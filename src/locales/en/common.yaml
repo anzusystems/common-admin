@@ -1,0 +1,18 @@
+button:
+  create: Create
+  createAndClose: Create And Close
+  save: Save
+  saveAndClose: Save And Close
+  close: Close
+  edit: Edit
+  submitFilter: Submit Filter
+  resetFilter: Reset Filter
+  cancel: Cancel
+  delete: Delete
+  id: Id
+  now: Now
+  logout: Logout
+  confirm: Confirm
+boolean:
+  true: Yes
+  false: No
