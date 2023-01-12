@@ -1,0 +1,18 @@
+button:
+  create: Vytvoriť
+  createAndClose: Vytvoriť a zatvoriť
+  save: Uložiť
+  saveAndClose: Uložiť a zatvoriť
+  close: Zatvoriť
+  edit: Editovať
+  submitFilter: Hľadať
+  resetFilter: Zrušiť filter
+  cancel: Zrušiť
+  delete: Zmazať
+  id: ID
+  now: Teraz
+  logout: Odhlásenie
+  confirm: Potvrď
+boolean:
+  true: áno
+  false: nie
