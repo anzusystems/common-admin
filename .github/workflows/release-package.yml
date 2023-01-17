@@ -29,4 +29,9 @@ jobs:
         run: yarn build
 
       - name: Publish package to npmjs
-        run: npm publish
+        run: |
+          npm config set _auth $NODE_AUTH_TOKEN
+          npm config set registry $NPM_REGISTRY_URL
+          npm config set always-auth=true
+          npm config set email=$NPM_PUBLISH_EMAIL
+          npm publish
