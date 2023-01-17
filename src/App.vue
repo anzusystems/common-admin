@@ -1,16 +1,8 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-</script>
+import AAbout from './components/AAbout.vue'
+import ABooleanValue from './components/ABooleanValue.vue'</script>
 
 <template>
-  <header>
-    <div>
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/components/boolean-value">ABooleanValue</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+  <ABooleanValue :value="true" chip></ABooleanValue>
+  <AAbout text="bla"></AAbout>
 </template>

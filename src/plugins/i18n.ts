@@ -1,19 +1,18 @@
 import type { Locale, Path } from 'vue-i18n'
 import { createI18n } from 'vue-i18n'
-import { messages } from '@/locales'
+import { commonMessages } from '../locales'
 
-const DO_NOT_LOG_LOCALES = ['en']
+const REQUIRED_LOCALES = ['sk']
 
 export const i18n = createI18n({
   globalInjection: false,
   legacy: false,
-  useScope: 'global',
-  locale: 'sk',
+  locale: REQUIRED_LOCALES[0],
   fallbackLocale: false,
   missing: (locale: Locale, key: Path) => {
-    if (DO_NOT_LOG_LOCALES.includes(locale)) return
-    console.warn(`Missing ${locale} translation: ${key}`)
+    if (REQUIRED_LOCALES.includes(locale)) {
+      console.warn(`Missing ${locale} translation: ${key}`)
+    }
   },
-  fallbackWarn: false,
-  messages,
+  messages: commonMessages,
 })

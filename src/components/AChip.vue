@@ -2,5 +2,5 @@
 </script>
 
 <template>
-  This is home.
+  <VChip color="success" label>I am vuetify chip!</VChip>
 </template>
