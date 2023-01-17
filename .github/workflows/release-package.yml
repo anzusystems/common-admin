@@ -31,5 +31,5 @@ jobs:
       - name: Publish package to npmjs
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm config set email=$NPM_PUBLISH_EMAIL
+          cat ~/.npmrc
           npm publish --access public
