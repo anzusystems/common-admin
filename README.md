@@ -28,7 +28,7 @@ yarn add @anzusystems/common-admin
 
 ```vue
 <script lang="ts" setup>
-import ABooleanValue from '@anzusystems/common-admin'
+import { ABooleanValue } from '@anzusystems/common-admin'
 </script>
 
 <template>
