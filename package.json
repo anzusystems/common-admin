@@ -1,5 +1,5 @@
 {
-  "name": "common-admin",
+  "name": "@anzusystems/common-admin",
   "files": [
     "dist"
   ],
@@ -17,7 +17,8 @@
   "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "exit 0"
   },
   "devDependencies": {
     "@mdi/font": "^7.1.96",
