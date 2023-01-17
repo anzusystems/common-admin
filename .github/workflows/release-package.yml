@@ -4,14 +4,10 @@ on:
   release:
     types: [created]
 
-env:
-  NODE_VERSION: '18'
-  PLATFORM: 'ubuntu-latest'
-
 jobs:
   build-publish-pkg:
-    name: Node ${{ env.NODE_VERSION }} on ${{ env.PLATFORM }}
-    runs-on: ${{ env.PLATFORM }}
+    name: Build and push package on node 18
+    runs-on: 'ubuntu-latest'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -19,7 +15,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '18'
           cache: 'yarn'
           cache-dependency-path: 'yarn.lock'
 
