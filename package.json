@@ -15,9 +15,6 @@
   "version": "0.0.1",
   "type": "module",
   "license": "Apache-2.0",
-  "publishConfig": {
-    "@anzusystems:registry": "https://npm.pkg.github.com"
-  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
