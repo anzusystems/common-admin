@@ -1,5 +1,11 @@
 # Vue 3 + Vuetify 3 + TypeScript + Vite lib
 
+## Install dependencies
+
+```shell
+yarn install
+```
+
 ## Build library
 
 Build dist files.
@@ -10,30 +16,22 @@ yarn build
 
 ## Publish library
 
-Publish to npm.
-
-```shell
-npm publish
-```
+Publish to npmjs is automated, it will be run upon a new release in GitHub.
 
 ## Install library in project
 
 ```shell
-yarn add @sakulb/common-lib
+yarn add @anzusystems/common-admin
 ```
 
 ## Use in project
 
 ```vue
 <script lang="ts" setup>
-import { AButton, AAbout, AChip } from '@sakulb/common-lib'
+import ABooleanValue from '@anzusystems/common-admin'
 </script>
 
 <template>
-  <AButton></AButton>
-  <hr>
-  <AAbout text="bla"></AAbout>
-  <hr>
-  <AChip></AChip>
+  <ABooleanValue :value="true" chip></ABooleanValue>
 </template>
 ```
