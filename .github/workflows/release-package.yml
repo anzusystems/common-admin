@@ -1,33 +1,36 @@
-name: Node.js Package
+name: Node.js Package Release
 
 on:
   release:
     types: [created]
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - run: npm ci
-      - run: npm test
+env:
+  NODE_VERSION: '18'
+  PLATFORM: 'ubuntu-latest'
 
-  publish-gpr:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
+jobs:
+  build-publish-pkg:
+    name: Node ${{ env.NODE_VERSION }} on ${{ env.PLATFORM }}
+    runs-on: ${{ env.PLATFORM }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
-          registry-url: https://npm.pkg.github.com/
-      - run: npm ci
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run Yarn Build
+        run: yarn build
+
+      - name: Publish package to npmjs
+        run: npm publish
