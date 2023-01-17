@@ -29,6 +29,8 @@ jobs:
         run: yarn build
 
       - name: Publish package to npmjs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           cat ~/.npmrc
