@@ -15,6 +15,13 @@
   "version": "0.0.1",
   "type": "module",
   "license": "Apache-2.0",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/anzusystems"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anzusystems/common-admin"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
