@@ -4,7 +4,7 @@ export const isUndefined = (value: unknown): value is undefined => {
   return typeof value === 'undefined'
 }
 
-export const isNotUndefined = (value: unknown): value is undefined => {
+export const isNotUndefined = (value: unknown) => {
   return false === isUndefined(value)
 }
 
@@ -38,6 +38,37 @@ export const isInt = (value: any): value is number => {
   return !isNaN(value) && (x | 0) === x
 }
 
+export const isObject = (value: any): value is object => {
+  return typeof value === 'object' && !isArray(value) && !isNull(value)
+}
+
+export const isEmptyObject = (value: any): value is object => {
+  if (isObject(value)) {
+    // noinspection LoopStatementThatDoesntLoopJS
+    for (const property in value) {
+      return false
+    }
+    return true
+  }
+  return false
+}
+
+export const isEmptyArray = (value: any): value is Array<any> => {
+  if (isArray(value)) {
+    // noinspection LoopStatementThatDoesntLoopJS
+    for (const property in value) {
+      return false
+    }
+    return true
+  }
+  return false
+}
+
 export const isEmpty = (value: any): boolean => {
-  return isNull(value) || isUndefined(value) || value === '' || value === 0 || (isArray(value) && value.length === 0)
+  return isNull(value)
+    || isUndefined(value)
+    || value === ''
+    || value === 0
+    || isEmptyArray(value)
+    || isEmptyObject(value)
 }

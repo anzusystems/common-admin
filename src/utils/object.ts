@@ -11,13 +11,6 @@ export const deepFreeze = <T>(obj: T) => {
   return Object.freeze(obj)
 }
 
-export const isEmpty = (object: any) => {
-  for (const property in object) {
-    return false
-  }
-  return true
-}
-
 export const getValueByPath = (obj: any, path: string, splitChar = '.') => {
   const a = path.split(splitChar)
   let o = obj

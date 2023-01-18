@@ -8,7 +8,7 @@ import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, 'src/components/index.ts'),
+      entry: path.resolve(__dirname, 'src/lib.ts'),
       name: 'CommonAdmin',
       fileName: (format) => `common-admin.${format}.js`,
     },
@@ -17,6 +17,7 @@ export default defineConfig({
       output: {
         globals: {
           vue: 'Vue',
+          vuetify: 'Vuetify',
         },
       },
     },
