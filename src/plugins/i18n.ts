@@ -1,6 +1,6 @@
 import type { Locale, Path } from 'vue-i18n'
 import { createI18n } from 'vue-i18n'
-import { commonMessages } from '../locales'
+import { commonMessages } from '@/locales'
 
 const REQUIRED_LOCALES = ['sk']
 

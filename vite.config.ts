@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 import dts from 'vite-plugin-dts'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
+import { fileURLToPath, URL } from 'url'
 
 export default defineConfig({
   build: {
@@ -32,4 +33,9 @@ export default defineConfig({
     }),
     dts({ insertTypesEntry: true })
   ],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
 })

@@ -3,7 +3,6 @@ import { VApp } from 'vuetify/components'
 import { ref } from 'vue'
 
 const opened = ref([])
-
 const drawer = ref<boolean>(true)
 
 const navIconClick = () => {
@@ -26,6 +25,10 @@ const navIconClick = () => {
         <VListItem
           :to="{ name: 'component-boolean-value' }"
           title="ABooleanValue"
+        ></VListItem>
+        <VListItem
+          :to="{ name: 'component-permission' }"
+          title="Permission"
         ></VListItem>
       </VList>
     </VNavigationDrawer>

@@ -1,4 +1,4 @@
-import { isUndefined } from './common'
+import { isUndefined } from '@/utils/common'
 
 export const deepFreeze = <T>(obj: T) => {
   const propNames = Object.getOwnPropertyNames(obj)

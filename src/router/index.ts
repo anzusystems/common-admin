@@ -19,6 +19,11 @@ const router = createRouter({
       name: 'component-boolean-value',
       component: () => import('../views/components/ABooleanValueView.vue')
     },
+    {
+      path: '/component/permission',
+      name: 'component-permission',
+      component: () => import('../views/components/PermissionView.vue')
+    },
   ]
 })
 

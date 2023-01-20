@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import ARow from '../../components/ARow.vue'
+import ARow from '@/components/ARow.vue'
 </script>
 
 <template>

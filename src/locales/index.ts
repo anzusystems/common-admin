@@ -1,4 +1,4 @@
-import { setValueByPath } from '../utils/object'
+import { setValueByPath } from '@/utils/object'
 
 // note: now import is not dynamic, so all language files are loaded at once
 const modules = import.meta.glob('./(sk|en)/**/*.yaml', { eager: true })

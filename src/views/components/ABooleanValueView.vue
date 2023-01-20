@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import ABooleanValue from '../../components/ABooleanValue.vue'
+import ABooleanValue from '@/components/ABooleanValue.vue'
 </script>
 
 <template>
