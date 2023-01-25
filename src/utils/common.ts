@@ -65,10 +65,7 @@ export const isEmptyArray = (value: any): value is Array<any> => {
 }
 
 export const isEmpty = (value: any): boolean => {
-  return isNull(value)
-    || isUndefined(value)
-    || value === ''
-    || value === 0
-    || isEmptyArray(value)
-    || isEmptyObject(value)
+  return (
+    isNull(value) || isUndefined(value) || value === '' || value === 0 || isEmptyArray(value) || isEmptyObject(value)
+  )
 }

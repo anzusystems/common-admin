@@ -5,15 +5,11 @@ import ARow from '@/components/ARow.vue'
 <template>
   <VCard>
     <VCardTitle>ARow</VCardTitle>
-    <VCardSubtitle>
-      title="The title" value="The value"
-    </VCardSubtitle>
+    <VCardSubtitle> title="The title" value="The value" </VCardSubtitle>
     <VCardText>
       <ARow title="The title" value="The value"></ARow>
     </VCardText>
-    <VCardSubtitle>
-      Use a slot
-    </VCardSubtitle>
+    <VCardSubtitle> Use a slot </VCardSubtitle>
     <VCardText>
       <ARow title="The title">
         <VChip>I'm a chip</VChip>

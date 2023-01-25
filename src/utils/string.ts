@@ -52,8 +52,7 @@ export const slugify = (value: string) => {
     .replace(/-+$/, '')
 }
 
-
-export const trimLength = (value: string, maxLength: number = 80): string => {
+export const trimLength = (value: string, maxLength = 80): string => {
   if (value.length > maxLength) {
     return value.substring(1, maxLength) + '...'
   }

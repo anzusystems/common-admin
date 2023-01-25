@@ -13,7 +13,7 @@ export interface AnzuUser extends AnzuUserAndTimeTrackingAware {
   _system: string
 }
 
-export interface AnzuUserAndTimeTrackingAware extends AnzuUserCreatedByAware{
+export interface AnzuUserAndTimeTrackingAware extends AnzuUserCreatedByAware {
   createdAt: DatetimeUTC
   modifiedAt: DatetimeUTC
   modifiedBy: IntegerIdNullable

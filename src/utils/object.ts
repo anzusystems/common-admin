@@ -36,7 +36,7 @@ export const setValueByPath = (obj: any, path: string, value: any, splitChar = '
 
 export function deletePropertyByPath<T>(obj: T, path: string, splitChar = '.'): T {
   const pathParts = path.split(splitChar)
-  const lastIndex = pathParts.length - 1;
+  const lastIndex = pathParts.length - 1
 
   function recurse(obj: any, index = 0) {
     const key = pathParts[index]

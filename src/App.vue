@@ -8,7 +8,6 @@ const drawer = ref<boolean>(true)
 const navIconClick = () => {
   drawer.value = !drawer.value
 }
-
 </script>
 
 <template>
@@ -18,18 +17,9 @@ const navIconClick = () => {
         <VListItem title="Admin common" subtitle="Anzu" class="text-h6"></VListItem>
       </VList>
       <VList v-model:opened="opened" density="compact" nav>
-        <VListItem
-          :to="{ name: 'component-row' }"
-          title="ARow"
-        ></VListItem>
-        <VListItem
-          :to="{ name: 'component-boolean-value' }"
-          title="ABooleanValue"
-        ></VListItem>
-        <VListItem
-          :to="{ name: 'component-permission' }"
-          title="Permission"
-        ></VListItem>
+        <VListItem :to="{ name: 'component-row' }" title="ARow"></VListItem>
+        <VListItem :to="{ name: 'component-boolean-value' }" title="ABooleanValue"></VListItem>
+        <VListItem :to="{ name: 'component-permission' }" title="Permission"></VListItem>
       </VList>
     </VNavigationDrawer>
     <VAppBar density="compact">
@@ -41,7 +31,7 @@ const navIconClick = () => {
     </VAppBar>
     <VMain>
       <VContainer class="pa-3" fluid>
-        <RouterView/>
+        <RouterView />
       </VContainer>
     </VMain>
   </VApp>
