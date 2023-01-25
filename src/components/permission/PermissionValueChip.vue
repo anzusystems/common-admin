@@ -13,19 +13,11 @@ const grantOption = computed(() => getGrantOption(props.grant))
 
 const { getGrantOriginOption } = useGrantOrigin()
 const grantOriginOption = computed(() => getGrantOriginOption(props.grantOrigin))
-
 </script>
 
 <template>
-  <VChip
-    :color="grantOption.color"
-    label
-    size="small"
-  >
+  <VChip v-if="grantOption" :color="grantOption.color" label size="small">
     {{ grantOption.title }}
-    <span
-      v-if="grantOrigin !== GrantOrigin.DefaultGrant"
-      class="ml-1"
-    >({{ grantOriginOption.title }})</span>
+    <span v-if="grantOrigin !== GrantOrigin.DefaultGrant" class="ml-1">({{ grantOriginOption?.title }})</span>
   </VChip>
 </template>

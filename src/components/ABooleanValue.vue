@@ -12,7 +12,7 @@ const props = withDefaults(
   }>(),
   {
     chip: false,
-    invertColor: false
+    invertColor: false,
   }
 )
 

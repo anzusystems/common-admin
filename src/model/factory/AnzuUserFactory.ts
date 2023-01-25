@@ -22,7 +22,7 @@ export function useAnzuUserFactory(system = '', resourceName = 'user') {
       resolvedPermissions: {},
       roles: [],
       _system: _system,
-      _resourceName: _resourceName
+      _resourceName: _resourceName,
     }
   }
 

@@ -31,7 +31,7 @@ export default defineConfig({
       runtimeOnly: false,
       include: path.resolve(__dirname, 'src/locales/**'),
     }),
-    dts({ insertTypesEntry: true })
+    dts({ insertTypesEntry: true }),
   ],
   resolve: {
     alias: {
