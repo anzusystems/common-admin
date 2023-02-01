@@ -17,7 +17,7 @@ export const newDateNow = (): Date => {
 }
 
 export const currentTimestamp = (): number => {
-  return toInt(dayjs().utc().format('X'))
+  return toInt(dayjs().utc().unix())
 }
 
 export const dateTimeNow = (ignoreFractionalSeconds = true, ignoreSeconds = false): string => {
