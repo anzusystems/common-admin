@@ -37,6 +37,8 @@ import {
 import { Grant, useGrant } from '@/model/valueObject/Grant'
 import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
 import { useAnzuUserFactory } from '@/model/factory/AnzuUserFactory'
+import { usePermissionConfigFactory } from '@/model/factory/PermissionConfigFactory'
+import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactory'
 
 import type {
   IntegerId,
@@ -53,6 +55,13 @@ import { isOwnerAware } from '@/types/OwnerAware'
 import type { AnzuUserAndTimeTrackingAware, AnzuUserCreatedByAware, AnzuUser } from '@/types/AnzuUser'
 import { isAnzuUserCreatedByAware } from '@/types/AnzuUser'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import type { PermissionConfig, PermissionTranslationGroup } from '@/types/PermissionConfig'
+import {
+  type UserAndTimeTrackingFields,
+  type CreatedByAware,
+  isCreatedByAware,
+} from '@/types/UserAndTimeTrackingFields'
+import type { PermissionGroup, PermissionGroupMinimal } from '@/types/PermissionGroup'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -85,9 +94,18 @@ export {                                //           |        |       |         
   Filter,                               //           |        |       |           |       |
   FilterBag,                            //           |        |       |           |       |
   FilterVariant,                        //           |        |       |           |       |
+  PermissionConfig,                     //           |        |       |           |       |
+  PermissionTranslationGroup,           //           |        |       |           |       |
+  UserAndTimeTrackingFields,            //           |        |       |           |       |
+  CreatedByAware,                       //           |        |       |           |       |
+  isCreatedByAware,                     //           |        |       |           |       |
+  PermissionGroup,                      //           |        |       |           |       |
+  PermissionGroupMinimal,               //           |        |       |           |       |
                                         //           |        |       |           |       |
   // Factories                          //           |        |       |           |       |
   useAnzuUserFactory,                   //           |        |       |           |       |
+  usePermissionConfigFactory,           //           |        |       |           |       |
+  usePermissionGroupFactory,            //           |        |       |           |       |
                                         //           |        |       |           |       |
   // UTILS                              //           |        |       |           |       |
   // common                             //           |        |       |           |       |
