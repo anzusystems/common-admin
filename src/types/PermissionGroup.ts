@@ -1,6 +1,6 @@
 import type { IntegerId } from '@/types/common'
 import type { Permissions } from '@/types/Permission'
-import { UserAndTimeTrackingFields } from '@/types/UserAndTimeTrackingFields'
+import { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 
 export interface PermissionGroupMinimal {
   id: IntegerId
@@ -8,7 +8,7 @@ export interface PermissionGroupMinimal {
   permissions: Permissions
 }
 
-export interface PermissionGroup extends PermissionGroupMinimal, UserAndTimeTrackingFields {
+export interface PermissionGroup extends PermissionGroupMinimal, AnzuUserAndTimeTrackingAware {
   description: string
   _system: string
   _resourceName: 'permissionGroup'
