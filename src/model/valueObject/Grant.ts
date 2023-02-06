@@ -30,8 +30,8 @@ export function useGrant() {
     },
   ])
 
-  const getGrantOption = (value: Grant) => {
-    return grantOptions.value.find((item) => item.value === value)
+  const getGrantOption = (value: Grant): ValueObjectOption<Grant> => {
+    return grantOptions.value.find((item) => item.value === value) as ValueObjectOption<Grant>
   }
 
   return {

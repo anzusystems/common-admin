@@ -37,6 +37,8 @@ import {
 import { Grant, useGrant } from '@/model/valueObject/Grant'
 import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
 import { useAnzuUserFactory } from '@/model/factory/AnzuUserFactory'
+import { usePermissionConfigFactory } from '@/model/factory/PermissionConfigFactory'
+import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactory'
 
 import type {
   IntegerId,
@@ -50,9 +52,12 @@ import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 import type { OwnerAware } from '@/types/OwnerAware'
 import { isOwnerAware } from '@/types/OwnerAware'
-import type { AnzuUserAndTimeTrackingAware, AnzuUserCreatedByAware, AnzuUser } from '@/types/AnzuUser'
-import { isAnzuUserCreatedByAware } from '@/types/AnzuUser'
+import type { AnzuUser } from '@/types/AnzuUser'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import type { PermissionConfig, PermissionTranslationGroup } from '@/types/PermissionConfig'
+import { type AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { PermissionGroup, PermissionGroupMinimal } from '@/types/PermissionGroup'
+import { type CreatedByAware, isCreatedByAware } from '@/types/CreatedByAware'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -75,19 +80,25 @@ export {                                //           |        |       |         
   DatetimeUTCNullable,                  //           |        |       |           |       |
   DatetimeUTC,                          //           |        |       |           |       |
   AnzuUser,                             //           |        |       |           |       |
-  AnzuUserCreatedByAware,               //           |        |       |           |       |
   AnzuUserAndTimeTrackingAware,         //           |        |       |           |       |
-  isAnzuUserCreatedByAware,             //           |        |       |           |       |
   ValueObjectOption,                    //           |        |       |           |       |
   Pagination,                           //           |        |       |           |       |
   OwnerAware,                           //           |        |       |           |       |
   isOwnerAware,                         //           |        |       |           |       |
+  CreatedByAware,                       //           |        |       |           |       |
+  isCreatedByAware,                     //           |        |       |           |       |
   Filter,                               //           |        |       |           |       |
   FilterBag,                            //           |        |       |           |       |
   FilterVariant,                        //           |        |       |           |       |
+  PermissionConfig,                     //           |        |       |           |       |
+  PermissionTranslationGroup,           //           |        |       |           |       |
+  PermissionGroup,                      //           |        |       |           |       |
+  PermissionGroupMinimal,               //           |        |       |           |       |
                                         //           |        |       |           |       |
   // Factories                          //           |        |       |           |       |
   useAnzuUserFactory,                   //           |        |       |           |       |
+  usePermissionConfigFactory,           //           |        |       |           |       |
+  usePermissionGroupFactory,            //           |        |       |           |       |
                                         //           |        |       |           |       |
   // UTILS                              //           |        |       |           |       |
   // common                             //           |        |       |           |       |
