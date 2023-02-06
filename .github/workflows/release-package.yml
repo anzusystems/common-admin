@@ -22,9 +22,6 @@ jobs:
       - name: Enable corepack
         run: corepack enable
 
-      - name: Install plugins
-        run: yarn plugin import interactive-tools
-
       - name: Install dependencies
         run: yarn install --immutable
 
