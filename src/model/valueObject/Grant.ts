@@ -1,6 +1,6 @@
 import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import { useI18n } from '@/createCommonAdmin'
 
 export enum Grant {
   Deny = 0,

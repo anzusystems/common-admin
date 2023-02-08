@@ -2,12 +2,12 @@ export interface FilterBag {
   [key: string]: Filter
 }
 
-export interface Filter {
+export interface Filter<T = any> {
   field: string
   multiple: boolean
   variant: FilterVariant
-  model: any
-  default: any
+  model: T | null
+  default: T | null
   title: string
   error: string
   mandatory: boolean

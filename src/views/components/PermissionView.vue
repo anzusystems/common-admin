@@ -10,7 +10,7 @@ import PermissionGrantEditor from '@/components/permission/PermissionGrantEditor
     <VCardTitle>PermissionValueChip</VCardTitle>
     <VCardSubtitle> :grant-origin="GrantOrigin.User" :grant="Grant.Allow" </VCardSubtitle>
     <VCardText>
-      <PermissionValueChip :grant-origin="GrantOrigin.User" :grant="Grant.Allow"></PermissionValueChip>
+      <PermissionValueChip :grant-origin="GrantOrigin.User" :grant="Grant.Allow" />
     </VCardText>
     <VCardTitle>PermissionGrantEditor</VCardTitle>
     <VCardSubtitle>
@@ -20,7 +20,7 @@ import PermissionGrantEditor from '@/components/permission/PermissionGrantEditor
       <PermissionGrantEditor
         :selected-grant="Grant.Allow"
         :available-grants="[Grant.Deny, Grant.AllowOwner, Grant.Allow]"
-      ></PermissionGrantEditor>
+      />
     </VCardText>
   </VCard>
 </template>

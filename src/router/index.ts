@@ -24,6 +24,21 @@ const router = createRouter({
       name: 'component-permission',
       component: () => import('../views/components/PermissionView.vue'),
     },
+    {
+      path: '/component/datetime',
+      name: 'component-datetime',
+      component: () => import('../views/components/DatetimeView.vue'),
+    },
+    {
+      path: '/component/forms',
+      name: 'component-forms',
+      component: () => import('../views/components/FormsView.vue'),
+    },
+    {
+      path: '/component/datatable',
+      name: 'component-datatable',
+      component: () => import('../views/components/DatatableView.vue'),
+    },
   ],
 })
 

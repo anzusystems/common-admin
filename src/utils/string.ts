@@ -1,3 +1,6 @@
+import { UrlParams } from '@/services/api/apiHelper'
+import { isUndefined } from '@/utils/common'
+
 export const toInt = (value: any, fallbackValue = 0): number => {
   let check = fallbackValue
   try {
@@ -59,3 +62,27 @@ export const trimLength = (value: string, maxLength = 80): string => {
 
   return value
 }
+
+/**
+ * Converts colon parameters to real values.
+ *
+ * @param template url containing colon parameters, example: '/:id/edit'
+ * @param params object containing real values to be replaced, example: { id:5 }
+ */
+export const urlTemplateReplace = (template: string, params: UrlParams) => {
+  if (template.indexOf(':') === -1) return template
+  const newParts: string[] = []
+  const parts = template.split('/')
+  parts.forEach((part, index) => {
+    newParts[index] = part
+    if (!part.startsWith(':')) return
+    const key = part.substring(1)
+    if (!isUndefined(params[key])) newParts[index] = params[part.substring(1)] + ''
+  })
+  return newParts.join('/')
+}
+
+/**
+ * Slot names with dots are not valid, Vue takes dots as modifiers, so we must replace dots with dash.
+ */
+export const normalizeForSlotName = (name: string) => name.replace('.', '-')

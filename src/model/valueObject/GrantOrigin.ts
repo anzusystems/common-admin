@@ -1,6 +1,6 @@
 import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import { useI18n } from '@/createCommonAdmin'
 
 export enum GrantOrigin {
   Role = 'role',
@@ -11,7 +11,7 @@ export enum GrantOrigin {
 }
 
 export function useGrantOrigin() {
-  const { t } = useI18n({ useScope: 'global' })
+  const { t } = useI18n()
 
   const grantOriginOptions = ref<ValueObjectOption<GrantOrigin>[]>([
     {

@@ -5,6 +5,7 @@ import vuetify from 'vite-plugin-vuetify'
 import dts from 'vite-plugin-dts'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { fileURLToPath, URL } from 'url'
+import externalGlobals from 'rollup-plugin-external-globals'
 
 export default defineConfig({
   build: {
@@ -32,6 +33,11 @@ export default defineConfig({
       include: path.resolve(__dirname, 'src/locales/**'),
     }),
     dts({ insertTypesEntry: true }),
+    // externalGlobals({
+    //   vue: 'vue',
+    //   vuetify: 'vuetify',
+    //   daysjs: 'daysjs',
+    // }),
   ],
   resolve: {
     alias: {
