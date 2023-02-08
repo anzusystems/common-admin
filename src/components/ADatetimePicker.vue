@@ -17,6 +17,8 @@ import { useI18n } from '@/createCommonAdmin'
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
 
+// todo make form and filter version
+
 const props = withDefaults(
   defineProps<{
     modelValue: DatetimeUTCNullable

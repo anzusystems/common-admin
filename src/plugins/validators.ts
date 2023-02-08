@@ -1,10 +1,13 @@
 import * as validators from '@vuelidate/validators'
 import type { Ref } from 'vue/dist/vue'
 import { unref } from 'vue'
-import { useI18n } from '@/createCommonAdmin'
+// import { useI18n } from '@/createCommonAdmin'
+import { i18n } from '@/plugins/i18n'
 
-const { t } = useI18n()
-const withI18nMessage = validators.createI18nMessage({ t })
+// const i18nGlobal = useI18n()
+// todo check if validations are working
+
+const withI18nMessage = validators.createI18nMessage({ t: i18n.global.t.bind(i18n) })
 
 export const required = withI18nMessage(validators.required, {
   messagePath: () => 'validations.required',

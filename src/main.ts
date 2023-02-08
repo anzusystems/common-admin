@@ -6,8 +6,6 @@ import { createPinia } from 'pinia'
 import router from './router'
 import { createCommonAdmin } from '@/createCommonAdmin'
 
-console.log(i18n)
-
 createCommonAdmin({ i18nInstance: i18n })
 
 createApp(App).use(createPinia()).use(router).use(i18n).use(vuetify).mount('#app')

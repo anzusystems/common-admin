@@ -6,8 +6,6 @@ import { useI18n } from '@/createCommonAdmin'
 export const DATETIME_AUTO_FORMAT_COLUMN_NAMES = ['createdAt', 'modifiedAt']
 export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']
 
-const { t } = useI18n()
-
 export type ColumnConfig = {
   name: string
   label?: string
@@ -25,6 +23,7 @@ const getLabelForConfig = (
   system: string | undefined = '',
   subject: string | undefined = ''
 ): string | undefined => {
+  const { t } = useI18n()
   if (!config) return undefined
   if (!isUndefined(config.label)) return config.label
   if (DATETIME_AUTO_LABEL_TRACKING.includes(config.name)) return t('common.tracking.' + config.name)

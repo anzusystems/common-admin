@@ -14,6 +14,8 @@ export const useI18n = () => {
   if (commonAdminI18n.value) {
     return commonAdminI18n.value.global
   }
+  console.warn('[Common admin] Do not use useI18n before initialisation.')
+
   return {
     t: () => {
       return ''
@@ -22,10 +24,8 @@ export const useI18n = () => {
 }
 
 export const createCommonAdmin = (config: Config = { i18nInstance: null }) => {
-  console.log(config.i18nInstance)
   if (config.i18nInstance) {
     commonAdminI18n.value = config.i18nInstance
-    console.log(commonAdminI18n.value)
     return
   }
   commonAdminI18n.value = createI18n({

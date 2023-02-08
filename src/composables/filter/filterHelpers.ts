@@ -4,8 +4,6 @@ import type { Pagination } from '@/types/Pagination'
 import { simpleCloneObject } from '@/utils/object'
 import { useI18n } from '@/createCommonAdmin'
 
-const { t } = useI18n()
-
 export interface MakeFilterOptions<T = any> {
   name: string
   variant: FilterVariant
@@ -19,6 +17,8 @@ export interface MakeFilterOptions<T = any> {
 }
 
 export function makeFilterHelper<T = any>(system?: string, subject?: string) {
+  const { t } = useI18n()
+
   return (options: Partial<MakeFilterOptions<T>> = {}): Filter<T> => {
     const variant = isUndefined(options.variant) ? 'eq' : options.variant
 
