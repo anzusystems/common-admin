@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { clickBlur } from '@/utils/event'
-import { useI18n } from '@/createCommonAdmin'
+import { useI18n } from '@/create'
 
 withDefaults(
   defineProps<{

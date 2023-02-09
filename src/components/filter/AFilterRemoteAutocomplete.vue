@@ -6,6 +6,7 @@ import type { Pagination } from '@/types/Pagination'
 import type { Filter, FilterBag } from '@/types/Filter'
 import { usePagination } from '@/composables/system/pagination'
 import { isArray, isNull } from '@/utils/common'
+import { useI18n } from '@/create'
 
 type FetchItemsByIdsType =
   | ((ids: number[]) => Promise<ValueObjectOption<number>[]>)
@@ -91,6 +92,12 @@ const tryToLoadFromLocalData = async (value: string | number | string[] | number
   return foundItems.length === count
 }
 
+const { t } = useI18n()
+
+const label = computed(() => {
+  return props.modelValue.titleT ? t(props.modelValue.titleT) : undefined
+})
+
 watch(
   value,
   async (newValue) => {
@@ -121,7 +128,7 @@ watchDebounced(
     item-title="title"
     item-value="value"
     no-filter
-    :label="modelValue.title"
+    :label="label"
     :multiple="modelValue.multiple"
     :clearable="!modelValue.mandatory"
   />

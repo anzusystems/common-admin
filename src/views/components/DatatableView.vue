@@ -5,7 +5,7 @@ import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { usePagination } from '@/composables/system/pagination'
 import { reactive, ref } from 'vue'
 import ADatatablePagination from '@/components/ADatatablePagination.vue'
-import AFilterWrapper from '@/components/AFilterWrapper.vue'
+import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import { makeFilterHelper, useFilterHelpers } from '@/composables/filter/filterHelpers'
 import AFilterString from '@/components/filter/AFilterString.vue'
 

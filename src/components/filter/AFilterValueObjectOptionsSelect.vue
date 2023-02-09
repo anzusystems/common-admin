@@ -3,6 +3,7 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Filter } from '@/types/Filter'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { computed } from 'vue'
+import { useI18n } from '@/create'
 
 const props = withDefaults(
   defineProps<{
@@ -26,13 +27,19 @@ const value = computed({
     emit('change')
   },
 })
+
+const { t } = useI18n()
+
+const label = computed(() => {
+  return props.modelValue.titleT ? t(props.modelValue.titleT) : undefined
+})
 </script>
 
 <template>
   <VAutocomplete
     v-model="value"
     :items="items"
-    :label="modelValue.title"
+    :label="label"
     :multiple="modelValue.multiple"
     :clearable="!modelValue.mandatory"
     data-cy="filter-value"

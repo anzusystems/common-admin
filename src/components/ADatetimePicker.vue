@@ -8,11 +8,11 @@ import 'flatpickr/dist/flatpickr.css'
 import { dateToUtc, newDateNow } from '@/utils/datetime'
 import type flatpickr from 'flatpickr'
 import { isNull, isUndefined } from '@/utils/common'
-import { requiredIf } from '@/plugins/validators'
 import type { ErrorObject } from '@vuelidate/core'
 import useVuelidate from '@vuelidate/core'
 import type { DatetimeUTCNullable } from '@/types/common'
-import { useI18n } from '@/createCommonAdmin'
+import { useI18n } from '@/create'
+import { useRequiredIf } from '@/validators/vuelidate/useRequiredIf'
 
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
@@ -226,11 +226,16 @@ onMounted(() => {
   flatpickrValue.value = props.modelValue
 })
 
-const rules = {
-  textFieldValue: {
-    required: requiredIf(props.required),
-  },
-}
+const requiredIf = useRequiredIf(t)
+
+const rules = computed(() => {
+  return {
+    textFieldValue: {
+      required: requiredIf(props.required),
+    },
+  }
+})
+
 const v$ = useVuelidate(rules, { textFieldValue })
 
 const errorMessageComputed = computed(() => {

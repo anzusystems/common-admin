@@ -8,7 +8,7 @@ export interface Filter<T = any> {
   variant: FilterVariant
   model: T | null
   default: T | null
-  title: string
+  titleT?: string
   error: string
   mandatory: boolean
   exclude: boolean

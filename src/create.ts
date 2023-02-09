@@ -11,15 +11,8 @@ interface Config {
 export const commonAdminI18n = ref<any>(null)
 
 export const useI18n = () => {
-  if (commonAdminI18n.value) {
-    return commonAdminI18n.value.global
-  }
-  console.warn('[Common admin] Do not use useI18n before initialisation.')
-
   return {
-    t: () => {
-      return ''
-    },
+    t: commonAdminI18n.value && commonAdminI18n.value.global ? commonAdminI18n.value.global.t : () => '',
   }
 }
 

@@ -8,6 +8,7 @@ import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import ADatatable from '@/components/ADatatable.vue'
 import ADatatablePagination from '@/components/ADatatablePagination.vue'
 import AFilterString from '@/components/filter/AFilterString.vue'
+import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import PermissionGrantEditor from '@/components/permission/PermissionGrantEditor.vue'
 import PermissionValueChip from '@/components/permission/PermissionValueChip.vue'
 import ADatetime from '@/components/ADatetime.vue'
@@ -16,6 +17,7 @@ import ARemoteAutocomplete from '@/components/form/ARemoteAutocomplete.vue'
 import AValueObjectOptionsSelect from '@/components/form/AValueObjectOptionsSelect.vue'
 import AFilterValueObjectOptionsSelect from '@/components/filter/AFilterValueObjectOptionsSelect.vue'
 import AFilterRemoteAutocomplete from '@/components/filter/AFilterRemoteAutocomplete.vue'
+import AFilterBooleanGroup from '@/components/filter/AFilterBooleanGroup.vue'
 import { commonMessages } from '@/locales'
 import { deepFreeze, deletePropertyByPath, getValueByPath, setValueByPath, simpleCloneObject } from '@/utils/object'
 import {
@@ -100,7 +102,7 @@ import { useQueryBuilder } from '@/services/api/queryBuilder'
 import { useAlerts } from '@/composables/system/alerts'
 import { useErrorHandler } from '@/composables/system/error'
 import { useTableColumns } from '@/composables/system/tableColumns'
-import { createCommonAdmin } from '@/createCommonAdmin'
+import { createCommonAdmin } from '@/create'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -118,9 +120,11 @@ export {                                //           |        |       |         
   ARemoteAutocomplete,                  //           |        |       |           |       |
   AValueObjectOptionsSelect,            //           |        |       |           |       |
   ABooleanToggle,                       //           |        |       |           |       |
+  AFilterWrapper,                       //           |        |       |           |       |
   AFilterString,                        //           |        |       |           |       |
   AFilterRemoteAutocomplete,            //           |        |       |           |       |
   AFilterValueObjectOptionsSelect,      //           |        |       |           |       |
+  AFilterBooleanGroup,                  //           |        |       |           |       |
   ADatetime,                            //           |        |       |           |       |
   ADatatable,                           //           |        |       |           |       |
   ADatatablePagination,                 //           |        |       |           |       |

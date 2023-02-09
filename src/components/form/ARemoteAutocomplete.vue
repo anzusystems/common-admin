@@ -11,7 +11,7 @@ import type { ErrorObject } from '@vuelidate/core'
 import { splitOnFirstOccurrence } from '@/utils/string'
 import type { Ref } from 'vue/dist/vue'
 import { simpleCloneObject } from '@/utils/object'
-import { useI18n } from '@/createCommonAdmin'
+import { useI18n } from '@/create'
 
 type FetchItemsByIdsType =
   | ((ids: number[]) => Promise<ValueObjectOption<number>[]>)

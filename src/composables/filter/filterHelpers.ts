@@ -2,13 +2,12 @@ import { isArray, isUndefined } from '@/utils/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 import { simpleCloneObject } from '@/utils/object'
-import { useI18n } from '@/createCommonAdmin'
+import { useI18n } from '@/create'
 
 export interface MakeFilterOptions<T = any> {
   name: string
   variant: FilterVariant
-  title: string
-  translationSuffix: undefined
+  titleT?: string
   default: T | null
   field: string
   multiple: boolean
@@ -26,15 +25,14 @@ export function makeFilterHelper<T = any>(system?: string, subject?: string) {
     if (isUndefined(options.default) && variant === 'in') {
       defaultValue = [] as any
     }
-
-    let title = isUndefined(options.title) ? '' : options.title
-    if (title === '' && system && subject && options.name) {
-      title = t(system + '.' + subject + '.filter.' + options.name)
+    let titleT = options.titleT
+    if (isUndefined(titleT) && system && subject && options.name) {
+      titleT = system + '.' + subject + '.filter.' + options.name
     }
 
     return {
       variant,
-      title,
+      titleT,
       default: defaultValue,
       field: isUndefined(options.field) ? '' : options.field,
       multiple: isArray(defaultValue),

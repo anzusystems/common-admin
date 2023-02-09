@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { useI18n } from '@/createCommonAdmin'
+import { useI18n } from '@/create'
 
 export enum GrantOrigin {
   Role = 'role',

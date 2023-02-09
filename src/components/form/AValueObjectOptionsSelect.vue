@@ -4,7 +4,7 @@ import { splitOnFirstOccurrence } from '@/utils/string'
 import type { ErrorObject } from '@vuelidate/core'
 import { isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import { useI18n } from '@/createCommonAdmin'
+import { useI18n } from '@/create'
 
 const props = withDefaults(
   defineProps<{

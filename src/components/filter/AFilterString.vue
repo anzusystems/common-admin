@@ -2,6 +2,7 @@
 import type { Filter } from '@/types/Filter'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { computed } from 'vue'
+import { useI18n } from '@/create'
 
 const props = withDefaults(
   defineProps<{
@@ -26,12 +27,18 @@ const value = computed({
 })
 
 const { clearOne } = useFilterHelpers()
+
+const { t } = useI18n()
+
+const label = computed(() => {
+  return props.modelValue.titleT ? t(props.modelValue.titleT) : undefined
+})
 </script>
 
 <template>
   <VTextField
     v-model="value"
-    :label="modelValue.title"
+    :label="label"
     :clearable="!modelValue.mandatory"
     :data-cy="dataCy"
     @click:clear.stop="clearOne(modelValue)"

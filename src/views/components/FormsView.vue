@@ -6,10 +6,13 @@ import ATextarea from '@/components/form/ATextarea.vue'
 import AValueObjectOptionsSelect from '@/components/form/AValueObjectOptionsSelect.vue'
 import { computed, ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
-import { minLength, required, maxLength } from '@/plugins/validators'
 import { Grant, useGrant } from '@/model/valueObject/Grant'
 import ABooleanToggle from '@/components/form/ABooleanToggle.vue'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
+import { useRequired } from '@/validators/vuelidate/useRequired'
+import { useI18n } from '@/create'
+import { useMinLength } from '@/validators/vuelidate/useMinLength'
+import { useMaxLength } from '@/validators/vuelidate/useMaxLength'
 
 const modelData = ref({
   shortText: 'text1',
@@ -18,6 +21,11 @@ const modelData = ref({
   grant: Grant.Default,
   publishedAt: null,
 })
+
+const { t } = useI18n()
+const required = useRequired(t)
+const minLength = useMinLength(t)
+const maxLength = useMaxLength(t)
 
 const rules = computed(() => ({
   modelData: {

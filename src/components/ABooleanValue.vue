@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { useI18n } from '@/createCommonAdmin'
+import { useI18n } from '@/create'
 
 const { t } = useI18n()
 
