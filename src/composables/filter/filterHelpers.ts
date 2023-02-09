@@ -2,7 +2,6 @@ import { isArray, isUndefined } from '@/utils/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 import { simpleCloneObject } from '@/utils/object'
-import { useI18n } from '@/create'
 
 export interface MakeFilterOptions<T = any> {
   name: string
@@ -16,8 +15,6 @@ export interface MakeFilterOptions<T = any> {
 }
 
 export function makeFilterHelper<T = any>(system?: string, subject?: string) {
-  const { t } = useI18n()
-
   return (options: Partial<MakeFilterOptions<T>> = {}): Filter<T> => {
     const variant = isUndefined(options.variant) ? 'eq' : options.variant
 

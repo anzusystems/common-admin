@@ -13,7 +13,7 @@
       "require": "./dist/common-admin.umd.js"
     }
   },
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -26,7 +26,7 @@
     "test": "exit 0"
   },
   "devDependencies": {
-    "@intlify/unplugin-vue-i18n": "^0.8.1",
+    "@intlify/unplugin-vue-i18n": "^0.8.2",
     "@kyvg/vue3-notification": "^2.8.0",
     "@mdi/font": "^7.1.96",
     "@rushstack/eslint-patch": "^1.2.0",
@@ -46,7 +46,6 @@
     "flatpickr": "^4.6.13",
     "pinia": "^2.0.30",
     "prettier": "^2.8.4",
-    "rollup-plugin-external-globals": "^0.7.1",
     "sass": "^1.58.0",
     "shortcut-buttons-flatpickr": "^0.4.0",
     "typescript": "^4.9.5",
@@ -61,16 +60,39 @@
     "vuetify": "^3.1.4"
   },
   "peerDependencies": {
+    "@vuelidate/core": "^2.0.0",
+    "@vuelidate/validators": "^2.0.0",
+    "@vueuse/core": "^9.12.0",
+    "@vueuse/integrations": "^9.12.0",
+    "axios": "^1.3.2",
+    "dayjs": "^1.11.7",
     "flatpickr": "^4.6.13",
+    "pinia": "^2.0.30",
     "vue": "^3.2.47",
     "vue-i18n": "^9.2.2",
+    "vue-router": "^4.1.6",
     "vuetify": "^3.1.4"
   },
   "peerDependenciesMeta": {
+    "@vueuse/core": {
+      "optional": true
+    },
+    "@vueuse/integrations": {
+      "optional": true
+    },
+    "axios": {
+      "optional": true
+    },
+    "dayjs": {
+      "optional": true
+    },
     "flatpickr": {
       "optional": true
     },
-    "vue-i18n": {
+    "pinia": {
+      "optional": true
+    },
+    "vue-router": {
       "optional": true
     }
   }
