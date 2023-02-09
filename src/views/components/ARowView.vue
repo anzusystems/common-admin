@@ -7,7 +7,7 @@ import ARow from '@/components/ARow.vue'
     <VCardTitle>ARow</VCardTitle>
     <VCardSubtitle> title="The title" value="The value" </VCardSubtitle>
     <VCardText>
-      <ARow title="The title" value="The value"></ARow>
+      <ARow title="The title" value="The value" />
     </VCardText>
     <VCardSubtitle> Use a slot </VCardSubtitle>
     <VCardText>

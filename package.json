@@ -13,7 +13,7 @@
       "require": "./dist/common-admin.umd.js"
     }
   },
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -26,29 +26,74 @@
     "test": "exit 0"
   },
   "devDependencies": {
-    "@intlify/unplugin-vue-i18n": "^0.8.1",
+    "@intlify/unplugin-vue-i18n": "^0.8.2",
+    "@kyvg/vue3-notification": "^2.8.0",
     "@mdi/font": "^7.1.96",
     "@rushstack/eslint-patch": "^1.2.0",
-    "@types/node": "^18.11.18",
-    "@typescript-eslint/parser": "^5.49.0",
+    "@types/node": "^18.13.0",
+    "@typescript-eslint/parser": "^5.51.0",
     "@vitejs/plugin-vue": "^4.0.0",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^11.0.2",
-    "axios": "^1.2.4",
+    "@vuelidate/core": "^2.0.0",
+    "@vuelidate/validators": "^2.0.0",
+    "@vueuse/core": "^9.12.0",
+    "@vueuse/integrations": "^9.12.0",
+    "axios": "^1.3.2",
     "dayjs": "^1.11.7",
-    "eslint": "^8.32.0",
+    "eslint": "^8.33.0",
     "eslint-plugin-vue": "^9.9.0",
-    "pinia": "^2.0.29",
-    "prettier": "^2.8.3",
-    "sass": "^1.57.1",
-    "typescript": "^4.9.4",
-    "vite": "^4.0.4",
-    "vite-plugin-dts": "^1.7.1",
-    "vite-plugin-vuetify": "^1.0.1",
-    "vue": "^3.2.45",
+    "flatpickr": "^4.6.13",
+    "pinia": "^2.0.30",
+    "prettier": "^2.8.4",
+    "sass": "^1.58.0",
+    "shortcut-buttons-flatpickr": "^0.4.0",
+    "typescript": "^4.9.5",
+    "vite": "^4.1.1",
+    "vite-plugin-dts": "^1.7.2",
+    "vite-plugin-vuetify": "^1.0.2",
+    "vue": "^3.2.47",
+    "vue-flatpickr-component": "^11.0.1",
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.1.6",
     "vue-tsc": "^1.0.24",
-    "vuetify": "^3.1.2"
+    "vuetify": "^3.1.4"
+  },
+  "peerDependencies": {
+    "@vuelidate/core": "^2.0.0",
+    "@vuelidate/validators": "^2.0.0",
+    "@vueuse/core": "^9.12.0",
+    "@vueuse/integrations": "^9.12.0",
+    "axios": "^1.3.2",
+    "dayjs": "^1.11.7",
+    "flatpickr": "^4.6.13",
+    "pinia": "^2.0.30",
+    "vue": "^3.2.47",
+    "vue-i18n": "^9.2.2",
+    "vue-router": "^4.1.6",
+    "vuetify": "^3.1.4"
+  },
+  "peerDependenciesMeta": {
+    "@vueuse/core": {
+      "optional": true
+    },
+    "@vueuse/integrations": {
+      "optional": true
+    },
+    "axios": {
+      "optional": true
+    },
+    "dayjs": {
+      "optional": true
+    },
+    "flatpickr": {
+      "optional": true
+    },
+    "pinia": {
+      "optional": true
+    },
+    "vue-router": {
+      "optional": true
+    }
   }
 }

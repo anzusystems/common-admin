@@ -2,7 +2,7 @@ import type { Locale, Path } from 'vue-i18n'
 import { createI18n } from 'vue-i18n'
 import { commonMessages } from '@/locales'
 
-const REQUIRED_LOCALES = ['sk']
+const REQUIRED_LOCALES = ['sk', 'en']
 
 export const i18n = createI18n({
   globalInjection: false,

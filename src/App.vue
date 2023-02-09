@@ -20,6 +20,9 @@ const navIconClick = () => {
         <VListItem :to="{ name: 'component-row' }" title="ARow"></VListItem>
         <VListItem :to="{ name: 'component-boolean-value' }" title="ABooleanValue"></VListItem>
         <VListItem :to="{ name: 'component-permission' }" title="Permission"></VListItem>
+        <VListItem :to="{ name: 'component-datetime' }" title="Datetime"></VListItem>
+        <VListItem :to="{ name: 'component-forms' }" title="Forms"></VListItem>
+        <VListItem :to="{ name: 'component-datatable' }" title="Datatable"></VListItem>
       </VList>
     </VNavigationDrawer>
     <VAppBar density="compact">
