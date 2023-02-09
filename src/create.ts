@@ -1,18 +1,18 @@
-import { ref } from 'vue'
-import { createI18n, Locale, Path } from 'vue-i18n'
+import { type Ref, ref } from 'vue'
+import { createI18n, Locale, Path, type I18n } from 'vue-i18n'
 import { commonMessages } from '@/locales'
 
 const REQUIRED_LOCALES = ['sk', 'en']
 
 interface Config {
-  i18nInstance: any
+  i18nInstance: null | I18n
 }
 
-export const commonAdminI18n = ref<any>(null)
+export const commonAdminI18n = ref(null) as Ref<I18n | null>
 
 export const useI18n = () => {
   return {
-    t: commonAdminI18n.value && commonAdminI18n.value.global ? commonAdminI18n.value.global.t : () => '',
+    t: commonAdminI18n.value && commonAdminI18n.value.global ? commonAdminI18n.value.global.t : (key: string) => key,
   }
 }
 
