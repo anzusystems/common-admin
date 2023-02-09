@@ -9,8 +9,8 @@ import ADatatable from '@/components/ADatatable.vue'
 import ADatatablePagination from '@/components/ADatatablePagination.vue'
 import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
-import PermissionGrantEditor from '@/components/permission/PermissionGrantEditor.vue'
-import PermissionValueChip from '@/components/permission/PermissionValueChip.vue'
+import APermissionGrantEditor from '@/components/permission/APermissionGrantEditor.vue'
+import APermissionValueChip from '@/components/permission/APermissionValueChip.vue'
 import ADatetime from '@/components/ADatetime.vue'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import ARemoteAutocomplete from '@/components/form/ARemoteAutocomplete.vue'
@@ -111,8 +111,8 @@ export {                                //           |        |       |         
   ACard,                                //           |        |       |           |       |
   ARow,                                 //           |        |       |           |       |
   ABooleanValue,                        //           |        |       |           |       |
-  PermissionGrantEditor,                //           |        |       |           |       |
-  PermissionValueChip,                  //           |        |       |           |       |
+  APermissionGrantEditor,               //           |        |       |           |       |
+  APermissionValueChip,                 //           |        |       |           |       |
   ASystemEntityScope,                   //           |        |       |           |       |
   ATextField,                           //           |        |       |           |       |
   ATextarea,                            //           |        |       |           |       |

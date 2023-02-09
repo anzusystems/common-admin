@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { Grant } from '@/model/valueObject/Grant'
 import { GrantOrigin } from '@/model/valueObject/GrantOrigin'
-import PermissionValueChip from '@/components/permission/PermissionValueChip.vue'
-import PermissionGrantEditor from '@/components/permission/PermissionGrantEditor.vue'
+import PermissionValueChip from '@/components/permission/APermissionValueChip.vue'
+import PermissionGrantEditor from '@/components/permission/APermissionGrantEditor.vue'
 </script>
 
 <template>
