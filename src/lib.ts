@@ -18,6 +18,7 @@ import AValueObjectOptionsSelect from '@/components/form/AValueObjectOptionsSele
 import AFilterValueObjectOptionsSelect from '@/components/filter/AFilterValueObjectOptionsSelect.vue'
 import AFilterRemoteAutocomplete from '@/components/filter/AFilterRemoteAutocomplete.vue'
 import AFilterBooleanGroup from '@/components/filter/AFilterBooleanGroup.vue'
+import JobStatusChip from '@/components/job/JobStatusChip.vue'
 import { commonMessages } from '@/locales'
 import { deepFreeze, deletePropertyByPath, getValueByPath, setValueByPath, simpleCloneObject } from '@/utils/object'
 import {
@@ -35,7 +36,15 @@ import {
   isString,
   isUndefined,
 } from '@/utils/common'
-import { normalizeForSlotName, slugify, splitOnFirstOccurrence, toFloat, toInt, trimLength } from '@/utils/string'
+import {
+  normalizeForSlotName,
+  slugify,
+  splitOnFirstOccurrence,
+  toFloat,
+  toInt,
+  toKebabCase,
+  trimLength,
+} from '@/utils/string'
 import {
   currentTimestamp,
   DATETIME_MAX,
@@ -103,6 +112,10 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useErrorHandler } from '@/composables/system/error'
 import { useTableColumns } from '@/composables/system/tableColumns'
 import { createCommonAdmin } from '@/create'
+import { JobStatus, useJobStatus } from './model/valueObject/JobStatus'
+import type { Job } from './types/Job'
+import { useJobApi } from './services/api/job/jobApi'
+import { type JobResource, useJobResource } from './model/valueObject/JobResource'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -128,6 +141,7 @@ export {                                //           |        |       |         
   ADatetime,                            //           |        |       |           |       |
   ADatatable,                           //           |        |       |           |       |
   ADatatablePagination,                 //           |        |       |           |       |
+  JobStatusChip,                        //           |        |       |           |       |
                                         //           |        |       |           |       |
   // COMPOSABLES                        //           |        |       |           |       |
   usePagination, usePaginationAutoHide, //           |        |       |           |       |
@@ -164,6 +178,9 @@ export {                                //           |        |       |         
   PermissionGroupMinimal,               //           |        |       |           |       |
   VuetifyIconValue,                     //           |        |       |           |       |
   MakeFilterOptions,                    //           |        |       |           |       |
+  Job,                                  //           |        |       |           |       |
+  JobStatus,                            //           |        |       |           |       |
+  JobResource,                          //           |        |       |           |       |
                                         //           |        |       |           |       |
   // Factories                          //           |        |       |           |       |
   useAnzuUserFactory,                   //           |        |       |           |       |
@@ -198,6 +215,7 @@ export {                                //           |        |       |         
   splitOnFirstOccurrence,               //           |        |       |           |       |
   trimLength,                           //           |        |       |           |       |
   normalizeForSlotName,                 //           |        |       |           |       |
+  toKebabCase,                          //           |        |       |           |       |
   // datetime                           //           |        |       |           |       |
   currentTimestamp,                     //           |        |       |           |       |
   DATETIME_MAX,                         //           |        |       |           |       |
@@ -225,6 +243,9 @@ export {                                //           |        |       |         
   apiFetchOne,                          //           |        |       |           |       |
   apiUpdateOne,                         //           |        |       |           |       |
   useQueryBuilder,                      //           |        |       |           |       |
+  useJobApi,                            //           |        |       |           |       |
+  useJobResource,                       //           |        |       |           |       |
+  useJobStatus,                         //           |        |       |           |       |
                                         //           |        |       |           |       |
   // TRANSLATION                        //           |        |       |           |       |
   commonMessages,                       //           |        |       |           |       |
