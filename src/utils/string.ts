@@ -55,6 +55,13 @@ export const slugify = (value: string) => {
     .replace(/-+$/, '')
 }
 
+type Kebab<T extends string, A extends string = ''> = T extends `${infer F}${infer R}`
+  ? Kebab<R, `${A}${F extends Lowercase<F> ? '' : '-'}${Lowercase<F>}`>
+  : A
+
+export const toKebabCase = <T extends string>(value: T): Kebab<T> =>
+  value.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase() as Kebab<T>
+
 export const trimLength = (value: string, maxLength = 80): string => {
   if (value.length > maxLength) {
     return value.substring(1, maxLength) + '...'
