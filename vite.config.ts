@@ -13,11 +13,12 @@ export default defineConfig({
       entry: path.resolve(__dirname, 'src/lib.ts'),
       name: 'CommonAdmin',
       fileName: (format) => `common-admin.${format}.js`,
+      formats: ['es'],
     },
     rollupOptions: {
       external: [
         'vue',
-        'vuetify',
+        /^vuetify(\/.*)?$/,
         'axios',
         'pinia',
         'vue-i18n',
@@ -27,20 +28,6 @@ export default defineConfig({
         '@vueuse/core',
         '@vueuse/integrations',
       ],
-      output: {
-        globals: {
-          vue: 'Vue',
-          vuetify: 'Vuetify',
-          axios: 'Axios',
-          pinia: 'Pinia',
-          'vue-i18n': 'VueI18n',
-          'vue-router': 'VueRouter',
-          '@vuelidate/core': 'VuelidateCore',
-          '@vuelidate/validators': 'VuelidateValidators',
-          '@vueuse/core': 'VueUseCore',
-          '@vueuse/integrations': 'VueUseIntegrations',
-        },
-      },
     },
   },
   plugins: [
@@ -51,6 +38,7 @@ export default defineConfig({
       runtimeOnly: false,
       include: path.resolve(__dirname, 'src/locales/**'),
     }),
+    // nodeResolve(),
     dts({ insertTypesEntry: true }),
   ],
   resolve: {
