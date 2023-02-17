@@ -27,7 +27,6 @@
     "@intlify/unplugin-vue-i18n": "^0.8.2",
     "@kyvg/vue3-notification": "^2.8.0",
     "@mdi/font": "^7.1.96",
-    "@rollup/plugin-node-resolve": "^15.0.1",
     "@rushstack/eslint-patch": "^1.2.0",
     "@types/node": "^18.13.0",
     "@typescript-eslint/parser": "^5.52.0",
