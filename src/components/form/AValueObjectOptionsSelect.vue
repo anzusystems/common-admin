@@ -5,6 +5,7 @@ import type { ErrorObject } from '@vuelidate/core'
 import { isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { useI18n } from '@/create'
+import { simpleCloneObject } from '@/utils/object'
 
 const props = withDefaults(
   defineProps<{
@@ -34,17 +35,23 @@ const props = withDefaults(
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
-  (e: 'blur', data: string | number | string[] | number[]): void
+  (e: 'blur', data: any): void
 }>()
+
+const modelValue = computed({
+  get() {
+    return props.modelValue
+  },
+  set(newValue) {
+    emit('update:modelValue', simpleCloneObject<any>(newValue))
+  },
+})
 
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
 const { t } = useI18n()
 
-const onUpdate = (newValue: any) => {
-  emit('update:modelValue', newValue)
-}
 const onBlur = () => {
   emit('blur', props.modelValue)
   props.v?.$touch()
@@ -68,23 +75,27 @@ const requiredComputed = computed(() => {
   if (props.v?.required && props.v?.required.$params.type === 'required') return true
   return false
 })
+
+const multipleComputedVuetifyTypeFix = computed(() => {
+  if (props.multiple === false) return false
+  return true as unknown as undefined
+})
 </script>
 
 <template>
   <VAutocomplete
-    :model-value="modelValue"
+    v-model="modelValue"
     :items="items"
     item-title="title"
     item-value="value"
-    :multiple="multiple"
+    :multiple="multipleComputedVuetifyTypeFix"
     :clearable="clearable"
     :error-messages="errorMessageComputed"
     :data-cy="dataCy"
     @blur="onBlur"
-    @update:model-value="onUpdate($event)"
   >
     <template #label>
-      <span v-if="!hideLabel">{{ labelComputed }}<span v-if="requiredComputed" class="required" /> </span>
+      <span v-if="!hideLabel">{{ labelComputed }}<span v-if="requiredComputed" class="required" /></span>
     </template>
   </VAutocomplete>
 </template>

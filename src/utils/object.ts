@@ -1,4 +1,5 @@
 import { isUndefined } from '@/utils/common'
+import { isFunction } from 'util'
 
 export const deepFreeze = <T>(obj: T) => {
   const propNames = Object.getOwnPropertyNames(obj)
@@ -57,5 +58,8 @@ export function deletePropertyByPath<T>(obj: T, path: string, splitChar = '.'): 
  * Use only for objects with some primitives like number, string, boolean, null. Not supported: function, undefined, symbol, ...
  */
 export const simpleCloneObject = <T>(object: T) => {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(object) as T
+  }
   return JSON.parse(JSON.stringify(object)) as T
 }
