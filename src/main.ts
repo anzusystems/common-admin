@@ -31,7 +31,7 @@ const currentUserObject: AnzuUser = {
   },
   roles: [],
 }
-const currentUserRef = ref<AnzuUser | undefined>(currentUserObject)
+const currentUserRef = ref<AnzuUser>(currentUserObject)
 const currentUser = readonly(currentUserRef)
 
 createApp(App)

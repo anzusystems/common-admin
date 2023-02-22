@@ -15,7 +15,7 @@ const { can } = useAcl<CustomAclValue>()
     <VCardTitle>PermissionValueChip</VCardTitle>
     <VCardSubtitle> :grant-origin="GrantOrigin.User" :grant="Grant.Allow"</VCardSubtitle>
     <VCardText>
-      <PermissionValueChip :grant-origin="GrantOrigin.User" :grant="Grant.Allow"/>
+      <PermissionValueChip :grant-origin="GrantOrigin.User" :grant="Grant.Allow" />
     </VCardText>
     <VCardTitle>PermissionGrantEditor</VCardTitle>
     <VCardSubtitle>
