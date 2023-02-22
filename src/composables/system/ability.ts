@@ -8,7 +8,7 @@ import {
   CurrentUserSymbol,
   CurrentUserType,
   CustomAclResolver,
-  CustomAclResolverSymbol
+  CustomAclResolverSymbol,
 } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/types/Permission'
 
