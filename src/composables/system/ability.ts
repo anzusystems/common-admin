@@ -15,13 +15,19 @@ import type { AclValue } from '@/types/Permission'
 export const ROLE_SUPER_ADMIN = 'ROLE_ADMIN'
 
 export type AclResolverConfig = {
+  disableInject?: true | undefined
   currentUser?: CurrentUserType
   customAclProvider?: CustomAclResolver
 }
 
 export function useAcl<T extends AclValue = AclValue>(options?: AclResolverConfig) {
-  const currentUser = options?.currentUser ?? (inject(CurrentUserSymbol) as CurrentUserType | undefined)
-  const customAclProvider = options?.customAclProvider ?? (inject(CustomAclResolverSymbol) as CustomAclResolver)
+  const shouldInject = isUndefined(options) || isUndefined(options.disableInject)
+  const currentUser =
+    options?.currentUser ??
+    (shouldInject ? (inject(CurrentUserSymbol, undefined) as CurrentUserType | undefined) : undefined)
+  const customAclProvider =
+    options?.customAclProvider ??
+    (shouldInject ? (inject(CustomAclResolverSymbol, undefined) as CustomAclResolver) : undefined)
 
   const can = (acl: T, subject?: object): boolean => {
     if (isUndefined(currentUser))
