@@ -3,7 +3,7 @@ import { computed, watch } from 'vue'
 import { isNull } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
 import { simpleCloneObject } from '@/utils/object'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 
 const props = withDefaults(
   defineProps<{

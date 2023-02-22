@@ -27,7 +27,11 @@ export const isString = (value: unknown): value is string => {
   return typeof value === 'string'
 }
 
-export const isArray = (value: unknown): value is Array<unknown> => {
+/**
+ * @template T Type used for request payload, by default same as Response type
+ * @template R Response type override, optional
+ */
+export const isArray = <T = unknown>(value: unknown): value is Array<T> => {
   return Array.isArray(value)
 }
 

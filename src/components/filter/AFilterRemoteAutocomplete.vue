@@ -6,7 +6,8 @@ import type { Pagination } from '@/types/Pagination'
 import type { Filter, FilterBag } from '@/types/Filter'
 import { usePagination } from '@/composables/system/pagination'
 import { isArray, isNull } from '@/utils/common'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
+import { DocId, IntegerId } from '@/types/common'
 
 type FetchItemsByIdsType =
   | ((ids: number[]) => Promise<ValueObjectOption<number>[]>)
@@ -101,12 +102,15 @@ const label = computed(() => {
 watch(
   value,
   async (newValue) => {
-    if (isNull(newValue) || (isArray(newValue) && newValue.length === 0)) {
+    if (isNull(newValue) || (isArray<DocId | IntegerId>(newValue) && newValue.length === 0)) {
       selectedCachedItems.value = []
       return
     }
     const found = await tryToLoadFromLocalData(newValue)
-    if (!found) selectedCachedItems.value = await props.fetchItemsByIds(isArray(newValue) ? newValue : [newValue])
+    if (!found)
+      selectedCachedItems.value = await props.fetchItemsByIds(
+        isArray<DocId | IntegerId>(newValue) ? newValue : [newValue]
+      )
   },
   { immediate: true }
 )

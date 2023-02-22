@@ -4,12 +4,9 @@ import { vuetify } from './plugins/vuetify'
 import { i18n } from './plugins/i18n'
 import { createPinia } from 'pinia'
 import router from './router'
-import { createCommonAdmin } from '@/create'
 import AnzuSystemsCommonAdmin from '@/AnzuSystemsCommonAdmin'
 import { AnzuUser } from '@/types/AnzuUser'
 import { Grant } from '@/model/valueObject/Grant'
-
-createCommonAdmin({ i18nInstance: i18n })
 
 export type CustomAclValue = 'anzu_entity_create' | 'anzu_entity_view'
 
@@ -39,5 +36,5 @@ createApp(App)
   .use(router)
   .use(i18n)
   .use(vuetify)
-  .use(AnzuSystemsCommonAdmin, { currentUser })
+  .use(AnzuSystemsCommonAdmin, { currentUser, i18n })
   .mount('#app')

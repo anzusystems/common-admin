@@ -5,7 +5,7 @@ import { isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { VuetifyIconValue } from '@/types/Vuetify'
 import type { ErrorObject } from '@vuelidate/core'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 
 const { t } = useI18n()
 

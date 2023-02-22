@@ -1,6 +1,6 @@
 import { notify } from '@kyvg/vue3-notification'
 import type { ApiErrors } from '@/composables/system/error'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 
 const DEFAULT_DURATION_SECONDS = 3
 

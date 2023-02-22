@@ -5,7 +5,7 @@ import ADatatableColumn from '@/components/ADatatableColumn.vue'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { normalizeForSlotName } from '@/utils/string'
 import { isEmpty } from '@/utils/common'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 
 const props = withDefaults(
   defineProps<{

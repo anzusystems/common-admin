@@ -11,7 +11,7 @@ import { isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import useVuelidate from '@vuelidate/core'
 import type { DatetimeUTCNullable } from '@/types/common'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 import { useRequiredIf } from '@/validators/vuelidate/useRequiredIf'
 
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }

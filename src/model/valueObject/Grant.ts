@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 
 export enum Grant {
   Deny = 0,
