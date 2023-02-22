@@ -39,7 +39,7 @@ export default defineConfig({
       include: path.resolve(__dirname, 'src/locales/**'),
     }),
     // nodeResolve(),
-    dts({ insertTypesEntry: true }),
+    dts({ rollupTypes: true }),
   ],
   resolve: {
     alias: {

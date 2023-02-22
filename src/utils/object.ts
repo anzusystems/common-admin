@@ -1,4 +1,5 @@
 import { isUndefined } from '@/utils/common'
+import { isProxy, isRef, toRaw } from 'vue'
 
 export const deepFreeze = <T>(obj: T) => {
   const propNames = Object.getOwnPropertyNames(obj)
@@ -58,7 +59,17 @@ export function deletePropertyByPath<T>(obj: T, path: string, splitChar = '.'): 
  */
 export const simpleCloneObject = <T>(object: T) => {
   if (typeof structuredClone === 'function') {
-    return structuredClone(object) as T
+    try {
+      if (isProxy(object)) {
+        return structuredClone(toRaw(object)) as T
+      }
+      if (isRef(object)) {
+        return structuredClone(object.value) as T
+      }
+      return structuredClone(object) as T
+    } catch (error) {
+      return JSON.parse(JSON.stringify(object)) as T
+    }
   }
   return JSON.parse(JSON.stringify(object)) as T
 }
