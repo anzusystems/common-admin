@@ -68,8 +68,6 @@ export const simpleCloneObject = <T>(object: T) => {
       }
       return structuredClone(object) as T
     } catch (error) {
-      console.error('simpleCloneObject error', object)
-
       return JSON.parse(JSON.stringify(object)) as T
     }
   }
