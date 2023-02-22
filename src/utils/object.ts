@@ -75,3 +75,7 @@ export const simpleCloneObject = <T>(object: T) => {
   }
   return JSON.parse(JSON.stringify(object)) as T
 }
+
+export type Immutable<T> = {
+  readonly [K in keyof T]: Immutable<T[K]>
+}
