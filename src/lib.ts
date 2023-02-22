@@ -1,5 +1,6 @@
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
+import AAlerts from '@/components/AAlerts.vue'
 import ACard from '@/components/ACard.vue'
 import ATextField from '@/components/form/ATextField.vue'
 import ATextarea from '@/components/form/ATextarea.vue'
@@ -109,7 +110,7 @@ import { apiFetchList } from '@/services/api/apiFetchList'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useQueryBuilder } from '@/services/api/queryBuilder'
-import { useAlerts } from '@/composables/system/alerts'
+import { NEW_LINE_MARK, useAlerts } from '@/composables/system/alerts'
 import { useErrorHandler } from '@/composables/system/error'
 import { useTableColumns } from '@/composables/system/tableColumns'
 import { JobStatus, useJobStatus } from './model/valueObject/JobStatus'
@@ -126,6 +127,7 @@ export {                                //           |        |       |         
   // COMPONENTS                         //           |        |       |           |       |
   ACard,                                //           |        |       |           |       |
   ARow,                                 //           |        |       |           |       |
+  AAlerts,                              //           |        |       |           |       |
   ABooleanValue,                        //           |        |       |           |       |
   APermissionGrantEditor,               //           |        |       |           |       |
   APermissionValueChip,                 //           |        |       |           |       |
@@ -265,6 +267,7 @@ export {                                //           |        |       |         
   HTTP_STATUS_UNAUTHORIZED,             //           |        |       |           |       |
   HTTP_STATUS_UNPROCESSABLE_ENTITY,     //           |        |       |           |       |
   ROLE_SUPER_ADMIN,                     //           |        |       |           |       |
+  NEW_LINE_MARK,                        //           |        |       |           |       |
                                         //           |        |       |           |       |
   // OTHER                              //           |        |       |           |       |
   AnzuApiResponseCodeError,             //           |        |       |           |       |

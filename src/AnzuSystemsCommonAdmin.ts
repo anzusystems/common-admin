@@ -4,6 +4,7 @@ import { AclValue } from '@/types/Permission'
 import Acl from '@/components/permission/Acl.vue'
 import { createI18nInstance } from '@/plugins/translate'
 import type { I18n } from 'vue-i18n'
+import Notification from '@kyvg/vue3-notification'
 
 export type CustomAclResolver<T extends AclValue = AclValue> =
   | undefined
@@ -27,5 +28,6 @@ export default {
     app.provide(CurrentUserSymbol, options.currentUser)
     app.provide(CustomAclResolverSymbol, options.customAclResolver)
     app.component('Acl', Acl)
+    app.use(Notification, { componentName: 'Notifications' })
   },
 }
