@@ -117,7 +117,7 @@ import { JobStatus, useJobStatus } from './model/valueObject/JobStatus'
 import type { Job } from './types/Job'
 import { useJobApi } from './services/api/job/jobApi'
 import { type JobResource, useJobResource } from './model/valueObject/JobResource'
-import { useAcl } from './composables/system/ability'
+import { ROLE_SUPER_ADMIN, useAcl } from './composables/system/ability'
 import AnzuSystemsCommonAdmin, { type PluginOptions, type CurrentUserType } from './AnzuSystemsCommonAdmin'
 import type { AclValue } from './types/Permission'
 
@@ -265,6 +265,7 @@ export {                                //           |        |       |         
   HTTP_STATUS_BAD_REQUEST,              //           |        |       |           |       |
   HTTP_STATUS_UNAUTHORIZED,             //           |        |       |           |       |
   HTTP_STATUS_UNPROCESSABLE_ENTITY,     //           |        |       |           |       |
+  ROLE_SUPER_ADMIN,                     //           |        |       |           |       |
                                         //           |        |       |           |       |
   // OTHER                              //           |        |       |           |       |
   AnzuApiResponseCodeError,             //           |        |       |           |       |
@@ -273,6 +274,6 @@ export {                                //           |        |       |         
   createCommonAdmin,                    //           |        |       |           |       |
   AnzuSystemsCommonAdmin,               //           |        |       |           |       |
   AclValue,                             //           |        |       |           |       |
-  PluginOptions,                             //           |        |       |           |       |
+  PluginOptions,                        //           |        |       |           |       |
 }
 /* eslint-enable */

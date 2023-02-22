@@ -19,11 +19,11 @@ export const isNull = (value: unknown): value is null => {
   return value === null
 }
 
-export const isNumber = (value: any): value is number => {
+export const isNumber = (value: unknown): value is number => {
   return typeof value === 'number'
 }
 
-export const isString = (value: any): value is string => {
+export const isString = (value: unknown): value is string => {
   return typeof value === 'string'
 }
 
@@ -31,12 +31,12 @@ export const isArray = (value: any): value is Array<any> => {
   return Array.isArray(value)
 }
 
-export const isBoolean = (value: any): value is boolean => {
+export const isBoolean = (value: unknown): value is boolean => {
   return typeof value === 'boolean'
 }
 
-export const isDocId = (value: any): value is DocId => {
-  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)
+export const isDocId = (value: unknown): value is DocId => {
+  return isString(value) && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)
 }
 
 export const isInt = (value: any): value is number => {
