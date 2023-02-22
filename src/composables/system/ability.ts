@@ -14,11 +14,18 @@ import type { AclValue } from '@/types/Permission'
 
 export const ROLE_SUPER_ADMIN = 'ROLE_ADMIN'
 
-export function useAcl<T extends AclValue = AclValue>() {
-  const currentUser = inject(CurrentUserSymbol) as CurrentUserType
-  const customAclProvider = inject(CustomAclResolverSymbol) as CustomAclResolver
+export type AclResolverConfig = {
+  currentUser?: CurrentUserType
+  customAclProvider?: CustomAclResolver
+}
+
+export function useAcl<T extends AclValue = AclValue>(options?: AclResolverConfig) {
+  const currentUser = options?.currentUser ?? (inject(CurrentUserSymbol) as CurrentUserType | undefined)
+  const customAclProvider = options?.customAclProvider ?? (inject(CustomAclResolverSymbol) as CustomAclResolver)
 
   const can = (acl: T, subject?: object): boolean => {
+    if (isUndefined(currentUser))
+      throw new Error('Composable useAcl can be used as a global state without providing current user as a parameter.')
     if (isDefined(customAclProvider) && isDefined(customAclProvider.can)) return customAclProvider.can(acl, subject)
     if (isUndefined(currentUser.value) || currentUser.value.id === 0) return false
     if (currentUser.value.roles.includes(ROLE_SUPER_ADMIN)) return true
@@ -39,6 +46,8 @@ export function useAcl<T extends AclValue = AclValue>() {
   }
 
   function canOwner(subject: object) {
+    if (isUndefined(currentUser))
+      throw new Error('Composable useAcl can be used as a global state without providing current user as a parameter.')
     if (!isUndefined(customAclProvider) && !isUndefined(customAclProvider.canOwner))
       return customAclProvider.canOwner(subject)
     if (currentUser.value) {
