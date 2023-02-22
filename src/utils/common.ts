@@ -4,6 +4,13 @@ export const isUndefined = (value: unknown): value is undefined => {
   return typeof value === 'undefined'
 }
 
+export const isDefined = <T>(value: T | undefined): value is T => {
+  return !isUndefined(value)
+}
+
+/**
+ * @deprecated use isDefined
+ */
 export const isNotUndefined = (value: unknown) => {
   return false === isUndefined(value)
 }

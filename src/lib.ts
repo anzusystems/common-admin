@@ -11,6 +11,7 @@ import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import APermissionGrantEditor from '@/components/permission/APermissionGrantEditor.vue'
 import APermissionValueChip from '@/components/permission/APermissionValueChip.vue'
+import Acl from '@/components/permission/Acl.vue'
 import ADatetime from '@/components/ADatetime.vue'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import ARemoteAutocomplete from '@/components/form/ARemoteAutocomplete.vue'
@@ -116,6 +117,9 @@ import { JobStatus, useJobStatus } from './model/valueObject/JobStatus'
 import type { Job } from './types/Job'
 import { useJobApi } from './services/api/job/jobApi'
 import { type JobResource, useJobResource } from './model/valueObject/JobResource'
+import { useAcl } from './composables/system/ability'
+import AnzuSystemsCommonAdmin, { type PluginOptions, type CurrentUserType } from './AnzuSystemsCommonAdmin'
+import type { AclValue } from './types/Permission'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -142,6 +146,7 @@ export {                                //           |        |       |         
   ADatatable,                           //           |        |       |           |       |
   ADatatablePagination,                 //           |        |       |           |       |
   JobStatusChip,                        //           |        |       |           |       |
+  Acl,                                  //           |        |       |           |       |
                                         //           |        |       |           |       |
   // COMPOSABLES                        //           |        |       |           |       |
   usePagination, usePaginationAutoHide, //           |        |       |           |       |
@@ -181,6 +186,7 @@ export {                                //           |        |       |         
   Job,                                  //           |        |       |           |       |
   JobStatus,                            //           |        |       |           |       |
   JobResource,                          //           |        |       |           |       |
+  CurrentUserType,                      //           |        |       |           |       |
                                         //           |        |       |           |       |
   // Factories                          //           |        |       |           |       |
   useAnzuUserFactory,                   //           |        |       |           |       |
@@ -246,6 +252,7 @@ export {                                //           |        |       |         
   useJobApi,                            //           |        |       |           |       |
   useJobResource,                       //           |        |       |           |       |
   useJobStatus,                         //           |        |       |           |       |
+  useAcl,                               //           |        |       |           |       |
                                         //           |        |       |           |       |
   // TRANSLATION                        //           |        |       |           |       |
   commonMessages,                       //           |        |       |           |       |
@@ -264,5 +271,8 @@ export {                                //           |        |       |         
   AnzuApiValidationError,               //           |        |       |           |       |
   AnzuFatalError,                       //           |        |       |           |       |
   createCommonAdmin,                    //           |        |       |           |       |
+  AnzuSystemsCommonAdmin,               //           |        |       |           |       |
+  AclValue,                             //           |        |       |           |       |
+  PluginOptions,                             //           |        |       |           |       |
 }
 /* eslint-enable */

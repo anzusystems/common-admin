@@ -1,5 +1,4 @@
 import { isUndefined } from '@/utils/common'
-import { isFunction } from 'util'
 
 export const deepFreeze = <T>(obj: T) => {
   const propNames = Object.getOwnPropertyNames(obj)
@@ -62,4 +61,8 @@ export const simpleCloneObject = <T>(object: T) => {
     return structuredClone(object) as T
   }
   return JSON.parse(JSON.stringify(object)) as T
+}
+
+export type Immutable<T> = {
+  readonly [K in keyof T]: Immutable<T[K]>
 }
