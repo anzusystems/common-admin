@@ -11,7 +11,8 @@ import type { ErrorObject } from '@vuelidate/core'
 import { splitOnFirstOccurrence } from '@/utils/string'
 import type { Ref } from 'vue/dist/vue'
 import { simpleCloneObject } from '@/utils/object'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
+import { DocId, IntegerId } from '@/types/common'
 
 type FetchItemsByIdsType =
   | ((ids: number[]) => Promise<ValueObjectOption<number>[]>)
@@ -170,11 +171,11 @@ const tryToLoadFromLazyLoader = (values: Array<string | number>) => {
 watch(
   value,
   async (newValue) => {
-    if (isNull(newValue) || (isArray(newValue) && newValue.length === 0)) {
+    if (isNull(newValue) || (isArray<DocId | IntegerId>(newValue) && newValue.length === 0)) {
       selectedCachedItems.value = []
       return
     }
-    const values = isArray(newValue) ? newValue : [newValue]
+    const values = isArray<DocId | IntegerId>(newValue) ? newValue : [newValue]
     const foundLocalData = await tryToLoadFromLocalData(values)
     const foundLazyLoader = tryToLoadFromLazyLoader(values)
 

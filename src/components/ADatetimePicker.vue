@@ -11,13 +11,13 @@ import { isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import useVuelidate from '@vuelidate/core'
 import type { DatetimeUTCNullable } from '@/types/common'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 import { useRequiredIf } from '@/validators/vuelidate/useRequiredIf'
 
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
 
-// todo make form and filter version
+// todo test form and filter version, fix types
 
 const props = withDefaults(
   defineProps<{
@@ -36,7 +36,7 @@ const props = withDefaults(
     weekNumbers?: false
     dataCy?: string
     defaultValue?: null | DatetimeUTCNullable
-    errorMessage?: string
+    errorMessages?: string[]
   }>(),
   {
     type: 'datetime',
@@ -53,11 +53,12 @@ const props = withDefaults(
     weekNumbers: false,
     dataCy: '',
     defaultValue: null,
-    errorMessage: undefined,
+    errorMessages: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'change'): void
+  (e: 'blur'): void
   (e: 'update:modelValue', data: string | null): void
   (e: 'onOpen'): void
   (e: 'onClose'): void
@@ -124,10 +125,12 @@ const onTextFieldBlur = () => {
       flatickrRef.value?.fp.setDate(props.defaultValue, true)
     }
     v$.value.textFieldValue.$touch()
+    emit('blur')
     return
   }
   flatickrRef.value?.fp.setDate(date, true)
   v$.value.textFieldValue.$touch()
+  emit('blur')
 }
 
 const onClear = () => {
@@ -239,7 +242,7 @@ const rules = computed(() => {
 const v$ = useVuelidate(rules, { textFieldValue })
 
 const errorMessageComputed = computed(() => {
-  if (!isUndefined(props.errorMessage)) return [props.errorMessage]
+  if (!isUndefined(props.errorMessages)) return props.errorMessages
   if (v$.value.textFieldValue.$errors.length)
     return [v$.value.textFieldValue.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []

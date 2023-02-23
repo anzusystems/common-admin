@@ -3,7 +3,7 @@ import { computed, inject } from 'vue'
 import { isUndefined } from '@/utils/common'
 import { splitOnFirstOccurrence } from '@/utils/string'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 
 const props = withDefaults(
   defineProps<{

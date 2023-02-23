@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 
-const { t } = useI18n()
+const i18n = useI18n()
+console.log(i18n)
+const { t } = i18n
 
 const props = withDefaults(
   defineProps<{

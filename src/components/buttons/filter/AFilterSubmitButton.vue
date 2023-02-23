@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { clickBlur } from '@/utils/event'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 
 withDefaults(
   defineProps<{

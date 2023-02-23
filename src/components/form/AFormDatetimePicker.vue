@@ -1,17 +1,16 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import { splitOnFirstOccurrence } from '@/utils/string'
-import { isUndefined } from '@/utils/common'
+import { useI18n } from '@/plugins/translate'
+import ADatetimePicker from '@/components/ADatetimePicker.vue'
+import type { VuetifyIconValue } from '@/types/Vuetify'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import { VuetifyIconValue } from '@/types/Vuetify'
-import type { ErrorObject } from '@vuelidate/core'
-import { useI18n } from '@/create'
-
-const { t } = useI18n()
+import { isUndefined } from '@/utils/common'
+import { ErrorObject } from '@vuelidate/core'
+import { splitOnFirstOccurrence } from '@/utils/string'
 
 const props = withDefaults(
   defineProps<{
-    modelValue: string // todo check number and null
+    modelValue: string
     label?: string
     errorMessage?: string
     required?: boolean
@@ -20,7 +19,8 @@ const props = withDefaults(
     appendIcon?: VuetifyIconValue
     dataCy?: string
     hideLabel?: boolean
-    rows?: number
+    type?: string
+    step?: number
   }>(),
   {
     label: undefined,
@@ -31,7 +31,8 @@ const props = withDefaults(
     appendIcon: undefined,
     dataCy: undefined,
     hideLabel: false,
-    rows: 1,
+    type: 'text',
+    step: undefined,
   }
 )
 const emit = defineEmits<{
@@ -39,6 +40,8 @@ const emit = defineEmits<{
   (e: 'click:append', data: string | number | null): void
   (e: 'blur', data: string | number | null): void
 }>()
+
+const { t } = useI18n()
 
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
@@ -72,20 +75,12 @@ const requiredComputed = computed(() => {
 </script>
 
 <template>
-  <VTextarea
-    :prepend-icon="prependIcon"
-    :data-cy="dataCy"
-    :error-messages="errorMessageComputed"
+  <ADatetimePicker
     :model-value="modelValue"
+    :error-messages="errorMessageComputed"
     :required="requiredComputed"
-    :rows="rows"
-    auto-grow
-    :append-icon="appendIcon"
-    trim
-    @click:append="(event) => emit('click:append', event)"
+    :label="labelComputed"
     @blur="onBlur"
     @update:model-value="onUpdate($event)"
-  >
-    <template v-if="!hideLabel" #label> {{ labelComputed }}<span v-if="requiredComputed" class="required" /></template>
-  </VTextarea>
+  />
 </template>

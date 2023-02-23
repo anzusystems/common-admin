@@ -59,7 +59,7 @@ export function useQueryBuilder() {
         }
         return null
       }
-      return model.map((item) => encodeURIComponent(item)).join(',')
+      return model.map((item) => (isString(item) ? encodeURIComponent(item) : item)).join(',')
     }
     if (isNumber(model) || isBoolean(model)) {
       return model

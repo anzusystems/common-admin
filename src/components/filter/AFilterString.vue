@@ -2,7 +2,7 @@
 import type { Filter } from '@/types/Filter'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { computed } from 'vue'
-import { useI18n } from '@/create'
+import { useI18n } from '@/plugins/translate'
 
 const props = withDefaults(
   defineProps<{

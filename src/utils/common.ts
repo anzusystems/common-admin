@@ -4,6 +4,13 @@ export const isUndefined = (value: unknown): value is undefined => {
   return typeof value === 'undefined'
 }
 
+export const isDefined = <T>(value: T | undefined): value is T => {
+  return !isUndefined(value)
+}
+
+/**
+ * @deprecated use isDefined
+ */
 export const isNotUndefined = (value: unknown) => {
   return false === isUndefined(value)
 }
@@ -12,24 +19,28 @@ export const isNull = (value: unknown): value is null => {
   return value === null
 }
 
-export const isNumber = (value: any): value is number => {
+export const isNumber = (value: unknown): value is number => {
   return typeof value === 'number'
 }
 
-export const isString = (value: any): value is string => {
+export const isString = (value: unknown): value is string => {
   return typeof value === 'string'
 }
 
-export const isArray = (value: any): value is Array<any> => {
+/**
+ * @template T Type used for request payload, by default same as Response type
+ * @template R Response type override, optional
+ */
+export const isArray = <T = unknown>(value: unknown): value is Array<T> => {
   return Array.isArray(value)
 }
 
-export const isBoolean = (value: any): value is boolean => {
+export const isBoolean = (value: unknown): value is boolean => {
   return typeof value === 'boolean'
 }
 
-export const isDocId = (value: any): value is DocId => {
-  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)
+export const isDocId = (value: unknown): value is DocId => {
+  return isString(value) && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)
 }
 
 export const isInt = (value: any): value is number => {
@@ -38,33 +49,22 @@ export const isInt = (value: any): value is number => {
   return !isNaN(value) && (x | 0) === x
 }
 
-export const isObject = (value: any): value is object => {
+export const isObject = (value: unknown): value is object => {
   return typeof value === 'object' && !isArray(value) && !isNull(value)
 }
 
-export const isEmptyObject = (value: any): value is object => {
+export const isEmptyObject = <T>(value: T): value is T => {
   if (isObject(value)) {
-    // noinspection LoopStatementThatDoesntLoopJS
-    for (const property in value) {
-      return false
-    }
-    return true
+    return Object.keys(value).length === 0
   }
   return false
 }
 
-export const isEmptyArray = (value: any): value is Array<any> => {
-  if (isArray(value)) {
-    // noinspection LoopStatementThatDoesntLoopJS
-    for (const property in value) {
-      return false
-    }
-    return true
-  }
-  return false
+export const isEmptyArray = (value: unknown): value is [] => {
+  return isArray(value) && value.length === 0
 }
 
-export const isEmpty = (value: any): boolean => {
+export const isEmpty = (value: unknown): boolean => {
   return (
     isNull(value) || isUndefined(value) || value === '' || value === 0 || isEmptyArray(value) || isEmptyObject(value)
   )
