@@ -17,7 +17,7 @@ import { useRequiredIf } from '@/validators/vuelidate/useRequiredIf'
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
 
-// todo test form and filter version
+// todo test form and filter version, fix types
 
 const props = withDefaults(
   defineProps<{
