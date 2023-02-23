@@ -36,5 +36,12 @@ createApp(App)
   .use(router)
   .use(i18n)
   .use(vuetify)
-  .use(AnzuSystemsCommonAdmin, { currentUser, i18n })
+  .use(AnzuSystemsCommonAdmin, {
+    currentUser,
+    i18n,
+    languages: {
+      available: ['en', 'sk'],
+      default: 'sk',
+    },
+  })
   .mount('#app')

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { useI18n } from '@/plugins/translate'
+
 withDefaults(
   defineProps<{
     routeName: string
@@ -12,6 +14,8 @@ withDefaults(
     dataCy: 'button-close',
   }
 )
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -26,6 +30,6 @@ withDefaults(
     :height="36"
   >
     <VIcon icon="mdi-close" />
-    <VTooltip activator="parent" location="bottom">Close</VTooltip>
+    <VTooltip activator="parent" location="bottom">{{ t('common.button.close') }}</VTooltip>
   </VBtn>
 </template>

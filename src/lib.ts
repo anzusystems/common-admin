@@ -39,7 +39,9 @@ import AFilterSubmitButton from '@/components/buttons/filter/AFilterSubmitButton
 import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
 import ATableDetailButton from '@/components/buttons/table/ATableDetailButton.vue'
 import ATableEditButton from '@/components/buttons/table/ATableEditButton.vue'
-import { commonMessages } from '@/locales'
+import AThemeSelect from '@/components/AThemeSelect.vue'
+import ALanguageSelect from '@/components/ALanguageSelect.vue'
+import { commonMessages } from '@/plugins/i18n'
 import { deepFreeze, deletePropertyByPath, getValueByPath, setValueByPath, simpleCloneObject } from '@/utils/object'
 import { numberToString } from '@/utils/number'
 import {
@@ -133,13 +135,20 @@ import { useQueryBuilder } from '@/services/api/queryBuilder'
 import { NEW_LINE_MARK, useAlerts } from '@/composables/system/alerts'
 import { useErrorHandler } from '@/composables/system/error'
 import { useTableColumns } from '@/composables/system/tableColumns'
-import { JobStatus, useJobStatus } from './model/valueObject/JobStatus'
-import type { Job } from './types/Job'
-import { useJobApi } from './services/api/job/jobApi'
-import { type JobResource, useJobResource } from './model/valueObject/JobResource'
-import { ROLE_SUPER_ADMIN, useAcl } from './composables/system/ability'
-import AnzuSystemsCommonAdmin, { type PluginOptions, type CurrentUserType } from './AnzuSystemsCommonAdmin'
-import type { AclValue } from './types/Permission'
+import { JobStatus, useJobStatus } from '@/model/valueObject/JobStatus'
+import type { Job } from '@/types/Job'
+import { useJobApi } from '@/services/api/job/jobApi'
+import { type JobResource, useJobResource } from '@/model/valueObject/JobResource'
+import { ROLE_SUPER_ADMIN, useAcl } from '@/composables/system/ability'
+import AnzuSystemsCommonAdmin, {
+  type PluginOptions,
+  type CurrentUserType,
+  AvailableLanguagesSymbol,
+  DefaultLanguageSymbol,
+} from '@/AnzuSystemsCommonAdmin'
+import type { AclValue } from '@/types/Permission'
+import { useTheme } from '@/composables/themeSettings'
+import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -186,13 +195,20 @@ export {                                //           |        |       |         
   ATableCopyIdButton,                   //           |        |       |           |       |
   ATableDetailButton,                   //           |        |       |           |       |
   ATableEditButton,                     //           |        |       |           |       |
+  AThemeSelect,                         //           |        |       |           |       |
+  ALanguageSelect,                      //           |        |       |           |       |
                                         //           |        |       |           |       |
   // COMPOSABLES                        //           |        |       |           |       |
-  usePagination, usePaginationAutoHide, //           |        |       |           |       |
-  makeFilterHelper, useFilterHelpers,   //           |        |       |           |       |
+  usePagination,                        //           |        |       |           |       |
+  usePaginationAutoHide,                //           |        |       |           |       |
+  useFilterHelpers,                     //           |        |       |           |       |
+  makeFilterHelper,                     //           |        |       |           |       |
   useAlerts,                            //           |        |       |           |       |
   useErrorHandler,                      //           |        |       |           |       |
   useTableColumns,                      //           |        |       |           |       |
+  useTheme,                             //           |        |       |           |       |
+  useLanguageSettings,                  //           |        |       |           |       |
+  modifyLanguageSettings,               //           |        |       |           |       |
                                         //           |        |       |           |       |
   // VALUE OBJECTS                      //           |        |       |           |       |
   Grant, useGrant,                      //           |        |       |           |       |
@@ -300,7 +316,10 @@ export {                                //           |        |       |         
   commonMessages,                       //           |        |       |           |       |
                                         //           |        |       |           |       |
   // SYMBOLS, CONSTANTS                 //           |        |       |           |       |
-  SystemScopeSymbol, SubjectScopeSymbol,//           |        |       |           |       |
+  SystemScopeSymbol,                    //           |        |       |           |       |
+  SubjectScopeSymbol,                   //           |        |       |           |       |
+  AvailableLanguagesSymbol,             //           |        |       |           |       |
+  DefaultLanguageSymbol,                //           |        |       |           |       |
   HTTP_STATUS_OK,                       //           |        |       |           |       |
   HTTP_STATUS_CREATED,                  //           |        |       |           |       |
   HTTP_STATUS_NO_CONTENT,               //           |        |       |           |       |
@@ -317,5 +336,6 @@ export {                                //           |        |       |         
   AnzuSystemsCommonAdmin,               //           |        |       |           |       |
   AclValue,                             //           |        |       |           |       |
   PluginOptions,                        //           |        |       |           |       |
+  LanguageCode,                         //           |        |       |           |       |
 }
 /* eslint-enable */

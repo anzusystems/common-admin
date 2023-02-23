@@ -1,0 +1,75 @@
+{
+  "common": {
+    "button": {
+      "create": "Create",
+      "createAndClose": "Create And Close",
+      "save": "Save",
+      "saveAndClose": "Save And Close",
+      "close": "Close",
+      "edit": "Edit",
+      "submitFilter": "Submit Filter",
+      "resetFilter": "Reset Filter",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "id": "Id",
+      "now": "Now",
+      "logout": "Logout",
+      "confirm": "Confirm"
+    },
+    "boolean": {
+      "true": "Yes",
+      "false": "No"
+    },
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "auto": "Auto"
+    },
+    "job": {
+      "meta": {
+        "detail": "Detail",
+        "list": "List",
+        "create": "Create"
+      },
+      "model": {
+        "id": "Id",
+        "_resourceName": "Type",
+        "status": "Status",
+        "startedAt": "Started at",
+        "finishedAt": "Finished at",
+        "result": "Result",
+        "targetUserId": "Target user id",
+        "anonymizeUser": "Anonymize user",
+        "createdAt": "Created at",
+        "modifiedAt": "Modified at"
+      },
+      "jobResource": {
+        "jobUserDataDelete": "User data delete"
+      },
+      "status": {
+        "waiting": "Waiting",
+        "processing": "Processing",
+        "awaitingBatchProcess": "Processing batch",
+        "done": "Done",
+        "error": "Error"
+      }
+    },
+    "permission": {
+      "table": {
+        "actions": "Actions",
+        "permissions": "Permissions"
+      },
+      "grant": {
+        "allow": "Allow",
+        "allowOwner": "Owner only",
+        "deny": "Deny"
+      },
+      "grantOrigin": {
+        "role": "Role",
+        "group": "Group",
+        "user": "User",
+        "defaultGrant": "Default"
+      }
+    }
+  }
+}

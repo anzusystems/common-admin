@@ -2,7 +2,7 @@
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import type { Filter } from '@/types/Filter'
 import { computed } from 'vue'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 
 // todo cast as integer/number
 

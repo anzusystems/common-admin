@@ -12,7 +12,7 @@ export enum JobStatus {
 }
 
 export function useJobStatus() {
-  const { t } = useI18n({ useScope: 'global' })
+  const { t } = useI18n()
 
   const jobStatusOptions = ref<ValueObjectOption<JobStatus>[]>([
     {

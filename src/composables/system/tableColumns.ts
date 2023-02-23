@@ -1,7 +1,7 @@
 import { isUndefined } from '@/utils/common'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 
 export const DATETIME_AUTO_FORMAT_COLUMN_NAMES = ['createdAt', 'modifiedAt']
 export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']

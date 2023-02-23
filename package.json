@@ -9,7 +9,8 @@
   "exports": {
     ".": {
       "import": "./dist/common-admin.es.js"
-    }
+    },
+    "./styles": "./dist/style.css"
   },
   "version": "0.0.10",
   "type": "module",

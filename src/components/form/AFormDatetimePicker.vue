@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'

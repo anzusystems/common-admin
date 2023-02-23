@@ -3,7 +3,7 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Filter } from '@/types/Filter'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { computed } from 'vue'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{

@@ -10,7 +10,7 @@ import { Grant, useGrant } from '@/model/valueObject/Grant'
 import ABooleanToggle from '@/components/form/AFormBooleanToggle.vue'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import { useRequired } from '@/validators/vuelidate/useRequired'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 import { useMinLength } from '@/validators/vuelidate/useMinLength'
 import { useMaxLength } from '@/validators/vuelidate/useMaxLength'
 

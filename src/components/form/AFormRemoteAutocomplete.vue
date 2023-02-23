@@ -11,7 +11,7 @@ import type { ErrorObject } from '@vuelidate/core'
 import { splitOnFirstOccurrence } from '@/utils/string'
 import type { Ref } from 'vue/dist/vue'
 import { simpleCloneObject } from '@/utils/object'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 
 type FetchItemsByIdsType =

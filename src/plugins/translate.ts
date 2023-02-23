@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import type { I18n } from 'vue-i18n'
 
-const i18nInstance = ref<undefined | I18n>(undefined)
+export const i18nInstance = ref<undefined | I18n>(undefined)
 
 export function createI18nInstance(instance: I18n) {
   // @ts-ignore

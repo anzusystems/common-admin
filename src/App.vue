@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { VApp } from 'vuetify/components'
-import { ref } from 'vue'
+import { inject, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { LanguageCode, modifyLanguageSettings } from '@/composables/languageSettings'
+import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/AnzuSystemsCommonAdmin'
+import { i18n } from '@/plugins/i18n'
 
 const opened = ref([])
 const drawer = ref<boolean>(true)
@@ -8,6 +12,15 @@ const drawer = ref<boolean>(true)
 const navIconClick = () => {
   drawer.value = !drawer.value
 }
+
+const configAvailableLanguages = inject<LanguageCode[]>(AvailableLanguagesSymbol, [])
+const configDefaultLanguage = inject<LanguageCode>(DefaultLanguageSymbol, 'en')
+const route = useRoute()
+const { initializeLanguage } = modifyLanguageSettings(i18n, configAvailableLanguages, configDefaultLanguage)
+
+onMounted(() => {
+  initializeLanguage()
+})
 </script>
 
 <template>
@@ -34,7 +47,7 @@ const navIconClick = () => {
     </VAppBar>
     <VMain>
       <VContainer class="pa-3" fluid>
-        <RouterView />
+        <RouterView :key="route.path" />
       </VContainer>
     </VMain>
   </VApp>

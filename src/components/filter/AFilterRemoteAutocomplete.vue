@@ -6,7 +6,7 @@ import type { Pagination } from '@/types/Pagination'
 import type { Filter, FilterBag } from '@/types/Filter'
 import { usePagination } from '@/composables/system/pagination'
 import { isArray, isNull } from '@/utils/common'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 import { DocId, IntegerId } from '@/types/common'
 
 type FetchItemsByIdsType =

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { clickBlur } from '@/utils/event'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 
 withDefaults(
   defineProps<{

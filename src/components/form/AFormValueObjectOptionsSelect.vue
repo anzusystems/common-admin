@@ -4,7 +4,7 @@ import { splitOnFirstOccurrence } from '@/utils/string'
 import type { ErrorObject } from '@vuelidate/core'
 import { isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 import { simpleCloneObject } from '@/utils/object'
 
 const props = withDefaults(
