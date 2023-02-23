@@ -27,6 +27,7 @@ import { deepFreeze, deletePropertyByPath, getValueByPath, setValueByPath, simpl
 import {
   isArray,
   isBoolean,
+  isDefined,
   isDocId,
   isEmpty,
   isEmptyArray,
@@ -208,6 +209,7 @@ export {                                //           |        |       |         
   isNull,                               //           |        |       |           |       |
   isNotUndefined,                       //           |        |       |           |       |
   isUndefined,                          //           |        |       |           |       |
+  isDefined,                            //           |        |       |           |       |
   isInt,                                //           |        |       |           |       |
   isString,                             //           |        |       |           |       |
   isNumber,                             //           |        |       |           |       |
