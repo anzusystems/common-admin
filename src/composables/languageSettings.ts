@@ -1,8 +1,7 @@
 import { useStorage } from '@vueuse/core'
 import { readonly } from 'vue'
-import { I18n } from 'vue-i18n'
 import { useLocale } from 'vuetify'
-import { i18n as i18nCommon } from '@/plugins/i18n'
+import { i18n } from '@/plugins/i18n'
 
 // use ISO 639-1 codes
 export type LanguageCode = 'en' | 'sk' | 'cs' | 'xx'
@@ -35,11 +34,7 @@ export const ALL_LANGUAGES = [
 
 const storedSettings = useStorage<LanguageCode>('language', 'xx')
 
-export function modifyLanguageSettings(
-  i18n: I18n | undefined | any,
-  configAvailableLanguages: LanguageCode[],
-  configDefaultLanguage: LanguageCode
-) {
+export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[], configDefaultLanguage: LanguageCode) {
   const { current } = useLocale()
   const setLanguage = (code: LanguageCode) => {
     if (!i18n || !i18n.global) return
@@ -47,7 +42,7 @@ export function modifyLanguageSettings(
       current.value = code
       storedSettings.value = code
       // @ts-ignore
-      i18nCommon.global.locale.value = code
+      i18n.global.locale.value = code
     }
   }
 
@@ -59,13 +54,13 @@ export function modifyLanguageSettings(
     ) {
       current.value = storedSettings.value
       // @ts-ignore
-      i18nCommon.global.locale.value = storedSettings.value
+      i18n.global.locale.value = storedSettings.value
       return
     }
     storedSettings.value = configDefaultLanguage
     current.value = configDefaultLanguage
     // @ts-ignore
-    i18nCommon.global.locale.value = configDefaultLanguage
+    i18n.global.locale.value = configDefaultLanguage
   }
 
   return {

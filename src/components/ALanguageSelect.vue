@@ -11,13 +11,12 @@ import {
   DefaultLanguageSymbol,
 } from '@/AnzuSystemsCommonAdmin'
 import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
-import { i18nInstance } from '@/plugins/translate'
 
 const currentUser = inject(CurrentUserSymbol) as CurrentUserType
 const configAvailableLanguages = inject(AvailableLanguagesSymbol) as LanguageCode[]
 const configDefaultLanguage = inject(DefaultLanguageSymbol) as LanguageCode
 // @ts-ignore
-const { setLanguage } = modifyLanguageSettings(i18nInstance.value, configAvailableLanguages, configDefaultLanguage)
+const { setLanguage } = modifyLanguageSettings(configAvailableLanguages, configDefaultLanguage)
 const { currentLanguageCode } = useLanguageSettings()
 
 const onLanguageChange = (code: LanguageCode) => {

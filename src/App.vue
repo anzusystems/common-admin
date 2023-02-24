@@ -4,7 +4,6 @@ import { inject, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { LanguageCode, modifyLanguageSettings } from '@/composables/languageSettings'
 import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/AnzuSystemsCommonAdmin'
-import { i18n } from '@/plugins/i18n'
 
 const opened = ref([])
 const drawer = ref<boolean>(true)
@@ -16,7 +15,7 @@ const navIconClick = () => {
 const configAvailableLanguages = inject<LanguageCode[]>(AvailableLanguagesSymbol, [])
 const configDefaultLanguage = inject<LanguageCode>(DefaultLanguageSymbol, 'en')
 const route = useRoute()
-const { initializeLanguage } = modifyLanguageSettings(i18n, configAvailableLanguages, configDefaultLanguage)
+const { initializeLanguage } = modifyLanguageSettings(configAvailableLanguages, configDefaultLanguage)
 
 onMounted(() => {
   initializeLanguage()

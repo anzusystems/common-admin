@@ -38,7 +38,6 @@ createApp(App)
   .use(vuetify)
   .use(AnzuSystemsCommonAdmin, {
     currentUser,
-    i18n,
     languages: {
       available: ['en', 'sk'],
       default: 'sk',

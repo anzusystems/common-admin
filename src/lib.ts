@@ -164,6 +164,7 @@ import { replaceBrowserHistoryURLByRouter, replaceBrowserHistoryURLByString } fr
 import { eventClickBlur } from './utils/event'
 import type { ResourceNameSystemAware } from './types/ResourceNameSystemAware'
 import type { ValidationScope } from './types/Validation'
+import { useI18n } from 'vue-i18n'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -360,6 +361,7 @@ export {                                //           |        |       |         
                                         //           |        |       |           |       |
   // OTHER                              //           |        |       |           |       |
   i18n,                                 //           |        |       |           |       |
+  useI18n,                              //           |        |       |           |       |
   AnzuApiResponseCodeError,             //           |        |       |           |       |
   AnzuApiValidationError,               //           |        |       |           |       |
   AnzuFatalError,                       //           |        |       |           |       |
@@ -370,8 +372,8 @@ export {                                //           |        |       |         
   DatatableColumnConfig,                //           |        |       |           |       |
   ApiErrors,                            //           |        |       |           |       |
   ValidationResponseData,               //           |        |       |           |       |
-  Immutable,               //           |        |       |           |       |
-  ResourceNameSystemAware,               //           |        |       |           |       |
-  ValidationScope,               //           |        |       |           |       |
+  Immutable,                            //           |        |       |           |       |
+  ResourceNameSystemAware,              //           |        |       |           |       |
+  ValidationScope,                      //           |        |       |           |       |
 }
 /* eslint-enable */
