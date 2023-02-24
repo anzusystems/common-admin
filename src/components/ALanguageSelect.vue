@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { Language, LanguageCode } from '@/composables/languageSettings'
+import { ALL_LANGUAGES, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import { computed, inject } from 'vue'
 import { isUndefined } from '@/utils/common'
 import FlagCountry from '@/components/flags/FlagCountry.vue'
@@ -10,7 +11,6 @@ import {
   DefaultLanguageSymbol,
 } from '@/AnzuSystemsCommonAdmin'
 import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
-import { ALL_LANGUAGES, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import { i18nInstance } from '@/plugins/translate'
 
 const currentUser = inject(CurrentUserSymbol) as CurrentUserType

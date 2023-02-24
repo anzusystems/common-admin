@@ -70,7 +70,7 @@ const { grantOptions } = useGrant()
                 <ABooleanToggle v-model="modelData.isActive" required />
               </ARow>
               <ARow>
-                <ADatetimePicker label="Custom label" v-model="modelData.publishedAt" />
+                <ADatetimePicker v-model="modelData.publishedAt" label="Custom label" />
               </ARow>
             </VCol>
           </VRow>

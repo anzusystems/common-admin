@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
-    variant?: string
+    variant?: 'flat' | 'text' | 'elevated' | 'tonal' | 'outlined' | 'plain' | undefined
     buttonT?: string
     buttonClass?: string
     dialogMessageT?: string

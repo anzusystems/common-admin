@@ -43,13 +43,13 @@ import AThemeSelect from '@/components/AThemeSelect.vue'
 import ALanguageSelect from '@/components/ALanguageSelect.vue'
 import { commonMessages, i18n } from '@/plugins/i18n'
 import {
-  objectDeepFreeze,
   deleteObjectPropertyByPath,
   getObjectValueByPath,
-  setObjectValueByPath,
-  simpleCloneObject,
   getObjectValues,
   type Immutable,
+  objectDeepFreeze,
+  setObjectValueByPath,
+  simpleCloneObject,
 } from '@/utils/object'
 import { numberToString } from '@/utils/number'
 import {
@@ -74,8 +74,8 @@ import {
   splitStringOnFirstOccurrence,
   stringToFloat,
   stringToInt,
-  toKebabCase,
   stringTrimLength,
+  toKebabCase,
   urlTemplateReplace,
 } from '@/utils/string'
 import { booleanToInteger } from '@/utils/boolean'
@@ -150,10 +150,10 @@ import { useJobApi } from '@/services/api/job/jobApi'
 import { type JobResource, useJobResource } from '@/model/valueObject/JobResource'
 import { ROLE_SUPER_ADMIN, useAcl } from '@/composables/system/ability'
 import AnzuSystemsCommonAdmin, {
-  type PluginOptions,
-  type CurrentUserType,
   AvailableLanguagesSymbol,
+  type CurrentUserType,
   DefaultLanguageSymbol,
+  type PluginOptions,
 } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/types/Permission'
 import { useTheme } from '@/composables/themeSettings'

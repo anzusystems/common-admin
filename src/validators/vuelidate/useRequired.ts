@@ -1,4 +1,4 @@
-import { required, createI18nMessage } from '@vuelidate/validators'
+import { createI18nMessage, required } from '@vuelidate/validators'
 
 export function useRequired(i18nTranslate: any) {
   const withI18nMessage = createI18nMessage({ t: i18nTranslate })

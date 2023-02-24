@@ -36,7 +36,7 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: string): void
+  (e: 'update:modelValue', data: string | null): void
   (e: 'click:append', data: string | number | null): void
   (e: 'blur', data: string | number | null): void
 }>()
@@ -46,7 +46,7 @@ const { t } = useI18n()
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
-const onUpdate = (newValue: string) => {
+const onUpdate = (newValue: string | null) => {
   emit('update:modelValue', newValue)
 }
 const onBlur = () => {

@@ -1,4 +1,4 @@
-import { maxLength, createI18nMessage } from '@vuelidate/validators'
+import { createI18nMessage, maxLength } from '@vuelidate/validators'
 
 export function useMaxLength(i18nTranslate: any) {
   const withI18nMessage = createI18nMessage({ t: i18nTranslate })

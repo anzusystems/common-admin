@@ -13,6 +13,7 @@ import useVuelidate from '@vuelidate/core'
 import type { DatetimeUTCNullable } from '@/types/common'
 import { useRequiredIf } from '@/validators/vuelidate/useRequiredIf'
 import { useI18n } from 'vue-i18n'
+import { DateLimit, DateOption } from 'flatpickr/dist/types/options'
 
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
@@ -32,7 +33,7 @@ const props = withDefaults(
     required?: boolean
     hideSetToNow?: boolean
     placeholder?: string
-    enable?: () => any
+    enable?: DateLimit<DateOption>[]
     weekNumbers?: false
     dataCy?: string
     defaultValue?: null | DatetimeUTCNullable
@@ -49,7 +50,7 @@ const props = withDefaults(
     required: false,
     hideSetToNow: false,
     placeholder: '',
-    enable: () => [],
+    enable: undefined,
     weekNumbers: false,
     dataCy: '',
     defaultValue: null,
@@ -147,7 +148,7 @@ const placeholderComputed = computed(() => {
 })
 
 const enableComputed = computed(() => {
-  if (props.enable.length > 0) {
+  if (props.enable && props.enable.length > 0) {
     return props.enable
   }
   return [
@@ -183,6 +184,7 @@ const pluginsComputed = computed(() => {
 })
 
 const flatpickrConfig = computed(() => {
+  const positionElement = textFieldRef.value?.$el.querySelector('.v-input__control')
   return {
     enableTime: props.type !== 'date',
     wrap: true,
@@ -192,12 +194,12 @@ const flatpickrConfig = computed(() => {
     allowInput: true,
     altInput: true,
     altInputClass: 'd-sr-only',
-    positionElement: textFieldRef.value?.$el.querySelector('.v-input__control'),
+    positionElement: positionElement ?? undefined,
     // dateFormat: 'Y-m-dTH:i:S.000000\\Z', problem with timezone
     dateFormat: 'Z',
     disableMobile: true,
     clickOpens: false,
-    position: 'auto right',
+    position: 'auto right' as const,
     // @ts-ignore
     locale: { ...FlatpickrLanguages[lang.value] },
     enable: enableComputed.value,

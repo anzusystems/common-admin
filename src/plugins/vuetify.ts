@@ -10,6 +10,7 @@ import { useI18n } from 'vue-i18n'
 
 export const vuetify = createVuetify({
   locale: {
+    // @ts-ignore
     adapter: createVueI18nAdapter({ i18n, useI18n }),
   },
   directives: { Intersect },
