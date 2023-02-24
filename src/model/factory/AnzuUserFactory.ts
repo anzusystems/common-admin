@@ -14,6 +14,15 @@ export function useAnzuUserFactory(system = '', resourceName = 'user') {
       createdAt: dateTimeNow(),
       createdBy: 0,
       email: '',
+      avatar: {
+        color: '',
+        text: '',
+      },
+      person: {
+        firstName: '',
+        fullName: '',
+        lastName: '',
+      },
       enabled: false,
       modifiedAt: dateTimeNow(),
       modifiedBy: 0,
