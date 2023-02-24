@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import type { UseTableColumns } from '@/composables/system/tableColumns'
+import type { UseTableColumns } from '@/composables/system/datatableColumns'
 import ADatatableColumn from '@/components/ADatatableColumn.vue'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { normalizeForSlotName } from '@/utils/string'

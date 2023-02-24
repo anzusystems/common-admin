@@ -133,8 +133,7 @@ import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useQueryBuilder } from '@/services/api/queryBuilder'
 import { NEW_LINE_MARK, useAlerts } from '@/composables/system/alerts'
-import { useErrorHandler } from '@/composables/system/error'
-import { useTableColumns } from '@/composables/system/tableColumns'
+import { type ApiErrors, useErrorHandler, type ValidationResponseData } from '@/composables/system/error'
 import { JobStatus, useJobStatus } from '@/model/valueObject/JobStatus'
 import type { Job } from '@/types/Job'
 import { useJobApi } from '@/services/api/job/jobApi'
@@ -149,6 +148,7 @@ import AnzuSystemsCommonAdmin, {
 import type { AclValue } from '@/types/Permission'
 import { useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
+import { type DatatableColumnConfig, useDatatableColumns } from '@/composables/system/datatableColumns'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -205,7 +205,7 @@ export {                                //           |        |       |         
   makeFilterHelper,                     //           |        |       |           |       |
   useAlerts,                            //           |        |       |           |       |
   useErrorHandler,                      //           |        |       |           |       |
-  useTableColumns,                      //           |        |       |           |       |
+  useDatatableColumns,                  //           |        |       |           |       |
   useTheme,                             //           |        |       |           |       |
   useLanguageSettings,                  //           |        |       |           |       |
   modifyLanguageSettings,               //           |        |       |           |       |
@@ -338,5 +338,8 @@ export {                                //           |        |       |         
   AclValue,                             //           |        |       |           |       |
   PluginOptions,                        //           |        |       |           |       |
   LanguageCode,                         //           |        |       |           |       |
+  DatatableColumnConfig,                //           |        |       |           |       |
+  ApiErrors,                            //           |        |       |           |       |
+  ValidationResponseData,               //           |        |       |           |       |
 }
 /* eslint-enable */

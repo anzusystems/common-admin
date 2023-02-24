@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { getValueByPath } from '@/utils/object'
 import { computed } from 'vue'
-import type { ColumnConfig } from '@/composables/system/tableColumns'
-import { DATETIME_AUTO_FORMAT_COLUMN_NAMES } from '@/composables/system/tableColumns'
+import type { DatatableColumnConfig } from '@/composables/system/datatableColumns'
+import { DATETIME_AUTO_FORMAT_COLUMN_NAMES } from '@/composables/system/datatableColumns'
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import { normalizeForSlotName } from '@/utils/string'
 import { friendlyDateTime } from '@/utils/datetime'
@@ -10,7 +10,7 @@ import { friendlyDateTime } from '@/utils/datetime'
 const props = withDefaults(
   defineProps<{
     rowData: any
-    column: ColumnConfig
+    column: DatatableColumnConfig
   }>(),
   {}
 )
