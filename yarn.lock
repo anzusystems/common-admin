@@ -22,7 +22,7 @@ __metadata:
     "@vuelidate/validators": ^2.0.0
     "@vueuse/core": ^9.13.0
     "@vueuse/integrations": ^9.13.0
-    axios: ^1.3.3
+    axios: ^1.3.4
     dayjs: ^1.11.7
     eslint: ^8.34.0
     eslint-plugin-vue: ^9.9.0
@@ -33,7 +33,7 @@ __metadata:
     shortcut-buttons-flatpickr: ^0.4.0
     typescript: ^4.9.5
     vite: ^4.1.4
-    vite-plugin-dts: ^2.0.0-beta.3
+    vite-plugin-dts: ^2.0.2
     vite-plugin-vuetify: ^1.0.2
     vue: ^3.2.47
     vue-flatpickr-component: ^11.0.2
@@ -1353,14 +1353,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.3.3":
-  version: 1.3.3
-  resolution: "axios@npm:1.3.3"
+"axios@npm:^1.3.4":
+  version: 1.3.4
+  resolution: "axios@npm:1.3.4"
   dependencies:
     follow-redirects: ^1.15.0
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
-  checksum: b734a4bc348e2fa27150a7d4289d783fa405feb3f79f8daf28fd05813a12c8525ae9d3854aafe7ba041b005a4a751a0ba3b923331ceed41296ae14c7e54e2f26
+  checksum: 7440edefcf8498bc3cdf39de00443e8101f249972c83b739c6e880d9d669fea9486372dbe8739e88b3bf8bb1ad15f6106693f206f078f4516fe8fd47b1c3093c
   languageName: node
   linkType: hard
 
@@ -3815,9 +3815,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-plugin-dts@npm:^2.0.0-beta.3":
-  version: 2.0.0-beta.3
-  resolution: "vite-plugin-dts@npm:2.0.0-beta.3"
+"vite-plugin-dts@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "vite-plugin-dts@npm:2.0.2"
   dependencies:
     "@babel/parser": ^7.20.15
     "@microsoft/api-extractor": ^7.33.5
@@ -3831,7 +3831,7 @@ __metadata:
     ts-morph: 17.0.1
   peerDependencies:
     vite: ">=2.9.0"
-  checksum: 59734efcbd9ed5e2f89827f8264711a3d78ce2632887eafc1265dfa026196419e9d687cf5996e4b0f665a2fd1452d4959c0ef8f99d0275d9d054a9e8581fb1e7
+  checksum: d8bf9a8066d6db088f967379139bc54f78aef495a7827f0680a5c261e9b62b17cfc7b4f8cc4ad94cf3ef08b1aa4740040d471d6557641fbab2174ce4ad059430
   languageName: node
   linkType: hard
 
