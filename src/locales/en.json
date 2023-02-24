@@ -25,6 +25,18 @@
       "dark": "Dark",
       "auto": "Auto"
     },
+    "tracking": {
+      "createdAt": "Created",
+      "modifiedAt": "Modified",
+      "created": "Created",
+      "modified": "Modified"
+    },
+    "datatable": {
+      "displayCols": "Display columns",
+      "itemsPerPage": "Records per page",
+      "from": "from",
+      "noDataText": "No data to display"
+    },
     "job": {
       "meta": {
         "detail": "Detail",

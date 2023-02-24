@@ -41,7 +41,7 @@ import ATableDetailButton from '@/components/buttons/table/ATableDetailButton.vu
 import ATableEditButton from '@/components/buttons/table/ATableEditButton.vue'
 import AThemeSelect from '@/components/AThemeSelect.vue'
 import ALanguageSelect from '@/components/ALanguageSelect.vue'
-import { commonMessages } from '@/plugins/i18n'
+import { commonMessages, i18n } from '@/plugins/i18n'
 import { deepFreeze, deletePropertyByPath, getValueByPath, setValueByPath, simpleCloneObject } from '@/utils/object'
 import { numberToString } from '@/utils/number'
 import {
@@ -330,6 +330,7 @@ export {                                //           |        |       |         
   NEW_LINE_MARK,                        //           |        |       |           |       |
                                         //           |        |       |           |       |
   // OTHER                              //           |        |       |           |       |
+  i18n,                                 //           |        |       |           |       |
   AnzuApiResponseCodeError,             //           |        |       |           |       |
   AnzuApiValidationError,               //           |        |       |           |       |
   AnzuFatalError,                       //           |        |       |           |       |
