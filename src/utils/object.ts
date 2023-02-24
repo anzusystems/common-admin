@@ -1,18 +1,22 @@
 import { isUndefined } from '@/utils/common'
 import { isProxy, isRef, toRaw } from 'vue'
 
-export const deepFreeze = <T>(obj: T) => {
+export const objectDeepFreeze = <T>(obj: T) => {
   const propNames = Object.getOwnPropertyNames(obj)
   for (const name of propNames) {
     const value = (obj as any)[name]
     if (value && typeof value === 'object') {
-      deepFreeze(value)
+      objectDeepFreeze(value)
     }
   }
   return Object.freeze(obj)
 }
 
-export const getValueByPath = (obj: any, path: string, splitChar = '.') => {
+export const getObjectValues = <T>(obj: { [key: string]: T }): T[] => {
+  return Object.keys(obj).map((k) => obj[k])
+}
+
+export const getObjectValueByPath = (obj: any, path: string, splitChar = '.') => {
   const a = path.split(splitChar)
   let o = obj
   while (a.length) {
@@ -23,7 +27,7 @@ export const getValueByPath = (obj: any, path: string, splitChar = '.') => {
   return o
 }
 
-export const setValueByPath = (obj: any, path: string, value: any, splitChar = '.') => {
+export const setObjectValueByPath = (obj: any, path: string, value: any, splitChar = '.') => {
   const a = path.split(splitChar)
   let o = obj
   while (a.length - 1) {
@@ -35,7 +39,7 @@ export const setValueByPath = (obj: any, path: string, value: any, splitChar = '
   o[a[0]] = value
 }
 
-export function deletePropertyByPath<T>(obj: T, path: string, splitChar = '.'): T {
+export function deleteObjectPropertyByPath<T>(obj: T, path: string, splitChar = '.'): T {
   const pathParts = path.split(splitChar)
   const lastIndex = pathParts.length - 1
 

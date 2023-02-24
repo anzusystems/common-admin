@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useClipboard } from '@vueuse/core'
-import { clickBlur } from '@/utils/event'
+import { eventClickBlur } from '@/utils/event'
 import { isNumber, isString } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import { useAlerts } from '@/composables/system/alerts'
@@ -23,7 +23,7 @@ const { showSuccess } = useAlerts()
 const { t } = useI18n()
 
 const onClick = (event: Event) => {
-  clickBlur(event)
+  eventClickBlur(event)
   if (!isSupported) return
   if (isNumber(props.value)) {
     copy(numberToString(props.value)).then(() => {

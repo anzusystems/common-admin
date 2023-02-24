@@ -1,4 +1,4 @@
-export const clickBlur = (event?: Event): void => {
+export const eventClickBlur = (event?: Event): void => {
   if (event?.currentTarget instanceof HTMLElement) {
     event.currentTarget.blur()
   }

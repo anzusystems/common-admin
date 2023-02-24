@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { clickBlur } from '@/utils/event'
+import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
 
 withDefaults(
@@ -25,7 +25,7 @@ const emit = defineEmits<{
 }>()
 
 const onClick = (event: Event) => {
-  clickBlur(event)
+  eventClickBlur(event)
   emit('saveRecord')
 }
 

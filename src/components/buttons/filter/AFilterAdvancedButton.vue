@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { clickBlur } from '@/utils/event'
+import { eventClickBlur } from '@/utils/event'
 
 withDefaults(
   defineProps<{
@@ -19,7 +19,7 @@ const emit = defineEmits<{
 const active = ref(false)
 
 const onClick = (event: Event) => {
-  clickBlur(event)
+  eventClickBlur(event)
   active.value = !active.value
   emit('advancedFilter')
 }

@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { isNull, isUndefined } from '@/utils/common'
-import { toInt } from '@/utils/string'
+import { stringToInt } from '@/utils/string'
 import type { DatetimeUTC, DatetimeUTCNullable } from '@/types/common'
 
 dayjs.extend(utc)
@@ -17,7 +17,7 @@ export const newDateNow = (): Date => {
 }
 
 export const currentTimestamp = (): number => {
-  return toInt(dayjs().utc().unix())
+  return stringToInt(dayjs().utc().unix())
 }
 
 export const dateTimeNow = (ignoreFractionalSeconds = true, ignoreSeconds = false): string => {

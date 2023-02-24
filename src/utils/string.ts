@@ -1,7 +1,7 @@
 import { UrlParams } from '@/services/api/apiHelper'
 import { isUndefined } from '@/utils/common'
 
-export const toInt = (value: any, fallbackValue = 0): number => {
+export const stringToInt = (value: any, fallbackValue = 0): number => {
   let check = fallbackValue
   try {
     check = Number.parseInt(value, 10)
@@ -16,7 +16,7 @@ export const toInt = (value: any, fallbackValue = 0): number => {
   return check
 }
 
-export const toFloat = (value: any, fallbackValue = 0): number => {
+export const stringToFloat = (value: any, fallbackValue = 0): number => {
   let check = fallbackValue
   try {
     check = Number.parseFloat(value)
@@ -31,7 +31,7 @@ export const toFloat = (value: any, fallbackValue = 0): number => {
   return check
 }
 
-export const splitOnFirstOccurrence = (value: string, delimiter = '') => {
+export const splitStringOnFirstOccurrence = (value: string, delimiter = '') => {
   const index = value.indexOf(delimiter)
 
   return {
@@ -62,7 +62,7 @@ type Kebab<T extends string, A extends string = ''> = T extends `${infer F}${inf
 export const toKebabCase = <T extends string>(value: T): Kebab<T> =>
   value.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase() as Kebab<T>
 
-export const trimLength = (value: string, maxLength = 80): string => {
+export const stringTrimLength = (value: string, maxLength = 80): string => {
   if (value.length > maxLength) {
     return value.substring(1, maxLength) + '...'
   }

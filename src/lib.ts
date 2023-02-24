@@ -42,7 +42,15 @@ import ATableEditButton from '@/components/buttons/table/ATableEditButton.vue'
 import AThemeSelect from '@/components/AThemeSelect.vue'
 import ALanguageSelect from '@/components/ALanguageSelect.vue'
 import { commonMessages, i18n } from '@/plugins/i18n'
-import { deepFreeze, deletePropertyByPath, getValueByPath, setValueByPath, simpleCloneObject } from '@/utils/object'
+import {
+  objectDeepFreeze,
+  deleteObjectPropertyByPath,
+  getObjectValueByPath,
+  setObjectValueByPath,
+  simpleCloneObject,
+  getObjectValues,
+  type Immutable,
+} from '@/utils/object'
 import { numberToString } from '@/utils/number'
 import {
   isArray,
@@ -63,12 +71,14 @@ import {
 import {
   normalizeForSlotName,
   slugify,
-  splitOnFirstOccurrence,
-  toFloat,
-  toInt,
+  splitStringOnFirstOccurrence,
+  stringToFloat,
+  stringToInt,
   toKebabCase,
-  trimLength,
+  stringTrimLength,
+  urlTemplateReplace,
 } from '@/utils/string'
+import { booleanToInteger } from '@/utils/boolean'
 import {
   currentTimestamp,
   DATETIME_MAX,
@@ -149,6 +159,11 @@ import type { AclValue } from '@/types/Permission'
 import { useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import { type DatatableColumnConfig, useDatatableColumns } from '@/composables/system/datatableColumns'
+import { arrayFromArgs, arrayToString, flattenArray, toggleArrayItem } from './utils/array'
+import { replaceBrowserHistoryURLByRouter, replaceBrowserHistoryURLByString } from './utils/history'
+import { eventClickBlur } from './utils/event'
+import type { ResourceNameSystemAware } from './types/ResourceNameSystemAware'
+import type { ValidationScope } from './types/Validation'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -265,18 +280,20 @@ export {                                //           |        |       |         
   isString,                             //           |        |       |           |       |
   isNumber,                             //           |        |       |           |       |
   // object                             //           |        |       |           |       |
-  setValueByPath,                       //           |        |       |           |       |
-  deletePropertyByPath,                 //           |        |       |           |       |
-  deepFreeze,                           //           |        |       |           |       |
+  getObjectValues,                      //           |        |       |           |       |
+  setObjectValueByPath,                 //           |        |       |           |       |
+  deleteObjectPropertyByPath,           //           |        |       |           |       |
+  objectDeepFreeze,                     //           |        |       |           |       |
   simpleCloneObject,                    //           |        |       |           |       |
-  getValueByPath,                       //           |        |       |           |       |
+  getObjectValueByPath,                 //           |        |       |           |       |
   // string                             //           |        |       |           |       |
-  toInt,                                //           |        |       |           |       |
+  stringToInt,                          //           |        |       |           |       |
   slugify,                              //           |        |       |           |       |
-  toFloat,                              //           |        |       |           |       |
-  splitOnFirstOccurrence,               //           |        |       |           |       |
-  trimLength,                           //           |        |       |           |       |
+  stringToFloat,                        //           |        |       |           |       |
+  splitStringOnFirstOccurrence,         //           |        |       |           |       |
+  stringTrimLength,                     //           |        |       |           |       |
   normalizeForSlotName,                 //           |        |       |           |       |
+  urlTemplateReplace,                   //           |        |       |           |       |
   toKebabCase,                          //           |        |       |           |       |
   // datetime                           //           |        |       |           |       |
   currentTimestamp,                     //           |        |       |           |       |
@@ -297,6 +314,18 @@ export {                                //           |        |       |         
   isValidHTTPStatus,                    //           |        |       |           |       |
   // number                             //           |        |       |           |       |
   numberToString,                       //           |        |       |           |       |
+  // boolean                            //           |        |       |           |       |
+  booleanToInteger,                     //           |        |       |           |       |
+  // array                              //           |        |       |           |       |
+  toggleArrayItem,                      //           |        |       |           |       |
+  arrayToString,                        //           |        |       |           |       |
+  arrayFromArgs,                        //           |        |       |           |       |
+  flattenArray,                         //           |        |       |           |       |
+  // history                            //           |        |       |           |       |
+  replaceBrowserHistoryURLByString,     //           |        |       |           |       |
+  replaceBrowserHistoryURLByRouter,     //           |        |       |           |       |
+  // event                              //           |        |       |           |       |
+  eventClickBlur,                       //           |        |       |           |       |
                                         //           |        |       |           |       |
   // SERVICES                           //           |        |       |           |       |
   apiAnyRequest,                        //           |        |       |           |       |
@@ -341,5 +370,8 @@ export {                                //           |        |       |         
   DatatableColumnConfig,                //           |        |       |           |       |
   ApiErrors,                            //           |        |       |           |       |
   ValidationResponseData,               //           |        |       |           |       |
+  Immutable,               //           |        |       |           |       |
+  ResourceNameSystemAware,               //           |        |       |           |       |
+  ValidationScope,               //           |        |       |           |       |
 }
 /* eslint-enable */

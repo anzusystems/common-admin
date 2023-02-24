@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { getValueByPath } from '@/utils/object'
+import { getObjectValueByPath } from '@/utils/object'
 import { computed } from 'vue'
 import type { DatatableColumnConfig } from '@/composables/system/datatableColumns'
 import { DATETIME_AUTO_FORMAT_COLUMN_NAMES } from '@/composables/system/datatableColumns'
@@ -16,7 +16,7 @@ const props = withDefaults(
 )
 
 const value = computed(() => {
-  return getValueByPath(props.rowData, props.column.name)
+  return getObjectValueByPath(props.rowData, props.column.name)
 })
 
 const formattedValue = computed(() => {

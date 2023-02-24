@@ -8,7 +8,7 @@ import { usePagination } from '@/composables/system/pagination'
 import { isArray, isEmptyArray, isNull, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { ErrorObject } from '@vuelidate/core'
-import { splitOnFirstOccurrence } from '@/utils/string'
+import { splitStringOnFirstOccurrence } from '@/utils/string'
 import type { Ref } from 'vue/dist/vue'
 import { simpleCloneObject } from '@/utils/object'
 import { useI18n } from 'vue-i18n'
@@ -115,7 +115,7 @@ const errorMessageComputed = computed(() => {
 const labelComputed = computed(() => {
   if (!isUndefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
-  const { end: path } = splitOnFirstOccurrence(props.v?.$path, '.')
+  const { end: path } = splitStringOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 

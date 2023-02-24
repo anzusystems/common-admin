@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router'
-import { clickBlur } from '@/utils/event'
+import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
@@ -28,7 +28,7 @@ const { t } = useI18n()
 const router = useRouter()
 
 const onClick = (event: Event) => {
-  clickBlur(event)
+  eventClickBlur(event)
   emit('editRecord')
   router.push({ name: props.routeName, params: { id: props.recordId } })
 }

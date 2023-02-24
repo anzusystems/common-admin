@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
 import { isUndefined } from '@/utils/common'
-import { splitOnFirstOccurrence } from '@/utils/string'
+import { splitStringOnFirstOccurrence } from '@/utils/string'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { useI18n } from 'vue-i18n'
 
@@ -42,7 +42,7 @@ const { t } = useI18n()
 const labelComputed = computed(() => {
   if (!isUndefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
-  const { end: path } = splitOnFirstOccurrence(props.v?.$path, '.')
+  const { end: path } = splitStringOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 

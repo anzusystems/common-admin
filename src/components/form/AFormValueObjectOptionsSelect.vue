@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import { splitOnFirstOccurrence } from '@/utils/string'
+import { splitStringOnFirstOccurrence } from '@/utils/string'
 import type { ErrorObject } from '@vuelidate/core'
 import { isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
@@ -66,7 +66,7 @@ const errorMessageComputed = computed(() => {
 const labelComputed = computed(() => {
   if (!isUndefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
-  const { end: path } = splitOnFirstOccurrence(props.v?.$path, '.')
+  const { end: path } = splitStringOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 

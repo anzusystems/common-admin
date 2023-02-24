@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { clickBlur } from '@/utils/event'
+import { eventClickBlur } from '@/utils/event'
 
 withDefaults(
   defineProps<{
@@ -18,7 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const onClick = (event: Event) => {
-  clickBlur(event)
+  eventClickBlur(event)
   emit('reset')
 }
 </script>
