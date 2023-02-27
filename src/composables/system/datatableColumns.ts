@@ -6,7 +6,7 @@ import { i18n } from '@/plugins/i18n'
 export const DATETIME_AUTO_FORMAT_COLUMN_NAMES = ['createdAt', 'modifiedAt']
 export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']
 
-const { t } = i18n.global || i18n
+const { t } = i18n.global
 
 export type DatatableColumnConfig = {
   name: string

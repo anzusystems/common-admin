@@ -15,7 +15,8 @@ export const commonAdminAllMessages = {
   xx, // used to display translations keys
 }
 
-export const i18n = createI18n<[MessageSchema], 'en' | 'sk'>({
+// put 'en' | 'sk' | ... here to validate all keys exist
+export const i18n = createI18n<[MessageSchema], 'en'>({
   globalInjection: false,
   legacy: false,
   locale: REQUIRED_LOCALES[0],
