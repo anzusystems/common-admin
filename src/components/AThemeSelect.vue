@@ -32,12 +32,12 @@ const isOpen = ref(false)
             <VIcon class="mr-2" icon="mdi-brightness-auto" />
           </template>
         </VListItem>
-        <VListItem :title="t('common.system..theme.light')" @click.stop="setThemeLight">
+        <VListItem :title="t('common.system.theme.light')" @click.stop="setThemeLight">
           <template #prepend>
             <VIcon class="mr-2" icon="mdi-brightness-7" />
           </template>
         </VListItem>
-        <VListItem :title="t('common.system..theme.dark')" @click.stop="setThemeDark">
+        <VListItem :title="t('common.system.theme.dark')" @click.stop="setThemeDark">
           <template #prepend>
             <VIcon class="mr-2" icon="mdi-brightness-4" />
           </template>
