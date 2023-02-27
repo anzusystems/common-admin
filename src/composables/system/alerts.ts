@@ -69,7 +69,7 @@ export function useAlerts() {
     const { t } = useI18n()
     notify({
       group: 'alerts',
-      text: t('common.alerts.fixValidationErrors'),
+      text: t('common.alert.fixValidationErrors'),
       duration: duration * 1000,
       type: 'error',
     })
@@ -79,7 +79,7 @@ export function useAlerts() {
     const { t } = useI18n()
     notify({
       group: 'alerts',
-      text: t('common.alerts.recordWas.' + variant),
+      text: t('common.alert.recordWas.' + variant),
       duration: duration * 1000,
       type: 'success',
     })
@@ -87,11 +87,11 @@ export function useAlerts() {
 
   const showApiError = (errors: ApiErrors[], duration = -1, fieldIsTranslated = false) => {
     const { t } = useI18n()
-    let text = t('common.alerts.fixApiValidationErrors') + NEW_LINE_MARK
+    let text = t('common.alert.fixApiValidationErrors') + NEW_LINE_MARK
     for (let i = 0; i < errors.length; i++) {
       text += fieldIsTranslated ? errors[i].field + ': ' : t(errors[i].field) + ': '
       for (let j = 0; j < errors[i].errors.length; j++) {
-        text += t('common.alerts.apiValidationErrors.' + errors[i].errors[j]) + NEW_LINE_MARK
+        text += t('validations.api.' + errors[i].errors[j]) + NEW_LINE_MARK
       }
     }
     notify({
@@ -106,7 +106,7 @@ export function useAlerts() {
     const { t } = useI18n()
     notify({
       group: 'alerts',
-      text: t('common.alerts.unknownError'),
+      text: t('common.alert.unknownError'),
       duration: duration * 1000,
       type: 'error',
     })
