@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { eventClickBlur } from '@/utils/event'
+import { useI18n } from 'vue-i18n'
 
 withDefaults(
   defineProps<{
@@ -21,6 +22,8 @@ const onClick = (event: Event) => {
   eventClickBlur(event)
   emit('reset')
 }
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -34,6 +37,6 @@ const onClick = (event: Event) => {
     @click.stop="onClick"
   >
     <VIcon color="grey darken-1" icon="mdi-filter-remove-outline" />
-    <VTooltip activator="parent" location="bottom">Reset</VTooltip>
+    <VTooltip activator="parent" location="bottom">{{ t(tooltipT) }}</VTooltip>
   </VBtn>
 </template>
