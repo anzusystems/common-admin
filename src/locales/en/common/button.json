@@ -16,6 +16,8 @@
     "logout": "Logout",
     "confirm": "Confirm",
     "copyId": "Copy ID",
-    "add": "Add"
+    "add": "Add",
+    "download": "Download",
+    "Upload": "Upload"
   }
 }

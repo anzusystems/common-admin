@@ -16,6 +16,8 @@
     "logout": "Odhlásenie",
     "confirm": "Potvrď",
     "copyId": "Copy ID",
-    "add": "Pridať"
+    "add": "Pridať",
+    "download": "Download",
+    "Upload": "Upload"
   }
 }
