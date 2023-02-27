@@ -11,7 +11,7 @@ export function useJobResource<T extends JobResource = JobResource>(customJobs: 
     ...([
       {
         value: 'jobUserDataDelete',
-        title: t('job.jobResource.jobUserDataDelete'),
+        title: t('common.job.jobResource.jobUserDataDelete'),
       },
     ] as unknown as ValueObjectOption<T>[]),
     ...customJobs,

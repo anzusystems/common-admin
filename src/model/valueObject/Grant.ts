@@ -15,17 +15,17 @@ export function useGrant() {
   const grantOptions = ref<ValueObjectOption<Grant>[]>([
     {
       value: Grant.Deny,
-      title: t('permission.grant.deny'),
+      title: t('common.permission.grant.deny'),
       color: 'error',
     },
     {
       value: Grant.AllowOwner,
-      title: t('permission.grant.allowOwner'),
+      title: t('common.permission.grant.allowOwner'),
       color: 'warning',
     },
     {
       value: Grant.Allow,
-      title: t('permission.grant.allow'),
+      title: t('common.permission.grant.allow'),
       color: 'success',
     },
   ])

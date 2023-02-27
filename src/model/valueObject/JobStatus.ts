@@ -17,27 +17,27 @@ export function useJobStatus() {
   const jobStatusOptions = ref<ValueObjectOption<JobStatus>[]>([
     {
       value: JobStatus.Waiting,
-      title: t('job.status.waiting'),
+      title: t('common.job.status.waiting'),
       color: 'warning',
     },
     {
       value: JobStatus.Processing,
-      title: t('job.status.processing'),
+      title: t('common.job.status.processing'),
       color: 'primary',
     },
     {
       value: JobStatus.AwaitingBatchProcess,
-      title: t('job.status.awaitingBatchProcess'),
+      title: t('common.job.status.awaitingBatchProcess'),
       color: 'primary',
     },
     {
       value: JobStatus.Done,
-      title: t('job.status.done'),
+      title: t('common.job.status.done'),
       color: 'success',
     },
     {
       value: JobStatus.Error,
-      title: t('job.status.error'),
+      title: t('common.job.status.error'),
       color: 'error',
     },
   ])
