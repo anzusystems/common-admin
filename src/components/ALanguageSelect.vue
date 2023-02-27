@@ -39,7 +39,7 @@ const currentLocale = computed(() => {
 const availableLocales = computed(() => {
   return ALL_LANGUAGES.filter(
     (item) =>
-      configAvailableLanguages.includes(item.code) &&
+      (configAvailableLanguages.includes(item.code) || item.code === 'xx') &&
       (!item.adminOnly || currentUser.value?.roles.includes(ROLE_SUPER_ADMIN))
   )
 })

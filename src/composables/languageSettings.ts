@@ -39,7 +39,7 @@ export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[],
 
   const setLanguage = (code: LanguageCode) => {
     if (!i18n || !i18n.global) return false
-    if (configAvailableLanguages.includes(code) && i18n.global.availableLocales.includes(code)) {
+    if ((configAvailableLanguages.includes(code) || code === 'xx') && i18n.global.availableLocales.includes(code)) {
       current.value = code
       storedSettings.value = code
       // @ts-ignore
@@ -53,7 +53,7 @@ export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[],
   const initializeLanguage = () => {
     if (!i18n || !i18n.global) return
     if (
-      configAvailableLanguages.includes(storedSettings.value) &&
+      (configAvailableLanguages.includes(storedSettings.value) || storedSettings.value === 'xx') &&
       i18n.global.availableLocales.includes(storedSettings.value)
     ) {
       current.value = storedSettings.value
