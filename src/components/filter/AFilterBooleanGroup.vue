@@ -37,10 +37,10 @@ const label = computed(() => {
     </VLabel>
     <VBtnToggle v-model="value" size="small">
       <VBtn size="small" :value="true" :color="value === true ? 'secondary' : ''">
-        {{ t('common.boolean.true') }}
+        {{ t('common.model.boolean.true') }}
       </VBtn>
       <VBtn size="small" :value="false" :color="value === false ? 'secondary' : ''">
-        {{ t('common.boolean.false') }}
+        {{ t('common.model.boolean.false') }}
       </VBtn>
     </VBtnToggle>
   </div>
