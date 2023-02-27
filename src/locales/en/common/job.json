@@ -1,29 +1,27 @@
 {
-  "job": {
-    "meta": {
-      "detail": "Detail",
-      "list": "List",
-      "create": "Create"
-    },
-    "model": {
-      "id": "Id",
-      "_resourceName": "Type",
-      "status": "Status",
-      "startedAt": "Started at",
-      "finishedAt": "Finished at",
-      "result": "Result",
-      "targetUserId": "Target user id",
-      "anonymizeUser": "Anonymize user"
-    },
-    "jobResource": {
-      "jobUserDataDelete": "User data delete"
-    },
-    "status": {
-      "waiting": "Waiting",
-      "processing": "Processing",
-      "awaitingBatchProcess": "Processing batch",
-      "done": "Done",
-      "error": "Error"
-    }
+  "meta": {
+    "detail": "Detail",
+    "list": "List",
+    "create": "Create"
+  },
+  "model": {
+    "id": "Id",
+    "_resourceName": "Type",
+    "status": "Status",
+    "startedAt": "Started at",
+    "finishedAt": "Finished at",
+    "result": "Result",
+    "targetUserId": "Target user id",
+    "anonymizeUser": "Anonymize user"
+  },
+  "jobResource": {
+    "jobUserDataDelete": "User data delete"
+  },
+  "status": {
+    "waiting": "Waiting",
+    "processing": "Processing",
+    "awaitingBatchProcess": "Processing batch",
+    "done": "Done",
+    "error": "Error"
   }
 }

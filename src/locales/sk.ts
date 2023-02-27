@@ -13,15 +13,15 @@ import vuetify from '@/locales/sk/vuetify.json'
 
 export const sk = {
   common: {
-    ...alert,
-    ...button,
-    ...model,
-    ...system,
-    ...anzuUser,
-    ...job,
-    ...log,
-    ...permission,
-    ...permissionGroup,
+    alert,
+    button,
+    model,
+    system,
+    anzuUser,
+    job,
+    log,
+    permission,
+    permissionGroup,
   },
   ...vuetify,
   validations: {
