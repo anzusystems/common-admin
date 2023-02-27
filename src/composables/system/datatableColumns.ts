@@ -27,7 +27,7 @@ const getLabelForConfig = (
 ): string | undefined => {
   if (!config) return undefined
   if (!isUndefined(config.label)) return config.label
-  if (DATETIME_AUTO_LABEL_TRACKING.includes(config.name)) return t('common.tracking.' + config.name)
+  if (DATETIME_AUTO_LABEL_TRACKING.includes(config.name)) return t('common.model.tracking.' + config.name)
   if (!isUndefined(system) && !isUndefined(subject)) return t(system + '.' + subject + '.model.' + config.name)
   return undefined
 }
