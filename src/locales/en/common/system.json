@@ -1,0 +1,23 @@
+{
+  "system": {
+    "version": "version",
+    "newVersionText": "New version of admin is available. For proper functioning, latest version is required.",
+    "newVersionReload": "Reload new version",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "auto": "Auto"
+    },
+    "datatable": {
+      "displayCols": "Display columns",
+      "itemsPerPage": "Records per page",
+      "from": "from",
+      "noDataText": "No data to display"
+    },
+    "modal": {
+      "confirmDelete": "Remove?",
+      "hide": "Hide",
+      "show": "Show"
+    }
+  }
+}

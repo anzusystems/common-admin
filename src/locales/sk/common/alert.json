@@ -1,0 +1,14 @@
+{
+  "alert": {
+    "unknownError": "System error, try again later or contact administrator",
+    "fixValidationErrors": "Please fill all required fields and fix problems",
+    "fixApiValidationErrors": "Please, fix these errors",
+    "recordWas": {
+      "created": "Record was created",
+      "updated": "Record was updated",
+      "deleted": "Record was removed"
+    },
+    "idWasCopied": "ID was copied to clipboard",
+    "textWasCopied": "Text was copied to clipboard"
+  }
+}

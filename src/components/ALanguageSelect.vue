@@ -12,6 +12,10 @@ import {
 } from '@/AnzuSystemsCommonAdmin'
 import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
 
+const emit = defineEmits<{
+  (e: 'afterChange', code: LanguageCode): void
+}>()
+
 const currentUser = inject(CurrentUserSymbol) as CurrentUserType
 const configAvailableLanguages = inject(AvailableLanguagesSymbol) as LanguageCode[]
 const configDefaultLanguage = inject(DefaultLanguageSymbol) as LanguageCode
@@ -20,7 +24,8 @@ const { setLanguage } = modifyLanguageSettings(configAvailableLanguages, configD
 const { currentLanguageCode } = useLanguageSettings()
 
 const onLanguageChange = (code: LanguageCode) => {
-  setLanguage(code)
+  const result = setLanguage(code)
+  if (result) emit('afterChange', code)
 }
 
 const currentLocale = computed(() => {

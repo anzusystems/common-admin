@@ -36,14 +36,18 @@ const storedSettings = useStorage<LanguageCode>('language', 'xx')
 
 export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[], configDefaultLanguage: LanguageCode) {
   const { current } = useLocale()
+
   const setLanguage = (code: LanguageCode) => {
-    if (!i18n || !i18n.global) return
+    if (!i18n || !i18n.global) return false
     if (configAvailableLanguages.includes(code) && i18n.global.availableLocales.includes(code)) {
       current.value = code
       storedSettings.value = code
       // @ts-ignore
       i18n.global.locale.value = code
+
+      return code
     }
+    return false
   }
 
   const initializeLanguage = () => {

@@ -1,0 +1,19 @@
+{
+  "permission": {
+    "table": {
+      "actions": "Actions",
+      "permissions": "Permissions"
+    },
+    "grant": {
+      "allow": "Allow",
+      "allowOwner": "Owner only",
+      "deny": "Deny"
+    },
+    "grantOrigin": {
+      "role": "Role",
+      "group": "Group",
+      "user": "User",
+      "defaultGrant": "Default"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "required": "Required.",
+  "minLength": "Minimal length is {min}.",
+  "maxLength": "Maximal length is {max}.",
+  "email": "Incorrect email format",
+  "stringArrayItemLength": "Item length in list must have between {min} and {max} characters."
+}

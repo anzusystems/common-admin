@@ -1,0 +1,14 @@
+{
+  "model": {
+    "boolean": {
+      "true": "Yes",
+      "false": "No"
+    },
+    "tracking": {
+      "createdAt": "Created",
+      "modifiedAt": "Modified",
+      "created": "Created",
+      "modified": "Modified"
+    }
+  }
+}

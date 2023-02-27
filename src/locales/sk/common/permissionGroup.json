@@ -1,0 +1,23 @@
+{
+  "permissionGroup": {
+    "meta": {
+      "detail": "Permission Group Detail",
+      "list": "Permission Group List",
+      "create": "Permission Group Create",
+      "edit": "Permission Group Edit"
+    },
+    "model": {
+      "id": "ID",
+      "title": "Title",
+      "description": "Description",
+      "permissions": "Permissions"
+    },
+    "filter": {
+      "id": "ID",
+      "title": "Title"
+    },
+    "button": {
+      "deleteConfirm": "Do you want to permanently remove the permission group from the system?"
+    }
+  }
+}
