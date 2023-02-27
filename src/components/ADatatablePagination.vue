@@ -108,7 +108,7 @@ const onClickNext = () => {
 <template>
   <div class="anzu-data-footer">
     <div v-if="!hideRecordsPerPage" class="anzu-data-footer__page-limit">
-      {{ t('common.datatable.itemsPerPage') }}:
+      {{ t('common.system.datatable.itemsPerPage') }}:
       <VBtnToggle
         v-model="modelValueComputed.rowsPerPage"
         class="ml-2"
@@ -130,7 +130,7 @@ const onClickNext = () => {
       </VBtnToggle>
     </div>
     <div class="anzu-data-footer__pagination">
-      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.datatable.from') }} {{ computedTotalCountText }}
+      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.system.datatable.from') }} {{ computedTotalCountText }}
     </div>
     <div class="anzu-data-footer__icons-before">
       <VBtn

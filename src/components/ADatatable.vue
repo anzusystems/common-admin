@@ -73,7 +73,9 @@ const { t } = useI18n()
       </template>
       <template v-else>
         <tr>
-          <td :colspan="totalColumnsCount" class="text-center text-disabled">{{ t('common.datatable.noDataText') }}</td>
+          <td :colspan="totalColumnsCount" class="text-center text-disabled">
+            {{ t('common.system.datatable.noDataText') }}
+          </td>
         </tr>
       </template>
     </tbody>
