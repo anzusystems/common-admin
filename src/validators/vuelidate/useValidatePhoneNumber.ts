@@ -1,9 +1,12 @@
 import { createI18nMessage, helpers } from '@vuelidate/validators'
+import { i18n } from '@/plugins/i18n'
 
-export function useValidatePhoneNumber(i18nTranslate: any) {
-  const withI18nMessage = createI18nMessage({ t: i18nTranslate })
+const { t } = i18n.global
+
+export function useValidatePhoneNumber() {
+  const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(helpers.regex(/^\+4219[0-9]{8}$/), {
-    messagePath: () => 'validations.phoneNumber',
+    messagePath: () => 'validations.js.phoneNumber',
   })
 }

@@ -10,7 +10,6 @@ import { Grant, useGrant } from '@/model/valueObject/Grant'
 import ABooleanToggle from '@/components/form/AFormBooleanToggle.vue'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import { useValidateRequired } from '@/validators/vuelidate/useValidateRequired'
-import { useI18n } from 'vue-i18n'
 import { useValidateMinLength } from '@/validators/vuelidate/useValidateMinLength'
 import { useValidateMaxLength } from '@/validators/vuelidate/useValidateMaxLength'
 
@@ -22,10 +21,9 @@ const modelData = ref({
   publishedAt: null,
 })
 
-const { t } = useI18n()
-const required = useValidateRequired(t)
-const minLength = useValidateMinLength(t)
-const maxLength = useValidateMaxLength(t)
+const required = useValidateRequired()
+const minLength = useValidateMinLength()
+const maxLength = useValidateMaxLength()
 
 const rules = computed(() => ({
   modelData: {

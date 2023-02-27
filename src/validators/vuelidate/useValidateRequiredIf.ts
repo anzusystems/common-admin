@@ -1,10 +1,13 @@
 import { createI18nMessage, requiredIf } from '@vuelidate/validators'
+import { i18n } from '@/plugins/i18n'
 
-export function useValidateRequiredIf(i18nTranslate: any) {
-  const withI18nMessage = createI18nMessage({ t: i18nTranslate })
+const { t } = i18n.global
+
+export function useValidateRequiredIf() {
+  const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(requiredIf, {
     withArguments: true,
-    messagePath: () => 'validations.required',
+    messagePath: () => 'validations.js.required',
   })
 }

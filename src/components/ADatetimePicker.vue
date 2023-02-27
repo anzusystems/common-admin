@@ -231,7 +231,7 @@ onMounted(() => {
   flatpickrValue.value = props.modelValue
 })
 
-const requiredIf = useValidateRequiredIf(t)
+const requiredIf = useValidateRequiredIf()
 
 const rules = computed(() => {
   return {

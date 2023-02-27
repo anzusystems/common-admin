@@ -1,8 +1,11 @@
 import { createI18nMessage, helpers } from '@vuelidate/validators'
 import { unref } from 'vue'
+import { i18n } from '@/plugins/i18n'
 
-export function useValidateStringArrayItemLength(i18nTranslate: any) {
-  const withI18nMessage = createI18nMessage({ t: i18nTranslate })
+const { t } = i18n.global
+
+export function useValidateStringArrayItemLength() {
+  const withI18nMessage = createI18nMessage({ t })
 
   const stringArrayItemLengthValidator = (min: number, max: number) => {
     return (value: string[]) =>
@@ -26,6 +29,6 @@ export function useValidateStringArrayItemLength(i18nTranslate: any) {
 
   return withI18nMessage(stringArrayItemLengthHelper, {
     withArguments: true,
-    messagePath: () => 'validations.stringArrayItemLength',
+    messagePath: () => 'validations.js.stringArrayItemLength',
   })
 }

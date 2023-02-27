@@ -1,10 +1,13 @@
 import { createI18nMessage, minLength } from '@vuelidate/validators'
+import { i18n } from '@/plugins/i18n'
 
-export function useValidateMinLength(i18nTranslate: any) {
-  const withI18nMessage = createI18nMessage({ t: i18nTranslate })
+const { t } = i18n.global
+
+export function useValidateMinLength() {
+  const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(minLength, {
     withArguments: true,
-    messagePath: () => 'validations.minLength',
+    messagePath: () => 'validations.js.minLength',
   })
 }

@@ -1,9 +1,12 @@
 import { createI18nMessage, helpers } from '@vuelidate/validators'
+import { i18n } from '@/plugins/i18n'
 
-export function useValidateLatitude(i18nTranslate: any) {
-  const withI18nMessage = createI18nMessage({ t: i18nTranslate })
+const { t } = i18n.global
+
+export function useValidateLatitude() {
+  const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(helpers.regex(/^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$/), {
-    messagePath: () => 'validations.latitude',
+    messagePath: () => 'validations.js.latitude',
   })
 }

@@ -1,10 +1,13 @@
 import { createI18nMessage, between } from '@vuelidate/validators'
+import { i18n } from '@/plugins/i18n'
 
-export function useValidateBetween(i18nTranslate: any) {
-  const withI18nMessage = createI18nMessage({ t: i18nTranslate })
+const { t } = i18n.global
+
+export function useValidateBetween() {
+  const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(between, {
     withArguments: true,
-    messagePath: () => 'validations.between',
+    messagePath: () => 'validations.js.between',
   })
 }

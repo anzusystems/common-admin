@@ -1,10 +1,13 @@
 import { createI18nMessage, minValue } from '@vuelidate/validators'
+import { i18n } from '@/plugins/i18n'
 
-export function useValidateMinValue(i18nTranslate: any) {
-  const withI18nMessage = createI18nMessage({ t: i18nTranslate })
+const { t } = i18n.global
+
+export function useValidateMinValue() {
+  const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(minValue, {
     withArguments: true,
-    messagePath: () => 'validations.minValue',
+    messagePath: () => 'validations.js.minValue',
   })
 }

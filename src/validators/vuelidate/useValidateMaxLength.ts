@@ -1,10 +1,13 @@
 import { createI18nMessage, maxLength } from '@vuelidate/validators'
+import { i18n } from '@/plugins/i18n'
 
-export function useValidateMaxLength(i18nTranslate: any) {
-  const withI18nMessage = createI18nMessage({ t: i18nTranslate })
+const { t } = i18n.global
+
+export function useValidateMaxLength() {
+  const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(maxLength, {
     withArguments: true,
-    messagePath: () => 'validations.maxLength',
+    messagePath: () => 'validations.js.maxLength',
   })
 }
