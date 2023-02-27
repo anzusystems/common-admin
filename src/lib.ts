@@ -99,7 +99,6 @@ import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
 import { useAnzuUserFactory } from '@/model/factory/AnzuUserFactory'
 import { usePermissionConfigFactory } from '@/model/factory/PermissionConfigFactory'
 import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactory'
-
 import type {
   DatetimeUTC,
   DatetimeUTCNullable,
@@ -166,6 +165,23 @@ import { eventClickBlur } from './utils/event'
 import type { ResourceNameSystemAware } from './types/ResourceNameSystemAware'
 import type { ValidationScope } from './types/Validation'
 import { useI18n } from 'vue-i18n'
+import { useValidateRequired } from '@/validators/vuelidate/useValidateRequired'
+import { useValidateRequiredIf } from '@/validators/vuelidate/useValidateRequiredIf'
+import { useValidateSlug } from './validators/vuelidate/useValidateSlug'
+import { useValidateUrl } from './validators/vuelidate/useValidateUrl'
+import { useValidateStringArrayItemLength } from './validators/vuelidate/useValidateStringArrayItemLength'
+import { useValidateBetween } from './validators/vuelidate/useValidateBetween'
+import { useValidateEmail } from './validators/vuelidate/useValidateEmail'
+import { useValidateLatitude } from './validators/vuelidate/useValidateLatitude'
+import { useValidateLatitudeNotZeroAsLongitude } from './validators/vuelidate/useValidateLatitudeNotZeroAsLongitude'
+import { useValidateLongitude } from './validators/vuelidate/useValidateLongitude'
+import { useValidateMaxLength } from './validators/vuelidate/useValidateMaxLength'
+import { useValidateMaxValue } from './validators/vuelidate/useValidateMaxValue'
+import { useValidateMinLength } from './validators/vuelidate/useValidateMinLength'
+import { useValidateMinValue } from './validators/vuelidate/useValidateMinValue'
+import { useValidateNumeric } from './validators/vuelidate/useValidateNumeric'
+import { useValidatePhoneNumber } from './validators/vuelidate/useValidatePhoneNumber'
+import { useValidateLongitudeNotZeroAsLatitude } from './validators/vuelidate/useValidateLongitudeNotZeroAsLatitude'
 
 /* eslint-disable */
 // ITEM ------------------------------------- FORUM --- BLOG --- DAM --- INHOUSE --- CMS ---
@@ -260,6 +276,15 @@ export {                                //           |        |       |         
   JobStatus,                            //           |        |       |           |       |
   JobResource,                          //           |        |       |           |       |
   CurrentUserType,                      //           |        |       |           |       |
+  AclValue,                             //           |        |       |           |       |
+  PluginOptions,                        //           |        |       |           |       |
+  LanguageCode,                         //           |        |       |           |       |
+  DatatableColumnConfig,                //           |        |       |           |       |
+  ApiErrors,                            //           |        |       |           |       |
+  ValidationResponseData,               //           |        |       |           |       |
+  Immutable,                            //           |        |       |           |       |
+  ResourceNameSystemAware,              //           |        |       |           |       |
+  ValidationScope,                      //           |        |       |           |       |
                                         //           |        |       |           |       |
   // Factories                          //           |        |       |           |       |
   useAnzuUserFactory,                   //           |        |       |           |       |
@@ -361,6 +386,25 @@ export {                                //           |        |       |         
   ROLE_SUPER_ADMIN,                     //           |        |       |           |       |
   NEW_LINE_MARK,                        //           |        |       |           |       |
                                         //           |        |       |           |       |
+  // VALIDATIONS                        //           |        |       |           |       |
+  useValidateRequired,                  //           |        |       |           |       |
+  useValidateRequiredIf,                //           |        |       |           |       |
+  useValidateSlug,                      //           |        |       |           |       |
+  useValidateUrl,                       //           |        |       |           |       |
+  useValidateStringArrayItemLength,     //           |        |       |           |       |
+  useValidateBetween,                   //           |        |       |           |       |
+  useValidateEmail,                     //           |        |       |           |       |
+  useValidateLatitude,                  //           |        |       |           |       |
+  useValidateLatitudeNotZeroAsLongitude,//           |        |       |           |       |
+  useValidateLongitude,                 //           |        |       |           |       |
+  useValidateLongitudeNotZeroAsLatitude,//           |        |       |           |       |
+  useValidateMaxLength,                 //           |        |       |           |       |
+  useValidateMaxValue,                  //           |        |       |           |       |
+  useValidateMinLength,                 //           |        |       |           |       |
+  useValidateMinValue,                  //           |        |       |           |       |
+  useValidateNumeric,                   //           |        |       |           |       |
+  useValidatePhoneNumber,               //           |        |       |           |       |
+                                        //           |        |       |           |       |
   // OTHER                              //           |        |       |           |       |
   i18n,                                 //           |        |       |           |       |
   useI18n,                              //           |        |       |           |       |
@@ -368,14 +412,5 @@ export {                                //           |        |       |         
   AnzuApiValidationError,               //           |        |       |           |       |
   AnzuFatalError,                       //           |        |       |           |       |
   AnzuSystemsCommonAdmin,               //           |        |       |           |       |
-  AclValue,                             //           |        |       |           |       |
-  PluginOptions,                        //           |        |       |           |       |
-  LanguageCode,                         //           |        |       |           |       |
-  DatatableColumnConfig,                //           |        |       |           |       |
-  ApiErrors,                            //           |        |       |           |       |
-  ValidationResponseData,               //           |        |       |           |       |
-  Immutable,                            //           |        |       |           |       |
-  ResourceNameSystemAware,              //           |        |       |           |       |
-  ValidationScope,                      //           |        |       |           |       |
 }
 /* eslint-enable */

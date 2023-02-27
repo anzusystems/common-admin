@@ -11,7 +11,7 @@ import { isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import useVuelidate from '@vuelidate/core'
 import type { DatetimeUTCNullable } from '@/types/common'
-import { useRequiredIf } from '@/validators/vuelidate/useRequiredIf'
+import { useValidateRequiredIf } from '@/validators/vuelidate/useValidateRequiredIf'
 import { useI18n } from 'vue-i18n'
 import { DateLimit, DateOption } from 'flatpickr/dist/types/options'
 
@@ -231,7 +231,7 @@ onMounted(() => {
   flatpickrValue.value = props.modelValue
 })
 
-const requiredIf = useRequiredIf(t)
+const requiredIf = useValidateRequiredIf(t)
 
 const rules = computed(() => {
   return {
