@@ -5,6 +5,15 @@ import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTracki
 export interface AnzuUser extends AnzuUserAndTimeTrackingAware {
   id: IntegerId
   email: string
+  person: {
+    firstName: string
+    lastName: string
+    fullName: string
+  }
+  avatar: {
+    color: string
+    text: string
+  }
   enabled: boolean
   roles: string[]
   permissionGroups: IntegerId[]
