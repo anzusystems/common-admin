@@ -11,7 +11,16 @@
     "email": "Email",
     "roles": "Roles",
     "permissionGroups": "Permission Groups",
-    "permissions": "Permissions"
+    "permissions": "Permissions",
+    "person": {
+      "firstName": "Firstname",
+      "lastName": "Lastname",
+      "fullName": "Full name"
+    },
+    "avatar": {
+      "color": "Avatar color",
+      "text": "Avatar text"
+    }
   },
   "filter": {
     "id": "ID",
