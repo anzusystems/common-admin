@@ -7,7 +7,7 @@ import FlagCountry from '@/components/flags/FlagCountry.vue'
 import {
   AvailableLanguagesSymbol,
   CurrentUserSymbol,
-  CurrentUserType,
+  type CurrentUserType,
   DefaultLanguageSymbol,
 } from '@/AnzuSystemsCommonAdmin'
 import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'

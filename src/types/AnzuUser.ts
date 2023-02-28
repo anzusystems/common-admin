@@ -1,6 +1,6 @@
 import type { IntegerId } from '@/types/common'
 import type { Permissions } from '@/types/Permission'
-import { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 
 export interface AnzuUser extends AnzuUserAndTimeTrackingAware {
   id: IntegerId

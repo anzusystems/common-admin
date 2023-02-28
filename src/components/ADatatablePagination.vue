@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { computed, watch } from 'vue'
-import { isNull } from '@/utils/common'
+import { isNull, cloneDeep } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
-import { simpleCloneObject } from '@/utils/object'
 import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
@@ -26,7 +25,7 @@ const modelValueComputed = computed({
     return props.modelValue
   },
   set(newValue: Pagination) {
-    emit('update:modelValue', simpleCloneObject(newValue))
+    emit('update:modelValue', cloneDeep(newValue))
   },
 })
 

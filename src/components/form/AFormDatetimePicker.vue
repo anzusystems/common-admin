@@ -5,8 +5,8 @@ import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { isUndefined } from '@/utils/common'
-import { ErrorObject } from '@vuelidate/core'
-import { splitStringOnFirstOccurrence } from '@/utils/string'
+import type { ErrorObject } from '@vuelidate/core'
+import { stringSplitOnFirstOccurrence } from '@/utils/string'
 
 const props = withDefaults(
   defineProps<{
@@ -63,7 +63,7 @@ const errorMessageComputed = computed(() => {
 const labelComputed = computed(() => {
   if (!isUndefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
-  const { end: path } = splitStringOnFirstOccurrence(props.v?.$path, '.')
+  const { end: path } = stringSplitOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 

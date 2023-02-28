@@ -1,10 +1,10 @@
 import type { RouteLocationRaw, Router } from 'vue-router'
 
-export const replaceBrowserHistoryURLByString = (path: string) => {
+export const browserHistoryReplaceUrlByString = (path: string) => {
   history.replaceState(history.state, '', path)
 }
 
-export const replaceBrowserHistoryURLByRouter = (router: Router, to: RouteLocationRaw) => {
+export const browserHistoryReplaceUrlByRouter = (router: Router, to: RouteLocationRaw) => {
   const resolved = router.resolve(to)
-  replaceBrowserHistoryURLByString(resolved.href)
+  browserHistoryReplaceUrlByString(resolved.href)
 }

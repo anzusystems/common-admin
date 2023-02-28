@@ -1,4 +1,4 @@
-import { IntegerIdNullable } from '@/types/common'
+import type { IntegerIdNullable } from '@/types/common'
 
 export interface CreatedByAware {
   createdBy: IntegerIdNullable

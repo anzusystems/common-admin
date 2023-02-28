@@ -5,7 +5,7 @@ import FlatPickr from 'vue-flatpickr-component'
 import ShortcutButtonsPlugin from 'shortcut-buttons-flatpickr'
 import FlatpickrLanguages from 'flatpickr/dist/l10n'
 import 'flatpickr/dist/flatpickr.css'
-import { dateToUtc, newDateNow } from '@/utils/datetime'
+import { dateToUtc, dateNow } from '@/utils/datetime'
 import type flatpickr from 'flatpickr'
 import { isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
@@ -13,7 +13,7 @@ import useVuelidate from '@vuelidate/core'
 import type { DatetimeUTCNullable } from '@/types/common'
 import { useValidateRequiredIf } from '@/validators/vuelidate/useValidateRequiredIf'
 import { useI18n } from 'vue-i18n'
-import { DateLimit, DateOption } from 'flatpickr/dist/types/options'
+import type { DateLimit, DateOption } from 'flatpickr/dist/types/options'
 
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
@@ -175,7 +175,7 @@ const pluginsComputed = computed(() => {
         },
       ],
       onClick: (index: number, fp: flatpickr.Instance) => {
-        const now = newDateNow()
+        const now = dateNow()
         fp.setDate(now, true)
         onFlatpickrUpdate(dateToUtc(now))
       },

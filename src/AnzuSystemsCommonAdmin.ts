@@ -1,9 +1,9 @@
 import type { App, DeepReadonly, Ref, UnwrapRef } from 'vue'
 import type { AnzuUser } from '@/types/AnzuUser'
-import { AclValue } from '@/types/Permission'
+import type { AclValue } from '@/types/Permission'
 import Acl from '@/components/permission/Acl.vue'
 import Notification from '@kyvg/vue3-notification'
-import { LanguageCode } from '@/composables/languageSettings'
+import type { LanguageCode } from '@/composables/languageSettings'
 
 export type CustomAclResolver<T extends AclValue = AclValue> =
   | undefined

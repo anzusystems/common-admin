@@ -1,4 +1,4 @@
-import { PermissionConfig } from '@/types/PermissionConfig'
+import type { PermissionConfig } from '@/types/PermissionConfig'
 
 export function usePermissionConfigFactory() {
   const createPermissionConfig = (): PermissionConfig => {

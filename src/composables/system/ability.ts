@@ -1,13 +1,13 @@
 import { isDefined, isUndefined } from '@/utils/common'
-import { getObjectValueByPath } from '@/utils/object'
+import { objectGetValueByPath } from '@/utils/object'
 import { Grant } from '@/model/valueObject/Grant'
 import { isOwnerAware } from '@/types/OwnerAware'
 import { isCreatedByAware } from '@/types/CreatedByAware'
 import { inject } from 'vue'
 import {
   CurrentUserSymbol,
-  CurrentUserType,
-  CustomAclResolver,
+  type CurrentUserType,
+  type CustomAclResolver,
   CustomAclResolverSymbol,
 } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/types/Permission'
@@ -35,7 +35,7 @@ export function useAcl<T extends AclValue = AclValue>(options?: AclResolverConfi
     if (isDefined(customAclProvider) && isDefined(customAclProvider.can)) return customAclProvider.can(acl, subject)
     if (isUndefined(currentUser.value) || currentUser.value.id === 0) return false
     if (currentUser.value.roles.includes(ROLE_SUPER_ADMIN)) return true
-    const permission = getObjectValueByPath(currentUser.value, 'resolvedPermissions.' + acl)
+    const permission = objectGetValueByPath(currentUser.value, 'resolvedPermissions.' + acl)
     if (isUndefined(permission)) return false
     switch (permission) {
       case Grant.Allow:

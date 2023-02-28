@@ -1,5 +1,5 @@
 import { dateTimeNow } from '@/utils/datetime'
-import { PermissionGroup } from '@/types/PermissionGroup'
+import type { PermissionGroup } from '@/types/PermissionGroup'
 
 export function usePermissionGroupFactory() {
   const createPermissionGroup = (): PermissionGroup => {

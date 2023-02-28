@@ -1,4 +1,4 @@
-import { UrlParams } from '@/services/api/apiHelper'
+import type { UrlParams } from '@/services/api/apiHelper'
 import { isUndefined } from '@/utils/common'
 
 export const stringToInt = (value: any, fallbackValue = 0): number => {
@@ -31,7 +31,7 @@ export const stringToFloat = (value: any, fallbackValue = 0): number => {
   return check
 }
 
-export const splitStringOnFirstOccurrence = (value: string, delimiter = '') => {
+export const stringSplitOnFirstOccurrence = (value: string, delimiter = '') => {
   const index = value.indexOf(delimiter)
 
   return {
@@ -40,7 +40,7 @@ export const splitStringOnFirstOccurrence = (value: string, delimiter = '') => {
   }
 }
 
-export const slugify = (value: string) => {
+export const stringToSlug = (value: string) => {
   return value
     .toString()
     .toLowerCase()
@@ -59,7 +59,7 @@ type Kebab<T extends string, A extends string = ''> = T extends `${infer F}${inf
   ? Kebab<R, `${A}${F extends Lowercase<F> ? '' : '-'}${Lowercase<F>}`>
   : A
 
-export const toKebabCase = <T extends string>(value: T): Kebab<T> =>
+export const stringToKebabCase = <T extends string>(value: T): Kebab<T> =>
   value.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase() as Kebab<T>
 
 export const stringTrimLength = (value: string, maxLength = 80): string => {
@@ -76,7 +76,7 @@ export const stringTrimLength = (value: string, maxLength = 80): string => {
  * @param template url containing colon parameters, example: '/:id/edit'
  * @param params object containing real values to be replaced, example: { id:5 }
  */
-export const urlTemplateReplace = (template: string, params: UrlParams) => {
+export const stringUrlTemplateReplace = (template: string, params: UrlParams) => {
   if (template.indexOf(':') === -1) return template
   const newParts: string[] = []
   const parts = template.split('/')
@@ -92,4 +92,4 @@ export const urlTemplateReplace = (template: string, params: UrlParams) => {
 /**
  * Slot names with dots are not valid, Vue takes dots as modifiers, so we must replace dots with dash.
  */
-export const normalizeForSlotName = (name: string) => name.replace('.', '-')
+export const stringNormalizeForSlotName = (name: string) => name.replace('.', '-')

@@ -32,14 +32,21 @@ export const ALL_LANGUAGES = [
   },
 ] as Language[]
 
-const storedSettings = useStorage<LanguageCode>('language', 'xx')
+const storedSettings = useStorage<LanguageCode | 'default'>('language', 'default')
 
 export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[], configDefaultLanguage: LanguageCode) {
+  if (storedSettings.value === 'default') storedSettings.value = configDefaultLanguage
   const { current } = useLocale()
+
+  function addMessages(language: LanguageCode, messages: any) {
+    if (!i18n || !i18n.global) return
+    // @ts-ignore
+    i18n.global.setLocaleMessage(language, messages)
+  }
 
   const setLanguage = (code: LanguageCode) => {
     if (!i18n || !i18n.global) return false
-    if ((configAvailableLanguages.includes(code) || code === 'xx') && i18n.global.availableLocales.includes(code)) {
+    if (configAvailableLanguages.includes(code) || code === 'xx') {
       current.value = code
       storedSettings.value = code
       // @ts-ignore
@@ -51,11 +58,8 @@ export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[],
   }
 
   const initializeLanguage = () => {
-    if (!i18n || !i18n.global) return
-    if (
-      (configAvailableLanguages.includes(storedSettings.value) || storedSettings.value === 'xx') &&
-      i18n.global.availableLocales.includes(storedSettings.value)
-    ) {
+    if (!i18n || !i18n.global || storedSettings.value === 'default') return
+    if (configAvailableLanguages.includes(storedSettings.value) || storedSettings.value === 'xx') {
       current.value = storedSettings.value
       // @ts-ignore
       i18n.global.locale.value = storedSettings.value
@@ -68,6 +72,7 @@ export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[],
   }
 
   return {
+    addMessages,
     initializeLanguage,
     currentLanguageCode: readonly(storedSettings),
     setLanguage,

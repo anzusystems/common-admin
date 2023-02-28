@@ -11,7 +11,7 @@ import validationApi from '@/locales/sk/validation/api.json'
 import validationJs from '@/locales/sk/validation/js.json'
 import vuetify from '@/locales/sk/vuetify.json'
 
-export const sk = {
+export default {
   common: {
     alert,
     button,

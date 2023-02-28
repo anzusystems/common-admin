@@ -11,7 +11,7 @@ import permissionGroup from '@/locales/en/common/permissionGroup.json'
 import validationApi from '@/locales/en/validation/api.json'
 import validationJs from '@/locales/en/validation/js.json'
 
-export const en = {
+export default {
   common: {
     alert,
     button,

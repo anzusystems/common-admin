@@ -18,6 +18,7 @@ __metadata:
     "@vitejs/plugin-vue": ^4.0.0
     "@vue/eslint-config-prettier": ^7.1.0
     "@vue/eslint-config-typescript": ^11.0.2
+    "@vue/tsconfig": ^0.1.3
     "@vuelidate/core": ^2.0.0
     "@vuelidate/validators": ^2.0.0
     "@vueuse/core": ^9.13.0
@@ -46,7 +47,7 @@ __metadata:
     "@vuelidate/validators": ^2.0.0
     "@vueuse/core": ^9.13.0
     "@vueuse/integrations": ^9.13.0
-    axios: ^1.3.3
+    axios: ^1.3.4
     dayjs: ^1.11.7
     flatpickr: ^4.6.13
     pinia: ^2.0.32
@@ -1091,6 +1092,18 @@ __metadata:
   version: 3.2.47
   resolution: "@vue/shared@npm:3.2.47"
   checksum: 0aa711dc9160fa0e476e6e94eea4e019398adf2211352d0e4a672cfb6b65b104bbd5d234807d1c091107bdc0f5d818d0f12378987eb7861d39be3aa9f6cd6e3e
+  languageName: node
+  linkType: hard
+
+"@vue/tsconfig@npm:^0.1.3":
+  version: 0.1.3
+  resolution: "@vue/tsconfig@npm:0.1.3"
+  peerDependencies:
+    "@types/node": "*"
+  peerDependenciesMeta:
+    "@types/node":
+      optional: true
+  checksum: 8150a24497a5348bc342c27afb38ad989de2ce8e94c349020628065d2a8df6837cb8bb3012f9161eea716487832612ac71b5f910d95bac41539ac6021d6bd88d
   languageName: node
   linkType: hard
 

@@ -1,4 +1,4 @@
-import { Grant } from '@/model/valueObject/Grant'
+import type { Grant } from '@/model/valueObject/Grant'
 
 export interface PermissionConfig {
   roles: string[]

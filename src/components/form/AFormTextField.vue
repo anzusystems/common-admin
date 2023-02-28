@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import { splitStringOnFirstOccurrence } from '@/utils/string'
+import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import { isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { VuetifyIconValue } from '@/types/Vuetify'
@@ -62,7 +62,7 @@ const errorMessageComputed = computed(() => {
 const labelComputed = computed(() => {
   if (!isUndefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
-  const { end: path } = splitStringOnFirstOccurrence(props.v?.$path, '.')
+  const { end: path } = stringSplitOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 

@@ -1,12 +1,13 @@
 import { createApp, readonly, ref } from 'vue'
-import App from './App.vue'
-import { vuetify } from './plugins/vuetify'
-import { i18n } from './plugins/i18n'
+import App from '@/App.vue'
+import { vuetify } from '@/plugins/vuetify'
+import { i18n } from '@/plugins/i18n'
 import { createPinia } from 'pinia'
-import router from './router'
+import router from '@/router'
 import AnzuSystemsCommonAdmin from '@/AnzuSystemsCommonAdmin'
-import { AnzuUser } from '@/types/AnzuUser'
+import type { AnzuUser } from '@/types/AnzuUser'
 import { Grant } from '@/model/valueObject/Grant'
+import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
 
 export type CustomAclValue = 'anzu_entity_create' | 'anzu_entity_view'
 
@@ -26,7 +27,7 @@ const currentUserObject: AnzuUser = {
     anzu_entity_create: Grant.Deny,
     anzu_entity_view: Grant.Allow,
   },
-  roles: [],
+  roles: [ROLE_SUPER_ADMIN],
 }
 const currentUserRef = ref<AnzuUser>(currentUserObject)
 const currentUser = readonly(currentUserRef)

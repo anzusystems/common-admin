@@ -2,8 +2,9 @@
 import { VApp } from 'vuetify/components'
 import { inject, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { LanguageCode, modifyLanguageSettings } from '@/composables/languageSettings'
+import { type LanguageCode, modifyLanguageSettings } from '@/composables/languageSettings'
 import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/AnzuSystemsCommonAdmin'
+import ALanguageSelect from '@/components/ALanguageSelect.vue'
 
 const opened = ref([])
 const drawer = ref<boolean>(true)
@@ -15,10 +16,28 @@ const navIconClick = () => {
 const configAvailableLanguages = inject<LanguageCode[]>(AvailableLanguagesSymbol, [])
 const configDefaultLanguage = inject<LanguageCode>(DefaultLanguageSymbol, 'en')
 const route = useRoute()
-const { initializeLanguage } = modifyLanguageSettings(configAvailableLanguages, configDefaultLanguage)
+const { initializeLanguage, addMessages, currentLanguageCode } = modifyLanguageSettings(
+  configAvailableLanguages,
+  configDefaultLanguage
+)
 
-onMounted(() => {
+const loadLanguageMessages = async (code: LanguageCode | 'default') => {
+  if (code === 'default' || code === 'xx') return
+  try {
+    const messages = await import(`./locales/${code}.ts`)
+    addMessages(code, messages.default)
+  } catch (e) {
+    console.error('Unable to load language translation messages.')
+  }
+}
+
+const afterLanguageChange = async (language: LanguageCode) => {
+  await loadLanguageMessages(language)
+}
+
+onMounted(async () => {
   initializeLanguage()
+  await loadLanguageMessages(currentLanguageCode.value)
 })
 </script>
 
@@ -40,8 +59,9 @@ onMounted(() => {
     <VAppBar density="compact">
       <div class="d-flex justify-space-between w-100 align-center">
         <div>
-          <VAppBarNavIcon @click.stop="navIconClick"></VAppBarNavIcon>
+          <VAppBarNavIcon @click.stop="navIconClick" />
         </div>
+        <ALanguageSelect @after-change="afterLanguageChange" />
       </div>
     </VAppBar>
     <VMain>

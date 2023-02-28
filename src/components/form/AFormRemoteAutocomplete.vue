@@ -5,12 +5,11 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { usePagination } from '@/composables/system/pagination'
-import { isArray, isEmptyArray, isNull, isUndefined } from '@/utils/common'
+import { isArray, isEmptyArray, isNull, isUndefined, cloneDeep } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { ErrorObject } from '@vuelidate/core'
-import { splitStringOnFirstOccurrence } from '@/utils/string'
+import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { Ref } from 'vue/dist/vue'
-import { simpleCloneObject } from '@/utils/object'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 
@@ -76,7 +75,7 @@ const modelValue = computed({
     return props.modelValue
   },
   set(newValue: string | number | string[] | number[] | null) {
-    emit('update:modelValue', simpleCloneObject<string | number | string[] | number[] | null>(newValue))
+    emit('update:modelValue', cloneDeep<string | number | string[] | number[] | null>(newValue))
   },
 })
 
@@ -115,7 +114,7 @@ const errorMessageComputed = computed(() => {
 const labelComputed = computed(() => {
   if (!isUndefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
-  const { end: path } = splitStringOnFirstOccurrence(props.v?.$path, '.')
+  const { end: path } = stringSplitOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 
@@ -186,7 +185,7 @@ const tryToLoadFromLazyLoader = (values: Array<string | number>) => {
     const idsInLazyLoader = values.every((id) => hasId(id))
     if (!idsInLazyLoader) return resolve(false)
     if (loadedAll.value) {
-      selectedItemsCache.value = simpleCloneObject(allValues.value.filter((item) => values.includes(item.value)))
+      selectedItemsCache.value = cloneDeep(allValues.value.filter((item) => values.includes(item.value)))
       return resolve(true)
     }
     values.forEach((id) => lazyLoadingIds.value.push(id))
