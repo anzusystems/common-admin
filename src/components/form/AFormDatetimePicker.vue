@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { isUndefined } from '@/utils/common'
-import { ErrorObject } from '@vuelidate/core'
-import { splitOnFirstOccurrence } from '@/utils/string'
+import type { ErrorObject } from '@vuelidate/core'
+import { stringSplitOnFirstOccurrence } from '@/utils/string'
 
 const props = withDefaults(
   defineProps<{
@@ -36,7 +36,7 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: string): void
+  (e: 'update:modelValue', data: string | null): void
   (e: 'click:append', data: string | number | null): void
   (e: 'blur', data: string | number | null): void
 }>()
@@ -46,7 +46,7 @@ const { t } = useI18n()
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
-const onUpdate = (newValue: string) => {
+const onUpdate = (newValue: string | null) => {
   emit('update:modelValue', newValue)
 }
 const onBlur = () => {
@@ -63,7 +63,7 @@ const errorMessageComputed = computed(() => {
 const labelComputed = computed(() => {
   if (!isUndefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
-  const { end: path } = splitOnFirstOccurrence(props.v?.$path, '.')
+  const { end: path } = stringSplitOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 

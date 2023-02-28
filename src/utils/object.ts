@@ -1,18 +1,21 @@
 import { isUndefined } from '@/utils/common'
-import { isProxy, isRef, toRaw } from 'vue'
 
-export const deepFreeze = <T>(obj: T) => {
+export const objectDeepFreeze = <T>(obj: T) => {
   const propNames = Object.getOwnPropertyNames(obj)
   for (const name of propNames) {
     const value = (obj as any)[name]
     if (value && typeof value === 'object') {
-      deepFreeze(value)
+      objectDeepFreeze(value)
     }
   }
   return Object.freeze(obj)
 }
 
-export const getValueByPath = (obj: any, path: string, splitChar = '.') => {
+export const objectGetValues = <T>(obj: { [key: string]: T }): T[] => {
+  return Object.keys(obj).map((k) => obj[k])
+}
+
+export const objectGetValueByPath = (obj: any, path: string, splitChar = '.') => {
   const a = path.split(splitChar)
   let o = obj
   while (a.length) {
@@ -23,7 +26,7 @@ export const getValueByPath = (obj: any, path: string, splitChar = '.') => {
   return o
 }
 
-export const setValueByPath = (obj: any, path: string, value: any, splitChar = '.') => {
+export const objectSetValueByPath = (obj: any, path: string, value: any, splitChar = '.') => {
   const a = path.split(splitChar)
   let o = obj
   while (a.length - 1) {
@@ -35,7 +38,7 @@ export const setValueByPath = (obj: any, path: string, value: any, splitChar = '
   o[a[0]] = value
 }
 
-export function deletePropertyByPath<T>(obj: T, path: string, splitChar = '.'): T {
+export function objectDeletePropertyByPath<T>(obj: T, path: string, splitChar = '.'): T {
   const pathParts = path.split(splitChar)
   const lastIndex = pathParts.length - 1
 
@@ -52,26 +55,6 @@ export function deletePropertyByPath<T>(obj: T, path: string, splitChar = '.'): 
 
   recurse(obj)
   return obj
-}
-
-/**
- * Use only for objects with some primitives like number, string, boolean, null. Not supported: function, undefined, symbol, ...
- */
-export const simpleCloneObject = <T>(object: T) => {
-  if (typeof structuredClone === 'function') {
-    try {
-      if (isProxy(object)) {
-        return structuredClone(toRaw(object)) as T
-      }
-      if (isRef(object)) {
-        return structuredClone(object.value) as T
-      }
-      return structuredClone(object) as T
-    } catch (error) {
-      return JSON.parse(JSON.stringify(object)) as T
-    }
-  }
-  return JSON.parse(JSON.stringify(object)) as T
 }
 
 export type Immutable<T> = {

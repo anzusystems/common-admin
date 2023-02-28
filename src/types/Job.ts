@@ -1,5 +1,5 @@
 import type { DatetimeUTCNullable, IntegerId, IntegerIdNullable } from '@/types/common'
-import { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { JobResource } from '@/model/valueObject/JobResource'
 
 export interface Job<T extends JobResource = JobResource> extends AnzuUserAndTimeTrackingAware {

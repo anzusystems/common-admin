@@ -1,0 +1,22 @@
+{
+  "create": "Vytvoriť",
+  "createAndClose": "Vytvoriť a zatvoriť",
+  "save": "Uložiť",
+  "saveAndClose": "Uložiť a zatvoriť",
+  "close": "Zatvoriť",
+  "edit": "Editovať",
+  "submitFilter": "Hľadať",
+  "resetFilter": "Zrušiť filter",
+  "advancedFilters": "More filters",
+  "cancel": "Zrušiť",
+  "delete": "Zmazať",
+  "id": "ID",
+  "now": "Teraz",
+  "logout": "Odhlásenie",
+  "confirm": "Potvrď",
+  "copyId": "Copy ID",
+  "add": "Pridať",
+  "download": "Download",
+  "Upload": "Upload"
+}
+

@@ -5,13 +5,13 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 export type JobResource = 'jobUserDataDelete' | `job${string}`
 
 export function useJobResource<T extends JobResource = JobResource>(customJobs: ValueObjectOption<T>[] = []) {
-  const { t } = useI18n({ useScope: 'global' })
+  const { t } = useI18n()
 
   const jobResourceOptions = ref<ValueObjectOption<T>[]>([
     ...([
       {
         value: 'jobUserDataDelete',
-        title: t('job.jobResource.jobUserDataDelete'),
+        title: t('common.job.jobResource.jobUserDataDelete'),
       },
     ] as unknown as ValueObjectOption<T>[]),
     ...customJobs,

@@ -1,0 +1,6 @@
+{
+  "error_field_length_min": "error_field_length_min",
+  "error_field_length_max": "error_field_length_max",
+  "error_field_not_unique": "error_field_not_unique",
+  "error_compromised_password": "error_compromised_password"
+}

@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { isNull, isUndefined } from '@/utils/common'
-import { toInt } from '@/utils/string'
+import { stringToInt } from '@/utils/string'
 import type { DatetimeUTC, DatetimeUTCNullable } from '@/types/common'
 
 dayjs.extend(utc)
@@ -12,12 +12,12 @@ const FORMAT = 'YYYY-MM-DDTHH:mm:ss'
 export const DATETIME_MIN = '1970-01-01T00:00:00.000000Z'
 export const DATETIME_MAX = '2100-01-01T00:00:00.000000Z'
 
-export const newDateNow = (): Date => {
+export const dateNow = (): Date => {
   return dayjs().utc().toDate()
 }
 
-export const currentTimestamp = (): number => {
-  return toInt(dayjs().utc().unix())
+export const timestampCurrent = (): number => {
+  return stringToInt(dayjs().utc().unix())
 }
 
 export const dateTimeNow = (ignoreFractionalSeconds = true, ignoreSeconds = false): string => {
@@ -41,7 +41,7 @@ export const dateTimeEndOfDay = (days = 0) => {
   return dayjs().add(days, 'days').endOf('day').utc().format(FORMAT) + SUFFIX
 }
 
-export const modifyMinutesOfDate = (minutes = 0, date: null | Date = null) => {
+export const dateModifyMinutes = (minutes = 0, date: null | Date = null) => {
   if (date === null) date = new Date()
   if (minutes === 0) return date
   if (minutes > 0) return dayjs(date).add(minutes, 'minutes').toDate()
@@ -56,7 +56,7 @@ export const yearNow = () => {
   return dayjs().utc().format('YYYY')
 }
 
-export const prettyDateTime = (
+export const dateTimePretty = (
   isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
   edgeDateValue = ''
 ): string => {
@@ -65,7 +65,7 @@ export const prettyDateTime = (
   return dayjs(isoDate).format('DD.MM.YYYY HH:mm')
 }
 
-export const friendlyDateTime = (isoDate: DatetimeUTC | DatetimeUTCNullable | string | null, edgeDateValue = '') => {
+export const dateTimeFriendly = (isoDate: DatetimeUTC | DatetimeUTCNullable | string | null, edgeDateValue = '') => {
   if (
     isoDate === DATETIME_MAX ||
     isoDate === DATETIME_MIN ||

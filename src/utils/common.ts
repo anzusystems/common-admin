@@ -1,4 +1,5 @@
 import type { DocId } from '@/types/common'
+import { isProxy, isRef, toRaw, unref } from 'vue'
 
 export const isUndefined = (value: unknown): value is undefined => {
   return typeof value === 'undefined'
@@ -6,13 +7,6 @@ export const isUndefined = (value: unknown): value is undefined => {
 
 export const isDefined = <T>(value: T | undefined): value is T => {
   return !isUndefined(value)
-}
-
-/**
- * @deprecated use isDefined
- */
-export const isNotUndefined = (value: unknown) => {
-  return false === isUndefined(value)
 }
 
 export const isNull = (value: unknown): value is null => {
@@ -68,4 +62,23 @@ export const isEmpty = (value: unknown): boolean => {
   return (
     isNull(value) || isUndefined(value) || value === '' || value === 0 || isEmptyArray(value) || isEmptyObject(value)
   )
+}
+/**
+ * Use only for objects with some primitives like number, string, boolean, null. Not supported: function, undefined, symbol, ...
+ */
+export const cloneDeep = <T>(object: T) => {
+  if (typeof structuredClone === 'function') {
+    try {
+      if (isProxy(object)) {
+        return structuredClone(toRaw(object)) as T
+      }
+      if (isRef(object)) {
+        return structuredClone(unref(object)) as T
+      }
+      return structuredClone(object) as T
+    } catch (error) {
+      return JSON.parse(JSON.stringify(object)) as T
+    }
+  }
+  return JSON.parse(JSON.stringify(object)) as T
 }

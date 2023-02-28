@@ -1,7 +1,6 @@
-import { isArray, isUndefined } from '@/utils/common'
+import { isArray, isUndefined, cloneDeep } from '@/utils/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
-import { simpleCloneObject } from '@/utils/object'
 
 export interface MakeFilterOptions<T = any> {
   name: string
@@ -35,7 +34,7 @@ export function makeFilterHelper<T = any>(system?: string, subject?: string) {
       multiple: isArray(defaultValue),
       mandatory: isUndefined(options.mandatory) ? false : options.mandatory,
       exclude: isUndefined(options.exclude) ? false : options.exclude,
-      model: simpleCloneObject(defaultValue),
+      model: cloneDeep(defaultValue),
       error: '',
     }
   }

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { clickBlur } from '@/utils/event'
-import { useI18n } from '@/plugins/translate'
+import { eventClickBlur } from '@/utils/event'
+import { useI18n } from 'vue-i18n'
 
 withDefaults(
   defineProps<{
@@ -19,7 +19,7 @@ const emit = defineEmits<{
 }>()
 
 const onClick = (event: Event) => {
-  clickBlur(event)
+  eventClickBlur(event)
   emit('submit')
 }
 

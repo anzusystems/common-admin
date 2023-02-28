@@ -7,12 +7,12 @@ import type { FilterBag } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 import { isUndefined } from '@/utils/common'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { useQueryBuilder } from './queryBuilder'
+import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 
 const { isValidationError, handleValidationError } = useErrorHandler()
 
 const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useQueryBuilder()
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
   querySetLimit(pagination.rowsPerPage)
   querySetOffset(pagination.page, pagination.rowsPerPage)
   querySetOrder(pagination.sortBy, pagination.descending)

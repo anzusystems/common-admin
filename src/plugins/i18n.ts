@@ -1,10 +1,12 @@
 import type { Locale, Path } from 'vue-i18n'
 import { createI18n } from 'vue-i18n'
-import { commonMessages } from '@/locales'
+import type en from '@/locales/en'
 
-const REQUIRED_LOCALES = ['sk', 'en']
+export type MessageSchema = typeof en
 
-export const i18n = createI18n({
+const REQUIRED_LOCALES = ['en', 'sk']
+
+export const i18n = createI18n<[MessageSchema]>({
   globalInjection: false,
   legacy: false,
   locale: REQUIRED_LOCALES[0],
@@ -14,5 +16,4 @@ export const i18n = createI18n({
       console.warn(`Missing ${locale} translation: ${key}`)
     }
   },
-  messages: commonMessages,
 })

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useAcl } from '@/composables/system/ability'
-import { ref, watch, inject } from 'vue'
-import { CurrentUserSymbol, CurrentUserType } from '@/AnzuSystemsCommonAdmin'
+import { inject, ref, watch } from 'vue'
+import { CurrentUserSymbol, type CurrentUserType } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/types/Permission'
 
 const props = withDefaults(

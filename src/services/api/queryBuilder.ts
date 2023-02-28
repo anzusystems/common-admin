@@ -5,7 +5,7 @@ import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 /**
  * Docs: /doc/Admin-Cms-Doc/Filters.md
  */
-export function useQueryBuilder() {
+export function useApiQueryBuilder() {
   const q = ref<string[]>([])
 
   const querySetLimit = (value: number): void => {

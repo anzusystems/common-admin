@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 
 export enum GrantOrigin {
   Role = 'role',
@@ -16,19 +16,19 @@ export function useGrantOrigin() {
   const grantOriginOptions = ref<ValueObjectOption<GrantOrigin>[]>([
     {
       value: GrantOrigin.Role,
-      title: t('permission.grantOrigin.role'),
+      title: t('common.permission.grantOrigin.role'),
     },
     {
       value: GrantOrigin.Group,
-      title: t('permission.grantOrigin.group'),
+      title: t('common.permission.grantOrigin.group'),
     },
     {
       value: GrantOrigin.User,
-      title: t('permission.grantOrigin.user'),
+      title: t('common.permission.grantOrigin.user'),
     },
     {
       value: GrantOrigin.DefaultGrant,
-      title: t('permission.grantOrigin.defaultGrant'),
+      title: t('common.permission.grantOrigin.defaultGrant'),
     },
   ])
 

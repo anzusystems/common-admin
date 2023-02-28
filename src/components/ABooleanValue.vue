@@ -1,10 +1,8 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 
-const i18n = useI18n()
-console.log(i18n)
-const { t } = i18n
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -24,9 +22,9 @@ const booleanValue = computed(() => {
 
 const text = computed(() => {
   if (booleanValue.value) {
-    return t('common.boolean.true')
+    return t('common.model.boolean.true')
   }
-  return t('common.boolean.false')
+  return t('common.model..boolean.false')
 })
 
 const color = computed(() => {

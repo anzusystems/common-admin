@@ -4,7 +4,7 @@ import { GrantOrigin } from '@/model/valueObject/GrantOrigin'
 import PermissionValueChip from '@/components/permission/APermissionValueChip.vue'
 import PermissionGrantEditor from '@/components/permission/APermissionGrantEditor.vue'
 import { useAcl } from '@/composables/system/ability'
-import { CustomAclValue } from '@/main'
+import type { CustomAclValue } from '@/main'
 import ARow from '@/components/ARow.vue'
 
 const { can } = useAcl<CustomAclValue>()

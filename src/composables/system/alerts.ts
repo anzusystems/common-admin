@@ -1,6 +1,6 @@
 import { notify } from '@kyvg/vue3-notification'
 import type { ApiErrors } from '@/composables/system/error'
-import { useI18n } from '@/plugins/translate'
+import { i18n } from '@/plugins/i18n'
 
 const DEFAULT_DURATION_SECONDS = 3
 
@@ -19,7 +19,7 @@ export function useAlerts() {
   }
 
   const showSuccessT = (translation: string, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = useI18n()
+    const { t } = i18n.global
     showSuccess(t(translation), duration)
   }
 
@@ -33,7 +33,7 @@ export function useAlerts() {
   }
 
   const showErrorT = (translation: string, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = useI18n()
+    const { t } = i18n.global
     showError(t(translation), duration)
   }
 
@@ -47,7 +47,7 @@ export function useAlerts() {
   }
 
   const showInfoT = (translation: string, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = useI18n()
+    const { t } = i18n.global
     showInfo(t(translation), duration)
   }
 
@@ -61,37 +61,37 @@ export function useAlerts() {
   }
 
   const showWarningT = (translation: string, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = useI18n()
+    const { t } = i18n.global
     showWarning(t(translation), duration)
   }
 
   const showValidationError = (duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = useI18n()
+    const { t } = i18n.global
     notify({
       group: 'alerts',
-      text: t('common.alerts.fixValidationErrors'),
+      text: t('common.alert.fixValidationErrors'),
       duration: duration * 1000,
       type: 'error',
     })
   }
 
   const showRecordWas = (variant: RecordWasType, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = useI18n()
+    const { t } = i18n.global
     notify({
       group: 'alerts',
-      text: t('common.alerts.recordWas.' + variant),
+      text: t('common.alert.recordWas.' + variant),
       duration: duration * 1000,
       type: 'success',
     })
   }
 
   const showApiError = (errors: ApiErrors[], duration = -1, fieldIsTranslated = false) => {
-    const { t } = useI18n()
-    let text = t('common.alerts.fixApiValidationErrors') + NEW_LINE_MARK
+    const { t } = i18n.global
+    let text = t('common.alert.fixApiValidationErrors') + NEW_LINE_MARK
     for (let i = 0; i < errors.length; i++) {
       text += fieldIsTranslated ? errors[i].field + ': ' : t(errors[i].field) + ': '
       for (let j = 0; j < errors[i].errors.length; j++) {
-        text += t('common.alerts.apiValidationErrors.' + errors[i].errors[j]) + NEW_LINE_MARK
+        text += t('validations.api.' + errors[i].errors[j]) + NEW_LINE_MARK
       }
     }
     notify({
@@ -103,10 +103,10 @@ export function useAlerts() {
   }
 
   const showUnknownError = (duration = -1) => {
-    const { t } = useI18n()
+    const { t } = i18n.global
     notify({
       group: 'alerts',
-      text: t('common.alerts.unknownError'),
+      text: t('common.alert.unknownError'),
       duration: duration * 1000,
       type: 'error',
     })

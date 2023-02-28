@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "detail": "Anzu User Detail",
+    "list": "Anzu Users List",
+    "edit": "Anzu User Edit",
+    "create": "Anzu User Create"
+  },
+  "model": {
+    "id": "ID",
+    "enabled": "Enabled",
+    "email": "Email",
+    "roles": "Roles",
+    "permissionGroups": "Permission Groups",
+    "permissions": "Permissions"
+  },
+  "filter": {
+    "id": "ID",
+    "enabled": "Enabled",
+    "email": "Email"
+  },
+  "table": {
+    "grants": "Actions",
+    "permissions": "Permissions",
+    "resolvedPermissions": "Resolved Permission",
+    "noPermissions": "No permissions set"
+  }
+}

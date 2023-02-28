@@ -4,7 +4,7 @@ import { AnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { useQueryBuilder } from './queryBuilder'
+import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 
 const { isValidationError, handleValidationError } = useErrorHandler()
 
@@ -13,7 +13,7 @@ const { isValidationError, handleValidationError } = useErrorHandler()
  * @template R Response type override, optional
  */
 const generateByIdsApiQuery = (ids: number[] | string[], isSearchApi: boolean): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } = useQueryBuilder()
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } = useApiQueryBuilder()
   const limit = ids.length
   querySetLimit(limit)
   querySetOffset(1, limit)

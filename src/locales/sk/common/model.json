@@ -1,0 +1,12 @@
+{
+  "boolean": {
+    "true": "áno",
+    "false": "nie"
+  },
+  "tracking": {
+    "createdAt": "Created",
+    "modifiedAt": "Modified",
+    "created": "Created",
+    "modified": "Modified"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "detail": "Detail",
+    "list": "Zoznam",
+    "create": "Vytvoriť"
+  },
+  "model": {
+    "id": "Id",
+    "_resourceName": "Typ",
+    "status": "Stav",
+    "startedAt": "Spustený",
+    "finishedAt": "Ukončený",
+    "result": "Výsledok",
+    "targetUserId": "Cieľovy používateľ",
+    "anonymizeUser": "Anonymizuj používateľa"
+  },
+  "jobResource": {
+    "jobUserDataDelete": "Výmaz používateľových dát"
+  },
+  "status": {
+    "waiting": "V poradí",
+    "processing": "Procesuje sa",
+    "awaitingBatchProcess": "Procesuje sa v dávke",
+    "done": "Hotovo",
+    "error": "Chyba"
+  }
+}

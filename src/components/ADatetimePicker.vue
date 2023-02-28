@@ -5,14 +5,15 @@ import FlatPickr from 'vue-flatpickr-component'
 import ShortcutButtonsPlugin from 'shortcut-buttons-flatpickr'
 import FlatpickrLanguages from 'flatpickr/dist/l10n'
 import 'flatpickr/dist/flatpickr.css'
-import { dateToUtc, newDateNow } from '@/utils/datetime'
+import { dateToUtc, dateNow } from '@/utils/datetime'
 import type flatpickr from 'flatpickr'
 import { isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import useVuelidate from '@vuelidate/core'
 import type { DatetimeUTCNullable } from '@/types/common'
-import { useI18n } from '@/plugins/translate'
-import { useRequiredIf } from '@/validators/vuelidate/useRequiredIf'
+import { useValidateRequiredIf } from '@/validators/vuelidate/useValidateRequiredIf'
+import { useI18n } from 'vue-i18n'
+import type { DateLimit, DateOption } from 'flatpickr/dist/types/options'
 
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
@@ -32,7 +33,7 @@ const props = withDefaults(
     required?: boolean
     hideSetToNow?: boolean
     placeholder?: string
-    enable?: () => any
+    enable?: DateLimit<DateOption>[]
     weekNumbers?: false
     dataCy?: string
     defaultValue?: null | DatetimeUTCNullable
@@ -49,7 +50,7 @@ const props = withDefaults(
     required: false,
     hideSetToNow: false,
     placeholder: '',
-    enable: () => [],
+    enable: undefined,
     weekNumbers: false,
     dataCy: '',
     defaultValue: null,
@@ -147,7 +148,7 @@ const placeholderComputed = computed(() => {
 })
 
 const enableComputed = computed(() => {
-  if (props.enable.length > 0) {
+  if (props.enable && props.enable.length > 0) {
     return props.enable
   }
   return [
@@ -174,7 +175,7 @@ const pluginsComputed = computed(() => {
         },
       ],
       onClick: (index: number, fp: flatpickr.Instance) => {
-        const now = newDateNow()
+        const now = dateNow()
         fp.setDate(now, true)
         onFlatpickrUpdate(dateToUtc(now))
       },
@@ -183,6 +184,7 @@ const pluginsComputed = computed(() => {
 })
 
 const flatpickrConfig = computed(() => {
+  const positionElement = textFieldRef.value?.$el.querySelector('.v-input__control')
   return {
     enableTime: props.type !== 'date',
     wrap: true,
@@ -192,12 +194,12 @@ const flatpickrConfig = computed(() => {
     allowInput: true,
     altInput: true,
     altInputClass: 'd-sr-only',
-    positionElement: textFieldRef.value?.$el.querySelector('.v-input__control'),
+    positionElement: positionElement ?? undefined,
     // dateFormat: 'Y-m-dTH:i:S.000000\\Z', problem with timezone
     dateFormat: 'Z',
     disableMobile: true,
     clickOpens: false,
-    position: 'auto right',
+    position: 'auto right' as const,
     // @ts-ignore
     locale: { ...FlatpickrLanguages[lang.value] },
     enable: enableComputed.value,
@@ -229,7 +231,7 @@ onMounted(() => {
   flatpickrValue.value = props.modelValue
 })
 
-const requiredIf = useRequiredIf(t)
+const requiredIf = useValidateRequiredIf()
 
 const rules = computed(() => {
   return {

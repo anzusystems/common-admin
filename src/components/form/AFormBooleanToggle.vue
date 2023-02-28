@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
 import { isUndefined } from '@/utils/common'
-import { splitOnFirstOccurrence } from '@/utils/string'
+import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -42,7 +42,7 @@ const { t } = useI18n()
 const labelComputed = computed(() => {
   if (!isUndefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
-  const { end: path } = splitOnFirstOccurrence(props.v?.$path, '.')
+  const { end: path } = stringSplitOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 
@@ -55,7 +55,7 @@ const requiredComputed = computed(() => {
 <template>
   <VLabel v-if="label" class="pr-1">{{ labelComputed }}<span v-if="requiredComputed" class="required" /></VLabel>
   <VBtnToggle v-model="value" :mandatory="requiredComputed">
-    <VBtn :value="true" data-cy="toggle-true">{{ t('common.boolean.true') }}</VBtn>
-    <VBtn :value="false" data-cy="toggle-false">{{ t('common.boolean.false') }}</VBtn>
+    <VBtn :value="true" data-cy="toggle-true">{{ t('common.model.boolean.true') }}</VBtn>
+    <VBtn :value="false" data-cy="toggle-false">{{ t('common.model.boolean.false') }}</VBtn>
   </VBtnToggle>
 </template>

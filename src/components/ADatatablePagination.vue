@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { computed, watch } from 'vue'
-import { isNull } from '@/utils/common'
+import { isNull, cloneDeep } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
-import { simpleCloneObject } from '@/utils/object'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -26,7 +25,7 @@ const modelValueComputed = computed({
     return props.modelValue
   },
   set(newValue: Pagination) {
-    emit('update:modelValue', simpleCloneObject(newValue))
+    emit('update:modelValue', cloneDeep(newValue))
   },
 })
 
@@ -108,7 +107,7 @@ const onClickNext = () => {
 <template>
   <div class="anzu-data-footer">
     <div v-if="!hideRecordsPerPage" class="anzu-data-footer__page-limit">
-      {{ t('common.datatable.itemsPerPage') }}:
+      {{ t('common.system.datatable.itemsPerPage') }}:
       <VBtnToggle
         v-model="modelValueComputed.rowsPerPage"
         class="ml-2"
@@ -130,7 +129,7 @@ const onClickNext = () => {
       </VBtnToggle>
     </div>
     <div class="anzu-data-footer__pagination">
-      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.datatable.from') }} {{ computedTotalCountText }}
+      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.system.datatable.from') }} {{ computedTotalCountText }}
     </div>
     <div class="anzu-data-footer__icons-before">
       <VBtn

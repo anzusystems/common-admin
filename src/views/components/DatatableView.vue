@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import ADatatable from '@/components/ADatatable.vue'
-import { useTableColumns } from '@/composables/system/tableColumns'
+import { useDatatableColumns } from '@/composables/system/datatableColumns'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { usePagination } from '@/composables/system/pagination'
 import { reactive, ref } from 'vue'
@@ -15,7 +15,7 @@ const data = ref(
   )
 )
 
-const columns = useTableColumns([{ name: 'texts.title' }, { name: 'createdAt' }, { name: 'modifiedAt' }])
+const columns = useDatatableColumns([{ name: 'texts.title' }, { name: 'createdAt' }, { name: 'modifiedAt' }])
 
 const pagination = usePagination()
 

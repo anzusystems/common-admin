@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "detail": "Log Detail",
+    "list": "List of Logs"
+  },
+  "system": "System",
+  "filter": {
+    "system": "System",
+    "type": "Type",
+    "levelName": "Level",
+    "id": "ID",
+    "contextId": "Context ID",
+    "userId": "User ID",
+    "datetimeFrom": "Date from",
+    "datetimeTo": "Date until",
+    "message": "Message",
+    "appVersion": "Version"
+  },
+  "model": {
+    "id": "ID",
+    "datetime": "Date",
+    "levelName": "Level",
+    "message": "Message",
+    "context": {
+      "appVersion": "Version",
+      "requestOriginAppVersion": "Origin version",
+      "contextId": "Context ID",
+      "userId": "User ID",
+      "ip": "IP",
+      "content": "Request content",
+      "response": "Response content",
+      "path": "URL",
+      "httpStatus": "Status code"
+    }
+  }
+}

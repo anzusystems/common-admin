@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { prettyDateTime } from '@/utils/datetime'
-import { DatetimeUTCNullable } from '@/types/common'
+import { dateTimePretty } from '@/utils/datetime'
+import type { DatetimeUTCNullable } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
@@ -14,7 +14,7 @@ const props = withDefaults(
 )
 
 const pretty = computed(() => {
-  return prettyDateTime(props.dateTime, props.edgeDateValue)
+  return dateTimePretty(props.dateTime, props.edgeDateValue)
 })
 </script>
 

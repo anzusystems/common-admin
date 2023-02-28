@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { Filter } from '@/types/Filter'
 import { computed } from 'vue'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 
 const props = withDefaults(

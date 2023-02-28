@@ -9,10 +9,9 @@ import useVuelidate from '@vuelidate/core'
 import { Grant, useGrant } from '@/model/valueObject/Grant'
 import ABooleanToggle from '@/components/form/AFormBooleanToggle.vue'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
-import { useRequired } from '@/validators/vuelidate/useRequired'
-import { useI18n } from '@/plugins/translate'
-import { useMinLength } from '@/validators/vuelidate/useMinLength'
-import { useMaxLength } from '@/validators/vuelidate/useMaxLength'
+import { useValidateRequired } from '@/validators/vuelidate/useValidateRequired'
+import { useValidateMinLength } from '@/validators/vuelidate/useValidateMinLength'
+import { useValidateMaxLength } from '@/validators/vuelidate/useValidateMaxLength'
 
 const modelData = ref({
   shortText: 'text1',
@@ -22,10 +21,9 @@ const modelData = ref({
   publishedAt: null,
 })
 
-const { t } = useI18n()
-const required = useRequired(t)
-const minLength = useMinLength(t)
-const maxLength = useMaxLength(t)
+const required = useValidateRequired()
+const minLength = useValidateMinLength()
+const maxLength = useValidateMaxLength()
 
 const rules = computed(() => ({
   modelData: {
@@ -70,7 +68,7 @@ const { grantOptions } = useGrant()
                 <ABooleanToggle v-model="modelData.isActive" required />
               </ARow>
               <ARow>
-                <ADatetimePicker label="Custom label" v-model="modelData.publishedAt" />
+                <ADatetimePicker v-model="modelData.publishedAt" label="Custom label" />
               </ARow>
             </VCol>
           </VRow>

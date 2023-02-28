@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import type { UseTableColumns } from '@/composables/system/tableColumns'
+import type { UseTableColumns } from '@/composables/system/datatableColumns'
 import ADatatableColumn from '@/components/ADatatableColumn.vue'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import { normalizeForSlotName } from '@/utils/string'
+import { stringNormalizeForSlotName } from '@/utils/string'
 import { isEmpty } from '@/utils/common'
-import { useI18n } from '@/plugins/translate'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -60,8 +60,8 @@ const { t } = useI18n()
       <template v-if="isNotEmpty">
         <tr v-for="(rowData, index) in props.data" :key="index" @click="onRowClick(rowData)">
           <ADatatableColumn v-for="column in availableColumns" :key="column.name" :row-data="rowData" :column="column">
-            <template #[normalizeForSlotName(column.name)]="{ data: slotData }">
-              <slot :name="normalizeForSlotName(column.name)" :data="slotData" :row-data="rowData" />
+            <template #[stringNormalizeForSlotName(column.name)]="{ data: slotData }">
+              <slot :name="stringNormalizeForSlotName(column.name)" :data="slotData" :row-data="rowData" />
             </template>
           </ADatatableColumn>
           <td v-if="actions">
@@ -73,7 +73,9 @@ const { t } = useI18n()
       </template>
       <template v-else>
         <tr>
-          <td :colspan="totalColumnsCount" class="text-center text-disabled">{{ t('common.datatable.noDataText') }}</td>
+          <td :colspan="totalColumnsCount" class="text-center text-disabled">
+            {{ t('common.system.datatable.noDataText') }}
+          </td>
         </tr>
       </template>
     </tbody>

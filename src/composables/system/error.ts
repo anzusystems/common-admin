@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useAlerts } from '@/composables/system/alerts'
 import { AnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
-import { HTTP_STATUS_UNPROCESSABLE_ENTITY } from '../statusCodes'
+import { HTTP_STATUS_UNPROCESSABLE_ENTITY } from '@/composables/statusCodes'
 
 interface ValidationResponseDataFields {
   [key: string]: string[]
