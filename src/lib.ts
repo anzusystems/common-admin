@@ -22,7 +22,8 @@ import AFormValueObjectOptionsSelect from '@/components/form/AFormValueObjectOpt
 import AFilterValueObjectOptionsSelect from '@/components/filter/AFilterValueObjectOptionsSelect.vue'
 import AFilterRemoteAutocomplete from '@/components/filter/AFilterRemoteAutocomplete.vue'
 import AFilterBooleanGroup from '@/components/filter/AFilterBooleanGroup.vue'
-import JobStatusChip from '@/components/job/JobStatusChip.vue'
+import AJobStatusChip from '@/components/job/AJobStatusChip.vue'
+import ALogLevelChip from '@/components/log/ALogLevelChip.vue'
 import ACopyText from '@/components/ACopyText.vue'
 import AIconGroup from '@/components/AIconGroup.vue'
 import APageTitle from '@/components/APageTitle.vue'
@@ -183,6 +184,8 @@ import { useValidatePhoneNumber } from '@/validators/vuelidate/useValidatePhoneN
 import { useValidateLongitudeNotZeroAsLatitude } from '@/validators/vuelidate/useValidateLongitudeNotZeroAsLatitude'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
+import type { Log } from '@/types/Log'
+import { LogLevel, useLogLevel } from '@/model/valueObject/LogLevel'
 
 export {
   // COMPONENTS
@@ -209,7 +212,7 @@ export {
   ADatetime,
   ADatatable,
   ADatatablePagination,
-  JobStatusChip,
+  AJobStatusChip,
   Acl,
   ACopyText,
   AIconGroup,
@@ -230,6 +233,7 @@ export {
   AThemeSelect,
   ALanguageSelect,
   ASystemBar,
+  ALogLevelChip,
 
   // COMPOSABLES
   usePagination,
@@ -248,6 +252,8 @@ export {
   useGrant,
   GrantOrigin,
   useGrantOrigin,
+  LogLevel,
+  useLogLevel,
 
   // TYPES
   IntegerId,
@@ -286,6 +292,7 @@ export {
   Immutable,
   ResourceNameSystemAware,
   ValidationScope,
+  Log,
 
   // FACTORIES
   useAnzuUserFactory,
