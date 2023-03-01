@@ -7,10 +7,11 @@ import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKey
 import { isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
+import type { DatetimeUTCNullable } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
-    modelValue: string
+    modelValue: DatetimeUTCNullable | undefined
     label?: string
     errorMessage?: string
     required?: boolean
@@ -50,7 +51,7 @@ const onUpdate = (newValue: string | null) => {
   emit('update:modelValue', newValue)
 }
 const onBlur = () => {
-  emit('blur', props.modelValue)
+  emit('blur', isUndefined(props.modelValue) ? null : props.modelValue)
   props.v?.$touch()
 }
 
