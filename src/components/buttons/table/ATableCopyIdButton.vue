@@ -21,7 +21,7 @@ const props = withDefaults(
     buttonT: 'common.button.copyId',
     buttonClass: 'ml-1',
     iconT: 'common.button.id',
-    notifyT: 'common.alerts.idWasCopied',
+    notifyT: 'common.alert.idWasCopied',
     dataCy: 'table-copy',
     size: 'x-small',
   }
