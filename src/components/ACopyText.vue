@@ -13,7 +13,7 @@ const props = withDefaults(
     dataCy?: string
   }>(),
   {
-    notifyT: 'common.alerts.textWasCopied',
+    notifyT: 'common.alert.textWasCopied',
     dataCy: 'copy_text',
   }
 )

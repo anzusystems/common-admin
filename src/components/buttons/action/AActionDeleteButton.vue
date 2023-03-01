@@ -27,7 +27,7 @@ const props = withDefaults(
     variant: 'text',
     buttonT: 'common.button.delete',
     buttonClass: 'ml-2',
-    dialogMessageT: 'common.modal.confirmDelete',
+    dialogMessageT: 'common.system.modal.confirmDelete',
     dialogConfirmButtonT: 'common.button.delete',
     dialogCancelButtonT: 'common.button.cancel',
     dialogConfirmColor: 'error',

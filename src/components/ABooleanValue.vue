@@ -24,7 +24,7 @@ const text = computed(() => {
   if (booleanValue.value) {
     return t('common.model.boolean.true')
   }
-  return t('common.model..boolean.false')
+  return t('common.model.boolean.false')
 })
 
 const color = computed(() => {
