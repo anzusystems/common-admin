@@ -22,7 +22,7 @@ type TextFieldRef = null | { $el: HTMLElement }
 
 const props = withDefaults(
   defineProps<{
-    modelValue: DatetimeUTCNullable
+    modelValue: DatetimeUTCNullable | undefined
     type?: 'datetime' | 'date'
     label?: string
     hideLabel?: boolean
@@ -85,7 +85,7 @@ const fixFormat = (value: string) => {
 }
 
 const onFlatpickrUpdate = (value: any) => {
-  if (value === null) {
+  if (value === null || isUndefined(value)) {
     emit('update:modelValue', null)
     emit('change')
     return
@@ -224,11 +224,11 @@ const onCalendarClick = () => {
 }
 
 onMounted(() => {
-  if (isNull(props.modelValue) && !isNull(props.defaultValue)) {
+  if ((isNull(props.modelValue) || isUndefined(props.modelValue)) && !isNull(props.defaultValue)) {
     flatpickrValue.value = props.defaultValue
     return
   }
-  flatpickrValue.value = props.modelValue
+  flatpickrValue.value = isUndefined(props.modelValue) ? null : props.modelValue
 })
 
 const requiredIf = useValidateRequiredIf()
