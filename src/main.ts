@@ -12,22 +12,31 @@ import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
 export type CustomAclValue = 'anzu_entity_create' | 'anzu_entity_view'
 
 const currentUserObject: AnzuUser = {
-  _resourceName: '',
-  _system: '',
-  createdAt: '',
-  createdBy: 0,
+  id: 1,
   email: '',
   enabled: false,
-  id: 1,
-  modifiedAt: '',
-  modifiedBy: 0,
+  roles: [ROLE_SUPER_ADMIN],
+  person: {
+    firstName: '',
+    lastName: '',
+    fullName: '',
+  },
+  avatar: {
+    color: '',
+    text: '',
+  },
   permissionGroups: [],
   permissions: {},
   resolvedPermissions: {
     anzu_entity_create: Grant.Deny,
     anzu_entity_view: Grant.Allow,
   },
-  roles: [ROLE_SUPER_ADMIN],
+  createdAt: '',
+  createdBy: 0,
+  modifiedAt: '',
+  modifiedBy: 0,
+  _resourceName: '',
+  _system: '',
 }
 const currentUserRef = ref<AnzuUser>(currentUserObject)
 const currentUser = readonly(currentUserRef)

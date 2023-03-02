@@ -154,6 +154,7 @@ import AnzuSystemsCommonAdmin, {
   type CurrentUserType,
   DefaultLanguageSymbol,
   type PluginOptions,
+  type CustomAclResolver,
 } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/types/Permission'
 import { useTheme } from '@/composables/themeSettings'
@@ -284,6 +285,7 @@ export {
   JobResource,
   CurrentUserType,
   AclValue,
+  CustomAclResolver,
   PluginOptions,
   LanguageCode,
   DatatableColumnConfig,
