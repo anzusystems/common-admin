@@ -2,7 +2,7 @@
 withDefaults(
   defineProps<{
     title?: string
-    value?: string | number
+    value?: string | number | undefined | null
     dataCy?: string
   }>(),
   {

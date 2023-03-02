@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
-    modelValue: string | number | null
+    modelValue: string | number | null | undefined
     label?: string
     errorMessage?: string
     required?: boolean
@@ -35,9 +35,9 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: string | number | null): void
-  (e: 'click:append', data: string | number | null): void
-  (e: 'blur', data: string | number | null): void
+  (e: 'update:modelValue', data: string | number | null | undefined): void
+  (e: 'click:append', data: string | number | null | undefined): void
+  (e: 'blur', data: string | number | null | undefined): void
 }>()
 
 const { t } = useI18n()
