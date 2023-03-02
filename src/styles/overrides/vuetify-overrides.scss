@@ -1,0 +1,83 @@
+#app {
+  .v-layout--full-height {
+    min-height: 100vh;
+  }
+}
+
+.v-overlay-container,
+#app {
+  .v-image__image {
+    &--preload {
+      filter: none;
+    }
+  }
+
+  .v-overlay__content.v-autocomplete__content .v-list-item .v-list-item__prepend input[type=checkbox] {
+    pointer-events: none; // fix for autocomplete checkboxes
+  }
+
+  .v-btn {
+    font-stretch: normal;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: none;
+  }
+
+  .v-text-field.v-text-field--pill {
+    .v-field__outline__start {
+      flex: 1 1;
+      border-radius: 9999px 0 0 9999px;
+    }
+
+    .v-field__outline__end {
+      border-radius: 0 9999px 9999px 0;
+    }
+  }
+
+  .v-input--density-compact {
+    --v-input-control-height: 8px; // todo: check
+    --v-input-padding-top: 5px;
+  }
+
+  .v-input--density-compact .v-field--variant-outlined,
+  .v-input--density-compact .v-field--single-line {
+    --v-field-padding-bottom: 5px;
+  }
+
+  .v-expansion-panels.v-expansion-panels--compact {
+    .v-expansion-panel-title {
+      padding: 12px;
+      min-height: 18px;
+    }
+
+    .v-expansion-panel-text__wrapper {
+      padding: 12px;
+    }
+  }
+
+  .v-toolbar.v-toolbar--custom-tiny {
+    height: 32px;
+    padding: 1px;
+
+    .v-toolbar__content {
+      height: 30px !important;
+    }
+  }
+
+  .v-dialog--fullscreen.overlay--sidebar .v-overlay__content {
+    overflow: hidden !important;
+  }
+}
+
+/* one or more available input mechanism(s) can hover, but not with ease (for example simulating the hovering when performing a long touch) */
+@media (any-hover: on-demand) {
+  .v-overlay.v-tooltip {
+    display: none !important;
+  }
+}
+/* one or more available input mechanism(s) cannot hover or there are no pointing input mechanisms */
+@media (any-hover: none) {
+  .v-overlay.v-tooltip {
+    display: none !important;
+  }
+}

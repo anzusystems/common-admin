@@ -1,0 +1,10 @@
+.anzu-data-table {
+  tbody {
+    tr {
+      cursor: pointer;
+      &:hover {
+        background-color: #eee;
+      }
+    }
+  }
+}

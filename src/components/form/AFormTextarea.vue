@@ -11,7 +11,7 @@ const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
-    modelValue: string // todo check number and null
+    modelValue: string | null // todo check number and null
     label?: string
     errorMessage?: string
     required?: boolean
@@ -35,9 +35,9 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: string): void
-  (e: 'click:append', data: string | number | null): void
-  (e: 'blur', data: string | number | null): void
+  (e: 'update:modelValue', data: string | null): void
+  (e: 'click:append', data: string | null): void
+  (e: 'blur', data: string | null): void
 }>()
 
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)

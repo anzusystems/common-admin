@@ -7,15 +7,16 @@ export const arrayItemToggle = <T>(array: Array<T>, value: T) => {
   array.splice(index, 1)
 }
 
-export const arrayToString = (values: number[] | string[], separator = ', ') => values.join(separator)
+export const arrayToString = (values: Array<string | number>, separator = ', ') => values.join(separator)
 
-// @ts-ignore todo
-export const arrayFromArgs = (...args: any) => Array.from(...args)
+export const arrayFromArgs = <T>(...args: [T[]]) => Array.from(...args)
 
-// @ts-ignore todo
-export const arrayFlatten = (arr) => {
-  // @ts-ignore todo
-  return arr.reduce(function (flat, toFlatten) {
-    return flat.concat(Array.isArray(toFlatten) ? arrayFlatten(toFlatten) : toFlatten)
+export type NestedArray<T> = Array<NestedArray<T> | T>
+
+export const arrayFlatten = <T>(input: NestedArray<T>, acc: T[] = []): T[] => {
+  return input.reduce((_: T[], current) => {
+    if (Array.isArray(current)) return arrayFlatten(current, acc)
+    acc.push(current)
+    return acc
   }, [])
 }
