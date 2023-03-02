@@ -160,7 +160,7 @@ import type { AclValue } from '@/types/Permission'
 import { useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import { type DatatableColumnConfig, useDatatableColumns } from '@/composables/system/datatableColumns'
-import { arrayFromArgs, arrayToString, arrayFlatten, arrayItemToggle } from '@/utils/array'
+import { arrayFromArgs, arrayToString, arrayFlatten, arrayItemToggle, type NestedArray } from '@/utils/array'
 import { browserHistoryReplaceUrlByRouter, browserHistoryReplaceUrlByString } from '@/utils/history'
 import { eventClickBlur } from '@/utils/event'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
@@ -187,6 +187,7 @@ import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
 import type { Log } from '@/types/Log'
 import { LogLevel, useLogLevel } from '@/model/valueObject/LogLevel'
+import '@/styles/main.scss'
 
 export {
   // COMPONENTS
@@ -358,6 +359,7 @@ export {
   arrayToString,
   arrayFromArgs,
   arrayFlatten,
+  NestedArray,
   // history
   browserHistoryReplaceUrlByString,
   browserHistoryReplaceUrlByRouter,

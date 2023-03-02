@@ -1,0 +1,39 @@
+.line-clamp-1 {
+  overflow: hidden;
+  -webkit-line-clamp: 1;
+  display: box;
+  -webkit-box-orient: vertical;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  display: box;
+  -webkit-box-orient: vertical;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  display: box;
+  -webkit-box-orient: vertical;
+}
+
+.line-clamp-4 {
+  overflow: hidden;
+  -webkit-line-clamp: 4;
+  display: box;
+  -webkit-box-orient: vertical;
+}
+
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+.word-break-all {
+  word-break: break-all !important;
+}
+
+.white-space-pre {
+  white-space: pre;
+}
