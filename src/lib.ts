@@ -188,6 +188,7 @@ import messagesSk from '@/locales/sk'
 import type { Log } from '@/types/Log'
 import { LogLevel, useLogLevel } from '@/model/valueObject/LogLevel'
 import '@/styles/main.scss'
+import type { ICON } from '@/model/icons'
 
 export {
   // COMPONENTS
@@ -397,6 +398,7 @@ export {
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
   ROLE_SUPER_ADMIN,
   NEW_LINE_MARK,
+  ICON,
 
   // VALIDATIONS
   useValidateRequired,

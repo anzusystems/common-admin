@@ -15,7 +15,7 @@ export const objectGetValues = <T>(obj: { [key: string]: T }): T[] => {
   return Object.keys(obj).map((k) => obj[k])
 }
 
-export const objectGetValueByPath = (obj: any, path: string, splitChar = '.') => {
+export const objectGetValueByPath = <R = any>(obj: any, path: string, splitChar = '.') => {
   const a = path.split(splitChar)
   let o = obj
   while (a.length) {
@@ -23,7 +23,7 @@ export const objectGetValueByPath = (obj: any, path: string, splitChar = '.') =>
     if (isUndefined(n) || !(n in o)) return
     o = o[n]
   }
-  return o
+  return o as R
 }
 
 export const objectSetValueByPath = (obj: any, path: string, value: any, splitChar = '.') => {
