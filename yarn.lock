@@ -34,14 +34,14 @@ __metadata:
     shortcut-buttons-flatpickr: ^0.4.0
     typescript: ^4.9.5
     vite: ^4.1.4
-    vite-plugin-dts: ^2.0.2
+    vite-plugin-dts: ^2.1.0
     vite-plugin-vuetify: ^1.0.2
     vue: ^3.2.47
     vue-flatpickr-component: ^11.0.2
     vue-i18n: ^9.2.2
     vue-router: ^4.1.6
     vue-tsc: ^1.2.1
-    vuetify: ^3.1.7
+    vuetify: ^3.1.8
   peerDependencies:
     "@vuelidate/core": ^2.0.0
     "@vuelidate/validators": ^2.0.0
@@ -3845,9 +3845,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-plugin-dts@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "vite-plugin-dts@npm:2.0.2"
+"vite-plugin-dts@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "vite-plugin-dts@npm:2.1.0"
   dependencies:
     "@babel/parser": ^7.20.15
     "@microsoft/api-extractor": ^7.33.5
@@ -3861,7 +3861,7 @@ __metadata:
     ts-morph: 17.0.1
   peerDependencies:
     vite: ">=2.9.0"
-  checksum: d8bf9a8066d6db088f967379139bc54f78aef495a7827f0680a5c261e9b62b17cfc7b4f8cc4ad94cf3ef08b1aa4740040d471d6557641fbab2174ce4ad059430
+  checksum: 6c51b6de986e622a8ec271b68dcbfac55ab0ba65ca3b74e19e3088ff931913e5bb5c6d15e77525ca0bc11a6c87497f4529132cd0ad6c5970e8794f809cfa9cb8
   languageName: node
   linkType: hard
 
@@ -4023,9 +4023,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:^3.1.7":
-  version: 3.1.7
-  resolution: "vuetify@npm:3.1.7"
+"vuetify@npm:^3.1.8":
+  version: 3.1.8
+  resolution: "vuetify@npm:3.1.8"
   peerDependencies:
     vite-plugin-vuetify: ^1.0.0-alpha.12
     vue: ^3.2.0
@@ -4038,7 +4038,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 1e53cf8d5f4f3c713716f5e9e7c796ec88d26c8a346c5edff330851d12d92f85efb0182c85a9365d11ed1dde1a9d0b0b7c24a7f7e79f44003ad759d41c8505e7
+  checksum: 01f2dff391a8dbbad41459a5bcf97344b12b030848e439d886cf95fb5137b65ef1e226cf884b752003712756a014383039b2ed64c5d1e5b0b1e412f5ae966d2f
   languageName: node
   linkType: hard
 
