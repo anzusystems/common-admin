@@ -23,7 +23,7 @@ export default {
     permission,
     permissionGroup,
   },
-  ...vuetify,
+  $vuetify: vuetify,
   validations: {
     api: {
       ...validationApi,
