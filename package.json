@@ -12,7 +12,7 @@
     },
     "./styles": "./dist/style.css"
   },
-  "version": "0.0.24",
+  "version": "0.0.25",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -26,7 +26,7 @@
     "test": "exit 0"
   },
   "devDependencies": {
-    "@intlify/unplugin-vue-i18n": "^0.8.2",
+    "@intlify/unplugin-vue-i18n": "^0.9.1",
     "@kyvg/vue3-notification": "^2.9.0",
     "@mdi/font": "^7.1.96",
     "@rushstack/eslint-patch": "^1.2.0",

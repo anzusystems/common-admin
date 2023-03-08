@@ -2,7 +2,6 @@
 import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
-import type { VuetifyIconValue } from '@/types/Vuetify'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
@@ -16,24 +15,16 @@ const props = withDefaults(
     errorMessage?: string
     required?: boolean
     v?: any
-    prependIcon?: VuetifyIconValue
-    appendIcon?: VuetifyIconValue
     dataCy?: string
-    hideLabel?: boolean
-    type?: string
-    step?: number
+    clearable?: boolean
   }>(),
   {
     label: undefined,
     errorMessage: undefined,
     required: undefined,
     v: null,
-    prependIcon: undefined,
-    appendIcon: undefined,
     dataCy: undefined,
-    hideLabel: false,
-    type: 'text',
-    step: undefined,
+    clearable: false,
   }
 )
 const emit = defineEmits<{
@@ -78,9 +69,11 @@ const requiredComputed = computed(() => {
 <template>
   <ADatetimePicker
     :model-value="modelValue"
+    :data-cy="dataCy"
     :error-messages="errorMessageComputed"
     :required="requiredComputed"
     :label="labelComputed"
+    :clearable="clearable"
     @blur="onBlur"
     @update:model-value="onUpdate($event)"
   />
