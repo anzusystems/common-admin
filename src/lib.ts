@@ -188,7 +188,7 @@ import messagesSk from '@/locales/sk'
 import type { Log } from '@/types/Log'
 import { LogLevel, useLogLevel } from '@/model/valueObject/LogLevel'
 import '@/styles/main.scss'
-import type { ICON } from '@/model/icons'
+import { ICON } from '@/model/icons'
 
 export {
   // COMPONENTS
