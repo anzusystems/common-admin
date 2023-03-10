@@ -7,23 +7,33 @@ import ABooleanValue from '@/components/ABooleanValue.vue'
     <VCardTitle>ABooleanValue</VCardTitle>
     <VCardSubtitle> :value="true" </VCardSubtitle>
     <VCardText>
-      <ABooleanValue :value="true"></ABooleanValue>
+      <ABooleanValue :value="true" />
     </VCardText>
     <VCardSubtitle> :value="false" </VCardSubtitle>
     <VCardText>
-      <ABooleanValue :value="false"></ABooleanValue>
+      <ABooleanValue :value="false" />
     </VCardText>
     <VCardSubtitle> :value="true" chip </VCardSubtitle>
     <VCardText>
-      <ABooleanValue :value="true" chip></ABooleanValue>
+      <ABooleanValue
+        :value="true"
+        chip
+      />
     </VCardText>
     <VCardSubtitle> :value="false" chip </VCardSubtitle>
     <VCardText>
-      <ABooleanValue :value="false" chip></ABooleanValue>
+      <ABooleanValue
+        :value="false"
+        chip
+      />
     </VCardText>
     <VCardSubtitle> :value="false" chip invert-color </VCardSubtitle>
     <VCardText>
-      <ABooleanValue :value="false" chip invert-color></ABooleanValue>
+      <ABooleanValue
+        :value="false"
+        chip
+        invert-color
+      />
     </VCardText>
   </VCard>
 </template>

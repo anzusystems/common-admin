@@ -9,9 +9,15 @@ const reloadAdmin = () => {
 </script>
 
 <template>
-  <span v-once class="system-bar-new-version">
+  <span
+    v-once
+    class="system-bar-new-version"
+  >
     {{ t('common.system.newVersionText') }}
-    <span class="text-decoration-underline cursor-pointer" @click.stop="reloadAdmin">
+    <span
+      class="text-decoration-underline cursor-pointer"
+      @click.stop="reloadAdmin"
+    >
       {{ t('common.system.newVersionReload') }}
     </span>
   </span>

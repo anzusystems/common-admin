@@ -26,10 +26,16 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <ARow v-if="!hideCreatedAt" :title="t('common.model.tracking.created')">
+  <ARow
+    v-if="!hideCreatedAt"
+    :title="t('common.model.tracking.created')"
+  >
     <ADatetime :date-time="data.createdAt" />
   </ARow>
-  <ARow v-if="!hideModifiedAt" :title="t('common.model.tracking.modified')">
+  <ARow
+    v-if="!hideModifiedAt"
+    :title="t('common.model.tracking.modified')"
+  >
     <ADatetime :date-time="data.modifiedAt" />
   </ARow>
 </template>

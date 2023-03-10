@@ -32,14 +32,24 @@ const toggleAdvancedFilter = () => {
 </script>
 
 <template>
-  <VRow v-if="enableTop" dense>
+  <VRow
+    v-if="enableTop"
+    dense
+  >
     <VCol class="">
       <slot name="top" />
     </VCol>
   </VRow>
   <VRow dense>
-    <VCol v-if="enableAdvanced" class="v-col-filters--show-hide" cols="auto">
-      <AFilterAdvancedButton :button-active="advancedFilter" @advanced-filter="toggleAdvancedFilter" />
+    <VCol
+      v-if="enableAdvanced"
+      class="v-col-filters--show-hide"
+      cols="auto"
+    >
+      <AFilterAdvancedButton
+        :button-active="advancedFilter"
+        @advanced-filter="toggleAdvancedFilter"
+      />
     </VCol>
     <VCol class="">
       <slot name="default" />
@@ -49,7 +59,11 @@ const toggleAdvancedFilter = () => {
         </div>
       </VExpandTransition>
     </VCol>
-    <VCol v-if="!hideButtons" class="v-col-filters--buttons text-right" cols="auto">
+    <VCol
+      v-if="!hideButtons"
+      class="v-col-filters--buttons text-right"
+      cols="auto"
+    >
       <slot name="buttons">
         <AFilterSubmitButton />
         <AFilterResetButton @reset="resetFilter" />

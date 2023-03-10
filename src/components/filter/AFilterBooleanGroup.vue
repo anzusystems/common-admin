@@ -35,11 +35,22 @@ const label = computed(() => {
     <VLabel class="pr-1">
       <span>{{ label }}</span>
     </VLabel>
-    <VBtnToggle v-model="value" size="small">
-      <VBtn size="small" :value="true" :color="value === true ? 'secondary' : ''">
+    <VBtnToggle
+      v-model="value"
+      size="small"
+    >
+      <VBtn
+        size="small"
+        :value="true"
+        :color="value === true ? 'secondary' : ''"
+      >
         {{ t('common.model.boolean.true') }}
       </VBtn>
-      <VBtn size="small" :value="false" :color="value === false ? 'secondary' : ''">
+      <VBtn
+        size="small"
+        :value="false"
+        :color="value === false ? 'secondary' : ''"
+      >
         {{ t('common.model.boolean.false') }}
       </VBtn>
     </VBtnToggle>

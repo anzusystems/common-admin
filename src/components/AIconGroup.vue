@@ -17,15 +17,38 @@ withDefaults(
 </script>
 
 <template>
-  <div v-if="!isNull(secondaryIcon)" class="anzu-icon-group">
-    <VIcon :size="size" class="anzu-icon-group__main-icon" :icon="mainIcon" />
-    <VIcon :size="size" class="anzu-icon-group__secondary-icon" :icon="secondaryIcon" />
+  <div
+    v-if="!isNull(secondaryIcon)"
+    class="anzu-icon-group"
+  >
+    <VIcon
+      :size="size"
+      class="anzu-icon-group__main-icon"
+      :icon="mainIcon"
+    />
+    <VIcon
+      :size="size"
+      class="anzu-icon-group__secondary-icon"
+      :icon="secondaryIcon"
+    />
   </div>
-  <div v-else-if="!isNull(secondaryText)" class="anzu-icon-group">
-    <VIcon :size="size" class="anzu-icon-group__main-icon" :icon="mainIcon" />
-    <div class="anzu-icon-group__secondary-text">{{ secondaryText }}</div>
+  <div
+    v-else-if="!isNull(secondaryText)"
+    class="anzu-icon-group"
+  >
+    <VIcon
+      :size="size"
+      class="anzu-icon-group__main-icon"
+      :icon="mainIcon"
+    />
+    <div class="anzu-icon-group__secondary-text">
+      {{ secondaryText }}
+    </div>
   </div>
-  <VIcon v-else :icon="mainIcon" />
+  <VIcon
+    v-else
+    :icon="mainIcon"
+  />
 </template>
 
 <style lang="scss">

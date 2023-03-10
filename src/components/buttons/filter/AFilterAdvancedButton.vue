@@ -35,8 +35,20 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <VBtn :class="buttonClass" :data-cy="dataCy" icon size="x-small" variant="text" @click.stop="onClick">
+  <VBtn
+    :class="buttonClass"
+    :data-cy="dataCy"
+    icon
+    size="x-small"
+    variant="text"
+    @click.stop="onClick"
+  >
     <VIcon :icon="icon" />
-    <VTooltip activator="parent" location="bottom">{{ t(tooltipT) }}</VTooltip>
+    <VTooltip
+      activator="parent"
+      location="bottom"
+    >
+      {{ t(tooltipT) }}
+    </VTooltip>
   </VBtn>
 </template>

@@ -50,7 +50,11 @@ const { t } = useI18n()
   <VTable class="anzu-data-table">
     <thead>
       <tr>
-        <th v-for="column in availableColumns" :key="column.name" class="text-left">
+        <th
+          v-for="column in availableColumns"
+          :key="column.name"
+          class="text-left"
+        >
           {{ column.getLabel ? column.getLabel(system, subject) : '' }}
         </th>
         <th v-if="actions" />
@@ -58,22 +62,41 @@ const { t } = useI18n()
     </thead>
     <tbody>
       <template v-if="isNotEmpty">
-        <tr v-for="(rowData, index) in props.data" :key="index" @click="onRowClick(rowData)">
-          <ADatatableColumn v-for="column in availableColumns" :key="column.name" :row-data="rowData" :column="column">
+        <tr
+          v-for="(rowData, index) in props.data"
+          :key="index"
+          @click="onRowClick(rowData)"
+        >
+          <ADatatableColumn
+            v-for="column in availableColumns"
+            :key="column.name"
+            :row-data="rowData"
+            :column="column"
+          >
             <template #[stringNormalizeForSlotName(column.name)]="{ data: slotData }">
-              <slot :name="stringNormalizeForSlotName(column.name)" :data="slotData" :row-data="rowData" />
+              <slot
+                :name="stringNormalizeForSlotName(column.name)"
+                :data="slotData"
+                :row-data="rowData"
+              />
             </template>
           </ADatatableColumn>
           <td v-if="actions">
             <div class="d-flex justify-end">
-              <slot name="actions" :data="rowData" />
+              <slot
+                name="actions"
+                :data="rowData"
+              />
             </div>
           </td>
         </tr>
       </template>
       <template v-else>
         <tr>
-          <td :colspan="totalColumnsCount" class="text-center text-disabled">
+          <td
+            :colspan="totalColumnsCount"
+            class="text-center text-disabled"
+          >
             {{ t('common.system.datatable.noDataText') }}
           </td>
         </tr>

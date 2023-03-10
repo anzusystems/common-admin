@@ -18,7 +18,13 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <VBtn :class="buttonClass" :data-cy="dataCy" :to="{ name: routeName }" color="success" rounded="pill">
+  <VBtn
+    :class="buttonClass"
+    :data-cy="dataCy"
+    :to="{ name: routeName }"
+    color="success"
+    rounded="pill"
+  >
     {{ t(buttonT) }}
   </VBtn>
 </template>

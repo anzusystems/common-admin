@@ -16,7 +16,12 @@ withDefaults(
 <template>
   <VRow>
     <VCol>
-      <h4 v-if="title.length" class="text-subtitle-2">{{ title }}</h4>
+      <h4
+        v-if="title.length"
+        class="text-subtitle-2"
+      >
+        {{ title }}
+      </h4>
       <slot>
         <span class="text-high-emphasis">{{ value }}</span>
       </slot>

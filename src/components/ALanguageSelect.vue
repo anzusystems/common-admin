@@ -48,8 +48,17 @@ const availableLocales = computed(() => {
 <template>
   <VMenu>
     <template #activator="{ props }">
-      <VBtn class="pl-1" rounded="pill" v-bind="props" variant="text" data-cy="settings-language">
-        <VAvatar class="mr-1" size="30">
+      <VBtn
+        class="pl-1"
+        rounded="pill"
+        v-bind="props"
+        variant="text"
+        data-cy="settings-language"
+      >
+        <VAvatar
+          class="mr-1"
+          size="30"
+        >
           <FlagCountry :code="currentLocale?.code" />
         </VAvatar>
         {{ currentLocale.title }}
@@ -57,9 +66,16 @@ const availableLocales = computed(() => {
     </template>
     <VCard>
       <VList dense>
-        <VListItem v-for="locale in availableLocales" :key="locale.code" @click.stop="onLanguageChange(locale.code)">
+        <VListItem
+          v-for="locale in availableLocales"
+          :key="locale.code"
+          @click.stop="onLanguageChange(locale.code)"
+        >
           <VListItemTitle>
-            <VAvatar class="mr-1" size="30">
+            <VAvatar
+              class="mr-1"
+              size="30"
+            >
               <FlagCountry :code="locale.code" />
             </VAvatar>
             {{ locale.title }}

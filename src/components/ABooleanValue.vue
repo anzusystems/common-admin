@@ -36,6 +36,13 @@ const color = computed(() => {
 </script>
 
 <template>
-  <VChip v-if="chip" :color="color" label size="small">{{ text }}</VChip>
+  <VChip
+    v-if="chip"
+    :color="color"
+    label
+    size="small"
+  >
+    {{ text }}
+  </VChip>
   <span v-else>{{ text }}</span>
 </template>

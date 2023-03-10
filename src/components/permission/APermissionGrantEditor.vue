@@ -21,7 +21,13 @@ const { getGrantOption } = useGrant()
 </script>
 
 <template>
-  <VBtnToggle v-model="selectedGrant" divided density="compact" variant="outlined" class="text-disabled">
+  <VBtnToggle
+    v-model="selectedGrant"
+    divided
+    density="compact"
+    variant="outlined"
+    class="text-disabled"
+  >
     <VBtn
       v-for="availableGrant in availableGrants"
       :key="availableGrant"

@@ -30,6 +30,11 @@ const { t } = useI18n()
     :height="36"
   >
     <VIcon icon="mdi-close" />
-    <VTooltip activator="parent" location="bottom">{{ t('common.button.close') }}</VTooltip>
+    <VTooltip
+      activator="parent"
+      location="bottom"
+    >
+      {{ t('common.button.close') }}
+    </VTooltip>
   </VBtn>
 </template>

@@ -16,11 +16,19 @@ withDefaults(
 </script>
 
 <template>
-  <VCard :title="title" :variant="variant" class="position-relative" :loading="loading">
+  <VCard
+    :title="title"
+    :variant="variant"
+    class="position-relative"
+    :loading="loading"
+  >
     <div :class="innerDivClass">
       <slot />
     </div>
-    <div v-show="loading" class="a-overlay" />
+    <div
+      v-show="loading"
+      class="a-overlay"
+    />
   </VCard>
 </template>
 
