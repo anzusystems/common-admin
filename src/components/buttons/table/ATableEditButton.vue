@@ -33,6 +33,11 @@ const { t } = useI18n()
     @click.stop="() => {}"
   >
     <VIcon icon="mdi-pencil" />
-    <VTooltip activator="parent" location="bottom">{{ t(buttonT) }}</VTooltip>
+    <VTooltip
+      activator="parent"
+      location="bottom"
+    >
+      {{ t(buttonT) }}
+    </VTooltip>
   </VBtn>
 </template>

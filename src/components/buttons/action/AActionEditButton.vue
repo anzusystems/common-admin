@@ -35,7 +35,14 @@ const onClick = (event: Event) => {
 </script>
 
 <template>
-  <VBtn :class="buttonClass" :data-cy="dataCy" :loading="loading" color="primary" rounded="pill" @click.stop="onClick">
+  <VBtn
+    :class="buttonClass"
+    :data-cy="dataCy"
+    :loading="loading"
+    color="primary"
+    rounded="pill"
+    @click.stop="onClick"
+  >
     <span>{{ t(buttonT) }}</span>
   </VBtn>
 </template>

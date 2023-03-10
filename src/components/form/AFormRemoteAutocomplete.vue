@@ -263,13 +263,29 @@ watch(search, (newValue, oldValue) => {
     @update:search="onSearchUpdate"
   >
     <template #label>
-      <span v-if="!hideLabel" :key="requiredComputed + ''">
-        {{ labelComputed }}<span v-if="requiredComputed" class="required" />
+      <span
+        v-if="!hideLabel"
+        :key="requiredComputed + ''"
+      >
+        {{ labelComputed }}<span
+          v-if="requiredComputed"
+          class="required"
+        />
       </span>
     </template>
-    <template v-if="chips" #chip="{ props: chipProps, item }">
-      <slot name="chip" :props="chipProps" :item="item">
-        <VChip v-bind="chipProps" :text="item.title" />
+    <template
+      v-if="chips"
+      #chip="{ props: chipProps, item }"
+    >
+      <slot
+        name="chip"
+        :props="chipProps"
+        :item="item"
+      >
+        <VChip
+          v-bind="chipProps"
+          :text="item.title"
+        />
       </slot>
     </template>
   </VAutocomplete>

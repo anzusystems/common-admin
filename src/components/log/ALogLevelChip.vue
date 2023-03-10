@@ -16,7 +16,12 @@ const levelOption = computed(() => {
 </script>
 
 <template>
-  <VChip v-if="levelOption" :color="levelOption.color" label size="small">
+  <VChip
+    v-if="levelOption"
+    :color="levelOption.color"
+    label
+    size="small"
+  >
     {{ levelOption.title }}
   </VChip>
 </template>

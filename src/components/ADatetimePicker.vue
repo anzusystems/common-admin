@@ -280,10 +280,22 @@ const errorMessageComputed = computed(() => {
           @on-open="onFlatpickrOpen"
           @on-change="onFlatpickrChange"
         />
-        <VIcon class="a-datetime-picker__calendar" icon="mdi-calendar" @click.stop="onCalendarClick" />
+        <VIcon
+          class="a-datetime-picker__calendar"
+          icon="mdi-calendar"
+          @click.stop="onCalendarClick"
+        />
       </div>
     </template>
-    <template v-if="!hideLabel" #label> {{ label }}<span v-if="required" class="required" /></template>
+    <template
+      v-if="!hideLabel"
+      #label
+    >
+      {{ label }}<span
+        v-if="required"
+        class="required"
+      />
+    </template>
   </VTextField>
 </template>
 

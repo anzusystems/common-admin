@@ -41,7 +41,10 @@ const { resetFilter, submitFilter } = useFilterHelpers()
   <VCard>
     <VCardTitle>Datatable</VCardTitle>
     <VCardText>
-      <VForm name="search" @submit.prevent="submitFilter(filter, pagination, getList)">
+      <VForm
+        name="search"
+        @submit.prevent="submitFilter(filter, pagination, getList)"
+      >
         <AFilterWrapper @reset-filter="resetFilter(filter, pagination, getList)">
           <VRow align="start">
             <VCol cols="4">
@@ -54,11 +57,20 @@ const { resetFilter, submitFilter } = useFilterHelpers()
         </AFilterWrapper>
       </VForm>
 
-      <ASystemEntityScope system="system" subject="subject">
-        <ADatatable :data="data.data" :columns="columns" />
+      <ASystemEntityScope
+        system="system"
+        subject="subject"
+      >
+        <ADatatable
+          :data="data.data"
+          :columns="columns"
+        />
       </ASystemEntityScope>
 
-      <ADatatablePagination v-model="pagination" @change="getList" />
+      <ADatatablePagination
+        v-model="pagination"
+        @change="getList"
+      />
     </VCardText>
   </VCard>
 </template>

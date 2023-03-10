@@ -36,7 +36,15 @@ const { t } = useI18n()
     variant="flat"
     @click.stop="onClick"
   >
-    <VIcon color="grey darken-1" icon="mdi-filter-remove-outline" />
-    <VTooltip activator="parent" location="bottom">{{ t(tooltipT) }}</VTooltip>
+    <VIcon
+      color="grey darken-1"
+      icon="mdi-filter-remove-outline"
+    />
+    <VTooltip
+      activator="parent"
+      location="bottom"
+    >
+      {{ t(tooltipT) }}
+    </VTooltip>
   </VBtn>
 </template>

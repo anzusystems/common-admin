@@ -45,7 +45,12 @@ const { t } = useI18n()
     @click.stop="onClick"
   >
     <VIcon icon="mdi-content-save" />
-    <VTooltip activator="parent" location="bottom">{{ t(buttonT) }}</VTooltip>
+    <VTooltip
+      activator="parent"
+      location="bottom"
+    >
+      {{ t(buttonT) }}
+    </VTooltip>
   </VBtn>
   <VBtn
     v-else

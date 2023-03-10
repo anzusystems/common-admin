@@ -157,7 +157,7 @@ import AnzuSystemsCommonAdmin, {
   type CustomAclResolver,
 } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/types/Permission'
-import { useTheme } from '@/composables/themeSettings'
+import { Theme, useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import { type DatatableColumnConfig, useDatatableColumns } from '@/composables/system/datatableColumns'
 import { arrayFromArgs, arrayToString, arrayFlatten, arrayItemToggle, type NestedArray } from '@/utils/array'
@@ -247,6 +247,7 @@ export {
   useErrorHandler,
   useDatatableColumns,
   useTheme,
+  Theme,
   useLanguageSettings,
   modifyLanguageSettings,
 

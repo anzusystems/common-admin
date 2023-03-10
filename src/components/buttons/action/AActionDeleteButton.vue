@@ -87,13 +87,31 @@ defineExpose({
     @click.stop="onClick"
   >
     <VIcon icon="mdi-trash-can-outline" />
-    <VTooltip activator="parent" location="bottom">{{ t(buttonT) }}</VTooltip>
+    <VTooltip
+      activator="parent"
+      location="bottom"
+    >
+      {{ t(buttonT) }}
+    </VTooltip>
   </VBtn>
-  <VDialog v-model="dialog" persistent :width="500" no-click-animation>
-    <VCard v-if="dialog" data-cy="delete-panel">
-      <VToolbar class="pl-2" density="compact">
+  <VDialog
+    v-model="dialog"
+    persistent
+    :width="500"
+    no-click-animation
+  >
+    <VCard
+      v-if="dialog"
+      data-cy="delete-panel"
+    >
+      <VToolbar
+        class="pl-2"
+        density="compact"
+      >
         <div class="d-block pl-0 w-100">
-          <div class="text-h6">{{ t(dialogMessageT) }}</div>
+          <div class="text-h6">
+            {{ t(dialogMessageT) }}
+          </div>
         </div>
         <VSpacer />
         <VToolbarItems>
@@ -110,10 +128,21 @@ defineExpose({
       </VToolbar>
       <VCardActions>
         <VSpacer />
-        <VBtn :color="dialogCancelColor" text :disabled="loading" data-cy="button-cancel" @click.stop="onCancel">
+        <VBtn
+          :color="dialogCancelColor"
+          text
+          :disabled="loading"
+          data-cy="button-cancel"
+          @click.stop="onCancel"
+        >
           {{ t(dialogCancelButtonT) }}
         </VBtn>
-        <VBtn :color="dialogConfirmColor" :loading="loading" data-cy="button-confirm" @click.stop="onConfirm">
+        <VBtn
+          :color="dialogConfirmColor"
+          :loading="loading"
+          data-cy="button-confirm"
+          @click.stop="onConfirm"
+        >
           {{ t(dialogConfirmButtonT) }}
         </VBtn>
       </VCardActions>

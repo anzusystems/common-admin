@@ -27,7 +27,14 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <VBtn :class="buttonClass" :data-cy="dataCy" color="success" type="submit" elevation="0" @click.stop="onClick">
+  <VBtn
+    :class="buttonClass"
+    :data-cy="dataCy"
+    color="success"
+    type="submit"
+    elevation="0"
+    @click.stop="onClick"
+  >
     {{ t(buttonT) }}
   </VBtn>
 </template>

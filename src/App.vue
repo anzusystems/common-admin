@@ -45,15 +45,41 @@ onMounted(async () => {
   <VApp>
     <VNavigationDrawer v-model="drawer">
       <VList>
-        <VListItem title="Admin common" subtitle="Anzu" class="text-h6"></VListItem>
+        <VListItem
+          title="Admin common"
+          subtitle="Anzu"
+          class="text-h6"
+        />
       </VList>
-      <VList v-model:opened="opened" density="compact" nav>
-        <VListItem :to="{ name: 'component-row' }" title="ARow"></VListItem>
-        <VListItem :to="{ name: 'component-boolean-value' }" title="ABooleanValue"></VListItem>
-        <VListItem :to="{ name: 'component-permission' }" title="Permission"></VListItem>
-        <VListItem :to="{ name: 'component-datetime' }" title="Datetime"></VListItem>
-        <VListItem :to="{ name: 'component-forms' }" title="Forms"></VListItem>
-        <VListItem :to="{ name: 'component-datatable' }" title="Datatable"></VListItem>
+      <VList
+        v-model:opened="opened"
+        density="compact"
+        nav
+      >
+        <VListItem
+          :to="{ name: 'component-row' }"
+          title="ARow"
+        />
+        <VListItem
+          :to="{ name: 'component-boolean-value' }"
+          title="ABooleanValue"
+        />
+        <VListItem
+          :to="{ name: 'component-permission' }"
+          title="Permission"
+        />
+        <VListItem
+          :to="{ name: 'component-datetime' }"
+          title="Datetime"
+        />
+        <VListItem
+          :to="{ name: 'component-forms' }"
+          title="Forms"
+        />
+        <VListItem
+          :to="{ name: 'component-datatable' }"
+          title="Datatable"
+        />
       </VList>
     </VNavigationDrawer>
     <VAppBar density="compact">
@@ -65,7 +91,10 @@ onMounted(async () => {
       </div>
     </VAppBar>
     <VMain>
-      <VContainer class="pa-3" fluid>
+      <VContainer
+        class="pa-3"
+        fluid
+      >
         <RouterView :key="route.path" />
       </VContainer>
     </VMain>

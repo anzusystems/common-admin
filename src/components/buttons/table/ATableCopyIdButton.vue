@@ -55,7 +55,16 @@ const onClick = (event: Event) => {
     variant="text"
     @click.stop="onClick"
   >
-    <AIconGroup :secondary-text="t(iconT)" main-icon="mdi-content-copy" size="small" />
-    <VTooltip activator="parent" location="bottom">{{ t(buttonT) }}</VTooltip>
+    <AIconGroup
+      :secondary-text="t(iconT)"
+      main-icon="mdi-content-copy"
+      size="small"
+    />
+    <VTooltip
+      activator="parent"
+      location="bottom"
+    >
+      {{ t(buttonT) }}
+    </VTooltip>
   </VBtn>
 </template>

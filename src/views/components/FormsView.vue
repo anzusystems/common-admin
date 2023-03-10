@@ -52,23 +52,45 @@ const { grantOptions } = useGrant()
     <VCardTitle>Forms</VCardTitle>
     <VCardText>
       <VForm>
-        <ASystemEntityScope system="system" subject="subject">
+        <ASystemEntityScope
+          system="system"
+          subject="subject"
+        >
           <VRow>
-            <VCol cols="12" md="8">
+            <VCol
+              cols="12"
+              md="8"
+            >
               <ARow>
-                <ATextField v-model="modelData.shortText" :v="v$.modelData.shortText" />
+                <ATextField
+                  v-model="modelData.shortText"
+                  :v="v$.modelData.shortText"
+                />
               </ARow>
               <ARow>
-                <ATextarea v-model="modelData.longText" :v="v$.modelData.longText" />
+                <ATextarea
+                  v-model="modelData.longText"
+                  :v="v$.modelData.longText"
+                />
               </ARow>
               <ARow>
-                <AValueObjectOptionsSelect v-model="modelData.grant" :items="grantOptions" :v="v$.modelData.grant" />
+                <AValueObjectOptionsSelect
+                  v-model="modelData.grant"
+                  :items="grantOptions"
+                  :v="v$.modelData.grant"
+                />
               </ARow>
               <ARow>
-                <ABooleanToggle v-model="modelData.isActive" required />
+                <ABooleanToggle
+                  v-model="modelData.isActive"
+                  required
+                />
               </ARow>
               <ARow>
-                <ADatetimePicker v-model="modelData.publishedAt" label="Custom label" />
+                <ADatetimePicker
+                  v-model="modelData.publishedAt"
+                  label="Custom label"
+                />
               </ARow>
             </VCol>
           </VRow>

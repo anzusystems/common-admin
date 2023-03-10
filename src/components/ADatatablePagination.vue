@@ -106,7 +106,10 @@ const onClickNext = () => {
 
 <template>
   <div class="anzu-data-footer">
-    <div v-if="!hideRecordsPerPage" class="anzu-data-footer__page-limit">
+    <div
+      v-if="!hideRecordsPerPage"
+      class="anzu-data-footer__page-limit"
+    >
       {{ t('common.system.datatable.itemsPerPage') }}:
       <VBtnToggle
         v-model="modelValueComputed.rowsPerPage"
@@ -151,8 +154,20 @@ const onClickNext = () => {
       <span>{{ modelValueComputed.page }}</span>
     </div>
     <div class="anzu-data-footer__icons-after">
-      <VBtn :disabled="disabledNext" icon="mdi-chevron-right" size="small" variant="text" @click.stop="onClickNext" />
-      <VBtn :disabled="disabledLast" icon="mdi-page-last" size="small" variant="text" @click.stop="onClickLast" />
+      <VBtn
+        :disabled="disabledNext"
+        icon="mdi-chevron-right"
+        size="small"
+        variant="text"
+        @click.stop="onClickNext"
+      />
+      <VBtn
+        :disabled="disabledLast"
+        icon="mdi-page-last"
+        size="small"
+        variant="text"
+        @click.stop="onClickLast"
+      />
     </div>
   </div>
 </template>

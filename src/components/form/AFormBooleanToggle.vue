@@ -53,9 +53,30 @@ const requiredComputed = computed(() => {
 })
 </script>
 <template>
-  <VLabel v-if="label" class="pr-1">{{ labelComputed }}<span v-if="requiredComputed" class="required" /></VLabel>
-  <VBtnToggle v-model="value" :mandatory="requiredComputed">
-    <VBtn :value="true" data-cy="toggle-true">{{ t('common.model.boolean.true') }}</VBtn>
-    <VBtn :value="false" data-cy="toggle-false">{{ t('common.model.boolean.false') }}</VBtn>
+  <VLabel
+    v-if="label"
+    class="pr-1"
+  >
+    {{ labelComputed }}<span
+      v-if="requiredComputed"
+      class="required"
+    />
+  </VLabel>
+  <VBtnToggle
+    v-model="value"
+    :mandatory="requiredComputed"
+  >
+    <VBtn
+      :value="true"
+      data-cy="toggle-true"
+    >
+      {{ t('common.model.boolean.true') }}
+    </VBtn>
+    <VBtn
+      :value="false"
+      data-cy="toggle-false"
+    >
+      {{ t('common.model.boolean.false') }}
+    </VBtn>
   </VBtnToggle>
 </template>
