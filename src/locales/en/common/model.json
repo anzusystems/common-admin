@@ -1,4 +1,5 @@
 {
+  "notSelected": "Not selected",
   "boolean": {
     "true": "Yes",
     "false": "No"

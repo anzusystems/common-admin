@@ -1,4 +1,5 @@
 {
+  "notSelected": "Nevybrané",
   "boolean": {
     "true": "áno",
     "false": "nie"
