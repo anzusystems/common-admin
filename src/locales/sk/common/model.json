@@ -1,4 +1,6 @@
 {
+  "system": "System",
+  "notSelected": "Nevybrané",
   "boolean": {
     "true": "áno",
     "false": "nie"
