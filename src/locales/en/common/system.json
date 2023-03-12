@@ -8,6 +8,7 @@
     "auto": "Auto"
   },
   "datatable": {
+    "config": "Config table",
     "displayCols": "Display columns",
     "itemsPerPage": "Records per page",
     "from": "from",
