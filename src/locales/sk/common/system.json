@@ -8,14 +8,34 @@
     "auto": "Automatická"
   },
   "datatable": {
+    "config": "Config table",
     "displayCols": "Display columns",
     "itemsPerPage": "Records per page",
     "from": "from",
-    "noDataText": "No data to display"
+    "noDataText": "No data to display",
+    "ordering": {
+      "title": "Radenie",
+      "mostRelevant": "Najrelevantnejšie",
+      "mostRecent": "Najnovšie",
+      "oldest": "Najstaršie"
+    }
   },
   "modal": {
     "confirmDelete": "Remove?",
     "hide": "Hide",
     "show": "Show"
+  },
+  "adminSwitcher": {
+    "button": "Aplikácie"
+  },
+  "currentUser": {
+    "button": "Účet",
+    "logout" : "Odhlásenie",
+    "settings" : "nastavenia"
+  },
+  "breadcrumbs": {
+    "detail": "Detail",
+    "edit": "Úprava",
+    "create": "Vytvorenie"
   }
 }
