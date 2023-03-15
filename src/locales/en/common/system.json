@@ -35,7 +35,7 @@
     "logoutConfirm" : "Logout",
     "settings" : "Settings"
   },
-  "breadcrumbs": {
+  "breadcrumb": {
     "detail": "Detail",
     "edit": "Edit",
     "create": "Create"
