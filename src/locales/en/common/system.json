@@ -12,11 +12,30 @@
     "displayCols": "Display columns",
     "itemsPerPage": "Records per page",
     "from": "from",
-    "noDataText": "No data to display"
+    "noDataText": "No data to display",
+    "ordering": {
+      "title": "Ordering",
+      "mostRelevant": "Most relevant",
+      "mostRecent": "Most recent",
+      "oldest": "Oldest"
+    }
   },
   "modal": {
     "confirmDelete": "Remove?",
     "hide": "Hide",
     "show": "Show"
+  },
+  "adminSwitcher": {
+    "button": "Applications"
+  },
+  "currentUser": {
+    "button": "Account",
+    "logout" : "Logout",
+    "settings" : "Settings"
+  },
+  "breadcrumbs": {
+    "detail": "Detail",
+    "edit": "Edit",
+    "create": "Create"
   }
 }
