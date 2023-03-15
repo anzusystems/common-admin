@@ -31,11 +31,27 @@
   "currentUser": {
     "button": "Account",
     "logout" : "Logout",
+    "logoutText" : "Are you sure you want to log out?",
+    "logoutConfirm" : "Logout",
     "settings" : "Settings"
   },
-  "breadcrumbs": {
+  "breadcrumb": {
     "detail": "Detail",
     "edit": "Edit",
     "create": "Create"
+  },
+  "login": {
+    "text": "Prosím, prihláste sa",
+    "button": "Prihlásiť sa"
+  },
+  "notFound": {
+    "title": "Oops, 404",
+    "text": "This page doesn't exist",
+    "backButton": "Return to homepage"
+  },
+  "unauthorized": {
+    "title": "Oops, 401",
+    "text": "You don't have access to this page",
+    "backButton": "Return to login"
   }
 }

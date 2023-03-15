@@ -31,11 +31,27 @@
   "currentUser": {
     "button": "Účet",
     "logout" : "Odhlásenie",
-    "settings" : "nastavenia"
+    "logoutText" : "Skutočne chcete odhlásiť?",
+    "logoutConfirm" : "Odhlásiť",
+    "settings" : "Nastavenia"
   },
-  "breadcrumbs": {
+  "breadcrumb": {
     "detail": "Detail",
     "edit": "Úprava",
     "create": "Vytvorenie"
+  },
+  "login": {
+    "text": "Prosím, prihláste sa",
+    "button": "Prihlásiť sa"
+  },
+  "notFound": {
+    "title": "Ups, 404",
+    "text": "Táto stránka neexistuje",
+    "backButton": "Vráť ma na úvodnú stránku"
+  },
+  "unauthorized": {
+    "title": "Ups, 401",
+    "text": "Na túto stránku nemáte prístup",
+    "backButton": "Vráť ma na prihlásenie"
   }
 }

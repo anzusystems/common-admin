@@ -17,7 +17,7 @@ export function useApiQueryBuilder() {
   }
 
   const querySetOrder = (field: string | null, desc: boolean): void => {
-    if (!isNull(field)) queryAdd('order[' + field + ']', desc ? 'desc' : 'asc')
+    if (!isNull(field) && field.length > 0) queryAdd('order[' + field + ']', desc ? 'desc' : 'asc')
   }
 
   const formatValue = (value: string | number | boolean): string | number => {
