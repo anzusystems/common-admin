@@ -48,10 +48,10 @@ export const apiFetchList = <T, R = T>(
         }
         if (res.data) {
           const resData = res.data as unknown as ApiResponseList<R> | ApiInfiniteResponseList<R>
-          if (isApiResponseList(resData)) {
-            pagination.totalCount = resData.totalCount
-          } else if (isApiInfiniteResponseList(resData)) {
+          if (isApiInfiniteResponseList(resData)) {
             pagination.hasNextPage = res.data.hasNextPage
+          } else if (isApiResponseList(resData)) {
+            pagination.totalCount = resData.totalCount
           }
           pagination.currentViewCount = res.data.data.length
           return resolve(res.data.data)
