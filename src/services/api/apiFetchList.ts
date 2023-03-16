@@ -9,6 +9,8 @@ import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
+import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
+import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
 
 const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
@@ -45,16 +47,20 @@ export const apiFetchList = <T, R = T>(
           return reject(new AnzuApiResponseCodeError(res.status))
         }
         if (res.data) {
-          pagination.totalCount = res.data.totalCount
+          const resData = res.data as unknown as ApiResponseList<R> | ApiInfiniteResponseList<R>
+          if (isApiInfiniteResponseList(resData)) {
+            pagination.hasNextPage = res.data.hasNextPage
+          } else if (isApiResponseList(resData)) {
+            pagination.totalCount = resData.totalCount
+          }
           pagination.currentViewCount = res.data.data.length
-          if (!isUndefined(res.data.hasNextPage)) pagination.hasNextPage = res.data.hasNextPage
           return resolve(res.data.data)
         }
         return reject(new AnzuFatalError())
       })
       .catch((err) => {
         if(axiosErrorResponseIsForbidden(err)) {
-          return reject(new AnzuApiForbiddenError())
+          return reject(new AnzuApiForbiddenError(err))
         }
         if (axiosErrorResponseHasValidationData(err)) {
           return reject(new AnzuApiValidationError(err, system, entity, err))

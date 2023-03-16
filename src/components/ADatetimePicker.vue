@@ -11,7 +11,7 @@ import { isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import useVuelidate from '@vuelidate/core'
 import type { DatetimeUTCNullable } from '@/types/common'
-import { useValidateRequiredIf } from '@/validators/vuelidate/useValidateRequiredIf'
+import { useValidateRequiredIf } from '@/validators/vuelidate/common/useValidateRequiredIf'
 import { useI18n } from 'vue-i18n'
 import type { DateLimit, DateOption } from 'flatpickr/dist/types/options'
 
