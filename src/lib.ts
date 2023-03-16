@@ -191,6 +191,7 @@ import { LogLevel, useLogLevel } from '@/model/valueObject/LogLevel'
 import '@/styles/main.scss'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import type { useValidate } from '@/validators/vuelidate/useValidate'
+import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
 
 export {
   // COMPONENTS
@@ -298,6 +299,8 @@ export {
   ResourceNameSystemAware,
   ValidationScope,
   Log,
+  ApiResponseList,
+  ApiInfiniteResponseList,
 
   // FACTORIES
   useAnzuUserFactory,
