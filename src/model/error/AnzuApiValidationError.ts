@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios, { type AxiosError } from 'axios'
 import { HTTP_STATUS_UNPROCESSABLE_ENTITY } from '@/composables/statusCodes'
 
 interface ValidationResponseDataFields {
