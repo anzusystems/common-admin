@@ -1,6 +1,5 @@
-import { useErrorHandler } from '@/composables/system/error'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { FilterBag } from '@/types/Filter'
@@ -8,8 +7,8 @@ import type { Pagination } from '@/types/Pagination'
 import { isUndefined } from '@/utils/common'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
-
-const { isValidationError, handleValidationError } = useErrorHandler()
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 
 const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
@@ -43,19 +42,24 @@ export const apiFetchList = <T, R = T>(
       )
       .then((res) => {
         if (!isValidHTTPStatus(res.status)) {
-          throw new AnzuApiResponseCodeError()
+          return reject(new AnzuApiResponseCodeError(res.status))
         }
-        pagination.totalCount = res.data.totalCount
-        pagination.currentViewCount = res.data.data.length
-        if (!isUndefined(res.data.hasNextPage)) pagination.hasNextPage = res.data.hasNextPage
-        resolve(res.data.data)
+        if (res.data) {
+          pagination.totalCount = res.data.totalCount
+          pagination.currentViewCount = res.data.data.length
+          if (!isUndefined(res.data.hasNextPage)) pagination.hasNextPage = res.data.hasNextPage
+          return resolve(res.data.data)
+        }
+        return reject(new AnzuFatalError())
       })
       .catch((err) => {
-        if (isValidationError(err)) {
-          handleValidationError(err, system, entity)
-          reject(new AnzuApiValidationError())
+        if(axiosErrorResponseIsForbidden(err)) {
+          return reject(new AnzuApiForbiddenError())
         }
-        reject(err)
+        if (axiosErrorResponseHasValidationData(err)) {
+          return reject(new AnzuApiValidationError(err, system, entity, err))
+        }
+        return reject(new AnzuFatalError(err))
       })
   })
 }

@@ -1,5 +1,6 @@
 {
   "unknownError": "System error, try again later or contact administrator",
+  "forbiddenError": "Access denied, you dont have correct rights for this action",
   "fixValidationErrors": "Please fill all required fields and fix problems",
   "fixApiValidationErrors": "Please, fix these errors",
   "recordWas": {

@@ -1,6 +1,9 @@
 import { notify } from '@kyvg/vue3-notification'
-import type { ApiErrors } from '@/composables/system/error'
 import { i18n } from '@/plugins/i18n'
+import { isAnzuFatalError } from '@/model/error/AnzuFatalError'
+import { isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
+import { isAnzuApiValidationError, type ValidationError } from '@/model/error/AnzuApiValidationError'
+import { isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 
 const DEFAULT_DURATION_SECONDS = 3
 
@@ -85,7 +88,7 @@ export function useAlerts() {
     })
   }
 
-  const showApiError = (errors: ApiErrors[], duration = -1, fieldIsTranslated = false) => {
+  const showApiError = (errors: ValidationError[], duration = -1, fieldIsTranslated = false) => {
     const { t } = i18n.global
     let text = t('common.alert.fixApiValidationErrors') + NEW_LINE_MARK
     for (let i = 0; i < errors.length; i++) {
@@ -112,6 +115,35 @@ export function useAlerts() {
     })
   }
 
+  const showForbiddenError = (duration = DEFAULT_DURATION_SECONDS) => {
+    const { t } = i18n.global
+    notify({
+      group: 'alerts',
+      text: t('common.alert.forbiddenError'),
+      duration: duration * 1000,
+      type: 'error',
+    })
+  }
+
+  const showErrorsDefault = (error: any) => {
+    if (isAnzuFatalError(error)) {
+      showUnknownError()
+      return
+    }
+    if (isAnzuApiForbiddenError(error)) {
+      showForbiddenError()
+      return
+    }
+    if (isAnzuApiValidationError(error)) {
+      showApiError(error.fields)
+      return
+    }
+    if (isAnzuApiResponseCodeError(error)) {
+      showUnknownError()
+      return
+    }
+  }
+
   return {
     showSuccess,
     showSuccessT,
@@ -125,5 +157,7 @@ export function useAlerts() {
     showRecordWas,
     showApiError,
     showUnknownError,
+    showForbiddenError,
+    showErrorsDefault,
   }
 }
