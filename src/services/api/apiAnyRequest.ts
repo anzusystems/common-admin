@@ -42,7 +42,7 @@ export const apiAnyRequest = <T, R = T>(
       })
       .catch((err) => {
         if(axiosErrorResponseIsForbidden(err)) {
-          return reject(new AnzuApiForbiddenError())
+          return reject(new AnzuApiForbiddenError(err))
         }
         if (axiosErrorResponseHasValidationData(err)) {
           return reject(new AnzuApiValidationError(err, system, entity, err))
