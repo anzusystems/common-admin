@@ -12,7 +12,7 @@ withDefaults(
     buttonT: 'common.button.close',
     buttonClass: 'ml-2',
     dataCy: 'button-close',
-  }
+  },
 )
 
 const { t } = useI18n()
@@ -25,9 +25,10 @@ const { t } = useI18n()
     :to="{ name: routeName }"
     icon
     size="small"
-    variant="outlined"
+    variant="text"
     :width="36"
     :height="36"
+    :active="false"
   >
     <VIcon icon="mdi-close" />
     <VTooltip

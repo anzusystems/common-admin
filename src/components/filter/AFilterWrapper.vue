@@ -1,19 +1,21 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
+import AFilterAdvancedButton from '@/components/buttons/filter/AFilterAdvancedButton.vue'
 import AFilterSubmitButton from '@/components/buttons/filter/AFilterSubmitButton.vue'
 import AFilterResetButton from '@/components/buttons/filter/AFilterResetButton.vue'
-import AFilterAdvancedButton from '@/components/buttons/filter/AFilterAdvancedButton.vue'
 
 withDefaults(
   defineProps<{
     enableAdvanced?: boolean
     enableTop?: boolean
     hideButtons?: boolean
+    touched?: boolean
   }>(),
   {
     enableAdvanced: false,
     enableTop: false,
     hideButtons: false,
+    touched: true,
   }
 )
 const emit = defineEmits<{
@@ -65,7 +67,7 @@ const toggleAdvancedFilter = () => {
       cols="auto"
     >
       <slot name="buttons">
-        <AFilterSubmitButton />
+        <AFilterSubmitButton :touched="touched" />
         <AFilterResetButton @reset="resetFilter" />
       </slot>
     </VCol>

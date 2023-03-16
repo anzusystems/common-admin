@@ -2,6 +2,7 @@ import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
 import AAlerts from '@/components/AAlerts.vue'
 import ACard from '@/components/ACard.vue'
+import ACardLoader from '@/components/ACardLoader.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import AFormBooleanToggle from '@/components/form/AFormBooleanToggle.vue'
@@ -196,6 +197,7 @@ import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiRespon
 export {
   // COMPONENTS
   ACard,
+  ACardLoader,
   ARow,
   AAlerts,
   ABooleanValue,
