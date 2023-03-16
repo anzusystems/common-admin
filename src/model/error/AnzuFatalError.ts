@@ -1,9 +1,12 @@
+export const isAnzuFatalError = (error: any): error is AnzuFatalError  => {
+  return error instanceof AnzuFatalError
+}
+
 export class AnzuFatalError extends Error {
-  private date: Date
-  constructor(message = '') {
-    super()
-    this.name = this.constructor.name
+  constructor(cause?: Error, message = '') {
+    super(message)
+    this.name = 'AnzuFatalError'
+    this.cause = cause
     this.message = message
-    this.date = new Date()
   }
 }

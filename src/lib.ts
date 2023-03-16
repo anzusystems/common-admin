@@ -129,6 +129,7 @@ import {
   HTTP_STATUS_NO_CONTENT,
   HTTP_STATUS_OK,
   HTTP_STATUS_UNAUTHORIZED,
+  HTTP_STATUS_FORBIDDEN,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
 } from '@/composables/statusCodes'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
@@ -143,7 +144,7 @@ import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { NEW_LINE_MARK, useAlerts } from '@/composables/system/alerts'
-import { type ApiErrors, useErrorHandler, type ValidationResponseData } from '@/composables/system/error'
+import { useErrors } from '@/composables/system/error'
 import { JobStatus, useJobStatus } from '@/model/valueObject/JobStatus'
 import type { Job } from '@/types/Job'
 import { useJobApi } from '@/services/api/job/jobApi'
@@ -244,7 +245,7 @@ export {
   useFilterHelpers,
   makeFilterHelper,
   useAlerts,
-  useErrorHandler,
+  useErrors,
   useDatatableColumns,
   useTheme,
   Theme,
@@ -292,8 +293,6 @@ export {
   PluginOptions,
   LanguageCode,
   DatatableColumnConfig,
-  ApiErrors,
-  ValidationResponseData,
   Immutable,
   ResourceNameSystemAware,
   ValidationScope,
@@ -396,6 +395,7 @@ export {
   HTTP_STATUS_NO_CONTENT,
   HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_UNAUTHORIZED,
+  HTTP_STATUS_FORBIDDEN,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
   ROLE_SUPER_ADMIN,
   NEW_LINE_MARK,

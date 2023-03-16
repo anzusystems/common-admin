@@ -1,8 +1,14 @@
+export const isAnzuApiResponseCodeError = (error: any): error is AnzuApiResponseCodeError  => {
+  return error instanceof AnzuApiResponseCodeError
+}
+
 export class AnzuApiResponseCodeError extends Error {
-  private date: Date
-  constructor() {
-    super()
-    this.name = this.constructor.name
-    this.date = new Date()
+  code: number
+
+  constructor(code: number, cause?: Error, message?: string) {
+    super(message)
+    this.name = 'AnzuApiResponseCodeError'
+    this.cause = cause
+    this.code = code
   }
 }
