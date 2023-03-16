@@ -9,9 +9,9 @@ import useVuelidate from '@vuelidate/core'
 import { Grant, useGrant } from '@/model/valueObject/Grant'
 import ABooleanToggle from '@/components/form/AFormBooleanToggle.vue'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
-import { useValidateRequired } from '@/validators/vuelidate/useValidateRequired'
-import { useValidateMinLength } from '@/validators/vuelidate/useValidateMinLength'
-import { useValidateMaxLength } from '@/validators/vuelidate/useValidateMaxLength'
+import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
+import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
+import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
 
 const modelData = ref({
   shortText: 'text1',

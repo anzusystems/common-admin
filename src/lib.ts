@@ -167,22 +167,22 @@ import { eventClickBlur } from '@/utils/event'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
 import type { ValidationScope } from '@/types/Validation'
 import { useI18n } from 'vue-i18n'
-import { useValidateRequired } from '@/validators/vuelidate/useValidateRequired'
-import { useValidateRequiredIf } from '@/validators/vuelidate/useValidateRequiredIf'
-import { useValidateSlug } from '@/validators/vuelidate/useValidateSlug'
-import { useValidateUrl } from '@/validators/vuelidate/useValidateUrl'
-import { useValidateStringArrayItemLength } from '@/validators/vuelidate/useValidateStringArrayItemLength'
-import { useValidateBetween } from '@/validators/vuelidate/useValidateBetween'
-import { useValidateEmail } from '@/validators/vuelidate/useValidateEmail'
+import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
+import { useValidateRequiredIf } from '@/validators/vuelidate/common/useValidateRequiredIf'
+import { useValidateSlug } from '@/validators/vuelidate/common/useValidateSlug'
+import { useValidateUrl } from '@/validators/vuelidate/common/useValidateUrl'
+import { useValidateStringArrayItemLength } from '@/validators/vuelidate/common/useValidateStringArrayItemLength'
+import { useValidateBetween } from '@/validators/vuelidate/common/useValidateBetween'
+import { useValidateEmail } from '@/validators/vuelidate/common/useValidateEmail'
 import { useValidateLatitude } from '@/validators/vuelidate/useValidateLatitude'
 import { useValidateLatitudeNotZeroAsLongitude } from '@/validators/vuelidate/useValidateLatitudeNotZeroAsLongitude'
 import { useValidateLongitude } from '@/validators/vuelidate/useValidateLongitude'
-import { useValidateMaxLength } from '@/validators/vuelidate/useValidateMaxLength'
-import { useValidateMaxValue } from '@/validators/vuelidate/useValidateMaxValue'
-import { useValidateMinLength } from '@/validators/vuelidate/useValidateMinLength'
-import { useValidateMinValue } from '@/validators/vuelidate/useValidateMinValue'
-import { useValidateNumeric } from '@/validators/vuelidate/useValidateNumeric'
-import { useValidatePhoneNumber } from '@/validators/vuelidate/useValidatePhoneNumber'
+import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
+import { useValidateMaxValue } from '@/validators/vuelidate/common/useValidateMaxValue'
+import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
+import { useValidateMinValue } from '@/validators/vuelidate/common/useValidateMinValue'
+import { useValidateNumeric } from '@/validators/vuelidate/common/useValidateNumeric'
+import { useValidateSlovakPhoneNumber } from '@/validators/vuelidate/useValidateSlovakPhoneNumber'
 import { useValidateLongitudeNotZeroAsLatitude } from '@/validators/vuelidate/useValidateLongitudeNotZeroAsLatitude'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
@@ -190,6 +190,7 @@ import type { Log } from '@/types/Log'
 import { LogLevel, useLogLevel } from '@/model/valueObject/LogLevel'
 import '@/styles/main.scss'
 import { COMMON_CONFIG } from '@/model/commonConfig'
+import type { useValidate } from '@/validators/vuelidate/useValidate'
 
 export {
   // COMPONENTS
@@ -402,23 +403,12 @@ export {
   COMMON_CONFIG,
 
   // VALIDATIONS
-  useValidateRequired,
-  useValidateRequiredIf,
-  useValidateSlug,
-  useValidateUrl,
-  useValidateStringArrayItemLength,
-  useValidateBetween,
-  useValidateEmail,
+  useValidate,
   useValidateLatitude,
-  useValidateLatitudeNotZeroAsLongitude,
   useValidateLongitude,
+  useValidateLatitudeNotZeroAsLongitude,
   useValidateLongitudeNotZeroAsLatitude,
-  useValidateMaxLength,
-  useValidateMaxValue,
-  useValidateMinLength,
-  useValidateMinValue,
-  useValidateNumeric,
-  useValidatePhoneNumber,
+  useValidateSlovakPhoneNumber,
 
   // OTHER
   i18n,
