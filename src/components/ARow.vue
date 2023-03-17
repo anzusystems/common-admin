@@ -4,11 +4,13 @@ withDefaults(
     title?: string
     value?: string | number | undefined | null
     dataCy?: string
+    titleClass?: string | undefined
   }>(),
   {
     title: '',
     value: '',
     dataCy: '',
+    titleClass: 'text-subtitle-2',
   }
 )
 </script>
