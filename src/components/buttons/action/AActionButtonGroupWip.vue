@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
+import { eventClickBlur } from '@/utils/event'
 
 // only example, do not use for now
 

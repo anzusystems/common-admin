@@ -34,11 +34,6 @@ const router = createRouter({
       name: 'component-forms',
       component: () => import('@/views/components/FormsView.vue'),
     },
-    {
-      path: '/component/datatable',
-      name: 'component-datatable',
-      component: () => import('@/views/components/DatatableView.vue'),
-    },
   ],
 })
 
