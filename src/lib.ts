@@ -195,6 +195,7 @@ import { createDatatableColumnsConfig, type DatatableOrderingOption, type Datata
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { defineCached } from '@/composables/system/defineCached'
 import type { ObjectLeaves, ObjectPaths } from '@/types/utils'
+import { loadCommonFonts } from '@/plugins/webfontloader'
 
 export {
   // COMPONENTS
@@ -441,4 +442,5 @@ export {
   AnzuFatalError,
   AnzuSystemsCommonAdmin,
   useCommonVuetifyConfig,
+  loadCommonFonts,
 }

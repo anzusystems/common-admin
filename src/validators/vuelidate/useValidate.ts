@@ -13,17 +13,17 @@ import { useValidateUrl } from '@/validators/vuelidate/common/useValidateUrl'
 
 export function useValidate() {
   return {
-    required: useValidateRequired,
-    requiredIf: useValidateRequiredIf,
-    minLength: useValidateMinLength,
-    maxLength: useValidateMaxLength,
-    minValue: useValidateMinValue,
-    maxValue: useValidateMaxValue,
-    between: useValidateBetween,
-    email: useValidateEmail,
-    numeric: useValidateNumeric,
-    slug: useValidateSlug,
-    url: useValidateUrl,
-    stringArrayItemLength: useValidateStringArrayItemLength,
+    required: useValidateRequired(),
+    requiredIf: useValidateRequiredIf(),
+    minLength: useValidateMinLength(),
+    maxLength: useValidateMaxLength(),
+    minValue: useValidateMinValue(),
+    maxValue: useValidateMaxValue(),
+    between: useValidateBetween(),
+    email: useValidateEmail(),
+    numeric: useValidateNumeric(),
+    slug: useValidateSlug(),
+    url: useValidateUrl(),
+    stringArrayItemLength: useValidateStringArrayItemLength(),
   }
 }

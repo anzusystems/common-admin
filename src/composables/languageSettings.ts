@@ -1,6 +1,6 @@
 import { useStorage } from '@vueuse/core'
 import { readonly } from 'vue'
-import { useLocale } from 'vuetify'
+// import { useLocale } from 'vuetify'
 import { i18n } from '@/plugins/i18n'
 
 // use ISO 639-1 codes
@@ -36,7 +36,7 @@ const storedSettings = useStorage<LanguageCode | 'default'>('language', 'default
 
 export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[], configDefaultLanguage: LanguageCode) {
   if (storedSettings.value === 'default') storedSettings.value = configDefaultLanguage
-  const { current } = useLocale()
+  // const { current } = useLocale()
 
   function addMessages(language: LanguageCode, messages: any) {
     if (!i18n || !i18n.global) return
@@ -47,7 +47,7 @@ export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[],
   const setLanguage = (code: LanguageCode) => {
     if (!i18n || !i18n.global) return false
     if (configAvailableLanguages.includes(code) || code === 'xx') {
-      current.value = code
+      // current.value = code
       storedSettings.value = code
       // @ts-ignore
       i18n.global.locale.value = code
@@ -60,13 +60,13 @@ export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[],
   const initializeLanguage = () => {
     if (!i18n || !i18n.global || storedSettings.value === 'default') return
     if (configAvailableLanguages.includes(storedSettings.value) || storedSettings.value === 'xx') {
-      current.value = storedSettings.value
+      // current.value = storedSettings.value
       // @ts-ignore
       i18n.global.locale.value = storedSettings.value
       return
     }
     storedSettings.value = configDefaultLanguage
-    current.value = configDefaultLanguage
+    // current.value = configDefaultLanguage
     // @ts-ignore
     i18n.global.locale.value = configDefaultLanguage
   }

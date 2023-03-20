@@ -41,7 +41,6 @@ const color = computed(() => {
     :color="color"
     label
     size="small"
-    class="v-chip-custom-no-link"
   >
     {{ text }}
   </VChip>
