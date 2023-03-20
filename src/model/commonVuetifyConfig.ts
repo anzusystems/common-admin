@@ -1,4 +1,5 @@
 import { VBtn } from 'vuetify/components'
+import { VChip } from 'vuetify/components'
 
 export const useCommonVuetifyConfig = () => {
   const commonTheme = () => {
@@ -23,9 +24,7 @@ export const useCommonVuetifyConfig = () => {
             'on-success': '#fff',
             warning: '#FB8C00',
             error: '#d92550',
-            info: '#78c3fb',
-            'primary-darken-1': '#3700B3',
-            'secondary-darken-1': '#333',
+            info: '#78c3fb'
           },
           variables: {},
         },
@@ -40,9 +39,7 @@ export const useCommonVuetifyConfig = () => {
             success: '#3ac47d',
             warning: '#FB8C00',
             error: '#d92550',
-            info: '#78c3fb',
-            'primary-darken-1': '#3700B3',
-            'secondary-darken-1': '#03DAC5',
+            info: '#78c3fb'
           },
           variables: {},
         },
@@ -115,6 +112,7 @@ export const useCommonVuetifyConfig = () => {
       ABtnSecondary: VBtn,
       ABtnTertiary: VBtn,
       ABtnIcon: VBtn,
+      AChipNoLink: VChip,
     }
   }
 

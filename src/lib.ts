@@ -38,6 +38,7 @@ import ACachedChip from '@/components/ACachedChip.vue'
 import ALogLevelChip from '@/components/log/ALogLevelChip.vue'
 import ACopyText from '@/components/ACopyText.vue'
 import AIconGroup from '@/components/AIconGroup.vue'
+import AChipNoLink from '@/components/AChipNoLink.vue'
 import AUserAndTimeTrackingFields from '@/components/AUserAndTimeTrackingFields.vue'
 import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
 import AActionCreateButton from '@/components/buttons/action/AActionCreateButton.vue'
@@ -193,12 +194,14 @@ import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiRespon
 import { createDatatableColumnsConfig, type DatatableOrderingOption, type DatatableOrderingOptions, type DatatableSortBy } from '@/composables/system/datatableColumns'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { defineCached } from '@/composables/system/defineCached'
+import type { ObjectLeaves, ObjectPaths } from '@/types/utils'
 
 export {
   // COMPONENTS
   ACard,
   ACardLoader,
   ARow,
+  AChipNoLink,
   AAlerts,
   ABooleanValue,
   APermissionGrantEditor,
@@ -316,6 +319,8 @@ export {
   DatatableOrderingOption,
   DatatableOrderingOptions,
   DatatableSortBy,
+  ObjectPaths,
+  ObjectLeaves,
 
   // FACTORIES
   useAnzuUserFactory,
