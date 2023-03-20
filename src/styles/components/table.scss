@@ -1,3 +1,5 @@
+// todo remove:
+
 .anzu-data-table {
   tbody {
     tr {
@@ -5,6 +7,36 @@
       &:hover {
         background-color: #eee;
       }
+    }
+  }
+}
+
+// end remove
+
+.a-datatable {
+  .v-data-table-column--last-fixed {
+    border-right: none;
+    border-left: none;
+    //border-left: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+    position: sticky;
+    z-index: 4;
+    right: 0 !important;
+    left: auto !important;
+  }
+}
+
+.v-theme--light {
+  .a-datatable {
+    &.v-data-table .v-table__wrapper > table tbody > tr:hover > td {
+      background-color: #eee;
+    }
+  }
+}
+
+.v-theme--dark {
+  .a-datatable {
+    &.v-data-table .v-table__wrapper > table tbody > tr:hover > td {
+      background-color: #505050;
     }
   }
 }
