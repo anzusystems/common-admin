@@ -78,7 +78,7 @@ watch(
 )
 
 onMounted(() => {
-  uniqueId.value = 'remote-switch-' +  Date.now()
+  uniqueId.value = 'a-remote-switch-' +  Date.now()
 })
 </script>
 

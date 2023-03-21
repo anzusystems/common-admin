@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
+import ADialogToolbar from '@/components/ADialogToolbar.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -12,7 +13,6 @@ const props = withDefaults(
     dialogConfirmButtonT?: string
     dialogCancelButtonT?: string
     dialogConfirmColor?: string
-    dialogCancelColor?: string
     dialogZIndex?: number
     dialogMaxWidth?: number
     dataCy?: string
@@ -30,8 +30,7 @@ const props = withDefaults(
     dialogMessageT: 'common.system.modal.confirmDelete',
     dialogConfirmButtonT: 'common.button.delete',
     dialogCancelButtonT: 'common.button.cancel',
-    dialogConfirmColor: 'error',
-    dialogCancelColor: 'secondary',
+    dialogConfirmColor: 'primary',
     dialogZIndex: 200,
     dialogMaxWidth: 300,
     dataCy: 'button-delete',
@@ -104,47 +103,26 @@ defineExpose({
       v-if="dialog"
       data-cy="delete-panel"
     >
-      <VToolbar
-        class="pl-2"
-        density="compact"
-      >
-        <div class="d-block pl-0 w-100">
-          <div class="text-h6">
-            {{ t(dialogMessageT) }}
-          </div>
-        </div>
-        <VSpacer />
-        <VToolbarItems>
-          <VBtn
-            class="ml-2"
-            icon="mdi-close"
-            size="small"
-            variant="text"
-            :disabled="loading"
-            data-cy="button-close"
-            @click.stop="onCancel"
-          />
-        </VToolbarItems>
-      </VToolbar>
+      <ADialogToolbar @on-cancel="onCancel">
+        {{ t(dialogMessageT) }}
+      </ADialogToolbar>
       <VCardActions>
         <VSpacer />
-        <VBtn
-          :color="dialogCancelColor"
-          text
+        <ABtnTertiary
           :disabled="loading"
           data-cy="button-cancel"
           @click.stop="onCancel"
         >
           {{ t(dialogCancelButtonT) }}
-        </VBtn>
-        <VBtn
+        </ABtnTertiary>
+        <ABtnPrimary
           :color="dialogConfirmColor"
           :loading="loading"
           data-cy="button-confirm"
           @click.stop="onConfirm"
         >
           {{ t(dialogConfirmButtonT) }}
-        </VBtn>
+        </ABtnPrimary>
       </VCardActions>
     </VCard>
   </VDialog>
