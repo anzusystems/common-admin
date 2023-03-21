@@ -84,19 +84,22 @@ const fixFormat = (value: string) => {
   return value.replace('Z', '000Z')
 }
 
+const checkIfReallyEmitChange = (value: any) => {
+  if (value === props.modelValue) return
+  emit('update:modelValue', value)
+  emit('change')
+}
+
 const onFlatpickrUpdate = (value: any) => {
   if (value === null || isUndefined(value)) {
-    emit('update:modelValue', null)
-    emit('change')
+    checkIfReallyEmitChange(null)
     return
   }
   if (value && value.date) {
-    emit('update:modelValue', fixFormat(value.date + '')) // check if needed
-    emit('change')
+    checkIfReallyEmitChange(fixFormat(value.date + ''))
     return
   }
-  emit('update:modelValue', fixFormat(value + ''))
-  emit('change')
+  checkIfReallyEmitChange(fixFormat(value + ''))
 }
 
 const onFlatpickrOpen = () => {
