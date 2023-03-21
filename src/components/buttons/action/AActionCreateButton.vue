@@ -22,7 +22,7 @@ const { t } = useI18n()
     :class="buttonClass"
     :data-cy="dataCy"
     :to="{ name: routeName }"
-    color="success"
+    color="primary"
     rounded="pill"
   >
     {{ t(buttonT) }}
