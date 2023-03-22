@@ -36,6 +36,12 @@ module.exports = {
       'exports': 'only-multiline',
       'functions': 'only-multiline',
     }],
+    'max-len': ['error', {
+      'code': 120,
+      'ignoreTrailingComments': true,
+      'ignoreUrls': true,
+      'ignoreRegExpLiterals': true,
+    }],
   },
   parserOptions: {
     ecmaVersion: 'latest',
