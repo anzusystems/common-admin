@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
+import { onMounted } from 'vue'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     title?: string | undefined
     logoUrl?: string | undefined
-    loginUrl?: string | undefined
+    loginUrl?: undefined | (() => string)
   }>(),
   {
     title: undefined,
@@ -15,6 +16,10 @@ withDefaults(
 )
 
 const { t } = useI18n()
+
+onMounted(() => {
+  console.log(props)
+})
 </script>
 
 <template>
@@ -37,7 +42,7 @@ const { t } = useI18n()
       <div class="py-5">
         <VBtn
           v-if="loginUrl"
-          :href="loginUrl"
+          :href="loginUrl()"
           color="primary"
           size="large"
         >

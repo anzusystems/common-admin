@@ -3,7 +3,7 @@ import { onMounted } from 'vue'
 
 const props = withDefaults(
   defineProps<{
-    logoutUrl?: string | undefined
+    logoutUrl?: undefined | (() => string)
   }>(),
   {
     logoutUrl: undefined,
@@ -12,7 +12,7 @@ const props = withDefaults(
 
 onMounted(() => {
   if (!props.logoutUrl) return
-  window.location.href = props.logoutUrl
+  window.location.href = props.logoutUrl()
 })
 </script>
 
