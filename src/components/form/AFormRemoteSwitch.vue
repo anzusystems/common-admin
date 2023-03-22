@@ -20,7 +20,7 @@ const props = withDefaults(
     hideDetails: undefined,
     hideLabel: undefined,
     v: null,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
@@ -67,18 +67,15 @@ const onClick = async () => {
   loading.value = false
 }
 
-watch(
-  modelValueComputed,
-  (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-      internalModelValue.value = newValue
-      hasError.value = false
-    }
-  },
-)
+watch(modelValueComputed, (newValue, oldValue) => {
+  if (newValue !== oldValue) {
+    internalModelValue.value = newValue
+    hasError.value = false
+  }
+})
 
 onMounted(() => {
-  uniqueId.value = 'remote-switch-' +  Date.now()
+  uniqueId.value = 'a-remote-switch-' + Date.now()
 })
 </script>
 

@@ -20,6 +20,7 @@ const props = withDefaults(
     hideLabel?: boolean
     type?: string
     step?: number
+    maxlength?: number | undefined
   }>(),
   {
     label: undefined,
@@ -32,6 +33,7 @@ const props = withDefaults(
     hideLabel: false,
     type: 'text',
     step: undefined,
+    maxlength: undefined,
   }
 )
 const emit = defineEmits<{
@@ -83,6 +85,7 @@ const requiredComputed = computed(() => {
     :type="type"
     :step="step"
     :append-icon="appendIcon"
+    :maxlength="maxlength"
     trim
     @click:append="(event) => emit('click:append', event)"
     @blur="onBlur"
@@ -92,7 +95,8 @@ const requiredComputed = computed(() => {
       v-if="!hideLabel"
       #label
     >
-      {{ labelComputed }}<span
+      {{ labelComputed
+      }}<span
         v-if="requiredComputed"
         class="required"
       />

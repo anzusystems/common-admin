@@ -94,7 +94,8 @@ const multipleComputedVuetifyTypeFix = computed(() => {
     @blur="onBlur"
   >
     <template #label>
-      <span v-if="!hideLabel">{{ labelComputed }}<span
+      <span v-if="!hideLabel">{{ labelComputed
+      }}<span
         v-if="requiredComputed"
         class="required"
       /></span>

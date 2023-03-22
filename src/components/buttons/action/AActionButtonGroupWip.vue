@@ -22,7 +22,7 @@ withDefaults(
     loading: undefined,
     disabled: undefined,
     disableClose: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'saveRecord'): void
@@ -95,7 +95,6 @@ const { t } = useI18n()
       :disabled="disabled || loading"
       color="primary"
       rounded="pill"
-
       class="a-button-split__more"
     >
       <VIcon icon="mdi-chevron-down" />
@@ -125,7 +124,6 @@ const { t } = useI18n()
     border-bottom-left-radius: 0 !important;
     padding: 0 4px 0 0 !important;
     min-width: 32px !important;
-
   }
   .a-button-split__divider {
     display: inline-block;

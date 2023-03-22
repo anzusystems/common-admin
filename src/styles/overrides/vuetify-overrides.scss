@@ -69,12 +69,6 @@
   }
 }
 
-/* one or more available input mechanism(s) can hover, but not with ease (for example simulating the hovering when performing a long touch) */
-@media (any-hover: on-demand) {
-  .v-overlay.v-tooltip {
-    display: none !important;
-  }
-}
 /* one or more available input mechanism(s) cannot hover or there are no pointing input mechanisms */
 @media (any-hover: none) {
   .v-overlay.v-tooltip {

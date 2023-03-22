@@ -3,12 +3,12 @@ import { watchDebounced } from '@vueuse/core'
 import { computed, inject, ref, toRefs, watch } from 'vue'
 import type { ErrorObject } from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
-import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
+import type { Pagination } from '@/types/Pagination'
 import type { DocId, IntegerId } from '@/types/common'
-import { usePagination } from '@/composables/system/pagination'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
+import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
+import { usePagination } from '@/composables/system/pagination'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { ValueObjectOption } from '@/types/ValueObject'
 
@@ -24,14 +24,10 @@ type UseCachedType = () => {
   addManualMinimal: any
 }
 
-/**
- * current limitation: now only supports cached where only 2 fields are in minimal interface,
- * like ValueObjectOption (some id and title)
- */
 const props = withDefaults(
   defineProps<{
-    modelValue: DocId | IntegerId | DocId[] | IntegerId[] | null | undefined
-    label?: string
+    modelValue: any
+    label?: string | undefined
     required?: boolean
     multiple?: boolean
     clearable?: boolean
@@ -138,22 +134,22 @@ const apiSearch = async (query: string) => {
   fetchedItemsMinimal.value.clear()
   const res = await props.fetchItemsMinimal(pagination, innerFilter.value)
   res.forEach((item: any) => {
-    fetchedItemsMinimal.value.set(item.value, item)
+    fetchedItemsMinimal.value.set(item[props.itemValue], item)
   })
   loading.value = false
 }
 
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
-  const final = new Map()
+  const final: Map<IntegerId | DocId, string> = new Map()
   if (isArray(modelValue.value)) {
     modelValue.value.forEach((value) => {
       final.set(value, '')
     })
   } else if (modelValue.value) {
-    final.set(modelValue.value, modelValue.value + '')
+    final.set(modelValue.value, '')
   }
-  fetchedItemsMinimal.value.forEach((value, key) => {
-    final.set(key, { value: value[props.itemValue], title: value[props.itemTitle] })
+  fetchedItemsMinimal.value.forEach((value) => {
+    final.set(value[props.itemValue], value[props.itemTitle])
   })
   return Array.from(final, ([key, value]) => {
     return { value: key, title: value }
@@ -171,6 +167,20 @@ const tryToAddFromFetchedItems = (ids: Set<DocId | IntegerId>) => {
   })
 }
 
+const onClickClear = () => {
+  apiSearch('')
+  if (props.multiple) {
+    modelValue.value = []
+    return
+  }
+  modelValue.value = null
+}
+
+const deleteWasPressedTime = ref(0)
+const onKeydownDelete = () => {
+  deleteWasPressedTime.value = Date.now()
+}
+
 watchDebounced(
   search,
   (newValue, oldValue) => {
@@ -183,6 +193,13 @@ watchDebounced(
 )
 
 watch(search, (newValue, oldValue) => {
+  if (newValue.length === 0 && isFocused.value === true) {
+    const now = Date.now()
+    if (now - deleteWasPressedTime.value > 200) {
+      search.value = oldValue
+      return
+    }
+  }
   if (newValue !== oldValue) {
     emit('searchChange', newValue)
   }
@@ -210,6 +227,7 @@ watch(
 <template>
   <VAutocomplete
     v-model="modelValue"
+    :search="search"
     chips
     :items="allItems"
     no-filter
@@ -217,23 +235,28 @@ watch(
     :clearable="clearable"
     :error-messages="errorMessageComputed"
     :loading="loading"
-    dirty
     @blur="onBlur"
     @focus="onFocus"
     @update:search="onSearchUpdate"
+    @click:clear="onClickClear"
+    @keydown.delete="onKeydownDelete"
   >
     <template #label>
       <span
         v-if="!hideLabel"
         :key="requiredComputed + ''"
       >
-        {{ labelComputed
-        }}<span
+        {{ labelComputed }}
+        <span
           v-if="requiredComputed"
           class="required"
         />
       </span>
     </template>
+    <template
+      v-if="!multiple"
+      #selection
+    />
     <template #chip="{ props: chipProps, item }">
       <slot
         name="chip"

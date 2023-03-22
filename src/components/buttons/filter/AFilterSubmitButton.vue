@@ -14,7 +14,7 @@ withDefaults(
     buttonClass: '',
     dataCy: 'filter-submit',
     touched: true,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'submit'): void

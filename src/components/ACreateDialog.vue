@@ -28,7 +28,7 @@ const props = withDefaults(
     disableRedirect: false,
     redirectRouteName: undefined,
     redirectParamName: 'id',
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
@@ -69,7 +69,10 @@ const onConfirm = async () => {
     showRecordWas('created')
     onClose()
     if (!isUndefined(res.id) && !props.disableRedirect && props.redirectRouteName) {
-      router.push({ name: props.redirectRouteName, params: { [props.redirectParamName]: res[props.redirectParamName] } })
+      router.push({
+        name: props.redirectRouteName,
+        params: { [props.redirectParamName]: res[props.redirectParamName] },
+      })
     }
   } catch (error) {
     showErrorsDefault(error)

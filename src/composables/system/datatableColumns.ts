@@ -4,16 +4,19 @@ import type { Pagination } from '@/types/Pagination'
 import { usePagination } from '@/composables/system/pagination'
 import { isUndefined } from '@/utils/common'
 
-export const DATETIME_AUTO_LABEL_TRACKING = [ 'createdAt', 'modifiedAt' ]
+export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']
 
 const { t } = i18n.global || i18n
 
-export type DatatableSortBy = {
-  key: string,
-  order: 'asc' | 'desc'
-} | null | undefined
+export type DatatableSortBy =
+  | {
+      key: string
+      order: 'asc' | 'desc'
+    }
+  | null
+  | undefined
 
-export type DatatableOrderingOption = { id: number, titleT: string, sortBy?: DatatableSortBy, customData?: any }
+export type DatatableOrderingOption = { id: number; titleT: string; sortBy?: DatatableSortBy; customData?: any }
 
 export type DatatableOrderingOptions = Array<DatatableOrderingOption>
 
@@ -44,7 +47,7 @@ export function createDatatableColumnsConfig(
   system: string | undefined = undefined,
   subject: string | undefined = undefined,
   disableActions: boolean = false,
-  customPagination: Pagination | undefined = undefined,
+  customPagination: Pagination | undefined = undefined
 ) {
   const pagination: Pagination = usePagination()
   if (customPagination) {
@@ -59,13 +62,13 @@ export function createDatatableColumnsConfig(
 
   const columnsAll = config.map((item) => {
     const obj = { ...defaultColumn, ...item }
-    if(!isUndefined(obj.title)) {
+    if (!isUndefined(obj.title)) {
       // do not modify
     } else if (isUndefined(obj.title) && DATETIME_AUTO_LABEL_TRACKING.includes(obj.key)) {
       obj.title = t('common.model.tracking.' + obj.key)
     } else if (isUndefined(obj.title) && system && subject) {
       obj.title = t(system + '.' + subject + '.model.' + obj.key)
-    }  else {
+    } else {
       obj.title = ''
     }
     return obj

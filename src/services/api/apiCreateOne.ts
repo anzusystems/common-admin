@@ -6,7 +6,6 @@ import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 
-
 /**
  * @template T Type used for request payload, by default same as Response type
  * @template R Response type override, optional
@@ -33,7 +32,7 @@ export const apiCreateOne = <T, R = T>(
         return reject(new AnzuFatalError())
       })
       .catch((err) => {
-        if(axiosErrorResponseIsForbidden(err)) {
+        if (axiosErrorResponseIsForbidden(err)) {
           return reject(new AnzuApiForbiddenError(err))
         }
         if (axiosErrorResponseHasValidationData(err)) {

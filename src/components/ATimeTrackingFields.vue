@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { dateTimePretty } from '@/utils/datetime'
+import ARow from '@/components/ARow.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -13,7 +14,7 @@ const props = withDefaults(
   {
     hideCreatedAt: false,
     hideModifiedAt: false,
-  },
+  }
 )
 
 const createdAt = computed(() => {

@@ -15,7 +15,7 @@ const props = withDefaults(
     buttonT: 'common.system.datatable.config',
     buttonClass: 'ml-1',
     dataCy: 'table-settings',
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:columnsHidden', data: Array<string>): void

@@ -24,7 +24,7 @@ export const useCommonVuetifyConfig = () => {
             'on-success': '#fff',
             warning: '#FB8C00',
             error: '#d92550',
-            info: '#78c3fb'
+            info: '#78c3fb',
           },
           variables: {},
         },
@@ -39,7 +39,7 @@ export const useCommonVuetifyConfig = () => {
             success: '#3ac47d',
             warning: '#FB8C00',
             error: '#d92550',
-            info: '#78c3fb'
+            info: '#78c3fb',
           },
           variables: {},
         },
@@ -108,11 +108,11 @@ export const useCommonVuetifyConfig = () => {
 
   const commonAliases = () => {
     return {
-      ABtnPrimary: VBtn,
-      ABtnSecondary: VBtn,
-      ABtnTertiary: VBtn,
-      ABtnIcon: VBtn,
-      AChipNoLink: VChip,
+      ABtnPrimary: VBtn as any,
+      ABtnSecondary: VBtn as any,
+      ABtnTertiary: VBtn as any,
+      ABtnIcon: VBtn as any,
+      AChipNoLink: VChip as any,
     }
   }
 
