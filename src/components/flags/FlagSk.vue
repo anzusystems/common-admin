@@ -1,3 +1,7 @@
+<script lang="ts" setup>
+/* eslint-disable max-len */
+</script>
+
 <template>
   <svg
     xmlns="http://www.w3.org/2000/svg"

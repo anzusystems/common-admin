@@ -64,7 +64,8 @@ export const isEmpty = (value: unknown): boolean => {
   )
 }
 /**
- * Use only for objects with some primitives like number, string, boolean, null. Not supported: function, undefined, symbol, ...
+ * Use only for objects with some primitives like:
+ * number, string, boolean, null. Not supported: function, undefined, symbol, ...
  */
 export const cloneDeep = <T>(object: T) => {
   if (typeof structuredClone === 'function') {

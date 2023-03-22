@@ -19,6 +19,7 @@
     "dev": "vite ",
     "build": "vite build --config vite.config.lib.ts",
     "prod": "vite build",
+    "ci": "yarn lint:tsc ; yarn lint:eslint",
     "lint": "yarn lint:tsc ; yarn lint:eslint",
     "lint:tsc": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
     "lint:eslint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
