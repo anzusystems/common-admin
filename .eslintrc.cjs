@@ -41,6 +41,7 @@ module.exports = {
       'ignoreTrailingComments': true,
       'ignoreUrls': true,
       'ignoreRegExpLiterals': true,
+      'ignorePattern': '^import .*',
     }],
   },
   parserOptions: {

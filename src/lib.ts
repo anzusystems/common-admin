@@ -59,6 +59,10 @@ import AAnzuUserAvatar from '@/components/AAnzuUserAvatar.vue'
 import AAvatarColorPicker from '@/components/AAvatarColorPicker.vue'
 import ACurrentUserDropdown from '@/components/ACurrentUserDropdown.vue'
 import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
+import ALoginView from '@/components/view/ALoginView.vue'
+import ALogoutView from '@/components/view/ALogoutView.vue'
+import AUnauthorizedView from '@/components/view/AUnauthorizedView.vue'
+import ANotFoundView from '@/components/view/ANotFoundView.vue'
 import { i18n } from '@/plugins/i18n'
 import {
   objectDeletePropertyByPath,
@@ -269,6 +273,12 @@ export {
   AAvatarColorPicker,
   ACurrentUserDropdown,
   AFormRemoteAutocompleteWithCached,
+
+  // VIEWS
+  ALoginView,
+  ALogoutView,
+  AUnauthorizedView,
+  ANotFoundView,
 
   // COMPOSABLES
   usePagination,
