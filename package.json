@@ -23,6 +23,8 @@
     "lint:tsc": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
     "lint:eslint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
     "lint:eslint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "lint:prettier": "prettier -c \"src/**/*.{ts,vue}\"",
+    "lint:prettier:fix": "prettier -w \"src/**/*.{ts,vue}\"",
     "test": "exit 0"
   },
   "devDependencies": {

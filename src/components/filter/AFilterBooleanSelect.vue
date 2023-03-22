@@ -8,7 +8,7 @@ const props = withDefaults(
   defineProps<{
     modelValue: Filter
   }>(),
-  {},
+  {}
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void

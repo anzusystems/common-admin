@@ -59,7 +59,7 @@ export const apiFetchList = <T, R = T>(
         return reject(new AnzuFatalError())
       })
       .catch((err) => {
-        if(axiosErrorResponseIsForbidden(err)) {
+        if (axiosErrorResponseIsForbidden(err)) {
           return reject(new AnzuApiForbiddenError(err))
         }
         if (axiosErrorResponseHasValidationData(err)) {

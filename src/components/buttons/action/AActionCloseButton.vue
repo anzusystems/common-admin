@@ -12,7 +12,7 @@ withDefaults(
     buttonT: 'common.button.close',
     buttonClass: 'ml-2',
     dataCy: 'button-close',
-  },
+  }
 )
 
 const { t } = useI18n()

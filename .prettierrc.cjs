@@ -4,4 +4,5 @@ module.exports = {
   singleQuote: true,
   bracketSameLine: false,
   trailingComma: 'es5',
+  singleAttributePerLine: true,
 }

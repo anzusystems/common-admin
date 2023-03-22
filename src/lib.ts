@@ -199,7 +199,7 @@ import {
   createDatatableColumnsConfig,
   type DatatableOrderingOption,
   type DatatableOrderingOptions,
-  type DatatableSortBy
+  type DatatableSortBy,
 } from '@/composables/system/datatableColumns'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { defineCached } from '@/composables/system/defineCached'

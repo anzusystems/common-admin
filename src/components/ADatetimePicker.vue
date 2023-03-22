@@ -294,7 +294,8 @@ const errorMessageComputed = computed(() => {
       v-if="!hideLabel"
       #label
     >
-      {{ label }}<span
+      {{ label
+      }}<span
         v-if="required"
         class="required"
       />

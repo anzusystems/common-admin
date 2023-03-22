@@ -31,7 +31,7 @@ const props = withDefaults(
     forceRounded: false,
     textOnly: false,
     fallbackIdText: false,
-  },
+  }
 )
 
 const router = useRouter()
@@ -62,7 +62,7 @@ watch(
     cached.value = newValue
     loaded.value = true
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 

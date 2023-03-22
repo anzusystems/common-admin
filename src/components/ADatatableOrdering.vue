@@ -14,7 +14,7 @@ const props = withDefaults(
     variant: 'default',
     modelValue: 1,
     customOptions: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: number): void
@@ -35,7 +35,7 @@ const modelValueComputed = computed({
   },
 })
 
-const defaultItems : DatatableOrderingOptions  = [
+const defaultItems: DatatableOrderingOptions = [
   { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: 'desc' } },
   { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: 'asc' } },
 ]
@@ -47,7 +47,7 @@ const defaultItemsMostRelevant: DatatableOrderingOptions = [
 ]
 
 const activeTitle = computed(() => {
-  const found = options.value.find((item)=> item.id === active.value)
+  const found = options.value.find((item) => item.id === active.value)
   if (found) return t(found.titleT)
   return ''
 })
@@ -66,10 +66,10 @@ watch(
   active,
   (newValue, oldValue) => {
     if (isUndefined(oldValue) || newValue === oldValue) return
-    const found = options.value.find((item)=> item.id === newValue)
+    const found = options.value.find((item) => item.id === newValue)
     if (found) emit('sortByChange', found)
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 watch(
@@ -78,7 +78,7 @@ watch(
     if (isUndefined(oldValue) || newValue === oldValue) return
     active.value = newValue
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 
@@ -108,7 +108,7 @@ watch(
             :key="item.id"
             @click="onItemClick(item)"
           >
-            <VListItemTitle :class="{'font-weight-bold': item.id === active}">
+            <VListItemTitle :class="{ 'font-weight-bold': item.id === active }">
               {{ t(item.titleT) }}
             </VListItemTitle>
           </VListItem>

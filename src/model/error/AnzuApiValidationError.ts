@@ -19,17 +19,21 @@ export interface ValidationError {
 const ERROR_VALIDATION = 'validation_failed'
 
 export const axiosErrorResponseHasValidationData = (error: Error) => {
-  return axios.isAxiosError(error) && error.response?.status === HTTP_STATUS_UNPROCESSABLE_ENTITY && error.response.data?.error === ERROR_VALIDATION
+  return (
+    axios.isAxiosError(error) &&
+    error.response?.status === HTTP_STATUS_UNPROCESSABLE_ENTITY &&
+    error.response.data?.error === ERROR_VALIDATION
+  )
 }
 
-export const isAnzuApiValidationError = (error: any): error is AnzuApiValidationError  => {
+export const isAnzuApiValidationError = (error: any): error is AnzuApiValidationError => {
   return error instanceof AnzuApiValidationError
 }
 
 function resolveResponseData(axiosError: AxiosError, system: string, entity: string) {
   const data = axiosError.response?.data as ValidationResponseData
   const items = [] as ValidationError[]
-  for (const [ key, values ] of Object.entries(data.fields)) {
+  for (const [key, values] of Object.entries(data.fields)) {
     items.push({
       field: system + '.' + entity + '.model.' + key,
       errors: values,

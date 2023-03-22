@@ -9,7 +9,7 @@ const props = withDefaults(
   }>(),
   {
     configUrl: '',
-  },
+  }
 )
 
 const { t } = useI18n()
@@ -49,9 +49,7 @@ onMounted(async () => {
     >
       {{ t('common.system.adminSwitcher.button') }}
     </VTooltip>
-    <VMenu
-      activator="parent"
-    >
+    <VMenu activator="parent">
       <VCard>
         <div class="a-admin-switcher__content">
           <a
@@ -103,7 +101,7 @@ onMounted(async () => {
       font-size: 14px;
       line-height: 14px;
       color: rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity));
-      padding:  8px 0;
+      padding: 8px 0;
     }
 
     img {
@@ -113,5 +111,4 @@ onMounted(async () => {
     }
   }
 }
-
 </style>

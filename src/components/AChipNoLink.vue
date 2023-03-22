@@ -1,7 +1,7 @@
 <template>
   <VChip
     class="a-chip-no-link"
-    label="label"
+    label
     size="small"
   >
     <slot />

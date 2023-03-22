@@ -5,7 +5,7 @@ export const axiosErrorResponseIsForbidden = (error: Error) => {
   return axios.isAxiosError(error) && error.response?.status === HTTP_STATUS_FORBIDDEN
 }
 
-export const isAnzuApiForbiddenError = (error: any): error is AnzuApiForbiddenError  => {
+export const isAnzuApiForbiddenError = (error: any): error is AnzuApiForbiddenError => {
   return error instanceof AnzuApiForbiddenError
 }
 

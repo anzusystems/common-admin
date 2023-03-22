@@ -227,7 +227,8 @@ watch(
         v-if="!hideLabel"
         :key="requiredComputed + ''"
       >
-        {{ labelComputed }}<span
+        {{ labelComputed
+        }}<span
           v-if="requiredComputed"
           class="required"
         />

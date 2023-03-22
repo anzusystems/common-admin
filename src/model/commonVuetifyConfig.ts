@@ -24,7 +24,7 @@ export const useCommonVuetifyConfig = () => {
             'on-success': '#fff',
             warning: '#FB8C00',
             error: '#d92550',
-            info: '#78c3fb'
+            info: '#78c3fb',
           },
           variables: {},
         },
@@ -39,7 +39,7 @@ export const useCommonVuetifyConfig = () => {
             success: '#3ac47d',
             warning: '#FB8C00',
             error: '#d92550',
-            info: '#78c3fb'
+            info: '#78c3fb',
           },
           variables: {},
         },

@@ -1,4 +1,4 @@
-export const isAnzuApiResponseCodeError = (error: any): error is AnzuApiResponseCodeError  => {
+export const isAnzuApiResponseCodeError = (error: any): error is AnzuApiResponseCodeError => {
   return error instanceof AnzuApiResponseCodeError
 }
 

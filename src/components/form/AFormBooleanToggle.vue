@@ -57,7 +57,8 @@ const requiredComputed = computed(() => {
     v-if="label"
     class="pr-1"
   >
-    {{ labelComputed }}<span
+    {{ labelComputed
+    }}<span
       v-if="requiredComputed"
       class="required"
     />
