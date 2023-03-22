@@ -108,11 +108,11 @@ export const useCommonVuetifyConfig = () => {
 
   const commonAliases = () => {
     return {
-      ABtnPrimary: VBtn,
-      ABtnSecondary: VBtn,
-      ABtnTertiary: VBtn,
-      ABtnIcon: VBtn,
-      AChipNoLink: VChip,
+      ABtnPrimary: VBtn as any,
+      ABtnSecondary: VBtn as any,
+      ABtnTertiary: VBtn as any,
+      ABtnIcon: VBtn as any,
+      AChipNoLink: VChip as any,
     }
   }
 
