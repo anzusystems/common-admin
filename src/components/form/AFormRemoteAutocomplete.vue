@@ -5,7 +5,7 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { usePagination } from '@/composables/system/pagination'
-import { isArray, isEmptyArray, isNull, isUndefined, cloneDeep } from '@/utils/common'
+import { isArray, isNull, isUndefined, cloneDeep } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
@@ -13,37 +13,26 @@ import type { Ref } from 'vue/dist/vue'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 
-type FetchItemsByIdsType =
+type fetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
   | ((ids: DocId[]) => Promise<ValueObjectOption<DocId>[]>)
 
-type FetchItemsType = (pagination: Pagination, filterBag: FilterBag) => Promise<ValueObjectOption<DocId | IntegerId>[]>
-
-type LazyLoaderType = () => {
-  allValues: Ref<ValueObjectOption<DocId | IntegerId>[]>
-  hasId: (id: DocId | IntegerId) => boolean
-  loadedAll: Ref<boolean>
-  [key: string]: any
-}
-
 const props = withDefaults(
   defineProps<{
-    modelValue: string | number | string[] | number[] | null
-    label?: string
-    required?: boolean
+    modelValue: any
+    label?: string | undefined
+    required?: boolean | undefined
     multiple?: boolean
     clearable?: boolean
     v?: any
     errorMessage?: string
     hideDetails?: boolean
     hideLabel?: boolean
-    fetchItems: FetchItemsType
-    fetchItemsByIds: FetchItemsByIdsType
+    fetchItems: (pagination: Pagination, filterBag: FilterBag) => Promise<ValueObjectOption<string | number>[]>
+    fetchItemsByIds: fetchItemsByIdsType
     innerFilter: FilterBag
     filterByField?: string
-    disableInitFetch?: boolean
-    lazyLoader?: LazyLoaderType
-    chips?: boolean
+    disableInitFetch?: boolean | undefined
     loading?: boolean
   }>(),
   {
@@ -57,52 +46,40 @@ const props = withDefaults(
     hideLabel: false,
     filterByField: 'name',
     disableInitFetch: false,
-    lazyLoader: undefined,
-    chips: false,
     loading: false,
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: string | number | string[] | number[] | null): void
-  (e: 'blur', data: string | number | string[] | number[] | null): void
-  (e: 'focus', data: string | number | string[] | number[] | null): void
+  (e: 'update:modelValue', data: DocId | IntegerId | DocId[] | IntegerId[] | null): void
   (e: 'searchChange', data: string): void
   (e: 'searchChangeDebounced', data: string): void
+  (e: 'blur', data: DocId | IntegerId | DocId[] | IntegerId[] | null): void
 }>()
 
 const modelValue = computed({
   get() {
     return props.modelValue
   },
-  set(newValue: string | number | string[] | number[] | null) {
-    emit('update:modelValue', cloneDeep<string | number | string[] | number[] | null>(newValue))
+  set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null) {
+    emit('update:modelValue', cloneDeep<DocId | IntegerId | DocId[] | IntegerId[] | null>(newValue))
   },
 })
 
-const modelValueVuetifyTypeFix = computed({
-  get() {
-    return modelValue.value as any
-  },
-  set(newValue: any) {
-    modelValue.value = newValue
-  },
-})
+const search = ref('')
+const isFocused = ref(false)
+const autoFetchTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
 
-const { t } = useI18n()
+const { t } = useI18n({ useScope: 'global' })
+
+const { innerFilter } = toRefs(props)
+
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
-const isFocused = ref(false)
-
-const onFocus = () => {
-  isFocused.value = true
-  emit('focus', modelValue.value)
-}
-
 const onBlur = () => {
-  isFocused.value = false
+  isFocused.value = true
+  emit('blur', props.modelValue)
   props.v?.$touch()
-  emit('blur', modelValue.value)
 }
 
 const errorMessageComputed = computed(() => {
@@ -128,22 +105,27 @@ const multipleComputedVuetifyTypeFix = computed(() => {
   return true as unknown as undefined
 })
 
-const arrayConcatAndFilterDuplicates = (
-  arr1: ValueObjectOption<string | number>[],
-  arr2: ValueObjectOption<string | number>[]
-) => {
-  return [...new Map([...arr1, ...arr2].map((item) => [item.value, item])).values()]
-}
-
-const loading = ref(false)
-const { innerFilter } = toRefs(props)
 const pagination = usePagination()
-const lazyLoadingIds = ref<Array<string | number>>([])
-
 const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
-const allItems = computed<ValueObjectOption<string | number>[]>(() => {
-  return arrayConcatAndFilterDuplicates(selectedItemsCache.value, fetchedItems.value)
+
+const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
+  const final = new Map()
+  selectedItemsCache.value.forEach((value) => {
+    final.set(value.value, { value: value.value, title: value.title })
+  })
+  fetchedItems.value.forEach((value) => {
+    final.set(value.value, { value: value.value, title: value.title })
+  })
+  return Array.from(final, ([key, value]) => {
+    return { value: key, title: value.title }
+  })
+})
+
+const loading = ref(false)
+const loadingComputed = computed(() => {
+  if (loading.value) return true
+  return props.loading
 })
 
 const apiSearch = async (query: string) => {
@@ -154,51 +136,67 @@ const apiSearch = async (query: string) => {
   loading.value = false
 }
 
-if (props.lazyLoader) {
-  const { allValues, loadedAll } = props.lazyLoader()
-  watch(loadedAll, (newValue) => {
-    if (newValue && lazyLoadingIds.value.length > 0)
-      selectedItemsCache.value = allValues.value.filter((item) => lazyLoadingIds.value.includes(item.value))
-  })
-}
-
-const findLocalDataByValues = (values: Array<string | number>) => {
-  const found1 = selectedItemsCache.value.filter((item: ValueObjectOption<string | number>) =>
+const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
+  const found = allItems.value.filter((item: ValueObjectOption<string | number>) =>
     values.includes(item.value)
   )
-  const found2 = fetchedItems.value.filter((item: ValueObjectOption<string | number>) => values.includes(item.value))
-  return arrayConcatAndFilterDuplicates(found1, found2)
+  return ([] as ValueObjectOption<string | number>[]).concat(found)
 }
 
-const tryToLoadFromLocalData = async (values: Array<string | number>) => {
-  return new Promise<boolean>((resolve) => {
-    const foundItems = findLocalDataByValues(values)
-    selectedItemsCache.value = foundItems
-    return resolve(foundItems.length === values.length)
-  })
+const tryToLoadFromLocalData = async (value: string | number | string[] | number[]) => {
+  let count = 1
+  let foundItems = []
+  if (isArray(value)) {
+    count = value.length
+    foundItems = findLocalDataByValues(value)
+  } else {
+    foundItems = findLocalDataByValues([value])
+  }
+  selectedItemsCache.value = foundItems
+  return foundItems.length === count
 }
 
-const tryToLoadFromLazyLoader = (values: Array<string | number>) => {
-  return new Promise<boolean>((resolve) => {
-    if (!props.lazyLoader) return resolve(false)
-    const { hasId, allValues, loadedAll } = props.lazyLoader()
-    const idsInLazyLoader = values.every((id) => hasId(id))
-    if (!idsInLazyLoader) return resolve(false)
-    if (loadedAll.value) {
-      selectedItemsCache.value = cloneDeep(allValues.value.filter((item) => values.includes(item.value)))
-      return resolve(true)
-    }
-    values.forEach((id) => lazyLoadingIds.value.push(id))
-    return resolve(true)
-  })
+const autoFetched = ref(false)
+const clearAutoFetchTimer = () => {
+  clearTimeout(autoFetchTimer.value)
+  autoFetchTimer.value = undefined
 }
-
-const fetchOnInit = async (model: string | number | string[] | number[] | null) => {
-  if (!props.disableInitFetch && (isEmptyArray(model) || isNull(model))) {
+const autoFetch = async () => {
+  clearAutoFetchTimer()
+  if (autoFetched.value === true) return
+  autoFetched.value = true
+  if (isNull(modelValue.value) || isUndefined(modelValue.value) || (isArray(modelValue.value) && modelValue.value.length === 0)) {
     loading.value = true
     fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
     loading.value = false
   }
+}
+const onFocus = () => {
+  isFocused.value = true
+  clearAutoFetchTimer()
+  autoFetch()
+}
+
+const singleItemSelectedTitle = computed(() => {
+  if (!props.multiple && selectedItemsCache.value[0]) {
+    return selectedItemsCache.value[0].title
+  }
+  return undefined
+})
+
+const onSearchUpdate = (query: string) => {
+  if (!props.multiple && !isFocused.value && query.length === 0) return // vuetify fix
+  if (singleItemSelectedTitle.value === query) return
+  search.value = query
+}
+
+const onClickClear = async () => {
+  fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
+  if (props.multiple) {
+    modelValue.value = []
+    return
+  }
+  modelValue.value = null
 }
 
 watch(
@@ -207,25 +205,26 @@ watch(
     if (newValue === oldValue) return
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []
-      await fetchOnInit(newValue)
+      if (props.disableInitFetch || autoFetched.value === true) return
+      autoFetchTimer.value = setTimeout(() => {
+        autoFetch()
+      }, 3000)
       return
     }
-    const values = isArray(newValue) ? newValue : [newValue]
-    const foundLocalData = await tryToLoadFromLocalData(values)
-    const foundLazyLoader = await tryToLoadFromLazyLoader(values)
-
-    if (!foundLocalData && !foundLazyLoader)
-      selectedItemsCache.value = await props.fetchItemsByIds(values as string[] & number[])
+    const found = await tryToLoadFromLocalData(newValue)
+    if (found) return
+    if (isArray<IntegerId | DocId>(newValue)) {
+      loading.value = true
+      selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
+      loading.value = false
+      return
+    }
+    loading.value = true
+    selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
+    loading.value = false
   },
   { immediate: true }
 )
-
-const search = ref('')
-
-const onSearchUpdate = (query: string) => {
-  if (!props.multiple && !isFocused.value && query.length === 0) return // vuetify fix
-  search.value = query
-}
 
 watchDebounced(
   search,
@@ -247,46 +246,31 @@ watch(search, (newValue, oldValue) => {
 
 <template>
   <VAutocomplete
-    v-model="modelValueVuetifyTypeFix"
-    :chips="chips"
+    v-model="modelValue"
     :items="allItems"
-    item-title="title"
-    item-value="value"
     no-filter
     :multiple="multipleComputedVuetifyTypeFix"
     :clearable="clearable"
     :error-messages="errorMessageComputed"
-    :loading="loading"
-    dirty
+    :chips="multiple"
+    :hide-details="hideDetails"
+    :loading="loadingComputed"
+    @update:search="onSearchUpdate"
     @blur="onBlur"
     @focus="onFocus"
-    @update:search="onSearchUpdate"
+    @click:clear="onClickClear"
   >
     <template #label>
       <span
         v-if="!hideLabel"
         :key="requiredComputed + ''"
       >
-        {{ labelComputed }}<span
+        {{ labelComputed }}
+        <span
           v-if="requiredComputed"
           class="required"
         />
       </span>
-    </template>
-    <template
-      v-if="chips"
-      #chip="{ props: chipProps, item }"
-    >
-      <slot
-        name="chip"
-        :props="chipProps"
-        :item="item"
-      >
-        <VChip
-          v-bind="chipProps"
-          :text="item.title"
-        />
-      </slot>
     </template>
   </VAutocomplete>
 </template>

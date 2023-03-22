@@ -8,7 +8,8 @@ import { COMMON_CONFIG } from '@/model/commonConfig'
 
 const props = withDefaults(
   defineProps<{
-    id: null | undefined | IntegerId | DocId
+    id?: null | undefined | IntegerId | DocId
+    title?: string
     containerClass?: undefined | string
     getCachedFn: (id: any) => any
     displayTextPath: string
@@ -22,6 +23,7 @@ const props = withDefaults(
   }>(),
   {
     id: null,
+    title: '',
     containerClass: 'd-inline-flex',
     disableClick: false,
     openInNew: false,
@@ -41,6 +43,7 @@ const item = computed(() => {
 })
 
 const displayTitle = computed(() => {
+  if (props.title.length > 0) return props.title
   if (cached.value) {
     return objectGetValueByPath(cached.value, props.displayTextPath)
   }
@@ -73,7 +76,7 @@ watch(
     <div v-else-if="textOnly">
       {{ displayTitle }}
       <VProgressCircular
-        v-if="!loaded"
+        v-if="!loaded && title.length === 0"
         :size="12"
         :width="2"
         indeterminate
@@ -87,7 +90,7 @@ watch(
     >
       {{ displayTitle }}
       <VProgressCircular
-        v-if="!loaded"
+        v-if="!loaded && title.length === 0"
         :size="12"
         :width="2"
         indeterminate
@@ -103,7 +106,7 @@ watch(
     >
       {{ displayTitle }}
       <VProgressCircular
-        v-if="!loaded"
+        v-if="!loaded && title.length === 0"
         :size="12"
         :width="2"
         indeterminate

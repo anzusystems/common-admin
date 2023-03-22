@@ -55,6 +55,10 @@ import ATableEditButton from '@/components/buttons/table/ATableEditButton.vue'
 import AThemeSelect from '@/components/AThemeSelect.vue'
 import ALanguageSelect from '@/components/ALanguageSelect.vue'
 import ASystemBar from '@/components/systemBar/ASystemBar.vue'
+import AAnzuUserAvatar from '@/components/AAnzuUserAvatar.vue'
+import AAvatarColorPicker from '@/components/AAvatarColorPicker.vue'
+import ACurrentUserDropdown from '@/components/ACurrentUserDropdown.vue'
+import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
 import { i18n } from '@/plugins/i18n'
 import {
   objectDeletePropertyByPath,
@@ -191,7 +195,12 @@ import '@/styles/main.scss'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
-import { createDatatableColumnsConfig, type DatatableOrderingOption, type DatatableOrderingOptions, type DatatableSortBy } from '@/composables/system/datatableColumns'
+import {
+  createDatatableColumnsConfig,
+  type DatatableOrderingOption,
+  type DatatableOrderingOptions,
+  type DatatableSortBy
+} from '@/composables/system/datatableColumns'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { defineCached } from '@/composables/system/defineCached'
 import type { ObjectLeaves, ObjectPaths } from '@/types/utils'
@@ -256,6 +265,10 @@ export {
   ALanguageSelect,
   ASystemBar,
   ALogLevelChip,
+  AAnzuUserAvatar,
+  AAvatarColorPicker,
+  ACurrentUserDropdown,
+  AFormRemoteAutocompleteWithCached,
 
   // COMPOSABLES
   usePagination,
