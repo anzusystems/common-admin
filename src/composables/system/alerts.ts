@@ -90,27 +90,45 @@ export function useAlerts() {
   }
 
   const showApiValidationError = (errors: ValidationError[], duration = -1, fieldIsTranslated = false) => {
-    const { t } = i18n.global
-    let text = t('common.alert.fixApiValidationErrors') + NEW_LINE_MARK
+    const { t, te } = i18n.global
+    const texts = [t('common.alert.fixApiValidationErrors')]
+
     for (let i = 0; i < errors.length; i++) {
-      text += fieldIsTranslated ? errors[i].field + ': ' : t(errors[i].field) + ': '
+      let fieldText = ''
+      if (fieldIsTranslated) {
+        fieldText += errors[i].field
+      } else if (te(errors[i].field)) {
+        fieldText += t(errors[i].field)
+      }
+      const errorsTexts = new Set<string>()
       for (let j = 0; j < errors[i].errors.length; j++) {
-        text += t('error.apiValidation.' + errors[i].errors[j]) + NEW_LINE_MARK
+        if (te('error.apiValidation.' + errors[i].errors[j])) {
+          errorsTexts.add(t('error.apiValidation.' + errors[i].errors[j]))
+          continue
+        }
+        errorsTexts.add(t('error.apiValidation.noTranslation'))
+      }
+      if (fieldText.length > 0) {
+        texts.push(fieldText + ': ' + Array.from(errorsTexts).join(', '))
       }
     }
     notify({
       group: 'alerts',
-      text: text,
+      text: texts.join(NEW_LINE_MARK),
       duration: duration * 1000,
       type: 'error',
     })
   }
 
   const showApiForbiddenOperationError = (detail: string, duration = -1) => {
-    const { t } = i18n.global
+    const { t, te } = i18n.global
+    let text = t('error.apiForbiddenOperation.noTranslation')
+    if (te('error.apiForbiddenOperation.' + detail)) {
+      text = t('error.apiForbiddenOperation.' + detail)
+    }
     notify({
       group: 'alerts',
-      text: t('common.alert.apiForbiddenOperationError') + NEW_LINE_MARK + t('error.apiForbiddenOperation.' + detail),
+      text: text,
       duration: duration * 1000,
       type: 'error',
     })
