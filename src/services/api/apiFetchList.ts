@@ -13,7 +13,7 @@ import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiRespon
 import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
 import {
   AnzuApiForbiddenOperationError,
-  axiosErrorResponseHasForbiddenOperationData
+  axiosErrorResponseHasForbiddenOperationData,
 } from '@/model/error/AnzuApiForbiddenOperationError'
 
 const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag): string => {

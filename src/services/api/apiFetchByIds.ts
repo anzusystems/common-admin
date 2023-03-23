@@ -8,7 +8,7 @@ import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/er
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import {
   AnzuApiForbiddenOperationError,
-  axiosErrorResponseHasForbiddenOperationData
+  axiosErrorResponseHasForbiddenOperationData,
 } from '@/model/error/AnzuApiForbiddenOperationError'
 
 /**
