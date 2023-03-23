@@ -13,7 +13,7 @@
   },
   "filterPlaceholder": {
     "eq": "Presný výraz",
-    "anyWhere": "Kdekoľvek vo výraze",
+    "contains": "Kdekoľvek vo výraze",
     "startsWith": "Začiatok výrazu"
   }
 }

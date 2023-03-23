@@ -15,6 +15,7 @@ export interface Filter<T = any> {
 }
 
 export type FilterVariant =
+  | 'search' // used for elastic fields
   | 'lt'
   | 'in'
   | 'notIn'
