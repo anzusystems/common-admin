@@ -1,83 +1,96 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
-import { computed, ref, toRefs, watch } from 'vue'
+import { computed, type Ref, ref, toRefs, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
 import type { Filter, FilterBag } from '@/types/Filter'
 import { usePagination } from '@/composables/system/pagination'
-import { isArray, isNull } from '@/utils/common'
+import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 
-type FetchItemsByIdsType =
-  | ((ids: number[]) => Promise<ValueObjectOption<number>[]>)
-  | ((ids: string[]) => Promise<ValueObjectOption<string>[]>)
+type fetchItemsByIdsType =
+  | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
+  | ((ids: DocId[]) => Promise<ValueObjectOption<DocId>[]>)
 
 const props = withDefaults(
   defineProps<{
     modelValue: Filter
     fetchItems: (pagination: Pagination, filterBag: FilterBag) => Promise<ValueObjectOption<string | number>[]>
-    fetchItemsByIds: FetchItemsByIdsType
+    fetchItemsByIds: fetchItemsByIdsType
     innerFilter: FilterBag
     filterByField?: string
+    disableInitFetch?: boolean | undefined
   }>(),
   {
     filterByField: 'name',
+    disableInitFetch: false,
   }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: Filter): void
 }>()
 
-const value = computed({
+const modelValue = computed({
   get() {
     return props.modelValue.model
   },
-  set(newValue) {
-    emit('update:modelValue', { ...props.modelValue, ...{ model: newValue } })
+  set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null) {
+    emit('update:modelValue', { ...props.modelValue, ...{ model: cloneDeep(newValue) } })
   },
 })
 
-const search = ref()
+const search = ref('')
+const isFocused = ref(false)
+const autoFetchTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
+
+const { t } = useI18n({ useScope: 'global' })
 
 const { innerFilter } = toRefs(props)
 
-const filterDuplicates = (arr: any[]) => {
-  const uniqueValues = new Map()
-  for (let index = 0; index < arr.length; ++index) {
-    const item = arr[index]
-    if (item == null) {
-      continue
-    }
-    !uniqueValues.has(item.value) && uniqueValues.set(item.value, item)
-  }
-  return Array.from(uniqueValues.values())
+const onBlur = () => {
+  isFocused.value = true
 }
 
-const pagination = usePagination()
-const items = ref<ValueObjectOption<string | number>[]>([])
-const selectedCachedItems = ref<ValueObjectOption<string | number>[]>([])
-const allItems = computed(() => {
-  return filterDuplicates(selectedCachedItems.value.concat(items.value))
+const label = computed(() => {
+  return props.modelValue.titleT ? t(props.modelValue.titleT) : undefined
 })
+
+const multipleComputedVuetifyTypeFix = computed(() => {
+  if (props.modelValue.multiple === false) return false
+  return true as unknown as undefined
+})
+
+const pagination = usePagination()
+const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
+const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
+
+const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
+  const final = new Map()
+  selectedItemsCache.value.forEach((value) => {
+    final.set(value.value, { value: value.value, title: value.title })
+  })
+  fetchedItems.value.forEach((value) => {
+    final.set(value.value, { value: value.value, title: value.title })
+  })
+  return Array.from(final, ([key, value]) => {
+    return { value: key, title: value.title }
+  })
+})
+
 const loading = ref(false)
 
 const apiSearch = async (query: string) => {
-  if (query.length > 0) {
-    loading.value = true
-    const filterField = innerFilter.value[props.filterByField]
-    filterField.model = query
-    items.value = await props.fetchItems(pagination, innerFilter.value)
-    loading.value = false
-  }
+  loading.value = true
+  const filterField = innerFilter.value[props.filterByField]
+  filterField.model = query
+  fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
+  loading.value = false
 }
 
-const findLocalDataByValues = (values: Array<string | number>) => {
-  const found1 = selectedCachedItems.value.filter((item: ValueObjectOption<string | number>) =>
-    values.includes(item.value)
-  )
-  const found2 = items.value.filter((item: ValueObjectOption<string | number>) => values.includes(item.value))
-  return filterDuplicates(([] as ValueObjectOption<string | number>[]).concat(found1, found2))
+const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
+  const found = allItems.value.filter((item: ValueObjectOption<string | number>) => values.includes(item.value))
+  return ([] as ValueObjectOption<string | number>[]).concat(found)
 }
 
 const tryToLoadFromLocalData = async (value: string | number | string[] | number[]) => {
@@ -89,36 +102,90 @@ const tryToLoadFromLocalData = async (value: string | number | string[] | number
   } else {
     foundItems = findLocalDataByValues([value])
   }
-  selectedCachedItems.value = foundItems
+  selectedItemsCache.value = foundItems
   return foundItems.length === count
 }
 
-const { t } = useI18n()
+const autoFetched = ref(false)
+const clearAutoFetchTimer = () => {
+  clearTimeout(autoFetchTimer.value)
+  autoFetchTimer.value = undefined
+}
+const autoFetch = async () => {
+  clearAutoFetchTimer()
+  if (autoFetched.value === true) return
+  autoFetched.value = true
+  if (
+    isNull(modelValue.value) ||
+    isUndefined(modelValue.value) ||
+    (isArray(modelValue.value) && modelValue.value.length === 0)
+  ) {
+    loading.value = true
+    fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
+    loading.value = false
+  }
+}
+const onFocus = () => {
+  isFocused.value = true
+  clearAutoFetchTimer()
+  autoFetch()
+}
 
-const label = computed(() => {
-  return props.modelValue.titleT ? t(props.modelValue.titleT) : undefined
+const singleItemSelectedTitle = computed(() => {
+  if (!props.modelValue.multiple && selectedItemsCache.value[0]) {
+    return selectedItemsCache.value[0].title
+  }
+  return undefined
 })
 
+const onSearchUpdate = (query: string) => {
+  if (!props.modelValue.multiple && !isFocused.value && query.length === 0) return // vuetify fix
+  if (singleItemSelectedTitle.value === query) return
+  search.value = query
+}
+
+const onClickClear = async () => {
+  fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
+  if (props.modelValue.multiple) {
+    modelValue.value = []
+    return
+  }
+  modelValue.value = null
+}
+
 watch(
-  value,
-  async (newValue) => {
-    if (isNull(newValue) || (isArray<DocId | IntegerId>(newValue) && newValue.length === 0)) {
-      selectedCachedItems.value = []
+  modelValue,
+  async (newValue, oldValue) => {
+    if (newValue === oldValue) return
+    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+      selectedItemsCache.value = []
+      if (props.disableInitFetch || autoFetched.value === true) return
+      autoFetchTimer.value = setTimeout(() => {
+        autoFetch()
+      }, 3000)
       return
     }
     const found = await tryToLoadFromLocalData(newValue)
-    if (!found)
-      selectedCachedItems.value = await props.fetchItemsByIds(
-        isArray<DocId | IntegerId>(newValue) ? newValue : [newValue]
-      )
+    if (found) return
+    if (isArray<IntegerId | DocId>(newValue)) {
+      loading.value = true
+      selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
+      loading.value = false
+      return
+    }
+    loading.value = true
+    selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
+    loading.value = false
   },
   { immediate: true }
 )
 
 watchDebounced(
   search,
-  (newValue) => {
-    apiSearch(newValue)
+  (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+      apiSearch(newValue)
+    }
   },
   { debounce: 300, maxWait: 1000 }
 )
@@ -126,14 +193,17 @@ watchDebounced(
 
 <template>
   <VAutocomplete
-    v-model="value"
-    v-model:search="search"
+    v-model="modelValue"
     :items="allItems"
-    item-title="title"
-    item-value="value"
     no-filter
-    :label="label"
-    :multiple="modelValue.multiple"
+    :multiple="multipleComputedVuetifyTypeFix"
     :clearable="!modelValue.mandatory"
+    :label="label"
+    :chips="modelValue.multiple"
+    :loading="loading"
+    @update:search="onSearchUpdate"
+    @blur="onBlur"
+    @focus="onFocus"
+    @click:clear="onClickClear"
   />
 </template>

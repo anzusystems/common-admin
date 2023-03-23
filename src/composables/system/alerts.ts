@@ -157,24 +157,25 @@ export function useAlerts() {
   const showErrorsDefault = (error: any) => {
     if (isAnzuApiForbiddenError(error)) {
       showForbiddenError()
-      return
+      return true
     }
     if (isAnzuApiValidationError(error)) {
       showApiValidationError(error.fields)
-      return
+      return true
     }
     if (isAnzuApiForbiddenOperationError(error)) {
       showApiForbiddenOperationError(error.detail)
-      return
+      return true
     }
     if (isAnzuFatalError(error)) {
       showUnknownError()
-      return
+      return true
     }
     if (isAnzuApiResponseCodeError(error)) {
       showUnknownError()
-      return
+      return true
     }
+    return false
   }
 
   return {

@@ -43,6 +43,7 @@ module.exports = {
       'ignoreRegExpLiterals': true,
       'ignorePattern': '^import .*',
     }],
+    'vue/no-template-target-blank': ['error'],
   },
   parserOptions: {
     ecmaVersion: 'latest',
