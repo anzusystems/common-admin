@@ -10,6 +10,11 @@
     "modifiedAt": "Modified",
     "created": "Created",
     "modified": "Modified"
+  },
+  "filterPlaceholder": {
+    "eq": "Presný výraz",
+    "anyWhere": "Kdekolvek vo výraze",
+    "startsWith": "Začiatok výrazu"
   }
 }
 
