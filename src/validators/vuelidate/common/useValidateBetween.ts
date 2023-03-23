@@ -8,6 +8,6 @@ export function useValidateBetween() {
 
   return withI18nMessage(between, {
     withArguments: true,
-    messagePath: () => 'validations.js.between',
+    messagePath: () => 'error.jsValidation.between',
   })
 }

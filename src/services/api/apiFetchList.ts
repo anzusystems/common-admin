@@ -11,6 +11,10 @@ import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/er
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
 import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
+import {
+  AnzuApiForbiddenOperationError,
+  axiosErrorResponseHasForbiddenOperationData
+} from '@/model/error/AnzuApiForbiddenOperationError'
 
 const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
@@ -64,6 +68,9 @@ export const apiFetchList = <T, R = T>(
         }
         if (axiosErrorResponseHasValidationData(err)) {
           return reject(new AnzuApiValidationError(err, system, entity, err))
+        }
+        if (axiosErrorResponseHasForbiddenOperationData(err)) {
+          return reject(new AnzuApiForbiddenOperationError(err, err))
         }
         return reject(new AnzuFatalError(err))
       })

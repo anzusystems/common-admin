@@ -8,6 +8,6 @@ export function useValidateMaxLength() {
 
   return withI18nMessage(maxLength, {
     withArguments: true,
-    messagePath: () => 'validations.js.maxLength',
+    messagePath: () => 'error.jsValidation.maxLength',
   })
 }

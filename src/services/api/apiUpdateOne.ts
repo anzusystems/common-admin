@@ -5,6 +5,10 @@ import { isValidHTTPStatus } from '@/utils/response'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
+import {
+  AnzuApiForbiddenOperationError,
+  axiosErrorResponseHasForbiddenOperationData
+} from '@/model/error/AnzuApiForbiddenOperationError'
 
 /**
  * @template T Type used for request payload, by default same as Response type
@@ -37,6 +41,9 @@ export const apiUpdateOne = <T, R = T>(
         }
         if (axiosErrorResponseHasValidationData(err)) {
           return reject(new AnzuApiValidationError(err, system, entity, err))
+        }
+        if (axiosErrorResponseHasForbiddenOperationData(err)) {
+          return reject(new AnzuApiForbiddenOperationError(err, err))
         }
         return reject(new AnzuFatalError(err))
       })

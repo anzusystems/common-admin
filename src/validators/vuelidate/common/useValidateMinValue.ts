@@ -8,6 +8,6 @@ export function useValidateMinValue() {
 
   return withI18nMessage(minValue, {
     withArguments: true,
-    messagePath: () => 'validations.js.minValue',
+    messagePath: () => 'error.jsValidation.minValue',
   })
 }

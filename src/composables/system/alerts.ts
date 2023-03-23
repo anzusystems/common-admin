@@ -4,6 +4,7 @@ import { isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
 import { isAnzuApiValidationError, type ValidationError } from '@/model/error/AnzuApiValidationError'
 import { isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
 
 const DEFAULT_DURATION_SECONDS = 3
 
@@ -88,18 +89,28 @@ export function useAlerts() {
     })
   }
 
-  const showApiError = (errors: ValidationError[], duration = -1, fieldIsTranslated = false) => {
+  const showApiValidationError = (errors: ValidationError[], duration = -1, fieldIsTranslated = false) => {
     const { t } = i18n.global
     let text = t('common.alert.fixApiValidationErrors') + NEW_LINE_MARK
     for (let i = 0; i < errors.length; i++) {
       text += fieldIsTranslated ? errors[i].field + ': ' : t(errors[i].field) + ': '
       for (let j = 0; j < errors[i].errors.length; j++) {
-        text += t('validations.api.' + errors[i].errors[j]) + NEW_LINE_MARK
+        text += t('error.apiValidation.' + errors[i].errors[j]) + NEW_LINE_MARK
       }
     }
     notify({
       group: 'alerts',
       text: text,
+      duration: duration * 1000,
+      type: 'error',
+    })
+  }
+
+  const showApiForbiddenOperationError = (detail: string, duration = -1) => {
+    const { t } = i18n.global
+    notify({
+      group: 'alerts',
+      text: t('common.alert.apiForbiddenOperationError') + NEW_LINE_MARK + t('error.apiForbiddenOperation.' + detail),
       duration: duration * 1000,
       type: 'error',
     })
@@ -126,16 +137,20 @@ export function useAlerts() {
   }
 
   const showErrorsDefault = (error: any) => {
-    if (isAnzuFatalError(error)) {
-      showUnknownError()
-      return
-    }
     if (isAnzuApiForbiddenError(error)) {
       showForbiddenError()
       return
     }
     if (isAnzuApiValidationError(error)) {
-      showApiError(error.fields)
+      showApiValidationError(error.fields)
+      return
+    }
+    if (isAnzuApiForbiddenOperationError(error)) {
+      showApiForbiddenOperationError(error.detail)
+      return
+    }
+    if (isAnzuFatalError(error)) {
+      showUnknownError()
       return
     }
     if (isAnzuApiResponseCodeError(error)) {
@@ -155,7 +170,7 @@ export function useAlerts() {
     showWarningT,
     showValidationError,
     showRecordWas,
-    showApiError,
+    showApiError: showApiValidationError,
     showUnknownError,
     showForbiddenError,
     showErrorsDefault,

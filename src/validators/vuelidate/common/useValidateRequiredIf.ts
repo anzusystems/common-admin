@@ -8,6 +8,6 @@ export function useValidateRequiredIf() {
 
   return withI18nMessage(requiredIf, {
     withArguments: true,
-    messagePath: () => 'validations.js.required',
+    messagePath: () => 'error.jsValidation.required',
   })
 }

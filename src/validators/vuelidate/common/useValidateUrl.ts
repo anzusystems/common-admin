@@ -7,6 +7,6 @@ export function useValidateUrl() {
   const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(url, {
-    messagePath: () => 'validations.js.url',
+    messagePath: () => 'error.jsValidation.url',
   })
 }
