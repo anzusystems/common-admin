@@ -126,6 +126,7 @@ import type {
   DocIdNullable,
   IntegerId,
   IntegerIdNullable,
+  EnableDisable,
 } from '@/types/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
@@ -345,6 +346,7 @@ export {
   DatatableSortBy,
   ObjectPaths,
   ObjectLeaves,
+  EnableDisable,
 
   // FACTORIES
   useAnzuUserFactory,
