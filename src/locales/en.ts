@@ -8,8 +8,9 @@ import job from '@/locales/en/common/job.json'
 import log from '@/locales/en/common/log.json'
 import permission from '@/locales/en/common/permission.json'
 import permissionGroup from '@/locales/en/common/permissionGroup.json'
-import validationApi from '@/locales/en/validation/api.json'
-import validationJs from '@/locales/en/validation/js.json'
+import apiValidation from '@/locales/en/error/apiValidation.json'
+import jsValidation from '@/locales/en/error/jsValidation.json'
+import apiForbiddenOperation from '@/locales/en/error/apiForbiddenOperation.json'
 
 export default {
   common: {
@@ -24,12 +25,15 @@ export default {
     permissionGroup,
   },
   $vuetify: vuetify,
-  validations: {
-    api: {
-      ...validationApi,
+  error: {
+    apiValidation: {
+      ...apiValidation,
     },
-    js: {
-      ...validationJs,
+    apiForbiddenOperation: {
+      ...apiForbiddenOperation,
+    },
+    jsValidation: {
+      ...jsValidation,
     },
   },
 }

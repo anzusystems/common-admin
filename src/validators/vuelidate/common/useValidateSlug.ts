@@ -7,6 +7,6 @@ export function useValidateSlug() {
   const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(helpers.regex(/^[a-z\-0-9/]+$/), {
-    messagePath: () => 'validations.js.slug',
+    messagePath: () => 'error.jsValidation.slug',
   })
 }

@@ -22,7 +22,8 @@ export const axiosErrorResponseHasValidationData = (error: Error) => {
   return (
     axios.isAxiosError(error) &&
     error.response?.status === HTTP_STATUS_UNPROCESSABLE_ENTITY &&
-    error.response.data?.error === ERROR_VALIDATION
+    error.response.data?.error === ERROR_VALIDATION &&
+    error.response.data?.fields
   )
 }
 

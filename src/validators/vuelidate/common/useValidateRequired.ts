@@ -7,6 +7,6 @@ export function useValidateRequired() {
   const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(required, {
-    messagePath: () => 'validations.js.required',
+    messagePath: () => 'error.jsValidation.required',
   })
 }

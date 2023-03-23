@@ -4,6 +4,7 @@ import { isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
 import { isAnzuApiValidationError, type ValidationError } from '@/model/error/AnzuApiValidationError'
 import { isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
 
 const DEFAULT_DURATION_SECONDS = 3
 
@@ -88,14 +89,42 @@ export function useAlerts() {
     })
   }
 
-  const showApiError = (errors: ValidationError[], duration = -1, fieldIsTranslated = false) => {
-    const { t } = i18n.global
-    let text = t('common.alert.fixApiValidationErrors') + NEW_LINE_MARK
+  const showApiValidationError = (errors: ValidationError[], duration = -1, fieldIsTranslated = false) => {
+    const { t, te } = i18n.global
+    const texts = [t('common.alert.fixApiValidationErrors')]
+
     for (let i = 0; i < errors.length; i++) {
-      text += fieldIsTranslated ? errors[i].field + ': ' : t(errors[i].field) + ': '
-      for (let j = 0; j < errors[i].errors.length; j++) {
-        text += t('validations.api.' + errors[i].errors[j]) + NEW_LINE_MARK
+      let fieldText = ''
+      if (fieldIsTranslated) {
+        fieldText += errors[i].field
+      } else if (te(errors[i].field)) {
+        fieldText += t(errors[i].field)
       }
+      const errorsTexts = new Set<string>()
+      for (let j = 0; j < errors[i].errors.length; j++) {
+        if (te('error.apiValidation.' + errors[i].errors[j])) {
+          errorsTexts.add(t('error.apiValidation.' + errors[i].errors[j]))
+          continue
+        }
+        errorsTexts.add(t('error.apiValidation.noTranslation'))
+      }
+      if (fieldText.length > 0) {
+        texts.push(fieldText + ': ' + Array.from(errorsTexts).join(', '))
+      }
+    }
+    notify({
+      group: 'alerts',
+      text: texts.join(NEW_LINE_MARK),
+      duration: duration * 1000,
+      type: 'error',
+    })
+  }
+
+  const showApiForbiddenOperationError = (detail: string, duration = -1) => {
+    const { t, te } = i18n.global
+    let text = t('error.apiForbiddenOperation.noTranslation')
+    if (te('error.apiForbiddenOperation.' + detail)) {
+      text = t('error.apiForbiddenOperation.' + detail)
     }
     notify({
       group: 'alerts',
@@ -126,16 +155,20 @@ export function useAlerts() {
   }
 
   const showErrorsDefault = (error: any) => {
-    if (isAnzuFatalError(error)) {
-      showUnknownError()
-      return
-    }
     if (isAnzuApiForbiddenError(error)) {
       showForbiddenError()
       return
     }
     if (isAnzuApiValidationError(error)) {
-      showApiError(error.fields)
+      showApiValidationError(error.fields)
+      return
+    }
+    if (isAnzuApiForbiddenOperationError(error)) {
+      showApiForbiddenOperationError(error.detail)
+      return
+    }
+    if (isAnzuFatalError(error)) {
+      showUnknownError()
       return
     }
     if (isAnzuApiResponseCodeError(error)) {
@@ -155,7 +188,8 @@ export function useAlerts() {
     showWarningT,
     showValidationError,
     showRecordWas,
-    showApiError,
+    showApiValidationError,
+    showApiForbiddenOperationError,
     showUnknownError,
     showForbiddenError,
     showErrorsDefault,

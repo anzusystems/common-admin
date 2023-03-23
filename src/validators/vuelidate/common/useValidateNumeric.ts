@@ -7,6 +7,6 @@ export function useValidateNumeric() {
   const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(numeric, {
-    messagePath: () => 'validations.js.numeric',
+    messagePath: () => 'error.jsValidation.numeric',
   })
 }

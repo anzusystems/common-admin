@@ -8,6 +8,6 @@ export function useValidateMaxValue() {
 
   return withI18nMessage(maxValue, {
     withArguments: true,
-    messagePath: () => 'validations.js.maxValue',
+    messagePath: () => 'error.jsValidation.maxValue',
   })
 }

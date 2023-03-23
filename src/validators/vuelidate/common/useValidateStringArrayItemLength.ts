@@ -29,6 +29,6 @@ export function useValidateStringArrayItemLength() {
 
   return withI18nMessage(stringArrayItemLengthHelper, {
     withArguments: true,
-    messagePath: () => 'validations.js.stringArrayItemLength',
+    messagePath: () => 'error.jsValidation.stringArrayItemLength',
   })
 }

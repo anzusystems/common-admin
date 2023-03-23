@@ -7,6 +7,6 @@ export function useValidateEmail() {
   const withI18nMessage = createI18nMessage({ t })
 
   return withI18nMessage(email, {
-    messagePath: () => 'validations.js.email',
+    messagePath: () => 'error.jsValidation.email',
   })
 }

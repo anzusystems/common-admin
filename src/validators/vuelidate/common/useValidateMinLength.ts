@@ -8,6 +8,6 @@ export function useValidateMinLength() {
 
   return withI18nMessage(minLength, {
     withArguments: true,
-    messagePath: () => 'validations.js.minLength',
+    messagePath: () => 'error.jsValidation.minLength',
   })
 }

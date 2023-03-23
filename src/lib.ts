@@ -126,6 +126,7 @@ import type {
   DocIdNullable,
   IntegerId,
   IntegerIdNullable,
+  EnableDisable,
 } from '@/types/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
@@ -186,11 +187,6 @@ import { eventClickBlur } from '@/utils/event'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
 import type { ValidationScope } from '@/types/Validation'
 import { useI18n } from 'vue-i18n'
-import { useValidateLatitude } from '@/validators/vuelidate/useValidateLatitude'
-import { useValidateLatitudeNotZeroAsLongitude } from '@/validators/vuelidate/useValidateLatitudeNotZeroAsLongitude'
-import { useValidateLongitude } from '@/validators/vuelidate/useValidateLongitude'
-import { useValidateSlovakPhoneNumber } from '@/validators/vuelidate/useValidateSlovakPhoneNumber'
-import { useValidateLongitudeNotZeroAsLatitude } from '@/validators/vuelidate/useValidateLongitudeNotZeroAsLatitude'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
 import type { Log } from '@/types/Log'
@@ -345,6 +341,7 @@ export {
   DatatableSortBy,
   ObjectPaths,
   ObjectLeaves,
+  EnableDisable,
 
   // FACTORIES
   useAnzuUserFactory,
@@ -451,11 +448,6 @@ export {
 
   // VALIDATIONS
   useValidate,
-  useValidateLatitude,
-  useValidateLongitude,
-  useValidateLatitudeNotZeroAsLongitude,
-  useValidateLongitudeNotZeroAsLatitude,
-  useValidateSlovakPhoneNumber,
 
   // OTHER
   i18n,
