@@ -21,17 +21,19 @@ const props = withDefaults(
     innerFilter: FilterBag
     filterByField?: string
     disableInitFetch?: boolean | undefined
+    placeholder?: string | undefined
   }>(),
   {
     filterByField: 'name',
     disableInitFetch: false,
+    placeholder: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: Filter): void
 }>()
 
-const modelValue = computed({
+const modelValueComputed = computed({
   get() {
     return props.modelValue.model
   },
@@ -116,9 +118,9 @@ const autoFetch = async () => {
   if (autoFetched.value === true) return
   autoFetched.value = true
   if (
-    isNull(modelValue.value) ||
-    isUndefined(modelValue.value) ||
-    (isArray(modelValue.value) && modelValue.value.length === 0)
+    isNull(modelValueComputed.value) ||
+    isUndefined(modelValueComputed.value) ||
+    (isArray(modelValueComputed.value) && modelValueComputed.value.length === 0)
   ) {
     loading.value = true
     fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
@@ -147,14 +149,22 @@ const onSearchUpdate = (query: string) => {
 const onClickClear = async () => {
   fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
   if (props.modelValue.multiple) {
-    modelValue.value = []
+    modelValueComputed.value = []
     return
   }
-  modelValue.value = null
+  modelValueComputed.value = null
 }
 
+const placeholderComputed = computed(() => {
+  if (!isUndefined(props.placeholder)) return props.placeholder
+  if (props.modelValue.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
+  if (props.modelValue.variant === 'eq') return t('common.model.filterPlaceholder.eq')
+  if (props.modelValue.variant === 'contains') return t('common.model.filterPlaceholder.contains')
+  return ''
+})
+
 watch(
-  modelValue,
+  modelValueComputed,
   async (newValue, oldValue) => {
     if (newValue === oldValue) return
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
@@ -193,9 +203,10 @@ watchDebounced(
 
 <template>
   <VAutocomplete
-    v-model="modelValue"
+    v-model="modelValueComputed"
     :items="allItems"
     no-filter
+    :placeholder="placeholderComputed"
     :multiple="multipleComputedVuetifyTypeFix"
     :clearable="!modelValue.mandatory"
     :label="label"
