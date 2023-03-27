@@ -154,7 +154,8 @@ import {
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
 } from '@/composables/statusCodes'
 import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData, isAnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData, isAnzuApiValidationError,
+  type AnzuApiValidationResponseData, type ValidationError } from '@/model/error/AnzuApiValidationError'
 import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
@@ -467,6 +468,8 @@ export {
   AnzuApiValidationError,
   isAnzuFatalError,
   AnzuFatalError,
+  ValidationError,
+  AnzuApiValidationResponseData,
   AnzuSystemsCommonAdmin,
   useCommonVuetifyConfig,
   loadCommonFonts,

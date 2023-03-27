@@ -5,7 +5,7 @@ interface ValidationResponseDataFields {
   [key: string]: string[]
 }
 
-interface ValidationResponseData {
+export interface AnzuApiValidationResponseData {
   contextId: string
   error: string
   fields: ValidationResponseDataFields
@@ -32,7 +32,7 @@ export const isAnzuApiValidationError = (error: any): error is AnzuApiValidation
 }
 
 function resolveResponseData(axiosError: AxiosError, system: string, entity: string) {
-  const data = axiosError.response?.data as ValidationResponseData
+  const data = axiosError.response?.data as AnzuApiValidationResponseData
   const items = [] as ValidationError[]
   for (const [key, values] of Object.entries(data.fields)) {
     items.push({
