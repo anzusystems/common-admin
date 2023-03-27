@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, type Ref } from 'vue'
 import { i18n } from '@/plugins/i18n'
 import type { Pagination } from '@/types/Pagination'
 import { usePagination } from '@/composables/system/pagination'
@@ -43,7 +43,7 @@ const defaultColumn: ColumnInternalValues = {
 
 export function createDatatableColumnsConfig(
   config: ColumnConfig[],
-  hidden: string[],
+  columnsHidden: Ref<Array<string>>,
   system: string | undefined = undefined,
   subject: string | undefined = undefined,
   disableActions: boolean = false,
@@ -58,7 +58,6 @@ export function createDatatableColumnsConfig(
       }
     }
   }
-  const columnsHidden = ref(hidden)
 
   const columnsAll = config.map((item) => {
     const obj = { ...defaultColumn, ...item }
