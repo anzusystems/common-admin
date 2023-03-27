@@ -56,6 +56,7 @@ onMounted(async () => {
             v-for="item in config"
             :key="item.id"
             :href="item.url"
+            rel="noopener noreferrer"
             target="_blank"
             class="a-admin-switcher__item"
           >

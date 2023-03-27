@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+// @ts-nocheck
 withDefaults(
   defineProps<{
     max?: number
