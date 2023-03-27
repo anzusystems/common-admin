@@ -206,8 +206,8 @@ import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { defineCached } from '@/composables/system/defineCached'
 import type { ObjectLeaves, ObjectPaths } from '@/types/utils'
 import { loadCommonFonts } from '@/plugins/webfontloader'
-import type { AnzuApiForbiddenError, axiosErrorResponseIsForbidden, isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
-import type { AnzuApiForbiddenOperationError,axiosErrorResponseHasForbiddenOperationData, isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden, isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiForbiddenOperationError,axiosErrorResponseHasForbiddenOperationData, isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
 
 export {
   // COMPONENTS
