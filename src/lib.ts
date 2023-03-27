@@ -153,9 +153,9 @@ import {
   HTTP_STATUS_FORBIDDEN,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
 } from '@/composables/statusCodes'
-import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
-import { AnzuFatalError } from '@/model/error/AnzuFatalError'
+import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData, isAnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
+import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
@@ -205,6 +205,8 @@ import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { defineCached } from '@/composables/system/defineCached'
 import type { ObjectLeaves, ObjectPaths } from '@/types/utils'
 import { loadCommonFonts } from '@/plugins/webfontloader'
+import type { AnzuApiForbiddenError, axiosErrorResponseIsForbidden, isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
+import type { AnzuApiForbiddenOperationError,axiosErrorResponseHasForbiddenOperationData, isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
 
 export {
   // COMPONENTS
@@ -452,8 +454,18 @@ export {
   // OTHER
   i18n,
   useI18n,
+  isAnzuApiForbiddenError,
+  axiosErrorResponseIsForbidden,
+  AnzuApiForbiddenError,
+  isAnzuApiResponseCodeError,
   AnzuApiResponseCodeError,
+  isAnzuApiForbiddenOperationError,
+  axiosErrorResponseHasForbiddenOperationData,
+  AnzuApiForbiddenOperationError,
+  isAnzuApiValidationError,
+  axiosErrorResponseHasValidationData,
   AnzuApiValidationError,
+  isAnzuFatalError,
   AnzuFatalError,
   AnzuSystemsCommonAdmin,
   useCommonVuetifyConfig,
