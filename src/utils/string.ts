@@ -99,7 +99,6 @@ export const stringUrlTemplateReplaceVueRouter = (template: string, params: UrlP
   if (template.indexOf(':') === -1) return template
   const newParts: string[] = []
   const parts = template.split('/')
-  console.log(parts)
   parts.forEach((part: string, index: number) => {
     newParts[index] = part
     if (!part.startsWith(':')) return
