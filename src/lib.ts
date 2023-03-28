@@ -98,6 +98,7 @@ import {
   stringTrimLength,
   stringToKebabCase,
   stringUrlTemplateReplace,
+  stringUrlTemplateReplaceVueRouter,
 } from '@/utils/string'
 import { booleanToInteger } from '@/utils/boolean'
 import {
@@ -382,6 +383,7 @@ export {
   stringToKebabCase,
   stringNormalizeForSlotName,
   stringUrlTemplateReplace,
+  stringUrlTemplateReplaceVueRouter,
   // datetime
   DATETIME_MIN,
   DATETIME_MAX,

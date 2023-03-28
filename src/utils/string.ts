@@ -1,5 +1,5 @@
 import type { UrlParams } from '@/services/api/apiHelper'
-import { isUndefined } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 
 export const stringToInt = (value: any, fallbackValue = 0): number => {
   let check = fallbackValue
@@ -71,7 +71,7 @@ export const stringTrimLength = (value: string, maxLength = 80): string => {
 }
 
 /**
- * Converts colon parameters to real values.
+ * Converts colon parameters to real values from params.
  *
  * @param template url containing colon parameters, example: '/:id/edit'
  * @param params object containing real values to be replaced, example: { id:5 }
@@ -85,6 +85,29 @@ export const stringUrlTemplateReplace = (template: string, params: UrlParams) =>
     if (!part.startsWith(':')) return
     const key = part.substring(1)
     if (!isUndefined(params[key])) newParts[index] = params[part.substring(1)] + ''
+  })
+  return newParts.join('/')
+}
+
+/**
+ * Converts colon parameters to real values from params. Same as above but it additionally supports vue router regexp.
+ *
+ * @param template url containing colon parameters, example: '/:id(\\d+)/edit'
+ * @param params object containing real values to be replaced, example: { id:5 }
+ */
+export const stringUrlTemplateReplaceVueRouter = (template: string, params: UrlParams) => {
+  if (template.indexOf(':') === -1) return template
+  const newParts: string[] = []
+  const parts = template.split('/')
+  console.log(parts)
+  parts.forEach((part: string, index: number) => {
+    newParts[index] = part
+    if (!part.startsWith(':')) return
+    newParts[index] = part.substring(1)
+    const regex = /^:([a-zA-Z0-9_-]+).*/
+    const match = part.match(regex)
+    if (isNull(match) || !match[1]) return
+    if (!isUndefined(params[match[1]])) newParts[index] = params[match[1]] + ''
   })
   return newParts.join('/')
 }
