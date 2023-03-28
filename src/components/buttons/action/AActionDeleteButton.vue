@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
+import { ButtonVariant } from '@/types/commonAdmin'
 
 const props = withDefaults(
   defineProps<{
-    variant?: 'flat' | 'text' | 'elevated' | 'tonal' | 'outlined' | 'plain' | undefined
+    variant?: ButtonVariant
     buttonT?: string
     buttonClass?: string
     dialogMessageT?: string
@@ -19,12 +20,11 @@ const props = withDefaults(
     disabled?: boolean
     disableCloseAfterConfirm?: boolean
     loading?: boolean
-    color?: string
-    width?: number
-    height?: number
+    color?: string | undefined
+    size?: number
   }>(),
   {
-    variant: 'text',
+    variant: 'icon',
     buttonT: 'common.button.delete',
     buttonClass: 'ml-2',
     dialogMessageT: 'common.system.modal.confirmDelete',
@@ -37,8 +37,7 @@ const props = withDefaults(
     disabled: false,
     disableCloseAfterConfirm: false,
     color: undefined,
-    width: undefined,
-    height: undefined,
+    size: 36,
   }
 )
 const emit = defineEmits<{
@@ -69,20 +68,33 @@ const { t } = useI18n()
 defineExpose({
   closeDialog,
 })
+
+const variantComputed = computed(() => {
+  switch (props.variant) {
+    case 'secondary':
+      return 'outlined'
+    case 'tertiary':
+    case 'icon':
+      return 'text'
+    default:
+      return 'flat'
+  }
+})
 </script>
 
 <template>
   <VBtn
+    v-if="variant === 'icon'"
     :class="buttonClass"
     :data-cy="dataCy"
     icon
     size="small"
-    :variant="variant"
+    :variant="variantComputed"
     :disabled="disabled"
     :color="color"
     :loading="loading"
-    :width="width"
-    :height="height"
+    :width="size"
+    :height="size"
     @click.stop="onClick"
   >
     <VIcon icon="mdi-trash-can-outline" />
@@ -92,6 +104,18 @@ defineExpose({
     >
       {{ t(buttonT) }}
     </VTooltip>
+  </VBtn>
+  <VBtn
+    v-else
+    :class="buttonClass"
+    :data-cy="dataCy"
+    :variant="variantComputed"
+    :color="color"
+    rounded="pill"
+    :height="size"
+    @click.stop="onClick"
+  >
+    {{ t(buttonT) }}
   </VBtn>
   <VDialog
     v-model="dialog"

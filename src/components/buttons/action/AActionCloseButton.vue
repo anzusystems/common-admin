@@ -10,11 +10,14 @@ const props = withDefaults(
     buttonT?: string
     buttonClass?: string
     dataCy?: string
+    size?: number
   }>(),
   {
+    routeParams: undefined,
     buttonT: 'common.button.close',
     buttonClass: 'ml-2',
     dataCy: 'button-close',
+    size: 36,
   }
 )
 
@@ -36,8 +39,8 @@ const routerToComputed = computed(() => {
     icon
     size="small"
     variant="text"
-    :width="36"
-    :height="36"
+    :width="size"
+    :height="size"
     :active="false"
   >
     <VIcon icon="mdi-close" />
