@@ -1,32 +1,41 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
+import { computed } from 'vue'
+import { isUndefined } from '@/utils/common'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
-    recordId: number | string
     routeName: string
+    recordId?: number | string | undefined
+    routeParams?: any | undefined
     buttonT?: string
     buttonClass?: string
-    target?: string
     dataCy?: string
   }>(),
   {
+    recordId: undefined,
+    routeParams: undefined,
     buttonT: 'common.button.detail',
     buttonClass: 'ml-1',
-    target: '_self',
     dataCy: 'table-detail',
   }
 )
 
 const { t } = useI18n()
+
+const routerToComputed = computed(() => {
+  if (!isUndefined(props.routeParams)) {
+    return { name: props.routeName, params: { ...props.routeParams } }
+  }
+  return { name: props.routeName, params: { id: props.recordId } }
+})
 </script>
 
 <template>
   <VBtn
     :class="buttonClass"
     :data-cy="dataCy"
-    :target="target"
-    :to="{ name: routeName, params: { id: recordId } }"
+    :to="routerToComputed"
     icon
     size="x-small"
     variant="text"
