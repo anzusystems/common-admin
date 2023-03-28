@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
+import { computed } from 'vue'
+import { isUndefined } from '@/utils/common'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     routeName: string
+    routeParams?: any | undefined
     buttonT?: string
     buttonClass?: string
     dataCy?: string
@@ -16,13 +19,20 @@ withDefaults(
 )
 
 const { t } = useI18n()
+
+const routerToComputed = computed(() => {
+  if (!isUndefined(props.routeParams)) {
+    return { name: props.routeName, params: { ...props.routeParams } }
+  }
+  return { name: props.routeName }
+})
 </script>
 
 <template>
   <VBtn
     :class="buttonClass"
     :data-cy="dataCy"
-    :to="{ name: routeName }"
+    :to="routerToComputed"
     icon
     size="small"
     variant="text"
