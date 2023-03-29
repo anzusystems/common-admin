@@ -1,4 +1,4 @@
-# Vue 3 + Vuetify 3 + TypeScript + Vite lib
+# Common admin components for anzusystems vue projects 
 
 ## Install dependencies
 
