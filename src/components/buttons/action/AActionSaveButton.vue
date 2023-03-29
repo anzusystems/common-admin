@@ -2,7 +2,7 @@
 import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
-import { ButtonVariant } from '@/types/commonAdmin'
+import type { ButtonVariant } from '@/types/commonAdmin'
 
 const props = withDefaults(
   defineProps<{

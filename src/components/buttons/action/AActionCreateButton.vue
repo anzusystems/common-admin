@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { ButtonVariant } from '@/types/commonAdmin'
+import type { ButtonVariant } from '@/types/commonAdmin'
 import { computed } from 'vue'
 
 const props = withDefaults(

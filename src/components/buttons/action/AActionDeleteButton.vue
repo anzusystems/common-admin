@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
-import { ButtonVariant } from '@/types/commonAdmin'
+import type { ButtonVariant } from '@/types/commonAdmin'
 
 const props = withDefaults(
   defineProps<{
