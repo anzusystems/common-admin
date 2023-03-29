@@ -9,7 +9,8 @@ import { isUndefined } from '@/utils/common'
 const props = withDefaults(
   defineProps<{
     routeName: string
-    recordId: number | string
+    recordId?: number | string | undefined
+    routeParams?: any | undefined
     buttonT?: string
     buttonClass?: string
     dataCy?: string
@@ -18,6 +19,8 @@ const props = withDefaults(
     variant?: ButtonVariant
   }>(),
   {
+    recordId: undefined,
+    routeParams: undefined,
     buttonT: 'common.button.edit',
     buttonClass: 'ml-2',
     dataCy: 'button-edit',
@@ -37,8 +40,15 @@ const router = useRouter()
 const onClick = (event: Event) => {
   eventClickBlur(event)
   emit('editRecord')
-  router.push({ name: props.routeName, params: { id: props.recordId } })
+  router.push(routerToComputed.value)
 }
+
+const routerToComputed = computed(() => {
+  if (!isUndefined(props.routeParams)) {
+    return { name: props.routeName, params: { ...props.routeParams } }
+  }
+  return { name: props.routeName, params: { id: props.recordId } }
+})
 
 const variantComputed = computed(() => {
   switch (props.variant) {
