@@ -20,8 +20,8 @@ __metadata:
     "@vue/eslint-config-prettier": ^7.1.0
     "@vue/eslint-config-typescript": ^11.0.2
     "@vue/tsconfig": ^0.1.3
-    "@vuelidate/core": ^2.0.1
-    "@vuelidate/validators": ^2.0.1
+    "@vuelidate/core": ^2.0.2
+    "@vuelidate/validators": ^2.0.2
     "@vueuse/core": ^9.13.0
     "@vueuse/integrations": ^9.13.0
     axios: ^1.3.4
@@ -1139,9 +1139,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vuelidate/core@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@vuelidate/core@npm:2.0.1"
+"@vuelidate/core@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@vuelidate/core@npm:2.0.2"
   dependencies:
     vue-demi: ^0.13.11
   peerDependencies:
@@ -1150,13 +1150,13 @@ __metadata:
   peerDependenciesMeta:
     "@vue/composition-api":
       optional: true
-  checksum: 738e96eb869501117db1aafba5c42a74de6b98604767d720c03870b00a807e49422acdc691a6befa965fb442b05dae977b8e6291c609939a4c7fb79714fde646
+  checksum: 7453d1b8feea6dfa769ade6ba831ffbc7273ff2c3c2310afff2777bed575531636608e7c053569eba889493bfb1a115c16ab03f34deea35ef2815c53ed80d0ea
   languageName: node
   linkType: hard
 
-"@vuelidate/validators@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@vuelidate/validators@npm:2.0.1"
+"@vuelidate/validators@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@vuelidate/validators@npm:2.0.2"
   dependencies:
     vue-demi: ^0.13.11
   peerDependencies:
@@ -1165,7 +1165,7 @@ __metadata:
   peerDependenciesMeta:
     "@vue/composition-api":
       optional: true
-  checksum: e0f602f2b63aac9ea249e56449a8f720dc8a388ae1288f8fd09a6b03e6c37919638e7814250e3dfc9fb21c153a64ead1ccdee03344a83f16b360d8f1ad97f396
+  checksum: 25c770c02fbcd0d174418e630510ab6e4b36a3992d0cee48695c666d547d6698db6f0f09c4565a55a37db7fce1c868baad4574a0887923e21e9944c4d9c085ef
   languageName: node
   linkType: hard
 

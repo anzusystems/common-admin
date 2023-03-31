@@ -2,9 +2,13 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ValueObjectOption } from '@/types/ValueObject'
 
-export type JobResource = 'jobUserDataDelete' | `job${string}`
+export const JOB_RESOURCE_USER_DATA_DELETE = 'jobUserDataDelete'
 
-export function useJobResource<T extends JobResource = JobResource>(customJobs: ValueObjectOption<T>[] = []) {
+export type JobBaseResource = typeof JOB_RESOURCE_USER_DATA_DELETE | `job${string}`
+
+export function useJobBaseResource<T extends JobBaseResource = JobBaseResource>(
+  customJobs: ValueObjectOption<T>[] = []
+) {
   const { t } = useI18n()
 
   const jobResourceOptions = ref<ValueObjectOption<T>[]>([

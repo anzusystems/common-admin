@@ -39,6 +39,7 @@ const label = computed(() => {
   <VAutocomplete
     v-model="value"
     :items="items"
+    :chips="modelValue.multiple"
     :label="label"
     :multiple="modelValue.multiple"
     :clearable="!modelValue.mandatory"

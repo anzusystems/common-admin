@@ -1,7 +1,7 @@
 import type { AxiosInstance } from 'axios'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
-import type { Job } from '@/types/Job'
+import type { JobBase } from '@/types/Job'
 import { apiFetchList } from '@/services/api/apiFetchList'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
@@ -11,7 +11,7 @@ import { stringToKebabCase } from '@/utils/string'
 const END_POINT = '/adm/v1/job'
 export const ENTITY = 'job'
 
-export function useJobApi<JobType extends Job = Job>(client: () => AxiosInstance, system: string) {
+export function useJobApi<JobType extends JobBase = JobBase>(client: () => AxiosInstance, system: string) {
   const fetchJobList = (pagination: Pagination, filterBag: FilterBag) =>
     apiFetchList<JobType[]>(client, END_POINT, {}, pagination, filterBag, system, ENTITY)
 

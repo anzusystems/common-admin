@@ -1,6 +1,6 @@
 {
   "required": "Required.",
-  "between": "todo translate between",
+  "between": "todo translate between numeric values",
   "minLength": "Minimal length is {min}.",
   "maxLength": "Maximal length is {max}.",
   "maxValue": "todo translate maxValue",

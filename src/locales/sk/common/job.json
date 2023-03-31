@@ -1,8 +1,9 @@
 {
-  "meta": {
-    "detail": "Detail",
-    "list": "Zoznam",
-    "create": "Vytvoriť"
+  "filter": {
+    "id": "Id",
+    "status": "Status",
+    "startedAtFrom": "Started at from",
+    "startedAtUntil": "Started at until"
   },
   "model": {
     "id": "Id",
@@ -16,6 +17,9 @@
   },
   "jobResource": {
     "jobUserDataDelete": "Výmaz používateľových dát"
+  },
+  "button": {
+    "create": "Vytvoriť systémovú úlohu"
   },
   "status": {
     "waiting": "V poradí",
