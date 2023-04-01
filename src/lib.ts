@@ -63,6 +63,7 @@ import ALoginView from '@/components/view/ALoginView.vue'
 import ALogoutView from '@/components/view/ALogoutView.vue'
 import AUnauthorizedView from '@/components/view/AUnauthorizedView.vue'
 import ANotFoundView from '@/components/view/ANotFoundView.vue'
+import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
 import { i18n } from '@/plugins/i18n'
 import {
   objectDeletePropertyByPath,
@@ -169,9 +170,9 @@ import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { NEW_LINE_MARK, useAlerts } from '@/composables/system/alerts'
 import { useErrors } from '@/composables/system/error'
 import { JobStatus, useJobStatus } from '@/model/valueObject/JobStatus'
-import type { Job } from '@/types/Job'
+import type { JobBase, JobUserDataDelete } from '@/types/Job'
 import { useJobApi } from '@/services/api/job/jobApi'
-import { type JobResource, useJobResource } from '@/model/valueObject/JobResource'
+import { type JobBaseResource, useJobBaseResource, JOB_RESOURCE_USER_DATA_DELETE } from '@/model/valueObject/JobBaseResource'
 import { ROLE_SUPER_ADMIN, useAcl } from '@/composables/system/ability'
 import AnzuSystemsCommonAdmin, {
   AvailableLanguagesSymbol,
@@ -209,6 +210,7 @@ import type { ObjectLeaves, ObjectPaths } from '@/types/utils'
 import { loadCommonFonts } from '@/plugins/webfontloader'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden, isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuApiForbiddenOperationError,axiosErrorResponseHasForbiddenOperationData, isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
+import { useCommonJobFactory } from '@/model/factory/JobFactory'
 
 export {
   // COMPONENTS
@@ -273,6 +275,7 @@ export {
   AAvatarColorPicker,
   ACurrentUserDropdown,
   AFormRemoteAutocompleteWithCached,
+  AJobDetailCommon,
 
   // VIEWS
   ALoginView,
@@ -326,9 +329,12 @@ export {
   PermissionGroupMinimal,
   VuetifyIconValue,
   MakeFilterOptions,
-  Job,
+  JobBase,
+  JobUserDataDelete,
+  JOB_RESOURCE_USER_DATA_DELETE,
   JobStatus,
-  JobResource,
+  JobBaseResource,
+  useCommonJobFactory,
   CurrentUserType,
   AclValue,
   CustomAclResolver,
@@ -427,7 +433,7 @@ export {
   apiUpdateOne,
   useApiQueryBuilder,
   useJobApi,
-  useJobResource,
+  useJobBaseResource,
   useJobStatus,
   useAcl,
 

@@ -81,6 +81,9 @@ export const useCommonVuetifyConfig = () => {
       VCard: {
         variant: 'flat',
       },
+      VDialog: {
+        noClickAnimation: true,
+      },
       VProgressCircular: {
         color: 'primary',
       },

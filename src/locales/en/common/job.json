@@ -1,8 +1,9 @@
 {
-  "meta": {
-    "detail": "Detail",
-    "list": "List",
-    "create": "Create"
+  "filter": {
+    "id": "Id",
+    "status": "Status",
+    "startedAtFrom": "Started at from",
+    "startedAtUntil": "Started at until"
   },
   "model": {
     "id": "Id",
@@ -16,6 +17,9 @@
   },
   "jobResource": {
     "jobUserDataDelete": "User data delete"
+  },
+  "button": {
+    "create": "Create job"
   },
   "status": {
     "waiting": "Waiting",

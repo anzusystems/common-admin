@@ -12,10 +12,10 @@ const option = computed(() => getJobStatusOption(props.value))
 
 <template>
   <VChip
-    :color="option.color"
+    :color="option?.color"
     label
     size="small"
   >
-    {{ option.title }}
+    {{ option?.title }}
   </VChip>
 </template>
