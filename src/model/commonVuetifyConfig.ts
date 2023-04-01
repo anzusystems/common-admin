@@ -83,6 +83,7 @@ export const useCommonVuetifyConfig = () => {
       },
       VDialog: {
         noClickAnimation: true,
+        persistent: true,
       },
       VProgressCircular: {
         color: 'primary',
