@@ -5,10 +5,10 @@ import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
-    configUrl?: string
+    configUrl?: string | undefined | null
   }>(),
   {
-    configUrl: '',
+    configUrl: null,
   }
 )
 
@@ -24,7 +24,7 @@ interface AdminConfigItem {
 const config = ref<AdminConfigItem[]>([])
 
 onMounted(async () => {
-  if (props.configUrl.length > 0) {
+  if (props.configUrl && props.configUrl.length > 0) {
     try {
       const { data } = await useFetch<AdminConfigItem[]>(props.configUrl).get().json()
       config.value = data.value
