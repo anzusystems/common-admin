@@ -1,4 +1,4 @@
-import { isArray, isUndefined, cloneDeep } from '@/utils/common'
+import { cloneDeep, isArray, isUndefined } from '@/utils/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 

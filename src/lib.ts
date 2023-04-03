@@ -66,15 +66,16 @@ import ANotFoundView from '@/components/view/ANotFoundView.vue'
 import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
 import { i18n } from '@/plugins/i18n'
 import {
+  type Immutable,
+  objectDeepFreeze,
   objectDeletePropertyByPath,
   objectGetValueByPath,
   objectGetValues,
-  type Immutable,
-  objectDeepFreeze,
   objectSetValueByPath,
 } from '@/utils/object'
 import { numberToString } from '@/utils/number'
 import {
+  cloneDeep,
   isArray,
   isBoolean,
   isDefined,
@@ -88,32 +89,31 @@ import {
   isObject,
   isString,
   isUndefined,
-  cloneDeep,
 } from '@/utils/common'
 import {
   stringNormalizeForSlotName,
-  stringToSlug,
   stringSplitOnFirstOccurrence,
   stringToFloat,
   stringToInt,
-  stringTrimLength,
   stringToKebabCase,
+  stringToSlug,
+  stringTrimLength,
   stringUrlTemplateReplace,
   stringUrlTemplateReplaceVueRouter,
 } from '@/utils/string'
 import { booleanToInteger } from '@/utils/boolean'
 import {
-  timestampCurrent,
+  dateModifyMinutes,
+  dateNow,
   DATETIME_MAX,
   DATETIME_MIN,
   dateTimeEndOfDay,
+  dateTimeFriendly,
   dateTimeNow,
+  dateTimePretty,
   dateTimeStartOfDay,
   dateToUtc,
-  dateTimeFriendly,
-  dateModifyMinutes,
-  dateNow,
-  dateTimePretty,
+  timestampCurrent,
   yearNow,
 } from '@/utils/datetime'
 import { Grant, useGrant } from '@/model/valueObject/Grant'
@@ -126,9 +126,9 @@ import type {
   DatetimeUTCNullable,
   DocId,
   DocIdNullable,
+  EnableDisable,
   IntegerId,
   IntegerIdNullable,
-  EnableDisable,
 } from '@/types/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
@@ -149,18 +149,18 @@ import { isValidHTTPStatus } from '@/utils/response'
 import {
   HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_CREATED,
+  HTTP_STATUS_FORBIDDEN,
   HTTP_STATUS_NO_CONTENT,
   HTTP_STATUS_OK,
   HTTP_STATUS_UNAUTHORIZED,
-  HTTP_STATUS_FORBIDDEN,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
 } from '@/composables/statusCodes'
 import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import {
   AnzuApiValidationError,
+  type AnzuApiValidationResponseData,
   axiosErrorResponseHasValidationData,
   isAnzuApiValidationError,
-  type AnzuApiValidationResponseData,
   type ValidationError,
 } from '@/model/error/AnzuApiValidationError'
 import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
@@ -178,22 +178,22 @@ import { JobStatus, useJobStatus } from '@/model/valueObject/JobStatus'
 import type { JobBase, JobUserDataDelete } from '@/types/Job'
 import { useJobApi } from '@/services/api/job/jobApi'
 import {
+  JOB_RESOURCE_USER_DATA_DELETE,
   type JobBaseResource,
   useJobBaseResource,
-  JOB_RESOURCE_USER_DATA_DELETE,
 } from '@/model/valueObject/JobBaseResource'
 import { ROLE_SUPER_ADMIN, useAcl } from '@/composables/system/ability'
 import AnzuSystemsCommonAdmin, {
   AvailableLanguagesSymbol,
   type CurrentUserType,
+  type CustomAclResolver,
   DefaultLanguageSymbol,
   type PluginOptions,
-  type CustomAclResolver,
 } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/types/Permission'
 import { Theme, useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
-import { arrayFromArgs, arrayToString, arrayFlatten, arrayItemToggle, type NestedArray } from '@/utils/array'
+import { arrayFlatten, arrayFromArgs, arrayItemToggle, arrayToString, type NestedArray } from '@/utils/array'
 import { browserHistoryReplaceUrlByRouter, browserHistoryReplaceUrlByString } from '@/utils/history'
 import { eventClickBlur } from '@/utils/event'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'

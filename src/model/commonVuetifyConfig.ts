@@ -1,5 +1,4 @@
-import { VBtn } from 'vuetify/components'
-import { VChip } from 'vuetify/components'
+import { VBtn, VChip } from 'vuetify/components'
 
 export const useCommonVuetifyConfig = () => {
   const commonTheme = () => {
