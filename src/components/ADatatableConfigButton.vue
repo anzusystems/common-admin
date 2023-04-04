@@ -58,7 +58,7 @@ const toggleVisibility = (key: string) => {
     </VTooltip>
     <VMenu activator="parent">
       <VCard>
-        <VList dense>
+        <VList density="compact">
           <VListItem>
             <VListItemTitle>
               <strong>{{ t('common.system.datatable.displayCols') }}</strong>
