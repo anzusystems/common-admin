@@ -84,7 +84,6 @@ onMounted(() => {
     <VCheckboxBtn
       :id="uniqueId"
       v-model="internalModelValue"
-      :loading="loading"
       :disabled="loading"
       @click.stop="onClick"
     />

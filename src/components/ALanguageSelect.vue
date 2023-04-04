@@ -65,7 +65,7 @@ const availableLocales = computed(() => {
       </VBtn>
     </template>
     <VCard>
-      <VList dense>
+      <VList density="compact">
         <VListItem
           v-for="locale in availableLocales"
           :key="locale.code"

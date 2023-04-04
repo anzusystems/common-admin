@@ -37,7 +37,6 @@ const label = computed(() => {
     </VLabel>
     <VBtnToggle
       v-model="value"
-      size="small"
     >
       <VBtn
         size="small"

@@ -33,6 +33,11 @@ const { t } = useI18n()
 const label = computed(() => {
   return props.modelValue.titleT ? t(props.modelValue.titleT) : undefined
 })
+
+const multipleComputedVuetifyTypeFix = computed(() => {
+  if (props.modelValue.multiple === false) return false
+  return true as unknown as undefined
+})
 </script>
 
 <template>
@@ -41,7 +46,7 @@ const label = computed(() => {
     :items="items"
     :chips="modelValue.multiple"
     :label="label"
-    :multiple="modelValue.multiple"
+    :multiple="multipleComputedVuetifyTypeFix"
     :clearable="!modelValue.mandatory"
     data-cy="filter-value"
     @clear="clearOne(modelValue)"

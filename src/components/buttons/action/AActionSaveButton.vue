@@ -54,7 +54,7 @@ const variantComputed = computed(() => {
     :class="buttonClass"
     icon
     size="small"
-    variant="variantComputed"
+    :variant="variantComputed"
     :loading="loading"
     :disabled="disabled"
     :width="size"

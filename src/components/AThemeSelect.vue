@@ -47,7 +47,7 @@ const isOpen = ref(false)
       </VBtn>
     </template>
     <VCard>
-      <VList dense>
+      <VList density="compact">
         <VListItem
           :title="t('common.system.theme.auto')"
           @click.stop="setThemeAuto"
