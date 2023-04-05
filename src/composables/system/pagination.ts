@@ -1,9 +1,9 @@
 import { computed, reactive } from 'vue'
 import type { Pagination } from '@/types/Pagination'
 
-export function usePagination() {
+export function usePagination(sortBy: string | null = 'createdAt') {
   return reactive<Pagination>({
-    sortBy: 'createdAt',
+    sortBy: sortBy,
     descending: true,
     page: 1,
     rowsPerPage: 10,

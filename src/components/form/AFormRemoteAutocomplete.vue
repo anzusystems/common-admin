@@ -32,6 +32,7 @@ const props = withDefaults(
     fetchItemsByIds: fetchItemsByIdsType
     innerFilter: FilterBag
     filterByField?: string
+    filterSortBy?: string | null
     disableInitFetch?: boolean | undefined
     loading?: boolean
   }>(),
@@ -45,6 +46,7 @@ const props = withDefaults(
     hideDetails: false,
     hideLabel: false,
     filterByField: 'name',
+    filterSortBy: 'createdAt',
     disableInitFetch: false,
     loading: false,
   }
@@ -105,7 +107,7 @@ const multipleComputedVuetifyTypeFix = computed(() => {
   return true as unknown as undefined
 })
 
-const pagination = usePagination()
+const pagination = usePagination(props.filterSortBy)
 const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 
