@@ -165,15 +165,15 @@ const autoFetch = async () => {
   clearAutoFetchTimer()
   if (autoFetched.value === true) return
   autoFetched.value = true
-  if (
-    isNull(modelValue.value) ||
-    isUndefined(modelValue.value) ||
-    (isArray(modelValue.value) && modelValue.value.length === 0)
-  ) {
+  // if (
+  //   isNull(modelValue.value) ||
+  //   isUndefined(modelValue.value) ||
+  //   (isArray(modelValue.value) && modelValue.value.length === 0)
+  // ) {
     loading.value = true
     fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
     loading.value = false
-  }
+  // }
 }
 const onFocus = () => {
   isFocused.value = true
