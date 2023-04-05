@@ -14,7 +14,7 @@ const props = withDefaults(
   }>(),
   {
     notifyT: 'common.alert.textWasCopied',
-    dataCy: 'copy_text',
+    dataCy: 'copy-text',
   }
 )
 

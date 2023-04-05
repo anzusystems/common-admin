@@ -37,6 +37,7 @@ const props = withDefaults(
     fetchItemsMinimal: FetchItemsMinimalType
     innerFilter: FilterBag
     filterByField?: string
+    filterSortBy?: string | null
     loading?: boolean
     useCached: UseCachedType
     itemTitle?: string
@@ -51,6 +52,7 @@ const props = withDefaults(
     errorMessage: undefined,
     hideLabel: false,
     filterByField: 'name',
+    filterSortBy: 'createdAt',
     loading: false,
     itemTitle: 'name',
     itemValue: 'id',
@@ -83,7 +85,7 @@ const isFocused = ref(false)
 const search = ref('')
 const loading = ref(false)
 const { innerFilter } = toRefs(props)
-const pagination = usePagination()
+const pagination = usePagination(props.filterSortBy)
 
 const fetchedItemsMinimal = ref<Map<IntegerId | DocId, any>>(new Map())
 // const fetchedItems = ref<Map<IntegerId | DocId, string>>(new Map())
