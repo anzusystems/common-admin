@@ -202,7 +202,7 @@ const flatpickrConfig = computed(() => {
     dateFormat: 'Z',
     disableMobile: true,
     clickOpens: false,
-    position: 'auto right' as const,
+    position: 'auto' as const,
     // @ts-ignore
     locale: { ...FlatpickrLanguages[lang.value] },
     enable: enableComputed.value,
