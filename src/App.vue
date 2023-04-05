@@ -76,10 +76,6 @@ onMounted(async () => {
           :to="{ name: 'component-forms' }"
           title="Forms"
         />
-        <VListItem
-          :to="{ name: 'component-datatable' }"
-          title="Datatable"
-        />
       </VList>
     </VNavigationDrawer>
     <VAppBar density="compact">
