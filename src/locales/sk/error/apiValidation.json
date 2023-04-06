@@ -9,7 +9,7 @@
   "error_field_value_not_found": "Hodnota v poli nebola nájdená.",
   "error_field_range_min": "Hodnota musí byť vyššia",
   "error_field_range_max": "Hodnota musí byť nižšia.",
-  "error_field_regex": "Regulárny výraz je v nesprávnom tvare.",
+  "error_field_regex": "Nesprávny formát.",
   "error_field_url": "URL je v nesprávnom tvare.",
   "error_already_exists": "Daná položka už existuje."
 }
