@@ -8,14 +8,14 @@
   "detail": "Detail",
   "submitFilter": "Hľadať",
   "resetFilter": "Zrušiť filter",
-  "advancedFilters": "More filters",
+  "advancedFilters": "Viac filtrov",
   "cancel": "Zrušiť",
   "delete": "Zmazať",
   "id": "ID",
   "now": "Teraz",
   "confirm": "Potvrď",
-  "copyId": "Copy ID",
+  "copyId": "Kopírovať ID",
   "add": "Pridať",
-  "download": "Download",
-  "Upload": "Upload"
+  "download": "Stiahnuť",
+  "Upload": "Nahratie"
 }
