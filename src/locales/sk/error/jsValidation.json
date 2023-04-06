@@ -1,13 +1,13 @@
 {
-  "required": "Required.",
-  "between": "todo translate between numeric values {min} and {max}",
-  "minLength": "Minimal length is {min}.",
-  "maxLength": "Maximal length is {max}.",
-  "maxValue": "todo translate maxValue {max}",
-  "minValue": "todo translate minValue {min}",
-  "email": "Incorrect email format",
-  "url": "Incorrect url format",
-  "numeric": "todo translate numeric",
-  "slug": "todo translate slug",
-  "stringArrayItemLength": "Item length in list must have between {min} and {max} characters."
+  "required": "Povinná hodnota.",
+  "between": "Hodnota musí byť medzi {min} a {max}.",
+  "minLength": "Minimálny počet znakov je {min}.",
+  "maxLength": "Maximálny počet znakov je {max}.",
+  "minValue": "Minimálna hodnota je {min}.",
+  "maxValue": "Maximálna hodnota je {max}.",
+  "email": "Nesprávny formát emailu.",
+  "url": "Nesprávny formát URL.",
+  "numeric": "Musia byť zadané iba čísla.",
+  "slug": "Povolené znaky pre slug sú a-z, - a 0-9.",
+  "stringArrayItemLength": "Dĺžka znakov každej položky musí byť medzi {min} a {max} znakov."
 }

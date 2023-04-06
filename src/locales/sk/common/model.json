@@ -1,15 +1,15 @@
 {
-  "system": "System",
+  "system": "Systém",
   "notSelected": "Nevybrané",
   "boolean": {
     "true": "áno",
     "false": "nie"
   },
   "tracking": {
-    "createdAt": "Created",
-    "modifiedAt": "Modified",
-    "created": "Created",
-    "modified": "Modified"
+    "createdAt": "Vytvorené",
+    "modifiedAt": "Upravené",
+    "created": "Vytvorené",
+    "modified": "Upravené"
   },
   "filterPlaceholder": {
     "eq": "Presný výraz",
