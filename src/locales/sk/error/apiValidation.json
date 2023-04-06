@@ -7,8 +7,8 @@
   "error_field_invalid": "Nevalidné pole.",
   "error_field_not_unique": "Pole musí byť unikátne.",
   "error_field_value_not_found": "Hodnota v poli nebola nájdená.",
-  "error_field_range_min": "Rozsah poľa musí byť vyšší.",
-  "error_field_range_max": "Rozsah poľa musí byť nižší.",
+  "error_field_range_min": "Hodnota musí byť vyššia",
+  "error_field_range_max": "Hodnota musí byť nižšia.",
   "error_field_regex": "Regulárny výraz je v nesprávnom tvare.",
   "error_field_url": "URL je v nesprávnom tvare.",
   "error_already_exists": "Daná položka už existuje."
