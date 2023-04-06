@@ -1,9 +1,9 @@
 {
   "filter": {
     "id": "Id",
-    "status": "Status",
-    "startedAtFrom": "Started at from",
-    "startedAtUntil": "Started at until"
+    "status": "Stav",
+    "startedAtFrom": "Začiatok",
+    "startedAtUntil": "Ukončenie"
   },
   "model": {
     "id": "Id",
