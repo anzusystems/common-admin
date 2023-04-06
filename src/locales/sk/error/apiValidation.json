@@ -1,15 +1,15 @@
 {
-  "noTranslation": "Invalid",
-  "error_id_mismatch": "todo trans error_id_mismatch",
-  "error_field_empty": "todo trans error_field_empty",
-  "error_field_length_min": "todo trans error_field_length_min",
-  "error_field_length_max": "todo trans error_field_length_max",
-  "error_field_invalid": "todo trans error_field_invalid",
-  "error_field_not_unique": "todo trans error_field_not_unique",
-  "error_field_value_not_found": "todo trans error_field_value_not_found",
-  "error_field_range_min": "todo trans error_field_range_min",
-  "error_field_range_max": "todo trans error_field_range_max",
-  "error_field_regex": "todo trans error_field_regex",
-  "error_field_url": "todo trans error_field_url",
-  "error_already_exists": "todo trans error_already_exists"
+  "noTranslation": "Nevalidné.",
+  "error_id_mismatch": "Nesúlad ID pri upravovaní objektu (MismatchID chyba). V prípade potreby kontaktuje administrátora.",
+  "error_field_empty": "Povinné pole je prázdne.",
+  "error_field_length_min": "Nedodržaná minimálna dĺžka poľa.",
+  "error_field_length_max": "Nedodržaná maximálna dĺžka poľa.",
+  "error_field_invalid": "Nevalidné pole.",
+  "error_field_not_unique": "Pole musí byť unikátne.",
+  "error_field_value_not_found": "Hodnota v poli nebola nájdená.",
+  "error_field_range_min": "Rozsah poľa musí byť vyšší.",
+  "error_field_range_max": "Rozsah poľa musí byť nižší.",
+  "error_field_regex": "Regulárny výraz je v nesprávnom tvare.",
+  "error_field_url": "URL je v nesprávnom tvare.",
+  "error_already_exists": "Daná položka už existuje."
 }
