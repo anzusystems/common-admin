@@ -1,21 +1,21 @@
 {
   "meta": {
-    "detail": "Permission Group Detail",
-    "list": "Permission Group List",
-    "create": "Permission Group Create",
-    "edit": "Permission Group Edit"
+    "detail": "Detail skupiny oprávnení",
+    "list": "Zoznam skupín oprávnení",
+    "create": "Vytvorenie skupiny oprávnení",
+    "edit": "Úprava skupiny oprávnení"
   },
   "model": {
     "id": "ID",
-    "title": "Title",
-    "description": "Description",
-    "permissions": "Permissions"
+    "title": "Nadpis",
+    "description": "Popis",
+    "permissions": "Oprávnenia"
   },
   "filter": {
     "id": "ID",
-    "title": "Title"
+    "title": "Nadpis"
   },
   "button": {
-    "deleteConfirm": "Do you want to permanently remove the permission group from the system?"
+    "deleteConfirm": "Skupina povolení bude natrvalo odstránená zo systému. Chcete pokračovať?"
   }
 }

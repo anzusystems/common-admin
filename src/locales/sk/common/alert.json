@@ -1,18 +1,18 @@
 {
-  "unknownError": "System error, try again later or contact administrator",
-  "forbiddenError": "Access denied, you dont have correct rights for this action",
-  "fixValidationErrors": "Please fill all required fields and fix problems",
-  "fixApiValidationErrors": "Please, fix these errors",
-  "apiForbiddenOperationError": "Forbidden operation",
+  "unknownError": "Systémová chyba. Skúste neskôr alebo kontaktujte administrátora.",
+  "forbiddenError": "Prístup zamietnutý. Na vykonanie danej akcie nemáte oprávnenie.",
+  "fixValidationErrors": "Vyplňte všetky povinné polia a opravte chyby.",
+  "fixApiValidationErrors": "Opravne tieto chyby.",
+  "apiForbiddenOperationError": "Zakázaná akcia.",
   "recordWas": {
-    "created": "Record was created",
-    "updated": "Record was updated",
-    "deleted": "Record was removed",
-    "published": "Record was published",
-    "unpublished": "Record was unpublished",
-    "enabled": "Record was enabled",
-    "disabled": "Record was disabled"
+    "created": "Záznam bol vytvorený.",
+    "updated": "Záznam bol upravený.",
+    "deleted": "Záznam bol odstránený.",
+    "published": "Záznam bol publikovaný.",
+    "unpublished": "Záznam bol stiahnutý.",
+    "enabled": "Záznam bol povolený.",
+    "disabled": "Záznam bol zakázaný."
   },
-  "idWasCopied": "ID was copied to clipboard",
-  "textWasCopied": "Text was copied to clipboard"
+  "idWasCopied": "ID bolo skopírované do schránky.",
+  "textWasCopied": "Text bol skopírovaný do schránky"
 }

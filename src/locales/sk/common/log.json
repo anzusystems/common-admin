@@ -1,36 +1,36 @@
 {
   "meta": {
-    "detail": "Log Detail",
-    "list": "List of Logs"
+    "detail": "Detail logu",
+    "list": "ZOznam logov"
   },
-  "system": "System",
+  "system": "Systém",
   "filter": {
-    "system": "System",
-    "type": "Type",
-    "levelName": "Level",
+    "system": "Systém",
+    "type": "Typ",
+    "levelName": "Úroveň",
     "id": "ID",
-    "contextId": "Context ID",
-    "userId": "User ID",
-    "datetimeFrom": "Date from",
-    "datetimeTo": "Date until",
-    "message": "Message",
-    "appVersion": "Version"
+    "contextId": "Kontextové ID",
+    "userId": "ID používateľa",
+    "datetimeFrom": "Dátum od",
+    "datetimeTo": "Dátum do",
+    "message": "Správa",
+    "appVersion": "Verzia"
   },
   "model": {
     "id": "ID",
-    "datetime": "Date",
-    "levelName": "Level",
-    "message": "Message",
+    "datetime": "Dátum",
+    "levelName": "Úroveň",
+    "message": "Správa",
     "context": {
-      "appVersion": "Version",
-      "requestOriginAppVersion": "Origin version",
-      "contextId": "Context ID",
-      "userId": "User ID",
+      "appVersion": "Verzia",
+      "requestOriginAppVersion": "Originálna verzia",
+      "contextId": "Kontextové ID",
+      "userId": "ID používateľa",
       "ip": "IP",
-      "content": "Request content",
-      "response": "Response content",
+      "content": "Obsah požiadavky",
+      "response": "Obsah odpovede",
       "path": "URL",
-      "httpStatus": "Status code"
+      "httpStatus": "Kód stavu"
     }
   }
 }

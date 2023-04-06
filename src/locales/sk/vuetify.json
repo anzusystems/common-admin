@@ -1,57 +1,57 @@
 {
-  "badge": "Badge",
-  "close": "Close",
+  "badge": "Štítok",
+  "close": "Zatvoriť",
   "dataIterator": {
-    "noResultsText": "No matching records found",
-    "loadingText": "Loading items..."
+    "noResultsText": "Nenašli sa žiadne zodpovedajúce záznamy",
+    "loadingText": "Načítavanie záznamov ..."
   },
   "dataTable": {
-    "itemsPerPageText": "Rows per page:",
+    "itemsPerPageText": "Riadkov na stránku:",
     "ariaLabel": {
-      "sortDescending": "Sorted descending.",
-      "sortAscending": "Sorted ascending.",
-      "sortNone": "Not sorted.",
-      "activateNone": "Activate to remove sorting.",
-      "activateDescending": "Activate to sort descending.",
-      "activateAscending": "Activate to sort ascending."
+      "sortDescending": "Zoradiť zostupne.",
+      "sortAscending": "Zoradiť vzostupne.",
+      "sortNone": "Bez zoradenia.",
+      "activateNone": "Prestať radiť.",
+      "activateDescending": "Aktivovať zostupné radenie.",
+      "activateAscending": "Aktivovať vzostupné radenie"
     },
-    "sortBy": "Sort by"
+    "sortBy": "Radiť"
   },
   "dataFooter": {
-    "itemsPerPageText": "Items per page:",
-    "itemsPerPageAll": "All",
-    "nextPage": "Next page",
-    "prevPage": "Previous page",
-    "firstPage": "First page",
-    "lastPage": "Last page",
-    "pageText": "{0}-{1} of {2}"
+    "itemsPerPageText": "Záznamov na stránku:",
+    "itemsPerPageAll": "Všetky",
+    "nextPage": "Ďalšia strana",
+    "prevPage": "Predchádzajúca strana",
+    "firstPage": "Prvá strana",
+    "lastPage": "Posledná strana",
+    "pageText": "{0}-{1} z {2}"
   },
   "datePicker": {
-    "itemsSelected": "{0} selected",
-    "nextMonthAriaLabel": "Next month",
-    "nextYearAriaLabel": "Next year",
-    "prevMonthAriaLabel": "Previous month",
-    "prevYearAriaLabel": "Previous year"
+    "itemsSelected": "{0} vybraných",
+    "nextMonthAriaLabel": "Ďalší mesiac",
+    "nextYearAriaLabel": "Ďalší rok",
+    "prevMonthAriaLabel": "Predchádzajúci mesiac",
+    "prevYearAriaLabel": "Predchádzajúci rok"
   },
-  "noDataText": "No data available",
+  "noDataText": "Žiadne dostupné dáta",
   "carousel": {
-    "prev": "Previous visual",
-    "next": "Next visual",
+    "prev": "Predchádzajúci krok",
+    "next": "Nasledujúci krok",
     "ariaLabel": {
-      "delimiter": "Carousel slide {0} of {1}"
+      "delimiter": "Krok {0} z {1}"
     }
   },
   "calendar": {
-    "moreEvents": "{0} more"
+    "moreEvents": "{0} viac"
   },
   "input": {
-    "clear": "Clear {0}",
-    "prependAction": "{0} prepended action",
-    "appendAction": "{0} appended action"
+    "clear": "Vymazať {0}",
+    "prependAction": "{0} akcií pred",
+    "appendAction": "{0} nasledovných akcií"
   },
   "fileInput": {
-    "counter": "{0} files",
-    "counterSize": "{0} files ({1} in total)"
+    "counter": "{0} súborov",
+    "counterSize": "{0} súborov ({1} spolu)"
   },
   "timePicker": {
     "am": "AM",
@@ -62,15 +62,15 @@
       "root": "Navigácia stránkovania",
       "next": "Ďalšia stránka",
       "previous": "Predchádzajúca stránka",
-      "page": "Goto Page {0}",
-      "currentPage": "Page {0}, Current Page",
-      "first": "First page",
-      "last": "Last page"
+      "page": "Ísť na stránku {0}",
+      "currentPage": "Stránka {0}, Aktuálna stránka",
+      "first": "Prvá stránka",
+      "last": "Posledná stránka"
     }
   },
   "rating": {
     "ariaLabel": {
-      "item": "Rating {0} of {1}"
+      "item": "Hodnotenie {0} z {1}"
     }
   }
 }

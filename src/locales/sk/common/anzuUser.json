@@ -1,17 +1,17 @@
 {
   "meta": {
-    "detail": "Anzu User Detail",
-    "list": "Anzu Users List",
-    "edit": "Anzu User Edit",
-    "create": "Anzu User Create"
+    "detail": "Detail Anzu používateľa",
+    "list": "Zoznam Anzu používateľov",
+    "edit": "Úprava Anzu používateľa",
+    "create": "Vytvorenie Anzu používateľa"
   },
   "model": {
     "id": "ID",
-    "enabled": "Enabled",
+    "enabled": "Povolený",
     "email": "Email",
-    "roles": "Roles",
-    "permissionGroups": "Permission Groups",
-    "permissions": "Permissions",
+    "roles": "Role",
+    "permissionGroups": "Skupiny oprávnení",
+    "permissions": "Oprávnenia",
     "person": {
       "firstName": "Meno",
       "lastName": "Priezvisko",
@@ -24,13 +24,13 @@
   },
   "filter": {
     "id": "ID",
-    "enabled": "Enabled",
+    "enabled": "Povolený",
     "email": "Email"
   },
   "table": {
-    "grants": "Actions",
-    "permissions": "Permissions",
-    "resolvedPermissions": "Resolved Permission",
-    "noPermissions": "No permissions set"
+    "grants": "Akcie",
+    "permissions": "Oprávnenia",
+    "resolvedPermissions": "Výsledné oprávnenie",
+    "noPermissions": "Žiadne oprávnenia"
   }
 }
