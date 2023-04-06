@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "0.0.52",
+  "version": "0.0.53",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
