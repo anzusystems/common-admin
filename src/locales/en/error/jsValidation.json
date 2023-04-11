@@ -3,11 +3,11 @@
   "between": "Value must be between {min} and {max}.",
   "minLength": "Minimal length is {min}.",
   "maxLength": "Maximal length is {max}.",
-  "maxValue": "Maximal value must be {max}",
-  "minValue": "Minimal value must be {min}",
-  "email": "Incorrect email format",
-  "url": "Incorrect url format",
+  "maxValue": "Maximal value must be {max}.",
+  "minValue": "Minimal value must be {min}.",
+  "email": "Incorrect email format.",
+  "url": "Incorrect url format.",
   "numeric": "Allowed only numbers.",
-  "slug": "Allowed only numbers a-z and 0-9.",
+  "slug": "Allowed only characters a-z and numbers 0-9.",
   "stringArrayItemLength": "Item length in list must have between {min} and {max} characters."
 }
