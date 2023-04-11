@@ -10,6 +10,6 @@
   "error_field_range_min": "Value must be greater.",
   "error_field_range_max": "Value must be lower.",
   "error_field_regex": "Incorrect format.",
-  "error_field_url": "URL is in an incorrect format.",
+  "error_field_url": "Url is in an incorrect format.",
   "error_already_exists": "Item already exists."
 }
