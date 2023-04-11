@@ -96,9 +96,6 @@
     "flatpickr": {
       "optional": true
     },
-    "pinia": {
-      "optional": true
-    },
     "vue-router": {
       "optional": true
     }
