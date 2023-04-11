@@ -1,13 +1,13 @@
 {
   "required": "Required.",
-  "between": "todo translate between numeric values {min} and {max}",
+  "between": "Value must be between {min} and {max}.",
   "minLength": "Minimal length is {min}.",
   "maxLength": "Maximal length is {max}.",
-  "maxValue": "todo translate maxValue {max}",
-  "minValue": "todo translate minValue {min}",
-  "email": "Incorrect email format",
-  "url": "Incorrect url format",
-  "numeric": "todo translate numeric",
-  "slug": "todo translate slug",
+  "maxValue": "Maximal value must be {max}.",
+  "minValue": "Minimal value must be {min}.",
+  "email": "Incorrect email format.",
+  "url": "Incorrect url format.",
+  "numeric": "Allowed only numbers.",
+  "slug": "Allowed only characters a-z, - and numbers 0-9.",
   "stringArrayItemLength": "Item length in list must have between {min} and {max} characters."
 }

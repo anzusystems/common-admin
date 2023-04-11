@@ -4,7 +4,7 @@
   "error_field_empty": "Povinné pole je prázdne.",
   "error_field_length_min": "Nedodržaná minimálna dĺžka poľa.",
   "error_field_length_max": "Nedodržaná maximálna dĺžka poľa.",
-  "error_field_invalid": "Nevalidné pole.",
+  "error_field_invalid": "Neplatné pole.",
   "error_field_not_unique": "Pole musí byť unikátne.",
   "error_field_value_not_found": "Hodnota v poli nebola nájdená.",
   "error_field_range_min": "Hodnota musí byť vyššia",
