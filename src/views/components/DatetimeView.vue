@@ -3,19 +3,64 @@ import ADatetime from '@/components/ADatetime.vue'
 import type { DatetimeUTCNullable } from '@/types/common'
 import { ref } from 'vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
+import { dateTimeNow } from '@/utils/datetime'
 
 const dateTime = ref<DatetimeUTCNullable>('2023-02-08T08:17:29.000000Z')
+const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)
+
+const changeToNow = () => {
+  dateTimeDefaultNull.value = dateTimeNow()
+}
 </script>
 
 <template>
   <VCard>
-    <VCardTitle>Datetime</VCardTitle>
+    <VCardTitle>ADatetime component to display formatted datetime</VCardTitle>
     <VCardText>
-      <ADatetime :date-time="dateTime"/>
-      <AFormDatetimePicker v-model="dateTime"/>
-      <div style="width:60px">
-        <AFormDatetimePicker v-model="dateTime"/>
-      </div>
+      <VRow>
+        <VCol>
+          <ADatetime :date-time="dateTime" />
+        </VCol>
+      </VRow>
+    </VCardText>
+  </VCard>
+
+  <VCard>
+    <VCardTitle>ADatetime component basic</VCardTitle>
+    <VCardText>
+      <VRow>
+        <VCol>
+          <ADatetime :date-time="dateTime" />
+        </VCol>
+      </VRow>
+    </VCardText>
+  </VCard>
+
+  <VCard>
+    <VCardTitle>AFormDatetimePicker component reactivity test</VCardTitle>
+    <VCardText>
+      <VRow>
+        <VCol>
+          Current value: <ADatetime :date-time="dateTimeDefaultNull" />
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
+          <AFormDatetimePicker
+            v-model="dateTimeDefaultNull"
+            clearable
+          />
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
+          <ABtnPrimary
+            @click="changeToNow"
+          >
+            Change to now
+          </ABtnPrimary>
+        </VCol>
+      </VRow>
     </VCardText>
   </VCard>
 </template>
