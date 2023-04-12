@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, unref } from 'vue'
+import { computed, onMounted, ref, unref, watch } from 'vue'
 import FlatPickr from 'vue-flatpickr-component'
 // @ts-ignore
 import ShortcutButtonsPlugin from 'shortcut-buttons-flatpickr'
@@ -226,14 +226,6 @@ const onCalendarClick = () => {
   }, 0)
 }
 
-onMounted(() => {
-  if ((isNull(props.modelValue) || isUndefined(props.modelValue)) && !isNull(props.defaultValue)) {
-    flatpickrValue.value = props.defaultValue
-    return
-  }
-  flatpickrValue.value = isUndefined(props.modelValue) ? null : props.modelValue
-})
-
 const requiredIf = useValidateRequiredIf()
 
 const rules = computed(() => {
@@ -252,6 +244,19 @@ const errorMessageComputed = computed(() => {
     return [v$.value.textFieldValue.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []
 })
+
+watch(
+  () => props.modelValue,
+  (newValue, oldValue) => {
+    if (newValue === oldValue) return
+    if ((isNull(props.modelValue) || isUndefined(props.modelValue)) && !isNull(props.defaultValue)) {
+      flatpickrValue.value = props.defaultValue
+      return
+    }
+    flatpickrValue.value = isUndefined(props.modelValue) ? null : props.modelValue
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
