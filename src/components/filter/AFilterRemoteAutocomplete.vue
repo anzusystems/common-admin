@@ -124,9 +124,9 @@ const autoFetch = async () => {
   //   isUndefined(modelValueComputed.value) ||
   //   (isArray(modelValueComputed.value) && modelValueComputed.value.length === 0)
   // ) {
-    loading.value = true
-    fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
-    loading.value = false
+  loading.value = true
+  fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
+  loading.value = false
   // }
 }
 const onFocus = () => {

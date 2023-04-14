@@ -35,9 +35,7 @@ const label = computed(() => {
     <VLabel class="pr-1">
       <span>{{ label }}</span>
     </VLabel>
-    <VBtnToggle
-      v-model="value"
-    >
+    <VBtnToggle v-model="value">
       <VBtn
         size="small"
         :value="true"

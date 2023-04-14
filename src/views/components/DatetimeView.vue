@@ -40,9 +40,7 @@ const changeToNow = () => {
     <VCardTitle>AFormDatetimePicker component reactivity test</VCardTitle>
     <VCardText>
       <VRow>
-        <VCol>
-          Current value: <ADatetime :date-time="dateTimeDefaultNull" />
-        </VCol>
+        <VCol> Current value: <ADatetime :date-time="dateTimeDefaultNull" /> </VCol>
       </VRow>
       <VRow>
         <VCol>
@@ -54,9 +52,7 @@ const changeToNow = () => {
       </VRow>
       <VRow>
         <VCol>
-          <ABtnPrimary
-            @click="changeToNow"
-          >
+          <ABtnPrimary @click="changeToNow">
             Change to now
           </ABtnPrimary>
         </VCol>
