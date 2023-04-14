@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, unref, watch } from 'vue'
+import { computed, ref, unref, watch } from 'vue'
 import FlatPickr from 'vue-flatpickr-component'
 // @ts-ignore
 import ShortcutButtonsPlugin from 'shortcut-buttons-flatpickr'
@@ -18,7 +18,7 @@ import type { DateLimit, DateOption } from 'flatpickr/dist/types/options'
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
 
-// todo test form and filter version, fix types
+// todo fix types
 
 const props = withDefaults(
   defineProps<{
