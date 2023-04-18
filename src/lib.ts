@@ -214,7 +214,7 @@ import {
   type DatatableSortBy,
 } from '@/composables/system/datatableColumns'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
-import { defineCached } from '@/composables/system/defineCached'
+import { defineCached, type CachedItem } from '@/composables/system/defineCached'
 import type { ObjectLeaves, ObjectPaths } from '@/types/utils'
 import { loadCommonFonts } from '@/plugins/webfontloader'
 import {
@@ -369,6 +369,7 @@ export {
   ObjectPaths,
   ObjectLeaves,
   EnableDisable,
+  CachedItem,
 
   // FACTORIES
   useAnzuUserFactory,
