@@ -89,3 +89,21 @@ export const dateTimeFriendly = (isoDate: DatetimeUTC | DatetimeUTCNullable | st
   if (!displayYear) return dayjs(date).format('D.M. H:mm')
   return dayjs(date).format('D.M.YYYY H:mm')
 }
+
+export const datePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string | null, edgeDateValue = ''): string => {
+  if (isoDate === DATETIME_MAX || isoDate === DATETIME_MIN || isoDate === '' || isNull(isoDate) || isUndefined(isoDate))
+    return edgeDateValue
+  return dayjs(isoDate).format('DD.MM.YYYY')
+}
+
+export const timePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string | null, edgeDateValue = ''): string => {
+  if (isoDate === DATETIME_MAX || isoDate === DATETIME_MIN || isoDate === '' || isNull(isoDate) || isUndefined(isoDate))
+    return edgeDateValue
+  return dayjs(isoDate).format('HH:mm')
+}
+
+export const dateDiff = (isoDate1: Date, isoDate2: Date) => {
+  const date1 = dayjs(isoDate1)
+  const date2 = dayjs(isoDate2)
+  return date1.diff(date2)
+}

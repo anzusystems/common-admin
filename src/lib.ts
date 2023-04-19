@@ -115,6 +115,9 @@ import {
   dateToUtc,
   timestampCurrent,
   yearNow,
+  datePretty,
+  timePretty,
+  dateDiff,
 } from '@/utils/datetime'
 import { Grant, useGrant } from '@/model/valueObject/Grant'
 import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
@@ -172,7 +175,7 @@ import { apiFetchList } from '@/services/api/apiFetchList'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
-import { NEW_LINE_MARK, useAlerts } from '@/composables/system/alerts'
+import { NEW_LINE_MARK, useAlerts, type RecordWasType } from '@/composables/system/alerts'
 import { useErrors } from '@/composables/system/error'
 import { JobStatus, useJobStatus } from '@/model/valueObject/JobStatus'
 import type { JobBase, JobUserDataDelete } from '@/types/Job'
@@ -193,7 +196,7 @@ import AnzuSystemsCommonAdmin, {
 import type { AclValue } from '@/types/Permission'
 import { Theme, useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
-import { arrayFlatten, arrayFromArgs, arrayItemToggle, arrayToString, type NestedArray } from '@/utils/array'
+import { arrayFlatten, arrayFromArgs, arrayItemToggle, arraysHaveSameElements, arrayToString, type NestedArray } from '@/utils/array'
 import { browserHistoryReplaceUrlByRouter, browserHistoryReplaceUrlByString } from '@/utils/history'
 import { eventClickBlur } from '@/utils/event'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
@@ -228,6 +231,9 @@ import {
   isAnzuApiForbiddenOperationError,
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { useCommonJobFactory } from '@/model/factory/JobFactory'
+import type { UrlParams } from '@/services/api/apiHelper'
+import type { generateUUIDv1 } from '@/utils/generator'
+import type { useLoginStatus } from '@/composables/system/loginStatus'
 
 export {
   // COMPONENTS
@@ -313,6 +319,7 @@ export {
   Theme,
   useLanguageSettings,
   modifyLanguageSettings,
+  useLoginStatus,
 
   // VALUE OBJECTS
   Grant,
@@ -370,6 +377,8 @@ export {
   ObjectLeaves,
   EnableDisable,
   CachedItem,
+  RecordWasType,
+  UrlParams,
 
   // FACTORIES
   useAnzuUserFactory,
@@ -421,6 +430,9 @@ export {
   dateToUtc,
   dateNow,
   yearNow,
+  datePretty,
+  timePretty,
+  dateDiff,
   // file
   prettyBytes,
   // response
@@ -435,11 +447,14 @@ export {
   arrayFromArgs,
   arrayFlatten,
   NestedArray,
+  arraysHaveSameElements,
   // history
   browserHistoryReplaceUrlByString,
   browserHistoryReplaceUrlByRouter,
   // event
   eventClickBlur,
+  // generator
+  generateUUIDv1,
 
   // SERVICES
   apiAnyRequest,

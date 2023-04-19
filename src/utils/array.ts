@@ -20,3 +20,22 @@ export const arrayFlatten = <T>(input: NestedArray<T>, acc: T[] = []): T[] => {
     return acc
   }, [])
 }
+
+export const arraysHaveSameElements = <T>(array1: T[], array2: T[]): boolean => {
+  if (array1.length !== array2.length) {
+    return false
+  }
+
+  // Sort both arrays
+  const sortedArray1 = array1.slice().sort()
+  const sortedArray2 = array2.slice().sort()
+
+  // Compare the sorted arrays
+  for (let i = 0; i < sortedArray1.length; i++) {
+    if (sortedArray1[i] !== sortedArray2[i]) {
+      return false
+    }
+  }
+
+  return true
+}
