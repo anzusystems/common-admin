@@ -7,8 +7,11 @@ import { isNull, isUndefined } from '@/utils/common'
 const props = withDefaults(
   defineProps<{
     modelValue: Filter
+    dataCy?: string
   }>(),
-  {}
+  {
+    dataCy: 'filter-boolean',
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
@@ -45,6 +48,7 @@ const items = computed(() => {
 <template>
   <VSelect
     v-model="value"
+    :data-cy="dataCy"
     :label="label"
     :items="items"
   />

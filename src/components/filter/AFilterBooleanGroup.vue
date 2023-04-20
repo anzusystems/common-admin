@@ -7,8 +7,13 @@ import type { Filter } from '@/types/Filter'
 const props = withDefaults(
   defineProps<{
     modelValue: Filter
+    dataCyTrue?: string
+    dataCyFalse?: string
   }>(),
-  {}
+  {
+    dataCyTrue: 'filter-true',
+    dataCyFalse: 'filter-false',
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
@@ -39,6 +44,7 @@ const label = computed(() => {
       <VBtn
         size="small"
         :value="true"
+        :data-cy="dataCyTrue"
         :color="value === true ? 'secondary' : ''"
       >
         {{ t('common.model.boolean.true') }}
@@ -46,6 +52,7 @@ const label = computed(() => {
       <VBtn
         size="small"
         :value="false"
+        :data-cy="dataCyFalse"
         :color="value === false ? 'secondary' : ''"
       >
         {{ t('common.model.boolean.false') }}

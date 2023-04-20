@@ -7,11 +7,13 @@ const props = withDefaults(
     title?: string | undefined
     logoUrl?: string | undefined
     loginUrl?: undefined | (() => string)
+    dataCy?: string
   }>(),
   {
     title: undefined,
     logoUrl: undefined,
     loginUrl: undefined,
+    dataCy: 'button-login',
   }
 )
 
@@ -42,6 +44,7 @@ onMounted(() => {
       <div class="py-5">
         <VBtn
           v-if="loginUrl"
+          :data-cy="dataCy"
           :href="loginUrl()"
           color="primary"
           size="large"

@@ -7,8 +7,11 @@ import ADatetimePicker from '@/components/ADatetimePicker.vue'
 const props = withDefaults(
   defineProps<{
     modelValue: Filter
+    dataCy?: string
   }>(),
-  {}
+  {
+    dataCy: 'filter-datepicker',
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
@@ -33,6 +36,7 @@ const label = computed(() => {
 <template>
   <ADatetimePicker
     v-model="value"
+    :data-cy="dataCy"
     :clearable="!modelValue.mandatory"
     :default-value="modelValue.default"
     :label="label"

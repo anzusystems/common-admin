@@ -10,9 +10,11 @@ import FlagEmpty from '@/components/flags/FlagEmpty.vue'
 const props = withDefaults(
   defineProps<{
     code?: LanguageCode | undefined
+    dataCy?: string
   }>(),
   {
     code: 'xx',
+    dataCy: 'flag-country',
   }
 )
 
@@ -30,6 +32,9 @@ const currentFlagComponent = computed(() => {
 
 <template>
   <div class="flag">
-    <component :is="currentFlagComponent" />
+    <component
+      :is="currentFlagComponent"
+      :data-cy="dataCy"
+    />
   </div>
 </template>

@@ -46,6 +46,7 @@ const { t } = useI18n()
   <VBtn
     v-if="icon"
     :class="buttonClass"
+    :data-cy="dataCy"
     :elevation="0"
     icon
     size="small"
@@ -93,6 +94,7 @@ const { t } = useI18n()
     <div class="a-button-split__divider d-inline-flex" />
     <VBtn
       :disabled="disabled || loading"
+      :data-cy="dataCy"
       color="primary"
       rounded="pill"
       class="a-button-split__more"

@@ -40,6 +40,7 @@ const variantComputed = computed(() => {
   <VBtn
     v-if="variant === 'icon'"
     :class="buttonClass"
+    :data-cy="dataCy"
     icon
     size="small"
     :variant="variantComputed"
