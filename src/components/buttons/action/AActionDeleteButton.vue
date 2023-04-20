@@ -142,7 +142,7 @@ const variantComputed = computed(() => {
         <ABtnPrimary
           :color="dialogConfirmColor"
           :loading="loading"
-          data-cy="button-confirm"
+          data-cy="button-confirm-delete"
           @click.stop="onConfirm"
         >
           {{ t(dialogConfirmButtonT) }}

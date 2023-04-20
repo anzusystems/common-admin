@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     placeholder: undefined,
-    dataCy: undefined,
+    dataCy: 'filter-string',
   }
 )
 const emit = defineEmits<{

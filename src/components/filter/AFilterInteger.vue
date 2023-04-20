@@ -12,7 +12,7 @@ const props = withDefaults(
     dataCy?: string
   }>(),
   {
-    dataCy: 'filter-id',
+    dataCy: 'filter-int',
   }
 )
 const emit = defineEmits<{
