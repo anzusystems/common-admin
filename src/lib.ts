@@ -232,8 +232,8 @@ import {
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { useCommonJobFactory } from '@/model/factory/JobFactory'
 import type { UrlParams } from '@/services/api/apiHelper'
-import type { generateUUIDv1 } from '@/utils/generator'
-import type { useLoginStatus } from '@/composables/system/loginStatus'
+import { generateUUIDv1 } from '@/utils/generator'
+import { useLoginStatus } from '@/composables/system/loginStatus'
 
 export {
   // COMPONENTS
