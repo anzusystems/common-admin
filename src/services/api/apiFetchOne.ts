@@ -9,6 +9,7 @@ import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
 } from '@/model/error/AnzuApiForbiddenOperationError'
+import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
 
 /**
  * @template R Response type
@@ -30,6 +31,9 @@ export const apiFetchOne = <R>(
         }
         if (res.data) {
           return resolve(res.data)
+        }
+        if (res.status === HTTP_STATUS_NO_CONTENT) {
+          return resolve(null as R)
         }
         return reject(new AnzuFatalError())
       })
