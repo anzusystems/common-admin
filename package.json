@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "0.0.63",
+  "version": "0.0.64",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -36,7 +36,7 @@
     "@rushstack/eslint-patch": "^1.2.0",
     "@types/node": "^18.16.0",
     "@types/webfontloader": "^1.6.35",
-    "@typescript-eslint/parser": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.1",
     "@vitejs/plugin-vue": "^4.1.0",
     "@vue/eslint-config-prettier": "^7.1.0",
     "@vue/eslint-config-typescript": "^11.0.2",
