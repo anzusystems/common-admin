@@ -17,5 +17,8 @@
   "copyId": "Copy ID",
   "add": "Add",
   "download": "Download",
-  "upload": "Upload"
+  "upload": "Upload",
+  "refresh": "Refresh",
+  "forwards ": "Forwards",
+  "backwards ": "Backwards"
 }
