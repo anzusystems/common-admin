@@ -82,7 +82,7 @@ const requiredComputed = computed(() => {
     auto-grow
     :append-icon="appendIcon"
     trim
-    @click:append="(event) => emit('click:append', event)"
+    @click:append="(event: any) => emit('click:append', event)"
     @blur="onBlur"
     @update:model-value="onUpdate($event)"
   >
