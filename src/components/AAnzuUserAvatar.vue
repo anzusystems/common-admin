@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import type { AnzuUser } from '@/types/AnzuUser'
+import type { AnzuUserMinimal } from '@/types/AnzuUser'
 
 const props = withDefaults(
   defineProps<{
-    user?: AnzuUser | undefined | null
+    user?: AnzuUserMinimal | undefined | null
     size?: number
     containerClass?: string
   }>(),

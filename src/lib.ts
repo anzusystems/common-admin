@@ -137,7 +137,7 @@ import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 import type { OwnerAware } from '@/types/OwnerAware'
 import { isOwnerAware } from '@/types/OwnerAware'
-import type { AnzuUser } from '@/types/AnzuUser'
+import type { AnzuUser, AnzuUserMinimal } from '@/types/AnzuUser'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { PermissionConfig, PermissionTranslationGroup } from '@/types/PermissionConfig'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
@@ -337,6 +337,7 @@ export {
   DatetimeUTCNullable,
   DatetimeUTC,
   AnzuUser,
+  AnzuUserMinimal,
   AnzuUserAndTimeTrackingAware,
   ValueObjectOption,
   Pagination,
