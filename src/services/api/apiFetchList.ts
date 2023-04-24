@@ -15,6 +15,7 @@ import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
 } from '@/model/error/AnzuApiForbiddenOperationError'
+import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
 
 const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
@@ -59,6 +60,9 @@ export const apiFetchList = <T, R = T>(
           }
           pagination.currentViewCount = res.data.data.length
           return resolve(res.data.data)
+        }
+        if (res.status === HTTP_STATUS_NO_CONTENT) {
+          return resolve(null as R)
         }
         return reject(new AnzuFatalError())
       })
