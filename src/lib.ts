@@ -118,6 +118,7 @@ import {
   datePretty,
   timePretty,
   dateDiff,
+  dateTimeToDate,
 } from '@/utils/datetime'
 import { Grant, useGrant } from '@/model/valueObject/Grant'
 import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
@@ -430,6 +431,7 @@ export {
   dateModifyMinutes,
   dateToUtc,
   dateNow,
+  dateTimeToDate,
   yearNow,
   datePretty,
   timePretty,

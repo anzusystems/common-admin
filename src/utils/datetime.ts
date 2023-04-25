@@ -17,6 +17,9 @@ export const dateNow = (): Date => {
   return dayjs().utc().toDate()
 }
 
+export const dateTimeToDate = (isoDate: DatetimeUTC | DatetimeUTCNullable | string): Date => {
+  return dayjs(isoDate).toDate()
+}
 export const timestampCurrent = (): number => {
   return stringToInt(dayjs().utc().unix())
 }
