@@ -41,7 +41,7 @@ export const dateTimeEndOfDay = (days = 0) => {
   return dayjs().add(days, 'days').endOf('day').utc().format(FORMAT) + SUFFIX
 }
 
-export const dateModifyMinutes = (minutes = 0, date: null | Date = null) => {
+export const dateModifyMinutes = (minutes = 0, date: null | Date = null): Date => {
   if (date === null) date = new Date()
   if (minutes === 0) return date
   if (minutes > 0) return dayjs(date).add(minutes, 'minutes').toDate()

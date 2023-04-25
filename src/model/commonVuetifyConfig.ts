@@ -76,6 +76,7 @@ export const useCommonVuetifyConfig = () => {
       },
       VSwitch: {
         color: 'success',
+        density: 'compact',
       },
       VCard: {
         variant: 'flat',
