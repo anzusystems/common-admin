@@ -1,3 +1,4 @@
+import type { OpUnitType, QUnitType } from 'dayjs'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { isNull, isUndefined } from '@/utils/common'
@@ -46,6 +47,7 @@ export const dateModifyMinutes = (minutes = 0, date: null | Date = null): Date =
   if (minutes === 0) return date
   if (minutes > 0) return dayjs(date).add(minutes, 'minutes').toDate()
   if (minutes < 0) return dayjs(date).subtract(minutes, 'minutes').toDate()
+  return date
 }
 
 export const dateToUtc = (date: dayjs.ConfigType) => {
@@ -102,8 +104,8 @@ export const timePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string |
   return dayjs(isoDate).format('HH:mm')
 }
 
-export const dateDiff = (isoDate1: Date, isoDate2: Date) => {
-  const date1 = dayjs(isoDate1)
-  const date2 = dayjs(isoDate2)
-  return date1.diff(date2)
+export const dateDiff = (date1: Date, date2: Date, unit: QUnitType | OpUnitType = 'ms') => {
+  const date1dayjs = dayjs(date1)
+  const date2dayjs = dayjs(date2)
+  return date1dayjs.diff(date2dayjs, unit)
 }
