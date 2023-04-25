@@ -118,6 +118,7 @@ import {
   datePretty,
   timePretty,
   dateDiff,
+  dateTimeToDate,
 } from '@/utils/datetime'
 import { Grant, useGrant } from '@/model/valueObject/Grant'
 import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
@@ -137,7 +138,7 @@ import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 import type { OwnerAware } from '@/types/OwnerAware'
 import { isOwnerAware } from '@/types/OwnerAware'
-import type { AnzuUser } from '@/types/AnzuUser'
+import type { AnzuUser, AnzuUserMinimal } from '@/types/AnzuUser'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { PermissionConfig, PermissionTranslationGroup } from '@/types/PermissionConfig'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
@@ -232,8 +233,8 @@ import {
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { useCommonJobFactory } from '@/model/factory/JobFactory'
 import type { UrlParams } from '@/services/api/apiHelper'
-import type { generateUUIDv1 } from '@/utils/generator'
-import type { useLoginStatus } from '@/composables/system/loginStatus'
+import { generateUUIDv1 } from '@/utils/generator'
+import { useLoginStatus } from '@/composables/system/loginStatus'
 
 export {
   // COMPONENTS
@@ -337,6 +338,7 @@ export {
   DatetimeUTCNullable,
   DatetimeUTC,
   AnzuUser,
+  AnzuUserMinimal,
   AnzuUserAndTimeTrackingAware,
   ValueObjectOption,
   Pagination,
@@ -429,6 +431,7 @@ export {
   dateModifyMinutes,
   dateToUtc,
   dateNow,
+  dateTimeToDate,
   yearNow,
   datePretty,
   timePretty,

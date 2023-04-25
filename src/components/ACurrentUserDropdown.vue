@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
-import type { AnzuUser } from '@/types/AnzuUser'
+import type { AnzuUserMinimal } from '@/types/AnzuUser'
 import AAnzuUserAvatar from '@/components/AAnzuUserAvatar.vue'
 
 withDefaults(
   defineProps<{
-    currentUser: AnzuUser
+    currentUser: AnzuUserMinimal | undefined | null
     settingsRouteName: string
     logoutRouteName: string
   }>(),

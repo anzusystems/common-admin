@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { onMounted } from 'vue'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     title?: string | undefined
     logoUrl?: string | undefined
@@ -18,10 +18,6 @@ const props = withDefaults(
 )
 
 const { t } = useI18n()
-
-onMounted(() => {
-  console.log(props)
-})
 </script>
 
 <template>

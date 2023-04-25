@@ -2,9 +2,8 @@ import type { IntegerId } from '@/types/common'
 import type { Permissions } from '@/types/Permission'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 
-export interface AnzuUser extends AnzuUserAndTimeTrackingAware {
+export interface AnzuUserMinimal {
   id: IntegerId
-  email: string
   person: {
     firstName: string
     lastName: string
@@ -14,6 +13,10 @@ export interface AnzuUser extends AnzuUserAndTimeTrackingAware {
     color: string
     text: string
   }
+  email: string
+}
+
+export interface AnzuUser extends AnzuUserAndTimeTrackingAware, AnzuUserMinimal {
   enabled: boolean
   roles: string[]
   permissionGroups: IntegerId[]

@@ -17,5 +17,8 @@
   "copyId": "Kopírovať ID",
   "add": "Pridať",
   "download": "Stiahnuť",
-  "Upload": "Nahratie"
+  "upload": "Nahratie",
+  "refresh": "Obnoviť",
+  "forwards": "Dopredu",
+  "backwards": "Dozadu"
 }
