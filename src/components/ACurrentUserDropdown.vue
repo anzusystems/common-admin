@@ -9,8 +9,11 @@ withDefaults(
     currentUser: AnzuUserMinimal | undefined | null
     settingsRouteName: string
     logoutRouteName: string
+    dataCy?: string
   }>(),
-  {}
+  {
+    dataCy: 'navbar-user',
+  }
 )
 
 const { t } = useI18n()
@@ -23,7 +26,7 @@ const logoutDialog = ref(false)
     variant="text"
     icon
     size="small"
-    data-cy="navbar-user"
+    :data-cy="dataCy"
   >
     <AAnzuUserAvatar
       :size="32"
@@ -62,11 +65,13 @@ const logoutDialog = ref(false)
             :active="false"
             prepend-icon="mdi-cog"
             :to="{ name: settingsRouteName }"
+            data-cy="navbar-user-settings"
           >
             {{ t('common.system.currentUser.settings') }}
           </VListItem>
           <VListItem
             prepend-icon="mdi-logout"
+            data-cy="navbar-user-logout"
             @click.stop="logoutDialog = true"
           >
             {{ t('common.system.currentUser.logout') }}
