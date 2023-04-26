@@ -3,20 +3,20 @@ withDefaults(
   defineProps<{
     title?: string
     value?: string | number | undefined | null
-    dataCy?: string
+    dataCy?: string | undefined
     titleClass?: string | undefined
   }>(),
   {
     title: '',
     value: '',
-    dataCy: '',
+    dataCy: undefined,
     titleClass: 'text-subtitle-2',
   }
 )
 </script>
 
 <template>
-  <VRow>
+  <VRow :data-cy="dataCy">
     <VCol>
       <h4
         v-if="title.length"
