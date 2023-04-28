@@ -76,6 +76,11 @@ onMounted(async () => {
           :to="{ name: 'component-forms' }"
           title="Forms"
         />
+
+        <VListItem
+          :to="{ name: 'component-buttons' }"
+          title="Buttons"
+        />
       </VList>
     </VNavigationDrawer>
     <VAppBar density="compact">

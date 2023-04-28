@@ -34,6 +34,11 @@ const router = createRouter({
       name: 'component-forms',
       component: () => import('@/views/components/FormsView.vue'),
     },
+    {
+      path: '/component/buttons',
+      name: 'component-buttons',
+      component: () => import('@/views/components/BtnView.vue'),
+    },
   ],
 })
 
