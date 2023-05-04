@@ -49,7 +49,7 @@ export const dateModifyMinutes = (minutes = 0, date: null | Date = null): Date =
   if (date === null) date = new Date()
   if (minutes === 0) return date
   if (minutes > 0) return dayjs(date).add(minutes, 'minutes').toDate()
-  if (minutes < 0) return dayjs(date).subtract(minutes, 'minutes').toDate()
+  if (minutes < 0) return dayjs(date).subtract(Math.abs(minutes), 'minutes').toDate()
   return date
 }
 
