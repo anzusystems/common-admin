@@ -161,7 +161,8 @@ const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
   if (props.modelValue.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
   if (props.modelValue.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (props.modelValue.variant === 'contains') return t('common.model.filterPlaceholder.contains')
+  if (props.modelValue.variant === 'contains' || props.modelValue.variant === 'search')
+    return t('common.model.filterPlaceholder.contains')
   return ''
 })
 
