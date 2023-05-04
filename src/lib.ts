@@ -17,6 +17,7 @@ import AAdminSwitcher from '@/components/AAdminSwitcher.vue'
 import AEmptyRouterView from '@/components/AEmptyRouterView.vue'
 import ATimeTrackingFields from '@/components/ATimeTrackingFields.vue'
 import AFilterString from '@/components/filter/AFilterString.vue'
+import AFilterMixed from '@/components/filter/AFilterMixed.vue'
 import AFilterInteger from '@/components/filter/AFilterInteger.vue'
 import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import APermissionGrantEditor from '@/components/permission/APermissionGrantEditor.vue'
@@ -296,6 +297,7 @@ export {
   AFilterAdvancedButton,
   AFilterResetButton,
   AFilterSubmitButton,
+  AFilterMixed,
   ATableCopyIdButton,
   ATableDetailButton,
   ATableEditButton,

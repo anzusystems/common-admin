@@ -4,10 +4,7 @@ import type { Ref } from 'vue'
 import { computed, ref, toRefs, watch } from 'vue'
 import { isDocId, isEmpty, isInt, isString, isUndefined } from '@/utils/common'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
-
-// note: not using for now, needs more UX work as now we can't filter number in text or url in text, etc.
-// use after these UX/product issues will be resolved
-// todo: add translation for titleT
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -16,6 +13,8 @@ const props = withDefaults(
     filterText?: Filter | undefined
     filterUrl?: Filter | undefined
     filterOverrides?: Filter[] | undefined
+    placeholder?: string | undefined
+    dataCy?: string
   }>(),
   {
     filterId: undefined,
@@ -23,10 +22,13 @@ const props = withDefaults(
     filterText: undefined,
     filterUrl: undefined,
     filterOverrides: undefined,
+    placeholder: undefined,
+    dataCy: 'filter-mixed',
   }
 )
 const model = ref('')
 const { filterId, filterText, filterDocId, filterUrl, filterOverrides } = toRefs(props)
+const { t } = useI18n()
 
 const filterActive = (filter: Ref<Filter | undefined> | undefined): filter is Ref<Filter> => {
   return !isUndefined(filter) && !isUndefined(filter.value)
@@ -108,23 +110,23 @@ const autodetectFilter = (newModel: string): Filter | undefined => {
 
 const label = computed(() => {
   if (filterActive(overrideFilter)) {
-    return overrideFilter.value.titleT
+    return t(overrideFilter.value.titleT ?? '')
   }
   if (filterActive(currentFilter)) {
-    return currentFilter.value.titleT
+    return t(currentFilter.value.titleT ?? '')
   }
   const filterLabels = []
   if (filterActive(filterId)) {
-    filterLabels.push(filterId.value.titleT)
+    filterLabels.push(t(filterId.value.titleT ?? ''))
   }
   if (filterActive(filterDocId)) {
-    filterLabels.push(filterDocId.value.titleT)
+    filterLabels.push(t(filterDocId.value.titleT ?? ''))
   }
   if (filterActive(filterUrl)) {
-    filterLabels.push(filterUrl.value.titleT)
+    filterLabels.push(t(filterUrl.value.titleT ?? ''))
   }
   if (filterActive(filterText)) {
-    filterLabels.push(filterText.value.titleT)
+    filterLabels.push(t(filterText.value.titleT ?? ''))
   }
   return filterLabels.join('/')
 })
@@ -137,12 +139,22 @@ watch(currentFilterModel, (newModel) => {
     model.value = ''
   }
 })
+
+const placeholderComputed = computed(() => {
+  if (!isUndefined(props.placeholder)) return props.placeholder
+  if (currentFilter.value?.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
+  if (currentFilter.value?.variant === 'eq') return t('common.model.filterPlaceholder.eq')
+  if (currentFilter.value?.variant === 'contains') return t('common.model.filterPlaceholder.contains')
+  return ''
+})
 </script>
 
 <template>
   <VTextField
     v-model="model"
     :label="label"
+    :data-cy="dataCy"
+    :placeholder="placeholderComputed"
   >
     <template
       v-if="filterOverrides"
@@ -159,7 +171,7 @@ watch(currentFilterModel, (newModel) => {
           size="small"
           :value="override"
         >
-          {{ override.titleT }}
+          {{ t(override.titleT ?? '') }}
         </VBtn>
       </VBtnToggle>
     </template>
