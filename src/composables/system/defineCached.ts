@@ -78,7 +78,9 @@ export function defineCached<
       const res = await fetchCallback(ids)
       updateToFetch(ids)
       updateMap(res)
+      return res
     }
+    return []
   }
 
   const debouncedFetch = useDebounceFn(
@@ -89,8 +91,20 @@ export function defineCached<
     { maxWait: 5000 }
   )
 
+  /**
+   * Debounced fetch for best performance. Can be awaited but no result.
+   * For general usage.
+   */
   const fetch = () => {
     return debouncedFetch()
+  }
+
+  /**
+   * Fetch with no debounce and with result in promise.
+   * Use for special cases.
+   */
+  const immediateFetch = () => {
+    return apiFetch()
   }
 
   const get = (id: I | null | undefined) => {
@@ -114,6 +128,7 @@ export function defineCached<
     cache,
     toFetch,
     fetch,
+    immediateFetch,
     add,
     addManual,
     addManualMinimal,
