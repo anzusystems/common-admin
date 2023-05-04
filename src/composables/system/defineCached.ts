@@ -83,14 +83,14 @@ export function defineCached<
 
   const debouncedFetch = useDebounceFn(
     async () => {
-      await apiFetch()
+      return await apiFetch()
     },
     1500,
     { maxWait: 5000 }
   )
 
   const fetch = () => {
-    debouncedFetch()
+    return debouncedFetch()
   }
 
   const get = (id: I | null | undefined) => {
