@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "0.0.71",
+  "version": "0.0.72",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -64,7 +64,7 @@
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.1.6",
     "vue-tsc": "1.4.4",
-    "vuetify": "^3.2.2",
+    "vuetify": "3.2.1",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -79,7 +79,7 @@
     "vue": "^3.2.47",
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.1.6",
-    "vuetify": "^3.2.2"
+    "vuetify": "3.2.1"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {
