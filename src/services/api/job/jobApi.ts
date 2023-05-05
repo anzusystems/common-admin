@@ -18,7 +18,9 @@ export function useJobApi<JobType extends JobBase = JobBase>(client: () => Axios
   const fetchJob = (id: number) => apiFetchOne<JobType>(client, END_POINT + '/:id', { id }, system, ENTITY)
 
   const createJob = (data: JobType) => {
-    const type = stringToKebabCase(data._resourceName).slice(4) // remove "job-" prefix
+    const type = stringToKebabCase(data._resourceName)
+      .slice(4) // remove "job-" prefix
+      .replace('-kind-', '-kind/') // replace "-kind-" with "-kind/" if the needle is found
 
     return apiCreateOne<JobType>(client, data, END_POINT + '/:type', { type }, system, ENTITY)
   }
