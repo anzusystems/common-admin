@@ -1,23 +1,7 @@
-// todo remove:
-
-.anzu-data-table {
-  tbody {
-    tr {
-      cursor: pointer;
-      &:hover {
-        background-color: #eee;
-      }
-    }
-  }
-}
-
-// end remove
-
 .a-datatable {
   .v-data-table-column--last-fixed {
     border-right: none;
     border-left: none;
-    //border-left: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     position: sticky;
     z-index: 4;
     right: 0 !important;

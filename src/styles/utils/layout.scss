@@ -1,7 +1,8 @@
 $layout-border-color: rgb(var(--v-border-color) var(--v-border-opacity));
-$layout-border-color: rgba(var(--v-border-color), var(--v-border-opacity));
+$layout-border-color: rgba(var(--v-border-color) var(--v-border-opacity));
 $layout-border-width: 1px;
 
+/* stylelint-disable */
 .system-border-t {
   border-top: $layout-border-width solid $layout-border-color !important;
   border-top-style:  solid  !important;
@@ -67,4 +68,4 @@ $layout-border-width: 1px;
   border-bottom-width: $layout-border-width !important;
   border-bottom-color: $layout-border-color !important;
 }
-
+/* stylelint-enable */

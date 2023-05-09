@@ -82,8 +82,6 @@ withDefaults(
     display: block;
     text-align: center;
     text-transform: uppercase;
-    //width: 18px;
-    //height: 18px;
   }
 }
 

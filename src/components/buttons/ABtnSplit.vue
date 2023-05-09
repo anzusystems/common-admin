@@ -139,16 +139,19 @@ const { t } = useI18n()
     border-bottom-right-radius: 0 !important;
     padding-right: 10px !important;
   }
+
   .a-button-split__more {
     border-top-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
     padding: 0 4px 0 0 !important;
     min-width: 32px !important;
   }
+
   .a-button-split__divider {
     display: inline-block;
     width: 1px;
   }
+
   &--secondary {
     .a-button-split__more {
       left: -2px;
