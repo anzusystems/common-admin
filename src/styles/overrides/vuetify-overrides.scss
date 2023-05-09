@@ -12,7 +12,7 @@
     }
   }
 
-  .v-overlay__content.v-autocomplete__content .v-list-item .v-list-item__prepend input[type=checkbox] {
+  .v-overlay__content.v-autocomplete__content .v-list-item .v-list-item__prepend input[type="checkbox"] {
     pointer-events: none; // fix for autocomplete checkboxes
   }
 
@@ -24,11 +24,12 @@
   }
 
   .v-text-field.v-text-field--pill {
+    /* stylelint-disable-next-line */
     .v-field__outline__start {
       flex: 1 1;
       border-radius: 9999px 0 0 9999px;
     }
-
+    /* stylelint-disable-next-line */
     .v-field__outline__end {
       border-radius: 0 9999px 9999px 0;
     }
