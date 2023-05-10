@@ -92,7 +92,7 @@ export function defineCached<
   )
 
   /**
-   * Debounced fetch for best performance. Can be awaited but no result.
+   * Debounced fetch for best performance.
    * For general usage.
    */
   const fetch = () => {
@@ -100,7 +100,7 @@ export function defineCached<
   }
 
   /**
-   * Fetch with no debounce and with result in promise.
+   * Immediate fetch with no debounce and with result in promise.
    * Use for special cases.
    */
   const immediateFetch = () => {
