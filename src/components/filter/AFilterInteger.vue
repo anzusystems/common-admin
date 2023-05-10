@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import type { Filter } from '@/types/Filter'
+import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-
-// todo cast as integer/number
+import { stringToInt } from '@/utils/string'
 
 const props = withDefaults(
   defineProps<{
@@ -12,11 +11,11 @@ const props = withDefaults(
     dataCy?: string
   }>(),
   {
-    dataCy: 'filter-int',
+    dataCy: 'filter-string',
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: any): void
+  (e: 'update:modelValue', data: Filter): void
 }>()
 
 const value = computed({
@@ -24,7 +23,7 @@ const value = computed({
     return props.modelValue.model
   },
   set(newValue) {
-    emit('update:modelValue', { ...props.modelValue, ...{ model: newValue } })
+    emit('update:modelValue', { ...props.modelValue, ...{ model: stringToInt(newValue + '') } })
   },
 })
 

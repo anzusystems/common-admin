@@ -13,7 +13,7 @@ __metadata:
     "@kyvg/vue3-notification": ^2.9.0
     "@mdi/font": ^7.2.96
     "@rushstack/eslint-patch": ^1.2.0
-    "@types/node": ^18.16.6
+    "@types/node": ^18.16.7
     "@types/webfontloader": ^1.6.35
     "@typescript-eslint/parser": ^5.59.5
     "@vitejs/plugin-vue": ^4.2.1
@@ -47,7 +47,7 @@ __metadata:
     vue-i18n: ^9.2.2
     vue-router: ^4.1.6
     vue-tsc: 1.6.4
-    vuetify: 3.2.1
+    vuetify: 3.2.3
     webfontloader: ^1.6.28
   peerDependencies:
     "@vuelidate/core": 2.0.2
@@ -61,7 +61,7 @@ __metadata:
     vue: 3.2.47
     vue-i18n: 9.2.2
     vue-router: 4.1.6
-    vuetify: 3.2.1
+    vuetify: 3.2.3
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -776,10 +776,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.16.6":
-  version: 18.16.6
-  resolution: "@types/node@npm:18.16.6"
-  checksum: 99417418952c0b1a6ff5dd40ccf01c2cd18db6a1c54bfaaff29c700c877e2e541aa31ea33090592f3817adb2b8c0946b86c7fb57049131e7c08252d70075f09b
+"@types/node@npm:^18.16.7":
+  version: 18.16.7
+  resolution: "@types/node@npm:18.16.7"
+  checksum: dbff7d41a050557cc81aa37cb186aaf3a799b3001bc4bb1015b240398abde1f9d0ac1e943959bba7f2ab2701292ae407a9ee2fc0f735a05b28bfc97d0b2b5e91
   languageName: node
   linkType: hard
 
@@ -5300,9 +5300,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.2.1":
-  version: 3.2.1
-  resolution: "vuetify@npm:3.2.1"
+"vuetify@npm:3.2.3":
+  version: 3.2.3
+  resolution: "vuetify@npm:3.2.3"
   peerDependencies:
     vite-plugin-vuetify: ^1.0.0-alpha.12
     vue: ^3.2.0
@@ -5315,7 +5315,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: d3a9fe11a4ba82a01166b99d6c3484edfea28d3d61a1611d0ac49995c6f80876228ec1af3d7214bb7ee5beda0a9c333a59191b5a4c06b322b2ec904a9c7bd18c
+  checksum: e5ff2b4c39b7a2509be9a3527923e5075d9bf5cde70abe74d47f56c101ee46ddc601f1432897d7c1dcf703737506e66f0e38d0dd33851ec2f6140a7962534f57
   languageName: node
   linkType: hard
 
