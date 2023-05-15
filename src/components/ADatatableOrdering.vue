@@ -47,7 +47,7 @@ const defaultItemsMostRelevant: DatatableOrderingOptions = [
 ]
 
 const activeTitle = computed(() => {
-  const found = options.value.find((item) => item.id === active.value)
+  const found = options.value.find((item: any) => item.id === active.value)
   if (found) return t(found.titleT)
   return ''
 })
@@ -66,7 +66,7 @@ watch(
   active,
   (newValue, oldValue) => {
     if (isUndefined(oldValue) || newValue === oldValue) return
-    const found = options.value.find((item) => item.id === newValue)
+    const found = options.value.find((item: any) => item.id === newValue)
     if (found) emit('sortByChange', found)
   },
   { immediate: true }
