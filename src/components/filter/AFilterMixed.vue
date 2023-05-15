@@ -53,7 +53,7 @@ const clearAllActiveExcept = (exceptFilter: Ref<Filter | undefined> | undefined 
     clearIfActive(filterUrl)
   }
   if (!isUndefined(filterOverrides)) {
-    filterOverrides.value?.forEach((filter) => {
+    filterOverrides.value?.forEach((filter: any) => {
       if (exceptFilter?.value?.titleT !== filter.titleT) {
         clearOne(filter)
       }
