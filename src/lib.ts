@@ -25,6 +25,7 @@ import APermissionValueChip from '@/components/permission/APermissionValueChip.v
 import Acl from '@/components/permission/Acl.vue'
 import ADatetime from '@/components/ADatetime.vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
+import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
 import AFormRemoteAutocomplete from '@/components/form/AFormRemoteAutocomplete.vue'
 import AFormRemoteCheckbox from '@/components/form/AFormRemoteCheckbox.vue'
@@ -79,6 +80,7 @@ import { numberToString } from '@/utils/number'
 import {
   cloneDeep,
   isArray,
+  isFunction,
   isBoolean,
   isDefined,
   isDocId,
@@ -259,6 +261,7 @@ export {
   AFormTextField,
   AFormTextarea,
   AFormDatetimePicker,
+  AFormFlagDatetimePicker,
   AFormRemoteAutocomplete,
   AFormRemoteCheckbox,
   AFormRemoteSwitch,
@@ -406,6 +409,7 @@ export {
   isObject,
   isEmptyArray,
   isArray,
+  isFunction,
   isBoolean,
   isDocId,
   isNull,

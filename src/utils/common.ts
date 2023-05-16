@@ -29,6 +29,10 @@ export const isArray = <T = unknown>(value: unknown): value is Array<T> => {
   return Array.isArray(value)
 }
 
+export const isFunction = <T extends (...args: any[]) => any>(value: unknown): value is T => {
+  return typeof value === 'function'
+}
+
 export const isBoolean = (value: unknown): value is boolean => {
   return typeof value === 'boolean'
 }
