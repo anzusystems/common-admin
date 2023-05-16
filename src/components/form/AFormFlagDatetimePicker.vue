@@ -1,30 +1,31 @@
 <script lang="ts" setup>
-import { computed, inject } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import { isUndefined } from '@/utils/common'
+import { isFunction, isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { DatetimeUTCNullable } from '@/types/common'
+import { dateTimeNow } from '@/utils/datetime'
 
 const props = withDefaults(
   defineProps<{
     modelValue: DatetimeUTCNullable | undefined
     label?: string
     errorMessage?: string
-    required?: boolean
     v?: any
     dataCy?: string
     clearable?: boolean
+    defaultActivationValue?: DatetimeUTCNullable | 'now' | (() => DatetimeUTCNullable)
   }>(),
   {
     label: undefined,
     errorMessage: undefined,
-    required: undefined,
     v: null,
     dataCy: undefined,
     clearable: false,
+    defaultActivationValue: 'now',
   }
 )
 const emit = defineEmits<{
@@ -37,6 +38,8 @@ const { t } = useI18n()
 
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
+
+const checkboxModel = ref(false)
 
 const modelValueComputed = computed({
   get() {
@@ -65,21 +68,51 @@ const labelComputed = computed(() => {
   return t(system + '.' + subject + '.model.' + path)
 })
 
-const requiredComputed = computed(() => {
-  if (!isUndefined(props.required)) return props.required
-  if (props.v?.required && props.v?.required.$params.type === 'required') return true
-  return false
-})
+watch(
+  modelValueComputed,
+  (newValue, oldValue) => {
+    if (newValue === oldValue) return
+    if (isNull(newValue) || isUndefined(newValue)) {
+      checkboxModel.value = false
+      return
+    }
+    checkboxModel.value = true
+  },
+  { immediate: true }
+)
+
+const onCheckboxClick = (value: boolean) => {
+  if (value) {
+    modelValueComputed.value = null
+    return
+  }
+  if (props.defaultActivationValue === 'now') {
+    modelValueComputed.value = dateTimeNow()
+    return
+  }
+  if (isFunction(props.defaultActivationValue)) {
+    modelValueComputed.value = props.defaultActivationValue()
+    return
+  }
+  modelValueComputed.value = props.defaultActivationValue
+}
 </script>
 
 <template>
-  <ADatetimePicker
-    v-model="modelValueComputed"
-    :data-cy="dataCy"
-    :error-messages="errorMessageComputed"
-    :required="requiredComputed"
+  <VCheckboxBtn
+    v-model="checkboxModel"
     :label="labelComputed"
-    :clearable="clearable"
-    @blur="onBlur"
+    @click.stop="onCheckboxClick(checkboxModel)"
   />
+  <VExpandTransition>
+    <div v-show="checkboxModel">
+      <ADatetimePicker
+        v-model="modelValueComputed"
+        :data-cy="dataCy"
+        :error-messages="errorMessageComputed"
+        :clearable="clearable"
+        @blur="onBlur"
+      />
+    </div>
+  </VExpandTransition>
 </template>
