@@ -10,6 +10,7 @@ const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)
 
 const changeToNow = () => {
   dateTimeDefaultNull.value = dateTimeNow()
+  dateTime.value = dateTimeNow()
 }
 </script>
 
@@ -46,6 +47,17 @@ const changeToNow = () => {
         <VCol>
           <AFormDatetimePicker
             v-model="dateTimeDefaultNull"
+            clearable
+          />
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol> Current value: <ADatetime :date-time="dateTime" /> </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
+          <AFormDatetimePicker
+            v-model="dateTime"
             clearable
           />
         </VCol>
