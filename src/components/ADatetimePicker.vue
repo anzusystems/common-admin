@@ -77,6 +77,7 @@ const isOpened = ref(false)
 const lang = ref('sk')
 const textFieldValue = ref('')
 const flatpickrValue = ref<string | null>(null)
+const initialized = ref(false)
 
 const { t } = useI18n()
 
@@ -116,6 +117,10 @@ const onFlatpickrClose = () => {
 const onFlatpickrChange = () => {
   if (!flatickrRefIsInitialized(flatickrRef.value)) return
   textFieldValue.value = flatickrRef.value.fpInput().value
+}
+
+const test = () => {
+  console.log('test')
 }
 
 const onTextFieldBlur = () => {
@@ -249,11 +254,23 @@ watch(
   () => props.modelValue,
   (newValue, oldValue) => {
     if (newValue === oldValue) return
-    if ((isNull(props.modelValue) || isUndefined(props.modelValue)) && !isNull(props.defaultValue)) {
+    if ((isNull(newValue) || isUndefined(newValue)) && !isNull(props.defaultValue)) {
       flatpickrValue.value = props.defaultValue
       return
     }
-    flatpickrValue.value = isUndefined(props.modelValue) ? null : props.modelValue
+    flatpickrValue.value = isUndefined(newValue) ? null : newValue
+  },
+  { immediate: true }
+)
+
+watch(
+  flatickrRef,
+  (newValue, oldValue) => {
+    if (initialized.value === true) return
+    if (newValue === oldValue) return
+    if (isNull(newValue) || isUndefined(newValue)) return
+    onFlatpickrChange()
+    initialized.value = true
   },
   { immediate: true }
 )
@@ -287,6 +304,7 @@ watch(
           @on-close="onFlatpickrClose"
           @on-open="onFlatpickrOpen"
           @on-change="onFlatpickrChange"
+          @on-init="test"
         />
         <VIcon
           class="a-datetime-picker__calendar"

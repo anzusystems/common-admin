@@ -3,7 +3,7 @@ import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import { isUndefined } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { DatetimeUTCNullable } from '@/types/common'
@@ -28,7 +28,7 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: string | null): void
+  (e: 'update:modelValue', data: DatetimeUTCNullable | undefined): void
   (e: 'click:append', data: string | number | null): void
   (e: 'blur', data: string | number | null): void
 }>()
@@ -38,9 +38,15 @@ const { t } = useI18n()
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
-const onUpdate = (newValue: string | null) => {
-  emit('update:modelValue', newValue)
-}
+const modelValueComputed = computed({
+  get() {
+    return props.modelValue
+  },
+  set(newValue: DatetimeUTCNullable | undefined) {
+    emit('update:modelValue', newValue)
+  },
+})
+
 const onBlur = () => {
   emit('blur', isUndefined(props.modelValue) ? null : props.modelValue)
   props.v?.$touch()
@@ -68,13 +74,12 @@ const requiredComputed = computed(() => {
 
 <template>
   <ADatetimePicker
-    :model-value="modelValue"
+    v-model="modelValueComputed"
     :data-cy="dataCy"
     :error-messages="errorMessageComputed"
     :required="requiredComputed"
     :label="labelComputed"
     :clearable="clearable"
     @blur="onBlur"
-    @update:model-value="onUpdate($event)"
   />
 </template>
