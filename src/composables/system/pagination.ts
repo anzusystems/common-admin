@@ -6,7 +6,7 @@ export function usePagination(sortBy: string | null = 'createdAt') {
     sortBy: sortBy,
     descending: true,
     page: 1,
-    rowsPerPage: 10,
+    rowsPerPage: 25,
     rowsNumber: 0,
     hasNextPage: null,
     currentViewCount: 0,
