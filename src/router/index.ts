@@ -44,6 +44,11 @@ const router = createRouter({
       name: 'component-buttons',
       component: () => import('@/views/components/BtnView.vue'),
     },
+    {
+      path: '/component/asset-select',
+      name: 'component-asset-select',
+      component: () => import('@/views/components/AssetSelectView.vue'),
+    },
   ],
 })
 

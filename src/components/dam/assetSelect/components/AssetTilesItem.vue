@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import type { AssetListItem } from '@/services/stores/coreDam/assetListStore'
 import { useAssetItemActions } from '@/components/dam/assetSelect/composables/assetItemActions'
 import AssetImagePreview from '@/components/dam/assetSelect/components/AssetImagePreview.vue'
-import { DocId } from '@/types/common'
+import type { DocId } from '@/types/common'
 
 const { t } = useI18n()
 
@@ -28,19 +28,13 @@ const onItemClick = () => {
   emit('itemClick', { assetId: asset.value.id, index: props.index })
 }
 
-const {
-  asset,
-  assetType,
-  assetStatus,
-  imageProperties,
-} = useAssetItemActions(props.item, props.index)
-
+const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(props.item)
 </script>
 
 <template>
   <div
     class="dam-image-grid__item"
-    :class="{ 'dam-image-grid__item--active': item.active, 'dam-image-grid__item--selected': item.selected }"
+    :class="{ 'dam-image-grid__item--selected': item.selected }"
     @click.stop.exact="onItemClick"
   >
     <div class="dam-image-grid__item-card">

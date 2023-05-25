@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { AssetType } from '@/types/coreDam/Asset'
@@ -18,11 +17,13 @@ const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
-    maxCount: number,
-    assetLicenceId: number,
-    assetType: AssetType,
+    maxCount: number
+    minCount: number
+    assetLicenceId: number
+    assetType: AssetType
   }>(),
   {
+    minCount: 1,
     maxCount: 1,
     assetType: AssetTypeValue.Image,
   }
@@ -35,27 +36,15 @@ const emit = defineEmits<{
   (e: 'onClose'): void
 }>()
 
-const {
-  loader,
-  pagination,
-  filter,
-  fetchNextPage,
-  listMounted,
-  resetAssetList,
-  getSelectedIds,
-} = useAssetListActions()
+const { loader, pagination, fetchNextPage, resetAssetList, getSelectedIds, initStoreContext, getSelectedCount } =
+  useAssetListActions()
 
 const onOpen = () => {
+  initStoreContext(props.assetLicenceId, props.assetType)
   resetAssetList()
-  // todo set defaults method
-  filter.type.model = [props.assetType]
-  // todo reset view, close filter
-  // todo set licence
-
+  closeSidebar()
   emit('onOpen')
   dialog.value = true
-
-  listMounted()
 }
 
 const onClose = () => {
@@ -89,28 +78,12 @@ const componentComputed = computed(() => {
   }
 })
 
-const { sidebarLeft } = useSidebar()
+const { sidebarLeft, leftCols, rightCols, closeSidebar } = useSidebar()
 
-const leftCols = ref(0)
-const rightCols = ref(12)
-
-watch(
-  sidebarLeft,
-  (newVal) => {
-    if (newVal) {
-      leftCols.value = 2
-      rightCols.value = 10
-      return
-    }
-
-    leftCols.value = 0
-    rightCols.value = 12
-  },
-  {
-    immediate: true,
-  }
-)
-
+const disabledSubmit = computed(() => {
+  const selectedCount = getSelectedCount()
+  return selectedCount < props.minCount || selectedCount > props.maxCount
+})
 </script>
 
 <template>
@@ -121,8 +94,7 @@ watch(
     <ABtnPrimary
       rounded="pill"
       @click.stop="onOpen"
-    >
-    </ABtnPrimary>
+    />
   </slot>
 
   <VDialog
@@ -160,21 +132,29 @@ watch(
             <div
               v-if="dialog"
               v-intersect="autoloadOnIntersect"
-              class="w-100"
+              class="justify-center"
             />
+            <div class="pa-2 d-flex align-center justify-center">
+              <ABtnPrimary
+                v-show="pagination.hasNextPage"
+                @click="fetchNextPage"
+              >
+                <slot name="button-confirm-title">
+                  {{ t('coreDam.asset.meta.controls.loadMore') }}
+                </slot>
+              </ABtnPrimary>
+            </div>
           </VCol>
-
         </VRow>
       </VCardText>
-
       <VCardActions>
         <VSpacer />
         <ABtnPrimary
-          data-cy="button-confirm-delete"
+          :disabled="disabledSubmit"
           @click.stop="onConfirm"
         >
           <slot name="button-confirm-title">
-            {{ t('todo') }}
+            {{ t('coreDam.asset.meta.controls.confirm') }}
           </slot>
         </ABtnPrimary>
       </VCardActions>

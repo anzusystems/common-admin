@@ -1,11 +1,16 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
-import AFilterString from '@/components/filter/AFilterString.vue'
-import AFilterBooleanSelect from '@/components/filter/AFilterBooleanSelect.vue'
+import { computed } from 'vue'
+import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
+import { AssetType as AssetTypeValue } from '@/types/coreDam/Asset'
+import AssetImageFilterForm from '@/components/dam/assetSelect/components/filter/AssetImageFilterForm.vue'
+import DefaultFilterForm from '@/components/dam/assetSelect/components/filter/DefaultFilterForm.vue'
 
 const { t } = useI18n()
-const { filter, fetchAssetList, resetAssetList, filterTouch, filterUnTouch, filterIsTouched } = useAssetListActions()
+const { fetchAssetList, resetAssetList, filterUnTouch, filterIsTouched } = useAssetListActions()
+
+const assetListStore = useAssetListStore()
 
 const submitFilter = () => {
   filterUnTouch()
@@ -16,10 +21,15 @@ const resetFilter = () => {
   resetAssetList()
   filterUnTouch()
 }
-const onAnyFilterUpdate = () => {
-  filterTouch()
-}
 
+const componentComputed = computed(() => {
+  switch (assetListStore.assetType) {
+    case AssetTypeValue.Image:
+      return AssetImageFilterForm
+    default:
+      return DefaultFilterForm
+  }
+})
 </script>
 
 <template>
@@ -28,39 +38,7 @@ const onAnyFilterUpdate = () => {
       name="search2"
       @submit.prevent="submitFilter"
     >
-      <VRow>
-        <VCol :cols="12">
-          <AFilterString
-            v-model="filter.text"
-            @update:model-value="onAnyFilterUpdate"
-            @keydown.enter="submitFilter"
-          />
-        </VCol>
-      </VRow>
-      <VRow>
-        <VCol :cols="12">
-          <AFilterBooleanSelect
-            v-model="filter.described"
-            @update:model-value="onAnyFilterUpdate"
-          />
-        </VCol>
-      </VRow>
-      <VRow>
-        <VCol :cols="12">
-          <AFilterBooleanSelect
-            v-model="filter.visible"
-            @update:model-value="onAnyFilterUpdate"
-          />
-        </VCol>
-      </VRow>
-      <VRow>
-        <VCol>
-          <AFilterBooleanSelect
-            v-model="filter.generatedBySystem"
-            @update:model-value="onAnyFilterUpdate"
-          />
-        </VCol>
-      </VRow>
+      <Component :is="componentComputed" />
     </VForm>
   </div>
   <div class="pa-2 d-flex align-center justify-center">

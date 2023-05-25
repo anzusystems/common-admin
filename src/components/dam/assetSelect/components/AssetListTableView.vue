@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
@@ -9,23 +8,35 @@ import { useAssetListActions } from '@/components/dam/assetSelect/composables/as
 const { t } = useI18n()
 
 const assetListStore = useAssetListStore()
-const { list, activeItemIndex } = storeToRefs(assetListStore)
+const { list } = storeToRefs(assetListStore)
 
 const { onItemClick } = useAssetListActions()
-
 </script>
 
 <template>
   <v-table
+    class="dam-image-table"
     fixed-header
   >
     <thead>
       <tr>
         <th class="text-left">
-          {{ t('coreDam.asset.list.table.thead.thumbnail') }}
+          {{ t('coreDam.asset.meta.table.checkbox') }}
         </th>
         <th class="text-left">
-          {{ t('coreDam.asset.list.table.thead.title') }}
+          {{ t('coreDam.asset.meta.table.image') }}
+        </th>
+        <th class="text-left">
+          {{ t('coreDam.asset.model.texts.displayTitle') }}
+        </th>
+        <th class="text-left">
+          {{ t('common.model.tracking.created') }}
+        </th>
+        <th class="text-left">
+          {{ t('coreDam.asset.model.mainFile.fileAttributes.mimeType') }}
+        </th>
+        <th class="text-left">
+          {{ t('coreDam.asset.model.mainFile.fileAttributes.size') }}
         </th>
       </tr>
     </thead>
@@ -40,3 +51,13 @@ const { onItemClick } = useAssetListActions()
     </tbody>
   </v-table>
 </template>
+
+<style lang="scss">
+$class-name-root: 'dam-image-table';
+
+.#{$class-name-root} {
+  &__row {
+    cursor: pointer;
+  }
+}
+</style>

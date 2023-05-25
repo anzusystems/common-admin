@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import type { AssetFileProperties } from '@/types/coreDam/Asset'
 import { AssetStatus, AssetType } from '@/types/coreDam/Asset'
 import placeholder16x9 from '@/assets/image/placeholder16x9.jpg'
 import { isUndefined } from '@/lib'
@@ -15,7 +13,7 @@ const props = withDefaults(
     width?: number
     height?: number
     fallbackHeight?: number
-    iconSize?: number,
+    iconSize?: number
     iconColor?: string
   }>(),
   {
@@ -31,15 +29,9 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'load'): void
   (e: 'error'): void
 }>()
 
-const { t } = useI18n()
-
-const onLoad = () => {
-  emit('load')
-}
 const onError = () => {
   emit('error')
 }
@@ -68,7 +60,6 @@ const showIconComputed = computed(() => {
   if (props.assetType === AssetType.Image && props.src) return false
   return true
 })
-
 </script>
 
 <template>
@@ -127,3 +118,23 @@ const showIconComputed = computed(() => {
     </div>
   </div>
 </template>
+
+<style lang="scss">
+// todo Stano -> copy paste from dam-admin [duplicate code]
+.asset-image {
+  position: relative;
+
+  &__icon-wrapper {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__icon-circle {
+    border-radius: 100%;
+    background-color: rgba(204 204 204 / 50%);
+  }
+}
+</style>

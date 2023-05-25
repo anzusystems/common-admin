@@ -1,13 +1,11 @@
 <script lang="ts" setup>
-
 import { useI18n } from 'vue-i18n'
 import { GridView, useGridView } from '@/components/dam/assetSelect/composables/gridView'
 import { useSidebar } from '@/components/dam/assetSelect/composables/filterSidebar'
 
 const { t } = useI18n()
 const { setGridView } = useGridView()
-const { sidebarLeft } = useSidebar()
-
+const { toggleSidebar } = useSidebar()
 </script>
 
 <template>
@@ -24,7 +22,7 @@ const { sidebarLeft } = useSidebar()
               icon
               :width="30"
               :height="30"
-              @click="sidebarLeft = !sidebarLeft"
+              @click="toggleSidebar"
             >
               <VIcon
                 icon="mdi-tune"
@@ -34,7 +32,7 @@ const { sidebarLeft } = useSidebar()
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.list.filterToggle') }}
+                {{ t('coreDam.asset.meta.filter.toggle') }}
               </VTooltip>
             </VBtn>
             <slot name="second-bar-left" />
@@ -52,7 +50,7 @@ const { sidebarLeft } = useSidebar()
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.list.gridView.masonry') }}
+                {{ t('coreDam.asset.meta.grid.masonry') }}
               </VTooltip>
             </VBtn>
             <VBtn
@@ -66,7 +64,7 @@ const { sidebarLeft } = useSidebar()
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.list.gridView.thumbnail') }}
+                {{ t('coreDam.asset.meta.grid.thumbnail') }}
               </VTooltip>
             </VBtn>
             <VBtn
@@ -80,7 +78,7 @@ const { sidebarLeft } = useSidebar()
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.list.gridView.table') }}
+                {{ t('coreDam.asset.meta.grid.table') }}
               </VTooltip>
             </VBtn>
           </div>

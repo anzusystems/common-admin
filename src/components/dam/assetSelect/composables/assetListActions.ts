@@ -1,35 +1,40 @@
 import { useDamApi } from '@/services/api/coreDam/assetApi'
-import { type DocId, useAlerts, useFilterHelpers, usePagination } from '@/lib'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { ref, inject } from 'vue'
+import type { AssetType } from '@/types/coreDam/Asset'
+import type { AxiosInstance } from 'axios'
+import { DamClientSymbol } from '@/components/injectionKeys'
+import { usePagination } from '@/composables/system/pagination'
+import { isUndefined } from '@/utils/common'
+import { useFilterHelpers } from '@/composables/filter/filterHelpers'
+import { useAlerts } from '@/composables/system/alerts'
+import type { DocId } from '@/types/common'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
-
 const filterIsTouched = ref(false)
 
-// todo move to config
-const assetLicenceId = 100000
-
 export function useAssetListActions() {
-  const { fetchAssetList: apiFetchAssetList } = useDamApi()
+  const damClient = inject<(() => AxiosInstance) | undefined>(DamClientSymbol, undefined)
+
+  if (isUndefined(damClient)) {
+    throw new Error("Composable useAssetListActions can't be used without configured damClient.")
+  }
+
+  const { fetchAssetList: apiFetchAssetList } = useDamApi(damClient)
+
   const assetListStore = useAssetListStore()
-  const { list, loader, activeItemIndex } = storeToRefs(assetListStore)
+  const { selectedAssets, list, loader } = storeToRefs(assetListStore)
   const { resetFilter } = useFilterHelpers()
-  const { showWarning, showErrorsDefault } = useAlerts()
+  const { showErrorsDefault } = useAlerts()
 
   const fetchAssetList = async () => {
     pagination.page = 1
     try {
       assetListStore.showLoader()
-
-      console.log('Fetch', filter.type)
-
-      assetListStore.setList(
-        await apiFetchAssetList(assetLicenceId, pagination, filter),
-      )
+      assetListStore.setList(await apiFetchAssetList(assetListStore.licenceId, pagination, filter))
     } catch (error) {
       showErrorsDefault(error)
     } finally {
@@ -40,9 +45,7 @@ export function useAssetListActions() {
     pagination.page = pagination.page + 1
     try {
       assetListStore.showLoader()
-      assetListStore.appendList(
-        await apiFetchAssetList(assetLicenceId, pagination, filter),
-      )
+      assetListStore.appendList(await apiFetchAssetList(assetListStore.licenceId, pagination, filter))
     } catch (error) {
       showErrorsDefault(error)
     } finally {
@@ -50,18 +53,14 @@ export function useAssetListActions() {
     }
   }
 
-  const onItemClick = (data: { assetId: DocId; index: number }) =>{
+  const onItemClick = (data: { assetId: DocId; index: number }) => {
     assetListStore.toggleSelectedByIndex(data.index)
   }
 
   const resetAssetList = async () => {
     assetListStore.reset()
+    filter.type.default = [assetListStore.assetType]
     resetFilter(filter, pagination, fetchAssetList)
-  }
-
-  const listMounted = async () => {
-    assetListStore.reset()
-    await fetchAssetList()
   }
 
   const filterTouch = () => {
@@ -75,19 +74,31 @@ export function useAssetListActions() {
     return assetListStore.getSelectedIds()
   }
 
+  const initStoreContext = (licenceId: number, assetType: AssetType): void => {
+    assetListStore.selectedAssets = {}
+    assetListStore.setAssetType(assetType)
+    assetListStore.setLicenceId(licenceId)
+  }
+
+  const getSelectedCount = () => {
+    return Object.keys(selectedAssets.value).length
+  }
+
   return {
     filterIsTouched,
     filter,
+    selectedAssets,
     pagination,
     loader,
     items: list,
     onItemClick,
     fetchAssetList,
-    listMounted,
     fetchNextPage,
     resetAssetList,
     filterTouch,
     filterUnTouch,
     getSelectedIds,
+    initStoreContext,
+    getSelectedCount,
   }
 }

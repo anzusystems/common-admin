@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-
 import type { AssetListItem } from '@/services/stores/coreDam/assetListStore'
 import { useI18n } from 'vue-i18n'
 import { useAssetItemActions } from '@/components/dam/assetSelect/composables/assetItemActions'
 import AssetImage from '@/components/dam/assetSelect/components/AssetImagePreview.vue'
 import type { DocId } from '@/types/common'
+import { prettyBytes } from '@/utils/file'
+import ADatetime from '@/components/ADatetime.vue'
 
 const { t } = useI18n()
 
@@ -21,12 +22,7 @@ const props = withDefaults(
   }
 )
 
-const {
-  asset,
-  imageProperties,
-  assetType,
-  assetStatus,
-} = useAssetItemActions(props.item, props.index)
+const { asset, imageProperties, assetType, assetStatus } = useAssetItemActions(props.item)
 
 const emit = defineEmits<{
   (e: 'itemClick', data: { assetId: DocId; index: number }): void
@@ -35,11 +31,12 @@ const emit = defineEmits<{
 const onItemClick = () => {
   emit('itemClick', { assetId: asset.value.id, index: props.index })
 }
-
 </script>
 
 <template>
   <tr
+    class="dam-image-table__row"
+    :class="{ 'dam-image-table__row--selected': item.selected }"
     @click.stop.exact="onItemClick"
   >
     <td>
@@ -54,7 +51,7 @@ const onItemClick = () => {
         :size="20"
       />
     </td>
-    <td>
+    <td class="d-flex align-center justify-center h-auto">
       <AssetImage
         :asset-type="assetType"
         :asset-status="assetStatus"
@@ -68,6 +65,15 @@ const onItemClick = () => {
     </td>
     <td>
       {{ asset.texts.displayTitle || t('coreDam.asset.list.noTitle') }}
+    </td>
+    <td>
+      <ADatetime :date-time="asset.createdAt" />
+    </td>
+    <td>
+      {{ asset.mainFile?.fileAttributes.mimeType }}
+    </td>
+    <td>
+      {{ prettyBytes(asset.mainFile?.fileAttributes.size || 0) }}
     </td>
   </tr>
 </template>

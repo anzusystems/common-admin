@@ -1,20 +1,14 @@
 <script lang="ts" setup>
-
-import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
-import AssetTableRowItem from '@/components/dam/assetSelect/components/AssetTableRowItem.vue'
 import AssetTilesItem from '@/components/dam/assetSelect/components/AssetTilesItem.vue'
 import { useGridView } from '@/components/dam/assetSelect/composables/gridView'
 import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
 
-const { t } = useI18n()
-
 const assetListStore = useAssetListStore()
-const { list} = storeToRefs(assetListStore)
+const { list } = storeToRefs(assetListStore)
 const { gridView } = useGridView()
 const { onItemClick } = useAssetListActions()
-
 </script>
 
 <template>
@@ -33,6 +27,7 @@ const { onItemClick } = useAssetListActions()
 </template>
 
 <style lang="scss">
+// todo Stano -> copy paste from dam-admin [duplicate code]
 $class-name-root: 'dam-image-grid';
 $bg-color-light: #f9f9f9;
 $bg-color-dark: #1e1e1e;
@@ -87,7 +82,8 @@ $bg-color-actions-dark: #1a1a1a;
       }
     }
 
-    &-text, &-text .line-clamp-1  {
+    &-text,
+    &-text .line-clamp-1 {
       font-weight: 500;
       line-height: 30px;
       min-height: 38px;
@@ -200,5 +196,4 @@ $bg-color-actions-dark: #1a1a1a;
     }
   }
 }
-
 </style>

@@ -1,26 +1,29 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
-import { isNull } from '@/lib'
-import { th } from 'vuetify/locale'
+import type { AssetType } from '@/types/coreDam/Asset'
+import { AssetType as AssetTypeValue } from '@/types/coreDam/Asset'
 
 export interface AssetListItem {
   asset: AssetSearchListItemDto
-  active: boolean
   selected: boolean
 }
 
 interface State {
   list: AssetListItem[]
-  activeItemIndex: null | number
   loader: boolean
+  licenceId: number
+  assetType: AssetType
+  selectedAssets: Record<string, AssetListItem>
 }
 
-export const useAssetListStore = defineStore('damAssetListStore', {
+export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore', {
   state: (): State => ({
     list: [],
-    activeItemIndex: null,
     loader: false,
+    licenceId: 0,
+    assetType: AssetTypeValue.Default,
+    selectedAssets: {},
   }),
   actions: {
     showLoader() {
@@ -29,11 +32,16 @@ export const useAssetListStore = defineStore('damAssetListStore', {
     hideLoader() {
       this.loader = false
     },
+    setLicenceId(licenceId: number) {
+      this.licenceId = licenceId
+    },
+    setAssetType(assetType: AssetType) {
+      this.assetType = assetType
+    },
     setList(assets: AssetSearchListItemDto[]) {
       this.list = assets.map((asset) => {
         return {
           asset: asset,
-          active: false,
           selected: false,
         }
       })
@@ -42,7 +50,6 @@ export const useAssetListStore = defineStore('damAssetListStore', {
       const items = assets.map((asset) => {
         return {
           asset: asset,
-          active: false,
           selected: false,
         }
       })
@@ -51,17 +58,26 @@ export const useAssetListStore = defineStore('damAssetListStore', {
     toggleSelectedByIndex(index: number) {
       if (!this.list[index]) return
       this.list[index].selected = !this.list[index].selected
+
+      if (this.list[index].selected) {
+        this.addToSelected(this.list[index])
+        return
+      }
+
+      this.removeFromSelected(this.list[index].asset.id)
+    },
+    addToSelected(assetItem: AssetListItem) {
+      this.selectedAssets[assetItem.asset.id] = assetItem
+    },
+    removeFromSelected(assetId: DocId) {
+      delete this.selectedAssets[assetId]
     },
     getSelectedIds(): DocId[] {
-      return this.list.filter(
-        (asset: AssetListItem ) => asset.selected && asset.asset.mainFile
-      ).map(
-        (asset: AssetListItem ) => asset.asset.mainFile?.id || ''
-      )
+      return Object.keys(this.selectedAssets).map((key) => this.selectedAssets[key].asset.mainFile?.id || '')
     },
     reset() {
       this.list = []
-      this.activeItemIndex = null
+      this.loader = false
     },
   },
 })
