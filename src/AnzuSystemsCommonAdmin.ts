@@ -20,13 +20,14 @@ export type PluginOptions<T extends AclValue = AclValue> = {
   currentUser: CurrentUserType
   languages: { available: LanguageCode[]; default: LanguageCode }
   customAclResolver?: CustomAclResolver<T>
-  coreDam?: { client: () => AxiosInstance }
+  coreDam?: { client: () => AxiosInstance; defaultLicenceId?: number }
 }
 
 export const CurrentUserSymbol = Symbol('currentUser')
 export const CustomAclResolverSymbol = Symbol('customAclResolver')
 export const AvailableLanguagesSymbol = Symbol('availableLanguages')
 export const DefaultLanguageSymbol = Symbol('defaultLanguage')
+export const DefaultLicenceIdSymbol = Symbol('defaultLicenceId')
 
 export default {
   install<T extends AclValue = AclValue>(app: App, options: PluginOptions<T>): void {
@@ -35,6 +36,7 @@ export default {
     app.provide(CustomAclResolverSymbol, options.customAclResolver)
     app.provide(AvailableLanguagesSymbol, options.languages.available)
     app.provide(DefaultLanguageSymbol, options.languages.default)
+    app.provide(DefaultLicenceIdSymbol, options.coreDam?.defaultLicenceId)
     app.component('Acl', Acl)
     app.use(Notification, { componentName: 'Notifications' })
   },

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { AssetType } from '@/types/coreDam/Asset'
@@ -12,6 +12,8 @@ import AssetListTilesView from '@/components/dam/assetSelect/components/AssetLis
 import { useSidebar } from '@/components/dam/assetSelect/composables/filterSidebar'
 import AssetFilter from '@/components/dam/assetSelect/components/filter/AssetFilter.vue'
 import type { DocId } from '@/types/common'
+import { DefaultLicenceIdSymbol } from '@/AnzuSystemsCommonAdmin'
+import { isUndefined } from '@/utils/common'
 
 const { t } = useI18n()
 
@@ -19,12 +21,13 @@ const props = withDefaults(
   defineProps<{
     maxCount: number
     minCount: number
-    assetLicenceId: number
+    assetLicenceId?: number
     assetType: AssetType
   }>(),
   {
     minCount: 1,
     maxCount: 1,
+    assetLicenceId: undefined,
     assetType: AssetTypeValue.Image,
   }
 )
@@ -39,8 +42,15 @@ const emit = defineEmits<{
 const { loader, pagination, fetchNextPage, resetAssetList, getSelectedIds, initStoreContext, getSelectedCount } =
   useAssetListActions()
 
+const defaultLicenceId = inject<number | undefined>(DefaultLicenceIdSymbol, undefined)
+
 const onOpen = () => {
-  initStoreContext(props.assetLicenceId, props.assetType)
+  const licenceId = props.assetLicenceId || defaultLicenceId
+  if (isUndefined(licenceId)) {
+    throw new Error('LicenceId must be provided. Provide using props or common-admin configuration.')
+  }
+
+  initStoreContext(licenceId, props.assetType)
   resetAssetList()
   closeSidebar()
   emit('onOpen')
@@ -140,7 +150,7 @@ const disabledSubmit = computed(() => {
                 @click="fetchNextPage"
               >
                 <slot name="button-confirm-title">
-                  {{ t('coreDam.asset.meta.controls.loadMore') }}
+                  {{ t('common.assetSelect.meta.controls.loadMore') }}
                 </slot>
               </ABtnPrimary>
             </div>
@@ -154,7 +164,7 @@ const disabledSubmit = computed(() => {
           @click.stop="onConfirm"
         >
           <slot name="button-confirm-title">
-            {{ t('coreDam.asset.meta.controls.confirm') }}
+            {{ t('common.assetSelect.meta.controls.confirm') }}
           </slot>
         </ABtnPrimary>
       </VCardActions>

@@ -21,22 +21,22 @@ const { onItemClick } = useAssetListActions()
     <thead>
       <tr>
         <th class="text-left">
-          {{ t('coreDam.asset.meta.table.checkbox') }}
+          {{ t('common.assetSelect.meta.table.checkbox') }}
         </th>
         <th class="text-left">
-          {{ t('coreDam.asset.meta.table.image') }}
+          {{ t('common.assetSelect.meta.table.image') }}
         </th>
         <th class="text-left">
-          {{ t('coreDam.asset.model.texts.displayTitle') }}
+          {{ t('common.assetSelect.model.texts.displayTitle') }}
         </th>
         <th class="text-left">
           {{ t('common.model.tracking.created') }}
         </th>
         <th class="text-left">
-          {{ t('coreDam.asset.model.mainFile.fileAttributes.mimeType') }}
+          {{ t('common.assetSelect.model.mainFile.fileAttributes.mimeType') }}
         </th>
         <th class="text-left">
-          {{ t('coreDam.asset.model.mainFile.fileAttributes.size') }}
+          {{ t('common.assetSelect.model.mainFile.fileAttributes.size') }}
         </th>
       </tr>
     </thead>

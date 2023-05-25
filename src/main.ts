@@ -55,6 +55,7 @@ createApp(App)
     },
     coreDam: {
       client: damClient,
+      defaultLicenceId: 100001,
     },
   })
   .mount('#app')

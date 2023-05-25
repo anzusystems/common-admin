@@ -64,7 +64,7 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(p
       <div class="dam-image-grid__item-text text-caption px-2 py-1">
         <div class="d-flex align-center justify-space-between position-relative">
           <div class="line-clamp-1">
-            {{ asset.texts.displayTitle || t('coreDam.asset.list.noTitle') }}
+            {{ asset.texts.displayTitle || t('commonCoreDam.asset.list.noTitle') }}
           </div>
         </div>
       </div>

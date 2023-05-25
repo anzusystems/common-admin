@@ -23,6 +23,10 @@
     },
     "filter": {
       "toggle": "Filter"
+    },
+    "controls": {
+      "loadMore": "Load more",
+      "confirm": "Confirm"
     }
   },
   "filter": {

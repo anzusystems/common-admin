@@ -32,7 +32,7 @@ const { toggleSidebar } = useSidebar()
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.meta.filter.toggle') }}
+                {{ t('common.assetSelect.meta.filter.toggle') }}
               </VTooltip>
             </VBtn>
             <slot name="second-bar-left" />
@@ -50,7 +50,7 @@ const { toggleSidebar } = useSidebar()
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.meta.grid.masonry') }}
+                {{ t('common.assetSelect.meta.grid.masonry') }}
               </VTooltip>
             </VBtn>
             <VBtn
@@ -64,7 +64,7 @@ const { toggleSidebar } = useSidebar()
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.meta.grid.thumbnail') }}
+                {{ t('common.assetSelect.meta.grid.thumbnail') }}
               </VTooltip>
             </VBtn>
             <VBtn
@@ -78,7 +78,7 @@ const { toggleSidebar } = useSidebar()
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.meta.grid.table') }}
+                {{ t('common.assetSelect.meta.grid.table') }}
               </VTooltip>
             </VBtn>
           </div>

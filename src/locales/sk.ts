@@ -11,7 +11,7 @@ import vuetify from '@/locales/sk/vuetify.json'
 import apiValidation from '@/locales/sk/error/apiValidation.json'
 import apiForbiddenOperation from '@/locales/sk/error/apiForbiddenOperation.json'
 import jsValidation from '@/locales/sk/error/jsValidation.json'
-import asset from '@/locales/sk/coreDam/asset.json'
+import assetSelect from '@/locales/sk/common/assetSelect.json'
 
 export default {
   common: {
@@ -24,9 +24,7 @@ export default {
     log,
     permission,
     permissionGroup,
-  },
-  coreDam: {
-    asset,
+    assetSelect,
   },
   $vuetify: vuetify,
   error: {

@@ -64,7 +64,7 @@ const onItemClick = () => {
       />
     </td>
     <td>
-      {{ asset.texts.displayTitle || t('coreDam.asset.list.noTitle') }}
+      {{ asset.texts.displayTitle || t('commonCoreDam.asset.list.noTitle') }}
     </td>
     <td>
       <ADatetime :date-time="asset.createdAt" />

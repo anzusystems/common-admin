@@ -28,7 +28,7 @@ const onConfirm = (data: DocId[]) => {
       </VCol>
       <VCol cols="10">
         <AAssetSelect
-          :asset-licence-id="fisrt"
+          :min-count="1"
           :max-count="5"
           :asset-type="AssetType.Image"
           @on-confirm="onConfirm"
@@ -55,6 +55,7 @@ const onConfirm = (data: DocId[]) => {
       <VCol cols="10">
         <AAssetSelect
           :asset-licence-id="second"
+          :min-count="1"
           :max-count="1"
           :asset-type="AssetType.Video"
           @on-confirm="onConfirm"
@@ -81,6 +82,7 @@ const onConfirm = (data: DocId[]) => {
       <VCol cols="10">
         <AAssetSelect
           :asset-licence-id="third"
+          :min-count="1"
           :max-count="1"
           :asset-type="AssetType.Audio"
           @on-confirm="onConfirm"
