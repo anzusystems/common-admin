@@ -45,7 +45,7 @@ export interface Link {
   type: LinkType
 }
 
-export type Links = Record<'image_list' | 'image_detail' | 'audio', Link> | Record<string, never>
+export type Links = Record<'image_list' | 'image_table' | 'image_detail' | 'audio', Link> | Record<string, never>
 
 export interface ImageFile extends AnzuUserAndTimeTrackingAware {
   id: DocId

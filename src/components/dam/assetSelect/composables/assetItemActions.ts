@@ -35,10 +35,28 @@ export function useAssetItemActions(item: AssetListItem) {
     }
   })
 
+  const tableImageProperties = computed(() => {
+    if (asset.value.mainFile && asset.value.mainFile.links && asset.value.mainFile.links.image_table) {
+      return {
+        url: asset.value.mainFile.links.image_table.url,
+        width: asset.value.mainFile.links.image_table.width,
+        height: asset.value.mainFile.links.image_table.height,
+        bgColor: IMAGE_BG_COLOR_DEFAULT,
+      }
+    }
+    return {
+      url: undefined,
+      width: undefined,
+      height: IMAGE_HEIGHT,
+      bgColor: IMAGE_BG_COLOR_DEFAULT,
+    }
+  })
+
   return {
     asset,
     assetType,
     assetStatus,
     imageProperties,
+    tableImageProperties,
   }
 }

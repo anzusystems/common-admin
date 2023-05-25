@@ -74,10 +74,11 @@ export function useAssetListActions() {
     return assetListStore.getSelectedIds()
   }
 
-  const initStoreContext = (licenceId: number, assetType: AssetType): void => {
+  const initStoreContext = (licenceId: number, assetType: AssetType, singleMode: boolean): void => {
     assetListStore.selectedAssets = {}
     assetListStore.setAssetType(assetType)
     assetListStore.setLicenceId(licenceId)
+    assetListStore.setSingleMode(singleMode)
   }
 
   const getSelectedCount = () => {

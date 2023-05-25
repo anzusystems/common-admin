@@ -3,6 +3,7 @@ import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
 import type { AssetType } from '@/types/coreDam/Asset'
 import { AssetType as AssetTypeValue } from '@/types/coreDam/Asset'
+import { th } from 'vuetify/locale'
 
 export interface AssetListItem {
   asset: AssetSearchListItemDto
@@ -15,6 +16,7 @@ interface State {
   licenceId: number
   assetType: AssetType
   selectedAssets: Record<string, AssetListItem>
+  singleMode: boolean
 }
 
 export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore', {
@@ -24,6 +26,7 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     licenceId: 0,
     assetType: AssetTypeValue.Default,
     selectedAssets: {},
+    singleMode: true,
   }),
   actions: {
     showLoader() {
@@ -34,6 +37,9 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     },
     setLicenceId(licenceId: number) {
       this.licenceId = licenceId
+    },
+    setSingleMode(singleMode: boolean) {
+      this.singleMode = singleMode
     },
     setAssetType(assetType: AssetType) {
       this.assetType = assetType
@@ -59,12 +65,30 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
       if (!this.list[index]) return
       this.list[index].selected = !this.list[index].selected
 
-      if (this.list[index].selected) {
+      if (this.singleMode && this.list[index].selected) {
+        this.unselectAllExcept(index)
+        this.clearSelected()
+        this.addToSelected(this.list[index])
+        return
+      }
+
+      if (!this.singleMode && this.list[index].selected) {
         this.addToSelected(this.list[index])
         return
       }
 
       this.removeFromSelected(this.list[index].asset.id)
+    },
+    unselectAllExcept(ignoreIndex: number)
+    {
+      this.list.filter(
+        (item: AssetListItem, index: number) => item.selected && index !== ignoreIndex
+      ).map(
+        (item: AssetListItem) => item.selected = false
+      )
+    },
+    clearSelected() {
+      this.selectedAssets = {}
     },
     addToSelected(assetItem: AssetListItem) {
       this.selectedAssets[assetItem.asset.id] = assetItem
@@ -78,6 +102,7 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     reset() {
       this.list = []
       this.loader = false
+      this.selectedAssets = {}
     },
   },
 })

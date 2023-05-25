@@ -8,7 +8,7 @@ import { AssetType } from '@/types/coreDam/Asset'
 
 const second = ref(100000)
 const third = ref(100000)
-const fisrt = ref(100000)
+const first = ref(100000)
 const pickedAssetIds = ref<DocId[]>([])
 
 const onConfirm = (data: DocId[]) => {
@@ -21,15 +21,16 @@ const onConfirm = (data: DocId[]) => {
     <VRow>
       <VCol cols="2">
         <VTextField
-          v-model="fisrt"
+          v-model="first"
           type="number"
           label="Licence Id"
         />
       </VCol>
       <VCol cols="10">
         <AAssetSelect
+          :asset-licence-id="first"
           :min-count="1"
-          :max-count="5"
+          :max-count="3"
           :asset-type="AssetType.Image"
           @on-confirm="onConfirm"
         >

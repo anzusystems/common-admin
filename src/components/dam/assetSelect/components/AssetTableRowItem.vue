@@ -9,7 +9,8 @@ import ADatetime from '@/components/ADatetime.vue'
 
 const { t } = useI18n()
 
-const IMAGE_HEIGHT = 70
+const IMAGE_HEIGHT = 72
+const IMAGE_WIDTH = 128
 
 const props = withDefaults(
   defineProps<{
@@ -22,7 +23,7 @@ const props = withDefaults(
   }
 )
 
-const { asset, imageProperties, assetType, assetStatus } = useAssetItemActions(props.item)
+const { asset, tableImageProperties, assetType, assetStatus } = useAssetItemActions(props.item)
 
 const emit = defineEmits<{
   (e: 'itemClick', data: { assetId: DocId; index: number }): void
@@ -35,8 +36,8 @@ const onItemClick = () => {
 
 <template>
   <tr
-    class="dam-image-table__row"
-    :class="{ 'dam-image-table__row--selected': item.selected }"
+    class="dam-image-table__row a-table__row"
+    :class="{ 'dam-image-table__row--selected': item.selected, 'a-table__row--selected': item.selected }"
     @click.stop.exact="onItemClick"
   >
     <td>
@@ -51,13 +52,13 @@ const onItemClick = () => {
         :size="20"
       />
     </td>
-    <td class="d-flex align-center justify-center h-auto">
+    <td>
       <AssetImage
         :asset-type="assetType"
         :asset-status="assetStatus"
-        :src="imageProperties.url"
-        :background-color="imageProperties.bgColor"
-        :width="imageProperties.width"
+        :src="tableImageProperties.url"
+        :background-color="tableImageProperties.bgColor"
+        :width="IMAGE_WIDTH"
         :height="IMAGE_HEIGHT"
         :icon-size="20"
         :fallback-height="IMAGE_HEIGHT"

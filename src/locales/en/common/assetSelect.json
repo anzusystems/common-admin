@@ -13,7 +13,6 @@
   },
   "meta": {
     "table": {
-      "checkbox": "Checked",
       "image": "Image"
     },
     "grid": {
@@ -27,6 +26,11 @@
     "controls": {
       "loadMore": "Load more",
       "confirm": "Confirm"
+    },
+    "texts": {
+      "title": "Select asset",
+      "pickExactCount": "Select items: {count}",
+      "pickRangeCount": "Select from {minCount} to {maxCount} items."
     }
   },
   "filter": {

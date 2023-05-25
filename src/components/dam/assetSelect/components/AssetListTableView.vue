@@ -15,13 +15,12 @@ const { onItemClick } = useAssetListActions()
 
 <template>
   <v-table
-    class="dam-image-table"
+    class="dam-image-table a-table"
     fixed-header
   >
     <thead>
       <tr>
         <th class="text-left">
-          {{ t('common.assetSelect.meta.table.checkbox') }}
         </th>
         <th class="text-left">
           {{ t('common.assetSelect.meta.table.image') }}
@@ -51,13 +50,3 @@ const { onItemClick } = useAssetListActions()
     </tbody>
   </v-table>
 </template>
-
-<style lang="scss">
-$class-name-root: 'dam-image-table';
-
-.#{$class-name-root} {
-  &__row {
-    cursor: pointer;
-  }
-}
-</style>

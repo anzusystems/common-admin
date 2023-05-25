@@ -60,12 +60,14 @@ const showIconComputed = computed(() => {
   if (props.assetType === AssetType.Image && props.src) return false
   return true
 })
+
 </script>
 
 <template>
   <div
     v-if="assetStatus === AssetStatus.WithFile && src"
     class="asset-image asset-image--img position-relative"
+    :style="{ width: width + 'px' }"
   >
     <img
       :src="srcComputed"

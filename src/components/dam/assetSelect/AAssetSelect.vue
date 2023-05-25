@@ -42,6 +42,8 @@ const emit = defineEmits<{
 const { loader, pagination, fetchNextPage, resetAssetList, getSelectedIds, initStoreContext, getSelectedCount } =
   useAssetListActions()
 
+const { sidebarLeft, leftCols, rightCols, openSidebar } = useSidebar()
+
 const defaultLicenceId = inject<number | undefined>(DefaultLicenceIdSymbol, undefined)
 
 const onOpen = () => {
@@ -50,9 +52,9 @@ const onOpen = () => {
     throw new Error('LicenceId must be provided. Provide using props or common-admin configuration.')
   }
 
-  initStoreContext(licenceId, props.assetType)
+  initStoreContext(licenceId, props.assetType, (1 === props.minCount) && (props.minCount) === props.maxCount)
   resetAssetList()
-  closeSidebar()
+  openSidebar()
   emit('onOpen')
   dialog.value = true
 }
@@ -88,8 +90,6 @@ const componentComputed = computed(() => {
   }
 })
 
-const { sidebarLeft, leftCols, rightCols, closeSidebar } = useSidebar()
-
 const disabledSubmit = computed(() => {
   const selectedCount = getSelectedCount()
   return selectedCount < props.minCount || selectedCount > props.maxCount
@@ -106,7 +106,7 @@ const disabledSubmit = computed(() => {
       @click.stop="onOpen"
     />
   </slot>
-
+<!--  "aa | Vyberte {count} položku. | Vyberte {count} položky. | | Vyberte {count} položky. | | Vyberte {count} položky.Vyberte {count} položiek.",-->
   <VDialog
     :model-value="dialog"
     fullscreen
@@ -115,11 +115,11 @@ const disabledSubmit = computed(() => {
   >
     <VCard>
       <ADialogToolbar @on-cancel="onClose">
-        <slot name="title" />
+        <slot name="title">
+          {{ t('common.assetSelect.meta.texts.title') }}
+        </slot>
       </ADialogToolbar>
-
       <AssetListBar />
-
       <VCardText>
         <VRow>
           <VCol
@@ -130,23 +130,12 @@ const disabledSubmit = computed(() => {
           </VCol>
           <VCol :cols="rightCols">
             <component :is="componentComputed" />
-            <div
-              v-if="loader"
-              class="w-100 d-flex align-center justify-center pa-4"
-            >
-              <VProgressCircular
-                indeterminate
-                color="primary"
-              />
-            </div>
-            <div
-              v-if="dialog"
-              v-intersect="autoloadOnIntersect"
-              class="justify-center"
-            />
             <div class="pa-2 d-flex align-center justify-center">
               <ABtnPrimary
-                v-show="pagination.hasNextPage"
+                v-if="dialog"
+                v-show="pagination.hasNextPage || loader"
+                v-intersect="autoloadOnIntersect"
+                :loading="loader"
                 @click="fetchNextPage"
               >
                 <slot name="button-confirm-title">
@@ -158,6 +147,12 @@ const disabledSubmit = computed(() => {
         </VRow>
       </VCardText>
       <VCardActions>
+        <span v-if="props.minCount === props.maxCount">
+          {{ t('common.assetSelect.meta.texts.pickExactCount', {count: props.minCount}) }}
+        </span>
+        <span v-else>
+          {{ t('common.assetSelect.meta.texts.pickRangeCount', {minCount: props.minCount, maxCount: props.maxCount}) }}
+        </span>
         <VSpacer />
         <ABtnPrimary
           :disabled="disabledSubmit"

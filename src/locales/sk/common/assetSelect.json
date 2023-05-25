@@ -13,7 +13,6 @@
   },
   "meta": {
     "table": {
-      "checkbox": "Vybrané",
       "image": "Náhľad"
     },
     "grid": {
@@ -27,6 +26,11 @@
     "controls": {
       "loadMore": "Načítaj ďalšie",
       "confirm": "Zvoliť"
+    },
+    "texts": {
+      "title": "Vyberte asset",
+      "pickExactCount": "Vyberte položky: {count}",
+      "pickRangeCount": "Vyberte od {minCount} do {maxCount} položiek."
     }
   },
   "filter": {

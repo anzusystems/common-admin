@@ -1,8 +1,7 @@
 import { reactive } from 'vue'
-import { ENTITY, SYSTEM_CORE_DAM } from '@/services/api/coreDam/assetApi'
 import { makeFilterHelper } from '@/lib'
 
-const makeFilter = makeFilterHelper(SYSTEM_CORE_DAM, ENTITY)
+const makeFilter = makeFilterHelper('common', 'assetSelect')
 
 const filter = reactive({
   _elastic: {
