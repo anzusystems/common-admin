@@ -36,12 +36,10 @@
     .a-table__row {
       &--selected {
         background-color: #d8e9e0;
-        color: #3ac47d;
       }
 
       &--active {
         background-color: #dae6f5;
-        color: #1867C0;
       }
     }
 
@@ -55,13 +53,11 @@
   .a-table {
     .a-table__row {
       &--selected {
-        background-color: #3ac47d;
-        color: #4d5e55;
+        background-color: #4d5e55;
       }
 
       &--active {
         background-color: #dae6f5;
-        color: #1867C0;
       }
     }
 

@@ -30,7 +30,7 @@
     "texts": {
       "title": "Vyberte asset",
       "pickExactCount": "Vyberte položky: {count}. Zvolených {selected}." ,
-      "pickRangeCount": "Vyberte od {minCount} do {maxCount} selected. Zvolených {picked}."
+      "pickRangeCount": "Vyberte od {minCount} do {maxCount} selected. Zvolených {selected}."
     }
   },
   "filter": {
