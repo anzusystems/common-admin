@@ -37,7 +37,7 @@ const onItemClick = () => {
 <template>
   <tr
     class="dam-image-table__row a-table__row"
-    :class="{ 'dam-image-table__row--selected': item.selected, 'a-table__row--selected': item.selected }"
+    :class="{ 'a-table__row--selected': item.selected }"
     @click.stop.exact="onItemClick"
   >
     <td>

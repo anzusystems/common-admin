@@ -39,7 +39,7 @@ const emit = defineEmits<{
   (e: 'onClose'): void
 }>()
 
-const { loader, pagination, fetchNextPage, resetAssetList, getSelectedIds, initStoreContext, getSelectedCount } =
+const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedIds, initStoreContext } =
   useAssetListActions()
 
 const { sidebarLeft, leftCols, rightCols, openSidebar } = useSidebar()
@@ -52,7 +52,13 @@ const onOpen = () => {
     throw new Error('LicenceId must be provided. Provide using props or common-admin configuration.')
   }
 
-  initStoreContext(licenceId, props.assetType, 1 === props.minCount && props.minCount === props.maxCount)
+  initStoreContext(
+    licenceId,
+    props.assetType,
+    1 === props.minCount && props.minCount === props.maxCount,
+    props.minCount,
+    props.maxCount
+  )
   resetAssetList()
   openSidebar()
   emit('onOpen')
@@ -91,8 +97,7 @@ const componentComputed = computed(() => {
 })
 
 const disabledSubmit = computed(() => {
-  const selectedCount = getSelectedCount()
-  return selectedCount < props.minCount || selectedCount > props.maxCount
+  return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
 })
 </script>
 
@@ -147,11 +152,15 @@ const disabledSubmit = computed(() => {
       </VCardText>
       <VCardActions>
         <span v-if="props.minCount === props.maxCount">
-          {{ t('common.assetSelect.meta.texts.pickExactCount', { count: props.minCount }) }}
+          {{ t('common.assetSelect.meta.texts.pickExactCount', { count: props.minCount, selected: selectedCount }) }}
         </span>
         <span v-else>
           {{
-            t('common.assetSelect.meta.texts.pickRangeCount', { minCount: props.minCount, maxCount: props.maxCount })
+            t('common.assetSelect.meta.texts.pickRangeCount', {
+              minCount: props.minCount,
+              maxCount: props.maxCount,
+              selected: selectedCount,
+            })
           }}
         </span>
         <VSpacer />

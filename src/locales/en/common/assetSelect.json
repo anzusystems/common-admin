@@ -29,8 +29,8 @@
     },
     "texts": {
       "title": "Select asset",
-      "pickExactCount": "Select items: {count}",
-      "pickRangeCount": "Select from {minCount} to {maxCount} items."
+      "pickExactCount": "Select items: {count}. Selected {selected}.",
+      "pickRangeCount": "Select from {minCount} to {maxCount} items. Selected {selected}."
     }
   },
   "filter": {

@@ -26,7 +26,7 @@ export function useAssetListActions() {
   const { fetchAssetList: apiFetchAssetList } = useDamApi(damClient)
 
   const assetListStore = useAssetListStore()
-  const { selectedAssets, list, loader } = storeToRefs(assetListStore)
+  const { selectedCount, selectedAssets, list, loader } = storeToRefs(assetListStore)
   const { resetFilter } = useFilterHelpers()
   const { showErrorsDefault } = useAlerts()
 
@@ -74,20 +74,25 @@ export function useAssetListActions() {
     return assetListStore.getSelectedIds()
   }
 
-  const initStoreContext = (licenceId: number, assetType: AssetType, singleMode: boolean): void => {
+  const initStoreContext = (
+    licenceId: number,
+    assetType: AssetType,
+    singleMode: boolean,
+    minCount: number,
+    maxCount: number
+  ): void => {
     assetListStore.selectedAssets = {}
     assetListStore.setAssetType(assetType)
     assetListStore.setLicenceId(licenceId)
     assetListStore.setSingleMode(singleMode)
-  }
-
-  const getSelectedCount = () => {
-    return Object.keys(selectedAssets.value).length
+    assetListStore.setMinCount(minCount)
+    assetListStore.setMaxCount(maxCount)
   }
 
   return {
     filterIsTouched,
     filter,
+    selectedCount,
     selectedAssets,
     pagination,
     loader,
@@ -100,6 +105,5 @@ export function useAssetListActions() {
     filterUnTouch,
     getSelectedIds,
     initStoreContext,
-    getSelectedCount,
   }
 }

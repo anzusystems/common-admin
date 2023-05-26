@@ -16,6 +16,9 @@ interface State {
   assetType: AssetType
   selectedAssets: Record<string, AssetListItem>
   singleMode: boolean
+  minCount: number
+  maxCount: number
+  selectedCount: number
 }
 
 export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore', {
@@ -26,6 +29,9 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     assetType: AssetTypeValue.Default,
     selectedAssets: {},
     singleMode: true,
+    minCount: 0,
+    maxCount: 0,
+    selectedCount: 0,
   }),
   actions: {
     showLoader() {
@@ -42,6 +48,12 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     },
     setAssetType(assetType: AssetType) {
       this.assetType = assetType
+    },
+    setMinCount(count: number) {
+      this.minCount = count
+    },
+    setMaxCount(count: number) {
+      this.maxCount = count
     },
     setList(assets: AssetSearchListItemDto[]) {
       this.list = assets.map((asset) => {
@@ -62,6 +74,11 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     },
     toggleSelectedByIndex(index: number) {
       if (!this.list[index]) return
+
+      if (!this.singleMode && this.isSelectedMax() && !this.list[index].selected) {
+        return
+      }
+
       this.list[index].selected = !this.list[index].selected
 
       if (this.singleMode && this.list[index].selected) {
@@ -85,12 +102,19 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     },
     clearSelected() {
       this.selectedAssets = {}
+      this.selectedCount = 0
     },
     addToSelected(assetItem: AssetListItem) {
-      this.selectedAssets[assetItem.asset.id] = assetItem
+      if (!(assetItem.asset.id in this.selectedAssets)) {
+        this.selectedAssets[assetItem.asset.id] = assetItem
+        this.selectedCount++
+      }
     },
     removeFromSelected(assetId: DocId) {
-      delete this.selectedAssets[assetId]
+      if (assetId in this.selectedAssets) {
+        delete this.selectedAssets[assetId]
+        this.selectedCount--
+      }
     },
     getSelectedIds(): DocId[] {
       return Object.keys(this.selectedAssets).map((key) => this.selectedAssets[key].asset.mainFile?.id || '')
@@ -98,7 +122,10 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     reset() {
       this.list = []
       this.loader = false
-      this.selectedAssets = {}
+      this.clearSelected()
+    },
+    isSelectedMax() {
+      return this.selectedCount >= this.maxCount
     },
   },
 })
