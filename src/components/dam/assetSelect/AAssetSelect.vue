@@ -52,7 +52,7 @@ const onOpen = () => {
     throw new Error('LicenceId must be provided. Provide using props or common-admin configuration.')
   }
 
-  initStoreContext(licenceId, props.assetType, (1 === props.minCount) && (props.minCount) === props.maxCount)
+  initStoreContext(licenceId, props.assetType, 1 === props.minCount && props.minCount === props.maxCount)
   resetAssetList()
   openSidebar()
   emit('onOpen')
@@ -106,7 +106,6 @@ const disabledSubmit = computed(() => {
       @click.stop="onOpen"
     />
   </slot>
-<!--  "aa | Vyberte {count} položku. | Vyberte {count} položky. | | Vyberte {count} položky. | | Vyberte {count} položky.Vyberte {count} položiek.",-->
   <VDialog
     :model-value="dialog"
     fullscreen
@@ -148,10 +147,12 @@ const disabledSubmit = computed(() => {
       </VCardText>
       <VCardActions>
         <span v-if="props.minCount === props.maxCount">
-          {{ t('common.assetSelect.meta.texts.pickExactCount', {count: props.minCount}) }}
+          {{ t('common.assetSelect.meta.texts.pickExactCount', { count: props.minCount }) }}
         </span>
         <span v-else>
-          {{ t('common.assetSelect.meta.texts.pickRangeCount', {minCount: props.minCount, maxCount: props.maxCount}) }}
+          {{
+            t('common.assetSelect.meta.texts.pickRangeCount', { minCount: props.minCount, maxCount: props.maxCount })
+          }}
         </span>
         <VSpacer />
         <ABtnPrimary

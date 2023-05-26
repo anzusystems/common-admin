@@ -20,8 +20,7 @@ const { onItemClick } = useAssetListActions()
   >
     <thead>
       <tr>
-        <th class="text-left">
-        </th>
+        <th class="text-left" />
         <th class="text-left">
           {{ t('common.assetSelect.meta.table.image') }}
         </th>

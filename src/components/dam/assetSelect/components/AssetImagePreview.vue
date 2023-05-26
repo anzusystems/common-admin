@@ -60,7 +60,6 @@ const showIconComputed = computed(() => {
   if (props.assetType === AssetType.Image && props.src) return false
   return true
 })
-
 </script>
 
 <template>

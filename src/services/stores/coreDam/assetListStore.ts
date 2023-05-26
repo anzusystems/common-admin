@@ -3,7 +3,6 @@ import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
 import type { AssetType } from '@/types/coreDam/Asset'
 import { AssetType as AssetTypeValue } from '@/types/coreDam/Asset'
-import { th } from 'vuetify/locale'
 
 export interface AssetListItem {
   asset: AssetSearchListItemDto
@@ -79,13 +78,10 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
 
       this.removeFromSelected(this.list[index].asset.id)
     },
-    unselectAllExcept(ignoreIndex: number)
-    {
-      this.list.filter(
-        (item: AssetListItem, index: number) => item.selected && index !== ignoreIndex
-      ).map(
-        (item: AssetListItem) => item.selected = false
-      )
+    unselectAllExcept(ignoreIndex: number) {
+      this.list
+        .filter((item: AssetListItem, index: number) => item.selected && index !== ignoreIndex)
+        .map((item: AssetListItem) => (item.selected = false))
     },
     clearSelected() {
       this.selectedAssets = {}
