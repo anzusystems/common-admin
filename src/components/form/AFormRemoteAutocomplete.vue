@@ -124,18 +124,18 @@ const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   })
 })
 
-const loading = ref(false)
+const loadingLocal = ref(false)
 const loadingComputed = computed(() => {
-  if (loading.value) return true
+  if (loadingLocal.value) return true
   return props.loading
 })
 
 const apiSearch = async (query: string) => {
-  loading.value = true
+  loadingLocal.value = true
   const filterField = innerFilter.value[props.filterByField]
   filterField.model = query
   fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
-  loading.value = false
+  loadingLocal.value = false
 }
 
 const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
@@ -170,9 +170,9 @@ const autoFetch = async () => {
   //   isUndefined(modelValue.value) ||
   //   (isArray(modelValue.value) && modelValue.value.length === 0)
   // ) {
-  loading.value = true
+  loadingLocal.value = true
   fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
-  loading.value = false
+  loadingLocal.value = false
   // }
 }
 const onFocus = () => {
@@ -218,14 +218,14 @@ watch(
     const found = await tryToLoadFromLocalData(newValue)
     if (found) return
     if (isArray<IntegerId | DocId>(newValue)) {
-      loading.value = true
+      loadingLocal.value = true
       selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
-      loading.value = false
+      loadingLocal.value = false
       return
     }
-    loading.value = true
+    loadingLocal.value = true
     selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
-    loading.value = false
+    loadingLocal.value = false
   },
   { immediate: true }
 )

@@ -33,11 +33,11 @@ const emit = defineEmits<{
   (e: 'onOpen'): void
   (e: 'onClose'): void
 }>()
-defineSlots<{
-  title?: (props: { activator: () => void }) => any
-  buttonOpenDialog?: any
-  buttonConfirmTitle?: any
-}>()
+// defineSlots<{
+//   title?: (props: { activator: () => void }) => any
+//   buttonOpenDialog?: any
+//   buttonConfirmTitle?: any
+// }>()
 
 const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedIds, initStoreContext } =
   useAssetListActions()

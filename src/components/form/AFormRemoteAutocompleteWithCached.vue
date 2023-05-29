@@ -83,7 +83,7 @@ const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
 const isFocused = ref(false)
 const search = ref('')
-const loading = ref(false)
+const loadingLocal = ref(false)
 const { innerFilter } = toRefs(props)
 const pagination = usePagination(props.filterSortBy)
 
@@ -130,7 +130,7 @@ const onSearchUpdate = (query: string) => {
 }
 
 const apiSearch = async (query: string) => {
-  loading.value = true
+  loadingLocal.value = true
   const filterField = innerFilter.value[props.filterByField]
   filterField.model = query
   fetchedItemsMinimal.value.clear()
@@ -138,7 +138,7 @@ const apiSearch = async (query: string) => {
   res.forEach((item: any) => {
     fetchedItemsMinimal.value.set(item[props.itemValue], item)
   })
-  loading.value = false
+  loadingLocal.value = false
 }
 
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
@@ -236,7 +236,7 @@ watch(
     :multiple="multipleComputedVuetifyTypeFix"
     :clearable="clearable"
     :error-messages="errorMessageComputed"
-    :loading="loading"
+    :loading="loadingLocal"
     @blur="onBlur"
     @focus="onFocus"
     @update:search="onSearchUpdate"
