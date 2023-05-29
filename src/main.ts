@@ -8,6 +8,7 @@ import AnzuSystemsCommonAdmin from '@/AnzuSystemsCommonAdmin'
 import type { AnzuUser } from '@/types/AnzuUser'
 import { Grant } from '@/model/valueObject/Grant'
 import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
+import { damClient } from '@/services/api/clients/coreDamClient'
 
 export type CustomAclValue = 'anzu_entity_create' | 'anzu_entity_view'
 
@@ -51,6 +52,10 @@ createApp(App)
     languages: {
       available: ['en', 'sk'],
       default: 'sk',
+    },
+    coreDam: {
+      client: damClient,
+      defaultLicenceId: 100001,
     },
   })
   .mount('#app')
