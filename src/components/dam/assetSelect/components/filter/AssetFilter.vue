@@ -33,39 +33,42 @@ const componentComputed = computed(() => {
 </script>
 
 <template>
-  <div class="pa-2">
-    <VForm
-      name="search2"
-      @submit.prevent="submitFilter"
-    >
-      <Component :is="componentComputed" />
-    </VForm>
-  </div>
-  <div class="pa-2 d-flex align-center justify-center">
-    <VBtn
-      color="primary"
-      class="mr-2"
-      :variant="filterIsTouched ? 'flat' : 'text'"
-      size="small"
-      @click.stop="submitFilter"
-    >
-      {{ t('common.button.submitFilter') }}
-    </VBtn>
-    <VBtn
-      class="px-2"
-      color="light"
-      min-width="36px"
-      variant="flat"
-      size="small"
-      @click.stop="resetFilter"
-    >
-      <VIcon icon="mdi-filter-remove-outline" />
-      <VTooltip
-        activator="parent"
-        location="bottom"
+  <div class="asset-select-filter">
+    <div class="asset-select-filter__content">
+      <VForm
+        name="search2"
+        class="px-2 pt-4"
+        @submit.prevent="submitFilter"
       >
-        {{ t('common.button.resetFilter') }}
-      </VTooltip>
-    </VBtn>
+        <Component :is="componentComputed" />
+      </VForm>
+    </div>
+    <div class="asset-select-filter__actions">
+      <VBtn
+        color="primary"
+        class="mx-2"
+        :variant="filterIsTouched ? 'flat' : 'text'"
+        size="small"
+        @click.stop="submitFilter"
+      >
+        {{ t('common.button.submitFilter') }}
+      </VBtn>
+      <VBtn
+        class="px-2"
+        color="light"
+        min-width="36px"
+        variant="flat"
+        size="small"
+        @click.stop="resetFilter"
+      >
+        <VIcon icon="mdi-filter-remove-outline" />
+        <VTooltip
+          activator="parent"
+          location="bottom"
+        >
+          {{ t('common.button.resetFilter') }}
+        </VTooltip>
+      </VBtn>
+    </div>
   </div>
 </template>

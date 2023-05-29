@@ -12,12 +12,12 @@ const router = createRouter({
     {
       path: '/component/row',
       name: 'component-row',
-      component: () => import('@/views/components/ARowView.vue'),
+      component: () => import('@/views/components/RowView.vue'),
     },
     {
       path: '/component/boolean-value',
       name: 'component-boolean-value',
-      component: () => import('@/views/components/ABooleanValueView.vue'),
+      component: () => import('@/views/components/BooleanValueView.vue'),
     },
     {
       path: '/component/permission',

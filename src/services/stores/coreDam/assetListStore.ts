@@ -119,13 +119,13 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     getSelectedIds(): DocId[] {
       return Object.keys(this.selectedAssets).map((key) => this.selectedAssets[key].asset.mainFile?.id || '')
     },
+    isSelectedMax() {
+      return this.selectedCount >= this.maxCount
+    },
     reset() {
       this.list = []
       this.loader = false
       this.clearSelected()
-    },
-    isSelectedMax() {
-      return this.selectedCount >= this.maxCount
     },
   },
 })

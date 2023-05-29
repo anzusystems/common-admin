@@ -33,18 +33,18 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(p
 
 <template>
   <div
-    class="dam-image-grid__item"
-    :class="{ 'dam-image-grid__item--selected': item.selected }"
+    class="asset-list-tiles__item"
+    :class="{ 'asset-list-tiles__item--selected': item.selected }"
     @click.stop.exact="onItemClick"
   >
-    <div class="dam-image-grid__item-card">
+    <div class="asset-list-tiles__item-card">
       <div
         v-if="item.selected"
-        class="selected-triangle"
+        class="asset-list-tiles__selected-triangle"
       >
-        <div class="selected-triangle__bg" />
+        <div class="asset-list-tiles__selected-triangle__bg" />
         <VIcon
-          class="selected-triangle__icon"
+          class="asset-list-tiles__selected-triangle__icon"
           icon="mdi-check"
           color="white"
           size="x-small"
@@ -61,7 +61,7 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(p
         :asset-file-properties="item.asset.assetFileProperties"
         :show-meta-icons="showMetaIcons"
       />
-      <div class="dam-image-grid__item-text text-caption px-2 py-1">
+      <div class="asset-list-tiles__item-text text-caption px-2 py-1">
         <div class="d-flex align-center justify-space-between position-relative">
           <div class="line-clamp-1">
             {{ asset.texts.displayTitle || t('commonCoreDam.asset.list.noTitle') }}

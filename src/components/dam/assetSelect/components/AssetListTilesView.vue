@@ -1,34 +1,41 @@
 <script lang="ts" setup>
-import { storeToRefs } from 'pinia'
-import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
 import AssetTilesItem from '@/components/dam/assetSelect/components/AssetTilesItem.vue'
 import { useGridView } from '@/components/dam/assetSelect/composables/gridView'
 import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
+import { useI18n } from 'vue-i18n'
 
-const assetListStore = useAssetListStore()
-const { list } = storeToRefs(assetListStore)
 const { gridView } = useGridView()
-const { onItemClick } = useAssetListActions()
+const { onItemClick, items, loader } = useAssetListActions()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <div
-    class="dam-image-grid"
-    :class="'dam-image-grid--' + gridView"
+    class="asset-list-tiles"
+    :class="'asset-list-tiles--' + gridView"
   >
     <AssetTilesItem
-      v-for="(item, index) in list"
+      v-for="(item, index) in items"
       :key="item.asset.id"
       :index="index"
       :item="item"
       @item-click="onItemClick"
     />
   </div>
+  <div
+    v-if="!loader && items.length === 0"
+    class="text-h6 text-medium-emphasis d-flex w-100 h-100 align-center justify-center"
+  >
+    {{ t('common.assetSelect.meta.texts.noItemsFound') }}
+  </div>
 </template>
 
 <style lang="scss">
-// todo Stano -> copy paste from dam-admin [duplicate code]
-$class-name-root: 'dam-image-grid';
+// css similar to '.dam-image-grid' in admin-dam, for now renamed here to new class to avoid conflicts
+// consider refactor later according how much different both versions will be
+
+$class-name-root: 'asset-list-tiles';
 $bg-color-light: #f9f9f9;
 $bg-color-dark: #1e1e1e;
 $border-color-light: #e8e9ea;
@@ -105,33 +112,33 @@ $bg-color-actions-dark: #1a1a1a;
       }
     }
   }
-}
 
-.selected-triangle {
-  position: absolute;
-  top: 11px;
-  right: 11px;
-  z-index: 1;
-
-  &__bg {
-    content: '';
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 30px 30px 0;
-    border-color: transparent #608a32 transparent transparent;
-    top: 0;
-    right: 0;
+  .#{$class-name-root}__selected-triangle {
     position: absolute;
-  }
+    top: 11px;
+    right: 11px;
+    z-index: 1;
 
-  &__icon {
-    position: absolute;
-    display: block;
-    width: 16px;
-    height: 16px;
-    top: -3px;
-    right: 0;
+    &__bg {
+      content: '';
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 30px 30px 0;
+      border-color: transparent #608a32 transparent transparent;
+      top: 0;
+      right: 0;
+      position: absolute;
+    }
+
+    &__icon {
+      position: absolute;
+      display: block;
+      width: 16px;
+      height: 16px;
+      top: -3px;
+      right: 0;
+    }
   }
 }
 

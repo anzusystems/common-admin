@@ -14,6 +14,7 @@ import type { DocId } from '@/types/common'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
+pagination.rowsPerPage = 25
 const filterIsTouched = ref(false)
 
 export function useAssetListActions() {

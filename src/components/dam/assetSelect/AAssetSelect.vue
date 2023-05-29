@@ -3,7 +3,6 @@ import { computed, inject, ref } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { AssetType } from '@/types/coreDam/Asset'
-import { AssetType as AssetTypeValue } from '@/types/coreDam/Asset'
 import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
 import AssetListTableView from '@/components/dam/assetSelect/components/AssetListTableView.vue'
 import AssetListBar from '@/components/dam/assetSelect/components/AssetListBar.vue'
@@ -25,24 +24,25 @@ const props = withDefaults(
     assetType: AssetType
   }>(),
   {
-    minCount: 1,
-    maxCount: 1,
     assetLicenceId: undefined,
-    assetType: AssetTypeValue.Image,
   }
 )
-
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
   (e: 'onConfirm', data: DocId[]): void
   (e: 'onOpen'): void
   (e: 'onClose'): void
 }>()
+defineSlots<{
+  title?: (props: { activator: () => void }) => any
+  buttonOpenDialog?: any
+  buttonConfirmTitle?: any
+}>()
 
 const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedIds, initStoreContext } =
   useAssetListActions()
 
-const { sidebarLeft, leftCols, rightCols, openSidebar } = useSidebar()
+const { sidebarLeft, openSidebar } = useSidebar()
 
 const defaultLicenceId = inject<number | undefined>(DefaultLicenceIdSymbol, undefined)
 
@@ -114,47 +114,51 @@ const disabledSubmit = computed(() => {
   <VDialog
     :model-value="dialog"
     fullscreen
-    scrollable
+    class="asset-select"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <VCard>
-      <ADialogToolbar @on-cancel="onClose">
+    <VCard
+      v-if="dialog"
+      class="asset-select__card"
+    >
+      <ADialogToolbar
+        class="asset-select__toolbar system-border-b"
+        @on-cancel="onClose"
+      >
         <slot name="title">
           {{ t('common.assetSelect.meta.texts.title') }}
         </slot>
       </ADialogToolbar>
       <AssetListBar />
-      <VCardText>
-        <VRow>
-          <VCol
-            v-if="sidebarLeft"
-            :cols="leftCols"
-          >
-            <AssetFilter />
-          </VCol>
-          <VCol :cols="rightCols">
-            <component :is="componentComputed" />
-            <div class="pa-2 d-flex align-center justify-center">
-              <ABtnPrimary
-                v-if="dialog"
-                v-show="pagination.hasNextPage || loader"
-                v-intersect="autoloadOnIntersect"
-                :loading="loader"
-                @click="fetchNextPage"
-              >
-                <slot name="button-confirm-title">
-                  {{ t('common.assetSelect.meta.controls.loadMore') }}
-                </slot>
-              </ABtnPrimary>
-            </div>
-          </VCol>
-        </VRow>
-      </VCardText>
-      <VCardActions>
-        <span v-if="props.minCount === props.maxCount">
+      <div
+        class="asset-select__main"
+        :class="{ 'asset-select__main--sidebar-active': sidebarLeft }"
+      >
+        <div class="asset-select__sidebar system-border-r">
+          <AssetFilter />
+        </div>
+        <div class="asset-select__content">
+          <component :is="componentComputed" />
+          <div class="d-flex w-100 align-center justify-center pa-4">
+            <ABtnSecondary
+              v-show="pagination.hasNextPage || loader"
+              v-intersect="autoloadOnIntersect"
+              :loading="loader"
+              size="small"
+              @click="fetchNextPage"
+            >
+              <slot name="button-confirm-title">
+                {{ t('common.assetSelect.meta.controls.loadMore') }}
+              </slot>
+            </ABtnSecondary>
+          </div>
+        </div>
+      </div>
+      <div class="asset-select__actions system-border-t">
+        <div v-if="props.minCount === props.maxCount">
           {{ t('common.assetSelect.meta.texts.pickExactCount', { count: props.minCount, selected: selectedCount }) }}
-        </span>
-        <span v-else>
+        </div>
+        <div v-else>
           {{
             t('common.assetSelect.meta.texts.pickRangeCount', {
               minCount: props.minCount,
@@ -162,7 +166,7 @@ const disabledSubmit = computed(() => {
               selected: selectedCount,
             })
           }}
-        </span>
+        </div>
         <VSpacer />
         <ABtnPrimary
           :disabled="disabledSubmit"
@@ -172,7 +176,7 @@ const disabledSubmit = computed(() => {
             {{ t('common.assetSelect.meta.controls.confirm') }}
           </slot>
         </ABtnPrimary>
-      </VCardActions>
+      </div>
     </VCard>
   </VDialog>
 </template>
