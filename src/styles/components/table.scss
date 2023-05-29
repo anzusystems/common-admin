@@ -24,3 +24,45 @@
     }
   }
 }
+
+.a-table {
+  .a-table__row {
+    cursor: pointer;
+  }
+}
+
+.v-theme--light {
+  .a-table {
+    .a-table__row {
+      &--selected {
+        background-color: #d8e9e0;
+      }
+
+      &--active {
+        background-color: #dae6f5;
+      }
+    }
+
+    .v-table__wrapper > table tbody > tr:hover > td {
+      background-color: #eee;
+    }
+  }
+}
+
+.v-theme--dark {
+  .a-table {
+    .a-table__row {
+      &--selected {
+        background-color: #4d5e55;
+      }
+
+      &--active {
+        background-color: #dae6f5;
+      }
+    }
+
+    .v-table__wrapper > table tbody > tr:hover > td {
+      background-color: #505050;
+    }
+  }
+}

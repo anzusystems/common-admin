@@ -11,6 +11,7 @@ import permissionGroup from '@/locales/en/common/permissionGroup.json'
 import apiValidation from '@/locales/en/error/apiValidation.json'
 import jsValidation from '@/locales/en/error/jsValidation.json'
 import apiForbiddenOperation from '@/locales/en/error/apiForbiddenOperation.json'
+import assetSelect from '@/locales/en/common/assetSelect.json'
 
 export default {
   common: {
@@ -23,6 +24,7 @@ export default {
     log,
     permission,
     permissionGroup,
+    assetSelect,
   },
   $vuetify: vuetify,
   error: {

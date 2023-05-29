@@ -1,0 +1,42 @@
+{
+  "model": {
+    "id": "Id",
+    "texts": {
+      "displayTitle": "Titulok"
+    },
+    "mainFile": {
+      "fileAttributes": {
+        "mimeType": "Typ súboru",
+        "size": "Veľkosť"
+      }
+    }
+  },
+  "meta": {
+    "table": {
+      "image": "Náhľad"
+    },
+    "grid": {
+      "masonry": "Mansonry",
+      "thumbnail": "Náhľad",
+      "table": "Zoznam"
+    },
+    "filter": {
+      "toggle": "Filter"
+    },
+    "controls": {
+      "loadMore": "Načítaj ďalšie",
+      "confirm": "Zvoliť"
+    },
+    "texts": {
+      "title": "Vyberte asset",
+      "pickExactCount": "Vyberte položky: {count}. Zvolených {selected}." ,
+      "pickRangeCount": "Vyberte od {minCount} do {maxCount} selected. Zvolených {selected}."
+    }
+  },
+  "filter": {
+    "text": "Text",
+    "described": "Popísané",
+    "visible": "Viditeľné",
+    "generatedBySystem": "Generované systémom"
+  }
+}

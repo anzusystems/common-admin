@@ -67,6 +67,8 @@ import ALogoutView from '@/components/view/ALogoutView.vue'
 import AUnauthorizedView from '@/components/view/AUnauthorizedView.vue'
 import ANotFoundView from '@/components/view/ANotFoundView.vue'
 import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
+import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
+
 import { i18n } from '@/plugins/i18n'
 import {
   type Immutable,
@@ -314,6 +316,9 @@ export {
   ACurrentUserDropdown,
   AFormRemoteAutocompleteWithCached,
   AJobDetailCommon,
+
+  // Dam
+  AAssetSelect,
 
   // VIEWS
   ALoginView,
