@@ -12,7 +12,9 @@ const { toggleSidebar } = useSidebar()
   <VToolbar
     density="compact"
     color="transparent"
-    class="system-border-b"
+    :height="46"
+    elevation="0"
+    class="system-border-b asset-select__second-bar"
   >
     <slot name="second-bar">
       <div class="d-flex flex-column w-100 px-1 align-center">

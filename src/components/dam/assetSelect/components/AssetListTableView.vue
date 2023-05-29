@@ -1,16 +1,11 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { storeToRefs } from 'pinia'
-import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
 import AssetTableRowItem from '@/components/dam/assetSelect/components/AssetTableRowItem.vue'
 import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
 
 const { t } = useI18n()
 
-const assetListStore = useAssetListStore()
-const { list } = storeToRefs(assetListStore)
-
-const { onItemClick } = useAssetListActions()
+const { onItemClick, items, loader } = useAssetListActions()
 </script>
 
 <template>
@@ -40,12 +35,20 @@ const { onItemClick } = useAssetListActions()
     </thead>
     <tbody>
       <AssetTableRowItem
-        v-for="(item, index) in list"
+        v-for="(item, index) in items"
         :key="item.asset.id"
         :index="index"
         :item="item"
         @item-click="onItemClick"
       />
+      <tr v-if="!loader && items.length === 0">
+        <td
+          colspan="6"
+          class="text-center"
+        >
+          {{ t('common.assetSelect.meta.texts.noItemsFound') }}
+        </td>
+      </tr>
     </tbody>
   </v-table>
 </template>
