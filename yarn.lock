@@ -45,9 +45,9 @@ __metadata:
     vue: ^3.3.4
     vue-flatpickr-component: ^11.0.3
     vue-i18n: ^9.2.2
-    vue-router: ^4.2.1
+    vue-router: ^4.2.2
     vue-tsc: 1.6.5
-    vuetify: 3.3.1
+    vuetify: 3.3.2
     webfontloader: ^1.6.28
   peerDependencies:
     "@vuelidate/core": 2.0.2
@@ -5374,14 +5374,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-router@npm:^4.2.1":
-  version: 4.2.1
-  resolution: "vue-router@npm:4.2.1"
+"vue-router@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "vue-router@npm:4.2.2"
   dependencies:
     "@vue/devtools-api": ^6.5.0
   peerDependencies:
     vue: ^3.2.0
-  checksum: 99ac17d79d46127e51d9ab2cd4577f4740ff31190e1d6cc719cf58c231b066f6442a2acd22bc185c0255bc9ad6d4c9074c23b84e61bff7ae47001f583173024d
+  checksum: 4181b3776a57e51060490b7bcd82f48891d5023587e5ffb54cf47c1f6b03dd2d20f5392b99c9e659821fb7b3fee84da2dc532022dae92d8545e67fe96a168d64
   languageName: node
   linkType: hard
 
@@ -5423,9 +5423,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.3.1":
-  version: 3.3.1
-  resolution: "vuetify@npm:3.3.1"
+"vuetify@npm:3.3.2":
+  version: 3.3.2
+  resolution: "vuetify@npm:3.3.2"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ^1.0.0-alpha.12
@@ -5441,7 +5441,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 867a37763852fb5c9ba8857f012a10a883d833e7b60b848ae94a88a2eced76bb5c9fb519437978e16f612f92dbe041a065c725a34954be561386454e5bd264cf
+  checksum: 1931a49fe2569bd32e0fa191eafe982ec247f1b63fcb27b2655eb0b9af22c983c861cb4ae60be61ef037182e3f11e5cf829e277af4586f4ecc17770ecbfedb2c
   languageName: node
   linkType: hard
 
