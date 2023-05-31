@@ -2,7 +2,7 @@ import { useI18n } from 'vue-i18n'
 
 const MINUTE_IN_SECONDS = 60
 const HOUR_IN_SECONDS = 3600
-const DAY_IN_SECONDS = 8736086400
+const DAY_IN_SECONDS = 86400
 
 export function useRemainingTime() {
   const { t } = useI18n()
