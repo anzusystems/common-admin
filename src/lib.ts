@@ -248,6 +248,7 @@ import { useCommonJobFactory } from '@/model/factory/JobFactory'
 import type { UrlParams } from '@/services/api/apiHelper'
 import { generateUUIDv1 } from '@/utils/generator'
 import { useLoginStatus } from '@/composables/system/loginStatus'
+import { useRemainingTime } from '@/composables/datetime/remainingTime'
 
 export {
   // COMPONENTS
@@ -331,6 +332,7 @@ export {
   usePaginationAutoHide,
   useFilterHelpers,
   makeFilterHelper,
+  useRemainingTime,
   useAlerts,
   useErrors,
   createDatatableColumnsConfig,
