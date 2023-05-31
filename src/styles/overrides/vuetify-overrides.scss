@@ -68,6 +68,10 @@
   .v-dialog--fullscreen.overlay--sidebar .v-overlay__content {
     overflow: hidden !important;
   }
+
+  .v-label-opacity-disabled .v-label {
+    opacity: 1;
+  }
 }
 
 /* one or more available input mechanism(s) cannot hover or there are no pointing input mechanisms */

@@ -8,7 +8,7 @@ yarn install
 
 ## Build library
 
-Build dist files.
+Build lib files.
 
 ```shell
 yarn build
