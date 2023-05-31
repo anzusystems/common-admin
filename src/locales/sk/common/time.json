@@ -1,0 +1,14 @@
+{
+  "long": {
+    "remainingSeconds": "{value} sekúnd",
+    "remainingMinutes": "{value} minút",
+    "remainingHours": "{value} hodín",
+    "remainingDays": "{value} dní"
+  },
+  "short": {
+    "remainingSeconds": "{value} s",
+    "remainingMinutes": "{value} m",
+    "remainingHours": "{value} h",
+    "remainingDays": "{value} d"
+  }
+}

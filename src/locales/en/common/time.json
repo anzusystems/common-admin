@@ -1,0 +1,14 @@
+{
+  "long": {
+    "remainingSeconds": "{value} seconds",
+    "remainingMinutes": "{value} minutes",
+    "remainingHours": "{value} hours",
+    "remainingDays": "{value} days"
+  },
+  "short": {
+    "remainingSeconds": "{value} s",
+    "remainingMinutes": "{value} m",
+    "remainingHours": "{value} h",
+    "remainingDays": "{value} d"
+  }
+}
