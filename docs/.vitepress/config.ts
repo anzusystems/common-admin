@@ -1,11 +1,34 @@
 import { createRequire } from 'module'
 import { defineConfig } from 'vitepress'
+import { fileURLToPath, URL } from 'url'
+import { splitVendorChunkPlugin } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vuetify from 'vite-plugin-vuetify'
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
+import path, { dirname } from 'path'
 
+const _dirname = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
-const pkg = require('@anzusystems/common-admin/package.json')
+const pkg = require('../../package.json')
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  vite: {
+    plugins: [
+      vuetify({
+        autoImport: true,
+      }),
+      VueI18nPlugin({
+        globalSFCScope: true,
+        include: path.resolve(_dirname, '../../src/locales/**.json'),
+      }),
+    ],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('../../src', import.meta.url)),
+      },
+    }
+  },
   lang: 'en-US',
   lastUpdated: true,
   title: "CommonAdmin",
