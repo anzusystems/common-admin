@@ -96,6 +96,7 @@ function sidebarGuide() {
         { text: 'Basic info', link: '/styleguide/basic' },
         { text: 'Layout', link: '/styleguide/layout' },
         { text: 'Buttons', link: '/styleguide/buttons' },
+        { text: 'Chip', link: '/styleguide/chip' },
         { text: 'Form', link: '/styleguide/form' },
         { text: 'Dialog', link: '/styleguide/dialog' },
         { text: 'Views', link: '/styleguide/views' },

@@ -35,7 +35,7 @@ According rules above we have 4 types of buttons:
 #### Secondary button
 
 - most important and visible button
-- preffered only one in a block or row
+- preferred only one in a block or row
 
 <VBtn class="my-2" color="primary" variant="outlined">Secondary</VBtn>
 
