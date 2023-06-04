@@ -7,7 +7,6 @@ import AValueObjectOptionsSelect from '@/components/form/AFormValueObjectOptions
 import { computed, ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import { Grant, useGrant } from '@/model/valueObject/Grant'
-import ABooleanToggle from '@/components/form/AFormBooleanToggle.vue'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
 import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
@@ -78,12 +77,6 @@ const { grantOptions } = useGrant()
                   v-model="modelData.grant"
                   :items="grantOptions"
                   :v="v$.modelData.grant"
-                />
-              </ARow>
-              <ARow>
-                <ABooleanToggle
-                  v-model="modelData.isActive"
-                  required
                 />
               </ARow>
               <ARow>

@@ -1,8 +1,6 @@
 import { createRequire } from 'module'
 import { defineConfig } from 'vitepress'
 import { fileURLToPath, URL } from 'url'
-import { splitVendorChunkPlugin } from 'vite'
-import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import path, { dirname } from 'path'
@@ -14,6 +12,9 @@ const pkg = require('../../package.json')
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   vite: {
+    ssr: {
+      noExternal: [/.*/]
+    },
     plugins: [
       vuetify({
         autoImport: true,
@@ -95,11 +96,11 @@ function sidebarGuide() {
       items: [
         { text: 'Basic info', link: '/styleguide/basic' },
         { text: 'Layout', link: '/styleguide/layout' },
+        { text: 'Views', link: '/styleguide/views' },
+        { text: 'Dialog', link: '/styleguide/dialog' },
+        { text: 'Form', link: '/styleguide/form' },
         { text: 'Buttons', link: '/styleguide/buttons' },
         { text: 'Chip', link: '/styleguide/chip' },
-        { text: 'Form', link: '/styleguide/form' },
-        { text: 'Dialog', link: '/styleguide/dialog' },
-        { text: 'Views', link: '/styleguide/views' },
         { text: 'Other', link: '/styleguide/other' },
       ]
     },

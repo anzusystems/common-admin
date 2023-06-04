@@ -10,25 +10,27 @@ import { COMMON_CONFIG } from '../../src/model/commonConfig'
 
 - always use `label` version of chip (do not use rounded, rounded can be only buttons), example:
 <div class="mt-4"> 
-<AChipNoLink class="mr-2">draft</AChipNoLink>
-<AChipNoLink class="mr-2" color="success">published</AChipNoLink>
-<VChip
-  :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
-  label
-  size="small"
-  @click.stop=""
-  class="mr-2"
->
-  internal link
-</VChip>
-<VChip
-  :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
-  label
-  size="small"
-  @click.stop=""
->
-  external link
-</VChip>
+<ClientOnly>
+  <AChipNoLink class="mr-2">draft</AChipNoLink>
+  <AChipNoLink class="mr-2" color="success">published</AChipNoLink>
+  <VChip
+    :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
+    label
+    size="small"
+    @click.stop=""
+    class="mr-2"
+  >
+    internal link
+  </VChip>
+  <VChip
+    :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
+    label
+    size="small"
+    @click.stop=""
+  >
+    external link
+  </VChip>
+</ClientOnly>
 </div>
 
 ## Non-linkable
@@ -37,8 +39,10 @@ import { COMMON_CONFIG } from '../../src/model/commonConfig'
 - if they are not colored, they are lighter colored as linkable version
 - they don't contain icons (except special cases, but still can't use icons used in linkable version)
 
-<AChipNoLink class="mr-2">draft</AChipNoLink>
-<AChipNoLink class="mr-2" color="success">published</AChipNoLink>
+<ClientOnly>
+  <AChipNoLink class="mr-2">draft</AChipNoLink>
+  <AChipNoLink class="mr-2" color="success">published</AChipNoLink>
+</ClientOnly>
 
 ```html
 <AChipNoLink class="mr-2">
@@ -53,15 +57,17 @@ import { COMMON_CONFIG } from '../../src/model/commonConfig'
 - mostly used by `ACachedChip` component
 - link to entity detail inside of admin (same tab), must append `mdi-arrow-top-right` icon inside
 
-<VChip
-  :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
-  label
-  size="small"
-  @click.stop=""
-  class="mr-2"
->
-internal link
-</VChip>
+<ClientOnly>
+  <VChip
+    :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
+    label
+    size="small"
+    @click.stop=""
+    class="mr-2"
+  >
+  internal link
+  </VChip>
+</ClientOnly>
 
 ```html
 <VChip
@@ -76,14 +82,16 @@ internal link
 ```
 - link to external link or entity of admin (new tab), must append `mdi-open-in-new` icon inside
 
-<VChip
-  :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
-  label
-  size="small"
-  @click.stop=""
->
-  external link
-</VChip>
+<ClientOnly>
+  <VChip
+    :append-icon="COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL"
+    label
+    size="small"
+    @click.stop=""
+  >
+    external link
+  </VChip>
+</ClientOnly>
 
 ```html
 <VChip
@@ -102,59 +110,61 @@ internal link
 - example:
 
 <div class="d-flex align-center">
-  <VChip
-    :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
-    label
-    size="small"
-    @click.stop=""
-    class="mr-2"
-  >
-    User name
-  </VChip>
-  <div class="d-inline-flex mr-2">
+  <ClientOnly>
     <VChip
-      class="pl-1"
-      size="small"
       :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
-      @click.stop=""
-    >
-      <VProgressCircular
-        :size="12"
-        :width="2"
-        indeterminate
-        class="ml-1"
-      />
-    </VChip>
-  </div>
-  <div class="d-inline-flex">
-    <VChip
-      class="pl-1"
+      label
       size="small"
-      :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
       @click.stop=""
+      class="mr-2"
     >
-      <template #prepend>
-        <AAnzuUserAvatar
-          :user="
-          {
-            id: 1,
-            person: {
-              firstName: '',
-              lastName: '',
-              fullName: ''
-            },
-            avatar: {
-              color: '',
-              text: 'UN'
-            },
-            email: ''
-          }
-          "
-          container-class="mr-1"
-          :size="20"
-        />
-      </template>
       User name
     </VChip>
-  </div>
+    <div class="d-inline-flex mr-2">
+      <VChip
+        class="pl-1"
+        size="small"
+        :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
+        @click.stop=""
+      >
+        <VProgressCircular
+          :size="12"
+          :width="2"
+          indeterminate
+          class="ml-1"
+        />
+      </VChip>
+    </div>
+    <div class="d-inline-flex">
+      <VChip
+        class="pl-1"
+        size="small"
+        :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
+        @click.stop=""
+      >
+        <template #prepend>
+          <AAnzuUserAvatar
+            :user="
+            {
+              id: 1,
+              person: {
+                firstName: '',
+                lastName: '',
+                fullName: ''
+              },
+              avatar: {
+                color: '',
+                text: 'UN'
+              },
+              email: ''
+            }
+            "
+            container-class="mr-1"
+            :size="20"
+          />
+        </template>
+        User name
+      </VChip>
+    </div>
+  </ClientOnly>
 </div>

@@ -6,8 +6,6 @@ import { isUndefined } from '@/utils/common'
 
 export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']
 
-const { t } = i18n.global || i18n
-
 export type DatatableSortBy =
   | {
       key: string
@@ -47,8 +45,11 @@ export function createDatatableColumnsConfig(
   system: string | undefined = undefined,
   subject: string | undefined = undefined,
   disableActions: boolean = false,
-  customPagination: Pagination | undefined = undefined
+  customPagination: Pagination | undefined = undefined,
+  customI18n: undefined | any = undefined
 ) {
+  const localI18n = customI18n ?? i18n
+  const { t } = localI18n.global || localI18n
   const pagination: Pagination = usePagination()
   if (customPagination) {
     for (const prop of Object.keys(pagination)) {

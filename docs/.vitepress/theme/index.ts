@@ -5,9 +5,11 @@ import './style.css'
 import { createVuetify } from 'vuetify'
 import { VDataTableServer } from 'vuetify/labs/VDataTable'
 import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n'
-import { i18nDocs as i18n } from '@/plugins/i18n'
+// @ts-ignore
+import { i18n } from '@/plugins/i18nDocs'
 import { useI18n } from 'vue-i18n'
 import { Intersect } from 'vuetify/directives'
+// @ts-ignore
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
@@ -36,6 +38,7 @@ export default {
       // https://vitepress.dev/guide/extending-default-theme#layout-slots
     })
   },
+  // @ts-ignore
   enhanceApp({ app, router, siteData }) {
     // ...
     app.use(i18n)

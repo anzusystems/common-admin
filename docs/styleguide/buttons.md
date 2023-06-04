@@ -26,7 +26,9 @@ According rules above we have 4 types of buttons:
 - most important and visible button
 - only one in a block or row
 
-<VBtn class="my-2" color="primary" variant="flat">Primary</VBtn>
+<ClientOnly>
+  <VBtn class="my-2" color="primary" variant="flat">Primary</VBtn>
+</ClientOnly>
 
 ```html
 <ABtnPrimary>Primary</ABtnPrimary>
@@ -37,7 +39,9 @@ According rules above we have 4 types of buttons:
 - most important and visible button
 - preferred only one in a block or row
 
-<VBtn class="my-2" color="primary" variant="outlined">Secondary</VBtn>
+<ClientOnly>
+  <VBtn class="my-2" color="primary" variant="outlined">Secondary</VBtn>
+</ClientOnly>
 
 ```html
 <ABtnSecondary>Secondary</ABtnSecondary>
@@ -47,7 +51,9 @@ According rules above we have 4 types of buttons:
 
 - you can use multiple of these buttons in block or row
 
-<VBtn class="my-2" color="primary" variant="text">Tertiary</VBtn>
+<ClientOnly>
+  <VBtn class="my-2" color="primary" variant="text">Tertiary</VBtn>
+</ClientOnly>
 
 ```html
 <ABtnTertiary>Tertiary</ABtnTertiary>
@@ -57,15 +63,17 @@ According rules above we have 4 types of buttons:
 
 - all buttons with icon must have tooltips
 
-<VBtn class="my-2" variant="text" icon="mdi-cog">
-  <VIcon icon="mdi-home" />
-  <VTooltip
-    activator="parent"
-    location="top"
-  >
-    Tooltip text
-  </VTooltip>
-</VBtn>
+<ClientOnly>
+  <VBtn class="my-2" variant="text" icon="mdi-cog">
+    <VIcon icon="mdi-home" />
+    <VTooltip
+      activator="parent"
+      location="top"
+    >
+      Tooltip text
+    </VTooltip>
+  </VBtn>
+</ClientOnly>
 
 ```html
 <ABtnIcon>
@@ -87,11 +95,13 @@ If you are not sure what type of button to use, consult it with product owner, U
 
 - we can use any button size supported by vuetify, but mostly we use `default` and `small`
 
-<VBtn class="my-2 mr-2" color="primary" variant="flat" size="x-large">x-large</VBtn>
-<VBtn class="my-2 mr-2" color="primary" variant="flat" size="large">large</VBtn>
-<VBtn class="my-2 mr-2" color="primary" variant="flat" size="default">default</VBtn>
-<VBtn class="my-2 mr-2" color="primary" variant="flat" size="small">small</VBtn>
-<VBtn class="my-2" color="primary" variant="flat" size="x-small">x-small</VBtn>
+<ClientOnly>
+  <VBtn class="my-2 mr-2" color="primary" variant="flat" size="x-large">x-large</VBtn>
+  <VBtn class="my-2 mr-2" color="primary" variant="flat" size="large">large</VBtn>
+  <VBtn class="my-2 mr-2" color="primary" variant="flat" size="default">default</VBtn>
+  <VBtn class="my-2 mr-2" color="primary" variant="flat" size="small">small</VBtn>
+  <VBtn class="my-2" color="primary" variant="flat" size="x-small">x-small</VBtn>
+</ClientOnly>
 
 ```html
 <ABtnPrimary size="x-large">x-large</ABtnPrimary>
@@ -111,8 +121,10 @@ If you are not sure what type of button to use, consult it with product owner, U
 - max numbers in toolbar should be 4, if exceeded consult using split button or different approach with product owner
 - example:
 
-<AActionSaveButton class="my-2 mr-2" />
-<AActionCloseButton class="my-2" />
+<ClientOnly>
+  <AActionSaveButton class="my-2 mr-2" />
+  <AActionCloseButton class="my-2" />
+</ClientOnly>
 
 ```html
 <ABtnIcon>
@@ -135,22 +147,24 @@ If you are not sure what type of button to use, consult it with product owner, U
 - example:
 
 
-<ABtnSplit rounded="pill">
-  <template #button-content>Save</template>
-  <VListItem>save and close</VListItem>
-</ABtnSplit>
-<ABtnSplit>
-  <template #button-content>Save</template>
-  <VListItem>save and close</VListItem>
-</ABtnSplit>
-<ABtnSplit variant="secondary">
-  <template #button-content>Save</template>
-  <VListItem>save and close</VListItem>
-</ABtnSplit>
-<ABtnSplit variant="tertiary">
-  <template #button-content>Save</template>
-  <VListItem>save and close</VListItem>
-</ABtnSplit>
+<ClientOnly>
+  <ABtnSplit rounded="pill">
+    <template #button-content>Save</template>
+    <VListItem>save and close</VListItem>
+  </ABtnSplit>
+  <ABtnSplit>
+    <template #button-content>Save</template>
+    <VListItem>save and close</VListItem>
+  </ABtnSplit>
+  <ABtnSplit variant="secondary">
+    <template #button-content>Save</template>
+    <VListItem>save and close</VListItem>
+  </ABtnSplit>
+  <ABtnSplit variant="tertiary">
+    <template #button-content>Save</template>
+    <VListItem>save and close</VListItem>
+  </ABtnSplit>
+</ClientOnly>
 
 ```html
 <ABtnSplit rounded="pill" buttonT="t('common.button.save')">

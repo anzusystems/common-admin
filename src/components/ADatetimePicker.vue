@@ -1,8 +1,6 @@
 <script lang="ts" setup>
-import { computed, ref, unref, watch } from 'vue'
+import { computed, onMounted, ref, unref, watch } from 'vue'
 import FlatPickr from 'vue-flatpickr-component'
-// @ts-ignore
-import ShortcutButtonsPlugin from 'shortcut-buttons-flatpickr'
 import FlatpickrLanguages from 'flatpickr/dist/l10n'
 import 'flatpickr/dist/flatpickr.css'
 import { dateNow, dateToUtc } from '@/utils/datetime'
@@ -65,6 +63,9 @@ const emit = defineEmits<{
   (e: 'onClose'): void
 }>()
 
+const shortcutButtonsPlugin = ref<any>(undefined)
+const pluginsImported = ref(false)
+
 const flatickrRefIsInitialized = (
   ref: FlatpickrRef
 ): ref is { fp: flatpickr.Instance; fpInput: () => { value: string; focus: () => void } } => {
@@ -119,10 +120,6 @@ const onFlatpickrChange = () => {
   textFieldValue.value = flatickrRef.value.fpInput().value
 }
 
-const test = () => {
-  console.log('test')
-}
-
 const onTextFieldBlur = () => {
   if (!flatickrRefIsInitialized(flatickrRef.value)) return
   const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '')
@@ -172,11 +169,11 @@ const defaultValueComputed = computed(() => {
 })
 
 const pluginsComputed = computed(() => {
-  if (props.hideSetToNow) {
+  if (props.hideSetToNow || isUndefined(shortcutButtonsPlugin.value)) {
     return []
   }
   return [
-    ShortcutButtonsPlugin({
+    shortcutButtonsPlugin.value({
       button: [
         {
           label: t('common.button.now'),
@@ -274,6 +271,14 @@ watch(
   },
   { immediate: true }
 )
+
+onMounted(() => {
+  // @ts-ignore
+  import('shortcut-buttons-flatpickr').then((module) => {
+    shortcutButtonsPlugin.value = module.default
+    pluginsImported.value = true
+  })
+})
 </script>
 
 <template>
@@ -296,6 +301,7 @@ watch(
       />
       <div>
         <FlatPickr
+          v-if="pluginsImported"
           ref="flatickrRef"
           :config="flatpickrConfig"
           :disabled="disabled"
@@ -304,7 +310,6 @@ watch(
           @on-close="onFlatpickrClose"
           @on-open="onFlatpickrOpen"
           @on-change="onFlatpickrChange"
-          @on-init="test"
         />
         <VIcon
           class="a-datetime-picker__calendar"

@@ -5,7 +5,6 @@ import ACard from '@/components/ACard.vue'
 import ACardLoader from '@/components/ACardLoader.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
-import AFormBooleanToggle from '@/components/form/AFormBooleanToggle.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import ADatatablePagination from '@/components/ADatatablePagination.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
@@ -269,7 +268,6 @@ export {
   AFormRemoteCheckbox,
   AFormRemoteSwitch,
   AFormValueObjectOptionsSelect,
-  AFormBooleanToggle,
   AFilterWrapper,
   AFilterString,
   AFilterInteger,
