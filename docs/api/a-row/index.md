@@ -20,15 +20,16 @@ import Demo1 from './Demo1.vue'
 </VRow>
 ```
 
-## Demo
+## Examples
 <ClientOnly>
   <Demo1 />
 </ClientOnly>
 
 <<< @/api/a-row/Demo1.vue
 
-## Props
-<<< @/../src/components/ARowProps.ts
+## Types
+#### Props
+<<< @/../src/components/ARow.vue#docs-props{ts}
 
-## Slots
+#### Slots
 - default

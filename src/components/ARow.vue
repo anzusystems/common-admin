@@ -1,8 +1,12 @@
 <script lang="ts" setup>
-import type { ARowProps } from '@/components/ARowProps'
-
+// #region docs-props
 withDefaults(
-  defineProps<ARowProps>(),
+  defineProps<{
+    title?: string
+    value?: string | number | undefined | null
+    dataCy?: string | undefined
+    titleClass?: string | undefined
+  }>(),
   {
     title: '',
     value: '',
@@ -10,6 +14,7 @@ withDefaults(
     titleClass: 'text-subtitle-2',
   }
 )
+// #endregion docs-props
 </script>
 
 <template>
