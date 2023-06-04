@@ -4,6 +4,8 @@ import { fileURLToPath, URL } from 'url'
 import vuetify from 'vite-plugin-vuetify'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import path, { dirname } from 'path'
+// @ts-ignore
+import { getApiSidebarItems } from './apiSidebar'
 
 const _dirname = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
@@ -45,7 +47,7 @@ export default defineConfig({
     sidebar: {
       '/guide/': sidebarGuide(),
       '/styleguide/': sidebarGuide(),
-      '/api/': sidebarApi()
+      '/api/': getApiSidebarItems()
     },
 
     socialLinks: [
@@ -63,7 +65,7 @@ function nav() {
     { text: 'Guide', link: '/guide/what-is-common-admin', activeMatch: '/guide/' },
     {
       text: 'API',
-      link: '/api/list',
+      link: '/api/',
       activeMatch: '/api/'
     },
     {
@@ -104,76 +106,5 @@ function sidebarGuide() {
         { text: 'Other', link: '/styleguide/other' },
       ]
     },
-  ]
-}
-
-function sidebarApi() {
-  return [
-    {
-      text: 'Api',
-      items: [
-        { text: 'Site Config', link: '/reference/site-config' },
-        { text: 'Frontmatter Config', link: '/reference/frontmatter-config' },
-        { text: 'Runtime API', link: '/reference/runtime-api' },
-        { text: 'CLI', link: '/reference/cli' },
-        {
-          text: 'Default Theme',
-          items: [
-            {
-              text: 'Overview',
-              link: '/reference/default-theme-config'
-            },
-            {
-              text: 'Nav',
-              link: '/reference/default-theme-nav'
-            },
-            {
-              text: 'Sidebar',
-              link: '/reference/default-theme-sidebar'
-            },
-            {
-              text: 'Home Page',
-              link: '/reference/default-theme-home-page'
-            },
-            {
-              text: 'Footer',
-              link: '/reference/default-theme-footer'
-            },
-            {
-              text: 'Layout',
-              link: '/reference/default-theme-layout'
-            },
-            {
-              text: 'Badge',
-              link: '/reference/default-theme-badge'
-            },
-            {
-              text: 'Team Page',
-              link: '/reference/default-theme-team-page'
-            },
-            {
-              text: 'Prev / Next Links',
-              link: '/reference/default-theme-prev-next-links'
-            },
-            {
-              text: 'Edit Link',
-              link: '/reference/default-theme-edit-link'
-            },
-            {
-              text: 'Last Updated Timestamp',
-              link: '/reference/default-theme-last-updated'
-            },
-            {
-              text: 'Search',
-              link: '/reference/default-theme-search'
-            },
-            {
-              text: 'Carbon Ads',
-              link: '/reference/default-theme-carbon-ads'
-            }
-          ]
-        }
-      ]
-    }
   ]
 }

@@ -1,11 +1,8 @@
 <script lang="ts" setup>
+import type { ARowProps } from '@/components/ARowProps'
+
 withDefaults(
-  defineProps<{
-    title?: string
-    value?: string | number | undefined | null
-    dataCy?: string | undefined
-    titleClass?: string | undefined
-  }>(),
+  defineProps<ARowProps>(),
   {
     title: '',
     value: '',
