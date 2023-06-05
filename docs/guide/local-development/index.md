@@ -30,11 +30,11 @@ You can run development playground using command:
 ::: code-group
 
 ```sh [yarn]
-$ yarn dev
+$ yarn playground:dev
 ```
 
 ```sh [npm]
-$ npm dev
+$ npm playground:dev
 ```
 
 :::
@@ -46,11 +46,11 @@ Only features exported in `src/lib.ts` are included in final library build.
 ::: code-group
 
 ```sh [yarn]
-$ yarn build
+$ yarn lib:build
 ```
 
 ```sh [npm]
-$ npm build
+$ npm lib:build
 ```
 
 :::
@@ -99,6 +99,22 @@ $ yarn docs:dev
 
 ```sh [npm]
 $ npm docs:dev
+```
+
+:::
+
+::: warning
+There are differences for `dev` watch mode and real `build` of docs. Always at the end of development/update of docs, if they are really able to build:
+:::
+
+::: code-group
+
+```sh [yarn]
+$ yarn docs:build
+```
+
+```sh [npm]
+$ npm docs:build
 ```
 
 :::
