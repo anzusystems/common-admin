@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { useTestListFilter } from '@/views/components/testFilter'
+import { useTestListFilter } from '@/views/filterView/testFilter'
 import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import AFilterInteger from '@/components/filter/AFilterInteger.vue'
 import AFilterString from '@/components/filter/AFilterString.vue'

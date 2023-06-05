@@ -11,6 +11,7 @@ import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
 import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
 import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
+import ActionbarWrapper from '@/views/system/ActionbarWrapper.vue'
 
 const modelData = ref({
   shortText: 'text1',
@@ -47,6 +48,8 @@ const { grantOptions } = useGrant()
 </script>
 
 <template>
+  <ActionbarWrapper />
+
   <VCard>
     <VCardTitle>Forms</VCardTitle>
     <VCardText>

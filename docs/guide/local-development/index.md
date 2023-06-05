@@ -21,9 +21,10 @@ $ npm install
 
 ## Local development
 
-You can use `src/views` as a playground to develop and test your feature. You can also use `docs` to import and test your feature.
+#### Local playground
+You can use `src/views` as a playground to develop and test your features. Put playground code in a separate folder with all code. Do not use other folder structure for playground (except pinia and router).
 
-There is a pinia and vue router available too. This is just a playground and will eb not included inside final build.
+There is a pinia and vue router available for you to use too. This is just a playground and will be not included inside final build.
 
 You can run development playground using command:
 ::: code-group
@@ -37,6 +38,8 @@ $ npm dev
 ```
 
 :::
+
+#### Library build
 
 Only features exported in `src/lib.ts` are included in final library build.
 

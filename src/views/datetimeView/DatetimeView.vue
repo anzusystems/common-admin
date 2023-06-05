@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import { dateTimeNow } from '@/utils/datetime'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
+import ActionbarWrapper from '@/views/system/ActionbarWrapper.vue'
 
 const dateTime = ref<DatetimeUTCNullable>('2023-02-08T08:17:29.000000Z')
 const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)
@@ -16,6 +17,8 @@ const changeToNow = () => {
 </script>
 
 <template>
+  <ActionbarWrapper />
+
   <VCard>
     <VCardTitle>ADatetime component to display formatted datetime</VCardTitle>
     <VCardText>

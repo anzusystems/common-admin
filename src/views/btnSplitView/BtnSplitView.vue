@@ -1,8 +1,11 @@
 <script lang="ts" setup>
 import ABtnSplit from '@/components/buttons/ABtnSplit.vue'
+import ActionbarWrapper from '@/views/system/ActionbarWrapper.vue'
 </script>
 
 <template>
+  <ActionbarWrapper />
+
   <VCard>
     <VCardTitle>Buttons</VCardTitle>
     <VCardSubtitle>ABtnSplit</VCardSubtitle>

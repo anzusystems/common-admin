@@ -1,5 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue'
+import HomepageView from '@/views/HomepageView.vue'
+import SettingsView from '@/views/SettingsView.vue'
+import BooleanValueView from '@/views/booleanValueView/BooleanValueView.vue'
+import PermissionView from '@/views/permissionView/PermissionView.vue'
+import DatetimeView from '@/views/datetimeView/DatetimeView.vue'
+import FormsView from '@/views/formsView/FormsView.vue'
+import FilterView from '@/views/filterView/FilterView.vue'
+import BtnSplitView from '@/views/btnSplitView/BtnSplitView.vue'
+import AssetSelectView from '@/views/assetSelectView/AssetSelectView.vue'
+import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/views/system/loadLanguageMessages'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,49 +16,54 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: HomepageView,
     },
     {
-      path: '/component/row',
-      name: 'component-row',
-      component: () => import('@/views/components/RowView.vue'),
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView,
     },
     {
-      path: '/component/boolean-value',
-      name: 'component-boolean-value',
-      component: () => import('@/views/components/BooleanValueView.vue'),
+      path: '/view/boolean-value',
+      name: 'view-boolean-value',
+      component: BooleanValueView,
     },
     {
-      path: '/component/permission',
-      name: 'component-permission',
-      component: () => import('@/views/components/PermissionView.vue'),
+      path: '/view/permission',
+      name: 'view-permission',
+      component: PermissionView,
     },
     {
-      path: '/component/datetime',
-      name: 'component-datetime',
-      component: () => import('@/views/components/DatetimeView.vue'),
+      path: '/view/datetime',
+      name: 'view-datetime',
+      component: DatetimeView,
     },
     {
-      path: '/component/forms',
-      name: 'component-forms',
-      component: () => import('@/views/components/FormsView.vue'),
+      path: '/view/forms',
+      name: 'view-forms',
+      component: FormsView,
     },
     {
-      path: '/component/filters',
-      name: 'component-filters',
-      component: () => import('@/views/components/FilterView.vue'),
+      path: '/view/filters',
+      name: 'view-filters',
+      component: FilterView,
     },
     {
-      path: '/component/buttons',
-      name: 'component-buttons',
-      component: () => import('@/views/components/BtnView.vue'),
+      path: '/view/split-buttons',
+      name: 'view-split-buttons',
+      component: BtnSplitView,
     },
     {
-      path: '/component/asset-select',
-      name: 'component-asset-select',
-      component: () => import('@/views/components/AssetSelectView.vue'),
+      path: '/view/asset-select',
+      name: 'view-asset-select',
+      component: AssetSelectView,
     },
   ],
+})
+
+router.beforeEach(async (to, from, next) => {
+  if (!initLanguageMessagesLoaded.value) await initLoadLanguageMessages()
+  next()
 })
 
 export default router

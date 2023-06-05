@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import TestFilter from '@/views/components/TestFilter.vue'
+import TestFilter from '@/views/filterView/TestFilter.vue'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
-import { useTestListFilter } from '@/views/components/testFilter'
+import { useTestListFilter } from '@/views/filterView/testFilter'
 import { usePagination } from '@/composables/system/pagination'
+import ActionbarWrapper from '@/views/system/ActionbarWrapper.vue'
 
 const { resetFilter, submitFilter } = useFilterHelpers()
 const pagination = usePagination()
@@ -15,6 +16,8 @@ const getList = () => {
 </script>
 
 <template>
+  <ActionbarWrapper />
+
   <VCard>
     <VCardTitle>Filters</VCardTitle>
     <VCardText>

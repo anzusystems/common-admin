@@ -6,11 +6,14 @@ import PermissionGrantEditor from '@/components/permission/APermissionGrantEdito
 import { useAcl } from '@/composables/system/ability'
 import type { CustomAclValue } from '@/playground'
 import ARow from '@/components/ARow.vue'
+import ActionbarWrapper from '@/views/system/ActionbarWrapper.vue'
 
 const { can } = useAcl<CustomAclValue>()
 </script>
 
 <template>
+  <ActionbarWrapper />
+
   <VCard>
     <VCardTitle>PermissionValueChip</VCardTitle>
     <VCardSubtitle> :grant-origin="GrantOrigin.User" :grant="Grant.Allow"</VCardSubtitle>
