@@ -1,4 +1,4 @@
-# Usage in project
+# Installation
 
 Usage of stable version of common-admin
 
@@ -59,7 +59,7 @@ loadEnvConfig(() => {
 })
 ```
 
-When you need to use `i18n` or you use components with localized texts, you need to also setup [i18n](./i18n#for-developer)
+When you need to use `i18n` or you use components with localized texts, you need to also setup [i18n](../i18n/#for-developer)
 
 ## Component usage example
 
@@ -74,4 +74,4 @@ import { AThemeSelect } from '@anzusystems/common-admin'
 <template>
 ```
 
-Check documentation for list of all components and features.
+Check [documentation](../../api/) for list of all components and features.

@@ -38,6 +38,9 @@ export default defineConfig({
   description: "Components for anzusystems vue projects",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
+    search: {
+      provider: 'local'
+    },
     nav: nav(),
     // nav: [
     //   { text: 'Home', link: '/' },
@@ -62,7 +65,7 @@ export default defineConfig({
 
 function nav() {
   return [
-    { text: 'Guide', link: '/guide/what-is-common-admin/', activeMatch: '/guide/' },
+    { text: 'Guide', link: '/guide/introduction/', activeMatch: '/guide/' },
     {
       text: 'API',
       link: '/api/',
@@ -83,12 +86,12 @@ function nav() {
 function sidebarGuide() {
   return [
     {
-      text: 'Introduction',
+      text: 'Guide',
       collapsed: false,
       items: [
-        { text: 'What is CommonAdmin?', link: '/guide/what-is-common-admin/' },
-        { text: 'Usage in project', link: '/guide/usage-in-project/' },
-        { text: 'i18n', link: '/guide/i18n/' },
+        { text: 'Introduction', link: '/guide/introduction/' },
+        { text: 'Installation', link: '/guide/installation/' },
+        { text: 'Localization', link: '/guide/i18n/' },
         { text: 'Local development', link: '/guide/local-development/' },
       ]
     },
@@ -97,12 +100,12 @@ function sidebarGuide() {
       collapsed: false,
       items: [
         { text: 'Basic info', link: '/styleguide/basic/' },
-        { text: 'Layout', link: '/styleguide/layout/' },
+        { text: 'Layouts', link: '/styleguide/layouts/' },
         { text: 'Views', link: '/styleguide/views/' },
-        { text: 'Dialog', link: '/styleguide/dialog/' },
-        { text: 'Form', link: '/styleguide/form/' },
+        { text: 'Dialogs', link: '/styleguide/dialogs/' },
+        { text: 'Forms', link: '/styleguide/forms/' },
         { text: 'Buttons', link: '/styleguide/buttons/' },
-        { text: 'Chip', link: '/styleguide/chip/' },
+        { text: 'Chips', link: '/styleguide/chips/' },
         { text: 'Other', link: '/styleguide/other/' },
       ]
     },

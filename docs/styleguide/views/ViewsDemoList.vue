@@ -3,7 +3,7 @@ import { useDemoListActions, useDemoListFilter } from './viewsDemoData'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { createDatatableColumnsConfig, DatatableOrderingOption } from '@/composables/system/datatableColumns'
 import { onMounted } from 'vue'
-import ViewsFilterDemo from './ViewsFilterDemo.vue'
+import ViewsDemoFilter from './ViewsDemoFilter.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ADatatablePagination from '@/components/ADatatablePagination.vue'
@@ -53,7 +53,7 @@ onMounted(() => {
 
 <template>
   <div>
-    <ViewsFilterDemo
+    <ViewsDemoFilter
       @submit-filter="submitFilter(filter, pagination, getList)"
       @reset-filter="resetFilter(filter, pagination, getList)"
     />

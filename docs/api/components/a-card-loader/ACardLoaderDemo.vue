@@ -4,7 +4,7 @@ import ACardLoader from '@/components/ACardLoader.vue'
 
 <template>
   <VCard
-    loading="primary"
+    loading
   >
     <ACardLoader loading />
     <VCardTitle>Lorem</VCardTitle>

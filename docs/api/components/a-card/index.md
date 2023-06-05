@@ -1,5 +1,5 @@
 <script setup>
-import Demo1 from './ACardDemo.vue'
+import ACardDemo from './ACardDemo.vue'
 </script>
 
 # ACard
@@ -8,9 +8,9 @@ import Demo1 from './ACardDemo.vue'
 - there is only one difference: it uses `ACardLoader` component to create layer to prevent to click on any element inside, when `loading` prop is active
 
 ## Examples
-<ClientOnly>
+<DocsExample>
   <ACardDemo />
-</ClientOnly>
+</DocsExample>
 
 <<< @/api/components/a-card/ACardDemo.vue
 

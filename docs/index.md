@@ -7,11 +7,11 @@ titleTemplate: Common library for anzusystems projects
 
 hero:
   name: CommonAdmin
-  tagline: Common library for anzusystems vuejs and vuetify projects
+  tagline: Common library for anzusystems admin projects
   actions:
     - theme: brand
       text: Get Started
-      link: /guide/what-is-common-admin/
+      link: /guide/introduction/
     - theme: alt
       text: View on GitHub
       link: https://github.com/anzusystems/common-admin

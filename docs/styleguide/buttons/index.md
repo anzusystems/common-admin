@@ -1,11 +1,11 @@
 <script setup>
-import { VBtn } from 'vuetify/components/VBtn';
-import { VIcon } from 'vuetify/components/VIcon';
-import { VListItem } from 'vuetify/components/VList';
-import { VTooltip } from 'vuetify/components/VTooltip'; 
-import AActionCloseButton from "../../../src/components/buttons/action/AActionCloseButton.vue";
-import AActionSaveButton from "../../../src/components/buttons/action/AActionSaveButton.vue";
-import ABtnSplit from "../../../src/components/buttons/ABtnSplit.vue";
+import ButtonsDemoPrimary from "./ButtonsDemoPrimary.vue";
+import ButtonsDemoSecondary from "./ButtonsDemoSecondary.vue";
+import ButtonsDemoTertiary from "./ButtonsDemoTertiary.vue";
+import ButtonsDemoIcon from "./ButtonsDemoIcon.vue";
+import ButtonsDemoSizes from "./ButtonsDemoSizes.vue";
+import ButtonsDemoActions from "./ButtonsDemoActions.vue";
+import ButtonsDemoSplit from "./ButtonsDemoSplit.vue";
 </script>
 
 # Buttons
@@ -26,9 +26,9 @@ According rules above we have 4 types of buttons:
 - most important and visible button
 - only one in a block or row
 
-<ClientOnly>
-  <VBtn class="my-2" color="primary" variant="flat">Primary</VBtn>
-</ClientOnly>
+<DocsExample>
+  <ButtonsDemoPrimary />
+</DocsExample>
 
 ```html
 <ABtnPrimary>Primary</ABtnPrimary>
@@ -39,9 +39,9 @@ According rules above we have 4 types of buttons:
 - most important and visible button
 - preferred only one in a block or row
 
-<ClientOnly>
-  <VBtn class="my-2" color="primary" variant="outlined">Secondary</VBtn>
-</ClientOnly>
+<DocsExample>
+  <ButtonsDemoSecondary />
+</DocsExample>
 
 ```html
 <ABtnSecondary>Secondary</ABtnSecondary>
@@ -51,9 +51,9 @@ According rules above we have 4 types of buttons:
 
 - you can use multiple of these buttons in block or row
 
-<ClientOnly>
-  <VBtn class="my-2" color="primary" variant="text">Tertiary</VBtn>
-</ClientOnly>
+<DocsExample>
+  <ButtonsDemoTertiary />
+</DocsExample>
 
 ```html
 <ABtnTertiary>Tertiary</ABtnTertiary>
@@ -63,17 +63,9 @@ According rules above we have 4 types of buttons:
 
 - all buttons with icon must have tooltips
 
-<ClientOnly>
-  <VBtn class="my-2" variant="text" icon="mdi-cog">
-    <VIcon icon="mdi-home" />
-    <VTooltip
-      activator="parent"
-      location="top"
-    >
-      Tooltip text
-    </VTooltip>
-  </VBtn>
-</ClientOnly>
+<DocsExample>
+  <ButtonsDemoIcon />
+</DocsExample>
 
 ```html
 <ABtnIcon>
@@ -95,13 +87,9 @@ If you are not sure what type of button to use, consult it with product owner, U
 
 - we can use any button size supported by vuetify, but mostly we use `default` and `small`
 
-<ClientOnly>
-  <VBtn class="my-2 mr-2" color="primary" variant="flat" size="x-large">x-large</VBtn>
-  <VBtn class="my-2 mr-2" color="primary" variant="flat" size="large">large</VBtn>
-  <VBtn class="my-2 mr-2" color="primary" variant="flat" size="default">default</VBtn>
-  <VBtn class="my-2 mr-2" color="primary" variant="flat" size="small">small</VBtn>
-  <VBtn class="my-2" color="primary" variant="flat" size="x-small">x-small</VBtn>
-</ClientOnly>
+<DocsExample>
+  <ButtonsDemoSizes />
+</DocsExample>
 
 ```html
 <ABtnPrimary size="x-large">x-large</ABtnPrimary>
@@ -121,21 +109,15 @@ If you are not sure what type of button to use, consult it with product owner, U
 - max numbers in toolbar should be 4, if exceeded consult using split button or different approach with product owner
 - example:
 
-<ClientOnly>
-  <AActionSaveButton class="my-2 mr-2" />
-  <AActionCloseButton class="my-2" />
-</ClientOnly>
+<DocsExample>
+  <ButtonsDemoActions />
+</DocsExample>
 
 ```html
-<ABtnIcon>
-  <VIcon icon="mdi-home" />
-  <VTooltip
-    activator="parent"
-    location="top"
-  >
-    Tooltip text
-  </VTooltip>
-</ABtnIcon>
+<AActionSaveButton />
+<AActionEditButton variant="secondary" />
+<ABtnTertiary rounded>Other</ABtnTertiary>
+<AActionCloseButton />
 ```
 
 ## Split button
@@ -147,24 +129,9 @@ If you are not sure what type of button to use, consult it with product owner, U
 - example:
 
 
-<ClientOnly>
-  <ABtnSplit rounded="pill">
-    <template #button-content>Save</template>
-    <VListItem>save and close</VListItem>
-  </ABtnSplit>
-  <ABtnSplit>
-    <template #button-content>Save</template>
-    <VListItem>save and close</VListItem>
-  </ABtnSplit>
-  <ABtnSplit variant="secondary">
-    <template #button-content>Save</template>
-    <VListItem>save and close</VListItem>
-  </ABtnSplit>
-  <ABtnSplit variant="tertiary">
-    <template #button-content>Save</template>
-    <VListItem>save and close</VListItem>
-  </ABtnSplit>
-</ClientOnly>
+<DocsExample>
+  <ButtonsDemoSplit />
+</DocsExample>
 
 ```html
 <ABtnSplit rounded="pill" buttonT="t('common.button.save')">

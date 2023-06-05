@@ -14,6 +14,8 @@ import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
 import '../../../src/styles/main.scss'
+// @ts-ignore
+import DocsExample from '../DocsExample.vue'
 
 
 const { commonTheme, commonAliases, commonDefaults } = useCommonVuetifyConfig()
@@ -43,5 +45,6 @@ export default {
     // ...
     app.use(i18n)
     app.use(vuetify)
+    app.component('DocsExample', DocsExample)
   }
 }

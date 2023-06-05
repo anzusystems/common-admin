@@ -9,9 +9,9 @@ import ACardLoaderDemo from './ACardLoaderDemo.vue'
 - you can also use it in combination with `VCard` if needed
 
 ## Examples
-<ClientOnly>
+<DocsExample>
   <ACardLoaderDemo />
-</ClientOnly>
+</DocsExample>
 
 <<< @/api/components/a-card-loader/ACardLoaderDemo.vue
 

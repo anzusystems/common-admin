@@ -44,4 +44,4 @@
 
 ## Content
 
-See [views](./views.md)
+See [views](../views/)

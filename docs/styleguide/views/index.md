@@ -1,5 +1,5 @@
 <script setup>
-import ViewsListDemo from "./ViewsListDemo.vue";
+import ViewsListDemo from "./ViewsDemoList.vue";
 </script>
 
 # Views
@@ -31,13 +31,13 @@ import ViewsListDemo from "./ViewsListDemo.vue";
   - copy id button - copy entity id to clipboard
   - detail button - redirect to entity detail
   - edit button - redirect to entity edit
+- note: some styling below can be broken for now - because of mix of vitepress + vuetify styles
 
-Example:
-
-<ClientOnly>
+::: raw
+<DocsExample>
   <ViewsListDemo />
-</ClientOnly>
-
+</DocsExample>
+:::
 
 ## Detail
 - displays readonly data about entity

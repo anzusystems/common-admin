@@ -192,6 +192,7 @@ __metadata:
     npm-run-all: ^4.1.5
     pinia: ^2.1.3
     postcss-html: ^1.5.0
+    postcss-prefix-selector: ^1.16.0
     prettier: ^2.8.8
     sass: ^1.62.1
     shortcut-buttons-flatpickr: ^0.4.0
@@ -4834,6 +4835,15 @@ __metadata:
   version: 0.2.3
   resolution: "postcss-media-query-parser@npm:0.2.3"
   checksum: 8000d4d95b912994928ff86137f5ab0ed4c4ee1498af2336e93d708ae8827a690cd7acbaed55d14684cf44d82c8d44b031c1c69ae6bcd2f9620ea67573888090
+  languageName: node
+  linkType: hard
+
+"postcss-prefix-selector@npm:^1.16.0":
+  version: 1.16.0
+  resolution: "postcss-prefix-selector@npm:1.16.0"
+  peerDependencies:
+    postcss: ">4 <9"
+  checksum: 8bdf10628ec8b1679a4dbb9cd736a4742c5d9b8a878c35cebaad43d67e50a18ffeb34d15860374f18a89fe4c43f818f3386bdb3321f92bb35eec9ef640a46a76
   languageName: node
   linkType: hard
 

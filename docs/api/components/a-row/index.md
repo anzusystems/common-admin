@@ -7,7 +7,7 @@ import ARowDemo from './ARowDemo.vue'
 - mostly used to print data in detail view
 - it's shorthand to this code:
 
-```html
+```vue
 <VRow>
   <VCol>
     <h4 class="text-subtitle-2">
@@ -21,9 +21,9 @@ import ARowDemo from './ARowDemo.vue'
 ```
 
 ## Examples
-<ClientOnly>
+<DocsExample>
   <ARowDemo />
-</ClientOnly>
+</DocsExample>
 
 <<< @/api/components/a-row/ARowDemo.vue
 

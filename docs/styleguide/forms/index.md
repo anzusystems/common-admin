@@ -1,5 +1,5 @@
 <script setup>
-import { VSwitch } from 'vuetify/components/VSwitch';
+import FormsDemoBoolean from './FormsDemoBoolean.vue';
 </script>
 
 # Form
@@ -9,9 +9,13 @@ import { VSwitch } from 'vuetify/components/VSwitch';
 
 - to set boolean value, where value us mandatory, just use vuetify component `VSwitch`:
 
-<ClientOnly>
-  <VSwitch></VSwitch>
-</ClientOnly>
+<DocsExample>
+  <FormsDemoBoolean />
+</DocsExample>
+
+```html
+<VSwitch label="Visible" />
+```
 
 - to set optional boolean value (true/false/null), use dropdown:
 TODO: create a new component ABooleanSwitch and update docs
