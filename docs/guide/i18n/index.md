@@ -7,7 +7,75 @@
 ## For developer
 - i18n instance is created and exported by common-admin
 - language translations are lazy loaded on app load or on language switch
+
+::: details Example - loading translation texts by using vue-router on first load
+```ts
+import { type LanguageCode, modifyLanguageSettings } from '@anzusystems/common-admin'
+import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from '@/main'
+import { ref } from 'vue'
+
+export const initLanguageMessagesLoaded = ref(false)
+
+export const initLoadLanguageMessages = async () => {
+  const loadMessages = async (code: LanguageCode | 'default') => {
+    if (code === 'default' || code === 'xx') return true
+    try {
+      const messages = await import(`./locales/${code}.ts`)
+      addMessages(code, messages.default)
+      initLanguageMessagesLoaded.value = true
+      return true
+    } catch (e) {
+      console.error('Unable to load language translation messages.', e)
+      return false
+    }
+  }
+  const { initializeLanguage, addMessages, currentLanguageCode } = modifyLanguageSettings(
+    AVAILABLE_LANGUAGES,
+    DEFAULT_LANGUAGE
+  )
+  initializeLanguage()
+  await loadMessages(currentLanguageCode.value)
+}
+```
+```ts
+vueRouter.beforeEach(async (to, from, next) => {
+  if (!initLanguageMessagesLoaded.value) await initLoadLanguageMessages()
+})
+```
+:::
+
+::: details Example - switching language
+```ts
+import {
+  AvailableLanguagesSymbol,
+  DefaultLanguageSymbol,
+  type LanguageCode,
+  modifyLanguageSettings,
+} from '@anzusystems/common-admin'
+import { inject } from 'vue'
+
+const configAvailableLanguages = inject<LanguageCode[]>(AvailableLanguagesSymbol, [])
+const configDefaultLanguage = inject<LanguageCode>(DefaultLanguageSymbol, 'sk')
+const { addMessages } = modifyLanguageSettings(configAvailableLanguages, configDefaultLanguage)
+
+const loadLanguageMessages = async (code: LanguageCode | 'default') => {
+  if (code === 'default' || code === 'xx') return
+  try {
+    const messages = await import(`./locales/${code}.ts`)
+    addMessages(code, messages.default)
+  } catch (e) {
+    console.error('Unable to load language translation messages.')
+  }
+}
+
+const afterLanguageChange = async (language: LanguageCode) => {
+  await loadLanguageMessages(language)
+}
+```
+:::
+
 - common admin must contain translation for all languages used in admins
+- language `xx` is used as system language for development purposes to display translation keys for admin user
 - translations are merged to this object:
 
 ```ts

@@ -38,8 +38,11 @@ function getDirectories(startingPath: string, relativeToPath: string): Directory
 }
 
 export const getApiSidebarItems = () => {
-  const startingPath = path.join(process.cwd(), '/docs/api')
-  const relativeToPath = path.join(process.cwd(), '/docs/')
-
-  return getDirectories(startingPath, relativeToPath)
+  return [
+    {
+      text: 'Components',
+      collapsed: false,
+      items: getDirectories(path.join(process.cwd(), '/docs/api/components'), path.join(process.cwd(), '/docs/')),
+    },
+  ]
 }

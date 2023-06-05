@@ -1,9 +1,9 @@
 <script setup>
-import AChipNoLink from "../../src/components/AChipNoLink.vue";
-import AAnzuUserAvatar from "../../src/components/AAnzuUserAvatar.vue";
+import AChipNoLink from "../../../src/components/AChipNoLink.vue";
+import AAnzuUserAvatar from "../../../src/components/AAnzuUserAvatar.vue";
 import { VChip } from 'vuetify/components/VChip';
 import { VProgressCircular } from 'vuetify/components/VProgressCircular';
-import { COMMON_CONFIG } from '../../src/model/commonConfig'
+import { COMMON_CONFIG } from '../../../src/model/commonConfig'
 </script>
 
 # Chip

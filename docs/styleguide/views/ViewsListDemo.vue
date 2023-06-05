@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { useDemoListActions, useDemoListFilter } from './views-data'
+import { useDemoListActions, useDemoListFilter } from './viewsDemoData'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { createDatatableColumnsConfig, DatatableOrderingOption } from '@/composables/system/datatableColumns'
 import { onMounted } from 'vue'
-import ViewsFilterDemo from './views-filter-demo.vue'
+import ViewsFilterDemo from './ViewsFilterDemo.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ADatatablePagination from '@/components/ADatatablePagination.vue'

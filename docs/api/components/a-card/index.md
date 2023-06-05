@@ -1,5 +1,5 @@
 <script setup>
-import Demo1 from './Demo1.vue'
+import Demo1 from './ACardDemo.vue'
 </script>
 
 # ACard
@@ -9,10 +9,10 @@ import Demo1 from './Demo1.vue'
 
 ## Examples
 <ClientOnly>
-  <Demo1 />
+  <ACardDemo />
 </ClientOnly>
 
-<<< @/api/a-card/Demo1.vue
+<<< @/api/components/a-card/ACardDemo.vue
 
 ## Types
 #### Props

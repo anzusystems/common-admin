@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { useDemoListFilter, useLogSystem, useLogType } from './views-data'
-import { useLogLevel } from '../../src/model/valueObject/LogLevel'
+import { useDemoListFilter, useLogSystem, useLogType } from './viewsDemoData'
+import { useLogLevel } from '../../../src/model/valueObject/LogLevel'
 import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterInteger from '@/components/filter/AFilterInteger.vue'

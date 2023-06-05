@@ -1,5 +1,5 @@
 <script setup>
-import ADialogToolbar from "../../src/components/ADialogToolbar.vue";
+import ADialogToolbar from "../../../src/components/ADialogToolbar.vue";
 import { VBtn } from 'vuetify/components/VBtn';
 import { VDialog } from 'vuetify/components/VDialog';
 import { VSpacer } from 'vuetify/components/VGrid';

@@ -1,5 +1,5 @@
 <script setup>
-import Demo1 from './Demo1.vue'
+import ARowDemo from './ARowDemo.vue'
 </script>
 
 # ARow
@@ -22,10 +22,10 @@ import Demo1 from './Demo1.vue'
 
 ## Examples
 <ClientOnly>
-  <Demo1 />
+  <ARowDemo />
 </ClientOnly>
 
-<<< @/api/a-row/Demo1.vue
+<<< @/api/components/a-row/ARowDemo.vue
 
 ## Types
 #### Props

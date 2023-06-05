@@ -62,7 +62,7 @@ export default defineConfig({
 
 function nav() {
   return [
-    { text: 'Guide', link: '/guide/what-is-common-admin', activeMatch: '/guide/' },
+    { text: 'Guide', link: '/guide/what-is-common-admin/', activeMatch: '/guide/' },
     {
       text: 'API',
       link: '/api/',
@@ -86,24 +86,24 @@ function sidebarGuide() {
       text: 'Introduction',
       collapsed: false,
       items: [
-        { text: 'What is CommonAdmin?', link: '/guide/what-is-common-admin' },
-        { text: 'Usage in project', link: '/guide/usage-in-project' },
-        { text: 'Local development', link: '/guide/local-development' },
-        { text: 'i18n', link: '/guide/i18n' },
+        { text: 'What is CommonAdmin?', link: '/guide/what-is-common-admin/' },
+        { text: 'Usage in project', link: '/guide/usage-in-project/' },
+        { text: 'i18n', link: '/guide/i18n/' },
+        { text: 'Local development', link: '/guide/local-development/' },
       ]
     },
     {
       text: 'Styleguide',
       collapsed: false,
       items: [
-        { text: 'Basic info', link: '/styleguide/basic' },
-        { text: 'Layout', link: '/styleguide/layout' },
-        { text: 'Views', link: '/styleguide/views' },
-        { text: 'Dialog', link: '/styleguide/dialog' },
-        { text: 'Form', link: '/styleguide/form' },
-        { text: 'Buttons', link: '/styleguide/buttons' },
-        { text: 'Chip', link: '/styleguide/chip' },
-        { text: 'Other', link: '/styleguide/other' },
+        { text: 'Basic info', link: '/styleguide/basic/' },
+        { text: 'Layout', link: '/styleguide/layout/' },
+        { text: 'Views', link: '/styleguide/views/' },
+        { text: 'Dialog', link: '/styleguide/dialog/' },
+        { text: 'Form', link: '/styleguide/form/' },
+        { text: 'Buttons', link: '/styleguide/buttons/' },
+        { text: 'Chip', link: '/styleguide/chip/' },
+        { text: 'Other', link: '/styleguide/other/' },
       ]
     },
   ]

@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /guide/what-is-common-admin
+      link: /guide/what-is-common-admin/
     - theme: alt
       text: View on GitHub
       link: https://github.com/anzusystems/common-admin

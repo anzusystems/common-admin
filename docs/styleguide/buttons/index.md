@@ -3,9 +3,9 @@ import { VBtn } from 'vuetify/components/VBtn';
 import { VIcon } from 'vuetify/components/VIcon';
 import { VListItem } from 'vuetify/components/VList';
 import { VTooltip } from 'vuetify/components/VTooltip'; 
-import AActionCloseButton from "../../src/components/buttons/action/AActionCloseButton.vue";
-import AActionSaveButton from "../../src/components/buttons/action/AActionSaveButton.vue";
-import ABtnSplit from "../../src/components/buttons/ABtnSplit.vue";
+import AActionCloseButton from "../../../src/components/buttons/action/AActionCloseButton.vue";
+import AActionSaveButton from "../../../src/components/buttons/action/AActionSaveButton.vue";
+import ABtnSplit from "../../../src/components/buttons/ABtnSplit.vue";
 </script>
 
 # Buttons

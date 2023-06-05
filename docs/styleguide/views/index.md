@@ -1,5 +1,5 @@
 <script setup>
-import ListDemo from "./views-list-demo.vue";
+import ViewsListDemo from "./ViewsListDemo.vue";
 </script>
 
 # Views
@@ -35,7 +35,7 @@ import ListDemo from "./views-list-demo.vue";
 Example:
 
 <ClientOnly>
-  <ListDemo />
+  <ViewsListDemo />
 </ClientOnly>
 
 

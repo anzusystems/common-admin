@@ -3,7 +3,7 @@ import ARow from '@/components/ARow.vue'
 </script>
 
 <template>
-  <ARow>
+  <ARow title="My title">
     Lorem ipsum
   </ARow>
 </template>

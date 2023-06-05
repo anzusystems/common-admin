@@ -33,7 +33,7 @@ import {
 } from '@anzusystems/common-admin'
 import { useCurrentUser } from '@/composables/system/currentUser'
 import type { AclValue } from '@/types/Permission'
-import '@anzusystems/common-admin/styles'
+import '@anzusystems/common-admin/styles' 
 
 export const DEFAULT_LANGUAGE: LanguageCode = 'sk'
 export const AVAILABLE_LANGUAGES: Array<LanguageCode> = ['en', 'sk']
@@ -47,17 +47,19 @@ loadEnvConfig(() => {
     .use(i18n)
     .use(vuetify)
     .use(router)
-    .use<PluginOptions<AclValue>>(AnzuSystemsCommonAdmin, { // [!code  hl]
-      currentUser, // [!code  hl]
-      languages: { // [!code  hl]
-        available: AVAILABLE_LANGUAGES, // [!code  hl]
-        default: DEFAULT_LANGUAGE, // [!code  hl]
-      }, // [!code  hl]
-    }) // [!code  hl]
+    .use<PluginOptions<AclValue>>(AnzuSystemsCommonAdmin, { // [!code hl]
+      currentUser, // [!code hl]
+      languages: { // [!code hl]
+        available: AVAILABLE_LANGUAGES, // [!code hl]
+        default: DEFAULT_LANGUAGE, // [!code hl]
+      }, // [!code hl]
+    }) /// [!code hl]
     // additional plugin config
   app.mount('#app')
 })
 ```
+
+When you need to use `i18n` or you use components with localized texts, you need to also setup [i18n](./i18n#for-developer)
 
 ## Component usage example
 
