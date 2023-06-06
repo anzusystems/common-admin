@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { type RouteParams, type RouteRecordName, RouteRecordNormalized, useRoute } from 'vue-router'
+import { type RouteParams, type RouteRecordName, type RouteRecordNormalized, useRoute } from 'vue-router'
 import { useActionbar } from '@/views/system/actionbar'
 import { isString } from '@/utils/common'
 

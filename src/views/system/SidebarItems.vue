@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { RouteRecordNormalized, useRouter } from 'vue-router'
+import { type RouteRecordNormalized, useRouter } from 'vue-router'
 import { computed } from 'vue'
 import { isString } from '@/utils/common'
 
@@ -8,12 +8,12 @@ const router = useRouter()
 const allRoutes = router.getRoutes()
 
 const generateTitle = (item: RouteRecordNormalized) => {
-  if (item.meta.title) return item.meta.title
+  if (item.meta.title) return item.meta.title as string
   if (isString(item.name)) {
     const word = item.name.split('-').slice(1).join(' ')
-    return word.charAt(0).toUpperCase() + word.slice(1)
+    return (word.charAt(0).toUpperCase() + word.slice(1)) as string
   }
-  return item.name
+  return ''
 }
 
 const items = computed(() => {
