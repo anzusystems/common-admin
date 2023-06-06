@@ -11,7 +11,7 @@ yarn install
 Build lib files.
 
 ```shell
-yarn build
+yarn lib:build
 ```
 
 ## Publish library
