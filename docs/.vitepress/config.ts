@@ -13,7 +13,6 @@ const pkg = require('../../package.json')
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  base: '/common-admin/',
   vite: {
     ssr: {
       noExternal: [/.*/]
