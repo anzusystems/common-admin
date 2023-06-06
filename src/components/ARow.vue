@@ -11,7 +11,7 @@ withDefaults(
     title: '',
     value: '',
     dataCy: undefined,
-    titleClass: 'text-subtitle-2',
+    titleClass: 'font-weight-bold text-subtitle-2',
   }
 )
 // #endregion docs-props
@@ -22,7 +22,7 @@ withDefaults(
     <VCol>
       <h4
         v-if="title.length"
-        class="text-subtitle-2"
+        :class="titleClass"
       >
         {{ title }}
       </h4>
