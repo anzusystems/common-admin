@@ -1,106 +1,87 @@
 <script setup lang="ts">
-import { VApp } from 'vuetify/components'
-import { inject, onMounted, ref } from 'vue'
+import { ref } from 'vue'
+import { useDisplay } from 'vuetify'
+import { useTheme } from '@/composables/themeSettings'
+import SidebarMain from '@/views/system/SidebarMain.vue'
+import SidebarRail from '@/views/system/SidebarRail.vue'
+import SidebarAppendMain from '@/views/system/SidebarAppendMain.vue'
+import SidebarAppendRail from '@/views/system/SidebarAppendRail.vue'
+import AAlerts from '@/components/AAlerts.vue'
+import ActionbarTeleportTarget from '@/views/system/ActionbarTeleportTarget.vue'
 import { useRoute } from 'vue-router'
-import { type LanguageCode, modifyLanguageSettings } from '@/composables/languageSettings'
-import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/AnzuSystemsCommonAdmin'
-import ALanguageSelect from '@/components/ALanguageSelect.vue'
 
-const opened = ref([])
-const drawer = ref<boolean>(true)
+const route = useRoute()
+
+const { mobile } = useDisplay()
+
+const drawer = ref(true)
+const rail = ref(false)
 
 const navIconClick = () => {
-  drawer.value = !drawer.value
-}
-
-const configAvailableLanguages = inject<LanguageCode[]>(AvailableLanguagesSymbol, [])
-const configDefaultLanguage = inject<LanguageCode>(DefaultLanguageSymbol, 'en')
-const route = useRoute()
-const { initializeLanguage, addMessages, currentLanguageCode } = modifyLanguageSettings(
-  configAvailableLanguages,
-  configDefaultLanguage
-)
-
-const loadLanguageMessages = async (code: LanguageCode | 'default') => {
-  if (code === 'default' || code === 'xx') return
-  try {
-    const messages = await import(`./locales/${code}.ts`)
-    addMessages(code, messages.default)
-  } catch (e) {
-    console.error('Unable to load language translation messages.')
+  if (mobile.value) {
+    rail.value = false
+    drawer.value = !drawer.value
+    return
   }
+  drawer.value = true
+  rail.value = !rail.value
 }
 
-const afterLanguageChange = async (language: LanguageCode) => {
-  await loadLanguageMessages(language)
-}
-
-onMounted(async () => {
-  initializeLanguage()
-  await loadLanguageMessages(currentLanguageCode.value)
-})
+const { theme } = useTheme()
 </script>
 
 <template>
-  <VApp>
-    <VNavigationDrawer v-model="drawer">
-      <VList>
-        <VListItem
-          title="Admin common"
-          subtitle="Anzu"
-          class="text-h6"
+  <AAlerts />
+  <VApp :theme="theme">
+    <VNavigationDrawer
+      v-model="drawer"
+      :rail="rail"
+    >
+      <SidebarMain v-show="!rail" />
+      <SidebarRail
+        v-show="rail"
+        v-if="!mobile"
+      />
+      <template #append>
+        <VDivider />
+        <SidebarAppendMain :class="{ 'd-flex': !rail, 'd-none': rail }" />
+        <SidebarAppendRail
+          v-if="!mobile"
+          :class="{ 'd-flex': rail, 'd-none': !rail }"
         />
-      </VList>
-      <VList
-        v-model:opened="opened"
-        density="compact"
-        nav
-      >
-        <VListItem
-          :to="{ name: 'component-row' }"
-          title="ARow"
-        />
-        <VListItem
-          :to="{ name: 'component-boolean-value' }"
-          title="ABooleanValue"
-        />
-        <VListItem
-          :to="{ name: 'component-permission' }"
-          title="Permission"
-        />
-        <VListItem
-          :to="{ name: 'component-datetime' }"
-          title="Datetime"
-        />
-        <VListItem
-          :to="{ name: 'component-forms' }"
-          title="Forms"
-        />
-        <VListItem
-          :to="{ name: 'component-filters' }"
-          title="Filters"
-        />
-        <VListItem
-          :to="{ name: 'component-buttons' }"
-          title="Buttons"
-        />
-        <VListItem
-          :to="{ name: 'component-asset-select' }"
-          title="Asset"
-        />
-      </VList>
+      </template>
     </VNavigationDrawer>
-    <VAppBar density="compact">
-      <div class="d-flex justify-space-between w-100 align-center">
-        <div>
-          <VAppBarNavIcon @click.stop="navIconClick" />
+    <VAppBar
+      density="compact"
+      elevation="0"
+      class="system-border-b"
+      :order="-1"
+    >
+      <div class="d-flex pr-2 w-100 justify-space-between full-width align-center">
+        <div class="d-flex align-center">
+          <VAppBarNavIcon
+            data-cy="navbar-collapse"
+            size="small"
+            class="mx-1"
+            @click.stop="navIconClick"
+          />
         </div>
-        <ALanguageSelect @after-change="afterLanguageChange" />
+        <div class="main-logo mr-sm-2">
+          <RouterLink
+            :to="{ name: 'home' }"
+            class="text-decoration-none"
+          >
+            <div>LOGO</div>
+          </RouterLink>
+        </div>
+        <KeepAlive>
+          <ActionbarTeleportTarget />
+        </KeepAlive>
       </div>
     </VAppBar>
     <VMain>
       <VContainer
-        class="pa-3"
+        class="pa-2"
         fluid
       >
         <RouterView :key="route.path" />

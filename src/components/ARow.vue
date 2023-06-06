@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+// #region docs-props
 withDefaults(
   defineProps<{
     title?: string
@@ -13,6 +14,7 @@ withDefaults(
     titleClass: 'text-subtitle-2',
   }
 )
+// #endregion docs-props
 </script>
 
 <template>

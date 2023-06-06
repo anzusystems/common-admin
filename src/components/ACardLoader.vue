@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+// #region docs-props
 withDefaults(
   defineProps<{
     loading?: boolean
@@ -7,6 +8,7 @@ withDefaults(
     loading: undefined,
   }
 )
+// #endregion docs-props
 </script>
 
 <template>

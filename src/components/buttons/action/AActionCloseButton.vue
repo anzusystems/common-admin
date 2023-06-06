@@ -5,7 +5,7 @@ import { isUndefined } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
-    routeName: string
+    routeName?: string
     routeParams?: any | undefined
     buttonT?: string
     buttonClass?: string
@@ -13,6 +13,7 @@ const props = withDefaults(
     size?: number
   }>(),
   {
+    routeName: undefined,
     routeParams: undefined,
     buttonT: 'common.button.close',
     buttonClass: 'ml-2',
@@ -24,6 +25,9 @@ const props = withDefaults(
 const { t } = useI18n()
 
 const routerToComputed = computed(() => {
+  if (isUndefined(props.routeName)) {
+    return undefined
+  }
   if (!isUndefined(props.routeParams)) {
     return { name: props.routeName, params: { ...props.routeParams } }
   }
