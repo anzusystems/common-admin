@@ -1,0 +1,13 @@
+/*
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Content-Type-Options: nosniff
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  X-XSS-Protection: 1; mode=block
+
+/*.ico
+  ! Cache-Control
+  Cache-Control: public, max-age=86400, s-maxage=86400
+
+/assets/*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400, s-maxage=86400
