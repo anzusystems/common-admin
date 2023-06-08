@@ -172,7 +172,7 @@ __metadata:
     "@intlify/unplugin-vue-i18n": ^0.11.0
     "@kyvg/vue3-notification": ^2.9.1
     "@mdi/font": ^7.2.96
-    "@rushstack/eslint-patch": ^1.3.0
+    "@rushstack/eslint-patch": ^1.3.1
     "@types/node": ^18.16.16
     "@types/webfontloader": ^1.6.35
     "@typescript-eslint/parser": ^5.59.9
@@ -194,7 +194,7 @@ __metadata:
     postcss-html: ^1.5.0
     postcss-prefix-selector: ^1.16.0
     prettier: ^2.8.8
-    sass: ^1.62.1
+    sass: ^1.63.2
     shortcut-buttons-flatpickr: ^0.4.0
     stylelint: ^15.7.0
     stylelint-config-recommended-vue: ^1.4.0
@@ -210,7 +210,7 @@ __metadata:
     vue-i18n: ^9.2.2
     vue-router: ^4.2.2
     vue-tsc: 1.6.5
-    vuetify: 3.3.2
+    vuetify: 3.3.3
     webfontloader: ^1.6.28
   peerDependencies:
     "@vuelidate/core": 2.0.2
@@ -218,13 +218,13 @@ __metadata:
     "@vueuse/core": 10.1.2
     "@vueuse/integrations": 10.1.2
     axios: 1.4.0
-    dayjs: 1.11.7
+    dayjs: 1.11.8
     flatpickr: 4.6.13
     pinia: ^2.1.3
     vue: 3.3.4
     vue-i18n: 9.2.2
     vue-router: 4.2.2
-    vuetify: 3.3.2
+    vuetify: 3.3.3
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -884,10 +884,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rushstack/eslint-patch@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@rushstack/eslint-patch@npm:1.3.0"
-  checksum: 2860b4adeebbab9a13bff68a2737ecf660fe199a3d2eca45b0359132ff92052467622ac4b22837958bc3ad611714d5f2b662db98ffdc5db34df604b4d502d347
+"@rushstack/eslint-patch@npm:^1.3.1":
+  version: 1.3.1
+  resolution: "@rushstack/eslint-patch@npm:1.3.1"
+  checksum: 951023fffbfa71696eab8d7e6676f3bea0b8efc954e06c4ab10cacd94d1323744ad94c2ed8e81b0c9390df4a8cefbed1faacd2bf56e4c26f2b41852719273e24
   languageName: node
   linkType: hard
 
@@ -5267,16 +5267,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.62.1":
-  version: 1.62.1
-  resolution: "sass@npm:1.62.1"
+"sass@npm:^1.63.2":
+  version: 1.63.2
+  resolution: "sass@npm:1.63.2"
   dependencies:
     chokidar: ">=3.0.0 <4.0.0"
     immutable: ^4.0.0
     source-map-js: ">=0.6.2 <2.0.0"
   bin:
     sass: sass.js
-  checksum: 1b1b3584b38a63dd94156b65f13b90e3f84b170a38c3d5e3fa578b7a32a37aeb349b4926b0eaf9448d48e955e86b1ee01b13993f19611dad8068af07a607c13b
+  checksum: 7ffc2b789aeae4637f09195f7d24e149fc590e2c69cb209c64fdf0ed0d7f09da28097c48fda7f36d257aeb7dd8e16a9ff77b50cf78830afe6f996e6dcd957280
   languageName: node
   linkType: hard
 
@@ -6394,9 +6394,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.3.2":
-  version: 3.3.2
-  resolution: "vuetify@npm:3.3.2"
+"vuetify@npm:3.3.3":
+  version: 3.3.3
+  resolution: "vuetify@npm:3.3.3"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ^1.0.0-alpha.12
@@ -6412,7 +6412,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 1931a49fe2569bd32e0fa191eafe982ec247f1b63fcb27b2655eb0b9af22c983c861cb4ae60be61ef037182e3f11e5cf829e277af4586f4ecc17770ecbfedb2c
+  checksum: 76c1db6f00270f9917996fd502e8b5660c8772bf62ac80f0ba4270afe9149ca53bd49628b40a50524e1a0edf67198884c5b61b046013a525d911b80d8f782e63
   languageName: node
   linkType: hard
 

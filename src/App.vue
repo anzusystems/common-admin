@@ -9,6 +9,8 @@ import SidebarAppendRail from '@/views/system/SidebarAppendRail.vue'
 import AAlerts from '@/components/AAlerts.vue'
 import ActionbarTeleportTarget from '@/views/system/ActionbarTeleportTarget.vue'
 import { useRoute } from 'vue-router'
+import logoFull from '@/assets/logo-ca-full.svg'
+import logoNoText from '@/assets/logo-ca-no-text.svg'
 
 const route = useRoute()
 
@@ -71,7 +73,20 @@ const { theme } = useTheme()
             :to="{ name: 'home' }"
             class="text-decoration-none"
           >
-            <div>LOGO</div>
+            <img
+              width="104"
+              height="42"
+              :src="logoFull"
+              alt="Admin"
+              class="hidden-xs"
+            >
+            <img
+              width="42"
+              height="42"
+              :src="logoNoText"
+              alt="Inhouse"
+              class="hidden-sm-and-up"
+            >
           </RouterLink>
         </div>
         <KeepAlive>
@@ -89,3 +104,12 @@ const { theme } = useTheme()
     </VMain>
   </VApp>
 </template>
+
+<style lang="scss">
+.main-logo img {
+  height: 38px;
+  display: block;
+  width: auto;
+}
+</style>
+
