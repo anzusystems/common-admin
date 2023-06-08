@@ -19,7 +19,6 @@ const generateTitle = (item: RouteRecordNormalized) => {
 
 const breadcrumbs = computed(() => {
   const final: any[] = []
-  console.log(route.matched)
   route.matched.forEach((value) => {
     if (value.path.length === 0) return
     const to: { path: string; name: string | undefined | RouteRecordName; params: RouteParams | undefined } = {
