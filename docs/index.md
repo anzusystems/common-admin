@@ -19,12 +19,12 @@ hero:
 features:
   - icon: ⚙️
     title: Components
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+    details: Reusable custom or components based on vuetify components.
   - icon: 💡
     title: Composables
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+    details: A lot of composables that can save your time.
   - icon: 🔧
     title: Utils
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+    details: Several utils functions for better readability of code and saving couple of code characters.
 ---
 
