@@ -20,6 +20,7 @@ const props = withDefaults(
     forceRounded?: boolean
     textOnly?: boolean
     fallbackIdText?: boolean
+    wrapText?: boolean
   }>(),
   {
     id: null,
@@ -31,6 +32,7 @@ const props = withDefaults(
     forceRounded: false,
     textOnly: false,
     fallbackIdText: false,
+    wrapText: false,
   }
 )
 
@@ -40,6 +42,10 @@ const loaded = shallowRef<boolean>(false)
 
 const item = computed(() => {
   return props.getCachedFn(props.id as any)
+})
+
+const containerClassComputed = computed(() => {
+  return props.containerClass + props.wrapText ? ' a-chip--wrap' : ''
 })
 
 const displayTitle = computed(() => {
@@ -67,7 +73,7 @@ watch(
 </script>
 
 <template>
-  <div :class="containerClass">
+  <div :class="containerClassComputed">
     <template v-if="isNull(id) || isUndefined(id)">
       <slot name="empty">
         -
@@ -115,3 +121,18 @@ watch(
     </VChip>
   </div>
 </template>
+
+<style lang="scss">
+.a-chip--wrap {
+  .v-chip {
+    height: auto !important;
+  }
+
+  .v-chip .v-chip__content {
+    max-width: 100%;
+    height: auto;
+    min-height: 32px;
+    white-space: pre-wrap;
+  }
+}
+</style>
