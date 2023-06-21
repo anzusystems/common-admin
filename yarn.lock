@@ -209,7 +209,7 @@ __metadata:
     postcss-html: ^1.5.0
     postcss-prefix-selector: ^1.16.0
     prettier: ^2.8.8
-    sass: ^1.63.4
+    sass: ^1.63.5
     shortcut-buttons-flatpickr: ^0.4.0
     stylelint: ^15.8.0
     stylelint-config-recommended-vue: ^1.4.0
@@ -225,7 +225,7 @@ __metadata:
     vue-i18n: ^9.2.2
     vue-router: ^4.2.2
     vue-tsc: 1.8.1
-    vuetify: 3.3.4
+    vuetify: 3.3.5
     webfontloader: ^1.6.28
   peerDependencies:
     "@vuelidate/core": 2.0.2
@@ -5318,16 +5318,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.63.4":
-  version: 1.63.4
-  resolution: "sass@npm:1.63.4"
+"sass@npm:^1.63.5":
+  version: 1.63.5
+  resolution: "sass@npm:1.63.5"
   dependencies:
     chokidar: ">=3.0.0 <4.0.0"
     immutable: ^4.0.0
     source-map-js: ">=0.6.2 <2.0.0"
   bin:
     sass: sass.js
-  checksum: 12bde5beff85a7018157d90c8b9d5aec8b56832f89fcfeca146f10936eecf97e669d22fd41f812b3407ed259bbb114d69c9ecbfc7ee9b15308211fb910cdf5eb
+  checksum: eee6a1b5f2bd85c464daa51aca11bd5d8086592099ff3a3a8286f92fafc0ab02edf5aaf781d8e53e446353beff15eff8cdf52052c232ece18efd7945d59172af
   languageName: node
   linkType: hard
 
@@ -6437,9 +6437,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.3.4":
-  version: 3.3.4
-  resolution: "vuetify@npm:3.3.4"
+"vuetify@npm:3.3.5":
+  version: 3.3.5
+  resolution: "vuetify@npm:3.3.5"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ^1.0.0-alpha.12
@@ -6455,7 +6455,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 49f337ae617534e68e4bf026fa11f8251b7af0e291d5937b56ecd1fad80005684db86c90bf05d477043e31bae069eb26939e55e9f8f26e5552bd266256b6df5a
+  checksum: 7be82835ab00bd9f49f7f04072b62c5655286b466aaaba271904ad821e1b77f653d4866d00dae3934f63c2072f80232f08747b2059e62518150d7d7f11303860
   languageName: node
   linkType: hard
 

@@ -61,7 +61,7 @@
     "postcss-html": "^1.5.0",
     "postcss-prefix-selector": "^1.16.0",
     "prettier": "^2.8.8",
-    "sass": "^1.63.4",
+    "sass": "^1.63.5",
     "shortcut-buttons-flatpickr": "^0.4.0",
     "stylelint": "^15.8.0",
     "stylelint-config-recommended-vue": "^1.4.0",
@@ -77,7 +77,7 @@
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.2.2",
     "vue-tsc": "1.8.1",
-    "vuetify": "3.3.4",
+    "vuetify": "3.3.5",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -92,7 +92,7 @@
     "vue": "3.3.4",
     "vue-i18n": "9.2.2",
     "vue-router": "4.2.2",
-    "vuetify": "3.3.4"
+    "vuetify": "3.3.5"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {
