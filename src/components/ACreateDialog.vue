@@ -121,7 +121,7 @@ const onConfirm = async () => {
           </ABtnTertiary>
           <ABtnPrimary
             :loading="buttonLoading"
-            data-cy="button-create"
+            data-cy="button-confirm"
             @click.stop="onConfirm"
           >
             <slot name="button-confirm-title">
