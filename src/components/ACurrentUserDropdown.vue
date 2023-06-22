@@ -110,7 +110,7 @@ const logoutDialog = ref(false)
                   </VBtn>
                   <VBtn
                     color="primary"
-                    data-cy="button-create"
+                    data-cy="button-confirm"
                     :to="{ name: logoutRouteName }"
                   >
                     {{ t('common.system.currentUser.logoutConfirm') }}
