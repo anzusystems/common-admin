@@ -1,3 +1,17 @@
+## [1.4.0](https://github.com/anzusystems/common-admin/compare/1.3.0...1.4.0) (2023-06-23)
+
+### Features
+* **chore:** updated dependencies
+
+### Bug Fixes
+* **tests:** fixed `data-cy` naming
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+  * `vuetify@3.3.5`
+  * `@vueuse/core@10.2.0`
+  * `@vueuse/integrations@10.2.0`
+
 ## [1.3.0](https://github.com/anzusystems/common-admin/compare/1.2.0...1.3.0) (2023-06-14)
 
 ### Features
