@@ -230,8 +230,8 @@ __metadata:
   peerDependencies:
     "@vuelidate/core": 2.0.2
     "@vuelidate/validators": 2.0.2
-    "@vueuse/core": 10.1.2
-    "@vueuse/integrations": 10.1.2
+    "@vueuse/core": 10.2.0
+    "@vueuse/integrations": 10.2.0
     axios: 1.4.0
     dayjs: 1.11.8
     flatpickr: 4.6.13
