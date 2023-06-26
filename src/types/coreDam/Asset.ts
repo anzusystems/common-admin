@@ -24,6 +24,23 @@ export enum DamAssetType {
   Default = Image,
 }
 
+export type DamAssetTypeValues =`${DamAssetType}`
+
+export const damAssetTypeValueToEnum = (value: DamAssetTypeValues) => {
+  switch (value) {
+    case 'image':
+      return DamAssetType.Image
+    case 'audio':
+      return DamAssetType.Audio
+    case 'video':
+      return DamAssetType.Video
+    case 'document':
+      return DamAssetType.Document
+    default:
+      return DamAssetType.Default
+  }
+}
+
 interface Attributes {
   assetType: DamAssetType
   assetStatus: DamAssetStatus

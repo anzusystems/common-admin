@@ -1,3 +1,8 @@
+## [1.4.2](https://github.com/anzusystems/common-admin/compare/1.4.1...1.4.2) (2023-06-27)
+
+### Bug Fixes
+* **types:** fixed enum exports `DamAssetType` and `DamAssetStatus`
+
 ## [1.4.1](https://github.com/anzusystems/common-admin/compare/1.4.0...1.4.1) (2023-06-27)
 
 ### Features

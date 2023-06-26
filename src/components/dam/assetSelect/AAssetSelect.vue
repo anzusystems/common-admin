@@ -2,7 +2,7 @@
 import { computed, inject, ref } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
 import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
 import AssetListTableView from '@/components/dam/assetSelect/components/AssetListTableView.vue'
 import AssetListBar from '@/components/dam/assetSelect/components/AssetListBar.vue'
@@ -13,15 +13,16 @@ import AssetFilter from '@/components/dam/assetSelect/components/filter/AssetFil
 import type { DocId } from '@/types/common'
 import { DefaultLicenceIdSymbol } from '@/AnzuSystemsCommonAdmin'
 import { isUndefined } from '@/utils/common'
+import { damAssetTypeValueToEnum } from '@/types/coreDam/Asset'
 
 const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
-    maxCount: number
+    assetType: DamAssetType | DamAssetTypeValues
     minCount: number
+    maxCount: number
     assetLicenceId?: number
-    assetType: DamAssetType
   }>(),
   {
     assetLicenceId: undefined,
@@ -42,7 +43,7 @@ const emit = defineEmits<{
 const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedIds, initStoreContext } =
   useAssetListActions()
 
-const { sidebarLeft, openSidebar } = useSidebar()
+const { openSidebar, sidebarLeft } = useSidebar()
 
 const defaultLicenceId = inject<number | undefined>(DefaultLicenceIdSymbol, undefined)
 
@@ -54,7 +55,7 @@ const onOpen = () => {
 
   initStoreContext(
     licenceId,
-    props.assetType,
+    damAssetTypeValueToEnum(props.assetType),
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
     props.maxCount
