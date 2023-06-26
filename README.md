@@ -1,5 +1,5 @@
 # Common admin components for anzusystems admin projects
 
-## Getting Started
+## Components and composables library
 
 Please follow the documentation at [docs.sme.sk/common-admin](https://docs.sme.sk/common-admin/)

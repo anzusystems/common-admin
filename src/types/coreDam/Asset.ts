@@ -9,18 +9,14 @@ interface Texts {
 
 export type DistributionServiceName = string
 
-// export type AssetFile = ImageFile | AudioFile | VideoFile | DocumentFile
-
-// todo separate file
-export enum AssetStatus {
+export enum DamAssetStatus {
   Draft = 'draft',
   WithFile = 'with_file',
   Deleting = 'deleting',
   Default = Draft,
 }
 
-// todo separate file
-export enum AssetType {
+export enum DamAssetType {
   Image = 'image',
   Audio = 'audio',
   Video = 'video',
@@ -29,8 +25,8 @@ export enum AssetType {
 }
 
 interface Attributes {
-  assetType: AssetType
-  assetStatus: AssetStatus
+  assetType: DamAssetType
+  assetStatus: DamAssetStatus
 }
 
 export interface AssetFileProperties {

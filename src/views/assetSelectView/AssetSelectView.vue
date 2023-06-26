@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { DocId } from '@/types/common'
 import AChipNoLink from '@/components/AChipNoLink.vue'
-import { AssetType } from '@/types/coreDam/Asset'
+import { DamAssetType } from '@/types/coreDam/Asset'
 import ActionbarWrapper from '@/views/system/ActionbarWrapper.vue'
 
 const second = ref(100000)
@@ -34,7 +34,7 @@ const onConfirm = (data: DocId[]) => {
             :asset-licence-id="first"
             :min-count="1"
             :max-count="3"
-            :asset-type="AssetType.Image"
+            :asset-type="DamAssetType.Image"
             @on-confirm="onConfirm"
           >
             <template #button-open-dialog="{ activator }">
@@ -61,7 +61,7 @@ const onConfirm = (data: DocId[]) => {
             :asset-licence-id="second"
             :min-count="1"
             :max-count="1"
-            :asset-type="AssetType.Video"
+            :asset-type="DamAssetType.Video"
             @on-confirm="onConfirm"
           >
             <template #button-open-dialog="{ activator }">
@@ -88,7 +88,7 @@ const onConfirm = (data: DocId[]) => {
             :asset-licence-id="third"
             :min-count="1"
             :max-count="1"
-            :asset-type="AssetType.Audio"
+            :asset-type="DamAssetType.Audio"
             @on-confirm="onConfirm"
           >
             <template #button-open-dialog="{ activator }">

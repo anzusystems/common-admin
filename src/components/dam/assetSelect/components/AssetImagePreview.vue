@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { AssetStatus, AssetType } from '@/types/coreDam/Asset'
+import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 import placeholder16x9 from '@/assets/image/placeholder16x9.jpg'
 import { isUndefined } from '@/lib'
 
 const props = withDefaults(
   defineProps<{
     src?: string
-    assetType?: AssetType
-    assetStatus?: AssetStatus
+    assetType?: DamAssetType
+    assetStatus?: DamAssetStatus
     backgroundColor?: string
     width?: number
     height?: number
@@ -17,8 +17,8 @@ const props = withDefaults(
     iconColor?: string
   }>(),
   {
-    assetType: AssetType.Image,
-    assetStatus: AssetStatus.WithFile,
+    assetType: DamAssetType.Image,
+    assetStatus: DamAssetStatus.WithFile,
     src: undefined,
     backgroundColor: '#ccc',
     width: undefined,
@@ -37,16 +37,16 @@ const onError = () => {
 }
 
 const icon = computed(() => {
-  if (props.assetStatus === AssetStatus.Deleting) return 'mdi-trash-can'
+  if (props.assetStatus === DamAssetStatus.Deleting) return 'mdi-trash-can'
   switch (props.assetType) {
-    case AssetType.Audio:
-      return props.assetStatus === AssetStatus.WithFile ? 'mdi-music' : 'mdi-music-off'
-    case AssetType.Document:
-      return props.assetStatus === AssetStatus.WithFile ? 'mdi-note' : 'mdi-note-off'
-    case AssetType.Video:
-      return props.assetStatus === AssetStatus.WithFile ? 'mdi-video' : 'mdi-video-off'
-    case AssetType.Image:
-      return props.assetStatus === AssetStatus.WithFile ? 'mdi-image' : 'mdi-image-off'
+    case DamAssetType.Audio:
+      return props.assetStatus === DamAssetStatus.WithFile ? 'mdi-music' : 'mdi-music-off'
+    case DamAssetType.Document:
+      return props.assetStatus === DamAssetStatus.WithFile ? 'mdi-note' : 'mdi-note-off'
+    case DamAssetType.Video:
+      return props.assetStatus === DamAssetStatus.WithFile ? 'mdi-video' : 'mdi-video-off'
+    case DamAssetType.Image:
+      return props.assetStatus === DamAssetStatus.WithFile ? 'mdi-image' : 'mdi-image-off'
     default:
       return ''
   }
@@ -57,14 +57,14 @@ const srcComputed = computed(() => {
 })
 
 const showIconComputed = computed(() => {
-  if (props.assetType === AssetType.Image && props.src) return false
+  if (props.assetType === DamAssetType.Image && props.src) return false
   return true
 })
 </script>
 
 <template>
   <div
-    v-if="assetStatus === AssetStatus.WithFile && src"
+    v-if="assetStatus === DamAssetStatus.WithFile && src"
     class="asset-image asset-image--img position-relative"
     :style="{ width: width + 'px' }"
   >

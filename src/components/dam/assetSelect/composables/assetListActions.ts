@@ -3,7 +3,7 @@ import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
 import { storeToRefs } from 'pinia'
 import { ref, inject } from 'vue'
-import type { AssetType } from '@/types/coreDam/Asset'
+import type { DamAssetType } from '@/types/coreDam/Asset'
 import type { AxiosInstance } from 'axios'
 import { DamClientSymbol } from '@/components/injectionKeys'
 import { usePagination } from '@/composables/system/pagination'
@@ -77,7 +77,7 @@ export function useAssetListActions() {
 
   const initStoreContext = (
     licenceId: number,
-    assetType: AssetType,
+    assetType: DamAssetType,
     singleMode: boolean,
     minCount: number,
     maxCount: number

@@ -248,6 +248,7 @@ import type { UrlParams } from '@/services/api/apiHelper'
 import { generateUUIDv1 } from '@/utils/generator'
 import { useLoginStatus } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
+import type { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 
 export {
   // COMPONENTS
@@ -400,6 +401,8 @@ export {
   CachedItem,
   RecordWasType,
   UrlParams,
+  DamAssetType,
+  DamAssetStatus,
 
   // FACTORIES
   useAnzuUserFactory,

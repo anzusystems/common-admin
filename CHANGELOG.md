@@ -1,4 +1,12 @@
-## [1.4.0](https://github.com/anzusystems/common-admin/compare/1.3.0...1.4.0) (2023-06-23)
+## [1.4.1](https://github.com/anzusystems/common-admin/compare/1.4.0...1.4.1) (2023-06-27)
+
+### Features
+* **chore:** updated dependencies
+
+### Bug Fixes
+* **types:** added missing type exports `DamAssetType` and `DamAssetStatus`
+
+## [1.4.0](https://github.com/anzusystems/common-admin/compare/1.3.0...1.4.0) (2023-06-26)
 
 ### Features
 * **chore:** updated dependencies

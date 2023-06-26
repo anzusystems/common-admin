@@ -2,7 +2,7 @@
 import { computed, inject, ref } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import type { AssetType } from '@/types/coreDam/Asset'
+import type { DamAssetType } from '@/types/coreDam/Asset'
 import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
 import AssetListTableView from '@/components/dam/assetSelect/components/AssetListTableView.vue'
 import AssetListBar from '@/components/dam/assetSelect/components/AssetListBar.vue'
@@ -21,7 +21,7 @@ const props = withDefaults(
     maxCount: number
     minCount: number
     assetLicenceId?: number
-    assetType: AssetType
+    assetType: DamAssetType
   }>(),
   {
     assetLicenceId: undefined,

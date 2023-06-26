@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
 import { computed } from 'vue'
 import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
-import { AssetType as AssetTypeValue } from '@/types/coreDam/Asset'
+import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
 import AssetImageFilterForm from '@/components/dam/assetSelect/components/filter/AssetImageFilterForm.vue'
 import DefaultFilterForm from '@/components/dam/assetSelect/components/filter/DefaultFilterForm.vue'
 

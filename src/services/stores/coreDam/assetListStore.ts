@@ -1,8 +1,8 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
-import type { AssetType } from '@/types/coreDam/Asset'
-import { AssetType as AssetTypeValue } from '@/types/coreDam/Asset'
+import type { DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
 
 export interface AssetListItem {
   asset: AssetSearchListItemDto
@@ -13,7 +13,7 @@ interface State {
   list: AssetListItem[]
   loader: boolean
   licenceId: number
-  assetType: AssetType
+  assetType: DamAssetType
   selectedAssets: Record<string, AssetListItem>
   singleMode: boolean
   minCount: number
@@ -46,7 +46,7 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     setSingleMode(singleMode: boolean) {
       this.singleMode = singleMode
     },
-    setAssetType(assetType: AssetType) {
+    setAssetType(assetType: DamAssetType) {
       this.assetType = assetType
     },
     setMinCount(count: number) {
