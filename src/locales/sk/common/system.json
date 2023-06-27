@@ -12,7 +12,7 @@
     "displayCols": "Zobrazené stĺpce",
     "itemsPerPage": "Záznamov na stránke",
     "from": "od",
-    "noDataText": "Žiadne záznamy pre zobrazenie",
+    "noDataText": "Žiadne záznamy na zobrazenie",
     "ordering": {
       "title": "Radenie",
       "mostRelevant": "Najrelevantnejšie",
