@@ -2,7 +2,7 @@
   "unknownError": "Systémová chyba. Skúste neskôr alebo kontaktujte administrátora.",
   "forbiddenError": "Prístup zamietnutý. Na vykonanie danej akcie nemáte oprávnenie.",
   "fixValidationErrors": "Vyplňte všetky povinné polia a opravte chyby.",
-  "fixApiValidationErrors": "Opravne tieto chyby.",
+  "fixApiValidationErrors": "Opravte tieto chyby.",
   "apiForbiddenOperationError": "Zakázaná akcia.",
   "recordWas": {
     "created": "Záznam bol vytvorený.",
