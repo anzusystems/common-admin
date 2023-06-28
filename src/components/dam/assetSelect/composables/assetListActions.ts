@@ -1,8 +1,9 @@
 import { useDamApi } from '@/services/api/coreDam/assetApi'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
-import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
+import { type AssetListItem, useAssetListStore } from '@/services/stores/coreDam/assetListStore'
 import { storeToRefs } from 'pinia'
-import { ref, inject } from 'vue'
+import type { Ref } from 'vue'
+import { inject, ref } from 'vue'
 import type { DamAssetType } from '@/types/coreDam/Asset'
 import type { AxiosInstance } from 'axios'
 import { DamClientSymbol } from '@/components/injectionKeys'
@@ -14,7 +15,6 @@ import type { DocId } from '@/types/common'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
-pagination.rowsPerPage = 25
 const filterIsTouched = ref(false)
 
 export function useAssetListActions() {
@@ -27,7 +27,8 @@ export function useAssetListActions() {
   const { fetchAssetList: apiFetchAssetList } = useDamApi(damClient)
 
   const assetListStore = useAssetListStore()
-  const { selectedCount, selectedAssets, list, loader } = storeToRefs(assetListStore)
+  const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetListStore)
+
   const { resetFilter } = useFilterHelpers()
   const { showErrorsDefault } = useAlerts()
 
@@ -71,8 +72,8 @@ export function useAssetListActions() {
     filterIsTouched.value = false
   }
 
-  const getSelectedIds = (): DocId[] => {
-    return assetListStore.getSelectedIds()
+  const getSelectedMainFileIds = (): DocId[] => {
+    return assetListStore.getSelectedMainFileIds()
   }
 
   const initStoreContext = (
@@ -82,7 +83,7 @@ export function useAssetListActions() {
     minCount: number,
     maxCount: number
   ): void => {
-    assetListStore.selectedAssets = {}
+    assetListStore.clearSelected()
     assetListStore.setAssetType(assetType)
     assetListStore.setLicenceId(licenceId)
     assetListStore.setSingleMode(singleMode)
@@ -97,14 +98,14 @@ export function useAssetListActions() {
     selectedAssets,
     pagination,
     loader,
-    items: list,
+    assetListItems: assetListItems as Ref<Array<AssetListItem>>,
     onItemClick,
     fetchAssetList,
     fetchNextPage,
     resetAssetList,
     filterTouch,
     filterUnTouch,
-    getSelectedIds,
+    getSelectedMainFileIds,
     initStoreContext,
   }
 }

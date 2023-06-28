@@ -14,7 +14,7 @@ const { toggleSidebar } = useSidebar()
     color="transparent"
     :height="46"
     elevation="0"
-    class="system-border-b asset-select__second-bar"
+    class="system-border-b subject-select__second-bar"
   >
     <slot name="second-bar">
       <div class="d-flex flex-column w-100 px-1 align-center">

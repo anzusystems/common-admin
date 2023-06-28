@@ -5,11 +5,12 @@ import { i18n } from '@/plugins/i18n'
 import { createPinia } from 'pinia'
 import router from '@/router'
 import AnzuSystemsCommonAdmin from '@/AnzuSystemsCommonAdmin'
-import { damClient } from '@/services/api/clients/coreDamClient'
+import { damClient } from '@/playground/assetSelectView/coreDamClient'
 import '@/styles/main.scss'
-import { currentUser } from '@/views/system/currentUser'
+import { currentUser } from '@/playground/system/currentUser'
 import type { LanguageCode } from '@/composables/languageSettings'
 import { loadCommonFonts } from '@/plugins/webfontloader'
+import { cmsClient } from '@/playground/articleSelectView/cmsDamClient'
 
 export type CustomAclValue = 'anzu_entity_create' | 'anzu_entity_view'
 
@@ -32,6 +33,9 @@ createApp(App)
     coreDam: {
       client: damClient,
       defaultLicenceId: 100001,
+    },
+    coreCms: {
+      client: cmsClient,
     },
   })
   .mount('#app')

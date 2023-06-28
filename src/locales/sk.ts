@@ -12,6 +12,7 @@ import apiValidation from '@/locales/sk/error/apiValidation.json'
 import apiForbiddenOperation from '@/locales/sk/error/apiForbiddenOperation.json'
 import jsValidation from '@/locales/sk/error/jsValidation.json'
 import assetSelect from '@/locales/sk/common/assetSelect.json'
+import articleSelect from '@/locales/sk/common/articleSelect.json'
 import time from '@/locales/sk/common/time.json'
 
 export default {
@@ -26,6 +27,7 @@ export default {
     permission,
     permissionGroup,
     assetSelect,
+    articleSelect,
     time,
   },
   $vuetify: vuetify,

@@ -1,133 +1,166 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
-import type { DocId } from '@/types/common'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
 import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
+import type { DocId } from '@/types/common'
+import { computed, ref } from 'vue'
 
 export interface AssetListItem {
   asset: AssetSearchListItemDto
   selected: boolean
 }
 
-interface State {
-  list: AssetListItem[]
-  loader: boolean
-  licenceId: number
-  assetType: DamAssetType
-  selectedAssets: Record<string, AssetListItem>
-  singleMode: boolean
-  minCount: number
-  maxCount: number
-  selectedCount: number
-}
+export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore', () => {
+  const assetListItems = ref<Array<AssetListItem>>([])
+  const loader = ref(false)
+  const licenceId = ref(0)
+  const assetType = ref<AssetTypeValue>(AssetTypeValue.Default)
+  const selectedAssets = ref<Map<DocId, AssetListItem>>(new Map())
+  const singleMode = ref(false)
+  const minCount = ref(0)
+  const maxCount = ref(0)
 
-export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore', {
-  state: (): State => ({
-    list: [],
-    loader: false,
-    licenceId: 0,
-    assetType: AssetTypeValue.Default,
-    selectedAssets: {},
-    singleMode: true,
-    minCount: 0,
-    maxCount: 0,
-    selectedCount: 0,
-  }),
-  actions: {
-    showLoader() {
-      this.loader = true
-    },
-    hideLoader() {
-      this.loader = false
-    },
-    setLicenceId(licenceId: number) {
-      this.licenceId = licenceId
-    },
-    setSingleMode(singleMode: boolean) {
-      this.singleMode = singleMode
-    },
-    setAssetType(assetType: DamAssetType) {
-      this.assetType = assetType
-    },
-    setMinCount(count: number) {
-      this.minCount = count
-    },
-    setMaxCount(count: number) {
-      this.maxCount = count
-    },
-    setList(assets: AssetSearchListItemDto[]) {
-      this.list = assets.map((asset) => {
-        return {
-          asset: asset,
-          selected: false,
-        }
-      })
-    },
-    appendList(assets: AssetSearchListItemDto[]) {
-      const items = assets.map((asset) => {
-        return {
-          asset: asset,
-          selected: false,
-        }
-      })
-      this.list = this.list.concat(items)
-    },
-    toggleSelectedByIndex(index: number) {
-      if (!this.list[index]) return
+  function showLoader() {
+    loader.value = true
+  }
 
-      if (!this.singleMode && this.isSelectedMax() && !this.list[index].selected) {
-        return
+  function hideLoader() {
+    loader.value = false
+  }
+
+  function setLicenceId(value: number) {
+    licenceId.value = value
+  }
+
+  function setSingleMode(value: boolean) {
+    singleMode.value = value
+  }
+
+  function setAssetType(value: DamAssetType) {
+    assetType.value = value
+  }
+
+  function setMinCount(value: number) {
+    minCount.value = value
+  }
+
+  function setMaxCount(value: number) {
+    maxCount.value = value
+  }
+
+  function setList(items: AssetSearchListItemDto[]) {
+    assetListItems.value = items.map((item) => {
+      return {
+        asset: item,
+        selected: false,
       }
+    })
+  }
 
-      this.list[index].selected = !this.list[index].selected
+  function appendList(items: AssetSearchListItemDto[]) {
+    const assets = items.map((asset) => {
+      return {
+        asset: asset,
+        selected: false,
+      }
+    })
+    assetListItems.value = assetListItems.value.concat(assets)
+  }
 
-      if (this.singleMode && this.list[index].selected) {
-        this.unselectAllExcept(index)
-        this.clearSelected()
-        this.addToSelected(this.list[index])
-        return
-      }
+  function toggleSelectedByIndex(index: number) {
+    if (!assetListItems.value[index]) return
 
-      if (!this.singleMode && this.list[index].selected) {
-        this.addToSelected(this.list[index])
-        return
-      }
+    if (!singleMode.value && isSelectedMax.value && !assetListItems.value[index].selected) {
+      return
+    }
 
-      this.removeFromSelected(this.list[index].asset.id)
-    },
-    unselectAllExcept(ignoreIndex: number) {
-      this.list
-        .filter((item: AssetListItem, index: number) => item.selected && index !== ignoreIndex)
-        .map((item: AssetListItem) => (item.selected = false))
-    },
-    clearSelected() {
-      this.selectedAssets = {}
-      this.selectedCount = 0
-    },
-    addToSelected(assetItem: AssetListItem) {
-      if (!(assetItem.asset.id in this.selectedAssets)) {
-        this.selectedAssets[assetItem.asset.id] = assetItem
-        this.selectedCount++
+    assetListItems.value[index].selected = !assetListItems.value[index].selected
+
+    if (singleMode.value && assetListItems.value[index].selected) {
+      unselectAllExcept(index)
+      clearSelected()
+      addToSelected(assetListItems.value[index])
+      return
+    }
+
+    if (!singleMode.value && assetListItems.value[index].selected) {
+      addToSelected(assetListItems.value[index])
+      return
+    }
+
+    removeFromSelected(assetListItems.value[index].asset.id)
+  }
+
+  function unselectAllExcept(ignoreIndex: number) {
+    const items = assetListItems.value
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].selected && i !== ignoreIndex) {
+        items[i].selected = false
       }
-    },
-    removeFromSelected(assetId: DocId) {
-      if (assetId in this.selectedAssets) {
-        delete this.selectedAssets[assetId]
-        this.selectedCount--
-      }
-    },
-    getSelectedIds(): DocId[] {
-      return Object.keys(this.selectedAssets).map((key) => this.selectedAssets[key].asset.mainFile?.id || '')
-    },
-    isSelectedMax() {
-      return this.selectedCount >= this.maxCount
-    },
-    reset() {
-      this.list = []
-      this.loader = false
-      this.clearSelected()
-    },
-  },
+    }
+  }
+
+  function clearSelected() {
+    selectedAssets.value.clear()
+  }
+
+  function addToSelected(assetItem: AssetListItem) {
+    if (!selectedAssets.value.has(assetItem.asset.id)) {
+      selectedAssets.value.set(assetItem.asset.id, assetItem)
+    }
+  }
+
+  function removeFromSelected(assetId: DocId) {
+    if (selectedAssets.value.has(assetId)) {
+      selectedAssets.value.delete(assetId)
+    }
+  }
+
+  function getSelectedMainFileIds(): DocId[] {
+    const fileIds = []
+    for (const value of selectedAssets.value.values()) {
+      fileIds.push(value.asset.mainFile?.id || '')
+    }
+    return fileIds
+  }
+
+  const isSelectedMax = computed(() => {
+    return selectedCount.value >= maxCount.value
+  })
+
+  const selectedCount = computed(() => {
+    return selectedAssets.value.size
+  })
+
+  function reset() {
+    assetListItems.value = []
+    loader.value = false
+    clearSelected()
+  }
+
+  return {
+    licenceId,
+    assetType,
+    singleMode,
+    minCount,
+    maxCount,
+    selectedCount,
+    selectedAssets,
+    loader,
+    assetListItems,
+    setAssetType,
+    setLicenceId,
+    setSingleMode,
+    setMinCount,
+    setMaxCount,
+    showLoader,
+    hideLoader,
+    setList,
+    appendList,
+    toggleSelectedByIndex,
+    getSelectedMainFileIds,
+    clearSelected,
+    reset,
+  }
 })
 
 if (import.meta.hot) {

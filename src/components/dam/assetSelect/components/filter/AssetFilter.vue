@@ -33,8 +33,8 @@ const componentComputed = computed(() => {
 </script>
 
 <template>
-  <div class="asset-select-filter">
-    <div class="asset-select-filter__content">
+  <div class="subject-select-filter">
+    <div class="subject-select-filter__content">
       <VForm
         name="search2"
         class="px-2 pt-4"
@@ -43,7 +43,7 @@ const componentComputed = computed(() => {
         <Component :is="componentComputed" />
       </VForm>
     </div>
-    <div class="asset-select-filter__actions">
+    <div class="subject-select-filter__actions">
       <VBtn
         color="primary"
         class="mx-2"

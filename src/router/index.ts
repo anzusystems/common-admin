@@ -1,14 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomepageView from '@/views/HomepageView.vue'
-import SettingsView from '@/views/SettingsView.vue'
-import BooleanValueView from '@/views/booleanValueView/BooleanValueView.vue'
-import PermissionView from '@/views/permissionView/PermissionView.vue'
-import DatetimeView from '@/views/datetimeView/DatetimeView.vue'
-import FormsView from '@/views/formsView/FormsView.vue'
-import FilterView from '@/views/filterView/FilterView.vue'
-import BtnSplitView from '@/views/btnSplitView/BtnSplitView.vue'
-import AssetSelectView from '@/views/assetSelectView/AssetSelectView.vue'
-import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/views/system/loadLanguageMessages'
+import HomepageView from '@/playground/HomepageView.vue'
+import SettingsView from '@/playground/SettingsView.vue'
+import BooleanValueView from '@/playground/booleanValueView/BooleanValueView.vue'
+import PermissionView from '@/playground/permissionView/PermissionView.vue'
+import DatetimeView from '@/playground/datetimeView/DatetimeView.vue'
+import FormsView from '@/playground/formsView/FormsView.vue'
+import FilterView from '@/playground/filterView/FilterView.vue'
+import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
+import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
+import ArticleSelectView from '@/playground/articleSelectView/ArticleSelectView.vue'
+import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -57,6 +58,11 @@ const router = createRouter({
       path: '/view/asset-select',
       name: 'view-asset-select',
       component: AssetSelectView,
+    },
+    {
+      path: '/view/article-select',
+      name: 'view-article-select',
+      component: ArticleSelectView,
     },
   ],
 })
