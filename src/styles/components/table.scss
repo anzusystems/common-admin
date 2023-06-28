@@ -7,6 +7,15 @@
     right: 0 !important;
     left: auto !important;
   }
+
+  &--dialog-sticky-fix {
+    position: relative;
+
+    .v-table__wrapper {
+      overflow-x: initial;
+      overflow-y: initial;
+    }
+  }
 }
 
 .v-theme--light {
@@ -25,15 +34,15 @@
   }
 }
 
-.a-table {
-  .a-table__row {
+.a-datatable {
+  .a-datatable__row {
     cursor: pointer;
   }
 }
 
 .v-theme--light {
-  .a-table {
-    .a-table__row {
+  .a-datatable {
+    .a-datatable__row {
       &--selected {
         background-color: #d8e9e0;
       }
@@ -50,7 +59,7 @@
 }
 
 .v-theme--dark {
-  .a-table {
+  .a-datatable {
     .a-table__row {
       &--selected {
         background-color: #4d5e55;

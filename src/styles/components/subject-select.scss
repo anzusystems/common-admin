@@ -74,7 +74,7 @@ $sidebar-width: 320px;
     width: 100%;
     transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
   }
 
   &__actions {

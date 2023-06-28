@@ -10,7 +10,7 @@ const { onItemClick, assetListItems, loader } = useAssetListActions()
 
 <template>
   <VTable
-    class="dam-image-table a-table"
+    class="a-datatable a-datatable--dialog-sticky-fix"
     fixed-header
   >
     <thead>
