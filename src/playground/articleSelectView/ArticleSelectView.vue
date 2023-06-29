@@ -4,11 +4,14 @@ import type { DocId } from '@/types/common'
 import AChipNoLink from '@/components/AChipNoLink.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import AArticleSelect from '@/components/cms/articleSelect/AArticleSelect.vue'
+import type { ArticleSelectReturnData } from '@/types/coreCms/ArticleSelect'
 
 const pickedArticleIds = ref<DocId[]>([])
 
-const onConfirm = (data: DocId[]) => {
-  pickedArticleIds.value = data
+const onConfirm = (data: ArticleSelectReturnData) => {
+  if (data.type === 'docId') {
+    pickedArticleIds.value = data.value
+  }
 }
 </script>
 

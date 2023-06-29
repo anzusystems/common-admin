@@ -7,7 +7,6 @@ import { usePagination } from '@/composables/system/pagination'
 import { isUndefined } from '@/utils/common'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { useAlerts } from '@/composables/system/alerts'
-import type { DocId } from '@/types/common'
 import { useCmsApi } from '@/services/api/coreCms/articleApi'
 import { type ArticleListItem, useArticleListStore } from '@/services/stores/coreCms/articleListStore'
 import { useArticleListFilter } from '@/model/coreCms/filter/ArticleFilter'
@@ -70,10 +69,6 @@ export function useArticleListActions() {
     filterIsTouched.value = false
   }
 
-  const getSelectedDocIds = (): DocId[] => {
-    return articleListStore.getSelectedDocIds()
-  }
-
   const initStoreContext = (
     singleMode: boolean,
     minCount: number,
@@ -93,13 +88,13 @@ export function useArticleListActions() {
     pagination,
     loader,
     articleListItems: articleListItems as Ref<Array<ArticleListItem>>,
+    getSelectedData: articleListStore.getSelectedData,
     onItemClick,
     fetchArticleList,
     fetchNextPage,
     resetArticleList,
     filterTouch,
     filterUnTouch,
-    getSelectedDocIds,
     initStoreContext,
   }
 }

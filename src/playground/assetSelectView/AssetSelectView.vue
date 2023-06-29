@@ -5,14 +5,25 @@ import type { DocId } from '@/types/common'
 import AChipNoLink from '@/components/AChipNoLink.vue'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
+import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 
-const second = ref(100000)
-const third = ref(100000)
 const first = ref(100000)
+const second = ref(100000)
+const secondDialog = ref(false)
+const third = ref(100000)
+const thirdAssetSelect = ref<InstanceType<typeof AAssetSelect> | null>(null)
+
 const pickedAssetIds = ref<DocId[]>([])
 
-const onConfirm = (data: DocId[]) => {
-  pickedAssetIds.value = data
+const openThirdDialog = () => {
+  if (!thirdAssetSelect.value) return
+  thirdAssetSelect.value.open()
+}
+
+const onConfirm = (data: AssetSelectReturnData) => {
+  if (data.type === 'mainFileId') {
+    pickedAssetIds.value = data.value
+  }
 }
 </script>
 
@@ -21,6 +32,11 @@ const onConfirm = (data: DocId[]) => {
 
   <VCard>
     <VCardText>
+      <VRow>
+        <VCol>
+          Open using activator:
+        </VCol>
+      </VRow>
       <VRow>
         <VCol cols="2">
           <VTextField
@@ -49,6 +65,11 @@ const onConfirm = (data: DocId[]) => {
         </VCol>
       </VRow>
       <VRow>
+        <VCol>
+          Open using v-model:
+        </VCol>
+      </VRow>
+      <VRow>
         <VCol cols="2">
           <VTextField
             v-model="second"
@@ -57,22 +78,25 @@ const onConfirm = (data: DocId[]) => {
           />
         </VCol>
         <VCol cols="10">
+          <VBtn
+            color="primary"
+            @click.stop="secondDialog = true"
+          >
+            Add image
+          </VBtn>
           <AAssetSelect
+            v-model="secondDialog"
             :asset-licence-id="second"
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Video"
             @on-confirm="onConfirm"
-          >
-            <template #activator="{ props }">
-              <VBtn
-                color="primary"
-                v-bind="props"
-              >
-                Add Video
-              </VBtn>
-            </template>
-          </AAssetSelect>
+          />
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
+          Open using template ref:
         </VCol>
       </VRow>
       <VRow>
@@ -84,22 +108,20 @@ const onConfirm = (data: DocId[]) => {
           />
         </VCol>
         <VCol cols="10">
+          <VBtn
+            color="primary"
+            @click.stop="openThirdDialog"
+          >
+            Add image
+          </VBtn>
           <AAssetSelect
+            ref="thirdAssetSelect"
             :asset-licence-id="third"
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Audio"
             @on-confirm="onConfirm"
-          >
-            <template #activator="{ props }">
-              <VBtn
-                color="primary"
-                v-bind="props"
-              >
-                Add Audio
-              </VBtn>
-            </template>
-          </AAssetSelect>
+          />
         </VCol>
       </VRow>
       <VRow>

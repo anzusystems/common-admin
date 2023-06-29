@@ -72,10 +72,6 @@ export function useAssetListActions() {
     filterIsTouched.value = false
   }
 
-  const getSelectedMainFileIds = (): DocId[] => {
-    return assetListStore.getSelectedMainFileIds()
-  }
-
   const initStoreContext = (
     licenceId: number,
     assetType: DamAssetType,
@@ -99,13 +95,13 @@ export function useAssetListActions() {
     pagination,
     loader,
     assetListItems: assetListItems as Ref<Array<AssetListItem>>,
+    getSelectedData: assetListStore.getSelectedData,
     onItemClick,
     fetchAssetList,
     fetchNextPage,
     resetAssetList,
     filterTouch,
     filterUnTouch,
-    getSelectedMainFileIds,
     initStoreContext,
   }
 }

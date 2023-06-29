@@ -3,48 +3,68 @@ import { computed, ref, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import { useSidebar } from '@/components/cms/articleSelect/composables/filterSidebar'
-import type { DocId } from '@/types/common'
 import { useArticleListActions } from '@/components/cms/articleSelect/composables/articleListActions'
 import ArticleListTable from '@/components/cms/articleSelect/components/ArticleListTable.vue'
 import ArticleFilter from '@/components/cms/articleSelect/components/ArticleFilter.vue'
 import ArticleListBar from '@/components/cms/articleSelect/components/ArticleListBar.vue'
+import { isUndefined } from '@/utils/common'
+import type {
+  ArticleSelectReturnData,
+  ArticleSelectReturnType,
+  ArticleSelectReturnTypeValues,
+} from '@/types/coreCms/ArticleSelect'
+import { articleSelectReturnTypeValuesToEnum } from '@/types/coreCms/ArticleSelect'
 
 const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
+    modelValue?: boolean | undefined
     minCount: number
     maxCount: number
+    returnType?: ArticleSelectReturnType | ArticleSelectReturnTypeValues
   }>(),
-  {}
+  {
+    modelValue: undefined,
+    returnType: 'docId',
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
-  (e: 'onConfirm', data: DocId[]): void
-  (e: 'onOpen'): void
-  (e: 'onClose'): void
+  (e: 'onConfirm', data: ArticleSelectReturnData): void
 }>()
 
-const { initStoreContext, selectedCount, loader, pagination, fetchNextPage, resetArticleList, getSelectedDocIds } =
+const dialogLocal = ref(false)
+const dialog = computed({
+  get() {
+    if (isUndefined(props.modelValue)) return dialogLocal.value
+    return props.modelValue
+  },
+  set(newValue: boolean) {
+    dialogLocal.value = newValue
+    emit('update:modelValue', newValue)
+  },
+})
+
+const { initStoreContext, selectedCount, loader, pagination, fetchNextPage, resetArticleList, getSelectedData } =
   useArticleListActions()
 
 const { openSidebar, sidebarLeft } = useSidebar()
 
 const onOpen = () => {
+  console.log('aaa')
   initStoreContext(1 === props.minCount && props.minCount === props.maxCount, props.minCount, props.maxCount)
   resetArticleList()
   openSidebar()
-  emit('onOpen')
   dialog.value = true
 }
 
 const onClose = () => {
-  emit('onClose')
   dialog.value = false
 }
 
 const onConfirm = () => {
-  emit('onConfirm', getSelectedDocIds())
+  emit('onConfirm', getSelectedData(articleSelectReturnTypeValuesToEnum(props.returnType)))
   onClose()
 }
 
@@ -54,10 +74,12 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
   }
 }
 
-const dialog = ref(false)
-
 const disabledSubmit = computed(() => {
   return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
+})
+
+defineExpose({
+  open: onOpen,
 })
 </script>
 
@@ -65,12 +87,7 @@ const disabledSubmit = computed(() => {
   <slot
     name="activator"
     :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
-  >
-    <ABtnPrimary
-      rounded="pill"
-      @click.stop="onOpen"
-    />
-  </slot>
+  />
   <VDialog
     :model-value="dialog"
     fullscreen

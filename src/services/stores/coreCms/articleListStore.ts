@@ -2,6 +2,7 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref } from 'vue'
 import type { ArticleKind } from '@/types/coreCms/ArticleKind'
+import { type ArticleSelectReturnData, ArticleSelectReturnType } from '@/types/coreCms/ArticleSelect'
 
 export interface ArticleListItem {
   article: ArticleKind
@@ -105,15 +106,44 @@ export const useArticleListStore = defineStore('commonAdminCoreCmsArticleListSto
   }
 
   function getSelectedDocIds(): DocId[] {
-    const docIds: Array<DocId> = []
+    const docIds: Set<DocId> = new Set()
     for (const value of selectedArticles.value.values()) {
-      docIds.push(value.article.docId)
+      docIds.add(value.article.docId)
     }
-    return docIds
+    return Array.from(docIds)
   }
 
   function getSelectedIds(): IntegerId[] {
     return Array.from(selectedArticles.value.keys())
+  }
+
+  function getSelectedArticleKinds(): ArticleKind[] {
+    const articles: Array<ArticleKind> = []
+    for (const value of selectedArticles.value.values()) {
+      articles.push(value.article)
+    }
+    return articles
+  }
+
+  function getSelectedData(type: ArticleSelectReturnType): ArticleSelectReturnData {
+    switch (type) {
+      case ArticleSelectReturnType.Id:
+        return {
+          type: ArticleSelectReturnType.Id,
+          value: getSelectedIds(),
+        }
+      case ArticleSelectReturnType.Article:
+        return {
+          type: ArticleSelectReturnType.Article,
+          value: getSelectedArticleKinds(),
+        }
+      case ArticleSelectReturnType.DocId:
+      default:
+        return {
+          type: ArticleSelectReturnType.DocId,
+          value: getSelectedDocIds(),
+        }
+    }
   }
 
   const isSelectedMax = computed(() => {
@@ -138,6 +168,7 @@ export const useArticleListStore = defineStore('commonAdminCoreCmsArticleListSto
     minCount,
     maxCount,
     selectedCount,
+    getSelectedData,
     setSingleMode,
     setMinCount,
     setMaxCount,
@@ -146,8 +177,6 @@ export const useArticleListStore = defineStore('commonAdminCoreCmsArticleListSto
     setList,
     appendList,
     toggleSelectedByIndex,
-    getSelectedDocIds,
-    getSelectedIds,
     clearSelected,
     reset,
   }

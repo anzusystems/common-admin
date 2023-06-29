@@ -3,6 +3,7 @@ import type { AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset
 import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
 import { computed, ref } from 'vue'
+import { type AssetSelectReturnData, AssetSelectReturnType } from '@/types/coreDam/AssetSelect'
 
 export interface AssetListItem {
   asset: AssetSearchListItemDto
@@ -116,11 +117,46 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
   }
 
   function getSelectedMainFileIds(): DocId[] {
-    const fileIds = []
+    const fileIds: Set<DocId> = new Set()
     for (const value of selectedAssets.value.values()) {
-      fileIds.push(value.asset.mainFile?.id || '')
+      if (value.asset.mainFile?.id) {
+        fileIds.add(value.asset.mainFile.id)
+      }
     }
-    return fileIds
+    return Array.from(fileIds)
+  }
+
+  function getSelectedAssetIds(): DocId[] {
+    return Array.from(selectedAssets.value.keys())
+  }
+
+  function getSelectedAssets(): AssetSearchListItemDto[] {
+    const assets: Array<AssetSearchListItemDto> = []
+    for (const value of selectedAssets.value.values()) {
+      assets.push(value.asset)
+    }
+    return assets
+  }
+
+  function getSelectedData(type: AssetSelectReturnType): AssetSelectReturnData {
+    switch (type) {
+      case AssetSelectReturnType.AssetId:
+        return {
+          type: AssetSelectReturnType.AssetId,
+          value: getSelectedAssetIds(),
+        }
+      case AssetSelectReturnType.Asset:
+        return {
+          type: AssetSelectReturnType.Asset,
+          value: getSelectedAssets(),
+        }
+      case AssetSelectReturnType.MainFileId:
+      default:
+        return {
+          type: AssetSelectReturnType.MainFileId,
+          value: getSelectedMainFileIds(),
+        }
+    }
   }
 
   const isSelectedMax = computed(() => {
@@ -147,6 +183,7 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     selectedAssets,
     loader,
     assetListItems,
+    getSelectedData,
     setAssetType,
     setLicenceId,
     setSingleMode,
@@ -157,7 +194,6 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     setList,
     appendList,
     toggleSelectedByIndex,
-    getSelectedMainFileIds,
     clearSelected,
     reset,
   }

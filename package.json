@@ -44,6 +44,8 @@
     "@types/webfontloader": "^1.6.35",
     "@typescript-eslint/parser": "^5.60.1",
     "@vitejs/plugin-vue": "^4.2.3",
+    "@volar/vue-language-server": "1.6.5",
+    "@volar/vue-language-service": "^1.6.5",
     "@vue/eslint-config-prettier": "^7.1.0",
     "@vue/eslint-config-typescript": "^11.0.3",
     "@vue/tsconfig": "0.1.3",

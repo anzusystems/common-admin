@@ -11,31 +11,50 @@ import { GridView, useGridView } from '@/components/dam/assetSelect/composables/
 import AssetListTiles from '@/components/dam/assetSelect/components/AssetListTiles.vue'
 import { useSidebar } from '@/components/dam/assetSelect/composables/filterSidebar'
 import AssetFilter from '@/components/dam/assetSelect/components/filter/AssetFilter.vue'
-import type { DocId } from '@/types/common'
 import { DefaultLicenceIdSymbol } from '@/AnzuSystemsCommonAdmin'
 import { isUndefined } from '@/utils/common'
+import type {
+  AssetSelectReturnData,
+  AssetSelectReturnType,
+  AssetSelectReturnTypeValues,
+} from '@/types/coreDam/AssetSelect'
+import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
 
 const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
+    modelValue?: boolean | undefined
     assetType: DamAssetType | DamAssetTypeValues
     minCount: number
     maxCount: number
     assetLicenceId?: number
+    returnType?: AssetSelectReturnType | AssetSelectReturnTypeValues
   }>(),
   {
+    modelValue: undefined,
     assetLicenceId: undefined,
+    returnType: 'mainFileId',
   }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
-  (e: 'onConfirm', data: DocId[]): void
-  (e: 'onOpen'): void
-  (e: 'onClose'): void
+  (e: 'onConfirm', data: AssetSelectReturnData): void
 }>()
 
-const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedMainFileIds, initStoreContext } =
+const dialogLocal = ref(false)
+const dialog = computed({
+  get() {
+    if (isUndefined(props.modelValue)) return dialogLocal.value
+    return props.modelValue
+  },
+  set(newValue: boolean) {
+    dialogLocal.value = newValue
+    emit('update:modelValue', newValue)
+  },
+})
+
+const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedData, initStoreContext } =
   useAssetListActions()
 
 const { openSidebar, sidebarLeft } = useSidebar()
@@ -57,17 +76,15 @@ const onOpen = () => {
   )
   resetAssetList()
   openSidebar()
-  emit('onOpen')
   dialog.value = true
 }
 
 const onClose = () => {
-  emit('onClose')
   dialog.value = false
 }
 
 const onConfirm = () => {
-  emit('onConfirm', getSelectedMainFileIds())
+  emit('onConfirm', getSelectedData(assetSelectReturnTypeValuesToEnum(props.returnType)))
   onClose()
 }
 
@@ -76,8 +93,6 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
     fetchNextPage()
   }
 }
-
-const dialog = ref(false)
 
 const { gridView } = useGridView()
 
@@ -95,18 +110,17 @@ const componentComputed = computed(() => {
 const disabledSubmit = computed(() => {
   return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
 })
+
+defineExpose({
+  open: onOpen,
+})
 </script>
 
 <template>
   <slot
     name="activator"
     :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
-  >
-    <ABtnPrimary
-      rounded="pill"
-      @click.stop="onOpen"
-    />
-  </slot>
+  />
   <VDialog
     :model-value="dialog"
     fullscreen
