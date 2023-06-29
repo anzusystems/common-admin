@@ -1,46 +1,60 @@
 <script lang="ts" setup>
-import { computed, inject, ref } from 'vue'
+import { computed, inject, ref, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
-import AssetListTableView from '@/components/dam/assetSelect/components/AssetListTableView.vue'
-import AssetListBar from '@/components/dam/assetSelect/components/AssetListBar.vue'
-import { GridView, useGridView } from '@/components/dam/assetSelect/composables/gridView'
-import AssetListTilesView from '@/components/dam/assetSelect/components/AssetListTilesView.vue'
-import { useSidebar } from '@/components/dam/assetSelect/composables/filterSidebar'
-import AssetFilter from '@/components/dam/assetSelect/components/filter/AssetFilter.vue'
-import type { DocId } from '@/types/common'
+import { damAssetTypeValueToEnum } from '@/types/coreDam/Asset'
+import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
+import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
+import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
+import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
+import AssetSelectFilter from '@/components/dam/assetSelect/components/filter/AssetSelectFilter.vue'
 import { DefaultLicenceIdSymbol } from '@/AnzuSystemsCommonAdmin'
 import { isUndefined } from '@/utils/common'
-import { damAssetTypeValueToEnum } from '@/types/coreDam/Asset'
+import type {
+  AssetSelectReturnData,
+  AssetSelectReturnType,
+  AssetSelectReturnTypeValues,
+} from '@/types/coreDam/AssetSelect'
+import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
 
 const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
+    modelValue?: boolean | undefined
     assetType: DamAssetType | DamAssetTypeValues
     minCount: number
     maxCount: number
     assetLicenceId?: number
+    returnType?: AssetSelectReturnType | AssetSelectReturnTypeValues
   }>(),
   {
+    modelValue: undefined,
     assetLicenceId: undefined,
+    returnType: 'mainFileId',
   }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
-  (e: 'onConfirm', data: DocId[]): void
-  (e: 'onOpen'): void
-  (e: 'onClose'): void
+  (e: 'onConfirm', data: AssetSelectReturnData): void
 }>()
-// defineSlots<{
-//   title?: (props: { activator: () => void }) => any
-//   buttonOpenDialog?: any
-//   buttonConfirmTitle?: any
-// }>()
 
-const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedIds, initStoreContext } =
+const dialogLocal = ref(false)
+const dialog = computed({
+  get() {
+    if (isUndefined(props.modelValue)) return dialogLocal.value
+    return props.modelValue
+  },
+  set(newValue: boolean) {
+    dialogLocal.value = newValue
+    emit('update:modelValue', newValue)
+  },
+})
+
+const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedData, initStoreContext } =
   useAssetListActions()
 
 const { openSidebar, sidebarLeft } = useSidebar()
@@ -62,17 +76,15 @@ const onOpen = () => {
   )
   resetAssetList()
   openSidebar()
-  emit('onOpen')
   dialog.value = true
 }
 
 const onClose = () => {
-  emit('onClose')
   dialog.value = false
 }
 
 const onConfirm = () => {
-  emit('onConfirm', getSelectedIds())
+  emit('onConfirm', getSelectedData(assetSelectReturnTypeValuesToEnum(props.returnType)))
   onClose()
 }
 
@@ -82,63 +94,60 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
   }
 }
 
-const dialog = ref(false)
-
 const { gridView } = useGridView()
 
 const componentComputed = computed(() => {
   switch (gridView.value) {
-    case GridView.Table:
-      return AssetListTableView
+    case AssetSelectGridView.Table:
+      return AssetSelectListTable
     default:
-    case GridView.Masonry:
-    case GridView.Thumbnail:
-      return AssetListTilesView
+    case AssetSelectGridView.Masonry:
+    case AssetSelectGridView.Thumbnail:
+      return AssetSelectListTiles
   }
 })
 
 const disabledSubmit = computed(() => {
   return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
 })
+
+defineExpose({
+  open: onOpen,
+})
 </script>
 
 <template>
   <slot
-    name="button-open-dialog"
-    :activator="onOpen"
-  >
-    <ABtnPrimary
-      rounded="pill"
-      @click.stop="onOpen"
-    />
-  </slot>
+    name="activator"
+    :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
+  />
   <VDialog
     :model-value="dialog"
     fullscreen
-    class="asset-select"
+    class="subject-select"
     @update:model-value="emit('update:modelValue', $event)"
   >
     <VCard
       v-if="dialog"
-      class="asset-select__card"
+      class="subject-select__card"
     >
       <ADialogToolbar
-        class="asset-select__toolbar system-border-b"
+        class="subject-select__toolbar system-border-b"
         @on-cancel="onClose"
       >
         <slot name="title">
           {{ t('common.assetSelect.meta.texts.title') }}
         </slot>
       </ADialogToolbar>
-      <AssetListBar />
+      <AssetSelectListBar />
       <div
-        class="asset-select__main"
-        :class="{ 'asset-select__main--sidebar-active': sidebarLeft }"
+        class="subject-select__main"
+        :class="{ 'subject-select__main--sidebar-active': sidebarLeft }"
       >
-        <div class="asset-select__sidebar system-border-r">
-          <AssetFilter />
+        <div class="subject-select__sidebar system-border-r">
+          <AssetSelectFilter />
         </div>
-        <div class="asset-select__content">
+        <div class="subject-select__content">
           <component :is="componentComputed" />
           <div class="d-flex w-100 align-center justify-center pa-4">
             <ABtnSecondary
@@ -155,7 +164,7 @@ const disabledSubmit = computed(() => {
           </div>
         </div>
       </div>
-      <div class="asset-select__actions system-border-t">
+      <div class="subject-select__actions system-border-t">
         <div v-if="props.minCount === props.maxCount">
           {{ t('common.assetSelect.meta.texts.pickExactCount', { count: props.minCount, selected: selectedCount }) }}
         </div>

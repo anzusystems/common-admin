@@ -2,12 +2,12 @@
 import { ref } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useTheme } from '@/composables/themeSettings'
-import SidebarMain from '@/views/system/SidebarMain.vue'
-import SidebarRail from '@/views/system/SidebarRail.vue'
-import SidebarAppendMain from '@/views/system/SidebarAppendMain.vue'
-import SidebarAppendRail from '@/views/system/SidebarAppendRail.vue'
+import SidebarMain from '@/playground/system/SidebarMain.vue'
+import SidebarRail from '@/playground/system/SidebarRail.vue'
+import SidebarAppendMain from '@/playground/system/SidebarAppendMain.vue'
+import SidebarAppendRail from '@/playground/system/SidebarAppendRail.vue'
 import AAlerts from '@/components/AAlerts.vue'
-import ActionbarTeleportTarget from '@/views/system/ActionbarTeleportTarget.vue'
+import ActionbarTeleportTarget from '@/playground/system/ActionbarTeleportTarget.vue'
 import { useRoute } from 'vue-router'
 import logoFull from '@/assets/logo-ca-full.svg'
 import logoNoText from '@/assets/logo-ca-no-text.svg'
@@ -30,11 +30,15 @@ const navIconClick = () => {
 }
 
 const { theme } = useTheme()
+import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMessages'
 </script>
 
 <template>
   <AAlerts />
-  <VApp :theme="theme">
+  <VApp
+    v-if="initLanguageMessagesLoaded"
+    :theme="theme"
+  >
     <VNavigationDrawer
       v-model="drawer"
       :rail="rail"

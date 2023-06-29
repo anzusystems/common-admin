@@ -249,6 +249,7 @@ import { generateUUIDv1 } from '@/utils/generator'
 import { useLoginStatus } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 
 export {
   // COMPONENTS
@@ -403,6 +404,7 @@ export {
   UrlParams,
   DamAssetType,
   DamAssetStatus,
+  AssetSelectReturnData,
 
   // FACTORIES
   useAnzuUserFactory,

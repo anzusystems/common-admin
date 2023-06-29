@@ -8,7 +8,7 @@ const filter = reactive({
     ...makeFilter({ exclude: true }),
   },
   text: {
-    ...makeFilter({ name: 'text' }),
+    ...makeFilter({ name: 'text', variant: 'search' }),
   },
   type: {
     ...makeFilter({ name: 'type', default: [] }),

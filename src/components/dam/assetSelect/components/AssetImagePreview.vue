@@ -65,7 +65,7 @@ const showIconComputed = computed(() => {
 <template>
   <div
     v-if="assetStatus === DamAssetStatus.WithFile && src"
-    class="asset-image asset-image--img position-relative"
+    class="anzu-common-asset-image anzu-common-asset-image--img position-relative"
     :style="{ width: width + 'px' }"
   >
     <img
@@ -78,10 +78,10 @@ const showIconComputed = computed(() => {
     >
     <div
       v-if="showIconComputed"
-      class="asset-image__icon-wrapper"
+      class="anzu-common-asset-image__icon-wrapper"
     >
       <div
-        class="asset-image__icon-circle"
+        class="anzu-common-asset-image__icon-circle"
         :style="{ padding: iconSize / 4 + 'px' }"
       >
         <VIcon
@@ -89,7 +89,7 @@ const showIconComputed = computed(() => {
           :size="iconSize"
           :icon="icon"
           :color="iconColor"
-          class="asset-image__icon"
+          class="anzu-common-asset-image__icon"
         />
       </div>
     </div>
@@ -121,8 +121,7 @@ const showIconComputed = computed(() => {
 </template>
 
 <style lang="scss">
-// todo Stano -> copy paste from dam-admin [duplicate code]
-.asset-image {
+.anzu-common-asset-image {
   position: relative;
 
   &__icon-wrapper {
