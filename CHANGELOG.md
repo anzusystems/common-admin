@@ -1,3 +1,16 @@
+## [1.5.0](https://github.com/anzusystems/common-admin/compare/1.4.2...1.5.0) (2023-06-30)
+
+### Features
+* **AAssetSelect:** added additional ways to open dialog, added possibility to return additional types, huge refactor, bug fixes
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **AAssetSelect:** changed activator slot, emits and return type
+* **dependencies:** new required versions:
+  * `vuetify@3.3.6`
+  * `@vuelidate/core@2.0.3`
+  * `@vuelidate/validators@2.0.3`
+
 ## [1.4.2](https://github.com/anzusystems/common-admin/compare/1.4.1...1.4.2) (2023-06-27)
 
 ### Bug Fixes
