@@ -1,11 +1,11 @@
 import { computed } from 'vue'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
-import type { AssetListItem } from '@/services/stores/coreDam/assetListStore'
+import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectStore'
 
 const IMAGE_HEIGHT = 200
 const IMAGE_BG_COLOR_DEFAULT = '#ccc'
 
-export function useAssetItemActions(item: AssetListItem) {
+export function useAssetItemActions(item: AssetSelectListItem) {
   const asset = computed<AssetSearchListItemDto>(() => {
     return item.asset
   })

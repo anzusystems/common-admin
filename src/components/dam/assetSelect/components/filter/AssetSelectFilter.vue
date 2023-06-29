@@ -1,16 +1,16 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
+import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { computed } from 'vue'
-import { useAssetListStore } from '@/services/stores/coreDam/assetListStore'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
-import AssetImageFilterForm from '@/components/dam/assetSelect/components/filter/AssetImageFilterForm.vue'
-import DefaultFilterForm from '@/components/dam/assetSelect/components/filter/DefaultFilterForm.vue'
+import AssetSelectFilterFormImage from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormImage.vue'
+import AssetSelectFilterFormDefault from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormDefault.vue'
 
 const { t } = useI18n()
 const { fetchAssetList, resetAssetList, filterUnTouch, filterIsTouched } = useAssetListActions()
 
-const assetListStore = useAssetListStore()
+const assetListStore = useAssetSelectStore()
 
 const submitFilter = () => {
   filterUnTouch()
@@ -25,9 +25,9 @@ const resetFilter = () => {
 const componentComputed = computed(() => {
   switch (assetListStore.assetType) {
     case AssetTypeValue.Image:
-      return AssetImageFilterForm
+      return AssetSelectFilterFormImage
     default:
-      return DefaultFilterForm
+      return AssetSelectFilterFormDefault
   }
 })
 </script>

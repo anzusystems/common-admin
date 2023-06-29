@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
+import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterBooleanSelect from '@/components/filter/AFilterBooleanSelect.vue'
 

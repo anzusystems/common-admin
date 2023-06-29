@@ -4,13 +4,13 @@ import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
 import { damAssetTypeValueToEnum } from '@/types/coreDam/Asset'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
-import AssetListTable from '@/components/dam/assetSelect/components/AssetListTable.vue'
-import AssetListBar from '@/components/dam/assetSelect/components/AssetListBar.vue'
-import { GridView, useGridView } from '@/components/dam/assetSelect/composables/gridView'
-import AssetListTiles from '@/components/dam/assetSelect/components/AssetListTiles.vue'
-import { useSidebar } from '@/components/dam/assetSelect/composables/filterSidebar'
-import AssetFilter from '@/components/dam/assetSelect/components/filter/AssetFilter.vue'
+import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
+import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
+import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
+import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
+import AssetSelectFilter from '@/components/dam/assetSelect/components/filter/AssetSelectFilter.vue'
 import { DefaultLicenceIdSymbol } from '@/AnzuSystemsCommonAdmin'
 import { isUndefined } from '@/utils/common'
 import type {
@@ -98,12 +98,12 @@ const { gridView } = useGridView()
 
 const componentComputed = computed(() => {
   switch (gridView.value) {
-    case GridView.Table:
-      return AssetListTable
+    case AssetSelectGridView.Table:
+      return AssetSelectListTable
     default:
-    case GridView.Masonry:
-    case GridView.Thumbnail:
-      return AssetListTiles
+    case AssetSelectGridView.Masonry:
+    case AssetSelectGridView.Thumbnail:
+      return AssetSelectListTiles
   }
 })
 
@@ -139,13 +139,13 @@ defineExpose({
           {{ t('common.assetSelect.meta.texts.title') }}
         </slot>
       </ADialogToolbar>
-      <AssetListBar />
+      <AssetSelectListBar />
       <div
         class="subject-select__main"
         :class="{ 'subject-select__main--sidebar-active': sidebarLeft }"
       >
         <div class="subject-select__sidebar system-border-r">
-          <AssetFilter />
+          <AssetSelectFilter />
         </div>
         <div class="subject-select__content">
           <component :is="componentComputed" />

@@ -1,6 +1,6 @@
-import { useDamApi } from '@/services/api/coreDam/assetApi'
+import { useAssetApi } from '@/services/api/coreDam/assetApi'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
-import { type AssetListItem, useAssetListStore } from '@/services/stores/coreDam/assetListStore'
+import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { inject, ref } from 'vue'
@@ -24,9 +24,9 @@ export function useAssetListActions() {
     throw new Error("Composable useAssetListActions can't be used without configured damClient.")
   }
 
-  const { fetchAssetList: apiFetchAssetList } = useDamApi(damClient)
+  const { fetchAssetList: apiFetchAssetList } = useAssetApi(damClient)
 
-  const assetListStore = useAssetListStore()
+  const assetListStore = useAssetSelectStore()
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetListStore)
 
   const { resetFilter } = useFilterHelpers()
@@ -94,7 +94,7 @@ export function useAssetListActions() {
     selectedAssets,
     pagination,
     loader,
-    assetListItems: assetListItems as Ref<Array<AssetListItem>>,
+    assetListItems: assetListItems as Ref<Array<AssetSelectListItem>>,
     getSelectedData: assetListStore.getSelectedData,
     onItemClick,
     fetchAssetList,

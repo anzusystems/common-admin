@@ -1,16 +1,16 @@
 import { readonly, ref } from 'vue'
 
-export enum GridView {
+export enum AssetSelectGridView {
   Masonry = 'masonry',
   Thumbnail = 'thumbnail',
   Table = 'table',
   Default = Masonry,
 }
 
-const gridView = ref<GridView>(GridView.Default)
+const gridView = ref<AssetSelectGridView>(AssetSelectGridView.Default)
 
 export function useGridView() {
-  const setGridView = (value: GridView) => {
+  const setGridView = (value: AssetSelectGridView) => {
     gridView.value = value
   }
 

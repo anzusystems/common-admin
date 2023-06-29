@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import AssetTilesItem from '@/components/dam/assetSelect/components/AssetTilesItem.vue'
-import { useGridView } from '@/components/dam/assetSelect/composables/gridView'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
+import AssetSelectTilesItem from '@/components/dam/assetSelect/components/AssetSelectTilesItem.vue'
+import { useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { useI18n } from 'vue-i18n'
 
 const { gridView } = useGridView()
@@ -15,7 +15,7 @@ const { t } = useI18n()
     class="asset-list-tiles"
     :class="'asset-list-tiles--' + gridView"
   >
-    <AssetTilesItem
+    <AssetSelectTilesItem
       v-for="(item, index) in assetListItems"
       :key="item.asset.id"
       :index="index"

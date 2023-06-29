@@ -249,7 +249,6 @@ import { generateUUIDv1 } from '@/utils/generator'
 import { useLoginStatus } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
-import type { ArticleSelectReturnData } from '@/types/coreCms/ArticleSelect'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 
 export {
@@ -405,7 +404,6 @@ export {
   UrlParams,
   DamAssetType,
   DamAssetStatus,
-  ArticleSelectReturnData,
   AssetSelectReturnData,
 
   // FACTORIES

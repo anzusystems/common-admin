@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import AssetTableRowItem from '@/components/dam/assetSelect/components/AssetTableRowItem.vue'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetListActions'
+import AssetSelectTableRowItem from '@/components/dam/assetSelect/components/AssetSelectTableRowItem.vue'
+import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 
 const { t } = useI18n()
 
@@ -34,7 +34,7 @@ const { onItemClick, assetListItems, loader } = useAssetListActions()
       </tr>
     </thead>
     <tbody>
-      <AssetTableRowItem
+      <AssetSelectTableRowItem
         v-for="(item, index) in assetListItems"
         :key="item.asset.id"
         :index="index"

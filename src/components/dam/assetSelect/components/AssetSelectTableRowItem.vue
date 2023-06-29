@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import type { AssetListItem } from '@/services/stores/coreDam/assetListStore'
+import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectStore'
 import { useI18n } from 'vue-i18n'
-import { useAssetItemActions } from '@/components/dam/assetSelect/composables/assetItemActions'
-import AssetImage from '@/components/dam/assetSelect/components/AssetImagePreview.vue'
+import { useAssetItemActions } from '@/components/dam/assetSelect/composables/assetSelectItemActions'
+import AssetImagePreview from '@/components/dam/assetSelect/components/AssetImagePreview.vue'
 import type { DocId } from '@/types/common'
 import { prettyBytes } from '@/utils/file'
 import ADatetime from '@/components/ADatetime.vue'
@@ -15,7 +15,7 @@ const IMAGE_WIDTH = 128
 const props = withDefaults(
   defineProps<{
     index: number
-    item: AssetListItem
+    item: AssetSelectListItem
     showMetaIcons?: boolean
   }>(),
   {
@@ -53,7 +53,7 @@ const onItemClick = () => {
       />
     </td>
     <td>
-      <AssetImage
+      <AssetImagePreview
         :asset-type="assetType"
         :asset-status="assetStatus"
         :src="tableImageProperties.url"

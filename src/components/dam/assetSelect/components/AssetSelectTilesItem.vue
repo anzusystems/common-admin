@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import type { AssetListItem } from '@/services/stores/coreDam/assetListStore'
-import { useAssetItemActions } from '@/components/dam/assetSelect/composables/assetItemActions'
+import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectStore'
+import { useAssetItemActions } from '@/components/dam/assetSelect/composables/assetSelectItemActions'
 import AssetImagePreview from '@/components/dam/assetSelect/components/AssetImagePreview.vue'
 import type { DocId } from '@/types/common'
 
@@ -12,7 +12,7 @@ const IMAGE_HEIGHT = 200
 const props = withDefaults(
   defineProps<{
     index: number
-    item: AssetListItem
+    item: AssetSelectListItem
     showMetaIcons?: boolean
   }>(),
   {

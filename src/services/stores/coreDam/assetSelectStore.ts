@@ -5,17 +5,17 @@ import type { DocId } from '@/types/common'
 import { computed, ref } from 'vue'
 import { type AssetSelectReturnData, AssetSelectReturnType } from '@/types/coreDam/AssetSelect'
 
-export interface AssetListItem {
+export interface AssetSelectListItem {
   asset: AssetSearchListItemDto
   selected: boolean
 }
 
-export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore', () => {
-  const assetListItems = ref<Array<AssetListItem>>([])
+export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
+  const assetListItems = ref<Array<AssetSelectListItem>>([])
   const loader = ref(false)
   const licenceId = ref(0)
   const assetType = ref<AssetTypeValue>(AssetTypeValue.Default)
-  const selectedAssets = ref<Map<DocId, AssetListItem>>(new Map())
+  const selectedAssets = ref<Map<DocId, AssetSelectListItem>>(new Map())
   const singleMode = ref(false)
   const minCount = ref(0)
   const maxCount = ref(0)
@@ -104,7 +104,7 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
     selectedAssets.value.clear()
   }
 
-  function addToSelected(assetItem: AssetListItem) {
+  function addToSelected(assetItem: AssetSelectListItem) {
     if (!selectedAssets.value.has(assetItem.asset.id)) {
       selectedAssets.value.set(assetItem.asset.id, assetItem)
     }
@@ -200,5 +200,5 @@ export const useAssetListStore = defineStore('commonAdminCoreDamAssetListStore',
 })
 
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useAssetListStore, import.meta.hot))
+  import.meta.hot.accept(acceptHMRUpdate(useAssetSelectStore, import.meta.hot))
 }

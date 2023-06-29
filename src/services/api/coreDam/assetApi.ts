@@ -8,7 +8,7 @@ const END_POINT = '/adm/v1/asset'
 export const ENTITY = 'asset'
 export const SYSTEM_CORE_DAM = 'coreDam'
 
-export function useDamApi(client: () => AxiosInstance) {
+export function useAssetApi(client: () => AxiosInstance) {
   const fetchAssetList = (licenceId: number, pagination: Pagination, filterBag: FilterBag) =>
     apiFetchList<AssetSearchListItemDto[]>(
       client,

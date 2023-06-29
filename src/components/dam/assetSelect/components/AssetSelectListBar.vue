@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { GridView, useGridView } from '@/components/dam/assetSelect/composables/gridView'
-import { useSidebar } from '@/components/dam/assetSelect/composables/filterSidebar'
+import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 
 const { t } = useI18n()
 const { setGridView } = useGridView()
@@ -45,7 +45,7 @@ const { toggleSidebar } = useSidebar()
               size="x-small"
               icon
               variant="text"
-              @click.stop="setGridView(GridView.Masonry)"
+              @click.stop="setGridView(AssetSelectGridView.Masonry)"
             >
               <VIcon icon="mdi-view-compact" />
               <VTooltip
@@ -59,7 +59,7 @@ const { toggleSidebar } = useSidebar()
               icon
               size="x-small"
               variant="text"
-              @click.stop="setGridView(GridView.Thumbnail)"
+              @click.stop="setGridView(AssetSelectGridView.Thumbnail)"
             >
               <VIcon icon="mdi-view-grid" />
               <VTooltip
@@ -73,7 +73,7 @@ const { toggleSidebar } = useSidebar()
               size="x-small"
               icon
               variant="text"
-              @click.stop="setGridView(GridView.Table)"
+              @click.stop="setGridView(AssetSelectGridView.Table)"
             >
               <VIcon icon="mdi-view-headline" />
               <VTooltip
