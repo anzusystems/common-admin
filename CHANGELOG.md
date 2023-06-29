@@ -10,6 +10,8 @@
   * `vuetify@3.3.6`
   * `@vuelidate/core@2.0.3`
   * `@vuelidate/validators@2.0.3`
+  * `@vueuse/core@10.2.1`
+  * `@vueuse/integrations@10.2.1`
 
 ## [1.4.2](https://github.com/anzusystems/common-admin/compare/1.4.1...1.4.2) (2023-06-27)
 
