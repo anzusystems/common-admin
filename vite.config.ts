@@ -26,6 +26,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: 'common-admin.sme.localhost',
     watch: {
       usePolling: true,
     },

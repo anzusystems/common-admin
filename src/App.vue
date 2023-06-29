@@ -30,11 +30,15 @@ const navIconClick = () => {
 }
 
 const { theme } = useTheme()
+import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMessages'
 </script>
 
 <template>
   <AAlerts />
-  <VApp :theme="theme">
+  <VApp
+    v-if="initLanguageMessagesLoaded"
+    :theme="theme"
+  >
     <VNavigationDrawer
       v-model="drawer"
       :rail="rail"
