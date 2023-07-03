@@ -145,6 +145,7 @@ function sidebarEditor() {
       items: [
 
         { text: 'EmbedImage', link: '/editor/nodes/embed-image/' },
+        { text: 'EmbedArticle', link: '/editor/nodes/embed-article/' },
       ]
     },
   ]

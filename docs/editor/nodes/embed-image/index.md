@@ -66,7 +66,13 @@ interface EmbedKindImage {
       settings: {
         reviewed: boolean
       }
-      imageAuthors: ImageAuthor[]
+      imageAuthors: Array<{
+        id: IntegerId
+        position: number
+        customAuthor: string
+        image: IntegerId
+        author: IntegerIdNullable
+      }>
       position: number
     }
   }
