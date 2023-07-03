@@ -57,7 +57,7 @@ export default defineConfig({
     sidebar: {
       '/guide/': sidebarGuide(),
       '/styleguide/': sidebarGuide(),
-      '/embeds/': sidebarGuide(),
+      '/editor/': sidebarEditor(),
       '/api/': getApiSidebarItems()
     },
 
@@ -78,6 +78,11 @@ function nav() {
       text: 'API',
       link: '/api/',
       activeMatch: '/api/'
+    },
+    {
+      text: 'Editor',
+      link: '/editor/introduction/',
+      activeMatch: '/editor/'
     },
     {
       text: pkg.version,
@@ -117,13 +122,29 @@ function sidebarGuide() {
         { text: 'Other', link: '/styleguide/other/' },
       ]
     },
+  ]
+}
+
+function sidebarEditor() {
+  return [
     {
-      text: 'Embeds',
+      text: 'General',
       collapsed: false,
       items: [
-        { text: 'General', link: '/embeds/general/' },
-        { text: 'Editor', link: '/embeds/editor/' },
-        { text: 'EmbedImage', link: '/embeds/embed-image/' },
+        { text: 'Introduction', link: '/editor/introduction/' },
+        { text: 'Editor', link: '/editor/editor/' },
+      ]
+    },
+    {
+      text: 'Marks',
+      collapsed: false,
+    },
+    {
+      text: 'Nodes',
+      collapsed: false,
+      items: [
+
+        { text: 'EmbedImage', link: '/editor/nodes/embed-image/' },
       ]
     },
   ]
