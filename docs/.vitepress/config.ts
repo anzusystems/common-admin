@@ -144,6 +144,7 @@ function sidebarEditor() {
       collapsed: false,
       items: [
 
+        { text: 'ContentLock', link: '/editor/nodes/content-lock/' },
         { text: 'EmbedImage', link: '/editor/nodes/embed-image/' },
         { text: 'EmbedArticle', link: '/editor/nodes/embed-article/' },
       ]
