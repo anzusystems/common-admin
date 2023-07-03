@@ -2,7 +2,7 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import type { AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
 import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
-import { computed, ref } from 'vue'
+import { computed, ref, toRaw } from 'vue'
 import { type AssetSelectReturnData, AssetSelectReturnType } from '@/types/coreDam/AssetSelect'
 
 export interface AssetSelectListItem {
@@ -133,7 +133,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   function getSelectedAssets(): AssetSearchListItemDto[] {
     const assets: Array<AssetSearchListItemDto> = []
     for (const value of selectedAssets.value.values()) {
-      assets.push(value.asset)
+      assets.push(toRaw(value.asset))
     }
     return assets
   }
