@@ -17,7 +17,7 @@ function getDirectories(startingPath: string, relativeToPath: string): Directory
 
   try {
     const files = fs.readdirSync(startingPath)
-    files.forEach((file) => {
+    files.forEach((file: any) => {
       const filePath = path.join(startingPath, file)
       const stats = fs.statSync(filePath)
 

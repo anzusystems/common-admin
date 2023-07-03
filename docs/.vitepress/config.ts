@@ -53,14 +53,11 @@ export default defineConfig({
       provider: 'local'
     },
     nav: nav(),
-    // nav: [
-    //   { text: 'Home', link: '/' },
-    //   { text: 'Examples', link: '/markdown-examples' }
-    // ],
 
     sidebar: {
       '/guide/': sidebarGuide(),
       '/styleguide/': sidebarGuide(),
+      '/embeds/': sidebarGuide(),
       '/api/': getApiSidebarItems()
     },
 
@@ -118,6 +115,15 @@ function sidebarGuide() {
         { text: 'Buttons', link: '/styleguide/buttons/' },
         { text: 'Chips', link: '/styleguide/chips/' },
         { text: 'Other', link: '/styleguide/other/' },
+      ]
+    },
+    {
+      text: 'Embeds',
+      collapsed: false,
+      items: [
+        { text: 'General', link: '/embeds/general/' },
+        { text: 'Editor', link: '/embeds/editor/' },
+        { text: 'EmbedImage', link: '/embeds/embed-image/' },
       ]
     },
   ]

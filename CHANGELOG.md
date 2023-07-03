@@ -1,3 +1,11 @@
+## [1.6.0](https://github.com/anzusystems/common-admin/compare/1.5.0...1.6.0) (2023-07-03)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new dayjs required version is `dayjs@1.11.9`
+
 ## [1.5.0](https://github.com/anzusystems/common-admin/compare/1.4.2...1.5.0) (2023-06-30)
 
 ### Features
