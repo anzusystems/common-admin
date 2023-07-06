@@ -38,7 +38,7 @@ export default defineConfig({
       runtimeOnly: false,
       include: path.resolve(__dirname, 'src/locales/**.json'),
     }),
-    dts({ rollupTypes: true, tsConfigFilePath: 'tsconfig.libdts.json' }),
+    dts({ rollupTypes: true, tsconfigPath: 'tsconfig.libdts.json' }),
   ],
   resolve: {
     alias: {

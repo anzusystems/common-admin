@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref, unref, watch } from 'vue'
 import FlatPickr from 'vue-flatpickr-component'
-import FlatpickrLanguages from 'flatpickr/dist/l10n'
+import { Slovak } from 'flatpickr/dist/l10n/sk'
+import { Czech } from 'flatpickr/dist/l10n/cs'
+import { english as English } from 'flatpickr/dist/l10n/default'
 import 'flatpickr/dist/flatpickr.css'
 import { dateNow, dateToUtc } from '@/utils/datetime'
 import type flatpickr from 'flatpickr'
@@ -12,6 +14,7 @@ import type { DatetimeUTCNullable } from '@/types/common'
 import { useValidateRequiredIf } from '@/validators/vuelidate/common/useValidateRequiredIf'
 import { useI18n } from 'vue-i18n'
 import type { DateLimit, DateOption } from 'flatpickr/dist/types/options'
+import { useLanguageSettings } from '@/composables/languageSettings'
 
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
@@ -188,6 +191,15 @@ const pluginsComputed = computed(() => {
   ]
 })
 
+// todo check for lazy solution
+const languages = {
+  sk: Slovak,
+  en: English,
+  cs: Czech,
+}
+
+const { currentLanguageCode } = useLanguageSettings()
+
 const flatpickrConfig = computed(() => {
   const positionElement = textFieldRef.value?.$el.querySelector('.v-input__control')
   return {
@@ -206,7 +218,7 @@ const flatpickrConfig = computed(() => {
     clickOpens: false,
     position: 'auto' as const,
     // @ts-ignore
-    locale: { ...FlatpickrLanguages[lang.value] },
+    locale: { ...languages[currentLanguageCode.value] },
     enable: enableComputed.value,
     weekNumbers: props.weekNumbers,
     // @ts-ignore
