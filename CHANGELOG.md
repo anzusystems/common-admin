@@ -1,3 +1,17 @@
+## [1.7.0](https://github.com/anzusystems/common-admin/compare/1.6.0...1.7.0) (2023-07-06)
+
+### Features
+* **ADatetimePicker:** instead of using one default language, component is now using system language for translations
+* **chore:** updated dependencies
+* **docs:** added wip docs for editor
+
+### Bug Fixes
+* **AAssetSelect:** confirm returns raw objects instead of proxies
+* **size:** reduced size by removing unused flatpickr translations
+
+### BREAKING CHANGES
+* **dependencies:** new vuetify required version is `vuetify@3.3.7`
+
 ## [1.6.0](https://github.com/anzusystems/common-admin/compare/1.5.0...1.6.0) (2023-07-03)
 
 ### Features
