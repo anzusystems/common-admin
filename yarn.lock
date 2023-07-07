@@ -191,7 +191,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@anzusystems/common-admin@workspace:."
   dependencies:
-    "@intlify/unplugin-vue-i18n": ^0.12.0
+    "@intlify/unplugin-vue-i18n": ^0.12.1
     "@kyvg/vue3-notification": ^2.9.1
     "@mdi/font": ^7.2.96
     "@rushstack/eslint-patch": ^1.3.2
@@ -225,14 +225,14 @@ __metadata:
     stylelint-config-standard-scss: ^10.0.0
     typescript: 4.9.5
     uuid: ^9.0.0
-    vite: ^4.4.1
-    vite-plugin-dts: ^3.1.0
+    vite: ^4.4.2
+    vite-plugin-dts: ^3.1.1
     vite-plugin-vuetify: ^1.0.2
     vitepress: 1.0.0-beta.5
     vue: ^3.3.4
     vue-flatpickr-component: ^11.0.3
     vue-i18n: ^9.2.2
-    vue-router: ^4.2.3
+    vue-router: ^4.2.4
     vue-tsc: 1.8.4
     vuetify: 3.3.7
     webfontloader: ^1.6.28
@@ -899,9 +899,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@intlify/unplugin-vue-i18n@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "@intlify/unplugin-vue-i18n@npm:0.12.0"
+"@intlify/unplugin-vue-i18n@npm:^0.12.1":
+  version: 0.12.1
+  resolution: "@intlify/unplugin-vue-i18n@npm:0.12.1"
   dependencies:
     "@intlify/bundle-utils": ^7.0.0
     "@intlify/shared": 9.3.0-beta.20
@@ -926,7 +926,7 @@ __metadata:
       optional: true
     vue-i18n-bridge:
       optional: true
-  checksum: a37123380fd34dc923912bc7a802a6268dd820eb32e8d50cd86dcb3567e09f931791b5a084fde140d8d470f1b3179e214234be1acf70945604342078dd48d08d
+  checksum: e6d13e3ecddbf8011bed544ebbc6ad81022530f2c8599a68d38e019ea2c7135f32c1b9326581a516f48fd46a4deb16c2084e67cb66577360be8d7576cf81b399
   languageName: node
   linkType: hard
 
@@ -6684,9 +6684,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-plugin-dts@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "vite-plugin-dts@npm:3.1.0"
+"vite-plugin-dts@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "vite-plugin-dts@npm:3.1.1"
   dependencies:
     "@microsoft/api-extractor": ^7.36.0
     "@rollup/pluginutils": ^5.0.2
@@ -6704,7 +6704,7 @@ __metadata:
       optional: true
     vite:
       optional: true
-  checksum: e0258c2997812d59b842db1ac5f3204d78e1f04bb4e1f3b539861a7dafcd006887412a90fd65fa64987f95306f7a7815cbec1eed6bea678115734e624319a5c6
+  checksum: c7f9dfe10e3dbde0cf621ae30a245780277c30ac1917d041d4c39b5135a9d72823946e598e385bb74197106981fd72b1b01092f81d1b4e7015841087ad5f102f
   languageName: node
   linkType: hard
 
@@ -6799,9 +6799,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^4.4.1":
-  version: 4.4.1
-  resolution: "vite@npm:4.4.1"
+"vite@npm:^4.4.2":
+  version: 4.4.2
+  resolution: "vite@npm:4.4.2"
   dependencies:
     esbuild: ^0.18.10
     fsevents: ~2.3.2
@@ -6835,7 +6835,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: c91d5228cd0b2410e95ea4b17279640a414f1a2d5290a01baec77351af2dda7d5901c240ed6a62de2b465567e328168d386da2aaa262d3a138fde827b289592d
+  checksum: 37a1c3a0ccc4b80c0a696203d3608d6bf7dc98219ddc178e528b972e3305af9ab8f92dea455421024e98c59372f6a97b1b4cc409a05f757a64bff830610053c6
   languageName: node
   linkType: hard
 
@@ -7088,14 +7088,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-router@npm:^4.2.3":
-  version: 4.2.3
-  resolution: "vue-router@npm:4.2.3"
+"vue-router@npm:^4.2.4":
+  version: 4.2.4
+  resolution: "vue-router@npm:4.2.4"
   dependencies:
     "@vue/devtools-api": ^6.5.0
   peerDependencies:
     vue: ^3.2.0
-  checksum: 66cde4a8a49fd3ddeac930771a76359e79ec3f343ecbb0b06f326e46eee00deaacf9859c6d5143e0ece659b15de48df216a7247d2bb0ae2b3505d6383a0f5e63
+  checksum: 9fe1fc11b613c8e020aad5d0850ba5caa971033dfaa4fc117e4595349f2c5f211793a247c30e3c03b0f91c3512b87af929af96b8b20b6b7d4cdccc5af13e5e7f
   languageName: node
   linkType: hard
 
