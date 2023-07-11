@@ -1,7 +1,10 @@
-# EmbedArticle
+# EmbedRelated
 
 ## Features
-- User can select article from CMS using filterable dialog
+- User can insert internal articles from CMS using filterable dialog to item, also can override article title
+- User can insert external url for item and specify title fot his item
+- user can mix both types
+- User can override box title
 
 ## Limitations
 - For now, user can't copy/paste and delete text including embed
@@ -10,23 +13,18 @@
 
 ```json
 {
-  "name": "embedArticle",
+  "name": "embedRelated",
   "groups": [
     "embed"
   ],
   "attrs": {
     "id": {
-      "hasDefault": true,
       "default": null
     },
     "changeId": {
-      "hasDefault": true,
       "default": ""
     }
-  },
-  "inlineContent": false,
-  "isBlock": true,
-  "isText": false
+  }
 }
 ```
 
@@ -34,7 +32,7 @@
 
 ```json
 {
-  "type": "embedArticle",
+  "type": "embedRelated",
   "attrs": {
     "id": 23,
     "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
@@ -45,10 +43,11 @@
 ## API data
 
 ```ts
-interface EmbedKindImage {
+interface EmbedKindRelated {
   id: IntegerId
+  title: string
+  items: Array<{id: DocId | string, title: string, type: 'article' | 'link', url: string}>
   article: IntegerId
-  articleDocIDs: DocId[]
   detail: {
     articles: Array<{
       id: IntegerId
