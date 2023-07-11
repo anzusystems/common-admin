@@ -8,6 +8,7 @@ import FormsView from '@/playground/formsView/FormsView.vue'
 import FilterView from '@/playground/filterView/FilterView.vue'
 import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
+import ImageView from '@/playground/image/ImageView.vue'
 import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 
 const router = createRouter({
@@ -57,6 +58,11 @@ const router = createRouter({
       path: '/view/asset-select',
       name: 'view-asset-select',
       component: AssetSelectView,
+    },
+    {
+      path: '/view/image',
+      name: 'view-image',
+      component: ImageView,
     },
   ],
 })

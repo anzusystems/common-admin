@@ -10,10 +10,7 @@
   "name": "contentLock",
   "groups": [
     "lock"
-  ],
-  "inlineContent": false,
-  "isBlock": true,
-  "isText": false
+  ]
 }
 ```
 

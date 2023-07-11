@@ -138,15 +138,41 @@ function sidebarEditor() {
     {
       text: 'Marks',
       collapsed: false,
+      items: [
+        { text: 'Anchor', link: '/editor/marks/anchor/' },
+        { text: 'Bold', link: '/editor/marks/bold/' },
+        { text: 'Italic', link: '/editor/marks/italic/' },
+        { text: 'Link', link: '/editor/marks/link/' },
+        { text: 'Strike', link: '/editor/marks/strike/' },
+        { text: 'Subscript', link: '/editor/marks/subscript/' },
+        { text: 'Superscript', link: '/editor/marks/superscript/' },
+        { text: 'Underline', link: '/editor/marks/underline/' },
+      ]
     },
     {
       text: 'Nodes',
       collapsed: false,
       items: [
-
+        { text: 'Blockquote', link: '/editor/nodes/blockquote/' },
+        { text: 'BulletList', link: '/editor/nodes/bullet-list/' },
+        { text: 'Button', link: '/editor/nodes/button/' },
         { text: 'ContentLock', link: '/editor/nodes/content-lock/' },
+        { text: 'Doc', link: '/editor/nodes/doc/' },
+        { text: 'EmbedGallery', link: '/editor/nodes/embed-gallery/' },
         { text: 'EmbedImage', link: '/editor/nodes/embed-image/' },
-        { text: 'EmbedArticle', link: '/editor/nodes/embed-article/' },
+        { text: 'EmbedImageInline', link: '/editor/nodes/embed-image-inline/' },
+        { text: 'EmbedRelated', link: '/editor/nodes/embed-related/' },
+        { text: 'HardBreak', link: '/editor/nodes/hard-break/' },
+        { text: 'Heading', link: '/editor/nodes/heading/' },
+        { text: 'HorizontalRule', link: '/editor/nodes/horizontal-rule/' },
+        { text: 'ListItem', link: '/editor/nodes/list-item/' },
+        { text: 'OrderedList', link: '/editor/nodes/ordered-list/' },
+        { text: 'Paragraph', link: '/editor/nodes/paragraph/' },
+        { text: 'Table', link: '/editor/nodes/table/' },
+        { text: 'TableCell', link: '/editor/nodes/table-cell/' },
+        { text: 'TableHeader', link: '/editor/nodes/table-header/' },
+        { text: 'TableRow', link: '/editor/nodes/table-row/' },
+        { text: 'Text', link: '/editor/nodes/text/' },
       ]
     },
   ]

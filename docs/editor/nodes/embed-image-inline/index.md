@@ -1,9 +1,7 @@
-# EmbedImage
+# EmbedImageInline
 
 ## Features
-- User can select image from DAM using filterable dialog
-- WIP: User can upload image from local file, so it will be uploaded to DAM and then used as embed
-- WIP: User can drag and drop file directly to editor to upload to DAM and use as embed
+todo
 
 ## Limitations
 - For now, user can't copy/paste and delete text including embed
@@ -12,9 +10,9 @@
 
 ```json
 {
-  "name": "embedImage",
+  "name": "embedImageInline",
   "groups": [
-    "embed"
+    "embedImageInline"
   ],
   "attrs": {
     "id": {
@@ -31,7 +29,7 @@
 
 ```json
 {
-  "type": "embedImage",
+  "type": "embedImageInline",
   "attrs": {
     "id": 23,
     "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
@@ -42,12 +40,11 @@
 ## API data
 
 ```ts
-interface EmbedKindGallery {
+interface EmbedKindImage {
   id: IntegerId
   article: IntegerId
-  gallery: IntegerId
+  image: IntegerId
   link: string
-  layout: 'parallax' | 'size20' | 'size50' | 'size100'
   align: 'right' | 'left' | 'center' | ''
   detail: {
     image: {
