@@ -59,11 +59,20 @@ const { isDraggingFile } = useDropzoneGlobalDragState()
     }"
     @click.stop="emit('onClick')"
   >
-    <div v-if="disabled" />
-    <div v-else-if="isDraggingFile">
+    <div
+      v-if="disabled"
+      class="text"
+    />
+    <div
+      v-else-if="isDraggingFile"
+      class="text"
+    >
       Drop files here
     </div>
-    <div v-else>
+    <div
+      v-else
+      class="text"
+    >
       You can drop files here
     </div>
   </div>
@@ -80,13 +89,13 @@ $class-name-root: 'a-file-dropzone';
   align-items: center;
   justify-items: center;
 
-  div {
-    padding: 10px;
+  .text {
+    padding: 6px;
     pointer-events: none;
     user-select: none;
-    color: white;
     width: 100%;
     text-align: center;
+    border-radius: 5px;
   }
 
   &--fill {
@@ -119,6 +128,10 @@ $class-name-root: 'a-file-dropzone';
 
 .v-theme--light {
   .#{$class-name-root} {
+    .text {
+      background-color: rgba(212 212 212 / 50%)
+    }
+
     &--bg {
       background-color: #D4D4D4;
     }
@@ -137,6 +150,10 @@ $class-name-root: 'a-file-dropzone';
 
 .v-theme--dark {
   .#{$class-name-root} {
+    .text {
+      background-color: rgba(57 57 57 / 50%)
+    }
+
     &--bg {
       background-color: #393939;
     }
