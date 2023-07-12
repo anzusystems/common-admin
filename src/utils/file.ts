@@ -10,3 +10,4 @@ export const prettyBytes = (bytes: number, decimals = 2) => {
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
+

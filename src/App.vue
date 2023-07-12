@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useTheme } from '@/composables/themeSettings'
 import SidebarMain from '@/playground/system/SidebarMain.vue'
@@ -31,6 +31,13 @@ const navIconClick = () => {
 
 const { theme } = useTheme()
 import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMessages'
+import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
+
+const { initGlobalDragState } = useDropzoneGlobalDragState()
+
+onMounted(() => {
+  initGlobalDragState()
+})
 </script>
 
 <template>
@@ -116,4 +123,3 @@ import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMess
   width: auto;
 }
 </style>
-

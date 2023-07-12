@@ -10,6 +10,7 @@ import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
 import ImageView from '@/playground/image/ImageView.vue'
 import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
+import FileView from '@/playground/file/FileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -63,6 +64,11 @@ const router = createRouter({
       path: '/view/image',
       name: 'view-image',
       component: ImageView,
+    },
+    {
+      path: '/view/file',
+      name: 'view-file',
+      component: FileView,
     },
   ],
 })
