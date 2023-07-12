@@ -87,13 +87,12 @@ $class-name-root: 'a-file-dropzone';
   text-align: center;
   display: flex;
   align-items: center;
-  justify-items: center;
+  justify-content: center;
 
   .text {
     padding: 6px;
     pointer-events: none;
     user-select: none;
-    width: 100%;
     text-align: center;
     border-radius: 5px;
   }

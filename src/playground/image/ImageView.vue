@@ -15,7 +15,10 @@ const imageId = ref(1)
     <VCardText>
       <VRow>
         <VCol cols="4">
-          <AImageWidgetSimple :image-id="imageId">
+          <AImageWidgetSimple
+            :image-id="imageId"
+            label="Simple image view"
+          >
             <template #append="{ image }">
               DAM ID: {{ image?.dam.damId }}
             </template>
@@ -26,6 +29,7 @@ const imageId = ref(1)
         <VCol cols="4">
           <AImageWidget
             v-model="imageId"
+            label="Lead image"
             stack-id="ahoj"
           />
         </VCol>

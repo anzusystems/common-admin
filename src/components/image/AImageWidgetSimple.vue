@@ -9,6 +9,7 @@ import { useImageActions } from '@/components/image/composables/imageActions'
 const props = withDefaults(
   defineProps<{
     configName?: string
+    label?: string | undefined
     image?: ImageWidgetImage | null
     imageId?: number | null
     width?: number | undefined
@@ -16,6 +17,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
+    label: undefined,
     image: null,
     imageId: null,
     width: undefined,
@@ -55,10 +57,12 @@ watch(
 </script>
 
 <template>
-  <slot
-    name="prepend"
-    :image="resImage"
-  />
+  <h4
+    v-if="label"
+    class="font-weight-bold text-subtitle-2"
+  >
+    {{ label }}
+  </h4>
   <VImg
     :lazy-src="imagePlaceholderPath"
     :src="resolvedSrc"
