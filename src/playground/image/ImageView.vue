@@ -1,7 +1,10 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import AImageSimple from '@/components/image/AImageSimple.vue'
-import AImage from '@/components/image/AImage.vue'
+import AImageWidgetSimple from '@/components/image/AImageWidgetSimple.vue'
+import AImageWidget from '@/components/image/AImageWidget.vue'
+import { ref } from 'vue'
+
+const imageId = ref(1)
 </script>
 
 <template>
@@ -12,12 +15,19 @@ import AImage from '@/components/image/AImage.vue'
     <VCardText>
       <VRow>
         <VCol cols="4">
-          <AImageSimple />
+          <AImageWidgetSimple :image-id="imageId">
+            <template #append="{ image }">
+              DAM ID: {{ image?.dam.damId }}
+            </template>
+          </AImageWidgetSimple>
         </VCol>
       </VRow>
       <VRow>
         <VCol cols="4">
-          <AImage />
+          <AImageWidget
+            v-model="imageId"
+            stack-id="ahoj"
+          />
         </VCol>
       </VRow>
     </VCardText>

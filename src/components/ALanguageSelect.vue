@@ -4,13 +4,9 @@ import { ALL_LANGUAGES, modifyLanguageSettings, useLanguageSettings } from '@/co
 import { computed, inject } from 'vue'
 import { isUndefined } from '@/utils/common'
 import FlagCountry from '@/components/flags/FlagCountry.vue'
-import {
-  AvailableLanguagesSymbol,
-  CurrentUserSymbol,
-  type CurrentUserType,
-  DefaultLanguageSymbol,
-} from '@/AnzuSystemsCommonAdmin'
+import type { CurrentUserType } from '@/AnzuSystemsCommonAdmin'
 import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
+import { AvailableLanguagesSymbol, CurrentUserSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
 
 const emit = defineEmits<{
   (e: 'afterChange', code: LanguageCode): void

@@ -1,6 +1,6 @@
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
 
-export interface Image {
+export interface ImageWidgetImage {
   id: IntegerId
   texts: {
     title?: string
@@ -15,16 +15,16 @@ export interface Image {
     reviewed: false
   }
   position: number
-  imageAuthors: ImageAuthor[]
-  licences: ImageLicence[]
+  imageAuthors: ImageWidgetImageAuthor[]
+  licences: ImageWidgetImageLicence[]
 }
 
-export interface ImageLicence {
+export interface ImageWidgetImageLicence {
   name: string // licencedBlog, licencedUser, etc.
   value: IntegerIdNullable
 }
 
-export interface ImageAuthor {
+export interface ImageWidgetImageAuthor {
   id: IntegerId
   position: number
   customAuthor: string

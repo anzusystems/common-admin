@@ -4,13 +4,9 @@ import { Grant } from '@/model/valueObject/Grant'
 import { isOwnerAware } from '@/types/OwnerAware'
 import { isCreatedByAware } from '@/types/CreatedByAware'
 import { inject } from 'vue'
-import {
-  CurrentUserSymbol,
-  type CurrentUserType,
-  type CustomAclResolver,
-  CustomAclResolverSymbol,
-} from '@/AnzuSystemsCommonAdmin'
+import type { CurrentUserType, CustomAclResolver } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue } from '@/types/Permission'
+import { CurrentUserSymbol, CustomAclResolverSymbol } from '@/components/injectionKeys'
 
 export const ROLE_SUPER_ADMIN = 'ROLE_ADMIN'
 

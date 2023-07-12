@@ -7,7 +7,7 @@ let mainInstance: AxiosInstance | null = null
 const cmsClient = function (): AxiosInstance {
   if (isNull(mainInstance)) {
     mainInstance = axios.create({
-      baseURL: 'http://core-dam.sme.localhost/api',
+      baseURL: 'http://core-cms.sme.localhost/api',
       timeout: 15 * 1000,
       withCredentials: true,
       headers: {

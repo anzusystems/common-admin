@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import AImageDropzone from '@/components/image/AImageDropzone.vue'
 import type { IntegerIdNullable } from '@/types/common'
-import type { Image } from '@/types/Image'
+import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
 
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
     stackId: string
     label?: string | undefined
-    image?: Image | undefined // optional, if available, no need to fetch image data
+    image?: ImageWidgetImage | undefined // optional, if available, no need to fetch image data
     uploadPriority?: number
     readonly?: boolean
     lockable?: boolean // todo
