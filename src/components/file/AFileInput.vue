@@ -65,7 +65,8 @@ const onDropzoneDrop = (files: File[]) => {
   validateData(files)
 }
 
-const onInputFileChange = (event: InputFileChangeEvent) => {
+const onInputFileChange = (payload: Event) => {
+  const event = payload as InputFileChangeEvent
   emit('change', event)
   validateData(Array.from(event.target?.files ?? []))
 }
