@@ -116,5 +116,3 @@ watch(
     @change="onInputFileChange"
   >
 </template>
-
-<style lang="scss"></style>

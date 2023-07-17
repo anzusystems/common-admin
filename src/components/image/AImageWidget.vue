@@ -4,13 +4,11 @@ import type { IntegerIdNullable } from '@/types/common'
 import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { computed, ref } from 'vue'
-import { useImageOptions } from '@/components/image/composables/imageOptions'
-import { useImageActions } from '@/components/image/composables/imageActions'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
  */
-const props = withDefaults(
+withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
     stackId: string
@@ -43,9 +41,9 @@ const props = withDefaults(
 
 const clickMenuOpened = ref(false)
 
-const imageOptions = useImageOptions(props.configName)
-const { fetchImageWidgetData } = imageOptions
-const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
+// const imageOptions = useImageOptions(props.configName)
+// const { fetchImageWidgetData } = imageOptions
+// const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 
 const enabledInteractionComputed = computed(() => {
   return true
