@@ -1,4 +1,4 @@
-# EmbedGallery
+# EmbedMinute
 
 ## Features
 todo
@@ -7,7 +7,7 @@ todo
 
 ```json
 {
-  "name": "embedGallery",
+  "name": "embedMinute",
   "groups": [
     "embed"
   ],
@@ -26,7 +26,7 @@ todo
 
 ```json
 {
-  "type": "embedGallery",
+  "type": "embedMinute",
   "attrs": {
     "id": 23,
     "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
@@ -37,11 +37,13 @@ todo
 ## API data
 
 ```ts
-interface EmbedKindGallery {
+interface EmbedKindMinute {
   id: IntegerId
   article: IntegerId
-  gallery: IntegerId
-  layoutType: 'thumb' | 'whole'
+  source: IntegerId, // todo toto je zatial id minute temy, todo vyriesit ako vybrat articles  
+  fromDate: DatetimeUTC,
+  toDate: DatetimeUTC,
+  autoRefresh: false,
   title: string
   detail: {
     todo

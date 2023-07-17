@@ -6,9 +6,6 @@
 - user can mix both types
 - User can override box title
 
-## Limitations
-- For now, user can't copy/paste and delete text including embed
-
 ## Node schema
 
 ```json
@@ -46,7 +43,13 @@
 interface EmbedKindRelated {
   id: IntegerId
   title: string
-  items: Array<{id: DocId | string, title: string, type: 'article' | 'link', url: string}>
+  items: Array<{
+    source: DocId | string
+    title: string
+    type: 'article' | 'link'
+    url: string
+    external: boolean
+  }>
   article: IntegerId
   detail: {
     articles: Array<{

@@ -2,11 +2,8 @@
 
 ## Features
 - User can select image from DAM using filterable dialog
-- WIP: User can upload image from local file, so it will be uploaded to DAM and then used as embed
-- WIP: User can drag and drop file directly to editor to upload to DAM and use as embed
-
-## Limitations
-- For now, user can't copy/paste and delete text including embed
+- User can upload image from local file, so it will be uploaded to DAM and then used as embed
+- User can drag and drop file directly to editor to upload to DAM and use as embed
 
 ## Node schema
 

@@ -13,6 +13,9 @@ todo: check clickthrough
     "external": {
       "default": false
     },
+    "nofollow": {
+      "default": false
+    },
     "email": {
       "default": false
     },

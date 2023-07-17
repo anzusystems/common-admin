@@ -11,6 +11,9 @@
     "embed"
   ],
   "attrs": {
+    "nofollow": {
+      "default": false
+    },
     "external": {
       "default": false
     },

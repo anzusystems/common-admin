@@ -1,13 +1,13 @@
-# EmbedGallery
+# EmbedCustom
 
 ## Features
-todo
+- same as other embeds that supports customForm, but with no dedicated fields
 
 ## Node schema
 
 ```json
 {
-  "name": "embedGallery",
+  "name": "embedCustom",
   "groups": [
     "embed"
   ],
@@ -26,7 +26,7 @@ todo
 
 ```json
 {
-  "type": "embedGallery",
+  "type": "embedCustom",
   "attrs": {
     "id": 23,
     "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
@@ -40,9 +40,6 @@ todo
 interface EmbedKindGallery {
   id: IntegerId
   article: IntegerId
-  gallery: IntegerId
-  layoutType: 'thumb' | 'whole'
-  title: string
   detail: {
     todo
   }
