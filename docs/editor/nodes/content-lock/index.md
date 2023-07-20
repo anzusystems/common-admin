@@ -1,4 +1,4 @@
-# ContentLock
+# contentLock
 
 ## Features
 - Only one per article, callback to set article field.

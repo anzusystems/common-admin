@@ -1,4 +1,4 @@
-# Bold
+# bold
 
 See [tiptap docs](https://tiptap.dev/api/marks/bold)
 

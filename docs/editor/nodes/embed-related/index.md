@@ -1,4 +1,4 @@
-# EmbedRelated
+# embedRelated
 
 ## Features
 - User can insert internal articles from CMS using filterable dialog to item, also can override article title

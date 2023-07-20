@@ -1,4 +1,4 @@
-# EmbedCustom
+# embedCustom
 
 ## Features
 - same as other embeds that supports customForm, but with no dedicated fields

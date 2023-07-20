@@ -1,4 +1,4 @@
-# Italic
+# italic
 
 See [tiptap docs](https://tiptap.dev/api/marks/italic)
 

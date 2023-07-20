@@ -1,4 +1,4 @@
-# EmbedMinute
+# embedMinute
 
 ## Features
 todo

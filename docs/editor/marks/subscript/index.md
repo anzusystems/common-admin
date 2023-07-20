@@ -1,4 +1,4 @@
-# Subscript
+# subscript
 
 See [tiptap docs](https://tiptap.dev/api/marks/subscript)
 

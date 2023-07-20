@@ -1,4 +1,4 @@
-# Link
+# link
 
 See [tiptap docs](https://tiptap.dev/api/marks/link)
 

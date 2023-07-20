@@ -1,4 +1,4 @@
-# OrderedList
+# orderedList
 
 See [tiptap docs](https://tiptap.dev/api/nodes/ordered-list)
 

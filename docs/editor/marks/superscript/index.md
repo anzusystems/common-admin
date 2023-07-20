@@ -1,4 +1,4 @@
-# Superscript
+# superscript
 
 See [tiptap docs](https://tiptap.dev/api/marks/superscript)
 

@@ -69,10 +69,10 @@ watch(
     if (newImageId) {
       const resImage = await fetchImageTODO(newImageId)
       // if (isImage(resImage)) {
-      if (true) {
-        resolvedSrc.value = getCoreImageUrl(resImage)
-        return
-      }
+      // if (true) {
+      resolvedSrc.value = getCoreImageUrl(resImage)
+      return
+      // }
     }
     return
   },

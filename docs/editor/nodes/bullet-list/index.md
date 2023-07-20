@@ -1,4 +1,4 @@
-# BulletList
+# bulletList
 
 See [tiptap docs](https://tiptap.dev/api/nodes/bullet-list)
 

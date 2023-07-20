@@ -1,4 +1,4 @@
-# EmbedGallery
+# embedGallery
 
 ## Features
 todo

@@ -1,4 +1,4 @@
-# Blockquote
+# blockquote
 
 See [tiptap docs](https://tiptap.dev/api/nodes/blockquote)
 

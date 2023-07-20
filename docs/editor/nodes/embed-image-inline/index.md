@@ -1,4 +1,4 @@
-# EmbedImageInline
+# embedImageInline
 
 ## Features
 todo
@@ -9,7 +9,7 @@ todo
 {
   "name": "embedImageInline",
   "groups": [
-    "embedImageInline"
+    "inline"
   ],
   "attrs": {
     "id": {

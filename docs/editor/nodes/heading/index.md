@@ -1,4 +1,4 @@
-# Heading
+# heading
 
 See [tiptap docs](https://tiptap.dev/api/nodes/heading)
 

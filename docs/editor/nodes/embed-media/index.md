@@ -1,4 +1,4 @@
-# EmbedMedia
+# embedMedia
 
 See [Media](/editor/media/general/) for more info
 

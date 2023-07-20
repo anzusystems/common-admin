@@ -1,4 +1,4 @@
-# StyledBox
+# styledBox
 
 ## Features
 

@@ -1,4 +1,4 @@
-# EmbedImage
+# embedImage
 
 ## Features
 - User can select image from DAM using filterable dialog

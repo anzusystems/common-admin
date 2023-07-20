@@ -1,4 +1,4 @@
-# EmbedWeather
+# embedWeather
 
 ## Features
 todo
