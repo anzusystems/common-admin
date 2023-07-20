@@ -1,3 +1,13 @@
+## [1.9.0](https://github.com/anzusystems/common-admin/compare/1.8.0...1.9.0) (2023-07-20)
+
+### Features
+* **chore:** updated dependencies
+* **docs:** updated editor docs
+
+### BREAKING CHANGES
+* **dependencies:** new vuetify required version is `vuetify@3.3.9`
+
+
 ## [1.8.0](https://github.com/anzusystems/common-admin/compare/1.7.0...1.8.0) (2023-07-07)
 
 ### Features
