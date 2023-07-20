@@ -175,5 +175,13 @@ function sidebarEditor() {
         { text: 'Text', link: '/editor/nodes/text/' },
       ]
     },
+    {
+      text: 'Media embeds',
+      collapsed: false,
+      items: [
+        { text: 'General', link: '/editor/media/general/' },
+        { text: 'Youtube', link: '/editor/media/youtube/' },
+      ]
+    },
   ]
 }

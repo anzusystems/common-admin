@@ -37,11 +37,34 @@
 ## API data
 
 ```ts
-interface EmbedKindGallery {
+interface EmbedKindCustom {
   id: IntegerId
   article: IntegerId
-  detail: {
-    todo
+  name: string
+  customData: object
+}
+```
+
+## Examples
+
+### Onlajny.eu
+
+```json
+{
+  "type": "embedCustom",
+  "attrs": {
+    "id": 23,
+    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
+  }
+}
+```
+
+```json
+{
+  "id": 23,
+  "article": 60,
+  "customData": {
+    "id": "sport;43264"
   }
 }
 ```

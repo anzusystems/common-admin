@@ -43,6 +43,8 @@ interface EmbedKindImage {
   image: IntegerId
   link: string
   align: 'right' | 'left' | 'center' | ''
+  width: string
+  height: string
   detail: {
     image: {
       id: IntegerId

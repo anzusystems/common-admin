@@ -1,4 +1,4 @@
-# EmbedVideo
+# embedPoll
 
 ## Features
 todo
@@ -7,7 +7,7 @@ todo
 
 ```json
 {
-  "name": "embedVideo",
+  "name": "embedPoll",
   "groups": [
     "embed"
   ],
@@ -26,7 +26,7 @@ todo
 
 ```json
 {
-  "type": "EmbedWeather",
+  "type": "embedPoll",
   "attrs": {
     "id": 23,
     "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
@@ -37,16 +37,12 @@ todo
 ## API data
 
 ```ts
-interface EmbedKindWeather {
+interface EmbedKindPoll {
   id: IntegerId
   article: IntegerId
-  srcId: string,
-  subType: 'youtube', // todo check types
-  ratio: number, // todo check types
-  dataHeight: number // todo check types
+  poll: IntegerId
   detail: {
     todo
   }
 }
 ```
-
