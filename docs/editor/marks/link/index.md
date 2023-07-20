@@ -1,4 +1,4 @@
-# Link
+# link
 
 See [tiptap docs](https://tiptap.dev/api/marks/link)
 
@@ -11,6 +11,9 @@ todo: check clickthrough
   "name": "link",
   "attrs": {
     "external": {
+      "default": false
+    },
+    "nofollow": {
       "default": false
     },
     "email": {

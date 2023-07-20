@@ -4,8 +4,26 @@ import type { AclValue } from '@/types/Permission'
 import Acl from '@/components/permission/Acl.vue'
 import Notification from '@kyvg/vue3-notification'
 import type { LanguageCode } from '@/composables/languageSettings'
-import { DamClientSymbol } from '@/components/injectionKeys'
+import {
+  AvailableLanguagesSymbol,
+  CurrentUserSymbol,
+  CustomAclResolverSymbol,
+  DamClientSymbol,
+  DefaultLanguageSymbol,
+  DefaultLicenceIdSymbol,
+  ImageOptions,
+} from '@/components/injectionKeys'
 import type { AxiosInstance } from 'axios'
+import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
+import type { IntegerId } from '@/types/common'
+
+export type PluginOptions<T extends AclValue = AclValue> = {
+  currentUser: CurrentUserType
+  languages: { available: LanguageCode[]; default: LanguageCode }
+  customAclResolver?: CustomAclResolver<T>
+  coreDam?: { client: () => AxiosInstance; defaultLicenceId?: IntegerId }
+  image?: CommonAdminImageOptions
+}
 
 export type CustomAclResolver<T extends AclValue = AclValue> =
   | undefined
@@ -16,18 +34,16 @@ export type CustomAclResolver<T extends AclValue = AclValue> =
 
 export type CurrentUserType = DeepReadonly<Ref<UnwrapRef<AnzuUser | undefined>>>
 
-export type PluginOptions<T extends AclValue = AclValue> = {
-  currentUser: CurrentUserType
-  languages: { available: LanguageCode[]; default: LanguageCode }
-  customAclResolver?: CustomAclResolver<T>
-  coreDam?: { client: () => AxiosInstance; defaultLicenceId?: number }
+export interface CommonAdminImageConfig {
+  getImage: (id: IntegerId) => Promise<ImageWidgetImage>
+  imageUrl: string
+  width: number
+  height: number
 }
 
-export const CurrentUserSymbol = Symbol('currentUser')
-export const CustomAclResolverSymbol = Symbol('customAclResolver')
-export const AvailableLanguagesSymbol = Symbol('availableLanguages')
-export const DefaultLanguageSymbol = Symbol('defaultLanguage')
-export const DefaultLicenceIdSymbol = Symbol('defaultLicenceId')
+export type CommonAdminImageOptions = undefined | {
+  configs: {[key: string]: CommonAdminImageConfig}
+}
 
 export default {
   install<T extends AclValue = AclValue>(app: App, options: PluginOptions<T>): void {
@@ -37,6 +53,7 @@ export default {
     app.provide(AvailableLanguagesSymbol, options.languages.available)
     app.provide(DefaultLanguageSymbol, options.languages.default)
     app.provide(DefaultLicenceIdSymbol, options.coreDam?.defaultLicenceId)
+    app.provide(ImageOptions, options.image)
     app.component('Acl', Acl)
     app.use(Notification, { componentName: 'Notifications' })
   },

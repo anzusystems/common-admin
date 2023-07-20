@@ -11,7 +11,6 @@ import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/c
 import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import AssetSelectFilter from '@/components/dam/assetSelect/components/filter/AssetSelectFilter.vue'
-import { DefaultLicenceIdSymbol } from '@/AnzuSystemsCommonAdmin'
 import { isUndefined } from '@/utils/common'
 import type {
   AssetSelectReturnData,
@@ -19,6 +18,7 @@ import type {
   AssetSelectReturnTypeValues,
 } from '@/types/coreDam/AssetSelect'
 import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
+import { DefaultLicenceIdSymbol } from '@/components/injectionKeys'
 
 const { t } = useI18n()
 

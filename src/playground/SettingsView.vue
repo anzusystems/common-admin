@@ -5,8 +5,8 @@ import ACard from '@/components/ACard.vue'
 import ALanguageSelect from '@/components/ALanguageSelect.vue'
 import AThemeSelect from '@/components/AThemeSelect.vue'
 import type { LanguageCode } from '@/composables/languageSettings'
-import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/AnzuSystemsCommonAdmin'
 import { modifyLanguageSettings } from '@/composables/languageSettings'
+import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
 
 const { t } = useI18n()
 const configAvailableLanguages = inject<LanguageCode[]>(AvailableLanguagesSymbol, [])

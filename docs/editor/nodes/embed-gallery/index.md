@@ -1,10 +1,7 @@
-# EmbedGallery
+# embedGallery
 
 ## Features
 todo
-
-## Limitations
-- For now, user can't copy/paste and delete text including embed
 
 ## Node schema
 

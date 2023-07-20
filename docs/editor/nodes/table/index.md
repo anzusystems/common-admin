@@ -1,4 +1,4 @@
-# Table
+# table
 
 See [tiptap docs](https://tiptap.dev/api/nodes/table)
 

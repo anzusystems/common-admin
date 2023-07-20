@@ -78,7 +78,6 @@ const flatickrRefIsInitialized = (
 const flatickrRef = ref<FlatpickrRef>(null)
 const textFieldRef = ref<TextFieldRef>(null)
 const isOpened = ref(false)
-const lang = ref('sk')
 const textFieldValue = ref('')
 const flatpickrValue = ref<string | null>(null)
 const initialized = ref(false)

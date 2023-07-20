@@ -21,7 +21,7 @@ export function useAssetListActions() {
   const damClient = inject<(() => AxiosInstance) | undefined>(DamClientSymbol, undefined)
 
   if (isUndefined(damClient)) {
-    throw new Error("Composable useAssetListActions can't be used without configured damClient.")
+    throw new Error("Composable useAssetListActions can't be used without properly configured common admin.")
   }
 
   const { fetchAssetList: apiFetchAssetList } = useAssetApi(damClient)

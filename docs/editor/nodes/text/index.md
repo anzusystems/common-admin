@@ -1,4 +1,4 @@
-# Text
+# text
 
 See [tiptap docs](https://tiptap.dev/api/nodes/text)
 

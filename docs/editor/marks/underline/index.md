@@ -1,4 +1,4 @@
-# Underline
+# underline
 
 See [tiptap docs](https://tiptap.dev/api/marks/underline)
 

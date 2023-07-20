@@ -1,4 +1,4 @@
-# HardBreak
+# hardBreak
 
 See [tiptap docs](https://tiptap.dev/api/nodes/hard-break)
 

@@ -1,4 +1,4 @@
-# ListItem
+# listItem
 
 See [tiptap docs](https://tiptap.dev/api/nodes/list-item)
 

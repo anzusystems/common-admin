@@ -1,4 +1,4 @@
-# Button
+# button
 
 // todo check clickthrough
 
@@ -11,6 +11,9 @@
     "embed"
   ],
   "attrs": {
+    "nofollow": {
+      "default": false
+    },
     "external": {
       "default": false
     },

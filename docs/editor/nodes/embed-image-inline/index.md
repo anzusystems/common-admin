@@ -1,10 +1,7 @@
-# EmbedImageInline
+# embedImageInline
 
 ## Features
 todo
-
-## Limitations
-- For now, user can't copy/paste and delete text including embed
 
 ## Node schema
 
@@ -12,7 +9,7 @@ todo
 {
   "name": "embedImageInline",
   "groups": [
-    "embedImageInline"
+    "inline"
   ],
   "attrs": {
     "id": {
@@ -46,6 +43,8 @@ interface EmbedKindImage {
   image: IntegerId
   link: string
   align: 'right' | 'left' | 'center' | ''
+  width: string
+  height: string
   detail: {
     image: {
       id: IntegerId

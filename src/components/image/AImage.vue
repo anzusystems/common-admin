@@ -3,7 +3,7 @@ import AImageDropzone from '@/components/image/AImageDropzone.vue'
 import type { IntegerIdNullable } from '@/types/common'
 import type { Image } from '@/types/Image'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
     stackId: string
@@ -36,5 +36,3 @@ const props = withDefaults(
     <AImageDropzone />
   </div>
 </template>
-
-<style lang="scss"></style>
