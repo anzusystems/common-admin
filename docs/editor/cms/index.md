@@ -22,7 +22,7 @@
 |-------------------|:-------------:|:------------:|:---------------:|------|:------------:|
 | anchor            |               |              |                 |      |              |
 | blockquote        |               |              |                 |      |              |
-| bulletList        |       ✅       |              |                 |      |              |
+| bulletList        |               |              |                 |      |              |
 | button            |       ✅       |              |                 |      |              |
 | contentBreak      |       ✅       |              |                 |      |              |
 | contentLock       |       ✅       |              |                 |      |              |
@@ -57,8 +57,8 @@
 |---------------------|:-------------:|:------------:|:---------------:|------|:------------:|
 | collaboration       |               |              |                 |      |              |
 | collaborationCursor |               |              |                 |      |              |
-| dropCursor          |               |              |                 |      |              |
-| gapCursor           |               |              |                 |      |              |
+| dropCursor          |       ✅       |              |                 |      |              |
+| gapCursor           |       ✅       |              |                 |      |              |
 | history             |               |              |                 |      |              |
 | textAlign           |               |              |                 |      |              |
 
