@@ -1,1 +1,51 @@
 # embedInfobox
+
+// todo specify fields
+
+Infobox is special entity with tiptap json body with specific schema.
+
+## Features
+- User can select infobox from list of existing.
+- User can create a new infobox or edit existing in new dialog
+
+## Node schema
+
+```json
+{
+  "name": "embedInfobox",
+  "groups": [
+    "embed"
+  ],
+  "attrs": {
+    "id": {
+      "default": null
+    },
+    "changeId": {
+      "default": ""
+    }
+  }
+}
+```
+
+## Node JSON example
+
+```json
+{
+  "type": "embedInfobox",
+  "attrs": {
+    "id": 23,
+    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
+  }
+}
+```
+
+## API data
+
+```ts
+interface EmbedKindInfobox {
+  id: IntegerId
+  article: IntegerId
+  infobox: IntegerId
+  detail: todo
+}
+```

@@ -1,11 +1,10 @@
 # embedMedia
 
-See [Media](/editor/media/general/) for more info
+See [Media](/editor/media/general/) for general info and all supported options.
 
 ## Features
-todo
-
-
+- User can open dialog, input supported code snippet inside textarea, and it will autodetect type of embed media and parse its content
+- User can input the media type and its fields manually.
 
 ## Node schema
 
@@ -44,7 +43,7 @@ todo
 interface EmbedKindMedia {
   id: IntegerId
   article: IntegerId
-  variant: string
+  variant: string // see Media docs
   damId: DocIdNullable
   damType: 'audio' | 'video'
   align: 'left' | 'right' | 'center',

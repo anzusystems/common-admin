@@ -1,7 +1,13 @@
 # embedCustom
 
+Same as other embeds that supports customData, but with no dedicated fields.
+Field `name` is used to specify customData fields setup.
+
+// todo add customData documentation
+
 ## Features
-- same as other embeds that supports customForm, but with no dedicated fields
+- User can insert custom embed, choose name and input its fields.
+- Used for special custom features.
 
 ## Node schema
 
@@ -64,7 +70,7 @@ interface EmbedKindCustom {
   "id": 23,
   "article": 60,
   "customData": {
-    "id": "sport;43264"
+    "id": "43264"
   }
 }
 ```

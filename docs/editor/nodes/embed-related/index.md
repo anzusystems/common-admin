@@ -3,8 +3,8 @@
 ## Features
 - User can insert internal articles from CMS using filterable dialog to item, also can override article title
 - User can insert external url for item and specify title fot his item
-- user can mix both types
-- User can override box title
+- User can mix both types
+- User can override title
 
 ## Node schema
 
@@ -47,8 +47,8 @@ interface EmbedKindRelated {
     source: DocId | string
     title: string
     type: 'article' | 'link'
-    url: string
     external: boolean
+    nofollow: boolean
   }>
   article: IntegerId
   detail: {

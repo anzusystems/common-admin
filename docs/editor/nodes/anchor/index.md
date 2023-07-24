@@ -1,7 +1,10 @@
 # anchor
 
+- todo inline node setup
+
 ## Features
-- todo inline node
+- User can place inline anchor anywhere in text and specify name
+- Name is auto converted to safe slug
 
 ## Node schema
 

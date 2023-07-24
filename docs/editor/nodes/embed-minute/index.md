@@ -1,7 +1,7 @@
 # embedMinute
 
 ## Features
-todo
+- todo
 
 ## Node schema
 
@@ -40,13 +40,11 @@ todo
 interface EmbedKindMinute {
   id: IntegerId
   article: IntegerId
-  source: IntegerId, // todo toto je zatial id minute temy, todo vyriesit ako vybrat articles  
+  source: IntegerId,  
   fromDate: DatetimeUTC,
   toDate: DatetimeUTC,
   autoRefresh: false,
   title: string
-  detail: {
-    todo
-  }
+  detail: todo
 }
 ```

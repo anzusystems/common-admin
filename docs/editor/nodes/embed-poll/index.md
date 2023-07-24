@@ -1,7 +1,7 @@
 # embedPoll
 
 ## Features
-todo
+- todo
 
 ## Node schema
 
@@ -41,8 +41,6 @@ interface EmbedKindPoll {
   id: IntegerId
   article: IntegerId
   poll: IntegerId
-  detail: {
-    todo
-  }
+  detail: todo
 }
 ```
