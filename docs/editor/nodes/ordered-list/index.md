@@ -1,6 +1,7 @@
 # orderedList
 
 See [tiptap docs](https://tiptap.dev/api/nodes/ordered-list)
+See [bulletList](/editor/nodes/bullet-list/)
 
 ## Node schema
 
@@ -16,4 +17,28 @@ See [tiptap docs](https://tiptap.dev/api/nodes/ordered-list)
     }
   }
 }
+```
+
+## Node JSON example
+
+```json
+{
+  "type": "orderedList",
+  "content": [
+    {
+      "type": "listItem",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Lorem"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+} 
 ```

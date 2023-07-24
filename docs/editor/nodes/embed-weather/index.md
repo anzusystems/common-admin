@@ -42,8 +42,6 @@ interface EmbedKindWeather {
   article: IntegerId
   locationId: IntegerId
   variant: 'today'
-  detail: {
-    todo
-  }
+  detail: todo
 }
 ```

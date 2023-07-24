@@ -193,5 +193,18 @@ function sidebarEditor() {
         { text: 'youtube', link: '/editor/media/youtube/' },
       ]
     },
+    {
+      text: 'Extensions',
+      collapsed: false,
+      items: [
+        { text: 'General', link: '/editor/extensions/general/' },
+        { text: 'collaboration', link: '/editor/extensions/collaboration/' },
+        { text: 'collaborationCursor', link: '/editor/extensions/collaboration-cursor/' },
+        { text: 'dropCursor', link: '/editor/extensions/drop-cursor/' },
+        { text: 'gapCursor', link: '/editor/extensions/gap-cursor/' },
+        { text: 'history', link: '/editor/extensions/history/' },
+        { text: 'textAlign', link: '/editor/extensions/text-align/' },
+      ]
+    },
   ]
 }

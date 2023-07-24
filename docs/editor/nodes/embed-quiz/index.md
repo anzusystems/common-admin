@@ -1,7 +1,7 @@
 # embedQuiz
 
 ## Features
-todo
+- todo
 
 ## Node schema
 
@@ -41,8 +41,6 @@ interface EmbedKindQuiz {
   id: IntegerId
   article: IntegerId
   quiz: IntegerId
-  detail: {
-    todo
-  }
+  detail: todo
 }
 ```

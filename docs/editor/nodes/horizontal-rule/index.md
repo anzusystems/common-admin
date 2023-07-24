@@ -9,11 +9,14 @@ See [tiptap docs](https://tiptap.dev/api/nodes/horizontal-rule)
   "name": "horizontalRule",
   "groups": [
     "block"
-  ],
-  "attrs": {
-    "start": {
-      "default": 1
-    }
-  }
+  ]
+}
+```
+
+## Node JSON example
+
+```json
+{
+  "type": "horizontalRule"
 }
 ```

@@ -4,6 +4,7 @@
 - User can select image from DAM using filterable dialog
 - User can upload image from local file, so it will be uploaded to DAM and then used as embed
 - User can drag and drop file directly to editor to upload to DAM and use as embed
+- User can input `decription` and `source` texts
 
 ## Node schema
 
@@ -39,18 +40,19 @@
 ## API data
 
 ```ts
-interface EmbedKindGallery {
+interface EmbedKindImage {
   id: IntegerId
   article: IntegerId
-  gallery: IntegerId
+  image: IntegerId
   link: string
-  layout: 'parallax' | 'size20' | 'size50' | 'size100'
+  layout: 'parallax' | 'size20' | 'size100' | 'size120'
   align: 'right' | 'left' | 'center' | ''
   detail: {
     image: {
       id: IntegerId
       texts: {
         description: string
+        source: string
       }
       dam: {
         damId: DocId
@@ -59,13 +61,6 @@ interface EmbedKindGallery {
       settings: {
         reviewed: boolean
       }
-      imageAuthors: Array<{
-        id: IntegerId
-        position: number
-        customAuthor: string
-        image: IntegerId
-        author: IntegerIdNullable
-      }>
       position: number
     }
   }

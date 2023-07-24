@@ -1,5 +1,7 @@
 # review
 
+// todo needs more product specs
+
 ## Features
 - User can insert node by selecting review entity or providing its id
 

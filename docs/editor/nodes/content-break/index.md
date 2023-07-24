@@ -1,7 +1,10 @@
 # contentBreak
 
+todo: check if add validation to one item per doc
+
 ## Features
-- todo
+- User can add this separator to separate multiple parts of document
+
 
 ## Node schema
 

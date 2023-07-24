@@ -1,6 +1,8 @@
 # button
 
-// todo check clickthrough
+Similar attrs to [link mark](/editor/marks/link/), with some changes, and it's block node.
+
+todo: check if implement clickthrough and if yes how
 
 ## Node schema
 
@@ -20,12 +22,34 @@
     "email": {
       "default": false
     },
-    "clickthrough": {
-      "default": ""
-    },
     "size": {
       "default": "small" // large | small
+    },
+    "clickthrough": {
+      "default": ""
     }
   }
 }
+```
+
+## Node JSON example
+
+```json
+{
+  "type": "button",
+  "content": [
+    {
+      "type": "text",
+      "text": "bla bla bla"
+    }
+  ],
+  "attrs": {
+    "href": "https://www.sme.sk",
+    "size": "large | small",
+    "external": false, 
+    "clickthrough": "track_redirect",
+    "nofollow": false,
+    "email": false
+  }
+} 
 ```

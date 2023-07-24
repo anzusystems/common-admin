@@ -1,8 +1,10 @@
 # styledBox
 
-## Features
+// todo features and schema also it's not final, its node that can contain content
 
-todo features and schema also it's not final, its node that can contain content
+## Features
+ - todo
+
 
 ## Node schema
 
