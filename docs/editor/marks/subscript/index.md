@@ -9,3 +9,17 @@ See [tiptap docs](https://tiptap.dev/api/marks/subscript)
   "name": "subscript"
 }
 ```
+
+## Mark JSON example
+
+```json
+{
+  "type": "text",
+  "text": "Lorem",
+  "marks": [
+    {
+      "type": "subscript"
+    }
+  ]
+}
+```

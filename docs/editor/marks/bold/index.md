@@ -9,3 +9,17 @@ See [tiptap docs](https://tiptap.dev/api/marks/bold)
   "name": "bold"
 }
 ```
+
+## Mark JSON example
+
+```json
+{
+  "type": "text",
+  "text": "Lorem",
+  "marks": [
+    {
+      "type": "bold"
+    }
+  ]
+}
+```
