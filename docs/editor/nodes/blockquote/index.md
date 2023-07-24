@@ -8,6 +8,8 @@ Based on [tiptap docs](https://tiptap.dev/api/nodes/blockquote) with custom attr
 
 ## Node schema
 
+todo add attr author as string
+
 ```json
 {
   "name": "blockquote",
