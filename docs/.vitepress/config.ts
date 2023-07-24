@@ -133,6 +133,7 @@ function sidebarEditor() {
       items: [
         { text: 'Introduction', link: '/editor/introduction/' },
         { text: 'Editor', link: '/editor/editor/' },
+        { text: 'CMS status', link: '/editor/cms/' },
       ]
     },
     {
