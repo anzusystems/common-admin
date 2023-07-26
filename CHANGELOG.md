@@ -1,3 +1,8 @@
+## [1.10.0](https://github.com/anzusystems/common-admin/compare/1.9.0...1.10.0) (WIP)
+
+### BREAKING CHANGES
+* **usePagination:** default `sortBy` changed from `createdAt` to `id`
+
 ## [1.9.0](https://github.com/anzusystems/common-admin/compare/1.8.0...1.9.0) (2023-07-20)
 
 ### Features
