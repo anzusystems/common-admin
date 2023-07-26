@@ -1,3 +1,13 @@
+## [1.10.0](https://github.com/anzusystems/common-admin/compare/1.9.0...1.10.0) (2023-07-23)
+
+### Features
+* **chore:** updated dependencies
+* **docs:** updated editor docs
+
+### BREAKING CHANGES
+* **usePagination:** default `sortBy` changed from `createdAt` to `id`
+* **dependencies:** new vuetify required version is `vuetify@3.3.10`
+
 ## [1.9.0](https://github.com/anzusystems/common-admin/compare/1.8.0...1.9.0) (2023-07-20)
 
 ### Features
@@ -6,7 +16,6 @@
 
 ### BREAKING CHANGES
 * **dependencies:** new vuetify required version is `vuetify@3.3.9`
-
 
 ## [1.8.0](https://github.com/anzusystems/common-admin/compare/1.7.0...1.8.0) (2023-07-07)
 
