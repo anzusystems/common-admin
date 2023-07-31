@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.10.0",
+  "version": "1.11.0",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -87,12 +87,12 @@
   "peerDependencies": {
     "@vuelidate/core": "2.0.3",
     "@vuelidate/validators": "2.0.3",
-    "@vueuse/core": "10.2.1",
-    "@vueuse/integrations": "10.2.1",
+    "@vueuse/core": "10.3.0",
+    "@vueuse/integrations": "10.3.0",
     "axios": "1.4.0",
     "dayjs": "1.11.9",
     "flatpickr": "4.6.13",
-    "pinia": "^2.1.3",
+    "pinia": "^2.1.6",
     "vue": "3.3.4",
     "vue-i18n": "9.2.2",
     "vue-router": "4.2.4",

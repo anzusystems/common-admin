@@ -1,3 +1,14 @@
+## [1.11.0](https://github.com/anzusystems/common-admin/compare/1.10.0...1.11.0) (2023-07-31)
+
+### Features
+* **chore:** updated dependencies
+* **docs:** updated editor docs
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+  * `@vueuse/core@10.3.0`
+  * `@vueuse/integrations@10.3.0`
+
 ## [1.10.0](https://github.com/anzusystems/common-admin/compare/1.9.0...1.10.0) (2023-07-23)
 
 ### Features

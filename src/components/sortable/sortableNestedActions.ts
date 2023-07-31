@@ -1,4 +1,4 @@
-import { type InjectionKey, nextTick, type Ref, ref, type UnwrapRef } from 'vue'
+import { type InjectionKey, nextTick, type Ref, ref } from 'vue'
 import type { UseSortableReturn } from '@vueuse/integrations/useSortable'
 import type { SortableItemNewPositions, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
 import { useAlerts } from '@/composables/system/alerts'
@@ -61,15 +61,15 @@ export function useSortableNestedActions(
   ) => void
   refresh: () => void
   destroy: () => void
-  removeDialog: Ref<UnwrapRef<boolean>>
-  sortableInstances: Ref<UnwrapRef<Array<UseSortableReturn>>>
+  removeDialog: Ref<boolean>
+  sortableInstances: Ref<Array<UseSortableReturn>>
   addChildToId: (targetId: DocId | IntegerId, data: any, childrenAllowed: boolean) => void
   addAfterId: (targetId: DocId | IntegerId | null, data: any, childrenAllowed: boolean) => SortableItemNewPositions
-  forceRerender: Ref<UnwrapRef<number>>
-  dragging: Ref<UnwrapRef<boolean>>
-  widgetEl: Ref<UnwrapRef<HTMLElement | null>>
-  itemToRemove: Ref<UnwrapRef<SortableNestedItem | null>>
-  randomUuid: string
+  forceRerender: Ref<number>
+  dragging: Ref<boolean>
+  widgetEl: Ref<HTMLElement | null>
+  itemToRemove: Ref<SortableNestedItem | null>
+  randomUuid: Ref<string>
   moveArrayElement: (
     currentId: DocId | IntegerId,
     targetId: DocId | IntegerId | null,

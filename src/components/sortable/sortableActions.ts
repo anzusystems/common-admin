@@ -1,4 +1,4 @@
-import { computed, type ComputedRef, nextTick, type Ref, ref, type UnwrapRef } from 'vue'
+import { computed, type ComputedRef, nextTick, type Ref, ref } from 'vue'
 import type { UseSortableReturn } from '@vueuse/integrations/useSortable'
 import type { SortableItemDataAware, SortableItemNewPositions } from '@/components/sortable/sortableUtils'
 import type { DocId, IntegerId } from '@/types/common'
@@ -52,14 +52,14 @@ export function useSortableActions(
   updateData: (id: DocId | IntegerId, data: SortablePropItem, position: number | null, dirty?: boolean | null) => void
   refresh: () => void
   destroy: () => void
-  removeDialog: Ref<UnwrapRef<boolean>>
+  removeDialog: Ref<boolean>
   addAfterId: (targetId: DocId | IntegerId | null, data: SortablePropItem) => SortableItemNewPositions
-  forceRerender: Ref<UnwrapRef<number>>
-  dirtyLocal: Ref<UnwrapRef<Set<DocId | IntegerId>>>
-  widgetEl: Ref<UnwrapRef<HTMLElement | null>>
-  itemToRemove: Ref<UnwrapRef<SortableItem | null>>
-  sortableInstance: Ref<UnwrapRef<UseSortableReturn | null>>
-  randomUuid: string
+  forceRerender: Ref<number>
+  dirtyLocal: Ref<Set<DocId | IntegerId>>
+  widgetEl: Ref<HTMLElement | null>
+  itemToRemove: Ref<SortableItem | null>
+  sortableInstance: Ref<UseSortableReturn | null>
+  randomUuid: Ref<string>
   items: ComputedRef<SortableItem[]>
   moveArrayElement: (from: number, to: number) => SortableItemNewPositions
   addAfterIndex: (targetIndex: number | null, data: SortablePropItem) => SortableItemNewPositions
