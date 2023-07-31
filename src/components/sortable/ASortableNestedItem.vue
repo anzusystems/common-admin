@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import type { SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 import { cloneDeep, isUndefined } from '@/utils/common'
 import { NESTED_HANDLE_CLASS, SortableLevel } from '@/components/sortable/sortableNestedActions'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -67,6 +68,8 @@ const showAddChildButtonComputed = computed(() => {
     level < props.maxDepth
   )
 })
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -103,7 +106,7 @@ const showAddChildButtonComputed = computed(() => {
             <VTooltip
               anchor="bottom"
               activator="parent"
-              text="Edit"
+              :text="t('common.sortable.edit')"
             />
           </VBtn>
           <VBtn
@@ -118,7 +121,7 @@ const showAddChildButtonComputed = computed(() => {
             <VTooltip
               anchor="bottom"
               activator="parent"
-              text="Remove"
+              :text="t('common.sortable.remove')"
             />
           </VBtn>
           <slot
@@ -136,7 +139,7 @@ const showAddChildButtonComputed = computed(() => {
             <VTooltip
               anchor="bottom"
               activator="parent"
-              text="More options"
+              :text="t('common.sortable.more')"
             />
             <VMenu activator="parent">
               <VList density="compact">
@@ -144,13 +147,13 @@ const showAddChildButtonComputed = computed(() => {
                   v-if="showAddAfterButton"
                   @click.stop="onAddAfterClick"
                 >
-                  Add new item after
+                  {{ t('common.sortable.addAfter') }}
                 </VListItem>
                 <VListItem
                   v-if="showAddChildButtonComputed"
                   @click.stop="onAddChildClick"
                 >
-                  Add child
+                  {{ t('common.sortable.addChild') }}
                 </VListItem>
               </VList>
             </VMenu>

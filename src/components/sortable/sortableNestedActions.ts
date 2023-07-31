@@ -332,7 +332,7 @@ export function useSortableNestedActions(
     }
 
     if (calculateNodeMaxDepth(targetItem, clonedData.children) > maxDepth) {
-      showWarningT('todo.unableToMoveMaxDepthExceeded')
+      showWarningT('common.sortable.error.maxDeepExceed')
       forceRerenderWidgetHtml()
       return []
     }
@@ -417,7 +417,7 @@ export function useSortableNestedActions(
     const { itemFound: targetItem, parentItem: targetItemParentItem } = findItemById(targetId, clonedData.children)
 
     if (!targetItem) {
-      showWarningT('todo.unableToAdd')
+      showWarningT('common.sortable.error.unableToAdd')
       return []
     }
     insertData.data.position = targetItem.data.position + 1
@@ -450,7 +450,7 @@ export function useSortableNestedActions(
     const { itemFound: targetItem } = findItemById(targetId, clonedData.children)
 
     if (!targetItem) {
-      showWarningT('todo.unableToAdd')
+      showWarningT('common.sortable.error.unableToAdd')
       return
     }
     const insertData: SortableNestedItem = {

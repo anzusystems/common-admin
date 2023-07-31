@@ -219,7 +219,7 @@ defineExpose({
       prepend-icon="mdi-plus"
       @click.stop="onAddLastClick"
     >
-      Add new item @end
+      {{ t('common.sortable.addNewAtEnd') }}
     </VBtn>
     <VDialog
       v-model="removeDialog"
@@ -227,7 +227,7 @@ defineExpose({
     >
       <VCard v-if="removeDialog">
         <ADialogToolbar @on-cancel="removeDialog = false">
-          {{ t('todo.modalConfirmDelete') }}
+          {{ t('common.system.modal.confirmDelete') }}
         </ADialogToolbar>
         <VCardActions>
           <VSpacer />

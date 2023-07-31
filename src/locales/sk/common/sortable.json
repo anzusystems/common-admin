@@ -1,0 +1,12 @@
+{
+  "addNewAtEnd": "Add new item at last position",
+  "edit": "Edit",
+  "remove": "Remove",
+  "addAfter": "Add new item after",
+  "addChild": "Add child",
+  "more": "More options",
+  "error": {
+    "maxDeepExceed": "Unable to move. New deep will exceed max deep.",
+    "unableToAdd": "Unable to add item."
+  }
+}
