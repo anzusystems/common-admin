@@ -67,7 +67,8 @@ import AUnauthorizedView from '@/components/view/AUnauthorizedView.vue'
 import ANotFoundView from '@/components/view/ANotFoundView.vue'
 import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
-
+import ASortable from '@/components/sortable/ASortable.vue'
+import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import { i18n } from '@/plugins/i18n'
 import {
   type Immutable,
@@ -253,6 +254,9 @@ import { useLoginStatus } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
+import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
+import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
+import type { SortableItemDataAware, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
 
 export {
   // COMPONENTS
@@ -320,6 +324,8 @@ export {
   ACurrentUserDropdown,
   AFormRemoteAutocompleteWithCached,
   AJobDetailCommon,
+  ASortable,
+  ASortableNested,
 
   // Dam
   AAssetSelect,
@@ -408,6 +414,12 @@ export {
   DamAssetType,
   DamAssetStatus,
   AssetSelectReturnData,
+  SortablePropItem,
+  SortableItem,
+  SortableNestedItem,
+  SortableNested,
+  SortableItemDataAware,
+  SortableItemWithParentDataAware,
 
   // FACTORIES
   useAnzuUserFactory,
