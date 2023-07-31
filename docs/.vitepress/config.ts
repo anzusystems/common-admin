@@ -161,6 +161,8 @@ function sidebarEditor() {
         { text: 'contentLock', link: '/editor/nodes/content-lock/' },
         { text: 'doc', link: '/editor/nodes/doc/' },
         { text: 'embedCustom', link: '/editor/nodes/embed-custom/' },
+        { text: 'embedExternalImage', link: '/editor/nodes/embed-external-image/' },
+        { text: 'embedExternalImageInline', link: '/editor/nodes/embed-external-image-inline/' },
         { text: 'embedGallery', link: '/editor/nodes/embed-gallery/' },
         { text: 'embedImage', link: '/editor/nodes/embed-image/' },
         { text: 'embedImageInline', link: '/editor/nodes/embed-image-inline/' },
