@@ -9,8 +9,9 @@ import FilterView from '@/playground/filterView/FilterView.vue'
 import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
 import ImageView from '@/playground/image/ImageView.vue'
-import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 import FileView from '@/playground/file/FileView.vue'
+import SortableView from '@/playground/sortable/SortableView.vue'
+import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -69,6 +70,11 @@ const router = createRouter({
       path: '/view/file',
       name: 'view-file',
       component: FileView,
+    },
+    {
+      path: '/view/sortable',
+      name: 'view-sortable',
+      component: SortableView,
     },
   ],
 })
