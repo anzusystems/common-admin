@@ -1,4 +1,4 @@
-import { type InjectionKey, nextTick, type Ref, ref } from 'vue'
+import { type InjectionKey, nextTick, type Ref, ref, type UnwrapRef } from 'vue'
 import type { UseSortableReturn } from '@vueuse/integrations/useSortable'
 import type { SortableItemNewPositions, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
 import { useAlerts } from '@/composables/system/alerts'
@@ -48,7 +48,36 @@ export function useSortableNestedActions(
   model: Readonly<Ref<SortableNested>>,
   initSortablesCallback: () => void,
   emit: SortableNestedEmit
-) {
+): {
+  onRemoveDialogConfirm: () => void
+  removeById: (id: DocId | IntegerId) => SortableItemNewPositions
+  updateData: (
+    id: DocId | IntegerId,
+    data: any,
+    children: Array<SortableNestedItem> | undefined | null,
+    position: number | null,
+    dirty?: boolean | null,
+    parent?: DocId | IntegerId | null | undefined
+  ) => void
+  refresh: () => void
+  destroy: () => void
+  removeDialog: Ref<UnwrapRef<boolean>>
+  sortableInstances: Ref<UnwrapRef<Array<UseSortableReturn>>>
+  addChildToId: (targetId: DocId | IntegerId, data: any, childrenAllowed: boolean) => void
+  addAfterId: (targetId: DocId | IntegerId | null, data: any, childrenAllowed: boolean) => SortableItemNewPositions
+  forceRerender: Ref<UnwrapRef<number>>
+  dragging: Ref<UnwrapRef<boolean>>
+  widgetEl: Ref<UnwrapRef<HTMLElement | null>>
+  itemToRemove: Ref<UnwrapRef<SortableNestedItem | null>>
+  randomUuid: string
+  moveArrayElement: (
+    currentId: DocId | IntegerId,
+    targetId: DocId | IntegerId | null,
+    newIndex: number,
+    oldIndex: number,
+    maxDepth: number
+  ) => SortableItemNewPositions
+} {
   const { showWarningT } = useAlerts()
 
   const sortableInstances = ref<Array<UseSortableReturn>>([])
