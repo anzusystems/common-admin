@@ -2,8 +2,6 @@
 
 Based on [tiptap link](https://tiptap.dev/api/marks/link) with custom attrs.
 
-todo: check if implement clickthrough and if yes how
-
 ## Features
 - User can select part of text and add link mark
 - If text is already linked user can modify or remove it
@@ -27,9 +25,6 @@ todo: check if implement clickthrough and if yes how
     },
     "email": {
       "default": false
-    },
-    "clickthrough": {
-      "default": "" // check
     }
   }
 }
@@ -48,8 +43,7 @@ todo: check if implement clickthrough and if yes how
         "href": "https://www.sme.sk",
         "external": false,
         "nofollow": false,
-        "email": false,
-        "clickthrough": "todo" // check
+        "email": false
       }
     }
 
