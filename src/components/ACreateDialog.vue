@@ -6,8 +6,6 @@ import { useI18n } from 'vue-i18n'
 import { useAlerts } from '@/composables/system/alerts'
 import { isUndefined } from '@/utils/common'
 
-const { t } = useI18n()
-
 const props = withDefaults(
   defineProps<{
     modelValue: boolean
@@ -30,6 +28,7 @@ const props = withDefaults(
     redirectParamName: 'id',
   }
 )
+
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
   (e: 'onConfirm'): void
@@ -38,6 +37,8 @@ const emit = defineEmits<{
   (e: 'onError', data: any): void
   (e: 'onSuccess', data: any): void
 }>()
+
+const { t } = useI18n()
 
 const buttonLoading = ref(false)
 

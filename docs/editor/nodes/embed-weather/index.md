@@ -1,7 +1,8 @@
 # embedWeather
 
 ## Features
-todo
+- locationId input
+- dialog - search for location
 
 ## Node schema
 

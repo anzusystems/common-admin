@@ -3,7 +3,17 @@
 // todo features and schema also it's not final, its node that can contain content
 
 ## Features
- - todo
+- nodes:
+  - heading h2-h5
+  - paragraph
+  - text
+  - hardBreak
+  - orderedList
+  - bulletList
+  - embedImage
+  - embedImageInline
+- marks:
+  - all
 
 
 ## Node schema

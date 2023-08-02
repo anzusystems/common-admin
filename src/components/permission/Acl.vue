@@ -17,6 +17,7 @@ const props = withDefaults(
 
 const currentUser = inject(CurrentUserSymbol) as CurrentUserType
 const { can } = useAcl()
+// eslint-disable-next-line vue/no-setup-props-destructure
 const allowed = ref<boolean>(can(props.permission, props.subject))
 
 watch(currentUser, () => {

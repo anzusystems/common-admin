@@ -36,13 +36,17 @@ export interface SortableEmit {
   (e: 'onDelete', data: SortableItem): void
 }
 
+export interface SortableActionsProps {
+  dirty: Set<DocId | IntegerId>
+  keyField: string
+  positionField: string
+  updatePosition: boolean
+}
+
 export function useSortableActions(
   model: Readonly<Ref<SortablePropItem[]>>,
-  dirty: Set<DocId | IntegerId>,
-  keyField: string,
-  updatePositionEnabled: boolean,
-  positionField: string,
   initSortableCallback: () => void,
+  props: SortableActionsProps,
   emit: SortableEmit
 ): {
   removeByIndex: (index: number) => SortableItemNewPositions
@@ -70,11 +74,11 @@ export function useSortableActions(
   const randomUuid = ref<string>(generateUUIDv1())
   const sortableInstance = ref<UseSortableReturn | null>(null)
   const forceRerender = ref(0)
-  const dirtyLocal = ref(dirty)
+  const dirtyLocal = ref(props.dirty)
 
   function transformItem(item: SortablePropItem, index: number): SortableItem {
     return {
-      key: item[keyField],
+      key: item[props.keyField],
       index,
       raw: item,
     }
@@ -112,8 +116,8 @@ export function useSortableActions(
     const start = oldIndex > newIndex ? newIndex : oldIndex
     let position = start + 1
     for (let i = start; i < items.length; i++) {
-      objectSetValueByPath(items[i], positionField, position)
-      touchDirty(items[i][keyField])
+      objectSetValueByPath(items[i], props.positionField, position)
+      touchDirty(items[i][props.keyField])
       position++
       updatedPositions.push({
         id: items[i].id,
@@ -129,7 +133,7 @@ export function useSortableActions(
       let returnData: SortableItemNewPositions = []
       const element = clonedData.splice(from, 1)[0]
       clonedData.splice(to, 0, element)
-      if (!isUndefined(updatePositionEnabled)) {
+      if (!isUndefined(props.updatePosition)) {
         returnData = updatePositions(clonedData, from, to)
       }
       emit('update:modelValue', clonedData)
@@ -139,7 +143,7 @@ export function useSortableActions(
   }
 
   const findItemIndexById = (id: DocId | IntegerId, items: SortablePropItem[]) => {
-    const idx = items.findIndex((item) => item[keyField] === id)
+    const idx = items.findIndex((item) => item[props.keyField] === id)
     if (idx === -1) return null
     return idx
   }
@@ -252,7 +256,7 @@ export function useSortableActions(
     const returnData: SortableItemNewPositions = []
 
     if (clonedData[index]) {
-      const id = clonedData[index][keyField]
+      const id = clonedData[index][props.keyField]
       clonedData.splice(index, 1)
       updatePositions(clonedData, index, index, returnData)
       untouchDirty(id)

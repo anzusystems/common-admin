@@ -1,7 +1,7 @@
 # embedPoll
 
 ## Features
-- todo
+- for now just select from existing polls
 
 ## Node schema
 

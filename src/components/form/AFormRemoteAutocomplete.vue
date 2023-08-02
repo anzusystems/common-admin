@@ -71,7 +71,7 @@ const search = ref('')
 const isFocused = ref(false)
 const autoFetchTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
 
-const { t } = useI18n({ useScope: 'global' })
+const { t } = useI18n()
 
 const { innerFilter } = toRefs(props)
 
@@ -107,6 +107,7 @@ const multipleComputedVuetifyTypeFix = computed(() => {
   return true as unknown as undefined
 })
 
+// eslint-disable-next-line vue/no-setup-props-destructure
 const pagination = usePagination(props.filterSortBy)
 const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])

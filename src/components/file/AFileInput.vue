@@ -5,8 +5,6 @@ import AFileDropzone from '@/components/file/AFileDropzone.vue'
 import type { InputFileChangeEvent } from '@/types/ChangeEvent'
 import { useFormatAndSizeCheck } from '@/components/file/composables/formatAndSizeCheck'
 
-const BLOCK_DOUBLE_CLICK_MS = 200
-
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
  */
@@ -36,7 +34,10 @@ const emit = defineEmits<{
   (e: 'filesInput', files: File[]): void
 }>()
 
+const BLOCK_DOUBLE_CLICK_MS = 200
+
 const inputRef = ref<undefined | HTMLInputElement>(undefined)
+// eslint-disable-next-line vue/no-setup-props-destructure
 const fileInputKeyLocal = ref(props.fileInputKey || 0)
 const blockDoubleClick = ref(false)
 
@@ -51,6 +52,7 @@ const clickInput = () => {
   }, BLOCK_DOUBLE_CLICK_MS)
 }
 
+// eslint-disable-next-line vue/no-setup-props-destructure
 const { checkFormatsAndSizes } = useFormatAndSizeCheck(props.accept, props.maxSizes)
 
 const validateData = (files: File[]) => {

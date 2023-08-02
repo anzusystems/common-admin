@@ -4,10 +4,7 @@ import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectS
 import { useAssetItemActions } from '@/components/dam/assetSelect/composables/assetSelectItemActions'
 import AssetImagePreview from '@/components/dam/assetSelect/components/AssetImagePreview.vue'
 import type { DocId } from '@/types/common'
-
-const { t } = useI18n()
-
-const IMAGE_HEIGHT = 200
+import { toRef } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -24,11 +21,17 @@ const emit = defineEmits<{
   (e: 'itemClick', data: { assetId: DocId; index: number }): void
 }>()
 
+const { t } = useI18n()
+
+const IMAGE_HEIGHT = 200
+
 const onItemClick = () => {
   emit('itemClick', { assetId: asset.value.id, index: props.index })
 }
 
-const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(props.item)
+const item = toRef(props, 'item')
+
+const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(item)
 </script>
 
 <template>

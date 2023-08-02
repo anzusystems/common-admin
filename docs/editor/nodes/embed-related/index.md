@@ -1,10 +1,12 @@
 # embedRelated
 
 ## Features
-- User can insert internal articles from CMS using filterable dialog to item, also can override article title
+- User can insert internal articles from CMS using filterable dialog to item
 - User can insert external url for item and specify title fot his item
 - User can mix both types
 - User can override title
+
+NTH: copy/paste url of article -> embedRelated
 
 ## Node schema
 

@@ -46,6 +46,7 @@ const modelValueComputed = computed(() => {
   return props.modelValue
 })
 
+// eslint-disable-next-line vue/no-setup-props-destructure
 const internalModelValue = ref(props.modelValue)
 
 const onClick = async () => {

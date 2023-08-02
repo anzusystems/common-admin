@@ -2,8 +2,6 @@
 
 Similar attrs to [link mark](/editor/marks/link/), with some changes, and it's block node.
 
-todo: check if implement clickthrough and if yes how
-
 ## Node schema
 
 ```json
@@ -24,9 +22,6 @@ todo: check if implement clickthrough and if yes how
     },
     "size": {
       "default": "small" // large | small
-    },
-    "clickthrough": {
-      "default": ""
     }
   }
 }
@@ -46,8 +41,7 @@ todo: check if implement clickthrough and if yes how
   "attrs": {
     "href": "https://www.sme.sk",
     "size": "large | small",
-    "external": false, 
-    "clickthrough": "track_redirect",
+    "external": false,
     "nofollow": false,
     "email": false
   }

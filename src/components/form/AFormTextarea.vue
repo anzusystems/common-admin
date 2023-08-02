@@ -7,8 +7,6 @@ import type { VuetifyIconValue } from '@/types/Vuetify'
 import type { ErrorObject } from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
-
 const props = withDefaults(
   defineProps<{
     modelValue: string | null // todo check number and null
@@ -34,11 +32,14 @@ const props = withDefaults(
     rows: 1,
   }
 )
+
 const emit = defineEmits<{
   (e: 'update:modelValue', data: string | null): void
   (e: 'click:append', data: string | null): void
   (e: 'blur', data: string | null): void
 }>()
+
+const { t } = useI18n()
 
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)

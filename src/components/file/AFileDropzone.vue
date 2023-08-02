@@ -33,6 +33,7 @@ const emit = defineEmits<{
 
 const dropZoneRef = ref<HTMLDivElement>()
 
+// eslint-disable-next-line vue/no-setup-props-destructure
 const { checkFormatsAndSizes } = useFormatAndSizeCheck(props.accept, props.maxSizes)
 
 function onDrop(files: File[] | null) {

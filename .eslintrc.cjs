@@ -44,6 +44,13 @@ module.exports = {
       'ignorePattern': '^import .*',
     }],
     'vue/no-template-target-blank': ['error'],
+    'vue/block-order': ['error', { 'order': [['script', 'template'], 'style'] }],
+    'vue/define-macros-order': ['error'],
+    'vue/component-name-in-template-casing': ['error'],
+    'vue/component-api-style': ['error'],
+    'vue/prefer-define-options': ['error'],
+    'vue/require-typed-ref': ['error'],
+
   },
   parserOptions: {
     ecmaVersion: 'latest',

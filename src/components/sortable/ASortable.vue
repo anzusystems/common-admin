@@ -13,7 +13,7 @@ import {
   GHOST_CLASS,
   GROUP_CLASS,
   HANDLE_CLASS,
-  useSortableActions
+  useSortableActions,
 } from '@/components/sortable/sortableActions'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 
@@ -118,11 +118,8 @@ const {
   updateDataAtIndex,
 } = useSortableActions(
   model,
-  props.dirty,
-  props.keyField,
-  props.updatePosition,
-  props.positionField,
   initSortable,
+  props,
   emit
 )
 
