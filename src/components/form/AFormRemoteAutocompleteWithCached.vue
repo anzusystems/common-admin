@@ -66,6 +66,7 @@ const emit = defineEmits<{
   (e: 'searchChangeDebounced', data: string): void
 }>()
 
+// eslint-disable-next-line vue/no-setup-props-destructure
 const { fetch, add, addManualMinimal } = props.useCached()
 
 const modelValue = computed({
@@ -85,6 +86,7 @@ const isFocused = ref(false)
 const search = ref('')
 const loadingLocal = ref(false)
 const { innerFilter } = toRefs(props)
+// eslint-disable-next-line vue/no-setup-props-destructure
 const pagination = usePagination(props.filterSortBy)
 
 const fetchedItemsMinimal = ref<Map<IntegerId | DocId, any>>(new Map())

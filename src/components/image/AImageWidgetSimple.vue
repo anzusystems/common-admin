@@ -25,6 +25,7 @@ const props = withDefaults(
   }
 )
 
+// eslint-disable-next-line vue/no-setup-props-destructure
 const imageOptions = useImageOptions(props.configName)
 const { fetchImageWidgetData } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)

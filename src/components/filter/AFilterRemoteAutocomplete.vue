@@ -65,6 +65,7 @@ const multipleComputedVuetifyTypeFix = computed(() => {
   return true as unknown as undefined
 })
 
+// eslint-disable-next-line vue/no-setup-props-destructure
 const pagination = usePagination(props.filterSortBy)
 const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])

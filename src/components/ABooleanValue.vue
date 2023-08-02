@@ -2,8 +2,6 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
-
 const props = withDefaults(
   defineProps<{
     value: number | string | boolean
@@ -15,6 +13,8 @@ const props = withDefaults(
     invertColor: false,
   }
 )
+
+const { t } = useI18n()
 
 const booleanValue = computed(() => {
   return props.value === true || props.value === 1 || props.value === 'true'

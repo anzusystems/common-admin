@@ -20,8 +20,6 @@ import type {
 import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
 import { DefaultLicenceIdSymbol } from '@/components/injectionKeys'
 
-const { t } = useI18n()
-
 const props = withDefaults(
   defineProps<{
     modelValue?: boolean | undefined
@@ -37,10 +35,13 @@ const props = withDefaults(
     returnType: 'mainFileId',
   }
 )
+
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
   (e: 'onConfirm', data: AssetSelectReturnData): void
 }>()
+
+const { t } = useI18n()
 
 const dialogLocal = ref(false)
 const dialog = computed({

@@ -53,6 +53,7 @@ const systemBarComponent = computed(() => {
   return ASystemBarNewVersion
 })
 
+// eslint-disable-next-line vue/no-setup-props-destructure
 const { pause } = useIntervalFn(() => {
   checkNewVersion()
 }, props.checkInterval)

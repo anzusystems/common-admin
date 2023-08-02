@@ -23,6 +23,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
+// eslint-disable-next-line vue/no-setup-props-destructure
 const active = ref(props.modelValue)
 
 const modelValueComputed = computed({
