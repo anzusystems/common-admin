@@ -159,10 +159,16 @@ export function useSortableActions(
     if (!isNull(dirty)) touchDirty(data.id)
   }
 
+  /**
+   * @param id - id of item
+   * @param data - item data
+   * @param position - item position, use null to skip update and keep original data
+   * @param dirty - item dirty, use null to skip update and keep original data
+   */
   const updateData = (
     id: DocId | IntegerId,
     data: SortablePropItem,
-    position: number | null,
+    position: number | null = null,
     dirty: null | boolean = null
   ) => {
     const clonedData = cloneDeep(model.value)
