@@ -1,7 +1,7 @@
 # embedGallery
 
 ## Features
-- User can insert gallery embed and choose from existing galleries.
+- User can insert existing gallery or choose from existing galleries.
 - User can create a new gallery and upload images to this gallery (it will be uploaded to DAM also) and user can also choose from existing DAM images and add them to gallery.
 
 ## Node schema

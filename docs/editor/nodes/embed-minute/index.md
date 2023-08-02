@@ -1,7 +1,7 @@
 # embedMinute
 
 ## Features
-- todo
+- for now just select from existing infoboxes
 
 ## Node schema
 

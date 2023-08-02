@@ -1,12 +1,25 @@
 # embedInfobox
 
-// todo specify fields
+// todo specify fields: only body for now
 
 Infobox is special entity with tiptap json body with specific schema.
 
 ## Features
 - User can select infobox from list of existing.
 - User can create a new infobox or edit existing in new dialog
+- nodes:
+  - heading h2-h5
+  - paragraph
+  - text
+  - hardBreak
+  - orderedList
+  - bulletList
+  - embedImage
+  - embedImageInline
+  - embedGallery
+  - faq
+- marks:
+  - all
 
 ## Node schema
 

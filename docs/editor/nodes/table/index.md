@@ -2,6 +2,9 @@
 
 See [tiptap docs](https://tiptap.dev/api/nodes/table)
 
+todo: variant: bordered and borderless
+@lukas check
+
 ## Node schema
 
 ```json
