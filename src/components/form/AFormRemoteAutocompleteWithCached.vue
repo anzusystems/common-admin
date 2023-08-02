@@ -261,23 +261,25 @@ watch(
       v-if="!multiple"
       #selection
     />
-    <template #chip="{ props: chipProps, item }">
+    <!-- @vue-skip -->
+    <template #chip="{ props: chipProps, item: chipItem }">
       <slot
         name="chip"
         :props="chipProps"
-        :item="item"
+        :item="chipItem"
       >
         <VChip
           v-bind="chipProps"
-          :text="item.title"
+          :text="chipItem.title"
         />
       </slot>
     </template>
-    <template #item="{ props: itemProps, item }">
+    <!-- @vue-skip -->
+    <template #item="{ props: itemProps, item: itemItem }">
       <slot
         name="item"
         :props="itemProps"
-        :item="item"
+        :item="itemItem"
       >
         <VListItem :props="itemProps" />
       </slot>
