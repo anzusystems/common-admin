@@ -15,7 +15,7 @@ const props = withDefaults(
     maxSizes?: Record<string, number> | undefined
     disabled?: boolean
     transparent?: boolean
-    size?: | 'small' | 'default' | 'large'
+    size?: 'small' | 'default' | 'large'
   }>(),
   {
     variant: 'default',
@@ -129,11 +129,11 @@ $class-name-root: 'a-file-dropzone';
 .v-theme--light {
   .#{$class-name-root} {
     .text {
-      background-color: rgba(212 212 212 / 50%)
+      background-color: rgba(212 212 212 / 50%);
     }
 
     &--bg {
-      background-color: #D4D4D4;
+      background-color: #d4d4d4;
     }
 
     &--over:not(&--disabled) {
@@ -151,7 +151,7 @@ $class-name-root: 'a-file-dropzone';
 .v-theme--dark {
   .#{$class-name-root} {
     .text {
-      background-color: rgba(57 57 57 / 50%)
+      background-color: rgba(57 57 57 / 50%);
     }
 
     &--bg {

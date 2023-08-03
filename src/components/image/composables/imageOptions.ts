@@ -6,11 +6,7 @@ import { isUndefined } from '@/utils/common'
 export function useImageOptions(configName: string) {
   const imageOptions = inject<CommonAdminImageOptions | undefined>(ImageOptions, undefined)
 
-  if (
-    isUndefined(imageOptions) ||
-    isUndefined(imageOptions.configs) ||
-    isUndefined(imageOptions.configs[configName])
-  ) {
+  if (isUndefined(imageOptions) || isUndefined(imageOptions.configs) || isUndefined(imageOptions.configs[configName])) {
     throw new Error("Component AImageWidgetSimple can't be used without properly configured common admin.")
   }
 

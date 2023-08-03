@@ -157,7 +157,7 @@ import {
   AvailableLanguagesSymbol,
   DefaultLanguageSymbol,
   SubjectScopeSymbol,
-  SystemScopeSymbol
+  SystemScopeSymbol,
 } from '@/components/injectionKeys'
 import { prettyBytes } from '@/utils/file'
 import { isValidHTTPStatus } from '@/utils/response'

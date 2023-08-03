@@ -36,7 +36,12 @@ createApp(App)
     },
     image: {
       configs: {
-        default: { getImage: playgroundFetchImageCms, imageUrl: 'http://admin-image.smedata.localhost', width: 500, height: 281 },
+        default: {
+          getImage: playgroundFetchImageCms,
+          imageUrl: 'http://admin-image.smedata.localhost',
+          width: 500,
+          height: 281,
+        },
       },
     },
   })

@@ -17,7 +17,7 @@ export type AddToCachedArgs<T extends DocId | IntegerId> =
 export function defineCached<
   I extends DocId | IntegerId,
   T extends Record<DocId | IntegerId, any>,
-  M extends Record<DocId | IntegerId, any>
+  M extends Record<DocId | IntegerId, any>,
 >(
   mapFullToMinimal: (source: T) => M,
   mapIdToMinimal: (id: I) => M,

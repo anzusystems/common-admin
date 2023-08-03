@@ -12,7 +12,7 @@
   ],
   "attrs": {
     "id": {
-      "default": null
+      "default": ""
     }
   }
 }

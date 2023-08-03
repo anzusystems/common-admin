@@ -24,7 +24,7 @@ export enum DamAssetType {
   Default = Image,
 }
 
-export type DamAssetTypeValues =`${DamAssetType}`
+export type DamAssetTypeValues = `${DamAssetType}`
 
 export const damAssetTypeValueToEnum = (value: DamAssetTypeValues) => {
   switch (value) {
