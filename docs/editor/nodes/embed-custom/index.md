@@ -19,7 +19,7 @@ Field `name` is used to specify customData fields setup.
   ],
   "attrs": {
     "id": {
-      "default": null
+      "default": ""
     },
     "changeId": {
       "default": ""
@@ -34,7 +34,7 @@ Field `name` is used to specify customData fields setup.
 {
   "type": "embedCustom",
   "attrs": {
-    "id": 23,
+    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
     "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
   }
 }
@@ -59,7 +59,7 @@ interface EmbedKindCustom {
 {
   "type": "embedCustom",
   "attrs": {
-    "id": 23,
+    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
     "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
   }
 }
@@ -67,7 +67,7 @@ interface EmbedKindCustom {
 
 ```json
 {
-  "id": 23,
+  "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
   "article": 60,
   "customData": {
     "id": "43264"
