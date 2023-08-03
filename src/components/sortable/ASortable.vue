@@ -116,12 +116,7 @@ const {
   addAfterIndex,
   removeByIndex,
   updateDataAtIndex,
-} = useSortableActions(
-  model,
-  initSortable,
-  props,
-  emit
-)
+} = useSortableActions(model, initSortable, props, emit)
 
 onBeforeUnmount(() => {
   destroy()

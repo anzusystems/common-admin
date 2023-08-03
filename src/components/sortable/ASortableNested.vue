@@ -2,7 +2,11 @@
 import type { SortableEvent } from 'sortablejs'
 import { computed, nextTick, onBeforeUnmount, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { SortableNested, SortableNestedEmit, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
+import type {
+  SortableNested,
+  SortableNestedEmit,
+  SortableNestedItem,
+} from '@/components/sortable/sortableNestedActions'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
 import {
@@ -10,7 +14,8 @@ import {
   NESTED_DRAG_CLASS,
   NESTED_GHOST_CLASS,
   NESTED_GROUP_CLASS,
-  NESTED_HANDLE_CLASS, useSortableNestedActions
+  NESTED_HANDLE_CLASS,
+  useSortableNestedActions,
 } from '@/components/sortable/sortableNestedActions'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { stringToInt } from '@/utils/string'

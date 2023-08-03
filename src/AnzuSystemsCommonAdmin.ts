@@ -41,9 +41,11 @@ export interface CommonAdminImageConfig {
   height: number
 }
 
-export type CommonAdminImageOptions = undefined | {
-  configs: {[key: string]: CommonAdminImageConfig}
-}
+export type CommonAdminImageOptions =
+  | undefined
+  | {
+      configs: { [key: string]: CommonAdminImageConfig }
+    }
 
 export default {
   install<T extends AclValue = AclValue>(app: App, options: PluginOptions<T>): void {

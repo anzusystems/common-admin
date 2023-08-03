@@ -7,9 +7,9 @@ export enum AssetSelectReturnType {
   Asset = 'asset',
 }
 
-export type AssetSelectReturnTypeValues =`${AssetSelectReturnType}`
+export type AssetSelectReturnTypeValues = `${AssetSelectReturnType}`
 
-export type AssetSelectReturnData =  AssetSelectReturnMainFileId | AssetSelectReturnAssetId | AssetSelectReturnAsset
+export type AssetSelectReturnData = AssetSelectReturnMainFileId | AssetSelectReturnAssetId | AssetSelectReturnAsset
 
 interface AssetSelectReturnMainFileId {
   type: 'mainFileId'
