@@ -37,7 +37,7 @@ const emit = defineEmits<{
 const BLOCK_DOUBLE_CLICK_MS = 200
 
 const inputRef = ref<undefined | HTMLInputElement>(undefined)
-// eslint-disable-next-line vue/no-setup-props-destructure
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const fileInputKeyLocal = ref(props.fileInputKey || 0)
 const blockDoubleClick = ref(false)
 
@@ -52,7 +52,7 @@ const clickInput = () => {
   }, BLOCK_DOUBLE_CLICK_MS)
 }
 
-// eslint-disable-next-line vue/no-setup-props-destructure
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { checkFormatsAndSizes } = useFormatAndSizeCheck(props.accept, props.maxSizes)
 
 const validateData = (files: File[]) => {
