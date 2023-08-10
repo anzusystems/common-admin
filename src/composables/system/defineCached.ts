@@ -28,7 +28,7 @@ export function defineCached<
   const toFetch = ref<Set<I>>(new Set())
 
   const add = (...args: AddToCachedArgs<I>) => {
-    const toAdd = ref<Set<I>>(new Set())
+    const toAdd = <Set<I>>(new Set())
     for (let i = 0; i < args.length; i++) {
       const arg = args[i]
       if (isNull(arg) || isUndefined(arg)) continue
@@ -36,13 +36,13 @@ export function defineCached<
         for (let j = 0; j < arg.length; j++) {
           const item = arg[j]
           if (isNull(item) || isUndefined(item)) continue
-          if (!cache.value.has(item)) toAdd.value.add(item)
+          if (!cache.value.has(item)) toAdd.add(item)
         }
         continue
       }
-      if (!cache.value.has(arg)) toAdd.value.add(arg)
+      if (!cache.value.has(arg)) toAdd.add(arg)
     }
-    toAdd.value.forEach((id) => {
+    toAdd.forEach((id) => {
       cache.value.set(id, { ...mapIdToMinimal(id), ...{ _loaded: false } })
       toFetch.value.add(id)
     })

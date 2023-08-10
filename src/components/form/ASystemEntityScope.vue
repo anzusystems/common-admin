@@ -9,9 +9,9 @@ const props = withDefaults(
   }>(),
   {}
 )
-// eslint-disable-next-line vue/no-setup-props-destructure
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 provide<string>(SystemScopeSymbol, props.system)
-// eslint-disable-next-line vue/no-setup-props-destructure
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 provide<string>(SubjectScopeSymbol, props.subject)
 </script>
 

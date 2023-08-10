@@ -50,6 +50,8 @@ module.exports = {
     'vue/component-api-style': ['error'],
     'vue/prefer-define-options': ['error'],
     'vue/require-typed-ref': ['error'],
+    'vue/no-setup-props-reactivity-loss': ['error'],
+    'vue/no-ref-object-reactivity-loss': ['error'],
 
   },
   parserOptions: {
