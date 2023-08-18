@@ -12,6 +12,7 @@ import ImageView from '@/playground/image/ImageView.vue'
 import FileView from '@/playground/file/FileView.vue'
 import SortableView from '@/playground/sortable/SortableView.vue'
 import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
+import AlertView from '@/playground/alertView/AlertView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -75,6 +76,11 @@ const router = createRouter({
       path: '/view/sortable',
       name: 'view-sortable',
       component: SortableView,
+    },
+    {
+      path: '/view/alert',
+      name: 'view-alert',
+      component: AlertView,
     },
   ],
 })

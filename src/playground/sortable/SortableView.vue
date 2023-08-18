@@ -222,14 +222,7 @@ const onAddAfterClickBasic = (item: SortableItem<BasicItemDemo>) => {
 }
 
 const onAddLastClickBasic = (item: SortablePropItem | null) => {
-  if (basicComponent.value) {
-    const needsRefresh = basicComponent.value.addAfterId(isNull(item) ? null : item.id, {
-      id: Date.now(),
-      text: 'Lorem 3',
-      position: 0,
-    })
-    console.log(needsRefresh)
-  }
+  console.log(item)
 }
 const onSortableBasicEnd = (data: SortableItemNewPositions) => {
   console.log(data)

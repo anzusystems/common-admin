@@ -29,7 +29,7 @@ export interface SortableEmit {
 
   (e: 'onAddAfter', data: SortableItem): void
 
-  (e: 'onAddLast', data: SortableItem | null): void
+  (e: 'onAddLast', data: SortablePropItem | null): void
 
   (e: 'onEdit', data: SortableItem): void
 
