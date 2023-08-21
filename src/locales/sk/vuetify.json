@@ -1,5 +1,6 @@
 {
   "badge": "Štítok",
+  "open": "Otvoriť",
   "close": "Zatvoriť",
   "dataIterator": {
     "noResultsText": "Nenašli sa žiadne zodpovedajúce záznamy",
