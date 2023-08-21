@@ -1,3 +1,11 @@
+## [1.14.1](https://github.com/anzusystems/common-admin/compare/1.14.0...1.14.1) (2023-08-23)
+
+### Features
+* **chore:** updated dependencies
+
+### Bug Fixes
+* **locales:** added missing vuetify translation added in vuetify@3.3.13
+
 ## [1.14.0](https://github.com/anzusystems/common-admin/compare/1.13.0...1.14.0) (2023-08-18)
 
 ### Features
