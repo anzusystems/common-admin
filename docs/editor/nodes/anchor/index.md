@@ -1,6 +1,6 @@
 # anchor
 
-- todo inline node setup
+- todo change to mark
 
 ## Features
 - User can place inline anchor anywhere in text and specify name

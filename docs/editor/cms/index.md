@@ -9,48 +9,50 @@
 ## Marks
 | Name        | Feature clear | Schema setup | Migration valid | Docs | Feature done |
 |-------------|:-------------:|:------------:|:---------------:|------|:------------:|
-| bold        |       ✅       |              |                 |      |              |
-| italic      |       ✅       |              |                 |      |              |
-| link        |       ✅       |              |                 |      |              |
-| strike      |       ✅       |              |                 |      |              |
-| subscript   |       ✅       |              |                 |      |              |
-| superscript |       ✅       |              |                 |      |              |
-| underline   |       ✅       |              |                 |      |              |
+| bold        |       ✅       |      ✅       |                 |      |              |
+| italic      |       ✅       |      ✅       |                 |      |              |
+| link        |               |              |                 |      |              |
+| strike      |       ✅       |      ✅       |                 |      |              |
+| subscript   |       ✅       |      ✅       |                 |      |              |
+| superscript |       ✅       |      ✅       |                 |      |              |
+| underline   |       ✅       |      ✅       |                 |      |              |
+| anchor      |               |              |                 |      |              |
 
 ## Nodes
-| Name              | Feature clear | Schema setup | Migration valid | Docs | Feature done |
-|-------------------|:-------------:|:------------:|:---------------:|------|:------------:|
-| anchor            |               |              |                 |      |              |
-| blockquote        |               |              |                 |      |              |
-| bulletList        |               |              |                 |      |              |
-| button            |       ✅       |              |                 |      |              |
-| contentBreak      |       ✅       |              |                 |      |              |
-| contentLock       |       ✅       |              |                 |      |              |
-| doc               |               |              |                 |      |              |
-| embedCustom       |               |              |                 |      |              |
-| embedGallery      |               |              |                 |      |              |
-| embedImage        |               |              |                 |      |              |
-| embedImageInline  |               |              |                 |      |              |
-| embedImageInfobox |               |              |                 |      |              |
-| embedMedia        |               |              |                 |      |              |
-| embedMinute       |               |              |                 |      |              |
-| embedPoll         |               |              |                 |      |              |
-| embedQuiz         |               |              |                 |      |              |
-| embedRelated      |               |              |                 |      |              |
-| embedWeather      |               |              |                 |      |              |
-| hardBreak         |       ✅       |              |                 |      |              |
-| heading           |       ✅       |              |                 |      |              |
-| horizontalRule    |       ✅       |              |                 |      |              |
-| listItem          |       ✅       |              |                 |      |              |
-| orderedList       |       ✅       |              |                 |      |              |
-| paragraph         |       ✅       |              |                 |      |              |
-| review            |               |              |                 |      |              |
-| styledBox         |               |              |                 |      |              |
-| table             |               |              |                 |      |              |
-| tableCell         |               |              |                 |      |              |
-| tableHeader       |               |              |                 |      |              |
-| tableRow          |               |              |                 |      |              |
-| text              |       ✅       |              |                 |      |              |
+| Name               | Feature clear | Schema setup | Migration valid | Docs | Feature done |
+|--------------------|:-------------:|:------------:|:---------------:|------|:------------:|
+| blockquote         |       ✅       |      ✅       |                 |      |              |
+| bulletList         |       ✅       |      ✅       |                 |      |              |
+| button             |       ✅       |      ✅       |                 |      |              |
+| contentBreak       |       ✅       |      ✅       |                 |      |              |
+| contentLock        |       ✅       |      ✅       |                 |      |              |
+| doc                |       ✅       |      ✅       |                 |      |              |
+| embedCustom        |               |      ✅       |                 |      |              |
+| embedGallery       |               |      ✅       |                 |      |              |
+| embedImage         |               |      ✅       |                 |      |              |
+| embedImageInline   |               |      ✅       |                 |      |              |
+| ~~embedInfobox~~ v |               |              |                 |      |              |
+| embedCrossbox?     |               |              |                 |      |              |
+| embedMedia         |               |      ✅       |                 |      |              |
+| embedMinute        |               |      ✅       |                 |      |              |
+| embedNewsletter    |               |              |                 |      |              |
+| embedPoll          |               |      ✅       |                 |      |              |
+| embedQuiz          |               |      ✅       |                 |      |              |
+| embedRelated       |               |      ✅       |                 |      |              |
+| embedWeather       |               |      ✅       |                 |      |              |
+| hardBreak          |       ✅       |      ✅       |                 |      |              |
+| heading            |       ✅       |      ✅       |                 |      |              |
+| horizontalRule     |       ✅       |      ✅       |                 |      |              |
+| listItem           |       ✅       |      ✅       |                 |      |              |
+| orderedList        |       ✅       |      ✅       |                 |      |              |
+| paragraph          |       ✅       |      ✅       |                 |      |              |
+| review             |               |      ✅       |                 |      |              |
+| styledBox          |               |              |                 |      |              |
+| table              |       ✅       |      ✅       |                 |      |              |
+| tableCell          |       ✅       |      ✅       |                 |      |              |
+| tableHeader        |       ✅       |      ✅       |                 |      |              |
+| tableRow           |       ✅       |      ✅       |                 |      |              |
+| text               |       ✅       |      ✅       |                 |      |              |
 
 ## Extensions
 | Name                | Feature clear | Schema setup | Migration valid | Docs | Feature done |
@@ -59,8 +61,9 @@
 | collaborationCursor |               |              |                 |      |              |
 | dropCursor          |       ✅       |              |                 |      |              |
 | gapCursor           |       ✅       |              |                 |      |              |
+| listKeymap          |       ✅       |              |                 |      |              |
 | history             |               |              |                 |      |              |
-| textAlign           |               |              |                 |      |              |
+| textAlign           |       ✅       |              |                 |      |              |
 
 ## Supported media embed variants
 | Name              | Feature clear | Migration valid | Docs | Feature done |
