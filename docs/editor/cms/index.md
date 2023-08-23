@@ -64,12 +64,12 @@
 ## Extensions
 | Name                | Feature clear | Development | Migration valid | Docs | Feature done |
 |---------------------|:-------------:|:-----------:|:---------------:|------|:------------:|
-| collaboration       |        ✅       |             |                 |      |              |
-| collaborationCursor |        ✅       |             |                 |      |              |
+| collaboration       |       ✅       |             |                 |      |              |
+| collaborationCursor |       ✅       |             |                 |      |              |
 | dropCursor          |       ✅       |             |                 |      |              |
 | gapCursor           |       ✅       |             |                 |      |              |
 | listKeymap          |       ✅       |      ✅      |                 |      |              |
-| history             |       ✅        |             |                 |      |              |
+| history             |       ✅       |             |                 |      |              |
 | textAlign           |       ✅       |      ✅      |                 |      |              |
 | tocGenerate         |       ✅       |             |                 |      |              |
 
