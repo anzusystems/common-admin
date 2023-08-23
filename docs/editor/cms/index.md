@@ -28,19 +28,19 @@
 | contentBreak         |       ✅       |      ✅       |             |                 |      |              |
 | contentLock          |       ✅       |      ✅       |      ✅      |                 |      |              |
 | doc                  |       ✅       |      ✅       |      ✅      |                 |      |              |
-| embedCustom          |               |      ✅       |             |                 |      |              |
-| embedGallery         |               |      ✅       |             |                 |      |              |
-| embedImage           |               |      ✅       |             |                 |      |              |
-| embedImageInline     |               |      ✅       |             |                 |      |              |
+| embedCustom          |       ✅       |      ✅       |             |                 |      |              |
+| embedGallery         |       ✅       |      ✅       |             |                 |      |              |
+| embedImage           |       ✅       |      ✅       |             |                 |      |              |
+| embedImageInline     |       ✅       |      ✅       |             |                 |      |              |
 | ~~embedInfobox~~ v   |               |              |             |                 |      |              |
 | embedCrossbox?       |               |              |             |                 |      |              |
 | embedMedia           |               |      ✅       |             |                 |      |              |
 | embedMinute          |               |      ✅       |             |                 |      |              |
 | ~~embed~~Newsletter? |               |              |             |                 |      |              |
-| embedPoll            |               |      ✅       |             |                 |      |              |
-| embedQuiz            |               |      ✅       |             |                 |      |              |
-| embedRelated         |               |      ✅       |             |                 |      |              |
-| embedWeather         |               |      ✅       |             |                 |      |              |
+| embedPoll            |       ✅       |      ✅       |             |                 |      |              |
+| embedQuiz            |       ✅       |      ✅       |             |                 |      |              |
+| embedRelated         |       ✅       |      ✅       |             |                 |      |              |
+| embedWeather         |       ✅       |      ✅       |             |                 |      |              |
 | hardBreak            |       ✅       |      ✅       |      ✅      |                 |      |              |
 | heading              |       ✅       |      ✅       |      ✅      |                 |      |              |
 | horizontalRule       |       ✅       |      ✅       |      ✅      |                 |      |              |
@@ -48,22 +48,28 @@
 | orderedList          |       ✅       |      ✅       |      ✅      |                 |      |              |
 | paragraph            |       ✅       |      ✅       |      ✅      |                 |      |              |
 | review               |               |      ✅       |             |                 |      |              |
-| styledBox            |               |              |             |                 |      |              |
+| styledBox            |       ✅       |              |             |                 |      |              |
 | table                |       ✅       |      ✅       |      ✅      |                 |      |              |
 | tableCell            |       ✅       |      ✅       |      ✅      |                 |      |              |
 | tableHeader          |       ✅       |      ✅       |      ✅      |                 |      |              |
 | tableRow             |       ✅       |      ✅       |      ✅      |                 |      |              |
 | text                 |       ✅       |      ✅       |      ✅      |                 |      |              |
 
+## Special nodes that will exist only for migration process and will be removed after that
+| Name                     | Schema setup | Migration valid | Removed after gold |
+|--------------------------|:------------:|:---------------:|:------------------:|
+| embedExternalImage       |      ✅       |                 |                    |
+| embedExternalImageInline |      ✅       |                 |                    |
+
 ## Extensions
 | Name                | Feature clear | Development | Migration valid | Docs | Feature done |
 |---------------------|:-------------:|:-----------:|:---------------:|------|:------------:|
-| collaboration       |               |             |                 |      |              |
-| collaborationCursor |               |             |                 |      |              |
+| collaboration       |        ✅       |             |                 |      |              |
+| collaborationCursor |        ✅       |             |                 |      |              |
 | dropCursor          |       ✅       |             |                 |      |              |
 | gapCursor           |       ✅       |             |                 |      |              |
 | listKeymap          |       ✅       |      ✅      |                 |      |              |
-| history             |               |             |                 |      |              |
+| history             |       ✅        |             |                 |      |              |
 | textAlign           |       ✅       |      ✅      |                 |      |              |
 | tocGenerate         |       ✅       |             |                 |      |              |
 
