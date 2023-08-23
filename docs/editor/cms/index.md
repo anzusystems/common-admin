@@ -73,7 +73,7 @@
 | textAlign           |       ✅       |      ✅      |                 |      |              |
 | tocGenerate         |       ✅       |             |                 |      |              |
 
-## Supported media embed variants
+## Supported media embed variants (needs to add all options)
 | Name              | Feature clear | Development | Migration valid | Docs | Feature done |
 |-------------------|:-------------:|:-----------:|:---------------:|------|:------------:|
 | youtube           |               |             |                 |      |              |
