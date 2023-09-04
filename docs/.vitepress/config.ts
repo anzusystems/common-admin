@@ -166,7 +166,7 @@ function sidebarEditor() {
         { text: 'embedGallery', link: '/editor/nodes/embed-gallery/' },
         { text: 'embedImage', link: '/editor/nodes/embed-image/' },
         { text: 'embedImageInline', link: '/editor/nodes/embed-image-inline/' },
-        { text: 'embedInfobox', link: '/editor/nodes/embed-infobox/' },
+        { text: 'embedCrossBox', link: '/editor/nodes/embed-cross-box/' },
         { text: 'embedMedia', link: '/editor/nodes/embed-media/' },
         { text: 'embedMinute', link: '/editor/nodes/embed-minute/' },
         { text: 'embedNewsletter', link: '/editor/nodes/embed-newsletter/' },
