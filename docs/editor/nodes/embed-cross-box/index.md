@@ -2,7 +2,7 @@
 
 // todo specify fields: only body for now
 
-Infobox is special entity with tiptap json body with specific schema.
+CrossBox is special entity with tiptap json body with specific schema.
 
 ## Features
 - User can select infobox from list of existing.
