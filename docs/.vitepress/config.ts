@@ -153,7 +153,6 @@ function sidebarEditor() {
       text: 'Nodes',
       collapsed: false,
       items: [
-        { text: 'anchor', link: '/editor/nodes/anchor/' },
         { text: 'blockquote', link: '/editor/nodes/blockquote/' },
         { text: 'bulletList', link: '/editor/nodes/bullet-list/' },
         { text: 'button', link: '/editor/nodes/button/' },
@@ -202,6 +201,7 @@ function sidebarEditor() {
       collapsed: false,
       items: [
         { text: 'General', link: '/editor/extensions/general/' },
+        { text: 'anchor', link: '/editor/extensions/anchor/' },
         { text: 'collaboration', link: '/editor/extensions/collaboration/' },
         { text: 'collaborationCursor', link: '/editor/extensions/collaboration-cursor/' },
         { text: 'dropCursor', link: '/editor/extensions/drop-cursor/' },

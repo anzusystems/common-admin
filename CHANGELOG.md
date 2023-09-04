@@ -1,3 +1,15 @@
+## [1.16.0](https://github.com/anzusystems/common-admin/compare/1.14.1...1.15.0) (2023-09-04)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+* `vuetify@3.3.15`
+* `axios@1.5.0`
+* `@vueuse/core@10.4.1`
+* `@vueuse/integrations@10.4.1`
+
 ## [1.15.0](https://github.com/anzusystems/common-admin/compare/1.14.1...1.15.0) (2023-08-23)
 
 ### Features

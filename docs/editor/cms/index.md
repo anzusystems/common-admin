@@ -12,12 +12,11 @@
 |-------------|:-------------:|:------------:|:-----------:|:---------------:|------|:------------:|
 | bold        |       ✅       |      ✅       |      ✅      |                 |      |              |
 | italic      |       ✅       |      ✅       |      ✅      |                 |      |              |
-| link        |               |              |             |                 |      |              |
+| link        |       ✅       |      ✅       |      ✅      |                 |      |              |
 | strike      |       ✅       |      ✅       |      ✅      |                 |      |              |
 | subscript   |       ✅       |      ✅       |      ✅      |                 |      |              |
 | superscript |       ✅       |      ✅       |      ✅      |                 |      |              |
 | underline   |       ✅       |      ✅       |      ✅      |                 |      |              |
-| anchor      |               |              |             |                 |      |              |
 
 ## Nodes
 | Name                 | Feature clear | Schema setup | Development | Migration valid | Docs | Feature done |
@@ -32,8 +31,7 @@
 | embedGallery         |       ✅       |      ✅       |             |                 |      |              |
 | embedImage           |       ✅       |      ✅       |             |                 |      |              |
 | embedImageInline     |       ✅       |      ✅       |             |                 |      |              |
-| ~~embedInfobox~~ v   |               |              |             |                 |      |              |
-| embedCrossbox?       |               |              |             |                 |      |              |
+| embedCrossBox        |               |              |             |                 |      |              |
 | embedMedia           |               |      ✅       |             |                 |      |              |
 | embedMinute          |               |      ✅       |             |                 |      |              |
 | ~~embed~~Newsletter? |               |              |             |                 |      |              |
@@ -64,6 +62,7 @@
 ## Extensions
 | Name                | Feature clear | Development | Migration valid | Docs | Feature done |
 |---------------------|:-------------:|:-----------:|:---------------:|------|:------------:|
+| anchor              |       ✅       |      ✅      |                 |      |              |
 | collaboration       |       ✅       |             |                 |      |              |
 | collaborationCursor |       ✅       |             |                 |      |              |
 | dropCursor          |       ✅       |             |                 |      |              |
@@ -71,7 +70,7 @@
 | listKeymap          |       ✅       |      ✅      |                 |      |              |
 | history             |       ✅       |             |                 |      |              |
 | textAlign           |       ✅       |      ✅      |                 |      |              |
-| tocGenerate         |       ✅       |             |                 |      |              |
+| tocGenerate         |       ✅       |      ✅      |                 |      |              |
 
 ## Supported media embed variants (needs to add all options)
 | Name              | Feature clear | Development | Migration valid | Docs | Feature done |
