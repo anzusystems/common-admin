@@ -207,6 +207,7 @@ function sidebarEditor() {
         { text: 'collaborationCursor', link: '/editor/extensions/collaboration-cursor/' },
         { text: 'dropCursor', link: '/editor/extensions/drop-cursor/' },
         { text: 'gapCursor', link: '/editor/extensions/gap-cursor/' },
+        { text: 'tocGenerate', link: '/editor/extensions/toc-generate/' },
         { text: 'history', link: '/editor/extensions/history/' },
         { text: 'textAlign', link: '/editor/extensions/text-align/' },
       ]
