@@ -38,6 +38,7 @@
 | embedPoll            |       ✅       |      ✅       |             |                 |      |              |
 | embedQuiz            |       ✅       |      ✅       |             |                 |      |              |
 | embedRelated         |       ✅       |      ✅       |             |                 |      |              |
+| embedTimeline        |               |              |             |                 |      |              |
 | embedWeather         |       ✅       |      ✅       |             |                 |      |              |
 | hardBreak            |       ✅       |      ✅       |     dep     |                 |      |              |
 | heading              |       ✅       |      ✅       |     dep     |                 |      |              |

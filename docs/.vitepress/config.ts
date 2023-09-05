@@ -172,6 +172,7 @@ function sidebarEditor() {
         { text: 'embedPoll', link: '/editor/nodes/embed-poll/' },
         { text: 'embedQuiz', link: '/editor/nodes/embed-quiz/' },
         { text: 'embedRelated', link: '/editor/nodes/embed-related/' },
+        { text: 'embedTimeline', link: '/editor/nodes/embed-timeline/' },
         { text: 'embedWeather', link: '/editor/nodes/embed-weather/' },
         { text: 'hardBreak', link: '/editor/nodes/hard-break/' },
         { text: 'heading', link: '/editor/nodes/heading/' },
