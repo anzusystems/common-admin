@@ -10,23 +10,23 @@
 ## Marks
 | Name        | Feature clear | Schema setup | Development | Migration valid | Docs | Feature done |
 |-------------|:-------------:|:------------:|:-----------:|:---------------:|------|:------------:|
-| bold        |       ✅       |      ✅       |      ✅      |                 |      |              |
-| italic      |       ✅       |      ✅       |      ✅      |                 |      |              |
+| bold        |       ✅       |      ✅       |     dep     |                 |      |              |
+| italic      |       ✅       |      ✅       |     dep     |                 |      |              |
 | link        |       ✅       |      ✅       |      ✅      |                 |      |              |
-| strike      |       ✅       |      ✅       |      ✅      |                 |      |              |
-| subscript   |       ✅       |      ✅       |      ✅      |                 |      |              |
-| superscript |       ✅       |      ✅       |      ✅      |                 |      |              |
-| underline   |       ✅       |      ✅       |      ✅      |                 |      |              |
+| strike      |       ✅       |      ✅       |     dep     |                 |      |              |
+| subscript   |       ✅       |      ✅       |     dep     |                 |      |              |
+| superscript |       ✅       |      ✅       |     dep     |                 |      |              |
+| underline   |       ✅       |      ✅       |     dep     |                 |      |              |
 
 ## Nodes
 | Name                 | Feature clear | Schema setup | Development | Migration valid | Docs | Feature done |
 |----------------------|:-------------:|:------------:|:-----------:|:---------------:|------|:------------:|
-| blockquote           |       ✅       |      ✅       |      ✅      |                 |      |              |
-| bulletList           |       ✅       |      ✅       |      ✅      |                 |      |              |
-| button               |               |              |             |                 |      |              |
+| blockquote           |       ✅       |      ✅       |   dep + ✅   |                 |      |              |
+| bulletList           |       ✅       |      ✅       |     dep     |                 |      |              |
+| button               |       ✅       |      ✅       |      ✅      |                 |      |              |
 | contentBreak         |       ✅       |      ✅       |             |                 |      |              |
 | contentLock          |       ✅       |      ✅       |      ✅      |                 |      |              |
-| doc                  |       ✅       |      ✅       |      ✅      |                 |      |              |
+| doc                  |       ✅       |      ✅       |     dep     |                 |      |              |
 | embedCustom          |       ✅       |      ✅       |             |                 |      |              |
 | embedGallery         |       ✅       |      ✅       |             |                 |      |              |
 | embedImage           |       ✅       |      ✅       |             |                 |      |              |
@@ -39,19 +39,19 @@
 | embedQuiz            |       ✅       |      ✅       |             |                 |      |              |
 | embedRelated         |       ✅       |      ✅       |             |                 |      |              |
 | embedWeather         |       ✅       |      ✅       |             |                 |      |              |
-| hardBreak            |       ✅       |      ✅       |      ✅      |                 |      |              |
-| heading              |       ✅       |      ✅       |      ✅      |                 |      |              |
-| horizontalRule       |       ✅       |      ✅       |      ✅      |                 |      |              |
-| listItem             |       ✅       |      ✅       |      ✅      |                 |      |              |
-| orderedList          |       ✅       |      ✅       |      ✅      |                 |      |              |
-| paragraph            |       ✅       |      ✅       |      ✅      |                 |      |              |
-| review               |               |      ✅       |             |                 |      |              |
-| styledBox            |       ✅       |              |             |                 |      |              |
-| table                |       ✅       |      ✅       |      ✅      |                 |      |              |
-| tableCell            |       ✅       |      ✅       |      ✅      |                 |      |              |
-| tableHeader          |       ✅       |      ✅       |      ✅      |                 |      |              |
-| tableRow             |       ✅       |      ✅       |      ✅      |                 |      |              |
-| text                 |       ✅       |      ✅       |      ✅      |                 |      |              |
+| hardBreak            |       ✅       |      ✅       |     dep     |                 |      |              |
+| heading              |       ✅       |      ✅       |     dep     |                 |      |              |
+| horizontalRule       |       ✅       |      ✅       |     dep     |                 |      |              |
+| listItem             |       ✅       |      ✅       |     dep     |                 |      |              |
+| orderedList          |       ✅       |      ✅       |     dep     |                 |      |              |
+| paragraph            |       ✅       |      ✅       |     dep     |                 |      |              |
+| review               |               |              |             |                 |      |              |
+| styledBox            |       ✅       |      ✅       |      ✅      |                 |      |              |
+| table                |       ✅       |      ✅       |   dep + ✅   |                 |      |              |
+| tableCell            |       ✅       |      ✅       |     dep     |                 |      |              |
+| tableHeader          |       ✅       |      ✅       |     dep     |                 |      |              |
+| tableRow             |       ✅       |      ✅       |     dep     |                 |      |              |
+| text                 |       ✅       |      ✅       |     dep     |                 |      |              |
 
 ## Special nodes that will exist only for migration process and will be removed after that
 | Name                     | Schema setup | Migration valid | Removed after gold |
@@ -63,13 +63,13 @@
 | Name                | Feature clear | Development | Migration valid | Docs | Feature done |
 |---------------------|:-------------:|:-----------:|:---------------:|------|:------------:|
 | anchor              |       ✅       |      ✅      |                 |      |              |
-| collaboration       |       ✅       |             |                 |      |              |
-| collaborationCursor |       ✅       |             |                 |      |              |
-| dropCursor          |       ✅       |             |                 |      |              |
-| gapCursor           |       ✅       |             |                 |      |              |
-| listKeymap          |       ✅       |      ✅      |                 |      |              |
-| history             |       ✅       |             |                 |      |              |
-| textAlign           |       ✅       |      ✅      |                 |      |              |
+| collaboration       |       ✅       |     dep     |                 |      |              |
+| collaborationCursor |       ✅       |     dep     |                 |      |              |
+| dropCursor          |       ✅       |     dep     |                 |      |              |
+| gapCursor           |       ✅       |     dep     |                 |      |              |
+| listKeymap          |       ✅       |     dep     |                 |      |              |
+| history             |       ✅       |     dep     |                 |      |              |
+| textAlign           |       ✅       |     dep     |                 |      |              |
 | tocGenerate         |       ✅       |      ✅      |                 |      |              |
 
 ## Supported media embed variants (needs to add all options)
