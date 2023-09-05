@@ -1,4 +1,12 @@
-## [1.16.0](https://github.com/anzusystems/common-admin/compare/1.14.1...1.15.0) (2023-09-04)
+## [1.17.0](https://github.com/anzusystems/common-admin/compare/1.16.0...1.17.0) (2023-09-05)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new vuetify required version is `vue-i18n@9.3.0`
+
+## [1.16.0](https://github.com/anzusystems/common-admin/compare/1.15.0...1.16.0) (2023-09-04)
 
 ### Features
 * **chore:** updated dependencies
