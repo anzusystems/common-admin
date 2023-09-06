@@ -1,3 +1,11 @@
+## [1.18.0](https://github.com/anzusystems/common-admin/compare/1.17.0...1.18.0) (2023-09-06)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **ASortable:** prop `keyField` is now by default set to `position` instead of `id`
+
 ## [1.17.0](https://github.com/anzusystems/common-admin/compare/1.16.0...1.17.0) (2023-09-05)
 
 ### Features

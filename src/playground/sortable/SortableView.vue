@@ -169,7 +169,7 @@ const confirmDeleteIndexBasic = () => {
 const confirmAddIndexBasic = () => {
   if (basicComponent.value) {
     const needsRefresh = basicComponent.value.addAfterIndex(toAddIndexBasic.value, {
-      id: Date.now(),
+      id: 0,
       text: 'Lorem I',
       position: 0,
     })

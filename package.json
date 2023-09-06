@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.17.0",
+  "version": "1.18.0",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -80,7 +80,7 @@
     "vue-flatpickr-component": "^11.0.3",
     "vue-i18n": "^9.3.0",
     "vue-router": "^4.2.4",
-    "vue-tsc": "1.8.8",
+    "vue-tsc": "1.8.10",
     "vuetify": "3.3.15",
     "webfontloader": "^1.6.28"
   },

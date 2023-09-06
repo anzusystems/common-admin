@@ -89,7 +89,6 @@ export function useSortableActions(
   })
 
   const forceRerenderWidgetHtml = (emitData: SortablePropItem[] | undefined = undefined) => {
-    console.log('a')
     forceRerender.value++
     if (!isUndefined(emitData)) {
       emit('update:modelValue', emitData)

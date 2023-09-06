@@ -35,7 +35,7 @@ const props = withDefaults(
   }>(),
   {
     dirty: () => new Set<DocId | IntegerId>(),
-    keyField: 'id',
+    keyField: 'position',
     disableDraggable: false,
     rootClassName: 'a-sortable-widget',
     widgetIdentifierId: undefined,
