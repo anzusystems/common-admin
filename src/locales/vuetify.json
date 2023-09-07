@@ -1,0 +1,76 @@
+{
+  "badge": "Štítek",
+  "close": "Zavřít",
+  "dataIterator": {
+    "noResultsText": "Nenašli se žádné odpovídající záznamy",
+    "loadingText": "Načítání záznamů ..."
+  },
+  "dataTable": {
+    "itemsPerPageText": "Řádků na stránku:",
+    "ariaLabel": {
+      "sortDescending": "Řadit sestupně.",
+      "sortAscending": "Řadit vzestupně.",
+      "sortNone": "Bez řazení.",
+      "activateNone": "Přestat řadit.",
+      "activateDescending": "Aktivovat sestupné řazení.",
+      "activateAscending": "Aktivovat vzestupné řazení"
+    },
+    "sortBy": "Radiť"
+  },
+  "dataFooter": {
+    "itemsPerPageText": "Záznamů na stránku:",
+    "itemsPerPageAll": "Všechny",
+    "nextPage": "Další strana",
+    "prevPage": "Předchozí strana",
+    "firstPage": "První strana",
+    "lastPage": "Poslední strana",
+    "pageText": "{0}-{1} z {2}"
+  },
+  "datePicker": {
+    "itemsSelected": "{0} vybraných",
+    "nextMonthAriaLabel": "Další měsíc",
+    "nextYearAriaLabel": "Další rok",
+    "prevMonthAriaLabel": "Předchozí měsíc",
+    "prevYearAriaLabel": "Předchozí rok"
+  },
+  "noDataText": "Žádná dostupná data",
+  "carousel": {
+    "prev": "Předchozí krok",
+    "next": "Následující krok",
+    "ariaLabel": {
+      "delimiter": "Krok {0} z {1}"
+    }
+  },
+  "calendar": {
+    "moreEvents": "{0} více"
+  },
+  "input": {
+    "clear": "Vymazat {0}",
+    "prependAction": "{0} akcí před",
+    "appendAction": "{0} následujících akcí"
+  },
+  "fileInput": {
+    "counter": "{0} souborů",
+    "counterSize": "{0} souborů ({1} spolu)"
+  },
+  "timePicker": {
+    "am": "AM",
+    "pm": "PM"
+  },
+  "pagination": {
+    "ariaLabel": {
+      "root": "Navigace stránkování",
+      "next": "Další stránka",
+      "previous": "Předchozí stránka",
+      "page": "Jít na stránku {0}",
+      "currentPage": "Stránka {0}, Aktuální stránka",
+      "first": "První stránka",
+      "last": "Poslední stránka"
+    }
+  },
+  "rating": {
+    "ariaLabel": {
+      "item": "Hodnocení {0} z {1}"
+    }
+  }
+}
