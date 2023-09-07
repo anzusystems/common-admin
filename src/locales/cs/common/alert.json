@@ -1,0 +1,18 @@
+{
+  "unknownError": "Systémová chyba. Zkuste to později nebo kontaktujte administrátora.",
+  "forbiddenError": "Přístup zamítnut. K provedení dané akce nemáte oprávnění.",
+  "fixValidationErrors": "Vyplňte všechna povinná pole a opravte chyby.",
+  "fixApiValidationErrors": "Opravte tyto chyby.",
+  "apiForbiddenOperationError": "Zakázaná akce.",
+  "recordWas": {
+    "created": "Záznam byl vytvořen.",
+    "updated": "Záznam byl upraven.",
+    "deleted": "Záznam byl odstraněn.",
+    "published": "Záznam byl publikován.",
+    "unpublished": "Záznam byl stažen.",
+    "enabled": "Záznam byl povolen.",
+    "disabled": "Záznam byl zakázán."
+  },
+  "idWasCopied": "ID bylo zkopírováno do schránky.",
+  "textWasCopied": "Text byl zkopírován do schránky"
+}
