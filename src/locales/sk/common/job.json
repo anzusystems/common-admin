@@ -12,7 +12,7 @@
     "startedAt": "Spustený",
     "finishedAt": "Ukončený",
     "result": "Výsledok",
-    "targetUserId": "Cieľovy používateľ",
+    "targetUserId": "Cieľový používateľ",
     "anonymizeUser": "Anonymizuj používateľa"
   },
   "jobResource": {
