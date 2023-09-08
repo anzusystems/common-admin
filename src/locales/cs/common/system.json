@@ -1,57 +1,57 @@
 {
-  "version": "Verzia",
-  "newVersionText": "K dispozícii je nová verzia administrácie. Pre správne fungovanie je potrebné vykonať aktulizáciu.",
-  "newVersionReload": "Načítať novú verziu.",
+  "version": "Verze",
+  "newVersionText": "K dispozici je nová verze administrace. Pro správné fungování je třeba provést aktulizaci.",
+  "newVersionReload": "Načíst novou verzi.",
   "theme": {
-    "light": "Svetlá",
+    "light": "Světlá",
     "dark": "Tmavá",
     "auto": "Automatická"
   },
   "datatable": {
-    "config": "Konfigurácia tabuľky",
-    "displayCols": "Zobrazené stĺpce",
-    "itemsPerPage": "Záznamov na stránke",
+    "config": "Konfigurace tabulky",
+    "displayCols": "Zobrazené sloupce",
+    "itemsPerPage": "Záznamů na stránce",
     "from": "od",
-    "noDataText": "Žiadne záznamy pre zobrazenie",
+    "noDataText": "Žádné záznamy k zobrazení",
     "ordering": {
-      "title": "Radenie",
-      "mostRelevant": "Najrelevantnejšie",
-      "mostRecent": "Najnovšie",
-      "oldest": "Najstaršie"
+      "title": "Řazení",
+      "mostRelevant": "Nejrelevantnější",
+      "mostRecent": "Nejnovější",
+      "oldest": "Nejstarší"
     }
   },
   "modal": {
-    "confirmDelete": "Odstrániť?",
-    "hide": "Skryť",
-    "show": "Zobraziť"
+    "confirmDelete": "Odstranit?",
+    "hide": "Skrýt",
+    "show": "Zobrazit"
   },
   "adminSwitcher": {
-    "button": "Aplikácie"
+    "button": "Aplikace"
   },
   "currentUser": {
     "button": "Účet",
-    "logout" : "Odhlásenie",
-    "logoutText" : "Skutočne sa chcete odhlásiť?",
-    "logoutConfirm" : "Odhlásiť",
-    "settings" : "Nastavenia"
+    "logout" : "Odhlášení",
+    "logoutText" : "Skutečně se chcete odhlásit?",
+    "logoutConfirm" : "Odhlásit",
+    "settings" : "Nastavení"
   },
   "breadcrumb": {
     "detail": "Detail",
     "edit": "Úprava",
-    "create": "Vytvorenie"
+    "create": "Vytvoření"
   },
   "login": {
-    "text": "Prosím, prihláste sa",
-    "button": "Prihlásiť sa"
+    "text": "Prosím, přihlaste se",
+    "button": "Přihlásit se"
   },
   "notFound": {
     "title": "Ups, nastala chyba 404",
-    "text": "Táto stránka neexistuje. Pokiaľ by mala, kontaktujte administrátora.",
-    "backButton": "Vráť ma na úvodnú stránku"
+    "text": "Tato stránka neexistuje. Pokud by měla, kontaktujte administrátora.",
+    "backButton": "Vrať mě na úvodní stránku"
   },
   "unauthorized": {
     "title": "Ups, nastala chyba 401",
-    "text": "Na túto stránku nemáte prístup. Pokiaľ máte mať k tejto stránke prístup, kontaktujte administrátora.",
-    "backButton": "Vráť ma na prihlásenie"
+    "text": "Na tuto stránku nemáte přístup. Pokud máte mít k této stránce přístup, kontaktujte administrátora.",
+    "backButton": "Vrať mě k přihlášení"
   }
 }
