@@ -2,42 +2,42 @@
   "model": {
     "id": "Id",
     "texts": {
-      "displayTitle": "Titulok"
+      "displayTitle": "Titulek"
     },
     "mainFile": {
       "fileAttributes": {
-        "mimeType": "Typ súboru",
-        "size": "Veľkosť"
+        "mimeType": "Typ souboru",
+        "size": "Velikost"
       }
     }
   },
   "meta": {
     "table": {
-      "image": "Náhľad"
+      "image": "Náhled"
     },
     "grid": {
       "masonry": "Mansonry",
-      "thumbnail": "Náhľad",
-      "table": "Zoznam"
+      "thumbnail": "Náhled",
+      "table": "Seznam"
     },
     "filter": {
-      "toggle": "Filter"
+      "toggle": "Filtr"
     },
     "controls": {
-      "loadMore": "Načítaj ďalšie",
-      "confirm": "Zvoliť"
+      "loadMore": "Načti další",
+      "confirm": "Zvolit"
     },
     "texts": {
       "title": "Vyberte asset",
-      "noItemsFound": "Žiadne nájdené assety",
+      "noItemsFound": "Žádné nalezené assety",
       "pickExactCount": "Vyberte assety: {count}. Zvolených: {selected}." ,
-      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetov. Zvolených: {selected}."
+      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetů. Zvolených: {selected}."
     }
   },
   "filter": {
     "text": "Text",
-    "described": "Popísané",
-    "visible": "Viditeľné",
-    "generatedBySystem": "Generované systémom"
+    "described": "Popsáno",
+    "visible": "Viditelné",
+    "generatedBySystem": "Generováno systémem"
   }
 }
