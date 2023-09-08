@@ -1,8 +1,8 @@
 {
   "long": {
-    "remainingSeconds": "{value} sekúnd",
-    "remainingMinutes": "{value} minút",
-    "remainingHours": "{value} hodín",
+    "remainingSeconds": "{value} vteřin",
+    "remainingMinutes": "{value} minut",
+    "remainingHours": "{value} hodin",
     "remainingDays": "{value} dní"
   },
   "short": {
