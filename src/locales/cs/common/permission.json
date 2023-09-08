@@ -1,17 +1,17 @@
 {
   "table": {
-    "actions": "Akcie",
-    "permissions": "Oprávnenia"
+    "actions": "Akce",
+    "permissions": "Oprávnění"
   },
   "grant": {
-    "allow": "Povolený",
-    "allowOwner": "Iba vlastník",
-    "deny": "Zamietnutý"
+    "allow": "Povolen",
+    "allowOwner": "Pouze vlastník",
+    "deny": "Zamítnut"
   },
   "grantOrigin": {
-    "role": "Rola",
+    "role": "Role",
     "group": "Skupina",
-    "user": "Užívateľ",
+    "user": "Uživatel",
     "defaultGrant": "Default"
   }
 }
