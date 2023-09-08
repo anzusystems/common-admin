@@ -1,0 +1,19 @@
+{
+  "system": "Systém",
+  "notSelected": "Nevybrané",
+  "boolean": {
+    "true": "áno",
+    "false": "nie"
+  },
+  "tracking": {
+    "createdAt": "Vytvorené",
+    "modifiedAt": "Upravené",
+    "created": "Vytvorené",
+    "modified": "Upravené"
+  },
+  "filterPlaceholder": {
+    "eq": "Presný výraz",
+    "contains": "Kdekoľvek vo výraze",
+    "startsWith": "Začiatok výrazu"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "detail": "Detail logu",
+    "list": "ZOznam logov"
+  },
+  "system": "Systém",
+  "filter": {
+    "system": "Systém",
+    "type": "Typ",
+    "levelName": "Úroveň",
+    "id": "ID",
+    "contextId": "Kontextové ID",
+    "userId": "ID používateľa",
+    "datetimeFrom": "Dátum od",
+    "datetimeTo": "Dátum do",
+    "message": "Správa",
+    "appVersion": "Verzia"
+  },
+  "model": {
+    "id": "ID",
+    "datetime": "Dátum",
+    "levelName": "Úroveň",
+    "message": "Správa",
+    "context": {
+      "appVersion": "Verzia",
+      "requestOriginAppVersion": "Originálna verzia",
+      "contextId": "Kontextové ID",
+      "userId": "ID používateľa",
+      "ip": "IP",
+      "content": "Obsah požiadavky",
+      "response": "Obsah odpovede",
+      "path": "URL",
+      "httpStatus": "Kód stavu"
+    }
+  }
+}
