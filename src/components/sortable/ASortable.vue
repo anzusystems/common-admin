@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { useSortable } from '@vueuse/integrations/useSortable'
 import type { SortableEvent } from 'sortablejs'
-import { computed, nextTick, onBeforeUnmount, toRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, toRef, watch, withModifiers } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SortableEmit, SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
-import type { DocId, IntegerId } from '@/types/common'
-import { cloneDeep, isUndefined } from '@/utils/common'
-import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
 import {
   CHOSEN_CLASS,
   DRAG_CLASS,
@@ -15,6 +12,9 @@ import {
   HANDLE_CLASS,
   useSortableActions,
 } from '@/components/sortable/sortableActions'
+import type { DocId, IntegerId } from '@/types/common'
+import { cloneDeep, isUndefined } from '@/utils/common'
+import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 
 const props = withDefaults(
@@ -32,6 +32,7 @@ const props = withDefaults(
     showAddLastButton?: boolean
     showDeleteButton?: boolean
     showEditButton?: boolean
+    addLastButtonT?: string
   }>(),
   {
     dirty: () => new Set<DocId | IntegerId>(),
@@ -46,6 +47,7 @@ const props = withDefaults(
     showAddLastButton: false,
     showDeleteButton: false,
     showEditButton: false,
+    addLastButtonT: 'common.sortable.addNewAtEnd',
   }
 )
 const emit = defineEmits<SortableEmit>()
@@ -244,15 +246,20 @@ defineExpose({
         </div>
       </div>
     </div>
-    <VBtn
-      v-if="showAddLastButton"
-      size="small"
-      prepend-icon="mdi-plus"
-      class="ma-1"
-      @click.stop="onAddLastClick"
+    <slot
+      name="add-last-activator"
+      :props="{ onClick: withModifiers(() => onAddLastClick(), ['stop']) }"
     >
-      {{ t('common.sortable.addNewAtEnd') }}
-    </VBtn>
+      <VBtn
+        v-if="showAddLastButton"
+        size="small"
+        prepend-icon="mdi-plus"
+        class="ma-1"
+        @click.stop="onAddLastClick"
+      >
+        {{ t(addLastButtonT) }}
+      </VBtn>
+    </slot>
     <VDialog
       v-model="removeDialog"
       :width="500"
