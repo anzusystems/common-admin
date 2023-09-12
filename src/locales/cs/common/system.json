@@ -1,0 +1,57 @@
+{
+  "version": "Verze",
+  "newVersionText": "K dispozici je nová verze administrace. Pro správné fungování je třeba provést aktulizaci.",
+  "newVersionReload": "Načíst novou verzi.",
+  "theme": {
+    "light": "Světlá",
+    "dark": "Tmavá",
+    "auto": "Automatická"
+  },
+  "datatable": {
+    "config": "Konfigurace tabulky",
+    "displayCols": "Zobrazené sloupce",
+    "itemsPerPage": "Záznamů na stránce",
+    "from": "od",
+    "noDataText": "Žádné záznamy k zobrazení",
+    "ordering": {
+      "title": "Řazení",
+      "mostRelevant": "Nejrelevantnější",
+      "mostRecent": "Nejnovější",
+      "oldest": "Nejstarší"
+    }
+  },
+  "modal": {
+    "confirmDelete": "Odstranit?",
+    "hide": "Skrýt",
+    "show": "Zobrazit"
+  },
+  "adminSwitcher": {
+    "button": "Aplikace"
+  },
+  "currentUser": {
+    "button": "Účet",
+    "logout" : "Odhlášení",
+    "logoutText" : "Skutečně se chcete odhlásit?",
+    "logoutConfirm" : "Odhlásit",
+    "settings" : "Nastavení"
+  },
+  "breadcrumb": {
+    "detail": "Detail",
+    "edit": "Úprava",
+    "create": "Vytvoření"
+  },
+  "login": {
+    "text": "Prosím, přihlaste se",
+    "button": "Přihlásit se"
+  },
+  "notFound": {
+    "title": "Ups, nastala chyba 404",
+    "text": "Tato stránka neexistuje. Pokud by měla, kontaktujte administrátora.",
+    "backButton": "Vrať mě na úvodní stránku"
+  },
+  "unauthorized": {
+    "title": "Ups, nastala chyba 401",
+    "text": "Na tuto stránku nemáte přístup. Pokud máte mít k této stránce přístup, kontaktujte administrátora.",
+    "backButton": "Vrať mě k přihlášení"
+  }
+}

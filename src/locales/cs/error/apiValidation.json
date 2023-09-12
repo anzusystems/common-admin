@@ -1,0 +1,15 @@
+{
+  "noTranslation": "Nevalidní.",
+  "error_id_mismatch": "Nesoulad ID při upravování objektu (MismatchID chyba). V případě potřeby kontaktuje administrátora.",
+  "error_field_empty": "Povinné pole je prázdné.",
+  "error_field_length_min": "Nedodržená minimální délka pole.",
+  "error_field_length_max": "Nedodržená maximální délka pole.",
+  "error_field_invalid": "Neplatné pole.",
+  "error_field_not_unique": "Pole musí být unikátní.",
+  "error_field_value_not_found": "Hodnota v poli nebyla nalezena.",
+  "error_field_range_min": "Hodnota musí být vyšší",
+  "error_field_range_max": "Hodnota musí být nižší.",
+  "error_field_regex": "Nesprávný formát.",
+  "error_field_url": "URL je ve špatném tvaru.",
+  "error_already_exists": "Daná položka již existuje."
+}

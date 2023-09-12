@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "detail": "Detail Anzu uživatele",
+    "list": "Seznam Anzu uživatelů",
+    "edit": "Úprava Anzu uživatele",
+    "create": "Vytvoření Anzu uživatele"
+  },
+  "model": {
+    "id": "ID",
+    "enabled": "Povolen",
+    "email": "E-mail",
+    "roles": "Role",
+    "permissionGroups": "Skupiny oprávnění",
+    "permissions": "Oprávnění",
+    "person": {
+      "firstName": "Jméno",
+      "lastName": "Příjmení",
+      "fullName": "Celé jméno"
+    },
+    "avatar": {
+      "color": "Avatar barva",
+      "text": "Avatar text"
+    }
+  },
+  "filter": {
+    "id": "ID",
+    "enabled": "Povolen",
+    "email": "E-mail"
+  },
+  "table": {
+    "grants": "Akce",
+    "permissions": "Oprávnění",
+    "resolvedPermissions": "Výsledné oprávnění",
+    "noPermissions": "Žádná oprávnění"
+  }
+}

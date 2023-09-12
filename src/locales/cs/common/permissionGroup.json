@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "detail": "Detail skupiny oprávnění",
+    "list": "Seznam skupin oprávnění",
+    "create": "Vytvoření skupiny oprávnění",
+    "edit": "Úprava skupiny oprávnění"
+  },
+  "model": {
+    "id": "ID",
+    "title": "Nadpis",
+    "description": "Popis",
+    "permissions": "Oprávnění"
+  },
+  "filter": {
+    "id": "ID",
+    "title": "Nadpis"
+  },
+  "button": {
+    "deleteConfirm": "Skupina povolení bude trvale odstraněna ze systému. Chcete pokračovat?"
+  }
+}

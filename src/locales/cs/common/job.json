@@ -1,0 +1,31 @@
+{
+  "filter": {
+    "id": "Id",
+    "status": "Stav",
+    "startedAtFrom": "Začátek",
+    "startedAtUntil": "Ukončení"
+  },
+  "model": {
+    "id": "Id",
+    "_resourceName": "Typ",
+    "status": "Stav",
+    "startedAt": "Spuštěn",
+    "finishedAt": "Ukončen",
+    "result": "Výsledek",
+    "targetUserId": "Cílový uživatel",
+    "anonymizeUser": "Anonymizuj uživatele"
+  },
+  "jobResource": {
+    "jobUserDataDelete": "Výmaz uživatelských dat"
+  },
+  "button": {
+    "create": "Vytvořit systémovou úlohu"
+  },
+  "status": {
+    "waiting": "V pořadí",
+    "processing": "Procesuje se",
+    "awaitingBatchProcess": "Procesuje se v dávce",
+    "done": "Hotovo",
+    "error": "Chyba"
+  }
+}

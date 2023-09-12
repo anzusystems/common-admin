@@ -219,6 +219,7 @@ import { eventClickBlur } from '@/utils/event'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
 import type { ValidationScope } from '@/types/Validation'
 import { useI18n } from 'vue-i18n'
+import messagesCs from '@/locales/cs'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
 import type { Log } from '@/types/Log'
@@ -514,6 +515,7 @@ export {
   useAcl,
 
   // TRANSLATIONS
+  messagesCs,
   messagesEn,
   messagesSk,
 
