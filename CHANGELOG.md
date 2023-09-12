@@ -2,6 +2,7 @@
 
 ### Features
 * **chore:** updated dependencies
+* **translations**: added czech translations
 * **ASortable:** 
   * added prop `addLastButtonT` for possibility to override default translation text for button that adds new item to last position
   * added slot `add-last-activator` for possibility to override button that adds new item to last position
