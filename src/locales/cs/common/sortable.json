@@ -1,0 +1,12 @@
+{
+  "addNewAtEnd": "Přidání nové položky na poslední pozici",
+  "edit": "Upravit",
+  "remove": "Odstranit",
+  "addAfter": "Přidání nové položky za",
+  "addChild": "Přidat dítě",
+  "more": "Další možnosti",
+  "error": {
+    "maxDeepExceed": "Nemožnost přesunu. Nová hloubka překročí maximální hloubku.",
+    "unableToAdd": "Nelze přidat položku."
+  }
+}

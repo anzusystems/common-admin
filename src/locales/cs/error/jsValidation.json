@@ -1,0 +1,13 @@
+{
+  "required": "Povinná hodnota.",
+  "between": "Hodnota musí být mezi {min} a {max}.",
+  "minLength": "Minimální počet znaků je {min}.",
+  "maxLength": "Maximální počet znaků je {max}.",
+  "minValue": "Minimální hodnota je {min}.",
+  "maxValue": "Maximální hodnota je {max}.",
+  "email": "Nesprávný formát e-mailu.",
+  "url": "Nesprávný formát URL.",
+  "numeric": "Musí být zadána pouze čísla.",
+  "slug": "Povolené znaky pro slug jsou a-z, - a 0-9.",
+  "stringArrayItemLength": "Délka znaků každé položky musí být mezi {min} a {max} znaků."
+}

@@ -1,0 +1,17 @@
+{
+  "table": {
+    "actions": "Akce",
+    "permissions": "Oprávnění"
+  },
+  "grant": {
+    "allow": "Povolen",
+    "allowOwner": "Pouze vlastník",
+    "deny": "Zamítnut"
+  },
+  "grantOrigin": {
+    "role": "Role",
+    "group": "Skupina",
+    "user": "Uživatel",
+    "defaultGrant": "Default"
+  }
+}
