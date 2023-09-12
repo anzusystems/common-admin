@@ -287,7 +287,12 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
       <h2 class="text-h5 mt-5 mb-2">
         ASortable simple example without updating position
       </h2>
-      <ASortable v-model="itemsBasic">
+      <ASortable
+        v-model="itemsBasic"
+        show-add-last-button
+        add-last-button-t="custom.translation.addItem"
+        @on-add-last="onAddLastClickBasic"
+      >
         <template #item="{ item }: { item: SortableItem<BasicItemDemo> }">
           {{ item.raw.id }} {{ item.raw.text }}
         </template>
@@ -323,6 +328,15 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
       >
         <template #item="{ item }: { item: SortableItem<BasicItemDemo> }">
           id: {{ item.raw.id }} / {{ item.raw.text }} / position: {{ item.raw.position }}
+        </template>
+        <template #add-last-activator="{ props }">
+          <VBtn
+            color="primary"
+            v-bind="props"
+            class="mt-2"
+          >
+            add item
+          </VBtn>
         </template>
       </ASortable>
       <div

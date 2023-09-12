@@ -1,3 +1,14 @@
+## [1.19.0](https://github.com/anzusystems/common-admin/compare/1.18.0...1.19.0) (2023-09-12)
+
+### Features
+* **chore:** updated dependencies
+* **ASortable:** 
+  * added prop `addLastButtonT` for possibility to override default translation text for button that adds new item to last position
+  * added slot `add-last-activator` for possibility to override button that adds new item to last position
+
+### BREAKING CHANGES
+* **dependencies:** new vue-i18n required version is `vue-i18n@9.4.0`
+
 ## [1.18.0](https://github.com/anzusystems/common-admin/compare/1.17.0...1.18.0) (2023-09-06)
 
 ### Features
@@ -12,7 +23,7 @@
 * **chore:** updated dependencies
 
 ### BREAKING CHANGES
-* **dependencies:** new vuetify required version is `vue-i18n@9.3.0`
+* **dependencies:** new vue-i18n required version is `vue-i18n@9.3.0`
 
 ## [1.16.0](https://github.com/anzusystems/common-admin/compare/1.15.0...1.16.0) (2023-09-04)
 
@@ -21,10 +32,10 @@
 
 ### BREAKING CHANGES
 * **dependencies:** new required versions:
-* `vuetify@3.3.15`
-* `axios@1.5.0`
-* `@vueuse/core@10.4.1`
-* `@vueuse/integrations@10.4.1`
+  * `vuetify@3.3.15`
+  * `axios@1.5.0`
+  * `@vueuse/core@10.4.1`
+  * `@vueuse/integrations@10.4.1`
 
 ## [1.15.0](https://github.com/anzusystems/common-admin/compare/1.14.1...1.15.0) (2023-08-23)
 
