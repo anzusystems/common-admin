@@ -230,13 +230,13 @@ __metadata:
     vite: ^4.4.9
     vite-plugin-dts: ^3.5.3
     vite-plugin-vuetify: ^1.0.2
-    vitepress: 1.0.0-rc.12
+    vitepress: 1.0.0-rc.13
     vue: ^3.3.4
     vue-flatpickr-component: ^11.0.3
     vue-i18n: 9.4.0
     vue-router: ^4.2.4
-    vue-tsc: 1.8.10
-    vuetify: 3.3.15
+    vue-tsc: 1.8.11
+    vuetify: 3.3.16
     webfontloader: ^1.6.28
   peerDependencies:
     "@vuelidate/core": 2.0.3
@@ -250,7 +250,7 @@ __metadata:
     vue: 3.3.4
     vue-i18n: 9.4.0
     vue-router: 4.2.4
-    vuetify: 3.3.15
+    vuetify: 3.3.16
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -1697,9 +1697,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/language-core@npm:1.8.10":
-  version: 1.8.10
-  resolution: "@vue/language-core@npm:1.8.10"
+"@vue/language-core@npm:1.8.11":
+  version: 1.8.11
+  resolution: "@vue/language-core@npm:1.8.11"
   dependencies:
     "@volar/language-core": ~1.10.0
     "@volar/source-map": ~1.10.0
@@ -1714,7 +1714,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 588c7420f9bd1b18c8dd256c03e14fa9e3100d48070f9bff7e4b451a37571b31ea88738740eb249039c8f56ca432c92f09a6bd269d0cfbf00de7ae3faa96e1e0
+  checksum: 7b7d8663aeae6e10c3e69eb9e10968503ae61428c863354a71caced5f35df558248535d97359801b280ccb2e9e67a01abf89e4cc675ed12a5f7376ec494a1f3f
   languageName: node
   linkType: hard
 
@@ -1849,13 +1849,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/typescript@npm:1.8.10":
-  version: 1.8.10
-  resolution: "@vue/typescript@npm:1.8.10"
+"@vue/typescript@npm:1.8.11":
+  version: 1.8.11
+  resolution: "@vue/typescript@npm:1.8.11"
   dependencies:
     "@volar/typescript": ~1.10.0
-    "@vue/language-core": 1.8.10
-  checksum: 16349a213c9ffb5444b8337eac8352355f8343b868a001fe229360abd4183acb8d57eb20cc2062bf5187664a3968c76bfd131dce49ed32865c649e7abe810314
+    "@vue/language-core": 1.8.11
+  checksum: 30c2ab20e23706e1c2bbedb4060833655b61a7ac2a289ad59dd2daced710df4b5bbbc056c858e1fdbb94e95266be4dca1c421899ec20a717d210d11965e24013
   languageName: node
   linkType: hard
 
@@ -6850,9 +6850,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitepress@npm:1.0.0-rc.12":
-  version: 1.0.0-rc.12
-  resolution: "vitepress@npm:1.0.0-rc.12"
+"vitepress@npm:1.0.0-rc.13":
+  version: 1.0.0-rc.13
+  resolution: "vitepress@npm:1.0.0-rc.13"
   dependencies:
     "@docsearch/css": ^3.5.2
     "@docsearch/js": ^3.5.2
@@ -6867,7 +6867,7 @@ __metadata:
     vue: ^3.3.4
   bin:
     vitepress: bin/vitepress.js
-  checksum: b6552230001cdbcb4392cd7d5e279ffd71e22ebab34b04b8ba023d02ec4b06e12db829c1efa48963fcb8f21625569a34a7f2f8ff11b9b273290c69eaf2e4e7f8
+  checksum: e0f3c34bb4a0d7325df9e0a441031276b1dd44f3032bb3c17a7132e5d35f3b1135b9fb64ca0b633f518956326f216e15e1656cfd121330e66c709f0d13568c22
   languageName: node
   linkType: hard
 
@@ -7117,18 +7117,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-tsc@npm:1.8.10":
-  version: 1.8.10
-  resolution: "vue-tsc@npm:1.8.10"
+"vue-tsc@npm:1.8.11":
+  version: 1.8.11
+  resolution: "vue-tsc@npm:1.8.11"
   dependencies:
-    "@vue/language-core": 1.8.10
-    "@vue/typescript": 1.8.10
+    "@vue/language-core": 1.8.11
+    "@vue/typescript": 1.8.11
     semver: ^7.3.8
   peerDependencies:
     typescript: "*"
   bin:
     vue-tsc: bin/vue-tsc.js
-  checksum: 449616f94aa149464f5e60b6a54f2b821caa48b9bd3ae899c73a75f014fe5b50916d177f96f12ac3f8c054e8a433ec5ffc04754a026b362284fa47170d4ba0f4
+  checksum: 09a0fb256223b4d3ba9674fc3fec8b82d71b91532131298131b1b63214312dc86bc2942e5971e0771ccba15b82bf09fd5873459d223d0122dd4feea5c57e6ec9
   languageName: node
   linkType: hard
 
@@ -7160,9 +7160,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.3.15":
-  version: 3.3.15
-  resolution: "vuetify@npm:3.3.15"
+"vuetify@npm:3.3.16":
+  version: 3.3.16
+  resolution: "vuetify@npm:3.3.16"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ^1.0.0-alpha.12
@@ -7178,7 +7178,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: b2e2d63bc4ed3cf249bdaa3f20cbcb9625bfa6fcaed4108bedde803b2b60a2fc5c764105d3513b3c0e8ecbcd4289a642a8fa0b8fd9baae8112865b3360b339ce
+  checksum: 2ffd5b8d399b6fb7e4ab45c314c6a5f8940879f059a112092090fd7ebb8bafb7873c583f94e99795e0d102bfe4e924fdec57f40fda1014452bba262e1c0886e3
   languageName: node
   linkType: hard
 

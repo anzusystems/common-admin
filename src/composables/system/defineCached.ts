@@ -28,7 +28,7 @@ export function defineCached<
   const toFetch = ref<Set<I>>(new Set())
 
   const add = (...args: AddToCachedArgs<I>) => {
-    const toAdd = <Set<I>>(new Set())
+    const toAdd = <Set<I>>new Set()
     for (let i = 0; i < args.length; i++) {
       const arg = args[i]
       if (isNull(arg) || isUndefined(arg)) continue
