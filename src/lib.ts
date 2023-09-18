@@ -250,7 +250,7 @@ import {
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { useCommonJobFactory } from '@/model/factory/JobFactory'
 import type { UrlParams } from '@/services/api/apiHelper'
-import { generateUUIDv1 } from '@/utils/generator'
+import { generateUUIDv1, generateUUIDv4 } from '@/utils/generator'
 import { useLoginStatus } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
@@ -499,6 +499,7 @@ export {
   eventClickBlur,
   // generator
   generateUUIDv1,
+  generateUUIDv4,
 
   // SERVICES
   apiAnyRequest,
