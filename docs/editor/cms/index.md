@@ -32,8 +32,8 @@
 | embedImage       |       ✅       |      ✅       |             |                 |      |              |
 | embedImageInline |       ✅       |      ✅       |             |                 |      |              |
 | embedCrossBox    |               |              |             |                 |      |              |
+| embedFaq         |               |      ✅       |             |                 |      |              |
 | embedMedia       |               |      ✅       |             |                 |      |              |
-| embedMinute      |               |      ✅       |             |                 |      |              |
 | embedNewsletter  |               |              |             |                 |      |              |
 | embedPoll        |       ✅       |      ✅       |             |                 |      |              |
 | embedQuiz        |       ✅       |      ✅       |             |                 |      |              |
