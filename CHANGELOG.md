@@ -1,3 +1,13 @@
+## [1.22.0](https://github.com/anzusystems/common-admin/compare/1.21.0...1.22.0) (2023-09-19)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+  * `vuetify@3.3.17`
+  * `dayjs@1.11.10`
+
 ## [1.21.0](https://github.com/anzusystems/common-admin/compare/1.20.0...1.21.0) (2023-09-18)
 
 ### Features
