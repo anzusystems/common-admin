@@ -19,11 +19,8 @@
 - drag and drop one or multiple images - create image embed or ask if create gallery, when dragged to table create embed image inline
 
 ## Missing embeds or unknown features
-- poll
-- quiz
-- infobox
 - odpovede osobnosti
-- poznamky pod ciarov
+- poznamky pod ciarov (az pre zlaty fond)
 - minute
 - review
-- faq
+- newsletter
