@@ -19,40 +19,40 @@
 | underline   |       ✅       |      ✅       |     dep     |                 |      |              |
 
 ## Nodes
-| Name                 | Feature clear | Schema setup | Development | Migration valid | Docs | Feature done |
-|----------------------|:-------------:|:------------:|:-----------:|:---------------:|------|:------------:|
-| blockquote           |       ✅       |      ✅       |   dep + ✅   |                 |      |              |
-| bulletList           |       ✅       |      ✅       |     dep     |                 |      |              |
-| button               |       ✅       |      ✅       |      ✅      |                 |      |              |
-| contentBreak         |       ✅       |      ✅       |             |                 |      |              |
-| contentLock          |       ✅       |      ✅       |      ✅      |                 |      |              |
-| doc                  |       ✅       |      ✅       |     dep     |                 |      |              |
-| embedCustom          |       ✅       |      ✅       |             |                 |      |              |
-| embedGallery         |       ✅       |      ✅       |             |                 |      |              |
-| embedImage           |       ✅       |      ✅       |             |                 |      |              |
-| embedImageInline     |       ✅       |      ✅       |             |                 |      |              |
-| embedCrossBox        |               |              |             |                 |      |              |
-| embedMedia           |               |      ✅       |             |                 |      |              |
-| embedMinute          |               |      ✅       |             |                 |      |              |
-| ~~embed~~Newsletter? |               |              |             |                 |      |              |
-| embedPoll            |       ✅       |      ✅       |             |                 |      |              |
-| embedQuiz            |       ✅       |      ✅       |             |                 |      |              |
-| embedRelated         |       ✅       |      ✅       |             |                 |      |              |
-| embedTimeline        |               |              |             |                 |      |              |
-| embedWeather         |       ✅       |      ✅       |             |                 |      |              |
-| hardBreak            |       ✅       |      ✅       |     dep     |                 |      |              |
-| heading              |       ✅       |      ✅       |     dep     |                 |      |              |
-| horizontalRule       |       ✅       |      ✅       |     dep     |                 |      |              |
-| listItem             |       ✅       |      ✅       |     dep     |                 |      |              |
-| orderedList          |       ✅       |      ✅       |     dep     |                 |      |              |
-| paragraph            |       ✅       |      ✅       |     dep     |                 |      |              |
-| review               |               |              |             |                 |      |              |
-| styledBox            |       ✅       |      ✅       |      ✅      |                 |      |              |
-| table                |       ✅       |      ✅       |   dep + ✅   |                 |      |              |
-| tableCell            |       ✅       |      ✅       |     dep     |                 |      |              |
-| tableHeader          |       ✅       |      ✅       |     dep     |                 |      |              |
-| tableRow             |       ✅       |      ✅       |     dep     |                 |      |              |
-| text                 |       ✅       |      ✅       |     dep     |                 |      |              |
+| Name             | Feature clear | Schema setup | Development | Migration valid | Docs | Feature done |
+|------------------|:-------------:|:------------:|:-----------:|:---------------:|------|:------------:|
+| blockquote       |       ✅       |      ✅       |   dep + ✅   |                 |      |              |
+| bulletList       |       ✅       |      ✅       |     dep     |                 |      |              |
+| button           |       ✅       |      ✅       |      ✅      |                 |      |              |
+| contentBreak     |       ✅       |      ✅       |             |                 |      |              |
+| contentLock      |       ✅       |      ✅       |      ✅      |                 |      |              |
+| doc              |       ✅       |      ✅       |     dep     |                 |      |              |
+| embedCustom      |       ✅       |      ✅       |             |                 |      |              |
+| embedGallery     |       ✅       |      ✅       |             |                 |      |              |
+| embedImage       |       ✅       |      ✅       |             |                 |      |              |
+| embedImageInline |       ✅       |      ✅       |             |                 |      |              |
+| embedCrossBox    |               |              |             |                 |      |              |
+| embedMedia       |               |      ✅       |             |                 |      |              |
+| embedMinute      |               |      ✅       |             |                 |      |              |
+| embedNewsletter  |               |              |             |                 |      |              |
+| embedPoll        |       ✅       |      ✅       |             |                 |      |              |
+| embedQuiz        |       ✅       |      ✅       |             |                 |      |              |
+| embedRelated     |       ✅       |      ✅       |             |                 |      |              |
+| embedTimeline    |               |              |             |                 |      |              |
+| embedWeather     |       ✅       |      ✅       |             |                 |      |              |
+| hardBreak        |       ✅       |      ✅       |     dep     |                 |      |              |
+| heading          |       ✅       |      ✅       |     dep     |                 |      |              |
+| horizontalRule   |       ✅       |      ✅       |     dep     |                 |      |              |
+| listItem         |       ✅       |      ✅       |     dep     |                 |      |              |
+| orderedList      |       ✅       |      ✅       |     dep     |                 |      |              |
+| paragraph        |       ✅       |      ✅       |     dep     |                 |      |              |
+| review           |               |              |             |                 |      |              |
+| styledBox        |       ✅       |      ✅       |      ✅      |                 |      |              |
+| table            |       ✅       |      ✅       |   dep + ✅   |                 |      |              |
+| tableCell        |       ✅       |      ✅       |     dep     |                 |      |              |
+| tableHeader      |       ✅       |      ✅       |     dep     |                 |      |              |
+| tableRow         |       ✅       |      ✅       |     dep     |                 |      |              |
+| text             |       ✅       |      ✅       |     dep     |                 |      |              |
 
 ## Special nodes that will exist only for migration process and will be removed after that
 | Name                     | Schema setup | Migration valid | Removed after gold |
