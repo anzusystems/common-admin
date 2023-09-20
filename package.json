@@ -40,7 +40,7 @@
     "@kyvg/vue3-notification": "^3.0.2",
     "@mdi/font": "^7.2.96",
     "@rushstack/eslint-patch": "^1.4.0",
-    "@types/node": "^18.17.17",
+    "@types/node": "^18.17.18",
     "@types/sortablejs": "^1.15.2",
     "@types/webfontloader": "^1.6.35",
     "@typescript-eslint/parser": "^6.7.2",
