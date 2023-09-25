@@ -236,7 +236,7 @@ import {
 } from '@/composables/system/datatableColumns'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { type CachedItem, defineCached } from '@/composables/system/defineCached'
-import type { ObjectLeaves, ObjectPaths } from '@/types/utils'
+import type { ObjectLeaves, ObjectPaths, Prettify } from '@/types/utils'
 import { loadCommonFonts } from '@/plugins/webfontloader'
 import {
   AnzuApiForbiddenError,
@@ -408,6 +408,7 @@ export {
   DatatableSortBy,
   ObjectPaths,
   ObjectLeaves,
+  Prettify,
   EnableDisable,
   CachedItem,
   RecordWasType,

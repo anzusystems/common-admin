@@ -19,3 +19,7 @@ export type ObjectLeaves<T, D extends number = 10> = [D] extends [never]
   : T extends object
   ? { [K in keyof T]-?: Join<K, ObjectLeaves<T[K], Prev[D]>> }[keyof T]
   : ''
+
+export type Prettify<T> = {
+  [K in keyof T]: T[K]
+} & {}
