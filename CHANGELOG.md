@@ -1,4 +1,4 @@
-## [1.22.0](https://github.com/anzusystems/common-admin/compare/1.21.0...1.22.0) (2023-09-19)
+## [1.23.0](https://github.com/anzusystems/common-admin/compare/1.22.0...1.23.0) (2023-09-25)
 
 ### Features
 * **types:** added new utility type `Prettify<T>`
