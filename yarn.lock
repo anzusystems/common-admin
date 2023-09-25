@@ -234,7 +234,7 @@ __metadata:
     vue: ^3.3.4
     vue-flatpickr-component: ^11.0.3
     vue-i18n: 9.4.1
-    vue-router: ^4.2.5
+    vue-router: 4.2.5
     vue-tsc: 1.8.13
     vuetify: 3.3.17
     webfontloader: ^1.6.28
@@ -7081,7 +7081,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-router@npm:^4.2.5":
+"vue-router@npm:4.2.5":
   version: 4.2.5
   resolution: "vue-router@npm:4.2.5"
   dependencies:

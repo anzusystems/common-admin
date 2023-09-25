@@ -1,6 +1,15 @@
 ## [1.22.0](https://github.com/anzusystems/common-admin/compare/1.21.0...1.22.0) (2023-09-19)
 
 ### Features
+* **types:** added new utility type `Prettify<T>`
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new vue-router required version is `vue-router@4.2.5`
+
+## [1.22.0](https://github.com/anzusystems/common-admin/compare/1.21.0...1.22.0) (2023-09-19)
+
+### Features
 * **chore:** updated dependencies
 
 ### BREAKING CHANGES
