@@ -1,3 +1,8 @@
+## [1.24.1](https://github.com/anzusystems/common-admin/compare/1.24.0...1.24.1) (2023-09-27)
+
+### Bug Fixes
+* **apiFetchListBatch:** fixed unnecessary 2nd call (totalCount api variant)
+
 ## [1.24.0](https://github.com/anzusystems/common-admin/compare/1.23.0...1.24.0) (2023-09-27)
 
 ### Features
