@@ -2,6 +2,7 @@
 
 ### Features
 * **chore:** updated dependencies
+* **api:** added `apiFetchListBatch` to batch load all items using search or list api
 
 ### BREAKING CHANGES
 * **dependencies:** new required versions:

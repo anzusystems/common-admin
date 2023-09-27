@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ENTITY, SYSTEM_CORE_DAM, useAssetApi } from '@/services/api/coreDam/assetApi'
-import { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import { damClient } from '@/playground/assetSelectView/coreDamClient'
 import { apiFetchListBatch } from '@/services/api/apiFetchListBatch'
 import { onMounted, reactive, ref } from 'vue'
@@ -12,12 +11,12 @@ import { apiFetchList } from '@/services/api/apiFetchList'
 const showData = ref(false)
 
 // data1 - search api
-const itemsBatch1 = ref<AssetSearchListItemDto[]>([])
-const itemsList1 = ref<AssetSearchListItemDto[]>([])
+const itemsBatch1 = ref<any[]>([])
+const itemsList1 = ref<any[]>([])
 
 const filter = useAssetListFilter()
 const fetchAssetListAll = (licenceId = 100000) =>
-  apiFetchListBatch<AssetSearchListItemDto[]>(
+  apiFetchListBatch<any[]>(
     damClient,
     '/adm/v1/asset' + '/licence/:licenceId',
     { licenceId },
