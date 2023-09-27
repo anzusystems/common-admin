@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.23.0",
+  "version": "1.24.0",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -39,7 +39,7 @@
     "@intlify/unplugin-vue-i18n": "^1.2.0",
     "@kyvg/vue3-notification": "^3.0.2",
     "@mdi/font": "^7.2.96",
-    "@rushstack/eslint-patch": "^1.4.0",
+    "@rushstack/eslint-patch": "^1.5.0",
     "@types/node": "^18.18.0",
     "@types/sortablejs": "^1.15.3",
     "@types/webfontloader": "^1.6.35",
@@ -54,7 +54,7 @@
     "@vuelidate/validators": "^2.0.4",
     "@vueuse/core": "^10.4.1",
     "@vueuse/integrations": "^10.4.1",
-    "axios": "^1.5.0",
+    "axios": "1.5.1",
     "dayjs": "1.11.10",
     "eslint": "^8.50.0",
     "eslint-plugin-vue": "9.17.0",
@@ -73,15 +73,15 @@
     "typescript": "4.9.5",
     "uuid": "^9.0.1",
     "vite": "^4.4.9",
-    "vite-plugin-dts": "^3.5.4",
+    "vite-plugin-dts": "^3.6.0",
     "vite-plugin-vuetify": "^1.0.2",
     "vitepress": "1.0.0-rc.20",
     "vue": "^3.3.4",
     "vue-flatpickr-component": "^11.0.3",
     "vue-i18n": "9.4.1",
     "vue-router": "4.2.5",
-    "vue-tsc": "1.8.14",
-    "vuetify": "3.3.17",
+    "vue-tsc": "1.8.15",
+    "vuetify": "3.3.19",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -89,14 +89,14 @@
     "@vuelidate/validators": "2.0.4",
     "@vueuse/core": "10.4.1",
     "@vueuse/integrations": "10.4.1",
-    "axios": "1.5.0",
+    "axios": "1.5.1",
     "dayjs": "1.11.10",
     "flatpickr": "4.6.13",
     "pinia": "^2.1.6",
     "vue": "3.3.4",
     "vue-i18n": "9.4.0",
     "vue-router": "4.2.5",
-    "vuetify": "3.3.17"
+    "vuetify": "3.3.19"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {

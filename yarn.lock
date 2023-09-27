@@ -194,7 +194,7 @@ __metadata:
     "@intlify/unplugin-vue-i18n": ^1.2.0
     "@kyvg/vue3-notification": ^3.0.2
     "@mdi/font": ^7.2.96
-    "@rushstack/eslint-patch": ^1.4.0
+    "@rushstack/eslint-patch": ^1.5.0
     "@types/node": ^18.18.0
     "@types/sortablejs": ^1.15.3
     "@types/webfontloader": ^1.6.35
@@ -209,7 +209,7 @@ __metadata:
     "@vuelidate/validators": ^2.0.4
     "@vueuse/core": ^10.4.1
     "@vueuse/integrations": ^10.4.1
-    axios: ^1.5.0
+    axios: 1.5.1
     dayjs: 1.11.10
     eslint: ^8.50.0
     eslint-plugin-vue: 9.17.0
@@ -228,29 +228,29 @@ __metadata:
     typescript: 4.9.5
     uuid: ^9.0.1
     vite: ^4.4.9
-    vite-plugin-dts: ^3.5.4
+    vite-plugin-dts: ^3.6.0
     vite-plugin-vuetify: ^1.0.2
     vitepress: 1.0.0-rc.20
     vue: ^3.3.4
     vue-flatpickr-component: ^11.0.3
     vue-i18n: 9.4.1
     vue-router: 4.2.5
-    vue-tsc: 1.8.14
-    vuetify: 3.3.17
+    vue-tsc: 1.8.15
+    vuetify: 3.3.19
     webfontloader: ^1.6.28
   peerDependencies:
     "@vuelidate/core": 2.0.3
     "@vuelidate/validators": 2.0.4
     "@vueuse/core": 10.4.1
     "@vueuse/integrations": 10.4.1
-    axios: 1.5.0
+    axios: 1.5.1
     dayjs: 1.11.10
     flatpickr: 4.6.13
     pinia: ^2.1.6
     vue: 3.3.4
     vue-i18n: 9.4.0
     vue-router: 4.2.5
-    vuetify: 3.3.17
+    vuetify: 3.3.19
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -936,10 +936,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rushstack/eslint-patch@npm:^1.4.0":
-  version: 1.4.0
-  resolution: "@rushstack/eslint-patch@npm:1.4.0"
-  checksum: 29b216288deda3dee69dfb49adb1d809217d67331775a854de18771905268a65c11be5325313d47fb1c62ea0b477733e17310bc9708ccb7f3fb6f0a3816b82d9
+"@rushstack/eslint-patch@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@rushstack/eslint-patch@npm:1.5.0"
+  checksum: f21595f92ade631b5c5b2426962db727f79a7224a2c60e462779310bf1f2b592a6f59d280fa936001f564a4c7d40997ba80b5a32081fee061309ef2c56b7f4b5
   languageName: node
   linkType: hard
 
@@ -1739,9 +1739,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/language-core@npm:1.8.14":
-  version: 1.8.14
-  resolution: "@vue/language-core@npm:1.8.14"
+"@vue/language-core@npm:1.8.15":
+  version: 1.8.15
+  resolution: "@vue/language-core@npm:1.8.15"
   dependencies:
     "@volar/language-core": ~1.10.0
     "@volar/source-map": ~1.10.0
@@ -1756,7 +1756,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 18b1b3818f078e67c9d57b34f688cdcc38d046eace9719a976ae306f39fcfaf2903c238591874b6fcec7eafc3642b1c82aa18e917c2365f655578102f1f15a1f
+  checksum: 78bf328c07205569620255ece07ed983c8fd8bdaa0c5c0711546a43955fd09004a680193a3922c88e1821125ac1b502969724ae48d40848fa24bef155e8e1a13
   languageName: node
   linkType: hard
 
@@ -1891,13 +1891,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/typescript@npm:1.8.14":
-  version: 1.8.14
-  resolution: "@vue/typescript@npm:1.8.14"
+"@vue/typescript@npm:1.8.15":
+  version: 1.8.15
+  resolution: "@vue/typescript@npm:1.8.15"
   dependencies:
     "@volar/typescript": ~1.10.0
-    "@vue/language-core": 1.8.14
-  checksum: 775bc97eacfc66a73ed2a41fd8ace63390297db13caef031dff31dc392cb01119e79e090ff800a9d1860fb057fc4d38db63087efdff9360f2849be88c9affd13
+    "@vue/language-core": 1.8.15
+  checksum: 59069d8788563a9ab721ec37336b4908dd65bcba1eac1701bb772965a60e39a775976887e124f427f0eb62ae31779f289eb4ae134c3c4900e472c461d7df8af2
   languageName: node
   linkType: hard
 
@@ -2279,14 +2279,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.5.0":
-  version: 1.5.0
-  resolution: "axios@npm:1.5.0"
+"axios@npm:1.5.1":
+  version: 1.5.1
+  resolution: "axios@npm:1.5.1"
   dependencies:
     follow-redirects: ^1.15.0
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
-  checksum: e7405a5dbbea97760d0e6cd58fecba311b0401ddb4a8efbc4108f5537da9b3f278bde566deb777935a960beec4fa18e7b8353881f2f465e4f2c0e949fead35be
+  checksum: 4444f06601f4ede154183767863d2b8e472b4a6bfc5253597ed6d21899887e1fd0ee2b3de792ac4f8459fe2e359d2aa07c216e45fd8b9e4e0688a6ebf48a5a8d
   languageName: node
   linkType: hard
 
@@ -6769,9 +6769,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-plugin-dts@npm:^3.5.4":
-  version: 3.5.4
-  resolution: "vite-plugin-dts@npm:3.5.4"
+"vite-plugin-dts@npm:^3.6.0":
+  version: 3.6.0
+  resolution: "vite-plugin-dts@npm:3.6.0"
   dependencies:
     "@microsoft/api-extractor": ^7.36.4
     "@rollup/pluginutils": ^5.0.2
@@ -6785,7 +6785,7 @@ __metadata:
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: d486220c478e9cb18cbb55867785d4f435bb780e7988e61a877d4cbb1ae6e58a3e85aca67f90a493a75db551afa15be1b0626764d75ed3907ab9084a0c02eaad
+  checksum: a19b3be8bab1169ba67bd87bc6c998ec53cc9f676b3bffd7d8aedd44f95bcd399d0c39d01930bb62fd5228c6bc8117f6dcc8e1f139240c2221402ae05b13a3b7
   languageName: node
   linkType: hard
 
@@ -7102,18 +7102,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-tsc@npm:1.8.14":
-  version: 1.8.14
-  resolution: "vue-tsc@npm:1.8.14"
+"vue-tsc@npm:1.8.15":
+  version: 1.8.15
+  resolution: "vue-tsc@npm:1.8.15"
   dependencies:
-    "@vue/language-core": 1.8.14
-    "@vue/typescript": 1.8.14
+    "@vue/language-core": 1.8.15
+    "@vue/typescript": 1.8.15
     semver: ^7.3.8
   peerDependencies:
     typescript: "*"
   bin:
     vue-tsc: bin/vue-tsc.js
-  checksum: 37580df08c1bc4d37796534003a486ea8f88455f185a9c11c13e38d591bf98434e7222eec7acd2e9f8f1ba791806353a7ae82c429d261de8da515c95079424d9
+  checksum: fc11349fb498ba6ced65a589f7dfd3db9f95a77308cf15c20ee7c595b634314d468d362101ee6144274556d6b891d038033d35b41dd602e623d904bd16d6b622
   languageName: node
   linkType: hard
 
@@ -7145,9 +7145,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.3.17":
-  version: 3.3.17
-  resolution: "vuetify@npm:3.3.17"
+"vuetify@npm:3.3.19":
+  version: 3.3.19
+  resolution: "vuetify@npm:3.3.19"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ^1.0.0-alpha.12
@@ -7163,7 +7163,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: b5e4bab6d449d7f39d691077559afee19c9e5fdb27ddac269a800b03d4b9bb91b073e677b80e8f4ee7e5483655cb34203279b3b3f60ab80237e8b289d039baf6
+  checksum: d004fb6caf57a5bb9da32fa93d013295f587571ae55f27327c2d48a5fd9b47703eba706f8156ee9e239c97d80c311d6ae69fc980202fdc2ad86b997bad1d1987
   languageName: node
   linkType: hard
 

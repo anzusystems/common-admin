@@ -1,3 +1,13 @@
+## [1.24.0](https://github.com/anzusystems/common-admin/compare/1.23.0...1.24.0) (2023-09-27)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+  * `vuetify@3.3.19`
+  * `axios@1.5.1`
+
 ## [1.23.0](https://github.com/anzusystems/common-admin/compare/1.22.0...1.23.0) (2023-09-25)
 
 ### Features
