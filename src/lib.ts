@@ -184,6 +184,7 @@ import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { apiFetchList } from '@/services/api/apiFetchList'
+import { apiFetchListBatch } from '@/services/api/apiFetchListBatch'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
@@ -508,6 +509,7 @@ export {
   apiDeleteOne,
   apiFetchByIds,
   apiFetchList,
+  apiFetchListBatch,
   apiFetchOne,
   apiUpdateOne,
   useApiQueryBuilder,

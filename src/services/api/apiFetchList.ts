@@ -27,10 +27,9 @@ const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag): str
 }
 
 /**
- * @template T Type used for request payload, by default same as Response type
  * @template R Response type override, optional
  */
-export const apiFetchList = <T, R = T>(
+export const apiFetchList = <R>(
   client: () => AxiosInstance,
   urlTemplate: string,
   urlParams: UrlParams = {},
@@ -62,7 +61,7 @@ export const apiFetchList = <T, R = T>(
           return resolve(res.data.data)
         }
         if (res.status === HTTP_STATUS_NO_CONTENT) {
-          return resolve(null as R)
+          return resolve([] as R)
         }
         return reject(new AnzuFatalError())
       })

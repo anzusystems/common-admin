@@ -8,6 +8,7 @@ import FormsView from '@/playground/formsView/FormsView.vue'
 import FilterView from '@/playground/filterView/FilterView.vue'
 import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
+import ApiFetchListBatchView from '@/playground/apiFetchListBatchView/ApiFetchListBatchView.vue'
 import ImageView from '@/playground/image/ImageView.vue'
 import FileView from '@/playground/file/FileView.vue'
 import SortableView from '@/playground/sortable/SortableView.vue'
@@ -81,6 +82,11 @@ const router = createRouter({
       path: '/view/alert',
       name: 'view-alert',
       component: AlertView,
+    },
+    {
+      path: '/view/fetch-batch',
+      name: 'view-fetch-batch',
+      component: ApiFetchListBatchView,
     },
   ],
 })
