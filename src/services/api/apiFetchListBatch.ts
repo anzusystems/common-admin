@@ -95,6 +95,9 @@ export const apiFetchListBatch = async <R>(
         }
       } else if (isApiResponseList(resData)) {
         pagination.totalCount = resData.totalCount
+        if (pagination.totalCount <= pagination.rowsPerPage) {
+          return Promise.resolve(results as R)
+        }
         const promises: Promise<any>[] = []
         const numPages = Math.ceil(pagination.totalCount / pagination.rowsPerPage)
         for (let i = 0; i < numPages; i++) {
