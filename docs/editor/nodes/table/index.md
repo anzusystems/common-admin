@@ -2,7 +2,7 @@
 
 See [tiptap docs](https://tiptap.dev/api/nodes/table)
 
-todo: variant: bordered and borderless
+todo: variant: '' | 'sportnetTvProgram'
 @lukas check
 
 ## Node schema
