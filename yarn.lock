@@ -219,7 +219,7 @@ __metadata:
     postcss-html: ^1.5.0
     postcss-prefix-selector: ^1.16.0
     prettier: ^3.0.3
-    sass: ^1.68.0
+    sass: ^1.69.0
     shortcut-buttons-flatpickr: ^0.4.0
     sortablejs: ^1.15.0
     stylelint: ^15.10.3
@@ -227,7 +227,7 @@ __metadata:
     stylelint-config-standard-scss: ^11.0.0
     typescript: 4.9.5
     uuid: ^9.0.1
-    vite: ^4.4.10
+    vite: ^4.4.11
     vite-plugin-dts: ^3.6.0
     vite-plugin-vuetify: ^1.0.2
     vitepress: 1.0.0-rc.20
@@ -5860,16 +5860,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.68.0":
-  version: 1.68.0
-  resolution: "sass@npm:1.68.0"
+"sass@npm:^1.69.0":
+  version: 1.69.0
+  resolution: "sass@npm:1.69.0"
   dependencies:
     chokidar: ">=3.0.0 <4.0.0"
     immutable: ^4.0.0
     source-map-js: ">=0.6.2 <2.0.0"
   bin:
     sass: sass.js
-  checksum: 65ccede83c96768beeb8dcaf67957b7c76b12ff1276bfd2849d7be151d46ba1400048a67717e6e5e4969bc75e87348e5530f5f272833f2e60a891c21a33d8ab0
+  checksum: eabea31ea3b1dd529c7eff345c8b6468afe6ab8011bd4f95caa2cffb8fb115cc055ea21de425be6197f7ed22516f5652eccb98d315d592ea152ada553f964b8a
   languageName: node
   linkType: hard
 
@@ -6803,9 +6803,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^4.4.10":
-  version: 4.4.10
-  resolution: "vite@npm:4.4.10"
+"vite@npm:^4.4.11":
+  version: 4.4.11
+  resolution: "vite@npm:4.4.11"
   dependencies:
     esbuild: ^0.18.10
     fsevents: ~2.3.2
@@ -6839,7 +6839,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: b5ab3fff97644321a9efd425d54cd841d619abcc4d3167f2c098253f4ed5d92d532a5c72ea0dad2cde3239b5613558a33c62ee77bb7b0ebce608d8e6d4f8a13d
+  checksum: c22145c8385343a629cd546054b9da6eee60327540102bdfd1ad897fd2e78e0763ce6a18a9d84fdefde9da8fd2427d3bec9eb2697b47cf4068c7b4b52f7e3e6a
   languageName: node
   linkType: hard
 

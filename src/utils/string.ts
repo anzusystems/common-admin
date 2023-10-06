@@ -115,3 +115,8 @@ export const stringUrlTemplateReplaceVueRouter = (template: string, params: UrlP
  * Slot names with dots are not valid, Vue takes dots as modifiers, so we must replace dots with dash.
  */
 export const stringNormalizeForSlotName = (name: string) => name.replace('.', '-')
+
+export const stringIsValidEmail = (email: string): boolean => {
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$/
+  return emailRegex.test(email)
+}

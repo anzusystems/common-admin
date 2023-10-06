@@ -97,6 +97,7 @@ import {
   isUndefined,
 } from '@/utils/common'
 import {
+  stringIsValidEmail,
   stringNormalizeForSlotName,
   stringSplitOnFirstOccurrence,
   stringToFloat,
@@ -460,6 +461,7 @@ export {
   stringTrimLength,
   stringToKebabCase,
   stringNormalizeForSlotName,
+  stringIsValidEmail,
   stringUrlTemplateReplace,
   stringUrlTemplateReplaceVueRouter,
   // datetime
