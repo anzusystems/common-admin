@@ -1,3 +1,14 @@
+## [1.26.0](https://github.com/anzusystems/common-admin/compare/1.26.0...1.27.0) (2023-10-03)
+
+### Features
+* **chore:** updated dependencies
+* **utils:** added `stringIsValidEmail` helper function
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+  * `@vueuse/core@10.5.0`
+  * `@vueuse/integrations@10.5.0`
+
 ## [1.26.0](https://github.com/anzusystems/common-admin/compare/1.25.0...1.26.0) (2023-10-03)
 
 ### Features
