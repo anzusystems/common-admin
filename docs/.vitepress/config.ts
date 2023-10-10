@@ -213,6 +213,7 @@ function sidebarEditor() {
         { text: 'collaborationCursor', link: '/editor/extensions/collaboration-cursor/' },
         { text: 'dropCursor', link: '/editor/extensions/drop-cursor/' },
         { text: 'gapCursor', link: '/editor/extensions/gap-cursor/' },
+        { text: 'listKeymap', link: '/editor/extensions/list-keymap/' },
         { text: 'nodePreventDelete', link: '/editor/extensions/node-prevent-delete/' },
         { text: 'nodePreventPaste', link: '/editor/extensions/node-prevent-paste/' },
         { text: 'tableCaption', link: '/editor/extensions/table-caption/' },

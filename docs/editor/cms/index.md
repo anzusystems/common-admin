@@ -21,13 +21,12 @@
 ## Nodes
 | Name             | Feature clear | Schema setup | Development | Migration valid | Docs | Feature done |
 |------------------|:-------------:|:------------:|:-----------:|:---------------:|------|:------------:|
-| quote            |       ✅       |      ✅       |      ✅      |                 |      |              |
 | bulletList       |       ✅       |      ✅       |     dep     |                 |      |              |
 | button           |       ✅       |      ✅       |      ✅      |                 |      |              |
-| contentBreak     |       ✅       |      ✅       |             |                 |      |              |
+| contentBreak     |       ✅       |      ✅       |      ✅      |                 |      |              |
 | contentLock      |       ✅       |      ✅       |      ✅      |                 |      |              |
 | doc              |       ✅       |      ✅       |     dep     |                 |      |              |
-| embedCustom      |       ✅       |      ✅       |             |                 |      |              |
+| embedCustom      |       ✅       |      ✅       |      ✅      |                 |      |              |
 | embedGallery     |       ✅       |      ✅       |             |                 |      |              |
 | embedImage       |       ✅       |      ✅       |             |                 |      |              |
 | embedImageInline |       ✅       |      ✅       |             |                 |      |              |
@@ -37,7 +36,7 @@
 | embedNewsletter  |               |              |             |                 |      |              |
 | embedPoll        |       ✅       |      ✅       |             |                 |      |              |
 | embedQuiz        |       ✅       |      ✅       |             |                 |      |              |
-| embedRelated     |       ✅       |      ✅       |             |                 |      |              |
+| embedRelated     |       ✅       |      ✅       |      ✅      |                 |      |              |
 | embedTimeline    |               |              |             |                 |      |              |
 | embedWeather     |       ✅       |      ✅       |             |                 |      |              |
 | hardBreak        |       ✅       |      ✅       |     dep     |                 |      |              |
@@ -46,8 +45,13 @@
 | listItem         |       ✅       |      ✅       |     dep     |                 |      |              |
 | orderedList      |       ✅       |      ✅       |     dep     |                 |      |              |
 | paragraph        |       ✅       |      ✅       |     dep     |                 |      |              |
+| quote            |       ✅       |      ✅       |      ✅      |                 |      |              |
+| quoteAuthor      |       ✅       |      ✅       |      ✅      |                 |      |              |
+| quoteContent     |       ✅       |      ✅       |      ✅      |                 |      |              |
 | review           |               |              |             |                 |      |              |
-| styledBox        |       ✅       |      ✅       |      ✅      |                 |      |              |
+| styledBox        |       ✅       |      ✅       |             |                 |      |              |
+| styledBoxContent |       ✅       |      ✅       |             |                 |      |              |
+| styledBoxTitle   |       ✅       |      ✅       |             |                 |      |              |
 | table            |       ✅       |      ✅       |   dep + ✅   |                 |      |              |
 | tableCell        |       ✅       |      ✅       |     dep     |                 |      |              |
 | tableHeader      |       ✅       |      ✅       |     dep     |                 |      |              |
@@ -64,14 +68,19 @@
 | Name                | Feature clear | Development | Migration valid | Docs | Feature done |
 |---------------------|:-------------:|:-----------:|:---------------:|------|:------------:|
 | anchor              |       ✅       |      ✅      |                 |      |              |
+| addParagraph        |       ✅       |      ✅      |                 |      |              |
 | collaboration       |       ✅       |     dep     |                 |      |              |
 | collaborationCursor |       ✅       |     dep     |                 |      |              |
 | dropCursor          |       ✅       |     dep     |                 |      |              |
 | gapCursor           |       ✅       |     dep     |                 |      |              |
 | listKeymap          |       ✅       |     dep     |                 |      |              |
+| nodePreventDelete   |       ✅       |             |                 |      |              |
+| nodePreventPaste    |       ✅       |             |                 |      |              |
+| tableCaption        |       ✅       |      ✅      |                 |      |              |
+| tocGenerate         |       ✅       |      ✅      |                 |      |              |
+| slashCommands       |       ✅       |      ✅      |                 |      |              |
 | history             |       ✅       |     dep     |                 |      |              |
 | textAlign           |       ✅       |     dep     |                 |      |              |
-| tocGenerate         |       ✅       |      ✅      |                 |      |              |
 
 ## Supported media embed variants (needs to add all options)
 | Name              | Feature clear | Development | Migration valid | Docs | Feature done |
