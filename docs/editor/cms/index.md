@@ -21,7 +21,7 @@
 ## Nodes
 | Name             | Feature clear | Schema setup | Development | Migration valid | Docs | Feature done |
 |------------------|:-------------:|:------------:|:-----------:|:---------------:|------|:------------:|
-| blockquote       |       ✅       |      ✅       |   dep + ✅   |                 |      |              |
+| quote            |       ✅       |      ✅       |      ✅      |                 |      |              |
 | bulletList       |       ✅       |      ✅       |     dep     |                 |      |              |
 | button           |       ✅       |      ✅       |      ✅      |                 |      |              |
 | contentBreak     |       ✅       |      ✅       |             |                 |      |              |

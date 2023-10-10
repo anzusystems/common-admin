@@ -17,8 +17,8 @@ Similar attrs to [link mark](/editor/marks/link/), with some changes, and it's b
     "external": {
       "default": false
     },
-    "email": {
-      "default": false
+    "variant": {
+      "default": "link" // link | email | anchor
     },
     "size": {
       "default": "small" // large | small
@@ -40,10 +40,10 @@ Similar attrs to [link mark](/editor/marks/link/), with some changes, and it's b
   ],
   "attrs": {
     "href": "https://www.sme.sk",
-    "size": "large | small",
+    "size": "large",
     "external": false,
     "nofollow": false,
-    "email": false
+    "variant": "link"
   }
 } 
 ```

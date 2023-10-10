@@ -1,18 +1,16 @@
 # styledBox
 
-// todo features and schema also it's not final, its node that can contain content
+// todo
 
 ## Features
-- nodes:
-  - heading h2-h5
-  - paragraph
-  - text
+- content of styledBoxContent:
+  - heading
+  - paragraph (text, embedImageInline)
   - hardBreak
   - orderedList
   - bulletList
   - embedImage
-  - embedImageInline
-- marks:
+- marks of styledBoxContent:
   - all
 
 
@@ -21,15 +19,11 @@
 ```json
 {
   "name": "styledBox",
-  "groups": [
-    "embed"
-  ],
+  "content": "styledBoxTitle styledBoxContent",
+  "group": "embed",
   "attrs": {
     "variant": {
       "default": "summary" // summary | column
-    },
-    "title": {
-      "default": ""
     }
   }
 }
@@ -41,16 +35,33 @@
 {
   "type": "styledBox",
   "attrs": {
-    "variant": "summary",
-    "title": "blabla"
+    "variant": "summary"
   },
   "content": [
     {
-      "type": "paragraph",
+      "type": "styledBoxTitle",
       "content": [
         {
           "type": "text",
-          "text": "bla bla bla"
+          "text": "Lorem"
+        }
+      ]
+    },
+    {
+      "type": "styledBoxContent",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "anchor": null,
+            "textAlign": "left"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Lorem"
+            }
+          ]
         }
       ]
     }
