@@ -1,3 +1,11 @@
+## [1.29.0](https://github.com/anzusystems/common-admin/compare/1.28.0...1.29.0) (2023-10-15)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new pinia required version is `pinia@2.1.7`
+
 ## [1.28.0](https://github.com/anzusystems/common-admin/compare/1.27.0...1.28.0) (2023-10-11)
 
 ### Features
