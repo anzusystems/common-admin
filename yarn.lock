@@ -215,7 +215,7 @@ __metadata:
     eslint-plugin-vue: 9.17.0
     flatpickr: ^4.6.13
     npm-run-all: ^4.1.5
-    pinia: ^2.1.6
+    pinia: 2.1.7
     postcss-html: ^1.5.0
     postcss-prefix-selector: ^1.16.0
     prettier: ^3.0.3
@@ -246,7 +246,7 @@ __metadata:
     axios: 1.5.1
     dayjs: 1.11.10
     flatpickr: 4.6.13
-    pinia: ^2.1.6
+    pinia: 2.1.7
     vue: 3.3.4
     vue-i18n: 9.5.0
     vue-router: 4.2.5
@@ -5392,9 +5392,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pinia@npm:^2.1.6":
-  version: 2.1.6
-  resolution: "pinia@npm:2.1.6"
+"pinia@npm:2.1.7":
+  version: 2.1.7
+  resolution: "pinia@npm:2.1.7"
   dependencies:
     "@vue/devtools-api": ^6.5.0
     vue-demi: ">=0.14.5"
@@ -5407,7 +5407,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 4e881e590c4f6ec9c2dc6174cf7ecc71a48bff1f3a5be878669b3b2fd32994fa64c3cbf499d138bc4e0f222ac6ad1d07935b0a592791acdaf8c9f2a12c98f042
+  checksum: 1b7882aab2828ad209d3e76e06918c8811d04699c9308d372094cde6df485d7e7785f25a3bb5c6a3724aeaee3fb0082fae03c41a6657acd3486c7965a0a09d34
   languageName: node
   linkType: hard
 
