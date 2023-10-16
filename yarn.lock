@@ -230,7 +230,7 @@ __metadata:
     vite: ^4.4.11
     vite-plugin-dts: ^3.6.0
     vite-plugin-vuetify: ^1.0.2
-    vitepress: 1.0.0-rc.21
+    vitepress: 1.0.0-rc.22
     vue: ^3.3.4
     vue-flatpickr-component: ^11.0.3
     vue-i18n: 9.5.0
@@ -3510,7 +3510,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"focus-trap@npm:^7.5.3":
+"focus-trap@npm:^7.5.4":
   version: 7.5.4
   resolution: "focus-trap@npm:7.5.4"
   dependencies:
@@ -6886,9 +6886,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitepress@npm:1.0.0-rc.21":
-  version: 1.0.0-rc.21
-  resolution: "vitepress@npm:1.0.0-rc.21"
+"vitepress@npm:1.0.0-rc.22":
+  version: 1.0.0-rc.22
+  resolution: "vitepress@npm:1.0.0-rc.22"
   dependencies:
     "@docsearch/css": ^3.5.2
     "@docsearch/js": ^3.5.2
@@ -6896,7 +6896,7 @@ __metadata:
     "@vue/devtools-api": ^6.5.1
     "@vueuse/core": ^10.5.0
     "@vueuse/integrations": ^10.5.0
-    focus-trap: ^7.5.3
+    focus-trap: ^7.5.4
     mark.js: 8.11.1
     minisearch: ^6.1.0
     shiki: ^0.14.5
@@ -6912,7 +6912,7 @@ __metadata:
       optional: true
   bin:
     vitepress: bin/vitepress.js
-  checksum: 5a6a56d6488cf88e36aa1f0b450a4caf2fc5368ea1b1eda2dc15a6da47156ef4a89c19ecfd7c37bbcd21e8f3d75fcc9f920fc01e51759d6b4be00a89184af5c3
+  checksum: 7ee1e9cc96f54114e13e371a617ea849e658add7ab765f35303c16ea1d918574a143dc4c03b15705d119452c733955a2a36913a522ebdc2ad5391e0f7510dab4
   languageName: node
   linkType: hard
 
