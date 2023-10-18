@@ -64,6 +64,18 @@ export function useSubjectSelect<TItem>(
     items.value = await fetch(pagination, filter)
   }
 
+  const onRowClick = (event: PointerEvent) => {
+    const eventTarget = event.target as HTMLElement | null
+    if (!eventTarget) return
+    const parent = eventTarget.parentElement
+    if (!parent || !parent.classList.contains('v-data-table__tr')) return
+    const firstTd = parent.firstElementChild
+    if (!firstTd || !firstTd.classList.contains('v-data-table__td')) return
+    const button = firstTd.querySelector('button')
+    if (!button) return
+    button.click()
+  }
+
   return {
     items,
     selected,
@@ -72,6 +84,7 @@ export function useSubjectSelect<TItem>(
     columnsHidden,
     columnsAll,
     filterTouched,
+    onRowClick,
     onFetchNextPage,
     customToggleSelect,
     onOpen,

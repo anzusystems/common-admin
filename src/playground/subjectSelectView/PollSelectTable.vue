@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="T = PollDemo">
+<script lang="ts" setup>
 import ASubjectSelectTable from '@/components/subjectSelect/ASubjectSelectTable.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
@@ -43,6 +43,7 @@ const {
   onOpen,
   sortByChange,
   getList,
+  onRowClick,
 } = useSubjectSelect<PollDemo>(
   [
     { key: 'id' },
@@ -112,6 +113,7 @@ const onConfirm = (items: Array<PollDemo>) => {
         item-value="id"
         return-object
         :select-strategy="generateSelectStrategy(minCount, maxCount) as any"
+        @click:row.stop="onRowClick"
       >
         <template #item.data-table-select="{ internalItem, toggleSelect, isSelected }">
           <ACheckboxSimple
