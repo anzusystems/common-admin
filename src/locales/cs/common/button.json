@@ -20,5 +20,6 @@
   "upload": "Nahrát",
   "refresh": "Obnovit",
   "forwards": "Vpřed",
-  "backwards": "Zpět"
+  "backwards": "Zpět",
+  "loadMore": "Načti další"
 }

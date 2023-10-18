@@ -23,10 +23,6 @@
     "filter": {
       "toggle": "Filter"
     },
-    "controls": {
-      "loadMore": "Load more",
-      "confirm": "Confirm"
-    },
     "texts": {
       "title": "Select asset",
       "noItemsFound": "No matching assets found",

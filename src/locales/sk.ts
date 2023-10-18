@@ -12,6 +12,7 @@ import apiValidation from '@/locales/sk/error/apiValidation.json'
 import apiForbiddenOperation from '@/locales/sk/error/apiForbiddenOperation.json'
 import jsValidation from '@/locales/sk/error/jsValidation.json'
 import assetSelect from '@/locales/sk/common/assetSelect.json'
+import subjectSelect from '@/locales/sk/common/subjectSelect.json'
 import time from '@/locales/sk/common/time.json'
 import sortable from '@/locales/sk/common/sortable.json'
 
@@ -27,6 +28,7 @@ export default {
     permission,
     permissionGroup,
     assetSelect,
+    subjectSelect,
     time,
     sortable,
   },

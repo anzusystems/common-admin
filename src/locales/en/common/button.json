@@ -20,5 +20,6 @@
   "upload": "Upload",
   "refresh": "Refresh",
   "forwards": "Forwards",
-  "backwards": "Backwards"
+  "backwards": "Backwards",
+  "loadMore": "Load more"
 }

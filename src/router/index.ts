@@ -14,6 +14,7 @@ import FileView from '@/playground/file/FileView.vue'
 import SortableView from '@/playground/sortable/SortableView.vue'
 import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 import AlertView from '@/playground/alertView/AlertView.vue'
+import SubjectSelectView from '@/playground/subjectSelectView/SubjectSelectView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -57,6 +58,11 @@ const router = createRouter({
       path: '/view/split-buttons',
       name: 'view-split-buttons',
       component: BtnSplitView,
+    },
+    {
+      path: '/view/subject-select',
+      name: 'view-subject-select',
+      component: SubjectSelectView,
     },
     {
       path: '/view/asset-select',

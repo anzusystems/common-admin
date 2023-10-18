@@ -1,0 +1,10 @@
+{
+  "filter": {
+    "toggle": "Filter"
+  },
+  "texts": {
+    "title": "Vyberte",
+    "pickExactCount": "Vyberte: {count}. Zvolených: {selected}." ,
+    "pickRangeCount": "Vyberte od {minCount} do {maxCount}. Zvolených: {selected}."
+  }
+}

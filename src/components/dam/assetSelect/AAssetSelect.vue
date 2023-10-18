@@ -159,7 +159,7 @@ defineExpose({
               @click="fetchNextPage"
             >
               <slot name="button-confirm-title">
-                {{ t('common.assetSelect.meta.controls.loadMore') }}
+                {{ t('common.button.loadMore') }}
               </slot>
             </ABtnSecondary>
           </div>
@@ -184,7 +184,7 @@ defineExpose({
           @click.stop="onConfirm"
         >
           <slot name="button-confirm-title">
-            {{ t('common.assetSelect.meta.controls.confirm') }}
+            {{ t('common.button.confirm') }}
           </slot>
         </ABtnPrimary>
       </div>

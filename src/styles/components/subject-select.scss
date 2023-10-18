@@ -56,8 +56,7 @@ $sidebar-width: 320px;
 
       .#{$class-name-filter}__content {
         flex: 1 1 auto;
-        overflow-x: hidden;
-        overflow-y: auto;
+        overflow: hidden auto;
       }
 
       .#{$class-name-filter}__actions {
@@ -73,8 +72,7 @@ $sidebar-width: 320px;
   &__content {
     width: 100%;
     transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow-y: auto;
-    overflow-x: auto;
+    overflow: auto auto;
   }
 
   &__actions {

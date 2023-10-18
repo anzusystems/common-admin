@@ -1,0 +1,10 @@
+{
+  "filter": {
+    "toggle": "Filter"
+  },
+  "texts": {
+    "title": "Select",
+    "pickExactCount": "Select: {count}. Selected: {selected}.",
+    "pickRangeCount": "Select from {minCount} to {maxCount}. Selected: {selected}."
+  }
+}

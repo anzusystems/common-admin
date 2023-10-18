@@ -23,10 +23,6 @@
     "filter": {
       "toggle": "Filtr"
     },
-    "controls": {
-      "loadMore": "Načti další",
-      "confirm": "Zvolit"
-    },
     "texts": {
       "title": "Vyberte asset",
       "noItemsFound": "Žádné nalezené assety",
