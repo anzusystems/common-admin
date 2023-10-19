@@ -195,9 +195,9 @@ __metadata:
     "@kyvg/vue3-notification": ^3.0.2
     "@mdi/font": ^7.3.67
     "@rushstack/eslint-patch": ^1.5.1
-    "@types/node": ^18.18.5
-    "@types/sortablejs": ^1.15.3
-    "@types/webfontloader": ^1.6.35
+    "@types/node": ^18.18.6
+    "@types/sortablejs": ^1.15.4
+    "@types/webfontloader": ^1.6.36
     "@typescript-eslint/parser": ^6.8.0
     "@vitejs/plugin-vue": ^4.4.0
     "@volar/vue-language-server": 1.6.5
@@ -227,7 +227,7 @@ __metadata:
     stylelint-config-standard-scss: ^11.0.0
     typescript: 4.9.5
     uuid: ^9.0.1
-    vite: ^4.4.11
+    vite: ^4.5.0
     vite-plugin-dts: ^3.6.0
     vite-plugin-vuetify: ^1.0.2
     vitepress: 1.0.0-rc.22
@@ -1044,10 +1044,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.18.5":
-  version: 18.18.5
-  resolution: "@types/node@npm:18.18.5"
-  checksum: fc8c9b2bf226270cf9085a7dac76ce09dd7c3519ec9b687ee2b50385954ab3709c45ca82d002d1536e24286803cd194d7ab7008acebdcd6681b8b19d4277fa5c
+"@types/node@npm:^18.18.6":
+  version: 18.18.6
+  resolution: "@types/node@npm:18.18.6"
+  checksum: a847639b8455fd3dfa6dbc2917274c82c9db789f1d41aaf69f94ac6c9e54c3c1dd29be6e1e1ccd7c17e54db3d78d7011bc4e70544c6447ceca253dccc0a187e1
   languageName: node
   linkType: hard
 
@@ -1065,10 +1065,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/sortablejs@npm:^1.15.3":
-  version: 1.15.3
-  resolution: "@types/sortablejs@npm:1.15.3"
-  checksum: 189cc8b16666e27f0de5894731b95889a8be29d8e68d0afdcbd703e1cd519623b2e42049fe66d25e4ec403dffed594b19bb1d16aab6939d0cdfb4d50e2fb99b6
+"@types/sortablejs@npm:^1.15.4":
+  version: 1.15.4
+  resolution: "@types/sortablejs@npm:1.15.4"
+  checksum: e433fc5de1a9e7dfaab09c27ef7eade34d07e0cd95d7e5b70ac302d45ac887017f7b4a81bb1566c511488996aad685367534b448a4ad770dd4da15435828a77d
   languageName: node
   linkType: hard
 
@@ -1079,10 +1079,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/webfontloader@npm:^1.6.35":
-  version: 1.6.35
-  resolution: "@types/webfontloader@npm:1.6.35"
-  checksum: 8a809e1f8041fc9f7ec1df82d6e841bfc51732a3aa0b56a4e3d2abab86a8abce1b0db90dc9d2c594fd0d77034e2670cae3cfb714a902a0112985fa04fd4a61c8
+"@types/webfontloader@npm:^1.6.36":
+  version: 1.6.36
+  resolution: "@types/webfontloader@npm:1.6.36"
+  checksum: 7f429fc253446f0f11f0aea5d88dfc67d272668277d8a1be7691277de76717b9435d9a65676267c9e5562634a7efbb366bc24fc68f5b507c6f1be9fd1a93bb2f
   languageName: node
   linkType: hard
 
@@ -6937,6 +6937,46 @@ __metadata:
   bin:
     vite: bin/vite.js
   checksum: c22145c8385343a629cd546054b9da6eee60327540102bdfd1ad897fd2e78e0763ce6a18a9d84fdefde9da8fd2427d3bec9eb2697b47cf4068c7b4b52f7e3e6a
+  languageName: node
+  linkType: hard
+
+"vite@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "vite@npm:4.5.0"
+  dependencies:
+    esbuild: ^0.18.10
+    fsevents: ~2.3.2
+    postcss: ^8.4.27
+    rollup: ^3.27.1
+  peerDependencies:
+    "@types/node": ">= 14"
+    less: "*"
+    lightningcss: ^1.21.0
+    sass: "*"
+    stylus: "*"
+    sugarss: "*"
+    terser: ^5.4.0
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  peerDependenciesMeta:
+    "@types/node":
+      optional: true
+    less:
+      optional: true
+    lightningcss:
+      optional: true
+    sass:
+      optional: true
+    stylus:
+      optional: true
+    sugarss:
+      optional: true
+    terser:
+      optional: true
+  bin:
+    vite: bin/vite.js
+  checksum: 06f1a4c858e4dc4c04a10466f4ccacea30c5a9f8574e5ba3deb9d03fa20e80ca6797f02dad97a988da7cdef96238dbc69c3b6a538156585c74722d996223619e
   languageName: node
   linkType: hard
 
