@@ -6,7 +6,7 @@ import { toRef } from 'vue'
 import ADatetime from '@/components/ADatetime.vue'
 import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
 import PollSelectFilter from '@/playground/subjectSelectView/PollSelectFilter.vue'
-import { generateSelectStrategy } from '@/components/subjectSelect/selectStrategies'
+import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
 import ACheckboxSimple from '@/components/ACheckboxSimple.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { fetchPollListDemo, type PollDemo } from '@/playground/subjectSelectView/pollDemoApi'
@@ -114,7 +114,7 @@ const onConfirm = (items: Array<PollDemo>) => {
         :loading="loading"
         item-value="id"
         return-object
-        :select-strategy="generateSelectStrategy(minCount, maxCount) as any"
+        :select-strategy="generateDatatableMinMaxSelectStrategy(minCount, maxCount) as any"
         @click:row.stop="onRowClick"
       >
         <template #item.data-table-select="{ internalItem, toggleSelect, isSelected }">

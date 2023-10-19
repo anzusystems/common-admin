@@ -22,7 +22,7 @@ interface DataTableSelectStrategy {
   }) => Set<unknown>
 }
 
-export const generateSelectStrategy = (min: number, max: number): DataTableSelectStrategy => {
+export const generateDatatableMinMaxSelectStrategy = (min: number, max: number): DataTableSelectStrategy => {
   return {
     showSelectAll: false,
     allSelected: () => [],

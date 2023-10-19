@@ -70,7 +70,9 @@ import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
+import ACheckboxSimple from '@/components/ACheckboxSimple.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
+import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
 import { i18n } from '@/plugins/i18n'
 import {
   type Immutable,
@@ -332,6 +334,7 @@ export {
   ASortable,
   ASortableNested,
   ASubjectSelect,
+  ACheckboxSimple,
 
   // Dam
   AAssetSelect,
@@ -358,6 +361,7 @@ export {
   modifyLanguageSettings,
   useLoginStatus,
   useSubjectSelect,
+  generateDatatableMinMaxSelectStrategy,
 
   // VALUE OBJECTS
   Grant,
