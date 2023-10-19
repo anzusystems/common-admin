@@ -4,7 +4,6 @@ import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import { toRef } from 'vue'
 import ADatetime from '@/components/ADatetime.vue'
-import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
 import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
 import PollSelectFilter from '@/playground/subjectSelectView/PollSelectFilter.vue'
 import { generateSelectStrategy } from '@/components/subjectSelect/selectStrategies'
@@ -44,6 +43,7 @@ const {
   sortByChange,
   getList,
   onRowClick,
+  loading,
 } = useSubjectSelect<PollDemo>(
   [
     { key: 'id' },
@@ -76,6 +76,7 @@ const onConfirm = (items: Array<PollDemo>) => {
     :selected-items="selected"
     :submit-filter="submitFilter"
     :reset-filter="resetFilter"
+    :loading="loading"
     @on-open="onOpen"
     @on-fetch-next-page="onFetchNextPage"
     @on-page-change="getList"
@@ -110,6 +111,7 @@ const onConfirm = (items: Array<PollDemo>) => {
         :headers="columnsVisible"
         :items="items"
         :items-length="items.length"
+        :loading="loading"
         item-value="id"
         return-object
         :select-strategy="generateSelectStrategy(minCount, maxCount) as any"

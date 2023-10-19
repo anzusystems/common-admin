@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
+import { useAlerts } from '@/composables/system/alerts'
 
 export function useSubjectSelect<TItem>(
   datatableConfig: any,
@@ -18,8 +19,10 @@ export function useSubjectSelect<TItem>(
   const filterTouched: Ref<boolean> = ref(false)
   const items: Ref<Array<TItem>> = ref([])
   const selected: Ref<Array<TItem>> = ref([])
+  const loading = ref(false)
 
   const { resetFilter, submitFilter } = useFilterHelpers()
+  const { showErrorsDefault } = useAlerts()
 
   const { columnsVisible, pagination, updateSortBy, columnsAll, columnsHidden } = createDatatableColumnsConfig(
     datatableConfig,
@@ -51,8 +54,15 @@ export function useSubjectSelect<TItem>(
   }
 
   const onFetchNextPage = async () => {
+    loading.value = true
     pagination.page++
-    items.value.push(...(await fetch(pagination, filter)))
+    try {
+      items.value.push(...(await fetch(pagination, filter)))
+    } catch (e) {
+      showErrorsDefault(e)
+    } finally {
+      loading.value = false
+    }
   }
 
   const resetState = () => {
@@ -61,10 +71,17 @@ export function useSubjectSelect<TItem>(
   }
 
   const getList = async () => {
-    items.value = await fetch(pagination, filter)
+    loading.value = true
+    try {
+      items.value = await fetch(pagination, filter)
+    } catch (e) {
+      showErrorsDefault(e)
+    } finally {
+      loading.value = false
+    }
   }
 
-  const onRowClick = (event: PointerEvent) => {
+  const onRowClick = (event: Event) => {
     const eventTarget = event.target as HTMLElement | null
     if (!eventTarget) return
     const parent = eventTarget.parentElement
@@ -84,6 +101,7 @@ export function useSubjectSelect<TItem>(
     columnsHidden,
     columnsAll,
     filterTouched,
+    loading,
     onRowClick,
     onFetchNextPage,
     customToggleSelect,

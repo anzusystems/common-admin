@@ -13,13 +13,15 @@ const props = withDefaults(
     pagination: Pagination
     submitFilter: Fn
     resetFilter: Fn
+    loading?: boolean
     minCount?: number
     maxCount?: number
     modelValue?: boolean | undefined // dialog
     dialogTitleT?: string
-    paginationMode?: 'standard' | 'lazyLoad'
+    paginationMode?: 'standard' | 'more'
   }>(),
   {
+    loading: false,
     minCount: 1,
     maxCount: 1,
     modelValue: undefined,
@@ -56,7 +58,6 @@ const paginationComputed = computed({
 })
 
 const sidebarLeft = ref(true)
-const loading = ref(false)
 const filterTouched = ref(false)
 
 const { t } = useI18n()
@@ -111,7 +112,7 @@ const hasNextPage = computed(() => {
 })
 
 const autoloadOnIntersect = (isIntersecting: boolean) => {
-  if (isIntersecting && hasNextPage.value && !loading.value) {
+  if (isIntersecting && hasNextPage.value && !props.loading) {
     fetchNextPage()
   }
 }
@@ -228,7 +229,7 @@ defineExpose({
         <div class="subject-select__content">
           <slot name="content" />
           <div
-            v-if="paginationMode === 'lazyLoad'"
+            v-if="paginationMode === 'more'"
             class="d-flex w-100 align-center justify-center pa-4"
           >
             <ABtnSecondary
