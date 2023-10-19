@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import ASubjectSelectTable from '@/components/subjectSelect/ASubjectSelectTable.vue'
+import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import { toRef } from 'vue'
@@ -69,7 +69,7 @@ const onConfirm = (items: Array<PollDemo>) => {
 </script>
 
 <template>
-  <ASubjectSelectTable
+  <ASubjectSelect
     v-model:pagination="pagination"
     :min-count="minCount"
     :max-count="maxCount"
@@ -140,5 +140,5 @@ const onConfirm = (items: Array<PollDemo>) => {
         <template #bottom />
       </VDataTableServer>
     </template>
-  </ASubjectSelectTable>
+  </ASubjectSelect>
 </template>

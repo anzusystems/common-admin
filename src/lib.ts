@@ -69,7 +69,7 @@ import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
-import ASubjectSelectTable from '@/components/subjectSelect/ASubjectSelectTable.vue'
+import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { i18n } from '@/plugins/i18n'
 import {
@@ -331,7 +331,7 @@ export {
   AJobDetailCommon,
   ASortable,
   ASortableNested,
-  ASubjectSelectTable,
+  ASubjectSelect,
 
   // Dam
   AAssetSelect,

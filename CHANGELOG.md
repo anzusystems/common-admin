@@ -2,7 +2,7 @@
 
 ### Features
 * **chore:** updated dependencies
-* **components:** added `ASubjectSelectTable`
+* **components:** added `ASubjectSelect`
 
 
 ## [1.30.0](https://github.com/anzusystems/common-admin/compare/1.29.0...1.30.0) (2023-10-18)
