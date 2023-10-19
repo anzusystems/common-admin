@@ -69,6 +69,8 @@ import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
+import ASubjectSelectTable from '@/components/subjectSelect/ASubjectSelectTable.vue'
+import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { i18n } from '@/plugins/i18n'
 import {
   type Immutable,
@@ -82,13 +84,13 @@ import { numberToString } from '@/utils/number'
 import {
   cloneDeep,
   isArray,
-  isFunction,
   isBoolean,
   isDefined,
   isDocId,
   isEmpty,
   isEmptyArray,
   isEmptyObject,
+  isFunction,
   isInt,
   isNull,
   isNumber,
@@ -329,6 +331,7 @@ export {
   AJobDetailCommon,
   ASortable,
   ASortableNested,
+  ASubjectSelectTable,
 
   // Dam
   AAssetSelect,
@@ -354,6 +357,7 @@ export {
   useLanguageSettings,
   modifyLanguageSettings,
   useLoginStatus,
+  useSubjectSelect,
 
   // VALUE OBJECTS
   Grant,
