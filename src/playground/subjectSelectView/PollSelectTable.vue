@@ -135,11 +135,6 @@ const onConfirm = (items: Array<PollDemo>) => {
         <template #item.modifiedAt="{ item }: { item: PollDemo }">
           <ADatetime :date-time="item.modifiedAt" />
         </template>
-        <template #item.actions="{ item }: { item: PollDemo }">
-          <div class="d-flex justify-end">
-            <ATableCopyIdButton :id="item.id" />
-          </div>
-        </template>
         <template #bottom />
       </VDataTableServer>
     </template>
