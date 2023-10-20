@@ -18,8 +18,24 @@
   }
 }
 
+.v-theme--dark {
+  .a-datatable {
+    .v-data-table-column--last-fixed {
+      background-color: #1A1A1A;
+    }
+
+    &.v-data-table .v-table__wrapper > table tbody > tr:hover > td {
+      background-color: #505050;
+    }
+  }
+}
+
 .v-theme--light {
   .a-datatable {
+    .v-data-table-column--last-fixed {
+      background-color: #fff;
+    }
+
     &.v-data-table .v-table__wrapper > table tbody > tr:hover > td {
       background-color: #eee;
     }
