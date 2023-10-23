@@ -1,3 +1,8 @@
+## [1.31.2](https://github.com/anzusystems/common-admin/compare/1.31.1...1.31.2) (2023-10-23)
+
+### Bug Fixes
+* fixed datatable fixed actions background color
+
 ## [1.31.1](https://github.com/anzusystems/common-admin/compare/1.31.0...1.31.1) (2023-10-19)
 
 ### Bug Fixes
