@@ -231,7 +231,7 @@ __metadata:
     vite-plugin-dts: ^3.6.0
     vite-plugin-vuetify: ^1.0.2
     vitepress: 1.0.0-rc.24
-    vue: ^3.3.7
+    vue: 3.3.7
     vue-flatpickr-component: ^11.0.3
     vue-i18n: 9.5.0
     vue-router: 4.2.5
@@ -247,10 +247,10 @@ __metadata:
     dayjs: 1.11.10
     flatpickr: 4.6.13
     pinia: 2.1.7
-    vue: 3.3.4
+    vue: 3.3.7
     vue-i18n: 9.5.0
     vue-router: 4.2.5
-    vuetify: 3.3.22
+    vuetify: 3.3.23
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -7487,6 +7487,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"vue@npm:3.3.7":
+  version: 3.3.7
+  resolution: "vue@npm:3.3.7"
+  dependencies:
+    "@vue/compiler-dom": 3.3.7
+    "@vue/compiler-sfc": 3.3.7
+    "@vue/runtime-dom": 3.3.7
+    "@vue/server-renderer": 3.3.7
+    "@vue/shared": 3.3.7
+  peerDependencies:
+    typescript: "*"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 463599d2a521de3a9e6d09d57bfa7a4fe4a96fadf4212c375d34e2547a7c08159138703c096471da9cf4d6c0b15a140dc245e9fbc2904e762067e220d40bdc8f
+  languageName: node
+  linkType: hard
+
 "vue@npm:^3.3.6":
   version: 3.3.6
   resolution: "vue@npm:3.3.6"
@@ -7502,24 +7520,6 @@ __metadata:
     typescript:
       optional: true
   checksum: 411a8a4edc01a342ba8ee8ae831da593d4903e5362f3343e7a3a3f7272ec0804d7a8776f9abddc736d615508d4c4dde6cdd9f1b7a256b1bb63c468f1152abc2d
-  languageName: node
-  linkType: hard
-
-"vue@npm:^3.3.7":
-  version: 3.3.7
-  resolution: "vue@npm:3.3.7"
-  dependencies:
-    "@vue/compiler-dom": 3.3.7
-    "@vue/compiler-sfc": 3.3.7
-    "@vue/runtime-dom": 3.3.7
-    "@vue/server-renderer": 3.3.7
-    "@vue/shared": 3.3.7
-  peerDependencies:
-    typescript: "*"
-  peerDependenciesMeta:
-    typescript:
-      optional: true
-  checksum: 463599d2a521de3a9e6d09d57bfa7a4fe4a96fadf4212c375d34e2547a7c08159138703c096471da9cf4d6c0b15a140dc245e9fbc2904e762067e220d40bdc8f
   languageName: node
   linkType: hard
 

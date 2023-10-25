@@ -1,3 +1,11 @@
+## [1.32.0](https://github.com/anzusystems/common-admin/compare/1.31.2...1.32.0) (2023-10-25)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new vuetify required version is `vuetify@3.3.23`
+
 ## [1.31.2](https://github.com/anzusystems/common-admin/compare/1.31.1...1.31.2) (2023-10-23)
 
 ### Bug Fixes
