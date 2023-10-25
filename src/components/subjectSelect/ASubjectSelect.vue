@@ -128,6 +128,7 @@ defineExpose({
     :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
   />
   <VDialog
+    v-bind="$attrs"
     :model-value="dialog"
     fullscreen
     class="subject-select"
