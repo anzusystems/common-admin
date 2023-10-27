@@ -2,22 +2,14 @@
 
 ## Prerequisites
 
-- node.js version 16 or higher, lts suggested
-- cloned project
+- node.js version 18
+- enable corepack, so yarn v4 from package.json will be used
 
 ## Installation
-
-::: code-group
 
 ```sh [yarn]
 $ yarn install
 ```
-
-```sh [npm]
-$ npm install
-```
-
-:::
 
 ## Local development
 
@@ -27,34 +19,18 @@ You can use `src/views` as a playground to develop and test your features. Put p
 There is a pinia and vue router available for you to use too. This is just a playground and will be not included inside final build.
 
 You can run development playground using command:
-::: code-group
 
 ```sh [yarn]
 $ yarn playground:dev
 ```
 
-```sh [npm]
-$ npm playground:dev
-```
-
-:::
-
 #### Library build
 
 Only features exported in `src/lib.ts` are included in final library build.
 
-::: code-group
-
 ```sh [yarn]
 $ yarn lib:build
 ```
-
-```sh [npm]
-$ npm lib:build
-```
-
-:::
-
 
 ## Local admin development
 
@@ -91,34 +67,17 @@ Use `docs` directory to update docs.
 
 You can use it also to develop some simple components as you can directly document them.
 
-::: code-group
-
 ```sh [yarn]
 $ yarn docs:dev
 ```
-
-```sh [npm]
-$ npm docs:dev
-```
-
-:::
 
 ::: warning
 There are differences for `dev` watch mode and real `build` of docs. Always at the end of development/update of docs, if they are really able to build:
 :::
 
-::: code-group
-
 ```sh [yarn]
 $ yarn docs:build
 ```
-
-```sh [npm]
-$ npm docs:build
-```
-
-:::
-
 
 ## Lint
 
@@ -126,31 +85,15 @@ Please follow code-style rules including `prettier`, `eslint`, `vue-tsc`, `style
 
 You can run all checks using:
 
-::: code-group
-
 ```sh [yarn]
 $ yarn lint
 ```
 
-```sh [npm]
-$ npm lint
-```
-
-:::
-
 Prettier and eslint autofix works very well and can save you a lot of time fixing basic code-style issues. Stylelint autofix can do some trouble so use it with caution. Recommended commands order to autofix is:
-::: code-group
 
 ```sh [yarn]
 $ yarn lint:prettier:fix
 $ yarn lint:eslint:fix
 ```
-
-```sh [npm]
-$ npm lint lint:prettier:fix
-$ npm lint lint:eslint:fix
-```
-
-:::
 
 Check `package.json` for additional commands.

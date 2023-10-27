@@ -1,6 +1,6 @@
 {
   "name": "@anzusystems/common-admin",
-  "packageManager": "yarn@3.5.0",
+  "packageManager": "yarn@4.0.0",
   "files": [
     "dist"
   ],
@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.32.0",
+  "version": "1.33.0",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -94,7 +94,7 @@
     "flatpickr": "4.6.13",
     "pinia": "2.1.7",
     "vue": "3.3.7",
-    "vue-i18n": "9.6.0",
+    "vue-i18n": "9.6.1",
     "vue-router": "4.2.5",
     "vuetify": "3.3.23"
   },

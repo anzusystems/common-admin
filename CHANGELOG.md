@@ -1,3 +1,14 @@
+## [1.33.0](https://github.com/anzusystems/common-admin/compare/1.32.0...1.33.0) (2023-10-27)
+
+### Features
+* **chore:** updated dependencies
+* **project:** switched to `node@20` and `yarn@4`
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+  * `axios@1.6.0`
+  * `vue-i18n@9.6.1`
+
 ## [1.32.0](https://github.com/anzusystems/common-admin/compare/1.31.2...1.32.0) (2023-10-25)
 
 ### Features
