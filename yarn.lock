@@ -228,12 +228,12 @@ __metadata:
     typescript: "npm:4.9.5"
     uuid: "npm:^9.0.1"
     vite: "npm:^4.5.0"
-    vite-plugin-dts: "npm:^3.6.2"
+    vite-plugin-dts: "npm:^3.6.3"
     vite-plugin-vuetify: "npm:^1.0.2"
     vitepress: "npm:1.0.0-rc.24"
     vue: "npm:3.3.7"
     vue-flatpickr-component: "npm:^11.0.3"
-    vue-i18n: "npm:9.6.1"
+    vue-i18n: "npm:9.6.2"
     vue-router: "npm:4.2.5"
     vue-tsc: "npm:1.8.22"
     vuetify: "npm:3.3.23"
@@ -711,23 +711,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@intlify/core-base@npm:9.6.1":
-  version: 9.6.1
-  resolution: "@intlify/core-base@npm:9.6.1"
+"@intlify/core-base@npm:9.6.2":
+  version: 9.6.2
+  resolution: "@intlify/core-base@npm:9.6.2"
   dependencies:
-    "@intlify/message-compiler": "npm:9.6.1"
-    "@intlify/shared": "npm:9.6.1"
-  checksum: 5b02ef241518214432d4b0110db05336704979e5f5b03240f83c9e3a83d63b235e54aafabb75b10a3c342724ac88ec79ca44876754a07f982ea860354def5859
+    "@intlify/message-compiler": "npm:9.6.2"
+    "@intlify/shared": "npm:9.6.2"
+  checksum: a465f8da2c956764ffddf9bf52e2a73695cfc3822707d3b2e205ad9f99ba1c1a17a95a91a46576c7154d9e4b27c950d3029ffcfb3af554b2a35bc9fa661ff93a
   languageName: node
   linkType: hard
 
-"@intlify/message-compiler@npm:9.6.1":
-  version: 9.6.1
-  resolution: "@intlify/message-compiler@npm:9.6.1"
+"@intlify/message-compiler@npm:9.6.2":
+  version: 9.6.2
+  resolution: "@intlify/message-compiler@npm:9.6.2"
   dependencies:
-    "@intlify/shared": "npm:9.6.1"
+    "@intlify/shared": "npm:9.6.2"
     source-map-js: "npm:^1.0.2"
-  checksum: 8612fd9e492bfa593564180092438c290c294762dcfb2648f1159b884372a84a349b6f7a21082205d44786907c3ef2f2bdb0100493a6e0fc148d25873036c401
+  checksum: 4a318d7332ffee77824ccfc982cb9e0a4751fb004080a68dbd97e21cc57a08a8d9b7367e51bcec9e9390b52de50c2b46547a402c33600a6e0ac187788d2eceaf
   languageName: node
   linkType: hard
 
@@ -748,10 +748,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@intlify/shared@npm:9.6.1":
-  version: 9.6.1
-  resolution: "@intlify/shared@npm:9.6.1"
-  checksum: e331106ab430f379fb7718baee98753aac7ef6114bda5f83c7c246d8ee28352295c0883926130ef08e657f4d7df8fe47925a9fa66f642ce39efa7b422c290d79
+"@intlify/shared@npm:9.6.2":
+  version: 9.6.2
+  resolution: "@intlify/shared@npm:9.6.2"
+  checksum: 2afb8ec08b4b7fe6862d357e6425087137bebb0b730a1a87142fea66f10c1023930494802238055f093471ec509172eb0927543473a220989d974f99f611a538
   languageName: node
   linkType: hard
 
@@ -6809,9 +6809,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-plugin-dts@npm:^3.6.2":
-  version: 3.6.2
-  resolution: "vite-plugin-dts@npm:3.6.2"
+"vite-plugin-dts@npm:^3.6.3":
+  version: 3.6.3
+  resolution: "vite-plugin-dts@npm:3.6.3"
   dependencies:
     "@microsoft/api-extractor": "npm:^7.38.0"
     "@rollup/pluginutils": "npm:^5.0.5"
@@ -6825,7 +6825,7 @@ __metadata:
   peerDependenciesMeta:
     vite:
       optional: true
-  checksum: 51fa62ba3199b1a028832333ff6565d38387683c43fdbaf8bbed8f3a4b359ac2070b308e7c3a49d32b466a556e5474abee62637c20432b1228c05ef9e051aac9
+  checksum: eb03afaf31afa4e41de63696a36eed8173fb9772b2163216374101b84a1c2c202cc1a9e1c33394300e7e9e7f6c065c274d6966af87444330f4f92d16d6b19892
   languageName: node
   linkType: hard
 
@@ -7263,16 +7263,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-i18n@npm:9.6.1":
-  version: 9.6.1
-  resolution: "vue-i18n@npm:9.6.1"
+"vue-i18n@npm:9.6.2":
+  version: 9.6.2
+  resolution: "vue-i18n@npm:9.6.2"
   dependencies:
-    "@intlify/core-base": "npm:9.6.1"
-    "@intlify/shared": "npm:9.6.1"
+    "@intlify/core-base": "npm:9.6.2"
+    "@intlify/shared": "npm:9.6.2"
     "@vue/devtools-api": "npm:^6.5.0"
   peerDependencies:
     vue: ^3.0.0
-  checksum: 3c144a04077a15a5993856b12d42f1f0e0f610acbbb271e4d453df409fb3cf47fd9274f696ec5c96b03a24328634b30e3e672f707ef6e6015dff47bebe29c0b2
+  checksum: 44b8b807d986c16b222ee3d7438aaf9e07b0ced48c90029f02b46c97faf6e46b77439c746a9d31b6ab5b3def13aeb8155f7891ecb8f9145dc07dcfb9450768dd
   languageName: node
   linkType: hard
 
