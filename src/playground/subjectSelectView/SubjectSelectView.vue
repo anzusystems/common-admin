@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import PollSelectTable from '@/playground/subjectSelectView/PollSelectTable.vue'
+import { ref } from 'vue'
+
+const maxCount = ref(1)
 const onConfirm = (data: any) => {
   console.log(data)
 }
@@ -16,9 +19,13 @@ const onConfirm = (data: any) => {
       </VRow>
       <VRow>
         <VCol cols="10">
+          <VTextField
+            v-model.number="maxCount"
+            type="number"
+          />
           <PollSelectTable
             :min-count="1"
-            :max-count="3"
+            :max-count="maxCount"
             @on-confirm="onConfirm"
           />
         </VCol>

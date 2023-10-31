@@ -9,11 +9,7 @@ interface DataTableSelectStrategy {
     allItems: VDatatableSelectableItem[]
     currentPage: VDatatableSelectableItem[]
   }) => VDatatableSelectableItem[]
-  select: (data: {
-    items: VDatatableSelectableItem[]
-    value: boolean
-    selected: Set<unknown>
-  }) => Set<unknown>
+  select: (data: { items: VDatatableSelectableItem[]; value: boolean; selected: Set<unknown> }) => Set<unknown>
   selectAll: (data: {
     value: boolean
     allItems: VDatatableSelectableItem[]
@@ -27,7 +23,10 @@ export const generateDatatableMinMaxSelectStrategy = (min: number, max: number):
     showSelectAll: false,
     allSelected: () => [],
     select: ({ items, value, selected }) => {
-      if (min === max && min ===1){
+      console.log(items)
+      console.log(value)
+      console.log(selected)
+      if (min === max && min === 1) {
         return new Set(value ? [items[0]?.value] : [])
       }
       for (const item of items) {

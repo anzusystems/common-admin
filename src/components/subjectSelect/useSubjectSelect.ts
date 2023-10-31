@@ -88,9 +88,9 @@ export function useSubjectSelect<TItem>(
     if (!parent || !parent.classList.contains('v-data-table__tr')) return
     const firstTd = parent.firstElementChild
     if (!firstTd || !firstTd.classList.contains('v-data-table__td')) return
-    const button = firstTd.querySelector('button')
-    if (!button) return
-    button.click()
+    const input = firstTd.querySelector('input')
+    if (!input) return
+    input.click()
   }
 
   return {

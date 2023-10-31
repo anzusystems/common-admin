@@ -7,7 +7,6 @@ import ADatetime from '@/components/ADatetime.vue'
 import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
 import PollSelectFilter from '@/playground/subjectSelectView/PollSelectFilter.vue'
 import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
-import ACheckboxSimple from '@/components/ACheckboxSimple.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { fetchPollListDemo, type PollDemo } from '@/playground/subjectSelectView/pollDemoApi'
 
@@ -118,11 +117,10 @@ const onConfirm = (items: Array<PollDemo>) => {
         @click:row.stop="onRowClick"
       >
         <template #item.data-table-select="{ internalItem, toggleSelect, isSelected }">
-          <ACheckboxSimple
+          <VCheckboxBtn
             :disabled="!internalItem.selectable"
-            :value="isSelected([internalItem])"
-            size="small"
-            @on-click="customToggleSelect(toggleSelect, isSelected, internalItem)"
+            :model-value="isSelected([internalItem])"
+            @click.prevent="customToggleSelect(toggleSelect, isSelected, internalItem)"
           />
         </template>
         <template #item.dates.startOfVoting="{ item }: { item: PollDemo }">
