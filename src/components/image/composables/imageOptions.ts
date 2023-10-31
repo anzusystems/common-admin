@@ -3,7 +3,7 @@ import type { CommonAdminImageOptions } from '@/AnzuSystemsCommonAdmin'
 import { ImageOptions } from '@/components/injectionKeys'
 import { isUndefined } from '@/utils/common'
 
-export function useImageOptions(configName: string) {
+export function useImageOptions(configName: string = 'default') {
   const imageOptions = inject<CommonAdminImageOptions | undefined>(ImageOptions, undefined)
 
   if (isUndefined(imageOptions) || isUndefined(imageOptions.configs) || isUndefined(imageOptions.configs[configName])) {
