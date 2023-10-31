@@ -2,7 +2,6 @@
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
-import { toRef } from 'vue'
 import ADatetime from '@/components/ADatetime.vue'
 import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
 import PollSelectFilter from '@/playground/subjectSelectView/PollSelectFilter.vue'
@@ -10,7 +9,7 @@ import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelec
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { fetchPollListDemo, type PollDemo } from '@/playground/subjectSelectView/pollDemoApi'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     minCount?: number
     maxCount?: number
@@ -37,7 +36,6 @@ const {
   resetFilter,
   filterTouched,
   onFetchNextPage,
-  customToggleSelect,
   onOpen,
   sortByChange,
   getList,
@@ -58,8 +56,7 @@ const {
   'cms',
   'poll',
   fetchPollListDemo,
-  filter,
-  toRef(props, 'maxCount')
+  filter
 )
 
 const onConfirm = (items: Array<PollDemo>) => {
@@ -120,7 +117,8 @@ const onConfirm = (items: Array<PollDemo>) => {
           <VCheckboxBtn
             :disabled="!internalItem.selectable"
             :model-value="isSelected([internalItem])"
-            @click.prevent="customToggleSelect(toggleSelect, isSelected, internalItem)"
+            @click.prevent="toggleSelect(internalItem)"
+            @change="toggleSelect(internalItem)"
           />
         </template>
         <template #item.dates.startOfVoting="{ item }: { item: PollDemo }">

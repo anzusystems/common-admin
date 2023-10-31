@@ -23,9 +23,6 @@ export const generateDatatableMinMaxSelectStrategy = (min: number, max: number):
     showSelectAll: false,
     allSelected: () => [],
     select: ({ items, value, selected }) => {
-      console.log(items)
-      console.log(value)
-      console.log(selected)
       if (min === max && min === 1) {
         return new Set(value ? [items[0]?.value] : [])
       }

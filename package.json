@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.33.0",
+  "version": "1.34.0",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -40,7 +40,7 @@
     "@kyvg/vue3-notification": "^3.0.2",
     "@mdi/font": "^7.3.67",
     "@rushstack/eslint-patch": "^1.5.1",
-    "@types/node": "^20.8.9",
+    "@types/node": "^20.8.10",
     "@types/sortablejs": "^1.15.4",
     "@types/webfontloader": "^1.6.36",
     "@typescript-eslint/parser": "^6.9.1",

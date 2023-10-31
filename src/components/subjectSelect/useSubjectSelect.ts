@@ -1,5 +1,4 @@
 import { createDatatableColumnsConfig, type DatatableOrderingOption } from '@/composables/system/datatableColumns'
-import type { VDatatableSelectableItem } from '@/components/subjectSelect/selectStrategies'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 import type { Pagination } from '@/types/Pagination'
@@ -13,8 +12,7 @@ export function useSubjectSelect<TItem>(
   system: string,
   subject: string,
   fetch: (pag: Pagination, fb: FilterBag) => Promise<Array<TItem>>,
-  filter: FilterBag,
-  maxCount: Ref<number>
+  filter: FilterBag
 ) {
   const filterTouched: Ref<boolean> = ref(false)
   const items: Ref<Array<TItem>> = ref([])
@@ -39,18 +37,6 @@ export function useSubjectSelect<TItem>(
   const sortByChange = (option: DatatableOrderingOption) => {
     updateSortBy(option.sortBy)
     getList()
-  }
-
-  const customToggleSelect = (
-    toggle: (item: VDatatableSelectableItem) => void,
-    isSelected: (item: VDatatableSelectableItem) => boolean,
-    internalItem: VDatatableSelectableItem
-  ) => {
-    if (selected.value.length < maxCount.value || isSelected(internalItem)) {
-      toggle(internalItem)
-      return true
-    }
-    return false
   }
 
   const onFetchNextPage = async () => {
@@ -104,7 +90,6 @@ export function useSubjectSelect<TItem>(
     loading,
     onRowClick,
     onFetchNextPage,
-    customToggleSelect,
     onOpen,
     sortByChange,
     getList,
