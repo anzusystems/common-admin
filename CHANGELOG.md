@@ -1,12 +1,12 @@
-## [1.34.0](https://github.com/anzusystems/common-admin/compare/1.33.0...1.34.0) (unreleased)
+## [1.34.0](https://github.com/anzusystems/common-admin/compare/1.33.0...1.34.0) (2023-10-31)
 
 ### Features
 * **chore:** updated dependencies
 
 ### BREAKING CHANGES
 * **dependencies:** new vue-i18n required version `vue-i18n@9.6.2`
-* **removed:** `ACheckboxSimple`, use `VCheckboxBtn`
 * **changed:** `useSubjectSelect` function arguments
+* **removed:** `ACheckboxSimple`, use `VCheckboxBtn`
 
 ## [1.33.0](https://github.com/anzusystems/common-admin/compare/1.32.0...1.33.0) (2023-10-27)
 
