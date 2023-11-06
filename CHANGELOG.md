@@ -1,3 +1,11 @@
+## [1.35.0](https://github.com/anzusystems/common-admin/compare/1.35.0...1.36.0) (2023-11-02)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new vue-i18n required version `vue-i18n@9.6.5`
+
 ## [1.35.0](https://github.com/anzusystems/common-admin/compare/1.34.0...1.35.0) (2023-11-02)
 
 ### Features
