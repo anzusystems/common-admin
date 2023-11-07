@@ -9,6 +9,11 @@ import { isNull } from '@/utils/common'
 import type { SortableItemNewPositions } from '@/components/sortable/sortableUtils'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 
+interface ItemWithoutIdDemo extends Record<string, any> {
+  title: string
+  position: number
+}
+
 interface BasicItemDemo extends Record<string, any> {
   id: number
   text: string
@@ -21,6 +26,13 @@ interface NestedDemoData extends Record<string, any> {
   id: IntegerId
   parent: IntegerIdNullable
 }
+
+const itemsWithoutId = ref<Array<ItemWithoutIdDemo>>([
+  { title: 'One', position: 1 },
+  { title: 'Two', position: 2 },
+  { title: 'Tree', position: 3 },
+  { title: 'Four', position: 4 },
+])
 
 const itemsBasic = ref<Array<BasicItemDemo>>([
   { id: 1, text: 'One', position: 1 },
@@ -309,6 +321,16 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
           {{ item.raw.id }} {{ item.raw.text }}
         </template>
       </ASortable>
+
+      <h2 class="text-h5 mt-5 mb-2">
+        ASortable items without id
+      </h2>
+      <ASortable v-model="itemsWithoutId">
+        <template #item="{ item }: { item: SortableItem<ItemWithoutIdDemo> }">
+          {{ item.raw.position }} {{ item.raw.title }}
+        </template>
+      </ASortable>
+      <pre>{{ itemsWithoutId }}</pre>
 
       <h2 class="text-h5 mt-5 mb-2">
         ASortable with changing of position field and dirty and all buttons

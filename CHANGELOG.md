@@ -1,4 +1,16 @@
-## [1.35.0](https://github.com/anzusystems/common-admin/compare/1.35.0...1.36.0) (2023-11-02)
+## [1.37.0](https://github.com/anzusystems/common-admin/compare/1.36.0...1.37.0) (2023-11-07)
+
+### Bug Fixes
+* **ASortable:** force rerender after move
+
+### Features
+* **chore:** updated dependencies
+* **SortableItemDataAware** interface: id is now optional
+
+### BREAKING CHANGES
+* **dependencies:** new vue required version `vue@3.3.8`
+
+## [1.36.0](https://github.com/anzusystems/common-admin/compare/1.35.0...1.36.0) (2023-11-06)
 
 ### Features
 * **chore:** updated dependencies

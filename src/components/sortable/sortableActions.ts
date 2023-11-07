@@ -135,6 +135,7 @@ export function useSortableActions(
       if (!isUndefined(props.updatePosition)) {
         returnData = updatePositions(clonedData, from, to)
       }
+      forceRerenderWidgetHtml()
       emit('update:modelValue', clonedData)
       return returnData
     }
