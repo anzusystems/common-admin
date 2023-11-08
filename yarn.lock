@@ -195,9 +195,9 @@ __metadata:
     "@kyvg/vue3-notification": "npm:^3.0.2"
     "@mdi/font": "npm:^7.3.67"
     "@rushstack/eslint-patch": "npm:^1.5.1"
-    "@types/node": "npm:^20.8.10"
-    "@types/sortablejs": "npm:^1.15.4"
-    "@types/webfontloader": "npm:^1.6.36"
+    "@types/node": "npm:^20.9.0"
+    "@types/sortablejs": "npm:^1.15.5"
+    "@types/webfontloader": "npm:^1.6.37"
     "@typescript-eslint/parser": "npm:^6.10.0"
     "@vitejs/plugin-vue": "npm:^4.4.0"
     "@vue/eslint-config-prettier": "npm:^8.0.0"
@@ -1076,12 +1076,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.8.10":
-  version: 20.8.10
-  resolution: "@types/node@npm:20.8.10"
+"@types/node@npm:^20.9.0":
+  version: 20.9.0
+  resolution: "@types/node@npm:20.9.0"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 8930039077c8ad74de74c724909412bea8110c3f8892bcef8dda3e9629073bed65632ee755f94b252bcdae8ca71cf83e89a4a440a105e2b1b7c9797b43483049
+  checksum: a934f7645ed117a27857147403b0c657ffbca578c8f280e4c21d27dfb43e58dc4f24c4319d4335b8a4fa08e28fb2dc905a5bd5e4bc8878047164c56c1b162139
   languageName: node
   linkType: hard
 
@@ -1099,10 +1099,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/sortablejs@npm:^1.15.4":
-  version: 1.15.4
-  resolution: "@types/sortablejs@npm:1.15.4"
-  checksum: 85ffefe50e4e4ce236fb023141d7a23a42d7f02ca77e9a2e3be95a9d99c068be280f7ca1af7138b93b3b0f1e63d44d597b5e3fd094eb311a1d8917af96db6e9c
+"@types/sortablejs@npm:^1.15.5":
+  version: 1.15.5
+  resolution: "@types/sortablejs@npm:1.15.5"
+  checksum: 3586e4508bff72798d2f2302fc3f4fb6f5d66bb3cd5a4dc787d1c1009028afefe7277c8de5f039e805f3ce8f228350a44a9dda4ad695cfa6ea843ee6cdc5f740
   languageName: node
   linkType: hard
 
@@ -1113,10 +1113,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/webfontloader@npm:^1.6.36":
-  version: 1.6.36
-  resolution: "@types/webfontloader@npm:1.6.36"
-  checksum: 7f429fc253446f0f11f0aea5d88dfc67d272668277d8a1be7691277de76717b9435d9a65676267c9e5562634a7efbb366bc24fc68f5b507c6f1be9fd1a93bb2f
+"@types/webfontloader@npm:^1.6.37":
+  version: 1.6.37
+  resolution: "@types/webfontloader@npm:1.6.37"
+  checksum: 8216d2c385b84b409ece92500eaf7fdc460c7a08205ea3f2e5a75e96687001c5fe75ca6c68645e2661e3e20309b0850c22ae3f9a695482fd0c32c79f5f7342a9
   languageName: node
   linkType: hard
 
