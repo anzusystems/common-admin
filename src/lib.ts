@@ -282,7 +282,6 @@ export {
   AChipNoLink,
   AAlerts,
   ABooleanValue,
-import type { UploadQueueItem } from './types/coreDam/UploadQueue'
   APermissionGrantEditor,
   APermissionValueChip,
   ASystemEntityScope,
