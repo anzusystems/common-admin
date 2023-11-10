@@ -8,7 +8,7 @@ import type {
 } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason,  Link } from '@/types/coreDam/AssetFile'
 
-export enum QueueItemType {
+export enum UploadQueueItemType {
   File = 'file',
   Asset = 'asset',
   ExternalProviderAsset = 'externalProviderAsset',
@@ -35,7 +35,7 @@ export interface UploadQueueItem {
   status: UploadQueueItemStatus
   assetStatus: DamAssetStatus
   isDuplicate: boolean
-  type: QueueItemType
+  type: UploadQueueItemType
   assetType: DamAssetType
   displayTitle: string
   assetId: DocIdNullable

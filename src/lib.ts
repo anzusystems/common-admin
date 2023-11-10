@@ -268,7 +268,7 @@ import {
   DamAssetStatus,
   DamAssetType,
 } from '@/types/coreDam/Asset'
-import { QueueItemType, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
+import { UploadQueueItemType, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
@@ -448,7 +448,7 @@ export {
   AssetMetadataSuggestions,
   UploadQueueItem,
   UploadQueueItemStatus,
-  QueueItemType,
+  UploadQueueItemType,
 
   // FACTORIES
   useAnzuUserFactory,
