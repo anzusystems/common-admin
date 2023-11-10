@@ -271,7 +271,18 @@ import {
 import {
   AssetFileFailReason,
   AssetFileProcessStatus,
-  AssetFileLinkType
+  AssetFileLinkType,
+  type AssetFile,
+  type AssetFileDocument,
+  type AssetFileVideo,
+  type AssetFileAudio,
+  type AssetFileImage,
+  type AssetFileNullable,
+  type AssetFileDownloadLink,
+  assetFileIsImageFile,
+  assetFileIsVideoFile,
+  assetFileIsAudioFile,
+  assetFileIsDocumentFile,
 } from '@/types/coreDam/AssetFile'
 import { UploadQueueItemType, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
@@ -454,6 +465,17 @@ export {
   AssetFileFailReason,
   AssetFileProcessStatus,
   AssetFileLinkType,
+  AssetFile,
+  AssetFileDocument,
+  AssetFileVideo,
+  AssetFileAudio,
+  AssetFileImage,
+  AssetFileNullable,
+  AssetFileDownloadLink,
+  assetFileIsImageFile,
+  assetFileIsVideoFile,
+  assetFileIsAudioFile,
+  assetFileIsDocumentFile,
   UploadQueueItem,
   UploadQueueItemStatus,
   UploadQueueItemType,

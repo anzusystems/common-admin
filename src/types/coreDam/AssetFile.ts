@@ -49,7 +49,7 @@ export type AssetFileLinks =
   | Record<'image_list' | 'image_table' | 'image_detail' | 'audio', AssetFileLink>
   | Record<string, never>
 
-export interface ImageFile extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileImage extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -58,7 +58,7 @@ export interface ImageFile extends AnzuUserAndTimeTrackingAware {
   _resourceName: 'imageFile'
 }
 
-export interface AudioFile extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -67,7 +67,7 @@ export interface AudioFile extends AnzuUserAndTimeTrackingAware {
   _resourceName: 'audioFile'
 }
 
-export interface VideoFile extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileVideo extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -76,7 +76,7 @@ export interface VideoFile extends AnzuUserAndTimeTrackingAware {
   _resourceName: 'videoFile'
 }
 
-export interface DocumentFile extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileDocument extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -85,33 +85,33 @@ export interface DocumentFile extends AnzuUserAndTimeTrackingAware {
   _resourceName: 'documentFile'
 }
 
-export interface FileDownloadLink extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileDownloadLink extends AnzuUserAndTimeTrackingAware {
   id: DocId
   link: string
   _system: string
   _resourceName: 'imageFile'
 }
 
-export type AssetFile = ImageFile | AudioFile | VideoFile | DocumentFile
+export type AssetFile = AssetFileImage | AssetFileAudio | AssetFileVideo | AssetFileDocument
 
-export type AssetFileNullable = ImageFile | AudioFile | VideoFile | DocumentFile | null
+export type AssetFileNullable = AssetFileImage | AssetFileAudio | AssetFileVideo | AssetFileDocument | null
 
-export const isImageFile = (value: any): value is ImageFile => {
+export const assetFileIsImageFile = (value: any): value is AssetFileImage => {
   if (!value || !value._resourceName) return false
   return value._resourceName === 'imageFile'
 }
 
-export const isVideoFile = (value: any): value is VideoFile => {
+export const assetFileIsVideoFile = (value: any): value is AssetFileVideo => {
   if (!value || !value._resourceName) return false
   return value._resourceName === 'videoFile'
 }
 
-export const isAudioFile = (value: any): value is AudioFile => {
+export const assetFileIsAudioFile = (value: any): value is AssetFileAudio => {
   if (!value || !value._resourceName) return false
   return value._resourceName === 'audioFile'
 }
 
-export const isDocumentFile = (value: any): value is DocumentFile => {
+export const assetFileIsDocumentFile = (value: any): value is AssetFileDocument => {
   if (!value || !value._resourceName) return false
   return value._resourceName === 'documentFile'
 }
