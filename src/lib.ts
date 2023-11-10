@@ -258,7 +258,17 @@ import type { UrlParams } from '@/services/api/apiHelper'
 import { generateUUIDv1, generateUUIDv4 } from '@/utils/generator'
 import { useLoginStatus } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
-import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import {
+  type AssetCustomData,
+  type AssetDetailItemDto,
+  type AssetFileProperties,
+  type AssetMetadataDto,
+  type AssetMetadataSuggestions,
+  type AssetSearchListItemDto,
+  DamAssetStatus,
+  DamAssetType,
+} from '@/types/coreDam/Asset'
+import { QueueItemType, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
@@ -272,6 +282,7 @@ export {
   AChipNoLink,
   AAlerts,
   ABooleanValue,
+import type { UploadQueueItem } from './types/coreDam/UploadQueue'
   APermissionGrantEditor,
   APermissionValueChip,
   ASystemEntityScope,
@@ -430,6 +441,15 @@ export {
   SortableNested,
   SortableItemDataAware,
   SortableItemWithParentDataAware,
+  AssetFileProperties,
+  AssetSearchListItemDto,
+  AssetDetailItemDto,
+  AssetMetadataDto,
+  AssetCustomData,
+  AssetMetadataSuggestions,
+  UploadQueueItem,
+  UploadQueueItemStatus,
+  QueueItemType,
 
   // FACTORIES
   useAnzuUserFactory,

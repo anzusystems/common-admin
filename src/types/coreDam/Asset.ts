@@ -1,4 +1,4 @@
-import type { DocId, IntegerId } from '@/types/common'
+import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
 import type { AssetFile } from '@/types/coreDam/AssetFile'
@@ -54,14 +54,56 @@ export interface AssetFileProperties {
   height: number
 }
 
+interface Flags {
+  described: boolean
+  visible: boolean
+}
+
+export interface AssetMetadataSuggestions extends Record<string, Array<string>> {}
+
+export type AssetCustomData = Record<string, any>
+
+interface Metadata {
+  authorSuggestions: AssetMetadataSuggestions
+  keywordSuggestions: AssetMetadataSuggestions
+  customData: any
+}
+
 export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   id: DocId
   texts: Texts
   attributes: Attributes
+  flags: Flags
   licence: IntegerId
   mainFile: null | AssetFile
   keywords: DocId[]
   authors: DocId[]
   podcasts: DocId[]
+  metadata: Metadata
   assetFileProperties: AssetFileProperties
 }
+
+export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
+  id: DocId
+  texts: Texts
+  attributes: Attributes
+  flags: Flags
+  licence: IntegerId
+  mainFile: null | AssetFile
+  keywords: DocId[]
+  authors: DocId[]
+  podcasts: DocId[]
+  metadata: Metadata
+  distributionCategory: DocIdNullable
+  assetFileProperties: AssetFileProperties
+}
+
+export interface AssetMetadataDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware, Metadata {
+  id: DocId
+  customData: AssetCustomData
+}
+
+export type AssetExternalProviderId = string | number
+export type AssetExternalProviderIdNullable = AssetExternalProviderId | null
+
+export type AssetExternalProviderMetadata = Record<string, string | number | number[] | string[] | boolean>
