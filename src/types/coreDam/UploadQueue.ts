@@ -6,7 +6,7 @@ import type {
   DamAssetStatus,
   DamAssetType
 } from '@/types/coreDam/Asset'
-import type { AssetFileFailReason,  Link } from '@/types/coreDam/AssetFile'
+import type { AssetFileFailReason,  AssetFileLink } from '@/types/coreDam/AssetFile'
 
 export enum UploadQueueItemType {
   File = 'file',
@@ -49,7 +49,7 @@ export interface UploadQueueItem {
   currentChunkIndex: number
   chunkTotalCount: number
   licenceId: IntegerId
-  imagePreview?: Link
+  imagePreview?: AssetFileLink
   canEditMetadata: boolean
   keywords: DocId[]
   authors: DocId[]

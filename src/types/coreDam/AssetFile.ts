@@ -29,30 +29,32 @@ interface FileAttributes {
   failReason: AssetFileFailReason
 }
 
-export enum LinkType {
+export enum AssetFileLinkType {
   Image = 'image',
   Audio = 'audio',
   Default = Image,
 }
 
-export interface Link {
+export interface AssetFileLink {
   width: number
   height: number
   requestedWidth: number
   requestedHeight: number
   url: string
   title: string
-  type: LinkType
+  type: AssetFileLinkType
 }
 
-export type Links = Record<'image_list' | 'image_table' | 'image_detail' | 'audio', Link> | Record<string, never>
+export type AssetFileLinks =
+  | Record<'image_list' | 'image_table' | 'image_detail' | 'audio', AssetFileLink>
+  | Record<string, never>
 
 export interface ImageFile extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
   originAssetFile: DocIdNullable
-  links?: Links
+  links?: AssetFileLinks
   _resourceName: 'imageFile'
 }
 
@@ -61,7 +63,7 @@ export interface AudioFile extends AnzuUserAndTimeTrackingAware {
   asset: DocId
   fileAttributes: FileAttributes
   originAssetFile: DocIdNullable
-  links?: Links
+  links?: AssetFileLinks
   _resourceName: 'audioFile'
 }
 
@@ -70,7 +72,7 @@ export interface VideoFile extends AnzuUserAndTimeTrackingAware {
   asset: DocId
   fileAttributes: FileAttributes
   originAssetFile: DocIdNullable
-  links?: Links
+  links?: AssetFileLinks
   _resourceName: 'videoFile'
 }
 
@@ -79,7 +81,7 @@ export interface DocumentFile extends AnzuUserAndTimeTrackingAware {
   asset: DocId
   fileAttributes: FileAttributes
   originAssetFile: DocIdNullable
-  links?: Links
+  links?: AssetFileLinks
   _resourceName: 'documentFile'
 }
 

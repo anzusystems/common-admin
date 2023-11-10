@@ -268,6 +268,11 @@ import {
   DamAssetStatus,
   DamAssetType,
 } from '@/types/coreDam/Asset'
+import {
+  AssetFileFailReason,
+  AssetFileProcessStatus,
+  AssetFileLinkType
+} from '@/types/coreDam/AssetFile'
 import { UploadQueueItemType, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
@@ -446,6 +451,9 @@ export {
   AssetMetadataDto,
   AssetCustomData,
   AssetMetadataSuggestions,
+  AssetFileFailReason,
+  AssetFileProcessStatus,
+  AssetFileLinkType,
   UploadQueueItem,
   UploadQueueItemStatus,
   UploadQueueItemType,
