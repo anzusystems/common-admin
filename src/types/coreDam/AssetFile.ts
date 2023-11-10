@@ -53,8 +53,10 @@ export interface AssetFileImage extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
+  imageAttributes: ImageAttributes
   originAssetFile: DocIdNullable
   links?: AssetFileLinks
+  metadata: Metadata
   _resourceName: 'imageFile'
 }
 
@@ -62,6 +64,7 @@ export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
+  audioAttributes: AudioAttributes
   originAssetFile: DocIdNullable
   links?: AssetFileLinks
   _resourceName: 'audioFile'
@@ -71,8 +74,10 @@ export interface AssetFileVideo extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
+  videoAttributes: VideoAttributes
   originAssetFile: DocIdNullable
   links?: AssetFileLinks
+  imagePreview: AssetFileImagePreviewNullable
   _resourceName: 'videoFile'
 }
 
@@ -80,6 +85,7 @@ export interface AssetFileDocument extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
+  documentAttributes: DocumentAttributes
   originAssetFile: DocIdNullable
   links?: AssetFileLinks
   _resourceName: 'documentFile'
@@ -115,3 +121,50 @@ export const assetFileIsDocumentFile = (value: any): value is AssetFileDocument 
   if (!value || !value._resourceName) return false
   return value._resourceName === 'documentFile'
 }
+
+interface ImageAttributes {
+  ratioWidth: number
+  ratioHeight: number
+  width: number
+  height: number
+  rotation: number
+  mostDominantColor: string
+  animated: boolean
+}
+
+interface Metadata {
+  exifData: [] // todo check
+  id: string
+  createdAt: string
+  modifiedAt: string
+  createdBy: number
+  modifiedBy: number
+}
+
+interface AudioAttributes {
+  duration: number
+  codecName: string
+  bitrate: number
+}
+
+interface DocumentAttributes {
+  pageCount: number
+}
+
+interface VideoAttributes {
+  bitrate: number
+  codecName: string
+  duration: number
+  height: number
+  ratioHeight: number
+  ratioWidth: number
+  rotation: number
+  width: number
+}
+
+export interface AssetFileImagePreview {
+  imageFile: DocId
+  position: number
+}
+
+export type AssetFileImagePreviewNullable = AssetFileImagePreview | null
