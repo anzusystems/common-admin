@@ -2,7 +2,7 @@ import { ref } from 'vue'
 
 const showAll = ref(false)
 
-export function useCustomForm() {
+export function useCustomDataForm() {
   const toggleForm = () => {
     showAll.value = !showAll.value
   }

@@ -1,18 +1,18 @@
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
 import type { DocId } from '@/types/common'
-import type { CustomFormElementTypeType } from '@/components/customForm/CustomFormElementTypes'
+import type { CustomDataFormElementTypeType } from '@/components/customDataForm/CustomDataFormElementTypes'
 
-export interface CustomFormElement extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
+export interface CustomDataFormElement extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   id: DocId
   property: string
   name: string
   position: number
-  attributes: CustomFormElementAttributes
+  attributes: CustomDataFormElementAttributes
 }
 
-export interface CustomFormElementAttributes {
-  type: CustomFormElementTypeType
+export interface CustomDataFormElementAttributes {
+  type: CustomDataFormElementTypeType
   minValue: number | null
   maxValue: number | null
   minCount: number | null
@@ -22,6 +22,6 @@ export interface CustomFormElementAttributes {
   readonly: boolean
 }
 
-export interface CustomFormDataAware {
+export interface CustomDataAware {
   customData: { [key: string]: any }
 }

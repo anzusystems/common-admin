@@ -2,16 +2,16 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
-import type { CustomFormElement } from '@/components/customForm/CustomForm'
+import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 import type { ValidationScope } from '@/types/Validation'
-import { useCustomForm } from '@/components/customForm/useCustomForm'
-import ACustomFormElement from '@/components/customForm/ACustomFormElement.vue'
+import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
+import ACustomFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
 import ARow from '@/components/ARow.vue'
 
 const props = withDefaults(
   defineProps<{
     modelValue: { [key: string]: any }
-    elements: CustomFormElement[]
+    elements: CustomDataFormElement[]
     validationScope?: ValidationScope
     pinnedCount?: number
     readonly?: boolean
@@ -30,7 +30,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const { showAll, toggleForm } = useCustomForm()
+const { showAll, toggleForm } = useCustomDataForm()
 
 const updateModelValue = (data: { property: string; value: any }) => {
   const updated = {} as { [key: string]: any }

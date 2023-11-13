@@ -2,16 +2,16 @@
 import { computed, isProxy, ref, toRaw } from 'vue'
 import type { ErrorObject } from '@vuelidate/core'
 import { useVuelidate } from '@vuelidate/core'
-import type { CustomFormElement } from '@/components/customForm/CustomForm'
+import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 import type { ValidationScope } from '@/types/Validation'
-import { CustomFormElementType } from '@/components/customForm/CustomFormElementTypes'
+import { CustomDataFormElementType } from '@/components/customDataForm/CustomDataFormElementTypes'
 import { isEmptyObject } from '@/utils/common'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 
 const props = withDefaults(
   defineProps<{
     modelValue: any
-    config: CustomFormElement
+    config: CustomDataFormElement
     validationScope?: ValidationScope
   }>(),
   {
@@ -24,7 +24,7 @@ const emit = defineEmits<{
 }>()
 
 const fixValue = (value: any) => {
-  if (props.config.attributes.type === CustomFormElementType.Integer) {
+  if (props.config.attributes.type === CustomDataFormElementType.Integer) {
     return parseInt(value)
   }
   return value
@@ -36,7 +36,7 @@ const updateModelValue = (value: any) => {
 
 const modelValueComputed = computed(() => {
   const value = isProxy(props.modelValue) ? toRaw(props.modelValue) : props.modelValue
-  if (props.config.attributes.type === CustomFormElementType.StringArray && isEmptyObject(value)) return []
+  if (props.config.attributes.type === CustomDataFormElementType.StringArray && isEmptyObject(value)) return []
   return value
 })
 
@@ -49,7 +49,7 @@ const rules = computed(() => {
     },
   }
   switch (props.config.attributes.type) {
-    case CustomFormElementType.String:
+    case CustomDataFormElementType.String:
       dynamicRules.modelValueComputed.minLength = minLength(
         props.config.attributes.minValue ? props.config.attributes.minValue : 0
       )
@@ -57,7 +57,7 @@ const rules = computed(() => {
         props.config.attributes.maxValue ? props.config.attributes.maxValue : 256
       )
       break
-    case CustomFormElementType.Integer:
+    case CustomDataFormElementType.Integer:
       dynamicRules.modelValueComputed.minValue = minValue(
         props.config.attributes.minValue ? props.config.attributes.minValue : 0
       )
@@ -65,7 +65,7 @@ const rules = computed(() => {
         props.config.attributes.maxValue ? props.config.attributes.maxValue : 9999
       )
       break
-    case CustomFormElementType.StringArray:
+    case CustomDataFormElementType.StringArray:
       dynamicRules.modelValueComputed.minLength = minLength(
         props.config.attributes.minCount ? props.config.attributes.minCount : 0
       )
@@ -101,7 +101,7 @@ const onBlur = () => {
 
 <template>
   <VTextarea
-    v-if="config.attributes.type === CustomFormElementType.String"
+    v-if="config.attributes.type === CustomDataFormElementType.String"
     :model-value="modelValue"
     auto-grow
     :rows="1"
@@ -120,7 +120,7 @@ const onBlur = () => {
     </template>
   </VTextarea>
   <VTextField
-    v-else-if="config.attributes.type === CustomFormElementType.Integer"
+    v-else-if="config.attributes.type === CustomDataFormElementType.Integer"
     :model-value="modelValueComputed"
     type="number"
     :label="config.name"
@@ -137,7 +137,7 @@ const onBlur = () => {
     </template>
   </VTextField>
   <VCombobox
-    v-else-if="config.attributes.type === CustomFormElementType.StringArray"
+    v-else-if="config.attributes.type === CustomDataFormElementType.StringArray"
     :model-value="modelValueComputed"
     :label="config.name"
     multiple
@@ -155,12 +155,12 @@ const onBlur = () => {
     </template>
   </VCombobox>
   <VSwitch
-    v-if="config.attributes.type === CustomFormElementType.Boolean && config.attributes.required === true"
+    v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === true"
     :label="config.name"
     :model-value="modelValueComputed"
     @update:model-value="updateModelValue"
   />
-  <div v-if="config.attributes.type === CustomFormElementType.Boolean && config.attributes.required === false">
+  <div v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === false">
     optional boolean todo
   </div>
 </template>

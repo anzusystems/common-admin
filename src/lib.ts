@@ -70,15 +70,15 @@ import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
-import ACustomForm from '@/components/customForm/ACustomForm.vue'
+import ACustomForm from '@/components/customDataForm/ACustomDataForm.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
-import { useCustomForm } from '@/components/customForm/useCustomForm'
+import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
-  CustomFormElementType,
-  CustomFormElementTypeDefault,
-  type CustomFormElementTypeType,
-  useCustomFormElementType,
-} from '@/components/customForm/CustomFormElementTypes'
+  CustomDataFormElementType,
+  CustomDataFormElementTypeDefault,
+  type CustomDataFormElementTypeType,
+  useCustomDataFormElementType,
+} from '@/components/customDataForm/CustomDataFormElementTypes'
 import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
 import { i18n } from '@/plugins/i18n'
 import {
@@ -297,10 +297,10 @@ import {
 } from '@/types/coreDam/AssetFile'
 import { type UploadQueueItem, UploadQueueItemStatus, UploadQueueItemType } from '@/types/coreDam/UploadQueue'
 import type {
-  CustomFormDataAware,
-  CustomFormElement,
-  CustomFormElementAttributes,
-} from '@/components/customForm/CustomForm'
+  CustomDataAware,
+  CustomDataFormElement,
+  CustomDataFormElementAttributes,
+} from '@/components/customDataForm/CustomDataForm'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
@@ -403,8 +403,8 @@ export {
   useLoginStatus,
   useSubjectSelect,
   generateDatatableMinMaxSelectStrategy,
-  useCustomForm,
-  useCustomFormElementType,
+  useCustomDataForm,
+  useCustomDataFormElementType,
 
   // VALUE OBJECTS
   Grant,
@@ -501,12 +501,12 @@ export {
   UploadQueueItem,
   UploadQueueItemStatus,
   UploadQueueItemType,
-  CustomFormDataAware,
-  CustomFormElement,
-  CustomFormElementAttributes,
-  CustomFormElementType,
-  CustomFormElementTypeDefault,
-  CustomFormElementTypeType,
+  CustomDataAware,
+  CustomDataFormElement,
+  CustomDataFormElementAttributes,
+  CustomDataFormElementType,
+  CustomDataFormElementTypeDefault,
+  CustomDataFormElementTypeType,
 
   // FACTORIES
   useAnzuUserFactory,
