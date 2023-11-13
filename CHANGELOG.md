@@ -1,4 +1,14 @@
-## [1.38.0](https://github.com/anzusystems/common-admin/compare/1.37.0...1.38.0) (2023-11-10)
+## [1.39.0](https://github.com/anzusystems/common-admin/compare/1.38.0...1.39.0) (2023-11-13)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+  * `@vueuse/core@10.6.1`
+  * `@vueuse/integrations@10.6.1`
+
+## [1.38.0](https://github.com/anzusystems/common-admin/compare/1.37.0...1.38.0) (2023-11-13)
 
 ### Features
 * **chore:** updated dependencies
