@@ -71,6 +71,7 @@ import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
+import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
@@ -376,6 +377,7 @@ export {
   ASortableNested,
   ASubjectSelect,
   ACustomDataForm,
+  ACustomDataFormElement,
 
   // Dam
   AAssetSelect,
