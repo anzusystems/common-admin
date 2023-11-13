@@ -70,7 +70,15 @@ import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
+import ACustomForm from '@/components/customForm/ACustomForm.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
+import { useCustomForm } from '@/components/customForm/useCustomForm'
+import {
+  CustomFormElementType,
+  CustomFormElementTypeDefault,
+  type CustomFormElementTypeType,
+  useCustomFormElementType,
+} from '@/components/customForm/CustomFormElementTypes'
 import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
 import { i18n } from '@/plugins/i18n'
 import {
@@ -269,25 +277,30 @@ import {
   DamAssetType,
 } from '@/types/coreDam/Asset'
 import {
-  AssetFileFailReason,
-  AssetFileProcessStatus,
-  AssetFileLinkType,
   type AssetFile,
-  type AssetFileDocument,
-  type AssetFileVideo,
   type AssetFileAudio,
-  type AssetFileImage,
-  type AssetFileNullable,
+  type AssetFileDocument,
   type AssetFileDownloadLink,
-  type AssetFileLink,
-  type AssetFileLinks,
+  AssetFileFailReason,
+  type AssetFileImage,
   type AssetFileImagePreviewNullable,
-  assetFileIsImageFile,
-  assetFileIsVideoFile,
   assetFileIsAudioFile,
   assetFileIsDocumentFile,
+  assetFileIsImageFile,
+  assetFileIsVideoFile,
+  type AssetFileLink,
+  type AssetFileLinks,
+  AssetFileLinkType,
+  type AssetFileNullable,
+  AssetFileProcessStatus,
+  type AssetFileVideo,
 } from '@/types/coreDam/AssetFile'
-import { UploadQueueItemType, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
+import { type UploadQueueItem, UploadQueueItemStatus, UploadQueueItemType } from '@/types/coreDam/UploadQueue'
+import type {
+  CustomFormDataAware,
+  CustomFormElement,
+  CustomFormElementAttributes,
+} from '@/components/customForm/CustomForm'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
@@ -362,6 +375,7 @@ export {
   ASortable,
   ASortableNested,
   ASubjectSelect,
+  ACustomForm,
 
   // Dam
   AAssetSelect,
@@ -389,6 +403,8 @@ export {
   useLoginStatus,
   useSubjectSelect,
   generateDatatableMinMaxSelectStrategy,
+  useCustomForm,
+  useCustomFormElementType,
 
   // VALUE OBJECTS
   Grant,
@@ -485,6 +501,12 @@ export {
   UploadQueueItem,
   UploadQueueItemStatus,
   UploadQueueItemType,
+  CustomFormDataAware,
+  CustomFormElement,
+  CustomFormElementAttributes,
+  CustomFormElementType,
+  CustomFormElementTypeDefault,
+  CustomFormElementTypeType,
 
   // FACTORIES
   useAnzuUserFactory,
