@@ -70,7 +70,16 @@ import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
+import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
+import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
+import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
+import {
+  CustomDataFormElementType,
+  CustomDataFormElementTypeDefault,
+  type CustomDataFormElementTypeType,
+  useCustomDataFormElementType,
+} from '@/components/customDataForm/CustomDataFormElementTypes'
 import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
 import { i18n } from '@/plugins/i18n'
 import {
@@ -258,7 +267,41 @@ import type { UrlParams } from '@/services/api/apiHelper'
 import { generateUUIDv1, generateUUIDv4 } from '@/utils/generator'
 import { useLoginStatus } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
-import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import {
+  type AssetCustomData,
+  type AssetDetailItemDto,
+  type AssetFileProperties,
+  type AssetMetadataDto,
+  type AssetMetadataSuggestions,
+  type AssetSearchListItemDto,
+  DamAssetStatus,
+  DamAssetType,
+} from '@/types/coreDam/Asset'
+import {
+  type AssetFile,
+  type AssetFileAudio,
+  type AssetFileDocument,
+  type AssetFileDownloadLink,
+  AssetFileFailReason,
+  type AssetFileImage,
+  type AssetFileImagePreviewNullable,
+  assetFileIsAudioFile,
+  assetFileIsDocumentFile,
+  assetFileIsImageFile,
+  assetFileIsVideoFile,
+  type AssetFileLink,
+  type AssetFileLinks,
+  AssetFileLinkType,
+  type AssetFileNullable,
+  AssetFileProcessStatus,
+  type AssetFileVideo,
+} from '@/types/coreDam/AssetFile'
+import { type UploadQueueItem, UploadQueueItemStatus, UploadQueueItemType } from '@/types/coreDam/UploadQueue'
+import type {
+  CustomDataAware,
+  CustomDataFormElement,
+  CustomDataFormElementAttributes,
+} from '@/components/customDataForm/CustomDataForm'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
@@ -333,6 +376,8 @@ export {
   ASortable,
   ASortableNested,
   ASubjectSelect,
+  ACustomDataForm,
+  ACustomDataFormElement,
 
   // Dam
   AAssetSelect,
@@ -360,6 +405,8 @@ export {
   useLoginStatus,
   useSubjectSelect,
   generateDatatableMinMaxSelectStrategy,
+  useCustomDataForm,
+  useCustomDataFormElementType,
 
   // VALUE OBJECTS
   Grant,
@@ -430,6 +477,38 @@ export {
   SortableNested,
   SortableItemDataAware,
   SortableItemWithParentDataAware,
+  AssetFileProperties,
+  AssetSearchListItemDto,
+  AssetDetailItemDto,
+  AssetMetadataDto,
+  AssetCustomData,
+  AssetMetadataSuggestions,
+  AssetFileFailReason,
+  AssetFileProcessStatus,
+  AssetFileLinkType,
+  AssetFile,
+  AssetFileDocument,
+  AssetFileVideo,
+  AssetFileAudio,
+  AssetFileImage,
+  AssetFileNullable,
+  AssetFileLink,
+  AssetFileLinks,
+  AssetFileDownloadLink,
+  AssetFileImagePreviewNullable,
+  assetFileIsImageFile,
+  assetFileIsVideoFile,
+  assetFileIsAudioFile,
+  assetFileIsDocumentFile,
+  UploadQueueItem,
+  UploadQueueItemStatus,
+  UploadQueueItemType,
+  CustomDataAware,
+  CustomDataFormElement,
+  CustomDataFormElementAttributes,
+  CustomDataFormElementType,
+  CustomDataFormElementTypeDefault,
+  CustomDataFormElementTypeType,
 
   // FACTORIES
   useAnzuUserFactory,

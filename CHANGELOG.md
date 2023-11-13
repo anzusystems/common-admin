@@ -1,3 +1,17 @@
+## [1.38.0](https://github.com/anzusystems/common-admin/compare/1.37.0...1.38.0) (2023-11-10)
+
+### Features
+* **chore:** updated dependencies
+* **ACustomDataForm:** new component to manage `CustomDataAware` entities
+* added several type exports for DAM
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+  * `vuetify@3.4.0`
+  * `@vueuse/core@10.6.0`
+  * `@vueuse/integrations@10.6.0`
+  * `axios@1.6.1`
+
 ## [1.37.0](https://github.com/anzusystems/common-admin/compare/1.36.0...1.37.0) (2023-11-07)
 
 ### Bug Fixes

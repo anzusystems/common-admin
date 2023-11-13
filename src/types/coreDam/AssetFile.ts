@@ -29,87 +29,142 @@ interface FileAttributes {
   failReason: AssetFileFailReason
 }
 
-export enum LinkType {
+export enum AssetFileLinkType {
   Image = 'image',
   Audio = 'audio',
   Default = Image,
 }
 
-export interface Link {
+export interface AssetFileLink {
   width: number
   height: number
   requestedWidth: number
   requestedHeight: number
   url: string
   title: string
-  type: LinkType
+  type: AssetFileLinkType
 }
 
-export type Links = Record<'image_list' | 'image_table' | 'image_detail' | 'audio', Link> | Record<string, never>
+export type AssetFileLinks =
+  | Record<'image_list' | 'image_table' | 'image_detail' | 'audio', AssetFileLink>
+  | Record<string, never>
 
-export interface ImageFile extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileImage extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
+  imageAttributes: ImageAttributes
   originAssetFile: DocIdNullable
-  links?: Links
+  links?: AssetFileLinks
+  metadata: Metadata
   _resourceName: 'imageFile'
 }
 
-export interface AudioFile extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
+  audioAttributes: AudioAttributes
   originAssetFile: DocIdNullable
-  links?: Links
+  links?: AssetFileLinks
   _resourceName: 'audioFile'
 }
 
-export interface VideoFile extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileVideo extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
+  videoAttributes: VideoAttributes
   originAssetFile: DocIdNullable
-  links?: Links
+  links?: AssetFileLinks
+  imagePreview: AssetFileImagePreviewNullable
   _resourceName: 'videoFile'
 }
 
-export interface DocumentFile extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileDocument extends AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
+  documentAttributes: DocumentAttributes
   originAssetFile: DocIdNullable
-  links?: Links
+  links?: AssetFileLinks
   _resourceName: 'documentFile'
 }
 
-export interface FileDownloadLink extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileDownloadLink extends AnzuUserAndTimeTrackingAware {
   id: DocId
   link: string
   _system: string
   _resourceName: 'imageFile'
 }
 
-export type AssetFile = ImageFile | AudioFile | VideoFile | DocumentFile
+export type AssetFile = AssetFileImage | AssetFileAudio | AssetFileVideo | AssetFileDocument
 
-export type AssetFileNullable = ImageFile | AudioFile | VideoFile | DocumentFile | null
+export type AssetFileNullable = AssetFileImage | AssetFileAudio | AssetFileVideo | AssetFileDocument | null
 
-export const isImageFile = (value: any): value is ImageFile => {
+export const assetFileIsImageFile = (value: any): value is AssetFileImage => {
   if (!value || !value._resourceName) return false
   return value._resourceName === 'imageFile'
 }
 
-export const isVideoFile = (value: any): value is VideoFile => {
+export const assetFileIsVideoFile = (value: any): value is AssetFileVideo => {
   if (!value || !value._resourceName) return false
   return value._resourceName === 'videoFile'
 }
 
-export const isAudioFile = (value: any): value is AudioFile => {
+export const assetFileIsAudioFile = (value: any): value is AssetFileAudio => {
   if (!value || !value._resourceName) return false
   return value._resourceName === 'audioFile'
 }
 
-export const isDocumentFile = (value: any): value is DocumentFile => {
+export const assetFileIsDocumentFile = (value: any): value is AssetFileDocument => {
   if (!value || !value._resourceName) return false
   return value._resourceName === 'documentFile'
 }
+
+interface ImageAttributes {
+  ratioWidth: number
+  ratioHeight: number
+  width: number
+  height: number
+  rotation: number
+  mostDominantColor: string
+  animated: boolean
+}
+
+interface Metadata {
+  exifData: [] // todo check
+  id: string
+  createdAt: string
+  modifiedAt: string
+  createdBy: number
+  modifiedBy: number
+}
+
+interface AudioAttributes {
+  duration: number
+  codecName: string
+  bitrate: number
+}
+
+interface DocumentAttributes {
+  pageCount: number
+}
+
+interface VideoAttributes {
+  bitrate: number
+  codecName: string
+  duration: number
+  height: number
+  ratioHeight: number
+  ratioWidth: number
+  rotation: number
+  width: number
+}
+
+export interface AssetFileImagePreview {
+  imageFile: DocId
+  position: number
+}
+
+export type AssetFileImagePreviewNullable = AssetFileImagePreview | null
