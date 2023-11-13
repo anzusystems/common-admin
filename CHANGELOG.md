@@ -2,7 +2,7 @@
 
 ### Features
 * **chore:** updated dependencies
-* **ACustomDataForm:** form to manage `CustomDataAware` entities
+* **ACustomDataForm:** new component to manage `CustomDataAware` entities
 * added several type exports for DAM
 
 ### BREAKING CHANGES
