@@ -108,6 +108,7 @@ const onBlur = () => {
     :label="config.name"
     :error-messages="errorMessageComputed"
     :counter="counter"
+    :data-cy="'custom-field-' + config.property"
     @update:model-value="updateModelValue"
     @blur="onBlur"
   >
@@ -125,6 +126,7 @@ const onBlur = () => {
     type="number"
     :label="config.name"
     :error-messages="errorMessageComputed"
+    :data-cy="'custom-field-' + config.property"
     @update:model-value="updateModelValue"
     @blur="onBlur"
   >
@@ -143,6 +145,7 @@ const onBlur = () => {
     multiple
     chips
     :error-messages="errorMessageComputed"
+    :data-cy="'custom-field-' + config.property"
     @update:model-value="updateModelValue"
     @blur="onBlur"
   >
@@ -158,6 +161,7 @@ const onBlur = () => {
     v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === true"
     :label="config.name"
     :model-value="modelValueComputed"
+    :data-cy="'custom-field-' + config.property"
     @update:model-value="updateModelValue"
   />
   <div v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === false">
