@@ -6,11 +6,10 @@ import Notification from '@kyvg/vue3-notification'
 import type { LanguageCode } from '@/composables/languageSettings'
 import {
   AvailableLanguagesSymbol,
+  CoreDamOptions,
   CurrentUserSymbol,
   CustomAclResolverSymbol,
-  DamClientSymbol,
   DefaultLanguageSymbol,
-  DefaultLicenceIdSymbol,
   ImageOptions,
 } from '@/components/injectionKeys'
 import type { AxiosInstance } from 'axios'
@@ -21,7 +20,7 @@ export type PluginOptions<T extends AclValue = AclValue> = {
   currentUser: CurrentUserType
   languages: { available: LanguageCode[]; default: LanguageCode }
   customAclResolver?: CustomAclResolver<T>
-  coreDam?: { client: () => AxiosInstance; defaultLicenceId?: IntegerId }
+  coreDam?: CommonAdminCoreDamOptions
   image?: CommonAdminImageOptions
 }
 
@@ -47,14 +46,24 @@ export type CommonAdminImageOptions =
       configs: { [key: string]: CommonAdminImageConfig }
     }
 
+export interface CommonAdminCoreDamConfig {
+  client: () => AxiosInstance
+  defaultLicenceId?: IntegerId
+}
+
+export type CommonAdminCoreDamOptions =
+  | undefined
+  | {
+      configs: { [key: string]: CommonAdminCoreDamConfig }
+    }
+
 export default {
   install<T extends AclValue = AclValue>(app: App, options: PluginOptions<T>): void {
     app.provide(CurrentUserSymbol, options.currentUser)
-    app.provide<(() => AxiosInstance) | undefined>(DamClientSymbol, options.coreDam?.client)
     app.provide(CustomAclResolverSymbol, options.customAclResolver)
     app.provide(AvailableLanguagesSymbol, options.languages.available)
     app.provide(DefaultLanguageSymbol, options.languages.default)
-    app.provide(DefaultLicenceIdSymbol, options.coreDam?.defaultLicenceId)
+    app.provide(CoreDamOptions, options.coreDam)
     app.provide(ImageOptions, options.image)
     app.component('Acl', Acl)
     app.use(Notification, { componentName: 'Notifications' })

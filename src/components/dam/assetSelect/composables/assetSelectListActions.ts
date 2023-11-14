@@ -3,28 +3,22 @@ import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
-import { inject, ref } from 'vue'
+import { ref } from 'vue'
 import type { DamAssetType } from '@/types/coreDam/Asset'
-import type { AxiosInstance } from 'axios'
-import { DamClientSymbol } from '@/components/injectionKeys'
 import { usePagination } from '@/composables/system/pagination'
-import { isUndefined } from '@/utils/common'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { useAlerts } from '@/composables/system/alerts'
 import type { DocId } from '@/types/common'
+import { useCoreDamOptions } from '@/components/dam/assetSelect/composables/coreDamOptions'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
 const filterIsTouched = ref(false)
 
-export function useAssetListActions() {
-  const damClient = inject<(() => AxiosInstance) | undefined>(DamClientSymbol, undefined)
+export function useAssetListActions(configName = 'default') {
+  const { client } = useCoreDamOptions(configName)
 
-  if (isUndefined(damClient)) {
-    throw new Error("Composable useAssetListActions can't be used without properly configured common admin.")
-  }
-
-  const { fetchAssetList: apiFetchAssetList } = useAssetApi(damClient)
+  const { fetchAssetList: apiFetchAssetList } = useAssetApi(client)
 
   const assetListStore = useAssetSelectStore()
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetListStore)

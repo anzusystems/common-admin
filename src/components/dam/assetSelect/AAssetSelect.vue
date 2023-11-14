@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, inject, ref, withModifiers } from 'vue'
+import { computed, ref, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
@@ -18,7 +18,7 @@ import type {
   AssetSelectReturnTypeValues,
 } from '@/types/coreDam/AssetSelect'
 import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
-import { DefaultLicenceIdSymbol } from '@/components/injectionKeys'
+import { useCoreDamOptions } from '@/components/dam/assetSelect/composables/coreDamOptions'
 
 const props = withDefaults(
   defineProps<{
@@ -28,11 +28,13 @@ const props = withDefaults(
     maxCount: number
     assetLicenceId?: number
     returnType?: AssetSelectReturnType | AssetSelectReturnTypeValues
+    configName?: string
   }>(),
   {
     modelValue: undefined,
     assetLicenceId: undefined,
     returnType: 'mainFileId',
+    configName: 'default',
   }
 )
 
@@ -60,7 +62,8 @@ const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSel
 
 const { openSidebar, sidebarLeft } = useSidebar()
 
-const defaultLicenceId = inject<number | undefined>(DefaultLicenceIdSymbol, undefined)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { defaultLicenceId } = useCoreDamOptions(props.configName)
 
 const onOpen = () => {
   const licenceId = props.assetLicenceId || defaultLicenceId

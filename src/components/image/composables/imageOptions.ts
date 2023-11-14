@@ -7,7 +7,7 @@ export function useImageOptions(configName: string = 'default') {
   const imageOptions = inject<CommonAdminImageOptions | undefined>(ImageOptions, undefined)
 
   if (isUndefined(imageOptions) || isUndefined(imageOptions.configs) || isUndefined(imageOptions.configs[configName])) {
-    throw new Error("Component AImageWidgetSimple can't be used without properly configured common admin.")
+    throw new Error("Component can't be used without properly configured common admin.")
   }
 
   return {
