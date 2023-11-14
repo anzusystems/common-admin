@@ -10,7 +10,7 @@ import '@/styles/main.scss'
 import { currentUser } from '@/playground/system/currentUser'
 import type { LanguageCode } from '@/composables/languageSettings'
 import { loadCommonFonts } from '@/plugins/webfontloader'
-import { playgroundFetchImageCms } from '@/playground/image/api'
+import { playgroundFetchImageCms } from '@/playground/imageView/api'
 
 export type CustomAclValue = 'anzu_entity_create' | 'anzu_entity_view'
 

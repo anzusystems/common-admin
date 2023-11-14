@@ -1,7 +1,7 @@
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { apiFetchList } from '@/services/api/apiFetchList'
-import { cmsClient } from '@/playground/image/cmsClient'
+import { cmsClient } from '@/playground/imageView/cmsClient'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { DatetimeUTCNullable, IntegerId } from '@/types/common'
 

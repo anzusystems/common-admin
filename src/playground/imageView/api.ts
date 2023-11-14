@@ -1,6 +1,6 @@
 import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
-import { cmsClient } from '@/playground/image/cmsClient'
+import { cmsClient } from '@/playground/imageView/cmsClient'
 import type { IntegerId } from '@/types/common'
 
 export const playgroundFetchImageCms = (id: IntegerId) =>

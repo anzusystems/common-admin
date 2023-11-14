@@ -3,7 +3,7 @@ import { ref, toRefs, watch } from 'vue'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import type { Image } from '@/types/Image'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
-import { cmsClient } from '@/playground/image/cmsClient'
+import { cmsClient } from '@/playground/imageView/cmsClient'
 
 const props = withDefaults(
   defineProps<{
