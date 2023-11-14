@@ -31,8 +31,12 @@ createApp(App)
       default: 'sk',
     },
     coreDam: {
-      client: damClient,
-      defaultLicenceId: 100001,
+      configs: {
+        default: {
+          client: damClient,
+          defaultLicenceId: 100001,
+        },
+      },
     },
     image: {
       configs: {
