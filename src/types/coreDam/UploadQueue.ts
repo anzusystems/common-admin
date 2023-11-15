@@ -8,6 +8,20 @@ import type {
 } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason,  AssetFileLink } from '@/types/coreDam/AssetFile'
 
+export type UploadQueueKey = string
+
+export interface UploadQueue {
+  items: UploadQueueItem[]
+  totalCount: number
+  processedCount: number
+  fileInputKey: number // used to reset html input file element
+
+  suggestions: {
+    newKeywordNames: Set<string>
+    newAuthorNames: Set<string>
+  }
+}
+
 export enum UploadQueueItemType {
   File = 'file',
   Asset = 'asset',

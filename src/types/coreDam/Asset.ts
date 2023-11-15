@@ -7,7 +7,7 @@ interface Texts {
   displayTitle: string
 }
 
-export type DistributionServiceName = string
+export type DamDistributionServiceName = string
 
 export enum DamAssetStatus {
   Draft = 'draft',
@@ -47,7 +47,7 @@ interface Attributes {
 }
 
 export interface AssetFileProperties {
-  distributesInServices: DistributionServiceName[]
+  distributesInServices: DamDistributionServiceName[]
   slotNames: string[]
   fromRss: boolean
   width: number

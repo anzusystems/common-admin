@@ -276,6 +276,7 @@ import {
   type AssetSearchListItemDto,
   DamAssetStatus,
   DamAssetType,
+  type DamDistributionServiceName,
 } from '@/types/coreDam/Asset'
 import {
   type AssetFile,
@@ -296,7 +297,12 @@ import {
   AssetFileProcessStatus,
   type AssetFileVideo,
 } from '@/types/coreDam/AssetFile'
-import { type UploadQueueItem, UploadQueueItemStatus, UploadQueueItemType } from '@/types/coreDam/UploadQueue'
+import {
+  type UploadQueue,
+  type UploadQueueItem,
+  UploadQueueItemStatus,
+  UploadQueueItemType,
+} from '@/types/coreDam/UploadQueue'
 import type {
   CustomDataAware,
   CustomDataFormElement,
@@ -306,6 +312,10 @@ import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 import type { SortableItemDataAware, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
+import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
+import type { DamConfig, DamConfigExtSystem, DamPubConfig } from '@/types/coreDam/DamConfig'
+import { useUploadQueueItemFactory } from '@/components/dam/uploadQueue/UploadQueueItemFactory'
+import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHelper'
 
 export {
   // COMPONENTS
@@ -407,6 +417,8 @@ export {
   generateDatatableMinMaxSelectStrategy,
   useCustomDataForm,
   useCustomDataFormElementType,
+  useDamConfigState,
+  useUploadQueueItemFactory,
 
   // VALUE OBJECTS
   Grant,
@@ -500,6 +512,7 @@ export {
   assetFileIsVideoFile,
   assetFileIsAudioFile,
   assetFileIsDocumentFile,
+  UploadQueue,
   UploadQueueItem,
   UploadQueueItemStatus,
   UploadQueueItemType,
@@ -509,6 +522,10 @@ export {
   CustomDataFormElementType,
   CustomDataFormElementTypeDefault,
   CustomDataFormElementTypeType,
+  DamPubConfig,
+  DamConfig,
+  DamConfigExtSystem,
+  DamDistributionServiceName,
 
   // FACTORIES
   useAnzuUserFactory,
@@ -650,4 +667,5 @@ export {
   AnzuSystemsCommonAdmin,
   useCommonVuetifyConfig,
   loadCommonFonts,
+  getAssetTypeByMimeType,
 }
