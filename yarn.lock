@@ -209,7 +209,7 @@ __metadata:
     "@vuelidate/validators": "npm:^2.0.4"
     "@vueuse/core": "npm:^10.6.1"
     "@vueuse/integrations": "npm:^10.6.1"
-    axios: "npm:1.6.1"
+    axios: "npm:1.6.2"
     dayjs: "npm:1.11.10"
     eslint: "npm:8.52.0"
     eslint-plugin-vue: "npm:9.18.1"
@@ -236,7 +236,7 @@ __metadata:
     vue-i18n: "npm:9.6.5"
     vue-router: "npm:4.2.5"
     vue-tsc: "npm:1.8.22"
-    vuetify: "npm:3.4.0"
+    vuetify: "npm:3.4.1"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@vuelidate/core": 2.0.3
@@ -2332,14 +2332,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.6.1":
-  version: 1.6.1
-  resolution: "axios@npm:1.6.1"
+"axios@npm:1.6.2":
+  version: 1.6.2
+  resolution: "axios@npm:1.6.2"
   dependencies:
     follow-redirects: "npm:^1.15.0"
     form-data: "npm:^4.0.0"
     proxy-from-env: "npm:^1.1.0"
-  checksum: fb091af3ad47d70fdcba5e71654b9e3c56947d93d8b2375dd0b4db63de9982adab6235aebc514488aa289c7faf103b09e8911280e6f6b1112d1604fe5f111f71
+  checksum: 612bc93f8f738a518e7c5f9de9cc782bcd36aac6bae279160ef6a10260378e21c1786520eab3336898e3d66e0839ebdf739f327fb6d0431baa4d3235703a7652
   languageName: node
   linkType: hard
 
@@ -7440,9 +7440,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.4.0":
-  version: 3.4.0
-  resolution: "vuetify@npm:3.4.0"
+"vuetify@npm:3.4.1":
+  version: 3.4.1
+  resolution: "vuetify@npm:3.4.1"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ^1.0.0-alpha.12
@@ -7458,7 +7458,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: cafa5ccec2ffa699255a2a0f1d018557a1798a76236dba9735f199bc24f0f2fd4626ca337a3d53e01298afa65641c831ebb7875c583613618daff3f4c586d2a3
+  checksum: e2f4eb292266b91b84ce8b036be29f3f3912e90aca2a5fb423c07762593ecda124fea993fcaa882496fdde3f090f24c2f65901dc948740b57d66aa3a4c83388f
   languageName: node
   linkType: hard
 

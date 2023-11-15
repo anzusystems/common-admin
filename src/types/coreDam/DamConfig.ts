@@ -1,4 +1,4 @@
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetType, DamDistributionServiceName } from '@/types/coreDam/Asset'
 
 export interface DamConfig {
   assetExternalProviders: {
@@ -52,19 +52,17 @@ export interface ExtSystemConfig {
 
 export type ExternalProviderAssetConfig = Record<ExternalProviderAssetName, { listingLimit: number; title: string }>
 
-export type DistributionServiceName = string
-
 export type ExternalProviderAssetName = string
 
 export interface DistributionConfig {
-  distributionServices: Array<DistributionServiceName>
-  distributionRequirements: Record<DistributionServiceName, DistributionRequirementsConfig>
+  distributionServices: Array<DamDistributionServiceName>
+  distributionRequirements: Record<DamDistributionServiceName, DistributionRequirementsConfig>
 }
 
 export interface DistributionRequirementsConfig {
   title: string
   requiredAuth: boolean
-  blockedBy: Array<DistributionServiceName>
+  blockedBy: Array<DamDistributionServiceName>
   categorySelect: DistributionRequirementsCategorySelectConfig
   strategy: DistributionRequirementStrategy
 }
