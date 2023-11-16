@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { IntegerId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
 import {
   type UploadQueue,
@@ -14,6 +14,7 @@ import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHel
 import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
 import { useUpload } from '@/components/dam/uploadQueue/uploadService'
 import { DamAssetType } from '@/types/coreDam/Asset'
+import type { AssetFileFailReason } from '@/types/coreDam/AssetFile'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
@@ -130,9 +131,9 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     item.progress.speed = speed
   }
 
-  function queueItemProcessed () {}
-  function queueItemDuplicate () {}
-  function queueItemFailed () {}
+  function queueItemProcessed (assetId: DocId) {}
+  function queueItemDuplicate (assetId: DocId) {}
+  function queueItemFailed (assetId: DocId, failReason: AssetFileFailReason) {}
 
   return {
     getQueue,
