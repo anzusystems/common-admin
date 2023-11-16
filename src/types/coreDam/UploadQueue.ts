@@ -83,3 +83,8 @@ export interface UploadQueueItem {
   notificationFallbackTry: number
   slotName: string | null
 }
+
+export interface DamUploadStartResponse {
+  id: DocId
+  asset: DocId
+}

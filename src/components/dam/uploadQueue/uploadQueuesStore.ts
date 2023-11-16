@@ -12,6 +12,8 @@ import {
 import { useUploadQueueItemFactory } from '@/components/dam/uploadQueue/UploadQueueItemFactory'
 import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHelper'
 import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
+import { useUpload } from '@/components/dam/uploadQueue/uploadService'
+import { DamAssetType } from '@/types/coreDam/Asset'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
@@ -39,7 +41,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     const { damConfigExtSystem } = useDamConfigState()
     for await (const file of files) {
       const type = getAssetTypeByMimeType(damFileTypeFix(file), damConfigExtSystem.value)
-      if (!type) continue
+      if (!type || type !== DamAssetType.Image) continue // only image now
       const queueItem = createDefault(
         'file_' + file.name,
         UploadQueueItemType.File,
@@ -107,19 +109,19 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   }
 
   async function queueItemUploadStart(item: UploadQueueItem, queueId: string) {
-    // const { upload, uploadInit } = useUpload(item, (progress: number, speed: number, estimate: number) => {
-    //   setUploadSpeed(item, progress, speed, estimate)
-    // })
-    // try {
-    //   await uploadInit()
-    //   await upload()
-    //   processUpload(queueId)
-    // } catch (e) {
-    //   item.error.hasError = true
-    //   item.status = UploadQueueItemStatus.Failed
-    //   recalculateQueueCounts(queueId)
-    //   processUpload(queueId)
-    // }
+    const { upload, uploadInit } = useUpload(item, (progress: number, speed: number, estimate: number) => {
+      setUploadSpeed(item, progress, speed, estimate)
+    })
+    try {
+      await uploadInit()
+      await upload()
+      processUpload(queueId)
+    } catch (e) {
+      item.error.hasError = true
+      item.status = UploadQueueItemStatus.Failed
+      recalculateQueueCounts(queueId)
+      processUpload(queueId)
+    }
   }
 
   function setUploadSpeed(item: UploadQueueItem, progress: number, speed: number, estimate: number) {
@@ -128,9 +130,16 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     item.progress.speed = speed
   }
 
+  function queueItemProcessed () {}
+  function queueItemDuplicate () {}
+  function queueItemFailed () {}
+
   return {
     getQueue,
     getQueueItems,
     addByFiles,
+    queueItemProcessed,
+    queueItemDuplicate,
+    queueItemFailed,
   }
 })

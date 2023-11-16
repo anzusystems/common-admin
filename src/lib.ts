@@ -302,6 +302,7 @@ import {
   type UploadQueueItem,
   UploadQueueItemStatus,
   UploadQueueItemType,
+  type DamUploadStartResponse
 } from '@/types/coreDam/UploadQueue'
 import type {
   CustomDataAware,
@@ -555,6 +556,7 @@ export {
   DamDistributionServiceType,
   DamDistributionStatus,
   UserAuthType,
+  DamUploadStartResponse,
 
   // FACTORIES
   useAnzuUserFactory,
