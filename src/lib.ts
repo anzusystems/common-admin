@@ -313,7 +313,22 @@ import type { SortableItem, SortablePropItem } from '@/components/sortable/sorta
 import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 import type { SortableItemDataAware, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
 import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
-import type { DamPrvConfig, DamExtSystemConfig, DamPubConfig } from '@/types/coreDam/DamConfig'
+import {
+  type DamDistributionConfig,
+  type DamDistributionRequirementsCategorySelectConfig,
+  type DamDistributionRequirementsConfig,
+  DamDistributionRequirementStrategy,
+  DamDistributionServiceType,
+  DamDistributionStatus,
+  type DamExternalProviderAssetConfig,
+  type DamExternalProviderAssetName,
+  type DamExtSystemAssetTypeExifMetadata,
+  type DamExtSystemConfig,
+  type DamExtSystemConfigItem,
+  type DamPrvConfig,
+  type DamPubConfig,
+  UserAuthType,
+} from '@/types/coreDam/DamConfig'
 import { useUploadQueueItemFactory } from '@/components/dam/uploadQueue/UploadQueueItemFactory'
 import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHelper'
 
@@ -480,8 +495,6 @@ export {
   CachedItem,
   RecordWasType,
   UrlParams,
-  DamAssetType,
-  DamAssetStatus,
   AssetSelectReturnData,
   SortablePropItem,
   SortableItem,
@@ -522,10 +535,23 @@ export {
   CustomDataFormElementType,
   CustomDataFormElementTypeDefault,
   CustomDataFormElementTypeType,
+  DamAssetType,
+  DamAssetStatus,
   DamPubConfig,
   DamPrvConfig,
   DamExtSystemConfig,
   DamDistributionServiceName,
+  DamExtSystemConfigItem,
+  DamExternalProviderAssetConfig,
+  DamExternalProviderAssetName,
+  DamDistributionConfig,
+  DamDistributionRequirementsConfig,
+  DamDistributionRequirementStrategy,
+  DamDistributionRequirementsCategorySelectConfig,
+  DamExtSystemAssetTypeExifMetadata,
+  DamDistributionServiceType,
+  DamDistributionStatus,
+  UserAuthType,
 
   // FACTORIES
   useAnzuUserFactory,
