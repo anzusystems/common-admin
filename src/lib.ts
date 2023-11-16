@@ -313,7 +313,7 @@ import type { SortableItem, SortablePropItem } from '@/components/sortable/sorta
 import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 import type { SortableItemDataAware, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
 import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
-import type { DamConfig, DamConfigExtSystem, DamPubConfig } from '@/types/coreDam/DamConfig'
+import type { DamPrvConfig, DamExtSystemConfig, DamPubConfig } from '@/types/coreDam/DamConfig'
 import { useUploadQueueItemFactory } from '@/components/dam/uploadQueue/UploadQueueItemFactory'
 import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHelper'
 
@@ -523,8 +523,8 @@ export {
   CustomDataFormElementTypeDefault,
   CustomDataFormElementTypeType,
   DamPubConfig,
-  DamConfig,
-  DamConfigExtSystem,
+  DamPrvConfig,
+  DamExtSystemConfig,
   DamDistributionServiceName,
 
   // FACTORIES

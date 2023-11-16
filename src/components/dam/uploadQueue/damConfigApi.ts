@@ -1,4 +1,4 @@
-import type { DamConfig, DamConfigExtSystem, DamPubConfig } from '@/types/coreDam/DamConfig'
+import type { DamPrvConfig, DamExtSystemConfig, DamPubConfig } from '@/types/coreDam/DamConfig'
 import type { AxiosInstance } from 'axios'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { SYSTEM_CORE_DAM } from '@/services/api/coreDam/assetApi'
@@ -13,7 +13,7 @@ export const fetchPubConfiguration = (damClient: () => AxiosInstance) =>
   apiFetchOne<DamPubConfig>(damClient, PUB_END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
 
 export const fetchConfiguration = (damClient: () => AxiosInstance) =>
-  apiFetchOne<DamConfig>(damClient, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
+  apiFetchOne<DamPrvConfig>(damClient, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
 
 export const fetchExtSystemConfiguration = (extSystem: IntegerId, damClient: () => AxiosInstance) =>
-  apiFetchOne<DamConfigExtSystem>(damClient, END_POINT + '/ext-system/' + extSystem, {}, SYSTEM_CORE_DAM, ENTITY)
+  apiFetchOne<DamExtSystemConfig>(damClient, END_POINT + '/ext-system/' + extSystem, {}, SYSTEM_CORE_DAM, ENTITY)

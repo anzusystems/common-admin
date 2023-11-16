@@ -1,9 +1,9 @@
 import { reactive, shallowRef } from 'vue'
 import {
-  type DamConfig,
-  type DamConfigExtSystem,
+  type DamPrvConfig,
+  type DamExtSystemConfig,
   type DamPubConfig,
-  type ExtSystemConfig,
+  type DamExtSystemConfigItem,
   UserAuthType,
 } from '@/types/coreDam/DamConfig'
 import { DamAssetType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
@@ -21,7 +21,7 @@ import {
   fetchDistributionCustomFormElements,
 } from '@/components/dam/uploadQueue/damAssetCustomFormApi'
 
-const createDefaultExtSystemConfig = (override: Partial<ExtSystemConfig> = {}): ExtSystemConfig => ({
+const createDefaultExtSystemConfig = (override: Partial<DamExtSystemConfigItem> = {}): DamExtSystemConfigItem => ({
   ...({
     sizeLimit: 0,
     defaultFileVersion: '',
@@ -41,7 +41,7 @@ const createDefaultExtSystemConfig = (override: Partial<ExtSystemConfig> = {}): 
     },
     customMetadataPinnedAmount: 1,
     slots: [],
-  } as ExtSystemConfig),
+  } as DamExtSystemConfigItem),
   ...override,
 })
 
@@ -61,7 +61,7 @@ const damPubConfig = shallowRef<DamPubConfig>({
   userAuthType: UserAuthType.JsonCredentials,
 })
 
-const damPrvConfig = shallowRef<DamConfig>({
+const damPrvConfig = shallowRef<DamPrvConfig>({
   colorSet: {},
   assetExternalProviders: {},
   distributionServices: {},
@@ -80,7 +80,7 @@ const damPrvConfig = shallowRef<DamConfig>({
   },
 })
 
-const damConfigExtSystem = shallowRef<DamConfigExtSystem>({
+const damConfigExtSystem = shallowRef<DamExtSystemConfig>({
   assetExternalProviders: {},
   audio: createDefaultExtSystemConfig(),
   document: createDefaultExtSystemConfig(),
@@ -158,7 +158,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     })
   }
 
-  function setDamPrvConfig(data: DamConfig) {
+  function setDamPrvConfig(data: DamPrvConfig) {
     try {
       damPrvConfig.value.settings = data.settings
       damPrvConfig.value.colorSet = data.colorSet
@@ -193,7 +193,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     })
   }
 
-  function setDamConfigExtSystem(data: DamConfigExtSystem, extSystemId: IntegerId) {
+  function setDamConfigExtSystem(data: DamExtSystemConfig, extSystemId: IntegerId) {
     try {
       damConfigExtSystem.value.assetExternalProviders = data.assetExternalProviders
       damConfigExtSystem.value.audio = data.audio

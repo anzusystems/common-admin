@@ -1,9 +1,9 @@
 import { DamAssetType } from '@/types/coreDam/Asset'
-import type { DamConfigExtSystem } from '@/types/coreDam/DamConfig'
+import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 
 export const getAssetTypeByMimeType = (
   mimeType: string,
-  damConfigExtSystem: DamConfigExtSystem
+  damConfigExtSystem: DamExtSystemConfig
 ): DamAssetType | null => {
   for (const [key, values] of Object.entries(damConfigExtSystem)) {
     if (!Object.values(DamAssetType).includes(key as DamAssetType)) continue

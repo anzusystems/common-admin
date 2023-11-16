@@ -78,7 +78,7 @@
     "vitepress": "1.0.0-rc.25",
     "vue": "3.3.8",
     "vue-flatpickr-component": "^11.0.3",
-    "vue-i18n": "9.6.5",
+    "vue-i18n": "9.7.0",
     "vue-router": "4.2.5",
     "vue-tsc": "1.8.22",
     "vuetify": "3.4.1",
