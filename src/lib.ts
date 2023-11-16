@@ -331,6 +331,8 @@ import {
 } from '@/types/coreDam/DamConfig'
 import { useUploadQueueItemFactory } from '@/components/dam/uploadQueue/UploadQueueItemFactory'
 import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHelper'
+import { useDamUploadChunkSize } from '@/components/dam/uploadQueue/damUploadChunkSize'
+import { damFileTypeFix } from '@/components/file/composables/fileType'
 
 export {
   // COMPONENTS
@@ -434,6 +436,7 @@ export {
   useCustomDataFormElementType,
   useDamConfigState,
   useUploadQueueItemFactory,
+  useDamUploadChunkSize,
 
   // VALUE OBJECTS
   Grant,
@@ -694,4 +697,5 @@ export {
   useCommonVuetifyConfig,
   loadCommonFonts,
   getAssetTypeByMimeType,
+  damFileTypeFix,
 }

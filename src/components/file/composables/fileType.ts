@@ -1,4 +1,4 @@
-export const fileTypeFix = (file: File | null | undefined) => {
+export const damFileTypeFix = (file: File | null | undefined) => {
   if (!file) return ''
   if (file.type && file.type.length > 0) {
     return file.type

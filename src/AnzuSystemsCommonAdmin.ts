@@ -55,6 +55,8 @@ export type CommonAdminCoreDamOptions =
   | undefined
   | {
       configs: { [key: string]: CommonAdminCoreDamConfig }
+      apiTimeout: number
+      uploadStatusFallback: boolean
     }
 
 export default {

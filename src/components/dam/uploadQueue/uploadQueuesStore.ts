@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { IntegerId } from '@/types/common'
-import { fileTypeFix } from '@/components/file/composables/fileType'
+import { damFileTypeFix } from '@/components/file/composables/fileType'
 import {
   type UploadQueue,
   type UploadQueueItem,
@@ -11,7 +11,7 @@ import {
 } from '@/types/coreDam/UploadQueue'
 import { useUploadQueueItemFactory } from '@/components/dam/uploadQueue/UploadQueueItemFactory'
 import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHelper'
-import { useDamConfig } from '@/components/dam/uploadQueue/damConfigState'
+import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
@@ -36,9 +36,9 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   }
 
   async function addByFiles(queueId: UploadQueueKey, assetLicence: IntegerId, files: File[]) {
-    const { damConfigExtSystem } = useDamConfig()
+    const { damConfigExtSystem } = useDamConfigState()
     for await (const file of files) {
-      const type = getAssetTypeByMimeType(fileTypeFix(file), damConfigExtSystem.value)
+      const type = getAssetTypeByMimeType(damFileTypeFix(file), damConfigExtSystem.value)
       if (!type) continue
       const queueItem = createDefault(
         'file_' + file.name,

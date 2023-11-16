@@ -195,6 +195,7 @@ __metadata:
     "@kyvg/vue3-notification": "npm:^3.0.2"
     "@mdi/font": "npm:^7.3.67"
     "@rushstack/eslint-patch": "npm:^1.5.1"
+    "@types/js-sha1": "npm:^0"
     "@types/node": "npm:^20.9.0"
     "@types/sortablejs": "npm:^1.15.5"
     "@types/webfontloader": "npm:^1.6.37"
@@ -214,6 +215,7 @@ __metadata:
     eslint: "npm:8.52.0"
     eslint-plugin-vue: "npm:9.18.1"
     flatpickr: "npm:^4.6.13"
+    js-sha1: "npm:^0.6.0"
     npm-run-all: "npm:^4.1.5"
     pinia: "npm:2.1.7"
     postcss-html: "npm:^1.5.0"
@@ -1035,6 +1037,13 @@ __metadata:
   version: 1.0.0
   resolution: "@types/estree@npm:1.0.0"
   checksum: 9ec366ea3b94db26a45262d7161456c9ee25fd04f3a0da482f6e97dbf90c0c8603053c311391a877027cc4ee648340f988cd04f11287886cdf8bc23366291ef9
+  languageName: node
+  linkType: hard
+
+"@types/js-sha1@npm:^0":
+  version: 0.6.2
+  resolution: "@types/js-sha1@npm:0.6.2"
+  checksum: 3bcedc1c0e7535b929398fc82b357b5a9e3dd530433a75238882caba6d2b6413f028bf4bd0c05a1a7f14dfe24c84ba14e06b21166c4297de55cea7dcfb7a5dbf
   languageName: node
   linkType: hard
 
@@ -4414,6 +4423,13 @@ __metadata:
   version: 1.4.0
   resolution: "jju@npm:1.4.0"
   checksum: 1067ff8ce02221faac5a842116ed0ec79a53312a111d0bf8342a80bd02c0a3fdf0b8449694a65947db0a3e8420e8b326dffb489c7dd5866efc380c0d1708a707
+  languageName: node
+  linkType: hard
+
+"js-sha1@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "js-sha1@npm:0.6.0"
+  checksum: c8d6c97f02e7b683421e8ff25f2992f41a9c86291d0f773ebdfe6175f3e4789aba4fec594466c6de634daba2a7043a2d54be6b86cf196c919b139f7d765ebafa
   languageName: node
   linkType: hard
 

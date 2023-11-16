@@ -1,5 +1,5 @@
 import { useAlerts } from '@/composables/system/alerts'
-import { fileTypeFix } from '@/components/file/composables/fileType'
+import { damFileTypeFix } from '@/components/file/composables/fileType'
 import { isUndefined } from '@/utils/common'
 import { computed } from 'vue'
 import { i18n } from '@/plugins/i18n'
@@ -55,9 +55,9 @@ export function useFormatAndSizeCheck(accept: string | undefined, maxSizes: Reco
       } else {
         // type
         const splitType = accepts[i].split('/')
-        if (splitType[1] === '*' && fileTypeFix(file).startsWith(splitType[0] + '/')) {
+        if (splitType[1] === '*' && damFileTypeFix(file).startsWith(splitType[0] + '/')) {
           return true
-        } else if (accepts[i] === fileTypeFix(file)) {
+        } else if (accepts[i] === damFileTypeFix(file)) {
           return true
         }
       }
@@ -79,9 +79,9 @@ export function useFormatAndSizeCheck(accept: string | undefined, maxSizes: Reco
       } else {
         // type
         const splitType = keys[j].split('/')
-        if (splitType[1] === '*' && fileTypeFix(file).startsWith(splitType[0] + '/') && sizes[keys[j]] > file.size) {
+        if (splitType[1] === '*' && damFileTypeFix(file).startsWith(splitType[0] + '/') && sizes[keys[j]] > file.size) {
           return true
-        } else if (keys[j] === fileTypeFix(file) && sizes[keys[j]] > file.size) {
+        } else if (keys[j] === damFileTypeFix(file) && sizes[keys[j]] > file.size) {
           return true
         }
       }
