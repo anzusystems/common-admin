@@ -18,7 +18,7 @@ import {
 import type { IntegerId } from '@/types/common'
 import {
   fetchAssetCustomFormElements,
-  fetchDistributionCustomFormElements
+  fetchDistributionCustomFormElements,
 } from '@/components/dam/uploadQueue/damAssetCustomFormApi'
 
 const createDefaultExtSystemConfig = (override: Partial<ExtSystemConfig> = {}): ExtSystemConfig => ({
@@ -95,7 +95,9 @@ const damConfigAssetCustomFormElements = shallowRef<{ [key in DamAssetType]: Cus
   document: [],
 })
 
-const damConfigDistributionCustomFormElements = shallowRef<Record<DamDistributionServiceName, CustomDataFormElement[]>>({})
+const damConfigDistributionCustomFormElements = shallowRef<Record<DamDistributionServiceName, CustomDataFormElement[]>>(
+  {}
+)
 
 export function useDamConfigState(client: undefined | (() => AxiosInstance) = undefined) {
   function onConfigError(error: Error) {
