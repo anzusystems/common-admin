@@ -15,7 +15,8 @@ export function useCoreDamOptions(configName: string = 'default') {
   }
 
   return {
-    client: coreDamOptions.configs[configName].client,
+    damClient: coreDamOptions.configs[configName].damClient,
+    imageClient: coreDamOptions.configs[configName].imageClient,
     defaultLicenceId: coreDamOptions.configs[configName].defaultLicenceId,
   }
 }

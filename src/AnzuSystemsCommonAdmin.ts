@@ -47,7 +47,8 @@ export type CommonAdminImageOptions =
     }
 
 export interface CommonAdminCoreDamConfig {
-  client: () => AxiosInstance
+  damClient: () => AxiosInstance
+  imageClient: () => AxiosInstance
   defaultLicenceId?: IntegerId
 }
 

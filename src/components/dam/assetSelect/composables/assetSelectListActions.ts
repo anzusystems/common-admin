@@ -16,9 +16,9 @@ const pagination = usePagination()
 const filterIsTouched = ref(false)
 
 export function useAssetListActions(configName = 'default') {
-  const { client } = useCoreDamOptions(configName)
+  const { damClient } = useCoreDamOptions(configName)
 
-  const { fetchAssetList: apiFetchAssetList } = useAssetApi(client)
+  const { fetchAssetList: apiFetchAssetList } = useAssetApi(damClient)
 
   const assetListStore = useAssetSelectStore()
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetListStore)
