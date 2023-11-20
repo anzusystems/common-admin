@@ -101,7 +101,7 @@ const onDrop = (files: File[]) => {
 }
 const onFileInput = (files: File[]) => {
   console.log('onFileInput', files)
-  // uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+  uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
 }
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -179,7 +179,13 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
             :accept="uploadAccept"
             :max-sizes="uploadSizes"
             @files-input="onFileInput"
-          />
+          >
+            <template #activator="{ props: fileInputProps }">
+              <VBtn v-bind="fileInputProps">
+                Upload
+              </VBtn>
+            </template>
+          </AFileInput>
         </div>
         <VBtn
           variant="text"
@@ -197,6 +203,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
             v-model="clickMenuOpened"
             activator="parent"
             location="bottom right"
+            eager
           >
             <VCard>
               <VList density="compact">
@@ -206,7 +213,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
                 >
                   <VListItem-title>Update metadata</VListItem-title>
                 </VListItem>
-                <VListItem @click="actionLibrary">
+                <VListItem @click.stop="actionLibrary">
                   <VListItem-title>
                     <span v-if="imageLoaded">Replace from library</span>
                     <span v-else>Choose from library</span>
@@ -219,8 +226,8 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
                   @files-input="onFileInput"
                 >
                   <template #activator="{ props: fileInputProps }">
-                    <VListItem v-bind="fileInputProps">
-                      Upload
+                    <VListItem @click.stop="fileInputProps.onClick($event)">
+                      Upload kravo
                     </VListItem>
                   </template>
                 </AFileInput>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, withModifiers } from 'vue'
+import { onMounted, onUnmounted, ref, watch, withModifiers } from 'vue'
 import { isBoolean, isUndefined } from '@/utils/common'
 import AFileDropzone from '@/components/file/AFileDropzone.vue'
 import type { InputFileChangeEvent } from '@/types/ChangeEvent'
@@ -56,15 +56,13 @@ const clickInput = () => {
 const { checkFormatsAndSizes } = useFormatAndSizeCheck(props.accept, props.maxSizes)
 
 const validateData = (files: File[]) => {
-  console.log('validateData')
   if (!props.multiple && files.length > 0) {
-    console.log('emit1')
-    emit('filesInput', checkFormatsAndSizes([files[0]]))
+    const checked = checkFormatsAndSizes([files[0]])
+    emit('filesInput', checked)
     return
   }
-  console.log('emit2')
-  console.log(files)
-  emit('filesInput', checkFormatsAndSizes(files))
+  const checked = checkFormatsAndSizes(files)
+  emit('filesInput', checked)
 }
 
 const onDropzoneDrop = (files: File[]) => {

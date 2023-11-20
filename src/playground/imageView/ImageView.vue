@@ -35,6 +35,7 @@ const imageId2 = ref<IntegerIdNullable>(null)
             :ext-system="1"
             queue-key="ahoj"
             label="Lead image"
+            expand-options
           />
         </VCol>
       </VRow>
