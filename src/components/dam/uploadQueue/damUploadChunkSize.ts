@@ -4,7 +4,7 @@ import { isNull } from '@/utils/common'
 
 const chunkSize = ref<number | undefined>(undefined)
 
-export function useDamUploadChunkSize(apiTimeout: number) {
+export function useDamUploadChunkSize(apiTimeout: number = 30) {
   const { damPrvConfig } = useDamConfigState()
   const lastChunkSize = ref(chunkSize.value || damPrvConfig.value.settings.imageChunkConfig.minSize)
 

@@ -80,8 +80,6 @@ const sleep = (ms: number) => {
 }
 
 export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = undefined) {
-  const coreDamOptions = inject<CommonAdminCoreDamOptions | undefined>(CoreDamOptions, undefined)
-  const apiTimeout = coreDamOptions?.apiTimeout ?? 30
   const { damClient } = useCoreDamOptions()
   const fileSize = ref(0)
 
@@ -92,7 +90,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   let endTimestamp = 0
   let lastLoaded = 0
   const assetAlgo = sha1.create()
-  const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize(apiTimeout)
+  const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize()
 
   const getCurrentTimestamp = () => {
     return Date.now() / 1000
