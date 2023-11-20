@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch, withModifiers } from 'vue'
+import { ref, watch, withModifiers } from 'vue'
 import { isBoolean, isUndefined } from '@/utils/common'
 import AFileDropzone from '@/components/file/AFileDropzone.vue'
 import type { InputFileChangeEvent } from '@/types/ChangeEvent'

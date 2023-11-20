@@ -62,7 +62,7 @@ const { showErrorsDefault } = useAlerts()
 const imageOptions = useImageOptions(props.configName)
 const { fetchImageWidgetData } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
-const { todo } = useImageWriteActions(imageOptions)
+const { actionDelete } = useImageWriteActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
 
 const resImage = ref<null | ImageAware>(null)
@@ -93,7 +93,6 @@ const actionEditMeta = () => {}
 const actionLibrary = () => {
   assetSelectDialog.value = true
 }
-const actionDelete = () => {}
 
 const onDrop = (files: File[]) => {
   console.log('onDrop', files)
@@ -188,6 +187,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
           </AFileInput>
         </div>
         <VBtn
+          v-else
           variant="text"
           size="x-small"
           icon
@@ -227,13 +227,13 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
                 >
                   <template #activator="{ props: fileInputProps }">
                     <VListItem @click.stop="fileInputProps.onClick($event)">
-                      Upload kravo
+                      Upload
                     </VListItem>
                   </template>
                 </AFileInput>
                 <VListItem
                   v-if="imageLoaded"
-                  @click="actionDelete"
+                  @click="actionDelete(props.modelValue)"
                 >
                   <VListItem-title>Remove image</VListItem-title>
                 </VListItem>

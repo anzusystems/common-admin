@@ -6,7 +6,7 @@ import { ref } from 'vue'
 import type { IntegerIdNullable } from '@/types/common'
 
 const imageId = ref(1)
-const imageId2 = ref<IntegerIdNullable>(null)
+const imageId2 = ref<IntegerIdNullable>(1)
 </script>
 
 <template>
@@ -35,7 +35,6 @@ const imageId2 = ref<IntegerIdNullable>(null)
             :ext-system="1"
             queue-key="ahoj"
             label="Lead image"
-            expand-options
           />
         </VCol>
       </VRow>

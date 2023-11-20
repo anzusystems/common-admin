@@ -2,6 +2,8 @@ import type { ImageAware } from '@/types/ImageAware'
 import type { useImageOptions } from '@/components/image/composables/imageOptions'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import { createImage } from '@/components/image/composables/imageApi'
+import type { IntegerId } from '@/types/common'
+import { isNull } from '@/utils/common'
 
 export function useImageActions(config: ReturnType<typeof useImageOptions>) {
   const widgetImageToDamImageUrl = (
@@ -30,12 +32,12 @@ export function useImageActions(config: ReturnType<typeof useImageOptions>) {
 }
 
 export function useImageWriteActions(config: ReturnType<typeof useImageOptions>) {
-  const todo = (assets: AssetSearchListItemDto[], withoutImage: boolean) => {
-    if (withoutImage) {
-    }
+  const actionDelete = (id: IntegerId | null) => {
+    if (isNull(id)) return
+    // todo
   }
 
   return {
-    todo,
+    actionDelete,
   }
 }
