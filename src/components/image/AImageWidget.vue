@@ -3,11 +3,13 @@ import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { IntegerIdNullable } from '@/types/common'
 import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
-import { computed, ref, toRefs, watch } from 'vue'
+import { computed, onMounted, ref, toRefs, watch } from 'vue'
 import { useImageOptions } from '@/components/image/composables/imageOptions'
 import { useImageActions } from '@/components/image/composables/imageActions'
 import { cloneDeep } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
+import { DamAssetType } from '@/types/coreDam/Asset'
+import { useDamAcceptTypeAndSizeHelper } from '@/components/dam/uploadQueue/acceptTypeAndSizeHelper'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
@@ -24,8 +26,6 @@ const props = withDefaults(
     expandOptions?: boolean
     disableOnClickMenu?: boolean
     width?: number | undefined
-    accept?: string | undefined
-    maxSizes?: Record<string, number> | undefined
   }>(),
   {
     configName: 'default',
@@ -38,8 +38,6 @@ const props = withDefaults(
     expandOptions: false,
     disableOnClickMenu: false,
     width: undefined,
-    accept: undefined,
-    maxSizes: undefined,
   }
 )
 
@@ -73,6 +71,12 @@ const actionEditMeta = () => {}
 const actionLibrary = () => {}
 const actionDelete = () => {}
 
+const onDrop = (files: File[]) => {
+  console.log(files)
+}
+
+const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(DamAssetType.Image)
+
 watch(
   [image, modelValue],
   async ([newImage, newImageId]) => {
@@ -100,6 +104,8 @@ watch(
   },
   { immediate: true }
 )
+
+onMounted(() => {})
 </script>
 
 <template>
@@ -210,9 +216,10 @@ watch(
       <AImageDropzone
         variant="fill"
         transparent
-        :accept="accept"
-        :max-sizes="maxSizes"
+        :accept="uploadAccept"
+        :max-sizes="uploadSizes"
         @on-click="clickMenuOpened = true"
+        @on-drop="onDrop"
       />
     </div>
   </div>

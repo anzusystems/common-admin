@@ -334,6 +334,7 @@ import { useUploadQueueItemFactory } from '@/components/dam/uploadQueue/UploadQu
 import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHelper'
 import { useDamUploadChunkSize } from '@/components/dam/uploadQueue/damUploadChunkSize'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
+import { useDamAcceptTypeAndSizeHelper } from '@/components/dam/uploadQueue/acceptTypeAndSizeHelper'
 
 export {
   // COMPONENTS
@@ -438,6 +439,7 @@ export {
   useDamConfigState,
   useUploadQueueItemFactory,
   useDamUploadChunkSize,
+  useDamAcceptTypeAndSizeHelper,
 
   // VALUE OBJECTS
   Grant,
