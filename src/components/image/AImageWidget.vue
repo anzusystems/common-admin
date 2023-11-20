@@ -3,18 +3,22 @@ import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { IntegerIdNullable } from '@/types/common'
 import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
-import { computed, ref } from 'vue'
+import { computed, ref, toRefs, watch } from 'vue'
+import { useImageOptions } from '@/components/image/composables/imageOptions'
+import { useImageActions } from '@/components/image/composables/imageActions'
+import { cloneDeep } from '@/utils/common'
+import { useAlerts } from '@/composables/system/alerts'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
  */
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
+    image?: ImageWidgetImage | undefined // optional, if available, no need to fetch image data
     stackId: string
     configName?: string
     label?: string | undefined
-    image?: ImageWidgetImage | undefined // optional, if available, no need to fetch image data
     readonly?: boolean
     dataCy?: string | undefined
     expandOptions?: boolean
@@ -39,11 +43,19 @@ withDefaults(
   }
 )
 
+const { showErrorsDefault } = useAlerts()
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const imageOptions = useImageOptions(props.configName)
+const { fetchImageWidgetData } = imageOptions
+const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
+
+const resImage = ref<null | ImageWidgetImage>(null)
 const clickMenuOpened = ref(false)
 
-// const imageOptions = useImageOptions(props.configName)
-// const { fetchImageWidgetData } = imageOptions
-// const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
+const { image, modelValue } = toRefs(props)
+
+const resolvedSrc = ref('')
 
 const enabledInteractionComputed = computed(() => {
   return true
@@ -60,6 +72,34 @@ const imageLoaded = computed(() => {
 const actionEditMeta = () => {}
 const actionLibrary = () => {}
 const actionDelete = () => {}
+
+watch(
+  [image, modelValue],
+  async ([newImage, newImageId]) => {
+    resImage.value = null
+    resolvedSrc.value = imagePlaceholderPath
+    if (newImage) {
+      resImage.value = cloneDeep(newImage)
+      if (resImage.value) {
+        resolvedSrc.value = widgetImageToDamImageUrl(resImage.value)
+      }
+      return
+    }
+    if (newImageId) {
+      try {
+        resImage.value = await fetchImageWidgetData(newImageId)
+      } catch (error) {
+        showErrorsDefault(error)
+      }
+      if (resImage.value) {
+        resolvedSrc.value = widgetImageToDamImageUrl(resImage.value)
+      }
+      return
+    }
+    return
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -152,7 +192,7 @@ const actionDelete = () => {}
     <div class="position-relative">
       <VImg
         :lazy-src="imagePlaceholderPath"
-        :src="imagePlaceholderPath"
+        :src="resolvedSrc"
         :width="width"
         cover
         max-width="100%"

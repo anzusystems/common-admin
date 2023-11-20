@@ -16,7 +16,7 @@ const imageId = ref(1)
       <VRow>
         <VCol cols="4">
           <AImageWidgetSimple
-            :image-id="imageId"
+            :model-value="imageId"
             label="Simple image view"
           >
             <template #append="{ image }">

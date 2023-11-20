@@ -11,6 +11,7 @@ import { currentUser } from '@/playground/system/currentUser'
 import type { LanguageCode } from '@/composables/languageSettings'
 import { loadCommonFonts } from '@/plugins/webfontloader'
 import { playgroundFetchImageCms } from '@/playground/imageView/api'
+import { cmsClient } from '@/playground/imageView/cmsClient'
 
 export type CustomAclValue = 'anzu_entity_create' | 'anzu_entity_view'
 
@@ -33,14 +34,17 @@ createApp(App)
     coreDam: {
       configs: {
         default: {
-          client: damClient,
+          damClient: damClient,
           defaultLicenceId: 100001,
         },
       },
+      apiTimeout: 30,
+      uploadStatusFallback: false,
     },
     image: {
       configs: {
         default: {
+          imageClient: cmsClient,
           getImage: playgroundFetchImageCms,
           imageUrl: 'http://admin-image.smedata.localhost',
           width: 500,

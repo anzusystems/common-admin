@@ -5,25 +5,28 @@ import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
 import { cloneDeep } from '@/utils/common'
 import { useImageOptions } from '@/components/image/composables/imageOptions'
 import { useImageActions } from '@/components/image/composables/imageActions'
+import type { IntegerIdNullable } from '@/types/common'
+import { useAlerts } from '@/composables/system/alerts'
 
 const props = withDefaults(
   defineProps<{
+    modelValue: IntegerIdNullable
+    image?: ImageWidgetImage | undefined // optional, if available, no need to fetch image data
     configName?: string
     label?: string | undefined
-    image?: ImageWidgetImage | null
-    imageId?: number | null
     width?: number | undefined
     disableAspectRatio?: boolean
   }>(),
   {
     configName: 'default',
     label: undefined,
-    image: null,
-    imageId: null,
+    image: undefined,
     width: undefined,
     disableAspectRatio: false,
   }
 )
+
+const { showErrorsDefault } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useImageOptions(props.configName)
@@ -32,23 +35,31 @@ const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 
 const resImage = ref<null | ImageWidgetImage>(null)
 
-const { image, imageId } = toRefs(props)
+const { image, modelValue } = toRefs(props)
 
 const resolvedSrc = ref('')
 
 watch(
-  [image, imageId],
+  [image, modelValue],
   async ([newImage, newImageId]) => {
     resImage.value = null
     resolvedSrc.value = imagePlaceholderPath
     if (newImage) {
       resImage.value = cloneDeep(newImage)
-      resolvedSrc.value = widgetImageToDamImageUrl(newImage)
+      if (resImage.value) {
+        resolvedSrc.value = widgetImageToDamImageUrl(resImage.value)
+      }
       return
     }
     if (newImageId) {
-      resImage.value = await fetchImageWidgetData(newImageId)
-      resolvedSrc.value = widgetImageToDamImageUrl(resImage.value)
+      try {
+        resImage.value = await fetchImageWidgetData(newImageId)
+      } catch (error) {
+        showErrorsDefault(error)
+      }
+      if (resImage.value) {
+        resolvedSrc.value = widgetImageToDamImageUrl(resImage.value)
+      }
       return
     }
     return

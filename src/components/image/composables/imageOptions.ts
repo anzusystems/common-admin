@@ -11,6 +11,7 @@ export function useImageOptions(configName: string = 'default') {
   }
 
   return {
+    imageClient: imageOptions.configs[configName].imageClient,
     fetchImageWidgetData: (id: number) => imageOptions.configs[configName].getImage(id),
     imageUrl: imageOptions.configs[configName].imageUrl,
     imageWidth: imageOptions.configs[configName].width,

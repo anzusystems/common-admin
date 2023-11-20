@@ -34,6 +34,7 @@ export type CustomAclResolver<T extends AclValue = AclValue> =
 export type CurrentUserType = DeepReadonly<Ref<UnwrapRef<AnzuUser | undefined>>>
 
 export interface CommonAdminImageConfig {
+  imageClient: () => AxiosInstance
   getImage: (id: IntegerId) => Promise<ImageWidgetImage>
   imageUrl: string
   width: number
@@ -48,7 +49,6 @@ export type CommonAdminImageOptions =
 
 export interface CommonAdminCoreDamConfig {
   damClient: () => AxiosInstance
-  imageClient: () => AxiosInstance
   defaultLicenceId?: IntegerId
 }
 
