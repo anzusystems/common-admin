@@ -3,8 +3,11 @@ import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import AImageWidgetSimple from '@/components/image/AImageWidgetSimple.vue'
 import AImageWidget from '@/components/image/AImageWidget.vue'
 import { ref } from 'vue'
+import AImageWidgetConfigProvider from '@/components/image/AImageWidgetConfigProvider.vue'
+import type { IntegerIdNullable } from '@/types/common'
 
 const imageId = ref(1)
+const imageId2 = ref<IntegerIdNullable>(null)
 </script>
 
 <template>
@@ -27,11 +30,14 @@ const imageId = ref(1)
       </VRow>
       <VRow>
         <VCol cols="4">
-          <AImageWidget
-            v-model="imageId"
-            label="Lead image"
-            stack-id="ahoj"
-          />
+          <AImageWidgetConfigProvider :ext-system="1">
+            <AImageWidget
+              v-model="imageId2"
+              :licence-id="100001"
+              queue-key="ahoj"
+              label="Lead image"
+            />
+          </AImageWidgetConfigProvider>
         </VCol>
       </VRow>
     </VCardText>

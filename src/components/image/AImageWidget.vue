@@ -1,15 +1,20 @@
 <script lang="ts" setup>
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
-import type { IntegerIdNullable } from '@/types/common'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
-import { computed, onMounted, ref, toRefs, watch } from 'vue'
+import { computed, ref, toRefs, watch } from 'vue'
 import { useImageOptions } from '@/components/image/composables/imageOptions'
 import { useImageActions } from '@/components/image/composables/imageActions'
-import { cloneDeep } from '@/utils/common'
+import { cloneDeep, isNull } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/dam/uploadQueue/acceptTypeAndSizeHelper'
+import { useUploadQueuesStore } from '@/components/dam/uploadQueue/uploadQueuesStore'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import AFileInput from '@/components/file/AFileInput.vue'
+import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
+import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
@@ -17,8 +22,9 @@ import { useDamAcceptTypeAndSizeHelper } from '@/components/dam/uploadQueue/acce
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
+    queueKey: UploadQueueKey
+    licenceId: IntegerId
     image?: ImageWidgetImage | undefined // optional, if available, no need to fetch image data
-    stackId: string
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -47,32 +53,38 @@ const { showErrorsDefault } = useAlerts()
 const imageOptions = useImageOptions(props.configName)
 const { fetchImageWidgetData } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
+// dam config is loaded
+// const { damConfigExtSystem } = useDamConfigState()
+const uploadQueuesStore = useUploadQueuesStore()
 
 const resImage = ref<null | ImageWidgetImage>(null)
 const clickMenuOpened = ref(false)
+const assetSelectDialog = ref(false)
 
 const { image, modelValue } = toRefs(props)
 
 const resolvedSrc = ref('')
 
+const uploadQueue = computed(() => {
+  return uploadQueuesStore.getQueue(props.queueKey)
+})
+
 const enabledInteractionComputed = computed(() => {
   return true
 })
 
-const showReviewIcon = computed(() => {
-  return true
-})
-
 const imageLoaded = computed(() => {
-  return true
+  return !isNull(resImage.value)
 })
 
 const actionEditMeta = () => {}
-const actionLibrary = () => {}
+const actionLibrary = () => {
+  assetSelectDialog.value = true
+}
 const actionDelete = () => {}
 
 const onDrop = (files: File[]) => {
-  console.log(files)
+  uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
 }
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(DamAssetType.Image)
@@ -105,7 +117,11 @@ watch(
   { immediate: true }
 )
 
-onMounted(() => {})
+const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
+  if (data.type === 'asset') {
+    console.log(data.value)
+  }
+}
 </script>
 
 <template>
@@ -118,19 +134,7 @@ onMounted(() => {})
         {{ label }}
       </h4>
       <div v-show="enabledInteractionComputed">
-        <VBtn
-          v-if="showReviewIcon"
-          color="orange"
-          variant="text"
-          size="small"
-          @click.stop="actionEditMeta"
-        >
-          <VIcon
-            size="small"
-            icon="mdi-alert"
-          />
-          <span>Check metadata</span>
-        </VBtn>
+        {{ uploadQueue }}
         <div
           v-if="expandOptions"
           class="d-flex flex-row"
@@ -149,7 +153,12 @@ onMounted(() => {})
             <span v-if="imageLoaded">Replace from library</span>
             <span v-else>Choose from library</span>
           </VBtn>
-          // upload button
+          <AFileInput
+            :file-input-key="uploadQueue?.fileInputKey"
+            :accept="uploadAccept"
+            :max-sizes="uploadSizes"
+            @files-input="onDrop"
+          />
         </div>
         <VBtn
           variant="text"
@@ -182,7 +191,18 @@ onMounted(() => {})
                     <span v-else>Choose from library</span>
                   </VListItem-title>
                 </VListItem>
-                // upload button
+                <AFileInput
+                  :file-input-key="uploadQueue?.fileInputKey"
+                  :accept="uploadAccept"
+                  :max-sizes="uploadSizes"
+                  @files-input="onDrop"
+                >
+                  <template #activator="{ props: fileInputProps }">
+                    <VListItem v-bind="fileInputProps">
+                      Upload
+                    </VListItem>
+                  </template>
+                </AFileInput>
                 <VListItem
                   v-if="imageLoaded"
                   @click="actionDelete"
@@ -223,6 +243,15 @@ onMounted(() => {})
       />
     </div>
   </div>
+  <AAssetSelect
+    v-model="assetSelectDialog"
+    :asset-licence-id="licenceId"
+    :min-count="1"
+    :max-count="1"
+    :asset-type="DamAssetType.Image"
+    return-type="asset"
+    @on-confirm="onAssetSelectConfirm"
+  />
 </template>
 
 <style lang="scss">

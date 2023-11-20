@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref, withModifiers } from 'vue'
+import { computed, ref, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
@@ -82,6 +82,15 @@ const onOpen = () => {
   openSidebar()
   dialog.value = true
 }
+
+watch(
+  dialog,
+  async (newValue, oldValue) => {
+    if (newValue === oldValue || !newValue) return
+    onOpen()
+  },
+  { immediate: true }
+)
 
 const onClose = () => {
   dialog.value = false

@@ -187,6 +187,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
           resolve(true)
         })
         .catch((err) => {
+          console.log(err)
           onConfigError(err)
           reject(false)
         })
