@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, toRefs, watch } from 'vue'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
-import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
+import type { ImageAware } from '@/types/ImageAware'
 import { cloneDeep } from '@/utils/common'
 import { useImageOptions } from '@/components/image/composables/imageOptions'
 import { useImageActions } from '@/components/image/composables/imageActions'
@@ -11,7 +11,7 @@ import { useAlerts } from '@/composables/system/alerts'
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
-    image?: ImageWidgetImage | undefined // optional, if available, no need to fetch image data
+    image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     label?: string | undefined
     width?: number | undefined
@@ -33,7 +33,7 @@ const imageOptions = useImageOptions(props.configName)
 const { fetchImageWidgetData } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 
-const resImage = ref<null | ImageWidgetImage>(null)
+const resImage = ref<null | ImageAware>(null)
 
 const { image, modelValue } = toRefs(props)
 

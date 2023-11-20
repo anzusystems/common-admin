@@ -1,9 +1,11 @@
-import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
+import type { ImageAware } from '@/types/ImageAware'
 import type { useImageOptions } from '@/components/image/composables/imageOptions'
+import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
+import { createImage } from '@/components/image/composables/imageApi'
 
 export function useImageActions(config: ReturnType<typeof useImageOptions>) {
   const widgetImageToDamImageUrl = (
-    image: ImageWidgetImage,
+    image: ImageAware,
     width = config.imageWidth,
     height = config.imageHeight,
     random = true
@@ -22,14 +24,18 @@ export function useImageActions(config: ReturnType<typeof useImageOptions>) {
     )
   }
 
-  // const imageAspectRatioComputed = computed(() => {
-  //   if (props.disableAspectRatio) {
-  //     return undefined
-  //   }
-  //   return DAM_IMAGE_ASPECT_RATIO
-  // })
-
   return {
     widgetImageToDamImageUrl,
+  }
+}
+
+export function useImageWriteActions(config: ReturnType<typeof useImageOptions>) {
+  const todo = (assets: AssetSearchListItemDto[], withoutImage: boolean) => {
+    if (withoutImage) {
+    }
+  }
+
+  return {
+    todo,
   }
 }

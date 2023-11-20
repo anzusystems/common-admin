@@ -38,6 +38,7 @@ export function useFormatAndSizeCheck(accept: string | undefined, maxSizes: Reco
       const { t } = i18n.global
       showWarning(t('system.upload.incorrectFormatSize') + ':' + incorrectFileNames.join(', '))
     }
+    console.log(validFiles)
 
     return validFiles
   }

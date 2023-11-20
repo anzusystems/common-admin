@@ -3,10 +3,9 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { onMounted, provide, ref } from 'vue'
 import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
 import { useCoreDamOptions } from '@/components/dam/assetSelect/composables/coreDamOptions'
-import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
+import type { ImageAware } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import AImageWidgetInner from '@/components/image/AImageWidgetInner.vue'
-import { CurrentUserSymbol } from '@/components/injectionKeys'
 import { ImageWidgetExtSystemConfig } from '@/components/image/composables/imageWidgetInkectionKeys'
 
 /**
@@ -18,7 +17,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     licenceId: IntegerId
     extSystem: IntegerId
-    image?: ImageWidgetImage | undefined // optional, if available, no need to fetch image data
+    image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     label?: string | undefined
     readonly?: boolean

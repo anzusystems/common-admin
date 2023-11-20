@@ -13,7 +13,7 @@ import {
   ImageOptions,
 } from '@/components/injectionKeys'
 import type { AxiosInstance } from 'axios'
-import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
+import type { ImageAware } from '@/types/ImageAware'
 import type { IntegerId } from '@/types/common'
 
 export type PluginOptions<T extends AclValue = AclValue> = {
@@ -35,7 +35,7 @@ export type CurrentUserType = DeepReadonly<Ref<UnwrapRef<AnzuUser | undefined>>>
 
 export interface CommonAdminImageConfig {
   imageClient: () => AxiosInstance
-  getImage: (id: IntegerId) => Promise<ImageWidgetImage>
+  getImage: (id: IntegerId) => Promise<ImageAware>
   imageUrl: string
   width: number
   height: number

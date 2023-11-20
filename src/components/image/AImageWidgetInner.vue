@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
+import type { ImageAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { computed, inject, ref, type ShallowRef, toRefs, watch } from 'vue'
 import { useImageOptions } from '@/components/image/composables/imageOptions'
-import { useImageActions } from '@/components/image/composables/imageActions'
+import { useImageActions, useImageWriteActions } from '@/components/image/composables/imageActions'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
 import { DamAssetType } from '@/types/coreDam/Asset'
@@ -24,7 +24,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     licenceId: IntegerId
     extSystem: IntegerId
-    image?: ImageWidgetImage | undefined // optional, if available, no need to fetch image data
+    image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -62,13 +62,16 @@ const { showErrorsDefault } = useAlerts()
 const imageOptions = useImageOptions(props.configName)
 const { fetchImageWidgetData } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
-// dam config is loaded
-// const { damConfigExtSystem } = useDamConfigState()
+const { todo } = useImageWriteActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
 
-const resImage = ref<null | ImageWidgetImage>(null)
+const resImage = ref<null | ImageAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
+
+const withoutImage = computed(() => {
+  return isNull(props.modelValue)
+})
 
 const { image, modelValue } = toRefs(props)
 
@@ -93,7 +96,12 @@ const actionLibrary = () => {
 const actionDelete = () => {}
 
 const onDrop = (files: File[]) => {
+  console.log('onDrop', files)
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+}
+const onFileInput = (files: File[]) => {
+  console.log('onFileInput', files)
+  // uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
 }
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -132,6 +140,7 @@ watch(
 const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
     console.log(data.value)
+    // todo(data.value, withoutImage.value)
   }
 }
 </script>
@@ -169,7 +178,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
             :file-input-key="uploadQueue?.fileInputKey"
             :accept="uploadAccept"
             :max-sizes="uploadSizes"
-            @files-input="onDrop"
+            @files-input="onFileInput"
           />
         </div>
         <VBtn
@@ -207,7 +216,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
                   :file-input-key="uploadQueue?.fileInputKey"
                   :accept="uploadAccept"
                   :max-sizes="uploadSizes"
-                  @files-input="onDrop"
+                  @files-input="onFileInput"
                 >
                   <template #activator="{ props: fileInputProps }">
                     <VListItem v-bind="fileInputProps">

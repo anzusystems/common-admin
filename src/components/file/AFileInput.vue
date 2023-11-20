@@ -56,10 +56,14 @@ const clickInput = () => {
 const { checkFormatsAndSizes } = useFormatAndSizeCheck(props.accept, props.maxSizes)
 
 const validateData = (files: File[]) => {
-  if (props.multiple && files.length > 1) {
+  console.log('validateData')
+  if (!props.multiple && files.length > 0) {
+    console.log('emit1')
     emit('filesInput', checkFormatsAndSizes([files[0]]))
     return
   }
+  console.log('emit2')
+  console.log(files)
   emit('filesInput', checkFormatsAndSizes(files))
 }
 

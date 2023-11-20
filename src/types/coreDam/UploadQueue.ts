@@ -7,6 +7,7 @@ import type {
   DamAssetType
 } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason,  AssetFileLink } from '@/types/coreDam/AssetFile'
+import type { ImageAware } from '@/types/ImageAware'
 
 export type UploadQueueKey = string
 
@@ -82,6 +83,7 @@ export interface UploadQueueItem {
   notificationFallbackTimer: ReturnType<typeof setTimeout> | undefined
   notificationFallbackTry: number
   slotName: string | null
+  image: undefined | ImageAware
 }
 
 export interface DamUploadStartResponse {
