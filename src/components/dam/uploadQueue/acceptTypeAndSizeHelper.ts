@@ -1,14 +1,15 @@
-import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import { computed } from 'vue'
+import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 
-export function useDamAcceptTypeAndSizeHelper (assetType: undefined | DamAssetType = undefined) {
-  const { damConfigExtSystem } = useDamConfigState()
-
+export function useDamAcceptTypeAndSizeHelper(
+  assetType: undefined | DamAssetType = undefined,
+  damConfigExtSystem: DamExtSystemConfig
+) {
   const createSizesByAssetType = (assetType: DamAssetType) => {
     const sizes: Record<string, number> = {}
-    for (let i = 0; i < damConfigExtSystem.value[assetType].mimeTypes.length; i++) {
-      sizes[damConfigExtSystem.value[assetType].mimeTypes[i]] = damConfigExtSystem.value[assetType].sizeLimit
+    for (let i = 0; i < damConfigExtSystem[assetType].mimeTypes.length; i++) {
+      sizes[damConfigExtSystem[assetType].mimeTypes[i]] = damConfigExtSystem[assetType].sizeLimit
     }
     return sizes
   }
