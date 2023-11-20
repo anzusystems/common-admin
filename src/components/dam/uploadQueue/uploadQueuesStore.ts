@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { DocId, IntegerId } from '@/types/common'
+import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
 import {
   type UploadQueue,
@@ -15,6 +15,8 @@ import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
 import { useUpload } from '@/components/dam/uploadQueue/uploadService'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason } from '@/types/coreDam/AssetFile'
+import { DamNotificationName } from '@/components/dam/uploadQueue/damNotificationsEventBus'
+import { useDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
@@ -23,6 +25,24 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   const queues = ref<Map<UploadQueueKey, UploadQueue>>(new Map())
 
   const { createDefault } = useUploadQueueItemFactory()
+
+  const { addDamNotificationListener } = useDamNotifications()
+  addDamNotificationListener((event) => {
+    switch (event.name) {
+      case DamNotificationName.AssetFileProcessed:
+        queueItemProcessed(event.data.assetId)
+        break
+      case DamNotificationName.AssetFileFailed:
+        queueItemFailed(event.data.assetId, event.data.failReason)
+        break
+      case DamNotificationName.AssetFileDuplicate:
+        queueItemDuplicate(event.data.assetId, event.data.originAssetFile, event.data.assetType)
+        break
+      case DamNotificationName.AssetMetadataProcessed:
+        queueItemMetadataProcessed(event.data.assetId)
+        break
+    }
+  })
 
   function getQueue(queueId: UploadQueueKey) {
     if (queues.value.has(queueId)) {
@@ -132,8 +152,15 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   }
 
   function queueItemProcessed (assetId: DocId) {}
-  function queueItemDuplicate (assetId: DocId) {}
+
+  function queueItemDuplicate(
+    assetId: DocId,
+    originAssetFile: DocIdNullable = null,
+    assetType: DamAssetType | null = null
+  ) {}
   function queueItemFailed (assetId: DocId, failReason: AssetFileFailReason) {}
+
+  function queueItemMetadataProcessed(assetId: DocId) {}
 
   return {
     getQueue,

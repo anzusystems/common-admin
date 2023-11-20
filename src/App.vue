@@ -11,6 +11,9 @@ import ActionbarTeleportTarget from '@/playground/system/ActionbarTeleportTarget
 import { useRoute } from 'vue-router'
 import logoFull from '@/assets/logo-ca-full.svg'
 import logoNoText from '@/assets/logo-ca-no-text.svg'
+import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMessages'
+import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
+import { initDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
 
 const route = useRoute()
 
@@ -30,12 +33,13 @@ const navIconClick = () => {
 }
 
 const { theme } = useTheme()
-import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMessages'
-import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
 
 const { initGlobalDragState } = useDropzoneGlobalDragState()
 
+const { openConnection } = initDamNotifications()
+
 onMounted(() => {
+  openConnection()
   initGlobalDragState()
 })
 </script>

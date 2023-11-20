@@ -40,6 +40,10 @@ createApp(App)
       },
       apiTimeout: 30,
       uploadStatusFallback: false,
+      notification: {
+        enabled: true,
+        webSocketUrl: 'ws://notification-server.sme.localhost/ws',
+      },
     },
     image: {
       configs: {

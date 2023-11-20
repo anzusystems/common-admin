@@ -15,6 +15,7 @@ import SortableView from '@/playground/sortableView/SortableView.vue'
 import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 import AlertView from '@/playground/alertView/AlertView.vue'
 import SubjectSelectView from '@/playground/subjectSelectView/SubjectSelectView.vue'
+import { initDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
