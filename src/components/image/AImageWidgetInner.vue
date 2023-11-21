@@ -4,7 +4,7 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ImageAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { computed, inject, ref, type ShallowRef, toRefs, watch } from 'vue'
-import { useImageOptions } from '@/components/image/composables/imageOptions'
+import { useCommonAdminImageOptions } from '@/components/image/composables/commonAdminImageOptions'
 import { useImageActions, useImageWriteActions } from '@/components/image/composables/imageActions'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
@@ -17,6 +17,7 @@ import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import { ImageWidgetExtSystemConfig } from '@/components/image/composables/imageWidgetInkectionKeys'
 import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
+import { fetchImage } from '@/components/image/composables/imageApi'
 
 const props = withDefaults(
   defineProps<{
@@ -59,8 +60,8 @@ if (isUndefined(imageWidgetExtSystemConfig)) {
 const { showErrorsDefault } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageOptions = useImageOptions(props.configName)
-const { fetchImageWidgetData } = imageOptions
+const imageOptions = useCommonAdminImageOptions(props.configName)
+const { imageClient } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 const { actionDelete } = useImageWriteActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
@@ -122,7 +123,7 @@ watch(
     }
     if (newImageId) {
       try {
-        resImage.value = await fetchImageWidgetData(newImageId)
+        resImage.value = await fetchImage(imageClient, newImageId)
       } catch (error) {
         showErrorsDefault(error)
       }

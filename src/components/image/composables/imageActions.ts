@@ -1,11 +1,9 @@
 import type { ImageAware } from '@/types/ImageAware'
-import type { useImageOptions } from '@/components/image/composables/imageOptions'
-import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
-import { createImage } from '@/components/image/composables/imageApi'
+import type { useCommonAdminImageOptions } from '@/components/image/composables/commonAdminImageOptions'
 import type { IntegerId } from '@/types/common'
 import { isNull } from '@/utils/common'
 
-export function useImageActions(config: ReturnType<typeof useImageOptions>) {
+export function useImageActions(config: ReturnType<typeof useCommonAdminImageOptions>) {
   const widgetImageToDamImageUrl = (
     image: ImageAware,
     width = config.imageWidth,
@@ -13,7 +11,7 @@ export function useImageActions(config: ReturnType<typeof useImageOptions>) {
     random = true
   ) => {
     return (
-      config.imageUrl +
+      config.previewDomain +
       '/image/w' +
       width +
       '-h' +
@@ -31,7 +29,7 @@ export function useImageActions(config: ReturnType<typeof useImageOptions>) {
   }
 }
 
-export function useImageWriteActions(config: ReturnType<typeof useImageOptions>) {
+export function useImageWriteActions(config: ReturnType<typeof useCommonAdminImageOptions>) {
   const actionDelete = (id: IntegerId | null) => {
     if (isNull(id)) return
     // todo

@@ -2,7 +2,7 @@
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { onMounted, provide, ref } from 'vue'
 import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
-import { useCoreDamOptions } from '@/components/dam/assetSelect/composables/coreDamOptions'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageAware } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import AImageWidgetInner from '@/components/image/AImageWidgetInner.vue'
@@ -43,7 +43,7 @@ const props = withDefaults(
 const ready = ref(false)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient } = useCoreDamOptions(props.configName)
+const { damClient } = useCommonAdminCoreDamOptions(props.configName)
 const { initialized, loadDamConfigExtSystem, damConfigExtSystem } = useDamConfigState(damClient)
 
 onMounted(async () => {

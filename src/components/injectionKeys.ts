@@ -13,5 +13,3 @@ export const CurrentUserSymbol: InjectionKey<CurrentUserType | undefined> = Symb
 export const CustomAclResolverSymbol: InjectionKey<CustomAclResolver | undefined> = Symbol.for('anzu:CustomAclResolver')
 export const AvailableLanguagesSymbol: InjectionKey<LanguageCode[] | undefined> = Symbol.for('anzu:AvailableLanguages')
 export const DefaultLanguageSymbol: InjectionKey<LanguageCode | undefined> = Symbol.for('anzu:DefaultLanguage')
-export const ImageOptions: InjectionKey<CommonAdminImageOptions | undefined> = Symbol.for('anzu:ImageOptions')
-export const CoreDamOptions: InjectionKey<CommonAdminCoreDamOptions | undefined> = Symbol.for('anzu:CoreDamOptions')

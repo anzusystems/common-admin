@@ -6,15 +6,14 @@ import Notification from '@kyvg/vue3-notification'
 import type { LanguageCode } from '@/composables/languageSettings'
 import {
   AvailableLanguagesSymbol,
-  CoreDamOptions,
   CurrentUserSymbol,
   CustomAclResolverSymbol,
   DefaultLanguageSymbol,
-  ImageOptions,
 } from '@/components/injectionKeys'
 import type { AxiosInstance } from 'axios'
-import type { ImageAware } from '@/types/ImageAware'
 import type { IntegerId } from '@/types/common'
+import { initCommonAdminImageOptions } from '@/components/image/composables/commonAdminImageOptions'
+import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 export type PluginOptions<T extends AclValue = AclValue> = {
   currentUser: CurrentUserType
@@ -35,8 +34,7 @@ export type CurrentUserType = DeepReadonly<Ref<UnwrapRef<AnzuUser | undefined>>>
 
 export interface CommonAdminImageConfig {
   imageClient: () => AxiosInstance
-  getImage: (id: IntegerId) => Promise<ImageAware>
-  imageUrl: string
+  previewDomain: string
   width: number
   height: number
 }
@@ -70,9 +68,9 @@ export default {
     app.provide(CustomAclResolverSymbol, options.customAclResolver)
     app.provide(AvailableLanguagesSymbol, options.languages.available)
     app.provide(DefaultLanguageSymbol, options.languages.default)
-    app.provide(CoreDamOptions, options.coreDam)
-    app.provide(ImageOptions, options.image)
     app.component('Acl', Acl)
     app.use(Notification, { componentName: 'Notifications' })
+    initCommonAdminImageOptions(options.image)
+    initCommonAdminCoreDamOptions(options.coreDam)
   },
 }

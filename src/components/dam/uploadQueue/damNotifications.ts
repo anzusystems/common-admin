@@ -1,24 +1,24 @@
 import { useWebSocket } from '@vueuse/core'
-import { inject, ref } from 'vue'
-import type { CommonAdminCoreDamOptions } from '@/AnzuSystemsCommonAdmin'
-import { CoreDamOptions } from '@/components/injectionKeys'
+import { ref } from 'vue'
 import { i18n } from '@/plugins/i18n'
 import { useAlerts } from '@/composables/system/alerts'
 import {
   type DamNotification,
   useDamNotificationsEventBus,
 } from '@/components/dam/uploadQueue/damNotificationsEventBus'
+import { useCommonAdminCoreDamOptionsGlobal } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const { t } = i18n.global || i18n
 
 const damNotificationsInitialized = ref(false)
 
 export function initDamNotifications() {
-  const coreDamOptions = inject<CommonAdminCoreDamOptions | undefined>(CoreDamOptions, undefined)
-  const enabled = coreDamOptions?.notification.enabled && coreDamOptions?.notification.webSocketUrl.length > 0
-  console.log(coreDamOptions?.notification.webSocketUrl)
+  const { notification } = useCommonAdminCoreDamOptionsGlobal()
 
-  const { open, ws } = useWebSocket(coreDamOptions?.notification.webSocketUrl, {
+  const enabled = notification.enabled && notification.webSocketUrl.length > 0
+  console.log(notification.webSocketUrl)
+
+  const { open, ws } = useWebSocket(notification.webSocketUrl, {
     immediate: false,
     autoReconnect: {
       retries: 10,

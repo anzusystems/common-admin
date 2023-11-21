@@ -3,10 +3,11 @@ import { ref, toRefs, watch } from 'vue'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import type { ImageAware } from '@/types/ImageAware'
 import { cloneDeep } from '@/utils/common'
-import { useImageOptions } from '@/components/image/composables/imageOptions'
+import { useCommonAdminImageOptions } from '@/components/image/composables/commonAdminImageOptions'
 import { useImageActions } from '@/components/image/composables/imageActions'
 import type { IntegerIdNullable } from '@/types/common'
 import { useAlerts } from '@/composables/system/alerts'
+import { fetchImage } from '@/components/image/composables/imageApi'
 
 const props = withDefaults(
   defineProps<{
@@ -29,8 +30,8 @@ const props = withDefaults(
 const { showErrorsDefault } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageOptions = useImageOptions(props.configName)
-const { fetchImageWidgetData } = imageOptions
+const imageOptions = useCommonAdminImageOptions(props.configName)
+const { imageClient } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 
 const resImage = ref<null | ImageAware>(null)
@@ -53,7 +54,7 @@ watch(
     }
     if (newImageId) {
       try {
-        resImage.value = await fetchImageWidgetData(newImageId)
+        resImage.value = await fetchImage(imageClient, newImageId)
       } catch (error) {
         showErrorsDefault(error)
       }

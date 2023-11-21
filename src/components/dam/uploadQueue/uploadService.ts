@@ -12,9 +12,11 @@ import { NEW_LINE_MARK } from '@/composables/system/alerts'
 import { isUndefined } from '@/utils/common'
 import { useDamUploadChunkSize } from '@/components/dam/uploadQueue/damUploadChunkSize'
 import type { CommonAdminCoreDamOptions } from '@/AnzuSystemsCommonAdmin'
-import { CoreDamOptions } from '@/components/injectionKeys'
 import { damUploadChunk, damUploadFinish, damUploadStart } from '@/components/dam/uploadQueue/api/uploadApi'
-import { useCoreDamOptions } from '@/components/dam/assetSelect/composables/coreDamOptions'
+import {
+  useCommonAdminCoreDamOptions,
+  useCommonAdminCoreDamOptionsGlobal
+} from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 // const CHUNK_MAX_RETRY = 6
 const CHUNK_MAX_RETRY = 4
@@ -27,9 +29,9 @@ const failUpload = async (queueItem: UploadQueueItem, error: unknown = null) => 
 }
 
 const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
-  const { damClient } = useCoreDamOptions()
-  const coreDamOptions = inject<CommonAdminCoreDamOptions | undefined>(CoreDamOptions, undefined)
-  return await damUploadFinish(damClient, queueItem, sha, coreDamOptions?.uploadStatusFallback ?? false)
+  const { damClient } = useCommonAdminCoreDamOptions()
+  const { uploadStatusFallback } = useCommonAdminCoreDamOptionsGlobal()
+  return await damUploadFinish(damClient, queueItem, sha, uploadStatusFallback)
 }
 
 const handleValidationErrorMessage = (error: Error | any) => {
@@ -80,7 +82,7 @@ const sleep = (ms: number) => {
 }
 
 export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = undefined) {
-  const { damClient } = useCoreDamOptions()
+  const { damClient } = useCommonAdminCoreDamOptions()
   const fileSize = ref(0)
 
   const progress = ref(0)

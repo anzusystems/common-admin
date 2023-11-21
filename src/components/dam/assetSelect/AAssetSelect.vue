@@ -18,7 +18,7 @@ import type {
   AssetSelectReturnTypeValues,
 } from '@/types/coreDam/AssetSelect'
 import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
-import { useCoreDamOptions } from '@/components/dam/assetSelect/composables/coreDamOptions'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
   defineProps<{
@@ -63,7 +63,7 @@ const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSel
 const { openSidebar, sidebarLeft } = useSidebar()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { defaultLicenceId } = useCoreDamOptions(props.configName)
+const { defaultLicenceId } = useCommonAdminCoreDamOptions(props.configName)
 
 const onOpen = () => {
   const licenceId = props.assetLicenceId || defaultLicenceId

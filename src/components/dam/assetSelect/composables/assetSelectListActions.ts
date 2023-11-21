@@ -9,14 +9,14 @@ import { usePagination } from '@/composables/system/pagination'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { useAlerts } from '@/composables/system/alerts'
 import type { DocId } from '@/types/common'
-import { useCoreDamOptions } from '@/components/dam/assetSelect/composables/coreDamOptions'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
 const filterIsTouched = ref(false)
 
 export function useAssetListActions(configName = 'default') {
-  const { damClient } = useCoreDamOptions(configName)
+  const { damClient } = useCommonAdminCoreDamOptions(configName)
 
   const { fetchAssetList: apiFetchAssetList } = useAssetApi(damClient)
 
