@@ -47,9 +47,9 @@ export function initDamNotifications() {
     }
     ws.value.onmessage = function (this: WebSocket, event: MessageEvent) {
       const message = JSON.parse(event.data as string)
-      console.log(message)
-      console.log(message.eventName)
-      eventBus.emit({ name: message.eventName, data: message.data.length ? JSON.parse(message.data) : undefined })
+      const data = message.data.length ? JSON.parse(message.data) : undefined
+      console.log(message.eventName, data)
+      eventBus.emit({ name: message.eventName, data })
     }
   }
 

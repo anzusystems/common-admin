@@ -139,14 +139,13 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   }
 
   const processAndUploadChunk = async (offset: number): Promise<File> => {
-    console.log(offset)
     updateChunkSize(queueItem.progress.speed)
     let arrayBuffer = await readFile(offset, lastChunkSize.value, queueItem.file!)
     let chunkFile = new File([arrayBuffer.data], queueItem.file!.name)
 
     queueItem.currentChunkIndex = offset
     const cancelToken = axios.CancelToken
-    queueItem.chunks.push({ cancelTokenSource: cancelToken.source() })
+    queueItem.latestChunkCancelToken = cancelToken.source()
 
     let sleepTime = CHUNK_RETRY_INTERVAL
     let attempt = 0

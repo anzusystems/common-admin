@@ -1,14 +1,23 @@
 import { type EventBusKey, useEventBus } from '@vueuse/core'
-import type { DocId, DocIdNullable } from '@/types/common'
-import type { AssetFileFailReason } from '@/types/coreDam/AssetFile'
+import type { DocId } from '@/types/common'
+import type { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 import type { DamAssetType, DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { DamDistributionStatus } from '@/types/coreDam/DamConfig'
+
+export const damNotificationsEventBusKey: EventBusKey<DamNotification> = Symbol('anzu:damNotificationsEventBusKey')
+
+export function useDamNotificationsEventBus() {
+  return useEventBus<DamNotification>(damNotificationsEventBusKey)
+}
 
 export const DamNotificationName = {
   AssetFileProcessed: 'asset_file_processed',
   AssetFileFailed: 'asset_file_failed',
   AssetFileDuplicate: 'asset_file_duplicate',
+  AssetFileUploaded: 'asset_file_uploaded',
+  AssetFileDeleted: 'asset_file_deleted',
   AssetMetadataProcessed: 'asset_metadata_processed',
+  AssetDeleted: 'asset_deleted',
   DistributionDistributing: 'distribution_distributing',
   DistributionRemoteProcessing: 'distribution_remote_processing',
   DistributionDistributed: 'distribution_distributed',
@@ -24,64 +33,83 @@ type DamNotificationEvent<T extends DamNotificationNameType, P> = {
   data: P
 }
 
+interface DamNotificationAssetFileData {
+  id: DocId
+  asset: DocId
+}
+
+interface DamNotificationAssetFileStatusData {
+  id: DocId
+  asset: DocId
+  status: AssetFileProcessStatus
+  failReason: AssetFileFailReason
+  assetType: DamAssetType
+}
+
+interface DamNotificationDistributionData {
+  id: DocId
+  asset: DocId
+  assetFile: DocId
+  status: DamDistributionStatus
+}
+
+interface DamNotificationAssetData {
+  asset: DocId
+}
+
 type DamNotificationAssetFileProcessed = DamNotificationEvent<
   typeof DamNotificationName.AssetFileProcessed,
-  {
-    assetId: DocId
-  }
+  DamNotificationAssetFileStatusData
 >
+
 type DamNotificationAssetFileFailed = DamNotificationEvent<
   typeof DamNotificationName.AssetFileFailed,
-  {
-    assetId: DocId
-    failReason: AssetFileFailReason
-  }
+  DamNotificationAssetFileStatusData
 >
+
 type DamNotificationAssetFileDuplicate = DamNotificationEvent<
   typeof DamNotificationName.AssetFileDuplicate,
-  {
-    assetId: DocId
-    originAssetFile: DocIdNullable
-    assetType: DamAssetType | null
-  }
+  DamNotificationAssetFileStatusData
 >
+
+type DamNotificationAssetFileUploaded = DamNotificationEvent<
+  typeof DamNotificationName.AssetFileUploaded,
+  DamNotificationAssetFileStatusData
+>
+
+type DamNotificationAssetFileDeleted = DamNotificationEvent<
+  typeof DamNotificationName.AssetFileDeleted,
+  DamNotificationAssetFileData
+>
+
 type DamNotificationAssetMetadataProcessed = DamNotificationEvent<
   typeof DamNotificationName.AssetMetadataProcessed,
-  {
-    assetId: DocId
-  }
+  DamNotificationAssetFileStatusData
+>
+
+type DamNotificationAssetDeleted = DamNotificationEvent<
+  typeof DamNotificationName.AssetDeleted,
+  DamNotificationAssetData
 >
 
 type DamNotificationDistributionDistributing = DamNotificationEvent<
   typeof DamNotificationName.DistributionDistributing,
-  {
-    distributionId: DocId
-    status: DamDistributionStatus
-  }
+  DamNotificationDistributionData
 >
 
 type DamNotificationDistributionRemoteProcessing = DamNotificationEvent<
   typeof DamNotificationName.DistributionRemoteProcessing,
-  {
-    distributionId: DocId
-    status: DamDistributionStatus
-  }
+  DamNotificationDistributionData
 >
 
 type DamNotificationDistributionDistributed = DamNotificationEvent<
   typeof DamNotificationName.DistributionDistributed,
-  {
-    distributionId: DocId
-    status: DamDistributionStatus
-  }
+  DamNotificationDistributionData
 >
 
 type DamNotificationDistributionFailed = DamNotificationEvent<
   typeof DamNotificationName.DistributionFailed,
-  {
-    distributionId: DocId
-    status: DamDistributionStatus
-  }
+  DamNotificationDistributionData
 >
 
 type DamNotificationDistributionAuthorized = DamNotificationEvent<
@@ -98,7 +126,10 @@ export type DamNotification =
   | DamNotificationAssetFileProcessed
   | DamNotificationAssetFileFailed
   | DamNotificationAssetFileDuplicate
+  | DamNotificationAssetFileUploaded
+  | DamNotificationAssetFileDeleted
   | DamNotificationAssetMetadataProcessed
+  | DamNotificationAssetDeleted
   | DamNotificationDistributionDistributing
   | DamNotificationDistributionRemoteProcessing
   | DamNotificationDistributionDistributed
@@ -106,8 +137,3 @@ export type DamNotification =
   | DamNotificationDistributionAuthorized
   | DamNotificationUserUpdated
 
-export const damNotificationsEventBusKey: EventBusKey<DamNotification> = Symbol('anzu:damNotificationsEventBusKey')
-
-export function useDamNotificationsEventBus() {
-  return useEventBus<DamNotification>(damNotificationsEventBusKey)
-}

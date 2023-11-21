@@ -40,7 +40,7 @@ const props = withDefaults(
   }
 )
 
-const ready = ref(false)
+const status = ref<'loading' | 'ready' | 'error'>('loading')
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
@@ -49,12 +49,20 @@ const { initialized, loadDamConfigExtSystem, damConfigExtSystem, loadDamPrvConfi
 onMounted(async () => {
   // todo load more at once, dont block config load
   if (!initialized.damPrvConfig) {
-    await loadDamPrvConfig()
+    try {
+      await loadDamPrvConfig()
+    } catch (e) {
+      status.value = 'error'
+    }
   }
   if (initialized.damConfigExtSystem !== props.extSystem) {
-    await loadDamConfigExtSystem(props.extSystem)
+    try {
+      await loadDamConfigExtSystem(props.extSystem)
+    } catch (e) {
+      status.value = 'error'
+    }
   }
-  ready.value = true
+  if (status.value !== 'error') status.value = 'ready'
 })
 
 provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
@@ -62,9 +70,12 @@ provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
 
 <template>
   <AImageWidgetInner
-    v-if="ready"
+    v-if="status === 'ready'"
     v-bind="props"
   />
+  <div v-else-if="status === 'error'">
+    error
+  </div>
   <div v-else>
     loading
   </div>
