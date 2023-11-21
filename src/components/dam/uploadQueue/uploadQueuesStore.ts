@@ -14,9 +14,13 @@ import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHel
 import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
 import { useUpload } from '@/components/dam/uploadQueue/uploadService'
 import { DamAssetType } from '@/types/coreDam/Asset'
-import type { AssetFileFailReason } from '@/types/coreDam/AssetFile'
+import type { AssetFileFailReason, AssetFileNullable } from '@/types/coreDam/AssetFile'
 import { DamNotificationName } from '@/components/dam/uploadQueue/damNotificationsEventBus'
 import { useDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
+import { fetchAsset } from '@/components/dam/uploadQueue/api/damAssetApi'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { fetchImageFile } from '@/components/dam/uploadQueue/api/damImageApi'
+import { useAssetSuggestions } from '@/components/dam/uploadQueue/assetSuggestions'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
@@ -26,6 +30,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
 
   const { createDefault } = useUploadQueueItemFactory()
 
+  const { damClient } = useCommonAdminCoreDamOptions()
   const { addDamNotificationListener } = useDamNotifications()
   addDamNotificationListener((event) => {
     switch (event.name) {
@@ -44,21 +49,21 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   })
 
-  function getQueue(queueId: UploadQueueKey) {
-    if (queues.value.has(queueId)) {
-      return queues.value.get(queueId)
+  function getQueue(queueKey: UploadQueueKey) {
+    if (queues.value.has(queueKey)) {
+      return queues.value.get(queueKey)
     }
     return null
   }
 
-  function getQueueItems(queueId: UploadQueueKey) {
-    if (queues.value.has(queueId)) {
-      return queues.value.get(queueId)?.items || []
+  function getQueueItems(queueKey: UploadQueueKey) {
+    if (queues.value.has(queueKey)) {
+      return queues.value.get(queueKey)?.items || []
     }
     return []
   }
 
-  async function addByFiles(queueId: UploadQueueKey, assetLicence: IntegerId, files: File[]) {
+  async function addByFiles(queueKey: UploadQueueKey, assetLicence: IntegerId, files: File[]) {
     const { damConfigExtSystem } = useDamConfigState()
     for await (const file of files) {
       const type = getAssetTypeByMimeType(damFileTypeFix(file), damConfigExtSystem.value)
@@ -73,22 +78,22 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       )
       queueItem.file = file
       queueItem.displayTitle = file.name
-      createQueue(queueId)
-      addQueueItem(queueId, queueItem)
-      recalculateQueueCounts(queueId)
-      processUpload(queueId)
+      createQueue(queueKey)
+      addQueueItem(queueKey, queueItem)
+      recalculateQueueCounts(queueKey)
+      processUpload(queueKey)
     }
   }
 
-  function addQueueItem(queueId: UploadQueueKey, item: UploadQueueItem) {
-    const queue = queues.value.get(queueId)
+  function addQueueItem(queueKey: UploadQueueKey, item: UploadQueueItem) {
+    const queue = queues.value.get(queueKey)
     if (!queue) return
     queue.items.push(item)
   }
 
-  function createQueue(queueId: UploadQueueKey) {
-    if (!queues.value.has(queueId)) {
-      queues.value.set(queueId, {
+  function createQueue(queueKey: UploadQueueKey) {
+    if (!queues.value.has(queueKey)) {
+      queues.value.set(queueKey, {
         items: [],
         totalCount: 0,
         processedCount: 0,
@@ -98,50 +103,50 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
-  function recalculateQueueCounts(queueId: UploadQueueKey) {
-    const queue = queues.value.get(queueId)
+  function recalculateQueueCounts(queueKey: UploadQueueKey) {
+    const queue = queues.value.get(queueKey)
     if (!queue) return
     queue.totalCount = queue.items.length
     queue.processedCount =
-      getQueueItemsByStatus(queueId, UploadQueueItemStatus.Uploaded).length +
-      getQueueItemsByStatus(queueId, UploadQueueItemStatus.Failed).length
+      getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Uploaded).length +
+      getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Failed).length
   }
 
-  function getQueueItemsByStatus(queueId: UploadQueueKey, status: UploadQueueItemStatus) {
-    const queue = queues.value.get(queueId)
+  function getQueueItemsByStatus(queueKey: UploadQueueKey, status: UploadQueueItemStatus) {
+    const queue = queues.value.get(queueKey)
     if (!queue) return []
     return queue.items.filter((item) => item.status === status)
   }
 
-  function processUpload(queueId: UploadQueueKey) {
-    const waitingItems = getQueueItemsByStatus(queueId, UploadQueueItemStatus.Waiting)
+  function processUpload(queueKey: UploadQueueKey) {
+    const waitingItems = getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Waiting)
     if (waitingItems.length === 0) {
       // upload finished
       return
     }
-    const uploadingCount = getQueueItemsByStatus(queueId, UploadQueueItemStatus.Uploading).length
+    const uploadingCount = getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Uploading).length
     if (uploadingCount === QUEUE_MAX_PARALLEL_UPLOADS) {
       // wait for empty upload slot
       return
     }
     for (let i = 0; i < QUEUE_MAX_PARALLEL_UPLOADS; i++) {
-      if (waitingItems[i]) queueItemUploadStart(waitingItems[i], queueId)
+      if (waitingItems[i]) queueItemUploadStart(waitingItems[i], queueKey)
     }
   }
 
-  async function queueItemUploadStart(item: UploadQueueItem, queueId: string) {
+  async function queueItemUploadStart(item: UploadQueueItem, queueKey: UploadQueueKey) {
     const { upload, uploadInit } = useUpload(item, (progress: number, speed: number, estimate: number) => {
       setUploadSpeed(item, progress, speed, estimate)
     })
     try {
       await uploadInit()
       await upload()
-      processUpload(queueId)
+      processUpload(queueKey)
     } catch (e) {
       item.error.hasError = true
       item.status = UploadQueueItemStatus.Failed
-      recalculateQueueCounts(queueId)
-      processUpload(queueId)
+      recalculateQueueCounts(queueKey)
+      processUpload(queueKey)
     }
   }
 
@@ -151,16 +156,110 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     item.progress.speed = speed
   }
 
-  function queueItemProcessed (assetId: DocId) {}
+  async function queueItemProcessed(assetId: DocId) {
+    try {
+      const asset = await fetchAsset(damClient, assetId)
+      if (!asset) return
+      queues.value.forEach((queue, queueKey) => {
+        queue.items.forEach((item) => {
+          if (item.assetId === asset.id && asset.mainFile) {
+            clearTimeout(item.notificationFallbackTimer)
+            item.status = UploadQueueItemStatus.Uploaded
+            item.assetStatus = asset.attributes.assetStatus
+            if (asset.mainFile.links?.image_detail) {
+              item.imagePreview = asset.mainFile.links.image_detail
+            }
+            processUpload(queueKey)
+          }
+        })
+        recalculateQueueCounts(queueKey)
+      })
+    } catch (e) {
+      //
+    }
+  }
 
-  function queueItemDuplicate(
+  async function queueItemDuplicate(
     assetId: DocId,
     originAssetFile: DocIdNullable = null,
     assetType: DamAssetType | null = null
-  ) {}
-  function queueItemFailed (assetId: DocId, failReason: AssetFileFailReason) {}
+  ) {
+    if (!originAssetFile || !assetType || assetType !== DamAssetType.Image) return
+    let file: null | AssetFileNullable = null
+    try {
+      file = await fetchImageFile(damClient, originAssetFile)
+    } catch (e) {
+      //
+    }
+    queues.value.forEach((queue, queueKey) => {
+      queue.items.forEach((item) => {
+        if (item.assetId === assetId) {
+          clearTimeout(item.notificationFallbackTimer)
+          item.isDuplicate = true
+          item.status = UploadQueueItemStatus.Uploaded
+          item.canEditMetadata = false
+          if (file) {
+            item.fileId = file.id
+            item.duplicateAssetId = file.asset
+          }
+          if (file?.links?.image_detail) {
+            item.imagePreview = file.links.image_detail
+          }
+          processUpload(queueKey)
+        }
+      })
+      recalculateQueueCounts(queueKey)
+    })
+  }
 
-  function queueItemMetadataProcessed(assetId: DocId) {}
+  async function queueItemFailed(assetId: DocId, failReason: AssetFileFailReason) {
+    try {
+      const asset = await fetchAsset(damClient, assetId)
+      queues.value.forEach((queue, queueKey) => {
+        queue.items.forEach((item) => {
+          if (item.assetId === asset.id) {
+            clearTimeout(item.notificationFallbackTimer)
+            item.error.hasError = true
+            item.status = UploadQueueItemStatus.Failed
+            item.error.assetFileFailReason = failReason
+            item.canEditMetadata = false
+            processUpload(queueKey)
+          }
+        })
+        recalculateQueueCounts(queueKey)
+      })
+    } catch (e) {
+      //
+    }
+  }
+
+  async function queueItemMetadataProcessed(assetId: DocId) {
+    const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
+    try {
+      const asset = await fetchAsset(damClient, assetId)
+      queues.value.forEach((queue, queueKey) => {
+        queue.items.forEach((item) => {
+          if (item.assetId === asset.id && item.type !== UploadQueueItemType.SlotFile) {
+            console.log('queueItemMetadataProcessed', asset)
+            item.keywords = asset.keywords
+            item.authors = asset.authors
+            item.customData = asset.metadata.customData
+            updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
+            updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
+            item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
+            item.canEditMetadata = true
+            // TODO
+            // addToCachedKeywords(item.keywords)
+            // addToCachedAuthors(item.authors)
+            // addToCachedAuthors(item.authorConflicts)
+          }
+        })
+        recalculateQueueCounts(queueKey)
+      })
+    } catch (e) {
+      //
+    }
+  }
 
   return {
     getQueue,

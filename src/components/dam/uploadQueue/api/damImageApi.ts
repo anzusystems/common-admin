@@ -3,9 +3,15 @@ import { type UploadQueueItem, UploadQueueItemType } from '@/types/coreDam/Uploa
 import type { DocId } from '@/types/common'
 import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
+import type { AssetFileImage } from '@/types/coreDam/AssetFile'
+import { apiFetchOne } from '@/services/api/apiFetchOne'
+import { SYSTEM_CORE_DAM } from '@/services/api/coreDam/assetApi'
 
 const END_POINT = '/adm/v1/image'
 const CHUNK_UPLOAD_TIMEOUT = 420
+
+export const fetchImageFile = (client: () => AxiosInstance, id: DocId) =>
+  apiFetchOne<AssetFileImage>(client, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, 'asset')
 
 export const imageUploadStart = (client: () => AxiosInstance, item: UploadQueueItem) => {
   return new Promise((resolve, reject) => {

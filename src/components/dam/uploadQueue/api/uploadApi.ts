@@ -88,7 +88,7 @@ async function notificationFallbackCallback(client: () => AxiosInstance, item: U
   if (!item.assetId) return
   const asset = await fetchAsset(client, item.assetId)
   if (asset && asset.mainFile && asset.mainFile.fileAttributes) {
-    const uploadQueuesStore = uploadQueuesStore()
+    const uploadQueuesStore = useUploadQueuesStore()
     if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Processed) {
       uploadQueuesStore.queueItemProcessed(asset.id)
       return
