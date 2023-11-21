@@ -139,13 +139,14 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   }
 
   const processAndUploadChunk = async (offset: number): Promise<File> => {
+    console.log(offset)
     updateChunkSize(queueItem.progress.speed)
     let arrayBuffer = await readFile(offset, lastChunkSize.value, queueItem.file!)
     let chunkFile = new File([arrayBuffer.data], queueItem.file!.name)
 
     queueItem.currentChunkIndex = offset
     const cancelToken = axios.CancelToken
-    queueItem.chunks[offset] = { cancelTokenSource: cancelToken.source() }
+    queueItem.chunks.push({ cancelTokenSource: cancelToken.source() })
 
     let sleepTime = CHUNK_RETRY_INTERVAL
     let attempt = 0
@@ -198,11 +199,11 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
   const uploadInit = async () => {
     return new Promise((resolve, reject) => {
-      if (!queueItem.file) {
+      if (!queueItem.file || queueItem.file.size < 1) {
         failUpload(queueItem)
         return
       }
-      fileSize.value = queueItem.file ? queueItem.file.size : 0
+      fileSize.value = queueItem.file.size
       queueItem.status = UploadQueueItemStatus.Uploading
       damUploadStart(damClient, queueItem)
         .then((res) => {

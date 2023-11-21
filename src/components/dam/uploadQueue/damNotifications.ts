@@ -16,7 +16,6 @@ export function initDamNotifications() {
   const { notification } = useCommonAdminCoreDamOptionsGlobal()
 
   const enabled = notification.enabled && notification.webSocketUrl.length > 0
-  console.log(notification.webSocketUrl)
 
   const { open, ws } = useWebSocket(notification.webSocketUrl, {
     immediate: false,

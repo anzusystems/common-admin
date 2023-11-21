@@ -92,8 +92,6 @@ const initSortable = () => {
     dragClass: DRAG_CLASS,
     chosenClass: CHOSEN_CLASS,
     onEnd: async (event: SortableEvent) => {
-      console.log(event.oldIndex)
-      console.log(event.newIndex)
       if (props.disableDefaultSort || isUndefined(event.oldIndex) || isUndefined(event.newIndex)) return
       const needsRefresh = moveArrayElement(event.oldIndex, event.newIndex)
       emit('onEnd', needsRefresh)

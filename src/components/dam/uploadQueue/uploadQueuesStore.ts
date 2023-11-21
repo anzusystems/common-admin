@@ -116,7 +116,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   function processUpload(queueId: UploadQueueKey) {
     const waitingItems = getQueueItemsByStatus(queueId, UploadQueueItemStatus.Waiting)
     if (waitingItems.length === 0) {
-      //upload finished
+      // upload finished
       return
     }
     const uploadingCount = getQueueItemsByStatus(queueId, UploadQueueItemStatus.Uploading).length

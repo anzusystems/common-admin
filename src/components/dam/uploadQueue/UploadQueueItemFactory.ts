@@ -31,7 +31,7 @@ export function useUploadQueueItemFactory() {
       authors: [],
       authorConflicts: [],
       customData: {},
-      chunks: [],
+      latestChunkCancelToken: null,
       chunkSize: chunkSize,
       currentChunkIndex: 0,
       chunkTotalCount: 0,
@@ -51,6 +51,7 @@ export function useUploadQueueItemFactory() {
       notificationFallbackTimer: undefined,
       notificationFallbackTry: 1,
       slotName: null,
+      image: undefined,
     }
   }
 

@@ -40,10 +40,6 @@ export enum UploadQueueItemStatus {
   Stop = 'stop', // after hitting stop upload
 }
 
-export interface UploadQueueItemChunk {
-  cancelTokenSource: CancelTokenSource
-}
-
 export interface UploadQueueItem {
   key: string
   file: File | null
@@ -59,7 +55,7 @@ export interface UploadQueueItem {
   externalProviderAssetId: AssetExternalProviderIdNullable
   externalProviderName: string | null
   externalProviderMetadata: AssetExternalProviderMetadata
-  chunks: UploadQueueItemChunk[]
+  latestChunkCancelToken: CancelTokenSource | null
   chunkSize: number
   currentChunkIndex: number
   chunkTotalCount: number
@@ -83,7 +79,7 @@ export interface UploadQueueItem {
   notificationFallbackTimer: ReturnType<typeof setTimeout> | undefined
   notificationFallbackTry: number
   slotName: string | null
-  image: undefined | ImageAware
+  image: undefined | ImageAware // todo check
 }
 
 export interface DamUploadStartResponse {

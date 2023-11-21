@@ -44,9 +44,13 @@ const ready = ref(false)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
-const { initialized, loadDamConfigExtSystem, damConfigExtSystem } = useDamConfigState(damClient)
+const { initialized, loadDamConfigExtSystem, damConfigExtSystem, loadDamPrvConfig } = useDamConfigState(damClient)
 
 onMounted(async () => {
+  // todo load more at once, dont block config load
+  if (!initialized.damPrvConfig) {
+    await loadDamPrvConfig()
+  }
   if (initialized.damConfigExtSystem !== props.extSystem) {
     await loadDamConfigExtSystem(props.extSystem)
   }
