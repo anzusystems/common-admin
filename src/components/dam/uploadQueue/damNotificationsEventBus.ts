@@ -44,6 +44,7 @@ interface DamNotificationAssetFileStatusData {
   status: AssetFileProcessStatus
   failReason: AssetFileFailReason
   assetType: DamAssetType
+  originAssetFile: DocId
 }
 
 interface DamNotificationDistributionData {

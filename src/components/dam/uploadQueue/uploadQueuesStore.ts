@@ -30,16 +30,16 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   addDamNotificationListener((event) => {
     switch (event.name) {
       case DamNotificationName.AssetFileProcessed:
-        queueItemProcessed(event.data.assetId)
+        queueItemProcessed(event.data.asset)
         break
       case DamNotificationName.AssetFileFailed:
-        queueItemFailed(event.data.assetId, event.data.failReason)
+        queueItemFailed(event.data.asset, event.data.failReason)
         break
       case DamNotificationName.AssetFileDuplicate:
-        queueItemDuplicate(event.data.assetId, event.data.originAssetFile, event.data.assetType)
+        queueItemDuplicate(event.data.asset, event.data.originAssetFile, event.data.assetType)
         break
       case DamNotificationName.AssetMetadataProcessed:
-        queueItemMetadataProcessed(event.data.assetId)
+        queueItemMetadataProcessed(event.data.asset)
         break
     }
   })
