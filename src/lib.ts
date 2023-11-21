@@ -335,6 +335,8 @@ import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHel
 import { useDamUploadChunkSize } from '@/components/dam/uploadQueue/damUploadChunkSize'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/dam/uploadQueue/acceptTypeAndSizeHelper'
+import { useAssetSuggestions } from '@/components/dam/uploadQueue/assetSuggestions'
+import { initDamNotifications, useDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
 
 export {
   // COMPONENTS
@@ -440,6 +442,9 @@ export {
   useUploadQueueItemFactory,
   useDamUploadChunkSize,
   useDamAcceptTypeAndSizeHelper,
+  useAssetSuggestions,
+  initDamNotifications,
+  useDamNotifications,
 
   // VALUE OBJECTS
   Grant,
