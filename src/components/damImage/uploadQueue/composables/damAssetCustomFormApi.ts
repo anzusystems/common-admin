@@ -1,7 +1,6 @@
-import type { DistributionServiceName } from '@/types/coreDam/DamConfig'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetType, DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { SYSTEM_CORE_DAM } from '@/services/api/coreDam/assetApi'
@@ -26,7 +25,7 @@ export const fetchAssetCustomFormElements = (
 // todo limit set to 100 for now, add load for pagination?
 export const fetchDistributionCustomFormElements = (
   damClient: () => AxiosInstance,
-  distributionService: DistributionServiceName
+  distributionService: DamDistributionServiceName
 ) =>
   apiFetchOne<{ data: CustomDataFormElement[] }>(
     damClient,

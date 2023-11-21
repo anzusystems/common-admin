@@ -14,12 +14,12 @@ import {
   fetchConfiguration,
   fetchExtSystemConfiguration,
   fetchPubConfiguration,
-} from '@/components/dam/uploadQueue/damConfigApi'
+} from '@/components/damImage/uploadQueue/composables/damConfigApi'
 import type { IntegerId } from '@/types/common'
 import {
   fetchAssetCustomFormElements,
   fetchDistributionCustomFormElements,
-} from '@/components/dam/uploadQueue/damAssetCustomFormApi'
+} from '@/components/damImage/uploadQueue/composables/damAssetCustomFormApi'
 
 const createDefaultExtSystemConfig = (override: Partial<DamExtSystemConfigItem> = {}): DamExtSystemConfigItem => ({
   ...({

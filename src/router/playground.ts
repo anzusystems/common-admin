@@ -15,7 +15,7 @@ import SortableView from '@/playground/sortableView/SortableView.vue'
 import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 import AlertView from '@/playground/alertView/AlertView.vue'
 import SubjectSelectView from '@/playground/subjectSelectView/SubjectSelectView.vue'
-import { initDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
+import ImageMultipleView from '@/playground/imageMultipleView/ImageMultipleView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -74,6 +74,11 @@ const router = createRouter({
       path: '/view/image',
       name: 'view-image',
       component: ImageView,
+    },
+    {
+      path: '/view/image-multiple',
+      name: 'view-image-multiple',
+      component: ImageMultipleView,
     },
     {
       path: '/view/file',

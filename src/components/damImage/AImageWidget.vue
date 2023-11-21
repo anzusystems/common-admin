@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { onMounted, provide, ref } from 'vue'
-import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageAware } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import AImageWidgetInner from '@/components/image/AImageWidgetInner.vue'
-import { ImageWidgetExtSystemConfig } from '@/components/image/composables/imageWidgetInkectionKeys'
+import AImageWidgetInner from '@/components/damImage/AImageWidgetInner.vue'
+import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}

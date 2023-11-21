@@ -10,9 +10,9 @@ import {
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
 import { NEW_LINE_MARK } from '@/composables/system/alerts'
 import { isUndefined } from '@/utils/common'
-import { useDamUploadChunkSize } from '@/components/dam/uploadQueue/damUploadChunkSize'
+import { useDamUploadChunkSize } from '@/components/damImage/uploadQueue/composables/damUploadChunkSize'
 import type { CommonAdminCoreDamOptions } from '@/AnzuSystemsCommonAdmin'
-import { damUploadChunk, damUploadFinish, damUploadStart } from '@/components/dam/uploadQueue/api/uploadApi'
+import { damUploadChunk, damUploadFinish, damUploadStart } from '@/components/damImage/uploadQueue/api/uploadApi'
 import {
   useCommonAdminCoreDamOptions,
   useCommonAdminCoreDamOptionsGlobal

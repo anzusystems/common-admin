@@ -5,7 +5,7 @@ import { useAlerts } from '@/composables/system/alerts'
 import {
   type DamNotification,
   useDamNotificationsEventBus,
-} from '@/components/dam/uploadQueue/damNotificationsEventBus'
+} from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
 import { useCommonAdminCoreDamOptionsGlobal } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const { t } = i18n.global || i18n

@@ -313,7 +313,7 @@ import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 import type { SortableItemDataAware, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
-import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import {
   type DamDistributionConfig,
   type DamDistributionRequirementsCategorySelectConfig,
@@ -330,17 +330,17 @@ import {
   type DamPubConfig,
   UserAuthType,
 } from '@/types/coreDam/DamConfig'
-import { useUploadQueueItemFactory } from '@/components/dam/uploadQueue/UploadQueueItemFactory'
-import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHelper'
-import { useDamUploadChunkSize } from '@/components/dam/uploadQueue/damUploadChunkSize'
+import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
+import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
+import { useDamUploadChunkSize } from '@/components/damImage/uploadQueue/composables/damUploadChunkSize'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
-import { useDamAcceptTypeAndSizeHelper } from '@/components/dam/uploadQueue/acceptTypeAndSizeHelper'
-import { useAssetSuggestions } from '@/components/dam/uploadQueue/assetSuggestions'
-import { initDamNotifications, useDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
+import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
+import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
+import { initDamNotifications, useDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
 import {
   DamNotificationName,
   type DamNotificationNameType,
-} from '@/components/dam/uploadQueue/damNotificationsEventBus'
+} from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
 
 export {
   // COMPONENTS

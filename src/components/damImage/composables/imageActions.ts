@@ -1,5 +1,5 @@
 import type { ImageAware } from '@/types/ImageAware'
-import type { useCommonAdminImageOptions } from '@/components/image/composables/commonAdminImageOptions'
+import type { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import type { IntegerId } from '@/types/common'
 import { isNull } from '@/utils/common'
 

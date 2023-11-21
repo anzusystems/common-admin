@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isNull } from '@/utils/common'
 
 const chunkSize = ref<number | undefined>(undefined)

@@ -13,7 +13,7 @@ import logoFull from '@/assets/logo-ca-full.svg'
 import logoNoText from '@/assets/logo-ca-no-text.svg'
 import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMessages'
 import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
-import { initDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
+import { initDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
 
 const route = useRoute()
 

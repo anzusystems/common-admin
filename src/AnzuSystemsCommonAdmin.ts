@@ -12,7 +12,7 @@ import {
 } from '@/components/injectionKeys'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
-import { initCommonAdminImageOptions } from '@/components/image/composables/commonAdminImageOptions'
+import { initCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 export type PluginOptions<T extends AclValue = AclValue> = {

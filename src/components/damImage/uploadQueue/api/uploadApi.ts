@@ -1,11 +1,11 @@
 import { DamAssetType } from '@/types/coreDam/Asset'
 import { type DamUploadStartResponse, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
-import { imageUploadChunk, imageUploadFinish, imageUploadStart } from '@/components/dam/uploadQueue/api/damImageApi'
+import { imageUploadChunk, imageUploadFinish, imageUploadStart } from '@/components/damImage/uploadQueue/api/damImageApi'
 import type { AxiosInstance } from 'axios'
 import type { DocId } from '@/types/common'
 import { AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
-import { fetchAsset } from '@/components/dam/uploadQueue/api/damAssetApi'
-import { useUploadQueuesStore } from '@/components/dam/uploadQueue/uploadQueuesStore'
+import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 
 const NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS = 10
 const NOTIFICATION_FALLBACK_MAX_TRIES = 3

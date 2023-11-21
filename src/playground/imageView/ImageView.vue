@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import AImageWidgetSimple from '@/components/image/AImageWidgetSimple.vue'
-import AImageWidget from '@/components/image/AImageWidget.vue'
+import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
+import AImageWidget from '@/components/damImage/AImageWidget.vue'
 import { ref } from 'vue'
 import type { IntegerIdNullable } from '@/types/common'
 
@@ -33,7 +33,7 @@ const imageId2 = ref<IntegerIdNullable>(1)
             v-model="imageId2"
             :licence-id="100001"
             :ext-system="1"
-            queue-key="ahoj"
+            queue-key="heroImage"
             label="Lead image"
           />
         </VCol>

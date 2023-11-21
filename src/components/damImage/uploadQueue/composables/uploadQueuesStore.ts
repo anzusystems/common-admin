@@ -9,18 +9,18 @@ import {
   UploadQueueItemType,
   type UploadQueueKey,
 } from '@/types/coreDam/UploadQueue'
-import { useUploadQueueItemFactory } from '@/components/dam/uploadQueue/UploadQueueItemFactory'
-import { getAssetTypeByMimeType } from '@/components/dam/uploadQueue/mimeTypeHelper'
-import { useDamConfigState } from '@/components/dam/uploadQueue/damConfigState'
-import { useUpload } from '@/components/dam/uploadQueue/uploadService'
+import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
+import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason, AssetFileNullable } from '@/types/coreDam/AssetFile'
-import { DamNotificationName } from '@/components/dam/uploadQueue/damNotificationsEventBus'
-import { useDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
-import { fetchAsset } from '@/components/dam/uploadQueue/api/damAssetApi'
+import { DamNotificationName } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
+import { useDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
+import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { fetchImageFile } from '@/components/dam/uploadQueue/api/damImageApi'
-import { useAssetSuggestions } from '@/components/dam/uploadQueue/assetSuggestions'
+import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageApi'
+import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
@@ -261,6 +261,12 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
+  function removeByIndex (queueKey: UploadQueueKey, index: number) {}
+
+  async function stopItemUpload(queueId: string, queueItem: UploadQueueItem, index: number) {
+
+  }
+
   return {
     getQueue,
     getQueueItems,
@@ -268,5 +274,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     queueItemProcessed,
     queueItemDuplicate,
     queueItemFailed,
+    removeByIndex,
+    stopItemUpload,
   }
 })

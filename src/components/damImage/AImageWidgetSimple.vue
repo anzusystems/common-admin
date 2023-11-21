@@ -3,11 +3,11 @@ import { ref, toRefs, watch } from 'vue'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import type { ImageAware } from '@/types/ImageAware'
 import { cloneDeep } from '@/utils/common'
-import { useCommonAdminImageOptions } from '@/components/image/composables/commonAdminImageOptions'
-import { useImageActions } from '@/components/image/composables/imageActions'
+import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
+import { useImageActions } from '@/components/damImage/composables/imageActions'
 import type { IntegerIdNullable } from '@/types/common'
 import { useAlerts } from '@/composables/system/alerts'
-import { fetchImage } from '@/components/image/composables/imageApi'
+import { fetchImage } from '@/components/damImage/composables/imageApi'
 
 const props = withDefaults(
   defineProps<{

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ENTITY, SYSTEM_CORE_DAM, useAssetApi } from '@/services/api/coreDam/assetApi'
-import { damClient } from '@/playground/assetSelectView/coreDamClient'
+import { damClient } from '@/playground/mock/coreDamClient'
 import { apiFetchListBatch } from '@/services/api/apiFetchListBatch'
 import { onMounted, reactive, ref } from 'vue'
 import { usePagination } from '@/composables/system/pagination'
