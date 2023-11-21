@@ -298,11 +298,11 @@ import {
   type AssetFileVideo,
 } from '@/types/coreDam/AssetFile'
 import {
+  type DamUploadStartResponse,
   type UploadQueue,
   type UploadQueueItem,
   UploadQueueItemStatus,
   UploadQueueItemType,
-  type DamUploadStartResponse
 } from '@/types/coreDam/UploadQueue'
 import type {
   CustomDataAware,
@@ -337,6 +337,10 @@ import { damFileTypeFix } from '@/components/file/composables/fileType'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/dam/uploadQueue/acceptTypeAndSizeHelper'
 import { useAssetSuggestions } from '@/components/dam/uploadQueue/assetSuggestions'
 import { initDamNotifications, useDamNotifications } from '@/components/dam/uploadQueue/damNotifications'
+import {
+  DamNotificationName,
+  type DamNotificationNameType,
+} from '@/components/dam/uploadQueue/damNotificationsEventBus'
 
 export {
   // COMPONENTS
@@ -564,6 +568,8 @@ export {
   DamDistributionStatus,
   UserAuthType,
   DamUploadStartResponse,
+  DamNotificationNameType,
+  DamNotificationName,
 
   // FACTORIES
   useAnzuUserFactory,
