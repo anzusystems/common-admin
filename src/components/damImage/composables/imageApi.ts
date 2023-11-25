@@ -5,10 +5,14 @@ import { apiDeleteOne } from '@/services/api/apiDeleteOne'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
+import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 
 const END_POINT = '/adm/v1/image'
 export const ENTITY = 'image'
 export const SYSTEM_CMS = 'cms'
+
+export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[]) =>
+  apiFetchByIds<ImageAware[]>(client, ids, END_POINT, {}, SYSTEM_CMS, ENTITY)
 
 export const fetchImage = (client: () => AxiosInstance, id: IntegerId) =>
   apiFetchOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
