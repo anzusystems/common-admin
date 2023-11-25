@@ -1,4 +1,3 @@
-import { reactive, shallowRef } from 'vue'
 import {
   type DamPrvConfig,
   type DamExtSystemConfig,
@@ -20,6 +19,7 @@ import {
   fetchAssetCustomFormElements,
   fetchDistributionCustomFormElements,
 } from '@/components/damImage/uploadQueue/composables/damAssetCustomFormApi'
+import { reactive, shallowRef } from 'vue'
 
 const createDefaultExtSystemConfig = (override: Partial<DamExtSystemConfigItem> = {}): DamExtSystemConfigItem => ({
   ...({

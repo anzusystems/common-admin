@@ -47,20 +47,17 @@ const { damClient } = useCommonAdminCoreDamOptions(props.configName)
 const { initialized, loadDamConfigExtSystem, damConfigExtSystem, loadDamPrvConfig } = useDamConfigState(damClient)
 
 onMounted(async () => {
-  // todo load more at once, dont block config load
+  const promises: Promise<any>[] = []
   if (!initialized.damPrvConfig) {
-    try {
-      await loadDamPrvConfig()
-    } catch (e) {
-      status.value = 'error'
-    }
+    promises.push(loadDamPrvConfig())
   }
   if (initialized.damConfigExtSystem !== props.extSystem) {
-    try {
-      await loadDamConfigExtSystem(props.extSystem)
-    } catch (e) {
-      status.value = 'error'
-    }
+    promises.push(loadDamConfigExtSystem(props.extSystem))
+  }
+  try {
+    await Promise.all(promises)
+  } catch (e) {
+    status.value = 'error'
   }
   if (status.value !== 'error') status.value = 'ready'
 })
@@ -73,10 +70,16 @@ provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
     v-if="status === 'ready'"
     v-bind="props"
   />
-  <div v-else-if="status === 'error'">
-    error
+  <div
+    v-else-if="status === 'error'"
+    class="text-error"
+  >
+    Loading DAM config error
   </div>
-  <div v-else>
-    loading
-  </div>
+  <VProgressCircular
+    v-else
+    :size="12"
+    :width="2"
+    indeterminate
+  />
 </template>
