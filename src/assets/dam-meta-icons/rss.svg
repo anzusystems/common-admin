@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Path_7158" data-name="Path 7158" d="M0,349.208A5.911,5.911,0,1,0,5.911,343.3,5.911,5.911,0,0,0,0,349.208" transform="translate(0 -343.297)" fill="#fff"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <path id="Path_7159" data-name="Path 7159" d="M0,167.86a20.2,20.2,0,0,1,20.2,20.2h8.375A28.572,28.572,0,0,0,0,159.485Z" transform="translate(-0.001 -159.485)" fill="#fff"/>
+    </clipPath>
+    <clipPath id="clip-path-3">
+      <path id="Path_7160" data-name="Path 7160" d="M0,0V8.621A34.483,34.483,0,0,1,34.484,43.1h8.621A43.1,43.1,0,0,0,0,0Z" transform="translate(-0.001 0)" fill="#fff"/>
+    </clipPath>
+  </defs>
+  <g id="RSS" transform="translate(-5652 -7415)">
+    <circle id="Ellipse_16" data-name="Ellipse 16" cx="50" cy="50" r="50" transform="translate(5652 7415)" opacity="0.5"/>
+    <g id="Group_2625" data-name="Group 2625" transform="translate(5683.674 7441.939)">
+      <g id="Group_2624" data-name="Group 2624" transform="translate(0)">
+        <g id="Group_2619" data-name="Group 2619" transform="translate(0 31.281)">
+          <g id="Group_2618" data-name="Group 2618" clip-path="url(#clip-path)">
+            <rect id="Rectangle_2677" data-name="Rectangle 2677" width="11.823" height="11.823" fill="#fff"/>
+          </g>
+        </g>
+        <g id="Group_2621" data-name="Group 2621" transform="translate(0 14.532)">
+          <g id="Group_2620" data-name="Group 2620" clip-path="url(#clip-path-2)">
+            <rect id="Rectangle_2678" data-name="Rectangle 2678" width="28.572" height="28.572" transform="translate(0 0)" fill="#fff"/>
+          </g>
+        </g>
+        <g id="Group_2623" data-name="Group 2623" transform="translate(0)">
+          <g id="Group_2622" data-name="Group 2622" clip-path="url(#clip-path-3)">
+            <rect id="Rectangle_2679" data-name="Rectangle 2679" width="43.104" height="43.104" transform="translate(0)" fill="#fff"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

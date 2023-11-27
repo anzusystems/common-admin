@@ -12,6 +12,8 @@ import { prettyBytes } from '@/utils/file'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/AssetCustomMetadataForm.vue'
+import AssetImage from '@/components/damImage/uploadQueue/AssetImage.vue'
+import AssetLinkExternal from '@/components/damImage/uploadQueue/AssetLinkExternal.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -136,21 +138,21 @@ const showCancel = computed(() => {
     <div class="dam-upload-queue__item">
       <div class="dam-upload-queue__item-card">
         <div class="position-relative">
-          <!--          <AssetImage-->
-          <!--            :asset-type="assetType"-->
-          <!--            :asset-status="status"-->
-          <!--            :src="imageSrc"-->
-          <!--            background-color="#ccc"-->
-          <!--            :show-uploading="uploading"-->
-          <!--            :show-processing="processing"-->
-          <!--            :show-waiting="waiting"-->
-          <!--            :show-done="done"-->
-          <!--            :uploading-progress="uploadProgress"-->
-          <!--            :remaining-time="item.progress.remainingTime"-->
-          <!--            use-component-->
-          <!--            cover-->
-          <!--            :aspect-ratio="IMAGE_ASPECT_RATIO"-->
-          <!--          />-->
+          <AssetImage
+            :asset-type="assetType"
+            :asset-status="status"
+            :src="imageSrc"
+            background-color="#ccc"
+            :show-uploading="uploading"
+            :show-processing="processing"
+            :show-waiting="waiting"
+            :show-done="done"
+            :uploading-progress="uploadProgress"
+            :remaining-time="item.progress.remainingTime"
+            use-component
+            cover
+            :aspect-ratio="IMAGE_ASPECT_RATIO"
+          />
           <div
             v-if="item.isDuplicate"
             :class="
@@ -167,14 +169,14 @@ const showCancel = computed(() => {
             <div class="text-warning">
               {{ t('coreDam.asset.queueItem.duplicate') }}
             </div>
-            <!--            <AssetLink-->
-            <!--              v-if="item.duplicateAssetId"-->
-            <!--              :asset-id="item.duplicateAssetId"-->
-            <!--              variant="text"-->
-            <!--              size="small"-->
-            <!--            >-->
-            <!--              {{ t('coreDam.asset.queueItem.viewOriginal') }}&nbsp;<VIcon icon="mdi-open-in-new" />-->
-            <!--            </AssetLink>-->
+            <AssetLinkExternal
+              v-if="item.duplicateAssetId"
+              :asset-id="item.duplicateAssetId"
+              variant="text"
+              size="small"
+            >
+              {{ t('coreDam.asset.queueItem.viewOriginal') }}&nbsp;<VIcon icon="mdi-open-in-new" />
+            </AssetLinkExternal>
           </div>
           <div
             v-if="item.error.hasError"
