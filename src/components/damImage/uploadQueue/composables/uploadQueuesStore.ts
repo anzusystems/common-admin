@@ -12,7 +12,7 @@ import {
 import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
 import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import { useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
+import { uploadStop, useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason, AssetFileNullable } from '@/types/coreDam/AssetFile'
 import { DamNotificationName } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
@@ -267,6 +267,61 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
 
   }
 
+  function getQueueTotalCount (queueKey: UploadQueueKey) {
+    const queue = queues.value.get(queueKey)
+    if (!queue) return 0
+    return queue.totalCount
+  }
+
+  function getQueueProcessedCount (queueKey: UploadQueueKey) {
+    const queue = queues.value.get(queueKey)
+    if (!queue) return 0
+    return queue.processedCount
+  }
+
+  function stopUpload (queueKey: UploadQueueKey) {
+    const queue = queues.value.get(queueKey)
+    if (!queue || queue.items.length === 0) return
+    const currentItems = getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Uploading)
+    queue.items.forEach((item) => {
+      item.status = UploadQueueItemStatus.Stop
+    })
+    if (currentItems.length > 0) {
+      currentItems.forEach((item) => {
+        if (item.latestChunkCancelToken) {
+          uploadStop(item.latestChunkCancelToken)
+        }
+      })
+    }
+    clearQueue(queueKey)
+    forceReloadFileInput(queueKey)
+  }
+
+  function forceReloadFileInput (queueKey: UploadQueueKey) {
+    createQueue(queueKey)
+    const queue = queues.value.get(queueKey)
+    if (!queue) return
+    queue.fileInputKey++
+  }
+
+  function getQueueFileInputKey (queueKey: UploadQueueKey) {
+    const queue = queues.value.get(queueKey)
+    if (!queue) return -1
+    return queue.fileInputKey
+  }
+
+  function clearQueue(queueKey: UploadQueueKey) {
+    const queue = queues.value.get(queueKey)
+    if (!queue) return
+    queues.value.set(queueKey, {
+      items: [],
+      totalCount: 0,
+      processedCount: 0,
+      fileInputKey: getQueueFileInputKey(queueKey) + 1,
+      suggestions: { newKeywordNames: new Set<string>(), newAuthorNames: new Set<string>() },
+    })
+  }
+
   return {
     getQueue,
     getQueueItems,
@@ -276,5 +331,8 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     queueItemFailed,
     removeByIndex,
     stopItemUpload,
+    getQueueTotalCount,
+    getQueueProcessedCount,
+    stopUpload,
   }
 })

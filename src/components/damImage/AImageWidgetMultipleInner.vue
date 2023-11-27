@@ -5,8 +5,6 @@ import { isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
-import UploadQueueEditable from '@/components/damImage/uploadQueue/UploadQueueEditable.vue'
-import { useDisplay } from 'vuetify'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import AImageWidgetMultipleItem from '@/components/damImage/AImageWidgetMultipleItem.vue'
 import { storeToRefs } from 'pinia'
@@ -20,6 +18,8 @@ import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
+import UploadQueueDialog from '@/components/damImage/uploadQueue/UploadQueueDialog.vue'
+import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 
 const props = withDefaults(
   defineProps<{
@@ -70,8 +70,6 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   imageWidgetExtSystemConfig.value
 )
 
-const { mobile } = useDisplay()
-const massOperations = ref(!mobile.value)
 const imagesLoading = ref(false)
 
 const imageStore = useImageStore()
@@ -98,14 +96,18 @@ const uploadQueue = computed(() => {
   return uploadQueuesStore.getQueue(props.queueKey)
 })
 
+const { uploadQueueDialog  } = useUploadQueueDialog()
+
 const onFileInput = (files: File[]) => {
   console.log('onFileInput', files)
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+  uploadQueueDialog.value = true
 }
 
 const onDrop = (files: File[]) => {
   console.log('onDrop', files)
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+  uploadQueueDialog.value = true
 }
 
 const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
@@ -156,10 +158,7 @@ onMounted(() => {
       @on-drop="onDrop"
     />
   </div>
-  <UploadQueueEditable
-    :queue-key="queueKey"
-    :mass-operations="massOperations"
-  />
+  <UploadQueueDialog :queue-key="queueKey" />
 </template>
 
 <style lang="scss"></style>
