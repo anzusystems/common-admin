@@ -14,6 +14,7 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/AssetCustomMetadataForm.vue'
 import AssetImage from '@/components/damImage/uploadQueue/AssetImage.vue'
 import AssetLinkExternal from '@/components/damImage/uploadQueue/AssetLinkExternal.vue'
+import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/AssetFileFailReasonChip.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -200,7 +201,7 @@ const showCancel = computed(() => {
               v-text="item.error.message"
             />
             <div v-else-if="item.error.assetFileFailReason !== AssetFileFailReason.None">
-              <!--              <AssetFileFailReasonChip :reason="item.error.assetFileFailReason" />-->
+              <AssetFileFailReasonChip :reason="item.error.assetFileFailReason" />
             </div>
             <div
               v-else
