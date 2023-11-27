@@ -110,3 +110,23 @@ export const imageUploadFinish = (client: () => AxiosInstance, item: UploadQueue
       })
   })
 }
+
+export const rotateImage = (client: () => AxiosInstance, imageId: DocId, angle: 90 | 270) => {
+  return new Promise((resolve, reject) => {
+    const url = END_POINT + '/' + imageId + '/rotate/' + angle
+    client()
+      .patch(url)
+      .then((res) => {
+        if (res.status === HTTP_STATUS_OK) {
+          resolve(res.data)
+        } else {
+          //
+          reject()
+        }
+      })
+      .catch((err) => {
+        //
+        reject(err)
+      })
+  })
+}
