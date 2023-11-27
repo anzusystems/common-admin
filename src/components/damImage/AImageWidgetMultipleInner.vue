@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { IntegerId } from '@/types/common'
-import { inject, onMounted, ref, type ShallowRef } from 'vue'
+import { computed, inject, onMounted, ref, type ShallowRef } from 'vue'
 import { isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -13,6 +13,13 @@ import { storeToRefs } from 'pinia'
 import { fetchImageListByIds } from '@/components/damImage/composables/imageApi'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
+import { DamAssetType } from '@/types/coreDam/Asset'
+import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
+import AFileInput from '@/components/file/AFileInput.vue'
+import AImageDropzone from '@/components/file/AFileDropzone.vue'
+import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
+import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
+import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 
 const props = withDefaults(
   defineProps<{
@@ -42,6 +49,8 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId[]): void
 }>()
 
+const assetSelectDialog = ref(false)
+
 const imageWidgetExtSystemConfig = inject<ShallowRef<DamExtSystemConfig> | undefined>(
   ImageWidgetExtSystemConfig,
   undefined
@@ -55,6 +64,11 @@ if (isUndefined(imageWidgetExtSystemConfig)) {
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient } = imageOptions
 const { showErrorsDefault } = useAlerts()
+
+const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
+  DamAssetType.Image,
+  imageWidgetExtSystemConfig.value
+)
 
 const { mobile } = useDisplay()
 const massOperations = ref(!mobile.value)
@@ -78,17 +92,70 @@ const fetchImagesOnLoad = async () => {
   }
 }
 
+const uploadQueuesStore = useUploadQueuesStore()
+
+const uploadQueue = computed(() => {
+  return uploadQueuesStore.getQueue(props.queueKey)
+})
+
+const onFileInput = (files: File[]) => {
+  console.log('onFileInput', files)
+  uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+}
+
+const onDrop = (files: File[]) => {
+  console.log('onDrop', files)
+  uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+}
+
+const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
+  if (data.type === 'asset') {
+    console.log(data.value)
+    // todo(data.value, withoutImage.value)
+  }
+}
+
 onMounted(() => {
   fetchImagesOnLoad()
 })
 </script>
 
 <template>
-  <AImageWidgetMultipleItem
-    v-for="(image, index) in images"
-    :key="image.id"
-    :index="index"
+  <AFileInput
+    :file-input-key="uploadQueue?.fileInputKey"
+    :accept="uploadAccept"
+    :max-sizes="uploadSizes"
+    @files-input="onFileInput"
+  >
+    <template #activator="{ props: fileInputProps }">
+      <VBtn v-bind="fileInputProps">
+        Upload
+      </VBtn>
+    </template>
+  </AFileInput>
+  <AAssetSelect
+    v-model="assetSelectDialog"
+    :asset-licence-id="licenceId"
+    :min-count="1"
+    :max-count="1"
+    :asset-type="DamAssetType.Image"
+    return-type="asset"
+    @on-confirm="onAssetSelectConfirm"
   />
+  <div class="position-relative">
+    <AImageWidgetMultipleItem
+      v-for="(image, index) in images"
+      :key="image.id"
+      :index="index"
+    />
+    <AImageDropzone
+      variant="fill"
+      transparent
+      :accept="uploadAccept"
+      :max-sizes="uploadSizes"
+      @on-drop="onDrop"
+    />
+  </div>
   <UploadQueueEditable
     :queue-key="queueKey"
     :mass-operations="massOperations"
