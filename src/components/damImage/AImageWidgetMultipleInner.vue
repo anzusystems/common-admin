@@ -158,7 +158,12 @@ onMounted(() => {
       @on-drop="onDrop"
     />
   </div>
-  <UploadQueueDialog :queue-key="queueKey" />
+  <UploadQueueDialog
+    :queue-key="queueKey"
+    :file-input-key="uploadQueue?.fileInputKey"
+    :accept="uploadAccept"
+    :max-sizes="uploadSizes"
+  />
 </template>
 
 <style lang="scss"></style>

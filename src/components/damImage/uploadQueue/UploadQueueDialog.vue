@@ -10,14 +10,24 @@ import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/composables/system/alerts'
 import { bulkUpdateAssetsMetadata } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import AFileInput from '@/components/file/AFileInput.vue'
+import AImageDropzone from '@/components/file/AFileDropzone.vue'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
+    fileInputKey: number
+    accept: string | undefined
+    maxSizes: Record<string, number> | undefined
   }>(),
   {
   }
 )
+
+const emit = defineEmits<{
+  (e: 'onDrop', files: File[]): void
+  (e: 'onFilesInput', files: File[]): void
+}>()
 
 const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
 
@@ -179,10 +189,31 @@ const onSaveAndClose = async () => {
                   {{ t('coreDam.asset.upload.save') }}
                 </VTooltip>
               </VBtn>
-              <!--              <AssetUpload-->
-              <!--                :height="36"-->
-              <!--                variant="icon"-->
-              <!--              />-->
+              <AFileInput
+                :file-input-key="fileInputKey"
+                :accept="accept"
+                :max-sizes="maxSizes"
+                @files-input="emit('onFilesInput', $event)"
+              >
+                <template #activator="{ props: fileInputProps }">
+                  <VBtn
+                    tabindex="-1"
+                    icon
+                    variant="text"
+                    :height="34"
+                    :width="34"
+                    v-bind="fileInputProps"
+                  >
+                    <VIcon icon="mdi-plus" />
+                    <VTooltip
+                      activator="parent"
+                      location="bottom"
+                    >
+                      {{ t('system.upload.add') }}
+                    </VTooltip>
+                  </VBtn>
+                </template>
+              </AFileInput>
               <VDivider
                 vertical
                 class="mx-4 my-2"
@@ -218,7 +249,14 @@ const onSaveAndClose = async () => {
             :mass-operations="uploadQueueSidebar"
           />
         </div>
-        <!--        <AssetUpload />-->
+        <AImageDropzone
+          variant="fill"
+          transparent
+          hover-only
+          :accept="accept"
+          :max-sizes="maxSizes"
+          @on-drop="emit('onDrop', $event)"
+        />
       </div>
     </VCard>
   </VDialog>
