@@ -25,7 +25,7 @@ export const fetchAsset = (client: () => AxiosInstance, id: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
 
 export const fetchAssetByFileId = (client: () => AxiosInstance, assetFileId: DocId) =>
-  apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/asset-file/:id', { id: assetFileId }, SYSTEM_CORE_DAM, ENTITY)
+  apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/asset-file/:id', { id: '1ee8e136-910e-69d8-b23a-87695fa0c58b' }, SYSTEM_CORE_DAM, ENTITY)
 
 export const bulkUpdateAssetsMetadata = (client: () => AxiosInstance, items: UploadQueueItem[]) => {
   return new Promise((resolve, reject) => {

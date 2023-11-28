@@ -78,7 +78,6 @@ const resImage = ref<null | ImageAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
 const metadataDialog = ref(false)
-const assetDialog = ref(false)
 
 const withoutImage = computed(() => {
   return isNull(props.modelValue)
@@ -160,19 +159,20 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
 }
 
 const assetDetailStore = useAssetDetailStore()
-const { loading: assetDetailLoading, dialog: assetDetailDialog } = storeToRefs(assetDetailStore)
+const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
 const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) =>  {
-  assetDetailLoading.value = true
-  assetDetailDialog.value = true
+  assetLoading.value = true
+  assetDialog.value = true
   try {
     const asset = await fetchAssetByFileId(damClient, assetFileId)
+    console.log(asset)
     assetDetailStore.setAsset(asset)
   } catch (e) {
     showErrorsDefault(e)
   } finally {
-    assetDetailLoading.value = false
+    assetLoading.value = false
   }
 }
 </script>
@@ -318,5 +318,5 @@ const onEditAsset = async (assetFileId: DocId) =>  {
     v-model="metadataDialog"
     @edit-asset="onEditAsset"
   />
-  <AssetDetailDialog v-model="assetDialog" />
+  <AssetDetailDialog />
 </template>

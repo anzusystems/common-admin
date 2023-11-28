@@ -17,10 +17,12 @@ const { t } = useI18n()
 const { toolbarColor } = useTheme()
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, dialog, activeTab } = storeToRefs(assetDetailStore)
-const loading = ref(false)
+const { asset, dialog, activeTab, loading } = storeToRefs(assetDetailStore)
 
-const closeDialog = () => {}
+const closeDialog = () => {
+  assetDetailStore.setAsset(null)
+  dialog.value = false
+}
 
 const postDelete = (data: DocId) => {
   // assetListStore.setDeletingById(data)
@@ -94,9 +96,10 @@ const assetMainFile = computed(() => {
 </script>
 
 <template>
+  {{ dialog }}
   <VDialog
     v-if="dialog"
-    :model-value="true"
+    :model-value="dialog"
     fullscreen
   >
     <AssetDetailDialogLoader
