@@ -212,13 +212,13 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
                   v-if="imageLoaded"
                   @click="actionEditMeta"
                 >
-                  <VListItem-title>Update metadata</VListItem-title>
+                  <VListItemTitle>Update metadata</VListItemTitle>
                 </VListItem>
                 <VListItem @click.stop="actionLibrary">
-                  <VListItem-title>
+                  <VListItemTitle>
                     <span v-if="imageLoaded">Replace from library</span>
                     <span v-else>Choose from library</span>
-                  </VListItem-title>
+                  </VListItemTitle>
                 </VListItem>
                 <AFileInput
                   :file-input-key="uploadQueue?.fileInputKey"
@@ -236,7 +236,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
                   v-if="imageLoaded"
                   @click="actionDelete(props.modelValue)"
                 >
-                  <VListItem-title>Remove image</VListItem-title>
+                  <VListItemTitle>Remove image</VListItemTitle>
                 </VListItem>
               </VList>
             </VCard>
@@ -267,6 +267,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
         transparent
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
+        :hide-text="modelValue !== null"
         @on-click="clickMenuOpened = true"
         @on-drop="onDrop"
       />

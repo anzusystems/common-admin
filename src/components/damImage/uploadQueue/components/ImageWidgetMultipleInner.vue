@@ -161,7 +161,7 @@ onMounted(() => {
   </div>
   <UploadQueueDialog
     :queue-key="queueKey"
-    :file-input-key="uploadQueue?.fileInputKey"
+    :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
   />

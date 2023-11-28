@@ -17,6 +17,7 @@ const props = withDefaults(
     transparent?: boolean
     size?: 'small' | 'default' | 'large'
     hoverOnly?: boolean
+    hideText?: boolean
   }>(),
   {
     variant: 'default',
@@ -26,6 +27,7 @@ const props = withDefaults(
     transparent: false,
     size: 'default',
     hoverOnly: false,
+    hideText: false,
   }
 )
 const emit = defineEmits<{
@@ -60,6 +62,7 @@ const { isDraggingFile } = useDropzoneGlobalDragState()
       [`a-file-dropzone--${variant}`]: true,
       [`a-file-dropzone--${size}`]: true,
       [`a-file-dropzone--hover-only`]: hoverOnly,
+      [`a-file-dropzone--hide-text`]: hideText,
     }"
     @click.stop="emit('onClick')"
   >
@@ -129,6 +132,10 @@ $class-name-root: 'a-file-dropzone';
   }
 
   &--hover-only {
+    display: none;
+  }
+
+  &--hide-text .text {
     display: none;
   }
 
