@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ImageAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
@@ -17,9 +17,14 @@ import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { fetchImage } from '@/components/damImage/composables/imageApi'
-import AImageDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
+import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { computed, inject, ref, type ShallowRef, toRaw, toRefs, watch } from 'vue'
+import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
+import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
+import { storeToRefs } from 'pinia'
+import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
   defineProps<{
@@ -73,6 +78,7 @@ const resImage = ref<null | ImageAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
 const metadataDialog = ref(false)
+const assetDialog = ref(false)
 
 const withoutImage = computed(() => {
   return isNull(props.modelValue)
@@ -150,6 +156,23 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
     console.log(data.value)
     // todo(data.value, withoutImage.value)
+  }
+}
+
+const assetDetailStore = useAssetDetailStore()
+const { loading: assetDetailLoading, dialog: assetDetailDialog } = storeToRefs(assetDetailStore)
+const { damClient } = useCommonAdminCoreDamOptions()
+
+const onEditAsset = async (assetFileId: DocId) =>  {
+  assetDetailLoading.value = true
+  assetDetailDialog.value = true
+  try {
+    const asset = await fetchAssetByFileId(damClient, assetFileId)
+    assetDetailStore.setAsset(asset)
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    assetDetailLoading.value = false
   }
 }
 </script>
@@ -291,17 +314,9 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
   />
-  <AImageDialogMetadata v-model="metadataDialog" />
+  <ImageDetailDialogMetadata
+    v-model="metadataDialog"
+    @edit-asset="onEditAsset"
+  />
+  <AssetDetailDialog v-model="assetDialog" />
 </template>
-
-<style lang="scss">
-$class-name-root: 'a-image-widget';
-
-.#{$class-name-root} {
-  &__options {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-</style>

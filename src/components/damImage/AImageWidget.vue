@@ -83,3 +83,15 @@ provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
     indeterminate
   />
 </template>
+
+<style lang="scss">
+$class-name-root: 'a-image-widget';
+
+.#{$class-name-root} {
+  &__options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+</style>

@@ -24,6 +24,9 @@ export declare type AssetCustomData = Record<string, any>;
 export const fetchAsset = (client: () => AxiosInstance, id: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
 
+export const fetchAssetByFileId = (client: () => AxiosInstance, assetFileId: DocId) =>
+  apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/asset-file/:id', { id: assetFileId }, SYSTEM_CORE_DAM, ENTITY)
+
 export const bulkUpdateAssetsMetadata = (client: () => AxiosInstance, items: UploadQueueItem[]) => {
   return new Promise((resolve, reject) => {
     updateMetadataSequence(client, items)

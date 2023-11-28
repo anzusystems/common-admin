@@ -5,6 +5,8 @@ import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { storeToRefs } from 'pinia'
+import type { DocId } from '@/types/common'
+import { isNull } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
@@ -15,6 +17,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
+  (e: 'editAsset', data: DocId): void
 }>()
 
 const { t } = useI18n()
@@ -26,6 +29,11 @@ const onClose = () => {
 
 const imageStore = useImageStore()
 const { imageDetail } = storeToRefs(imageStore)
+
+const onEditAsset = () => {
+  if (isNull(imageDetail.value)) return
+  emit('editAsset', imageDetail.value.dam.damId)
+}
 </script>
 
 <template>
@@ -49,6 +57,13 @@ const { imageDetail } = storeToRefs(imageStore)
               :image="imageDetail"
             />
           </div>
+          <VRow>
+            <VCol>
+              <VBtn @click.stop="onEditAsset">
+                Edit DAM asset
+              </VBtn>
+            </VCol>
+          </VRow>
           <VRow>
             <VCol>
               <AFormTextarea

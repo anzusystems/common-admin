@@ -1,17 +1,14 @@
 <script lang="ts" setup>
-import { useAssetDetailActions } from '@/views/coreDam/asset/detail/composables/assetDetailActions'
-import { deleteAsset, updateAssetMetadata } from '@/services/api/coreDam/assetApi'
-import type { DamAssetType, DocId } from '@anzusystems/common-admin'
-import { AActionDeleteButton, isNull, useAlerts } from '@anzusystems/common-admin'
-import AssetDetailSidebarActionsWrapper from '@/views/coreDam/asset/detail/components/AssetDetailSidebarActionsWrapper.vue'
+import AssetDetailSidebarActionsWrapper from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsWrapper.vue'
+import { isNull } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import AssetMetadata from '@/views/coreDam/asset/components/AssetMetadata.vue'
-import useVuelidate from '@vuelidate/core'
-import { AssetMetadataValidationScopeSymbol } from '@/components/validationScopes'
-import AssetDownloadButton from '@/views/coreDam/asset/detail/components/AssetDownloadButton.vue'
 import { ref } from 'vue'
-import { ACL } from '@/types/Permission'
-import { useUploadQueuesStore } from '@/stores/coreDam/uploadQueuesStore'
+import { useAlerts } from '@/composables/system/alerts'
+import useVuelidate from '@vuelidate/core'
+import type { DocId } from '@/types/common'
+import type { DamAssetType } from '@/types/coreDam/Asset'
+import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
+import { storeToRefs } from 'pinia'
 
 withDefaults(
   defineProps<{
@@ -29,14 +26,16 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const { asset, view } = useAssetDetailActions()
-const uploadQueueStore = useUploadQueuesStore()
+const assetDetailStore = useAssetDetailStore()
+const { asset } = storeToRefs(assetDetailStore)
+// const uploadQueueStore = useUploadQueuesStore()
 
 const saveButtonLoading = ref(false)
 
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
 
-const v$ = useVuelidate({}, {}, { $scope: AssetMetadataValidationScopeSymbol })
+// const v$ = useVuelidate({}, {}, { $scope: AssetMetadataValidationScopeSymbol })
+const v$ = useVuelidate({}, {}, { $scope: 'replace' })
 
 const onSave = async () => {
   if (isNull(asset.value)) return
@@ -48,10 +47,10 @@ const onSave = async () => {
     return
   }
   try {
-    await updateAssetMetadata(asset.value)
-    if (view.value === 'queue') {
-      uploadQueueStore.updateAssetMetadata(asset.value)
-    }
+    // await updateAssetMetadata(asset.value)
+    // if (view.value === 'queue') {
+    //   uploadQueueStore.updateAssetMetadata(asset.value)
+    // }
     showRecordWas('updated')
   } catch (error) {
     showErrorsDefault(error)
@@ -63,7 +62,7 @@ const onSave = async () => {
 const onDelete = async () => {
   if (isNull(asset.value)) return
   try {
-    await deleteAsset(asset.value.id)
+    // await deleteAsset(asset.value.id)
     showRecordWas('deleted')
     emit('postDelete', asset.value.id)
   } catch (error) {
@@ -74,21 +73,17 @@ const onDelete = async () => {
 
 <template>
   <AssetDetailSidebarActionsWrapper v-if="isActive">
-    <AssetDownloadButton :asset-type="assetType" />
-    <Acl :permission="ACL.DAM_ASSET_DELETE">
-      <AActionDeleteButton @delete-record="onDelete" />
-    </Acl>
-    <Acl :permission="ACL.DAM_ASSET_UPDATE">
-      <ABtnPrimary
-        type="submit"
-        class="ml-2"
-        data-cy="button-save"
-        :loading="saveButtonLoading"
-        @click.stop="onSave"
-      >
-        {{ t('common.button.save') }}
-      </ABtnPrimary>
-    </Acl>
+    <!--    <AssetDownloadButton :asset-type="assetType" />-->
+    <!--    <AActionDeleteButton @delete-record="onDelete" />-->
+    <ABtnPrimary
+      type="submit"
+      class="ml-2"
+      data-cy="button-save"
+      :loading="saveButtonLoading"
+      @click.stop="onSave"
+    >
+      {{ t('common.button.save') }}
+    </ABtnPrimary>
   </AssetDetailSidebarActionsWrapper>
-  <AssetMetadata />
+  <!--  <AssetMetadata />-->
 </template>

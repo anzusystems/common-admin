@@ -11,6 +11,7 @@ export enum AssetDetailTabImageWithRoi {
 export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
   const asset = ref<AssetDetailItemDto | null>(null)
   const dialog = ref(false)
+  const loading = ref(false)
   const activeTab = ref<AssetDetailTabImageWithRoi>(AssetDetailTabImageWithRoi.Default)
 
   function setAsset(data: AssetDetailItemDto | null) {
@@ -23,6 +24,7 @@ export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
 
   return {
     asset,
+    loading,
     setAsset,
     dialog,
     reset,
