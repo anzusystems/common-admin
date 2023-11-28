@@ -39,7 +39,13 @@ const status = ref<'loading' | 'ready' | 'error'>('loading')
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
-const { initialized, loadDamConfigExtSystem, damConfigExtSystem, loadDamPrvConfig } = useDamConfigState(damClient)
+const {
+  initialized,
+  loadDamConfigExtSystem,
+  damConfigExtSystem,
+  loadDamPrvConfig,
+  loadDamConfigAssetCustomFormElements,
+} = useDamConfigState(damClient)
 
 onMounted(async () => {
   const promises: Promise<any>[] = []
@@ -48,6 +54,7 @@ onMounted(async () => {
   }
   if (initialized.damConfigExtSystem !== props.extSystem) {
     promises.push(loadDamConfigExtSystem(props.extSystem))
+    promises.push(loadDamConfigAssetCustomFormElements(props.extSystem))
   }
   try {
     await Promise.all(promises)
