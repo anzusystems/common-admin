@@ -3,7 +3,6 @@ import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ImageAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
-import { computed, inject, ref, type ShallowRef, toRefs, watch } from 'vue'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions, useImageWriteActions } from '@/components/damImage/composables/imageActions'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
@@ -18,6 +17,9 @@ import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { fetchImage } from '@/components/damImage/composables/imageApi'
+import AImageDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
+import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
+import { computed, inject, ref, type ShallowRef, toRaw, toRefs, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -65,10 +67,12 @@ const { imageClient } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 const { actionDelete } = useImageWriteActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
+const imageStore = useImageStore()
 
 const resImage = ref<null | ImageAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
+const metadataDialog = ref(false)
 
 const withoutImage = computed(() => {
   return isNull(props.modelValue)
@@ -90,7 +94,12 @@ const imageLoaded = computed(() => {
   return !isNull(resImage.value)
 })
 
-const actionEditMeta = () => {}
+const actionEditMeta = () => {
+  console.log(toRaw(resImage.value))
+  imageStore.setImageDetail(toRaw(resImage.value))
+  metadataDialog.value = true
+}
+
 const actionLibrary = () => {
   assetSelectDialog.value = true
 }
@@ -117,7 +126,7 @@ watch(
     if (newImage) {
       resImage.value = cloneDeep(newImage)
       if (resImage.value) {
-        resolvedSrc.value = widgetImageToDamImageUrl(resImage.value)
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
       }
       return
     }
@@ -127,8 +136,8 @@ watch(
       } catch (error) {
         showErrorsDefault(error)
       }
-      if (resImage.value) {
-        resolvedSrc.value = widgetImageToDamImageUrl(resImage.value)
+      if (!isNull(resImage.value)) {
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
       }
       return
     }
@@ -267,7 +276,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
         transparent
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
-        :hide-text="modelValue !== null"
+        :hide-text="!withoutImage"
         @on-click="clickMenuOpened = true"
         @on-drop="onDrop"
       />
@@ -282,6 +291,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
   />
+  <AImageDialogMetadata v-model="metadataDialog" />
 </template>
 
 <style lang="scss">
