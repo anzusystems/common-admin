@@ -9,6 +9,7 @@ import type { DocId } from '@/types/common'
 import type { DamAssetType } from '@/types/coreDam/Asset'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
+import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
 
 withDefaults(
   defineProps<{
@@ -85,5 +86,5 @@ const onDelete = async () => {
       {{ t('common.button.save') }}
     </ABtnPrimary>
   </AssetDetailSidebarActionsWrapper>
-  <!--  <AssetMetadata />-->
+  <AssetMetadata />
 </template>

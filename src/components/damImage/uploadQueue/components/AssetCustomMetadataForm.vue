@@ -33,6 +33,7 @@ const pinnedCount = computed(() => {
 </script>
 
 <template>
+  {{ damConfigAssetCustomFormElements }}
   <ACustomDataForm
     :model-value="modelValue"
     :pinned-count="pinnedCount"
