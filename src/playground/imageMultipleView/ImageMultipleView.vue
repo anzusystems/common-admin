@@ -14,7 +14,7 @@ const imageId = ref<IntegerId[]>([1, 2, 3])
     <VCardTitle>Image multiple</VCardTitle>
     <VCardText>
       <VRow>
-        <VCol cols="4">
+        <VCol>
           <AImageWidgetMultiple
             v-model="imageId"
             :licence-id="100001"

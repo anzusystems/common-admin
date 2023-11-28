@@ -144,7 +144,7 @@ onMounted(() => {
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
   />
-  <div class="position-relative">
+  <div class="position-relative w-100">
     <ImageWidgetMultipleItem
       v-for="(image, index) in images"
       :key="image.id"
@@ -153,6 +153,7 @@ onMounted(() => {
     <AImageDropzone
       variant="fill"
       transparent
+      hover-only
       :accept="uploadAccept"
       :max-sizes="uploadSizes"
       @on-drop="onDrop"
