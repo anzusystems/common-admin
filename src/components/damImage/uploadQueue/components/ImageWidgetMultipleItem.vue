@@ -3,6 +3,8 @@ import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { computed } from 'vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
+import type { DocId } from '@/types/common'
+import { isNull, isUndefined } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
@@ -11,9 +13,18 @@ const props = withDefaults(
   {}
 )
 
+const emit = defineEmits<{
+  (e: 'editAsset', data: DocId): void
+}>()
+
 const imageStore = useImageStore()
 
 const image = computed(() => imageStore.images[props.index])
+
+const onEditAsset = () => {
+  if (isNull(image.value) || isUndefined(image.value)) return
+  emit('editAsset', image.value.dam.damId)
+}
 </script>
 
 <template>
@@ -24,6 +35,13 @@ const image = computed(() => imageStore.images[props.index])
         :image="image"
       />
     </div>
+    <VRow>
+      <VCol>
+        <VBtn @click.stop="onEditAsset">
+          Edit DAM asset
+        </VBtn>
+      </VCol>
+    </VRow>
     <VRow>
       <VCol>
         <AFormTextarea

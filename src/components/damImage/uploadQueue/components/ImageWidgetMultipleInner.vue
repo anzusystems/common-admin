@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { IntegerId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import { computed, inject, onMounted, ref, type ShallowRef } from 'vue'
 import { isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
@@ -20,6 +20,10 @@ import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composab
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import UploadQueueDialog from '@/components/damImage/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
+import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
+import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
   defineProps<{
@@ -117,6 +121,23 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
   }
 }
 
+const assetDetailStore = useAssetDetailStore()
+const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
+const { damClient } = useCommonAdminCoreDamOptions()
+
+const onEditAsset = async (assetFileId: DocId) =>  {
+  assetLoading.value = true
+  assetDialog.value = true
+  try {
+    const asset = await fetchAssetByFileId(damClient, assetFileId)
+    assetDetailStore.setAsset(asset)
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    assetLoading.value = false
+  }
+}
+
 onMounted(() => {
   fetchImagesOnLoad()
 })
@@ -149,6 +170,7 @@ onMounted(() => {
       v-for="(image, index) in images"
       :key="image.id"
       :index="index"
+      @edit-asset="onEditAsset"
     />
     <AImageDropzone
       variant="fill"
@@ -165,6 +187,7 @@ onMounted(() => {
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
   />
+  <AssetDetailDialog />
 </template>
 
 <style lang="scss"></style>

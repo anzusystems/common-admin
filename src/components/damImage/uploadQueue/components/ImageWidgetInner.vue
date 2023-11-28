@@ -167,7 +167,6 @@ const onEditAsset = async (assetFileId: DocId) =>  {
   assetDialog.value = true
   try {
     const asset = await fetchAssetByFileId(damClient, assetFileId)
-    console.log(asset)
     assetDetailStore.setAsset(asset)
   } catch (e) {
     showErrorsDefault(e)
