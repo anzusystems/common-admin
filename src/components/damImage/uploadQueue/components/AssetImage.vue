@@ -5,7 +5,7 @@ import placeholder16x9 from '@/assets/image/placeholder16x9.jpg'
 import { type AssetFileProperties, DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 import { isUndefined } from '@/utils/common'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
-import AssetImageMetaIcons from '@/components/damImage/uploadQueue/AssetImageMetaIcons.vue'
+import AssetImageMetaIcons from '@/components/damImage/uploadQueue/components/AssetImageMetaIcons.vue'
 
 const props = withDefaults(
   defineProps<{

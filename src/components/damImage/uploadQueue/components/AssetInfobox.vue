@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 import type { DamAssetStatus } from '@/types/coreDam/Asset'
-import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/AssetFileFailReasonChip.vue'
+import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
 
 withDefaults(
   defineProps<{

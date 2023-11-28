@@ -11,10 +11,10 @@ import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton
 import { prettyBytes } from '@/utils/file'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/AssetCustomMetadataForm.vue'
-import AssetImage from '@/components/damImage/uploadQueue/AssetImage.vue'
-import AssetLinkExternal from '@/components/damImage/uploadQueue/AssetLinkExternal.vue'
-import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/AssetFileFailReasonChip.vue'
+import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/components/AssetCustomMetadataForm.vue'
+import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
+import AssetLinkExternal from '@/components/damImage/uploadQueue/components/AssetLinkExternal.vue'
+import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
 
 const props = withDefaults(
   defineProps<{

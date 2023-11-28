@@ -8,11 +8,11 @@ import type { DocId } from '@/types/common'
 import { type DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 import { useI18n } from 'vue-i18n'
-import AssetInfobox from '@/components/damImage/uploadQueue/AssetInfobox.vue'
-import AssetDetailSidebarMetadata from '@/components/damImage/uploadQueue/AssetDetailSidebarMetadata.vue'
-import AssetDetailSidebarROI from '@/components/damImage/uploadQueue/AssetDetailSidebarROI.vue'
+import AssetInfobox from '@/components/damImage/uploadQueue/components/AssetInfobox.vue'
+import AssetDetailSidebarMetadata from '@/components/damImage/uploadQueue/components/AssetDetailSidebarMetadata.vue'
+import AssetDetailSidebarROI from '@/components/damImage/uploadQueue/components/AssetDetailSidebarROI.vue'
 import AssetDetailSidebarActionsTeleportTarget
-  from '@/components/damImage/uploadQueue/AssetDetailSidebarActionsTeleportTarget.vue'
+  from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsTeleportTarget.vue'
 
 withDefaults(
   defineProps<{

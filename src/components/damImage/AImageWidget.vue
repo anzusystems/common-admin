@@ -5,7 +5,7 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageAware } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import AImageWidgetInner from '@/components/damImage/AImageWidgetInner.vue'
+import ImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 
 /**
@@ -66,7 +66,7 @@ provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
 </script>
 
 <template>
-  <AImageWidgetInner
+  <ImageWidgetInner
     v-if="status === 'ready'"
     v-bind="props"
   />

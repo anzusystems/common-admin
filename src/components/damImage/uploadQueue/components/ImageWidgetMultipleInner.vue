@@ -6,7 +6,7 @@ import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
-import AImageWidgetMultipleItem from '@/components/damImage/AImageWidgetMultipleItem.vue'
+import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleItem.vue'
 import { storeToRefs } from 'pinia'
 import { fetchImageListByIds } from '@/components/damImage/composables/imageApi'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
@@ -18,7 +18,7 @@ import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
-import UploadQueueDialog from '@/components/damImage/uploadQueue/UploadQueueDialog.vue'
+import UploadQueueDialog from '@/components/damImage/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 
 const props = withDefaults(
@@ -145,7 +145,7 @@ onMounted(() => {
     @on-confirm="onAssetSelectConfirm"
   />
   <div class="position-relative">
-    <AImageWidgetMultipleItem
+    <ImageWidgetMultipleItem
       v-for="(image, index) in images"
       :key="image.id"
       :index="index"

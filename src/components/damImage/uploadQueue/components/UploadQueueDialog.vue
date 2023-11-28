@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import { useI18n } from 'vue-i18n'
-import UploadQueueEditable from '@/components/damImage/uploadQueue/UploadQueueEditable.vue'
+import UploadQueueEditable from '@/components/damImage/uploadQueue/components/UploadQueueEditable.vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import { computed, ref } from 'vue'
 import { useTheme } from '@/composables/themeSettings'
-import UploadQueueButtonStop from '@/components/damImage/uploadQueue/UploadQueueButtonStop.vue'
+import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/composables/system/alerts'
 import { bulkUpdateAssetsMetadata } from '@/components/damImage/uploadQueue/api/damAssetApi'

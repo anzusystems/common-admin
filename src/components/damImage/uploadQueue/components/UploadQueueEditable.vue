@@ -2,7 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
-import UploadQueueItemEditable from '@/components/damImage/uploadQueue/UploadQueueItemEditable.vue'
+import UploadQueueItemEditable from '@/components/damImage/uploadQueue/components/UploadQueueItemEditable.vue'
 
 const props = withDefaults(
   defineProps<{

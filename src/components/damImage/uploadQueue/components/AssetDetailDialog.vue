@@ -6,11 +6,11 @@ import { useTheme } from '@/composables/themeSettings'
 import { AssetDetailTabImageWithRoi, useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import type { DocId } from '@/types/common'
 import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
-import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/AssetDetailDialogLoader.vue'
-import AssetImage from '@/components/damImage/uploadQueue/AssetImage.vue'
-import AssetDetailDialogSidebar from '@/components/damImage/uploadQueue/AssetDetailDialogSidebar.vue'
+import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/components/AssetDetailDialogLoader.vue'
+import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
+import AssetDetailDialogSidebar from '@/components/damImage/uploadQueue/components/AssetDetailDialogSidebar.vue'
 import { assetFileIsImageFile } from '@/types/coreDam/AssetFile'
-import AssetImageRoiSelect from '@/components/damImage/uploadQueue/AssetImageRoiSelect.vue'
+import AssetImageRoiSelect from '@/components/damImage/uploadQueue/components/AssetImageRoiSelect.vue'
 
 const { t } = useI18n()
 

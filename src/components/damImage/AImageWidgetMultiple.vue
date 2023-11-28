@@ -5,7 +5,7 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import AImageWidgetMultipleInner from '@/components/damImage/AImageWidgetMultipleInner.vue'
+import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
@@ -61,7 +61,7 @@ provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
 </script>
 
 <template>
-  <AImageWidgetMultipleInner
+  <ImageWidgetMultipleInner
     v-if="status === 'ready'"
     v-bind="props"
   />
