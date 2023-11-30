@@ -12,6 +12,7 @@ import { bulkUpdateAssetsMetadata } from '@/components/damImage/uploadQueue/api/
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
+import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 
 const props = withDefaults(
   defineProps<{
@@ -29,6 +30,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'onDrop', files: File[]): void
   (e: 'onFilesInput', files: File[]): void
+  (e: 'onApply', items: ImageCreateUpdateAware[]): void
 }>()
 
 const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
@@ -87,7 +89,7 @@ const onSave = async () => {
   }
 }
 
-const onSaveAndClose = async () => {
+const onSaveAndApply = async () => {
   if (items.value.length === 0) return
   saveAndCloseButtonLoading.value = true
   v$.value.$touch()
@@ -98,6 +100,23 @@ const onSaveAndClose = async () => {
   }
   try {
     await bulkUpdateAssetsMetadata(damClient, items.value)
+    emit(
+      'onApply',
+      items.value.map((item) => {
+        // todo take data from asset
+        return {
+          texts: {
+            description: '',
+            source: '',
+          },
+          dam: {
+            damId: item.fileId ?? '',
+            regionPosition: 0,
+          },
+          position: 1,
+        }
+      })
+    )
     showRecordWas('updated')
     await onStopConfirm()
   } catch (error) {
@@ -116,9 +135,7 @@ const onSaveAndClose = async () => {
     class="overlay--sidebar"
   >
     <VCard>
-      <div
-        class="asset-footer__upload asset-footer--full asset-footer__upload--full pa-0"
-      >
+      <div class="asset-footer__upload asset-footer--full asset-footer__upload--full pa-0">
         <div class="d-flex w-100 h-100 flex-column">
           <VToolbar
             class="w-100 system-border-b pr-1"
@@ -169,7 +186,7 @@ const onSaveAndClose = async () => {
                 rounded="pill"
                 :loading="saveAndCloseButtonLoading"
                 :disabled="saveButtonLoading"
-                @click.stop="onSaveAndClose"
+                @click.stop="onSaveAndApply"
               >
                 {{ t('coreDam.asset.upload.saveAndClose') }}
               </ABtnPrimary>

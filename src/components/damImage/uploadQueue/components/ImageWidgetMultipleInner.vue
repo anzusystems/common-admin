@@ -24,6 +24,7 @@ import AssetDetailDialog from '@/components/damImage/uploadQueue/components/Asse
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 
 const props = withDefaults(
   defineProps<{
@@ -138,6 +139,10 @@ const onEditAsset = async (assetFileId: DocId) =>  {
   }
 }
 
+const afterUploadApply = (items: ImageCreateUpdateAware[]) => {
+
+}
+
 onMounted(() => {
   fetchImagesOnLoad()
 })
@@ -187,6 +192,7 @@ onMounted(() => {
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
     multiple
+    @on-apply="afterUploadApply"
   />
   <AssetDetailDialog />
 </template>

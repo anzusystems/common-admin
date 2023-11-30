@@ -6,7 +6,7 @@ import { ref } from 'vue'
 import type { IntegerIdNullable } from '@/types/common'
 
 const imageId = ref(1)
-const imageId2 = ref<IntegerIdNullable>(1)
+const imageId2 = ref<IntegerIdNullable>(null)
 </script>
 
 <template>
