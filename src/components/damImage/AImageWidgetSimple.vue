@@ -11,7 +11,7 @@ import { fetchImage } from '@/components/damImage/composables/imageApi'
 
 const props = withDefaults(
   defineProps<{
-    modelValue: IntegerIdNullable
+    modelValue: IntegerIdNullable | undefined
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     label?: string | undefined

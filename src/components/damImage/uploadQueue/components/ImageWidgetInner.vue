@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
-import type { ImageAware } from '@/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions, useImageWriteActions } from '@/components/damImage/composables/imageActions'
@@ -75,7 +75,7 @@ const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 const { actionDelete } = useImageWriteActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
 const imageStore = useImageStore()
-const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
+const { uploadQueueDialog  } = useUploadQueueDialog()
 
 const resImage = ref<null | ImageAware>(null)
 const clickMenuOpened = ref(false)
@@ -158,8 +158,25 @@ watch(
 
 const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
-    console.log(data.value)
-    // todo(data.value, withoutImage.value)
+    if (!data.value[0] || !data.value[0].mainFile) return
+    console.log('fileId', data.value[0].mainFile.id)
+    const image: ImageCreateUpdateAware = {
+      texts: {
+        description: 'todo',
+        source: 'todo',
+      },
+      dam: {
+        damId: data.value[0].mainFile.id,
+        regionPosition: 0,
+      },
+      position: 1,
+    }
+    if (!isNull(props.modelValue)) {
+      image.id = props.modelValue
+    }
+    imageStore.setImageDetail(image)
+    console.log(imageStore.imageDetail)
+    metadataDialog.value = true
   }
 }
 
@@ -168,6 +185,8 @@ const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailSt
 const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) =>  {
+  console.log(assetFileId)
+  console.log(imageStore.imageDetail.dam.damId)
   assetLoading.value = true
   assetDialog.value = true
   try {
