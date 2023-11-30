@@ -10,7 +10,6 @@ export const useImageStore = defineStore('commonImageStore', () => {
   function setImageDetail (data: ImageCreateUpdateAware | null) {
     if (isNull(data)) imageDetail.value = null
     imageDetail.value = cloneDeep(data)
-    console.log(imageDetail.value)
   }
 
   function setImages (data: ImageCreateUpdateAware[]) {

@@ -8,23 +8,29 @@ import { storeToRefs } from 'pinia'
 import type { DocId } from '@/types/common'
 import { isNull } from '@/utils/common'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     modelValue: boolean
+    saving: boolean
   }>(),
   {}
 )
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: boolean): void
   (e: 'editAsset', data: DocId): void
+  (e: 'onConfirm'): void
+  (e: 'onClose'): void
 }>()
 
 const { t } = useI18n()
 
-const onConfirm = () => {}
-const onClose = () => {
-  emit('update:modelValue', false)
+const onConfirm = () => {
+  emit('onConfirm')
+}
+
+const onDialogModelUpdate = (newValue: boolean) => {
+  if (newValue) return
+  emit('onClose')
 }
 
 const imageStore = useImageStore()
@@ -40,10 +46,10 @@ const onEditAsset = () => {
   <VDialog
     :model-value="modelValue"
     :max-width="500"
-    @update:model-value="emit('update:modelValue', $event)"
+    @update:model-value="onDialogModelUpdate"
   >
     <VCard v-if="modelValue">
-      <ADialogToolbar @on-cancel="onClose">
+      <ADialogToolbar @on-cancel="onDialogModelUpdate(false)">
         Update metadata
       </ADialogToolbar>
       <VCardText>
@@ -84,10 +90,11 @@ const onEditAsset = () => {
       </VCardText>
       <VCardActions>
         <VSpacer />
-        <ABtnPrimary @click.stop="onConfirm">
-          <slot name="button-confirm-title">
-            {{ t('common.button.confirm') }}
-          </slot>
+        <ABtnPrimary
+          :loading="saving"
+          @click.stop="onConfirm"
+        >
+          {{ t('common.button.confirm') }}
         </ABtnPrimary>
       </VCardActions>
     </VCard>

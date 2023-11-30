@@ -16,7 +16,7 @@ import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
-import { fetchImage } from '@/components/damImage/composables/imageApi'
+import { createImage, fetchImage, updateImage } from '@/components/damImage/composables/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { computed, inject, ref, type ShallowRef, toRaw, toRefs, watch } from 'vue'
@@ -57,6 +57,10 @@ const props = withDefaults(
   }
 )
 
+const emit = defineEmits<{
+  (e: 'update:modelValue', data: IntegerIdNullable): void
+}>()
+
 const imageWidgetExtSystemConfig = inject<ShallowRef<DamExtSystemConfig> | undefined>(
   ImageWidgetExtSystemConfig,
   undefined
@@ -77,16 +81,18 @@ const uploadQueuesStore = useUploadQueuesStore()
 const imageStore = useImageStore()
 const { uploadQueueDialog  } = useUploadQueueDialog()
 
+const firstInitDone = ref(false)
 const resImage = ref<null | ImageAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
 const metadataDialog = ref(false)
+const metadataDialogSaving = ref(false)
 
 const withoutImage = computed(() => {
   return isNull(props.modelValue)
 })
 
-const { image, modelValue } = toRefs(props)
+// const { image, modelValue } = toRefs(props)
 
 const resolvedSrc = ref('')
 
@@ -129,18 +135,22 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
 )
 
 watch(
-  [image, modelValue],
+  [() => props.image, () => props.modelValue],
   async ([newImage, newImageId]) => {
+    console.log('watch', newImageId)
     resImage.value = null
     resolvedSrc.value = imagePlaceholderPath
-    if (newImage) {
+    if (newImage && !firstInitDone.value) {
+      console.log('iba na zaciatku')
       resImage.value = cloneDeep(newImage)
       if (resImage.value) {
         resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
       }
+      firstInitDone.value = true
       return
     }
     if (newImageId) {
+      console.log('new image id')
       try {
         resImage.value = await fetchImage(imageClient, newImageId)
       } catch (error) {
@@ -149,9 +159,10 @@ watch(
       if (!isNull(resImage.value)) {
         resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
       }
+      firstInitDone.value = true
       return
     }
-    return
+    firstInitDone.value = true
   },
   { immediate: true }
 )
@@ -159,7 +170,6 @@ watch(
 const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
     if (!data.value[0] || !data.value[0].mainFile) return
-    console.log('fileId', data.value[0].mainFile.id)
     const image: ImageCreateUpdateAware = {
       texts: {
         description: 'todo',
@@ -175,7 +185,6 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
       image.id = props.modelValue
     }
     imageStore.setImageDetail(image)
-    console.log(imageStore.imageDetail)
     metadataDialog.value = true
   }
 }
@@ -185,8 +194,6 @@ const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailSt
 const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) =>  {
-  console.log(assetFileId)
-  console.log(imageStore.imageDetail.dam.damId)
   assetLoading.value = true
   assetDialog.value = true
   try {
@@ -196,6 +203,28 @@ const onEditAsset = async (assetFileId: DocId) =>  {
     showErrorsDefault(e)
   } finally {
     assetLoading.value = false
+  }
+}
+
+const onMetadataDialogClose = () => {
+  imageStore.setImageDetail(null)
+  metadataDialog.value = false
+}
+
+const createOrUpdateImage = async () => {
+  if (isNull(imageStore.imageDetail)) return
+  metadataDialogSaving.value = true
+  try {
+    const res = imageStore.imageDetail.id
+      ? await updateImage(imageClient, imageStore.imageDetail.id, imageStore.imageDetail)
+      : await createImage(imageClient, imageStore.imageDetail)
+    metadataDialog.value = false
+    emit('update:modelValue', res.id)
+    imageStore.setImageDetail(null)
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    metadataDialogSaving.value = false
   }
 }
 </script>
@@ -339,7 +368,10 @@ const onEditAsset = async (assetFileId: DocId) =>  {
   />
   <ImageDetailDialogMetadata
     v-model="metadataDialog"
+    :saving="metadataDialogSaving"
     @edit-asset="onEditAsset"
+    @on-confirm="createOrUpdateImage"
+    @on-close="onMetadataDialogClose"
   />
   <AssetDetailDialog />
   <UploadQueueDialog

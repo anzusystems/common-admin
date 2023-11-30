@@ -17,6 +17,7 @@ const props = withDefaults(
     label?: string | undefined
     width?: number | undefined
     disableAspectRatio?: boolean
+    aspectRatio?: number | string
   }>(),
   {
     configName: 'default',
@@ -24,6 +25,7 @@ const props = withDefaults(
     image: undefined,
     width: undefined,
     disableAspectRatio: false,
+    aspectRatio: 1.777, // 16/9
   }
 )
 
@@ -83,6 +85,7 @@ watch(
     cover
     max-width="100%"
     class="disable-radius"
+    :aspect-ratio="disableAspectRatio ? undefined : aspectRatio"
   >
     <template #placeholder>
       <div class="d-flex align-center justify-center h-100">

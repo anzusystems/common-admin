@@ -40,6 +40,10 @@ const props = withDefaults(
   }
 )
 
+const emit = defineEmits<{
+  (e: 'update:modelValue', data: IntegerIdNullable): void
+}>()
+
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -51,6 +55,11 @@ const {
   loadDamPrvConfig,
   loadDamConfigAssetCustomFormElements,
 } = useDamConfigState(damClient)
+
+const updateModelValue = (newValue: IntegerIdNullable) => {
+  console.log('aaaaaa', newValue)
+  emit('update:modelValue', newValue)
+}
 
 onMounted(async () => {
   const promises: Promise<any>[] = []
@@ -76,6 +85,7 @@ provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
   <ImageWidgetInner
     v-if="status === 'ready'"
     v-bind="props"
+    @update:model-value="updateModelValue"
   />
   <div
     v-else-if="status === 'error'"
