@@ -186,6 +186,7 @@ onMounted(() => {
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
+    multiple
   />
   <AssetDetailDialog />
 </template>

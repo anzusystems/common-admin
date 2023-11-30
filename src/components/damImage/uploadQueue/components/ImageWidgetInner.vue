@@ -25,6 +25,8 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import { storeToRefs } from 'pinia'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import UploadQueueDialog from '@/components/damImage/uploadQueue/components/UploadQueueDialog.vue'
+import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 
 const props = withDefaults(
   defineProps<{
@@ -73,6 +75,7 @@ const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 const { actionDelete } = useImageWriteActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
 const imageStore = useImageStore()
+const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
 
 const resImage = ref<null | ImageAware>(null)
 const clickMenuOpened = ref(false)
@@ -112,10 +115,12 @@ const actionLibrary = () => {
 const onDrop = (files: File[]) => {
   console.log('onDrop', files)
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+  uploadQueueDialog.value = true
 }
 const onFileInput = (files: File[]) => {
   console.log('onFileInput', files)
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+  uploadQueueDialog.value = true
 }
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -318,4 +323,10 @@ const onEditAsset = async (assetFileId: DocId) =>  {
     @edit-asset="onEditAsset"
   />
   <AssetDetailDialog />
+  <UploadQueueDialog
+    :queue-key="queueKey"
+    :file-input-key="uploadQueue?.fileInputKey ?? -1"
+    :accept="uploadAccept"
+    :max-sizes="uploadSizes"
+  />
 </template>

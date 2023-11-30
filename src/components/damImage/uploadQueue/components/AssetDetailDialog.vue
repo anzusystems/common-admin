@@ -3,7 +3,10 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useTheme } from '@/composables/themeSettings'
-import { AssetDetailTabImageWithRoi, useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
+import {
+  AssetDetailTabImageWithRoi,
+  useAssetDetailStore,
+} from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import type { DocId } from '@/types/common'
 import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/components/AssetDetailDialogLoader.vue'
@@ -96,7 +99,6 @@ const assetMainFile = computed(() => {
 </script>
 
 <template>
-  {{ dialog }}
   <VDialog
     v-if="dialog"
     :model-value="dialog"
