@@ -129,7 +129,6 @@ const onSaveAndApply = async () => {
 
 <template>
   <VDialog
-    v-if="uploadQueueDialog"
     :model-value="true"
     fullscreen
     class="overlay--sidebar"

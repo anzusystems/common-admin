@@ -1,0 +1,21 @@
+$class-name-root: 'sidebar-info';
+$toolbar-height: 48px;
+$tabs-height: 48px;
+$actions-height: 48px;
+$sum-height: $toolbar-height + $tabs-height + $actions-height;
+
+.#{$class-name-root} {
+  &__tabs {
+    height: 48px;
+  }
+
+  &__content {
+    overflow-y: auto;
+    height: calc(100vh - $sum-height);
+    max-height: calc(100vh - $sum-height);
+  }
+
+  &__actions {
+    height: 48px;
+  }
+}

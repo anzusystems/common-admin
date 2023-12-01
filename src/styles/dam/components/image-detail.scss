@@ -1,0 +1,92 @@
+@use 'vuetify/lib/styles/settings/_variables.scss' as vars;
+
+$class-name-root: 'dam-image-detail';
+$sidebar-width: 600px;
+$toolbar-height: 50px;
+$bg-color-light: #f1f4f6;
+$bg-color-dark: #000;
+$bg-sidebar-color-light: #fff;
+$bg-sidebar-color-dark: #1a1a1a;
+
+.#{$class-name-root} {
+  min-height: 100vh !important;
+  background-color: #f1f4f6;
+  position: relative;
+  overflow: hidden !important;
+
+  &__wrapper {
+    width: 100vw;
+    height: 100vh;
+
+    .asset-image.asset-image--placeholder {
+      width: 100% !important;
+      height: 100% !important;
+    }
+  }
+
+  &__sidebar {
+    transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(110%);
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    @media #{map-get(vars.$display-breakpoints, 'sm-and-down')} {
+      width: 100%;
+    }
+
+    @media #{map-get(vars.$display-breakpoints, 'md-and-up')} {
+      width: $sidebar-width;
+    }
+  }
+
+  &__left {
+    transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    height: calc(100vh - $toolbar-height);
+    max-height: calc(100vh - $toolbar-height);
+    overflow: hidden;
+  }
+
+  &__image {
+    max-height: calc(100vh - $toolbar-height);
+    width: auto;
+  }
+
+  &--sidebar-active {
+    .#{$class-name-root}__sidebar {
+      transform: translateX(0%);
+      display: flex;
+    }
+
+    .#{$class-name-root}__left {
+      @media #{map-get(vars.$display-breakpoints, 'sm-and-down')} {
+        width: 100%;
+      }
+
+      @media #{map-get(vars.$display-breakpoints, 'md-and-up')} {
+        padding-right: $sidebar-width;
+      }
+    }
+  }
+}
+
+.v-theme--light {
+  .#{$class-name-root} {
+    background-color: $bg-color-light;
+
+    &__sidebar {
+      background-color: $bg-sidebar-color-light;
+    }
+  }
+}
+
+.v-theme--dark {
+  .#{$class-name-root} {
+    background-color: $bg-color-dark;
+
+    &__sidebar {
+      background-color: $bg-sidebar-color-dark;
+    }
+  }
+}

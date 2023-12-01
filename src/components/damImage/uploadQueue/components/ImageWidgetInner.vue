@@ -384,6 +384,7 @@ const onImageDelete = async () => {
   />
   <AssetDetailDialog />
   <UploadQueueDialog
+    v-if="uploadQueueDialog"
     :queue-key="queueKey"
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"
