@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import { onMounted, provide, ref } from 'vue'
+import { onMounted, provide, ref, toRaw, watch } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageAware } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import ImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
+import { cloneDeep, isNull } from '@/utils/common'
+import { fetchImage } from '@/components/damImage/composables/imageApi'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
@@ -56,11 +59,6 @@ const {
   loadDamConfigAssetCustomFormElements,
 } = useDamConfigState(damClient)
 
-const updateModelValue = (newValue: IntegerIdNullable) => {
-  console.log('aaaaaa', newValue)
-  emit('update:modelValue', newValue)
-}
-
 onMounted(async () => {
   const promises: Promise<any>[] = []
   if (!initialized.damPrvConfig) {
@@ -85,7 +83,7 @@ provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
   <ImageWidgetInner
     v-if="status === 'ready'"
     v-bind="props"
-    @update:model-value="updateModelValue"
+    @update:model-value="emit('update:modelValue', $event)"
   />
   <div
     v-else-if="status === 'error'"

@@ -81,7 +81,6 @@ const uploadQueuesStore = useUploadQueuesStore()
 const imageStore = useImageStore()
 const { uploadQueueDialog  } = useUploadQueueDialog()
 
-const firstInitDone = ref(false)
 const resImage = ref<null | ImageAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
@@ -109,7 +108,6 @@ const imageLoaded = computed(() => {
 })
 
 const actionEditMeta = () => {
-  console.log(toRaw(resImage.value))
   imageStore.setImageDetail(toRaw(resImage.value))
   metadataDialog.value = true
 }
@@ -119,12 +117,10 @@ const actionLibrary = () => {
 }
 
 const onDrop = (files: File[]) => {
-  console.log('onDrop', files)
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
   uploadQueueDialog.value = true
 }
 const onFileInput = (files: File[]) => {
-  console.log('onFileInput', files)
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
   uploadQueueDialog.value = true
 }
@@ -134,35 +130,32 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   imageWidgetExtSystemConfig.value
 )
 
+const reload = async (newImage: ImageAware | undefined, newImageId: IntegerIdNullable, force = false) => {
+  resolvedSrc.value = imagePlaceholderPath
+  if (newImage && isNull(resImage.value) || newImage && force) {
+    resImage.value = cloneDeep(newImage)
+    if (resImage.value) {
+      resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+    }
+    return
+  }
+  if (newImageId) {
+    try {
+      resImage.value = await fetchImage(imageClient, newImageId)
+    } catch (error) {
+      showErrorsDefault(error)
+    }
+    if (!isNull(resImage.value)) {
+      resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+    }
+    return
+  }
+}
+
 watch(
   [() => props.image, () => props.modelValue],
   async ([newImage, newImageId]) => {
-    console.log('watch', newImageId)
-    resImage.value = null
-    resolvedSrc.value = imagePlaceholderPath
-    if (newImage && !firstInitDone.value) {
-      console.log('iba na zaciatku')
-      resImage.value = cloneDeep(newImage)
-      if (resImage.value) {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
-      }
-      firstInitDone.value = true
-      return
-    }
-    if (newImageId) {
-      console.log('new image id')
-      try {
-        resImage.value = await fetchImage(imageClient, newImageId)
-      } catch (error) {
-        showErrorsDefault(error)
-      }
-      if (!isNull(resImage.value)) {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
-      }
-      firstInitDone.value = true
-      return
-    }
-    firstInitDone.value = true
+    await reload(newImage, newImageId)
   },
   { immediate: true }
 )
@@ -211,7 +204,7 @@ const onMetadataDialogClose = () => {
   metadataDialog.value = false
 }
 
-const createOrUpdateImage = async () => {
+const onMetadataDialogConfirm = async () => {
   if (isNull(imageStore.imageDetail)) return
   metadataDialogSaving.value = true
   try {
@@ -221,6 +214,7 @@ const createOrUpdateImage = async () => {
     metadataDialog.value = false
     emit('update:modelValue', res.id)
     imageStore.setImageDetail(null)
+    reload(res, res.id, true)
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -298,7 +292,7 @@ const createOrUpdateImage = async () => {
                 >
                   <VListItemTitle>Update metadata</VListItemTitle>
                 </VListItem>
-                <VListItem @click.stop="actionLibrary">
+                <VListItem @click="actionLibrary">
                   <VListItemTitle>
                     <span v-if="imageLoaded">Replace from library</span>
                     <span v-else>Choose from library</span>
@@ -370,7 +364,7 @@ const createOrUpdateImage = async () => {
     v-model="metadataDialog"
     :saving="metadataDialogSaving"
     @edit-asset="onEditAsset"
-    @on-confirm="createOrUpdateImage"
+    @on-confirm="onMetadataDialogConfirm"
     @on-close="onMetadataDialogClose"
   />
   <AssetDetailDialog />
