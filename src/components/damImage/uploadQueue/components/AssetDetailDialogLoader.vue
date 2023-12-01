@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
 import { useTheme } from '@/composables/themeSettings'
 
 const emit = defineEmits<{
   (e: 'closeDialog'): void
 }>()
-
-const { t } = useI18n()
 
 const { toolbarColor } = useTheme()
 
@@ -24,40 +21,6 @@ const closeDialog = () => {
         :height="64"
         class="system-border-b"
       >
-        <div>
-          <VBtn
-            variant="text"
-            icon
-            class="mx-1"
-            :width="36"
-            :height="36"
-            @click.stop=""
-          >
-            <VIcon icon="mdi-chevron-left" />
-            <VTooltip
-              activator="parent"
-              location="bottom"
-            >
-              {{ t('coreDam.asset.list.prev') }}
-            </VTooltip>
-          </VBtn>
-          <VBtn
-            variant="text"
-            icon
-            class="mr-2"
-            :width="36"
-            :height="36"
-            @click.stop=""
-          >
-            <VIcon icon="mdi-chevron-right" />
-            <VTooltip
-              activator="parent"
-              location="bottom"
-            >
-              {{ t('coreDam.asset.list.next') }}
-            </VTooltip>
-          </VBtn>
-        </div>
         <div class="text-subtitle-2 d-flex" />
         <VSpacer />
         <div>
