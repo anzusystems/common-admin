@@ -3,6 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import UploadQueueItemEditable from '@/components/damImage/uploadQueue/components/UploadQueueItemEditable.vue'
+import AssetQueueSelectedSidebar from '@/components/damImage/uploadQueue/components/AssetQueueSelectedSidebar.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -70,7 +71,7 @@ onMounted(() => {
       v-if="list.length > 1"
       class="asset-queue-editable__sidebar system-border-l"
     >
-      <!--      <AssetQueueSelectedSidebar :queue-key="queueKey" />-->
+      <AssetQueueSelectedSidebar :queue-key="queueKey" />
     </div>
   </div>
 </template>

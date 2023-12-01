@@ -322,6 +322,21 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     })
   }
 
+  function getQueueItemsTypes(queueKey: UploadQueueKey) {
+      const types: Array<DamAssetType> = []
+    const queue = queues.value.get(queueKey)
+    if (!queue) return types
+    if (queue.items.length > 0) {
+      for (let i = 0; i < queue.items.length; i++) {
+        if (types.includes(queue.items[i].assetType)) {
+          continue
+        }
+        types.push(queue.items[i].assetType)
+      }
+    }
+    return types
+  }
+
   return {
     getQueue,
     getQueueItems,
@@ -334,5 +349,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     getQueueTotalCount,
     getQueueProcessedCount,
     stopUpload,
+    getQueueItemsTypes,
   }
 })

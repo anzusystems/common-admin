@@ -248,7 +248,6 @@ const onImageDelete = async () => {
         {{ label }}
       </h4>
       <div v-show="enabledInteractionComputed">
-        {{ uploadQueue }}
         <div
           v-if="expandOptions"
           class="d-flex flex-row"
