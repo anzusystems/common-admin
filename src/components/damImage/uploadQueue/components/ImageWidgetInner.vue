@@ -4,7 +4,7 @@ import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
-import { useImageActions, useImageWriteActions } from '@/components/damImage/composables/imageActions'
+import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
 import { DamAssetType } from '@/types/coreDam/Asset'
@@ -16,10 +16,10 @@ import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
-import { createImage, fetchImage, updateImage } from '@/components/damImage/composables/imageApi'
+import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/composables/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
-import { computed, inject, ref, type ShallowRef, toRaw, toRefs, watch } from 'vue'
+import { computed, inject, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -76,10 +76,9 @@ const { showErrorsDefault } = useAlerts()
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
-const { actionDelete } = useImageWriteActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
 const imageStore = useImageStore()
-const { uploadQueueDialog  } = useUploadQueueDialog()
+const { uploadQueueDialog } = useUploadQueueDialog()
 
 const resImage = ref<null | ImageAware>(null)
 const clickMenuOpened = ref(false)
@@ -132,7 +131,7 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
 
 const reload = async (newImage: ImageAware | undefined, newImageId: IntegerIdNullable, force = false) => {
   resolvedSrc.value = imagePlaceholderPath
-  if (newImage && isNull(resImage.value) || newImage && force) {
+  if ((newImage && isNull(resImage.value)) || (newImage && force)) {
     resImage.value = cloneDeep(newImage)
     if (resImage.value) {
       resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
@@ -150,6 +149,12 @@ const reload = async (newImage: ImageAware | undefined, newImageId: IntegerIdNul
     }
     return
   }
+}
+
+const reset =  () => {
+  resolvedSrc.value = imagePlaceholderPath
+  resImage.value = null
+  emit('update:modelValue', null)
 }
 
 watch(
@@ -186,7 +191,7 @@ const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
 const { damClient } = useCommonAdminCoreDamOptions()
 
-const onEditAsset = async (assetFileId: DocId) =>  {
+const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = true
   try {
@@ -219,6 +224,16 @@ const onMetadataDialogConfirm = async () => {
     showErrorsDefault(e)
   } finally {
     metadataDialogSaving.value = false
+  }
+}
+
+const onImageDelete = async () => {
+  if (isNull(props.modelValue)) return
+  try {
+    await deleteImage(imageClient, props.modelValue)
+    reset()
+  } catch (e) {
+    showErrorsDefault(e)
   }
 }
 </script>
@@ -312,7 +327,7 @@ const onMetadataDialogConfirm = async () => {
                 </AFileInput>
                 <VListItem
                   v-if="imageLoaded"
-                  @click="actionDelete(props.modelValue)"
+                  @click="onImageDelete"
                 >
                   <VListItemTitle>Remove image</VListItemTitle>
                 </VListItem>

@@ -28,14 +28,3 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
     widgetImageToDamImageUrl,
   }
 }
-
-export function useImageWriteActions(config: ReturnType<typeof useCommonAdminImageOptions>) {
-  const actionDelete = (id: IntegerId | null) => {
-    if (isNull(id)) return
-    // todo
-  }
-
-  return {
-    actionDelete,
-  }
-}
