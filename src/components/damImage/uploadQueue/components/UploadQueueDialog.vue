@@ -20,10 +20,8 @@ const props = withDefaults(
     fileInputKey: number
     accept: string | undefined
     maxSizes: Record<string, number> | undefined
-    multiple?: boolean
   }>(),
   {
-    multiple: false,
   }
 )
 

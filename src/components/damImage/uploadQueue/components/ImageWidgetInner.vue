@@ -25,7 +25,7 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import { storeToRefs } from 'pinia'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import UploadQueueDialog from '@/components/damImage/uploadQueue/components/UploadQueueDialog.vue'
+import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 
 const props = withDefaults(
@@ -236,6 +236,16 @@ const onImageDelete = async () => {
     showErrorsDefault(e)
   }
 }
+
+const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
+    if (!items[0]) return
+
+    if (!isNull(props.modelValue)) {
+      items[0].id = props.modelValue
+    }
+    imageStore.setImageDetail(items[0])
+    metadataDialog.value = true
+}
 </script>
 
 <template>
@@ -382,11 +392,12 @@ const onImageDelete = async () => {
     @on-close="onMetadataDialogClose"
   />
   <AssetDetailDialog />
-  <UploadQueueDialog
+  <UploadQueueDialogSingle
     v-if="uploadQueueDialog"
     :queue-key="queueKey"
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
+    @on-apply="onAssetUploadConfirm"
   />
 </template>

@@ -240,7 +240,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && item.type !== UploadQueueItemType.SlotFile) {
-            console.log('queueItemMetadataProcessed', asset)
             item.keywords = asset.keywords
             item.authors = asset.authors
             item.customData = asset.metadata.customData

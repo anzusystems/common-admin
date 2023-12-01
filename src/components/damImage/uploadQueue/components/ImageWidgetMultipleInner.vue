@@ -104,20 +104,18 @@ const uploadQueue = computed(() => {
 const { uploadQueueDialog  } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
-  console.log('onFileInput', files)
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
   uploadQueueDialog.value = true
 }
 
 const onDrop = (files: File[]) => {
-  console.log('onDrop', files)
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
   uploadQueueDialog.value = true
 }
 
 const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
-    console.log(data.value)
+    console.log('todo',data.value)
     // todo(data.value, withoutImage.value)
   }
 }
