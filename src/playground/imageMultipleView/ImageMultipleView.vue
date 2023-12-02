@@ -15,6 +15,11 @@ const imageIds = ref<IntegerId[]>([])
     <VCardText>
       <VRow>
         <VCol>
+          {{ imageIds }}
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
           <AImageWidgetMultiple
             v-model="imageIds"
             :licence-id="100001"

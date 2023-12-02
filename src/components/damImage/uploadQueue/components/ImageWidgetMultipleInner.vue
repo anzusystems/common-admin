@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, inject, onMounted, ref, type ShallowRef } from 'vue'
-import { isUndefined } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
@@ -86,7 +86,7 @@ const fetchImagesOnLoad = async () => {
     imageStore.setImages(await fetchImageListByIds(imageClient, props.modelValue))
     emit(
       'update:modelValue',
-      images.value.map((image) => image.id)
+      images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[]
     )
   } catch (e) {
     showErrorsDefault(e)
@@ -115,8 +115,21 @@ const onDrop = (files: File[]) => {
 
 const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
-    console.log('todo',data.value)
-    // todo(data.value, withoutImage.value)
+    if (data.value.length === 0) return
+    const images = data.value.filter((asset) => !isNull(asset.mainFile)).map((assetWithMainFile) => {
+      return {
+        texts: {
+          description: 'todo',
+          source: 'todo',
+        },
+        dam: {
+          damId: assetWithMainFile.mainFile!.id,
+          regionPosition: 0,
+        },
+        position: 1,
+      }
+    })
+    imageStore.addImages(images)
   }
 }
 
@@ -141,6 +154,10 @@ const afterUploadApply = (items: ImageCreateUpdateAware[]) => {
 
 }
 
+const actionLibrary = () => {
+  assetSelectDialog.value = true
+}
+
 onMounted(() => {
   fetchImagesOnLoad()
 })
@@ -159,11 +176,17 @@ onMounted(() => {
       </VBtn>
     </template>
   </AFileInput>
+  <VBtn
+    class="mr-2"
+    @click="actionLibrary"
+  >
+    Add from library
+  </VBtn>
   <AAssetSelect
     v-model="assetSelectDialog"
     :asset-licence-id="licenceId"
     :min-count="1"
-    :max-count="1"
+    :max-count="50"
     :asset-type="DamAssetType.Image"
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
@@ -185,6 +208,7 @@ onMounted(() => {
     />
   </div>
   <UploadQueueDialog
+    v-if="uploadQueueDialog"
     :queue-key="queueKey"
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"

@@ -16,6 +16,10 @@ export const useImageStore = defineStore('commonImageStore', () => {
     images.value = data
   }
 
+  function addImages (data: ImageCreateUpdateAware[]) {
+    images.value.push(...data)
+  }
+
   function reset () {
     images.value = []
     imageDetail.value = null
@@ -25,6 +29,7 @@ export const useImageStore = defineStore('commonImageStore', () => {
     images,
     imageDetail,
     setImages,
+    addImages,
     setImageDetail,
     reset,
   }

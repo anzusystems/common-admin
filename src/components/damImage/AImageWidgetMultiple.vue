@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { IntegerId } from '@/types/common'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { onMounted, provide, ref } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
@@ -34,6 +34,10 @@ const props = withDefaults(
     width: undefined,
   }
 )
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', data: IntegerId[]): void
+}>()
 
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 
@@ -71,6 +75,7 @@ provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
   <ImageWidgetMultipleInner
     v-if="status === 'ready'"
     v-bind="props"
+    @update:model-value="emit('update:modelValue', $event)"
   />
   <div
     v-else-if="status === 'error'"
