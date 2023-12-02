@@ -150,6 +150,7 @@ const onEditAsset = async (assetFileId: DocId) => {
 }
 
 const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
+  console.log(items)
   if (items.length === 0) return
   imageStore.addImages(items)
   uploadQueueDialog.value = false

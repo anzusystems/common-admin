@@ -3,7 +3,7 @@ import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composab
 import { useI18n } from 'vue-i18n'
 import UploadQueueEditable from '@/components/damImage/uploadQueue/components/UploadQueueEditable.vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
-import { computed, ref } from 'vue'
+import { computed, ref, toRaw } from 'vue'
 import { useTheme } from '@/composables/themeSettings'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
 import useVuelidate from '@vuelidate/core'
@@ -65,11 +65,12 @@ const saveAndCloseButtonLoading = ref(false)
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
-  uploadQueueDialog.value = false
+  // uploadQueueDialog.value = false
 }
 
 const onSave = async () => {
-  if (items.value.length === 0) return
+  const itemsRaw = toRaw(items.value)
+  if (itemsRaw.length === 0) return
   saveButtonLoading.value = true
   v$.value.$touch()
   if (v$.value.$invalid) {
@@ -78,9 +79,10 @@ const onSave = async () => {
     return
   }
   try {
-    await bulkUpdateAssetsMetadata(damClient, items.value)
+    await bulkUpdateAssetsMetadata(damClient, itemsRaw)
     showRecordWas('updated')
   } catch (error) {
+    console.error(error)
     showErrorsDefault(error)
   } finally {
     saveButtonLoading.value = false
@@ -88,19 +90,23 @@ const onSave = async () => {
 }
 
 const onSaveAndApply = async () => {
-  if (items.value.length === 0) return
+  const itemsRaw = toRaw(items.value)
+  if (itemsRaw.length === 0) return
   saveAndCloseButtonLoading.value = true
   v$.value.$touch()
   if (v$.value.$invalid) {
+    console.log('invalid')
     showValidationError()
     saveAndCloseButtonLoading.value = false
     return
   }
+  console.log(itemsRaw)
   try {
-    await bulkUpdateAssetsMetadata(damClient, items.value)
+    await bulkUpdateAssetsMetadata(damClient, itemsRaw)
     emit(
       'onApply',
-      items.value.map((item) => {
+      itemsRaw.map((item) => {
+        console.log(item)
         // todo take data from asset
         return {
           texts: {

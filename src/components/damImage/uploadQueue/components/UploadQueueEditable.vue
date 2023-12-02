@@ -68,7 +68,7 @@ onMounted(() => {
       </div>
     </div>
     <div
-      v-if="list.length > 1"
+      v-if="list.length > 0"
       class="asset-queue-editable__sidebar system-border-l"
     >
       <AssetQueueSelectedSidebar :queue-key="queueKey" />

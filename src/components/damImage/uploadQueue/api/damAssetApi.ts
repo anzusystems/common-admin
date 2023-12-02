@@ -1,4 +1,4 @@
-import type { AxiosInstance } from 'axios'
+import type { AxiosInstance, AxiosResponse } from 'axios'
 import type { DocId } from '@/types/common'
 import { SYSTEM_CORE_DAM } from '@/services/api/coreDam/assetApi'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
@@ -29,31 +29,34 @@ export const fetchAssetByFileId = (client: () => AxiosInstance, assetFileId: Doc
 
 export const bulkUpdateAssetsMetadata = (client: () => AxiosInstance, items: UploadQueueItem[]) => {
   return new Promise((resolve, reject) => {
-    updateMetadataSequence(client, items)
+    const bulkItems = listItemsToMetadataBulkItems(items)
+    updateMetadataSequence(client, bulkItems)
       .then((responses) => {
-        if (responses.length === 0) {
-          reject(responses)
+        console.log(responses)
+        if (bulkItems.length === 0) {
+          return resolve([])
+        } else if (responses.length === 0) {
+          return reject(responses)
         } else if (
           responses.every((res) => {
             return res.status === HTTP_STATUS_OK
           })
         ) {
-          resolve(responses)
+          return resolve(responses)
         } else {
-          reject(responses)
+          return reject(responses)
         }
       })
       .catch((err) => {
         //
-        reject(err)
+        return reject(err)
       })
   })
 }
 
-async function updateMetadataSequence(client: () => AxiosInstance, items: UploadQueueItem[]) {
-  const totalCalls = Math.ceil(items.length / BULK_METADATA_LIMIT)
-  const bulkItems = listItemsToMetadataBulkItems(items)
-  const responses = []
+async function updateMetadataSequence(client: () => AxiosInstance, bulkItems: AssetMetadataBulkItem[]) {
+  const totalCalls = Math.ceil(bulkItems.length / BULK_METADATA_LIMIT)
+  const responses: AxiosResponse[] = []
   if (bulkItems.length === 0) return Promise.resolve([])
 
   for (let i = 0; i < totalCalls; i++) {
