@@ -170,14 +170,14 @@ const showCancel = computed(() => {
             <div class="text-warning">
               {{ t('coreDam.asset.queueItem.duplicate') }}
             </div>
-            <AssetLinkExternal
-              v-if="item.duplicateAssetId"
-              :asset-id="item.duplicateAssetId"
-              variant="text"
-              size="small"
-            >
-              {{ t('coreDam.asset.queueItem.viewOriginal') }}&nbsp;<VIcon icon="mdi-open-in-new" />
-            </AssetLinkExternal>
+            <!--            <AssetLinkExternal-->
+            <!--              v-if="item.duplicateAssetId"-->
+            <!--              :asset-id="item.duplicateAssetId"-->
+            <!--              variant="text"-->
+            <!--              size="small"-->
+            <!--            >-->
+            <!--              {{ t('coreDam.asset.queueItem.viewOriginal') }}&nbsp;<VIcon icon="mdi-open-in-new" />-->
+            <!--            </AssetLinkExternal>-->
           </div>
           <div
             v-if="item.error.hasError"
@@ -219,7 +219,6 @@ const showCancel = computed(() => {
             <div class="w-100 d-flex justify-space-between align-center">
               <div>
                 <VBtn
-                  v-if="!item.isDuplicate"
                   size="small"
                   variant="text"
                   :disabled="!item.canEditMetadata"
@@ -269,7 +268,7 @@ const showCancel = computed(() => {
             <span v-if="item.file?.size">&nbsp;({{ prettyBytes(item.file.size) }})</span>
           </VCol>
         </VRow>
-        <VForm :disabled="!item.canEditMetadata || item.isDuplicate">
+        <VForm :disabled="!item.canEditMetadata">
           <AssetCustomMetadataForm
             v-if="item"
             v-model="customData"

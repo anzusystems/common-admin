@@ -65,7 +65,7 @@ const saveAndCloseButtonLoading = ref(false)
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
-  // uploadQueueDialog.value = false
+  uploadQueueDialog.value = false
 }
 
 const onSave = async () => {

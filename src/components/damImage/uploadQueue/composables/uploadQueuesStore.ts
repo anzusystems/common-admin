@@ -13,11 +13,11 @@ import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/com
 import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { uploadStop, useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
-import { DamAssetType } from '@/types/coreDam/Asset'
+import { type AssetDetailItemDto, DamAssetType } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason, AssetFileNullable } from '@/types/coreDam/AssetFile'
 import { DamNotificationName } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
 import { useDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
-import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAsset, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageApi'
 import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
@@ -41,6 +41,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         queueItemFailed(event.data.asset, event.data.failReason)
         break
       case DamNotificationName.AssetFileDuplicate:
+        console.log(event.data)
         queueItemDuplicate(event.data.asset, event.data.originAssetFile, event.data.assetType)
         break
       case DamNotificationName.AssetMetadataProcessed:
@@ -185,9 +186,9 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     assetType: DamAssetType | null = null
   ) {
     if (!originAssetFile || !assetType || assetType !== DamAssetType.Image) return
-    let file: null | AssetFileNullable = null
+    let assetRes: null | AssetDetailItemDto = null
     try {
-      file = await fetchImageFile(damClient, originAssetFile)
+      assetRes = await fetchAssetByFileId(damClient, originAssetFile)
     } catch (e) {
       //
     }
@@ -197,14 +198,14 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
           clearTimeout(item.notificationFallbackTimer)
           item.isDuplicate = true
           item.status = UploadQueueItemStatus.Uploaded
-          item.canEditMetadata = false
-          if (file) {
-            item.fileId = file.id
-            item.duplicateAssetId = file.asset
+          if (assetRes) {
+            item.fileId = originAssetFile
+            item.duplicateAssetId = assetRes.id
           }
-          if (file?.links?.image_detail) {
-            item.imagePreview = file.links.image_detail
+          if (assetRes?.mainFile?.links?.image_detail) {
+            item.imagePreview = assetRes.mainFile.links.image_detail
           }
+          item.canEditMetadata = true
           processUpload(queueKey)
         }
       })
