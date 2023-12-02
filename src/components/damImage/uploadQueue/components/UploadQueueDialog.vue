@@ -115,8 +115,6 @@ const onSaveAndApply = async () => {
         }
       })
     )
-    showRecordWas('updated')
-    await onStopConfirm()
   } catch (error) {
     showErrorsDefault(error)
   } finally {
