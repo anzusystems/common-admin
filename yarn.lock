@@ -195,11 +195,11 @@ __metadata:
     "@kyvg/vue3-notification": "npm:^3.0.2"
     "@mdi/font": "npm:^7.3.67"
     "@rushstack/eslint-patch": "npm:^1.6.0"
-    "@types/node": "npm:^20.10.1"
+    "@types/node": "npm:^20.10.2"
     "@types/sortablejs": "npm:^1.15.7"
     "@types/webfontloader": "npm:^1.6.38"
     "@typescript-eslint/parser": "npm:^6.13.1"
-    "@vitejs/plugin-vue": "npm:^4.5.0"
+    "@vitejs/plugin-vue": "npm:^4.5.1"
     "@vue/eslint-config-prettier": "npm:^8.0.0"
     "@vue/eslint-config-typescript": "npm:^12.0.0"
     "@vue/language-server": "npm:^1.8.24"
@@ -218,13 +218,13 @@ __metadata:
     js-sha1: "npm:^0.6.0"
     npm-run-all: "npm:^4.1.5"
     pinia: "npm:2.1.7"
-    postcss: "npm:^8.4.31"
+    postcss: "npm:^8.4.32"
     postcss-html: "npm:^1.5.0"
     postcss-prefix-selector: "npm:^1.16.0"
     prettier: "npm:^3.1.0"
     sass: "npm:^1.69.5"
     shortcut-buttons-flatpickr: "npm:^0.4.0"
-    sortablejs: "npm:^1.15.0"
+    sortablejs: "npm:^1.15.1"
     stylelint: "npm:^15.11.0"
     stylelint-config-recommended-vue: "npm:^1.5.0"
     stylelint-config-standard-scss: "npm:^11.1.0"
@@ -1191,12 +1191,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.10.1":
-  version: 20.10.1
-  resolution: "@types/node@npm:20.10.1"
+"@types/node@npm:^20.10.2":
+  version: 20.10.2
+  resolution: "@types/node@npm:20.10.2"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 703c3cc5bdb2818a16f87019fe4072bfd66489bb300338970260c5b84dd2129595995c41b28773c3b7d9d1a64f36fec59a741629ec466f2aeddad7a9d0c027ac
+  checksum: e88d0e92870ec4880642cc39250903a098443d791e864a08d08f4e7fdca0c4c9c0233a6fd98bec356f0ebabc6551152a4590d1c9c34b73a95c2b33935f59185f
   languageName: node
   linkType: hard
 
@@ -1441,6 +1441,16 @@ __metadata:
     vite: ^4.0.0 || ^5.0.0
     vue: ^3.2.25
   checksum: 15be17e5792eb7cfcf0ab0439eb40f53c0b6248ac32dbd01a2b1a315deb74724232ece7f607e1c2cd36241f6e2e9bdfc96dfdb495bfac8d272926e28e841a5ab
+  languageName: node
+  linkType: hard
+
+"@vitejs/plugin-vue@npm:^4.5.1":
+  version: 4.5.1
+  resolution: "@vitejs/plugin-vue@npm:4.5.1"
+  peerDependencies:
+    vite: ^4.0.0 || ^5.0.0
+    vue: ^3.2.25
+  checksum: cc0e2b4ca03d63f4eda541275fadc7a48fb7a887ccc65de29a73f93a7791c4071854c98765e6f6a019cb5e86f2c756ff83aeffd12cca8543a7b1d079698f0e4a
   languageName: node
   linkType: hard
 
@@ -5338,6 +5348,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nanoid@npm:^3.3.7":
+  version: 3.3.7
+  resolution: "nanoid@npm:3.3.7"
+  bin:
+    nanoid: bin/nanoid.cjs
+  checksum: ac1eb60f615b272bccb0e2b9cd933720dad30bf9708424f691b8113826bb91aca7e9d14ef5d9415a6ba15c266b37817256f58d8ce980c82b0ba3185352565679
+  languageName: node
+  linkType: hard
+
 "natural-compare@npm:^1.4.0":
   version: 1.4.0
   resolution: "natural-compare@npm:1.4.0"
@@ -5914,6 +5933,17 @@ __metadata:
     picocolors: "npm:^1.0.0"
     source-map-js: "npm:^1.0.2"
   checksum: 1a6653e72105907377f9d4f2cd341d8d90e3fde823a5ddea1e2237aaa56933ea07853f0f2758c28892a1d70c53bbaca200eb8b80f8ed55f13093003dbec5afa0
+  languageName: node
+  linkType: hard
+
+"postcss@npm:^8.4.32":
+  version: 8.4.32
+  resolution: "postcss@npm:8.4.32"
+  dependencies:
+    nanoid: "npm:^3.3.7"
+    picocolors: "npm:^1.0.0"
+    source-map-js: "npm:^1.0.2"
+  checksum: 28084864122f29148e1f632261c408444f5ead0e0b9ea9bd9729d0468818ebe73fe5dc0075acd50c1365dbe639b46a79cba27d355ec857723a24bc9af0f18525
   languageName: node
   linkType: hard
 
@@ -6535,10 +6565,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sortablejs@npm:^1.15.0":
-  version: 1.15.0
-  resolution: "sortablejs@npm:1.15.0"
-  checksum: f93a8e2f34b9fced858d09056fe9da55b022d51401cddee652b19449be99ce7b4e42f3bfad926d7e2a34ac4ca681296c5ba129f33ddbd4fc1f69c04af741049d
+"sortablejs@npm:^1.15.1":
+  version: 1.15.1
+  resolution: "sortablejs@npm:1.15.1"
+  checksum: c4ccbc60e7936321eee0e07448e04b1f4481fed727ed1ace86866f49f9929e3acda2b7b825894e7ece5b8bc41f3c135eb4d00d09a287de1ee896d8256a0a84df
   languageName: node
   linkType: hard
 
