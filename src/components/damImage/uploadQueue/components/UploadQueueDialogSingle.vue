@@ -23,6 +23,7 @@ import { useAlerts } from '@/composables/system/alerts'
 import { bulkUpdateAssetsMetadata, fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingleSidebar from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebar.vue'
+import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -107,11 +108,6 @@ const asset = computed<AssetDetailItemDto | null>(() => {
   }
 })
 
-const closeDialog = () => {
-  // assetDetailStore.setAsset(null)
-  // uploadQueueDialog.value = false
-}
-
 const sidebar = ref(true)
 
 const toggleSidebar = () => {
@@ -193,8 +189,21 @@ const { damClient } = useCommonAdminCoreDamOptions()
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
+  assetDetailStore.setAsset(null)
   uploadQueueDialog.value = false
 }
+
+const queueTotalCount = computed(() => {
+  return uploadQueuesStore.getQueueTotalCount(props.queueKey)
+})
+
+const queueProcessedCount = computed(() => {
+  return uploadQueuesStore.getQueueProcessedCount(props.queueKey)
+})
+
+const isUploading = computed(() => {
+  return queueTotalCount.value > queueProcessedCount.value
+})
 
 const onSave = async () => {
   if (items.value.length === 0) return
@@ -260,7 +269,7 @@ onMounted(() => {
   >
     <AssetDetailDialogLoader
       v-if="loading"
-      @close-dialog="closeDialog"
+      @close-dialog="onStopConfirm"
     />
     <VCard
       v-else-if="item"
@@ -297,22 +306,12 @@ onMounted(() => {
                 {{ t('coreDam.asset.detail.toggleInfo') }}
               </VTooltip>
             </VBtn>
-            <VBtn
-              icon
-              variant="text"
-              :width="36"
-              :height="36"
-              class="mr-1"
-              @click.stop="closeDialog"
-            >
-              <VIcon icon="mdi-close" />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-              >
-                {{ t('common.button.close') }}
-              </VTooltip>
-            </VBtn>
+            <UploadQueueButtonStop
+              data-cy="button-close"
+              :button-size="36"
+              :is-uploading="isUploading"
+              @confirm="onStopConfirm"
+            />
           </div>
         </VToolbar>
         <div class="d-flex w-100 h-100 position-relative">
