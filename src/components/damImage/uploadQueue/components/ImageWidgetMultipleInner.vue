@@ -150,8 +150,11 @@ const onEditAsset = async (assetFileId: DocId) =>  {
   }
 }
 
-const afterUploadApply = (items: ImageCreateUpdateAware[]) => {
-
+const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
+  if (items.length === 0) return
+  imageStore.addImages(items)
+  uploadQueueDialog.value = false
+  uploadQueuesStore.stopUpload(props.queueKey)
 }
 
 const actionLibrary = () => {
@@ -214,7 +217,7 @@ onMounted(() => {
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
     multiple
-    @on-apply="afterUploadApply"
+    @on-apply="onAssetUploadConfirm"
   />
   <AssetDetailDialog />
 </template>
