@@ -84,10 +84,7 @@ const fetchImagesOnLoad = async () => {
   try {
     imagesLoading.value = true
     imageStore.setImages(await fetchImageListByIds(imageClient, props.modelValue))
-    emit(
-      'update:modelValue',
-      images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[]
-    )
+    emit('update:modelValue', images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[])
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -101,7 +98,7 @@ const uploadQueue = computed(() => {
   return uploadQueuesStore.getQueue(props.queueKey)
 })
 
-const { uploadQueueDialog  } = useUploadQueueDialog()
+const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
@@ -116,19 +113,21 @@ const onDrop = (files: File[]) => {
 const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
     if (data.value.length === 0) return
-    const images = data.value.filter((asset) => !isNull(asset.mainFile)).map((assetWithMainFile) => {
-      return {
-        texts: {
-          description: 'todo',
-          source: 'todo',
-        },
-        dam: {
-          damId: assetWithMainFile.mainFile!.id,
-          regionPosition: 0,
-        },
-        position: 1,
-      }
-    })
+    const images = data.value
+      .filter((asset) => !isNull(asset.mainFile))
+      .map((assetWithMainFile) => {
+        return {
+          texts: {
+            description: 'todo',
+            source: 'todo',
+          },
+          dam: {
+            damId: assetWithMainFile.mainFile!.id,
+            regionPosition: 0,
+          },
+          position: 1,
+        }
+      })
     imageStore.addImages(images)
   }
 }
@@ -137,7 +136,7 @@ const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
 const { damClient } = useCommonAdminCoreDamOptions()
 
-const onEditAsset = async (assetFileId: DocId) =>  {
+const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = true
   try {
@@ -195,12 +194,14 @@ onMounted(() => {
     @on-confirm="onAssetSelectConfirm"
   />
   <div class="position-relative w-100">
-    <ImageWidgetMultipleItem
-      v-for="(image, index) in images"
-      :key="image.id"
-      :index="index"
-      @edit-asset="onEditAsset"
-    />
+    <VRow>
+      <ImageWidgetMultipleItem
+        v-for="(image, index) in images"
+        :key="image.id"
+        :index="index"
+        @edit-asset="onEditAsset"
+      />
+    </VRow>
     <AImageDropzone
       variant="fill"
       transparent
