@@ -166,24 +166,26 @@ onMounted(() => {
 </script>
 
 <template>
-  <AFileInput
-    :file-input-key="uploadQueue?.fileInputKey"
-    :accept="uploadAccept"
-    :max-sizes="uploadSizes"
-    @files-input="onFileInput"
-  >
-    <template #activator="{ props: fileInputProps }">
-      <VBtn v-bind="fileInputProps">
-        Upload
-      </VBtn>
-    </template>
-  </AFileInput>
-  <VBtn
-    class="mr-2"
-    @click="actionLibrary"
-  >
-    Add from library
-  </VBtn>
+  <div class="pb-2">
+    <AFileInput
+      :file-input-key="uploadQueue?.fileInputKey"
+      :accept="uploadAccept"
+      :max-sizes="uploadSizes"
+      @files-input="onFileInput"
+    >
+      <template #activator="{ props: fileInputProps }">
+        <VBtn v-bind="fileInputProps">
+          Upload
+        </VBtn>
+      </template>
+    </AFileInput>
+    <VBtn
+      class="mr-2"
+      @click="actionLibrary"
+    >
+      Add from library
+    </VBtn>
+  </div>
   <AAssetSelect
     v-model="assetSelectDialog"
     :asset-licence-id="licenceId"
@@ -193,18 +195,20 @@ onMounted(() => {
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
   />
-  <div class="position-relative w-100">
-    <VRow>
+  <div
+    class="position-relative w-100"
+    style="min-height: 140px"
+  >
+    <div class="asset-list-tiles asset-list-tiles--thumbnail">
       <ImageWidgetMultipleItem
         v-for="(image, index) in images"
         :key="image.id"
         :index="index"
         @edit-asset="onEditAsset"
       />
-    </VRow>
+    </div>
     <AImageDropzone
       variant="fill"
-      transparent
       hover-only
       :accept="uploadAccept"
       :max-sizes="uploadSizes"

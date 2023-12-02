@@ -28,43 +28,42 @@ const onEditAsset = () => {
 </script>
 
 <template>
-  <VCol
-    xxl="2"
-    xl="3"
-    md="4"
-    sm="6"
-    cols="12"
-  >
-    <div class="position-relative">
-      <div class="my-4">
+  <div class="asset-list-tiles__item">
+    <div class="asset-list-tiles__item-card">
+      <div class="ma-2">
         <AImageWidgetSimple
           :model-value="image.id"
           :image="image"
         />
+
+        <VRow>
+          <VCol class="text-right my-1">
+            <VBtn
+              variant="text"
+              size="small"
+              @click.stop="onEditAsset"
+            >
+              Edit DAM asset
+            </VBtn>
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol>
+            <AFormTextarea
+              v-model="image.texts.description"
+              label="Description"
+            />
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol>
+            <AFormTextarea
+              v-model="image.texts.source"
+              label="Source"
+            />
+          </VCol>
+        </VRow>
       </div>
-      <VRow>
-        <VCol>
-          <VBtn @click.stop="onEditAsset">
-            Edit DAM asset
-          </VBtn>
-        </VCol>
-      </VRow>
-      <VRow>
-        <VCol>
-          <AFormTextarea
-            v-model="image.texts.description"
-            label="Description"
-          />
-        </VCol>
-      </VRow>
-      <VRow>
-        <VCol>
-          <AFormTextarea
-            v-model="image.texts.source"
-            label="Source"
-          />
-        </VCol>
-      </VRow>
     </div>
-  </VCol>
+  </div>
 </template>

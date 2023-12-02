@@ -52,7 +52,6 @@ $bg-color-actions-dark: #1a1a1a;
   padding: 2px;
 
   &__item {
-    cursor: pointer;
     user-select: none;
     flex-grow: 2;
     max-width: 800px;
@@ -65,7 +64,7 @@ $bg-color-actions-dark: #1a1a1a;
       border-radius: 5px;
       overflow: hidden;
 
-      img:not(.img-svg) {
+      img.anzu-common-asset-image__img {
         display: block;
         height: 200px;
         min-width: 100%;
@@ -95,6 +94,10 @@ $bg-color-actions-dark: #1a1a1a;
       line-height: 30px;
       min-height: 38px;
       max-height: 38px;
+    }
+
+    &--pointer {
+      cursor: pointer;
     }
   }
 

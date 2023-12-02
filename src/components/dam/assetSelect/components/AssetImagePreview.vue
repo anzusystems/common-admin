@@ -69,6 +69,7 @@ const showIconComputed = computed(() => {
     :style="{ width: width + 'px' }"
   >
     <img
+      class="anzu-common-asset-image__img"
       :src="srcComputed"
       :width="width"
       :height="height"
