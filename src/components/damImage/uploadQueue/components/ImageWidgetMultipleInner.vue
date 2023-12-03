@@ -183,9 +183,17 @@ const actionLibrary = () => {
 
 const saveImages = async () => {
   try {
-    const res = await bulkUpdateImages(imageClient, toRaw(images.value))
-    console.log(res)
-    // emit new ids
+    const resItems = await bulkUpdateImages(imageClient, toRaw(images.value))
+    const ids: IntegerId[] = []
+    const items = resItems.map((resItem) => {
+      ids.push(resItem.id)
+      return {
+        key: generateUUIDv1(),
+        ...resItem,
+      }
+    })
+    imageStore.setImages(items)
+    emit('update:modelValue', ids)
   } catch (e) {
     //
   }

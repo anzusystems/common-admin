@@ -8,6 +8,7 @@ import { isNull } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { apiFetchList } from '@/services/api/apiFetchList'
+import type { ImageAware } from '@/types/ImageAware'
 
 const END_POINT = '/adm/v1/asset'
 const BULK_METADATA_LIMIT = 10
@@ -47,11 +48,10 @@ export const fetchAssetByFileId = (client: () => AxiosInstance, assetFileId: Doc
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/asset-file/:id', { id: assetFileId }, SYSTEM_CORE_DAM, ENTITY)
 
 export const bulkUpdateAssetsMetadata = (client: () => AxiosInstance, items: UploadQueueItem[]) => {
-  return new Promise((resolve, reject) => {
+  return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
     const bulkItems = listItemsToMetadataBulkItems(items)
     updateMetadataSequence(client, bulkItems)
       .then((responses) => {
-        console.log(responses)
         if (bulkItems.length === 0) {
           return resolve([])
         } else if (responses.length === 0) {
@@ -61,7 +61,8 @@ export const bulkUpdateAssetsMetadata = (client: () => AxiosInstance, items: Upl
             return res.status === HTTP_STATUS_OK
           })
         ) {
-          return resolve(responses)
+          const bulkItemsRes: AssetMetadataBulkItem[] = responses.flatMap(response => response.data)
+          return resolve(bulkItemsRes)
         } else {
           return reject(responses)
         }

@@ -6,16 +6,13 @@ import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
-import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
-import { isNull } from '@/utils/common'
-import type { AssetMetadataBulkItem } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 const END_POINT = '/adm/v1/image'
 export const ENTITY = 'image'
 export const SYSTEM_CMS = 'cms'
 
-const BULK_METADATA_LIMIT = 10
+const BULK_METADATA_LIMIT = 1
 
 export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[]) =>
   apiFetchByIds<ImageAware[]>(client, ids, END_POINT, {}, SYSTEM_CMS, ENTITY)
@@ -33,10 +30,9 @@ export const deleteImage = (client: () => AxiosInstance, id: IntegerId) =>
   apiDeleteOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
 
 export const bulkUpdateImages = (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => {
-  return new Promise((resolve, reject) => {
+  return new Promise<ImageAware[]>((resolve, reject) => {
     updateImagesSequence(client, items)
       .then((responses) => {
-        console.log(responses)
         if (items.length === 0) {
           return resolve([])
         } else if (responses.length === 0) {
@@ -46,7 +42,8 @@ export const bulkUpdateImages = (client: () => AxiosInstance, items: ImageCreate
             return res.status === HTTP_STATUS_OK
           })
         ) {
-          return resolve(responses)
+          const images: ImageAware[] = responses.flatMap(response => response.data.images)
+          return resolve(images)
         } else {
           return reject(responses)
         }
@@ -66,7 +63,8 @@ async function updateImagesSequence(client: () => AxiosInstance, items: ImageCre
   for (let i = 0; i < totalCalls; i++) {
     const offset = i * BULK_METADATA_LIMIT
     const reduced = items.slice(offset, offset + BULK_METADATA_LIMIT)
-    const res = await client().put(END_POINT, JSON.stringify(reduced))
+    const reqData = { images: reduced }
+    const res = await client().put(END_POINT, JSON.stringify(reqData))
     responses.push(res)
   }
   return responses
