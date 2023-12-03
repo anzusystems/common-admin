@@ -6,7 +6,7 @@ import { cloneDeep, isNull } from '@/utils/common'
 export const useImageStore = defineStore('commonImageStore', () => {
   const images = ref<ImageCreateUpdateAwareKeyed[]>([])
   const imageDetail = ref<ImageCreateUpdateAware | null>(null)
-  const maxPosition = ref(1)
+  const maxPosition = ref(0)
 
   function setImageDetail(data: ImageCreateUpdateAware | null) {
     if (isNull(data)) imageDetail.value = null

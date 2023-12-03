@@ -5,8 +5,8 @@ import AImageWidget from '@/components/damImage/AImageWidget.vue'
 import { ref } from 'vue'
 import type { IntegerIdNullable } from '@/types/common'
 
-const imageId = ref(1255)
-const imageId2 = ref<IntegerIdNullable>(1255)
+const imageId = ref<IntegerIdNullable>(null)
+const imageId2 = ref<IntegerIdNullable>(null)
 </script>
 
 <template>
