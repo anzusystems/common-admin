@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
-import { computed, inject, onMounted, ref, type ShallowRef } from 'vue'
+import { computed, inject, onMounted, ref, type ShallowRef, toRaw } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -8,7 +8,7 @@ import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleItem.vue'
 import { storeToRefs } from 'pinia'
-import { fetchImageListByIds } from '@/components/damImage/composables/imageApi'
+import { bulkUpdateImages, fetchImageListByIds } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
 import { DamAssetType } from '@/types/coreDam/Asset'
@@ -180,6 +180,20 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
 const actionLibrary = () => {
   assetSelectDialog.value = true
 }
+
+const saveImages = async () => {
+  try {
+    const res = await bulkUpdateImages(imageClient, toRaw(images.value))
+    console.log(res)
+    // emit new ids
+  } catch (e) {
+    //
+  }
+}
+
+defineExpose({
+  saveImages,
+})
 
 onMounted(() => {
   fetchImagesOnLoad()

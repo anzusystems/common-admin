@@ -9,7 +9,7 @@ import ImageWidgetInner from '@/components/damImage/uploadQueue/components/Image
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { cloneDeep, isNull } from '@/utils/common'
-import { fetchImage } from '@/components/damImage/composables/imageApi'
+import { fetchImage } from '@/components/damImage/uploadQueue/api/imageApi'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}

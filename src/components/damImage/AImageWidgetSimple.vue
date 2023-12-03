@@ -7,7 +7,7 @@ import { useCommonAdminImageOptions } from '@/components/damImage/composables/co
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import type { IntegerIdNullable } from '@/types/common'
 import { useAlerts } from '@/composables/system/alerts'
-import { fetchImage } from '@/components/damImage/composables/imageApi'
+import { fetchImage } from '@/components/damImage/uploadQueue/api/imageApi'
 
 const props = withDefaults(
   defineProps<{

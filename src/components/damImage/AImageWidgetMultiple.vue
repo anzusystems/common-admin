@@ -6,13 +6,14 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
+import ASortableNested from '@/components/sortable/ASortableNested.vue'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
  */
 const props = withDefaults(
   defineProps<{
-    modelValue: IntegerId[]
+    modelValue: IntegerId[] // initial ids, updated only when save is called
     queueKey: UploadQueueKey
     licenceId: IntegerId
     extSystem: IntegerId
@@ -68,12 +69,24 @@ onMounted(async () => {
   if (status.value !== 'error') status.value = 'ready'
 })
 
+const innerComponent = ref<InstanceType<typeof ImageWidgetMultipleInner> | null>(null)
+
+const saveImages = async () => {
+  if (!innerComponent.value) return false
+  return await innerComponent.value.saveImages()
+}
+
 provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
+
+defineExpose({
+  saveImages,
+})
 </script>
 
 <template>
   <ImageWidgetMultipleInner
     v-if="status === 'ready'"
+    ref="innerComponent"
     v-bind="props"
     @update:model-value="emit('update:modelValue', $event)"
   />
