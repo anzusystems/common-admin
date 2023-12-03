@@ -18,6 +18,10 @@ export interface ImageCreateUpdateAware extends Omit<ImageAware, 'id'> {
   id?: IntegerId
 }
 
+export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {
+  key: string
+}
+
 // export interface ImageWidgetImageLicence {
 //   name: string // licencedBlog, licencedUser, etc.
 //   value: IntegerIdNullable

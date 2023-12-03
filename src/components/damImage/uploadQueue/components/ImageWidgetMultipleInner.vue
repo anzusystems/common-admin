@@ -25,6 +25,7 @@ import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAss
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import { generateUUIDv1 } from '@/utils/generator'
 
 const props = withDefaults(
   defineProps<{
@@ -78,12 +79,21 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
 const imagesLoading = ref(false)
 
 const imageStore = useImageStore()
-const { images } = storeToRefs(imageStore)
+const { images, maxPosition } = storeToRefs(imageStore)
 
 const fetchImagesOnLoad = async () => {
   try {
     imagesLoading.value = true
-    imageStore.setImages(await fetchImageListByIds(imageClient, props.modelValue))
+    const imagesRes = await fetchImageListByIds(imageClient, props.modelValue)
+    imageStore.setImages(
+      imagesRes.map((imageRes) => {
+        imageStore.updateMaxPositionIfGreater(imageRes.position)
+        return {
+          key: generateUUIDv1(),
+          ...imageRes,
+        }
+      })
+    )
     emit('update:modelValue', images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[])
   } catch (e) {
     showErrorsDefault(e)
@@ -113,10 +123,12 @@ const onDrop = (files: File[]) => {
 const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
     if (data.value.length === 0) return
-    const images = data.value
+    const items = data.value
       .filter((asset) => !isNull(asset.mainFile))
       .map((assetWithMainFile) => {
+        maxPosition.value++
         return {
+          key: generateUUIDv1(),
           texts: {
             description: 'todo',
             source: 'todo',
@@ -125,10 +137,10 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
             damId: assetWithMainFile.mainFile!.id,
             regionPosition: 0,
           },
-          position: 1,
+          position: maxPosition.value,
         }
       })
-    imageStore.addImages(images)
+    imageStore.addImages(items)
   }
 }
 
@@ -150,9 +162,17 @@ const onEditAsset = async (assetFileId: DocId) => {
 }
 
 const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
-  console.log(items)
   if (items.length === 0) return
-  imageStore.addImages(items)
+  imageStore.addImages(
+    items.map((item) => {
+      maxPosition.value++
+      return {
+        key: generateUUIDv1(),
+        ...item,
+        position: maxPosition.value,
+      }
+    })
+  )
   uploadQueueDialog.value = false
   uploadQueuesStore.stopUpload(props.queueKey)
 }
@@ -203,7 +223,7 @@ onMounted(() => {
     <div class="asset-list-tiles asset-list-tiles--thumbnail">
       <ImageWidgetMultipleItem
         v-for="(image, index) in images"
-        :key="image.id"
+        :key="image.key"
         :index="index"
         @edit-asset="onEditAsset"
       />
