@@ -12,7 +12,7 @@ const END_POINT = '/adm/v1/image'
 export const ENTITY = 'image'
 export const SYSTEM_CMS = 'cms'
 
-const BULK_METADATA_LIMIT = 1
+const BULK_METADATA_LIMIT = 20
 
 export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[]) =>
   apiFetchByIds<ImageAware[]>(client, ids, END_POINT, {}, SYSTEM_CMS, ENTITY)

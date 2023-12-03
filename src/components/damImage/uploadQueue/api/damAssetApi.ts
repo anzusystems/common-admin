@@ -8,10 +8,9 @@ import { isNull } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { apiFetchList } from '@/services/api/apiFetchList'
-import type { ImageAware } from '@/types/ImageAware'
 
 const END_POINT = '/adm/v1/asset'
-const BULK_METADATA_LIMIT = 10
+const BULK_METADATA_LIMIT = 20
 export const ENTITY = 'asset'
 export const SYSTEM_CORE_DAM = 'coreDam'
 
