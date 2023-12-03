@@ -70,6 +70,7 @@ if (isUndefined(imageWidgetExtSystemConfig)) {
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient } = imageOptions
 const { showErrorsDefault } = useAlerts()
+const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   DamAssetType.Image,
@@ -217,7 +218,10 @@ onMounted(() => {
       @files-input="onFileInput"
     >
       <template #activator="{ props: fileInputProps }">
-        <VBtn v-bind="fileInputProps">
+        <VBtn
+          ref="uploadButtonComponent"
+          v-bind="fileInputProps"
+        >
           Upload
         </VBtn>
       </template>
@@ -256,6 +260,7 @@ onMounted(() => {
       :accept="uploadAccept"
       :max-sizes="uploadSizes"
       @on-drop="onDrop"
+      @on-click="uploadButtonComponent?.$el.click()"
     />
   </div>
   <UploadQueueDialog
