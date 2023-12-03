@@ -8,7 +8,7 @@ import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleItem.vue'
 import { storeToRefs } from 'pinia'
-import { bulkUpdateImages, fetchImageListByIds } from '@/components/damImage/uploadQueue/api/imageApi'
+import { bulkUpdateImages, deleteImage, fetchImageListByIds } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
 import { DamAssetType } from '@/types/coreDam/Asset'
@@ -200,6 +200,21 @@ const saveImages = async () => {
   }
 }
 
+const removeItem = async (index: number) => {
+  const image = images.value[index]
+  if (!image) return
+  if (isUndefined(image.id)) {
+    imageStore.removeImageByIndex(index)
+    return
+  }
+  try {
+    await deleteImage(imageClient, image.id)
+    imageStore.removeImageByIndex(index)
+  } catch (e) {
+    showErrorsDefault(e)
+  }
+}
+
 defineExpose({
   saveImages,
 })
@@ -252,6 +267,7 @@ onMounted(() => {
         :key="image.key"
         :index="index"
         @edit-asset="onEditAsset"
+        @remove-item="removeItem"
       />
     </div>
     <AImageDropzone

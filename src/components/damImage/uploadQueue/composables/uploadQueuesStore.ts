@@ -201,6 +201,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
           if (assetRes) {
             item.fileId = originAssetFile
             item.duplicateAssetId = assetRes.id
+            item.assetStatus = assetRes.attributes.assetStatus
           }
           if (assetRes?.mainFile?.links?.image_detail) {
             item.imagePreview = assetRes.mainFile.links.image_detail

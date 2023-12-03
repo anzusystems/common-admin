@@ -27,6 +27,10 @@ export const useImageStore = defineStore('commonImageStore', () => {
     }
   }
 
+  function removeImageByIndex(index: number) {
+    images.value.splice(index, 1)
+  }
+
   function reset() {
     images.value = []
     imageDetail.value = null
@@ -40,6 +44,7 @@ export const useImageStore = defineStore('commonImageStore', () => {
     addImages,
     setImageDetail,
     updateMaxPositionIfGreater,
+    removeImageByIndex,
     reset,
   }
 })
