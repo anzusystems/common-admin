@@ -5,7 +5,8 @@ import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
 import type { AssetFileImage } from '@/types/coreDam/AssetFile'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
-import { SYSTEM_CORE_DAM } from '@/services/api/coreDam/assetApi'
+
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 const END_POINT = '/adm/v1/image'
 const CHUNK_UPLOAD_TIMEOUT = 420

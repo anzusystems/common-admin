@@ -1,4 +1,3 @@
-import { useAssetApi } from '@/services/api/coreDam/assetApi'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
@@ -10,6 +9,7 @@ import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { useAlerts } from '@/composables/system/alerts'
 import type { DocId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { fetchAssetList as apiFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
@@ -17,8 +17,6 @@ const filterIsTouched = ref(false)
 
 export function useAssetListActions(configName = 'default') {
   const { damClient } = useCommonAdminCoreDamOptions(configName)
-
-  const { fetchAssetList: apiFetchAssetList } = useAssetApi(damClient)
 
   const assetListStore = useAssetSelectStore()
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetListStore)
@@ -30,7 +28,7 @@ export function useAssetListActions(configName = 'default') {
     pagination.page = 1
     try {
       assetListStore.showLoader()
-      assetListStore.setList(await apiFetchAssetList(assetListStore.licenceId, pagination, filter))
+      assetListStore.setList(await apiFetchAssetList(damClient, assetListStore.licenceId, pagination, filter))
     } catch (error) {
       showErrorsDefault(error)
     } finally {
@@ -41,7 +39,7 @@ export function useAssetListActions(configName = 'default') {
     pagination.page = pagination.page + 1
     try {
       assetListStore.showLoader()
-      assetListStore.appendList(await apiFetchAssetList(assetListStore.licenceId, pagination, filter))
+      assetListStore.appendList(await apiFetchAssetList(damClient, assetListStore.licenceId, pagination, filter))
     } catch (error) {
       showErrorsDefault(error)
     } finally {

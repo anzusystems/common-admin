@@ -1,8 +1,8 @@
 import type { DamPrvConfig, DamExtSystemConfig, DamPubConfig } from '@/types/coreDam/DamConfig'
 import type { AxiosInstance } from 'axios'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
-import { SYSTEM_CORE_DAM } from '@/services/api/coreDam/assetApi'
 import type { IntegerId } from '@/types/common'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 const END_POINT = '/adm/v1/configuration'
 const PUB_END_POINT_PREFIX = '/pub'
