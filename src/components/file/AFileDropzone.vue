@@ -139,7 +139,7 @@ $class-name-root: 'a-file-dropzone';
     display: none;
   }
 
-  .#{$class-name-root}--hover-only.#{$class-name-root}--possibility {
+  &.#{$class-name-root}--hover-only.#{$class-name-root}--possibility {
     display: flex;
   }
 }
