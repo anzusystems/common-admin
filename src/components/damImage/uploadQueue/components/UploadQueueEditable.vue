@@ -4,6 +4,8 @@ import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composab
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import UploadQueueItemEditable from '@/components/damImage/uploadQueue/components/UploadQueueItemEditable.vue'
 import AssetQueueSelectedSidebar from '@/components/damImage/uploadQueue/components/AssetQueueSelectedSidebar.vue'
+import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keywords/cachedKeywords'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/authors/cachedAuthors'
 
 const props = withDefaults(
   defineProps<{
@@ -30,16 +32,16 @@ const removeItem = (index: number) => {
   uploadQueuesStore.removeByIndex(props.queueKey, index)
 }
 
-// const { addToCachedKeywords, fetchCachedKeywords } = useCachedKeywords()
-// const { addToCachedAuthors, fetchCachedAuthors } = useCachedAuthors()
+const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
+const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
 
 onMounted(() => {
   list.value.forEach((item) => {
-    // addToCachedKeywords(item.keywords)
-    // addToCachedAuthors(item.authors)
+    addToCachedKeywords(item.keywords)
+    addToCachedAuthors(item.authors)
   })
-  // fetchCachedKeywords()
-  // fetchCachedAuthors()
+  fetchCachedKeywords()
+  fetchCachedAuthors()
 })
 </script>
 

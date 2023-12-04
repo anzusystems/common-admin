@@ -43,7 +43,7 @@ export const useDamCachedAuthors = () => {
   }
 }
 
-export const useCachedAuthorsForRemoteAutocomplete = () => {
+export const useDamCachedAuthorsForRemoteAutocomplete = () => {
   return {
     fetch,
     add,
