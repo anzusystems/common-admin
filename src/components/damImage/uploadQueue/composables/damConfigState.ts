@@ -1,8 +1,8 @@
 import {
-  type DamPrvConfig,
   type DamExtSystemConfig,
-  type DamPubConfig,
   type DamExtSystemConfigItem,
+  type DamPrvConfig,
+  type DamPubConfig,
   UserAuthType,
 } from '@/types/coreDam/DamConfig'
 import { DamAssetType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
