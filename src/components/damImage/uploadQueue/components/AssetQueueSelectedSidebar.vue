@@ -4,8 +4,9 @@ import { useI18n } from 'vue-i18n'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
-import AssetCustomMetadataFormMassOperations
-  from '@/components/damImage/uploadQueue/components/AssetCustomMetadataFormMassOperations.vue'
+import AssetCustomMetadataFormMassOperations from '@/components/damImage/uploadQueue/components/AssetCustomMetadataFormMassOperations.vue'
+import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -144,13 +145,13 @@ onMounted(() => {
                   >
                     <div class="d-flex">
                       <div style="min-width: 286px">
-                        <!--                        <KeywordRemoteAutocompleteWithCached-->
-                        <!--                          v-model="massOperationsKeywords"-->
-                        <!--                          :label="t('coreDam.asset.model.keywords')"-->
-                        <!--                          clearable-->
-                        <!--                          multiple-->
-                        <!--                          :validation-scope="false"-->
-                        <!--                        />-->
+                        <KeywordRemoteAutocompleteWithCached
+                          v-model="massOperationsKeywords"
+                          :label="t('coreDam.asset.model.keywords')"
+                          clearable
+                          multiple
+                          :validation-scope="false"
+                        />
                       </div>
                       <VBtn
                         icon
@@ -196,13 +197,13 @@ onMounted(() => {
                   >
                     <div class="d-flex">
                       <div style="min-width: 286px">
-                        <!--                        <AuthorRemoteAutocompleteWithCached-->
-                        <!--                          v-model="massOperationsAuthors"-->
-                        <!--                          :label="t('coreDam.asset.model.authors')"-->
-                        <!--                          clearable-->
-                        <!--                          multiple-->
-                        <!--                          :validation-scope="false"-->
-                        <!--                        />-->
+                        <AuthorRemoteAutocompleteWithCached
+                          v-model="massOperationsAuthors"
+                          :label="t('coreDam.asset.model.authors')"
+                          clearable
+                          multiple
+                          :validation-scope="false"
+                        />
                       </div>
                       <VBtn
                         icon
@@ -249,51 +250,6 @@ onMounted(() => {
               <AssetCustomMetadataFormMassOperations
                 v-model="massOperationsData.image"
                 :asset-type="DamAssetType.Image"
-                @fill-empty-field="fillEmptyField"
-                @replace-field="replaceField"
-              />
-            </VExpansionPanelText>
-          </VExpansionPanel>
-          <VExpansionPanel
-            v-if="assetTypes.includes(DamAssetType.Video)"
-            elevation="0"
-            :title="t('coreDam.asset.assetType.video')"
-            :value="DamAssetType.Video"
-          >
-            <VExpansionPanelText>
-              <AssetCustomMetadataFormMassOperations
-                v-model="massOperationsData.video"
-                :asset-type="DamAssetType.Video"
-                @fill-empty-field="fillEmptyField"
-                @replace-field="replaceField"
-              />
-            </VExpansionPanelText>
-          </VExpansionPanel>
-          <VExpansionPanel
-            v-if="assetTypes.includes(DamAssetType.Audio)"
-            elevation="0"
-            :title="t('coreDam.asset.assetType.audio')"
-            :value="DamAssetType.Audio"
-          >
-            <VExpansionPanelText>
-              <AssetCustomMetadataFormMassOperations
-                v-model="massOperationsData.audio"
-                :asset-type="DamAssetType.Audio"
-                @fill-empty-field="fillEmptyField"
-                @replace-field="replaceField"
-              />
-            </VExpansionPanelText>
-          </VExpansionPanel>
-          <VExpansionPanel
-            v-if="assetTypes.includes(DamAssetType.Document)"
-            elevation="0"
-            :title="t('coreDam.asset.assetType.document')"
-            :value="DamAssetType.Document"
-          >
-            <VExpansionPanelText>
-              <AssetCustomMetadataFormMassOperations
-                v-model="massOperationsData.document"
-                :asset-type="DamAssetType.Document"
                 @fill-empty-field="fillEmptyField"
                 @replace-field="replaceField"
               />

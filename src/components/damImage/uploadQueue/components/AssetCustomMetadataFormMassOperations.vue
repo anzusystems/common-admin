@@ -50,7 +50,11 @@ const elements = computed(() => {
       class="mt-1"
     >
       <VCol>
-        <div class="d-flex">
+        <div v-if="element.attributes.readonly" />
+        <div
+          v-else
+          class="d-flex"
+        >
           <ACustomDataFormElement
             :config="element"
             :model-value="modelValue[element.property]"

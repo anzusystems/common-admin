@@ -11,6 +11,7 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import { storeToRefs } from 'pinia'
 import UploadQueueDialogSingleSidebarMetadataContent
   from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebarMetadataContent.vue'
+import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 
 withDefaults(
   defineProps<{
@@ -34,8 +35,7 @@ const { t } = useI18n()
 // const { asset } = storeToRefs(assetDetailStore)
 // const uploadQueueStore = useUploadQueuesStore()
 
-// const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
-// const v$ = useVuelidate({}, {}, { $scope: 'replace' })
+const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
 
 const onSave = async () => {
   emit('onSave')

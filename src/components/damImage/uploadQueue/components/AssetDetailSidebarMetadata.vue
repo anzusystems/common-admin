@@ -12,6 +12,7 @@ import { storeToRefs } from 'pinia'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
 import { updateAssetMetadata } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 
 withDefaults(
   defineProps<{
@@ -37,8 +38,7 @@ const saveButtonLoading = ref(false)
 
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
 
-// const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
-const v$ = useVuelidate({}, {}, { $scope: 'replace' })
+const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
 
 const { damClient } = useCommonAdminCoreDamOptions()
 

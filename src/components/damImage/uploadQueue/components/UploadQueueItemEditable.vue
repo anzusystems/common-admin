@@ -15,6 +15,11 @@ import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/component
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
 import AssetLinkExternal from '@/components/damImage/uploadQueue/components/AssetLinkExternal.vue'
 import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
+import AuthorRemoteAutocompleteWithCached
+  from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import KeywordRemoteAutocompleteWithCached
+  from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -285,16 +290,16 @@ const showCancel = computed(() => {
                     subject="keyword"
                     system="dam"
                   >
-                    <!--                    <KeywordRemoteAutocompleteWithCached-->
-                    <!--                      v-model="keywords"-->
-                    <!--                      :queue-id="queueKey"-->
-                    <!--                      :label="t('coreDam.asset.model.keywords')"-->
-                    <!--                      clearable-->
-                    <!--                      multiple-->
-                    <!--                      :required="damConfigExtSystem[assetType].keywords.required"-->
-                    <!--                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"-->
-                    <!--                      :disabled="!item.canEditMetadata"-->
-                    <!--                    />-->
+                    <KeywordRemoteAutocompleteWithCached
+                      v-model="keywords"
+                      :queue-id="queueKey"
+                      :label="t('coreDam.asset.model.keywords')"
+                      clearable
+                      multiple
+                      :required="damConfigExtSystem[assetType].keywords.required"
+                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                      :disabled="!item.canEditMetadata"
+                    />
                   </ASystemEntityScope>
                 </VCol>
               </VRow>
@@ -308,17 +313,17 @@ const showCancel = computed(() => {
                     subject="author"
                     system="dam"
                   >
-                    <!--                    <AuthorRemoteAutocompleteWithCached-->
-                    <!--                      v-model="authors"-->
-                    <!--                      :queue-id="queueKey"-->
-                    <!--                      :label="t('coreDam.asset.model.authors')"-->
-                    <!--                      :author-conflicts="item.authorConflicts"-->
-                    <!--                      clearable-->
-                    <!--                      multiple-->
-                    <!--                      :required="damConfigExtSystem[assetType].authors.required"-->
-                    <!--                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"-->
-                    <!--                      :disabled="!item.canEditMetadata"-->
-                    <!--                    />-->
+                    <AuthorRemoteAutocompleteWithCached
+                      v-model="authors"
+                      :queue-id="queueKey"
+                      :label="t('coreDam.asset.model.authors')"
+                      :author-conflicts="item.authorConflicts"
+                      clearable
+                      multiple
+                      :required="damConfigExtSystem[assetType].authors.required"
+                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                      :disabled="!item.canEditMetadata"
+                    />
                   </ASystemEntityScope>
                 </VCol>
               </VRow>

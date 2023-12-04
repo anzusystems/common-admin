@@ -11,13 +11,18 @@ import { prettyBytes } from '@/utils/file'
 import AssetMetadataImageAttributes from '@/components/damImage/uploadQueue/components/AssetMetadataImageAttributes.vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
+import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
+import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { dateTimePretty } from '@/utils/datetime'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
   }>(),
-  {
-  }
+  {}
 )
 
 const { t } = useI18n()
@@ -25,7 +30,7 @@ const { t } = useI18n()
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset } = storeToRefs(assetDetailStore)
+const { asset, authorConflicts, metadataAreTouched } = storeToRefs(assetDetailStore)
 
 const uploadQueuesStore = useUploadQueuesStore()
 
@@ -51,11 +56,10 @@ const assetMainFile = computed<null | AssetFile>(() => {
   return asset.value && asset.value.mainFile ? (asset.value.mainFile as AssetFile) : null
 })
 
-// const { keywordEnabled, keywordRequired } = useKeywordAssetTypeConfig(assetType.value)
-// const { authorEnabled, authorRequired } = useAuthorAssetTypeConfig(assetType.value)
+const { damConfigExtSystem } = useDamConfigState()
 
 const onAnyMetadataChange = () => {
-  // metadataTouch()
+  metadataAreTouched.value = true
 }
 </script>
 
@@ -79,53 +83,53 @@ const onAnyMetadataChange = () => {
           @any-change="onAnyMetadataChange"
         >
           <template #after-pinned>
-            <!--            <VRow-->
-            <!--              v-if="keywordEnabled"-->
-            <!--              dense-->
-            <!--              class="my-2"-->
-            <!--            >-->
-            <!--              <VCol>-->
-            <!--                <ASystemEntityScope-->
-            <!--                  subject="keyword"-->
-            <!--                  system="dam"-->
-            <!--                >-->
-            <!--                  <KeywordRemoteAutocompleteWithCached-->
-            <!--                    v-model="asset.keywords"-->
-            <!--                    :label="t('coreDam.asset.model.keywords')"-->
-            <!--                    data-cy="custom-field-keywords"-->
-            <!--                    clearable-->
-            <!--                    multiple-->
-            <!--                    :required="keywordRequired"-->
-            <!--                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"-->
-            <!--                    @update:model-value="onAnyMetadataChange"-->
-            <!--                  />-->
-            <!--                </ASystemEntityScope>-->
-            <!--              </VCol>-->
-            <!--            </VRow>-->
-            <!--            <VRow-->
-            <!--              v-if="authorEnabled"-->
-            <!--              dense-->
-            <!--              class="my-2"-->
-            <!--            >-->
-            <!--              <VCol>-->
-            <!--                <ASystemEntityScope-->
-            <!--                  subject="author"-->
-            <!--                  system="dam"-->
-            <!--                >-->
-            <!--                  <AuthorRemoteAutocompleteWithCached-->
-            <!--                    v-model="asset.authors"-->
-            <!--                    :label="t('coreDam.asset.model.authors')"-->
-            <!--                    :author-conflicts="authorConflicts"-->
-            <!--                    data-cy="custom-field-authors"-->
-            <!--                    clearable-->
-            <!--                    multiple-->
-            <!--                    :required="authorRequired"-->
-            <!--                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"-->
-            <!--                    @update:model-value="onAnyMetadataChange"-->
-            <!--                  />-->
-            <!--                </ASystemEntityScope>-->
-            <!--              </VCol>-->
-            <!--            </VRow>-->
+            <VRow
+              v-if="damConfigExtSystem[assetType].keywords.enabled"
+              dense
+              class="my-2"
+            >
+              <VCol>
+                <ASystemEntityScope
+                  subject="keyword"
+                  system="dam"
+                >
+                  <KeywordRemoteAutocompleteWithCached
+                    v-model="asset.keywords"
+                    :label="t('coreDam.asset.model.keywords')"
+                    data-cy="custom-field-keywords"
+                    clearable
+                    multiple
+                    :required="damConfigExtSystem[assetType].keywords.required"
+                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                    @update:model-value="onAnyMetadataChange"
+                  />
+                </ASystemEntityScope>
+              </VCol>
+            </VRow>
+            <VRow
+              v-if="damConfigExtSystem[assetType].authors.enabled"
+              dense
+              class="my-2"
+            >
+              <VCol>
+                <ASystemEntityScope
+                  subject="author"
+                  system="dam"
+                >
+                  <AuthorRemoteAutocompleteWithCached
+                    v-model="asset.authors"
+                    :label="t('coreDam.asset.model.authors')"
+                    :author-conflicts="authorConflicts"
+                    data-cy="custom-field-authors"
+                    clearable
+                    multiple
+                    :required="damConfigExtSystem[assetType].authors.enabled"
+                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                    @update:model-value="onAnyMetadataChange"
+                  />
+                </ASystemEntityScope>
+              </VCol>
+            </VRow>
           </template>
         </AssetCustomMetadataForm>
       </VExpansionPanelText>
@@ -159,7 +163,7 @@ const onAnyMetadataChange = () => {
             {{ t('common.model.tracking.created') }}
           </VCol>
           <VCol cols="9">
-            <!--            {{ dateTimePretty(asset.createdAt) }}<br><CachedDamUserChip :id="asset.createdBy" />-->
+            {{ dateTimePretty(asset.createdAt) }}
           </VCol>
         </VRow>
         <VRow>
@@ -167,7 +171,7 @@ const onAnyMetadataChange = () => {
             {{ t('common.model.tracking.modified') }}
           </VCol>
           <VCol cols="9">
-            <!--            {{ dateTimePretty(asset.modifiedAt) }}<br><CachedDamUserChip :id="asset.modifiedBy" />-->
+            {{ dateTimePretty(asset.modifiedAt) }}
           </VCol>
         </VRow>
         <div v-if="assetMainFile">
