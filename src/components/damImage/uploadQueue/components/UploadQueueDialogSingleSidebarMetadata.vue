@@ -34,7 +34,7 @@ const { t } = useI18n()
 // const { asset } = storeToRefs(assetDetailStore)
 // const uploadQueueStore = useUploadQueuesStore()
 
-// const v$ = useVuelidate({}, {}, { $scope: AssetMetadataValidationScopeSymbol })
+// const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
 // const v$ = useVuelidate({}, {}, { $scope: 'replace' })
 
 const onSave = async () => {

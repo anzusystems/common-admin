@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
+import type { DocId } from '@/types/common'
 
 export enum AssetDetailTabImageWithRoi {
   Info = 'meta',
@@ -10,8 +11,10 @@ export enum AssetDetailTabImageWithRoi {
 
 export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
   const asset = ref<AssetDetailItemDto | null>(null)
+  const authorConflicts = ref<DocId[]>([])
   const dialog = ref(false)
   const loading = ref(false)
+  const metadataAreTouched = ref(false)
   const activeTab = ref<AssetDetailTabImageWithRoi>(AssetDetailTabImageWithRoi.Default)
 
   function setAsset(data: AssetDetailItemDto | null) {
@@ -23,6 +26,8 @@ export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
   }
 
   return {
+    metadataAreTouched,
+    authorConflicts,
     asset,
     loading,
     setAsset,

@@ -1,6 +1,6 @@
 import type { DocId } from '@/types/common'
 import { defineCached } from '@/composables/system/defineCached'
-import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/authors/DamAuthor'
+import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'

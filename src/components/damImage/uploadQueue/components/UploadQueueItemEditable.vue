@@ -39,9 +39,6 @@ const emit = defineEmits<{
   (e: 'removeItem', index: number): void
 }>()
 
-// todo
-const AssetMetadataValidationScopeSymbol = Symbol.for('anzu:asset-metadata-validation-scope')
-
 const IMAGE_ASPECT_RATIO = 16 / 9
 
 const customData = computed({
@@ -295,7 +292,7 @@ const showCancel = computed(() => {
                     <!--                      clearable-->
                     <!--                      multiple-->
                     <!--                      :required="damConfigExtSystem[assetType].keywords.required"-->
-                    <!--                      :validation-scope="AssetMetadataValidationScopeSymbol"-->
+                    <!--                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"-->
                     <!--                      :disabled="!item.canEditMetadata"-->
                     <!--                    />-->
                   </ASystemEntityScope>
@@ -319,7 +316,7 @@ const showCancel = computed(() => {
                     <!--                      clearable-->
                     <!--                      multiple-->
                     <!--                      :required="damConfigExtSystem[assetType].authors.required"-->
-                    <!--                      :validation-scope="AssetMetadataValidationScopeSymbol"-->
+                    <!--                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"-->
                     <!--                      :disabled="!item.canEditMetadata"-->
                     <!--                    />-->
                   </ASystemEntityScope>

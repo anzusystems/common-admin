@@ -1,6 +1,6 @@
 import type { AxiosInstance, AxiosResponse } from 'axios'
 import type { DocId } from '@/types/common'
-import type { AssetDetailItemDto, AssetSearchListItemDto } from '@/types/coreDam/Asset'
+import type { AssetDetailItemDto, AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
@@ -8,6 +8,20 @@ import { isNull } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { apiFetchList } from '@/services/api/apiFetchList'
+import {
+  AnzuApiValidationError,
+  type AnzuApiValidationResponseData,
+  axiosErrorResponseHasValidationData,
+  type ValidationError,
+} from '@/model/error/AnzuApiValidationError'
+import { useAlerts } from '@/composables/system/alerts'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import {
+  AnzuApiForbiddenOperationError,
+  axiosErrorResponseHasForbiddenOperationData,
+} from '@/model/error/AnzuApiForbiddenOperationError'
+import { AnzuFatalError } from '@/model/error/AnzuFatalError'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const END_POINT = '/adm/v1/asset'
 const BULK_METADATA_LIMIT = 20
@@ -102,4 +116,63 @@ function listItemsToMetadataBulkItems (items: UploadQueueItem[]) {
   })
 
   return dtoItems
+}
+
+const { showUnknownError, showApiValidationError } = useAlerts()
+
+const handleMetadataValidationError = (error: any, assetType: DamAssetType) => {
+  const { damConfigAssetCustomFormElements } = useDamConfigState()
+  if (!error || !error.response || !error.response.data) return
+  const data = error.response.data as AnzuApiValidationResponseData
+  const items = [] as ValidationError[]
+  for (const [key, values] of Object.entries(data.fields)) {
+    const field = key.split('.').pop()
+    const found = damConfigAssetCustomFormElements.value[assetType].find((item) => item.property === field)
+    if (found) {
+      items.push({
+        field: found.name,
+        errors: values,
+      })
+    }
+  }
+  if (items.length) {
+    showApiValidationError(items, -1, true)
+    return
+  }
+  showUnknownError()
+}
+
+export const updateAssetMetadata = (client: () => AxiosInstance, asset: AssetDetailItemDto) => {
+  return new Promise((resolve, reject) => {
+    const data = {
+      id: asset.id,
+      keywords: asset.keywords,
+      authors: asset.authors,
+      described: true,
+      customData: asset.metadata.customData,
+    }
+    client()
+      .patch(END_POINT + '/metadata-bulk-update', JSON.stringify([data]))
+      .then((res) => {
+        if (res.status === HTTP_STATUS_OK) {
+          resolve(res.data)
+        } else {
+          //
+          reject()
+        }
+      })
+      .catch((err) => {
+        if (axiosErrorResponseIsForbidden(err)) {
+          return reject(new AnzuApiForbiddenError(err))
+        }
+        if (axiosErrorResponseHasValidationData(err)) {
+          handleMetadataValidationError(err, asset.attributes.assetType)
+          return reject(new AnzuApiValidationError(err, SYSTEM_CORE_DAM, ENTITY, err))
+        }
+        if (axiosErrorResponseHasForbiddenOperationData(err)) {
+          return reject(new AnzuApiForbiddenOperationError(err, err))
+        }
+        return reject(new AnzuFatalError(err))
+      })
+  })
 }

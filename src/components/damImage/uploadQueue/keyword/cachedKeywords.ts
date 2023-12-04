@@ -1,6 +1,6 @@
 import type { DocId } from '@/types/common'
 import { defineCached } from '@/composables/system/defineCached'
-import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keywords/DamKeyword'
+import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import { fetchKeywordListByIds } from '@/components/damImage/uploadQueue/api/keywordApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'

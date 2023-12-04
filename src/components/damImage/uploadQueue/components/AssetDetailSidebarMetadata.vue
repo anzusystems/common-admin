@@ -10,6 +10,8 @@ import type { DamAssetType } from '@/types/coreDam/Asset'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
+import { updateAssetMetadata } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 withDefaults(
   defineProps<{
@@ -35,8 +37,10 @@ const saveButtonLoading = ref(false)
 
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
 
-// const v$ = useVuelidate({}, {}, { $scope: AssetMetadataValidationScopeSymbol })
+// const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
 const v$ = useVuelidate({}, {}, { $scope: 'replace' })
+
+const { damClient } = useCommonAdminCoreDamOptions()
 
 const onSave = async () => {
   if (isNull(asset.value)) return
@@ -48,7 +52,7 @@ const onSave = async () => {
     return
   }
   try {
-    // await updateAssetMetadata(asset.value)
+    await updateAssetMetadata(damClient, asset.value) // todo
     // if (view.value === 'queue') {
     //   uploadQueueStore.updateAssetMetadata(asset.value)
     // }
@@ -59,23 +63,10 @@ const onSave = async () => {
     saveButtonLoading.value = false
   }
 }
-
-const onDelete = async () => {
-  if (isNull(asset.value)) return
-  try {
-    // await deleteAsset(asset.value.id)
-    showRecordWas('deleted')
-    emit('postDelete', asset.value.id)
-  } catch (error) {
-    showErrorsDefault(error)
-  }
-}
 </script>
 
 <template>
   <AssetDetailSidebarActionsWrapper v-if="isActive">
-    <!--    <AssetDownloadButton :asset-type="assetType" />-->
-    <!--    <AActionDeleteButton @delete-record="onDelete" />-->
     <ABtnPrimary
       type="submit"
       class="ml-2"

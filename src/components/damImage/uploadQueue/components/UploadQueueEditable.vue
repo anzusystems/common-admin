@@ -4,8 +4,8 @@ import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composab
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import UploadQueueItemEditable from '@/components/damImage/uploadQueue/components/UploadQueueItemEditable.vue'
 import AssetQueueSelectedSidebar from '@/components/damImage/uploadQueue/components/AssetQueueSelectedSidebar.vue'
-import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keywords/cachedKeywords'
-import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/authors/cachedAuthors'
+import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 
 const props = withDefaults(
   defineProps<{

@@ -1,7 +1,7 @@
 import type { DocId, IntegerId } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
-import type { AuthorType } from '@/components/damImage/uploadQueue/authors/AuthorType'
+import type { AuthorType } from '@/components/damImage/uploadQueue/author/AuthorType'
 
 interface Flags {
   reviewed: boolean

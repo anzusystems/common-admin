@@ -96,7 +96,7 @@ const onAnyMetadataChange = () => {
             <!--                    clearable-->
             <!--                    multiple-->
             <!--                    :required="keywordRequired"-->
-            <!--                    :validation-scope="AssetMetadataValidationScopeSymbol"-->
+            <!--                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"-->
             <!--                    @update:model-value="onAnyMetadataChange"-->
             <!--                  />-->
             <!--                </ASystemEntityScope>-->
@@ -120,7 +120,7 @@ const onAnyMetadataChange = () => {
             <!--                    clearable-->
             <!--                    multiple-->
             <!--                    :required="authorRequired"-->
-            <!--                    :validation-scope="AssetMetadataValidationScopeSymbol"-->
+            <!--                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"-->
             <!--                    @update:model-value="onAnyMetadataChange"-->
             <!--                  />-->
             <!--                </ASystemEntityScope>-->
