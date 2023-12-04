@@ -39,5 +39,12 @@ const pinnedCount = computed(() => {
     :elements="elements"
     @any-change="emit('anyChange')"
     @update:model-value="emit('update:modelValue', $event)"
-  />
+  >
+    <template #after-pinned>
+      <slot name="after-pinned" />
+    </template>
+    <template #before-pinned>
+      <slot name="before-pinned" />
+    </template>
+  </ACustomDataForm>
 </template>
