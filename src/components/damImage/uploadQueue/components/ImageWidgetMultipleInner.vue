@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
-import { computed, inject, onMounted, ref, type ShallowRef, toRaw } from 'vue'
+import { computed, inject, nextTick, onMounted, ref, type ShallowRef, toRaw } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -26,6 +26,10 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
+import { CHOSEN_CLASS, DRAG_CLASS, GHOST_CLASS, GROUP_CLASS, HANDLE_CLASS } from '@/components/sortable/sortableActions'
+import { useSortable, type UseSortableReturn } from '@vueuse/integrations/useSortable'
+import type { SortableEvent } from 'sortablejs'
+import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
 
 const props = withDefaults(
   defineProps<{
@@ -38,6 +42,8 @@ const props = withDefaults(
     readonly?: boolean
     dataCy?: string | undefined
     width?: number | undefined
+    disableDraggable?: boolean
+    widgetIdentifierId?: string | undefined
   }>(),
   {
     configName: 'default',
@@ -48,6 +54,8 @@ const props = withDefaults(
     lockedById: undefined,
     dataCy: undefined,
     width: undefined,
+    disableDraggable: false,
+    widgetIdentifierId: undefined,
   }
 )
 
@@ -215,6 +223,61 @@ const removeItem = async (index: number) => {
   }
 }
 
+const widgetEl = ref<HTMLElement | null>(null)
+const randomUuid = ref<string>(generateUUIDv1())
+const sortableInstance = ref<UseSortableReturn | null>(null)
+const forceRerender = ref(0)
+
+const widgetHtmlId = computed(() => {
+  return isUndefined(props.widgetIdentifierId) ? WIDGET_HTML_ID_PREFIX + randomUuid.value : props.widgetIdentifierId
+})
+
+const forceRerenderWidgetHtml = () => {
+  forceRerender.value++
+  nextTick(() => {
+    initSortable()
+  })
+}
+
+const updateAllPositions = () => {
+  let pos = 0
+  images.value.forEach((image) => {
+    pos++
+    image.position = pos
+  })
+  imageStore.maxPosition = pos
+}
+const moveImagePositions = (from: number, to: number) => {
+  if (to >= 0 && to < images.value.length) {
+    const element = images.value.splice(from, 1)[0]
+    images.value.splice(to, 0, element)
+    updateAllPositions()
+    forceRerenderWidgetHtml()
+  }
+}
+
+const initSortable = () => {
+  if (props.disableDraggable) return
+  if (!widgetEl.value) return
+  const nestedSortable = widgetEl.value.querySelector<HTMLElement>('.' + GROUP_CLASS)
+  if (!nestedSortable) return
+  sortableInstance.value = useSortable(nestedSortable, [], {
+    handle: '.' + HANDLE_CLASS,
+    ghostClass: GHOST_CLASS,
+    dragClass: DRAG_CLASS,
+    chosenClass: CHOSEN_CLASS,
+    onEnd: async (event: SortableEvent) => {
+      if (isUndefined(event.oldIndex) || isUndefined(event.newIndex)) return
+      moveImagePositions(event.oldIndex, event.newIndex)
+    },
+  })
+}
+
+nextTick(() => {
+  widgetEl.value = document.querySelector('#' + widgetHtmlId.value)
+  initSortable()
+})
+
 defineExpose({
   saveImages,
 })
@@ -225,70 +288,78 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="pb-2">
-    <AFileInput
-      :file-input-key="uploadQueue?.fileInputKey"
-      :accept="uploadAccept"
-      :max-sizes="uploadSizes"
-      @files-input="onFileInput"
+  <div :id="widgetHtmlId">
+    <div class="pb-2">
+      <AFileInput
+        :file-input-key="uploadQueue?.fileInputKey"
+        :accept="uploadAccept"
+        :max-sizes="uploadSizes"
+        @files-input="onFileInput"
+      >
+        <template #activator="{ props: fileInputProps }">
+          <VBtn
+            ref="uploadButtonComponent"
+            v-bind="fileInputProps"
+          >
+            Upload
+          </VBtn>
+        </template>
+      </AFileInput>
+      <VBtn
+        class="mr-2"
+        @click="actionLibrary"
+      >
+        Add from library
+      </VBtn>
+    </div>
+    <AAssetSelect
+      v-model="assetSelectDialog"
+      :asset-licence-id="licenceId"
+      :min-count="1"
+      :max-count="50"
+      :asset-type="DamAssetType.Image"
+      return-type="asset"
+      @on-confirm="onAssetSelectConfirm"
+    />
+
+    <div
+      class="position-relative w-100"
+      style="min-height: 140px"
     >
-      <template #activator="{ props: fileInputProps }">
-        <VBtn
-          ref="uploadButtonComponent"
-          v-bind="fileInputProps"
-        >
-          Upload
-        </VBtn>
-      </template>
-    </AFileInput>
-    <VBtn
-      class="mr-2"
-      @click="actionLibrary"
-    >
-      Add from library
-    </VBtn>
-  </div>
-  <AAssetSelect
-    v-model="assetSelectDialog"
-    :asset-licence-id="licenceId"
-    :min-count="1"
-    :max-count="50"
-    :asset-type="DamAssetType.Image"
-    return-type="asset"
-    @on-confirm="onAssetSelectConfirm"
-  />
-  <div
-    class="position-relative w-100"
-    style="min-height: 140px"
-  >
-    <div class="asset-list-tiles asset-list-tiles--thumbnail">
-      <ImageWidgetMultipleItem
-        v-for="(image, index) in images"
-        :key="image.key"
-        :index="index"
-        @edit-asset="onEditAsset"
-        @remove-item="removeItem"
+      <div
+        :key="forceRerender"
+        :class="GROUP_CLASS"
+        class="asset-list-tiles asset-list-tiles--thumbnail"
+      >
+        <ImageWidgetMultipleItem
+          v-for="(image, index) in images"
+          :key="image.key"
+          :index="index"
+          :disable-draggable="disableDraggable"
+          @edit-asset="onEditAsset"
+          @remove-item="removeItem"
+        />
+      </div>
+      <AImageDropzone
+        variant="fill"
+        :hover-only="images.length > 0"
+        :accept="uploadAccept"
+        :max-sizes="uploadSizes"
+        @on-drop="onDrop"
+        @on-click="uploadButtonComponent?.$el.click()"
       />
     </div>
-    <AImageDropzone
-      variant="fill"
-      :hover-only="images.length > 0"
+    <UploadQueueDialog
+      v-if="uploadQueueDialog"
+      :queue-key="queueKey"
+      :file-input-key="uploadQueue?.fileInputKey ?? -1"
       :accept="uploadAccept"
       :max-sizes="uploadSizes"
-      @on-drop="onDrop"
-      @on-click="uploadButtonComponent?.$el.click()"
+      multiple
+      @on-apply="onAssetUploadConfirm"
     />
+    <AssetDetailDialog />
   </div>
-  <UploadQueueDialog
-    v-if="uploadQueueDialog"
-    :queue-key="queueKey"
-    :file-input-key="uploadQueue?.fileInputKey ?? -1"
-    :accept="uploadAccept"
-    :max-sizes="uploadSizes"
-    multiple
-    @on-apply="onAssetUploadConfirm"
-  />
-  <AssetDetailDialog />
 </template>
 
 <style lang="scss"></style>

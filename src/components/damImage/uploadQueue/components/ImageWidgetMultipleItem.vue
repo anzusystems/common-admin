@@ -6,10 +6,12 @@ import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import type { DocId } from '@/types/common'
 import { isNull, isUndefined } from '@/utils/common'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
+import { HANDLE_CLASS } from '@/components/sortable/sortableActions'
 
 const props = withDefaults(
   defineProps<{
     index: number
+    disableDraggable: boolean
   }>(),
   {}
 )
@@ -37,13 +39,24 @@ const removeItem = () => {
   <div class="asset-list-tiles__item">
     <div class="asset-list-tiles__item-card">
       <div class="ma-2">
+        <div class="d-flex justify-md-space-between align-center">
+          <VIcon
+            :class="{
+              [HANDLE_CLASS]: true,
+              [HANDLE_CLASS + '--disabled']: disableDraggable,
+            }"
+            icon="mdi-drag"
+          />
+          <div class="text-caption">
+            {{ image.position }}
+          </div>
+        </div>
         <AImageWidgetSimple
           :model-value="image.id"
           :image="image"
         />
-
-        <VRow>
-          <VCol class="text-right my-1">
+        <VRow dense>
+          <VCol class="d-flex justify-space-between mt-1">
             <VBtn
               variant="text"
               size="small"
@@ -53,12 +66,13 @@ const removeItem = () => {
             </VBtn>
             <AActionDeleteButton
               variant="icon"
+              :size="30"
               button-class=""
               @delete-record="removeItem"
             />
           </VCol>
         </VRow>
-        <VRow>
+        <VRow dense>
           <VCol>
             <AFormTextarea
               v-model="image.texts.description"
@@ -66,7 +80,7 @@ const removeItem = () => {
             />
           </VCol>
         </VRow>
-        <VRow>
+        <VRow dense>
           <VCol>
             <AFormTextarea
               v-model="image.texts.source"
@@ -78,3 +92,9 @@ const removeItem = () => {
     </div>
   </div>
 </template>
+
+<style lang="scss">
+.asset-list-tiles--thumbnail.a-sortable-widget__group .asset-list-tiles__item img:not(.img-svg) {
+  padding: 0;
+}
+</style>
