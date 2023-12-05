@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, inject, nextTick, onMounted, ref, type ShallowRef, toRaw } from 'vue'
-import { isNull, isUndefined } from '@/utils/common'
+import { isNull, isString, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
@@ -11,7 +11,7 @@ import { storeToRefs } from 'pinia'
 import { bulkUpdateImages, deleteImage, fetchImageListByIds } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
-import { DamAssetType } from '@/types/coreDam/Asset'
+import { type AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
@@ -21,7 +21,7 @@ import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import UploadQueueDialog from '@/components/damImage/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
-import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAssetByFileId, fetchAssetListByIds } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
@@ -30,6 +30,7 @@ import { CHOSEN_CLASS, DRAG_CLASS, GHOST_CLASS, GROUP_CLASS, HANDLE_CLASS } from
 import { useSortable, type UseSortableReturn } from '@vueuse/integrations/useSortable'
 import type { SortableEvent } from 'sortablejs'
 import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
+import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 
 const props = withDefaults(
   defineProps<{
@@ -129,26 +130,65 @@ const onDrop = (files: File[]) => {
   uploadQueueDialog.value = true
 }
 
-const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
+const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
+  const ids = items.map((item) => item.id)
+  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
+  const authorIdsToFetch = new Set<DocId>()
+  const authorsMap = new Map<DocId, string>()
+  try {
+    const assetDetails = await fetchAssetListByIds(damClient, ids, props.licenceId)
+    assetDetails.forEach((assetDetail) => {
+      assetMetadataMap.set(assetDetail.id, {
+        description: isString(assetDetail.metadata.customData?.description)
+          ? assetDetail.metadata.customData.description.trim()
+          : '',
+        authorIds: assetDetail.authors,
+      })
+    })
+    assetMetadataMap.forEach((assetMeta) => {
+      assetMeta.authorIds.forEach((authorId) => {
+        authorIdsToFetch.add(authorId)
+      })
+    })
+    if (authorIdsToFetch.size > 0) {
+      const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, [...authorIdsToFetch])
+      authorsRes.forEach((author) => {
+        authorsMap.set(author.id, author.name)
+      })
+    }
+  } catch (e) {
+    showErrorsDefault(e)
+  }
+
+  return items.map((asset) => {
+    maxPosition.value++
+    const description = assetMetadataMap.get(asset.id)?.description
+    const authorNames: string[] = []
+    assetMetadataMap.get(asset.id)?.authorIds.forEach((authorId) => {
+      const name = authorsMap.get(authorId)
+      if (!isUndefined(name) && name.trim().length > 0) {
+        authorNames.push(name)
+      }
+    })
+    return {
+      key: generateUUIDv1(),
+      texts: {
+        description: description ?? '',
+        source: authorNames.join(', '),
+      },
+      dam: {
+        damId: asset.mainFile!.id,
+        regionPosition: 0,
+      },
+      position: maxPosition.value,
+    }
+  })
+}
+
+const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type === 'asset') {
     if (data.value.length === 0) return
-    const items = data.value
-      .filter((asset) => !isNull(asset.mainFile))
-      .map((assetWithMainFile) => {
-        maxPosition.value++
-        return {
-          key: generateUUIDv1(),
-          texts: {
-            description: 'todo',
-            source: 'todo',
-          },
-          dam: {
-            damId: assetWithMainFile.mainFile!.id,
-            regionPosition: 0,
-          },
-          position: maxPosition.value,
-        }
-      })
+    const items = await assetSelectConfirmMap(data.value.filter((asset) => !isNull(asset.mainFile)))
     imageStore.addImages(items)
   }
 }
