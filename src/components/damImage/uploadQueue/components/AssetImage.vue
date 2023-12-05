@@ -140,7 +140,7 @@ const { remainingTimeShort } = useRemainingTime()
           :width="iconSize / 10"
         />
         <div class="text-caption text-center">
-          {{ t('system.upload.waiting') }}
+          {{ t('common.damImage.upload.waiting') }}
         </div>
       </div>
       <div
@@ -158,7 +158,7 @@ const { remainingTimeShort } = useRemainingTime()
           v-if="!disableProcessingText"
           class="text-caption text-center"
         >
-          {{ t('system.upload.processing') }}
+          {{ t('common.damImage.upload.processing') }}
         </div>
       </div>
       <div
@@ -175,7 +175,7 @@ const { remainingTimeShort } = useRemainingTime()
           {{ uploadingPercentage }}
         </VProgressCircular>
         <div class="text-caption text-center">
-          {{ t('system.upload.uploading') }}
+          {{ t('common.damImage.upload.uploading') }}
           <span
             v-if="remainingTime"
             class="font-weight-bold"
@@ -225,7 +225,7 @@ const { remainingTimeShort } = useRemainingTime()
           :size="iconSize"
         />
         <div class="text-caption text-center">
-          {{ t('system.upload.done') }}
+          {{ t('common.damImage.upload.done') }}
         </div>
       </div>
       <AssetImageMetaIcons
@@ -302,7 +302,7 @@ const { remainingTimeShort } = useRemainingTime()
         :size="iconSize"
       />
       <div class="text-caption text-center">
-        {{ t('system.upload.done') }}
+        {{ t('common.damImage.upload.done') }}
       </div>
     </div>
     <AssetImageMetaIcons

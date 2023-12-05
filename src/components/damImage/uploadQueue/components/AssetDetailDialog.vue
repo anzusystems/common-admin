@@ -140,7 +140,7 @@ const assetMainFile = computed(() => {
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.detail.toggleInfo') }}
+                {{ t('common.damImage.asset.detail.toggleInfo') }}
               </VTooltip>
             </VBtn>
             <VBtn

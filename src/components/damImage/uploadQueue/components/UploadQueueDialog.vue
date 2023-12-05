@@ -277,7 +277,7 @@ const onSaveAndApply = async () => {
                       activator="parent"
                       location="bottom"
                     >
-                      {{ t('system.upload.add') }}
+                      {{ t('common.damImage.upload.add') }}
                     </VTooltip>
                   </VBtn>
                 </template>

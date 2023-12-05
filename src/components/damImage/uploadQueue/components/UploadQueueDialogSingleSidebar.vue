@@ -57,14 +57,14 @@ const { activeTab } = storeToRefs(assetDetailStore)
           :value="AssetDetailTabImageWithRoi.Info"
           data-cy="button-meta"
         >
-          {{ t('coreDam.asset.detail.tabs.info') }}
+          {{ t('common.damImage.asset.detail.tabs.info') }}
         </VTab>
         <VTab
           v-if="isImage && enableRoiTab"
           :value="AssetDetailTabImageWithRoi.ROI"
           data-cy="button-focus"
         >
-          {{ t('coreDam.asset.detail.tabs.roi') }}
+          {{ t('common.damImage.asset.detail.tabs.roi') }}
         </VTab>
       </VTabs>
 

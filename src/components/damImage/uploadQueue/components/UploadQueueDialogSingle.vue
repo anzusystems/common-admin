@@ -342,7 +342,7 @@ onMounted(() => {
                 activator="parent"
                 location="bottom"
               >
-                {{ t('coreDam.asset.detail.toggleInfo') }}
+                {{ t('common.damImage.asset.detail.toggleInfo') }}
               </VTooltip>
             </VBtn>
             <UploadQueueButtonStop
@@ -439,7 +439,7 @@ onMounted(() => {
                     v-else
                     class="text-caption"
                   >
-                    {{ t('system.uploadErrors.unknownError') }}
+                    {{ t('common.damImage.uploadErrors.unknownError') }}
                   </div>
                 </div>
               </div>

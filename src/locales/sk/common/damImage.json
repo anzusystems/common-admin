@@ -1,0 +1,36 @@
+{
+  "asset": {
+    "model": {
+      "authors": "Autori",
+      "keywords": "Kľúčové slová"
+    },
+    "detail": {
+      "toggleInfo": "Info karta",
+      "tabs": {
+        "info": "Info",
+        "roi": "Fókus"
+      },
+      "info": {
+        "metadata": "Metaúdaje",
+        "file": "Info o súbore"
+      }
+    }
+  },
+  "upload": {
+    "waiting": "Čakanie",
+    "processing": "Spracováva sa",
+    "uploading": "Nahrávanie",
+    "done": "Hotovo",
+    "stop": "Zatvoriť",
+    "add": "Pridať do nahrávania",
+    "stopConfirmQuestion": "Chcete ukončiť nahrávanie?"
+  },
+  "uploadErrors": {
+    "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",
+    "systemError": "Chyba",
+    "size": "Nesprávna veľkosť",
+    "offset": "Nesprávny offset",
+    "mimeType": "Nesprávny formát súboru"
+  },
+  "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne."
+}

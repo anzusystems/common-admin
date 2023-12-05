@@ -38,27 +38,27 @@ const handleValidationErrorMessage = (error: Error | any) => {
   const { t } = i18n.global || i18n
   if (!error || !error.response || !error.response.data) {
     // @ts-ignore
-    return t('system.uploadErrors.unknownError')
+    return t('common.damImage.uploadErrors.unknownError')
   }
   const data = error.response.data as AnzuApiValidationResponseData
   const errorMessages: string[] = []
   for (const [key, values] of Object.entries(data.fields)) {
     switch (key) {
       case 'size':
-        errorMessages.push(t('system.uploadErrors.size'))
+        errorMessages.push(t('common.damImage.uploadErrors.size'))
         break
       case 'offset':
-        errorMessages.push(t('system.uploadErrors.offset'))
+        errorMessages.push(t('common.damImage.uploadErrors.offset'))
         break
       case 'mimeType':
-        errorMessages.push(t('system.uploadErrors.mimeType'))
+        errorMessages.push(t('common.damImage.uploadErrors.mimeType'))
         break
       default:
         // @ts-ignore
-        errorMessages.push(t('system.uploadErrors.systemError') + ': ' + key + ' - ' + values.join(','))
+        errorMessages.push(t('common.damImage.uploadErrors.systemError') + ': ' + key + ' - ' + values.join(','))
     }
   }
-  return errorMessages.length > 0 ? errorMessages.join(NEW_LINE_MARK) : t('system.uploadErrors.unknownError')
+  return errorMessages.length > 0 ? errorMessages.join(NEW_LINE_MARK) : t('common.damImage.uploadErrors.unknownError')
 }
 
 const readFile = async (offset: number, size: number, file: File): Promise<{ data: string; offset: number }> => {

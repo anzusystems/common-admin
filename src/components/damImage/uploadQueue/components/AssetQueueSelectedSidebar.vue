@@ -147,7 +147,7 @@ onMounted(() => {
                       <div style="min-width: 286px">
                         <KeywordRemoteAutocompleteWithCached
                           v-model="massOperationsKeywords"
-                          :label="t('coreDam.asset.model.keywords')"
+                          :label="t('common.damImage.asset.model.keywords')"
                           clearable
                           multiple
                           :validation-scope="false"
@@ -199,7 +199,7 @@ onMounted(() => {
                       <div style="min-width: 286px">
                         <AuthorRemoteAutocompleteWithCached
                           v-model="massOperationsAuthors"
-                          :label="t('coreDam.asset.model.authors')"
+                          :label="t('common.damImage.asset.model.authors')"
                           clearable
                           multiple
                           :validation-scope="false"

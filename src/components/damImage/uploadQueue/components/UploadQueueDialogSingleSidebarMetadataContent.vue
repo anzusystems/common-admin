@@ -72,7 +72,7 @@ const onAnyMetadataChange = () => {
   >
     <VExpansionPanel
       elevation="0"
-      :title="t('coreDam.asset.detail.info.metadata')"
+      :title="t('common.damImage.asset.detail.info.metadata')"
       value="metadata"
     >
       <VExpansionPanelText>
@@ -95,7 +95,7 @@ const onAnyMetadataChange = () => {
                 >
                   <KeywordRemoteAutocompleteWithCached
                     v-model="asset.keywords"
-                    :label="t('coreDam.asset.model.keywords')"
+                    :label="t('common.damImage.asset.model.keywords')"
                     data-cy="custom-field-keywords"
                     clearable
                     multiple
@@ -118,7 +118,7 @@ const onAnyMetadataChange = () => {
                 >
                   <AuthorRemoteAutocompleteWithCached
                     v-model="asset.authors"
-                    :label="t('coreDam.asset.model.authors')"
+                    :label="t('common.damImage.asset.model.authors')"
                     :author-conflicts="authorConflicts"
                     data-cy="custom-field-authors"
                     clearable

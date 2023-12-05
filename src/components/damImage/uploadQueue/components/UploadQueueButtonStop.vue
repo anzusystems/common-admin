@@ -57,7 +57,7 @@ const { t } = useI18n()
       activator="parent"
       location="bottom"
     >
-      {{ t('system.upload.stop') }}
+      {{ t('common.damImage.upload.stop') }}
     </VTooltip>
   </VBtn>
   <VDialog
@@ -69,7 +69,7 @@ const { t } = useI18n()
       data-cy="delete-panel"
     >
       <ADialogToolbar @on-cancel="onCancel">
-        {{ t('system.upload.stopConfirmQuestion') }}
+        {{ t('common.damImage.upload.stopConfirmQuestion') }}
       </ADialogToolbar>
       <VCardActions>
         <VSpacer />
@@ -83,7 +83,7 @@ const { t } = useI18n()
           data-cy="button-confirm"
           @click.stop="onConfirm"
         >
-          {{ t('system.upload.stop') }}
+          {{ t('common.damImage.upload.stop') }}
         </ABtnPrimary>
       </VCardActions>
     </VCard>

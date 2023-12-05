@@ -209,7 +209,7 @@ const showCancel = computed(() => {
               v-else
               class="text-caption"
             >
-              {{ t('system.uploadErrors.unknownError') }}
+              {{ t('common.damImage.uploadErrors.unknownError') }}
             </div>
           </div>
         </div>
@@ -293,7 +293,7 @@ const showCancel = computed(() => {
                     <KeywordRemoteAutocompleteWithCached
                       v-model="keywords"
                       :queue-id="queueKey"
-                      :label="t('coreDam.asset.model.keywords')"
+                      :label="t('common.damImage.asset.model.keywords')"
                       clearable
                       multiple
                       :required="damConfigExtSystem[assetType].keywords.required"
@@ -316,7 +316,7 @@ const showCancel = computed(() => {
                     <AuthorRemoteAutocompleteWithCached
                       v-model="authors"
                       :queue-id="queueKey"
-                      :label="t('coreDam.asset.model.authors')"
+                      :label="t('common.damImage.asset.model.authors')"
                       :author-conflicts="item.authorConflicts"
                       clearable
                       multiple

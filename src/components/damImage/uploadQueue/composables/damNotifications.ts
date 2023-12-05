@@ -41,7 +41,7 @@ export function initDamNotifications() {
     ws.value.onerror = function (this: WebSocket, event: Event) {
       const { showWarning } = useAlerts()
       setTimeout(() => {
-        showWarning(t('system.error.notificationsNotConnected'), -1)
+        showWarning(t('common.damImage.notificationsNotConnected'), -1)
       }, 3000)
       console.log('ws dam notification-server error', event)
     }
