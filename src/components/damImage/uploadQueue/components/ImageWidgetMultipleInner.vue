@@ -414,5 +414,3 @@ onMounted(() => {
     <AssetDetailDialog />
   </div>
 </template>
-
-<style lang="scss"></style>

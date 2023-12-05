@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
 import { useAlerts } from '@/composables/system/alerts'
 import useVuelidate from '@vuelidate/core'
-import type { DocId } from '@/types/common'
 import type { DamAssetType } from '@/types/coreDam/Asset'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -25,9 +24,6 @@ withDefaults(
     dataCy: undefined,
   }
 )
-const emit = defineEmits<{
-  (e: 'postDelete', data: DocId): void
-}>()
 
 const { t } = useI18n()
 

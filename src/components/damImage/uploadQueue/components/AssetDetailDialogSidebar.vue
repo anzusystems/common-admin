@@ -32,13 +32,6 @@ withDefaults(
     dataCy: undefined,
   }
 )
-const emit = defineEmits<{
-  (e: 'postDelete', data: DocId): void
-}>()
-
-const postDelete = (data: DocId) => {
-  emit('postDelete', data)
-}
 
 const { t } = useI18n()
 
@@ -82,7 +75,6 @@ const { activeTab } = storeToRefs(assetDetailStore)
           <AssetDetailSidebarMetadata
             :is-active="activeTab === AssetDetailTabImageWithRoi.Info"
             :asset-type="assetType"
-            @post-delete="postDelete"
           />
         </div>
         <div

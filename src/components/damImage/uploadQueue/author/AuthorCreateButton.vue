@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ValidationScope } from '@/types/Validation'
@@ -70,7 +69,6 @@ const onCancel = () => {
   dialog.value = false
 }
 
-const router = useRouter()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { v$ } = useAuthorValidation(author, props.validationScope)
 const { t } = useI18n()

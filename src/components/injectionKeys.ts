@@ -1,10 +1,5 @@
 import type { InjectionKey } from 'vue'
-import type {
-  CommonAdminCoreDamOptions,
-  CommonAdminImageOptions,
-  CurrentUserType,
-  CustomAclResolver,
-} from '@/AnzuSystemsCommonAdmin'
+import type { CurrentUserType, CustomAclResolver } from '@/AnzuSystemsCommonAdmin'
 import type { LanguageCode } from '@/composables/languageSettings'
 
 export const SystemScopeSymbol: InjectionKey<string | undefined> = Symbol.for('anzu:SystemScope')

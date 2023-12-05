@@ -7,7 +7,6 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 import { isNull, isUndefined } from '@/utils/common'
 import { useKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAlerts } from '@/composables/system/alerts'
 import { useKeywordValidation } from '@/components/damImage/uploadQueue/keyword/keywordValidation'
@@ -68,7 +67,6 @@ const onCancel = () => {
   dialog.value = false
 }
 
-const router = useRouter()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { v$ } = useKeywordValidation(keyword, props.validationScope)
 const { t } = useI18n()

@@ -7,7 +7,6 @@ import {
   AssetDetailTabImageWithRoi,
   useAssetDetailStore,
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
-import type { DocId } from '@/types/common'
 import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/components/AssetDetailDialogLoader.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
@@ -25,14 +24,6 @@ const { asset, dialog, activeTab, loading } = storeToRefs(assetDetailStore)
 const closeDialog = () => {
   assetDetailStore.setAsset(null)
   dialog.value = false
-}
-
-const postDelete = (data: DocId) => {
-  // assetListStore.setDeletingById(data)
-  // if (asset.value?.id === data) {
-  //   assetDetailStore.setDeleting()
-  // }
-  closeDialog()
 }
 
 const sidebar = ref(true)
@@ -199,7 +190,6 @@ const assetMainFile = computed(() => {
               :asset-type="assetType"
               :asset-main-file-status="assetMainFile ? assetMainFile.fileAttributes.status : undefined"
               :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
-              @post-delete="postDelete"
             />
           </div>
         </div>

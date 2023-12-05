@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import { type AssetCustomData, DamAssetStatus } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
 import { type UploadQueueItem, UploadQueueItemStatus, type UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import { useAlerts } from '@/composables/system/alerts'
 import { AssetFileFailReason } from '@/types/coreDam/AssetFile'
 import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
 import { prettyBytes } from '@/utils/file'
@@ -73,11 +72,6 @@ const authors = computed({
 
 const { t } = useI18n()
 
-// const assetDetailStore = useAssetDetailStore()
-// const assetListStore = useAssetListStore()
-
-const { showRecordWas, showErrorsDefault } = useAlerts()
-
 const processing = computed(() => {
   return [UploadQueueItemStatus.Processing, UploadQueueItemStatus.Loading].includes(props.item.status)
 })
@@ -94,16 +88,6 @@ const uploadProgress = computed(() => {
   return props.item.progress.progressPercent
 })
 
-// const remove = async () => {
-//   if (!props.item.assetId) return
-//   try {
-//     // await deleteAsset(props.item.assetId)
-//     emit('removeItem', props.index)
-//     showRecordWas('deleted')
-//   } catch (error) {
-//     showErrorsDefault(error)
-//   }
-// }
 const imageSrc = computed(() => {
   return props.item.imagePreview ? props.item.imagePreview.url : undefined
 })
