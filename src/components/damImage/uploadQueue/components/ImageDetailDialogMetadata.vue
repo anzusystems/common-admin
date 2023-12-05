@@ -7,6 +7,8 @@ import { useImageStore } from '@/components/damImage/uploadQueue/composables/ima
 import { storeToRefs } from 'pinia'
 import type { DocId } from '@/types/common'
 import { isNull } from '@/utils/common'
+import { useImageValidation } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { useAlerts } from '@/composables/system/alerts'
 
 withDefaults(
   defineProps<{
@@ -24,8 +26,19 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const imageStore = useImageStore()
+const { imageDetail } = storeToRefs(imageStore)
+
+const { v$ } = useImageValidation(imageDetail)
+
+const { showValidationError } = useAlerts()
 
 const onConfirm = () => {
+  v$.value.$touch()
+  if (v$.value.$invalid) {
+    showValidationError()
+    return
+  }
   emit('onConfirm')
 }
 
@@ -33,9 +46,6 @@ const onDialogModelUpdate = (newValue: boolean) => {
   if (newValue) return
   emit('onClose')
 }
-
-const imageStore = useImageStore()
-const { imageDetail } = storeToRefs(imageStore)
 
 const onEditAsset = () => {
   if (isNull(imageDetail.value)) return
@@ -92,6 +102,7 @@ const onEditAsset = () => {
               <AFormTextarea
                 v-model="imageDetail.texts.source"
                 label="Source"
+                :v="v$.image.texts.source"
               />
             </VCol>
           </VRow>
