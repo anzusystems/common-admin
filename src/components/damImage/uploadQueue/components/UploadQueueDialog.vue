@@ -159,12 +159,10 @@ const onSaveAndApply = async () => {
   saveAndCloseButtonLoading.value = true
   v$.value.$touch()
   if (v$.value.$invalid) {
-    console.log('invalid')
     showValidationError()
     saveAndCloseButtonLoading.value = false
     return
   }
-  console.log(itemsRaw)
   try {
     const res = await bulkUpdateAssetsMetadata(damClient, itemsRaw)
     const mapped = await metadataMap(itemsRaw, res)

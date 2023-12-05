@@ -62,9 +62,10 @@ const removeItem = () => {
             <VBtn
               variant="text"
               size="small"
+              class="mb-2"
               @click.stop="onEditAsset"
             >
-              Edit DAM asset
+              {{ t('common.damImage.queueItem.edit') }}
             </VBtn>
             <AActionDeleteButton
               variant="icon"

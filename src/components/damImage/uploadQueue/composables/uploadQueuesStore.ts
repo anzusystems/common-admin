@@ -14,18 +14,23 @@ import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/compos
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { uploadStop, useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
 import { type AssetDetailItemDto, DamAssetType } from '@/types/coreDam/Asset'
-import type { AssetFileFailReason, AssetFileNullable } from '@/types/coreDam/AssetFile'
+import type { AssetFileFailReason } from '@/types/coreDam/AssetFile'
 import { DamNotificationName } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
 import { useDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
 import { fetchAsset, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageApi'
 import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
+import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { isNull } from '@/utils/common'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
 
 export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () => {
+  const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
+  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
+
   const queues = ref<Map<UploadQueueKey, UploadQueue>>(new Map())
 
   const { createDefault } = useUploadQueueItemFactory()
@@ -185,32 +190,44 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     originAssetFile: DocIdNullable = null,
     assetType: DamAssetType | null = null
   ) {
+    const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
     if (!originAssetFile || !assetType || assetType !== DamAssetType.Image) return
     let assetRes: null | AssetDetailItemDto = null
     try {
       assetRes = await fetchAssetByFileId(damClient, originAssetFile)
     } catch (e) {
-      //
+      throw new Error('Fatal error')
     }
     queues.value.forEach((queue, queueKey) => {
       queue.items.forEach((item) => {
+        if (isNull(assetRes)) return
         if (item.assetId === assetId) {
           clearTimeout(item.notificationFallbackTimer)
           item.isDuplicate = true
           item.status = UploadQueueItemStatus.Uploaded
-          if (assetRes) {
-            item.fileId = originAssetFile
-            item.duplicateAssetId = assetRes.id
-            item.assetStatus = assetRes.attributes.assetStatus
-          }
-          if (assetRes?.mainFile?.links?.image_detail) {
+          item.fileId = originAssetFile
+          item.duplicateAssetId = assetRes.id
+          item.assetStatus = assetRes.attributes.assetStatus
+          if (assetRes.mainFile?.links?.image_detail) {
             item.imagePreview = assetRes.mainFile.links.image_detail
           }
+          item.keywords = assetRes.keywords
+          item.authors = assetRes.authors
+          item.customData = assetRes.metadata.customData
+          updateNewNames(assetRes.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
+          updateNewNames(assetRes.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
+          item.authorConflicts = getAuthorConflicts(assetRes!.metadata.authorSuggestions)
+          addToCachedKeywords(item.keywords)
+          addToCachedAuthors(item.authors)
+          addToCachedAuthors(item.authorConflicts)
+          item.assetId = assetRes.id
           item.canEditMetadata = true
           processUpload(queueKey)
         }
       })
       recalculateQueueCounts(queueKey)
+      fetchCachedAuthors()
+      fetchCachedKeywords()
     })
   }
 
@@ -241,21 +258,23 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       const asset = await fetchAsset(damClient, assetId)
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
-          if (item.assetId === asset.id && item.type !== UploadQueueItemType.SlotFile) {
+          if (item.assetId === asset.id && item.type) {
+            clearTimeout(item.notificationFallbackTimer)
             item.keywords = asset.keywords
             item.authors = asset.authors
             item.customData = asset.metadata.customData
             updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
             updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
             item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
+            addToCachedKeywords(item.keywords)
+            addToCachedAuthors(item.authors)
+            addToCachedAuthors(item.authorConflicts)
             item.canEditMetadata = true
-            // TODO
-            // addToCachedKeywords(item.keywords)
-            // addToCachedAuthors(item.authors)
-            // addToCachedAuthors(item.authorConflicts)
           }
         })
         recalculateQueueCounts(queueKey)
+        fetchCachedAuthors()
+        fetchCachedKeywords()
       })
     } catch (e) {
       //
