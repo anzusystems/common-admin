@@ -32,6 +32,11 @@ import type { SortableEvent } from 'sortablejs'
 import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useI18n } from 'vue-i18n'
+import useVuelidate from '@vuelidate/core'
+import {
+  ADamAssetMetadataValidationScopeSymbol,
+  AImageMetadataValidationScopeSymbol
+} from '@/components/damImage/uploadQueue/composables/uploadValidations'
 
 const props = withDefaults(
   defineProps<{
@@ -79,7 +84,7 @@ if (isUndefined(imageWidgetExtSystemConfig)) {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient } = imageOptions
-const { showErrorsDefault } = useAlerts()
+const { showErrorsDefault, showValidationError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -233,7 +238,14 @@ const actionLibrary = () => {
   assetSelectDialog.value = true
 }
 
+const v$ = useVuelidate({}, {}, { $scope: AImageMetadataValidationScopeSymbol })
+
 const saveImages = async () => {
+  v$.value.$touch()
+  if (v$.value.$invalid) {
+    showValidationError()
+    return
+  }
   try {
     const resItems = await bulkUpdateImages(imageClient, toRaw(images.value))
     const ids: IntegerId[] = []
