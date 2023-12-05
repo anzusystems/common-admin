@@ -13,13 +13,10 @@ import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/components/AssetCustomMetadataForm.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
-import AssetLinkExternal from '@/components/damImage/uploadQueue/components/AssetLinkExternal.vue'
 import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
-import AuthorRemoteAutocompleteWithCached
-  from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
-import KeywordRemoteAutocompleteWithCached
-  from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
+import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -244,6 +241,14 @@ const showCancel = computed(() => {
           <VCol class="pt-0">
             {{ t('common.damImage.queueItem.displayTitle') }}: {{ item.displayTitle }}
             <span v-if="item.file?.size">&nbsp;({{ prettyBytes(item.file.size) }})</span>
+          </VCol>
+        </VRow>
+        <VRow
+          v-if="item.isDuplicate"
+          class="text-caption text-warning"
+        >
+          <VCol class="pt-0">
+            {{ t('common.damImage.asset.detail.info.status.duplicate') }}
           </VCol>
         </VRow>
         <VForm :disabled="!item.canEditMetadata">

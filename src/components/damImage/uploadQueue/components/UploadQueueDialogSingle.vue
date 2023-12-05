@@ -323,7 +323,18 @@ onMounted(() => {
           class="system-border-b pr-1"
         >
           <div class="text-subtitle-2 d-flex px-2">
-            <div>DAM upload</div>
+            <div
+              v-if="isUploading"
+              class="text-subtitle-2"
+            >
+              {{ t('common.damImage.upload.title') }}
+            </div>
+            <div
+              v-else
+              class="text-subtitle-2 text-green-darken-3 font-weight-bold"
+            >
+              {{ t('common.damImage.upload.titleDone') }}
+            </div>
           </div>
           <VSpacer />
           <div>
