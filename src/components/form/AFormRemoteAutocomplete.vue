@@ -9,7 +9,7 @@ import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
-import type { Ref } from 'vue/dist/vue'
+import type { Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 
