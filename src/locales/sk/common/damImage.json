@@ -1,4 +1,18 @@
 {
+  "image": {
+    "model": {
+      "texts": {
+        "description": "Popis",
+        "source": "Zdroj"
+      }
+    },
+    "meta": {
+      "edit": "Upraviť obrázok"
+    },
+    "button": {
+      "editAsset": "Upraviť v DAM"
+    }
+  },
   "asset": {
     "model": {
       "authors": "Autori",
@@ -29,6 +43,16 @@
           "ratio": "Pomer strán",
           "animated": "Animované"
         }
+      },
+      "roi": {
+        "title": "Náhľady",
+        "description": "Náhľad obrázku na mobile, počítači alebo v aplikácii.",
+        "refresh": "Znovu načítať náhľady",
+        "rotate": {
+          "rotateMainFileImage": "Otočenie obrázku (hlavného súboru)",
+          "rotateClockwise": "Otočiť doprava",
+          "rotateCounterclockwise": "Otočiť doľava"
+        }
       }
     }
   },
@@ -42,11 +66,22 @@
     "stopConfirmQuestion": "Chcete ukončiť nahrávanie?"
   },
   "keyword": {
+    "model": {
+      "name": "Meno"
+    },
     "button": {
       "add": "Pridať kľúčové slovo"
+    },
+    "meta": {
+      "create": "Vytvoriť kľúčové slovo"
     }
   },
   "author": {
+    "model": {
+      "name": "Meno",
+      "identifier": "Identifikátor",
+      "type": "Typ"
+    },
     "authorType": {
       "none": "Žiaden",
       "internal": "Interný",
@@ -55,6 +90,9 @@
     },
     "button": {
       "add": "Pridať nového autora"
+    },
+    "meta": {
+      "create": "Vytvorenie autora"
     },
     "conflicts": "Konflikt autorov"
   },

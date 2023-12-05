@@ -186,7 +186,7 @@ onMounted(() => {
     class="d-flex flex-column"
   >
     <div>
-      <span class="text-caption">{{ t('coreDam.author.conflicts') }}</span>
+      <span class="text-caption">{{ t('common.damImage.author.conflicts') }}</span>
     </div>
     <div>
       <AuthorRemoteAutocompleteCachedAuthorChipConflicts

@@ -83,7 +83,7 @@ onMounted(async () => {
       v-if="!imageRoiStore.loader"
       @click.stop="imageRoiStore.forceReloadRoiPreviews()"
     >
-      {{ t('coreDam.asset.detail.roi.refresh') }}
+      {{ t('common.damImage.asset.detail.roi.refresh') }}
     </ABtnTertiary>
   </AssetDetailSidebarActionsWrapper>
   <div class="px-3">
@@ -92,10 +92,10 @@ onMounted(async () => {
     <!--      @active-slot-change="activeSlotChange"-->
     <!--    />-->
     <div class="v-expansion-panel-title px-0">
-      {{ t('coreDam.asset.detail.roi.title') }}
+      {{ t('common.damImage.asset.detail.roi.title') }}
     </div>
     <div class="text-caption">
-      {{ t('coreDam.asset.detail.roi.description') }}
+      {{ t('common.damImage.asset.detail.roi.description') }}
     </div>
   </div>
   <div

@@ -43,7 +43,7 @@ const { t } = useI18n()
 <template>
   <div>
     <div class="text-caption">
-      {{ t('coreDam.asset.detail.roi.rotate.rotateMainFileImage') }}
+      {{ t('common.damImage.asset.detail.roi.rotate.rotateMainFileImage') }}
     </div>
     <div
       v-if="loading"
@@ -61,14 +61,14 @@ const { t } = useI18n()
         data-cy="button-rotate-right"
         @click.stop="rotate(90)"
       >
-        {{ t('coreDam.asset.detail.roi.rotate.rotateClockwise') }}
+        {{ t('common.damImage.asset.detail.roi.rotate.rotateClockwise') }}
       </ABtnTertiary>
       <ABtnTertiary
         prepend-icon="mdi-rotate-left"
         data-cy="button-rotate-left"
         @click.stop="rotate(270)"
       >
-        {{ t('coreDam.asset.detail.roi.rotate.rotateCounterclockwise') }}
+        {{ t('common.damImage.asset.detail.roi.rotate.rotateCounterclockwise') }}
       </ABtnTertiary>
     </div>
   </div>

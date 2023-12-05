@@ -64,7 +64,7 @@ const onEditAsset = () => {
   >
     <VCard v-if="modelValue">
       <ADialogToolbar @on-cancel="onDialogModelUpdate(false)">
-        Update metadata
+        {{ t('common.damImage.image.meta.edit') }}
       </ADialogToolbar>
       <VCardText>
         <div
@@ -88,7 +88,7 @@ const onEditAsset = () => {
           <VRow>
             <VCol>
               <VBtn @click.stop="onEditAsset">
-                Edit DAM asset
+                {{ t('common.damImage.image.button.editAsset') }}
               </VBtn>
             </VCol>
           </VRow>
@@ -96,7 +96,7 @@ const onEditAsset = () => {
             <VCol>
               <AFormTextarea
                 v-model="imageDetail.texts.description"
-                label="Description"
+                :label="t('common.damImage.image.model.texts.description')"
               />
             </VCol>
           </VRow>
@@ -104,7 +104,7 @@ const onEditAsset = () => {
             <VCol>
               <AFormTextarea
                 v-model="imageDetail.texts.source"
-                label="Source"
+                :label="t('common.damImage.image.model.texts.source')"
                 :v="v$.image.texts.source"
               />
             </VCol>

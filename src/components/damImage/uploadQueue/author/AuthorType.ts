@@ -15,19 +15,19 @@ export function useAuthorType() {
   const authorTypeOptions = ref<ValueObjectOption<AuthorType>[]>([
     {
       value: AuthorType.None,
-      title: t('coreDam.author.authorType.none'),
+      title: t('common.damImage.author.authorType.none'),
     },
     {
       value: AuthorType.Internal,
-      title: t('coreDam.author.authorType.internal'),
+      title: t('common.damImage.author.authorType.internal'),
     },
     {
       value: AuthorType.External,
-      title: t('coreDam.author.authorType.external'),
+      title: t('common.damImage.author.authorType.external'),
     },
     {
       value: AuthorType.Agency,
-      title: t('coreDam.author.authorType.agency'),
+      title: t('common.damImage.author.authorType.agency'),
     },
   ])
 

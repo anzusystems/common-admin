@@ -140,7 +140,7 @@ const { authorTypeOptions } = useAuthorType()
       data-cy="create-panel"
     >
       <ADialogToolbar @on-cancel="onCancel">
-        {{ t('coreDam.author.meta.create') }}
+        {{ t('common.damImage.author.meta.create') }}
       </ADialogToolbar>
       <VCardText>
         <ASystemEntityScope
@@ -150,7 +150,7 @@ const { authorTypeOptions } = useAuthorType()
           <ARow>
             <AFormTextField
               v-model="author.name"
-              :label="t('coreDam.author.model.name')"
+              :label="t('common.damImage.author.model.name')"
               :v="v$.author.name"
               required
               data-cy="author-name"
@@ -160,7 +160,7 @@ const { authorTypeOptions } = useAuthorType()
           <ARow>
             <AFormTextField
               v-model="author.identifier"
-              :label="t('coreDam.author.model.identifier')"
+              :label="t('common.damImage.author.model.identifier')"
               :v="v$.author.identifier"
               data-cy="author-identifier"
               @keyup.enter="onConfirm"
@@ -169,7 +169,7 @@ const { authorTypeOptions } = useAuthorType()
           <ARow>
             <AFormValueObjectOptionsSelect
               v-model="author.type"
-              :label="t('coreDam.author.model.type')"
+              :label="t('common.damImage.author.model.type')"
               :items="authorTypeOptions"
               data-cy="author-type"
               @keyup.enter="onConfirm"

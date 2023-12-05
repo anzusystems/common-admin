@@ -156,31 +156,6 @@ const showCancel = computed(() => {
             cover
             :aspect-ratio="IMAGE_ASPECT_RATIO"
           />
-          <!--          <div-->
-          <!--            v-if="item.isDuplicate"-->
-          <!--            :class="-->
-          <!--              'dam-upload-queue__overlay dam-upload-queue__overlay&#45;&#45;warning ' +-->
-          <!--                'd-flex align-center justify-center flex-column'-->
-          <!--            "-->
-          <!--          >-->
-          <!--            <VIcon-->
-          <!--              icon="mdi-alert"-->
-          <!--              class="ma-1"-->
-          <!--              size="x-small"-->
-          <!--              color="warning"-->
-          <!--            />-->
-          <!--            <div class="text-warning">-->
-          <!--              {{ t('coreDam.asset.queueItem.duplicate') }}-->
-          <!--            </div>-->
-          <!--            &lt;!&ndash;            <AssetLinkExternal&ndash;&gt;-->
-          <!--            &lt;!&ndash;              v-if="item.duplicateAssetId"&ndash;&gt;-->
-          <!--            &lt;!&ndash;              :asset-id="item.duplicateAssetId"&ndash;&gt;-->
-          <!--            &lt;!&ndash;              variant="text"&ndash;&gt;-->
-          <!--            &lt;!&ndash;              size="small"&ndash;&gt;-->
-          <!--            &lt;!&ndash;            >&ndash;&gt;-->
-          <!--            &lt;!&ndash;              {{ t('coreDam.asset.queueItem.viewOriginal') }}&nbsp;<VIcon icon="mdi-open-in-new" />&ndash;&gt;-->
-          <!--            &lt;!&ndash;            </AssetLinkExternal>&ndash;&gt;-->
-          <!--          </div>-->
           <div
             v-if="item.error.hasError"
             :class="

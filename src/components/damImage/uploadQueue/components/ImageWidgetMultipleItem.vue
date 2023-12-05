@@ -7,6 +7,7 @@ import type { DocId } from '@/types/common'
 import { isNull, isUndefined } from '@/utils/common'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
 import { HANDLE_CLASS } from '@/components/sortable/sortableActions'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 }>()
 
 const imageStore = useImageStore()
+const { t } = useI18n()
 
 const image = computed(() => imageStore.images[props.index])
 
@@ -76,7 +78,7 @@ const removeItem = () => {
           <VCol>
             <AFormTextarea
               v-model="image.texts.description"
-              label="Description"
+              :label="t('common.damImage.image.model.texts.description')"
             />
           </VCol>
         </VRow>
@@ -84,7 +86,7 @@ const removeItem = () => {
           <VCol>
             <AFormTextarea
               v-model="image.texts.source"
-              label="Source"
+              :label="t('common.damImage.image.model.texts.source')"
             />
           </VCol>
         </VRow>

@@ -136,7 +136,7 @@ const onConfirm = async () => {
       data-cy="create-panel"
     >
       <ADialogToolbar @on-cancel="onCancel">
-        {{ t('coreDam.keyword.meta.create') }}
+        {{ t('common.damImage.keyword.meta.create') }}
       </ADialogToolbar>
       <VCardText>
         <ASystemEntityScope
@@ -146,7 +146,7 @@ const onConfirm = async () => {
           <ARow>
             <AFormTextField
               v-model="keyword.name"
-              :label="t('coreDam.keyword.model.name')"
+              :label="t('common.damImage.keyword.model.name')"
               :v="v$.keyword.name"
               required
               data-cy="keyword-name"

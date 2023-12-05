@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
 import { isNull } from '@/utils/common'
 import { useFormatAndSizeCheck } from '@/components/file/composables/formatAndSizeCheck'
+import { useI18n } from 'vue-i18n'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
@@ -49,6 +50,7 @@ function onDrop(files: File[] | null) {
 const { isOverDropZone } = useDropZone(dropZoneRef, onDrop)
 
 const { isDraggingFile } = useDropzoneGlobalDragState()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -74,13 +76,13 @@ const { isDraggingFile } = useDropzoneGlobalDragState()
       v-else-if="isDraggingFile"
       class="text"
     >
-      Drop files here
+      {{ t('common.system.dropzone.dropHere') }}
     </div>
     <div
       v-else
       class="text"
     >
-      You can drop files here
+      {{ t('common.system.dropzone.dropPossibility') }}
     </div>
   </div>
 </template>

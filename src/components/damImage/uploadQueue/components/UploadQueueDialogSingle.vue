@@ -387,31 +387,6 @@ onMounted(() => {
                   @error="onImageLoad"
                 />
                 <div
-                  v-if="item && item.isDuplicate"
-                  :class="
-                    'dam-upload-queue__overlay dam-upload-queue__overlay--warning ' +
-                      'd-flex align-center justify-center flex-column'
-                  "
-                >
-                  <VIcon
-                    icon="mdi-alert"
-                    class="ma-1"
-                    size="x-small"
-                    color="warning"
-                  />
-                  <div class="text-warning">
-                    {{ t('coreDam.asset.queueItem.duplicate') }}
-                  </div>
-                  <AssetLinkExternal
-                    v-if="item && item.duplicateAssetId"
-                    :asset-id="item.duplicateAssetId"
-                    variant="text"
-                    size="small"
-                  >
-                    {{ t('coreDam.asset.queueItem.viewOriginal') }}&nbsp;<VIcon icon="mdi-open-in-new" />
-                  </AssetLinkExternal>
-                </div>
-                <div
                   v-if="item && item.error.hasError"
                   :class="
                     'dam-upload-queue__overlay dam-upload-queue__overlay--error ' +
