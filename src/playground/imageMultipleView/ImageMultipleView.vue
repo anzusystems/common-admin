@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import type { IntegerId } from '@/types/common'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 
-const imageIds = ref<IntegerId[]>([ 1227, 1228, 1229, 1230 ])
+const imageIds = ref<IntegerId[]>([1231, 1232, 1233])
 
 const component = ref<InstanceType<typeof AImageWidgetMultiple> | null>(null)
 
