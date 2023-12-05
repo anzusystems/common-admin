@@ -1,20 +1,16 @@
 <script setup lang="ts">
 import {
   AssetDetailTabImageWithRoi,
-  useAssetDetailStore
+  useAssetDetailStore,
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import type { DocId } from '@/types/common'
 import { type DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 import { useI18n } from 'vue-i18n'
-import AssetInfobox from '@/components/damImage/uploadQueue/components/AssetInfobox.vue'
-import AssetDetailSidebarMetadata from '@/components/damImage/uploadQueue/components/AssetDetailSidebarMetadata.vue'
 import AssetDetailSidebarROI from '@/components/damImage/uploadQueue/components/AssetDetailSidebarROI.vue'
-import AssetDetailSidebarActionsTeleportTarget
-  from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsTeleportTarget.vue'
-import UploadQueueDialogSingleSidebarMetadata
-  from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebarMetadata.vue'
+import AssetDetailSidebarActionsTeleportTarget from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsTeleportTarget.vue'
+import UploadQueueDialogSingleSidebarMetadata from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebarMetadata.vue'
 
 withDefaults(
   defineProps<{
@@ -40,6 +36,7 @@ withDefaults(
 )
 const emit = defineEmits<{
   (e: 'onSave'): void
+  (e: 'onSaveAndApply'): void
 }>()
 
 const { t } = useI18n()
@@ -81,6 +78,7 @@ const { activeTab } = storeToRefs(assetDetailStore)
             :is-active="activeTab === AssetDetailTabImageWithRoi.Info"
             :asset-type="assetType"
             @on-save="emit('onSave')"
+            @on-save-and-apply="emit('onSaveAndApply')"
           />
         </div>
         <div

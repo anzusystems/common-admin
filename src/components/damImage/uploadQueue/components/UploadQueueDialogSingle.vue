@@ -243,6 +243,44 @@ const onSave = async () => {
   }
 }
 
+const onSaveAndApply = async () => {
+  if (items.value.length === 0) return
+  // saveAndCloseButtonLoading.value = true
+  // v$.value.$touch()
+  // if (v$.value.$invalid) {
+  //   showValidationError()
+  //   saveAndCloseButtonLoading.value = false
+  //   return
+  // }
+  try {
+    const res = await bulkUpdateAssetsMetadata(damClient, items.value)
+    console.log(res)
+    emit(
+      'onApply',
+      items.value.map((item) => {
+        // todo take data from asset
+        return {
+          texts: {
+            description: '',
+            source: '',
+          },
+          dam: {
+            damId: item.fileId ?? '',
+            regionPosition: 0,
+          },
+          position: 1,
+        }
+      })
+    )
+    showRecordWas('updated')
+    await onStopConfirm()
+  } catch (error) {
+    showErrorsDefault(error)
+  } finally {
+    // saveAndCloseButtonLoading.value = false
+  }
+}
+
 watch(
   isDone,
   async (newValue) => {
@@ -424,6 +462,7 @@ onMounted(() => {
               :asset-main-file-status="assetMainFile ? assetMainFile.fileAttributes.status : undefined"
               :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
               @on-save="onSave"
+              @on-save-and-apply="onSaveAndApply"
             />
           </div>
         </div>
