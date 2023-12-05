@@ -400,7 +400,7 @@ onMounted(() => {
                     color="error"
                   />
                   <div class="text-error">
-                    {{ t('coreDam.asset.queueItem.error') }}
+                    {{ t('common.damImage.queueItem.error') }}
                   </div>
                   <div
                     v-if="item && item.error.message.length"

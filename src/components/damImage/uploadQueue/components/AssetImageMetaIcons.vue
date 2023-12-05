@@ -4,9 +4,10 @@ import { useI18n } from 'vue-i18n'
 import  { type AssetFileProperties, DamAssetType } from '@/types/coreDam/Asset'
 import {
   DIMENSIONS_CONFIG,
-  ICON_LOW,
+  ICON_LOW, ICON_RSS, ICON_SLOTS,
   LOW_DIMENSION
 } from '@/components/damImage/uploadQueue/composables/assetImageIconsConfig'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const props = withDefaults(
   defineProps<{
@@ -27,7 +28,7 @@ const checkDimensions = (icons: string[], titles: string[]) => {
   }
   if (props.assetFileProperties.width < LOW_DIMENSION || props.assetFileProperties.height < LOW_DIMENSION) {
     icons.push(ICON_LOW)
-    titles.push(t('coreDam.asset.metaIcons.low'))
+    titles.push(t('common.damImage.asset.metaIcons.low'))
     return
   }
   if (props.assetType !== DamAssetType.Video) return
@@ -61,11 +62,11 @@ const data = computed(() => {
 
   if (props.assetFileProperties.slotNames.length > 1) {
     icons.push(ICON_SLOTS)
-    titles.push(t('coreDam.asset.metaIcons.slots'))
+    titles.push(t('common.damImage.asset.metaIcons.slots'))
   }
   if (props.assetFileProperties.fromRss) {
     icons.push(ICON_RSS)
-    titles.push(t('coreDam.asset.metaIcons.rss'))
+    titles.push(t('common.damImage.asset.metaIcons.rss'))
   }
   checkDimensions(icons, titles)
   checkDistributions(icons, titles)

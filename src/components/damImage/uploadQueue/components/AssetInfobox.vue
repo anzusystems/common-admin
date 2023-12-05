@@ -28,7 +28,7 @@ const { t } = useI18n()
       dark
       type="warning"
     >
-      {{ t('coreDam.asset.detail.info.status.duplicate') }}
+      {{ t('common.damImage.asset.detail.info.status.duplicate') }}
     </VAlert>
   </div>
   <div
@@ -39,7 +39,7 @@ const { t } = useI18n()
       dark
       type="error"
     >
-      {{ t('coreDam.asset.detail.info.status.failed') }}
+      {{ t('common.damImage.asset.detail.info.status.failed') }}
       <div v-if="assetMainFileFailReason">
         <br>
         <AssetFileFailReasonChip :reason="assetMainFileFailReason" />
@@ -54,7 +54,7 @@ const { t } = useI18n()
       dark
       type="error"
     >
-      {{ t('coreDam.asset.detail.info.status.deleting') }}
+      {{ t('common.damImage.asset.detail.info.status.deleting') }}
     </VAlert>
   </div>
   <div
@@ -65,7 +65,7 @@ const { t } = useI18n()
       dark
       type="warning"
     >
-      {{ t('coreDam.asset.detail.info.status.draft') }}
+      {{ t('common.damImage.asset.detail.info.status.draft') }}
     </VAlert>
   </div>
 </template>

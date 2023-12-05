@@ -9,27 +9,27 @@ export function useAssetFileFailReason() {
   const assetFileFailReasonOptions = ref<ValueObjectOption<AssetFileFailReason>[]>([
     {
       value: AssetFileFailReason.None,
-      title: t('coreDam.asset.assetFileFailReason.none'),
+      title: t('common.damImage.asset.assetFileFailReason.none'),
     },
     {
       value: AssetFileFailReason.Unknown,
-      title: t('coreDam.asset.assetFileFailReason.unknown'),
+      title: t('common.damImage.asset.assetFileFailReason.unknown'),
     },
     {
       value: AssetFileFailReason.InvalidChecksum,
-      title: t('coreDam.asset.assetFileFailReason.invalidChecksum'),
+      title: t('common.damImage.asset.assetFileFailReason.invalidChecksum'),
     },
     {
       value: AssetFileFailReason.InvalidMimeType,
-      title: t('coreDam.asset.assetFileFailReason.invalidMimeType'),
+      title: t('common.damImage.asset.assetFileFailReason.invalidMimeType'),
     },
     {
       value: AssetFileFailReason.DownloadFailed,
-      title: t('coreDam.asset.assetFileFailReason.downloadFailed'),
+      title: t('common.damImage.asset.assetFileFailReason.downloadFailed'),
     },
     {
       value: AssetFileFailReason.InvalidSize,
-      title: t('coreDam.asset.assetFileFailReason.invalidSize'),
+      title: t('common.damImage.asset.assetFileFailReason.invalidSize'),
     },
   ])
 

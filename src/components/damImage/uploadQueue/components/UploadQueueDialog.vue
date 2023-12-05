@@ -198,7 +198,7 @@ const onSaveAndApply = async () => {
                   v-if="isUploading"
                   class="text-subtitle-2 d-flex align-center"
                 >
-                  {{ t('common.damImage.asset.upload.title') }}
+                  {{ t('common.damImage.upload.title') }}
                 </div>
                 <div
                   v-else

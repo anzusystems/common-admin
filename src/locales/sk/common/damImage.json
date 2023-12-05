@@ -15,6 +15,12 @@
       "addFromDam": "Pridať z DAM"
     }
   },
+  "queueItem": {
+    "edit": "Upraviť",
+    "displayTitle": "Meno originálu",
+    "error": "Chyba",
+    "copyAssetId": "Kopírovať asset ID"
+  },
   "asset": {
     "model": {
       "authors": "Autori",
@@ -37,6 +43,12 @@
         "roi": "Fókus"
       },
       "info": {
+        "status": {
+          "duplicate": "Hlavný súbor je duplikát.",
+          "draft": "Neobsahuje žiaden súbor.",
+          "deleting": "Čoskoro bude zmazaný.",
+          "failed": "Spracovávanie súboru zlyhalo."
+        },
         "metadata": "Metaúdaje",
         "file": "Info o súbore",
         "field": {
@@ -72,6 +84,24 @@
       "replaceAll": "Nahradiť všetko",
       "clearForm": "Vyčistiť",
       "general": "Hlavné"
+    },
+    "metaIcons": {
+      "low": "Nízka kvalita",
+      "slots": "Sloty",
+      "rss": "RSS",
+      "fullHd": "FullHD",
+      "2k": "2K",
+      "qhd": "QHD",
+      "4k": "4K",
+      "8k": "8K"
+    },
+    "assetFileFailReason": {
+      "none": "Žiadny",
+      "unknown": "Neznámy",
+      "invalidChecksum": "Neplatný kontrolný súčet",
+      "invalidMimeType": "Neplatný typ súboru",
+      "downloadFailed": "Sťahovanie zlyhalo",
+      "invalidSize": "Neplatná veľkosť"
     }
   },
   "upload": {

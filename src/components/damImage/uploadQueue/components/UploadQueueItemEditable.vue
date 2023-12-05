@@ -170,7 +170,7 @@ const showCancel = computed(() => {
               color="error"
             />
             <div class="text-error">
-              {{ t('coreDam.asset.queueItem.error') }}
+              {{ t('common.damImage.queueItem.error') }}
             </div>
             <div
               v-if="item.error.message.length"
@@ -200,17 +200,15 @@ const showCancel = computed(() => {
                   variant="text"
                   :disabled="!item.canEditMetadata"
                 >
-                  {{ t('coreDam.asset.queueItem.edit') }}
+                  {{ t('common.damImage.queueItem.edit') }}
                 </VBtn>
               </div>
               <div>
-                <div v-if="item.isDuplicate">
-                  isDuplicate
-                </div>
+                <div v-if="item.isDuplicate" />
                 <ATableCopyIdButton
                   v-if="item.assetId"
                   :id="item.assetId"
-                  button-t="coreDam.asset.queueItem.copyAssetId"
+                  button-t="common.damImage.queueItem.copyAssetId"
                   size="small"
                 />
                 <VBtn
@@ -244,7 +242,7 @@ const showCancel = computed(() => {
           class="my-2 mb-3 mt-0 text-caption"
         >
           <VCol class="pt-0">
-            {{ t('coreDam.asset.queueItem.displayTitle') }}: {{ item.displayTitle }}
+            {{ t('common.damImage.queueItem.displayTitle') }}: {{ item.displayTitle }}
             <span v-if="item.file?.size">&nbsp;({{ prettyBytes(item.file.size) }})</span>
           </VCol>
         </VRow>

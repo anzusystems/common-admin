@@ -9,31 +9,31 @@ import svgrss from '@/assets/dam-meta-icons/rss.svg'
 
 export const DIMENSIONS_CONFIG = [
   {
-    titleT: 'coreDam.asset.metaIcons.fullHd',
+    titleT: 'common.damImage.asset.metaIcons.fullHd',
     width: 1920,
     height: 1080,
     svgSrc: svgfhd,
   },
   {
-    titleT: 'coreDam.asset.metaIcons.2k',
+    titleT: 'common.damImage.asset.metaIcons.2k',
     width: 2048,
     height: 1080,
     svgSrc: svg2k,
   },
   {
-    titleT: 'coreDam.asset.metaIcons.qhd',
+    titleT: 'common.damImage.asset.metaIcons.qhd',
     width: 2560,
     height: 1440,
     svgSrc: svgqhd,
   },
   {
-    titleT: 'coreDam.asset.metaIcons.4k',
+    titleT: 'common.damImage.asset.metaIcons.4k',
     width: 3840,
     height: 2160,
     svgSrc: svg4k,
   },
   {
-    titleT: 'coreDam.asset.metaIcons.8k',
+    titleT: 'common.damImage.asset.metaIcons.8k',
     width: 7680,
     height: 4320,
     svgSrc: svg8k,
