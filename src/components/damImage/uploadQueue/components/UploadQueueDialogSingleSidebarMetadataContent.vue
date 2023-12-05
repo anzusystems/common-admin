@@ -137,14 +137,14 @@ const onAnyMetadataChange = () => {
     <VExpansionPanel
       v-if="asset"
       elevation="0"
-      :title="t('coreDam.asset.detail.info.file')"
+      :title="t('common.damImage.asset.detail.info.file')"
       value="file"
     >
       <VExpansionPanelText class="text-caption">
         <!-- all types -->
         <VRow>
           <VCol cols="3">
-            {{ t('coreDam.asset.detail.info.field.id') }}
+            {{ t('common.damImage.asset.detail.info.field.id') }}
           </VCol>
           <VCol cols="9">
             <ACopyText :value="asset.id" />
@@ -152,7 +152,7 @@ const onAnyMetadataChange = () => {
         </VRow>
         <VRow>
           <VCol cols="3">
-            {{ t('coreDam.asset.detail.info.field.type') }}
+            {{ t('common.damImage.asset.detail.info.field.type') }}
           </VCol>
           <VCol cols="9">
             {{ asset.attributes.assetType }}
@@ -177,7 +177,7 @@ const onAnyMetadataChange = () => {
         <div v-if="assetMainFile">
           <VRow>
             <VCol cols="3">
-              {{ t('coreDam.asset.detail.info.field.mainFileId') }}
+              {{ t('common.damImage.asset.detail.info.field.mainFileId') }}
             </VCol>
             <VCol cols="9">
               <ACopyText :value="assetMainFile.id" />
@@ -185,7 +185,7 @@ const onAnyMetadataChange = () => {
           </VRow>
           <VRow>
             <VCol cols="3">
-              {{ t('coreDam.asset.detail.info.field.mimeType') }}
+              {{ t('common.damImage.asset.detail.info.field.mimeType') }}
             </VCol>
             <VCol cols="9">
               {{ assetMainFile.fileAttributes.mimeType }}
@@ -193,7 +193,7 @@ const onAnyMetadataChange = () => {
           </VRow>
           <VRow>
             <VCol cols="3">
-              {{ t('coreDam.asset.detail.info.field.size') }}
+              {{ t('common.damImage.asset.detail.info.field.size') }}
             </VCol>
             <VCol cols="9">
               {{ prettyBytes(assetMainFile.fileAttributes.size) }}

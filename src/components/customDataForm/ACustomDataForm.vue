@@ -48,7 +48,9 @@ const elementsOther = computed(() => {
 })
 
 const showHideButtonText = computed(() => {
-  return showAll.value ? t('coreDam.asset.detail.metadataToggle.show') : t('coreDam.asset.detail.metadataToggle.hide')
+  return showAll.value
+    ? t('common.damImage.asset.detail.metadataToggle.show')
+    : t('common.damImage.asset.detail.metadataToggle.hide')
 })
 const showHideButtonIcon = computed(() => {
   return showAll.value ? 'mdi-minus' : 'mdi-plus'

@@ -117,7 +117,7 @@ const onAnyMetadataChange = () => {
     </VExpansionPanel>
     <VExpansionPanel
       elevation="0"
-      :title="t('coreDam.asset.detail.info.file')"
+      :title="t('common.damImage.asset.detail.info.file')"
       value="file"
     >
       <VExpansionPanelText class="text-caption">

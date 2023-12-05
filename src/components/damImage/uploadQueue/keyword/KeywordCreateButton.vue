@@ -125,7 +125,7 @@ const onConfirm = async () => {
       activator="parent"
       location="bottom"
     >
-      {{ t('coreDam.keyword.button.add') }}
+      {{ t('common.damImage.keyword.button.add') }}
     </VTooltip>
   </VBtn>
   <VDialog v-model="dialog">

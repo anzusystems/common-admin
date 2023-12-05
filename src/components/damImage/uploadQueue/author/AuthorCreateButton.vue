@@ -129,7 +129,7 @@ const { authorTypeOptions } = useAuthorType()
       activator="parent"
       location="bottom"
     >
-      {{ t('coreDam.author.button.add') }}
+      {{ t('common.damImage.author.button.add') }}
     </VTooltip>
   </VBtn>
   <VDialog v-model="dialog">

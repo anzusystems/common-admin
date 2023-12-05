@@ -6,13 +6,29 @@
     },
     "detail": {
       "toggleInfo": "Info karta",
+      "metadataToggle": {
+        "show": "Skryť viac detailov",
+        "hide": "Zobraziť viac detailov"
+      },
       "tabs": {
         "info": "Info",
         "roi": "Fókus"
       },
       "info": {
         "metadata": "Metaúdaje",
-        "file": "Info o súbore"
+        "file": "Info o súbore",
+        "field": {
+          "id": "Asset ID",
+          "mainFileId": "ID hlavného súboru",
+          "type": "Typ",
+          "mimeType": "Formát",
+          "size": "Veľkosť",
+          "dominantColor": "Farba",
+          "width": "Šírka",
+          "height": "Výška",
+          "ratio": "Pomer strán",
+          "animated": "Animované"
+        }
       }
     }
   },
@@ -24,6 +40,23 @@
     "stop": "Zatvoriť",
     "add": "Pridať do nahrávania",
     "stopConfirmQuestion": "Chcete ukončiť nahrávanie?"
+  },
+  "keyword": {
+    "button": {
+      "add": "Pridať kľúčové slovo"
+    }
+  },
+  "author": {
+    "authorType": {
+      "none": "Žiaden",
+      "internal": "Interný",
+      "external": "Externý",
+      "agency": "Agentúra"
+    },
+    "button": {
+      "add": "Pridať nového autora"
+    },
+    "conflicts": "Konflikt autorov"
   },
   "uploadErrors": {
     "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",
