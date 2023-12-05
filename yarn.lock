@@ -210,7 +210,6 @@ __metadata:
     "@vueuse/core": ^10.7.0
     "@vueuse/integrations": ^10.7.0
     axios: 1.6.2
-    cropperjs: ^1.6.1
     dayjs: 1.11.10
     eslint: 8.52.0
     eslint-plugin-vue: 9.19.2
@@ -2974,7 +2973,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cropperjs@npm:^1.5.6, cropperjs@npm:^1.6.1":
+"cropperjs@npm:^1.5.6":
   version: 1.6.1
   resolution: "cropperjs@npm:1.6.1"
   checksum: 951ec5e6786dabac70b02d7aa909d115c7f2652dfaab3e2bcc65c0bf8d329acec875b1f5ff5f3004abf9511686ccb2aa2765718c3176e74cc8e92ec78a42e7a7
@@ -8060,7 +8059,7 @@ __metadata:
   version: 5.0.0
   resolution: "vue-cropperjs@npm:5.0.0"
   dependencies:
-    cropperjs: "npm:^1.5.6"
+    cropperjs: ^1.5.6
   peerDependencies:
     vue: ">=3.0.0"
   checksum: 392d2b617201dbb2765f27fbe7854dbea05b8d7e195257c67deebddc577c6e45c6e4fedb8256da30724d930b4f96a6cb0b3c328efe3e869519f513db1b57536c
