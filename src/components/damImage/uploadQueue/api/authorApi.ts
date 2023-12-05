@@ -25,7 +25,12 @@ export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: n
     true
   )
 
-export const fetchAuthorList = (client: () => AxiosInstance, extSystemId: number, pagination: Pagination, filterBag: FilterBag) =>
+export const fetchAuthorList = (
+  client: () => AxiosInstance,
+  extSystemId: number,
+  pagination: Pagination,
+  filterBag: FilterBag
+) =>
   apiFetchList<DamAuthor[]>(
     client,
     END_POINT_LIST,

@@ -27,6 +27,7 @@ const END_POINT = '/adm/v1/asset'
 const BULK_METADATA_LIMIT = 20
 export const ENTITY = 'asset'
 export const SYSTEM_CORE_DAM = 'coreDam'
+const FETCH_BY_IDS_MAX_LIMIT = 25
 
 export interface AssetMetadataBulkItem {
   id: DocId
@@ -83,6 +84,53 @@ export const bulkUpdateAssetsMetadata = (client: () => AxiosInstance, items: Upl
       .catch((err) => {
         //
         return reject(err)
+      })
+  })
+}
+
+async function fetchAssetListByIdsSequence(client: () => AxiosInstance, ids: DocId[], licenceId: number) {
+  if (ids.length === 0) return Promise.resolve([])
+  const totalCalls = Math.ceil(ids.length / FETCH_BY_IDS_MAX_LIMIT)
+  const responses = []
+
+  for (let i = 0; i < totalCalls; i++) {
+    const offset = i * FETCH_BY_IDS_MAX_LIMIT
+    const reduced = ids.slice(offset, offset + FETCH_BY_IDS_MAX_LIMIT)
+    const res = await client().get(END_POINT + `/licence/${licenceId}/ids/${reduced.join(',')}`)
+    responses.push(res)
+  }
+  return responses
+}
+
+export const fetchAssetListByIds: (
+  client: () => AxiosInstance,
+  ids: DocId[],
+  licenceId: number
+) => Promise<AssetDetailItemDto[]> = (client: () => AxiosInstance, ids: DocId[], licenceId: number) => {
+  return new Promise((resolve, reject) => {
+    fetchAssetListByIdsSequence(client, ids, licenceId)
+      .then((responses) => {
+        if (ids.length === 0) {
+          return resolve([])
+        } else if (responses.length === 0) {
+          reject(responses)
+        } else if (
+          responses.every((res) => {
+            return res.status === HTTP_STATUS_OK
+          })
+        ) {
+          const final = []
+          for (let i = 0; i < responses.length; i++) {
+            final.push(...responses[i].data.data)
+          }
+          resolve(final as AssetDetailItemDto[])
+        } else {
+          reject(responses)
+        }
+      })
+      .catch((err) => {
+        //
+        reject(err)
       })
   })
 }

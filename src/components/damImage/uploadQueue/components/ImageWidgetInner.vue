@@ -5,7 +5,7 @@ import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
-import { cloneDeep, isNull, isUndefined } from '@/utils/common'
+import { cloneDeep, isNull, isString, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
@@ -23,10 +23,11 @@ import { computed, inject, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
-import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAsset, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
+import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 
 const props = withDefaults(
   defineProps<{
@@ -85,6 +86,7 @@ const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
 const metadataDialog = ref(false)
 const metadataDialogSaving = ref(false)
+const metadataDialogLoading = ref(false)
 
 const withoutImage = computed(() => {
   return isNull(props.modelValue)
@@ -151,7 +153,7 @@ const reload = async (newImage: ImageAware | undefined, newImageId: IntegerIdNul
   }
 }
 
-const reset =  () => {
+const reset = () => {
   resolvedSrc.value = imagePlaceholderPath
   resImage.value = null
   emit('update:modelValue', null)
@@ -165,13 +167,33 @@ watch(
   { immediate: true }
 )
 
-const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
+const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
+  metadataDialogLoading.value = true
+  imageStore.setImageDetail(null)
+  metadataDialog.value = true
+  let description = ''
+  let source = ''
   if (data.type === 'asset') {
     if (!data.value[0] || !data.value[0].mainFile) return
+    try {
+      const assetRes = await fetchAsset(damClient, data.value[0].id)
+      if (isString(assetRes.metadata.customData?.description)) {
+        description = assetRes.metadata.customData.description.trim()
+      }
+      if (assetRes.authors.length > 0) {
+        const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, assetRes.authors)
+        console.log(authorsRes)
+        source = authorsRes.map((author) =>
+          author.name
+        ).join(', ')
+      }
+    } catch (e) {
+      showErrorsDefault(e)
+    }
     const image: ImageCreateUpdateAware = {
       texts: {
-        description: 'todo',
-        source: 'todo',
+        description: description,
+        source: source,
       },
       dam: {
         damId: data.value[0].mainFile.id,
@@ -183,7 +205,7 @@ const onAssetSelectConfirm = (data: AssetSelectReturnData) => {
       image.id = props.modelValue
     }
     imageStore.setImageDetail(image)
-    metadataDialog.value = true
+    metadataDialogLoading.value = false
   }
 }
 
@@ -238,13 +260,13 @@ const onImageDelete = async () => {
 }
 
 const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
-    if (!items[0]) return
+  if (!items[0]) return
 
-    if (!isNull(props.modelValue)) {
-      items[0].id = props.modelValue
-    }
-    imageStore.setImageDetail(items[0])
-    metadataDialog.value = true
+  if (!isNull(props.modelValue)) {
+    items[0].id = props.modelValue
+  }
+  imageStore.setImageDetail(items[0])
+  metadataDialog.value = true
 }
 </script>
 
@@ -387,6 +409,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   <ImageDetailDialogMetadata
     v-model="metadataDialog"
     :saving="metadataDialogSaving"
+    :loading="metadataDialogLoading"
     @edit-asset="onEditAsset"
     @on-confirm="onMetadataDialogConfirm"
     @on-close="onMetadataDialogClose"

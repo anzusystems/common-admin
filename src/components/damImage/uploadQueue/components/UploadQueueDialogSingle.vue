@@ -215,7 +215,8 @@ const onSave = async () => {
   //   return
   // }
   try {
-    await bulkUpdateAssetsMetadata(damClient, items.value)
+    const res = await bulkUpdateAssetsMetadata(damClient, items.value)
+    console.log(res)
     emit(
       'onApply',
       items.value.map((item) => {

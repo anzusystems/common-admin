@@ -12,6 +12,7 @@ withDefaults(
   defineProps<{
     modelValue: boolean
     saving: boolean
+    loading: boolean
   }>(),
   {}
 )
@@ -54,7 +55,15 @@ const onEditAsset = () => {
       </ADialogToolbar>
       <VCardText>
         <div
-          v-if="imageDetail"
+          v-if="loading"
+          class="d-flex align-center justify-center"
+        >
+          <VProgressCircular
+            indeterminate
+          />
+        </div>
+        <div
+          v-else-if="imageDetail"
           class="position-relative"
         >
           <div class="my-4">
@@ -92,6 +101,7 @@ const onEditAsset = () => {
         <VSpacer />
         <ABtnPrimary
           :loading="saving"
+          :disabled="loading"
           @click.stop="onConfirm"
         >
           {{ t('common.button.confirm') }}
