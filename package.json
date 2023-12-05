@@ -1,6 +1,6 @@
 {
   "name": "@anzusystems/common-admin",
-  "packageManager": "yarn@4.0.2",
+  "packageManager": "yarn@3.6.4",
   "files": [
     "dist"
   ],
