@@ -7,7 +7,10 @@ import { useImageStore } from '@/components/damImage/uploadQueue/composables/ima
 import { storeToRefs } from 'pinia'
 import type { DocId } from '@/types/common'
 import { isNull } from '@/utils/common'
-import { useImageValidation } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import {
+  AImageMetadataValidationScopeSymbol,
+  useImageValidation
+} from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useAlerts } from '@/composables/system/alerts'
 
 withDefaults(
@@ -29,7 +32,7 @@ const { t } = useI18n()
 const imageStore = useImageStore()
 const { imageDetail } = storeToRefs(imageStore)
 
-const { v$ } = useImageValidation(imageDetail)
+const { v$ } = useImageValidation(imageDetail, AImageMetadataValidationScopeSymbol)
 
 const { showValidationError } = useAlerts()
 

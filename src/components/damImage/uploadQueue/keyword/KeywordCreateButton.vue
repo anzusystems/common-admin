@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ValidationScope } from '@/types/Validation'
-import { KeywordCreateValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { ADamKeywordCreateValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
@@ -37,7 +37,7 @@ const props = withDefaults(
     buttonClass: 'ml-2',
     dataCy: undefined,
     disabled: undefined,
-    validationScope: KeywordCreateValidationScopeSymbol,
+    validationScope: ADamKeywordCreateValidationScopeSymbol,
   }
 )
 const emit = defineEmits<{

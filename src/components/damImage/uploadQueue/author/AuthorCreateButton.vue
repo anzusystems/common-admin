@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ValidationScope } from '@/types/Validation'
-import { AuthorCreateValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { ADamAuthorCreateValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { useAuthorType } from '@/components/damImage/uploadQueue/author/AuthorType'
 import { isNull, isUndefined } from '@/utils/common'
@@ -39,7 +39,7 @@ const props = withDefaults(
     buttonClass: 'ml-2',
     dataCy: undefined,
     disabled: undefined,
-    validationScope: AuthorCreateValidationScopeSymbol,
+    validationScope: ADamAuthorCreateValidationScopeSymbol,
   }
 )
 const emit = defineEmits<{
