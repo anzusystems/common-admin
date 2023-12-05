@@ -42,8 +42,6 @@ const item = computed<UploadQueueItem | null>(() => {
   return items.value[0] ?? null
 })
 
-// const { asset, authorConflicts, metadataTouch } = useAssetDetailActions()
-
 const assetType = computed(() => {
   return DamAssetType.Image
 })
@@ -65,7 +63,7 @@ const onAnyMetadataChange = () => {
 
 <template>
   <VExpansionPanels
-    v-if="asset"
+    v-if="item"
     v-model="panels"
     multiple
     class="v-expansion-panels--compact"
@@ -76,62 +74,66 @@ const onAnyMetadataChange = () => {
       value="metadata"
     >
       <VExpansionPanelText>
-        <AssetCustomMetadataForm
-          v-if="item"
-          v-model="item.customData"
-          :asset-type="assetType"
-          @any-change="onAnyMetadataChange"
-        >
-          <template #after-pinned>
-            <VRow
-              v-if="damConfigExtSystem[assetType].keywords.enabled"
-              dense
-              class="my-2"
-            >
-              <VCol>
-                <ASystemEntityScope
-                  subject="keyword"
-                  system="dam"
-                >
-                  <KeywordRemoteAutocompleteWithCached
-                    v-model="asset.keywords"
-                    :label="t('common.damImage.asset.model.keywords')"
-                    data-cy="custom-field-keywords"
-                    clearable
-                    multiple
-                    :required="damConfigExtSystem[assetType].keywords.required"
-                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
-                    @update:model-value="onAnyMetadataChange"
-                  />
-                </ASystemEntityScope>
-              </VCol>
-            </VRow>
-            <VRow
-              v-if="damConfigExtSystem[assetType].authors.enabled"
-              dense
-              class="my-2"
-            >
-              <VCol>
-                <ASystemEntityScope
-                  subject="author"
-                  system="dam"
-                >
-                  <AuthorRemoteAutocompleteWithCached
-                    v-model="asset.authors"
-                    :label="t('common.damImage.asset.model.authors')"
-                    :author-conflicts="authorConflicts"
-                    data-cy="custom-field-authors"
-                    clearable
-                    multiple
-                    :required="damConfigExtSystem[assetType].authors.enabled"
-                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
-                    @update:model-value="onAnyMetadataChange"
-                  />
-                </ASystemEntityScope>
-              </VCol>
-            </VRow>
-          </template>
-        </AssetCustomMetadataForm>
+        <VForm :disabled="!item.canEditMetadata">
+          <AssetCustomMetadataForm
+            v-if="item"
+            v-model="item.customData"
+            :asset-type="assetType"
+            @any-change="onAnyMetadataChange"
+          >
+            <template #after-pinned>
+              <VRow
+                v-if="damConfigExtSystem[assetType].keywords.enabled"
+                dense
+                class="my-2"
+              >
+                <VCol>
+                  <ASystemEntityScope
+                    subject="keyword"
+                    system="dam"
+                  >
+                    <KeywordRemoteAutocompleteWithCached
+                      v-model="item.keywords"
+                      :label="t('common.damImage.asset.model.keywords')"
+                      data-cy="custom-field-keywords"
+                      clearable
+                      multiple
+                      :disabled="!item.canEditMetadata"
+                      :required="damConfigExtSystem[assetType].keywords.required"
+                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                      @update:model-value="onAnyMetadataChange"
+                    />
+                  </ASystemEntityScope>
+                </VCol>
+              </VRow>
+              <VRow
+                v-if="damConfigExtSystem[assetType].authors.enabled"
+                dense
+                class="my-2"
+              >
+                <VCol>
+                  <ASystemEntityScope
+                    subject="author"
+                    system="dam"
+                  >
+                    <AuthorRemoteAutocompleteWithCached
+                      v-model="item.authors"
+                      :label="t('common.damImage.asset.model.authors')"
+                      :author-conflicts="authorConflicts"
+                      data-cy="custom-field-authors"
+                      clearable
+                      multiple
+                      :disabled="!item.canEditMetadata"
+                      :required="damConfigExtSystem[assetType].authors.enabled"
+                      :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                      @update:model-value="onAnyMetadataChange"
+                    />
+                  </ASystemEntityScope>
+                </VCol>
+              </VRow>
+            </template>
+          </AssetCustomMetadataForm>
+        </VForm>
       </VExpansionPanelText>
     </VExpansionPanel>
     <VExpansionPanel

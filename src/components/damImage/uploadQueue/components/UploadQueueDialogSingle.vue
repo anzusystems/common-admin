@@ -248,6 +248,7 @@ const onSaveAndApply = async () => {
     showRecordWas('updated')
     if (isString(assetsMetadataRes[0].customData?.description)) {
       description = assetsMetadataRes[0].customData.description.trim()
+      console.log(description)
     }
     if (assetsMetadataRes[0].authors.length > 0) {
       const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, assetsMetadataRes[0].authors)
