@@ -1,16 +1,12 @@
 <script lang="ts" setup>
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { IntegerId } from '@/types/common'
 import { onMounted, provide, ref } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
-import ASortableNested from '@/components/sortable/ASortableNested.vue'
 
-/**
- * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
- */
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerId[] // initial ids, updated only when save is called

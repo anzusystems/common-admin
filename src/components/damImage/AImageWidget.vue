@@ -1,19 +1,13 @@
 <script lang="ts" setup>
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import { onMounted, provide, ref, toRaw, watch } from 'vue'
+import { onMounted, provide, ref } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageAware } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import ImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
-import { cloneDeep, isNull } from '@/utils/common'
-import { fetchImage } from '@/components/damImage/uploadQueue/api/imageApi'
 
-/**
- * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
- */
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
