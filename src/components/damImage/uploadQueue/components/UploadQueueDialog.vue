@@ -198,13 +198,13 @@ const onSaveAndApply = async () => {
                   v-if="isUploading"
                   class="text-subtitle-2 d-flex align-center"
                 >
-                  {{ t('coreDam.asset.upload.title') }}
+                  {{ t('common.damImage.asset.upload.title') }}
                 </div>
                 <div
                   v-else
                   class="text-subtitle-2 d-flex align-center text-green-darken-3 font-weight-bold"
                 >
-                  {{ t('coreDam.asset.upload.titleDone') }}
+                  {{ t('common.damImage.upload.titleDone') }}
                 </div>
               </div>
             </div>
@@ -220,7 +220,9 @@ const onSaveAndApply = async () => {
                 width="2"
                 class="mr-1"
               />
-              <div>{{ t('coreDam.asset.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{ queueTotalCount }}</div>
+              <div>
+                {{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{ queueTotalCount }}
+              </div>
             </div>
             <div class="d-flex align-center">
               <VDivider
@@ -237,7 +239,7 @@ const onSaveAndApply = async () => {
                 :disabled="saveButtonLoading"
                 @click.stop="onSaveAndApply"
               >
-                {{ t('coreDam.asset.upload.saveAndClose') }}
+                {{ t('common.damImage.upload.saveAndApply') }}
               </ABtnPrimary>
               <VBtn
                 variant="text"
@@ -254,7 +256,7 @@ const onSaveAndApply = async () => {
                   activator="parent"
                   location="bottom"
                 >
-                  {{ t('coreDam.asset.upload.save') }}
+                  {{ t('common.damImage.upload.save') }}
                 </VTooltip>
               </VBtn>
               <AFileInput
@@ -301,7 +303,7 @@ const onSaveAndApply = async () => {
                   activator="parent"
                   location="bottom"
                 >
-                  {{ t('coreDam.asset.uploadQueueSidebar.title') }}
+                  {{ t('common.damImage.asset.massOperations.title') }}
                 </VTooltip>
               </VBtn>
               <UploadQueueButtonStop

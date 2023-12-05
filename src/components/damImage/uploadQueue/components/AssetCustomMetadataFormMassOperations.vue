@@ -72,7 +72,7 @@ const elements = computed(() => {
               activator="parent"
               location="bottom"
             >
-              {{ t('coreDam.asset.massOperations.fillOneEmpty') }}
+              {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
             </VTooltip>
           </VBtn>
           <VBtn
@@ -86,7 +86,7 @@ const elements = computed(() => {
               activator="parent"
               location="bottom"
             >
-              {{ t('coreDam.asset.massOperations.replaceOne') }}
+              {{ t('common.damImage.asset.massOperations.replaceOne') }}
             </VTooltip>
           </VBtn>
         </div>

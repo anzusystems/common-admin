@@ -10,13 +10,21 @@
       "edit": "Upraviť obrázok"
     },
     "button": {
-      "editAsset": "Upraviť v DAM"
+      "editAsset": "Upraviť v DAM",
+      "upload": "Nahrať",
+      "addFromDam": "Pridať z DAM"
     }
   },
   "asset": {
     "model": {
       "authors": "Autori",
       "keywords": "Kľúčové slová"
+    },
+    "assetType": {
+      "image": "Obrázok",
+      "audio": "Audio",
+      "video": "Video",
+      "document": "Dokument"
     },
     "detail": {
       "toggleInfo": "Info karta",
@@ -54,6 +62,16 @@
           "rotateCounterclockwise": "Otočiť doľava"
         }
       }
+    },
+    "massOperations": {
+      "title": "Hromadné operácie",
+      "description": "Hromadná úprava metaúdajov. Ak chcete upravovať metaúdaje po riadkoch, použite tlačidlo vedľa riadka. Ak chcete upraviť všetky riadky naraz, použite tlačidlá úplne dole.",
+      "fillOneEmpty": "Vyplňte prázdne pole",
+      "fillAllEmpty": "Vyplniť len prázdne",
+      "replaceOne": "Nahradiť všade",
+      "replaceAll": "Nahradiť všetko",
+      "clearForm": "Vyčistiť",
+      "general": "Hlavné"
     }
   },
   "upload": {
@@ -63,6 +81,10 @@
     "done": "Hotovo",
     "stop": "Zatvoriť",
     "add": "Pridať do nahrávania",
+    "save": "Uložiť a pokračovať",
+    "saveAndApply": "Uložiť a použiť",
+    "title": "Nahrávanie",
+    "titleDone": "Nahrávanie ukončené",
     "stopConfirmQuestion": "Chcete ukončiť nahrávanie?"
   },
   "keyword": {

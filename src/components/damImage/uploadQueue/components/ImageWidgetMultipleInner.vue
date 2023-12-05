@@ -31,6 +31,7 @@ import { useSortable, type UseSortableReturn } from '@vueuse/integrations/useSor
 import type { SortableEvent } from 'sortablejs'
 import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -85,6 +86,8 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   DamAssetType.Image,
   imageWidgetExtSystemConfig.value
 )
+
+const { t } = useI18n()
 
 const imagesLoading = ref(false)
 
@@ -341,7 +344,7 @@ onMounted(() => {
             ref="uploadButtonComponent"
             v-bind="fileInputProps"
           >
-            Upload
+            {{ t('common.damImage.image.button.upload') }}
           </VBtn>
         </template>
       </AFileInput>
@@ -349,7 +352,7 @@ onMounted(() => {
         class="mr-2"
         @click="actionLibrary"
       >
-        Add from library
+        {{ t('common.damImage.image.button.addFromDam') }}
       </VBtn>
     </div>
     <AAssetSelect

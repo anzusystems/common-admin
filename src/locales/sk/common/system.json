@@ -55,7 +55,7 @@
     "backButton": "Vráť ma na prihlásenie"
   },
   "dropzone": {
-    "dropPossibility": "You can drop file(s) here",
-    "dropHere": "Drop file(s) here"
+    "dropPossibility": "Sem presuň nahrávané súbory",
+    "dropHere": "Sem presuň súbor"
   }
 }

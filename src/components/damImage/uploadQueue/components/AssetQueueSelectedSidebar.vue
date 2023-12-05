@@ -117,11 +117,11 @@ onMounted(() => {
   <div class="sidebar-info d-flex w-100 h-100 flex-column">
     <div class="w-100 d-flex flex-column">
       <VTabs class="sidebar-info__tabs">
-        <VTab>{{ t('coreDam.asset.massOperations.title') }}</VTab>
+        <VTab>{{ t('common.damImage.asset.massOperations.title') }}</VTab>
       </VTabs>
       <div class="sidebar-info__content">
         <div class="text-caption pa-3">
-          {{ t('coreDam.asset.massOperations.description') }}
+          {{ t('common.damImage.asset.massOperations.description') }}
         </div>
         <VExpansionPanels
           v-model="panels"
@@ -130,7 +130,7 @@ onMounted(() => {
         >
           <VExpansionPanel
             elevation="0"
-            :title="t('coreDam.asset.massOperations.general')"
+            :title="t('common.damImage.asset.massOperations.general')"
             value="general"
           >
             <VExpansionPanelText>
@@ -165,7 +165,7 @@ onMounted(() => {
                           activator="parent"
                           location="bottom"
                         >
-                          {{ t('coreDam.asset.massOperations.fillOneEmpty') }}
+                          {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
                         </VTooltip>
                       </VBtn>
                       <VBtn
@@ -179,7 +179,7 @@ onMounted(() => {
                           activator="parent"
                           location="bottom"
                         >
-                          {{ t('coreDam.asset.massOperations.replaceOne') }}
+                          {{ t('common.damImage.asset.massOperations.replaceOne') }}
                         </VTooltip>
                       </VBtn>
                     </div>
@@ -217,7 +217,7 @@ onMounted(() => {
                           activator="parent"
                           location="bottom"
                         >
-                          {{ t('coreDam.asset.massOperations.fillOneEmpty') }}
+                          {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
                         </VTooltip>
                       </VBtn>
                       <VBtn
@@ -231,7 +231,7 @@ onMounted(() => {
                           activator="parent"
                           location="bottom"
                         >
-                          {{ t('coreDam.asset.massOperations.replaceOne') }}
+                          {{ t('common.damImage.asset.massOperations.replaceOne') }}
                         </VTooltip>
                       </VBtn>
                     </div>
@@ -243,7 +243,7 @@ onMounted(() => {
           <VExpansionPanel
             v-if="assetTypes.includes(DamAssetType.Image)"
             elevation="0"
-            :title="t('coreDam.asset.assetType.image')"
+            :title="t('common.damImage.asset.assetType.image')"
             :value="DamAssetType.Image"
           >
             <VExpansionPanelText>
@@ -264,7 +264,7 @@ onMounted(() => {
           size="small"
           @click.stop="fillAll(false)"
         >
-          {{ t('coreDam.asset.massOperations.fillAllEmpty') }}
+          {{ t('common.damImage.asset.massOperations.fillAllEmpty') }}
         </VBtn>
         <VBtn
           class="mr-2"
@@ -272,14 +272,14 @@ onMounted(() => {
           size="small"
           @click.stop="fillAll(true)"
         >
-          {{ t('coreDam.asset.massOperations.replaceAll') }}
+          {{ t('common.damImage.asset.massOperations.replaceAll') }}
         </VBtn>
         <VBtn
           variant="text"
           size="small"
           @click.stop="clearForm"
         >
-          {{ t('coreDam.asset.massOperations.clearForm') }}
+          {{ t('common.damImage.asset.massOperations.clearForm') }}
         </VBtn>
       </div>
     </div>
