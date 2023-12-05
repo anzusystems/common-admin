@@ -281,10 +281,50 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
-  function removeByIndex (queueKey: UploadQueueKey, index: number) {}
+  function removeByIndex (queueKey: UploadQueueKey, index: number) {
+    const queue = queues.value.get(queueKey)
+    if (!queue || !queue.items[index]) return
+    queue.items.splice(index, 1)
+    recalculateQueueCounts(queueKey)
+  }
 
-  async function stopItemUpload(queueId: string, queueItem: UploadQueueItem, index: number) {
+  async function stopItemUpload(queueKey: string, queueItem: UploadQueueItem, index: number) {
+    const queue = queues.value.get(queueKey)
+    if (!queue || queue.items.length === 0) return
+    queueItem.status = UploadQueueItemStatus.Stop
+    if (queueItem.latestChunkCancelToken) {
+      uploadStop(queueItem.latestChunkCancelToken)
+    }
+    removeByIndex(queueKey, index)
+    processUpload(queueKey)
+  }
 
+  async function updateFromDetail(asset: AssetDetailItemDto) {
+    const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
+    try {
+      const assetRes = await fetchAsset(damClient, asset.id)
+      queues.value.forEach((queue, queueKey) => {
+        queue.items.forEach((item) => {
+          if (item.assetId === assetRes.id && item.type) {
+            clearTimeout(item.notificationFallbackTimer)
+            item.keywords = assetRes.keywords
+            item.authors = assetRes.authors
+            item.customData = assetRes.metadata.customData
+            updateNewNames(assetRes.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
+            updateNewNames(assetRes.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
+            item.authorConflicts = getAuthorConflicts(assetRes.metadata.authorSuggestions)
+            addToCachedKeywords(item.keywords)
+            addToCachedAuthors(item.authors)
+            addToCachedAuthors(item.authorConflicts)
+          }
+        })
+        recalculateQueueCounts(queueKey)
+        fetchCachedAuthors()
+        fetchCachedKeywords()
+      })
+    } catch (e) {
+      //
+    }
   }
 
   function getQueueTotalCount (queueKey: UploadQueueKey) {
@@ -370,5 +410,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     getQueueProcessedCount,
     stopUpload,
     getQueueItemsTypes,
+    updateFromDetail,
   }
 })

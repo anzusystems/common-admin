@@ -8,7 +8,11 @@ import { useTheme } from '@/composables/themeSettings'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/composables/system/alerts'
-import { type AssetMetadataBulkItem, bulkUpdateAssetsMetadata } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  type AssetMetadataBulkItem,
+  bulkUpdateAssetsMetadata,
+  fetchAsset,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
@@ -20,6 +24,7 @@ import { generateUUIDv1 } from '@/utils/generator'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { storeToRefs } from 'pinia'
+import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 
 const props = withDefaults(
   defineProps<{
@@ -173,6 +178,23 @@ const onSaveAndApply = async () => {
     saveAndCloseButtonLoading.value = false
   }
 }
+
+const assetDetailStore = useAssetDetailStore()
+const { loading, dialog, updateUploadStore } = storeToRefs(assetDetailStore)
+
+const showDetail = async (id: DocId) => {
+  try {
+    assetDetailStore.setAsset(null)
+    loading.value = true
+    dialog.value = true
+    updateUploadStore.value = true
+    assetDetailStore.setAsset(await fetchAsset(damClient, id))
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -218,9 +240,7 @@ const onSaveAndApply = async () => {
                 width="2"
                 class="mr-1"
               />
-              <div>
-                {{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{ queueTotalCount }}
-              </div>
+              <div>{{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{ queueTotalCount }}</div>
             </div>
             <div class="d-flex align-center">
               <VDivider
@@ -315,6 +335,7 @@ const onSaveAndApply = async () => {
           <UploadQueueEditable
             :queue-key="queueKey"
             :mass-operations="uploadQueueSidebar"
+            @show-detail="showDetail"
           />
         </div>
         <AImageDropzone

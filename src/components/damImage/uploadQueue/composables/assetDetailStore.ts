@@ -16,6 +16,7 @@ export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
   const loading = ref(false)
   const metadataAreTouched = ref(false)
   const activeTab = ref<AssetDetailTabImageWithRoi>(AssetDetailTabImageWithRoi.Default)
+  const updateUploadStore = ref(false)
 
   function setAsset(data: AssetDetailItemDto | null) {
     asset.value = data
@@ -30,9 +31,10 @@ export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
     authorConflicts,
     asset,
     loading,
-    setAsset,
     dialog,
-    reset,
     activeTab,
+    updateUploadStore,
+    setAsset,
+    reset,
   }
 })

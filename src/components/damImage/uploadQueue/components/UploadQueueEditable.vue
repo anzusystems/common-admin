@@ -6,6 +6,7 @@ import UploadQueueItemEditable from '@/components/damImage/uploadQueue/component
 import AssetQueueSelectedSidebar from '@/components/damImage/uploadQueue/components/AssetQueueSelectedSidebar.vue'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import type { DocId } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
@@ -17,6 +18,10 @@ const props = withDefaults(
     disableDoneAnimation: false,
   }
 )
+
+const emit = defineEmits<{
+  (e: 'showDetail', data: DocId): void
+}>()
 
 const uploadQueuesStore = useUploadQueuesStore()
 
@@ -65,6 +70,7 @@ onMounted(() => {
             :disable-done-animation="disableDoneAnimation"
             @cancel-item="cancelItem"
             @remove-item="removeItem"
+            @show-detail="emit('showDetail', $event)"
           />
         </VRow>
       </div>

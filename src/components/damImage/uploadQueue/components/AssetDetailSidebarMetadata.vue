@@ -13,6 +13,7 @@ import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMet
 import { updateAssetMetadata } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 
 withDefaults(
   defineProps<{
@@ -31,8 +32,8 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const assetDetailStore = useAssetDetailStore()
-const { asset } = storeToRefs(assetDetailStore)
-// const uploadQueueStore = useUploadQueuesStore()
+const { asset, updateUploadStore } = storeToRefs(assetDetailStore)
+const uploadQueueStore = useUploadQueuesStore()
 
 const saveButtonLoading = ref(false)
 
@@ -52,10 +53,10 @@ const onSave = async () => {
     return
   }
   try {
-    await updateAssetMetadata(damClient, asset.value) // todo
-    // if (view.value === 'queue') {
-    //   uploadQueueStore.updateAssetMetadata(asset.value)
-    // }
+    await updateAssetMetadata(damClient, asset.value)
+    if (updateUploadStore.value && !isNull(asset.value)) {
+      await uploadQueueStore.updateFromDetail(asset.value)
+    }
     showRecordWas('updated')
   } catch (error) {
     showErrorsDefault(error)
