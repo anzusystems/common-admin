@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-publish-pkg:
-    name: Build and push package on node 18
+    name: Build and push package on node 20
     runs-on: 'ubuntu-latest'
     steps:
       - name: Checkout
@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'yarn'
           cache-dependency-path: 'yarn.lock'
 
