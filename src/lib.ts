@@ -72,6 +72,9 @@ import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
+import AImageWidget from '@/components/damImage/AImageWidget.vue'
+import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
+import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
@@ -413,6 +416,9 @@ export {
   ASubjectSelect,
   ACustomDataForm,
   ACustomDataFormElement,
+  AImageWidget,
+  AImageWidgetSimple,
+  AImageWidgetMultiple,
 
   // Dam
   AAssetSelect,
