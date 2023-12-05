@@ -55,9 +55,6 @@ const removeItem = () => {
             }"
             icon="mdi-drag"
           />
-          <div class="text-caption">
-            {{ image.position }}
-          </div>
         </div>
         <AImageWidgetSimple
           :model-value="image.id"
