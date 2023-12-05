@@ -7,6 +7,7 @@ import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import AssetCustomMetadataFormMassOperations from '@/components/damImage/uploadQueue/components/AssetCustomMetadataFormMassOperations.vue'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
+import { useUploadQueueMassOperations } from '@/components/damImage/uploadQueue/composables/uploadQueueMassOperations'
 
 const props = withDefaults(
   defineProps<{
@@ -25,68 +26,69 @@ const panels = ref<Array<string>>(['general'])
 
 const uploadQueuesStore = useUploadQueuesStore()
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { replaceEmptyCustomDataValue, replaceEmptyAuthors, replaceEmptyKeywords } = useUploadQueueMassOperations(
+  props.queueKey
+)
+
 const fillEmptyField = (data: { assetType: DamAssetType; elementProperty: string; value: any }) => {
-  // uploadQueuesStore.queueItemsReplaceEmptyCustomDataValue(props.queueId, data)
+  replaceEmptyCustomDataValue(data)
 }
 const replaceField = (data: { assetType: DamAssetType; elementProperty: string; value: any }) => {
-  // uploadQueuesStore.queueItemsReplaceEmptyCustomDataValue(props.queueId, data, true)
+  replaceEmptyCustomDataValue(data, true)
 }
 const fillEmptyKeywords = () => {
-  // uploadQueuesStore.queueItemsReplaceEmptyKeywords(props.queueId, massOperationsKeywords.value)
+  replaceEmptyKeywords(massOperationsKeywords.value)
 }
 const replaceKeywords = () => {
-  // uploadQueuesStore.queueItemsReplaceEmptyKeywords(props.queueId, massOperationsKeywords.value, true)
+  replaceEmptyKeywords(massOperationsKeywords.value, true)
 }
 const fillEmptyAuthors = () => {
-  // uploadQueuesStore.queueItemsReplaceEmptyAuthors(props.queueId, massOperationsAuthors.value)
+  replaceEmptyAuthors(massOperationsAuthors.value)
 }
 const replaceAuthors = () => {
-  // uploadQueuesStore.queueItemsReplaceEmptyAuthors(props.queueId, massOperationsAuthors.value, true)
+  replaceEmptyAuthors(massOperationsAuthors.value, true)
 }
 const fillAll = (forceReplace = false) => {
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.image)) {
-    // uploadQueuesStore.queueItemsReplaceEmptyCustomDataValue(
-    //   props.queueId,
-    //   {
-    //     assetType: DamAssetType.Image,
-    //     elementProperty,
-    //     value,
-    //   },
-    //   forceReplace
-    // )
+    replaceEmptyCustomDataValue(
+      {
+        assetType: DamAssetType.Image,
+        elementProperty,
+        value,
+      },
+      forceReplace
+    )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.video)) {
-    // uploadQueuesStore.queueItemsReplaceEmptyCustomDataValue(
-    //   props.queueId,
-    //   {
-    //     assetType: DamAssetType.Video,
-    //     elementProperty,
-    //     value,
-    //   },
-    //   forceReplace
-    // )
+    replaceEmptyCustomDataValue(
+      {
+        assetType: DamAssetType.Video,
+        elementProperty,
+        value,
+      },
+      forceReplace
+    )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.audio)) {
-    // uploadQueuesStore.queueItemsReplaceEmptyCustomDataValue(
-    //   props.queueId,
-    //   {
-    //     assetType: DamAssetType.Audio,
-    //     elementProperty,
-    //     value,
-    //   },
-    //   forceReplace
-    // )
+    replaceEmptyCustomDataValue(
+      {
+        assetType: DamAssetType.Audio,
+        elementProperty,
+        value,
+      },
+      forceReplace
+    )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.document)) {
-    // uploadQueuesStore.queueItemsReplaceEmptyCustomDataValue(
-    //   props.queueId,
-    //   {
-    //     assetType: DamAssetType.Document,
-    //     elementProperty,
-    //     value,
-    //   },
-    //   forceReplace
-    // )
+    replaceEmptyCustomDataValue(
+      {
+        assetType: DamAssetType.Document,
+        elementProperty,
+        value,
+      },
+      forceReplace
+    )
   }
   if (forceReplace) {
     replaceAuthors()
