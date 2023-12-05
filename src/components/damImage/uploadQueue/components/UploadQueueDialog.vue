@@ -124,7 +124,9 @@ const metadataMap = async (queueItems: UploadQueueItem[], bulkItems: AssetMetada
     showErrorsDefault(e)
   }
 
-  const queueItemsWithAssetId = queueItems.filter((queueItem) => !isNull(queueItem.assetId))
+  const queueItemsWithAssetId = queueItems.filter(
+    (queueItem) => !isNull(queueItem.assetId) && !isNull(queueItem.fileId)
+  )
 
   return queueItemsWithAssetId.map((queueItem) => {
     maxPosition.value++
@@ -143,7 +145,7 @@ const metadataMap = async (queueItems: UploadQueueItem[], bulkItems: AssetMetada
         source: authorNames.join(', '),
       },
       dam: {
-        damId: queueItem.fileId,
+        damId: queueItem.fileId as DocId,
         regionPosition: 0,
       },
       position: maxPosition.value,
