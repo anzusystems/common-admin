@@ -16,7 +16,7 @@
     }
   },
   "queueItem": {
-    "edit": "Upraviť",
+    "edit": "Upraviť v DAM",
     "displayTitle": "Meno originálu",
     "error": "Chyba",
     "copyAssetId": "Kopírovať asset ID"

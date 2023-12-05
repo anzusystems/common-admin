@@ -17,6 +17,7 @@ import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/component
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
+import { isNull } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
@@ -39,6 +40,7 @@ const emit = defineEmits<{
   (e: 'update:authors', data: DocId[]): void
   (e: 'cancelItem', data: { index: number; item: UploadQueueItem; queueKey: string }): void
   (e: 'removeItem', index: number): void
+  (e: 'showDetail', data: DocId): void
 }>()
 
 const IMAGE_ASPECT_RATIO = 16 / 9
@@ -93,16 +95,16 @@ const uploadProgress = computed(() => {
   return props.item.progress.progressPercent
 })
 
-const remove = async () => {
-  if (!props.item.assetId) return
-  try {
-    // await deleteAsset(props.item.assetId)
-    emit('removeItem', props.index)
-    showRecordWas('deleted')
-  } catch (error) {
-    showErrorsDefault(error)
-  }
-}
+// const remove = async () => {
+//   if (!props.item.assetId) return
+//   try {
+//     // await deleteAsset(props.item.assetId)
+//     emit('removeItem', props.index)
+//     showRecordWas('deleted')
+//   } catch (error) {
+//     showErrorsDefault(error)
+//   }
+// }
 const imageSrc = computed(() => {
   return props.item.imagePreview ? props.item.imagePreview.url : undefined
 })
@@ -125,6 +127,11 @@ const showCancel = computed(() => {
     props.item.status
   )
 })
+
+const showDetail = async () => {
+  if (isNull(props.item.assetId)) return
+  emit('showDetail', props.item.assetId)
+}
 </script>
 
 <template>
@@ -196,6 +203,7 @@ const showCancel = computed(() => {
                   size="small"
                   variant="text"
                   :disabled="!item.canEditMetadata"
+                  @click.stop="showDetail"
                 >
                   {{ t('common.damImage.queueItem.edit') }}
                 </VBtn>
@@ -223,12 +231,12 @@ const showCancel = computed(() => {
                     {{ t('common.button.cancel') }}
                   </VTooltip>
                 </VBtn>
-                <AActionDeleteButton
-                  variant="icon"
-                  :disabled="!item.canEditMetadata && !item.isDuplicate"
-                  button-class=""
-                  @delete-record="remove"
-                />
+                <!--                <AActionDeleteButton-->
+                <!--                  variant="icon"-->
+                <!--                  :disabled="!item.canEditMetadata && !item.isDuplicate"-->
+                <!--                  button-class=""-->
+                <!--                  @delete-record="remove"-->
+                <!--                />-->
               </div>
             </div>
           </VCol>
