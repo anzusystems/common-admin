@@ -10,9 +10,12 @@
       "edit": "Upraviť obrázok"
     },
     "button": {
+      "options": "Upraviť obrazok",
       "editAsset": "Upraviť v DAM",
       "upload": "Nahrať",
-      "addFromDam": "Pridať z DAM"
+      "addFromDam": "Pridať z DAM",
+      "replaceFromDam": "Vymenit z DAM",
+      "removeImage": "Odstrannit obrazok"
     }
   },
   "queueItem": {

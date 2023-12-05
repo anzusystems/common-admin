@@ -28,6 +28,7 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -70,6 +71,8 @@ const imageWidgetExtSystemConfig = inject<ShallowRef<DamExtSystemConfig> | undef
 if (isUndefined(imageWidgetExtSystemConfig)) {
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
+
+const { t } = useI18n()
 
 const { showErrorsDefault } = useAlerts()
 
@@ -286,14 +289,14 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
             class="mr-2 mb-2"
             @click="actionEditMeta"
           >
-            Edit metadata
+            {{ t('common.damImage.image.meta.edit') }}
           </VBtn>
           <VBtn
             class="mr-2 mb-2"
             @click="actionLibrary"
           >
-            <span v-if="imageLoaded">Replace from library</span>
-            <span v-else>Choose from library</span>
+            <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
+            <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
           </VBtn>
           <AFileInput
             :file-input-key="uploadQueue?.fileInputKey"
@@ -303,7 +306,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
           >
             <template #activator="{ props: fileInputProps }">
               <VBtn v-bind="fileInputProps">
-                Upload
+                {{ t('common.damImage.image.button.upload') }}
               </VBtn>
             </template>
           </AFileInput>
@@ -319,7 +322,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
             activator="parent"
             location="top"
           >
-            Image options
+            {{ t('common.damImage.image.button.options') }}
           </VTooltip>
           <VMenu
             v-model="clickMenuOpened"
@@ -333,12 +336,12 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
                   v-if="imageLoaded"
                   @click="actionEditMeta"
                 >
-                  <VListItemTitle>Update metadata</VListItemTitle>
+                  <VListItemTitle>{{ t('common.damImage.image.meta.edit') }}</VListItemTitle>
                 </VListItem>
                 <VListItem @click="actionLibrary">
                   <VListItemTitle>
-                    <span v-if="imageLoaded">Replace from library</span>
-                    <span v-else>Choose from library</span>
+                    <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
+                    <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
                   </VListItemTitle>
                 </VListItem>
                 <AFileInput
@@ -349,7 +352,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
                 >
                   <template #activator="{ props: fileInputProps }">
                     <VListItem @click.stop="fileInputProps.onClick">
-                      Upload
+                      {{ t('common.damImage.image.button.upload') }}
                     </VListItem>
                   </template>
                 </AFileInput>
@@ -357,7 +360,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
                   v-if="imageLoaded"
                   @click="onImageDelete"
                 >
-                  <VListItemTitle>Remove image</VListItemTitle>
+                  <VListItemTitle>{{ t('common.damImage.image.button.removeImage') }}</VListItemTitle>
                 </VListItem>
               </VList>
             </VCard>
