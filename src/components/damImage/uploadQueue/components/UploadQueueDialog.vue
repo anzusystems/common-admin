@@ -8,21 +8,28 @@ import { useTheme } from '@/composables/themeSettings'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/composables/system/alerts'
-import { bulkUpdateAssetsMetadata } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { type AssetMetadataBulkItem, bulkUpdateAssetsMetadata } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { DocId, IntegerId } from '@/types/common'
+import { isNull, isString, isUndefined } from '@/utils/common'
+import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import { generateUUIDv1 } from '@/utils/generator'
+import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
+import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
+import { storeToRefs } from 'pinia'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
     fileInputKey: number
+    extSystem: IntegerId
     accept: string | undefined
     maxSizes: Record<string, number> | undefined
   }>(),
-  {
-  }
+  {}
 )
 
 const emit = defineEmits<{
@@ -33,6 +40,8 @@ const emit = defineEmits<{
 
 const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
 
+const imageStore = useImageStore()
+const { maxPosition } = storeToRefs(imageStore)
 const uploadQueuesStore = useUploadQueuesStore()
 const queueTotalCount = computed(() => {
   return uploadQueuesStore.getQueueTotalCount(props.queueKey)
@@ -89,6 +98,59 @@ const onSave = async () => {
   }
 }
 
+const metadataMap = async (queueItems: UploadQueueItem[], bulkItems: AssetMetadataBulkItem[]) => {
+  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
+  const authorIdsToFetch = new Set<DocId>()
+  const authorsMap = new Map<DocId, string>()
+  try {
+    bulkItems.forEach((bulkItem) => {
+      assetMetadataMap.set(bulkItem.id, {
+        description: isString(bulkItem.customData?.description) ? bulkItem.customData.description.trim() : '',
+        authorIds: bulkItem.authors,
+      })
+    })
+    assetMetadataMap.forEach((assetMeta) => {
+      assetMeta.authorIds.forEach((authorId) => {
+        authorIdsToFetch.add(authorId)
+      })
+    })
+    if (authorIdsToFetch.size > 0) {
+      const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, [...authorIdsToFetch])
+      authorsRes.forEach((author) => {
+        authorsMap.set(author.id, author.name)
+      })
+    }
+  } catch (e) {
+    showErrorsDefault(e)
+  }
+
+  const queueItemsWithAssetId = queueItems.filter((queueItem) => !isNull(queueItem.assetId))
+
+  return queueItemsWithAssetId.map((queueItem) => {
+    maxPosition.value++
+    const description = assetMetadataMap.get(queueItem.assetId!)?.description
+    const authorNames: string[] = []
+    assetMetadataMap.get(queueItem.assetId!)?.authorIds.forEach((authorId) => {
+      const name = authorsMap.get(authorId)
+      if (!isUndefined(name) && name.trim().length > 0) {
+        authorNames.push(name)
+      }
+    })
+    return {
+      key: generateUUIDv1(),
+      texts: {
+        description: description ?? '',
+        source: authorNames.join(', '),
+      },
+      dam: {
+        damId: queueItem.fileId,
+        regionPosition: 0,
+      },
+      position: maxPosition.value,
+    }
+  })
+}
+
 const onSaveAndApply = async () => {
   const itemsRaw = toRaw(items.value)
   if (itemsRaw.length === 0) return
@@ -102,25 +164,9 @@ const onSaveAndApply = async () => {
   }
   console.log(itemsRaw)
   try {
-    await bulkUpdateAssetsMetadata(damClient, itemsRaw)
-    emit(
-      'onApply',
-      itemsRaw.map((item) => {
-        console.log(item)
-        // todo take data from asset
-        return {
-          texts: {
-            description: '',
-            source: '',
-          },
-          dam: {
-            damId: item.fileId ?? '',
-            regionPosition: 0,
-          },
-          position: 1,
-        }
-      })
-    )
+    const res = await bulkUpdateAssetsMetadata(damClient, itemsRaw)
+    const mapped = await metadataMap(itemsRaw, res)
+    emit('onApply', mapped)
   } catch (error) {
     showErrorsDefault(error)
   } finally {

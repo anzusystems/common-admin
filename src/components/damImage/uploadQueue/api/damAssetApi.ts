@@ -24,7 +24,7 @@ import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const END_POINT = '/adm/v1/asset'
-const BULK_METADATA_LIMIT = 20
+const BULK_METADATA_LIMIT = 10
 export const ENTITY = 'asset'
 export const SYSTEM_CORE_DAM = 'coreDam'
 const FETCH_BY_IDS_MAX_LIMIT = 25
