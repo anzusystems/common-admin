@@ -3,11 +3,10 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { type AssetCustomData, DamAssetStatus } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
-import { type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
+import { type UploadQueueItem, UploadQueueItemStatus, type UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { useAlerts } from '@/composables/system/alerts'
 import { AssetFileFailReason } from '@/types/coreDam/AssetFile'
 import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
-import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
 import { prettyBytes } from '@/utils/file'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
@@ -38,7 +37,7 @@ const emit = defineEmits<{
   (e: 'update:customData', data: AssetCustomData): void
   (e: 'update:keywords', data: DocId[]): void
   (e: 'update:authors', data: DocId[]): void
-  (e: 'cancelItem', data: { index: number; item: UploadQueueItem; queueKey: string }): void
+  (e: 'cancelItem', data: { index: number; item: UploadQueueItem; queueKey: UploadQueueKey }): void
   (e: 'removeItem', index: number): void
   (e: 'showDetail', data: DocId): void
 }>()

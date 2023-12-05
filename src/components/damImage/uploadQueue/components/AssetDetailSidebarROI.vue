@@ -30,9 +30,9 @@ const { damClient } = useCommonAdminCoreDamOptions()
 const loadRois = async () => {
   if (imageRoiStore.imageFile) {
     imageRoiStore.showLoader()
-    const res = await fetchImageRoiList(damClient ,imageRoiStore.imageFile.id, pagination, {})
+    const res = await fetchImageRoiList(damClient, imageRoiStore.imageFile.id, pagination, {})
     if (res.length > 0 && res[0].id) {
-      const roi = await fetchRoi(damClient ,res[0].id)
+      const roi = await fetchRoi(damClient, res[0].id)
       imageRoiStore.setRoi(roi)
       imageRoiStore.hideLoader()
       return

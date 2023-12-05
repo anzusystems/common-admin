@@ -287,7 +287,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     recalculateQueueCounts(queueKey)
   }
 
-  async function stopItemUpload(queueKey: string, queueItem: UploadQueueItem, index: number) {
+  async function stopItemUpload(queueKey: UploadQueueKey, queueItem: UploadQueueItem, index: number) {
     const queue = queues.value.get(queueKey)
     if (!queue || queue.items.length === 0) return
     queueItem.status = UploadQueueItemStatus.Stop

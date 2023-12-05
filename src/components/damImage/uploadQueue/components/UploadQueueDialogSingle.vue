@@ -18,13 +18,12 @@ import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composab
 import { type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
 import { dateTimeNow } from '@/utils/datetime'
 import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
-import AssetLinkExternal from '@/components/damImage/uploadQueue/components/AssetLinkExternal.vue'
 import { useAlerts } from '@/composables/system/alerts'
 import { bulkUpdateAssetsMetadata, fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingleSidebar from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebar.vue'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
-import { isString } from '@/utils/common'
+import { isNull, isString } from '@/utils/common'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import type { IntegerId } from '@/types/common'
 
@@ -171,22 +170,24 @@ const assetMainFile = computed(() => {
 })
 
 const processing = computed(() => {
-  return item.value && [UploadQueueItemStatus.Processing, UploadQueueItemStatus.Loading].includes(item.value.status)
+  return (
+    !isNull(item.value) && [UploadQueueItemStatus.Processing, UploadQueueItemStatus.Loading].includes(item.value.status)
+  )
 })
 const waiting = computed(() => {
-  return item.value && item.value.status === UploadQueueItemStatus.Waiting
+  return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Waiting
 })
 const isDone = computed(() => {
-  return item.value && item.value.status === UploadQueueItemStatus.Uploaded
+  return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Uploaded
 })
 const showDone = computed(() => {
   return !props.disableDoneAnimation && isDone.value
 })
 const uploading = computed(() => {
-  return item.value && item.value.status === UploadQueueItemStatus.Uploading
+  return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Uploading
 })
 const uploadProgress = computed(() => {
-  return item.value && item.value.progress.progressPercent
+  return item.value?.progress.progressPercent
 })
 
 const { damClient } = useCommonAdminCoreDamOptions()
@@ -250,9 +251,7 @@ const onSaveAndApply = async () => {
     }
     if (assetsMetadataRes[0].authors.length > 0) {
       const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, assetsMetadataRes[0].authors)
-      source = authorsRes.map((author) =>
-        author.name
-      ).join(', ')
+      source = authorsRes.map((author) => author.name).join(', ')
     }
     emit(
       'onApply',

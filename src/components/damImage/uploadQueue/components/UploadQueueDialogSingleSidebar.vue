@@ -5,7 +5,7 @@ import {
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import type { DocId } from '@/types/common'
-import { type DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 import { useI18n } from 'vue-i18n'
 import AssetDetailSidebarROI from '@/components/damImage/uploadQueue/components/AssetDetailSidebarROI.vue'

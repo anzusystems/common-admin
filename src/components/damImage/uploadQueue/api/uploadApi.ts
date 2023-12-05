@@ -1,6 +1,10 @@
 import { DamAssetType } from '@/types/coreDam/Asset'
 import { type DamUploadStartResponse, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
-import { imageUploadChunk, imageUploadFinish, imageUploadStart } from '@/components/damImage/uploadQueue/api/damImageApi'
+import {
+  imageUploadChunk,
+  imageUploadFinish,
+  imageUploadStart,
+} from '@/components/damImage/uploadQueue/api/damImageApi'
 import type { AxiosInstance } from 'axios'
 import type { DocId } from '@/types/common'
 import { AssetFileProcessStatus } from '@/types/coreDam/AssetFile'

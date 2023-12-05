@@ -7,15 +7,13 @@ import { useValidate } from '@/validators/vuelidate/useValidate'
 import useVuelidate from '@vuelidate/core'
 import {
   useDamCachedAuthors,
-  useDamCachedAuthorsForRemoteAutocomplete
+  useDamCachedAuthorsForRemoteAutocomplete,
 } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { isArray } from '@/utils/common'
 import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
-import AuthorRemoteAutocompleteCachedAuthorChip
-  from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteCachedAuthorChip.vue'
-import AuthorRemoteAutocompleteCachedAuthorChipConflicts
-  from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteCachedAuthorChipConflicts.vue'
+import AuthorRemoteAutocompleteCachedAuthorChip from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteCachedAuthorChip.vue'
+import AuthorRemoteAutocompleteCachedAuthorChipConflicts from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteCachedAuthorChipConflicts.vue'
 import { useAuthorSelectActions } from '@/components/damImage/uploadQueue/author/authorActions'
 import { useAuthorFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
 import AuthorCreateButton from '@/components/damImage/uploadQueue/author/AuthorCreateButton.vue'

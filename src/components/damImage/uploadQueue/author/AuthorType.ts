@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ValueObjectOption } from '@/types/ValueObject'
+
 export enum AuthorType {
   None = 'none',
   Internal = 'internal',

@@ -1,4 +1,4 @@
-import { inject, ref } from 'vue'
+import { ref } from 'vue'
 import sha1 from 'js-sha1'
 import type { CancelTokenSource } from 'axios'
 import axios from 'axios'
@@ -11,11 +11,10 @@ import { type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/Upl
 import { NEW_LINE_MARK } from '@/composables/system/alerts'
 import { isUndefined } from '@/utils/common'
 import { useDamUploadChunkSize } from '@/components/damImage/uploadQueue/composables/damUploadChunkSize'
-import type { CommonAdminCoreDamOptions } from '@/AnzuSystemsCommonAdmin'
 import { damUploadChunk, damUploadFinish, damUploadStart } from '@/components/damImage/uploadQueue/api/uploadApi'
 import {
   useCommonAdminCoreDamOptions,
-  useCommonAdminCoreDamOptionsGlobal
+  useCommonAdminCoreDamOptionsGlobal,
 } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 // const CHUNK_MAX_RETRY = 6

@@ -10,7 +10,7 @@ import { HANDLE_CLASS } from '@/components/sortable/sortableActions'
 import { useI18n } from 'vue-i18n'
 import {
   AImageMetadataValidationScopeSymbol,
-  useImageValidation
+  useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 
 const props = withDefaults(

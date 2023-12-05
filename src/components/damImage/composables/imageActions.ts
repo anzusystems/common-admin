@@ -1,11 +1,9 @@
-import type { ImageAware } from '@/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import type { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
-import type { IntegerId } from '@/types/common'
-import { isNull } from '@/utils/common'
 
 export function useImageActions(config: ReturnType<typeof useCommonAdminImageOptions>) {
   const widgetImageToDamImageUrl = (
-    image: ImageAware,
+    image: ImageAware | ImageCreateUpdateAware,
     width = config.imageWidth,
     height = config.imageHeight,
     random = true

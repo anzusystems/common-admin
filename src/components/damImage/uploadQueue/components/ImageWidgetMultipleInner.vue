@@ -4,7 +4,7 @@ import { computed, inject, nextTick, onMounted, ref, type ShallowRef, toRaw } fr
 import { isNull, isString, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
+import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleItem.vue'
 import { storeToRefs } from 'pinia'
@@ -33,10 +33,7 @@ import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
-import {
-  ADamAssetMetadataValidationScopeSymbol,
-  AImageMetadataValidationScopeSymbol
-} from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 
 const props = withDefaults(
   defineProps<{

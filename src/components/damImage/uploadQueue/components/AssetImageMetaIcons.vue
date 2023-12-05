@@ -1,11 +1,13 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import  { type AssetFileProperties, DamAssetType } from '@/types/coreDam/Asset'
+import { type AssetFileProperties, DamAssetType } from '@/types/coreDam/Asset'
 import {
   DIMENSIONS_CONFIG,
-  ICON_LOW, ICON_RSS, ICON_SLOTS,
-  LOW_DIMENSION
+  ICON_LOW,
+  ICON_RSS,
+  ICON_SLOTS,
+  LOW_DIMENSION,
 } from '@/components/damImage/uploadQueue/composables/assetImageIconsConfig'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 

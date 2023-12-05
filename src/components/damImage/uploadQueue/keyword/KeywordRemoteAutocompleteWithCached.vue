@@ -11,8 +11,7 @@ import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKe
 import { isArray } from '@/utils/common'
 import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
 import { useDamCachedAuthorsForRemoteAutocomplete } from '@/components/damImage/uploadQueue/author/cachedAuthors'
-import KeywordRemoteAutocompleteCachedKeywordChip
-  from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteCachedKeywordChip.vue'
+import KeywordRemoteAutocompleteCachedKeywordChip from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteCachedKeywordChip.vue'
 import KeywordCreateButton from '@/components/damImage/uploadQueue/keyword/KeywordCreateButton.vue'
 
 const props = withDefaults(

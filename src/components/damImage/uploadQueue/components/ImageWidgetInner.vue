@@ -15,7 +15,7 @@ import AFileInput from '@/components/file/AFileInput.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
+import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
@@ -182,9 +182,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       }
       if (assetRes.authors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, assetRes.authors)
-        source = authorsRes.map((author) =>
-          author.name
-        ).join(', ')
+        source = authorsRes.map((author) => author.name).join(', ')
       }
     } catch (e) {
       showErrorsDefault(e)
@@ -350,7 +348,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
                   @files-input="onFileInput"
                 >
                   <template #activator="{ props: fileInputProps }">
-                    <VListItem @click.stop="fileInputProps.onClick($event)">
+                    <VListItem @click.stop="fileInputProps.onClick">
                       Upload
                     </VListItem>
                   </template>

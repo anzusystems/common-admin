@@ -1,7 +1,5 @@
 <script lang="ts" setup>
-import {
-  useAssetDetailSidebarActionbar
-} from '@/components/damImage/uploadQueue/composables/assetDetailSidebarActionbar'
+import { useAssetDetailSidebarActionbar } from '@/components/damImage/uploadQueue/composables/assetDetailSidebarActionbar'
 
 const { canTeleport } = useAssetDetailSidebarActionbar()
 </script>

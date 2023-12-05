@@ -13,10 +13,8 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { dateTimePretty } from '@/utils/datetime'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
-import AuthorRemoteAutocompleteWithCached
-  from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
-import KeywordRemoteAutocompleteWithCached
-  from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
+import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 
 const { t } = useI18n()
 

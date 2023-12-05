@@ -9,7 +9,7 @@ import type { DocId } from '@/types/common'
 import { isNull } from '@/utils/common'
 import {
   AImageMetadataValidationScopeSymbol,
-  useImageValidation
+  useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useAlerts } from '@/composables/system/alerts'
 
@@ -71,9 +71,7 @@ const onEditAsset = () => {
           v-if="loading"
           class="d-flex align-center justify-center"
         >
-          <VProgressCircular
-            indeterminate
-          />
+          <VProgressCircular indeterminate />
         </div>
         <div
           v-else-if="imageDetail"

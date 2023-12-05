@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, toRefs, watch } from 'vue'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
-import type { ImageAware } from '@/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import { cloneDeep } from '@/utils/common'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
@@ -12,7 +12,7 @@ import { fetchImage } from '@/components/damImage/uploadQueue/api/imageApi'
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable | undefined
-    image?: ImageAware | undefined // optional, if available, no need to fetch image data
+    image?: ImageAware | ImageCreateUpdateAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     label?: string | undefined
     width?: number | undefined
@@ -36,7 +36,7 @@ const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 
-const resImage = ref<null | ImageAware>(null)
+const resImage = ref<null | ImageAware | ImageCreateUpdateAware>(null)
 
 const { image, modelValue } = toRefs(props)
 

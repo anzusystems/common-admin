@@ -1,4 +1,4 @@
-import type { DamPrvConfig, DamExtSystemConfig, DamPubConfig } from '@/types/coreDam/DamConfig'
+import type { DamExtSystemConfig, DamPrvConfig, DamPubConfig } from '@/types/coreDam/DamConfig'
 import type { AxiosInstance } from 'axios'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { IntegerId } from '@/types/common'

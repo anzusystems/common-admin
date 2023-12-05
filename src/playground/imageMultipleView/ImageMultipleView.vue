@@ -9,7 +9,7 @@ const imageIds = ref<IntegerId[]>([])
 const component = ref<InstanceType<typeof AImageWidgetMultiple> | null>(null)
 
 const save = () => {
-  component.value.saveImages()
+  component.value?.saveImages()
 }
 </script>
 

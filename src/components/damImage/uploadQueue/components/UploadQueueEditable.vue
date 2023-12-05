@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
-import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
+import type { UploadQueueItem, UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import UploadQueueItemEditable from '@/components/damImage/uploadQueue/components/UploadQueueItemEditable.vue'
 import AssetQueueSelectedSidebar from '@/components/damImage/uploadQueue/components/AssetQueueSelectedSidebar.vue'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
@@ -29,8 +29,8 @@ const list = computed(() => {
   return uploadQueuesStore.getQueueItems(props.queueKey)
 })
 
-const cancelItem = (data: { index: number; item: UploadQueueItem; queueId: string }) => {
-  uploadQueuesStore.stopItemUpload(data.queueId, data.item, data.index)
+const cancelItem = (data: { index: number; item: UploadQueueItem; queueKey: UploadQueueKey }) => {
+  uploadQueuesStore.stopItemUpload(data.queueKey, data.item, data.index)
 }
 
 const removeItem = (index: number) => {
