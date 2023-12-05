@@ -184,8 +184,6 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
             throw new Error('Unable to load dam ext system config. Incorrect response body.')
           }
           setDamConfigExtSystem(config, extSystemId)
-          damConfigExtSystem.value.image.authors.required = true
-          console.log(damConfigExtSystem.value)
           resolve(true)
         })
         .catch((err) => {

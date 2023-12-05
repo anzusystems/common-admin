@@ -182,7 +182,6 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       }
       if (assetRes.authors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, assetRes.authors)
-        console.log(authorsRes)
         source = authorsRes.map((author) =>
           author.name
         ).join(', ')

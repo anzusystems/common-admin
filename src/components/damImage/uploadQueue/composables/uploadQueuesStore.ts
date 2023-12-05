@@ -46,7 +46,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         queueItemFailed(event.data.asset, event.data.failReason)
         break
       case DamNotificationName.AssetFileDuplicate:
-        console.log(event.data)
         queueItemDuplicate(event.data.asset, event.data.originAssetFile, event.data.assetType)
         break
       case DamNotificationName.AssetMetadataProcessed:

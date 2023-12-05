@@ -241,18 +241,15 @@ const onSaveAndApply = async () => {
   let source = ''
   try {
     const assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, items.value)
-    console.log(assetsMetadataRes[0])
     if (!assetsMetadataRes[0]) {
       throw new Error('Fatal error updating asset metadata')
     }
     showRecordWas('updated')
     if (isString(assetsMetadataRes[0].customData?.description)) {
       description = assetsMetadataRes[0].customData.description.trim()
-      console.log(description)
     }
     if (assetsMetadataRes[0].authors.length > 0) {
       const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, assetsMetadataRes[0].authors)
-      console.log(authorsRes)
       source = authorsRes.map((author) =>
         author.name
       ).join(', ')
