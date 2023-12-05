@@ -24,10 +24,14 @@ import { bulkUpdateAssetsMetadata, fetchAsset } from '@/components/damImage/uplo
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingleSidebar from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebar.vue'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
+import { isString } from '@/utils/common'
+import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import type { IntegerId } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
+    extSystem: IntegerId
     fileInputKey: number
     accept: string | undefined
     maxSizes: Record<string, number> | undefined
@@ -215,27 +219,8 @@ const onSave = async () => {
   //   return
   // }
   try {
-    const res = await bulkUpdateAssetsMetadata(damClient, items.value)
-    console.log(res)
-    emit(
-      'onApply',
-      items.value.map((item) => {
-        // todo take data from asset
-        return {
-          texts: {
-            description: '',
-            source: '',
-          },
-          dam: {
-            damId: item.fileId ?? '',
-            regionPosition: 0,
-          },
-          position: 1,
-        }
-      })
-    )
+    await bulkUpdateAssetsMetadata(damClient, items.value)
     showRecordWas('updated')
-    await onStopConfirm()
   } catch (error) {
     showErrorsDefault(error)
   } finally {
@@ -252,17 +237,32 @@ const onSaveAndApply = async () => {
   //   saveAndCloseButtonLoading.value = false
   //   return
   // }
+  let description = ''
+  let source = ''
   try {
-    const res = await bulkUpdateAssetsMetadata(damClient, items.value)
-    console.log(res)
+    const assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, items.value)
+    console.log(assetsMetadataRes[0])
+    if (!assetsMetadataRes[0]) {
+      throw new Error('Fatal error updating asset metadata')
+    }
+    showRecordWas('updated')
+    if (isString(assetsMetadataRes[0].customData?.description)) {
+      description = assetsMetadataRes[0].customData.description.trim()
+    }
+    if (assetsMetadataRes[0].authors.length > 0) {
+      const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, assetsMetadataRes[0].authors)
+      console.log(authorsRes)
+      source = authorsRes.map((author) =>
+        author.name
+      ).join(', ')
+    }
     emit(
       'onApply',
       items.value.map((item) => {
-        // todo take data from asset
         return {
           texts: {
-            description: '',
-            source: '',
+            description: description,
+            source: source,
           },
           dam: {
             damId: item.fileId ?? '',
@@ -272,7 +272,7 @@ const onSaveAndApply = async () => {
         }
       })
     )
-    showRecordWas('updated')
+
     await onStopConfirm()
   } catch (error) {
     showErrorsDefault(error)

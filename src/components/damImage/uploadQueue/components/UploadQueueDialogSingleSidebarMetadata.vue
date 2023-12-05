@@ -19,16 +19,11 @@ withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'postDelete', data: DocId): void
   (e: 'onSave'): void
   (e: 'onSaveAndApply'): void
 }>()
 
 const { t } = useI18n()
-
-// const assetDetailStore = useAssetDetailStore()
-// const { asset } = storeToRefs(assetDetailStore)
-// const uploadQueueStore = useUploadQueuesStore()
 
 const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
 

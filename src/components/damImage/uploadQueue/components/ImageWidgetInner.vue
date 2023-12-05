@@ -418,6 +418,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog"
     :queue-key="queueKey"
+    :ext-system="extSystem"
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
