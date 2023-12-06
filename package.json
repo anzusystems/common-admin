@@ -1,6 +1,6 @@
 {
   "name": "@anzusystems/common-admin",
-  "packageManager": "yarn@3.6.4",
+  "packageManager": "yarn@4.0.2",
   "files": [
     "dist"
   ],
@@ -55,6 +55,7 @@
     "@vueuse/core": "^10.7.0",
     "@vueuse/integrations": "^10.7.0",
     "axios": "1.6.2",
+    "cropperjs": "^1.6.1",
     "dayjs": "1.11.10",
     "eslint": "8.52.0",
     "eslint-plugin-vue": "9.19.2",
@@ -79,7 +80,6 @@
     "vite-plugin-vuetify": "^1.0.2",
     "vitepress": "1.0.0-rc.31",
     "vue": "3.3.10",
-    "vue-cropperjs": "^5.0.0",
     "vue-flatpickr-component": "^11.0.3",
     "vue-i18n": "9.8.0",
     "vue-router": "4.2.5",
