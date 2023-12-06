@@ -95,6 +95,7 @@ const props = withDefaults(
     crop: null,
     cropend: null,
     cropmove: null,
+    cropstart: null,
     zoom: null,
   }
 )

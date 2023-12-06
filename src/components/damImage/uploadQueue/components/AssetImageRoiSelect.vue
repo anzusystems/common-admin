@@ -16,8 +16,7 @@ const imageRoiStore = useImageRoiStore()
 
 const { damClient } = useCommonAdminCoreDamOptions()
 
-const cropper = ref<InstanceType<typeof ACropperjs> | null>(null)
-const cropperOpacityHide = ref(true)
+const cropper = ref<any>(null) // fix any
 
 const imageUrl = computed(() => {
   if (imageRoiStore.imageFile && imageRoiStore.imageFile.links?.image_detail) {
@@ -76,7 +75,6 @@ const saveRoi = async () => {
 }
 
 const cropperReady = () => {
-  cropperOpacityHide.value = false
   applyRegionOfInterest()
   enableCropper()
 }
