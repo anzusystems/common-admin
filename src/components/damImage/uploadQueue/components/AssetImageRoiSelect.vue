@@ -1,14 +1,11 @@
 <script setup lang="ts">
-// @ts-ignore
-import VueCropper from 'vue-cropperjs'
-import type Cropper from 'cropperjs'
-import 'cropperjs/dist/cropper.css'
 import { computed, onUnmounted, ref } from 'vue'
 import { useAlerts } from '@/composables/system/alerts'
 import { useImageRoiStore } from '@/components/damImage/uploadQueue/composables/imageRoiStore'
 import { updateRoi } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import ACropperjs from '@/components/ACropperjs.vue'
 
 const { showRecordWas, showErrorsDefault } = useAlerts()
 
@@ -19,7 +16,7 @@ const imageRoiStore = useImageRoiStore()
 
 const { damClient } = useCommonAdminCoreDamOptions()
 
-const cropper = ref<Cropper | null>(null)
+const cropper = ref<InstanceType<typeof ACropperjs> | null>(null)
 const cropperOpacityHide = ref(true)
 
 const imageUrl = computed(() => {
@@ -109,11 +106,10 @@ onUnmounted(() => {
     indeterminate
     color="primary"
   />
-  <VueCropper
+  <ACropperjs
     v-if="showCropper"
     :key="imageRoiStore.timestampCropper"
     ref="cropper"
-    :class="{ 'image-cropper-hidden': cropperOpacityHide }"
     :aspect-ratio="DAM_IMAGE_ASPECT_RATIO"
     :background="false"
     :check-cross-origin="false"
@@ -129,10 +125,6 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss">
-.image-cropper-hidden {
-  opacity: 0;
-}
-
 .cropper-modal {
   background-color: #f1f4f6;
 }

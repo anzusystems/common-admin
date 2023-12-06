@@ -75,6 +75,7 @@ import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormE
 import AImageWidget from '@/components/damImage/AImageWidget.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
+import ACropperjs from '@/components/ACropperjs.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
@@ -419,6 +420,7 @@ export {
   AImageWidget,
   AImageWidgetSimple,
   AImageWidgetMultiple,
+  ACropperjs,
 
   // Dam
   AAssetSelect,

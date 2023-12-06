@@ -1,7 +1,8 @@
 <script setup lang="ts" generic="T extends EventTarget = EventTarget">
 import Cropper from 'cropperjs'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { isNull } from '@/utils/common'
+import 'cropperjs/dist/cropper.css'
 
 const props = withDefaults(
   defineProps<{
@@ -100,6 +101,7 @@ const props = withDefaults(
 
 const cropperInstance = ref<InstanceType<typeof Cropper> | null>(null)
 const imgEl = ref<HTMLImageElement | HTMLCanvasElement | null>(null)
+const loading = ref(true)
 
 const enable = () => {
   cropperInstance.value?.enable()
@@ -121,12 +123,17 @@ const getData = () => {
   return cropperInstance.value?.getData()
 }
 
+const setData = (data: Cropper.SetDataOptions) => {
+  return cropperInstance.value?.setData(data)
+}
+
 defineExpose({
   enable,
   disable,
   destroy,
   getImageData,
   getData,
+  setData,
 })
 
 onMounted(() => {
@@ -139,7 +146,12 @@ onMounted(() => {
       options[key] = propsOptions[key]
     }
   }
-  if (!isNull(imgEl.value)) cropperInstance.value = new Cropper(imgEl.value as any, options)
+  nextTick(() => {
+    if (!isNull(imgEl.value)) {
+      cropperInstance.value = new Cropper(imgEl.value as any, options)
+      loading.value = false
+    }
+  })
 })
 
 onUnmounted(() => {
@@ -148,11 +160,17 @@ onUnmounted(() => {
 </script>
 <template>
   <div :style="containerStyle">
-    <img
-      ref="imgRef"
-      :alt="alt"
-      :src="src"
-      :style="imgStyle"
-    >
+    <VProgressCircular
+      v-if="loading"
+      indeterminate
+    />
+    <div :style="{ opacity: loading ? 0 : undefined }">
+      <img
+        ref="imgEl"
+        :alt="alt"
+        :src="src"
+        :style="imgStyle"
+      >
+    </div>
   </div>
 </template>
