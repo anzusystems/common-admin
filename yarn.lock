@@ -196,6 +196,7 @@ __metadata:
     "@mdi/font": "npm:^7.3.67"
     "@rushstack/eslint-patch": "npm:^1.6.0"
     "@types/node": "npm:^20.10.3"
+    "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.7"
     "@types/webfontloader": "npm:^1.6.38"
     "@typescript-eslint/parser": "npm:^6.13.2"
@@ -215,13 +216,13 @@ __metadata:
     eslint: "npm:8.52.0"
     eslint-plugin-vue: "npm:9.19.2"
     flatpickr: "npm:^4.6.13"
-    js-sha1: "npm:^0.6.0"
     npm-run-all: "npm:^4.1.5"
     pinia: "npm:2.1.7"
     postcss: "npm:^8.4.32"
     postcss-html: "npm:^1.5.0"
     postcss-prefix-selector: "npm:^1.16.0"
     prettier: "npm:^3.1.0"
+    rusha: "npm:^0.8.14"
     sass: "npm:^1.69.5"
     shortcut-buttons-flatpickr: "npm:^0.4.0"
     sortablejs: "npm:^1.15.1"
@@ -1344,7 +1345,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.10.3":
+"@types/node@npm:*, @types/node@npm:^20.10.3":
   version: 20.10.3
   resolution: "@types/node@npm:20.10.3"
   dependencies:
@@ -1357,6 +1358,15 @@ __metadata:
   version: 2.4.1
   resolution: "@types/normalize-package-data@npm:2.4.1"
   checksum: e87bccbf11f95035c89a132b52b79ce69a1e3652fe55962363063c9c0dae0fe2477ebc585e03a9652adc6f381d24ba5589cc5e51849df4ced3d3e004a7d40ed5
+  languageName: node
+  linkType: hard
+
+"@types/rusha@npm:^0.8.3":
+  version: 0.8.3
+  resolution: "@types/rusha@npm:0.8.3"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 7ff727103aad70f207ef3c6a5b3a07459bc12ac1065b2e571e055ed1fe99c8939e296c54d4da8392ed12b6546c4325a29085790a4c6084ef9d0b5d8b55c12a9c
   languageName: node
   linkType: hard
 
@@ -4959,13 +4969,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-sha1@npm:^0.6.0":
-  version: 0.6.0
-  resolution: "js-sha1@npm:0.6.0"
-  checksum: c8d6c97f02e7b683421e8ff25f2992f41a9c86291d0f773ebdfe6175f3e4789aba4fec594466c6de634daba2a7043a2d54be6b86cf196c919b139f7d765ebafa
-  languageName: node
-  linkType: hard
-
 "js-tokens@npm:^4.0.0":
   version: 4.0.0
   resolution: "js-tokens@npm:4.0.0"
@@ -6601,6 +6604,13 @@ __metadata:
   dependencies:
     queue-microtask: "npm:^1.2.2"
   checksum: cb4f97ad25a75ebc11a8ef4e33bb962f8af8516bb2001082ceabd8902e15b98f4b84b4f8a9b222e5d57fc3bd1379c483886ed4619367a7680dad65316993021d
+  languageName: node
+  linkType: hard
+
+"rusha@npm:^0.8.14":
+  version: 0.8.14
+  resolution: "rusha@npm:0.8.14"
+  checksum: cdd0507caa2d045f8a18e1ecfb5bd06cede774cfd53cf686a297070052634fd6aae7423632dc0e2e9c7b6920d2c35f1aaeb4e0338a35611b8487829eaaec3404
   languageName: node
   linkType: hard
 

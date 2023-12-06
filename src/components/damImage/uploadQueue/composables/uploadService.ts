@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import sha1 from 'js-sha1'
 import type { CancelTokenSource } from 'axios'
 import axios from 'axios'
 import { i18n } from '@/plugins/i18n'
@@ -16,6 +15,7 @@ import {
   useCommonAdminCoreDamOptions,
   useCommonAdminCoreDamOptionsGlobal,
 } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import rusha from 'rusha'
 
 // const CHUNK_MAX_RETRY = 6
 const CHUNK_MAX_RETRY = 4
@@ -90,7 +90,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   let lastTimestamp = 0
   let endTimestamp = 0
   let lastLoaded = 0
-  const assetAlgo = sha1.create()
+  const sha = rusha.createHash()
   const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize()
 
   const getCurrentTimestamp = () => {
@@ -139,7 +139,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
   const processAndUploadChunk = async (offset: number): Promise<File> => {
     updateChunkSize(queueItem.progress.speed)
-    let arrayBuffer = await readFile(offset, lastChunkSize.value, queueItem.file!)
+    let arrayBuffer: { data: string; offset: number } = await readFile(offset, lastChunkSize.value, queueItem.file!)
     let chunkFile = new File([arrayBuffer.data], queueItem.file!.name)
 
     queueItem.currentChunkIndex = offset
@@ -152,7 +152,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       attempt++
       try {
         await uploadChunk(chunkFile, offset)
-        assetAlgo.update(arrayBuffer.data)
+        sha.update(arrayBuffer.data)
 
         return chunkFile
       } catch (error) {
@@ -231,7 +231,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     }
 
     endTimestamp = Date.now() / 1000
-    return await finishUpload(queueItem, assetAlgo.hex())
+    return await finishUpload(queueItem, sha.digest('hex'))
   }
 
   return {
