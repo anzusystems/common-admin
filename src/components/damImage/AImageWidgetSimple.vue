@@ -12,12 +12,14 @@ import { fetchImage } from '@/components/damImage/uploadQueue/api/imageApi'
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable | undefined
-    image?: ImageAware | ImageCreateUpdateAware | undefined // optional, if available, no need to fetch image data
+    image?: ImageAware | ImageCreateUpdateAware | undefined | null // optional, if available, no need to fetch image data
     configName?: string
     label?: string | undefined
     width?: number | undefined
     disableAspectRatio?: boolean
     aspectRatio?: number | string
+    showDescription?: boolean
+    showSource?: boolean
   }>(),
   {
     configName: 'default',
@@ -26,6 +28,8 @@ const props = withDefaults(
     width: undefined,
     disableAspectRatio: false,
     aspectRatio: 1.777, // 16/9
+    showDescription: false,
+    showSource: false,
   }
 )
 
@@ -96,6 +100,12 @@ watch(
       </div>
     </template>
   </VImg>
+  <VRow v-if="showDescription && resImage">
+    <VCol><strong>Description:</strong> {{ resImage.texts.description }} </VCol>
+  </VRow>
+  <VRow v-if="showSource && resImage">
+    <VCol><strong>Source:</strong> {{ resImage.texts.source }} </VCol>
+  </VRow>
   <slot
     name="append"
     :image="resImage"

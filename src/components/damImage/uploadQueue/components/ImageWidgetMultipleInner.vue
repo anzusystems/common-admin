@@ -348,6 +348,12 @@ onMounted(() => {
 
 <template>
   <div :id="widgetHtmlId">
+    <h4
+      v-if="label"
+      class="font-weight-bold text-subtitle-2"
+    >
+      {{ label }}
+    </h4>
     <div class="pb-2">
       <AFileInput
         :file-input-key="uploadQueue?.fileInputKey"
