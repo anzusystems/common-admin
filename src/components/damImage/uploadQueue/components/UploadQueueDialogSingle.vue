@@ -299,7 +299,6 @@ onMounted(() => {
 </script>
 
 <template>
-  {{ uploadQueueDialog }} / {{ item }}
   <VDialog
     :model-value="uploadQueueDialog"
     fullscreen

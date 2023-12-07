@@ -124,7 +124,7 @@ const onAnyMetadataChange = () => {
                       clearable
                       multiple
                       :disabled="!item.canEditMetadata"
-                      :required="damConfigExtSystem[assetType].authors.enabled"
+                      :required="damConfigExtSystem[assetType].authors.required"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       @update:model-value="onAnyMetadataChange"
                     />
