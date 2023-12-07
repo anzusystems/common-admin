@@ -38,6 +38,19 @@ const imageId2 = ref<IntegerIdNullable>(null)
           />
         </VCol>
       </VRow>
+      <VRow>
+        <VCol cols="4">
+          Expanded actions:
+          <AImageWidget
+            v-model="imageId2"
+            :licence-id="100001"
+            :ext-system="1"
+            queue-key="heroImage"
+            label="Lead image"
+            expand-options
+          />
+        </VCol>
+      </VRow>
     </VCardText>
   </VCard>
 </template>

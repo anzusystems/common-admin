@@ -29,6 +29,7 @@ import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/component
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useI18n } from 'vue-i18n'
+import type { VBtn } from 'vuetify/components'
 
 const props = withDefaults(
   defineProps<{
@@ -274,6 +275,16 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   imageStore.setImageDetail(items[0])
   metadataDialog.value = true
 }
+
+const expandedUploadButton = ref<InstanceType<typeof AFileInput> | null>(null)
+
+const onDropzoneClick = () => {
+  if (!props.expandOptions) {
+    clickMenuOpened.value = true
+    return
+  }
+  expandedUploadButton.value?.activate()
+}
 </script>
 
 <template>
@@ -305,6 +316,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
             <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
           </VBtn>
           <AFileInput
+            ref="expandedUploadButton"
             :file-input-key="uploadQueue?.fileInputKey"
             :accept="uploadAccept"
             :max-sizes="uploadSizes"
@@ -398,7 +410,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
         :hide-text="!withoutImage"
-        @on-click="clickMenuOpened = true"
+        @on-click="onDropzoneClick"
         @on-drop="onDrop"
       />
     </div>

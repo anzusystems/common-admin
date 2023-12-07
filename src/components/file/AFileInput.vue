@@ -95,6 +95,10 @@ watch(
     fileInputKeyLocal.value = newValue
   }
 )
+
+defineExpose({
+  activate: clickInput,
+})
 </script>
 
 <template>
