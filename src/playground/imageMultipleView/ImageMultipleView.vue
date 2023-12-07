@@ -30,6 +30,8 @@ const save = () => {
           Simple:<br>
           <AImageWidgetMultipleSimple
             v-model="imageIds"
+            show-description
+            show-source
           />
         </VCol>
       </VRow>

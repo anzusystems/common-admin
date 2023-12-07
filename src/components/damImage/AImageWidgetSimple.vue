@@ -8,6 +8,7 @@ import { useImageActions } from '@/components/damImage/composables/imageActions'
 import type { IntegerIdNullable } from '@/types/common'
 import { useAlerts } from '@/composables/system/alerts'
 import { fetchImage } from '@/components/damImage/uploadQueue/api/imageApi'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -46,6 +47,8 @@ const { image, modelValue } = toRefs(props)
 
 const resolvedSrc = ref('')
 
+const { t } = useI18n()
+
 watch(
   [image, modelValue],
   async ([newImage, newImageId]) => {
@@ -67,9 +70,7 @@ watch(
       if (resImage.value) {
         resolvedSrc.value = widgetImageToDamImageUrl(resImage.value)
       }
-      return
     }
-    return
   },
   { immediate: true }
 )
@@ -100,12 +101,24 @@ watch(
       </div>
     </template>
   </VImg>
-  <VRow v-if="showDescription && resImage">
-    <VCol><strong>Description:</strong> {{ resImage.texts.description }} </VCol>
-  </VRow>
-  <VRow v-if="showSource && resImage">
-    <VCol><strong>Source:</strong> {{ resImage.texts.source }} </VCol>
-  </VRow>
+  <div class="pa-2">
+    <VRow
+      v-if="showDescription && resImage"
+      dense
+    >
+      <VCol>
+        <span class="text-caption text-medium-emphasis">{{ t('common.damImage.image.model.texts.description') }}:</span><br>{{ resImage.texts.description }}
+      </VCol>
+    </VRow>
+    <VRow
+      v-if="showSource && resImage"
+      dense
+    >
+      <VCol>
+        <span class="text-caption text-medium-emphasis">{{ t('common.damImage.image.model.texts.source') }}:</span><br>{{ resImage.texts.source }}
+      </VCol>
+    </VRow>
+  </div>
   <slot
     name="append"
     :image="resImage"
