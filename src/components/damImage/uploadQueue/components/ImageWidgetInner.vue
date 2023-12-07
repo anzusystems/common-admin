@@ -44,6 +44,7 @@ const props = withDefaults(
     expandOptions?: boolean
     disableOnClickMenu?: boolean
     width?: number | undefined
+    callDeleteApiOnRemove?: boolean
   }>(),
   {
     configName: 'default',
@@ -56,6 +57,7 @@ const props = withDefaults(
     expandOptions: false,
     disableOnClickMenu: false,
     width: undefined,
+    callDeleteApiOnRemove: false,
   }
 )
 
@@ -251,12 +253,16 @@ const onMetadataDialogConfirm = async () => {
 
 const onImageDelete = async () => {
   if (isNull(props.modelValue)) return
-  try {
-    await deleteImage(imageClient, props.modelValue)
-    reset()
-  } catch (e) {
-    showErrorsDefault(e)
+  if (props.callDeleteApiOnRemove) {
+    try {
+      await deleteImage(imageClient, props.modelValue)
+      reset()
+    } catch (e) {
+      showErrorsDefault(e)
+    }
+    return
   }
+  reset()
 }
 
 const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {

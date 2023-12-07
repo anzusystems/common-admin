@@ -48,6 +48,7 @@ const props = withDefaults(
     width?: number | undefined
     disableDraggable?: boolean
     widgetIdentifierId?: string | undefined
+    callDeleteApiOnRemove?: boolean
   }>(),
   {
     configName: 'default',
@@ -60,6 +61,7 @@ const props = withDefaults(
     width: undefined,
     disableDraggable: false,
     widgetIdentifierId: undefined,
+    callDeleteApiOnRemove: false,
   }
 )
 
@@ -267,12 +269,16 @@ const removeItem = async (index: number) => {
     imageStore.removeImageByIndex(index)
     return
   }
-  try {
-    await deleteImage(imageClient, image.id)
-    imageStore.removeImageByIndex(index)
-  } catch (e) {
-    showErrorsDefault(e)
+  if (props.callDeleteApiOnRemove) {
+    try {
+      await deleteImage(imageClient, image.id)
+      imageStore.removeImageByIndex(index)
+    } catch (e) {
+      showErrorsDefault(e)
+    }
+    return
   }
+  imageStore.removeImageByIndex(index)
 }
 
 const widgetEl = ref<HTMLElement | null>(null)

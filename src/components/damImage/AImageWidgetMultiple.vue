@@ -18,6 +18,7 @@ const props = withDefaults(
     readonly?: boolean
     dataCy?: string | undefined
     width?: number | undefined
+    callDeleteApiOnRemove?: boolean
   }>(),
   {
     configName: 'default',
@@ -29,6 +30,7 @@ const props = withDefaults(
     dataCy: undefined,
     expandOptions: false,
     width: undefined,
+    callDeleteApiOnRemove: false,
   }
 )
 
