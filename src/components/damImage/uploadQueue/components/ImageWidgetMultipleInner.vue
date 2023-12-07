@@ -401,7 +401,7 @@ onMounted(() => {
       </div>
       <AImageDropzone
         variant="fill"
-        :hover-only="images.length > 0"
+        :hover-only="modelValue.length > 0"
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
         @on-drop="onDrop"
