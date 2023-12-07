@@ -243,7 +243,7 @@ const saveImages = async () => {
   v$.value.$touch()
   if (v$.value.$invalid) {
     showValidationError()
-    return
+    return false
   }
   try {
     const resItems = await bulkUpdateImages(imageClient, toRaw(images.value))
@@ -257,8 +257,9 @@ const saveImages = async () => {
     })
     imageStore.setImages(items)
     emit('update:modelValue', ids)
+    return true
   } catch (e) {
-    //
+    return false
   }
 }
 

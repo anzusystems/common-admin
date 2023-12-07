@@ -71,7 +71,7 @@ const innerComponent = ref<InstanceType<typeof ImageWidgetMultipleInner> | null>
 
 const saveImages = async () => {
   if (!innerComponent.value) return false
-  return await innerComponent.value.saveImages()
+  return await innerComponent.value.saveImages() as boolean
 }
 
 provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
