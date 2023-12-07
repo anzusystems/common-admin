@@ -107,7 +107,8 @@ watch(
       dense
     >
       <VCol>
-        <span class="text-caption text-medium-emphasis">{{ t('common.damImage.image.model.texts.description') }}:</span><br>{{ resImage.texts.description }}
+        <span class="text-caption text-medium-emphasis">{{ t('common.damImage.image.model.texts.description') }}:</span>
+        <br>{{ resImage.texts.description }}
       </VCol>
     </VRow>
     <VRow
@@ -115,7 +116,8 @@ watch(
       dense
     >
       <VCol>
-        <span class="text-caption text-medium-emphasis">{{ t('common.damImage.image.model.texts.source') }}:</span><br>{{ resImage.texts.source }}
+        <span class="text-caption text-medium-emphasis"> {{ t('common.damImage.image.model.texts.source') }}:</span>
+        <br>{{ resImage.texts.source }}
       </VCol>
     </VRow>
   </div>
