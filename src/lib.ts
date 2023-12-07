@@ -341,6 +341,7 @@ import { damFileTypeFix } from '@/components/file/composables/fileType'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
 import { initDamNotifications, useDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
+import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
 import {
   DamNotificationName,
   type DamNotificationNameType,
@@ -457,6 +458,7 @@ export {
   useAssetSuggestions,
   initDamNotifications,
   useDamNotifications,
+  useDropzoneGlobalDragState,
 
   // VALUE OBJECTS
   Grant,

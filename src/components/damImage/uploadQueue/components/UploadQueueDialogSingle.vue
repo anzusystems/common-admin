@@ -299,12 +299,13 @@ onMounted(() => {
 </script>
 
 <template>
+  {{ uploadQueueDialog }} / {{ item }}
   <VDialog
     :model-value="uploadQueueDialog"
     fullscreen
   >
     <AssetDetailDialogLoader
-      v-if="loading"
+      v-if="loading || !item"
       @close-dialog="onStopConfirm"
     />
     <VCard

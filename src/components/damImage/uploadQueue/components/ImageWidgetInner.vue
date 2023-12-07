@@ -421,6 +421,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
     @on-close="onMetadataDialogClose"
   />
   <AssetDetailDialog />
+  {{ uploadQueueDialog }}
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog"
     :queue-key="queueKey"
