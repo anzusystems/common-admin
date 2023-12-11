@@ -5,7 +5,7 @@ import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKe
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isNull, isUndefined } from '@/utils/common'
-import { useKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
+import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAlerts } from '@/composables/system/alerts'
@@ -49,7 +49,7 @@ if (isNull(initialized.damConfigExtSystem)) {
   throw new Error('Ext system must be initialised.')
 }
 
-const { createDefault } = useKeywordFactory()
+const { createDefault } = useDamKeywordFactory()
 const keyword = ref<DamKeyword>(createDefault(initialized.damConfigExtSystem))
 const dialog = ref(false)
 const buttonLoading = ref(false)

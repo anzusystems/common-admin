@@ -351,6 +351,11 @@ import {
   type DamNotificationNameType,
 } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
 import type { ImageAware, ImageCreateUpdateAware, ImageCreateUpdateAwareKeyed } from '@/types/ImageAware'
+import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
+import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
+import { DamAuthorType, useDamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
+import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
+import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
 
 export {
   // COMPONENTS
@@ -465,6 +470,9 @@ export {
   initDamNotifications,
   useDamNotifications,
   useDropzoneGlobalDragState,
+  useDamKeywordFactory,
+  useDamAuthorFactory,
+  useDamAuthorType,
 
   // VALUE OBJECTS
   Grant,
@@ -589,6 +597,11 @@ export {
   ImageAware,
   ImageCreateUpdateAware,
   ImageCreateUpdateAwareKeyed,
+  DamAuthor,
+  DamAuthorMinimal,
+  DamKeyword,
+  DamKeywordMinimal,
+  DamAuthorType,
 
   // FACTORIES
   useAnzuUserFactory,

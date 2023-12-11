@@ -3,7 +3,7 @@ import { dateTimeNow } from '@/utils/datetime'
 import { ENTITY } from '@/components/damImage/uploadQueue/api/keywordApi'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
-export function useKeywordFactory() {
+export function useDamKeywordFactory() {
   const createDefault = (extSystemId: number, reviewed?: boolean): DamKeyword => {
     return {
       id: '',

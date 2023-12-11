@@ -2,7 +2,7 @@ import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTracki
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
 import type { DocId, IntegerId } from '@/types/common'
 
-interface Flags {
+export interface Flags {
   reviewed: boolean
 }
 

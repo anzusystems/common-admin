@@ -1,10 +1,10 @@
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import { AuthorType } from '@/components/damImage/uploadQueue/author/AuthorType'
+import { DamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
 import { dateTimeNow } from '@/utils/datetime'
 import { ENTITY } from '@/components/damImage/uploadQueue/api/authorApi'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
-export function useAuthorFactory() {
+export function useDamAuthorFactory() {
   const createDefault = (extSystemId: number, reviewed?: boolean): DamAuthor => {
     return {
       id: '',
@@ -14,7 +14,7 @@ export function useAuthorFactory() {
       flags: {
         reviewed: reviewed ?? false,
       },
-      type: AuthorType.Default,
+      type: DamAuthorType.Default,
       createdAt: dateTimeNow(),
       modifiedAt: dateTimeNow(),
       createdBy: 0,

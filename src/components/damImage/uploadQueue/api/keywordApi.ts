@@ -33,8 +33,3 @@ export const fetchKeywordList = (
 export const createKeyword = (client: () => AxiosInstance, data: DamKeyword) =>
   apiCreateOne<DamKeyword>(client, data, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
 
-// export const updateKeyword = (id: string, data: DamKeyword) =>
-//   apiUpdateOne<DamKeyword>(damClient, data, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
-//
-// export const fetchKeyword = (id: string) =>
-//   apiFetchOne<DamKeyword>(damClient, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)

@@ -45,9 +45,4 @@ export const fetchAuthorList = (
 
 export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) =>
   apiCreateOne<DamAuthor>(client, data, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
-//
-// export const updateAuthor = (id: string, data: DamAuthor) =>
-//   apiUpdateOne<DamAuthor>(damClient, data, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
-//
-// export const fetchAuthor = (id: string) =>
-//   apiFetchOne<DamAuthor>(damClient, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
+

@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ValueObjectOption } from '@/types/ValueObject'
 
-export enum AuthorType {
+export enum DamAuthorType {
   None = 'none',
   Internal = 'internal',
   External = 'external',
@@ -10,29 +10,29 @@ export enum AuthorType {
   Default = None,
 }
 
-export function useAuthorType() {
+export function useDamAuthorType() {
   const { t } = useI18n()
 
-  const authorTypeOptions = ref<ValueObjectOption<AuthorType>[]>([
+  const authorTypeOptions = ref<ValueObjectOption<DamAuthorType>[]>([
     {
-      value: AuthorType.None,
+      value: DamAuthorType.None,
       title: t('common.damImage.author.authorType.none'),
     },
     {
-      value: AuthorType.Internal,
+      value: DamAuthorType.Internal,
       title: t('common.damImage.author.authorType.internal'),
     },
     {
-      value: AuthorType.External,
+      value: DamAuthorType.External,
       title: t('common.damImage.author.authorType.external'),
     },
     {
-      value: AuthorType.Agency,
+      value: DamAuthorType.Agency,
       title: t('common.damImage.author.authorType.agency'),
     },
   ])
 
-  const getAuthorTypeOption = (value: AuthorType) => {
+  const getAuthorTypeOption = (value: DamAuthorType) => {
     return authorTypeOptions.value.find((item) => item.value === value)
   }
 

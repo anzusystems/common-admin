@@ -4,13 +4,13 @@ import { useI18n } from 'vue-i18n'
 import type { ValidationScope } from '@/types/Validation'
 import { ADamAuthorCreateValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import { useAuthorType } from '@/components/damImage/uploadQueue/author/AuthorType'
+import { useDamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
 import { isNull, isUndefined } from '@/utils/common'
 import { useAuthorValidation } from '@/components/damImage/uploadQueue/author/authorValidation'
 import { useAlerts } from '@/composables/system/alerts'
 import { createAuthor } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import { useAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
+import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
@@ -51,7 +51,7 @@ if (isNull(initialized.damConfigExtSystem)) {
   throw new Error('Ext system must be initialised.')
 }
 
-const { createDefault } = useAuthorFactory()
+const { createDefault } = useDamAuthorFactory()
 const author = ref<DamAuthor>(createDefault(initialized.damConfigExtSystem))
 const dialog = ref(false)
 const buttonLoading = ref(false)
@@ -98,7 +98,7 @@ const onConfirm = async () => {
   }
 }
 
-const { authorTypeOptions } = useAuthorType()
+const { authorTypeOptions } = useDamAuthorType()
 </script>
 
 <template>
