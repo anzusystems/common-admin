@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.40.0-alpha9",
+  "version": "1.40.0-alpha10",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -80,7 +80,7 @@
     "vite-plugin-dts": "^3.6.4",
     "vite-plugin-vuetify": "^1.0.2",
     "vitepress": "1.0.0-rc.31",
-    "vue": "3.3.11",
+    "vue": "3.3.10",
     "vue-flatpickr-component": "^11.0.3",
     "vue-i18n": "9.8.0",
     "vue-router": "4.2.5",
