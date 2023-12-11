@@ -49,7 +49,10 @@ const onSaveAndApply = async () => {
 </script>
 
 <template>
-  <AssetDetailSidebarActionsWrapper v-if="isActive">
+  <AssetDetailSidebarActionsWrapper
+    v-if="isActive"
+    :queue-key="queueKey"
+  >
     <ABtnSecondary
       type="submit"
       class="ml-2"

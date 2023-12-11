@@ -10,10 +10,12 @@ import AssetDetailSidebarActionsWrapper from '@/components/damImage/uploadQueue/
 import AssetFileRotate from '@/components/damImage/uploadQueue/components/AssetFileRotate.vue'
 import { fetchImageRoiList, fetchRoi } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 
 withDefaults(
   defineProps<{
     isActive: boolean
+    queueKey: UploadQueueKey
   }>(),
   {}
 )
@@ -78,7 +80,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <AssetDetailSidebarActionsWrapper v-if="isActive">
+  <AssetDetailSidebarActionsWrapper
+    v-if="isActive"
+    :queue-key="queueKey"
+  >
     <ABtnTertiary
       v-if="!imageRoiStore.loader"
       @click.stop="imageRoiStore.forceReloadRoiPreviews()"

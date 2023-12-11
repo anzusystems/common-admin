@@ -13,6 +13,15 @@ import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.
 import AssetDetailDialogSidebar from '@/components/damImage/uploadQueue/components/AssetDetailDialogSidebar.vue'
 import { assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import AssetImageRoiSelect from '@/components/damImage/uploadQueue/components/AssetImageRoiSelect.vue'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+
+withDefaults(
+  defineProps<{
+    queueKey: UploadQueueKey
+  }>(),
+  {
+  }
+)
 
 const { t } = useI18n()
 
@@ -181,6 +190,7 @@ const assetMainFile = computed(() => {
             <AssetDetailDialogSidebar
               v-if="asset"
               :key="asset.id"
+              :queue-key="queueKey"
               :asset-id="asset.id"
               :is-video="isTypeVideo"
               :is-audio="isTypeAudio"

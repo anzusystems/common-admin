@@ -12,9 +12,11 @@ import AssetInfobox from '@/components/damImage/uploadQueue/components/AssetInfo
 import AssetDetailSidebarMetadata from '@/components/damImage/uploadQueue/components/AssetDetailSidebarMetadata.vue'
 import AssetDetailSidebarROI from '@/components/damImage/uploadQueue/components/AssetDetailSidebarROI.vue'
 import AssetDetailSidebarActionsTeleportTarget from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsTeleportTarget.vue'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 
 withDefaults(
   defineProps<{
+    queueKey: UploadQueueKey
     assetId: DocId
     isVideo: boolean
     isAudio: boolean
@@ -73,6 +75,7 @@ const { activeTab } = storeToRefs(assetDetailStore)
           class="py-2"
         >
           <AssetDetailSidebarMetadata
+            :queue-key="queueKey"
             :is-active="activeTab === AssetDetailTabImageWithRoi.Info"
             :asset-type="assetType"
           />
@@ -81,11 +84,14 @@ const { activeTab } = storeToRefs(assetDetailStore)
           v-if="isImage && activeTab === AssetDetailTabImageWithRoi.ROI"
           class="py-2"
         >
-          <AssetDetailSidebarROI :is-active="activeTab === AssetDetailTabImageWithRoi.ROI" />
+          <AssetDetailSidebarROI
+            :is-active="activeTab === AssetDetailTabImageWithRoi.ROI"
+            :queue-key="queueKey"
+          />
         </div>
       </div>
       <div class="sidebar-info__actions px-2">
-        <AssetDetailSidebarActionsTeleportTarget />
+        <AssetDetailSidebarActionsTeleportTarget :queue-key="queueKey" />
       </div>
     </div>
   </div>

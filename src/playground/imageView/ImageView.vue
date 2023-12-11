@@ -45,7 +45,7 @@ const imageId2 = ref<IntegerIdNullable>(null)
             v-model="imageId2"
             :licence-id="100001"
             :ext-system="1"
-            queue-key="heroImage"
+            queue-key="listingImage"
             label="Lead image"
             expand-options
           />

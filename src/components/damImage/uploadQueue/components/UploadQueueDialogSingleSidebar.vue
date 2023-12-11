@@ -85,11 +85,14 @@ const { activeTab } = storeToRefs(assetDetailStore)
           v-if="isImage && activeTab === AssetDetailTabImageWithRoi.ROI"
           class="py-2"
         >
-          <AssetDetailSidebarROI :is-active="activeTab === AssetDetailTabImageWithRoi.ROI" />
+          <AssetDetailSidebarROI
+            :queue-key="queueKey"
+            :is-active="activeTab === AssetDetailTabImageWithRoi.ROI"
+          />
         </div>
       </div>
       <div class="sidebar-info__actions px-2">
-        <AssetDetailSidebarActionsTeleportTarget />
+        <AssetDetailSidebarActionsTeleportTarget :queue-key="queueKey" />
       </div>
     </div>
   </div>

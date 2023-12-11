@@ -432,7 +432,7 @@ const onDropzoneClick = () => {
     @on-confirm="onMetadataDialogConfirm"
     @on-close="onMetadataDialogClose"
   />
-  <AssetDetailDialog />
+  <AssetDetailDialog :queue-key="queueKey" />
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog"
     :queue-key="queueKey"

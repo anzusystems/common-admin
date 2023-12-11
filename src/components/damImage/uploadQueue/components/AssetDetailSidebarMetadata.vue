@@ -13,9 +13,11 @@ import { updateAssetMetadata } from '@/components/damImage/uploadQueue/api/damAs
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 
 withDefaults(
   defineProps<{
+    queueKey: UploadQueueKey
     isActive: boolean
     dataCy?: string
     assetType: DamAssetType
@@ -63,7 +65,10 @@ const onSave = async () => {
 </script>
 
 <template>
-  <AssetDetailSidebarActionsWrapper v-if="isActive">
+  <AssetDetailSidebarActionsWrapper
+    v-if="isActive"
+    :queue-key="queueKey"
+  >
     <ABtnPrimary
       type="submit"
       class="ml-2"

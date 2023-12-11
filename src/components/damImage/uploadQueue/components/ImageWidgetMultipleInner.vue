@@ -424,6 +424,6 @@ onMounted(() => {
       multiple
       @on-apply="onAssetUploadConfirm"
     />
-    <AssetDetailDialog />
+    <AssetDetailDialog :queue-key="queueKey" />
   </div>
 </template>
