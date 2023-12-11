@@ -353,9 +353,11 @@ import {
 import type { ImageAware, ImageCreateUpdateAware, ImageCreateUpdateAwareKeyed } from '@/types/ImageAware'
 import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
+import type { DamExtSystem, DamExtSystemMinimal } from '@/components/damImage/uploadQueue/composables/DamExtSystem'
 import { DamAuthorType, useDamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
 import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
+import { regionToCrop, cropToRegion } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 
 export {
   // COMPONENTS
@@ -602,6 +604,8 @@ export {
   DamKeyword,
   DamKeywordMinimal,
   DamAuthorType,
+  DamExtSystem,
+  DamExtSystemMinimal,
 
   // FACTORIES
   useAnzuUserFactory,
@@ -697,6 +701,8 @@ export {
   useJobBaseResource,
   useJobStatus,
   useAcl,
+  regionToCrop,
+  cropToRegion,
 
   // TRANSLATIONS
   messagesCs,
