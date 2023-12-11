@@ -429,6 +429,7 @@ onMounted(() => {
     <AssetDetailDialog
       v-if="localAssetDialog && assetDialog"
       :queue-key="queueKey"
+      @on-close="localAssetDialog = false"
     />
   </div>
 </template>

@@ -437,6 +437,7 @@ const onDropzoneClick = () => {
   <AssetDetailDialog
     v-if="localAssetDialog && assetDialog"
     :queue-key="queueKey"
+    @on-close="localAssetDialog = false"
   />
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog"
