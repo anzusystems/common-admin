@@ -186,7 +186,7 @@ const showDetail = async (id: DocId) => {
   try {
     assetDetailStore.setAsset(null)
     loading.value = true
-    dialog.value = true
+    dialog.value = props.queueKey
     updateUploadStore.value = true
     assetDetailStore.setAsset(await fetchAsset(damClient, id))
   } catch (e) {

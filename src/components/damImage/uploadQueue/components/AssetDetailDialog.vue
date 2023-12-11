@@ -99,7 +99,7 @@ const assetMainFile = computed(() => {
 
 <template>
   <VDialog
-    :model-value="dialog"
+    :model-value="true"
     fullscreen
   >
     <AssetDetailDialogLoader
