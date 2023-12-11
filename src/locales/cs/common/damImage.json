@@ -1,0 +1,162 @@
+{
+  "image": {
+    "model": {
+      "texts": {
+        "description": "Popis",
+        "source": "Zdroj"
+      }
+    },
+    "meta": {
+      "edit": "Upraviť obrázok"
+    },
+    "button": {
+      "options": "Upraviť obrazok",
+      "editAsset": "Upraviť v DAM",
+      "upload": "Nahrať",
+      "addFromDam": "Pridať z DAM",
+      "replaceFromDam": "Vymenit z DAM",
+      "removeImage": "Odstrannit obrazok"
+    }
+  },
+  "queueItem": {
+    "edit": "Upraviť v DAM",
+    "displayTitle": "Meno originálu",
+    "error": "Chyba",
+    "copyAssetId": "Kopírovať asset ID"
+  },
+  "asset": {
+    "model": {
+      "authors": "Autori",
+      "keywords": "Kľúčové slová"
+    },
+    "assetType": {
+      "image": "Obrázok",
+      "audio": "Audio",
+      "video": "Video",
+      "document": "Dokument"
+    },
+    "detail": {
+      "toggleInfo": "Info karta",
+      "metadataToggle": {
+        "show": "Skryť viac detailov",
+        "hide": "Zobraziť viac detailov"
+      },
+      "tabs": {
+        "info": "Info",
+        "roi": "Fókus"
+      },
+      "info": {
+        "status": {
+          "duplicate": "Hlavný súbor je duplikát.",
+          "draft": "Neobsahuje žiaden súbor.",
+          "deleting": "Čoskoro bude zmazaný.",
+          "failed": "Spracovávanie súboru zlyhalo."
+        },
+        "metadata": "Metaúdaje",
+        "file": "Info o súbore",
+        "field": {
+          "id": "Asset ID",
+          "mainFileId": "ID hlavného súboru",
+          "type": "Typ",
+          "mimeType": "Formát",
+          "size": "Veľkosť",
+          "dominantColor": "Farba",
+          "width": "Šírka",
+          "height": "Výška",
+          "ratio": "Pomer strán",
+          "animated": "Animované"
+        }
+      },
+      "roi": {
+        "title": "Náhľady",
+        "description": "Náhľad obrázku na mobile, počítači alebo v aplikácii.",
+        "refresh": "Znovu načítať náhľady",
+        "rotate": {
+          "rotateMainFileImage": "Otočenie obrázku (hlavného súboru)",
+          "rotateClockwise": "Otočiť doprava",
+          "rotateCounterclockwise": "Otočiť doľava"
+        }
+      }
+    },
+    "massOperations": {
+      "title": "Hromadné operácie",
+      "description": "Hromadná úprava metaúdajov. Ak chcete upravovať metaúdaje po riadkoch, použite tlačidlo vedľa riadka. Ak chcete upraviť všetky riadky naraz, použite tlačidlá úplne dole.",
+      "fillOneEmpty": "Vyplňte prázdne pole",
+      "fillAllEmpty": "Vyplniť len prázdne",
+      "replaceOne": "Nahradiť všade",
+      "replaceAll": "Nahradiť všetko",
+      "clearForm": "Vyčistiť",
+      "general": "Hlavné"
+    },
+    "metaIcons": {
+      "low": "Nízka kvalita",
+      "slots": "Sloty",
+      "rss": "RSS",
+      "fullHd": "FullHD",
+      "2k": "2K",
+      "qhd": "QHD",
+      "4k": "4K",
+      "8k": "8K"
+    },
+    "assetFileFailReason": {
+      "none": "Žiadny",
+      "unknown": "Neznámy",
+      "invalidChecksum": "Neplatný kontrolný súčet",
+      "invalidMimeType": "Neplatný typ súboru",
+      "downloadFailed": "Sťahovanie zlyhalo",
+      "invalidSize": "Neplatná veľkosť"
+    }
+  },
+  "upload": {
+    "waiting": "Čakanie",
+    "processing": "Spracováva sa",
+    "uploading": "Nahrávanie",
+    "done": "Hotovo",
+    "stop": "Zatvoriť",
+    "add": "Pridať do nahrávania",
+    "save": "Uložiť a pokračovať",
+    "saveAndApply": "Uložiť a použiť",
+    "title": "Nahrávanie",
+    "titleDone": "Nahrávanie ukončené",
+    "stopConfirmQuestion": "Chcete ukončiť nahrávanie?"
+  },
+  "keyword": {
+    "model": {
+      "name": "Meno"
+    },
+    "button": {
+      "add": "Pridať kľúčové slovo"
+    },
+    "meta": {
+      "create": "Vytvoriť kľúčové slovo"
+    }
+  },
+  "author": {
+    "model": {
+      "name": "Meno",
+      "identifier": "Identifikátor",
+      "type": "Typ"
+    },
+    "authorType": {
+      "none": "Žiaden",
+      "internal": "Interný",
+      "external": "Externý",
+      "agency": "Agentúra"
+    },
+    "button": {
+      "add": "Pridať nového autora"
+    },
+    "meta": {
+      "create": "Vytvorenie autora"
+    },
+    "conflicts": "Konflikt autorov"
+  },
+  "uploadErrors": {
+    "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",
+    "systemError": "Chyba",
+    "size": "Nesprávna veľkosť",
+    "offset": "Nesprávny offset",
+    "mimeType": "Nesprávny formát súboru"
+  },
+  "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne."
+}
