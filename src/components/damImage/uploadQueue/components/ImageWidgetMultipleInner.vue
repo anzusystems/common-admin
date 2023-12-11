@@ -94,7 +94,6 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
 const { t } = useI18n()
 
 const imagesLoading = ref(false)
-const localAssetDialog = ref(false)
 
 const imageStore = useImageStore()
 const { images, maxPosition } = storeToRefs(imageStore)
@@ -207,8 +206,7 @@ const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
-  assetDialog.value = true
-  localAssetDialog.value = true
+  assetDialog.value = props.queueKey
   try {
     const asset = await fetchAssetByFileId(damClient, assetFileId)
     assetDetailStore.setAsset(asset)
@@ -427,9 +425,8 @@ onMounted(() => {
       @on-apply="onAssetUploadConfirm"
     />
     <AssetDetailDialog
-      v-if="localAssetDialog && assetDialog"
+      v-if="assetDialog === queueKey"
       :queue-key="queueKey"
-      @on-close="localAssetDialog = false"
     />
   </div>
 </template>

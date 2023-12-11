@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
 import type { DocId } from '@/types/common'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 
 export enum AssetDetailTabImageWithRoi {
   Info = 'meta',
@@ -12,7 +13,7 @@ export enum AssetDetailTabImageWithRoi {
 export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
   const asset = ref<AssetDetailItemDto | null>(null)
   const authorConflicts = ref<DocId[]>([])
-  const dialog = ref(false)
+  const dialog = ref<null | UploadQueueKey>(null)
   const loading = ref(false)
   const metadataAreTouched = ref(false)
   const activeTab = ref<AssetDetailTabImageWithRoi>(AssetDetailTabImageWithRoi.Default)

@@ -93,7 +93,6 @@ const assetSelectDialog = ref(false)
 const metadataDialog = ref(false)
 const metadataDialogSaving = ref(false)
 const metadataDialogLoading = ref(false)
-const localAssetDialog = ref(false)
 
 const withoutImage = computed(() => {
   return isNull(props.modelValue)
@@ -219,8 +218,7 @@ const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
-  assetDialog.value = true
-  localAssetDialog.value = true
+  assetDialog.value = props.queueKey
   try {
     const asset = await fetchAssetByFileId(damClient, assetFileId)
     assetDetailStore.setAsset(asset)
@@ -435,9 +433,8 @@ const onDropzoneClick = () => {
     @on-close="onMetadataDialogClose"
   />
   <AssetDetailDialog
-    v-if="localAssetDialog && assetDialog"
+    v-if="assetDialog === queueKey"
     :queue-key="queueKey"
-    @on-close="localAssetDialog = false"
   />
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog"

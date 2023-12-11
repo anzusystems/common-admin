@@ -14,7 +14,6 @@ import AssetDetailDialogSidebar from '@/components/damImage/uploadQueue/componen
 import { assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import AssetImageRoiSelect from '@/components/damImage/uploadQueue/components/AssetImageRoiSelect.vue'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import type { IntegerIdNullable } from '@/types/common'
 
 withDefaults(
   defineProps<{
@@ -22,10 +21,6 @@ withDefaults(
   }>(),
   {}
 )
-
-const emit = defineEmits<{
-  (e: 'onClose'): void
-}>()
 
 const { t } = useI18n()
 
@@ -36,8 +31,7 @@ const { asset, dialog, activeTab, loading } = storeToRefs(assetDetailStore)
 
 const closeDialog = () => {
   assetDetailStore.setAsset(null)
-  dialog.value = false
-  emit('onClose')
+  dialog.value = null
 }
 
 const sidebar = ref(true)
@@ -105,7 +99,6 @@ const assetMainFile = computed(() => {
 
 <template>
   <VDialog
-    v-if="dialog"
     :model-value="dialog"
     fullscreen
   >
