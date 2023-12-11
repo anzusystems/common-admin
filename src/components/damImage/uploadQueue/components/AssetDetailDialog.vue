@@ -19,8 +19,7 @@ withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
   }>(),
-  {
-  }
+  {}
 )
 
 const { t } = useI18n()

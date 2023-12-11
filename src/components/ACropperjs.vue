@@ -149,8 +149,11 @@ onMounted(() => {
   }
   nextTick(() => {
     if (!isNull(imgEl.value)) {
+      console.log(imgEl.value)
       cropperInstance.value = new Cropper(imgEl.value as any, options)
-      loading.value = false
+      setTimeout(() => {
+        loading.value = false
+      }, 1000)
     }
   })
 })
@@ -159,18 +162,22 @@ onUnmounted(() => {
   destroy()
 })
 </script>
+
 <template>
-  <div :style="containerStyle">
-    <VProgressCircular
+  <div class="d-flex flex-column">
+    <div
       v-if="loading"
-      indeterminate
-    />
-    <div :style="{ opacity: loading ? 0 : undefined }">
+      class="d-flex w-100 align-center justify-center"
+    >
+      <VProgressCircular indeterminate />
+    </div>
+
+    <div :style="containerStyle">
       <img
         ref="imgEl"
+        :style="[{ 'max-width': '100%', opacity: loading ? 0 : 1 }, imgStyle]"
         :alt="alt"
         :src="src"
-        :style="imgStyle"
       >
     </div>
   </div>

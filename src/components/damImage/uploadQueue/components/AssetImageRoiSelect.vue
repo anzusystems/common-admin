@@ -84,7 +84,7 @@ const cropperEnd = () => {
 }
 
 const showCropper = computed(() => {
-  if (imageRoiStore.imageFile && imageRoiStore.imageFile.links?.image_detail && !imageRoiStore.loader) {
+  if (imageRoiStore.imageFile && imageUrl.value.length > 0 && !imageRoiStore.loader) {
     return true
   }
   return false
@@ -99,11 +99,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <VProgressCircular
-    v-if="imageRoiStore.loader"
-    indeterminate
-    color="primary"
-  />
   <ACropperjs
     v-if="showCropper"
     :key="imageRoiStore.timestampCropper"
@@ -117,7 +112,6 @@ onUnmounted(() => {
     :src="imageUrl"
     :view-mode="1"
     :zoom-on-wheel="false"
-    canvas
     responsive
   />
 </template>
