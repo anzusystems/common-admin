@@ -106,7 +106,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
 
   function loadDamPubConfig() {
     return new Promise((resolve, reject) => {
-      initialized.damPrvConfig = false
+      initialized.damPubConfig = false
       if (isUndefined(client)) {
         reject(false)
         return
