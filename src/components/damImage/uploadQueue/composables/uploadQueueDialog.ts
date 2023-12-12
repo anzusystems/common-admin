@@ -1,6 +1,7 @@
 import { ref } from 'vue'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 
-const uploadQueueDialog = ref(false)
+const uploadQueueDialog = ref<UploadQueueKey | null>(null)
 const uploadQueueSidebar = ref(false)
 
 export function useUploadQueueDialog () {

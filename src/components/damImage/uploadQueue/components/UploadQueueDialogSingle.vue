@@ -195,7 +195,7 @@ const { damClient } = useCommonAdminCoreDamOptions()
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
   assetDetailStore.setAsset(null)
-  uploadQueueDialog.value = false
+  uploadQueueDialog.value = null
 }
 
 const queueTotalCount = computed(() => {
@@ -300,7 +300,7 @@ onMounted(() => {
 
 <template>
   <VDialog
-    :model-value="uploadQueueDialog"
+    :model-value="true"
     fullscreen
   >
     <AssetDetailDialogLoader

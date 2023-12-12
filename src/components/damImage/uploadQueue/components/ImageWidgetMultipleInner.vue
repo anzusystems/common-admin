@@ -129,12 +129,12 @@ const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
-  uploadQueueDialog.value = true
+  uploadQueueDialog.value = props.queueKey
 }
 
 const onDrop = (files: File[]) => {
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
-  uploadQueueDialog.value = true
+  uploadQueueDialog.value = props.queueKey
 }
 
 const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
@@ -229,7 +229,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
       }
     })
   )
-  uploadQueueDialog.value = false
+  uploadQueueDialog.value = null
   uploadQueuesStore.stopUpload(props.queueKey)
 }
 
@@ -415,7 +415,7 @@ onMounted(() => {
       />
     </div>
     <UploadQueueDialog
-      v-if="uploadQueueDialog"
+      v-if="uploadQueueDialog === queueKey"
       :queue-key="queueKey"
       :ext-system="extSystem"
       :file-input-key="uploadQueue?.fileInputKey ?? -1"

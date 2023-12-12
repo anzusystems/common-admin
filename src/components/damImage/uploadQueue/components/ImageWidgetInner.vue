@@ -125,11 +125,11 @@ const actionLibrary = () => {
 
 const onDrop = (files: File[]) => {
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
-  uploadQueueDialog.value = true
+  uploadQueueDialog.value = props.queueKey
 }
 const onFileInput = (files: File[]) => {
   uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
-  uploadQueueDialog.value = true
+  uploadQueueDialog.value = props.queueKey
 }
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -437,7 +437,7 @@ const onDropzoneClick = () => {
     :queue-key="queueKey"
   />
   <UploadQueueDialogSingle
-    v-if="uploadQueueDialog"
+    v-if="uploadQueueDialog === queueKey"
     :queue-key="queueKey"
     :ext-system="extSystem"
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
