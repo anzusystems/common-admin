@@ -36,7 +36,7 @@
     "test": "exit 0"
   },
   "devDependencies": {
-    "@intlify/unplugin-vue-i18n": "^1.5.0",
+    "@intlify/unplugin-vue-i18n": "^1.6.0",
     "@kyvg/vue3-notification": "^3.1.0",
     "@mdi/font": "^7.3.67",
     "@rushstack/eslint-patch": "^1.6.0",
@@ -78,14 +78,14 @@
     "uuid": "^9.0.1",
     "vite": "5.0.8",
     "vite-plugin-dts": "^3.6.4",
-    "vite-plugin-vuetify": "^1.0.2",
+    "vite-plugin-vuetify": "^2.0.1",
     "vitepress": "1.0.0-rc.31",
     "vue": "3.3.11",
     "vue-flatpickr-component": "^11.0.3",
     "vue-i18n": "9.8.0",
     "vue-router": "4.2.5",
     "vue-tsc": "1.8.25",
-    "vuetify": "3.4.6",
+    "vuetify": "3.4.7",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
