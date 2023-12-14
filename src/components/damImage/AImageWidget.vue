@@ -24,6 +24,7 @@ const props = withDefaults(
     readonly?: boolean
     dataCy?: string | undefined
     expandOptions?: boolean
+    expandMetadata?: boolean
     disableOnClickMenu?: boolean
     width?: number | undefined
     callDeleteApiOnRemove?: boolean
@@ -37,6 +38,7 @@ const props = withDefaults(
     lockedById: undefined,
     dataCy: undefined,
     expandOptions: false,
+    expandMetadata: false,
     disableOnClickMenu: false,
     width: undefined,
     callDeleteApiOnRemove: false,
@@ -45,6 +47,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerIdNullable): void
+  (e: 'afterMetadataSaveSuccess'): void
 }>()
 
 const status = ref<'loading' | 'ready' | 'error'>('loading')
@@ -85,13 +88,25 @@ onMounted(async () => {
 })
 
 provide(ImageWidgetExtSystemConfigs, damConfigExtSystem)
+
+const innerComponent = ref<InstanceType<typeof ImageWidgetInner> | null>(null)
+
+const metadataConfirm = () => {
+  innerComponent.value?.metadataConfirm()
+}
+
+defineExpose({
+  metadataConfirm,
+})
 </script>
 
 <template>
   <ImageWidgetInner
     v-if="status === 'ready'"
+    ref="innerComponent"
     v-bind="props"
     @update:model-value="emit('update:modelValue', $event)"
+    @after-metadata-save-success="emit('afterMetadataSaveSuccess')"
   />
   <div
     v-else-if="status === 'error'"

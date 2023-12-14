@@ -4,9 +4,17 @@ import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AImageWidget from '@/components/damImage/AImageWidget.vue'
 import { ref } from 'vue'
 import type { IntegerIdNullable } from '@/types/common'
+import ADialogToolbar from '@/components/ADialogToolbar.vue'
 
 const imageId = ref<IntegerIdNullable>(null)
-const imageId2 = ref<IntegerIdNullable>(1256)
+const imageId2 = ref<IntegerIdNullable>(null)
+
+const dialog = ref(false)
+const widgetComponent = ref<InstanceType<typeof AImageWidget> | null>(null)
+
+const saveInsideDialog = () => {
+  widgetComponent.value?.metadataConfirm()
+}
 </script>
 
 <template>
@@ -26,8 +34,6 @@ const imageId2 = ref<IntegerIdNullable>(1256)
             </template>
           </AImageWidgetSimple>
         </VCol>
-      </VRow>
-      <VRow>
         <VCol cols="4">
           <AImageWidget
             v-model="imageId2"
@@ -46,9 +52,46 @@ const imageId2 = ref<IntegerIdNullable>(1256)
             :licence-id="100001"
             :ext-system="1"
             queue-key="listingImage"
-            label="Lead image"
             expand-options
           />
+        </VCol>
+        <VCol cols="4">
+          Expanded actions & metadata - only one at once in dialogs like embed:
+          <VBtn @click.stop="dialog = true">
+            Open dialog
+          </VBtn>
+          <VDialog
+            v-model="dialog"
+            :max-width="500"
+          >
+            <VCard v-if="dialog">
+              <ADialogToolbar @on-cancel="dialog = false">
+                test
+              </ADialogToolbar>
+              <VCardText>
+                <VRow>
+                  <VCol>
+                    <AImageWidget
+                      ref="widgetComponent"
+                      v-model="imageId2"
+                      :licence-id="100001"
+                      :ext-system="1"
+                      queue-key="embedImage"
+                      expand-options
+                      expand-metadata
+                      @after-metadata-save-success="dialog = false"
+                    />
+                  </VCol>
+                </VRow>
+              </VCardText>
+              <VCardActions>
+                <VSpacer />
+                <ABtnPrimary @click.stop="saveInsideDialog">
+                  Confirm
+                </ABtnPrimary>
+              </VCardActions>
+            </VCard>
+          </VDialog>
         </VCol>
       </VRow>
     </VCardText>

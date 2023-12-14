@@ -18,8 +18,11 @@ withDefaults(
     modelValue: boolean
     saving: boolean
     loading: boolean
+    expand?: boolean
   }>(),
-  {}
+  {
+    expand: false,
+  }
 )
 
 const emit = defineEmits<{
@@ -54,10 +57,48 @@ const onEditAsset = () => {
   if (isNull(imageDetail.value)) return
   emit('editAsset', imageDetail.value.dam.damId)
 }
+
+defineExpose({
+  confirm: onConfirm,
+})
 </script>
 
 <template>
+  <div v-if="expand">
+    <VRow v-if="loading">
+      <VCol>
+        <div class="d-flex align-center justify-center">
+          <VProgressCircular indeterminate />
+        </div>
+      </VCol>
+    </VRow>
+    <VRow v-if="imageDetail">
+      <VCol>
+        <VBtn @click.stop="onEditAsset">
+          {{ t('common.damImage.image.button.editAsset') }}
+        </VBtn>
+      </VCol>
+    </VRow>
+    <VRow v-if="imageDetail">
+      <VCol>
+        <AFormTextarea
+          v-model="imageDetail.texts.description"
+          :label="t('common.damImage.image.model.texts.description')"
+        />
+      </VCol>
+    </VRow>
+    <VRow v-if="imageDetail">
+      <VCol>
+        <AFormTextarea
+          v-model="imageDetail.texts.source"
+          :label="t('common.damImage.image.model.texts.source')"
+          :v="v$.image.texts.source"
+        />
+      </VCol>
+    </VRow>
+  </div>
   <VDialog
+    v-else
     :model-value="modelValue"
     :max-width="500"
     @update:model-value="onDialogModelUpdate"

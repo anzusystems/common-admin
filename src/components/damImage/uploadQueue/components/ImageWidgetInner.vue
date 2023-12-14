@@ -43,6 +43,7 @@ const props = withDefaults(
     readonly?: boolean
     dataCy?: string | undefined
     expandOptions?: boolean
+    expandMetadata?: boolean // only one at once, use in dialogs
     disableOnClickMenu?: boolean
     width?: number | undefined
     callDeleteApiOnRemove?: boolean
@@ -56,6 +57,7 @@ const props = withDefaults(
     lockedById: undefined,
     dataCy: undefined,
     expandOptions: false,
+    expandMetadata: false,
     disableOnClickMenu: false,
     width: undefined,
     callDeleteApiOnRemove: false,
@@ -64,6 +66,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerIdNullable): void
+  (e: 'afterMetadataSaveSuccess'): void
 }>()
 
 const imageWidgetExtSystemConfigs = inject<ShallowRef<Map<IntegerId, DamExtSystemConfig>> | undefined>(
@@ -89,7 +92,7 @@ const uploadQueuesStore = useUploadQueuesStore()
 const imageStore = useImageStore()
 const { uploadQueueDialog } = useUploadQueueDialog()
 
-const resImage = ref<null | ImageAware>(null)
+const resImage = ref<null | ImageCreateUpdateAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
 const metadataDialog = ref(false)
@@ -136,12 +139,15 @@ const onFileInput = (files: File[]) => {
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(DamAssetType.Image, imageWidgetExtSystemConfig)
 
-const reload = async (newImage: ImageAware | undefined, newImageId: IntegerIdNullable, force = false) => {
+const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
   resolvedSrc.value = imagePlaceholderPath
   if ((newImage && isNull(resImage.value)) || (newImage && force)) {
     resImage.value = cloneDeep(newImage)
     if (resImage.value) {
       resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+      if (props.expandMetadata) {
+        imageStore.setImageDetail(toRaw(resImage.value))
+      }
     }
     return
   }
@@ -153,6 +159,9 @@ const reload = async (newImage: ImageAware | undefined, newImageId: IntegerIdNul
     }
     if (!isNull(resImage.value)) {
       resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+      if (props.expandMetadata) {
+        imageStore.setImageDetail(toRaw(resImage.value))
+      }
     }
     return
   }
@@ -208,6 +217,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     }
     imageStore.setImageDetail(image)
     metadataDialogLoading.value = false
+    forceReloadViewWithExpandMetadata()
   }
 }
 
@@ -244,6 +254,7 @@ const onMetadataDialogConfirm = async () => {
     emit('update:modelValue', res.id)
     imageStore.setImageDetail(null)
     reload(res, res.id, true)
+    emit('afterMetadataSaveSuccess')
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -265,6 +276,13 @@ const onImageDelete = async () => {
   reset()
 }
 
+const forceReloadViewWithExpandMetadata = () => {
+  const detail = imageStore.imageDetail
+  if (!isNull(detail)) {
+    reload(detail, null, true)
+  }
+}
+
 const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   if (!items[0]) return
 
@@ -273,6 +291,9 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   }
   imageStore.setImageDetail(items[0])
   metadataDialog.value = true
+  if (props.expandMetadata) {
+    forceReloadViewWithExpandMetadata()
+  }
 }
 
 const expandedUploadButton = ref<InstanceType<typeof AFileInput> | null>(null)
@@ -284,6 +305,16 @@ const onDropzoneClick = () => {
   }
   expandedUploadButton.value?.activate()
 }
+
+const detailDialogMetadataComponent = ref<InstanceType<typeof ImageDetailDialogMetadata> | null>(null)
+
+const metadataConfirm = () => {
+  detailDialogMetadataComponent.value?.confirm()
+}
+
+defineExpose({
+  metadataConfirm,
+})
 </script>
 
 <template>
@@ -301,7 +332,7 @@ const onDropzoneClick = () => {
           class="d-flex flex-row"
         >
           <VBtn
-            v-if="imageLoaded"
+            v-if="imageLoaded && !expandMetadata"
             class="mr-2 mb-2"
             @click="actionEditMeta"
           >
@@ -350,7 +381,7 @@ const onDropzoneClick = () => {
             <VCard>
               <VList density="compact">
                 <VListItem
-                  v-if="imageLoaded"
+                  v-if="imageLoaded && !expandMetadata"
                   @click="actionEditMeta"
                 >
                   <VListItemTitle>{{ t('common.damImage.image.meta.edit') }}</VListItemTitle>
@@ -413,6 +444,16 @@ const onDropzoneClick = () => {
         @on-drop="onDrop"
       />
     </div>
+    <ImageDetailDialogMetadata
+      ref="detailDialogMetadataComponent"
+      v-model="metadataDialog"
+      :expand="expandMetadata"
+      :saving="metadataDialogSaving"
+      :loading="metadataDialogLoading"
+      @edit-asset="onEditAsset"
+      @on-confirm="onMetadataDialogConfirm"
+      @on-close="onMetadataDialogClose"
+    />
   </div>
   <AAssetSelect
     v-model="assetSelectDialog"
@@ -422,14 +463,6 @@ const onDropzoneClick = () => {
     :asset-type="DamAssetType.Image"
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
-  />
-  <ImageDetailDialogMetadata
-    v-model="metadataDialog"
-    :saving="metadataDialogSaving"
-    :loading="metadataDialogLoading"
-    @edit-asset="onEditAsset"
-    @on-confirm="onMetadataDialogConfirm"
-    @on-close="onMetadataDialogClose"
   />
   <AssetDetailDialog
     v-if="assetDialog === queueKey"
