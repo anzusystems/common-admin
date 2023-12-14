@@ -26,3 +26,8 @@ export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {
 //   name: string // licencedBlog, licencedUser, etc.
 //   value: IntegerIdNullable
 // }
+
+export interface ImageWidgetDamConfig {
+  licence: IntegerId
+  extSystem: IntegerId
+}

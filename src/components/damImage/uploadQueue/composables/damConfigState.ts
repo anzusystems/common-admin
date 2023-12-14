@@ -1,6 +1,5 @@
 import {
   type DamExtSystemConfig,
-  type DamExtSystemConfigItem,
   type DamPrvConfig,
   type DamPubConfig,
   UserAuthType,
@@ -21,40 +20,36 @@ import {
 } from '@/components/damImage/uploadQueue/composables/damAssetCustomFormApi'
 import { reactive, shallowRef } from 'vue'
 
-const createDefaultExtSystemConfig = (override: Partial<DamExtSystemConfigItem> = {}): DamExtSystemConfigItem => ({
-  ...({
-    sizeLimit: 0,
-    defaultFileVersion: '',
-    versions: [],
-    mimeTypes: [],
-    distribution: {
-      distributionServices: [],
-      distributionRequirements: {},
-    },
-    keywords: {
-      enabled: false,
-      required: false,
-    },
-    authors: {
-      enabled: false,
-      required: false,
-    },
-    customMetadataPinnedAmount: 1,
-    slots: [],
-  } as DamExtSystemConfigItem),
-  ...override,
-})
+// const createDefaultExtSystemConfig = (override: Partial<DamExtSystemConfigItem> = {}): DamExtSystemConfigItem => ({
+//   ...({
+//     sizeLimit: 0,
+//     defaultFileVersion: '',
+//     versions: [],
+//     mimeTypes: [],
+//     distribution: {
+//       distributionServices: [],
+//       distributionRequirements: {},
+//     },
+//     keywords: {
+//       enabled: false,
+//       required: false,
+//     },
+//     authors: {
+//       enabled: false,
+//       required: false,
+//     },
+//     customMetadataPinnedAmount: 1,
+//     slots: [],
+//   } as DamExtSystemConfigItem),
+//   ...override,
+// })
 
 const initialized = reactive<{
   damPubConfig: boolean
   damPrvConfig: boolean
-  damConfigExtSystem: IntegerId | null
-  damConfigAssetCustomFormElements: IntegerId | null
 }>({
   damPubConfig: false,
   damPrvConfig: false,
-  damConfigExtSystem: null,
-  damConfigAssetCustomFormElements: null,
 })
 
 const damPubConfig = shallowRef<DamPubConfig>({
@@ -80,23 +75,14 @@ const damPrvConfig = shallowRef<DamPrvConfig>({
   },
 })
 
-const damConfigExtSystem = shallowRef<DamExtSystemConfig>({
-  assetExternalProviders: {},
-  audio: createDefaultExtSystemConfig(),
-  document: createDefaultExtSystemConfig(),
-  image: createDefaultExtSystemConfig(),
-  video: createDefaultExtSystemConfig(),
-})
+const damConfigExtSystem = shallowRef(new Map<IntegerId, DamExtSystemConfig>())
 
-const damConfigAssetCustomFormElements = shallowRef<{ [key in DamAssetType]: CustomDataFormElement[] }>({
-  image: [],
-  audio: [],
-  video: [],
-  document: [],
-})
+const damConfigAssetCustomFormElements = shallowRef(
+  new Map<IntegerId, { [key in DamAssetType]: CustomDataFormElement[] }>()
+)
 
-const damConfigDistributionCustomFormElements = shallowRef<Record<DamDistributionServiceName, CustomDataFormElement[]>>(
-  {}
+const damConfigDistributionCustomFormElements = shallowRef(
+  new Map<DamDistributionServiceName, CustomDataFormElement[]>()
 )
 
 export function useDamConfigState(client: undefined | (() => AxiosInstance) = undefined) {
@@ -136,6 +122,10 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     }
   }
 
+  function isDamPubConfigLoaded() {
+    return initialized.damPubConfig
+  }
+
   function loadDamPrvConfig() {
     return new Promise((resolve, reject) => {
       initialized.damPubConfig = false
@@ -171,9 +161,12 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     }
   }
 
+  function isDamPrvConfigLoaded() {
+    return initialized.damPrvConfig
+  }
+
   function loadDamConfigExtSystem(extSystemId: IntegerId) {
     return new Promise((resolve, reject) => {
-      initialized.damConfigExtSystem = null
       if (isUndefined(client)) {
         reject(false)
         return
@@ -195,22 +188,26 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
 
   function setDamConfigExtSystem(data: DamExtSystemConfig, extSystemId: IntegerId) {
     try {
-      damConfigExtSystem.value.assetExternalProviders = data.assetExternalProviders
-      damConfigExtSystem.value.audio = data.audio
-      damConfigExtSystem.value.document = data.document
-      damConfigExtSystem.value.image = data.image
-      damConfigExtSystem.value.video = data.video
-
-      initialized.damConfigExtSystem = extSystemId
+      const config = {
+        assetExternalProviders: data.assetExternalProviders,
+        audio: data.audio,
+        document: data.document,
+        image: data.image,
+        video: data.video,
+      }
+      damConfigExtSystem.value.set(extSystemId, config)
     } catch (err) {
       throw new Error('Unable to load dam ext system config. Incorrect fields in json.')
     }
   }
 
+  function getDamConfigExtSystem(extSystemId: IntegerId) {
+    return damConfigExtSystem.value.get(extSystemId)
+  }
+
   // todo add support to load only selected types
   function loadDamConfigAssetCustomFormElements(extSystemId: IntegerId) {
     return new Promise((resolve, reject) => {
-      initialized.damConfigExtSystem = null
       if (isUndefined(client)) {
         reject(false)
         return
@@ -250,15 +247,20 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     extSystemId: IntegerId
   ) {
     try {
-      damConfigAssetCustomFormElements.value.image = responses[0].data
-      damConfigAssetCustomFormElements.value.audio = responses[1].data
-      damConfigAssetCustomFormElements.value.video = responses[2].data
-      damConfigAssetCustomFormElements.value.document = responses[3].data
-
-      initialized.damConfigAssetCustomFormElements = extSystemId
+      const config = {
+        image: responses[0].data,
+        audio: responses[1].data,
+        video: responses[2].data,
+        document: responses[3].data,
+      }
+      damConfigAssetCustomFormElements.value.set(extSystemId, config)
     } catch (err) {
       throw new Error('Unable to load asset custom form config. Incorrect fields in json.')
     }
+  }
+
+  function getDamConfigAssetCustomFormElements(extSystemId: IntegerId) {
+    return damConfigAssetCustomFormElements.value.get(extSystemId)
   }
 
   function loadDamConfigDistributionCustomFormElements (distributionServiceName: DamDistributionServiceName) {
@@ -267,13 +269,13 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
         reject(false)
         return
       }
-      if (damConfigDistributionCustomFormElements.value[distributionServiceName]) {
+      if (damConfigDistributionCustomFormElements.value.has(distributionServiceName)) {
         resolve(true)
         return
       }
       fetchDistributionCustomFormElements(client, distributionServiceName)
         .then((res) => {
-          damConfigDistributionCustomFormElements.value[distributionServiceName] = res.data
+          damConfigDistributionCustomFormElements.value.set(distributionServiceName , res.data)
           resolve(true)
           return
         })
@@ -296,5 +298,9 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     loadDamConfigExtSystem,
     loadDamConfigAssetCustomFormElements,
     loadDamConfigDistributionCustomFormElements,
+    isDamPubConfigLoaded,
+    isDamPrvConfigLoaded,
+    getDamConfigExtSystem,
+    getDamConfigAssetCustomFormElements,
   }
 }

@@ -2,9 +2,8 @@ import type { DocId } from '@/types/common'
 import { defineCached } from '@/composables/system/defineCached'
 import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { isNull } from '@/utils/common'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const mapFullToMinimal = (author: DamAuthor): DamAuthorMinimal => ({
   id: author.id,
@@ -21,12 +20,9 @@ const { cache, toFetch, fetch, add, addManual, addManualMinimal, has, get, isLoa
   DamAuthor,
   DamAuthorMinimal
 >(mapFullToMinimal, mapIdToMinimal, (ids) => {
-  const { initialized } = useDamConfigState()
-  if (isNull(initialized.damConfigExtSystem)) {
-    throw new Error('Ext system must be initialised.')
-  }
+  const { cachedExtSystemId } = useExtSystemIdForCached()
   const { damClient } = useCommonAdminCoreDamOptions()
-  return fetchAuthorListByIds(damClient, initialized.damConfigExtSystem, ids)
+  return fetchAuthorListByIds(damClient, cachedExtSystemId.value, ids)
 })
 
 export const useDamCachedAuthors = () => {

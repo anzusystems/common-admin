@@ -334,6 +334,7 @@ const showDetail = async (id: DocId) => {
           </VToolbar>
           <UploadQueueEditable
             :queue-key="queueKey"
+            :ext-system="extSystem"
             :mass-operations="uploadQueueSidebar"
             @show-detail="showDetail"
           />

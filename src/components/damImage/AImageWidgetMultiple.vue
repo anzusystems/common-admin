@@ -4,8 +4,10 @@ import { onMounted, provide, ref } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
+import { isUndefined } from '@/utils/common'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const props = withDefaults(
   defineProps<{
@@ -48,15 +50,23 @@ const {
   damConfigExtSystem,
   loadDamPrvConfig,
   loadDamConfigAssetCustomFormElements,
+  getDamConfigExtSystem,
+  getDamConfigAssetCustomFormElements,
 } = useDamConfigState(damClient)
 
 onMounted(async () => {
+  const { cachedExtSystemId } = useExtSystemIdForCached()
+  cachedExtSystemId.value = props.extSystem
   const promises: Promise<any>[] = []
   if (!initialized.damPrvConfig) {
     promises.push(loadDamPrvConfig())
   }
-  if (initialized.damConfigExtSystem !== props.extSystem) {
+  const configExtSystem = getDamConfigExtSystem(props.extSystem)
+  if (isUndefined(configExtSystem)) {
     promises.push(loadDamConfigExtSystem(props.extSystem))
+  }
+  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.extSystem)
+  if (isUndefined(configAssetCustomFormElements)) {
     promises.push(loadDamConfigAssetCustomFormElements(props.extSystem))
   }
   try {
@@ -71,10 +81,10 @@ const innerComponent = ref<InstanceType<typeof ImageWidgetMultipleInner> | null>
 
 const saveImages = async () => {
   if (!innerComponent.value) return false
-  return await innerComponent.value.saveImages() as boolean
+  return (await innerComponent.value.saveImages()) as boolean
 }
 
-provide(ImageWidgetExtSystemConfig, damConfigExtSystem)
+provide(ImageWidgetExtSystemConfigs, damConfigExtSystem)
 
 defineExpose({
   saveImages,

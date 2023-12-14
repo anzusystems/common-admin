@@ -22,7 +22,7 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
-import { isNull } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
@@ -68,10 +68,15 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     return []
   }
 
-  async function addByFiles(queueKey: UploadQueueKey, assetLicence: IntegerId, files: File[]) {
-    const { damConfigExtSystem } = useDamConfigState()
+  async function addByFiles(queueKey: UploadQueueKey, extSystem: IntegerId, assetLicence: IntegerId, files: File[]) {
+    const { getDamConfigExtSystem } = useDamConfigState()
+    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+    const configExtSystem = getDamConfigExtSystem(extSystem)
+    if (isUndefined(configExtSystem)) {
+      throw new Error('Ext system must be initialised.')
+    }
     for await (const file of files) {
-      const type = getAssetTypeByMimeType(damFileTypeFix(file), damConfigExtSystem.value)
+      const type = getAssetTypeByMimeType(damFileTypeFix(file), configExtSystem)
       if (!type || type !== DamAssetType.Image) continue // only image now
       const queueItem = createDefault(
         'file_' + file.name,

@@ -14,7 +14,7 @@ import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
-import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
@@ -66,12 +66,14 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerIdNullable): void
 }>()
 
-const imageWidgetExtSystemConfig = inject<ShallowRef<DamExtSystemConfig> | undefined>(
-  ImageWidgetExtSystemConfig,
+const imageWidgetExtSystemConfigs = inject<ShallowRef<Map<IntegerId, DamExtSystemConfig>> | undefined>(
+  ImageWidgetExtSystemConfigs,
   undefined
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const imageWidgetExtSystemConfig = imageWidgetExtSystemConfigs?.value?.get(props.extSystem)
 
-if (isUndefined(imageWidgetExtSystemConfig)) {
+if (isUndefined(imageWidgetExtSystemConfigs) || isUndefined(imageWidgetExtSystemConfig)) {
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
 
@@ -124,18 +126,15 @@ const actionLibrary = () => {
 }
 
 const onDrop = (files: File[]) => {
-  uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+  uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
   uploadQueueDialog.value = props.queueKey
 }
 const onFileInput = (files: File[]) => {
-  uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+  uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
   uploadQueueDialog.value = props.queueKey
 }
 
-const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
-  DamAssetType.Image,
-  imageWidgetExtSystemConfig.value
-)
+const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(DamAssetType.Image, imageWidgetExtSystemConfig)
 
 const reload = async (newImage: ImageAware | undefined, newImageId: IntegerIdNullable, force = false) => {
   resolvedSrc.value = imagePlaceholderPath
@@ -435,6 +434,7 @@ const onDropzoneClick = () => {
   <AssetDetailDialog
     v-if="assetDialog === queueKey"
     :queue-key="queueKey"
+    :ext-system="extSystem"
   />
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog === queueKey"

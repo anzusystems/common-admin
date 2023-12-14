@@ -6,10 +6,12 @@ import type { DamAssetType } from '@/types/coreDam/Asset'
 import UploadQueueDialogSingleSidebarMetadataContent from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebarMetadataContent.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useAlerts } from '@/composables/system/alerts'
+import type { IntegerId } from '@/types/common'
 
 withDefaults(
   defineProps<{
     queueKey: string
+    extSystem: IntegerId
     isActive: boolean
     dataCy?: string
     assetType: DamAssetType
@@ -70,5 +72,8 @@ const onSaveAndApply = async () => {
       {{ t('common.damImage.upload.saveAndApply') }}
     </ABtnPrimary>
   </AssetDetailSidebarActionsWrapper>
-  <UploadQueueDialogSingleSidebarMetadataContent :queue-key="queueKey" />
+  <UploadQueueDialogSingleSidebarMetadataContent
+    :queue-key="queueKey"
+    :ext-system="extSystem"
+  />
 </template>

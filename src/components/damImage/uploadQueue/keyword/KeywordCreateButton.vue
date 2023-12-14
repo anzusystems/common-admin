@@ -4,7 +4,7 @@ import { ADamKeywordCreateValidationScopeSymbol } from '@/components/damImage/up
 import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import { isNull, isUndefined } from '@/utils/common'
+import { isUndefined } from '@/utils/common'
 import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -16,9 +16,11 @@ import { createKeyword, ENTITY } from '@/components/damImage/uploadQueue/api/key
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import ARow from '@/components/ARow.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
+import type { IntegerId } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
+    extSystem: IntegerId
     initialValue?: string
     disableRedirect?: boolean
     variant?: 'button' | 'icon'
@@ -44,21 +46,24 @@ const emit = defineEmits<{
 }>()
 
 const { damClient } = useCommonAdminCoreDamOptions()
-const { initialized } = useDamConfigState()
-if (isNull(initialized.damConfigExtSystem)) {
+const { getDamConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configExtSystem = getDamConfigExtSystem(props.extSystem)
+if (isUndefined(configExtSystem)) {
   throw new Error('Ext system must be initialised.')
 }
 
 const { createDefault } = useDamKeywordFactory()
-const keyword = ref<DamKeyword>(createDefault(initialized.damConfigExtSystem))
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const keyword = ref<DamKeyword>(createDefault(props.extSystem))
 const dialog = ref(false)
 const buttonLoading = ref(false)
 
 const onClick = () => {
-  if (isNull(initialized.damConfigExtSystem)) {
+  if (isUndefined(configExtSystem)) {
     throw new Error('Ext system must be initialised.')
   }
-  keyword.value = createDefault(initialized.damConfigExtSystem, true)
+  keyword.value = createDefault(props.extSystem, true)
   keyword.value.name = props.initialValue
   dialog.value = true
 }

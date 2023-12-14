@@ -1,15 +1,21 @@
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import { isNull } from '@/utils/common'
+import { isUndefined } from '@/utils/common'
 import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { fetchAuthorList, fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import type { IntegerId } from '@/types/common'
 
-export const useAuthorSelectActions = () => {
+export const useAuthorSelectActions = (extSystem: IntegerId) => {
   const { damClient } = useCommonAdminCoreDamOptions()
-  const { initialized } = useDamConfigState()
+  const { getDamConfigExtSystem } = useDamConfigState()
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  const configExtSystem = getDamConfigExtSystem(extSystem)
+  if (isUndefined(configExtSystem)) {
+    throw new Error('Ext system must be initialised.')
+  }
 
   const mapToMinimal = (author: DamAuthor): DamAuthorMinimal => ({
     id: author.id,
@@ -31,24 +37,15 @@ export const useAuthorSelectActions = () => {
   }
 
   const fetchItems = async (pagination: Pagination, filterBag: FilterBag) => {
-    if (isNull(initialized.damConfigExtSystem)) {
-      throw new Error('Ext system must be initialised.')
-    }
-    return mapToValueObjects(await fetchAuthorList(damClient, initialized.damConfigExtSystem, pagination, filterBag))
+    return mapToValueObjects(await fetchAuthorList(damClient, extSystem, pagination, filterBag))
   }
 
   const fetchItemsMinimal = async (pagination: Pagination, filterBag: FilterBag) => {
-    if (isNull(initialized.damConfigExtSystem)) {
-      throw new Error('Ext system must be initialised.')
-    }
-    return mapToMinimals(await fetchAuthorList(damClient, initialized.damConfigExtSystem, pagination, filterBag))
+    return mapToMinimals(await fetchAuthorList(damClient, extSystem, pagination, filterBag))
   }
 
   const fetchItemsByIds = async (ids: string[]) => {
-    if (isNull(initialized.damConfigExtSystem)) {
-      throw new Error('Ext system must be initialised.')
-    }
-    return mapToValueObjects(await fetchAuthorListByIds(damClient, initialized.damConfigExtSystem, ids))
+    return mapToValueObjects(await fetchAuthorListByIds(damClient, extSystem, ids))
   }
 
   return {

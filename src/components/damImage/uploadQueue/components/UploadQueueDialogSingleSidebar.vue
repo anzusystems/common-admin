@@ -4,7 +4,7 @@ import {
   useAssetDetailStore,
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
-import type { DocId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import type { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 import { useI18n } from 'vue-i18n'
@@ -15,6 +15,7 @@ import UploadQueueDialogSingleSidebarMetadata from '@/components/damImage/upload
 withDefaults(
   defineProps<{
     queueKey: string
+    extSystem: IntegerId
     assetId: DocId
     isVideo: boolean
     isAudio: boolean
@@ -75,6 +76,7 @@ const { activeTab } = storeToRefs(assetDetailStore)
         >
           <UploadQueueDialogSingleSidebarMetadata
             :queue-key="queueKey"
+            :ext-system="extSystem"
             :is-active="activeTab === AssetDetailTabImageWithRoi.Info"
             :asset-type="assetType"
             @on-save="emit('onSave')"

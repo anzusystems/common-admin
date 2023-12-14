@@ -1,15 +1,21 @@
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import { isNull } from '@/utils/common'
+import { isUndefined } from '@/utils/common'
 import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { fetchKeywordList, fetchKeywordListByIds } from '@/components/damImage/uploadQueue/api/keywordApi'
+import type { IntegerId } from '@/types/common'
 
-export const useKeywordSelectActions = () => {
+export const useKeywordSelectActions = (extSystem: IntegerId) => {
   const { damClient } = useCommonAdminCoreDamOptions()
-  const { initialized } = useDamConfigState()
+  const { getDamConfigExtSystem } = useDamConfigState()
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  const configExtSystem = getDamConfigExtSystem(extSystem)
+  if (isUndefined(configExtSystem)) {
+    throw new Error('Ext system must be initialised.')
+  }
 
   const mapToValueObject = (keyword: DamKeyword): ValueObjectOption<string> => ({
     title: keyword.name,
@@ -30,24 +36,15 @@ export const useKeywordSelectActions = () => {
   }
 
   const fetchItems = async (pagination: Pagination, filterBag: FilterBag) => {
-    if (isNull(initialized.damConfigExtSystem)) {
-      throw new Error('Ext system must be initialised.')
-    }
-    return mapToValueObjects(await fetchKeywordList(damClient, initialized.damConfigExtSystem, pagination, filterBag))
+    return mapToValueObjects(await fetchKeywordList(damClient, extSystem, pagination, filterBag))
   }
 
   const fetchItemsMinimal = async (pagination: Pagination, filterBag: FilterBag) => {
-    if (isNull(initialized.damConfigExtSystem)) {
-      throw new Error('Ext system must be initialised.')
-    }
-    return mapToMinimals(await fetchKeywordList(damClient, initialized.damConfigExtSystem, pagination, filterBag))
+    return mapToMinimals(await fetchKeywordList(damClient, extSystem, pagination, filterBag))
   }
 
   const fetchItemsByIds = async (ids: string[]) => {
-    if (isNull(initialized.damConfigExtSystem)) {
-      throw new Error('Ext system must be initialised.')
-    }
-    return mapToValueObjects(await fetchKeywordListByIds(damClient, initialized.damConfigExtSystem, ids))
+    return mapToValueObjects(await fetchKeywordListByIds(damClient, extSystem, ids))
   }
 
   return {

@@ -4,10 +4,13 @@ import { useI18n } from 'vue-i18n'
 import type { DamAssetType } from '@/types/coreDam/Asset'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
+import { isUndefined } from '@/utils/common'
+import type { IntegerId } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
     assetType: DamAssetType
+    extSystem: IntegerId
     modelValue: { [key: string]: any }
   }>(),
   {}
@@ -34,10 +37,15 @@ const replaceField = (elementProperty: string, value: any) => {
   emit('replaceField', { assetType: props.assetType, elementProperty, value })
 }
 
-const { damConfigAssetCustomFormElements } = useDamConfigState()
+const { getDamConfigAssetCustomFormElements } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.extSystem)
+if (isUndefined(configAssetCustomFormElements)) {
+  throw new Error('Custom form elements must be initialised.')
+}
 
 const elements = computed(() => {
-  return damConfigAssetCustomFormElements.value[props.assetType]
+  return configAssetCustomFormElements[props.assetType]
 })
 </script>
 

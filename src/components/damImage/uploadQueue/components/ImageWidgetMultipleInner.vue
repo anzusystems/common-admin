@@ -3,7 +3,7 @@ import type { DocId, IntegerId } from '@/types/common'
 import { computed, inject, nextTick, onMounted, ref, type ShallowRef, toRaw } from 'vue'
 import { isNull, isString, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import { ImageWidgetExtSystemConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleItem.vue'
@@ -71,12 +71,14 @@ const emit = defineEmits<{
 
 const assetSelectDialog = ref(false)
 
-const imageWidgetExtSystemConfig = inject<ShallowRef<DamExtSystemConfig> | undefined>(
-  ImageWidgetExtSystemConfig,
+const imageWidgetExtSystemConfigs = inject<ShallowRef<Map<IntegerId, DamExtSystemConfig>> | undefined>(
+  ImageWidgetExtSystemConfigs,
   undefined
 )
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const imageWidgetExtSystemConfig = imageWidgetExtSystemConfigs?.value?.get(props.extSystem)
 
-if (isUndefined(imageWidgetExtSystemConfig)) {
+if (isUndefined(imageWidgetExtSystemConfigs) || isUndefined(imageWidgetExtSystemConfig)) {
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
 
@@ -88,7 +90,7 @@ const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   DamAssetType.Image,
-  imageWidgetExtSystemConfig.value
+  imageWidgetExtSystemConfig
 )
 
 const { t } = useI18n()
@@ -128,12 +130,12 @@ const uploadQueue = computed(() => {
 const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
-  uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+  uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
   uploadQueueDialog.value = props.queueKey
 }
 
 const onDrop = (files: File[]) => {
-  uploadQueuesStore.addByFiles(props.queueKey, props.licenceId, files)
+  uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
   uploadQueueDialog.value = props.queueKey
 }
 
@@ -427,6 +429,7 @@ onMounted(() => {
     <AssetDetailDialog
       v-if="assetDialog === queueKey"
       :queue-key="queueKey"
+      :ext-system="extSystem"
     />
   </div>
 </template>

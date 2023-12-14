@@ -4,10 +4,13 @@ import type { DamAssetType } from '@/types/coreDam/Asset'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import type { IntegerId } from '@/types/common'
+import { isUndefined } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
     assetType: DamAssetType
+    extSystem: IntegerId
     modelValue: { [key: string]: any }
     dataCy?: string
   }>(),
@@ -20,16 +23,26 @@ const emit = defineEmits<{
   (e: 'anyChange'): void
 }>()
 
-const { damConfigAssetCustomFormElements } = useDamConfigState()
+const { getDamConfigAssetCustomFormElements, getDamConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.extSystem)
+if (isUndefined(configAssetCustomFormElements)) {
+  throw new Error('Custom form elements must be initialised.')
+}
 
 const elements = computed(() => {
-  return damConfigAssetCustomFormElements.value[props.assetType]
+  return configAssetCustomFormElements[props.assetType]
 })
 
-const { damConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configExtSystem = getDamConfigExtSystem(props.extSystem)
+
+if (isUndefined(configExtSystem)) {
+  throw new Error('Ext system must be initialised.')
+}
 
 const pinnedCount = computed(() => {
-  return damConfigExtSystem.value[props.assetType].customMetadataPinnedAmount
+  return configExtSystem[props.assetType].customMetadataPinnedAmount
 })
 </script>
 

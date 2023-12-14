@@ -8,10 +8,12 @@ import AssetCustomMetadataFormMassOperations from '@/components/damImage/uploadQ
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import { useUploadQueueMassOperations } from '@/components/damImage/uploadQueue/composables/uploadQueueMassOperations'
+import type { IntegerId } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
+    extSystem: IntegerId
   }>(),
   {}
 )
@@ -151,6 +153,7 @@ onMounted(() => {
                           v-model="massOperationsKeywords"
                           :label="t('common.damImage.asset.model.keywords')"
                           clearable
+                          :ext-system="extSystem"
                           multiple
                           :validation-scope="false"
                         />
@@ -202,6 +205,7 @@ onMounted(() => {
                         <AuthorRemoteAutocompleteWithCached
                           v-model="massOperationsAuthors"
                           :label="t('common.damImage.asset.model.authors')"
+                          :ext-system="extSystem"
                           clearable
                           multiple
                           :validation-scope="false"
@@ -252,6 +256,7 @@ onMounted(() => {
               <AssetCustomMetadataFormMassOperations
                 v-model="massOperationsData.image"
                 :asset-type="DamAssetType.Image"
+                :ext-system="extSystem"
                 @fill-empty-field="fillEmptyField"
                 @replace-field="replaceField"
               />

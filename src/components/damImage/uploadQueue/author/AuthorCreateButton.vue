@@ -5,7 +5,7 @@ import type { ValidationScope } from '@/types/Validation'
 import { ADamAuthorCreateValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { useDamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
-import { isNull, isUndefined } from '@/utils/common'
+import { isUndefined } from '@/utils/common'
 import { useAuthorValidation } from '@/components/damImage/uploadQueue/author/authorValidation'
 import { useAlerts } from '@/composables/system/alerts'
 import { createAuthor } from '@/components/damImage/uploadQueue/api/authorApi'
@@ -18,9 +18,11 @@ import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import ARow from '@/components/ARow.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import AFormValueObjectOptionsSelect from '@/components/form/AFormValueObjectOptionsSelect.vue'
+import type { IntegerId } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
+    extSystem: IntegerId
     initialValue?: string
     disableRedirect?: boolean
     variant?: 'button' | 'icon'
@@ -46,21 +48,24 @@ const emit = defineEmits<{
 }>()
 
 const { damClient } = useCommonAdminCoreDamOptions()
-const { initialized } = useDamConfigState()
-if (isNull(initialized.damConfigExtSystem)) {
+const { getDamConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configExtSystem = getDamConfigExtSystem(props.extSystem)
+if (isUndefined(configExtSystem)) {
   throw new Error('Ext system must be initialised.')
 }
 
 const { createDefault } = useDamAuthorFactory()
-const author = ref<DamAuthor>(createDefault(initialized.damConfigExtSystem))
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const author = ref<DamAuthor>(createDefault(props.extSystem))
 const dialog = ref(false)
 const buttonLoading = ref(false)
 
 const onClick = () => {
-  if (isNull(initialized.damConfigExtSystem)) {
+  if (isUndefined(configExtSystem)) {
     throw new Error('Ext system must be initialised.')
   }
-  author.value = createDefault(initialized.damConfigExtSystem, true)
+  author.value = createDefault(props.extSystem, true)
   author.value.name = props.initialValue
   dialog.value = true
 }

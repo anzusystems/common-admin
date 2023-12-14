@@ -2,9 +2,8 @@ import type { DocId } from '@/types/common'
 import { defineCached } from '@/composables/system/defineCached'
 import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import { fetchKeywordListByIds } from '@/components/damImage/uploadQueue/api/keywordApi'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { isNull } from '@/utils/common'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const mapFullToMinimal = (keyword: DamKeyword): DamKeywordMinimal => ({
   id: keyword.id,
@@ -20,12 +19,9 @@ const { cache, toFetch, fetch, add, addManual, addManualMinimal, has, get, isLoa
   DamKeyword,
   DamKeywordMinimal
 >(mapFullToMinimal, mapIdToMinimal, (ids) => {
-  const { initialized } = useDamConfigState()
-  if (isNull(initialized.damConfigExtSystem)) {
-    throw new Error('Ext system must be initialised.')
-  }
+  const { cachedExtSystemId } = useExtSystemIdForCached()
   const { damClient } = useCommonAdminCoreDamOptions()
-  return fetchKeywordListByIds(damClient, initialized.damConfigExtSystem, ids)
+  return fetchKeywordListByIds(damClient, cachedExtSystemId.value, ids)
 })
 
 export const useDamCachedKeywords = () => {

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { DocId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import type { ValidationScope } from '@/types/Validation'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -21,6 +21,7 @@ import AuthorCreateButton from '@/components/damImage/uploadQueue/author/AuthorC
 const props = withDefaults(
   defineProps<{
     modelValue: DocId | null | DocId[] | any
+    extSystem: IntegerId
     queueId?: string | undefined
     label?: string | undefined
     required?: boolean | null
@@ -72,7 +73,8 @@ const rules = {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validationScope })
 
-const { fetchItemsMinimal } = useAuthorSelectActions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { fetchItemsMinimal } = useAuthorSelectActions(props.extSystem)
 
 const innerFilter = useAuthorFilter()
 
@@ -171,6 +173,7 @@ onMounted(() => {
     <div>
       <AuthorCreateButton
         variant="icon"
+        :ext-system="extSystem"
         data-cy="add-author"
         :initial-value="addNewAuthorText"
         disable-redirect

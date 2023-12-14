@@ -2,13 +2,12 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { type AssetCustomData, DamAssetStatus } from '@/types/coreDam/Asset'
-import type { DocId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import { type UploadQueueItem, UploadQueueItemStatus, type UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { AssetFileFailReason } from '@/types/coreDam/AssetFile'
 import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
 import { prettyBytes } from '@/utils/file'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import AssetCustomMetadataForm from '@/components/damImage/uploadQueue/components/AssetCustomMetadataForm.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
 import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
@@ -16,11 +15,14 @@ import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueu
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import { isNull } from '@/utils/common'
+import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
+import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
 
 const props = withDefaults(
   defineProps<{
     index: number
     queueKey: string
+    extSystem: IntegerId
     customData: AssetCustomData
     keywords: DocId[]
     authors: DocId[]
@@ -99,8 +101,6 @@ const status = computed(() => {
   return props.item.assetStatus
 })
 
-const { damConfigExtSystem } = useDamConfigState()
-
 const cancelItem = () => {
   emit('cancelItem', { index: props.index, item: props.item, queueKey: props.queueKey })
 }
@@ -115,6 +115,11 @@ const showDetail = async () => {
   if (isNull(props.item.assetId)) return
   emit('showDetail', props.item.assetId)
 }
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
+const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
+const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
 </script>
 
 <template>
@@ -246,11 +251,12 @@ const showDetail = async () => {
           <AssetCustomMetadataForm
             v-if="item"
             v-model="customData"
+            :ext-system="extSystem"
             :asset-type="assetType"
           >
             <template #after-pinned>
               <VRow
-                v-if="damConfigExtSystem[assetType].keywords.enabled"
+                v-if="keywordEnabled"
                 dense
                 class="my-2"
               >
@@ -262,10 +268,11 @@ const showDetail = async () => {
                     <KeywordRemoteAutocompleteWithCached
                       v-model="keywords"
                       :queue-id="queueKey"
+                      :ext-system="extSystem"
                       :label="t('common.damImage.asset.model.keywords')"
                       clearable
                       multiple
-                      :required="damConfigExtSystem[assetType].keywords.required"
+                      :required="keywordRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       :disabled="!item.canEditMetadata"
                     />
@@ -273,7 +280,7 @@ const showDetail = async () => {
                 </VCol>
               </VRow>
               <VRow
-                v-if="damConfigExtSystem[assetType].authors.enabled"
+                v-if="authorEnabled"
                 dense
                 class="my-2"
               >
@@ -287,9 +294,10 @@ const showDetail = async () => {
                       :queue-id="queueKey"
                       :label="t('common.damImage.asset.model.authors')"
                       :author-conflicts="item.authorConflicts"
+                      :ext-system="extSystem"
                       clearable
                       multiple
-                      :required="damConfigExtSystem[assetType].authors.required"
+                      :required="authorRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       :disabled="!item.canEditMetadata"
                     />

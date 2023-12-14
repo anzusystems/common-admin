@@ -14,13 +14,15 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import type { IntegerId } from '@/types/common'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     isActive: boolean
     dataCy?: string
     assetType: DamAssetType
+    extSystem: IntegerId
   }>(),
   {
     dataCy: undefined,
@@ -51,7 +53,7 @@ const onSave = async () => {
     return
   }
   try {
-    await updateAssetMetadata(damClient, asset.value)
+    await updateAssetMetadata(damClient, asset.value, props.extSystem)
     if (updateUploadStore.value && !isNull(asset.value)) {
       await uploadQueueStore.updateFromDetail(asset.value)
     }
@@ -79,5 +81,5 @@ const onSave = async () => {
       {{ t('common.button.save') }}
     </ABtnPrimary>
   </AssetDetailSidebarActionsWrapper>
-  <AssetMetadata />
+  <AssetMetadata :ext-system="extSystem" />
 </template>

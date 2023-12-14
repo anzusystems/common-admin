@@ -1,10 +1,10 @@
 import type { AxiosInstance, AxiosResponse } from 'axios'
-import type { DocId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import type { AssetDetailItemDto, AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
-import { isNull } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { apiFetchList } from '@/services/api/apiFetchList'
@@ -168,14 +168,19 @@ function listItemsToMetadataBulkItems (items: UploadQueueItem[]) {
 
 const { showUnknownError, showApiValidationError } = useAlerts()
 
-const handleMetadataValidationError = (error: any, assetType: DamAssetType) => {
-  const { damConfigAssetCustomFormElements } = useDamConfigState()
+const handleMetadataValidationError = (error: any, assetType: DamAssetType, extSystem: IntegerId) => {
+  const { getDamConfigAssetCustomFormElements } = useDamConfigState()
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(extSystem)
+  if (isUndefined(configAssetCustomFormElements)) {
+    throw new Error('Custom form elements must be initialised.')
+  }
   if (!error || !error.response || !error.response.data) return
   const data = error.response.data as AnzuApiValidationResponseData
   const items = [] as ValidationError[]
   for (const [key, values] of Object.entries(data.fields)) {
     const field = key.split('.').pop()
-    const found = damConfigAssetCustomFormElements.value[assetType].find((item) => item.property === field)
+    const found = configAssetCustomFormElements[assetType].find((item) => item.property === field)
     if (found) {
       items.push({
         field: found.name,
@@ -190,7 +195,7 @@ const handleMetadataValidationError = (error: any, assetType: DamAssetType) => {
   showUnknownError()
 }
 
-export const updateAssetMetadata = (client: () => AxiosInstance, asset: AssetDetailItemDto) => {
+export const updateAssetMetadata = (client: () => AxiosInstance, asset: AssetDetailItemDto, extSystem: IntegerId) => {
   return new Promise((resolve, reject) => {
     const data = {
       id: asset.id,
@@ -214,7 +219,7 @@ export const updateAssetMetadata = (client: () => AxiosInstance, asset: AssetDet
           return reject(new AnzuApiForbiddenError(err))
         }
         if (axiosErrorResponseHasValidationData(err)) {
-          handleMetadataValidationError(err, asset.attributes.assetType)
+          handleMetadataValidationError(err, asset.attributes.assetType, extSystem)
           return reject(new AnzuApiValidationError(err, SYSTEM_CORE_DAM, ENTITY, err))
         }
         if (axiosErrorResponseHasForbiddenOperationData(err)) {

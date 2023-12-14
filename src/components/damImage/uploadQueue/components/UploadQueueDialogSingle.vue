@@ -433,6 +433,7 @@ onMounted(() => {
               v-if="asset"
               :key="asset.id"
               :queue-key="queueKey"
+              :ext-system="extSystem"
               :enable-roi-tab="enableRoiTab"
               :show-file-info="enableRoiTab"
               :asset-id="asset.id"

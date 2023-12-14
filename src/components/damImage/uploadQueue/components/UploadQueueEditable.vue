@@ -6,11 +6,12 @@ import UploadQueueItemEditable from '@/components/damImage/uploadQueue/component
 import AssetQueueSelectedSidebar from '@/components/damImage/uploadQueue/components/AssetQueueSelectedSidebar.vue'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
-import type { DocId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
+    extSystem: IntegerId
     massOperations: boolean
     disableDoneAnimation?: boolean
   }>(),
@@ -64,6 +65,7 @@ onMounted(() => {
             v-model:customData="item.customData"
             v-model:keywords="item.keywords"
             v-model:authors="item.authors"
+            :ext-system="extSystem"
             :item="item"
             :index="index"
             :queue-key="queueKey"
@@ -79,7 +81,10 @@ onMounted(() => {
       v-if="list.length > 0"
       class="asset-queue-editable__sidebar system-border-l"
     >
-      <AssetQueueSelectedSidebar :queue-key="queueKey" />
+      <AssetQueueSelectedSidebar
+        :queue-key="queueKey"
+        :ext-system="extSystem"
+      />
     </div>
   </div>
 </template>

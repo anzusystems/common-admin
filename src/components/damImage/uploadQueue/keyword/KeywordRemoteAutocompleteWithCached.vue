@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { DocId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import type { ValidationScope } from '@/types/Validation'
 import { computed, ref } from 'vue'
 import { useValidate } from '@/validators/vuelidate/useValidate'
@@ -17,6 +17,7 @@ import KeywordCreateButton from '@/components/damImage/uploadQueue/keyword/Keywo
 const props = withDefaults(
   defineProps<{
     modelValue: DocId | null | DocId[] | any
+    extSystem: IntegerId
     queueId?: string | undefined
     label?: string | undefined
     required?: boolean | null
@@ -63,7 +64,8 @@ const rules = {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validationScope })
 
-const { fetchItemsMinimal } = useKeywordSelectActions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { fetchItemsMinimal } = useKeywordSelectActions(props.extSystem)
 
 const innerFilter = useKeywordFilter()
 
@@ -152,6 +154,7 @@ const itemSlotIsSelected = (item: DocId) => {
       <KeywordCreateButton
         variant="icon"
         data-cy="add-keyword"
+        :ext-system="extSystem"
         :initial-value="addNewKeywordText"
         disable-redirect
         :disabled="disabled"

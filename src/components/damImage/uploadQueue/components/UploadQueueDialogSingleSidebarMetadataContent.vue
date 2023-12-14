@@ -14,13 +14,16 @@ import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { dateTimePretty } from '@/utils/datetime'
+import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
+import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
+import type { IntegerId } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
+    extSystem: IntegerId
   }>(),
   {}
 )
@@ -54,11 +57,14 @@ const assetMainFile = computed<null | AssetFile>(() => {
   return asset.value && asset.value.mainFile ? (asset.value.mainFile as AssetFile) : null
 })
 
-const { damConfigExtSystem } = useDamConfigState()
-
 const onAnyMetadataChange = () => {
   metadataAreTouched.value = true
 }
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
+const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
+const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
 </script>
 
 <template>
@@ -78,12 +84,13 @@ const onAnyMetadataChange = () => {
           <AssetCustomMetadataForm
             v-if="item"
             v-model="item.customData"
+            :ext-system="extSystem"
             :asset-type="assetType"
             @any-change="onAnyMetadataChange"
           >
             <template #after-pinned>
               <VRow
-                v-if="damConfigExtSystem[assetType].keywords.enabled"
+                v-if="keywordEnabled"
                 dense
                 class="my-2"
               >
@@ -96,10 +103,11 @@ const onAnyMetadataChange = () => {
                       v-model="item.keywords"
                       :label="t('common.damImage.asset.model.keywords')"
                       data-cy="custom-field-keywords"
+                      :ext-system="extSystem"
                       clearable
                       multiple
                       :disabled="!item.canEditMetadata"
-                      :required="damConfigExtSystem[assetType].keywords.required"
+                      :required="keywordRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       @update:model-value="onAnyMetadataChange"
                     />
@@ -107,7 +115,7 @@ const onAnyMetadataChange = () => {
                 </VCol>
               </VRow>
               <VRow
-                v-if="damConfigExtSystem[assetType].authors.enabled"
+                v-if="authorEnabled"
                 dense
                 class="my-2"
               >
@@ -121,10 +129,11 @@ const onAnyMetadataChange = () => {
                       :label="t('common.damImage.asset.model.authors')"
                       :author-conflicts="authorConflicts"
                       data-cy="custom-field-authors"
+                      :ext-system="extSystem"
                       clearable
                       multiple
                       :disabled="!item.canEditMetadata"
-                      :required="damConfigExtSystem[assetType].authors.required"
+                      :required="authorRequired"
                       :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                       @update:model-value="onAnyMetadataChange"
                     />
