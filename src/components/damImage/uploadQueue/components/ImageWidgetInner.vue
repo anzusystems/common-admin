@@ -30,6 +30,7 @@ import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composab
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useI18n } from 'vue-i18n'
 import type { VBtn } from 'vuetify/components'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const props = withDefaults(
   defineProps<{
@@ -128,11 +129,15 @@ const actionLibrary = () => {
   assetSelectDialog.value = true
 }
 
+const { cachedExtSystemId } = useExtSystemIdForCached()
+
 const onDrop = (files: File[]) => {
+  cachedExtSystemId.value = props.extSystem
   uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
   uploadQueueDialog.value = props.queueKey
 }
 const onFileInput = (files: File[]) => {
+  cachedExtSystemId.value = props.extSystem
   uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
   uploadQueueDialog.value = props.queueKey
 }
@@ -226,6 +231,7 @@ const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailSt
 const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
+  cachedExtSystemId.value = props.extSystem
   assetLoading.value = true
   assetDialog.value = props.queueKey
   try {

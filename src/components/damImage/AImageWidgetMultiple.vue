@@ -7,7 +7,6 @@ import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import { isUndefined } from '@/utils/common'
-import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const props = withDefaults(
   defineProps<{
@@ -55,8 +54,6 @@ const {
 } = useDamConfigState(damClient)
 
 onMounted(async () => {
-  const { cachedExtSystemId } = useExtSystemIdForCached()
-  cachedExtSystemId.value = props.extSystem
   const promises: Promise<any>[] = []
   if (!initialized.damPrvConfig) {
     promises.push(loadDamPrvConfig())

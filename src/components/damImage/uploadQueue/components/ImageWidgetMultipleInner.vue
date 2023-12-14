@@ -34,6 +34,7 @@ import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/auth
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
 import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const props = withDefaults(
   defineProps<{
@@ -127,14 +128,18 @@ const uploadQueue = computed(() => {
   return uploadQueuesStore.getQueue(props.queueKey)
 })
 
+const { cachedExtSystemId } = useExtSystemIdForCached()
+
 const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
+  cachedExtSystemId.value = props.extSystem
   uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
   uploadQueueDialog.value = props.queueKey
 }
 
 const onDrop = (files: File[]) => {
+  cachedExtSystemId.value = props.extSystem
   uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
   uploadQueueDialog.value = props.queueKey
 }
@@ -208,6 +213,7 @@ const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
+  cachedExtSystemId.value = props.extSystem
   assetDialog.value = props.queueKey
   try {
     const asset = await fetchAssetByFileId(damClient, assetFileId)
