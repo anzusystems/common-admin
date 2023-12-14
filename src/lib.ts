@@ -301,6 +301,9 @@ import {
   type AssetFileNullable,
   AssetFileProcessStatus,
   type AssetFileVideo,
+  type AssetFileRoute,
+  type AssetFileRouteStatus,
+  type AssetFileMainRouteAware,
 } from '@/types/coreDam/AssetFile'
 import {
   type DamUploadStartResponse,
@@ -560,6 +563,9 @@ export {
   AssetFileNullable,
   AssetFileLink,
   AssetFileLinks,
+  AssetFileRoute,
+  AssetFileRouteStatus,
+  AssetFileMainRouteAware,
   AssetFileDownloadLink,
   AssetFileImagePreviewNullable,
   assetFileIsImageFile,
