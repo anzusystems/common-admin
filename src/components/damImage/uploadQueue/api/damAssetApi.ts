@@ -170,7 +170,6 @@ const { showUnknownError, showApiValidationError } = useAlerts()
 
 const handleMetadataValidationError = (error: any, assetType: DamAssetType, extSystem: IntegerId) => {
   const { getDamConfigAssetCustomFormElements } = useDamConfigState()
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(extSystem)
   if (isUndefined(configAssetCustomFormElements)) {
     throw new Error('Custom form elements must be initialised.')
