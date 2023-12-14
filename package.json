@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.40.0-alpha16",
+  "version": "1.40.0-alpha17",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -76,7 +76,7 @@
     "stylelint-config-standard-scss": "^12.0.0",
     "typescript": "4.9.5",
     "uuid": "^9.0.1",
-    "vite": "5.0.8",
+    "vite": "5.0.9",
     "vite-plugin-dts": "^3.6.4",
     "vite-plugin-vuetify": "^2.0.1",
     "vitepress": "1.0.0-rc.31",
