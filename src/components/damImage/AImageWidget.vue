@@ -3,7 +3,7 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { onMounted, provide, ref } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageAware } from '@/types/ImageAware'
+import type { ImageAware, ImageWidgetSelectConfig, ImageWidgetUploadConfig } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import ImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
 import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -13,8 +13,8 @@ const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
     queueKey: UploadQueueKey
-    // uploadConfig: ImageWidgetDamConfig
-    // selectConfig: ImageWidgetDamConfig[]
+    uploadConfig: ImageWidgetUploadConfig
+    selectConfig: ImageWidgetSelectConfig[]
     licenceId: IntegerId
     extSystem: IntegerId
     image?: ImageAware | undefined // optional, if available, no need to fetch image data

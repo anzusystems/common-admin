@@ -298,12 +298,12 @@ import {
   type AssetFileLink,
   type AssetFileLinks,
   AssetFileLinkType,
+  type AssetFileMainRouteAware,
   type AssetFileNullable,
   AssetFileProcessStatus,
-  type AssetFileVideo,
   type AssetFileRoute,
   type AssetFileRouteStatus,
-  type AssetFileMainRouteAware,
+  type AssetFileVideo,
 } from '@/types/coreDam/AssetFile'
 import {
   type DamUploadStartResponse,
@@ -353,14 +353,20 @@ import {
   DamNotificationName,
   type DamNotificationNameType,
 } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
-import type { ImageAware, ImageCreateUpdateAware, ImageCreateUpdateAwareKeyed } from '@/types/ImageAware'
+import type {
+  ImageAware,
+  ImageCreateUpdateAware,
+  ImageCreateUpdateAwareKeyed,
+  ImageWidgetSelectConfig,
+  ImageWidgetUploadConfig,
+} from '@/types/ImageAware'
 import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import type { DamExtSystem, DamExtSystemMinimal } from '@/components/damImage/uploadQueue/composables/DamExtSystem'
 import { DamAuthorType, useDamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
 import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
-import { regionToCrop, cropToRegion } from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 
 export {
   // COMPONENTS
@@ -612,6 +618,8 @@ export {
   DamAuthorType,
   DamExtSystem,
   DamExtSystemMinimal,
+  ImageWidgetUploadConfig,
+  ImageWidgetSelectConfig,
 
   // FACTORIES
   useAnzuUserFactory,

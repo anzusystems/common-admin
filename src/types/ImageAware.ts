@@ -27,7 +27,14 @@ export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {
 //   value: IntegerIdNullable
 // }
 
-export interface ImageWidgetDamConfig {
+export interface ImageWidgetUploadConfig {
   licence: IntegerId
   extSystem: IntegerId
 }
+
+export interface ImageWidgetSelectConfig {
+  title: string
+  licence: IntegerId
+  extSystem: IntegerId
+}
+

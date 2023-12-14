@@ -48,6 +48,16 @@ const save = () => {
           <AImageWidgetMultiple
             ref="component"
             v-model="imageIds"
+            :upload-config="{
+              licence: 1000001,
+              extSystem: 1,
+            }"
+            :select-config="[
+              {
+                licence: 1000001,
+                extSystem: 1,
+              },
+            ]"
             :licence-id="100001"
             :ext-system="1"
             queue-key="gallery"

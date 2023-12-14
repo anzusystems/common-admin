@@ -7,11 +7,14 @@ import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import { isUndefined } from '@/utils/common'
+import type { ImageWidgetSelectConfig, ImageWidgetUploadConfig } from '@/types/ImageAware'
 
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerId[] // initial ids, updated only when save is called
     queueKey: UploadQueueKey
+    uploadConfig: ImageWidgetUploadConfig
+    selectConfig: ImageWidgetSelectConfig[]
     licenceId: IntegerId
     extSystem: IntegerId
     configName?: string

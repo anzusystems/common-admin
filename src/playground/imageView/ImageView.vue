@@ -37,6 +37,16 @@ const saveInsideDialog = () => {
         <VCol cols="4">
           <AImageWidget
             v-model="imageId2"
+            :upload-config="{
+              licence: 1000001,
+              extSystem: 1,
+            }"
+            :select-config="[
+              {
+                licence: 1000001,
+                extSystem: 1,
+              },
+            ]"
             :licence-id="100001"
             :ext-system="1"
             queue-key="heroImage"
@@ -49,6 +59,16 @@ const saveInsideDialog = () => {
           Expanded actions:
           <AImageWidget
             v-model="imageId2"
+            :upload-config="{
+              licence: 1000001,
+              extSystem: 1,
+            }"
+            :select-config="[
+              {
+                licence: 1000001,
+                extSystem: 1,
+              },
+            ]"
             :licence-id="100001"
             :ext-system="1"
             queue-key="listingImage"
@@ -75,6 +95,16 @@ const saveInsideDialog = () => {
                       ref="widgetComponent"
                       v-model="imageId2"
                       :licence-id="100001"
+                      :upload-config="{
+                        licence: 1000001,
+                        extSystem: 1,
+                      }"
+                      :select-config="[
+                        {
+                          licence: 1000001,
+                          extSystem: 1,
+                        },
+                      ]"
                       :ext-system="1"
                       queue-key="embedImage"
                       expand-options
