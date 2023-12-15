@@ -54,6 +54,7 @@ const save = () => {
             }"
             :select-config="[
               {
+                title: 'Default',
                 licence: 1000001,
                 extSystem: 1,
               },

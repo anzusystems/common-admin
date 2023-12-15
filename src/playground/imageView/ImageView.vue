@@ -43,6 +43,7 @@ const saveInsideDialog = () => {
             }"
             :select-config="[
               {
+                title: 'Default',
                 licence: 1000001,
                 extSystem: 1,
               },
@@ -65,6 +66,7 @@ const saveInsideDialog = () => {
             }"
             :select-config="[
               {
+                title: 'Default',
                 licence: 1000001,
                 extSystem: 1,
               },
@@ -101,6 +103,7 @@ const saveInsideDialog = () => {
                       }"
                       :select-config="[
                         {
+                          title: 'Default',
                           licence: 1000001,
                           extSystem: 1,
                         },

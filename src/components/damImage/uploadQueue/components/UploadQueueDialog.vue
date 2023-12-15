@@ -29,6 +29,7 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 const props = withDefaults(
   defineProps<{
     queueKey: string
+    licenceId: IntegerId
     fileInputKey: number
     extSystem: IntegerId
     accept: string | undefined
@@ -152,6 +153,7 @@ const metadataMap = async (queueItems: UploadQueueItem[], bulkItems: AssetMetada
       dam: {
         damId: queueItem.fileId as DocId,
         regionPosition: 0,
+        licenceId: props.licenceId,
       },
       position: maxPosition.value,
     }

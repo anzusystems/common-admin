@@ -31,6 +31,7 @@ const props = withDefaults(
   defineProps<{
     queueKey: string
     extSystem: IntegerId
+    licenceId: IntegerId
     fileInputKey: number
     accept: string | undefined
     maxSizes: Record<string, number> | undefined
@@ -264,6 +265,7 @@ const onSaveAndApply = async () => {
           dam: {
             damId: item.fileId ?? '',
             regionPosition: 0,
+            licenceId: props.licenceId,
           },
           position: 1,
         }

@@ -193,6 +193,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
       dam: {
         damId: asset.mainFile!.id,
         regionPosition: 0,
+        licenceId: props.licenceId,
       },
       position: maxPosition.value,
     }
@@ -426,6 +427,7 @@ onMounted(() => {
       v-if="uploadQueueDialog === queueKey"
       :queue-key="queueKey"
       :ext-system="extSystem"
+      :licence-id="licenceId"
       :file-input-key="uploadQueue?.fileInputKey ?? -1"
       :accept="uploadAccept"
       :max-sizes="uploadSizes"
