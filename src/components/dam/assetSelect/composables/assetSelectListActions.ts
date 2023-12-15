@@ -10,16 +10,17 @@ import { useAlerts } from '@/composables/system/alerts'
 import type { DocId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetList as apiFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import type { ImageWidgetSelectConfig } from '@/types/ImageAware'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
 const filterIsTouched = ref(false)
 
-export function useAssetListActions(configName = 'default') {
+export function useAssetSelectActions(configName = 'default') {
   const { damClient } = useCommonAdminCoreDamOptions(configName)
 
-  const assetListStore = useAssetSelectStore()
-  const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetListStore)
+  const assetSelectStore = useAssetSelectStore()
+  const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
 
   const { resetFilter } = useFilterHelpers()
   const { showErrorsDefault } = useAlerts()
@@ -27,33 +28,37 @@ export function useAssetListActions(configName = 'default') {
   const fetchAssetList = async () => {
     pagination.page = 1
     try {
-      assetListStore.showLoader()
-      assetListStore.setList(await apiFetchAssetList(damClient, assetListStore.licenceId, pagination, filter))
+      assetSelectStore.showLoader()
+      assetSelectStore.setList(
+        await apiFetchAssetList(damClient, assetSelectStore.selectedLicenceId, pagination, filter)
+      )
     } catch (error) {
       showErrorsDefault(error)
     } finally {
-      assetListStore.hideLoader()
+      assetSelectStore.hideLoader()
     }
   }
   const fetchNextPage = async () => {
     pagination.page = pagination.page + 1
     try {
-      assetListStore.showLoader()
-      assetListStore.appendList(await apiFetchAssetList(damClient, assetListStore.licenceId, pagination, filter))
+      assetSelectStore.showLoader()
+      assetSelectStore.appendList(
+        await apiFetchAssetList(damClient, assetSelectStore.selectedLicenceId, pagination, filter)
+      )
     } catch (error) {
       showErrorsDefault(error)
     } finally {
-      assetListStore.hideLoader()
+      assetSelectStore.hideLoader()
     }
   }
 
   const onItemClick = (data: { assetId: DocId; index: number }) => {
-    assetListStore.toggleSelectedByIndex(data.index)
+    assetSelectStore.toggleSelectedByIndex(data.index)
   }
 
   const resetAssetList = async () => {
-    assetListStore.reset()
-    filter.type.default = [assetListStore.assetType]
+    assetSelectStore.reset()
+    filter.type.default = [assetSelectStore.assetType]
     resetFilter(filter, pagination, fetchAssetList)
   }
 
@@ -65,18 +70,18 @@ export function useAssetListActions(configName = 'default') {
   }
 
   const initStoreContext = (
-    licenceId: number,
+    selectConfig: ImageWidgetSelectConfig[],
     assetType: DamAssetType,
     singleMode: boolean,
     minCount: number,
     maxCount: number
   ): void => {
-    assetListStore.clearSelected()
-    assetListStore.setAssetType(assetType)
-    assetListStore.setLicenceId(licenceId)
-    assetListStore.setSingleMode(singleMode)
-    assetListStore.setMinCount(minCount)
-    assetListStore.setMaxCount(maxCount)
+    assetSelectStore.clearSelected()
+    assetSelectStore.setAssetType(assetType)
+    assetSelectStore.setSelectConfig(selectConfig)
+    assetSelectStore.setSingleMode(singleMode)
+    assetSelectStore.setMinCount(minCount)
+    assetSelectStore.setMaxCount(maxCount)
   }
 
   return {
@@ -87,7 +92,7 @@ export function useAssetListActions(configName = 'default') {
     pagination,
     loader,
     assetListItems: assetListItems as Ref<Array<AssetSelectListItem>>,
-    getSelectedData: assetListStore.getSelectedData,
+    getSelectedData: assetSelectStore.getSelectedData,
     onItemClick,
     fetchAssetList,
     fetchNextPage,

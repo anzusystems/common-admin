@@ -1,16 +1,18 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
-import { computed } from 'vue'
+import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import { computed, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
 import AssetSelectFilterFormImage from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormImage.vue'
 import AssetSelectFilterFormDefault from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormDefault.vue'
+import { storeToRefs } from 'pinia'
 
 const { t } = useI18n()
-const { fetchAssetList, resetAssetList, filterUnTouch, filterIsTouched } = useAssetListActions()
+const { fetchAssetList, resetAssetList, filterUnTouch, filterIsTouched } = useAssetSelectActions()
 
-const assetListStore = useAssetSelectStore()
+const assetSelectStore = useAssetSelectStore()
+const { selectedLicenceId, selectConfig } = storeToRefs(assetSelectStore)
 
 const submitFilter = () => {
   filterUnTouch()
@@ -23,13 +25,22 @@ const resetFilter = () => {
 }
 
 const componentComputed = computed(() => {
-  switch (assetListStore.assetType) {
+  switch (assetSelectStore.assetType) {
     case AssetTypeValue.Image:
       return AssetSelectFilterFormImage
     default:
       return AssetSelectFilterFormDefault
   }
 })
+
+watch(
+  selectedLicenceId,
+  (newValue, oldValue) => {
+    if (newValue === oldValue) return
+    submitFilter()
+  },
+  { immediate: false }
+)
 </script>
 
 <template>
@@ -40,6 +51,17 @@ const componentComputed = computed(() => {
         class="px-2 pt-4"
         @submit.prevent="submitFilter"
       >
+        <VRow v-if="selectConfig.length > 1">
+          <VCol :cols="12">
+            <VSelect
+              v-model="selectedLicenceId"
+              :label="t('common.assetSelect.filter.licence')"
+              :items="selectConfig"
+              item-title="title"
+              item-value="licence"
+            />
+          </VCol>
+        </VRow>
         <Component :is="componentComputed" />
       </VForm>
     </div>

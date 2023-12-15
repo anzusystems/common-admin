@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import AssetSelectTilesItem from '@/components/dam/assetSelect/components/AssetSelectTilesItem.vue'
 import { useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { useI18n } from 'vue-i18n'
 
 const { gridView } = useGridView()
-const { onItemClick, assetListItems, loader } = useAssetListActions()
+const { onItemClick, assetListItems, loader } = useAssetSelectActions()
 
 const { t } = useI18n()
 </script>

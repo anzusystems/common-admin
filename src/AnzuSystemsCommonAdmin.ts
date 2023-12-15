@@ -11,7 +11,6 @@ import {
   DefaultLanguageSymbol,
 } from '@/components/injectionKeys'
 import type { AxiosInstance } from 'axios'
-import type { IntegerId } from '@/types/common'
 import { initCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
@@ -47,7 +46,6 @@ export type CommonAdminImageOptions =
 
 export interface CommonAdminCoreDamConfig {
   damClient: () => AxiosInstance
-  defaultLicenceId?: IntegerId
 }
 
 export type CommonAdminCoreDamOptions =

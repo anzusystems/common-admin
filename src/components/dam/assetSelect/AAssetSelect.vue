@@ -4,7 +4,7 @@ import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
 import { damAssetTypeValueToEnum } from '@/types/coreDam/Asset'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
 import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
@@ -18,7 +18,7 @@ import type {
   AssetSelectReturnTypeValues,
 } from '@/types/coreDam/AssetSelect'
 import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
-import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import type { ImageWidgetSelectConfig } from '@/types/ImageAware'
 
 const props = withDefaults(
   defineProps<{
@@ -26,15 +26,16 @@ const props = withDefaults(
     assetType: DamAssetType | DamAssetTypeValues
     minCount: number
     maxCount: number
-    assetLicenceId?: number
+    selectConfig: ImageWidgetSelectConfig[]
     returnType?: AssetSelectReturnType | AssetSelectReturnTypeValues
     configName?: string
+    skipCurrentUserCheck?: boolean
   }>(),
   {
     modelValue: undefined,
-    assetLicenceId: undefined,
     returnType: 'mainFileId',
     configName: 'default',
+    skipCurrentUserCheck: false,
   }
 )
 
@@ -46,6 +47,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const dialogLocal = ref(false)
+const noLicenceAccess = ref(false)
 const dialog = computed({
   get() {
     if (isUndefined(props.modelValue)) return dialogLocal.value
@@ -58,21 +60,21 @@ const dialog = computed({
 })
 
 const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedData, initStoreContext } =
-  useAssetListActions()
+  useAssetSelectActions()
 
 const { openSidebar, sidebarLeft } = useSidebar()
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { defaultLicenceId } = useCommonAdminCoreDamOptions(props.configName)
-
 const onOpen = () => {
-  const licenceId = props.assetLicenceId || defaultLicenceId
-  if (isUndefined(licenceId)) {
-    throw new Error('LicenceId must be provided. Provide using props or common-admin configuration.')
+  let selectConfigLocal = props.selectConfig
+  if (!props.skipCurrentUserCheck) {
+    selectConfigLocal = props.selectConfig // todo from current user
+  }
+  if (selectConfigLocal.length === 0) {
+    noLicenceAccess.value = true
   }
 
   initStoreContext(
-    licenceId,
+    selectConfigLocal,
     damAssetTypeValueToEnum(props.assetType),
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,

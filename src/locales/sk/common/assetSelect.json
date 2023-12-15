@@ -31,6 +31,7 @@
     }
   },
   "filter": {
+    "licence": "Licencia",
     "text": "Text",
     "described": "Popísané",
     "visible": "Viditeľné",

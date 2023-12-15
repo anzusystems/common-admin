@@ -1,9 +1,11 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import type { AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
 import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
-import type { DocId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
 import { type AssetSelectReturnData, AssetSelectReturnType } from '@/types/coreDam/AssetSelect'
+import type { ImageWidgetSelectConfig } from '@/types/ImageAware'
+import { cloneDeep } from '@/utils/common'
 
 export interface AssetSelectListItem {
   asset: AssetSearchListItemDto
@@ -13,7 +15,8 @@ export interface AssetSelectListItem {
 export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
   const assetListItems = ref<Array<AssetSelectListItem>>([])
   const loader = ref(false)
-  const licenceId = ref(0)
+  const selectedLicenceId = ref<IntegerId>(0)
+  const selectConfig = ref<ImageWidgetSelectConfig[]>([])
   const assetType = ref<AssetTypeValue>(AssetTypeValue.Default)
   const selectedAssets = ref<Map<DocId, AssetSelectListItem>>(new Map())
   const singleMode = ref(false)
@@ -28,8 +31,10 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     loader.value = false
   }
 
-  function setLicenceId(value: number) {
-    licenceId.value = value
+  function setSelectConfig(value: ImageWidgetSelectConfig[]) {
+    if (value.length === 0) return
+    selectConfig.value = cloneDeep(value)
+    selectedLicenceId.value = value[0].licence
   }
 
   function setSingleMode(value: boolean) {
@@ -174,7 +179,8 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   }
 
   return {
-    licenceId,
+    selectedLicenceId,
+    selectConfig,
     assetType,
     singleMode,
     minCount,
@@ -185,7 +191,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     assetListItems,
     getSelectedData,
     setAssetType,
-    setLicenceId,
+    setSelectConfig,
     setSingleMode,
     setMinCount,
     setMaxCount,

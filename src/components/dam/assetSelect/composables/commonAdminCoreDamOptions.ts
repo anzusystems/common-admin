@@ -20,7 +20,6 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
 
   return {
     damClient: commonAdminCoreDamOptions.value.configs[configName].damClient,
-    defaultLicenceId: commonAdminCoreDamOptions.value.configs[configName].defaultLicenceId,
   }
 }
 

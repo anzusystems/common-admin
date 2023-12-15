@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterBooleanSelect from '@/components/filter/AFilterBooleanSelect.vue'
 
-const { filter, filterTouch, filterUnTouch, fetchAssetList } = useAssetListActions()
+const { filter, filterTouch, filterUnTouch, fetchAssetList } = useAssetSelectActions()
 
 const onAnyFilterUpdate = () => {
   filterTouch()
