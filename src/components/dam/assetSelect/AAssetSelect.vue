@@ -19,6 +19,10 @@ import type {
 } from '@/types/coreDam/AssetSelect'
 import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
 import type { ImageWidgetSelectConfig } from '@/types/ImageAware'
+import {
+  filterAllowedImageWidgetSelectConfigs
+} from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
+import { useAlerts } from '@/composables/system/alerts'
 
 const props = withDefaults(
   defineProps<{
@@ -47,7 +51,6 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const dialogLocal = ref(false)
-const noLicenceAccess = ref(false)
 const dialog = computed({
   get() {
     if (isUndefined(props.modelValue)) return dialogLocal.value
@@ -63,14 +66,16 @@ const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSel
   useAssetSelectActions()
 
 const { openSidebar, sidebarLeft } = useSidebar()
+const { showErrorT } = useAlerts()
 
 const onOpen = () => {
   let selectConfigLocal = props.selectConfig
   if (!props.skipCurrentUserCheck) {
-    selectConfigLocal = props.selectConfig // todo from current user
+    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(props.selectConfig)
   }
   if (selectConfigLocal.length === 0) {
-    noLicenceAccess.value = true
+    showErrorT('common.assetSelect.error.unallowedLicence')
+    return
   }
 
   initStoreContext(
