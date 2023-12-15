@@ -8,6 +8,7 @@ export interface ImageAware {
   }
   dam: {
     damId: DocId
+    licenceId: IntegerId
     regionPosition: number
   }
   position: number
