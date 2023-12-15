@@ -192,7 +192,7 @@ __metadata:
   resolution: "@anzusystems/common-admin@workspace:."
   dependencies:
     "@intlify/unplugin-vue-i18n": "npm:^1.6.0"
-    "@kyvg/vue3-notification": "npm:^3.1.0"
+    "@kyvg/vue3-notification": "npm:^3.1.1"
     "@mdi/font": "npm:^7.3.67"
     "@rushstack/eslint-patch": "npm:^1.6.1"
     "@types/node": "npm:^20.10.4"
@@ -231,7 +231,7 @@ __metadata:
     stylelint-config-standard-scss: "npm:^12.0.0"
     typescript: "npm:4.9.5"
     uuid: "npm:^9.0.1"
-    vite: "npm:5.0.9"
+    vite: "npm:5.0.10"
     vite-plugin-dts: "npm:^3.6.4"
     vite-plugin-vuetify: "npm:^2.0.1"
     vitepress: "npm:1.0.0-rc.31"
@@ -820,12 +820,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@kyvg/vue3-notification@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "@kyvg/vue3-notification@npm:3.1.0"
+"@kyvg/vue3-notification@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "@kyvg/vue3-notification@npm:3.1.1"
   peerDependencies:
     vue: ^3.0.0
-  checksum: 95179f0cb118ba5ab314acaacb1ceaf4f63c4a8acbd58bb876105336ca2a68d550e8b2f8b08639097cf79466b80a76c486abb4510e7f387e4bdc50ff291ce3c3
+  checksum: 567839583a987364b20fb2925ee398d9ca47639e8519d2f8e372b5bc9f619ff3ef07236cf86003a6d2ef8277d0ace47bb1c107a5dcc92070d90cc3d72b0a4dc4
   languageName: node
   linkType: hard
 
@@ -7174,9 +7174,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:5.0.9":
-  version: 5.0.9
-  resolution: "vite@npm:5.0.9"
+"vite@npm:5.0.10":
+  version: 5.0.10
+  resolution: "vite@npm:5.0.10"
   dependencies:
     esbuild: "npm:^0.19.3"
     fsevents: "npm:~2.3.3"
@@ -7210,7 +7210,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: a57b018ef619ed5da9fbd51d5e2bf989cc7fb18467fab54aeaa4ed0457e783f9c3b51102890e3e4dda0bb13ce5c118f1db87cd7403d3e8db788e47ab81ca4b57
+  checksum: 5421e9c7f8cf3152eace9a8b528269141635f367e5dc63c5f1fe2712a766d9757f8197733cf3f28be590afdd520130d38de90c955e6dba6edfa6f9056c1e5ea7
   languageName: node
   linkType: hard
 
