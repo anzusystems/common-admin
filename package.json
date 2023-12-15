@@ -39,7 +39,7 @@
     "@intlify/unplugin-vue-i18n": "^1.6.0",
     "@kyvg/vue3-notification": "^3.1.0",
     "@mdi/font": "^7.3.67",
-    "@rushstack/eslint-patch": "^1.6.0",
+    "@rushstack/eslint-patch": "^1.6.1",
     "@types/node": "^20.10.4",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.7",
