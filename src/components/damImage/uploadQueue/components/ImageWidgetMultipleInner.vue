@@ -388,7 +388,13 @@ onMounted(() => {
     </div>
     <AAssetSelect
       v-model="assetSelectDialog"
-      :asset-licence-id="licenceId"
+      :select-config="[
+        {
+          title: 'Default',
+          licence: licenceId,
+          extSystem: extSystem,
+        },
+      ]"
       :min-count="1"
       :max-count="50"
       :asset-type="DamAssetType.Image"

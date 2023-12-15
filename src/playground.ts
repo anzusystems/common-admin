@@ -34,7 +34,6 @@ createApp(App)
       configs: {
         default: {
           damClient: damClient,
-          defaultLicenceId: 100001,
         },
       },
       apiTimeout: 30,

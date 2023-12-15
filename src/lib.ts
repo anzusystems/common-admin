@@ -367,6 +367,14 @@ import { DamAuthorType, useDamAuthorType } from '@/components/damImage/uploadQue
 import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
 import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
+import { fetchDamCurrentUser } from '@/components/damImage/uploadQueue/api/damCurrentUserApi'
+import {
+  damCurrentUser,
+  damCurrentUserIsSuperAdmin,
+  updateDamCurrentUser,
+  useDamCurrentUser,
+} from '@/components/damImage/composables/damCurrentUser'
 
 export {
   // COMPONENTS
@@ -484,6 +492,8 @@ export {
   useDamKeywordFactory,
   useDamAuthorFactory,
   useDamAuthorType,
+  useDamCurrentUser,
+  updateDamCurrentUser,
 
   // VALUE OBJECTS
   Grant,
@@ -620,6 +630,7 @@ export {
   DamExtSystemMinimal,
   ImageWidgetUploadConfig,
   ImageWidgetSelectConfig,
+  DamCurrentUserDto,
 
   // FACTORIES
   useAnzuUserFactory,
@@ -765,4 +776,7 @@ export {
   loadCommonFonts,
   getAssetTypeByMimeType,
   damFileTypeFix,
+  fetchDamCurrentUser,
+  damCurrentUser,
+  damCurrentUserIsSuperAdmin,
 }
