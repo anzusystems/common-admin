@@ -8,6 +8,7 @@ import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/i
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import { isUndefined } from '@/utils/common'
 import type { ImageWidgetSelectConfig, ImageWidgetUploadConfig } from '@/types/ImageAware'
+import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 
 const props = withDefaults(
   defineProps<{
@@ -15,8 +16,6 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadConfig: ImageWidgetUploadConfig
     selectConfig: ImageWidgetSelectConfig[]
-    licenceId: IntegerId
-    extSystem: IntegerId
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -42,7 +41,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId[]): void
 }>()
 
-const status = ref<'loading' | 'ready' | 'error'>('loading')
+const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading')
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
@@ -57,17 +56,21 @@ const {
 } = useDamConfigState(damClient)
 
 onMounted(async () => {
+  if (!isImageWidgetUploadConfigAllowed(props.uploadConfig)) {
+    status.value = 'uploadNotAllowed'
+    return
+  }
   const promises: Promise<any>[] = []
   if (!initialized.damPrvConfig) {
     promises.push(loadDamPrvConfig())
   }
-  const configExtSystem = getDamConfigExtSystem(props.extSystem)
+  const configExtSystem = getDamConfigExtSystem(props.uploadConfig.extSystem)
   if (isUndefined(configExtSystem)) {
-    promises.push(loadDamConfigExtSystem(props.extSystem))
+    promises.push(loadDamConfigExtSystem(props.uploadConfig.extSystem))
   }
-  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.extSystem)
+  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.uploadConfig.extSystem)
   if (isUndefined(configAssetCustomFormElements)) {
-    promises.push(loadDamConfigAssetCustomFormElements(props.extSystem))
+    promises.push(loadDamConfigAssetCustomFormElements(props.uploadConfig.extSystem))
   }
   try {
     await Promise.all(promises)
@@ -103,6 +106,12 @@ defineExpose({
     class="text-error"
   >
     Loading DAM config error
+  </div>
+  <div
+    v-else-if="status === 'uploadNotAllowed'"
+    class="text-error"
+  >
+    DAM access rights error
   </div>
   <VProgressCircular
     v-else

@@ -375,6 +375,7 @@ import {
   updateDamCurrentUser,
   useDamCurrentUser,
 } from '@/components/damImage/composables/damCurrentUser'
+import type { DamAssetLicence, DamAssetLicenceMinimal } from '@/types/coreDam/AssetLicence'
 
 export {
   // COMPONENTS
@@ -631,6 +632,8 @@ export {
   ImageWidgetUploadConfig,
   ImageWidgetSelectConfig,
   DamCurrentUserDto,
+  DamAssetLicence,
+  DamAssetLicenceMinimal,
 
   // FACTORIES
   useAnzuUserFactory,

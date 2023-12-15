@@ -24,7 +24,7 @@ import AssetDetailDialog from '@/components/damImage/uploadQueue/components/Asse
 import { fetchAssetByFileId, fetchAssetListByIds } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { ImageCreateUpdateAware, ImageWidgetSelectConfig, ImageWidgetUploadConfig } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
 import { CHOSEN_CLASS, DRAG_CLASS, GHOST_CLASS, GROUP_CLASS, HANDLE_CLASS } from '@/components/sortable/sortableActions'
 import { useSortable, type UseSortableReturn } from '@vueuse/integrations/useSortable'
@@ -35,13 +35,15 @@ import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
 import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
+import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerId[]
     queueKey: UploadQueueKey
-    licenceId: IntegerId
-    extSystem: IntegerId
+    uploadConfig: ImageWidgetUploadConfig
+    selectConfig: ImageWidgetSelectConfig[]
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -77,7 +79,7 @@ const imageWidgetExtSystemConfigs = inject<ShallowRef<Map<IntegerId, DamExtSyste
   undefined
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageWidgetExtSystemConfig = imageWidgetExtSystemConfigs?.value?.get(props.extSystem)
+const imageWidgetExtSystemConfig = imageWidgetExtSystemConfigs?.value?.get(props.uploadConfig.extSystem)
 
 if (isUndefined(imageWidgetExtSystemConfigs) || isUndefined(imageWidgetExtSystemConfig)) {
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
@@ -89,10 +91,7 @@ const { imageClient } = imageOptions
 const { showErrorsDefault, showValidationError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
-const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
-  DamAssetType.Image,
-  imageWidgetExtSystemConfig
-)
+const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(DamAssetType.Image, imageWidgetExtSystemConfig)
 
 const { t } = useI18n()
 
@@ -133,24 +132,25 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
-  cachedExtSystemId.value = props.extSystem
-  uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
+  cachedExtSystemId.value = props.uploadConfig.extSystem
+  uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   uploadQueueDialog.value = props.queueKey
 }
 
 const onDrop = (files: File[]) => {
-  cachedExtSystemId.value = props.extSystem
-  uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
+  cachedExtSystemId.value = props.uploadConfig.extSystem
+  uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   uploadQueueDialog.value = props.queueKey
 }
 
 const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
+  const assetSelectStore = useAssetSelectStore()
   const ids = items.map((item) => item.id)
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
   const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
   try {
-    const assetDetails = await fetchAssetListByIds(damClient, ids, props.licenceId)
+    const assetDetails = await fetchAssetListByIds(damClient, ids, assetSelectStore.selectedLicenceId)
     assetDetails.forEach((assetDetail) => {
       assetMetadataMap.set(assetDetail.id, {
         description: isString(assetDetail.metadata.customData?.description)
@@ -165,7 +165,9 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
       })
     })
     if (authorIdsToFetch.size > 0) {
-      const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, [...authorIdsToFetch])
+      const authorsRes = await fetchAuthorListByIds(damClient, assetSelectStore.selectedSelectConfig.extSystem, [
+        ...authorIdsToFetch,
+      ])
       authorsRes.forEach((author) => {
         authorsMap.set(author.id, author.name)
       })
@@ -193,7 +195,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
       dam: {
         damId: asset.mainFile!.id,
         regionPosition: 0,
-        licenceId: props.licenceId,
+        licenceId: asset.licence,
       },
       position: maxPosition.value,
     }
@@ -214,10 +216,13 @@ const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
-  cachedExtSystemId.value = props.extSystem
   assetDialog.value = props.queueKey
   try {
     const asset = await fetchAssetByFileId(damClient, assetFileId)
+    const licence = await fetchDamAssetLicence(damClient, asset.licence)
+    if (licence.extSystem) {
+      cachedExtSystemId.value = licence.extSystem
+    }
     assetDetailStore.setAsset(asset)
   } catch (e) {
     showErrorsDefault(e)
@@ -388,13 +393,7 @@ onMounted(() => {
     </div>
     <AAssetSelect
       v-model="assetSelectDialog"
-      :select-config="[
-        {
-          title: 'Default',
-          licence: licenceId,
-          extSystem: extSystem,
-        },
-      ]"
+      :select-config="selectConfig"
       :min-count="1"
       :max-count="50"
       :asset-type="DamAssetType.Image"
@@ -432,8 +431,8 @@ onMounted(() => {
     <UploadQueueDialog
       v-if="uploadQueueDialog === queueKey"
       :queue-key="queueKey"
-      :ext-system="extSystem"
-      :licence-id="licenceId"
+      :ext-system="uploadConfig.extSystem"
+      :licence-id="uploadConfig.licence"
       :file-input-key="uploadQueue?.fileInputKey ?? -1"
       :accept="uploadAccept"
       :max-sizes="uploadSizes"
@@ -443,7 +442,7 @@ onMounted(() => {
     <AssetDetailDialog
       v-if="assetDialog === queueKey"
       :queue-key="queueKey"
-      :ext-system="extSystem"
+      :ext-system="cachedExtSystemId"
     />
   </div>
 </template>

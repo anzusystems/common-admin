@@ -178,6 +178,12 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     clearSelected()
   }
 
+  const selectedSelectConfig = computed(() => {
+    const found = selectConfig.value.find((configItem ) => configItem.licence === selectedLicenceId.value)
+    if (found) return found
+    return selectConfig.value[0]
+  })
+
   return {
     selectedLicenceId,
     selectConfig,
@@ -202,6 +208,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     toggleSelectedByIndex,
     clearSelected,
     reset,
+    selectedSelectConfig,
   }
 })
 

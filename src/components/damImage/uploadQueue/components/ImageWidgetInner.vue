@@ -1,7 +1,12 @@
 <script lang="ts" setup>
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
-import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
+import type {
+  ImageAware,
+  ImageCreateUpdateAware,
+  ImageWidgetSelectConfig,
+  ImageWidgetUploadConfig,
+} from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
@@ -31,13 +36,15 @@ import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/auth
 import { useI18n } from 'vue-i18n'
 import type { VBtn } from 'vuetify/components'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
 
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
     queueKey: UploadQueueKey
-    licenceId: IntegerId
-    extSystem: IntegerId
+    uploadConfig: ImageWidgetUploadConfig
+    selectConfig: ImageWidgetSelectConfig[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     label?: string | undefined
@@ -75,7 +82,7 @@ const imageWidgetExtSystemConfigs = inject<ShallowRef<Map<IntegerId, DamExtSyste
   undefined
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageWidgetExtSystemConfig = imageWidgetExtSystemConfigs?.value?.get(props.extSystem)
+const imageWidgetExtSystemConfig = imageWidgetExtSystemConfigs?.value?.get(props.uploadConfig.extSystem)
 
 if (isUndefined(imageWidgetExtSystemConfigs) || isUndefined(imageWidgetExtSystemConfig)) {
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
@@ -132,13 +139,13 @@ const actionLibrary = () => {
 const { cachedExtSystemId } = useExtSystemIdForCached()
 
 const onDrop = (files: File[]) => {
-  cachedExtSystemId.value = props.extSystem
-  uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
+  cachedExtSystemId.value = props.uploadConfig.extSystem
+  uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   uploadQueueDialog.value = props.queueKey
 }
 const onFileInput = (files: File[]) => {
-  cachedExtSystemId.value = props.extSystem
-  uploadQueuesStore.addByFiles(props.queueKey, props.extSystem, props.licenceId, files)
+  cachedExtSystemId.value = props.uploadConfig.extSystem
+  uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   uploadQueueDialog.value = props.queueKey
 }
 
@@ -187,6 +194,7 @@ watch(
 )
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
+  const assetSelectStore = useAssetSelectStore()
   metadataDialogLoading.value = true
   imageStore.setImageDetail(null)
   metadataDialog.value = true
@@ -200,7 +208,11 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         description = assetRes.metadata.customData.description.trim()
       }
       if (assetRes.authors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, assetRes.authors)
+        const authorsRes = await fetchAuthorListByIds(
+          damClient,
+          assetSelectStore.selectedSelectConfig.extSystem,
+          assetRes.authors
+        )
         source = authorsRes.map((author) => author.name).join(', ')
       }
     } catch (e) {
@@ -214,7 +226,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       dam: {
         damId: data.value[0].mainFile.id,
         regionPosition: 0,
-        licenceId: props.licenceId,
+        licenceId: data.value[0].licence,
       },
       position: 1,
     }
@@ -232,11 +244,14 @@ const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailSt
 const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
-  cachedExtSystemId.value = props.extSystem
   assetLoading.value = true
   assetDialog.value = props.queueKey
   try {
     const asset = await fetchAssetByFileId(damClient, assetFileId)
+    const licence = await fetchDamAssetLicence(damClient, asset.licence)
+    if (licence.extSystem) {
+      cachedExtSystemId.value = licence.extSystem
+    }
     assetDetailStore.setAsset(asset)
   } catch (e) {
     showErrorsDefault(e)
@@ -464,13 +479,7 @@ defineExpose({
   </div>
   <AAssetSelect
     v-model="assetSelectDialog"
-    :select-config="[
-      {
-        title: 'Default',
-        licence: licenceId,
-        extSystem: extSystem,
-      },
-    ]"
+    :select-config="selectConfig"
     :min-count="1"
     :max-count="1"
     :asset-type="DamAssetType.Image"
@@ -480,13 +489,13 @@ defineExpose({
   <AssetDetailDialog
     v-if="assetDialog === queueKey"
     :queue-key="queueKey"
-    :ext-system="extSystem"
+    :ext-system="cachedExtSystemId"
   />
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog === queueKey"
     :queue-key="queueKey"
-    :ext-system="extSystem"
-    :licence-id="licenceId"
+    :ext-system="uploadConfig.extSystem"
+    :licence-id="uploadConfig.licence"
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
