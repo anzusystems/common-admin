@@ -24,7 +24,7 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
 export function useCollabInit() {
-  const { enabled: collabEnabled, socketUrl } = useCommonAdminCollabOptions()
+  const { collabOptions } = useCommonAdminCollabOptions()
   const { showWarningT, showSuccessT } = useAlerts()
   const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState } = useCollabState()
 
@@ -40,11 +40,11 @@ export function useCollabInit() {
     const rejectedRequestToTakeModerationEventBus = useCollabRejectedRequestToTakeModerationEventBus()
     const kickedFromRoomEventBus = useCollabKickedFromRoomEventBus()
 
-    if (collabSocket.value || !collabEnabled) {
+    if (collabSocket.value || !collabOptions.value.enabled) {
       return
     }
 
-    collabSocket.value = io(socketUrl, {
+    collabSocket.value = io(collabOptions.value.socketUrl, {
       transports: ['websocket'],
       path: '/ws',
       forceNew: true,

@@ -29,7 +29,7 @@ import { useCommonAdminCollabOptions } from '@/components/collab/composables/com
 import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
 
 export function useCollabField(room: CollabRoom, field: CollabFieldName) {
-  const { enabled: collabEnabled } = useCommonAdminCollabOptions()
+  const { collabOptions } = useCommonAdminCollabOptions()
   const { currentUserId } = useCollabCurrentUserId()
   const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } = useCollabState()
 
@@ -118,7 +118,7 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName) {
   })
 
   const acquireCollabFieldLock = (options: Partial<CollabFieldLockOptions> = {}) => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     const roomInfo = collabRoomInfoState.get(room)
     if (roomInfo && roomInfo.status === CollabStatus.Inactive) return
     collabSocket.value
@@ -149,7 +149,7 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName) {
   }
 
   const releaseCollabFieldLock = (data: CollabFieldData, options: Partial<CollabFieldLockOptions> = {}) => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     const roomInfo = collabRoomInfoState.get(room)
     if (roomInfo && roomInfo.status === CollabStatus.Inactive) {
       if (!collabFieldDataBufferState.has(room)) {
@@ -185,7 +185,7 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName) {
   }
 
   const changeCollabFieldData = (data: CollabFieldData) => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     const roomInfo = collabRoomInfoState.get(room)
     if (roomInfo && roomInfo.status === CollabStatus.Inactive) return
     collabSocket.value.emit('changeFieldData', room, field, data, () => {

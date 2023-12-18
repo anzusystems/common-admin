@@ -44,14 +44,14 @@ import { useCollabState } from '@/components/collab/composables/collabState'
 import { isDefined, isUndefined } from '@/utils/common'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import type { AddToCachedArgs } from '@/composables/system/defineCached'
-import type { DocId, IntegerId } from '@/types/common'
+import type { IntegerId } from '@/types/common'
 import type { AnzuUser } from '@/types/AnzuUser'
 
 const alertedOccupiedRooms = ref(new Set<CollabRoom>())
 
 export function useCollabRoom(
   room: CollabRoom,
-  addToCachedUsers: ((...args: AddToCachedArgs<IntegerId | DocId>) => void) | undefined = undefined,
+  addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined = undefined,
   fetchCachedUsers: (() => Promisify<Promise<AnzuUser>>) | undefined = undefined
 ) {
   const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState } = useCollabState()
@@ -226,17 +226,17 @@ export function useCollabRoom(
     })
   }
 
-  const { enabled: collabEnabled } = useCommonAdminCollabOptions()
+  const { collabOptions } = useCommonAdminCollabOptions()
 
   const subscribeCollabRoomInfo = () => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('subscribeCollabRoomInfo', room, (response: CollabRoomInfoCallback) => {
       collabRoomInfoState.set(room, response.room)
     })
   }
 
   const unsubscribeCollabRoomInfo = () => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('unsubscribeCollabRoomInfo', room, (response: CollabRoomInfoCallback) => {
       collabRoomInfoState.set(room, response.room)
     })
@@ -244,7 +244,7 @@ export function useCollabRoom(
 
   const joinCollabRoom = async (options: Partial<CollabRoomOptions> = {}): Promise<CollabAccessRoomStatusType> => {
     return new Promise((resolve, reject) => {
-      if (!collabEnabled || isUndefined(collabSocket.value)) return reject(CollabAccessRoomStatus.Failed)
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabAccessRoomStatus.Failed)
       collabSocket.value
         ?.timeout(5000)
         .emit('joinCollabRoom', room, options, (error, response: CollabAccessRoomCallbackTypes) => {
@@ -261,7 +261,7 @@ export function useCollabRoom(
   }
 
   const leaveCollabRoom = () => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('leaveCollabRoom', room, (response: CollabAccessRoomCallbackTypes) => {
       if (isCollabSuccessAccessRoomCallback(response)) {
         collabRoomInfoState.set(room, response.room)
@@ -270,13 +270,13 @@ export function useCollabRoom(
   }
 
   const enteredCollabRoom = () => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value?.emit('enteredCollabRoom', room)
   }
 
   const requestToJoinCollabRoom = (): Promise<CollabRequestToJoinStatusType> => {
     return new Promise((resolve, reject) => {
-      if (!collabEnabled || isUndefined(collabSocket.value)) return reject(CollabRequestToJoinStatus.Failed)
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabRequestToJoinStatus.Failed)
       collabSocket.value
         ?.timeout(2000)
         .emit('requestToJoin', room, new Date().getTime(), (error, response: CollabRequestToJoinStatusCallback) => {
@@ -292,18 +292,18 @@ export function useCollabRoom(
   }
 
   const approveRequestToJoinCollabRoom = (userId: number) => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('approveRequestToJoin', room, userId)
   }
 
   const rejectRequestToJoinCollabRoom = (userId: number) => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('rejectRequestToJoin', room, userId)
   }
 
   const requestToTakeModeration = async (): Promise<CollabRequestToTakeModerationStatusType> => {
     return new Promise((resolve, reject) => {
-      if (!collabEnabled || isUndefined(collabSocket.value)) return reject(CollabRequestToTakeModerationStatus.Failed)
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabRequestToTakeModerationStatus.Failed)
       collabSocket.value
         ?.timeout(2000)
         .emit(
@@ -324,29 +324,29 @@ export function useCollabRoom(
   }
 
   const approveRequestToTakeModeration = () => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('approveRequestToTakeModeration', room)
   }
 
   const rejectRequestToTakeModeration = () => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('rejectRequestToTakeModeration', room)
   }
 
   const kickUserFromRoom = (userId: number) => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('kickUserFromRoom', room, userId)
   }
 
   const transferModeration = (userId: number) => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('transferModeration', room, userId)
   }
 
   const fetchRoomInfo = async (room: CollabRoom): Promise<CollabRoomInfo> => {
     const baseRoomInfo: CollabRoomInfo = { name: '', status: CollabStatus.Inactive, users: [], moderator: null }
     return new Promise((resolve) => {
-      if (!collabEnabled || isUndefined(collabSocket.value)) return resolve(baseRoomInfo)
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return resolve(baseRoomInfo)
       collabSocket.value?.timeout(500).emit('fetchRoomsInfo', [room], (error, response: CollabRoomsInfo) => {
         if (error) return void resolve(baseRoomInfo)
         const roomInfo = response[room]

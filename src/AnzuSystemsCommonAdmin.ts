@@ -63,7 +63,6 @@ export type CommonAdminCoreDamOptions =
     }
 
 export type CommonAdminCollabOptions =
-  | undefined
   | {
       enabled: boolean
       socketUrl: string

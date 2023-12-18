@@ -13,15 +13,17 @@ import { computed, reactive, ref, type Ref, toRaw } from 'vue'
 import { useCollabGatheringBufferDataEventBus } from '@/components/collab/composables/collabEventBus'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
-const { enabled: collabEnabled } = useCommonAdminCollabOptions()
 const collabConnected = ref(true)
-const collabReconnecting = computed(() => collabEnabled && !collabConnected.value)
 const collabSocket: Ref<Socket<CollabServerToClientEvents, CollabClientToServerEvents> | undefined> = ref()
 const collabRoomInfoState = reactive(new Map<CollabRoom, CollabRoomInfo>())
 const collabFieldLocksState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldLock>>())
 const collabFieldDataBufferState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldData>>())
 
 export function useCollabState() {
+  const { collabOptions } = useCommonAdminCollabOptions()
+
+  const collabReconnecting = computed(() => collabOptions.value.enabled && !collabConnected.value)
+
   const gatherBufferData = (room: CollabRoom): CollabRoomPlainData => {
     const collabGatheringBufferDataEventBus = useCollabGatheringBufferDataEventBus()
     collabGatheringBufferDataEventBus.emit({ room })

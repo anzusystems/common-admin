@@ -11,18 +11,18 @@ export const COLLAB_FIELD_PREFIX_COMMENT = 'comment:'
 export type CollabCachedUsersMap = Map<IntegerId, CachedItem<AnzuUserMinimal>>
 
 export function useCollabHelpers() {
-  const { enabled: collabEnabled } = useCommonAdminCollabOptions()
+  const { collabOptions } = useCommonAdminCollabOptions()
 
   const createCollabRoom = (id: IntegerId | DocId, entity: string, system: string) => {
     return (system + ':' + entity + ':' + id) as CollabRoom
   }
 
   const createCollabFieldConfig = (name: CollabFieldName, room: CollabRoom, cachedUsers: CollabCachedUsersMap ) => {
-    return { room, field: name, enabled: collabEnabled, cachedUsers }
+    return { room, field: name, enabled: collabOptions.value.enabled, cachedUsers }
   }
 
   const createCollabCommandConfig = (name: CollabFieldName, room: CollabRoom, cachedUsers: CollabCachedUsersMap) => {
-    return { room, field: name, enabled: collabEnabled, cachedUsers }
+    return { room, field: name, enabled: collabOptions.value.enabled, cachedUsers }
   }
 
   const createCollabEmbedFieldName = (id: DocId) => {

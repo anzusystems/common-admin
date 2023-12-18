@@ -15,7 +15,7 @@ import { useCollabState } from '@/components/collab/composables/collabState'
 import { isUndefined } from '@/utils/common'
 
 export function useCollabAnyDataChange(room: CollabRoom) {
-  const { enabled: collabEnabled } = useCommonAdminCollabOptions()
+  const { collabOptions } = useCommonAdminCollabOptions()
   const { collabSocket } = useCollabState()
   const changeEventBus = useCollabRoomDataChangeEventBus()
 
@@ -37,7 +37,7 @@ export function useCollabAnyDataChange(room: CollabRoom) {
   }
 
   const changeCollabAnyData = (field: CollabFieldName, data: CollabFieldData, callback: Fn | undefined = undefined) => {
-    if (!collabEnabled || isUndefined(collabSocket.value)) return
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('changeFieldData', room, field, data, () => {
       if (!isUndefined(callback)) callback()
     })
