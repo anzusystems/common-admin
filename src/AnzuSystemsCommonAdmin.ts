@@ -13,6 +13,7 @@ import {
 import type { AxiosInstance } from 'axios'
 import { initCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { initCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
 export type PluginOptions<T extends AclValue = AclValue> = {
   currentUser: CurrentUserType
@@ -20,6 +21,7 @@ export type PluginOptions<T extends AclValue = AclValue> = {
   customAclResolver?: CustomAclResolver<T>
   coreDam?: CommonAdminCoreDamOptions
   image?: CommonAdminImageOptions
+  collab?: CommonAdminCollabOptions
 }
 
 export type CustomAclResolver<T extends AclValue = AclValue> =
@@ -60,6 +62,13 @@ export type CommonAdminCoreDamOptions =
       }
     }
 
+export type CommonAdminCollabOptions =
+  | undefined
+  | {
+      enabled: boolean
+      socketUrl: string
+    }
+
 export default {
   install<T extends AclValue = AclValue>(app: App, options: PluginOptions<T>): void {
     app.provide(CurrentUserSymbol, options.currentUser)
@@ -70,5 +79,6 @@ export default {
     app.use(Notification, { componentName: 'Notifications' })
     initCommonAdminImageOptions(options.image)
     initCommonAdminCoreDamOptions(options.coreDam)
+    initCommonAdminCollabOptions(options.collab)
   },
 }
