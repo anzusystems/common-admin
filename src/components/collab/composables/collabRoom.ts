@@ -51,6 +51,7 @@ const alertedOccupiedRooms = ref(new Set<CollabRoom>())
 
 export function useCollabRoom(
   room: CollabRoom,
+  watchForNewUsers: boolean = false,
   addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined = undefined,
   fetchCachedUsers: (() => Promisify<Promise<AnzuUser>>) | undefined = undefined
 ) {
@@ -276,7 +277,9 @@ export function useCollabRoom(
 
   const requestToJoinCollabRoom = (): Promise<CollabRequestToJoinStatusType> => {
     return new Promise((resolve, reject) => {
-      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabRequestToJoinStatus.Failed)
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) {
+        return reject(CollabRequestToJoinStatus.Failed)
+      }
       collabSocket.value
         ?.timeout(2000)
         .emit('requestToJoin', room, new Date().getTime(), (error, response: CollabRequestToJoinStatusCallback) => {
@@ -303,7 +306,9 @@ export function useCollabRoom(
 
   const requestToTakeModeration = async (): Promise<CollabRequestToTakeModerationStatusType> => {
     return new Promise((resolve, reject) => {
-      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabRequestToTakeModerationStatus.Failed)
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) {
+        return reject(CollabRequestToTakeModerationStatus.Failed)
+      }
       collabSocket.value
         ?.timeout(2000)
         .emit(
@@ -363,16 +368,18 @@ export function useCollabRoom(
     return collabRoomInfoState.get(room) ?? { name: room, moderator: null, users: [], status: CollabStatus.Inactive }
   })
 
-  watch(
-    collabRoomInfo,
-    (newValue) => {
-      if (newValue.users.length) {
-        if (!isUndefined(addToCachedUsers)) addToCachedUsers(newValue.users)
-        if (!isUndefined(fetchCachedUsers)) fetchCachedUsers()
-      }
-    },
-    { immediate: true }
-  )
+  if (watchForNewUsers) {
+    watch(
+      collabRoomInfo,
+      (newValue) => {
+        if (newValue.users.length) {
+          if (!isUndefined(addToCachedUsers)) addToCachedUsers(newValue.users)
+          if (!isUndefined(fetchCachedUsers)) fetchCachedUsers()
+        }
+      },
+      { immediate: true }
+    )
+  }
 
   const collabRoomLocks = computed((): Map<CollabFieldName, CollabFieldLock> => {
     return collabFieldLocksState.get(room) ?? new Map()
