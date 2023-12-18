@@ -53,5 +53,9 @@ createApp(App)
         },
       },
     },
+    collab: {
+      enabled: true,
+      socketUrl: 'ws://collaboration.sme.localhost',
+    },
   })
   .mount('#app')

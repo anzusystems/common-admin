@@ -53,7 +53,7 @@ export function useCollabRoom(
   room: CollabRoom,
   watchForNewUsers: boolean = false,
   addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined = undefined,
-  fetchCachedUsers: (() => Promisify<Promise<AnzuUser>>) | undefined = undefined
+  fetchCachedUsers: (() => Promisify<Promise<any>>) | undefined = undefined
 ) {
   const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState } = useCollabState()
 

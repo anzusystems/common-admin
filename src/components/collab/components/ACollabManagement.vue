@@ -8,7 +8,7 @@ import {
   type CollabUserId,
 } from '@/components/collab/types/Collab'
 import { useI18n } from 'vue-i18n'
-import { computed, ref } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import ACollabCountdown from '@/components/collab/components/ACollabCountdown.vue'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
 import { useAlerts } from '@/composables/system/alerts'
@@ -18,13 +18,17 @@ import type { IntegerId } from '@/types/common'
 import type { Promisify } from '@vueuse/core'
 import type { AnzuUser } from '@/types/AnzuUser'
 import { isDefined } from '@/utils/common'
+import ADialogToolbar from '@/components/ADialogToolbar.vue'
+import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
+import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
 
 const props = withDefaults(
   defineProps<{
     collabRoom: CollabRoom
+    cachedUsers: CollabCachedUsersMap | Ref<CollabCachedUsersMap>
     isEdit?: boolean
-    addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined
-    fetchCachedUsers: (() => Promisify<Promise<AnzuUser>>) | undefined // todo check type issue
+    addToCachedUsers?: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined
+    fetchCachedUsers?: (() => Promisify<Promise<any>>) | undefined
   }>(),
   {
     isEdit: false,
@@ -238,18 +242,18 @@ const calculateWaitingSeconds = (timestamp: number) => {
 <template>
   <div>
     moderator:
-    <CachedUserChip
+    <ACollabLockedByUser
       v-if="collabRoomInfo.moderator"
       :id="collabRoomInfo.moderator"
       :key="collabRoomInfo.moderator"
-      minimal
+      :users="cachedUsers"
     />
     users:
-    <CachedUserChip
+    <ACollabLockedByUser
       v-for="userId in collabRoomInfo.users.filter((user) => user !== collabRoomInfo.moderator)"
       :id="userId"
       :key="userId"
-      minimal
+      :users="cachedUsers"
     />
     <VDivider
       class="mx-2"
@@ -310,10 +314,13 @@ const calculateWaitingSeconds = (timestamp: number) => {
               :value="request.userId"
             >
               <template #prepend>
-                <CachedUserChip :id="request.userId" />
+                <ACollabLockedByUser
+                  :id="request.userId"
+                  :users="cachedUsers"
+                />
               </template>
               <template #title>
-                <CollabCountdown
+                <ACollabCountdown
                   class="ml-3"
                   :seconds="calculateWaitingSeconds(request.timestamp)"
                   :label="t('cms.collab.approvedAfterCountdown')"
@@ -363,7 +370,10 @@ const calculateWaitingSeconds = (timestamp: number) => {
               :link="false"
             >
               <template #title>
-                <CachedUserChip :id="userId" />
+                <ACollabLockedByUser
+                  :id="userId"
+                  :users="cachedUsers"
+                />
               </template>
               <template #append>
                 <div class="ml-3">
@@ -424,7 +434,10 @@ const calculateWaitingSeconds = (timestamp: number) => {
           <VList>
             <VListItem>
               <template #prepend>
-                <CachedUserChip :id="moderationRequest.userId" />
+                <ACollabLockedByUser
+                  :id="moderationRequest.userId"
+                  :users="cachedUsers"
+                />
               </template>
               <template #title>
                 <span class="ml-1">{{ t('cms.collab.requestToTakeModerationText') }}</span>
@@ -439,7 +452,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
           </ABtnTertiary>
           <ABtnPrimary @click.stop="approveRequestToTakeModerationAction">
             {{ t('cms.collab.button.accept') }}
-            <CollabCountdown
+            <ACollabCountdown
               parentheses
               :seconds="calculateWaitingSeconds(moderationRequest.timestamp)"
               @done="resetRequestToTakeModeration"
@@ -478,7 +491,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
               icon="mdi-loading mdi-spin"
             />
             {{ t('cms.collab.waitingForApprove') }}
-            <CollabCountdown
+            <ACollabCountdown
               parentheses
               @done="waitingForApprovalTimerDone"
             />
