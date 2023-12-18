@@ -23,6 +23,7 @@ import APermissionGrantEditor from '@/components/permission/APermissionGrantEdit
 import APermissionValueChip from '@/components/permission/APermissionValueChip.vue'
 import Acl from '@/components/permission/Acl.vue'
 import ADatetime from '@/components/ADatetime.vue'
+import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
@@ -492,6 +493,7 @@ export {
   AFilterBooleanSelect,
   AFilterDatetimePicker,
   ADatetime,
+  ADatetimePicker,
   ADatatablePagination,
   ADatatableConfigButton,
   ADatatableOrdering,
