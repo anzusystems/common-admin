@@ -24,7 +24,7 @@ const props = withDefaults(
     collabRoom: CollabRoom
     isEdit?: boolean
     addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined
-    fetchCachedUsers: (() => Promisify<Promise<AnzuUser>>) | undefined
+    fetchCachedUsers: (() => Promisify<Promise<AnzuUser>>) | undefined // todo check type issue
   }>(),
   {
     isEdit: false,
