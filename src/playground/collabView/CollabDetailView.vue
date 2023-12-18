@@ -22,7 +22,7 @@ const {
   unsubscribeCollabRoomInfo,
   addCollabReconnectListener,
   addApprovedJoinRequestListener,
-} = useCollabRoom(collabRoom, true, addToCachedUsers, fetchCachedUsers as any)
+} = useCollabRoom(collabRoom, true, addToCachedUsers, fetchCachedUsers)
 
 onMounted(() => {
   subscribeCollabRoomInfo()
@@ -54,7 +54,7 @@ addApprovedJoinRequestListener(() => {
       <ACollabManagement
         :collab-room="collabRoom"
         :add-to-cached-users="addToCachedUsers"
-        :fetch-cached-users="fetchCachedUsers as any"
+        :fetch-cached-users="fetchCachedUsers"
         :cached-users="cachedUsers"
       />
     </VCardText>

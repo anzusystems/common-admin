@@ -16,7 +16,6 @@ import { useCollabCurrentUserId } from '@/components/collab/composables/collabCu
 import type { AddToCachedArgs } from '@/composables/system/defineCached'
 import type { IntegerId } from '@/types/common'
 import type { Promisify } from '@vueuse/core'
-import type { AnzuUser } from '@/types/AnzuUser'
 import { isDefined } from '@/utils/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'

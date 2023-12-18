@@ -45,7 +45,6 @@ import { isDefined, isUndefined } from '@/utils/common'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import type { AddToCachedArgs } from '@/composables/system/defineCached'
 import type { IntegerId } from '@/types/common'
-import type { AnzuUser } from '@/types/AnzuUser'
 
 const alertedOccupiedRooms = ref(new Set<CollabRoom>())
 

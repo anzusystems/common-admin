@@ -36,7 +36,7 @@ const {
   collabRoomLocks,
   collabRoomInfo,
   collabFieldDataBufferState,
-} = useCollabRoom(collab.room, true, addToCachedUsers, fetchCachedUsers as any)
+} = useCollabRoom(collab.room, true, addToCachedUsers, fetchCachedUsers)
 const { gatherBufferData } = useCollabState()
 
 addCollabReconnectListener(async () => {
@@ -92,7 +92,7 @@ const model = reactive({
       <ACollabManagement
         :collab-room="collab.room"
         :add-to-cached-users="addToCachedUsers"
-        :fetch-cached-users="fetchCachedUsers as any"
+        :fetch-cached-users="fetchCachedUsers"
         :cached-users="cachedUsers"
       />
       <h2 class="text-h6 mt-5 mb-3">
