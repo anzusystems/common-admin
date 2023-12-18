@@ -14,7 +14,7 @@ import type {
   CollabFieldLockOptions,
 } from '@/components/collab/types/Collab'
 import type { IntegerIdNullable } from '@/types/common'
-import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
+import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import {
   CollabFieldLockStatus,
   type CollabFieldLockStatusPayload,
@@ -182,7 +182,7 @@ const disabledComputed = computed(() => {
         name="locked"
         :user-id="lockedByUserLocal"
       >
-        <AnzutapLockedByUser
+        <ACollabLockedByUser
           v-if="collab"
           :id="lockedByUserLocal"
           :users="collab.cachedUsers"

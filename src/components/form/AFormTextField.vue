@@ -6,7 +6,7 @@ import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKey
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import type { ErrorObject } from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
-import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
+import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import {
   CollabFieldLockStatus,
   type CollabFieldLockStatusPayload,
@@ -192,7 +192,7 @@ const disabledComputed = computed(() => {
         name="locked"
         :user-id="lockedByUserLocal"
       >
-        <AnzutapLockedByUser
+        <ACollabLockedByUser
           v-if="collab"
           :id="lockedByUserLocal"
           :users="collab.cachedUsers"

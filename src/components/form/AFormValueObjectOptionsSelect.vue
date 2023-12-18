@@ -5,7 +5,7 @@ import type { ErrorObject } from '@vuelidate/core'
 import { cloneDeep, isDefined, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { useI18n } from 'vue-i18n'
-import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
+import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
 import type { IntegerIdNullable } from '@/types/common'
@@ -179,7 +179,7 @@ watch(
         name="locked"
         :user-id="lockedByUserLocal"
       >
-        <AnzutapLockedByUser
+        <ACollabLockedByUser
           v-if="collab"
           :id="lockedByUserLocal"
           :users="collab.cachedUsers"

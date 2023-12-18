@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
-import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
+import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import { isDefined } from '@/utils/common'
 import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
@@ -109,7 +109,7 @@ const disabledComputed = computed(() => {
         name="locked"
         :user-id="lockedByUserLocal"
       >
-        <AnzutapLockedByUser
+        <ACollabLockedByUser
           v-if="collab"
           :id="lockedByUserLocal"
           :users="collab.cachedUsers"

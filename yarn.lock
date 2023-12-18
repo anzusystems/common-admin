@@ -192,7 +192,7 @@ __metadata:
   resolution: "@anzusystems/common-admin@workspace:."
   dependencies:
     "@intlify/unplugin-vue-i18n": "npm:^1.6.0"
-    "@kyvg/vue3-notification": "npm:^3.1.1"
+    "@kyvg/vue3-notification": "npm:^3.1.2"
     "@mdi/font": "npm:^7.3.67"
     "@rushstack/eslint-patch": "npm:^1.6.1"
     "@types/node": "npm:^20.10.5"
@@ -812,12 +812,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@kyvg/vue3-notification@npm:^3.1.1":
-  version: 3.1.1
-  resolution: "@kyvg/vue3-notification@npm:3.1.1"
+"@kyvg/vue3-notification@npm:^3.1.2":
+  version: 3.1.2
+  resolution: "@kyvg/vue3-notification@npm:3.1.2"
   peerDependencies:
     vue: ^3.0.0
-  checksum: 567839583a987364b20fb2925ee398d9ca47639e8519d2f8e372b5bc9f619ff3ef07236cf86003a6d2ef8277d0ace47bb1c107a5dcc92070d90cc3d72b0a4dc4
+  checksum: 77318564f5c37db39e0df0a06d43f4761f053e19bf4c0e9f112da7eda0da3b96e5ceb267cfcb855bb48045541433f1f49249b52d92319cbd624b9ddd8950acb0
   languageName: node
   linkType: hard
 

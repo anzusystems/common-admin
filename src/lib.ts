@@ -42,7 +42,9 @@ import ALogLevelChip from '@/components/log/ALogLevelChip.vue'
 import ACopyText from '@/components/ACopyText.vue'
 import AIconGroup from '@/components/AIconGroup.vue'
 import AChipNoLink from '@/components/AChipNoLink.vue'
-import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
+import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
+import ACollabCountdown from '@/components/collab/components/ACollabCountdown.vue'
+import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
 import AUserAndTimeTrackingFields from '@/components/AUserAndTimeTrackingFields.vue'
 import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
 import AActionCreateButton from '@/components/buttons/action/AActionCreateButton.vue'
@@ -548,7 +550,9 @@ export {
   AImageWidgetMultiple,
   AImageWidgetMultipleSimple,
   ACropperjs,
-  AnzutapLockedByUser,
+  ACollabLockedByUser,
+  ACollabCountdown,
+  ACollabManagement,
   AAssetSelect,
 
   // VIEWS
