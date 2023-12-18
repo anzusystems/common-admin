@@ -28,6 +28,7 @@ import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.v
 import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
 import AFormRemoteAutocomplete from '@/components/form/AFormRemoteAutocomplete.vue'
 import AFormRemoteCheckbox from '@/components/form/AFormRemoteCheckbox.vue'
+import AFormSwitch from '@/components/form/AFormSwitch.vue'
 import AFormRemoteSwitch from '@/components/form/AFormRemoteSwitch.vue'
 import AFormValueObjectOptionsSelect from '@/components/form/AFormValueObjectOptionsSelect.vue'
 import AFilterValueObjectOptionsSelect from '@/components/filter/AFilterValueObjectOptionsSelect.vue'
@@ -40,6 +41,7 @@ import ALogLevelChip from '@/components/log/ALogLevelChip.vue'
 import ACopyText from '@/components/ACopyText.vue'
 import AIconGroup from '@/components/AIconGroup.vue'
 import AChipNoLink from '@/components/AChipNoLink.vue'
+import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
 import AUserAndTimeTrackingFields from '@/components/AUserAndTimeTrackingFields.vue'
 import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
 import AActionCreateButton from '@/components/buttons/action/AActionCreateButton.vue'
@@ -479,6 +481,7 @@ export {
   AFormRemoteAutocomplete,
   AFormRemoteCheckbox,
   AFormRemoteSwitch,
+  AFormSwitch,
   AFormValueObjectOptionsSelect,
   AFilterWrapper,
   AFilterString,
@@ -537,8 +540,7 @@ export {
   AImageWidgetMultiple,
   AImageWidgetMultipleSimple,
   ACropperjs,
-
-  // Dam
+  AnzutapLockedByUser,
   AAssetSelect,
 
   // VIEWS

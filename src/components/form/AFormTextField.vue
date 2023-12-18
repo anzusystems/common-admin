@@ -1,11 +1,28 @@
 <script lang="ts" setup>
-import { computed, inject } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
-import { isUndefined } from '@/utils/common'
+import { isDefined, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import type { ErrorObject } from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
+import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
+import {
+  CollabFieldLockStatus,
+  type CollabFieldLockStatusPayload,
+  CollabFieldLockType,
+} from '@/components/collab/composables/collabEventBus'
+import type {
+  CollabFieldData,
+  CollabFieldDataEnvelope,
+  CollabFieldLockOptions,
+  CollabFieldName,
+  CollabRoom,
+} from '@/components/collab/types/Collab'
+import { useCollabField } from '@/components/collab/composables/collabField'
+import type { IntegerIdNullable } from '@/types/common'
+import type { VTextField } from 'vuetify/components/VTextField'
+import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
 
 const props = withDefaults(
   defineProps<{
@@ -21,6 +38,12 @@ const props = withDefaults(
     type?: string
     step?: number
     maxlength?: number | undefined
+    collab?:
+      | { room: CollabRoom; field: CollabFieldName; enabled: boolean; cachedUsers: CollabCachedUsersMap }
+      | undefined
+    disabled?: boolean
+    placeholder?: undefined | string
+    persistentPlaceholder?: boolean
   }>(),
   {
     label: undefined,
@@ -34,13 +57,59 @@ const props = withDefaults(
     type: 'text',
     step: undefined,
     maxlength: undefined,
+    collab: undefined,
+    disabled: undefined,
+    placeholder: undefined,
+    persistentPlaceholder: false,
   }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: string | number | null | undefined): void
   (e: 'click:append', data: string | number | null | undefined): void
   (e: 'blur', data: string | number | null | undefined): void
+  (e: 'focus', data: string | number | null | undefined): void
 }>()
+
+const textFieldRef = ref<InstanceType<typeof VTextField> | null>(null)
+
+// Collaboration
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const releaseFieldLock = ref((data: CollabFieldData, options?: Partial<CollabFieldLockOptions>) => {})
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const acquireFieldLock = ref((options?: Partial<CollabFieldLockOptions>) => {})
+const lockedByUserLocal = ref<IntegerIdNullable>(null)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+if (!isUndefined(props.collab) && props.collab.enabled) {
+  const {
+    releaseCollabFieldLock,
+    acquireCollabFieldLock,
+    addCollabFieldDataChangeListener,
+    addCollabFieldLockStatusListener,
+    addCollabGatheringBufferDataListener,
+    lockedByUser,
+    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  } = useCollabField(props.collab.room, props.collab.field)
+  releaseFieldLock.value = releaseCollabFieldLock
+  acquireFieldLock.value = acquireCollabFieldLock
+  watch(
+    lockedByUser,
+    (newValue) => {
+      lockedByUserLocal.value = newValue
+    },
+    { immediate: true }
+  )
+  addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
+    emit('update:modelValue', data.value as string | number | null | undefined)
+  })
+  addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
+    if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
+      textFieldRef.value?.blur()
+    }
+  })
+  addCollabGatheringBufferDataListener(() => {
+    textFieldRef.value?.blur()
+  })
+}
 
 const { t } = useI18n()
 
@@ -53,30 +122,42 @@ const onUpdate = (newValue: string) => {
 const onBlur = () => {
   emit('blur', props.modelValue)
   props.v?.$touch()
+  releaseFieldLock.value(props.modelValue)
+}
+
+const onFocus = () => {
+  emit('focus', props.modelValue)
+  acquireFieldLock.value()
 }
 
 const errorMessageComputed = computed(() => {
-  if (!isUndefined(props.errorMessage)) return [props.errorMessage]
+  if (isDefined(props.errorMessage)) return [props.errorMessage]
   if (props.v?.$errors?.length) return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []
 })
 
 const labelComputed = computed(() => {
-  if (!isUndefined(props.label)) return props.label
+  if (isDefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
   const { end: path } = stringSplitOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 
 const requiredComputed = computed(() => {
-  if (!isUndefined(props.required)) return props.required
+  if (isDefined(props.required)) return props.required
   if (props.v?.required && props.v?.required.$params.type === 'required') return true
   return false
+})
+
+const disabledComputed = computed(() => {
+  if (isDefined(props.disabled)) return props.disabled
+  return !!lockedByUserLocal.value
 })
 </script>
 
 <template>
   <VTextField
+    ref="textFieldRef"
     :prepend-icon="prependIcon"
     :data-cy="dataCy"
     :error-messages="errorMessageComputed"
@@ -86,9 +167,13 @@ const requiredComputed = computed(() => {
     :step="step"
     :append-icon="appendIcon"
     :maxlength="maxlength"
+    :disabled="disabledComputed"
+    :placeholder="placeholder"
+    :persistent-placeholder="persistentPlaceholder"
     trim
     @click:append="(event: any) => emit('click:append', event)"
     @blur="onBlur"
+    @focus="onFocus"
     @update:model-value="onUpdate($event)"
   >
     <template
@@ -100,6 +185,21 @@ const requiredComputed = computed(() => {
         v-if="requiredComputed"
         class="required"
       />
+    </template>
+    <template
+      v-if="lockedByUserLocal"
+      #append-inner
+    >
+      <slot
+        name="locked"
+        :user-id="lockedByUserLocal"
+      >
+        <AnzutapLockedByUser
+          v-if="collab"
+          :id="lockedByUserLocal"
+          :users="collab.cachedUsers"
+        />
+      </slot>
     </template>
   </VTextField>
 </template>

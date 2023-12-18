@@ -1,17 +1,26 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
+import type { Ref } from 'vue'
 import { computed, inject, ref, toRefs, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import { usePagination } from '@/composables/system/pagination'
-import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
+import { cloneDeep, isArray, isDefined, isNull, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
-import type { Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { DocId, IntegerId } from '@/types/common'
+import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
+import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
+import type {
+  CollabFieldData,
+  CollabFieldDataEnvelope,
+  CollabFieldName,
+  CollabRoom
+} from '@/components/collab/types/Collab'
+import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
+import { useCollabField } from '@/components/collab/composables/collabField'
 
 type fetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
@@ -35,6 +44,10 @@ const props = withDefaults(
     filterSortBy?: string | null
     disableInitFetch?: boolean | undefined
     loading?: boolean
+    collab?:
+      | { room: CollabRoom; field: CollabFieldName; enabled: boolean; cachedUsers: CollabCachedUsersMap }
+      | undefined
+    disabled?: boolean
   }>(),
   {
     label: undefined,
@@ -49,6 +62,8 @@ const props = withDefaults(
     filterSortBy: 'createdAt',
     disableInitFetch: false,
     loading: false,
+    collab: undefined,
+    disabled: undefined,
   }
 )
 const emit = defineEmits<{
@@ -56,6 +71,7 @@ const emit = defineEmits<{
   (e: 'searchChange', data: string): void
   (e: 'searchChangeDebounced', data: string): void
   (e: 'blur', data: DocId | IntegerId | DocId[] | IntegerId[] | null): void
+  (e: 'focus', data: DocId | IntegerId | DocId[] | IntegerId[] | null): void
 }>()
 
 const modelValue = computed({
@@ -66,6 +82,38 @@ const modelValue = computed({
     emit('update:modelValue', cloneDeep<DocId | IntegerId | DocId[] | IntegerId[] | null>(newValue))
   },
 })
+
+// Collaboration
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const releaseFieldLock = ref((data: CollabFieldData) => {})
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const changeFieldData = ref((data: CollabFieldData) => {})
+const acquireFieldLock = ref(() => {})
+const lockedByUserLocal = ref<IntegerIdNullable>(null)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+if (!isUndefined(props.collab) && props.collab.enabled) {
+  const {
+    releaseCollabFieldLock,
+    changeCollabFieldData,
+    acquireCollabFieldLock,
+    addCollabFieldDataChangeListener,
+    lockedByUser,
+    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  } = useCollabField(props.collab.room, props.collab.field)
+  releaseFieldLock.value = releaseCollabFieldLock
+  changeFieldData.value = changeCollabFieldData
+  acquireFieldLock.value = acquireCollabFieldLock
+  watch(
+    lockedByUser,
+    (newValue) => {
+      lockedByUserLocal.value = newValue
+    },
+    { immediate: true }
+  )
+  addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
+    emit('update:modelValue', data.value as DocId | IntegerId | DocId[] | IntegerId[] | null)
+  })
+}
 
 const search = ref('')
 const isFocused = ref(false)
@@ -79,27 +127,33 @@ const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
 const onBlur = () => {
-  isFocused.value = true
+  isFocused.value = false
   emit('blur', props.modelValue)
   props.v?.$touch()
+  releaseFieldLock.value(props.modelValue)
 }
 
 const errorMessageComputed = computed(() => {
-  if (!isUndefined(props.errorMessage)) return [props.errorMessage]
+  if (isDefined(props.errorMessage)) return [props.errorMessage]
   if (props.v?.$errors?.length) return props.v.$errors.map((item: ErrorObject) => item.$message)
   return []
 })
 
 const labelComputed = computed(() => {
-  if (!isUndefined(props.label)) return props.label
+  if (isDefined(props.label)) return props.label
   if (isUndefined(system) || isUndefined(subject) || isUndefined(props.v?.$path)) return ''
   const { end: path } = stringSplitOnFirstOccurrence(props.v?.$path, '.')
   return t(system + '.' + subject + '.model.' + path)
 })
 
 const requiredComputed = computed(() => {
-  if (!isUndefined(props.required)) return props.required
+  if (isDefined(props.required)) return props.required
   return props.v?.required && props.v?.required.$params.type === 'required'
+})
+
+const disabledComputed = computed(() => {
+  if (isDefined(props.disabled)) return props.disabled
+  return !!lockedByUserLocal.value
 })
 
 const multipleComputedVuetifyTypeFix = computed(() => {
@@ -180,6 +234,8 @@ const onFocus = () => {
   isFocused.value = true
   clearAutoFetchTimer()
   autoFetch()
+  emit('focus', props.modelValue)
+  acquireFieldLock.value()
 }
 
 const singleItemSelectedTitle = computed(() => {
@@ -208,6 +264,9 @@ watch(
   modelValue,
   async (newValue, oldValue) => {
     if (newValue === oldValue) return
+    if (props.collab?.enabled && isFocused.value) {
+      changeFieldData.value(newValue)
+    }
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []
       if (props.disableInitFetch || autoFetched.value === true) return
@@ -260,6 +319,7 @@ watch(search, (newValue, oldValue) => {
     :chips="multiple"
     :hide-details="hideDetails"
     :loading="loadingComputed"
+    :disabled="disabledComputed"
     @update:search="onSearchUpdate"
     @blur="onBlur"
     @focus="onFocus"
@@ -276,6 +336,21 @@ watch(search, (newValue, oldValue) => {
           class="required"
         />
       </span>
+    </template>
+    <template
+      v-if="lockedByUserLocal"
+      #append-inner
+    >
+      <slot
+        name="locked"
+        :user-id="lockedByUserLocal"
+      >
+        <AnzutapLockedByUser
+          v-if="collab"
+          :id="lockedByUserLocal"
+          :users="collab.cachedUsers"
+        />
+      </slot>
     </template>
   </VAutocomplete>
 </template>

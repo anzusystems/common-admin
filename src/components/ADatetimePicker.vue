@@ -5,16 +5,16 @@ import { Slovak } from 'flatpickr/dist/l10n/sk'
 import { Czech } from 'flatpickr/dist/l10n/cs'
 import { english as English } from 'flatpickr/dist/l10n/default'
 import 'flatpickr/dist/flatpickr.css'
-import { dateNow, dateToUtc } from '@/utils/datetime'
 import type flatpickr from 'flatpickr'
-import { isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import useVuelidate from '@vuelidate/core'
-import type { DatetimeUTCNullable } from '@/types/common'
-import { useValidateRequiredIf } from '@/validators/vuelidate/common/useValidateRequiredIf'
 import { useI18n } from 'vue-i18n'
 import type { DateLimit, DateOption } from 'flatpickr/dist/types/options'
+import type { DatetimeUTCNullable } from '@/types/common'
+import { isDefined, isNull, isUndefined } from '@/utils/common'
+import { dateNow, dateToUtc } from '@/utils/datetime'
 import { useLanguageSettings } from '@/composables/languageSettings'
+import { useValidate } from '@/validators/vuelidate/useValidate'
 
 type FlatpickrRef = null | { fp: undefined | flatpickr.Instance }
 type TextFieldRef = null | { $el: HTMLElement }
@@ -61,6 +61,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'change'): void
   (e: 'blur'): void
+  (e: 'focus'): void
   (e: 'update:modelValue', data: string | null): void
   (e: 'onOpen'): void
   (e: 'onClose'): void
@@ -120,6 +121,10 @@ const onFlatpickrClose = () => {
 const onFlatpickrChange = () => {
   if (!flatickrRefIsInitialized(flatickrRef.value)) return
   textFieldValue.value = flatickrRef.value.fpInput().value
+}
+
+const onTextFieldFocus = () => {
+  emit('focus')
 }
 
 const onTextFieldBlur = () => {
@@ -239,7 +244,7 @@ const onCalendarClick = () => {
   }, 0)
 }
 
-const requiredIf = useValidateRequiredIf()
+const { requiredIf } = useValidate()
 
 const rules = computed(() => {
   return {
@@ -252,7 +257,7 @@ const rules = computed(() => {
 const v$ = useVuelidate(rules, { textFieldValue })
 
 const errorMessageComputed = computed(() => {
-  if (!isUndefined(props.errorMessages)) return props.errorMessages
+  if (isDefined(props.errorMessages)) return props.errorMessages
   if (v$.value.textFieldValue.$errors.length)
     return [v$.value.textFieldValue.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []
@@ -300,7 +305,9 @@ onMounted(() => {
     :persistent-placeholder="true"
     :placeholder="placeholderComputed"
     class="a-datetime-picker"
+    :disabled="disabled"
     @blur="onTextFieldBlur"
+    @focus="onTextFieldFocus"
     @keyup.enter="onTextFieldBlur"
   >
     <template #append-inner>
@@ -325,8 +332,12 @@ onMounted(() => {
         <VIcon
           class="a-datetime-picker__calendar"
           icon="mdi-calendar"
+          size="small"
           @click.stop="onCalendarClick"
         />
+      </div>
+      <div class="ml-1">
+        <slot name="append-inner" />
       </div>
     </template>
     <template
