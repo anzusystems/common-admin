@@ -385,7 +385,12 @@ import { useCollabCurrentUserId } from '@/components/collab/composables/collabCu
 import { useCollabState } from '@/components/collab/composables/collabState'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
-import { useCollabHelpers } from '@/components/collab/composables/collabHelpers'
+import {
+  COLLAB_FIELD_PREFIX_COMMENT,
+  COLLAB_FIELD_PREFIX_EMBED,
+  type CollabCachedUsersMap,
+  useCollabHelpers,
+} from '@/components/collab/composables/collabHelpers'
 import { useCollabAnyDataChange } from '@/components/collab/composables/collabAnyDataChange'
 import {
   type CollabApprovedJoinRequestEvent,
@@ -925,6 +930,9 @@ export {
   CollabServerToClientEvents,
   CollabRouteMeta,
   CollabDelayedRequest,
+  CollabCachedUsersMap,
+  COLLAB_FIELD_PREFIX_EMBED,
+  COLLAB_FIELD_PREFIX_COMMENT,
 
   // OTHER
   i18n,
