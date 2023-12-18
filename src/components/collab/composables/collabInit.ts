@@ -97,10 +97,10 @@ export function useCollabInit() {
       rejectedRequestToTakeModerationEventBus.emit({ room })
     })
     collabSocket.value?.on('transferredModeration', () => {
-      showSuccessT('cms.collab.alert.transferredModeration')
+      showSuccessT('common.collab.alert.transferredModeration')
     })
     collabSocket.value?.on('kickedFromRoom', (room: CollabRoom) => {
-      showWarningT('cms.collab.alert.kickedFromRoom')
+      showWarningT('common.collab.alert.kickedFromRoom')
       kickedFromRoomEventBus.emit({ room })
     })
     collabSocket.value?.on('startCollab', async (room, callback: (data: CollabRoomPlainData) => void) => {

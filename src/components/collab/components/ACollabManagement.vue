@@ -80,14 +80,14 @@ addJoinRequestListener(async (userId: CollabUserId, timestamp: number) => {
 })
 
 addApprovedJoinRequestListener(() => {
-  showSuccessT('cms.collab.alert.approvedJoinRequest')
+  showSuccessT('common.collab.alert.approvedJoinRequest')
   waitingFroApproval.value = false
   requestToJoinAccepted.value = true
   alertedOccupiedRooms.value.delete(props.collabRoom)
 })
 
 addRejectedJoinRequestListener(() => {
-  showErrorT('cms.collab.alert.rejectedJoinRequest')
+  showErrorT('common.collab.alert.rejectedJoinRequest')
   waitingFroApproval.value = false
   requestToJoinAccepted.value = false
   alertedOccupiedRooms.value.delete(props.collabRoom)
@@ -101,12 +101,12 @@ addRequestToTakeModerationListener(async (userId: number, timestamp: number) => 
 })
 
 addApprovedRequestToTakeModerationListener(() => {
-  showSuccessT('cms.collab.alert.approvedToTakeModeration')
+  showSuccessT('common.collab.alert.approvedToTakeModeration')
   waitingFroApproval.value = false
 })
 
 addRejectedRequestToTakeModerationListener(() => {
-  showErrorT('cms.collab.alert.rejectedToTakeModeration')
+  showErrorT('common.collab.alert.rejectedToTakeModeration')
   waitingFroApproval.value = false
 })
 
@@ -162,9 +162,9 @@ const requestToJoinCollabRoomAction = async () => {
     waitingFroApproval.value = true
   } catch (error) {
     if (error === CollabRequestToJoinStatus.AlreadyRequested) {
-      return void showErrorT('cms.collab.alert.alreadyRequestedToJoin')
+      return void showErrorT('common.collab.alert.alreadyRequestedToJoin')
     }
-    return void showErrorT('cms.collab.alert.failedRequestedToJoin')
+    return void showErrorT('common.collab.alert.failedRequestedToJoin')
   }
 }
 
@@ -178,9 +178,9 @@ const requestToTakeModerationAction = async () => {
     waitingFroApproval.value = true
   } catch (error) {
     if (error === CollabRequestToTakeModerationStatus.AlreadyRequested) {
-      return void showErrorT('cms.collab.alert.alreadyRequestedToTakeModeration')
+      return void showErrorT('common.collab.alert.alreadyRequestedToTakeModeration')
     }
-    return void showErrorT('cms.collab.alert.failedRequestToTakeModeration')
+    return void showErrorT('common.collab.alert.failedRequestToTakeModeration')
   }
 }
 
@@ -264,7 +264,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
       size="small"
       @click="requestToJoinCollabRoomAction"
     >
-      {{ t('cms.collab.requestToCollaborate') }}
+      {{ t('common.collab.requestToCollaborate') }}
     </ABtnSecondary>
     <VBtn
       v-if="waitingFroApproval"
@@ -275,7 +275,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
         class="mr-1"
         icon="mdi-loading mdi-spin"
       />
-      {{ t('cms.collab.waitingForApprove') }}
+      {{ t('common.collab.waitingForApprove') }}
       <ACollabCountdown
         parentheses
         @done="waitingForApprovalTimerDone"
@@ -290,7 +290,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
       <VTooltip
         anchor="bottom"
         activator="parent"
-        :text="t('cms.collab.moderatorManagement')"
+        :text="t('common.collab.moderatorManagement')"
       />
     </ABtnIcon>
     <VDialog
@@ -300,7 +300,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
     >
       <VCard v-if="approveRequestsToCollab.length">
         <ADialogToolbar>
-          {{ t('cms.collab.requestToCollaborateText') }}
+          {{ t('common.collab.requestToCollaborateText') }}
         </ADialogToolbar>
         <VCardItem>
           <VList
@@ -322,7 +322,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
                 <ACollabCountdown
                   class="ml-3"
                   :seconds="calculateWaitingSeconds(request.timestamp)"
-                  :label="t('cms.collab.approvedAfterCountdown')"
+                  :label="t('common.collab.approvedAfterCountdown')"
                   @done="() => requestToJoinCollabTimerDone(request.userId)"
                 />
               </template>
@@ -342,13 +342,13 @@ const calculateWaitingSeconds = (timestamp: number) => {
             :disabled="!selectedIdsToCollab.length"
             @click="rejectRequestToCollaborate"
           >
-            {{ t('cms.collab.button.reject') }}
+            {{ t('common.collab.button.reject') }}
           </ABtnTertiary>
           <ABtnPrimary
             :disabled="!selectedIdsToCollab.length"
             @click.stop="approveRequestToCollaborate"
           >
-            {{ t('cms.collab.button.accept') }}
+            {{ t('common.collab.button.accept') }}
           </ABtnPrimary>
         </VCardActions>
       </VCard>
@@ -359,7 +359,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
     >
       <VCard>
         <ADialogToolbar @on-cancel="moderatorManagementDialog = false">
-          {{ t('cms.collab.moderatorManagement') }}
+          {{ t('common.collab.moderatorManagement') }}
         </ADialogToolbar>
         <VCardItem>
           <VList>
@@ -380,13 +380,13 @@ const calculateWaitingSeconds = (timestamp: number) => {
                     size="small"
                     @click="transferModerationAction(userId)"
                   >
-                    {{ t('cms.collab.button.transferModeration') }}
+                    {{ t('common.collab.button.transferModeration') }}
                   </ABtnSecondary>
                   <ABtnTertiary
                     size="small"
                     @click="kickUserAction(userId)"
                   >
-                    {{ t('cms.collab.button.kickUser') }}
+                    {{ t('common.collab.button.kickUser') }}
                   </ABtnTertiary>
                 </div>
               </template>
@@ -410,7 +410,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
       <VTooltip
         anchor="bottom"
         activator="parent"
-        :text="t('cms.collab.requestToTakeModeration')"
+        :text="t('common.collab.requestToTakeModeration')"
       />
     </ABtnIcon>
     <ABtnTertiary
@@ -418,7 +418,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
       size="small"
       @click="kickYourselfAction"
     >
-      {{ t('cms.collab.button.kickYourself') }}
+      {{ t('common.collab.button.kickYourself') }}
     </ABtnTertiary>
     <VDialog
       v-if="moderationRequest"
@@ -427,7 +427,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
     >
       <VCard>
         <ADialogToolbar>
-          {{ t('cms.collab.requestToTakeModerationTextTitle') }}
+          {{ t('common.collab.requestToTakeModerationTextTitle') }}
         </ADialogToolbar>
         <VCardItem>
           <VList>
@@ -439,7 +439,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
                 />
               </template>
               <template #title>
-                <span class="ml-1">{{ t('cms.collab.requestToTakeModerationText') }}</span>
+                <span class="ml-1">{{ t('common.collab.requestToTakeModerationText') }}</span>
               </template>
             </VListItem>
           </VList>
@@ -447,10 +447,10 @@ const calculateWaitingSeconds = (timestamp: number) => {
         <VCardActions>
           <VSpacer />
           <ABtnTertiary @click="rejectRequestToTakeModerationAction">
-            {{ t('cms.collab.button.reject') }}
+            {{ t('common.collab.button.reject') }}
           </ABtnTertiary>
           <ABtnPrimary @click.stop="approveRequestToTakeModerationAction">
-            {{ t('cms.collab.button.accept') }}
+            {{ t('common.collab.button.accept') }}
             <ACollabCountdown
               parentheses
               :seconds="calculateWaitingSeconds(moderationRequest.timestamp)"
@@ -467,9 +467,9 @@ const calculateWaitingSeconds = (timestamp: number) => {
     >
       <VCard>
         <ADialogToolbar @on-cancel="alertedOccupiedRooms.delete(props.collabRoom)">
-          {{ t('cms.collab.occupiedEntityTitle') }}
+          {{ t('common.collab.occupiedEntityTitle') }}
         </ADialogToolbar>
-        <VCardText>{{ t('cms.collab.occupiedEntityText') }}</VCardText>
+        <VCardText>{{ t('common.collab.occupiedEntityText') }}</VCardText>
         <VCardActions>
           <VSpacer />
           <ABtnTertiary @click="alertedOccupiedRooms.delete(props.collabRoom)">
@@ -479,7 +479,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
             v-if="showRequestToJoinCollabButton"
             @click="requestToJoinCollabRoomAction"
           >
-            {{ t('cms.collab.requestToCollaborate') }}
+            {{ t('common.collab.requestToCollaborate') }}
           </ABtnPrimary>
           <VBtn
             v-if="waitingFroApproval"
@@ -489,7 +489,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
               class="mr-1"
               icon="mdi-loading mdi-spin"
             />
-            {{ t('cms.collab.waitingForApprove') }}
+            {{ t('common.collab.waitingForApprove') }}
             <ACollabCountdown
               parentheses
               @done="waitingForApprovalTimerDone"

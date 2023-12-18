@@ -94,6 +94,7 @@ const model = reactive({
         :add-to-cached-users="addToCachedUsers"
         :fetch-cached-users="fetchCachedUsers"
         :cached-users="cachedUsers"
+        is-edit
       />
       <h2 class="text-h6 mt-5 mb-3">
         Playground

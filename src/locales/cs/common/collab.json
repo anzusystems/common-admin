@@ -1,0 +1,34 @@
+{
+  "alert": {
+    "occupied": "Entita je práve upravovaná iným používateľom a je nutné požiadať o kolaboráciu",
+    "error": "Ľutujeme, ale pri inicializácii kolaborácie nastala neočakávaná chyba.",
+    "approvedJoinRequest": "Vaša žiadosť o kolaboráciu bola úspešne schválená, môžete vstúpiť do editácie.",
+    "rejectedJoinRequest": "Ľutujeme, ale vaša žiadosť o kolaboráciu bola zamietnutá.",
+    "failedRequestToTakeModeration": "Ľutujeme, ale vaša žiadosť o prevzatie moderovanie bola zamietnutá.",
+    "alreadyRequestedToTakeModeration": "Ľutujeme, ale v súčasnosti už existuje iná žiadosť o prevzatia moderovania. Skúste to neskôr.",
+    "approvedToTakeModeration": "Vaša žiadosť o prevzatie moderovania bola úspešne schválená.",
+    "rejectedToTakeModeration": "Ľutujeme, ale vaša žiadosť o prevzatie moderovania bola zamietnutá.",
+    "kickedFromRoom": "Boli ste vyhodený z kolaborácie.",
+    "transferredModeration": "Stali ste sa moderátorom.",
+    "alreadyRequestedToJoin": "Už ste o kolaboráciu požiadali, čaká sa na schválenie vašej žiadosti.",
+    "failedRequestedToJoin": "Ľutujeme, ale vašu žiadosť o pripojenie ku kolaborácii sa nepodarilo spracovať. Skúste to neskôr.."
+  },
+  "occupiedEntityTitle": "Na článku sa práve pracuje",
+  "occupiedEntityText": "Chcete požiadať o kolaboráciu?",
+  "requestToCollaborate": "Požiadať o kolaboráciu",
+  "requestToCollaborateText": "Žiadosti o kolaboráciu",
+  "waitingForApprove": "Čakanie na schválenie",
+  "approvedAfterCountdown": "Automaticky prijatý za",
+  "requestToTakeModeration": "Poslať žiadosť o prevzatie moderovania",
+  "requestToTakeModerationTextTitle": "Žiadosť o prevzatie moderovania",
+  "requestToTakeModerationText": "žiada o prevzatie moderovania",
+  "moderatorManagement": "Manažment moderátora",
+  "transferModeration": "Presunúť moderovanie",
+  "button": {
+    "accept": "Prijať",
+    "reject": "Zamietnuť",
+    "kickUser": "Vyhodiť z kolaborácie",
+    "kickYourself": "Odísť z kolaborácie",
+    "transferModeration": "Presunúť moderovanie"
+  }
+}

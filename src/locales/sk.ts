@@ -16,6 +16,7 @@ import subjectSelect from '@/locales/sk/common/subjectSelect.json'
 import time from '@/locales/sk/common/time.json'
 import sortable from '@/locales/sk/common/sortable.json'
 import damImage from '@/locales/sk/common/damImage.json'
+import collab from '@/locales/sk/common/collab.json'
 
 export default {
   common: {
@@ -33,6 +34,7 @@ export default {
     time,
     sortable,
     damImage,
+    collab,
   },
   $vuetify: vuetify,
   error: {

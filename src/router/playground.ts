@@ -163,10 +163,10 @@ const checkCollab = async (to: RouteLocationNormalized, from: RouteLocationNorma
       await joinCollabRoom({ joinStrategy: collab.joinStrategy, editors: collab.editors })
     } catch (error) {
       if (error instanceof Error && error.message === CollabAccessRoomStatus.Failed) {
-        showErrorT('cms.collab.alert.error')
+        showErrorT('common.collab.alert.error')
         return next(from)
       }
-      showWarningT('cms.collab.alert.occupied')
+      showWarningT('common.collab.alert.occupied')
       alertedOccupiedRooms.value.add(collab.room)
 
       const redirectToRoute = collab.occupiedOrKickedRedirectToRoute
