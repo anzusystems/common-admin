@@ -13,14 +13,9 @@ import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
 import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
-import type {
-  CollabFieldData,
-  CollabFieldDataEnvelope,
-  CollabFieldName,
-  CollabRoom
-} from '@/components/collab/types/Collab'
-import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
+import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
+import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
 type fetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
@@ -44,9 +39,7 @@ const props = withDefaults(
     filterSortBy?: string | null
     disableInitFetch?: boolean | undefined
     loading?: boolean
-    collab?:
-      | { room: CollabRoom; field: CollabFieldName; enabled: boolean; cachedUsers: CollabCachedUsersMap }
-      | undefined
+    collab?: CollabComponentConfig
     disabled?: boolean
   }>(),
   {
@@ -84,6 +77,7 @@ const modelValue = computed({
 })
 
 // Collaboration
+const { collabOptions } = useCommonAdminCollabOptions()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const releaseFieldLock = ref((data: CollabFieldData) => {})
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -91,7 +85,7 @@ const changeFieldData = ref((data: CollabFieldData) => {})
 const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-if (!isUndefined(props.collab) && props.collab.enabled) {
+if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     changeCollabFieldData,
@@ -264,7 +258,7 @@ watch(
   modelValue,
   async (newValue, oldValue) => {
     if (newValue === oldValue) return
-    if (props.collab?.enabled && isFocused.value) {
+    if (collabOptions.value.enabled && isFocused.value) {
       changeFieldData.value(newValue)
     }
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {

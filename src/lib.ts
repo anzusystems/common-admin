@@ -431,6 +431,7 @@ import {
   CollabChangeRoomLockStatus,
   type CollabChangeRoomLockStatusType,
   type CollabClientToServerEvents,
+  type CollabComponentConfig,
   type CollabDelayedRequest,
   type CollabFailedAccessRoomCallback,
   type CollabFailedChangeRoomLockCallback,
@@ -931,6 +932,7 @@ export {
   CollabRouteMeta,
   CollabDelayedRequest,
   CollabCachedUsersMap,
+  CollabComponentConfig,
   COLLAB_FIELD_PREFIX_EMBED,
   COLLAB_FIELD_PREFIX_COMMENT,
 

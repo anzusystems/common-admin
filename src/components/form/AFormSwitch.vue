@@ -1,16 +1,11 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
 import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
-import { isDefined, isUndefined } from '@/utils/common'
-import type {
-  CollabFieldData,
-  CollabFieldDataEnvelope,
-  CollabFieldName,
-  CollabRoom
-} from '@/components/collab/types/Collab'
+import { isDefined } from '@/utils/common'
+import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import type { IntegerIdNullable } from '@/types/common'
-import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
+import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
 const props = withDefaults(
   defineProps<{
@@ -18,9 +13,7 @@ const props = withDefaults(
     label?: string
     dataCy?: string
     hideLabel?: boolean
-    collab?:
-      | { room: CollabRoom; field: CollabFieldName; enabled: boolean; cachedUsers: CollabCachedUsersMap }
-      | undefined
+    collab?: CollabComponentConfig
     disabled?: boolean
   }>(),
   {
@@ -38,12 +31,13 @@ const emit = defineEmits<{
 }>()
 
 // Collaboration
+const { collabOptions } = useCommonAdminCollabOptions()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const releaseFieldLock = ref((data: CollabFieldData) => {})
 const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-if (!isUndefined(props.collab) && props.collab.enabled) {
+if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     acquireCollabFieldLock,

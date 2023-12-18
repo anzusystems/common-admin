@@ -8,19 +8,20 @@ import type { ErrorObject } from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
 import type { VTextField } from 'vuetify/components/VTextField'
 import type {
+  CollabComponentConfig,
   CollabFieldData,
   CollabFieldDataEnvelope,
-  CollabFieldLockOptions, CollabFieldName,
-  CollabRoom
+  CollabFieldLockOptions,
 } from '@/components/collab/types/Collab'
 import type { IntegerIdNullable } from '@/types/common'
 import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
 import {
   CollabFieldLockStatus,
-  type CollabFieldLockStatusPayload, CollabFieldLockType
+  type CollabFieldLockStatusPayload,
+  CollabFieldLockType,
 } from '@/components/collab/composables/collabEventBus'
 import { useCollabField } from '@/components/collab/composables/collabField'
-import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
+import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
 const props = withDefaults(
   defineProps<{
@@ -34,9 +35,7 @@ const props = withDefaults(
     dataCy?: string
     hideLabel?: boolean
     rows?: number
-    collab?:
-      | { room: CollabRoom; field: CollabFieldName; enabled: boolean; cachedUsers: CollabCachedUsersMap }
-      | undefined
+    collab?: CollabComponentConfig
     disabled?: boolean
   }>(),
   {
@@ -64,13 +63,14 @@ const emit = defineEmits<{
 const textareaRef = ref<InstanceType<typeof VTextField> | null>(null)
 
 // Collaboration
+const { collabOptions } = useCommonAdminCollabOptions()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const releaseFieldLock = ref((data: CollabFieldData) => {})
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const acquireFieldLock = ref((options?: Partial<CollabFieldLockOptions>) => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-if (!isUndefined(props.collab) && props.collab.enabled) {
+if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     acquireCollabFieldLock,

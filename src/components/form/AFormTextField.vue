@@ -13,16 +13,15 @@ import {
   CollabFieldLockType,
 } from '@/components/collab/composables/collabEventBus'
 import type {
+  CollabComponentConfig,
   CollabFieldData,
   CollabFieldDataEnvelope,
   CollabFieldLockOptions,
-  CollabFieldName,
-  CollabRoom,
 } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import type { IntegerIdNullable } from '@/types/common'
 import type { VTextField } from 'vuetify/components/VTextField'
-import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
+import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
 const props = withDefaults(
   defineProps<{
@@ -38,9 +37,7 @@ const props = withDefaults(
     type?: string
     step?: number
     maxlength?: number | undefined
-    collab?:
-      | { room: CollabRoom; field: CollabFieldName; enabled: boolean; cachedUsers: CollabCachedUsersMap }
-      | undefined
+    collab?: CollabComponentConfig
     disabled?: boolean
     placeholder?: undefined | string
     persistentPlaceholder?: boolean
@@ -73,13 +70,14 @@ const emit = defineEmits<{
 const textFieldRef = ref<InstanceType<typeof VTextField> | null>(null)
 
 // Collaboration
+const { collabOptions } = useCommonAdminCollabOptions()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const releaseFieldLock = ref((data: CollabFieldData, options?: Partial<CollabFieldLockOptions>) => {})
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const acquireFieldLock = ref((options?: Partial<CollabFieldLockOptions>) => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-if (!isUndefined(props.collab) && props.collab.enabled) {
+if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     acquireCollabFieldLock,

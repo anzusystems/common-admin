@@ -1,9 +1,18 @@
 import type { RouteParams } from 'vue-router'
+import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
 
 export type CollabUserId = number
 export type CollabUserIdNullable = number | null
 
 export type CollabRoom = string
+
+export type CollabComponentConfig =
+  | undefined
+  | {
+      room: CollabRoom
+      field: CollabFieldName
+      cachedUsers: CollabCachedUsersMap
+    }
 
 export const CollabStatus = {
   Inactive: 'inactive',

@@ -7,15 +7,10 @@ import { isDefined, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { DatetimeUTCNullable, IntegerIdNullable } from '@/types/common'
-import type {
-  CollabFieldData,
-  CollabFieldDataEnvelope,
-  CollabFieldName,
-  CollabRoom
-} from '@/components/collab/types/Collab'
-import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
+import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import AnzutapLockedByUser from '@/components/collab/components/AnzutapLockedByUser.vue'
+import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
 const props = withDefaults(
   defineProps<{
@@ -26,9 +21,7 @@ const props = withDefaults(
     v?: any
     dataCy?: string
     clearable?: boolean
-    collab?:
-      | { room: CollabRoom; field: CollabFieldName; enabled: boolean; cachedUsers: CollabCachedUsersMap }
-      | undefined
+    collab?: CollabComponentConfig
     disabled?: boolean
   }>(),
   {
@@ -59,6 +52,7 @@ const modelValueComputed = computed({
 })
 
 // Collaboration
+const { collabOptions } = useCommonAdminCollabOptions()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const releaseFieldLock = ref((data: CollabFieldData) => {})
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -66,7 +60,7 @@ const changeFieldData = ref((data: CollabFieldData) => {})
 const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-if (!isUndefined(props.collab) && props.collab.enabled) {
+if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     changeCollabFieldData,
@@ -147,7 +141,7 @@ const disabledComputed = computed(() => {
 
 watch(modelValueComputed, (newValue, oldValue) => {
   if (newValue === oldValue) return
-  if (props.collab?.enabled && (isFocused.value || isOpened.value)) {
+  if (collabOptions.value.enabled && (isFocused.value || isOpened.value)) {
     changeFieldData.value(newValue)
   }
 })
