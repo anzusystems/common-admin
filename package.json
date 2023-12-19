@@ -44,7 +44,7 @@
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.7",
     "@types/webfontloader": "^1.6.38",
-    "@typescript-eslint/parser": "^6.14.0",
+    "@typescript-eslint/parser": "^6.15.0",
     "@vitejs/plugin-vue": "^4.5.2",
     "@vue/eslint-config-prettier": "^8.0.0",
     "@vue/eslint-config-typescript": "^12.0.0",
