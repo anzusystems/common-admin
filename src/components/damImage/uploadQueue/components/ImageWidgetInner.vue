@@ -128,13 +128,11 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
 const lockedLocal = ref(false)
 const acquireFieldLockLocal = () => {
   if (lockedLocal.value === true) return
-  console.log('acquireFieldLock')
   acquireFieldLock.value()
   lockedLocal.value = true
 }
 const releaseFieldLockLocal = (value: IntegerIdNullable) => {
   if (lockedLocal.value === false) return
-  console.log('releaseFieldLock')
   releaseFieldLock.value(value)
   lockedLocal.value = false
 }
@@ -240,6 +238,7 @@ const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: 
     }
     return
   }
+  resImage.value = null
 }
 
 const reset = () => {
