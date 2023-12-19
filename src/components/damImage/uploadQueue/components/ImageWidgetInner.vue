@@ -10,7 +10,7 @@ import type {
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
-import { cloneDeep, isNull, isString, isUndefined } from '@/utils/common'
+import { cloneDeep, isDefined, isNull, isString, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
@@ -38,6 +38,15 @@ import type { VBtn } from 'vuetify/components'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
+import type {
+  CollabComponentConfig,
+  CollabFieldData,
+  CollabFieldDataEnvelope,
+  CollabFieldLockOptions,
+} from '@/components/collab/types/Collab'
+import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
+import { useCollabField } from '@/components/collab/composables/collabField'
+import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -47,6 +56,7 @@ const props = withDefaults(
     selectConfig: ImageWidgetSelectConfig[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
+    collab?: CollabComponentConfig
     label?: string | undefined
     readonly?: boolean
     dataCy?: string | undefined
@@ -58,6 +68,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
+    collab: undefined,
     label: undefined,
     image: undefined,
     readonly: false,
@@ -76,6 +87,57 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerIdNullable): void
   (e: 'afterMetadataSaveSuccess'): void
 }>()
+
+// Collaboration
+const { collabOptions } = useCommonAdminCollabOptions()
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const releaseFieldLock = ref((data: CollabFieldData, options?: Partial<CollabFieldLockOptions>) => {})
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const acquireFieldLock = ref((options?: Partial<CollabFieldLockOptions>) => {})
+const lockedByUserLocal = ref<IntegerIdNullable>(null)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+if (collabOptions.value.enabled && isDefined(props.collab)) {
+  const {
+    releaseCollabFieldLock,
+    acquireCollabFieldLock,
+    addCollabFieldDataChangeListener,
+    lockedByUser,
+    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  } = useCollabField(props.collab.room, props.collab.field)
+  releaseFieldLock.value = releaseCollabFieldLock
+  acquireFieldLock.value = acquireCollabFieldLock
+  watch(
+    lockedByUser,
+    (newValue) => {
+      lockedByUserLocal.value = newValue
+    },
+    { immediate: true }
+  )
+  addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
+    emit('update:modelValue', data.value as IntegerIdNullable)
+  })
+  // addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
+  //   if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
+  //     kickFromWidget()
+  //   }
+  // })
+  // addCollabGatheringBufferDataListener(() => {
+  //   kickFromWidget()
+  // })
+}
+const lockedLocal = ref(false)
+const acquireFieldLockLocal = () => {
+  if (lockedLocal.value === true) return
+  console.log('acquireFieldLock')
+  acquireFieldLock.value()
+  lockedLocal.value = true
+}
+const releaseFieldLockLocal = (value: IntegerIdNullable) => {
+  if (lockedLocal.value === false) return
+  console.log('releaseFieldLock')
+  releaseFieldLock.value(value)
+  lockedLocal.value = false
+}
 
 const imageWidgetExtSystemConfigs = inject<ShallowRef<Map<IntegerId, DamExtSystemConfig>> | undefined>(
   ImageWidgetExtSystemConfigs,
@@ -139,6 +201,7 @@ const actionLibrary = () => {
 const { cachedExtSystemId } = useExtSystemIdForCached()
 
 const onDrop = (files: File[]) => {
+  acquireFieldLockLocal()
   cachedExtSystemId.value = props.uploadConfig.extSystem
   uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   uploadQueueDialog.value = props.queueKey
@@ -183,6 +246,7 @@ const reset = () => {
   resolvedSrc.value = imagePlaceholderPath
   resImage.value = null
   emit('update:modelValue', null)
+  releaseFieldLock.value(null)
 }
 
 watch(
@@ -275,8 +339,9 @@ const onMetadataDialogConfirm = async () => {
     metadataDialog.value = false
     emit('update:modelValue', res.id)
     imageStore.setImageDetail(null)
-    reload(res, res.id, true)
+    await reload(res, res.id, true)
     emit('afterMetadataSaveSuccess')
+    releaseFieldLock.value(res.id)
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -321,6 +386,8 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
 const expandedUploadButton = ref<InstanceType<typeof AFileInput> | null>(null)
 
 const onDropzoneClick = () => {
+  if (isLocked.value) return
+  acquireFieldLockLocal()
   if (!props.expandOptions) {
     clickMenuOpened.value = true
     return
@@ -334,13 +401,47 @@ const metadataConfirm = () => {
   detailDialogMetadataComponent.value?.confirm()
 }
 
+const onOptionsButtonClick = () => {
+  acquireFieldLockLocal()
+}
+
+const anyWidgetDialogOpened = computed(() => {
+  return metadataDialog.value || assetSelectDialog.value || uploadQueueDialog.value === props.queueKey
+})
+
+const isLocked = computed(() => {
+  return !isNull(lockedByUserLocal.value)
+})
+
+watch(
+  clickMenuOpened,
+  (newValue, oldValue) => {
+    console.log(newValue)
+    if (newValue === oldValue || newValue || anyWidgetDialogOpened.value) return
+    releaseFieldLockLocal(props.modelValue)
+  },
+  { immediate: false }
+)
+
+watch(
+  anyWidgetDialogOpened,
+  (newValue, oldValue) => {
+    if (newValue === oldValue || newValue) return
+    releaseFieldLockLocal(props.modelValue)
+  },
+  { immediate: false }
+)
+
 defineExpose({
   metadataConfirm,
 })
 </script>
 
 <template>
-  <div class="a-image-widget">
+  <div
+    class="a-image-widget"
+    :class="{ 'a-image-widget--locked': isLocked }"
+  >
     <div class="a-image-widget__options">
       <h4
         v-if="label"
@@ -348,94 +449,104 @@ defineExpose({
       >
         {{ label }}
       </h4>
-      <div v-show="enabledInteractionComputed">
-        <div
-          v-if="expandOptions"
-          class="d-flex flex-row"
-        >
-          <VBtn
-            v-if="imageLoaded && !expandMetadata"
-            class="mr-2 mb-2"
-            @click="actionEditMeta"
-          >
-            {{ t('common.damImage.image.meta.edit') }}
-          </VBtn>
-          <VBtn
-            class="mr-2 mb-2"
-            @click="actionLibrary"
-          >
-            <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
-            <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
-          </VBtn>
-          <AFileInput
-            ref="expandedUploadButton"
-            :file-input-key="uploadQueue?.fileInputKey"
-            :accept="uploadAccept"
-            :max-sizes="uploadSizes"
-            @files-input="onFileInput"
-          >
-            <template #activator="{ props: fileInputProps }">
-              <VBtn v-bind="fileInputProps">
-                {{ t('common.damImage.image.button.upload') }}
-              </VBtn>
-            </template>
-          </AFileInput>
+      <div class="d-flex">
+        <div v-if="isLocked && collab">
+          <ACollabLockedByUser
+            :id="lockedByUserLocal"
+            :users="collab.cachedUsers"
+          />
         </div>
-        <VBtn
-          v-else
-          variant="text"
-          size="x-small"
-          icon
-        >
-          <VIcon icon="mdi-dots-horizontal" />
-          <VTooltip
-            activator="parent"
-            location="top"
+        <div v-show="enabledInteractionComputed">
+          <div
+            v-if="expandOptions"
+            class="d-flex flex-row"
           >
-            {{ t('common.damImage.image.button.options') }}
-          </VTooltip>
-          <VMenu
-            v-model="clickMenuOpened"
-            activator="parent"
-            location="bottom right"
-            eager
+            <VBtn
+              v-if="imageLoaded && !expandMetadata"
+              class="mr-2 mb-2"
+              @click="actionEditMeta"
+            >
+              {{ t('common.damImage.image.meta.edit') }}
+            </VBtn>
+            <VBtn
+              class="mr-2 mb-2"
+              @click="actionLibrary"
+            >
+              <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
+              <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
+            </VBtn>
+            <AFileInput
+              ref="expandedUploadButton"
+              :file-input-key="uploadQueue?.fileInputKey"
+              :accept="uploadAccept"
+              :max-sizes="uploadSizes"
+              @files-input="onFileInput"
+            >
+              <template #activator="{ props: fileInputProps }">
+                <VBtn v-bind="fileInputProps">
+                  {{ t('common.damImage.image.button.upload') }}
+                </VBtn>
+              </template>
+            </AFileInput>
+          </div>
+          <VBtn
+            v-else
+            variant="text"
+            size="x-small"
+            icon
+            :disabled="isLocked"
+            @click.stop="onOptionsButtonClick"
           >
-            <VCard>
-              <VList density="compact">
-                <VListItem
-                  v-if="imageLoaded && !expandMetadata"
-                  @click="actionEditMeta"
-                >
-                  <VListItemTitle>{{ t('common.damImage.image.meta.edit') }}</VListItemTitle>
-                </VListItem>
-                <VListItem @click="actionLibrary">
-                  <VListItemTitle>
-                    <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
-                    <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
-                  </VListItemTitle>
-                </VListItem>
-                <AFileInput
-                  :file-input-key="uploadQueue?.fileInputKey"
-                  :accept="uploadAccept"
-                  :max-sizes="uploadSizes"
-                  @files-input="onFileInput"
-                >
-                  <template #activator="{ props: fileInputProps }">
-                    <VListItem @click.stop="fileInputProps.onClick">
-                      {{ t('common.damImage.image.button.upload') }}
-                    </VListItem>
-                  </template>
-                </AFileInput>
-                <VListItem
-                  v-if="imageLoaded"
-                  @click="onImageDelete"
-                >
-                  <VListItemTitle>{{ t('common.damImage.image.button.removeImage') }}</VListItemTitle>
-                </VListItem>
-              </VList>
-            </VCard>
-          </VMenu>
-        </VBtn>
+            <VIcon icon="mdi-dots-horizontal" />
+            <VTooltip
+              activator="parent"
+              location="top"
+            >
+              {{ t('common.damImage.image.button.options') }}
+            </VTooltip>
+            <VMenu
+              v-model="clickMenuOpened"
+              activator="parent"
+              location="bottom right"
+              eager
+            >
+              <VCard>
+                <VList density="compact">
+                  <VListItem
+                    v-if="imageLoaded && !expandMetadata"
+                    @click="actionEditMeta"
+                  >
+                    <VListItemTitle>{{ t('common.damImage.image.meta.edit') }}</VListItemTitle>
+                  </VListItem>
+                  <VListItem @click="actionLibrary">
+                    <VListItemTitle>
+                      <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
+                      <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
+                    </VListItemTitle>
+                  </VListItem>
+                  <AFileInput
+                    :file-input-key="uploadQueue?.fileInputKey"
+                    :accept="uploadAccept"
+                    :max-sizes="uploadSizes"
+                    @files-input="onFileInput"
+                  >
+                    <template #activator="{ props: fileInputProps }">
+                      <VListItem @click.stop="fileInputProps.onClick">
+                        {{ t('common.damImage.image.button.upload') }}
+                      </VListItem>
+                    </template>
+                  </AFileInput>
+                  <VListItem
+                    v-if="imageLoaded"
+                    @click="onImageDelete"
+                  >
+                    <VListItemTitle>{{ t('common.damImage.image.button.removeImage') }}</VListItemTitle>
+                  </VListItem>
+                </VList>
+              </VCard>
+            </VMenu>
+          </VBtn>
+        </div>
       </div>
     </div>
     <div class="position-relative">
@@ -446,6 +557,7 @@ defineExpose({
         cover
         max-width="100%"
         class="disable-radius"
+        :class="{ aaa: true }"
       >
         <template #placeholder>
           <div class="d-flex align-center justify-center h-100">
@@ -461,7 +573,7 @@ defineExpose({
         transparent
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
-        :hide-text="!withoutImage"
+        :hide-text="!withoutImage || isLocked"
         @on-click="onDropzoneClick"
         @on-drop="onDrop"
       />

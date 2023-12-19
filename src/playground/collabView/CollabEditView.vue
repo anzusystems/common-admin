@@ -15,6 +15,7 @@ import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
 import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
+import AImageWidget from '@/components/damImage/AImageWidget.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -75,8 +76,8 @@ const model = reactive({
   switch: false,
   date1: null,
   date2: null,
+  image: null,
 })
-
 </script>
 
 <template>
@@ -100,46 +101,69 @@ const model = reactive({
         Playground
       </h2>
       <div>
-        <AFormTextarea
-          v-model="model.inputOne"
-          label="Test textarea field input lock"
-          :collab="createCollabFieldConfig('testOneField', collab.room, cachedUsers)"
-        />
-        <AFormTextField
-          v-model="model.inputTwo"
-          label="Test text field input lock"
-          :collab="createCollabFieldConfig('testTwoField', collab.room, cachedUsers)"
-        />
-        <AFormTextField
-          v-model="model.inputThree"
-          label="Test text field input lock"
-          :collab="createCollabFieldConfig('testThreeField', collab.room, cachedUsers)"
-        />
-        <AFormTextField
-          v-model="model.inputFour"
-          label="Test text field input lock"
-          :collab="createCollabFieldConfig('testFourField', collab.room, cachedUsers)"
-        />
-        <AFormTextField
-          v-model="model.inputFive"
-          label="Test text field input lock"
-          :collab="createCollabFieldConfig('testFiveField', collab.room, cachedUsers)"
-        />
-        <AFormSwitch
-          v-model="model.switch"
-          label="Test switch"
-          :collab="createCollabFieldConfig('testSwitch', collab.room, cachedUsers)"
-        />
-        <AFormDatetimePicker
-          v-model="model.date1"
-          label="Test datetime picker"
-          :collab="createCollabFieldConfig('testDate1', collab.room, cachedUsers)"
-        />
-        <AFormFlagDatetimePicker
-          v-model="model.date2"
-          label="Test flag datetime picker"
-          :collab="createCollabFieldConfig('testDate2', collab.room, cachedUsers)"
-        />
+        <VRow>
+          <VCol cols="8">
+            <AFormTextarea
+              v-model="model.inputOne"
+              label="Test textarea field input lock"
+              :collab="createCollabFieldConfig('testOneField', collab.room, cachedUsers)"
+            />
+            <AFormTextField
+              v-model="model.inputTwo"
+              label="Test text field input lock"
+              :collab="createCollabFieldConfig('testTwoField', collab.room, cachedUsers)"
+            />
+            <AFormTextField
+              v-model="model.inputThree"
+              label="Test text field input lock"
+              :collab="createCollabFieldConfig('testThreeField', collab.room, cachedUsers)"
+            />
+            <AFormTextField
+              v-model="model.inputFour"
+              label="Test text field input lock"
+              :collab="createCollabFieldConfig('testFourField', collab.room, cachedUsers)"
+            />
+            <AFormTextField
+              v-model="model.inputFive"
+              label="Test text field input lock"
+              :collab="createCollabFieldConfig('testFiveField', collab.room, cachedUsers)"
+            />
+            <AFormSwitch
+              v-model="model.switch"
+              label="Test switch"
+              :collab="createCollabFieldConfig('testSwitch', collab.room, cachedUsers)"
+            />
+            <AFormDatetimePicker
+              v-model="model.date1"
+              label="Test datetime picker"
+              :collab="createCollabFieldConfig('testDate1', collab.room, cachedUsers)"
+            />
+            <AFormFlagDatetimePicker
+              v-model="model.date2"
+              label="Test flag datetime picker"
+              :collab="createCollabFieldConfig('testDate2', collab.room, cachedUsers)"
+            />
+          </VCol>
+          <VCol cols="4">
+            <AImageWidget
+              v-model="model.image"
+              :upload-config="{
+                licence: 100000,
+                extSystem: 1,
+              }"
+              :select-config="[
+                {
+                  title: 'Default',
+                  licence: 100000,
+                  extSystem: 1,
+                },
+              ]"
+              :collab="createCollabFieldConfig('collabImage', collab.room, cachedUsers)"
+              queue-key="collabImage"
+              label="Image"
+            />
+          </VCol>
+        </VRow>
         <h2 class="text-h6 mb-2">
           Room Info
         </h2>

@@ -9,6 +9,7 @@ import ImageWidgetInner from '@/components/damImage/uploadQueue/components/Image
 import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { isUndefined } from '@/utils/common'
 import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
+import type { CollabComponentConfig } from '@/components/collab/types/Collab'
 
 const props = withDefaults(
   defineProps<{
@@ -18,6 +19,7 @@ const props = withDefaults(
     selectConfig: ImageWidgetSelectConfig[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
+    collab?: CollabComponentConfig
     label?: string | undefined
     readonly?: boolean
     dataCy?: string | undefined
@@ -29,6 +31,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
+    collab: undefined,
     label: undefined,
     image: undefined,
     readonly: false,
@@ -136,6 +139,10 @@ $class-name-root: 'a-image-widget';
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+
+  &--locked .v-img {
+    opacity: 0.6;
   }
 }
 </style>
