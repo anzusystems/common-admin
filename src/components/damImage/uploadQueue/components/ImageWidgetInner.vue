@@ -331,6 +331,7 @@ const onMetadataDialogClose = () => {
 
 const onMetadataDialogConfirm = async () => {
   if (isNull(imageStore.imageDetail)) return
+  console.log(imageStore.imageDetail)
   metadataDialogSaving.value = true
   try {
     const res = imageStore.imageDetail.id

@@ -38,13 +38,13 @@ const saveInsideDialog = () => {
           <AImageWidget
             v-model="imageId2"
             :upload-config="{
-              licence: 1000001,
+              licence: 100000,
               extSystem: 1,
             }"
             :select-config="[
               {
                 title: 'Default',
-                licence: 1000001,
+                licence: 100000,
                 extSystem: 1,
               },
             ]"
@@ -59,13 +59,13 @@ const saveInsideDialog = () => {
           <AImageWidget
             v-model="imageId2"
             :upload-config="{
-              licence: 1000001,
+              licence: 100000,
               extSystem: 1,
             }"
             :select-config="[
               {
                 title: 'Default',
-                licence: 1000001,
+                licence: 100000,
                 extSystem: 1,
               },
             ]"
@@ -93,13 +93,13 @@ const saveInsideDialog = () => {
                       ref="widgetComponent"
                       v-model="imageId2"
                       :upload-config="{
-                        licence: 1000001,
+                        licence: 100000,
                         extSystem: 1,
                       }"
                       :select-config="[
                         {
                           title: 'Default',
-                          licence: 1000001,
+                          licence: 100000,
                           extSystem: 1,
                         },
                       ]"

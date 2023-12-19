@@ -79,7 +79,6 @@ export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, Re
   keywords: DocId[]
   authors: DocId[]
   podcasts: DocId[]
-  metadata: Metadata
   assetFileProperties: AssetFileProperties
 }
 

@@ -49,18 +49,16 @@ const save = () => {
             ref="component"
             v-model="imageIds"
             :upload-config="{
-              licence: 1000001,
+              licence: 100000,
               extSystem: 1,
             }"
             :select-config="[
               {
                 title: 'Default',
-                licence: 1000001,
+                licence: 100000,
                 extSystem: 1,
               },
             ]"
-            :licence-id="100001"
-            :ext-system="1"
             queue-key="gallery"
           />
         </VCol>
