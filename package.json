@@ -81,7 +81,7 @@
     "vite-plugin-dts": "^3.6.4",
     "vite-plugin-vuetify": "^2.0.1",
     "vitepress": "1.0.0-rc.32",
-    "vue": "3.3.12",
+    "vue": "3.3.13",
     "vue-flatpickr-component": "^11.0.3",
     "vue-i18n": "9.8.0",
     "vue-router": "4.2.5",
@@ -98,7 +98,7 @@
     "dayjs": "1.11.10",
     "flatpickr": "4.6.13",
     "pinia": "2.1.7",
-    "vue": "3.3.12",
+    "vue": "3.3.13",
     "vue-i18n": "9.8.0",
     "vue-router": "4.2.5",
     "vuetify": "3.4.7"
