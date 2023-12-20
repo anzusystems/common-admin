@@ -1342,7 +1342,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^6.15.0":
+"@typescript-eslint/parser@npm:^6.15.0, @typescript-eslint/parser@npm:^6.7.0":
   version: 6.15.0
   resolution: "@typescript-eslint/parser@npm:6.15.0"
   dependencies:
@@ -1357,24 +1357,6 @@ __metadata:
     typescript:
       optional: true
   checksum: fdd1f584e5068216c36a01e40750950ef309b36a522f6ecde36931690558a319960a702b4b4a806f335fb28ca99f8a07bb206571141550aaab1f6f40066f6605
-  languageName: node
-  linkType: hard
-
-"@typescript-eslint/parser@npm:^6.7.0":
-  version: 6.7.0
-  resolution: "@typescript-eslint/parser@npm:6.7.0"
-  dependencies:
-    "@typescript-eslint/scope-manager": "npm:6.7.0"
-    "@typescript-eslint/types": "npm:6.7.0"
-    "@typescript-eslint/typescript-estree": "npm:6.7.0"
-    "@typescript-eslint/visitor-keys": "npm:6.7.0"
-    debug: "npm:^4.3.4"
-  peerDependencies:
-    eslint: ^7.0.0 || ^8.0.0
-  peerDependenciesMeta:
-    typescript:
-      optional: true
-  checksum: 88e5659b4149d5da3d4602cda8d7bbc17c857397f7bfb501d1f34bad63838c83a652c4e6b41d3ceeae3cb350c832291669e0ce7514fc9de2827e33bdd8a3e5c1
   languageName: node
   linkType: hard
 
