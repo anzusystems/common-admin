@@ -37,7 +37,7 @@ export interface AssetMetadataBulkItem {
   customData: AssetCustomData
 }
 
-export declare type AssetCustomData = Record<string, any>;
+export declare type AssetCustomData = Record<string, any>
 
 export const fetchAssetList = (
   client: () => AxiosInstance,

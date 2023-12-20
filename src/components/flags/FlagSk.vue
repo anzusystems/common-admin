@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-/* eslint-disable max-len */
+/* eslint-disable @stylistic/max-len */
 </script>
 
 <template>
