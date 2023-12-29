@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.40.0-alpha30",
+  "version": "1.40.0-alpha31",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -47,8 +47,8 @@
     "@types/sortablejs": "^1.15.7",
     "@types/webfontloader": "^1.6.38",
     "@typescript-eslint/parser": "^6.16.0",
-    "@vitejs/plugin-vue": "^5.0.0",
-    "@vue/eslint-config-prettier": "^8.0.0",
+    "@vitejs/plugin-vue": "^5.0.1",
+    "@vue/eslint-config-prettier": "^9.0.0",
     "@vue/eslint-config-typescript": "^12.0.0",
     "@vue/language-server": "^1.8.27",
     "@vue/language-service": "^1.8.27",
@@ -70,7 +70,7 @@
     "postcss-prefix-selector": "^1.16.0",
     "prettier": "^3.1.1",
     "rusha": "^0.8.14",
-    "sass": "^1.69.5",
+    "sass": "^1.69.6",
     "shortcut-buttons-flatpickr": "^0.4.0",
     "socket.io-client": "^4.7.2",
     "sortablejs": "^1.15.1",
@@ -83,12 +83,12 @@
     "vite-plugin-dts": "^3.7.0",
     "vite-plugin-vuetify": "^2.0.1",
     "vitepress": "1.0.0-rc.33",
-    "vue": "3.3.13",
+    "vue": "3.4.0",
     "vue-flatpickr-component": "^11.0.3",
     "vue-i18n": "9.8.0",
     "vue-router": "4.2.5",
     "vue-tsc": "1.8.27",
-    "vuetify": "3.4.8",
+    "vuetify": "3.4.9",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -100,10 +100,10 @@
     "dayjs": "1.11.10",
     "flatpickr": "4.6.13",
     "pinia": "2.1.7",
-    "vue": "3.3.13",
+    "vue": "3.4.0",
     "vue-i18n": "9.8.0",
     "vue-router": "4.2.5",
-    "vuetify": "3.4.8"
+    "vuetify": "3.4.9"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {
