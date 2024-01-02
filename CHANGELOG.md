@@ -1,3 +1,28 @@
+## [1.40.0](https://github.com/anzusystems/common-admin/compare/1.39.0...1.40.0) (2024-01-02)
+
+### Features
+* **chore:** project is now using `typescript 5.3.3` and `node 20`
+* **chore:** added `stylistic` to support deprecated formatting eslint rules
+* **ACropperjs:** added new component wrapper for `cropperjs`
+* **AFormSwitch:** added new component wrapper for `VSwitch`
+* **collaboration:** added collaboration services, utils, composables, components adn types, added collaboration support to form component
+* **dam**: added components for DAM support: `AImageWidget`, `AImageWidgetSimple`, `AImageWidgetMultiple`, `AImageWidgetMultipleSimple`, including services, utils, types, websocket notification service, upload support
+* **chore:** moved services, utils, composables, components, styles and types from admin-dam to this repo, because it's now shared in multiple admins
+* **chore:** updated dependencies
+* and more
+
+### Bug Fixes
+* **GitHub:** fixed GitHub workflow build
+
+### BREAKING CHANGES
+* **plugin:** changed options config for AnzuSystemsCommonAdmin plugin install
+* **dependencies:** new required versions:
+  * `vue@3.4.3`
+  * `vuetify@3.4.9`
+  * `vue-i18n@9.8.0`
+  * `@vueuse/core@10.7.1`
+  * `@vueuse/integrations@10.7.1`
+
 ## [1.39.0](https://github.com/anzusystems/common-admin/compare/1.38.0...1.39.0) (2023-11-13)
 
 ### Features
@@ -24,12 +49,12 @@
 
 ## [1.37.0](https://github.com/anzusystems/common-admin/compare/1.36.0...1.37.0) (2023-11-07)
 
-### Bug Fixes
-* **ASortable:** force rerender after move
-
 ### Features
 * **chore:** updated dependencies
 * **SortableItemDataAware** interface: id is now optional
+
+### Bug Fixes
+* **ASortable:** force rerender after move
 
 ### BREAKING CHANGES
 * **dependencies:** new vue required version `vue@3.3.8`

@@ -6,11 +6,14 @@ on:
 
 jobs:
   build-publish-pkg:
-    name: Build and push package on node 18
+    name: Build and push package on node 20
     runs-on: 'ubuntu-latest'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Enable corepack
+        run: corepack enable
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -18,9 +21,6 @@ jobs:
           node-version: '20'
           cache: 'yarn'
           cache-dependency-path: 'yarn.lock'
-
-      - name: Enable corepack
-        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --immutable

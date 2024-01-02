@@ -53,5 +53,9 @@
     "title": "Ups, nastala chyba 401",
     "text": "Na túto stránku nemáte prístup. Pokiaľ máte mať k tejto stránke prístup, kontaktujte administrátora.",
     "backButton": "Vráť ma na prihlásenie"
+  },
+  "dropzone": {
+    "dropPossibility": "Sem presuň nahrávané súbory",
+    "dropHere": "Sem presuň súbor"
   }
 }

@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
 import { isNull } from '@/utils/common'
 import { useFormatAndSizeCheck } from '@/components/file/composables/formatAndSizeCheck'
+import { useI18n } from 'vue-i18n'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
@@ -16,6 +17,8 @@ const props = withDefaults(
     disabled?: boolean
     transparent?: boolean
     size?: 'small' | 'default' | 'large'
+    hoverOnly?: boolean
+    hideText?: boolean
   }>(),
   {
     variant: 'default',
@@ -24,6 +27,8 @@ const props = withDefaults(
     disabled: false,
     transparent: false,
     size: 'default',
+    hoverOnly: false,
+    hideText: false,
   }
 )
 const emit = defineEmits<{
@@ -45,6 +50,7 @@ function onDrop(files: File[] | null) {
 const { isOverDropZone } = useDropZone(dropZoneRef, onDrop)
 
 const { isDraggingFile } = useDropzoneGlobalDragState()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -57,6 +63,8 @@ const { isDraggingFile } = useDropzoneGlobalDragState()
       'a-file-dropzone--possibility': isDraggingFile,
       [`a-file-dropzone--${variant}`]: true,
       [`a-file-dropzone--${size}`]: true,
+      [`a-file-dropzone--hover-only`]: hoverOnly,
+      [`a-file-dropzone--hide-text`]: hideText,
     }"
     @click.stop="emit('onClick')"
   >
@@ -68,13 +76,13 @@ const { isDraggingFile } = useDropzoneGlobalDragState()
       v-else-if="isDraggingFile"
       class="text"
     >
-      Drop files here
+      {{ t('common.system.dropzone.dropHere') }}
     </div>
     <div
       v-else
       class="text"
     >
-      You can drop files here
+      {{ t('common.system.dropzone.dropPossibility') }}
     </div>
   </div>
 </template>
@@ -123,6 +131,18 @@ $class-name-root: 'a-file-dropzone';
 
   &--large {
     min-height: 210px;
+  }
+
+  &--hover-only {
+    display: none;
+  }
+
+  &--hide-text .text {
+    display: none;
+  }
+
+  &.#{$class-name-root}--hover-only.#{$class-name-root}--possibility {
+    display: flex;
   }
 }
 

@@ -1,0 +1,48 @@
+$class-name-root: "asset-queue-editable";
+$sidebar-width: 400px;
+$second-toolbar-height: 49px;
+$bg-color-light: #fff;
+$bg-color-dark: #1a1a1a;
+
+.#{$class-name-root} {
+  min-height: 100vh !important;
+  position: relative;
+
+  &__sidebar {
+    transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(110%);
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: $sidebar-width;
+    height: calc(100vh - $second-toolbar-height);
+  }
+
+  &__left {
+    transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    height: calc(100vh - $second-toolbar-height);
+  }
+
+  &--sidebar-active {
+    .#{$class-name-root}__sidebar {
+      transform: translateX(0%);
+      display: flex;
+    }
+
+    .#{$class-name-root}__left {
+      margin-right: $sidebar-width;
+    }
+  }
+}
+
+.v-theme--light {
+  .#{$class-name-root} {
+    background-color: $bg-color-light;
+  }
+}
+
+.v-theme--dark {
+  .#{$class-name-root} {
+    background-color: $bg-color-dark;
+  }
+}

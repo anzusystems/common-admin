@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import AssetSelectTableRowItem from '@/components/dam/assetSelect/components/AssetSelectTableRowItem.vue'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 
 const { t } = useI18n()
 
-const { onItemClick, assetListItems, loader } = useAssetListActions()
+const { onItemClick, assetListItems, loader } = useAssetSelectActions()
 </script>
 
 <template>

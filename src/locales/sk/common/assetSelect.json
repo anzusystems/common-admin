@@ -31,9 +31,13 @@
     }
   },
   "filter": {
+    "licence": "Licencia",
     "text": "Text",
     "described": "Popísané",
     "visible": "Viditeľné",
     "generatedBySystem": "Generované systémom"
+  },
+  "error": {
+    "unallowedLicence": "Nemáte práva na licenciu v DAM"
   }
 }

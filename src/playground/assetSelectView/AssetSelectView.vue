@@ -7,10 +7,7 @@ import { DamAssetType } from '@/types/coreDam/Asset'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 
-const first = ref(100000)
-const second = ref(100000)
 const secondDialog = ref(false)
-const third = ref(100000)
 const thirdAssetSelect = ref<InstanceType<typeof AAssetSelect> | null>(null)
 
 const pickedAssetIds = ref<DocId[]>([])
@@ -36,18 +33,22 @@ const onConfirm = (data: AssetSelectReturnData) => {
         <VCol> Open using activator: </VCol>
       </VRow>
       <VRow>
-        <VCol cols="2">
-          <VTextField
-            v-model="first"
-            type="number"
-            label="Licence Id"
-          />
-        </VCol>
         <VCol cols="10">
           <AAssetSelect
-            :asset-licence-id="first"
             :min-count="1"
             :max-count="3"
+            :select-config="[
+              {
+                title: 'Default',
+                licence: 100000,
+                extSystem: 1,
+              },
+              {
+                title: 'Second',
+                licence: 100001,
+                extSystem: 1,
+              },
+            ]"
             :asset-type="DamAssetType.Image"
             @on-confirm="onConfirm"
           >
@@ -66,13 +67,6 @@ const onConfirm = (data: AssetSelectReturnData) => {
         <VCol> Open using v-model: </VCol>
       </VRow>
       <VRow>
-        <VCol cols="2">
-          <VTextField
-            v-model="second"
-            type="number"
-            label="Licence Id"
-          />
-        </VCol>
         <VCol cols="10">
           <VBtn
             color="primary"
@@ -82,7 +76,13 @@ const onConfirm = (data: AssetSelectReturnData) => {
           </VBtn>
           <AAssetSelect
             v-model="secondDialog"
-            :asset-licence-id="second"
+            :select-config="[
+              {
+                title: 'Default',
+                licence: 100000,
+                extSystem: 1,
+              }
+            ]"
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Video"
@@ -94,13 +94,6 @@ const onConfirm = (data: AssetSelectReturnData) => {
         <VCol> Open using template ref: </VCol>
       </VRow>
       <VRow>
-        <VCol cols="2">
-          <VTextField
-            v-model="third"
-            type="number"
-            label="Licence Id"
-          />
-        </VCol>
         <VCol cols="10">
           <VBtn
             color="primary"
@@ -110,7 +103,13 @@ const onConfirm = (data: AssetSelectReturnData) => {
           </VBtn>
           <AAssetSelect
             ref="thirdAssetSelect"
-            :asset-licence-id="third"
+            :select-config="[
+              {
+                title: 'Default',
+                licence: 100000,
+                extSystem: 1,
+              }
+            ]"
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Audio"

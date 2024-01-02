@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { type Ref, ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import type { DocId, IntegerId } from '@/types/common'
 import { isArray, isNull, isUndefined } from '@/utils/common'
@@ -24,8 +24,8 @@ export function defineCached<
   fetchCallback: (ids: I[]) => Promise<T[]>,
   idProp = 'id'
 ) {
-  const cache = ref<Map<I, CachedItem<M>>>(new Map())
-  const toFetch = ref<Set<I>>(new Set())
+  const cache: Ref<Map<I, CachedItem<M>>> = ref(new Map()) // todo check
+  const toFetch = ref(new Set()) as Ref<Set<I>> // todo check
 
   const add = (...args: AddToCachedArgs<I>) => {
     const toAdd = <Set<I>>new Set()

@@ -56,11 +56,13 @@ const clickInput = () => {
 const { checkFormatsAndSizes } = useFormatAndSizeCheck(props.accept, props.maxSizes)
 
 const validateData = (files: File[]) => {
-  if (props.multiple && files.length > 1) {
-    emit('filesInput', checkFormatsAndSizes([files[0]]))
+  if (!props.multiple && files.length > 0) {
+    const checked = checkFormatsAndSizes([files[0]])
+    emit('filesInput', checked)
     return
   }
-  emit('filesInput', checkFormatsAndSizes(files))
+  const checked = checkFormatsAndSizes(files)
+  emit('filesInput', checked)
 }
 
 const onDropzoneDrop = (files: File[]) => {
@@ -93,6 +95,10 @@ watch(
     fileInputKeyLocal.value = newValue
   }
 )
+
+defineExpose({
+  activate: clickInput,
+})
 </script>
 
 <template>

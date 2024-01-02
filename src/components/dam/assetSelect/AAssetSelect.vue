@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { computed, inject, ref, withModifiers } from 'vue'
+import { computed, ref, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
 import { damAssetTypeValueToEnum } from '@/types/coreDam/Asset'
-import { useAssetListActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
 import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
@@ -18,7 +18,11 @@ import type {
   AssetSelectReturnTypeValues,
 } from '@/types/coreDam/AssetSelect'
 import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
-import { DefaultLicenceIdSymbol } from '@/components/injectionKeys'
+import type { ImageWidgetSelectConfig } from '@/types/ImageAware'
+import {
+  filterAllowedImageWidgetSelectConfigs
+} from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
+import { useAlerts } from '@/composables/system/alerts'
 
 const props = withDefaults(
   defineProps<{
@@ -26,13 +30,16 @@ const props = withDefaults(
     assetType: DamAssetType | DamAssetTypeValues
     minCount: number
     maxCount: number
-    assetLicenceId?: number
+    selectConfig: ImageWidgetSelectConfig[]
     returnType?: AssetSelectReturnType | AssetSelectReturnTypeValues
+    configName?: string
+    skipCurrentUserCheck?: boolean
   }>(),
   {
     modelValue: undefined,
-    assetLicenceId: undefined,
     returnType: 'mainFileId',
+    configName: 'default',
+    skipCurrentUserCheck: false,
   }
 )
 
@@ -56,20 +63,23 @@ const dialog = computed({
 })
 
 const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedData, initStoreContext } =
-  useAssetListActions()
+  useAssetSelectActions()
 
 const { openSidebar, sidebarLeft } = useSidebar()
-
-const defaultLicenceId = inject<number | undefined>(DefaultLicenceIdSymbol, undefined)
+const { showErrorT } = useAlerts()
 
 const onOpen = () => {
-  const licenceId = props.assetLicenceId || defaultLicenceId
-  if (isUndefined(licenceId)) {
-    throw new Error('LicenceId must be provided. Provide using props or common-admin configuration.')
+  let selectConfigLocal = props.selectConfig
+  if (!props.skipCurrentUserCheck) {
+    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(props.selectConfig)
+  }
+  if (selectConfigLocal.length === 0) {
+    showErrorT('common.assetSelect.error.unallowedLicence')
+    return
   }
 
   initStoreContext(
-    licenceId,
+    selectConfigLocal,
     damAssetTypeValueToEnum(props.assetType),
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
@@ -79,6 +89,15 @@ const onOpen = () => {
   openSidebar()
   dialog.value = true
 }
+
+watch(
+  dialog,
+  async (newValue, oldValue) => {
+    if (newValue === oldValue || !newValue) return
+    onOpen()
+  },
+  { immediate: true }
+)
 
 const onClose = () => {
   dialog.value = false

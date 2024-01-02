@@ -8,21 +8,20 @@ import {
   AvailableLanguagesSymbol,
   CurrentUserSymbol,
   CustomAclResolverSymbol,
-  DamClientSymbol,
   DefaultLanguageSymbol,
-  DefaultLicenceIdSymbol,
-  ImageOptions,
 } from '@/components/injectionKeys'
 import type { AxiosInstance } from 'axios'
-import type { ImageWidgetImage } from '@/types/ImageWidgetImage'
-import type { IntegerId } from '@/types/common'
+import { initCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
+import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { initCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
 export type PluginOptions<T extends AclValue = AclValue> = {
   currentUser: CurrentUserType
   languages: { available: LanguageCode[]; default: LanguageCode }
   customAclResolver?: CustomAclResolver<T>
-  coreDam?: { client: () => AxiosInstance; defaultLicenceId?: IntegerId }
+  coreDam?: CommonAdminCoreDamOptions
   image?: CommonAdminImageOptions
+  collab?: CommonAdminCollabOptions
 }
 
 export type CustomAclResolver<T extends AclValue = AclValue> =
@@ -35,8 +34,8 @@ export type CustomAclResolver<T extends AclValue = AclValue> =
 export type CurrentUserType = DeepReadonly<Ref<UnwrapRef<AnzuUser | undefined>>>
 
 export interface CommonAdminImageConfig {
-  getImage: (id: IntegerId) => Promise<ImageWidgetImage>
-  imageUrl: string
+  imageClient: () => AxiosInstance
+  previewDomain: string
   width: number
   height: number
 }
@@ -47,16 +46,38 @@ export type CommonAdminImageOptions =
       configs: { [key: string]: CommonAdminImageConfig }
     }
 
+export interface CommonAdminCoreDamConfig {
+  damClient: () => AxiosInstance
+}
+
+export type CommonAdminCoreDamOptions =
+  | undefined
+  | {
+      configs: { [key: string]: CommonAdminCoreDamConfig }
+      apiTimeout: number
+      uploadStatusFallback: boolean
+      notification: {
+        enabled: boolean
+        webSocketUrl: string
+      }
+    }
+
+export type CommonAdminCollabOptions =
+  | {
+      enabled: boolean
+      socketUrl: string
+    }
+
 export default {
   install<T extends AclValue = AclValue>(app: App, options: PluginOptions<T>): void {
     app.provide(CurrentUserSymbol, options.currentUser)
-    app.provide<(() => AxiosInstance) | undefined>(DamClientSymbol, options.coreDam?.client)
     app.provide(CustomAclResolverSymbol, options.customAclResolver)
     app.provide(AvailableLanguagesSymbol, options.languages.available)
     app.provide(DefaultLanguageSymbol, options.languages.default)
-    app.provide(DefaultLicenceIdSymbol, options.coreDam?.defaultLicenceId)
-    app.provide(ImageOptions, options.image)
     app.component('Acl', Acl)
     app.use(Notification, { componentName: 'Notifications' })
+    initCommonAdminImageOptions(options.image)
+    initCommonAdminCoreDamOptions(options.coreDam)
+    initCommonAdminCollabOptions(options.collab)
   },
 }

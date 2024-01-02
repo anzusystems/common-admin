@@ -45,7 +45,7 @@ const item = computed(() => {
 })
 
 const containerClassComputed = computed(() => {
-  return props.containerClass + props.wrapText ? ' a-chip--wrap' : ''
+  return props.wrapText ? props.containerClass + ' a-chip--wrap' : props.containerClass
 })
 
 const displayTitle = computed(() => {

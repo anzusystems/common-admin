@@ -36,7 +36,7 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(i
 
 <template>
   <div
-    class="asset-list-tiles__item"
+    class="asset-list-tiles__item asset-list-tiles__item--pointer"
     :class="{ 'asset-list-tiles__item--selected': item.selected }"
     @click.stop.exact="onItemClick"
   >

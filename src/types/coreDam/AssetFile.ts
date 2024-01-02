@@ -20,6 +20,12 @@ export enum AssetFileFailReason {
   Default = None,
 }
 
+export enum AssetFileRouteStatus {
+  Disabled = 'disabled',
+  Active = 'active',
+  Default = Disabled,
+}
+
 interface FileAttributes {
   status: AssetFileProcessStatus
   mimeType: string
@@ -45,11 +51,23 @@ export interface AssetFileLink {
   type: AssetFileLinkType
 }
 
+export interface AssetFileRoute {
+  id: DocId
+  status: AssetFileRouteStatus
+  main: boolean,
+  publicUrl: string
+  _resourceName: 'assetFileRoute'
+}
+
+export interface AssetFileMainRouteAware {
+  mainRoute?: AssetFileRoute
+}
+
 export type AssetFileLinks =
-  | Record<'image_list' | 'image_table' | 'image_detail' | 'audio', AssetFileLink>
+  | Record<'image_list' | 'image_table' | 'image_detail' | 'image_animated' | 'audio', AssetFileLink>
   | Record<string, never>
 
-export interface AssetFileImage extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileImage extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -60,7 +78,7 @@ export interface AssetFileImage extends AnzuUserAndTimeTrackingAware {
   _resourceName: 'imageFile'
 }
 
-export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -81,7 +99,7 @@ export interface AssetFileVideo extends AnzuUserAndTimeTrackingAware {
   _resourceName: 'videoFile'
 }
 
-export interface AssetFileDocument extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileDocument extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes

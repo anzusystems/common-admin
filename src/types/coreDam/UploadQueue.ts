@@ -7,6 +7,21 @@ import type {
   DamAssetType
 } from '@/types/coreDam/Asset'
 import type { AssetFileFailReason,  AssetFileLink } from '@/types/coreDam/AssetFile'
+import type { ImageAware } from '@/types/ImageAware'
+
+export type UploadQueueKey = string
+
+export interface UploadQueue {
+  items: UploadQueueItem[]
+  totalCount: number
+  processedCount: number
+  fileInputKey: number // used to reset html input file element
+
+  suggestions: {
+    newKeywordNames: Set<string>
+    newAuthorNames: Set<string>
+  }
+}
 
 export enum UploadQueueItemType {
   File = 'file',
@@ -25,10 +40,6 @@ export enum UploadQueueItemStatus {
   Stop = 'stop', // after hitting stop upload
 }
 
-export interface UploadQueueItemChunk {
-  cancelTokenSource: CancelTokenSource
-}
-
 export interface UploadQueueItem {
   key: string
   file: File | null
@@ -44,7 +55,7 @@ export interface UploadQueueItem {
   externalProviderAssetId: AssetExternalProviderIdNullable
   externalProviderName: string | null
   externalProviderMetadata: AssetExternalProviderMetadata
-  chunks: UploadQueueItemChunk[]
+  latestChunkCancelToken: CancelTokenSource | null
   chunkSize: number
   currentChunkIndex: number
   chunkTotalCount: number
@@ -68,4 +79,10 @@ export interface UploadQueueItem {
   notificationFallbackTimer: ReturnType<typeof setTimeout> | undefined
   notificationFallbackTry: number
   slotName: string | null
+  image: undefined | ImageAware // todo check
+}
+
+export interface DamUploadStartResponse {
+  id: DocId
+  asset: DocId
 }

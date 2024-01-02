@@ -11,6 +11,11 @@ import ActionbarTeleportTarget from '@/playground/system/ActionbarTeleportTarget
 import { useRoute } from 'vue-router'
 import logoFull from '@/assets/logo-ca-full.svg'
 import logoNoText from '@/assets/logo-ca-no-text.svg'
+import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMessages'
+import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
+import { initDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
+import { updateDamCurrentUser } from '@/components/damImage/composables/damCurrentUser'
+import { damClient } from '@/playground/mock/coreDamClient'
 
 const route = useRoute()
 
@@ -18,6 +23,7 @@ const { mobile } = useDisplay()
 
 const drawer = ref(true)
 const rail = ref(false)
+const ready = ref(false)
 
 const navIconClick = () => {
   if (mobile.value) {
@@ -30,20 +36,23 @@ const navIconClick = () => {
 }
 
 const { theme } = useTheme()
-import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMessages'
-import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
 
 const { initGlobalDragState } = useDropzoneGlobalDragState()
 
-onMounted(() => {
+const { openConnection } = initDamNotifications()
+
+onMounted(async () => {
+  openConnection()
   initGlobalDragState()
+  await updateDamCurrentUser(damClient)
+  ready.value = true
 })
 </script>
 
 <template>
   <AAlerts />
   <VApp
-    v-if="initLanguageMessagesLoaded"
+    v-if="initLanguageMessagesLoaded && ready"
     :theme="theme"
   >
     <VNavigationDrawer
