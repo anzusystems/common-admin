@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, unref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, unref, watch } from 'vue'
 import FlatPickr from 'vue-flatpickr-component'
 import { Slovak } from 'flatpickr/dist/l10n/sk'
 import { Czech } from 'flatpickr/dist/l10n/cs'
@@ -294,6 +294,10 @@ onMounted(() => {
     shortcutButtonsPlugin.value = module.default
     pluginsImported.value = true
   })
+})
+
+onUnmounted(()=>{
+  flatickrRef.value?.fp?.destroy()
 })
 </script>
 
