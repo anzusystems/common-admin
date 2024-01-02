@@ -29,26 +29,20 @@ export function initDamNotifications() {
   })
 
   const openConnection = () => {
-    console.log('openConnection', enabled)
     damNotificationsInitialized.value = true
     if (!enabled) return
     const eventBus = useDamNotificationsEventBus()
     open()
     if (!ws.value) return
-    ws.value.onopen = function (this: WebSocket, event: Event) {
-      console.log('ws dam notification-server open', event)
-    }
-    ws.value.onerror = function (this: WebSocket, event: Event) {
+    ws.value.onerror = function (this: WebSocket) {
       const { showWarning } = useAlerts()
       setTimeout(() => {
         showWarning(t('common.damImage.notificationsNotConnected'), -1)
       }, 3000)
-      console.log('ws dam notification-server error', event)
     }
     ws.value.onmessage = function (this: WebSocket, event: MessageEvent) {
       const message = JSON.parse(event.data as string)
       const data = message.data.length ? JSON.parse(message.data) : undefined
-      console.log(message.eventName, data)
       eventBus.emit({ name: message.eventName, data })
     }
   }

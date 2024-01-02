@@ -43,7 +43,6 @@ export function useCollabInit() {
     if (collabSocket.value || !collabOptions.value.enabled) {
       return
     }
-    console.log('init collab')
 
     collabSocket.value = io(collabOptions.value.socketUrl, {
       transports: ['websocket'],

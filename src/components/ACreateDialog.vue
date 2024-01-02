@@ -8,7 +8,6 @@ import { isUndefined } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
-    modelValue: boolean
     buttonClass?: string
     maxWidth?: number | undefined
     dataCy?: string
@@ -30,7 +29,6 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: boolean): void
   (e: 'onConfirm'): void
   (e: 'onOpen'): void
   (e: 'onClose'): void
@@ -38,17 +36,19 @@ const emit = defineEmits<{
   (e: 'onSuccess', data: any): void
 }>()
 
+const modelValue = defineModel<boolean>({ default: false, required: false })
+
 const { t } = useI18n()
 
 const buttonLoading = ref(false)
 
 const onOpen = () => {
-  emit('update:modelValue', true)
+  modelValue.value = true
   emit('onOpen')
 }
 
 const onClose = () => {
-  emit('update:modelValue', false)
+  modelValue.value = true
   emit('onClose')
 }
 
@@ -98,7 +98,7 @@ const onConfirm = async () => {
       :model-value="modelValue"
       :max-width="maxWidth"
       persistent
-      @update:model-value="emit('update:modelValue', $event)"
+      @update:model-value="modelValue = $event"
     >
       <VCard
         v-if="modelValue"

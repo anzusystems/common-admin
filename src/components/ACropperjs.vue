@@ -149,7 +149,6 @@ onMounted(() => {
   }
   nextTick(() => {
     if (!isNull(imgEl.value)) {
-      console.log(imgEl.value)
       cropperInstance.value = new Cropper(imgEl.value as any, options)
       setTimeout(() => {
         loading.value = false

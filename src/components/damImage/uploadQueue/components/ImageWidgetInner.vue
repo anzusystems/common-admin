@@ -330,7 +330,6 @@ const onMetadataDialogClose = () => {
 
 const onMetadataDialogConfirm = async () => {
   if (isNull(imageStore.imageDetail)) return
-  console.log(imageStore.imageDetail)
   metadataDialogSaving.value = true
   try {
     const res = imageStore.imageDetail.id
@@ -416,7 +415,6 @@ const isLocked = computed(() => {
 watch(
   clickMenuOpened,
   (newValue, oldValue) => {
-    console.log(newValue)
     if (newValue === oldValue || newValue || anyWidgetDialogOpened.value) return
     releaseFieldLockLocal(props.modelValue)
   },
