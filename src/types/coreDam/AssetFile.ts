@@ -64,7 +64,7 @@ export interface AssetFileMainRouteAware {
 }
 
 export type AssetFileLinks =
-  | Record<'image_list' | 'image_table' | 'image_detail' | 'audio', AssetFileLink>
+  | Record<'image_list' | 'image_table' | 'image_detail' | 'image_animated' | 'audio', AssetFileLink>
   | Record<string, never>
 
 export interface AssetFileImage extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
