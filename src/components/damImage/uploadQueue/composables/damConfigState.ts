@@ -20,30 +20,6 @@ import {
 } from '@/components/damImage/uploadQueue/composables/damAssetCustomFormApi'
 import { reactive, shallowRef } from 'vue'
 
-// const createDefaultExtSystemConfig = (override: Partial<DamExtSystemConfigItem> = {}): DamExtSystemConfigItem => ({
-//   ...({
-//     sizeLimit: 0,
-//     defaultFileVersion: '',
-//     versions: [],
-//     mimeTypes: [],
-//     distribution: {
-//       distributionServices: [],
-//       distributionRequirements: {},
-//     },
-//     keywords: {
-//       enabled: false,
-//       required: false,
-//     },
-//     authors: {
-//       enabled: false,
-//       required: false,
-//     },
-//     customMetadataPinnedAmount: 1,
-//     slots: [],
-//   } as DamExtSystemConfigItem),
-//   ...override,
-// })
-
 const initialized = reactive<{
   damPubConfig: boolean
   damPrvConfig: boolean
