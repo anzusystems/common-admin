@@ -1,12 +1,12 @@
 import { useWebSocket } from '@vueuse/core'
 import { ref } from 'vue'
 import { i18n } from '@/plugins/i18n'
-import { useAlerts } from '@/composables/system/alerts'
 import {
   type DamNotification,
   useDamNotificationsEventBus,
 } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
 import { useCommonAdminCoreDamOptionsGlobal } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useAlerts } from '@/composables/system/alerts'
 
 const { t } = i18n.global || i18n
 
@@ -17,38 +17,34 @@ export function initDamNotifications() {
 
   const enabled = notification.enabled && notification.webSocketUrl.length > 0
 
-  const { open, ws } = useWebSocket(notification.webSocketUrl, {
+  const eventBus = useDamNotificationsEventBus()
+
+  const { open } = useWebSocket(notification.webSocketUrl, {
     immediate: false,
+    autoClose: false,
     autoReconnect: {
       retries: 10,
       delay: 5000,
     },
-    heartbeat: {
-      interval: 4000,
+    onMessage(ws, event) {
+      if (!enabled) return
+      const message = JSON.parse(event.data as string)
+      const data = message.data.length ? JSON.parse(message.data) : undefined
+      eventBus.emit({ name: message.eventName, data })
+    },
+    onError() {
+      if (!enabled) return
+      const { showWarning } = useAlerts()
+      setTimeout(() => {
+        showWarning(t('common.damImage.notificationsNotConnected'), -1)
+      }, 3000)
     },
   })
 
   const openConnection = () => {
     damNotificationsInitialized.value = true
     if (!enabled) return
-    const eventBus = useDamNotificationsEventBus()
     open()
-    if (!ws.value) return
-    // important: if you remove ws.value.onopen, it will stop working
-    ws.value.onopen = function () {
-      console.log('notification-server connected')
-    }
-    ws.value.onerror = function (this: WebSocket) {
-      const { showWarning } = useAlerts()
-      setTimeout(() => {
-        showWarning(t('common.damImage.notificationsNotConnected'), -1)
-      }, 3000)
-    }
-    ws.value.onmessage = function (this: WebSocket, event: MessageEvent) {
-      const message = JSON.parse(event.data as string)
-      const data = message.data.length ? JSON.parse(message.data) : undefined
-      eventBus.emit({ name: message.eventName, data })
-    }
   }
 
   return {
