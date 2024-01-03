@@ -34,6 +34,10 @@ export function initDamNotifications() {
     const eventBus = useDamNotificationsEventBus()
     open()
     if (!ws.value) return
+    // important: if you remove ws.value.onopen, it will stop working
+    ws.value.onopen = function () {
+      console.log('notification-server connected')
+    }
     ws.value.onerror = function (this: WebSocket) {
       const { showWarning } = useAlerts()
       setTimeout(() => {
