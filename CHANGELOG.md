@@ -1,3 +1,14 @@
+## [1.41.0](https://github.com/anzusystems/common-admin/compare/1.40.0...1.41.0) (2024-01-03)
+
+### Features
+* **chore:** updated dependencies
+
+### Bug Fixes
+* **initDamNotifications:** fix for not triggering event bus
+
+### BREAKING CHANGES
+* **dependencies:** new vue required version `vue@3.4.4`
+
 ## [1.40.0](https://github.com/anzusystems/common-admin/compare/1.39.0...1.40.0) (2024-01-02)
 
 ### Features
