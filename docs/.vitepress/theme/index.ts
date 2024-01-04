@@ -3,7 +3,6 @@ import { h } from 'vue'
 import Theme from 'vitepress/theme'
 import './style.css'
 import { createVuetify } from 'vuetify'
-import { VDataTableServer } from 'vuetify/labs/VDataTable'
 import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n'
 // @ts-ignore
 import { i18n } from '@/plugins/i18nDocs'
@@ -21,9 +20,6 @@ import DocsExample from '../DocsExample.vue'
 const { commonTheme, commonAliases, commonDefaults } = useCommonVuetifyConfig()
 export const vuetify = createVuetify({
   aliases: commonAliases(),
-  components: {
-    VDataTableServer,
-  },
   locale: {
     // @ts-ignore
     adapter: createVueI18nAdapter({ i18n, useI18n }),

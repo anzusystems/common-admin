@@ -12,7 +12,7 @@ import ATableDetailButton from '@/components/buttons/table/ATableDetailButton.vu
 import ATableEditButton from '@/components/buttons/table/ATableEditButton.vue'
 import { i18n } from '@/plugins/i18nDocs'
 
-type DatatableItem = { raw: any }
+type DatatableItem = any
 
 const filter = useDemoListFilter()
 const { resetFilter, submitFilter } = useFilterHelpers()
@@ -75,13 +75,13 @@ onMounted(() => {
       >
         <template #item.actions="{ item }: { item: DatatableItem }">
           <div class="d-flex justify-end">
-            <ATableCopyIdButton :id="item.raw.id" />
+            <ATableCopyIdButton :id="item.id" />
             <ATableDetailButton
-              :record-id="item.raw.id"
+              :record-id="item.id"
               route-name="name"
             />
             <ATableEditButton
-              :record-id="item.raw.id"
+              :record-id="item.id"
               route-name="name"
             />
           </div>
