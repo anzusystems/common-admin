@@ -1,3 +1,12 @@
+## [1.42.0](https://github.com/anzusystems/common-admin/compare/1.41.0...1.42.0) (2024-01-04)
+
+### Features
+* **chore:** updated dependencies
+* **initDamNotifications:** refactor
+
+### BREAKING CHANGES
+* **dependencies:** new axios required version `axios@1.6.4`
+
 ## [1.41.0](https://github.com/anzusystems/common-admin/compare/1.40.0...1.41.0) (2024-01-03)
 
 ### Features
