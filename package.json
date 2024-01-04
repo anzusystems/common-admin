@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.42.0",
+  "version": "1.43.0",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -83,7 +83,7 @@
     "vite-plugin-dts": "^3.7.0",
     "vite-plugin-vuetify": "^2.0.1",
     "vitepress": "1.0.0-rc.35",
-    "vue": "3.4.4",
+    "vue": "3.4.5",
     "vue-flatpickr-component": "^11.0.3",
     "vue-i18n": "9.8.0",
     "vue-router": "4.2.5",
@@ -100,7 +100,7 @@
     "dayjs": "1.11.10",
     "flatpickr": "4.6.13",
     "pinia": "2.1.7",
-    "vue": "3.4.4",
+    "vue": "3.4.5",
     "vue-i18n": "9.8.0",
     "vue-router": "4.2.5",
     "vuetify": "3.4.9"

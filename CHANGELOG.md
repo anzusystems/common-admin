@@ -1,3 +1,14 @@
+## [1.43.0](https://github.com/anzusystems/common-admin/compare/1.42.0...1.43.0) (2024-01-04)
+
+### Features
+* **chore:** updated dependencies
+
+### Bug Fixes
+* **docs:** fixed docs build
+
+### BREAKING CHANGES
+* **dependencies:** new vue required version `vue@3.4.5`
+
 ## [1.42.0](https://github.com/anzusystems/common-admin/compare/1.41.0...1.42.0) (2024-01-04)
 
 ### Features
