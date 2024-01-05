@@ -1,3 +1,9 @@
+## [1.44.0](https://github.com/anzusystems/common-admin/compare/1.43.0...1.44.0) (2024-01-05)
+
+### Features
+* **chore:** updated dependencies
+* **ACopyText:** supports now activator slot
+
 ## [1.43.0](https://github.com/anzusystems/common-admin/compare/1.42.0...1.43.0) (2024-01-04)
 
 ### Features
