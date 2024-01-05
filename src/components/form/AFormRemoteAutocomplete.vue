@@ -182,6 +182,9 @@ const loadingComputed = computed(() => {
 const apiSearch = async (query: string) => {
   loadingLocal.value = true
   const filterField = innerFilter.value[props.filterByField]
+  if (isUndefined(filterField)) {
+    throw new Error('AFormRemoteAutocomplete incorrect innerFilter or filterByField setup.')
+  }
   filterField.model = query
   fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
   loadingLocal.value = false
