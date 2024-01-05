@@ -5,6 +5,7 @@ import { isNumber, isString } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import { useAlerts } from '@/composables/system/alerts'
 import { numberToString } from '@/utils/number'
+import { withModifiers } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -38,26 +39,34 @@ const onClick = (event: Event) => {
 </script>
 
 <template>
-  <div
-    :class="{ 'cursor-pointer': isSupported }"
-    :data-cy="dataCy"
-    class="d-inline-flex align-center anzu-copy-text"
-    @click.stop="onClick"
+  <slot
+    name="activator"
+    :props="{
+      onClick: withModifiers((e) => onClick(e), ['stop']),
+      disabled: !isSupported
+    }"
   >
-    <span>{{ value }}</span>
-    <VIcon
-      v-if="isSupported"
-      class="ml-1"
-      size="x-small"
-      icon="mdi-content-copy"
-    />
-    <VTooltip
-      activator="parent"
-      location="bottom"
+    <div
+      :class="{ 'cursor-pointer': isSupported }"
+      :data-cy="dataCy"
+      class="d-inline-flex align-center anzu-copy-text"
+      @click.stop="onClick"
     >
-      Copy
-    </VTooltip>
-  </div>
+      <span>{{ value }}</span>
+      <VIcon
+        v-if="isSupported"
+        class="ml-1"
+        size="x-small"
+        icon="mdi-content-copy"
+      />
+      <VTooltip
+        activator="parent"
+        location="bottom"
+      >
+        Copy
+      </VTooltip>
+    </div>
+  </slot>
 </template>
 
 <style lang="scss">
