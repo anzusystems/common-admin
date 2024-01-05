@@ -33,6 +33,7 @@ import { useCommonAdminCollabOptions } from '@/components/collab/composables/com
 import { useAlerts } from '@/composables/system/alerts'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
 import { updateCurrentUser, useCurrentUser } from '@/playground/collabView/currentUser'
+import CopyTextView from '@/playground/copyTextView/CopyTextView.vue'
 
 const { createCollabRoom } = useCollabHelpers()
 
@@ -53,6 +54,11 @@ const router = createRouter({
       path: '/view/boolean-value',
       name: 'view-boolean-value',
       component: BooleanValueView,
+    },
+    {
+      path: '/view/copy-text',
+      name: 'view-copy-text',
+      component: CopyTextView,
     },
     {
       path: '/view/permission',
