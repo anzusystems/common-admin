@@ -5,6 +5,7 @@ import { isNumber, isString } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import { useAlerts } from '@/composables/system/alerts'
 import { numberToString } from '@/utils/number'
+import { withModifiers } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -40,8 +41,10 @@ const onClick = (event: Event) => {
 <template>
   <slot
     name="activator"
-    :on-click="onClick"
-    :is-supported="isSupported"
+    :props="{
+      onClick: withModifiers((e) => onClick(e), ['stop']),
+      disabled: !isSupported
+    }"
   >
     <div
       :class="{ 'cursor-pointer': isSupported }"

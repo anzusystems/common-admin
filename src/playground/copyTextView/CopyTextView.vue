@@ -22,11 +22,10 @@ const copyTextThird = ref('copyTextThird')
       <VRow>
         <VCol cols="4">
           <ACopyText :value="copyTextSecond">
-            <template #activator="{ onClick, isSupported }">
+            <template #activator="{ props }">
               <ABtnPrimary
-                :disabled="!isSupported"
                 text="Click me to copy"
-                @click.stop="onClick"
+                v-bind="props"
               />
             </template>
           </ACopyText>
@@ -35,10 +34,9 @@ const copyTextThird = ref('copyTextThird')
       <VRow>
         <VCol cols="4">
           <ACopyText :value="copyTextThird">
-            <template #activator="{ onClick, isSupported }">
+            <template #activator="{ props }">
               <VBtn
-                :disabled="!isSupported"
-                @click.stop="onClick"
+                v-bind="props"
               >
                 <VIcon icon="mdi-content-copy" />
               </VBtn>
