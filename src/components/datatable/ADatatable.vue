@@ -30,8 +30,6 @@ const isNotEmpty = computed(() => {
 
 const totalColumnsCount = computed(() => {
   return props.columns.length
-  // if (props.actions) ++count
-  // return count
 })
 
 const { t } = useI18n()
@@ -57,18 +55,6 @@ const { t } = useI18n()
           :key="(item as any)[itemKey]"
           @click="onRowClick($event, item)"
         >
-          <!--          <td-->
-          <!--            v-for="column in columns"-->
-          <!--            :key="column.key"-->
-          <!--          >-->
-          <!--            <slot-->
-          <!--              :name="datatableSlotName(column.key)"-->
-          <!--              :item="item"-->
-          <!--            >-->
-          <!--              &lt;!&ndash;              {{ item }}&ndash;&gt;-->
-          <!--              A-->
-          <!--            </slot>-->
-          <!--          </td>-->
           <ADatatableColumn
             v-for="column in columns"
             :key="column.key"
@@ -82,14 +68,6 @@ const { t } = useI18n()
               />
             </template>
           </ADatatableColumn>
-          <!--          <td v-if="actions">-->
-          <!--            <div class="d-flex justify-end">-->
-          <!--              <slot-->
-          <!--                name="actions"-->
-          <!--                :item="rowData"-->
-          <!--              />-->
-          <!--            </div>-->
-          <!--          </td>-->
         </tr>
       </template>
       <template v-else>
@@ -104,4 +82,5 @@ const { t } = useI18n()
       </template>
     </tbody>
   </VTable>
+  <slot name="bottom" />
 </template>
