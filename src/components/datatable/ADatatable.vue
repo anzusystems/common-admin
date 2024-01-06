@@ -10,11 +10,9 @@ const props = withDefaults(
     items: TItem[]
     columns: any
     itemKey?: string
-    actions?: boolean
   }>(),
   {
     itemKey: 'id',
-    actions: true,
   }
 )
 
@@ -31,9 +29,9 @@ const isNotEmpty = computed(() => {
 })
 
 const totalColumnsCount = computed(() => {
-  let count = props.columns.length
-  if (props.actions) ++count
-  return count
+  return props.columns.length
+  // if (props.actions) ++count
+  // return count
 })
 
 const { t } = useI18n()
@@ -50,7 +48,6 @@ const { t } = useI18n()
         >
           {{ column.title }}
         </th>
-        <th v-if="actions" />
       </tr>
     </thead>
     <tbody>
