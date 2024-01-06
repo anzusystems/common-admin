@@ -102,3 +102,7 @@ export function createDatatableColumnsConfig(
     pagination,
   }
 }
+
+export const datatableSlotName = (columnName: string, prefix = 'item') => {
+  return prefix + '.' + columnName
+}

@@ -2,26 +2,18 @@
 import { objectGetValueByPath } from '@/utils/object'
 import { computed } from 'vue'
 import ABooleanValue from '@/components/ABooleanValue.vue'
-import { stringNormalizeForSlotName } from '@/utils/string'
-import { dateTimeFriendly } from '@/utils/datetime'
-import { type DatatableColumnConfig, DATETIME_AUTO_FORMAT_COLUMN_NAMES } from '@/components/datatable/datatable'
+import { datatableSlotName } from '@/composables/system/datatableColumns'
 
 const props = withDefaults(
   defineProps<{
-    rowData: any
-    column: DatatableColumnConfig
+    item: any
+    column: any
   }>(),
   {}
 )
 
 const value = computed(() => {
-  return objectGetValueByPath(props.rowData, props.column.name)
-})
-
-const formattedValue = computed(() => {
-  if (props.column.type === 'datetime' || DATETIME_AUTO_FORMAT_COLUMN_NAMES.includes(props.column.name))
-    return dateTimeFriendly(value.value)
-  return value.value
+  return objectGetValueByPath(props.item, props.column.key)
 })
 
 const isBoolean = computed(() => typeof value.value === 'boolean')
@@ -30,15 +22,17 @@ const isBoolean = computed(() => typeof value.value === 'boolean')
 <template>
   <td>
     <slot
-      :name="stringNormalizeForSlotName(column.name)"
-      :data="value"
+      :name="datatableSlotName(column.key)"
+      :item="item"
     >
       <ABooleanValue
         v-if="isBoolean"
         chip
         :value="value"
       />
-      <span v-else>{{ formattedValue }}</span>
+      <template v-else>
+        {{ value }}
+      </template>
     </slot>
   </td>
 </template>

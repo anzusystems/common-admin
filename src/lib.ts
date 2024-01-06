@@ -82,6 +82,7 @@ import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
+import ADatatable from '@/components/datatable/ADatatable.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
@@ -554,6 +555,7 @@ export {
   ACollabCountdown,
   ACollabManagement,
   AAssetSelect,
+  ADatatable,
 
   // VIEWS
   ALoginView,

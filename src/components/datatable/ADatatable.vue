@@ -1,44 +1,37 @@
-<script lang="ts" setup>
-import { computed, inject } from 'vue'
-import ADatatableColumn from '@/components/datatable/ADatatableColumn.vue'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import { stringNormalizeForSlotName } from '@/utils/string'
+<script lang="ts" setup generic="TItem = Record<string, unknown>">
+import { computed } from 'vue'
 import { isEmpty } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import type { UseTableColumns } from '@/components/datatable/datatable'
+import { datatableSlotName } from '@/composables/system/datatableColumns'
+import ADatatableColumn from '@/components/datatable/ADatatableColumn.vue'
 
 const props = withDefaults(
   defineProps<{
-    data: any
-    columns: UseTableColumns
+    items: TItem[]
+    columns: any
+    itemKey?: string
     actions?: boolean
   }>(),
   {
+    itemKey: 'id',
     actions: true,
   }
 )
 
 const emit = defineEmits<{
-  (e: 'rowClick', data: any): void
+  (e: 'click:row', data: any): void
 }>()
 
-const availableColumns = computed(() => {
-  return props.columns.availableColumns.value
-})
-
-const onRowClick = (data: any) => {
-  emit('rowClick', data)
+const onRowClick = (event: unknown, item: unknown) => {
+  emit('click:row', { event, item })
 }
 
-const system = inject<string | undefined>(SystemScopeSymbol, undefined)
-const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
-
 const isNotEmpty = computed(() => {
-  return !isEmpty(props.data)
+  return !isEmpty(props.items)
 })
 
 const totalColumnsCount = computed(() => {
-  let count = props.columns.availableColumns.value.length
+  let count = props.columns.length
   if (props.actions) ++count
   return count
 })
@@ -47,15 +40,15 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <VTable class="anzu-data-table">
+  <VTable class="a-datatable">
     <thead>
       <tr>
         <th
-          v-for="column in availableColumns"
-          :key="column.name"
+          v-for="column in columns"
+          :key="column.key"
           class="text-left"
         >
-          {{ column.getLabel ? column.getLabel(system, subject) : '' }}
+          {{ column.title }}
         </th>
         <th v-if="actions" />
       </tr>
@@ -63,32 +56,43 @@ const { t } = useI18n()
     <tbody>
       <template v-if="isNotEmpty">
         <tr
-          v-for="(rowData, index) in props.data"
-          :key="index"
-          @click="onRowClick(rowData)"
+          v-for="item in props.items"
+          :key="(item as any)[itemKey]"
+          @click="onRowClick($event, item)"
         >
+          <!--          <td-->
+          <!--            v-for="column in columns"-->
+          <!--            :key="column.key"-->
+          <!--          >-->
+          <!--            <slot-->
+          <!--              :name="datatableSlotName(column.key)"-->
+          <!--              :item="item"-->
+          <!--            >-->
+          <!--              &lt;!&ndash;              {{ item }}&ndash;&gt;-->
+          <!--              A-->
+          <!--            </slot>-->
+          <!--          </td>-->
           <ADatatableColumn
-            v-for="column in availableColumns"
-            :key="column.name"
-            :row-data="rowData"
+            v-for="column in columns"
+            :key="column.key"
+            :item="item"
             :column="column"
           >
-            <template #[stringNormalizeForSlotName(column.name)]="{ data: slotData }">
+            <template #[datatableSlotName(column.key)]="{ item: slotItem }">
               <slot
-                :name="stringNormalizeForSlotName(column.name)"
-                :data="slotData"
-                :row-data="rowData"
+                :name="datatableSlotName(column.key)"
+                :item="slotItem"
               />
             </template>
           </ADatatableColumn>
-          <td v-if="actions">
-            <div class="d-flex justify-end">
-              <slot
-                name="actions"
-                :data="rowData"
-              />
-            </div>
-          </td>
+          <!--          <td v-if="actions">-->
+          <!--            <div class="d-flex justify-end">-->
+          <!--              <slot-->
+          <!--                name="actions"-->
+          <!--                :item="rowData"-->
+          <!--              />-->
+          <!--            </div>-->
+          <!--          </td>-->
         </tr>
       </template>
       <template v-else>
