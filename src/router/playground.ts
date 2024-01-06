@@ -34,6 +34,7 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
 import { updateCurrentUser, useCurrentUser } from '@/playground/collabView/currentUser'
 import CopyTextView from '@/playground/copyTextView/CopyTextView.vue'
+import DatatableView from '@/playground/datatableView/DatatableView.vue'
 
 const { createCollabRoom } = useCollabHelpers()
 
@@ -119,6 +120,11 @@ const router = createRouter({
       path: '/view/alert',
       name: 'view-alert',
       component: AlertView,
+    },
+    {
+      path: '/view/datatable',
+      name: 'view-datatable',
+      component: DatatableView,
     },
     {
       path: '/view/fetch-batch',
