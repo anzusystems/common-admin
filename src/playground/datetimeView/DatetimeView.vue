@@ -6,6 +6,8 @@ import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import { dateTimeNow } from '@/utils/datetime'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
+import ADatetimePicker from '@/components/ADatetimePicker.vue'
+import ADatetimePickerNew from '@/components/ADatetimePickerNew.vue'
 
 const dateTime = ref<DatetimeUTCNullable>('2023-02-08T08:17:29.000000Z')
 const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)
@@ -31,11 +33,22 @@ const changeToNow = () => {
   </VCard>
 
   <VCard>
-    <VCardTitle>ADatetime component basic</VCardTitle>
+    <VCardTitle>
+      ADatetimePicker component basic
+    </VCardTitle>
     <VCardText>
+      <p>
+        (always prefer to use AFormDatetimePicker or AFilterDatetimePicker version, this is a helper component
+        for them with main functionality of datetime picking)
+      </p>
       <VRow>
         <VCol>
-          <ADatetime :date-time="dateTime" />
+          <ADatetimePicker v-model="dateTime" />
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
+          <ADatetimePickerNew v-model="dateTime" />
         </VCol>
       </VRow>
     </VCardText>

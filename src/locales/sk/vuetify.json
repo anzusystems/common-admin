@@ -32,18 +32,18 @@
     "pageText": "{0}-{1} z {2}"
   },
   "dateRangeInput": {
-    "divider": "to"
+    "divider": "do"
   },
   "datePicker": {
     "itemsSelected": "{0} vybraných",
     "range": {
-      "title": "Select dates",
-      "header": "Enter dates"
+      "title": "Vybrať dátumy",
+      "header": "Vyberte"
     },
-    "title": "Select date",
-    "header": "Enter date",
+    "title": "Vybrať dátum",
+    "header": "Vyberte",
     "input": {
-      "placeholder": "Enter date"
+      "placeholder": "Vybrať dátum"
     }
   },
   "noDataText": "Žiadne dostupné dáta",
