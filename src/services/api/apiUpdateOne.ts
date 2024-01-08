@@ -49,6 +49,7 @@ export const apiUpdateOne = <T, R = T>(
         if (axiosErrorResponseHasForbiddenOperationData(err)) {
           return reject(new AnzuApiForbiddenOperationError(err, err))
         }
+        // todo catch another axios errors, for example timeout
         return reject(new AnzuFatalError(err))
       })
   })

@@ -2,6 +2,7 @@
 
 ### Features
 * **chore:** updated dependencies
+* **ADatatable:** added new component for simple datatable
 
 ### BREAKING CHANGES
 * **dependencies:** new required versions:
