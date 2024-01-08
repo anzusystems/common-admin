@@ -214,5 +214,13 @@ const onTextFieldFocus = () => {
   :deep(.v-date-picker-header) {
     padding-top: 12px;
   }
+
+  :deep(.v-date-picker-month__days) {
+    row-gap: 1px;
+  }
+
+  :deep(.v-date-picker-month) {
+    padding-bottom: 2px;
+  }
 }
 </style>
