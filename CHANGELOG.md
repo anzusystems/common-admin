@@ -1,3 +1,13 @@
+## [1.45.0](https://github.com/anzusystems/common-admin/compare/1.44.0...1.45.0) (2024-01-08)
+
+### Features
+* **chore:** updated dependencies
+
+### BREAKING CHANGES
+* **dependencies:** new required versions:
+  * `axios@1.6.5`
+  * `vue-i18n@9.9.0`
+
 ## [1.44.0](https://github.com/anzusystems/common-admin/compare/1.43.0...1.44.0) (2024-01-05)
 
 ### Features
