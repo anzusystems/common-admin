@@ -2,6 +2,10 @@
   "badge": "Štítok",
   "open": "Otvoriť",
   "close": "Zatvoriť",
+  "confirmEdit": {
+    "ok": "OK",
+    "cancel": "Cancel"
+  },
   "dataIterator": {
     "noResultsText": "Nenašli sa žiadne zodpovedajúce záznamy",
     "loadingText": "Načítavanie záznamov ..."
@@ -27,12 +31,20 @@
     "lastPage": "Posledná strana",
     "pageText": "{0}-{1} z {2}"
   },
+  "dateRangeInput": {
+    "divider": "to"
+  },
   "datePicker": {
     "itemsSelected": "{0} vybraných",
-    "nextMonthAriaLabel": "Ďalší mesiac",
-    "nextYearAriaLabel": "Ďalší rok",
-    "prevMonthAriaLabel": "Predchádzajúci mesiac",
-    "prevYearAriaLabel": "Predchádzajúci rok"
+    "range": {
+      "title": "Select dates",
+      "header": "Enter dates"
+    },
+    "title": "Select date",
+    "header": "Enter date",
+    "input": {
+      "placeholder": "Enter date"
+    }
   },
   "noDataText": "Žiadne dostupné dáta",
   "carousel": {
@@ -43,12 +55,14 @@
     }
   },
   "calendar": {
-    "moreEvents": "{0} viac"
+    "moreEvents": "{0} ďalších",
+    "today": "Dnes"
   },
   "input": {
     "clear": "Vymazať {0}",
     "prependAction": "{0} akcií pred",
-    "appendAction": "{0} nasledovných akcií"
+    "appendAction": "{0} nasledovných akcií",
+    "otp": "Please enter OTP character {0}"
   },
   "fileInput": {
     "counter": "{0} súborov",
@@ -69,9 +83,18 @@
       "last": "Posledná stránka"
     }
   },
+  "stepper": {
+    "next": "Next",
+    "prev": "Previous"
+  },
   "rating": {
     "ariaLabel": {
       "item": "Hodnotenie {0} z {1}"
     }
+  },
+  "loading": "Loading...",
+  "infiniteScroll": {
+    "loadMore": "Load more",
+    "empty": "No more"
   }
 }
