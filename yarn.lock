@@ -250,12 +250,12 @@ __metadata:
     "@vuelidate/validators": 2.0.4
     "@vueuse/core": 10.7.1
     "@vueuse/integrations": 10.7.1
-    axios: 1.6.4
+    axios: 1.6.5
     dayjs: 1.11.10
     flatpickr: 4.6.13
     pinia: 2.1.7
     vue: 3.4.5
-    vue-i18n: 9.8.0
+    vue-i18n: 9.9.0
     vue-router: 4.2.5
     vuetify: 3.4.9
   peerDependenciesMeta:
