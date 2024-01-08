@@ -7,7 +7,7 @@ import { dateTimeNow } from '@/utils/datetime'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import ADatetimePicker from '@/components/ADatetimePicker.vue'
-import ADatetimePickerNew from '@/components/ADatetimePickerNew.vue'
+import ADatetimePickerNew from '@/components/datetime/ADatetimePickerNew.vue'
 
 const dateTime = ref<DatetimeUTCNullable>('2023-02-08T08:17:29.000000Z')
 const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)

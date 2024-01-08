@@ -5,6 +5,7 @@ import { computed, ref, unref } from 'vue'
 import { isDefined } from '@/utils/common'
 import useVuelidate, { type ErrorObject } from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
+import TimePicker from '@/components/datetime/TimePicker.vue'
 
 type TextFieldRef = null | { $el: HTMLElement }
 
@@ -139,41 +140,14 @@ const onTextFieldFocus = () => {
         </template>
 
         <VCard>
-          <VDatePicker color="primary" />
-          <div class="a-datetime-picker__time">
-            <div class="a-datetime-picker__hours">
-              <input
-                class="a-datetime-picker__time-input a-datetime-picker__time-input--hours"
-                type="number"
-                aria-label="Hour"
-                tabindex="-1"
-                step="1"
-                min="0"
-                max="23"
-                maxlength="2"
-              >
-              <div class="a-datetime-picker__arrow a-datetime-picker__arrow-up" />
-              <div class="a-datetime-picker__arrow a-datetime-picker__arrow-down" />
-            </div>
-            <span class="a-datetime-picker__time-separator">:</span>
-            <div class="a-datetime-picker__mins">
-              <input
-                class="a-datetime-picker__time-input a-datetime-picker__time-input--minutes"
-                type="number"
-                aria-label="Minute"
-                tabindex="-1"
-                step="1"
-                min="0"
-                max="59"
-                maxlength="2"
-              >
-              <div class="a-datetime-picker__arrow a-datetime-picker__arrow-up" />
-              <div class="a-datetime-picker__arrow a-datetime-picker__arrow-down" />
-            </div>
-          </div>
+          <VDatePicker
+            class="a-datetime-picker-calendar"
+            color="primary"
+          />
+          <TimePicker />
           <button
             type="button"
-            class="a-datetime-picker__now"
+            class="a-datetime-picker__now-button"
             tabindex="-1"
           >
             Teraz
@@ -215,6 +189,30 @@ const onTextFieldFocus = () => {
     .a-datetime-picker__clearable-icon {
       opacity: 0.6 !important;
     }
+  }
+
+  &__now-button {
+    width: 100%;
+    text-align: center;
+    font-size: 0.86rem;
+    font-family: "Roboto", sans-serif;
+    font-weight: bold;
+    line-height: 1.8;
+    padding: 6px 0;
+
+    &:hover {
+      background-color: rgba(0 0 0 / 5%);
+    }
+  }
+}
+
+.a-datetime-picker-calendar {
+  :deep(.v-picker-title) {
+    display: none;
+  }
+
+  :deep(.v-date-picker-header) {
+    padding-top: 12px;
   }
 }
 </style>
