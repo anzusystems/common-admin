@@ -1,11 +1,75 @@
 <script setup lang="ts">
+import { nextTick, ref, watch } from 'vue'
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const modelValue = defineModel<{ hours: number, minutes: number }>('modelValue', {
+  required: true,
+})
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const hours = ref<string | undefined>(String(modelValue.value.hours).padStart(2, '0'))
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const minutes = ref<string | undefined>(String(modelValue.value.minutes).padStart(2, '0'))
+
+const selectContent = async (event: FocusEvent) => {
+  const target = event.target as HTMLInputElement | null
+  await nextTick()
+  target?.select()
+}
+
+const onBlurHours = () => {
+  const parsedHours = parseInt(hours.value || '0')
+  hours.value = (parsedHours >= 0 && parsedHours <= 23) ? String(parsedHours).padStart(2, '0') : '00'
+}
+
+const onBlurMinutes = () => {
+  const parsedMinutes = parseInt(minutes.value || '0')
+  minutes.value = (parsedMinutes >= 0 && parsedMinutes <= 59) ? String(parsedMinutes).padStart(2, '0') : '00'
+}
+
+const increaseHours = () => {
+  const parsedHours = parseInt(hours.value || '0', 10)
+  const newHours = isNaN(parsedHours) ? 1 : (parsedHours + 1) % 24
+  hours.value = String(newHours).padStart(2, '0')
+}
+
+const decreaseHours = () => {
+  const parsedHours = parseInt(hours.value || '0', 10)
+  const newHours = isNaN(parsedHours) ? 23 : (parsedHours - 1 + 24) % 24
+  hours.value = String(newHours).padStart(2, '0')
+}
+
+const increaseMinutes = () => {
+  const parsedMinutes = parseInt(minutes.value || '0', 10)
+  const newMinutes = isNaN(parsedMinutes) ? 1 : (parsedMinutes + 1) % 60
+  minutes.value = String(newMinutes).padStart(2, '0')
+}
+
+const decreaseMinutes = () => {
+  const parsedMinutes = parseInt(minutes.value || '0', 10)
+  const newMinutes = isNaN(parsedMinutes) ? 59 : (parsedMinutes - 1 + 60) % 60
+  minutes.value = String(newMinutes).padStart(2, '0')
+}
+
+watch(
+  [hours, minutes],
+  ([newHours, newMinutes], [oldHours, oldMinutes]) => {
+    if (newHours === oldHours && newMinutes === oldMinutes) return
+    const hoursInt = parseInt(newHours ?? modelValue.value.hours.toString())
+    const minutesInt = parseInt(newMinutes ?? modelValue.value.minutes.toString())
+    if (hoursInt >= 0 && hoursInt <= 23 && minutesInt >= 0 && minutesInt <= 59) {
+      modelValue.value = { hours: hoursInt, minutes: minutesInt }
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
   <div class="a-datetime-picker-time">
     <div class="a-datetime-picker-time__item a-datetime-picker-time__item">
       <input
+        v-model="hours"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--hours"
         type="number"
         aria-label="Hour"
@@ -14,21 +78,26 @@
         min="0"
         max="23"
         maxlength="2"
+        @focus="selectContent"
+        @blur="onBlurHours"
       >
       <div class="a-datetime-picker-time__arrows">
         <VIcon
           icon="mdi-chevron-up"
           class="a-datetime-picker-time__arrow-up"
+          @click="increaseHours"
         />
         <VIcon
           icon="mdi-chevron-down"
           class="a-datetime-picker-time__arrow-down"
+          @click="decreaseHours"
         />
       </div>
     </div>
     <span class="a-datetime-picker-time__separator">:</span>
     <div class="a-datetime-picker-time__item">
       <input
+        v-model="minutes"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--minutes"
         type="number"
         aria-label="Minute"
@@ -37,15 +106,19 @@
         min="0"
         max="59"
         maxlength="2"
+        @focus="selectContent"
+        @blur="onBlurMinutes"
       >
       <div class="a-datetime-picker-time__arrows">
         <VIcon
           icon="mdi-chevron-up"
           class="a-datetime-picker-time__arrow-up"
+          @click="increaseMinutes"
         />
         <VIcon
           icon="mdi-chevron-down"
           class="a-datetime-picker-time__arrow-down"
+          @click="decreaseMinutes"
         />
       </div>
     </div>
@@ -101,6 +174,7 @@ $hover-bg-color: rgba(0 0 0 / 5%);
 
   &__input {
     width: 100%;
+    height: 100%;
     display: inline-block;
     background: transparent;
     -webkit-box-shadow: none;
@@ -110,7 +184,6 @@ $hover-bg-color: rgba(0 0 0 / 5%);
     text-align: center;
     margin: 0;
     padding: 0;
-    height: inherit;
     line-height: inherit;
     font-size: 1rem;
     position: relative;

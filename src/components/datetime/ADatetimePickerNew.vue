@@ -54,6 +54,8 @@ const emit = defineEmits<{
 const textFieldRef = ref<TextFieldRef>(null)
 const textFieldValue = ref('')
 
+const timePickerValue = ref({ hours: 12, minutes: 0 })
+
 const placeholderComputed = computed(() => {
   return props.type === 'datetime' ? 'dd.mm.yyyy hh:mm' : 'dd.mm.yyyy'
 })
@@ -144,7 +146,8 @@ const onTextFieldFocus = () => {
             class="a-datetime-picker-calendar"
             color="primary"
           />
-          <TimePicker />
+          {{ timePickerValue }}
+          <TimePicker v-model="timePickerValue" />
           <button
             type="button"
             class="a-datetime-picker__now-button"
