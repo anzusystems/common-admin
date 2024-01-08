@@ -7,6 +7,7 @@ import type { ValidationScope } from '@/types/Validation'
 import { CustomDataFormElementType } from '@/components/customDataForm/CustomDataFormElementTypes'
 import { isEmptyObject } from '@/utils/common'
 import { useValidate } from '@/validators/vuelidate/useValidate'
+import ABooleanSelect from '@/components/ABooleanSelect.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -108,6 +109,7 @@ const onBlur = () => {
     :label="config.name"
     :error-messages="errorMessageComputed"
     :counter="counter"
+    :readonly="config.attributes.readonly"
     :data-cy="'custom-field-' + config.property"
     @update:model-value="updateModelValue"
     @blur="onBlur"
@@ -126,6 +128,7 @@ const onBlur = () => {
     type="number"
     :label="config.name"
     :error-messages="errorMessageComputed"
+    :readonly="config.attributes.readonly"
     :data-cy="'custom-field-' + config.property"
     @update:model-value="updateModelValue"
     @blur="onBlur"
@@ -144,6 +147,7 @@ const onBlur = () => {
     :label="config.name"
     multiple
     chips
+    :readonly="config.attributes.readonly"
     :error-messages="errorMessageComputed"
     :data-cy="'custom-field-' + config.property"
     @update:model-value="updateModelValue"
@@ -161,10 +165,16 @@ const onBlur = () => {
     v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === true"
     :label="config.name"
     :model-value="modelValueComputed"
+    :readonly="config.attributes.readonly"
     :data-cy="'custom-field-' + config.property"
     @update:model-value="updateModelValue"
   />
-  <div v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === false">
-    optional boolean todo
-  </div>
+  <ABooleanSelect
+    v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === false"
+    :model-value="modelValueComputed"
+    :label="config.name"
+    :data-cy="'custom-field-' + config.property"
+    :readonly="config.attributes.readonly"
+    @update:model-value="updateModelValue"
+  />
 </template>
