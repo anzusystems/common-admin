@@ -87,8 +87,8 @@ const displayFormat = computed(() => {
 watch(
   () => props.modelValue,
   (newValue, oldValue) => {
+    console.log('watch modelValue', newValue, oldValue)
     if (newValue === oldValue) return
-    console.log(newValue)
     if (isNull(newValue) || isUndefined(newValue)) {
       datetimeInternal.value = null
       return
@@ -102,6 +102,7 @@ watch(
 watch(
   datePickerValue,
   (newValue, oldValue) => {
+    console.log('watch datePickerValue', newValue, oldValue)
     if (isNull(newValue) || isNull(datetimeInternal.value)) return
     if (isNull(newValue) && isNull(oldValue)) return
     if (newValue.getTime() === oldValue?.getTime()) return
@@ -112,7 +113,7 @@ watch(
 watch(
   timePickerValue,
   (newValue, oldValue) => {
-    console.log(newValue)
+    console.log('watch timePickerValue', newValue, oldValue)
     if (isNull(newValue) || isNull(datetimeInternal.value)) return
     if (newValue.hours === oldValue?.hours && newValue.minutes === oldValue?.minutes) return
     datetimeInternal.value = datetimeInternal.value.hour(newValue.hours).minute(newValue.minutes)
@@ -122,7 +123,7 @@ watch(
 watch(
   datetimeInternal,
   (newValue, oldValue) => {
-    console.log(newValue)
+    console.log('watch datetimeInternal', newValue, oldValue)
     if (isNull(newValue)) {
       textFieldValue.value = ''
       emit('update:modelValue', null)
@@ -146,7 +147,16 @@ const errorMessageComputed = computed(() => {
 
 const onTextFieldBlur = () => {
   const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '')
-  datetimeInternal.value = dayjs(filtered, displayFormat.value)
+  const parsed = dayjs(filtered, ['DD.MM.YYYY HH:mm', 'DD.MM.YYYY'])
+  if (parsed.isValid()) {
+    datetimeInternal.value = parsed
+    // textFieldValue.value = datetimeInternal.value.format(displayFormat.value)
+    v$.value.textFieldValue.$touch()
+    emit('blur')
+    return
+  }
+  datetimeInternal.value = null
+  // textFieldValue.value = ''
   v$.value.textFieldValue.$touch()
   emit('blur')
 }
