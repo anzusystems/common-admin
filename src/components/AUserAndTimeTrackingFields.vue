@@ -2,7 +2,7 @@
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { useI18n } from 'vue-i18n'
 import ARow from '@/components/ARow.vue'
-import ADatetime from '@/components/ADatetime.vue'
+import ADatetime from '@/components/datetime/ADatetime.vue'
 
 // todo add user details, find generic way for all systems
 

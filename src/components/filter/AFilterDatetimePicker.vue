@@ -2,7 +2,7 @@
 import type { Filter } from '@/types/Filter'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import ADatetimePicker from '@/components/ADatetimePicker.vue'
+import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
 
 const props = withDefaults(
   defineProps<{

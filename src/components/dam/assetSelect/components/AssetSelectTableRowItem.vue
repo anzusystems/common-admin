@@ -5,7 +5,7 @@ import { useAssetItemActions } from '@/components/dam/assetSelect/composables/as
 import AssetImagePreview from '@/components/dam/assetSelect/components/AssetImagePreview.vue'
 import type { DocId } from '@/types/common'
 import { prettyBytes } from '@/utils/file'
-import ADatetime from '@/components/ADatetime.vue'
+import ADatetime from '@/components/datetime/ADatetime.vue'
 import { toRef } from 'vue'
 
 const props = withDefaults(

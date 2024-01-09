@@ -1,13 +1,15 @@
 import type { OpUnitType, QUnitType } from 'dayjs'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { isNull, isUndefined } from '@/utils/common'
 import { stringToInt } from '@/utils/string'
 import type { DatetimeUTC, DatetimeUTCNullable } from '@/types/common'
 
 dayjs.extend(utc)
+dayjs.extend(customParseFormat)
 
-const SUFFIX = '.000000Z'
+export const SUFFIX = '.000000Z'
 const FORMAT = 'YYYY-MM-DDTHH:mm:ss'
 
 export const DATETIME_MIN = '1970-01-01T00:00:00.000000Z'

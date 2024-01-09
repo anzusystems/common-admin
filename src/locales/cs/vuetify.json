@@ -2,6 +2,10 @@
   "badge": "Štítek",
   "open": "Otevřít",
   "close": "Zavřít",
+  "confirmEdit": {
+    "ok": "OK",
+    "cancel": "Zrušit"
+  },
   "dataIterator": {
     "noResultsText": "Nenašli se žádné odpovídající záznamy",
     "loadingText": "Načítání záznamů ..."
@@ -27,12 +31,20 @@
     "lastPage": "Poslední strana",
     "pageText": "{0}-{1} z {2}"
   },
+  "dateRangeInput": {
+    "divider": "do"
+  },
   "datePicker": {
-    "itemsSelected": "{0} vybraných",
-    "nextMonthAriaLabel": "Další měsíc",
-    "nextYearAriaLabel": "Další rok",
-    "prevMonthAriaLabel": "Předchozí měsíc",
-    "prevYearAriaLabel": "Předchozí rok"
+    "itemsSelected": "{0} vybrán",
+    "range": {
+      "title": "Vyberte datumy",
+      "header": "Zadejte datumy"
+    },
+    "title": "Vyberte datum",
+    "header": "Zadejte datum",
+    "input": {
+      "placeholder": "Zadejte datum"
+    }
   },
   "noDataText": "Žádná dostupná data",
   "carousel": {
@@ -43,12 +55,14 @@
     }
   },
   "calendar": {
-    "moreEvents": "{0} více"
+    "moreEvents": "{0} více",
+    "today": "Dnes"
   },
   "input": {
     "clear": "Vymazat {0}",
     "prependAction": "{0} akcí před",
-    "appendAction": "{0} následujících akcí"
+    "appendAction": "{0} následujících akcí",
+    "otp": "Vložte výhradně OTP znaky {0}"
   },
   "fileInput": {
     "counter": "{0} souborů",
@@ -69,9 +83,18 @@
       "last": "Poslední stránka"
     }
   },
+  "stepper": {
+    "next": "Další",
+    "prev": "Předchozí"
+  },
   "rating": {
     "ariaLabel": {
       "item": "Hodnocení {0} z {1}"
     }
+  },
+  "loading": "Načítám...",
+  "infiniteScroll": {
+    "loadMore": "Načíst více",
+    "empty": "Žádné další"
   }
 }

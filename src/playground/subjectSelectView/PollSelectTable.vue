@@ -2,7 +2,7 @@
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
-import ADatetime from '@/components/ADatetime.vue'
+import ADatetime from '@/components/datetime/ADatetime.vue'
 import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
 import PollSelectFilter from '@/playground/subjectSelectView/PollSelectFilter.vue'
 import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'

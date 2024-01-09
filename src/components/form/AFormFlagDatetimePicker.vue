@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { computed, inject, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { isDefined, isFunction, isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
@@ -12,6 +11,7 @@ import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByU
 import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
+import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
 
 const props = withDefaults(
   defineProps<{

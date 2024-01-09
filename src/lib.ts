@@ -22,8 +22,8 @@ import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import APermissionGrantEditor from '@/components/permission/APermissionGrantEditor.vue'
 import APermissionValueChip from '@/components/permission/APermissionValueChip.vue'
 import Acl from '@/components/permission/Acl.vue'
-import ADatetime from '@/components/ADatetime.vue'
-import ADatetimePicker from '@/components/ADatetimePicker.vue'
+import ADatetime from '@/components/datetime/ADatetime.vue'
+import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
@@ -83,6 +83,7 @@ import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
 import ADatatable from '@/components/datatable/ADatatable.vue'
+import ABooleanSelect from '@/components/ABooleanSelect.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
@@ -556,6 +557,7 @@ export {
   ACollabManagement,
   AAssetSelect,
   ADatatable,
+  ABooleanSelect,
 
   // VIEWS
   ALoginView,
