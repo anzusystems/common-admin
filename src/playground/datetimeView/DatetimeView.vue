@@ -48,7 +48,10 @@ const changeToNow = () => {
       </VRow>
       <VRow>
         <VCol>
-          <ADatetimePickerNew v-model="dateTime" />
+          <ADatetimePickerNew
+            v-model="dateTime"
+            clearable
+          />
         </VCol>
       </VRow>
     </VCardText>

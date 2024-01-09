@@ -2,14 +2,20 @@
 import { nextTick, ref, watch } from 'vue'
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const modelValue = defineModel<{ hours: number, minutes: number }>('modelValue', {
+const modelValue = defineModel<null | { hours: number, minutes: number }>('modelValue', {
   required: true,
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const hours = ref<string | undefined>(String(modelValue.value.hours).padStart(2, '0'))
+const hours = ref<string | undefined>(
+  modelValue.value ? String(modelValue.value.hours).padStart(2, '0') : undefined
+)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const minutes = ref<string | undefined>(String(modelValue.value.minutes).padStart(2, '0'))
+const minutes = ref<string | undefined>(
+  modelValue.value ? String(modelValue.value.minutes).padStart(2, '0') : undefined
+)
+
+const hoursRef = ref<HTMLInputElement | null>(null)
 
 const selectContent = async (event: FocusEvent) => {
   const target = event.target as HTMLInputElement | null
@@ -51,24 +57,33 @@ const decreaseMinutes = () => {
   minutes.value = String(newMinutes).padStart(2, '0')
 }
 
+const focus = () => {
+  hoursRef.value?.focus()
+}
+
 watch(
   [hours, minutes],
   ([newHours, newMinutes], [oldHours, oldMinutes]) => {
     if (newHours === oldHours && newMinutes === oldMinutes) return
-    const hoursInt = parseInt(newHours ?? modelValue.value.hours.toString())
-    const minutesInt = parseInt(newMinutes ?? modelValue.value.minutes.toString())
+    const hoursInt = parseInt(newHours ?? (modelValue.value ? modelValue.value.hours.toString() : '12'))
+    const minutesInt = parseInt(newMinutes ?? (modelValue.value ? modelValue.value.minutes.toString() : '0'))
     if (hoursInt >= 0 && hoursInt <= 23 && minutesInt >= 0 && minutesInt <= 59) {
       modelValue.value = { hours: hoursInt, minutes: minutesInt }
     }
   },
   { immediate: true }
 )
+
+defineExpose({
+  focus,
+})
 </script>
 
 <template>
   <div class="a-datetime-picker-time">
     <div class="a-datetime-picker-time__item a-datetime-picker-time__item">
       <input
+        ref="hoursRef"
         v-model="hours"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--hours"
         type="number"

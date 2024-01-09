@@ -1,18 +1,20 @@
 <script lang="ts" setup>
 import 'flatpickr/dist/flatpickr.css'
 import type { DatetimeUTC } from '@/types/common'
-import { computed, ref, unref } from 'vue'
-import { isDefined } from '@/utils/common'
+import { computed, ref, watch } from 'vue'
+import { isDefined, isNull, isUndefined } from '@/utils/common'
 import useVuelidate, { type ErrorObject } from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import TimePicker from '@/components/datetime/TimePicker.vue'
-
-type TextFieldRef = null | { $el: HTMLElement }
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import { SUFFIX } from '@/utils/datetime'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 
 const props = withDefaults(
   defineProps<{
     modelValue: DatetimeUTC | null | undefined
-    type?: 'datetime' | 'date'
+    type?: 'datetime'
     label?: string
     hideLabel?: boolean
     clearable?: boolean
@@ -42,6 +44,7 @@ const props = withDefaults(
     errorMessages: undefined,
   }
 )
+
 const emit = defineEmits<{
   (e: 'change'): void
   (e: 'blur'): void
@@ -51,10 +54,17 @@ const emit = defineEmits<{
   (e: 'onClose'): void
 }>()
 
+dayjs.extend(utc)
+dayjs.extend(customParseFormat)
+
+type TextFieldRef = null | { $el: HTMLElement }
+
 const textFieldRef = ref<TextFieldRef>(null)
 const textFieldValue = ref('')
 
-const timePickerValue = ref({ hours: 12, minutes: 0 })
+const datePickerValue = ref<null | Date>(null)
+const timePickerValue = ref<null | { hours: number, minutes: number }>(null)
+const datetimeInternal = ref<null | dayjs.Dayjs>(null)
 
 const placeholderComputed = computed(() => {
   return props.type === 'datetime' ? 'dd.mm.yyyy hh:mm' : 'dd.mm.yyyy'
@@ -70,6 +80,63 @@ const rules = computed(() => {
 })
 const v$ = useVuelidate(rules, { textFieldValue })
 
+const displayFormat = computed(() => {
+  return props.type === 'datetime' ? 'DD.MM.YYYY HH:mm' : 'DD.MM.YYYY'
+})
+
+watch(
+  () => props.modelValue,
+  (newValue, oldValue) => {
+    if (newValue === oldValue) return
+    console.log(newValue)
+    if (isNull(newValue) || isUndefined(newValue)) {
+      datetimeInternal.value = null
+      return
+    }
+
+    datetimeInternal.value = dayjs(newValue)
+  },
+  { immediate: true }
+)
+
+watch(
+  datePickerValue,
+  (newValue, oldValue) => {
+    if (isNull(newValue) || isNull(datetimeInternal.value)) return
+    if (isNull(newValue) && isNull(oldValue)) return
+    if (newValue.getTime() === oldValue?.getTime()) return
+    datetimeInternal.value = dayjs(datetimeInternal.value).hour(newValue.getHours()).minute(newValue.getMinutes())
+  }
+)
+
+watch(
+  timePickerValue,
+  (newValue, oldValue) => {
+    console.log(newValue)
+    if (isNull(newValue) || isNull(datetimeInternal.value)) return
+    if (newValue.hours === oldValue?.hours && newValue.minutes === oldValue?.minutes) return
+    datetimeInternal.value = datetimeInternal.value.hour(newValue.hours).minute(newValue.minutes)
+  }
+)
+
+watch(
+  datetimeInternal,
+  (newValue, oldValue) => {
+    console.log(newValue)
+    if (isNull(newValue)) {
+      textFieldValue.value = ''
+      emit('update:modelValue', null)
+      return
+    }
+    if (newValue.isSame(oldValue)) return
+    textFieldValue.value = newValue.format(displayFormat.value)
+    datePickerValue.value = newValue.toDate()
+    timePickerValue.value = { hours: newValue.hour(), minutes: newValue.minute() }
+    emit('update:modelValue', newValue.utc().format('YYYY-MM-DDTHH:mm:00') + SUFFIX)
+  },
+  { immediate: true }
+)
+
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessages)) return props.errorMessages
   if (v$.value.textFieldValue.$errors.length)
@@ -78,31 +145,26 @@ const errorMessageComputed = computed(() => {
 })
 
 const onTextFieldBlur = () => {
-  // if (!flatickrRefIsInitialized(flatickrRef.value)) return
-  // const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '')
-  // const date = flatickrRef.value.fp.parseDate(filtered, altFormat.value)
-  // if (isUndefined(date)) {
-  //   if (isNull(props.defaultValue)) {
-  //     flatickrRef.value?.fp.clear(true)
-  //   } else {
-  //     flatickrRef.value?.fp.setDate(props.defaultValue, true)
-  //   }
-  //   v$.value.textFieldValue.$touch()
-  //   emit('blur')
-  //   return
-  // }
-  // flatickrRef.value?.fp.setDate(date, true)
-  // v$.value.textFieldValue.$touch()
+  const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '')
+  datetimeInternal.value = dayjs(filtered, displayFormat.value)
+  v$.value.textFieldValue.$touch()
   emit('blur')
 }
 
 const onClear = () => {
-  // flatpickrValue.value = props.defaultValue
-  emit('update:modelValue', unref(props.defaultValue))
+  if (isNull(props.defaultValue) || isUndefined(props.defaultValue)) {
+    datetimeInternal.value = null
+    return
+  }
+  datetimeInternal.value = dayjs()
 }
 
 const onTextFieldFocus = () => {
   emit('focus')
+}
+
+const now = () => {
+  datetimeInternal.value = dayjs()
 }
 </script>
 
@@ -143,15 +205,17 @@ const onTextFieldFocus = () => {
 
         <VCard>
           <VDatePicker
+            v-model="datePickerValue"
             class="a-datetime-picker-calendar"
             color="primary"
+            show-adjacent-months
           />
-          {{ timePickerValue }}
           <TimePicker v-model="timePickerValue" />
           <button
             type="button"
             class="a-datetime-picker__now-button"
             tabindex="-1"
+            @click="now"
           >
             Teraz
           </button>
