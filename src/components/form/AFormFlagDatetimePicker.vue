@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { computed, inject, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { isDefined, isFunction, isNull, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
@@ -12,6 +11,7 @@ import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByU
 import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
+import ADatetimePickerNew from '@/components/datetime/ADatetimePickerNew.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -200,7 +200,7 @@ watch(modelValueComputed, (newValue, oldValue) => {
   </div>
   <VExpandTransition>
     <div v-show="checkboxModel">
-      <ADatetimePicker
+      <ADatetimePickerNew
         v-model="modelValueComputed"
         :data-cy="dataCy"
         :error-messages="errorMessageComputed"
@@ -212,7 +212,7 @@ watch(modelValueComputed, (newValue, oldValue) => {
         @on-close="onClose"
       >
         <template #append-inner />
-      </ADatetimePicker>
+      </ADatetimePickerNew>
     </div>
   </VExpandTransition>
 </template>

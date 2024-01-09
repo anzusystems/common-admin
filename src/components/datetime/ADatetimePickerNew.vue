@@ -46,7 +46,6 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'change'): void
   (e: 'blur'): void
   (e: 'focus'): void
   (e: 'update:modelValue', data: DatetimeUTC | null | undefined): void
@@ -149,8 +148,8 @@ watch(
       return
     }
     const newUtcValue = newValue.utc().format('YYYY-MM-DDTHH:mm:ss') + SUFFIX
-    if (newUtcValue === props.modelValue) return
     textFieldValue.value = newValue.format(displayFormat.value)
+    if (newUtcValue === props.modelValue) return
     updateDateAndTimePickerOnlyWhenChanged(newValue)
     emit('update:modelValue', newUtcValue)
   },
@@ -163,7 +162,10 @@ watch(pickerOpened, (newValue) => {
     nextTick(() => {
       pickerKey.value++
     })
+    emit('onOpen')
+    return
   }
+  emit('onClose')
 })
 
 const errorMessageComputed = computed(() => {
@@ -177,6 +179,7 @@ const onTextFieldBlur = () => {
   const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '').trim()
   if (filtered.length === 0 && !props.required) {
     datetimeInternal.value = null
+    emit('blur')
     return
   }
   const parsed = dayjs(filtered, ['DD.MM.YYYY HH:mm', 'DD.MM.YYYY'])

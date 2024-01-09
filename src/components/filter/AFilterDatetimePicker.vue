@@ -2,7 +2,7 @@
 import type { Filter } from '@/types/Filter'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import ADatetimePicker from '@/components/ADatetimePicker.vue'
+import ADatetimePickerNew from '@/components/datetime/ADatetimePickerNew.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -34,7 +34,7 @@ const label = computed(() => {
 </script>
 
 <template>
-  <ADatetimePicker
+  <ADatetimePickerNew
     v-model="value"
     :data-cy="dataCy"
     :clearable="!modelValue.mandatory"
