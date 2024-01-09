@@ -168,7 +168,11 @@ const errorMessageComputed = computed(() => {
 })
 
 const onTextFieldBlur = () => {
-  const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '')
+  const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '').trim()
+  if (filtered.length === 0 && !props.required) {
+    datetimeInternal.value = null
+    return
+  }
   const parsed = dayjs(filtered, ['DD.MM.YYYY HH:mm', 'DD.MM.YYYY'])
   if (parsed.isValid()) {
     datetimeInternal.value = parsed
@@ -188,7 +192,7 @@ const onClear = () => {
     datetimeInternal.value = null
     return
   }
-  datetimeInternal.value = dayjs()
+  datetimeInternal.value = dayjs(props.defaultValue)
 }
 
 const onTextFieldFocus = () => {
@@ -318,10 +322,6 @@ const now = () => {
 
   :deep(.v-date-picker-header) {
     padding-top: 12px;
-  }
-
-  :deep(.v-date-picker-month__days) {
-    row-gap: 1px;
   }
 
   :deep(.v-date-picker-month) {
