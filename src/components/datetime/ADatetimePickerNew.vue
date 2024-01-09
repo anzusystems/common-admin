@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import 'flatpickr/dist/flatpickr.css'
 import type { DatetimeUTC } from '@/types/common'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, toRaw, watch } from 'vue'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import useVuelidate, { type ErrorObject } from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
@@ -61,11 +61,12 @@ type TextFieldRef = null | { $el: HTMLElement }
 
 const pickerOpened = ref(false)
 const pickerKey = ref(0)
+const timeKey = ref(0)
 const textFieldRef = ref<TextFieldRef>(null)
 const textFieldValue = ref('')
 
 const datePickerValue = ref<null | Date>(null)
-const timePickerValue = ref<null | { hours: number, minutes: number }>(null)
+const timePickerValue = ref<null | { hours: number; minutes: number }>(null)
 const datetimeInternal = ref<null | dayjs.Dayjs>(null)
 
 const placeholderComputed = computed(() => {
@@ -86,79 +87,84 @@ const displayFormat = computed(() => {
   return props.type === 'datetime' ? 'DD.MM.YYYY HH:mm' : 'DD.MM.YYYY'
 })
 
+const updateDateAndTimePickerOnlyWhenChanged = (newValue: dayjs.Dayjs | null) => {
+  if (isNull(newValue)) return
+  if (
+    !(
+      !isNull(timePickerValue.value) &&
+      newValue.hour() === timePickerValue.value.hours &&
+      newValue.minute() === timePickerValue.value.minutes
+    )
+  ) {
+    timePickerValue.value = { hours: newValue.hour(), minutes: newValue.minute() }
+  }
+  if (
+    !isNull(datePickerValue.value) &&
+    newValue.year() === datePickerValue.value.getFullYear() &&
+    newValue.month() === datePickerValue.value.getMonth() &&
+    newValue.date() === datePickerValue.value.getDate()
+  ) {
+    return
+  }
+  datePickerValue.value = newValue.toDate()
+}
+
 watch(
   () => props.modelValue,
   (newValue, oldValue) => {
-    console.log('watch modelValue', newValue, oldValue)
     if (newValue === oldValue) return
-    console.log('watch modelValue part1')
     if (isNull(newValue) || isUndefined(newValue)) {
       datetimeInternal.value = null
       return
     }
-    console.log('watch modelValue part2')
-    datetimeInternal.value = dayjs(newValue)
+    datetimeInternal.value = dayjs(newValue).millisecond(0)
   },
   { immediate: true }
 )
 
-watch(
-  datePickerValue,
-  (newValue, oldValue) => {
-    console.log('watch datePickerValue', newValue, oldValue)
-    if (isNull(newValue) || isNull(datetimeInternal.value)) return
-    if (isNull(newValue) && isNull(oldValue)) return
-    if (newValue.getTime() === oldValue?.getTime()) return
-    console.log('watch datePickerValue aaaaaaaaaaaaaaaaaaaaaaaa')
-    datetimeInternal.value =
-      dayjs(datetimeInternal.value).day(newValue.getDay()).month(newValue.getMonth()).year(newValue.getFullYear())
-  }
-)
+const watchDatePicker = (newValue: null | Date, internal: dayjs.Dayjs) => {
+  if (isNull(newValue)) return internal
+  return internal.set('date', newValue.getDate()).set('month', newValue.getMonth()).set('year', newValue.getFullYear())
+}
 
-watch(
-  timePickerValue,
-  (newValue, oldValue) => {
-    console.log('watch timePickerValue', newValue, oldValue)
-    if (isNull(newValue) || isNull(datetimeInternal.value)) return
-    if (newValue.hours === oldValue?.hours && newValue.minutes === oldValue?.minutes) return
-    console.log('watch timePickerValue aaaaaaaaaaaaaaaaaaaaaaaa')
-    datetimeInternal.value = datetimeInternal.value.hour(newValue.hours).minute(newValue.minutes)
-  }
-)
+const watchTimePicker = (newValue: null | { hours: number; minutes: number }, internal: dayjs.Dayjs) => {
+  if (isNull(newValue)) return internal
+  return internal.set('hour', newValue.hours).set('minute', newValue.minutes)
+}
+
+watch([timePickerValue, datePickerValue], ([newTimePickerValue, newDatePickerValue]) => {
+  let newDate = datetimeInternal.value ? datetimeInternal.value : dayjs().hour(12).minute(0).millisecond(0).second(0)
+  newDate = watchTimePicker(newTimePickerValue, newDate)
+  newDate = watchDatePicker(newDatePickerValue, newDate)
+  if (newDate.isSame(toRaw(datetimeInternal.value))) return
+  datetimeInternal.value = newDate
+})
 
 watch(
   datetimeInternal,
-  (newValue, oldValue) => {
-    console.log('watch datetimeInternal', newValue, oldValue)
+  (newValue) => {
     if (isNull(newValue)) {
-      console.log('watch datetimeInternal part1')
       textFieldValue.value = ''
       emit('update:modelValue', null)
       return
     }
-    console.log('watch datetimeInternal part2')
-    if (newValue.isSame(oldValue)) return
-    console.log('watch datetimeInternal part3')
+    const newUtcValue = newValue.utc().format('YYYY-MM-DDTHH:mm:ss') + SUFFIX
+    if (newUtcValue === props.modelValue) return
     textFieldValue.value = newValue.format(displayFormat.value)
-    datePickerValue.value = newValue.toDate()
-    timePickerValue.value = { hours: newValue.hour(), minutes: newValue.minute() }
-    emit('update:modelValue', newValue.utc().format('YYYY-MM-DDTHH:mm:00') + SUFFIX)
+    updateDateAndTimePickerOnlyWhenChanged(newValue)
+    emit('update:modelValue', newUtcValue)
   },
   { immediate: true }
 )
 
-watch(
-  pickerOpened,
-  (newValue) => {
-    if (newValue) {
-      // aaa
-      onTextFieldBlur()
-      nextTick(() => {
-        pickerKey.value++
-      })
-    }
-  },
-)
+watch(pickerOpened, (newValue) => {
+  if (newValue) {
+    onTextFieldBlur()
+    nextTick(() => {
+      pickerKey.value++
+    })
+  }
+})
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessages)) return props.errorMessages
@@ -180,7 +186,7 @@ const onTextFieldBlur = () => {
     emit('blur')
     return
   }
-  if(!isNull(datetimeInternal.value)) {
+  if (!isNull(datetimeInternal.value)) {
     textFieldValue.value = datetimeInternal.value.format(displayFormat.value)
   }
   v$.value.textFieldValue.$touch()
@@ -190,6 +196,8 @@ const onTextFieldBlur = () => {
 const onClear = () => {
   if (isNull(props.defaultValue) || isUndefined(props.defaultValue)) {
     datetimeInternal.value = null
+    datePickerValue.value = null
+    timePickerValue.value = null
     return
   }
   datetimeInternal.value = dayjs(props.defaultValue)
@@ -200,9 +208,10 @@ const onTextFieldFocus = () => {
 }
 
 const now = () => {
-  datetimeInternal.value = dayjs()
+  datetimeInternal.value = dayjs().second(0).millisecond(0)
   nextTick(() => {
     pickerKey.value++
+    timeKey.value++
   })
 }
 </script>
@@ -232,7 +241,7 @@ const now = () => {
         location="bottom end"
         origin="top end"
         :close-on-content-click="false"
-        @update:model-value="value => pickerOpened = value"
+        @update:model-value="(value) => (pickerOpened = value)"
       >
         <template #activator="{ props: menuProps }">
           <VIcon
@@ -251,7 +260,10 @@ const now = () => {
             color="primary"
             show-adjacent-months
           />
-          <TimePicker v-model="timePickerValue" />
+          <TimePicker
+            :key="timeKey"
+            v-model="timePickerValue"
+          />
           <button
             type="button"
             class="a-datetime-picker__now-button"
@@ -271,7 +283,8 @@ const now = () => {
       v-if="!hideLabel"
       #label
     >
-      {{ label }}<span
+      {{ label
+      }}<span
         v-if="required"
         class="required"
       />
@@ -304,7 +317,7 @@ const now = () => {
     width: 100%;
     text-align: center;
     font-size: 0.86rem;
-    font-family: "Roboto", sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-weight: bold;
     line-height: 1.8;
     padding: 6px 0;

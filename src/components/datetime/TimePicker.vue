@@ -8,11 +8,11 @@ const modelValue = defineModel<null | { hours: number, minutes: number }>('model
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const hours = ref<string | undefined>(
-  modelValue.value ? String(modelValue.value.hours).padStart(2, '0') : undefined
+  modelValue.value ? String(modelValue.value.hours).padStart(2, '0') : '12'
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const minutes = ref<string | undefined>(
-  modelValue.value ? String(modelValue.value.minutes).padStart(2, '0') : undefined
+  modelValue.value ? String(modelValue.value.minutes).padStart(2, '0') : '00'
 )
 
 const hoursRef = ref<HTMLInputElement | null>(null)
@@ -34,25 +34,25 @@ const onBlurMinutes = () => {
 }
 
 const increaseHours = () => {
-  const parsedHours = parseInt(hours.value || '0', 10)
+  const parsedHours = parseInt(hours.value || '0')
   const newHours = isNaN(parsedHours) ? 1 : (parsedHours + 1) % 24
   hours.value = String(newHours).padStart(2, '0')
 }
 
 const decreaseHours = () => {
-  const parsedHours = parseInt(hours.value || '0', 10)
+  const parsedHours = parseInt(hours.value || '0')
   const newHours = isNaN(parsedHours) ? 23 : (parsedHours - 1 + 24) % 24
   hours.value = String(newHours).padStart(2, '0')
 }
 
 const increaseMinutes = () => {
-  const parsedMinutes = parseInt(minutes.value || '0', 10)
+  const parsedMinutes = parseInt(minutes.value || '0')
   const newMinutes = isNaN(parsedMinutes) ? 1 : (parsedMinutes + 1) % 60
   minutes.value = String(newMinutes).padStart(2, '0')
 }
 
 const decreaseMinutes = () => {
-  const parsedMinutes = parseInt(minutes.value || '0', 10)
+  const parsedMinutes = parseInt(minutes.value || '0')
   const newMinutes = isNaN(parsedMinutes) ? 59 : (parsedMinutes - 1 + 60) % 60
   minutes.value = String(newMinutes).padStart(2, '0')
 }
@@ -71,7 +71,6 @@ watch(
       modelValue.value = { hours: hoursInt, minutes: minutesInt }
     }
   },
-  { immediate: true }
 )
 
 defineExpose({
