@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
+import { dateTimeEndOfDay, dateTimeStartOfDay } from '@/utils/datetime'
 
 const makeFilter = makeFilterHelper('system', 'subject')
 
@@ -26,10 +27,22 @@ const filter = reactive({
     ...makeFilter({ name: 'url' }),
   },
   publishedAtFrom: {
-    ...makeFilter({ name: 'publishedAtFrom' }),
+    ...makeFilter({
+      name: 'publishedAtFrom',
+      field: 'publishedAt',
+      variant: 'gte',
+      default: dateTimeStartOfDay(-100),
+      mandatory: true,
+    }),
   },
   publishedAtUntil: {
-    ...makeFilter({ name: 'publishedAtUntil' }),
+    ...makeFilter({
+      name: 'publishedAtUntil',
+      field: 'publishedAt',
+      variant: 'lte',
+      default: dateTimeEndOfDay(),
+      mandatory: true,
+    }),
   },
 })
 

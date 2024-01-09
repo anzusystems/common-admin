@@ -89,23 +89,20 @@ const displayFormat = computed(() => {
 const updateDateAndTimePickerOnlyWhenChanged = (newValue: dayjs.Dayjs | null) => {
   if (isNull(newValue)) return
   if (
-    !(
-      !isNull(timePickerValue.value) &&
-      newValue.hour() === timePickerValue.value.hours &&
-      newValue.minute() === timePickerValue.value.minutes
-    )
+    isNull(timePickerValue.value) ||
+    newValue.hour() !== timePickerValue.value.hours ||
+    newValue.minute() !== timePickerValue.value.minutes
   ) {
     timePickerValue.value = { hours: newValue.hour(), minutes: newValue.minute() }
   }
   if (
-    !isNull(datePickerValue.value) &&
-    newValue.year() === datePickerValue.value.getFullYear() &&
-    newValue.month() === datePickerValue.value.getMonth() &&
-    newValue.date() === datePickerValue.value.getDate()
+    isNull(datePickerValue.value) ||
+    newValue.year() !== datePickerValue.value.getFullYear() ||
+    newValue.month() !== datePickerValue.value.getMonth() ||
+    newValue.date() !== datePickerValue.value.getDate()
   ) {
-    return
+    datePickerValue.value = newValue.toDate()
   }
-  datePickerValue.value = newValue.toDate()
 }
 
 watch(
@@ -116,7 +113,7 @@ watch(
       datetimeInternal.value = null
       return
     }
-    datetimeInternal.value = dayjs(newValue).millisecond(0)
+    datetimeInternal.value = dayjs(newValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ').millisecond(0)
   },
   { immediate: true }
 )
@@ -132,9 +129,18 @@ const watchTimePicker = (newValue: null | { hours: number; minutes: number }, in
 }
 
 watch([timePickerValue, datePickerValue], ([newTimePickerValue, newDatePickerValue]) => {
-  let newDate = datetimeInternal.value ? datetimeInternal.value : dayjs().hour(12).minute(0).millisecond(0).second(0)
-  newDate = watchTimePicker(newTimePickerValue, newDate)
-  newDate = watchDatePicker(newDatePickerValue, newDate)
+  let newDate: dayjs.Dayjs | null = null
+
+  if (!isNull(datetimeInternal.value)) {
+    newDate = datetimeInternal.value
+  } else if (!isNull(props.modelValue)) {
+    newDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
+  } else {
+    newDate = dayjs().hour(12).minute(0).second(0).millisecond(0)
+  }
+
+  newDate = watchTimePicker(newTimePickerValue, newDate!)
+  newDate = watchDatePicker(newDatePickerValue, newDate!)
   if (newDate.isSame(toRaw(datetimeInternal.value))) return
   datetimeInternal.value = newDate
 })
@@ -149,8 +155,8 @@ watch(
     }
     const newUtcValue = newValue.utc().format('YYYY-MM-DDTHH:mm:ss') + SUFFIX
     textFieldValue.value = newValue.format(displayFormat.value)
-    if (newUtcValue === props.modelValue) return
     updateDateAndTimePickerOnlyWhenChanged(newValue)
+    if (newUtcValue === props.modelValue) return
     emit('update:modelValue', newUtcValue)
   },
   { immediate: true }
@@ -184,7 +190,13 @@ const onTextFieldBlur = () => {
   }
   const parsed = dayjs(filtered, ['DD.MM.YYYY HH:mm', 'DD.MM.YYYY'])
   if (parsed.isValid()) {
-    datetimeInternal.value = parsed
+    // keep seconds from original model
+    let seconds = 0
+    if(!isNull(props.modelValue)) {
+      const modelDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
+      if (modelDate.isValid()) seconds = modelDate.second()
+    }
+    datetimeInternal.value = parsed.second(seconds)
     v$.value.textFieldValue.$touch()
     emit('blur')
     return
@@ -203,7 +215,7 @@ const onClear = () => {
     timePickerValue.value = null
     return
   }
-  datetimeInternal.value = dayjs(props.defaultValue)
+  datetimeInternal.value = dayjs(props.defaultValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
 }
 
 const onTextFieldFocus = () => {

@@ -5,6 +5,7 @@ import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import AFilterInteger from '@/components/filter/AFilterInteger.vue'
 import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterMixed from '@/components/filter/AFilterMixed.vue'
+import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
 
 const emit = defineEmits<{
   (e: 'submitFilter'): void
@@ -68,6 +69,18 @@ const onAnyFilterUpdate = () => {
         >
           <AFilterString
             v-model="filter.text"
+            @update:model-value="onAnyFilterUpdate"
+          />
+        </VCol>
+        <VCol cols="6">
+          <AFilterDatetimePicker
+            v-model="filter.publishedAtFrom"
+            @update:model-value="onAnyFilterUpdate"
+          />
+        </VCol>
+        <VCol cols="6">
+          <AFilterDatetimePicker
+            v-model="filter.publishedAtUntil"
             @update:model-value="onAnyFilterUpdate"
           />
         </VCol>
