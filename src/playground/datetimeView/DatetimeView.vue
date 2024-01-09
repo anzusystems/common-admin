@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import ADatetime from '@/components/ADatetime.vue'
+import ADatetime from '@/components/datetime/ADatetime.vue'
 import type { DatetimeUTCNullable } from '@/types/common'
 import { ref } from 'vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import { dateTimeNow } from '@/utils/datetime'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import ADatetimePickerNew from '@/components/datetime/ADatetimePickerNew.vue'
+import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
 
 const dateTime = ref<DatetimeUTCNullable>('2023-02-08T08:17:29.000000Z')
 const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)
@@ -46,7 +46,7 @@ const changeToNow = () => {
       </p>
       <VRow>
         <VCol>
-          <ADatetimePickerNew
+          <ADatetimePicker
             v-model="dateTime"
             label="default value null, not clearable, not required"
             :default-value="null"
@@ -55,7 +55,7 @@ const changeToNow = () => {
       </VRow>
       <VRow>
         <VCol>
-          <ADatetimePickerNew
+          <ADatetimePicker
             v-model="dateTimeDefaultNull"
             label="init value null, default value null, clearable, not required"
             :default-value="null"
@@ -65,7 +65,7 @@ const changeToNow = () => {
       </VRow>
       <VRow>
         <VCol>
-          <ADatetimePickerNew
+          <ADatetimePicker
             v-model="dateTime"
             label="default value 2020-01-01T09:15:00.000000Z, clearable, required"
             default-value="2020-01-01T09:15:00.000000Z"

@@ -10,7 +10,7 @@ import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } 
 import { useCollabField } from '@/components/collab/composables/collabField'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
-import ADatetimePickerNew from '@/components/datetime/ADatetimePickerNew.vue'
+import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -148,7 +148,7 @@ watch(modelValueComputed, (newValue, oldValue) => {
 </script>
 
 <template>
-  <ADatetimePickerNew
+  <ADatetimePicker
     v-model="modelValueComputed"
     :data-cy="dataCy"
     :error-messages="errorMessageComputed"
@@ -173,5 +173,5 @@ watch(modelValueComputed, (newValue, oldValue) => {
         />
       </slot>
     </template>
-  </ADatetimePickerNew>
+  </ADatetimePicker>
 </template>

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import 'flatpickr/dist/flatpickr.css'
 import type { DatetimeUTC } from '@/types/common'
 import { computed, nextTick, ref, toRaw, watch } from 'vue'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
