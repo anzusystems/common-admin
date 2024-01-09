@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import 'flatpickr/dist/flatpickr.css'
 import type { DatetimeUTC } from '@/types/common'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import useVuelidate, { type ErrorObject } from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
@@ -59,6 +59,8 @@ dayjs.extend(customParseFormat)
 
 type TextFieldRef = null | { $el: HTMLElement }
 
+const pickerOpened = ref(false)
+const pickerKey = ref(0)
 const textFieldRef = ref<TextFieldRef>(null)
 const textFieldValue = ref('')
 
@@ -89,11 +91,12 @@ watch(
   (newValue, oldValue) => {
     console.log('watch modelValue', newValue, oldValue)
     if (newValue === oldValue) return
+    console.log('watch modelValue part1')
     if (isNull(newValue) || isUndefined(newValue)) {
       datetimeInternal.value = null
       return
     }
-
+    console.log('watch modelValue part2')
     datetimeInternal.value = dayjs(newValue)
   },
   { immediate: true }
@@ -106,7 +109,9 @@ watch(
     if (isNull(newValue) || isNull(datetimeInternal.value)) return
     if (isNull(newValue) && isNull(oldValue)) return
     if (newValue.getTime() === oldValue?.getTime()) return
-    datetimeInternal.value = dayjs(datetimeInternal.value).hour(newValue.getHours()).minute(newValue.getMinutes())
+    console.log('watch datePickerValue aaaaaaaaaaaaaaaaaaaaaaaa')
+    datetimeInternal.value =
+      dayjs(datetimeInternal.value).day(newValue.getDay()).month(newValue.getMonth()).year(newValue.getFullYear())
   }
 )
 
@@ -116,6 +121,7 @@ watch(
     console.log('watch timePickerValue', newValue, oldValue)
     if (isNull(newValue) || isNull(datetimeInternal.value)) return
     if (newValue.hours === oldValue?.hours && newValue.minutes === oldValue?.minutes) return
+    console.log('watch timePickerValue aaaaaaaaaaaaaaaaaaaaaaaa')
     datetimeInternal.value = datetimeInternal.value.hour(newValue.hours).minute(newValue.minutes)
   }
 )
@@ -125,17 +131,33 @@ watch(
   (newValue, oldValue) => {
     console.log('watch datetimeInternal', newValue, oldValue)
     if (isNull(newValue)) {
+      console.log('watch datetimeInternal part1')
       textFieldValue.value = ''
       emit('update:modelValue', null)
       return
     }
+    console.log('watch datetimeInternal part2')
     if (newValue.isSame(oldValue)) return
+    console.log('watch datetimeInternal part3')
     textFieldValue.value = newValue.format(displayFormat.value)
     datePickerValue.value = newValue.toDate()
     timePickerValue.value = { hours: newValue.hour(), minutes: newValue.minute() }
     emit('update:modelValue', newValue.utc().format('YYYY-MM-DDTHH:mm:00') + SUFFIX)
   },
   { immediate: true }
+)
+
+watch(
+  pickerOpened,
+  (newValue) => {
+    if (newValue) {
+      // aaa
+      onTextFieldBlur()
+      nextTick(() => {
+        pickerKey.value++
+      })
+    }
+  },
 )
 
 const errorMessageComputed = computed(() => {
@@ -150,13 +172,13 @@ const onTextFieldBlur = () => {
   const parsed = dayjs(filtered, ['DD.MM.YYYY HH:mm', 'DD.MM.YYYY'])
   if (parsed.isValid()) {
     datetimeInternal.value = parsed
-    // textFieldValue.value = datetimeInternal.value.format(displayFormat.value)
     v$.value.textFieldValue.$touch()
     emit('blur')
     return
   }
-  datetimeInternal.value = null
-  // textFieldValue.value = ''
+  if(!isNull(datetimeInternal.value)) {
+    textFieldValue.value = datetimeInternal.value.format(displayFormat.value)
+  }
   v$.value.textFieldValue.$touch()
   emit('blur')
 }
@@ -175,6 +197,9 @@ const onTextFieldFocus = () => {
 
 const now = () => {
   datetimeInternal.value = dayjs()
+  nextTick(() => {
+    pickerKey.value++
+  })
 }
 </script>
 
@@ -203,6 +228,7 @@ const now = () => {
         location="bottom end"
         origin="top end"
         :close-on-content-click="false"
+        @update:model-value="value => pickerOpened = value"
       >
         <template #activator="{ props: menuProps }">
           <VIcon
@@ -215,6 +241,7 @@ const now = () => {
 
         <VCard>
           <VDatePicker
+            :key="pickerKey"
             v-model="datePickerValue"
             class="a-datetime-picker-calendar"
             color="primary"
@@ -255,6 +282,7 @@ const now = () => {
   }
 
   &__calendar-icon {
+    margin-top: 2px;
     opacity: 0.6 !important;
   }
 
