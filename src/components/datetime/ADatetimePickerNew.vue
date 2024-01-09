@@ -10,6 +10,7 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { SUFFIX } from '@/utils/datetime'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -20,7 +21,6 @@ const props = withDefaults(
     clearable?: boolean
     disabled?: boolean
     hideDetails?: boolean
-    minNow?: boolean
     required?: boolean
     hideSetToNow?: boolean
     placeholder?: string
@@ -35,7 +35,6 @@ const props = withDefaults(
     clearable: false,
     disabled: false,
     hideDetails: false,
-    minNow: false,
     required: false,
     hideSetToNow: false,
     placeholder: '',
@@ -67,6 +66,8 @@ const textFieldValue = ref('')
 const datePickerValue = ref<null | Date>(null)
 const timePickerValue = ref<null | { hours: number; minutes: number }>(null)
 const datetimeInternal = ref<null | dayjs.Dayjs>(null)
+
+const { t } = useI18n()
 
 const placeholderComputed = computed(() => {
   return props.type === 'datetime' ? 'dd.mm.yyyy hh:mm' : 'dd.mm.yyyy'
@@ -255,7 +256,7 @@ const now = () => {
           />
         </template>
 
-        <VCard>
+        <VCard v-if="pickerOpened">
           <VDatePicker
             :key="pickerKey"
             v-model="datePickerValue"
@@ -273,7 +274,7 @@ const now = () => {
             tabindex="-1"
             @click="now"
           >
-            Teraz
+            {{ t('common.time.now') }}
           </button>
         </VCard>
       </VMenu>

@@ -10,5 +10,6 @@
     "remainingMinutes": "{value} m",
     "remainingHours": "{value} h",
     "remainingDays": "{value} d"
-  }
+  },
+  "now": "Teď"
 }
