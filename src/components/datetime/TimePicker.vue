@@ -161,11 +161,11 @@ $hover-bg-color: rgba(0 0 0 / 5%);
     font-weight: bold;
     font-size: 1.2rem;
     text-align: center;
-    font-family: "Roboto", sans-serif;
+    font-family: Roboto, sans-serif;
     min-height: 40px;
     padding: 0 5px;
     display: flex;
-    align-items: center; /* Vertical alignment */
+    align-items: center;
   }
 
   &__arrows {
@@ -191,6 +191,7 @@ $hover-bg-color: rgba(0 0 0 / 5%);
     height: 100%;
     display: inline-block;
     background: transparent;
+    /* stylelint-disable-next-line */
     -webkit-box-shadow: none;
     box-shadow: none;
     border: 0;
@@ -201,9 +202,12 @@ $hover-bg-color: rgba(0 0 0 / 5%);
     line-height: inherit;
     font-size: 1rem;
     position: relative;
+    /* stylelint-disable-next-line */
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
+    /* stylelint-disable-next-line */
     -webkit-appearance: textfield;
+    /* stylelint-disable-next-line */
     -moz-appearance: textfield;
     appearance: textfield;
     outline: none;
@@ -215,6 +219,7 @@ $hover-bg-color: rgba(0 0 0 / 5%);
 
   &__input::-webkit-inner-spin-button,
   &__input::-webkit-outer-spin-button {
+    /* stylelint-disable-next-line */
     -webkit-appearance: none;
     margin: 0;
   }

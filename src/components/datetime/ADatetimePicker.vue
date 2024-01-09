@@ -320,7 +320,7 @@ const now = () => {
     width: 100%;
     text-align: center;
     font-size: 0.86rem;
-    font-family: 'Roboto', sans-serif;
+    font-family: Roboto, sans-serif;
     font-weight: bold;
     line-height: 1.8;
     padding: 6px 0;
