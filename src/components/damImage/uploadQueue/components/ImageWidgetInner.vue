@@ -58,6 +58,7 @@ const props = withDefaults(
     configName?: string
     collab?: CollabComponentConfig
     label?: string | undefined
+    required?: boolean
     readonly?: boolean
     dataCy?: string | undefined
     expandOptions?: boolean
@@ -70,6 +71,7 @@ const props = withDefaults(
     configName: 'default',
     collab: undefined,
     label: undefined,
+    required: false,
     image: undefined,
     readonly: false,
     lockable: false,
@@ -445,7 +447,11 @@ defineExpose({
         v-if="label"
         class="font-weight-bold text-subtitle-2"
       >
-        {{ label }}
+        {{ label
+        }}<span
+          v-if="required"
+          class="required-mark"
+        />
       </h4>
       <div class="d-flex">
         <div v-if="isLocked && collab">
@@ -486,6 +492,10 @@ defineExpose({
                 </VBtn>
               </template>
             </AFileInput>
+            <span
+              v-if="required"
+              class="required-mark ml-2"
+            />
           </div>
           <VBtn
             v-else
