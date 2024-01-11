@@ -11,7 +11,7 @@ export interface ImageAware {
     licenceId: IntegerId
     regionPosition: number
   }
-  position: number
+  position?: number
   // licences: ImageWidgetImageLicence[]
 }
 

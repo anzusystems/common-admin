@@ -106,6 +106,7 @@ const fetchImagesOnLoad = async () => {
     const imagesRes = await fetchImageListByIds(imageClient, props.modelValue)
     imageStore.setImages(
       imagesRes.map((imageRes) => {
+        if (isUndefined(imageRes.position)) throw new Error('Image object needs position field!')
         imageStore.updateMaxPositionIfGreater(imageRes.position)
         return {
           key: generateUUIDv1(),

@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue'
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const modelValue = defineModel<null | { hours: number, minutes: number }>('modelValue', {
+// eslint-disable-next-line vue/no-ref-object-reactivity-loss
+const modelValue = defineModel<null | { hours: number; minutes: number }>('modelValue', {
   required: true,
 })
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const hours = ref<string | undefined>(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   modelValue.value ? String(modelValue.value.hours).padStart(2, '0') : '12'
 )
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const minutes = ref<string | undefined>(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   modelValue.value ? String(modelValue.value.minutes).padStart(2, '0') : '00'
 )
 
@@ -25,12 +25,12 @@ const selectContent = async (event: FocusEvent) => {
 
 const onBlurHours = () => {
   const parsedHours = parseInt(hours.value || '0')
-  hours.value = (parsedHours >= 0 && parsedHours <= 23) ? String(parsedHours).padStart(2, '0') : '00'
+  hours.value = parsedHours >= 0 && parsedHours <= 23 ? String(parsedHours).padStart(2, '0') : '00'
 }
 
 const onBlurMinutes = () => {
   const parsedMinutes = parseInt(minutes.value || '0')
-  minutes.value = (parsedMinutes >= 0 && parsedMinutes <= 59) ? String(parsedMinutes).padStart(2, '0') : '00'
+  minutes.value = parsedMinutes >= 0 && parsedMinutes <= 59 ? String(parsedMinutes).padStart(2, '0') : '00'
 }
 
 const increaseHours = () => {
@@ -61,17 +61,14 @@ const focus = () => {
   hoursRef.value?.focus()
 }
 
-watch(
-  [hours, minutes],
-  ([newHours, newMinutes], [oldHours, oldMinutes]) => {
-    if (newHours === oldHours && newMinutes === oldMinutes) return
-    const hoursInt = parseInt(newHours ?? (modelValue.value ? modelValue.value.hours.toString() : '12'))
-    const minutesInt = parseInt(newMinutes ?? (modelValue.value ? modelValue.value.minutes.toString() : '0'))
-    if (hoursInt >= 0 && hoursInt <= 23 && minutesInt >= 0 && minutesInt <= 59) {
-      modelValue.value = { hours: hoursInt, minutes: minutesInt }
-    }
-  },
-)
+watch([hours, minutes], ([newHours, newMinutes], [oldHours, oldMinutes]) => {
+  if (newHours === oldHours && newMinutes === oldMinutes) return
+  const hoursInt = parseInt(newHours ?? (modelValue.value ? modelValue.value.hours.toString() : '12'))
+  const minutesInt = parseInt(newMinutes ?? (modelValue.value ? modelValue.value.minutes.toString() : '0'))
+  if (hoursInt >= 0 && hoursInt <= 23 && minutesInt >= 0 && minutesInt <= 59) {
+    modelValue.value = { hours: hoursInt, minutes: minutesInt }
+  }
+})
 
 defineExpose({
   focus,
@@ -169,7 +166,7 @@ $hover-bg-color: rgba(0 0 0 / 5%);
   }
 
   &__arrows {
-    display:flex;
+    display: flex;
     flex-direction: column;
     visibility: hidden;
 
@@ -181,7 +178,7 @@ $hover-bg-color: rgba(0 0 0 / 5%);
       cursor: pointer;
 
       &:hover {
-        background-color: $hover-bg-color
+        background-color: $hover-bg-color;
       }
     }
   }
