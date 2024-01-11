@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.46.0-alpha3",
+  "version": "1.46.0-alpha4",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -23,6 +23,7 @@
     "playground:dev": "vite",
     "playground:build": "vite build",
     "build": "vite build --config vite.config.lib.ts",
+    "build:dev": "vite build --minify false --sourcemap true --config vite.config.lib.ts",
     "lib:build": "vite build --config vite.config.lib.ts",
     "ci": "run-s --print-name lint:tsc lint:eslint lint:stylelint",
     "lint": "yarn ci",
@@ -81,7 +82,7 @@
     "vite-plugin-dts": "^3.7.0",
     "vite-plugin-vuetify": "^2.0.1",
     "vitepress": "1.0.0-rc.36",
-    "vue": "3.4.9",
+    "vue": "3.4.10",
     "vue-i18n": "9.9.0",
     "vue-router": "4.2.5",
     "vue-tsc": "1.8.27",
@@ -96,7 +97,7 @@
     "axios": "1.6.5",
     "dayjs": "1.11.10",
     "pinia": "2.1.7",
-    "vue": "3.4.9",
+    "vue": "3.4.10",
     "vue-i18n": "9.9.0",
     "vue-router": "4.2.5",
     "vuetify": "3.4.10"
