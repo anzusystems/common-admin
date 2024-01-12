@@ -220,12 +220,12 @@ __metadata:
     npm-run-all: "npm:^4.1.5"
     pinia: "npm:2.1.7"
     postcss: "npm:^8.4.33"
-    postcss-html: "npm:^1.5.0"
+    postcss-html: "npm:^1.6.0"
     postcss-prefix-selector: "npm:^1.16.0"
     prettier: "npm:^3.1.1"
     rusha: "npm:^0.8.14"
     sass: "npm:^1.69.7"
-    socket.io-client: "npm:^4.7.3"
+    socket.io-client: "npm:^4.7.4"
     sortablejs: "npm:^1.15.1"
     stylelint: "npm:16.1.0"
     stylelint-config-recommended-vue: "npm:^1.5.0"
@@ -5574,15 +5574,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-html@npm:^1.5.0":
-  version: 1.5.0
-  resolution: "postcss-html@npm:1.5.0"
+"postcss-html@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "postcss-html@npm:1.6.0"
   dependencies:
     htmlparser2: "npm:^8.0.0"
     js-tokens: "npm:^8.0.0"
     postcss: "npm:^8.4.0"
     postcss-safe-parser: "npm:^6.0.0"
-  checksum: 639d99c90e7fe6b6dd5b2dd67b9958fdd86e7b9b05f2779bbb7168dfaf5790a149269cce7a899f3a44e60b94a6fefd2887e18175496d512144f33531b87689c2
+  checksum: e7df3da02c3af15c65f63d8c4f985139b8ea0d59cc830020dc976802cff7f6621d7784d55d368f99607d73ad32fcf6ca6e327facba20e69dd87dfce24d842ff9
   languageName: node
   linkType: hard
 
@@ -6234,15 +6234,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"socket.io-client@npm:^4.7.3":
-  version: 4.7.3
-  resolution: "socket.io-client@npm:4.7.3"
+"socket.io-client@npm:^4.7.4":
+  version: 4.7.4
+  resolution: "socket.io-client@npm:4.7.4"
   dependencies:
     "@socket.io/component-emitter": "npm:~3.1.0"
     debug: "npm:~4.3.2"
     engine.io-client: "npm:~6.5.2"
     socket.io-parser: "npm:~4.2.4"
-  checksum: 1ac5816afdee55d4501e1da301cd73679a466c1615cafc3bb22d2651e25a7f692cd16fd7f817ed629c6b934f323b977c84548dbfdbd1d4f73786be3d63f32e83
+  checksum: dff61e3e802424518ac95b55cf41bd0853644a63ece6a6104e815c836ae855b03901f0df83a0044567f653ef8da09177ae824fa17a1c2c188fbedfae21fb5827
   languageName: node
   linkType: hard
 
