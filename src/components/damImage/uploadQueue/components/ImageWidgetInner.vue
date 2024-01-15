@@ -16,7 +16,6 @@ import { DamAssetType } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import AFileInput from '@/components/file/AFileInput.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -48,6 +47,11 @@ import { useCommonAdminCollabOptions } from '@/components/collab/composables/com
 import { useCollabField } from '@/components/collab/composables/collabField'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import AFileInputDialog from '@/components/file/AFileInputDialog.vue'
+import {
+  CollabFieldLockStatus,
+  type CollabFieldLockStatusPayload,
+  CollabFieldLockType,
+} from '@/components/collab/composables/collabEventBus'
 
 const props = withDefaults(
   defineProps<{
@@ -104,6 +108,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     releaseCollabFieldLock,
     acquireCollabFieldLock,
     addCollabFieldDataChangeListener,
+    addCollabFieldLockStatusListener,
     lockedByUser,
     // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   } = useCollabField(props.collab.room, props.collab.field)
@@ -119,14 +124,13 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
     emit('update:modelValue', data.value as IntegerIdNullable)
   })
-  // addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
-  //   if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
-  //     kickFromWidget()
-  //   }
-  // })
-  // addCollabGatheringBufferDataListener(() => {
-  //   kickFromWidget()
-  // })
+  addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
+    if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
+      collabFieldLockReallyLocked.value = true
+    } else if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Acquire) {
+      collabFieldLockReallyLocked.value = false
+    }
+  })
 }
 const lockedLocal = ref(false)
 const acquireFieldLockLocal = () => {
@@ -153,7 +157,7 @@ if (isUndefined(imageWidgetExtSystemConfigs) || isUndefined(imageWidgetExtSystem
 
 const { t } = useI18n()
 
-const { showErrorsDefault } = useAlerts()
+const { showErrorsDefault, showError } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
@@ -201,12 +205,44 @@ const actionLibrary = () => {
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
 
-const onDrop = (files: File[]) => {
-  acquireFieldLockLocal()
-  cachedExtSystemId.value = props.uploadConfig.extSystem
-  uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
-  uploadQueueDialog.value = props.queueKey
+// this ref is updating only when the lock was really success or failure using sockets, needed for drop files
+const collabFieldLockReallyLocked = ref(false)
+
+const waitForFieldLockIsReallyAcquired = async () => {
+  if (!collabOptions.value.enabled || isUndefined(props.collab) {
+    return Promise.resolve(true)
+  }
+
+  let count = 0
+
+  const checkLock: () => (Promise<Awaited<boolean>>) = () => {
+    if (collabFieldLockReallyLocked.value) {
+      return Promise.resolve(true)
+    }
+
+    count++
+    if (count < 50) {
+      return new Promise((resolve) => setTimeout(() => resolve(checkLock()), 100))
+    }
+
+    return Promise.reject(false)
+  }
+
+  return checkLock()
 }
+
+const onDrop = async (files: File[]) => {
+  acquireFieldLockLocal()
+  try {
+    await waitForFieldLockIsReallyAcquired()
+    cachedExtSystemId.value = props.uploadConfig.extSystem
+    uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
+    uploadQueueDialog.value = props.queueKey
+  } catch (e) {
+    showError('Unable to lock image widget by current user.')
+  }
+}
+
 const onFileInput = (files: File[]) => {
   cachedExtSystemId.value = props.uploadConfig.extSystem
   uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
