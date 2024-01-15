@@ -209,7 +209,7 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const collabFieldLockReallyLocked = ref(false)
 
 const waitForFieldLockIsReallyAcquired = async () => {
-  if (!collabOptions.value.enabled || isUndefined(props.collab) {
+  if (!collabOptions.value.enabled || isUndefined(props.collab)) {
     return Promise.resolve(true)
   }
 
