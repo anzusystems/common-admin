@@ -47,6 +47,7 @@ import type {
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
+import AFileInputDialog from '@/components/file/AFileInputDialog.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -384,7 +385,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   }
 }
 
-const expandedUploadButton = ref<InstanceType<typeof AFileInput> | null>(null)
+const expandedUploadDialog = ref<InstanceType<typeof AFileInputDialog> | null>(null)
 
 const onDropzoneClick = () => {
   if (isLocked.value) return
@@ -393,7 +394,7 @@ const onDropzoneClick = () => {
     clickMenuOpened.value = true
     return
   }
-  expandedUploadButton.value?.activate()
+  expandedUploadDialog.value?.activate()
 }
 
 const detailDialogMetadataComponent = ref<InstanceType<typeof ImageDetailDialogMetadata> | null>(null)
@@ -479,8 +480,8 @@ defineExpose({
               <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
               <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
             </VBtn>
-            <AFileInput
-              ref="expandedUploadButton"
+            <AFileInputDialog
+              ref="expandedUploadDialog"
               :file-input-key="uploadQueue?.fileInputKey"
               :accept="uploadAccept"
               :max-sizes="uploadSizes"
@@ -491,7 +492,7 @@ defineExpose({
                   {{ t('common.damImage.image.button.upload') }}
                 </VBtn>
               </template>
-            </AFileInput>
+            </AFileInputDialog>
             <span
               v-if="required"
               class="required-mark ml-2"
@@ -532,7 +533,7 @@ defineExpose({
                       <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
                     </VListItemTitle>
                   </VListItem>
-                  <AFileInput
+                  <AFileInputDialog
                     :file-input-key="uploadQueue?.fileInputKey"
                     :accept="uploadAccept"
                     :max-sizes="uploadSizes"
@@ -543,7 +544,7 @@ defineExpose({
                         {{ t('common.damImage.image.button.upload') }}
                       </VListItem>
                     </template>
-                  </AFileInput>
+                  </AFileInputDialog>
                   <VListItem
                     v-if="imageLoaded"
                     @click="onImageDelete"
