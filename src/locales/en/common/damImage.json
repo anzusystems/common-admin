@@ -118,7 +118,16 @@
     "saveAndApply": "Uložiť a použiť",
     "title": "Nahrávanie",
     "titleDone": "Nahrávanie ukončené",
-    "stopConfirmQuestion": "Chcete ukončiť nahrávanie?"
+    "stopConfirmQuestion": "Chcete ukončiť nahrávanie?",
+    "limits": {
+      "uploadWarning": "Upload warning",
+      "onUploadLimit": "You are already on upload limit ({limit}). Finish upload, then try again.",
+      "addingOverLimit": "You are trying to upload additional {count} files",
+      "countAlreadyInProgress": "{count} file(s) are already in progress.",
+      "onlyAllowedAtOnce": "Only {count} are allowed to upload at once",
+      "cancelOrUploadFirst": "Do you want to cancel or upload only first {count} file(s)?",
+      "actionAddFirstItems": "Add first {count} file(s)"
+    }
   },
   "keyword": {
     "model": {
