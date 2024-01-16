@@ -126,10 +126,14 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     reload(undefined, modelValue.value)
   })
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
-    if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
+    if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Acquire) {
       collabFieldLockReallyLocked.value = true
-    } else if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Acquire) {
+    } else if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
       collabFieldLockReallyLocked.value = false
+    } else if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Release) {
+      collabFieldLockReallyLocked.value = false
+    } else if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Release) {
+      collabFieldLockReallyLocked.value = true
     }
   })
 }
@@ -235,6 +239,7 @@ const waitForFieldLockIsReallyAcquired = async () => {
 
 const onDrop = async (files: File[]) => {
   acquireFieldLockLocal()
+  console.log('acquire')
   try {
     await waitForFieldLockIsReallyAcquired()
     cachedExtSystemId.value = props.uploadConfig.extSystem
