@@ -23,7 +23,7 @@ import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
-import { computed, inject, ref, type ShallowRef, toRaw, watch } from 'vue'
+import { computed, inject, nextTick, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -55,7 +55,6 @@ import {
 
 const props = withDefaults(
   defineProps<{
-    modelValue: IntegerIdNullable
     queueKey: UploadQueueKey
     uploadConfig: ImageWidgetUploadConfig
     selectConfig: ImageWidgetSelectConfig[]
@@ -91,9 +90,10 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: IntegerIdNullable): void
   (e: 'afterMetadataSaveSuccess'): void
 }>()
+
+const modelValue = defineModel<IntegerIdNullable>({ required: true })
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
@@ -122,7 +122,8 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     { immediate: true }
   )
   addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-    emit('update:modelValue', data.value as IntegerIdNullable)
+    modelValue.value = data.value as IntegerIdNullable
+    reload(undefined, modelValue.value)
   })
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
     if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
@@ -173,9 +174,10 @@ const assetSelectDialog = ref(false)
 const metadataDialog = ref(false)
 const metadataDialogSaving = ref(false)
 const metadataDialogLoading = ref(false)
+const fileInputDialog = ref(false)
 
 const withoutImage = computed(() => {
-  return isNull(props.modelValue)
+  return isNull(modelValue.value)
 })
 
 // const { image, modelValue } = toRefs(props)
@@ -215,7 +217,7 @@ const waitForFieldLockIsReallyAcquired = async () => {
 
   let count = 0
 
-  const checkLock: () => (Promise<Awaited<boolean>>) = () => {
+  const checkLock: () => Promise<Awaited<boolean>> = () => {
     if (collabFieldLockReallyLocked.value) {
       return Promise.resolve(true)
     }
@@ -283,12 +285,12 @@ const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: 
 const reset = () => {
   resolvedSrc.value = imagePlaceholderPath
   resImage.value = null
-  emit('update:modelValue', null)
+  modelValue.value = null
   releaseFieldLock.value(null)
 }
 
 watch(
-  [() => props.image, () => props.modelValue],
+  [() => props.image, modelValue],
   async ([newImage, newImageId]) => {
     await reload(newImage, newImageId)
   },
@@ -332,8 +334,8 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       },
       position: 1,
     }
-    if (!isNull(props.modelValue)) {
-      image.id = props.modelValue
+    if (!isNull(modelValue.value)) {
+      image.id = modelValue.value
     }
     imageStore.setImageDetail(image)
     metadataDialogLoading.value = false
@@ -375,7 +377,7 @@ const onMetadataDialogConfirm = async () => {
       ? await updateImage(imageClient, imageStore.imageDetail.id, imageStore.imageDetail)
       : await createImage(imageClient, imageStore.imageDetail)
     metadataDialog.value = false
-    emit('update:modelValue', res.id)
+    modelValue.value = res.id
     imageStore.setImageDetail(null)
     await reload(res, res.id, true)
     emit('afterMetadataSaveSuccess')
@@ -388,10 +390,10 @@ const onMetadataDialogConfirm = async () => {
 }
 
 const onImageDelete = async () => {
-  if (isNull(props.modelValue)) return
+  if (isNull(modelValue.value)) return
   if (props.callDeleteApiOnRemove) {
     try {
-      await deleteImage(imageClient, props.modelValue)
+      await deleteImage(imageClient, modelValue.value)
       reset()
     } catch (e) {
       showErrorsDefault(e)
@@ -411,8 +413,8 @@ const forceReloadViewWithExpandMetadata = () => {
 const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   if (!items[0]) return
 
-  if (!isNull(props.modelValue)) {
-    items[0].id = props.modelValue
+  if (!isNull(modelValue.value)) {
+    items[0].id = modelValue.value
   }
   imageStore.setImageDetail(items[0])
   metadataDialog.value = true
@@ -444,7 +446,12 @@ const onOptionsButtonClick = () => {
 }
 
 const anyWidgetDialogOpened = computed(() => {
-  return metadataDialog.value || assetSelectDialog.value || uploadQueueDialog.value === props.queueKey
+  return (
+    metadataDialog.value ||
+    assetSelectDialog.value ||
+    fileInputDialog.value ||
+    uploadQueueDialog.value === props.queueKey
+  )
 })
 
 const isLocked = computed(() => {
@@ -455,7 +462,7 @@ watch(
   clickMenuOpened,
   (newValue, oldValue) => {
     if (newValue === oldValue || newValue || anyWidgetDialogOpened.value) return
-    releaseFieldLockLocal(props.modelValue)
+    releaseFieldLockLocal(modelValue.value)
   },
   { immediate: false }
 )
@@ -464,7 +471,7 @@ watch(
   anyWidgetDialogOpened,
   (newValue, oldValue) => {
     if (newValue === oldValue || newValue) return
-    releaseFieldLockLocal(props.modelValue)
+    releaseFieldLockLocal(modelValue.value)
   },
   { immediate: false }
 )
@@ -518,6 +525,7 @@ defineExpose({
             </VBtn>
             <AFileInputDialog
               ref="expandedUploadDialog"
+              v-model="fileInputDialog"
               :file-input-key="uploadQueue?.fileInputKey"
               :accept="uploadAccept"
               :max-sizes="uploadSizes"
@@ -570,13 +578,21 @@ defineExpose({
                     </VListItemTitle>
                   </VListItem>
                   <AFileInputDialog
+                    v-model="fileInputDialog"
                     :file-input-key="uploadQueue?.fileInputKey"
                     :accept="uploadAccept"
                     :max-sizes="uploadSizes"
                     @files-input="onFileInput"
                   >
                     <template #activator="{ props: fileInputProps }">
-                      <VListItem @click.stop="fileInputProps.onClick">
+                      <VListItem
+                        @click="
+                          ($event) => {
+                            fileInputProps.onClick($event)
+                            clickMenuOpened = false
+                          }
+                        "
+                      >
                         {{ t('common.damImage.image.button.upload') }}
                       </VListItem>
                     </template>

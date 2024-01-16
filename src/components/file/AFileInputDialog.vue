@@ -5,6 +5,7 @@ import AFileInput from '@/components/file/AFileInput.vue'
 import type { VBtn } from 'vuetify/components'
 import type { InputFileChangeEvent } from '@/types/ChangeEvent'
 import { ref } from 'vue'
+import ARow from '@/components/ARow.vue'
 
 /**
  * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
@@ -54,7 +55,6 @@ defineExpose({
 </script>
 
 <template>
-  <div />
   <VDialog
     :model-value="modelValue"
     persistent
@@ -82,7 +82,7 @@ defineExpose({
         </slot>
       </ADialogToolbar>
       <VCardText>
-        <div>
+        <ARow>
           <AFileInput
             ref="fileInput"
             :file-input-key="fileInputKey"
@@ -93,7 +93,7 @@ defineExpose({
             @files-input="onFilesInput"
             @change="emit('change', $event)"
           />
-        </div>
+        </ARow>
       </VCardText>
       <VCardActions>
         <VSpacer />
