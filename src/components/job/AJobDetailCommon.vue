@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import ARow from '@/components/ARow.vue'
 import AJobStatusChip from '@/components/job/AJobStatusChip.vue'
 import ADatetime from '@/components/ADatetime.vue'
+import AJobPriorityChip from '@/components/job/AJobPriorityChip.vue'
 
 withDefaults(
   defineProps<{
@@ -31,6 +32,12 @@ const { t } = useI18n()
     </ARow>
     <ARow :title="t('common.job.model.status')">
       <AJobStatusChip :value="job.status" />
+    </ARow>
+    <ARow :title="t('common.job.model.priority')">
+      <AJobPriorityChip :priority="job.priority" />
+    </ARow>
+    <ARow :title="t('common.job.model.scheduledAt')">
+      <ADatetime :date-time="job.scheduledAt" />
     </ARow>
     <ARow :title="t('common.job.model.startedAt')">
       <ADatetime :date-time="job.startedAt" />
