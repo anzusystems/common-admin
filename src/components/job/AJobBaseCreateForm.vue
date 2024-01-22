@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { computed } from 'vue'
 import type { JobBase } from '@/types/Job'
 import { useJobPriority } from '@/components/job/composables/jobPriority'
