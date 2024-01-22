@@ -1,3 +1,8 @@
+## [1.46.0](https://github.com/anzusystems/common-admin/compare/1.45.0...1.46.0) (2024-01-22)
+
+### Features
+* **job:** added support for priority and scheduledAt
+
 ## [1.45.0](https://github.com/anzusystems/common-admin/compare/1.44.0...1.45.0) (2024-01-08)
 
 ### Features

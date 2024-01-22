@@ -8,12 +8,21 @@
   "model": {
     "id": "Id",
     "_resourceName": "Typ",
+    "priority": "Priorita",
+    "scheduledAt": "Čas spustenia",
     "status": "Stav",
     "startedAt": "Spustený",
     "finishedAt": "Ukončený",
     "result": "Výsledok",
     "targetUserId": "Cieľový používateľ",
     "anonymizeUser": "Anonymizuj používateľa"
+  },
+  "meta": {
+    "priority": {
+      "low": "Nízka",
+      "medium": "Normálna",
+      "high": "Vysoká"
+    }
   },
   "jobResource": {
     "jobUserDataDelete": "Výmaz používateľových dát"

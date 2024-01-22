@@ -7,6 +7,8 @@ export function useCommonJobFactory() {
   const createBase = (resourceName: JobBaseResource, system: string): JobBase => {
     return {
       id: 0,
+      scheduledAt: dateTimeNow(),
+      priority: 1,
       status: JobStatus.Default,
       result: '',
       batchProcessedIterationCount: 0,
