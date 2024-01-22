@@ -71,6 +71,8 @@ import ALogoutView from '@/components/view/ALogoutView.vue'
 import AUnauthorizedView from '@/components/view/AUnauthorizedView.vue'
 import ANotFoundView from '@/components/view/ANotFoundView.vue'
 import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
+import AJobPriorityChip from '@/components/job/AJobPriorityChip.vue'
+import AJobBaseCreateForm from '@/components/job/AJobBaseCreateForm.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
@@ -541,6 +543,8 @@ export {
   ACurrentUserDropdown,
   AFormRemoteAutocompleteWithCached,
   AJobDetailCommon,
+  AJobPriorityChip,
+  AJobBaseCreateForm,
   ASortable,
   ASortableNested,
   ASubjectSelect,
