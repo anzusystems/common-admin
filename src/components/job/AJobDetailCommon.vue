@@ -3,8 +3,8 @@ import type { JobBase } from '@/types/Job'
 import { useI18n } from 'vue-i18n'
 import ARow from '@/components/ARow.vue'
 import AJobStatusChip from '@/components/job/AJobStatusChip.vue'
-import ADatetime from '@/components/ADatetime.vue'
 import AJobPriorityChip from '@/components/job/AJobPriorityChip.vue'
+import ADatetime from '@/components/datetime/ADatetime.vue'
 
 withDefaults(
   defineProps<{
