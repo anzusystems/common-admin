@@ -34,6 +34,7 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
 import { updateCurrentUser, useCurrentUser } from '@/playground/collabView/currentUser'
 import CopyTextView from '@/playground/copyTextView/CopyTextView.vue'
+import ImagePublicInputView from '@/playground/imagePublicInputView/ImagePublicInputView.vue'
 
 const { createCollabRoom } = useCollabHelpers()
 
@@ -104,6 +105,11 @@ const router = createRouter({
       path: '/view/image-multiple',
       name: 'view-image-multiple',
       component: ImageMultipleView,
+    },
+    {
+      path: '/view/image-public-input',
+      name: 'view-image-public-input',
+      component: ImagePublicInputView,
     },
     {
       path: '/view/file',
