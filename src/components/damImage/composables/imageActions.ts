@@ -22,7 +22,21 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
     )
   }
 
+  const widgetImageToDamImageOriginalUrl = (
+    image: ImageAware | ImageCreateUpdateAware,
+    random = true
+  ) => {
+    return (
+      config.previewDomain +
+      '/image/original/' +
+      image.dam.damId +
+      '.jpg' +
+      (random ? '?random=' + Date.now() : '')
+    )
+  }
+
   return {
     widgetImageToDamImageUrl,
+    widgetImageToDamImageOriginalUrl,
   }
 }

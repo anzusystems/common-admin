@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import type { ImageAware, ImageWidgetSelectConfig } from '@/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware, ImageWidgetSelectConfig } from '@/types/ImageAware'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { isDocId, isString } from '@/utils/common'
-import { ref } from 'vue'
+import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
+import { ref, toRaw, watch } from 'vue'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
 import type { IntegerIdNullable } from '@/types/common'
+import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
+import { createImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
+import { useImageActions } from '@/components/damImage/composables/imageActions'
+import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
+import { useAlerts } from '@/composables/system/alerts'
 
 const props = withDefaults(
   defineProps<{
@@ -24,11 +29,21 @@ const props = withDefaults(
 )
 const modelValue = defineModel<IntegerIdNullable>({ default: null, required: true })
 const inputField = defineModel<string>({ default: '', required: false })
+const inputDescription = ref('')
+const inputSource = ref('')
+
+const resolvedSrc = ref('')
+const resImage = ref<null | ImageCreateUpdateAware>(null)
 
 const isValid = ref(true)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient } = useCommonAdminCoreDamOptions(props.configName)
+const imageOptions = useCommonAdminImageOptions(props.configName)
+const { imageClient } = imageOptions
+const { damClient } = useCommonAdminCoreDamOptions()
+const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
+
+const { showErrorsDefault } = useAlerts()
 
 const extractUUID = (url: string): string | undefined => {
   const regex = /\/image\/original\/([0-9a-fA-F-]+)\.jpg/
@@ -60,16 +75,76 @@ const submit = async () => {
 
   try {
     const assetRes = await fetchAssetByFileId(damClient, inputField.value)
+    if (isNull(assetRes.mainFile)) {
+      isValid.value = false
+      return Promise.reject('Incorrect asset or no access')
+    }
     if (validateAssetData(assetRes, props.selectConfig)) {
-      return Promise.resolve(assetRes)
+      const data: ImageCreateUpdateAware = {
+        texts: {
+          description: '',
+          source: '',
+        },
+        dam: {
+          damId: assetRes.mainFile.id,
+          licenceId: assetRes.licence,
+          regionPosition: 0,
+        },
+        position: 0,
+      }
+      if (resImage.value?.id) {
+        data.id = resImage.value.id
+      }
+      const imageRes = resImage.value?.id
+        ? await updateImage(imageClient, resImage.value.id, data)
+        : await createImage(imageClient, data)
+      return Promise.resolve({ asset: assetRes, image: imageRes })
     }
     isValid.value = false
     return Promise.reject('Incorrect asset or no access')
   } catch (e) {
     isValid.value = false
+    showErrorsDefault(e)
     return Promise.reject('Incorrect asset or no access')
   }
 }
+
+const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
+  resolvedSrc.value = imagePlaceholderPath
+  if ((newImage && isNull(resImage.value)) || (newImage && force)) {
+    resImage.value = cloneDeep(newImage)
+    if (resImage.value) {
+      resolvedSrc.value = widgetImageToDamImageOriginalUrl(toRaw(resImage.value))
+      inputDescription.value = resImage.value.texts.description
+      inputSource.value = resImage.value.texts.source
+    }
+    return
+  }
+  if (newImageId) {
+    try {
+      resImage.value = await fetchImage(imageClient, newImageId)
+    } catch (error) {
+      showErrorsDefault(error)
+    }
+    if (!isNull(resImage.value)) {
+      resolvedSrc.value = widgetImageToDamImageOriginalUrl(toRaw(resImage.value))
+      inputDescription.value = resImage.value.texts.description
+      inputSource.value = resImage.value.texts.source
+    }
+    return
+  }
+  resImage.value = null
+  inputDescription.value = ''
+  inputSource.value = ''
+}
+
+watch(
+  [() => props.image, modelValue],
+  async ([newImage, newImageId]) => {
+    await reload(newImage, newImageId)
+  },
+  { immediate: true }
+)
 
 defineExpose({
   submit,
@@ -82,4 +157,19 @@ defineExpose({
     :label="label"
     :error="!isValid"
   />
+  <VTextField
+    v-model="inputDescription"
+    :label="label"
+  />
+  <VTextField
+    v-model="inputSource"
+    :label="label"
+  />
+  <div v-if="resolvedSrc.length > 0">
+    Image Preview:
+    <img
+      :src="resolvedSrc"
+      alt=""
+    >
+  </div>
 </template>
