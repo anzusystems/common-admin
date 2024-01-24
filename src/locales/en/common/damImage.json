@@ -167,5 +167,10 @@
     "offset": "Nesprávny offset",
     "mimeType": "Nesprávny formát súboru"
   },
-  "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne."
+  "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne.",
+  "public": {
+    "idOrUrl": "Image ID or public image URL",
+    "inputError": "Incorrect ID provided",
+    "imagePreview": "Image preview"
+  }
 }

@@ -24,7 +24,7 @@ export function useImageValidation(
       texts: {
         source: {
           required,
-          minLength: maxLength(255),
+          maxLength: maxLength(255),
         },
       },
     },

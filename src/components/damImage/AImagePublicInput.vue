@@ -3,39 +3,44 @@ import type { ImageAware, ImageCreateUpdateAware, ImageWidgetSelectConfig } from
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
-import { ref, toRaw, watch } from 'vue'
+import { computed, ref, toRaw, watch } from 'vue'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
 import type { IntegerIdNullable } from '@/types/common'
-import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { createImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
+import { useI18n } from 'vue-i18n'
+import AFormTextField from '@/components/form/AFormTextField.vue'
+import AFormTextarea from '@/components/form/AFormTextarea.vue'
+import ARow from '@/components/ARow.vue'
+import useVuelidate from '@vuelidate/core'
+import { useValidate } from '@/validators/vuelidate/useValidate'
 
 const props = withDefaults(
   defineProps<{
     selectConfig: ImageWidgetSelectConfig[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
-    label?: string | undefined
+    labelT?: string | undefined
     dataCy?: string | undefined
   }>(),
   {
     image: undefined,
     configName: 'default',
-    label: undefined,
+    labelT: 'common.damImage.public.idOrUrl',
     dataCy: undefined,
   }
 )
 const modelValue = defineModel<IntegerIdNullable>({ default: null, required: true })
-const inputField = defineModel<string>({ default: '', required: false })
-const inputDescription = ref('')
-const inputSource = ref('')
+const inputField = ref('')
+const meta = ref({ description: '', source: '' })
 
 const resolvedSrc = ref('')
 const resImage = ref<null | ImageCreateUpdateAware>(null)
 
 const isValid = ref(true)
+const isDirty = ref(false)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
@@ -43,7 +48,8 @@ const { imageClient } = imageOptions
 const { damClient } = useCommonAdminCoreDamOptions()
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
-const { showErrorsDefault } = useAlerts()
+const { showErrorsDefault, showValidationError } = useAlerts()
+const { t } = useI18n()
 
 const extractUUID = (url: string): string | undefined => {
   const regex = /\/image\/original\/([0-9a-fA-F-]+)\.jpg/
@@ -53,15 +59,26 @@ const extractUUID = (url: string): string | undefined => {
 }
 
 const validateAssetData = (asset: AssetDetailItemDto, configs: ImageWidgetSelectConfig[]) => {
-  configs.forEach((config) => {
-    if (config.licence === asset.licence) {
-      return true
-    }
-  })
-  return false
+  return configs.some((config) => config.licence === asset.licence)
 }
 
-const submit = async () => {
+const { required, maxLength } = useValidate()
+
+const rules = {
+  meta: {
+  description: {
+    maxLength: maxLength(255),
+  },
+  source: {
+    required,
+    maxLength: maxLength(255),
+  },
+  }
+}
+const v$ = useVuelidate(rules, { meta }, { $scope: false })
+
+const validateField = async () => {
+  isDirty.value = true
   isValid.value = true
   inputField.value = inputField.value.trim()
   if (inputField.value.startsWith('http')) {
@@ -72,51 +89,91 @@ const submit = async () => {
     isValid.value = false
     return Promise.reject('Incorrect URL/ID provided')
   }
-
   try {
     const assetRes = await fetchAssetByFileId(damClient, inputField.value)
     if (isNull(assetRes.mainFile)) {
       isValid.value = false
-      return Promise.reject('Incorrect asset or no access')
+      return Promise.reject('Incorrect asset mainFile')
     }
     if (validateAssetData(assetRes, props.selectConfig)) {
-      const data: ImageCreateUpdateAware = {
-        texts: {
-          description: '',
-          source: '',
-        },
-        dam: {
-          damId: assetRes.mainFile.id,
-          licenceId: assetRes.licence,
-          regionPosition: 0,
-        },
-        position: 0,
-      }
-      if (resImage.value?.id) {
-        data.id = resImage.value.id
-      }
-      const imageRes = resImage.value?.id
-        ? await updateImage(imageClient, resImage.value.id, data)
-        : await createImage(imageClient, data)
-      return Promise.resolve({ asset: assetRes, image: imageRes })
+      isValid.value = true
+      return Promise.resolve(assetRes)
     }
     isValid.value = false
     return Promise.reject('Incorrect asset or no access')
   } catch (e) {
     isValid.value = false
-    showErrorsDefault(e)
     return Promise.reject('Incorrect asset or no access')
   }
 }
 
+const submit = async () => {
+  try {
+    const asset = await validateField()
+    v$.value.$touch()
+    if (v$.value.$invalid) {
+      showValidationError()
+      return Promise.reject('Invalid source or description')
+    }
+    const data: ImageCreateUpdateAware = {
+      texts: {
+        description: meta.value.description.trim(),
+        source: meta.value.source.trim(),
+      },
+      dam: {
+        damId: asset.mainFile!.id,
+        licenceId: asset.licence,
+        regionPosition: 0,
+      },
+      position: 0,
+    }
+    if (resImage.value?.id) {
+      data.id = resImage.value.id
+    }
+    const imageRes = resImage.value?.id
+      ? await updateImage(imageClient, resImage.value.id, data)
+      : await createImage(imageClient, data)
+    resImage.value = imageRes
+    modelValue.value = imageRes.id
+    return Promise.resolve({ asset: asset, image: imageRes })
+  } catch (e) {
+    showErrorsDefault(e)
+  }
+}
+
+const updatePreviewAndTexts = () => {
+  resolvedSrc.value = widgetImageToDamImageOriginalUrl({
+    texts: {
+      description: '',
+      source: '',
+    },
+    dam: {
+      damId: inputField.value,
+      licenceId: 0,
+      regionPosition: 0,
+    },
+  })
+}
+
+const onBlur = async () => {
+  try {
+    await validateField()
+    updatePreviewAndTexts()
+  } catch (e) {
+    //
+  }
+}
+
 const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
-  resolvedSrc.value = imagePlaceholderPath
+  resolvedSrc.value = ''
   if ((newImage && isNull(resImage.value)) || (newImage && force)) {
     resImage.value = cloneDeep(newImage)
     if (resImage.value) {
+      inputField.value = resImage.value.dam.damId
       resolvedSrc.value = widgetImageToDamImageOriginalUrl(toRaw(resImage.value))
-      inputDescription.value = resImage.value.texts.description
-      inputSource.value = resImage.value.texts.source
+      meta.value.description = resImage.value.texts.description
+      meta.value.source = resImage.value.texts.source
+      onBlur()
     }
     return
   }
@@ -127,16 +184,20 @@ const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: 
       showErrorsDefault(error)
     }
     if (!isNull(resImage.value)) {
+      inputField.value = resImage.value.dam.damId
       resolvedSrc.value = widgetImageToDamImageOriginalUrl(toRaw(resImage.value))
-      inputDescription.value = resImage.value.texts.description
-      inputSource.value = resImage.value.texts.source
+      meta.value.description = resImage.value.texts.description
+      meta.value.source = resImage.value.texts.source
+      onBlur()
     }
     return
   }
   resImage.value = null
-  inputDescription.value = ''
-  inputSource.value = ''
+  meta.value.description = ''
+  meta.value.source = ''
 }
+
+const disabled = computed(() => !(isValid.value && isDirty.value))
 
 watch(
   [() => props.image, modelValue],
@@ -152,24 +213,38 @@ defineExpose({
 </script>
 
 <template>
-  <VTextField
-    v-model="inputField"
-    :label="label"
-    :error="!isValid"
-  />
-  <VTextField
-    v-model="inputDescription"
-    :label="label"
-  />
-  <VTextField
-    v-model="inputSource"
-    :label="label"
-  />
-  <div v-if="resolvedSrc.length > 0">
-    Image Preview:
+  <ARow>
+    <AFormTextField
+      v-model="inputField"
+      :label="labelT ? t(labelT) : undefined"
+      :error="!isValid"
+      :error-message="isValid ? undefined : t('common.damImage.public.inputError')"
+      required
+      @blur="onBlur"
+      @keyup.enter="onBlur"
+    />
+  </ARow>
+  <ARow>
+    <AFormTextarea
+      v-model="meta.description"
+      :label="t('common.damImage.image.model.texts.description')"
+      :v="v$.meta.description"
+      :disabled="disabled"
+    />
+  </ARow>
+  <ARow>
+    <AFormTextarea
+      v-model="meta.source"
+      :label="t('common.damImage.image.model.texts.source')"
+      :v="v$.meta.source"
+      :disabled="disabled"
+    />
+  </ARow>
+  <ARow style="min-height: 50px;">
+    <div>{{ t('common.damImage.public.imagePreview') }}:</div>
     <img
       :src="resolvedSrc"
       alt=""
     >
-  </div>
+  </ARow>
 </template>
