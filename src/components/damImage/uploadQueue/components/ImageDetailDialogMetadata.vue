@@ -35,7 +35,7 @@ const { t } = useI18n()
 const imageStore = useImageStore()
 const { imageDetail } = storeToRefs(imageStore)
 
-const { v$ } = useImageValidation(imageDetail, AImageMetadataValidationScopeSymbol)
+const { v$ } = useImageValidation(imageDetail)
 
 const { showValidationError } = useAlerts()
 

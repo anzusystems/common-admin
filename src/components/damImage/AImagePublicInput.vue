@@ -75,7 +75,7 @@ const rules = {
   },
   }
 }
-const v$ = useVuelidate(rules, { meta }, { $scope: false })
+const v$ = useVuelidate(rules, { meta }, { $stopPropagation: true })
 
 const validateField = async () => {
   isDirty.value = true

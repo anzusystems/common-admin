@@ -31,7 +31,7 @@ const { t } = useI18n()
 
 const image = computed(() => imageStore.images[props.index])
 
-const { v$ } = useImageValidation(image, AImageMetadataValidationScopeSymbol)
+const { v$ } = useImageValidation(image)
 
 const onEditAsset = () => {
   if (isNull(image.value) || isUndefined(image.value)) return
