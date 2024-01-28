@@ -43,7 +43,7 @@
     "@rushstack/eslint-patch": "^1.7.2",
     "@stylistic/eslint-plugin": "^1.5.4",
     "@tsconfig/node18": "^18.2.2",
-    "@types/node": "^20.11.7",
+    "@types/node": "^20.11.9",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.7",
     "@types/webfontloader": "^1.6.38",
