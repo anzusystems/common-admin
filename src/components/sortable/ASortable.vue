@@ -28,6 +28,7 @@ const props = withDefaults(
     disableDefaultSort?: boolean
     updatePosition?: boolean
     positionField?: string
+    positionMultiplier?: number
     showAddAfterButton?: boolean
     showAddLastButton?: boolean
     showDeleteButton?: boolean
@@ -43,6 +44,7 @@ const props = withDefaults(
     disableDefaultSort: false,
     updatePosition: false,
     positionField: 'position',
+    positionMultiplier: 1,
     showAddAfterButton: false,
     showAddLastButton: false,
     showDeleteButton: false,
