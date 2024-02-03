@@ -21,5 +21,7 @@
   "refresh": "Refresh",
   "forwards": "Forwards",
   "backwards": "Backwards",
+  "next": "Next",
+  "prev": "Prev",
   "loadMore": "Load more"
 }

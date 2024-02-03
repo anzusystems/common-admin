@@ -21,5 +21,7 @@
   "refresh": "Obnovit",
   "forwards": "Vpřed",
   "backwards": "Zpět",
+  "next": "Vpřed",
+  "prev": "Zpět",
   "loadMore": "Načti další"
 }
