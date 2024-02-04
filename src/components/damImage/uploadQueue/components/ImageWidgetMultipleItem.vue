@@ -8,10 +8,7 @@ import { isNull, isUndefined } from '@/utils/common'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
 import { HANDLE_CLASS } from '@/components/sortable/sortableActions'
 import { useI18n } from 'vue-i18n'
-import {
-  AImageMetadataValidationScopeSymbol,
-  useImageValidation,
-} from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { useImageValidation } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 
 const props = withDefaults(
   defineProps<{

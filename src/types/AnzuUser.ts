@@ -1,4 +1,4 @@
-import type { IntegerId } from '@/types/common'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { Permissions } from '@/types/Permission'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 
@@ -16,7 +16,8 @@ export interface AnzuUserMinimal {
   email: string
 }
 
-export interface AnzuUser extends AnzuUserAndTimeTrackingAware, AnzuUserMinimal {
+export interface AnzuUser extends AnzuUserAndTimeTrackingAware, Omit<AnzuUserMinimal, 'id'> {
+  id?: IntegerIdNullable
   enabled: boolean
   roles: string[]
   permissionGroups: IntegerId[]

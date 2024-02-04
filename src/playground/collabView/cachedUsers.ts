@@ -7,8 +7,8 @@ import { cmsClient } from '@/playground/mock/cmsClient'
 export const fetchUserListByIds = (ids: number[]) =>
   apiFetchByIds<AnzuUser[]>(cmsClient, ids, '/adm/v1/user', {}, 'cms', 'user')
 
-const mapFullToMinimal = (source: AnzuUser): AnzuUserMinimal => {
-  return { id: source.id, email: source.email, avatar: source.avatar, person: source.person }
+export const mapFullToMinimal = (source: AnzuUser): AnzuUserMinimal => {
+  return { id: source.id ?? 0, email: source.email, avatar: source.avatar, person: source.person }
 }
 
 const mapIdToMinimal = (id: IntegerId): AnzuUserMinimal => {
