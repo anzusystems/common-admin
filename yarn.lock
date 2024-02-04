@@ -192,7 +192,7 @@ __metadata:
   resolution: "@anzusystems/common-admin@workspace:."
   dependencies:
     "@intlify/unplugin-vue-i18n": "npm:^2.0.0"
-    "@kyvg/vue3-notification": "npm:^3.1.3"
+    "@kyvg/vue3-notification": "npm:^3.1.4"
     "@mdi/font": "npm:^7.4.47"
     "@rushstack/eslint-patch": "npm:^1.7.2"
     "@stylistic/eslint-plugin": "npm:^1.5.4"
@@ -222,7 +222,7 @@ __metadata:
     postcss: "npm:^8.4.33"
     postcss-html: "npm:^1.6.0"
     postcss-prefix-selector: "npm:^1.16.0"
-    prettier: "npm:^3.2.4"
+    prettier: "npm:^3.2.5"
     rusha: "npm:^0.8.14"
     sass: "npm:^1.70.0"
     socket.io-client: "npm:4.7.4"
@@ -825,12 +825,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@kyvg/vue3-notification@npm:^3.1.3":
-  version: 3.1.3
-  resolution: "@kyvg/vue3-notification@npm:3.1.3"
+"@kyvg/vue3-notification@npm:^3.1.4":
+  version: 3.1.4
+  resolution: "@kyvg/vue3-notification@npm:3.1.4"
   peerDependencies:
     vue: ^3.0.0
-  checksum: 10/6e2b7c6841bc990fa4923575046dd11f813c9ac720f66cbf2530130965b0fe9c8cbe2bd0ee46bec915be0b8841181220790dccfa08daa68401674e1e4a42fc14
+  checksum: 10/d7d1b84e7d619ede2414479fccf00bf95b4a352383d881f2227d39760eb13369fdbb6b4e70404ffb67688ea6841b02454103715ea949106cfced977e9b37ccad
   languageName: node
   linkType: hard
 
@@ -5678,12 +5678,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.2.4":
-  version: 3.2.4
-  resolution: "prettier@npm:3.2.4"
+"prettier@npm:^3.2.5":
+  version: 3.2.5
+  resolution: "prettier@npm:3.2.5"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/e2b735d0552501b3a7ac8bd3ba3b6de2920bb35bd4cd02d08cb9057ebe3e96d83b9a7e4b903d987b7530a50223b12c74d107c154337236ae2c68156ba1e65cd2
+  checksum: 10/d509f9da0b70e8cacc561a1911c0d99ec75117faed27b95cc8534cb2349667dee6351b0ca83fa9d5703f14127faa52b798de40f5705f02d843da133fc3aa416a
   languageName: node
   linkType: hard
 
