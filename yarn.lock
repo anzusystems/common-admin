@@ -219,7 +219,7 @@ __metadata:
     eslint-plugin-vue: "npm:9.21.1"
     npm-run-all: "npm:^4.1.5"
     pinia: "npm:2.1.7"
-    postcss: "npm:^8.4.33"
+    postcss: "npm:^8.4.34"
     postcss-html: "npm:^1.6.0"
     postcss-prefix-selector: "npm:^1.16.0"
     prettier: "npm:^3.2.5"
@@ -5618,6 +5618,17 @@ __metadata:
     picocolors: "npm:^1.0.0"
     source-map-js: "npm:^1.0.2"
   checksum: 10/e22a4594c255f26117f38419fb494d7ecab0f596cd409f7aadc8a6173abf180ed7ea970cd13fd366ab12b5840be901d2a09b25197700c2ebcb5a8077326bf519
+  languageName: node
+  linkType: hard
+
+"postcss@npm:^8.4.34":
+  version: 8.4.34
+  resolution: "postcss@npm:8.4.34"
+  dependencies:
+    nanoid: "npm:^3.3.7"
+    picocolors: "npm:^1.0.0"
+    source-map-js: "npm:^1.0.2"
+  checksum: 10/ff4769ff6910f688b0672e0a8f83d1d0a9fee3f61aa33b61b6ade0d5dc2ef53ce1a80d78e2eab03f2d40a15e04bc028682857a4f15d31501d63c80473dee2981
   languageName: node
   linkType: hard
 
