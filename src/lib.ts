@@ -232,7 +232,7 @@ import AnzuSystemsCommonAdmin, {
   type CustomAclResolver,
   type PluginOptions,
 } from '@/AnzuSystemsCommonAdmin'
-import type { AclValue } from '@/types/Permission'
+import type { AclValue, Permissions } from '@/types/Permission'
 import { Theme, useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import {
@@ -645,6 +645,7 @@ export {
   useCommonJobFactory,
   type CurrentUserType,
   type AclValue,
+  type Permissions,
   type CustomAclResolver,
   type PluginOptions,
   type LanguageCode,
