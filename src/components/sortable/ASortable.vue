@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSortable } from '@vueuse/integrations/useSortable'
 import type { SortableEvent } from 'sortablejs'
-import { Comment, computed, nextTick, onBeforeUnmount, toRef, useSlots, watch, withModifiers } from 'vue'
+import { computed, nextTick, onBeforeUnmount, toRef, watch, withModifiers } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SortableEmit, SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import {
