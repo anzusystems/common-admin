@@ -98,6 +98,9 @@ const initSortable = () => {
       const needsRefresh = moveArrayElement(event.oldIndex, event.newIndex)
       emit('onEnd', needsRefresh)
     },
+    onStart() {
+      emit('onStart')
+    },
   })
 }
 
@@ -170,80 +173,93 @@ defineExpose({
         <div
           v-for="item of items"
           :key="item.key"
-          class="a-sortable-widget__item"
         >
-          <VIcon
-            :class="{
-              [HANDLE_CLASS]: true,
-              [HANDLE_CLASS + '--disabled']: disableDraggable,
-            }"
-            icon="mdi-drag"
-          />
-          <div class="a-sortable-widget__content">
+          <div class="a-sortable-widget__before">
             <slot
-              name="item"
+              name="itemBefore"
               :item="item"
             />
           </div>
-          <div class="a-sortable-widget__buttons">
-            <VBtn
-              v-if="showEditButton"
-              icon
-              size="x-small"
-              variant="text"
-              class="mx-1"
-              @click.stop="onEditClick(item)"
-            >
-              <VIcon icon="mdi-pencil" />
-              <VTooltip
-                anchor="bottom"
-                activator="parent"
-                text="Edit"
+          <div class="a-sortable-widget__item">
+            <VIcon
+              :class="{
+              [HANDLE_CLASS]: true,
+              [HANDLE_CLASS + '--disabled']: disableDraggable,
+            }"
+              icon="mdi-drag"
+            />
+            <div class="a-sortable-widget__content">
+              <slot
+                name="item"
+                :item="item"
               />
-            </VBtn>
-            <VBtn
-              v-if="showDeleteButton"
-              icon
-              size="x-small"
-              variant="text"
-              class="mx-1"
-              @click.stop="onDeleteClick(item)"
-            >
-              <VIcon icon="mdi-trash-can-outline" />
-              <VTooltip
-                anchor="bottom"
-                activator="parent"
-                text="Remove"
+            </div>
+            <div class="a-sortable-widget__buttons">
+              <VBtn
+                v-if="showEditButton"
+                icon
+                size="x-small"
+                variant="text"
+                class="mx-1"
+                @click.stop="onEditClick(item)"
+              >
+                <VIcon icon="mdi-pencil" />
+                <VTooltip
+                  anchor="bottom"
+                  activator="parent"
+                  text="Edit"
+                />
+              </VBtn>
+              <VBtn
+                v-if="showDeleteButton"
+                icon
+                size="x-small"
+                variant="text"
+                class="mx-1"
+                @click.stop="onDeleteClick(item)"
+              >
+                <VIcon icon="mdi-trash-can-outline" />
+                <VTooltip
+                  anchor="bottom"
+                  activator="parent"
+                  text="Remove"
+                />
+              </VBtn>
+              <slot
+                name="buttons"
+                :item="item"
               />
-            </VBtn>
+              <VBtn
+                v-if="showAddAfterButton"
+                icon
+                size="x-small"
+                variant="text"
+                class="mx-1"
+              >
+                <VIcon icon="mdi-dots-vertical" />
+                <VTooltip
+                  anchor="bottom"
+                  activator="parent"
+                  text="More options"
+                />
+                <VMenu activator="parent">
+                  <VList density="compact">
+                    <VListItem
+                      v-if="showAddAfterButton"
+                      @click.stop="onAddAfterClick(item)"
+                    >
+                      Add new item after
+                    </VListItem>
+                  </VList>
+                </VMenu>
+              </VBtn>
+            </div>
+          </div>
+          <div class="a-sortable-widget__after">
             <slot
-              name="buttons"
+              name="itemAfter"
               :item="item"
             />
-            <VBtn
-              v-if="showAddAfterButton"
-              icon
-              size="x-small"
-              variant="text"
-              class="mx-1"
-            >
-              <VIcon icon="mdi-dots-vertical" />
-              <VTooltip
-                anchor="bottom"
-                activator="parent"
-                text="More options"
-              />
-              <VMenu activator="parent">
-                <VList density="compact">
-                  <VListItem
-                    v-if="showAddAfterButton"
-                    @click.stop="onAddAfterClick(item)"
-                  >
-                    Add new item after
-                  </VListItem>
-                </VList>
-              </VMenu>
-            </VBtn>
           </div>
         </div>
       </div>
@@ -330,6 +346,14 @@ $ghost-bg-color: color.scale(#3f6ad8, $lightness: 95%);
   }
 
   &__content {
+    width: 100%;
+  }
+
+  &__before {
+    width: 100%;
+  }
+
+  &__after {
     width: 100%;
   }
 
