@@ -25,6 +25,8 @@ export interface SortableEmit {
 
   (e: 'update:dirty', data: Array<DocId | IntegerId>): void
 
+  (e: 'onStart'): void
+
   (e: 'onEnd', data: SortableItemNewPositions): void
 
   (e: 'onAddAfter', data: SortableItem): void
