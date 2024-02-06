@@ -203,7 +203,7 @@ defineExpose({
                 class="mx-1"
                 @click.stop="onEditClick(item)"
               >
-                <VIcon icon="mdi-pencil"/>
+                <VIcon icon="mdi-pencil" />
                 <VTooltip
                   anchor="bottom"
                   activator="parent"
@@ -218,7 +218,7 @@ defineExpose({
                 class="mx-1"
                 @click.stop="onDeleteClick(item)"
               >
-                <VIcon icon="mdi-trash-can-outline"/>
+                <VIcon icon="mdi-trash-can-outline" />
                 <VTooltip
                   anchor="bottom"
                   activator="parent"
@@ -236,7 +236,7 @@ defineExpose({
                 variant="text"
                 class="mx-1"
               >
-                <VIcon icon="mdi-dots-vertical"/>
+                <VIcon icon="mdi-dots-vertical" />
                 <VTooltip
                   anchor="bottom"
                   activator="parent"
@@ -287,7 +287,7 @@ defineExpose({
           {{ t('common.system.modal.confirmDelete') }}
         </ADialogToolbar>
         <VCardActions>
-          <VSpacer/>
+          <VSpacer />
           <ABtnTertiary @click.stop="removeDialog = false">
             {{ t('common.button.cancel') }}
           </ABtnTertiary>
