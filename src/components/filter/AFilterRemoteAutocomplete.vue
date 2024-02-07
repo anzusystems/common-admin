@@ -73,13 +73,13 @@ const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   const final = new Map()
   selectedItemsCache.value.forEach((value) => {
-    final.set(value.value, { value: value.value, title: value.title })
+    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
   })
   fetchedItems.value.forEach((value) => {
-    final.set(value.value, { value: value.value, title: value.title })
+    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
   })
   return Array.from(final, ([key, value]) => {
-    return { value: key, title: value.title }
+    return { value: key, title: value.title, subtitle: value.subtitle }
   })
 })
 
