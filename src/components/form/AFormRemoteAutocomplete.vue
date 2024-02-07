@@ -322,6 +322,13 @@ watch(search, (newValue, oldValue) => {
     @focus="onFocus"
     @click:clear="onClickClear"
   >
+    <template #item="{ props: itemProps, item }">
+      <VListItem
+        v-bind="itemProps"
+        :title="item.raw.title"
+        :subtitle="item.raw.subtitle"
+      />
+    </template>
     <template #label>
       <span
         v-if="!hideLabel"

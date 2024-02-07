@@ -3,4 +3,5 @@ export interface ValueObjectOption<T> {
   title: string
   color?: string
   active?: false
+  subtitle?: string
 }
