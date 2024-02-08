@@ -183,9 +183,9 @@ defineExpose({
           <div class="a-sortable-widget__item">
             <VIcon
               :class="{
-              [HANDLE_CLASS]: true,
-              [HANDLE_CLASS + '--disabled']: disableDraggable,
-            }"
+                [HANDLE_CLASS]: true,
+                [HANDLE_CLASS + '--disabled']: disableDraggable,
+              }"
               icon="mdi-drag"
             />
             <div class="a-sortable-widget__content">
