@@ -476,6 +476,15 @@ import {
   isCollabFailedChangeRoomLockCallback,
   isCollabSuccessChangeRoomLockCallback,
 } from '@/components/collab/types/Collab'
+import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
+import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRemoteAutocomplete.vue'
+import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
+import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
+import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
+import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
+import { fetchDamAssetLicenceListByIds, fetchDamAssetLicenceList } from '@/components/dam/user/assetLicenceApi'
+import { fetchDamExtSystemListByIds, fetchDamExtSystemList } from '@/components/dam/user/extSystemApi'
+import type { DamUserUpdateDto } from '@/components/dam/user/DamUser'
 
 export {
   // COMPONENTS
@@ -564,6 +573,10 @@ export {
   AAssetSelect,
   ADatatable,
   ABooleanSelect,
+  DamExtSystemRemoteAutocomplete,
+  DamExternalProviderAssetSelect,
+  DamDistributionServiceSelect,
+  DamAssetLicenceRemoteAutocomplete,
 
   // VIEWS
   ALoginView,
@@ -603,6 +616,8 @@ export {
   useDamAuthorType,
   useDamCurrentUser,
   updateDamCurrentUser,
+  useDamDistributionServiceType,
+  useDamAssetLicenceFilter,
 
   // VALUE OBJECTS
   Grant,
@@ -743,6 +758,7 @@ export {
   type DamCurrentUserDto,
   type DamAssetLicence,
   type DamAssetLicenceMinimal,
+  type DamUserUpdateDto,
 
   // FACTORIES
   useAnzuUserFactory,
@@ -840,6 +856,10 @@ export {
   useAcl,
   regionToCrop,
   cropToRegion,
+  fetchDamAssetLicenceListByIds,
+  fetchDamAssetLicenceList,
+  fetchDamExtSystemListByIds,
+  fetchDamExtSystemList,
 
   // TRANSLATIONS
   messagesCs,

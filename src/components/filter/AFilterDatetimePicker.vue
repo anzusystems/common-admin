@@ -22,7 +22,6 @@ const value = computed({
     return props.modelValue.model
   },
   set(newValue) {
-    console.log('update:modelValue set', newValue)
     emit('update:modelValue', { ...props.modelValue, ...{ model: newValue } })
   },
 })

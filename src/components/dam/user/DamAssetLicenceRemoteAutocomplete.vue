@@ -1,0 +1,87 @@
+<script lang="ts" setup>
+import { computed, watch } from 'vue'
+import type { IntegerId } from '@/types/common'
+import { cloneDeep } from '@/utils/common'
+import AFormRemoteAutocomplete from '@/components/form/AFormRemoteAutocomplete.vue'
+import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
+import { useAssetLicenceSelectActions } from '@/components/dam/user/assetLicenceActions'
+import type { AxiosInstance } from 'axios'
+
+const props = withDefaults(
+  defineProps<{
+    modelValue: IntegerId | null | IntegerId[] | any
+    client: () => AxiosInstance,
+    label?: string | undefined
+    required?: boolean | undefined
+    multiple?: boolean
+    clearable?: boolean
+    dataCy?: string
+    extSystemId?: IntegerId | null
+    hideDetails?: boolean
+    disableInitFetch?: boolean
+  }>(),
+  {
+    label: undefined,
+    required: undefined,
+    multiple: false,
+    clearable: false,
+    dataCy: '',
+    extSystemId: null,
+    hideDetails: undefined,
+    disableInitFetch: false,
+  }
+)
+const emit = defineEmits<{
+  (e: 'update:modelValue', data: IntegerId | null | IntegerId[] | any): void
+}>()
+
+const modelValueComputed = computed({
+  get() {
+    return props.modelValue
+  },
+  set(newValue: IntegerId | null | IntegerId[] | any) {
+    emit('update:modelValue', cloneDeep<IntegerId | null | IntegerId[] | any>(newValue))
+  },
+})
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { fetchItems, fetchItemsByIds } = useAssetLicenceSelectActions(props.client)
+
+const innerFilter = useDamAssetLicenceFilter()
+
+const selectedExtSystemId = computed(() => {
+  return props.extSystemId
+})
+
+watch(
+  selectedExtSystemId,
+  (newValue, oldValue) => {
+    if (newValue === oldValue) return
+    modelValueComputed.value = null
+    if (newValue) {
+      innerFilter.extSystem.model = newValue
+      return
+    }
+    innerFilter.extSystem.model = null
+  },
+  { immediate: true }
+)
+</script>
+
+<template>
+  <AFormRemoteAutocomplete
+    :key="selectedExtSystemId + ''"
+    v-model="modelValueComputed"
+    :required="required"
+    :label="label"
+    :fetch-items="fetchItems"
+    :fetch-items-by-ids="fetchItemsByIds"
+    :inner-filter="innerFilter"
+    :multiple="multiple"
+    :clearable="clearable"
+    filter-by-field="name"
+    :data-cy="dataCy"
+    :hide-details="hideDetails"
+    :disable-init-fetch="disableInitFetch"
+  />
+</template>
