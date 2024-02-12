@@ -22,8 +22,8 @@ import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import APermissionGrantEditor from '@/components/permission/APermissionGrantEditor.vue'
 import APermissionValueChip from '@/components/permission/APermissionValueChip.vue'
 import Acl from '@/components/permission/Acl.vue'
-import ADatetime from '@/components/ADatetime.vue'
-import ADatetimePicker from '@/components/ADatetimePicker.vue'
+import ADatetime from '@/components/datetime/ADatetime.vue'
+import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
@@ -83,8 +83,10 @@ import AImageWidget from '@/components/damImage/AImageWidget.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
+import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
 import ADatatable from '@/components/datatable/ADatatable.vue'
+import ABooleanSelect from '@/components/ABooleanSelect.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
@@ -230,7 +232,7 @@ import AnzuSystemsCommonAdmin, {
   type CustomAclResolver,
   type PluginOptions,
 } from '@/AnzuSystemsCommonAdmin'
-import type { AclValue } from '@/types/Permission'
+import type { AclValue, Permissions } from '@/types/Permission'
 import { Theme, useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import {
@@ -474,6 +476,16 @@ import {
   isCollabFailedChangeRoomLockCallback,
   isCollabSuccessChangeRoomLockCallback,
 } from '@/components/collab/types/Collab'
+import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
+import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRemoteAutocomplete.vue'
+import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
+import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
+import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
+import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
+import { fetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
+import { fetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
+import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
+import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
 
 export {
   // COMPONENTS
@@ -554,12 +566,18 @@ export {
   AImageWidgetSimple,
   AImageWidgetMultiple,
   AImageWidgetMultipleSimple,
+  AImagePublicInput,
   ACropperjs,
   ACollabLockedByUser,
   ACollabCountdown,
   ACollabManagement,
   AAssetSelect,
   ADatatable,
+  ABooleanSelect,
+  DamExtSystemRemoteAutocomplete,
+  DamExternalProviderAssetSelect,
+  DamDistributionServiceSelect,
+  DamAssetLicenceRemoteAutocomplete,
 
   // VIEWS
   ALoginView,
@@ -599,6 +617,8 @@ export {
   useDamAuthorType,
   useDamCurrentUser,
   updateDamCurrentUser,
+  useDamDistributionServiceType,
+  useDamAssetLicenceFilter,
 
   // VALUE OBJECTS
   Grant,
@@ -641,6 +661,7 @@ export {
   useCommonJobFactory,
   type CurrentUserType,
   type AclValue,
+  type Permissions,
   type CustomAclResolver,
   type PluginOptions,
   type LanguageCode,
@@ -738,6 +759,8 @@ export {
   type DamCurrentUserDto,
   type DamAssetLicence,
   type DamAssetLicenceMinimal,
+  type DamUserUpdateDto,
+  type DamUser,
 
   // FACTORIES
   useAnzuUserFactory,
@@ -835,6 +858,14 @@ export {
   useAcl,
   regionToCrop,
   cropToRegion,
+  fetchDamAssetLicenceListByIds,
+  fetchDamAssetLicenceList,
+  fetchDamExtSystemListByIds,
+  fetchDamExtSystemList,
+  fetchDamUserListByIds,
+  fetchDamUserList,
+  updateDamUser,
+  fetchDamUser,
 
   // TRANSLATIONS
   messagesCs,

@@ -5,9 +5,20 @@ import AImageWidget from '@/components/damImage/AImageWidget.vue'
 import { ref } from 'vue'
 import type { IntegerIdNullable } from '@/types/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
+import useVuelidate from '@vuelidate/core'
 
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)
+const imageId3 = ref<IntegerIdNullable>(null)
+
+const v$ = useVuelidate()
+const isValid = ref<boolean | null>(null)
+
+const validate = async () => {
+  v$.value.$touch()
+  isValid.value = await v$.value.$validate()
+  console.log(v$.value.$errors)
+}
 
 const dialog = ref(false)
 const widgetComponent = ref<InstanceType<typeof AImageWidget> | null>(null)
@@ -51,6 +62,28 @@ const saveInsideDialog = () => {
             queue-key="heroImage"
             label="Lead image"
           />
+        </VCol>
+        <VCol cols="4">
+          <AImageWidget
+            v-model="imageId3"
+            :upload-config="{
+              licence: 100000,
+              extSystem: 1,
+            }"
+            :select-config="[
+              {
+                title: 'Default',
+                licence: 100000,
+                extSystem: 1,
+              },
+            ]"
+            queue-key="heroImage2"
+            label="Lead image 2 with global validation test"
+          />
+          <div>isvalid (should be always true): {{ isValid }}</div>
+          <VBtn @click.stop="validate">
+            validate should not fire nested widget validation
+          </VBtn>
         </VCol>
       </VRow>
       <VRow>

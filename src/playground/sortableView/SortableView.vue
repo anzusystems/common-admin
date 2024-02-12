@@ -35,10 +35,10 @@ const itemsWithoutId = ref<Array<ItemWithoutIdDemo>>([
 ])
 
 const itemsBasic = ref<Array<BasicItemDemo>>([
-  { id: 1, text: 'One', position: 1 },
-  { id: 2, text: 'Two', position: 2 },
-  { id: 3, text: 'Tree', position: 3 },
-  { id: 4, text: 'Four', position: 4 },
+  { id: 1, text: 'One', position: 100 },
+  { id: 2, text: 'Two', position: 200 },
+  { id: 3, text: 'Tree', position: 300 },
+  { id: 4, text: 'Four', position: 400 },
 ])
 
 const itemsBasicDirty = ref(new Set<DocId | IntegerId>())
@@ -340,6 +340,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         v-model="itemsBasic"
         v-model:dirty="itemsBasicDirty"
         update-position
+        :position-multiplier="100"
         show-edit-button
         show-delete-button
         show-add-after-button

@@ -22,6 +22,7 @@ const props = withDefaults(
     collab?: CollabComponentConfig
     label?: string | undefined
     readonly?: boolean
+    required?: boolean
     dataCy?: string | undefined
     expandOptions?: boolean
     expandMetadata?: boolean
@@ -35,6 +36,7 @@ const props = withDefaults(
     label: undefined,
     image: undefined,
     readonly: false,
+    required: false,
     lockable: false,
     lockedById: undefined,
     dataCy: undefined,

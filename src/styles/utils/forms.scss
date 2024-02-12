@@ -1,4 +1,4 @@
-label span.required {
+label span.required, span.required-mark {
   &::after {
     content: "*";
     color: red;

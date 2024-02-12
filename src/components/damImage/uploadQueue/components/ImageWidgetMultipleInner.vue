@@ -37,6 +37,7 @@ import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploa
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -106,6 +107,7 @@ const fetchImagesOnLoad = async () => {
     const imagesRes = await fetchImageListByIds(imageClient, props.modelValue)
     imageStore.setImages(
       imagesRes.map((imageRes) => {
+        if (isUndefined(imageRes.position)) throw new Error('Image object needs position field!')
         imageStore.updateMaxPositionIfGreater(imageRes.position)
         return {
           key: generateUUIDv1(),
@@ -133,13 +135,19 @@ const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
   cachedExtSystemId.value = props.uploadConfig.extSystem
-  uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
+  // uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
+  limitDialogComponent.value?.check(files)
   uploadQueueDialog.value = props.queueKey
 }
 
 const onDrop = (files: File[]) => {
   cachedExtSystemId.value = props.uploadConfig.extSystem
-  uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
+  limitDialogComponent.value?.check(files)
+  // uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
+  uploadQueueDialog.value = props.queueKey
+}
+
+const afterLimitDialogAdd = () => {
   uploadQueueDialog.value = props.queueKey
 }
 
@@ -300,6 +308,7 @@ const widgetEl = ref<HTMLElement | null>(null)
 const randomUuid = ref<string>(generateUUIDv1())
 const sortableInstance = ref<UseSortableReturn | null>(null)
 const forceRerender = ref(0)
+const limitDialogComponent = ref<InstanceType<typeof ImageWidgetMultipleLimitDialog> | null>(null)
 
 const widgetHtmlId = computed(() => {
   return isUndefined(props.widgetIdentifierId) ? WIDGET_HTML_ID_PREFIX + randomUuid.value : props.widgetIdentifierId
@@ -443,6 +452,12 @@ onMounted(() => {
       v-if="assetDialog === queueKey"
       :queue-key="queueKey"
       :ext-system="cachedExtSystemId"
+    />
+    <ImageWidgetMultipleLimitDialog
+      ref="limitDialogComponent"
+      :queue-key="queueKey"
+      :upload-config="uploadConfig"
+      @after-add="afterLimitDialogAdd"
     />
   </div>
 </template>

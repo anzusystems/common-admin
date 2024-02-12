@@ -42,7 +42,11 @@ const toggleAdvancedFilter = () => {
       <slot name="top" />
     </VCol>
   </VRow>
-  <VRow dense>
+  <VRow
+    dense
+    class="a-filter-advanced"
+    :class="{'a-filter-advanced--active': advancedFilter }"
+  >
     <VCol
       v-if="enableAdvanced"
       class="v-col-filters--show-hide"
@@ -55,11 +59,12 @@ const toggleAdvancedFilter = () => {
     </VCol>
     <VCol class="">
       <slot name="default" />
-      <VExpandTransition v-if="enableAdvanced">
-        <div v-show="advancedFilter">
-          <slot name="advanced" />
-        </div>
-      </VExpandTransition>
+      <div
+        v-show="advancedFilter"
+        class="a-filter-advanced__content"
+      >
+        <slot name="advanced" />
+      </div>
     </VCol>
     <VCol
       v-if="!hideButtons"

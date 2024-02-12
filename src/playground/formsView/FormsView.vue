@@ -7,11 +7,11 @@ import AValueObjectOptionsSelect from '@/components/form/AFormValueObjectOptions
 import { computed, ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import { Grant, useGrant } from '@/model/valueObject/Grant'
-import ADatetimePicker from '@/components/ADatetimePicker.vue'
 import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
 import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
 import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
+import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
 
 const modelData = ref({
   shortText: 'text1',

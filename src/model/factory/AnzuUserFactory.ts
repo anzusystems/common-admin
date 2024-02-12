@@ -10,9 +10,7 @@ export function useAnzuUserFactory(system = '', resourceName = 'user') {
     if (isString(resourceName)) _resourceName = resourceName
 
     return {
-      id: 0,
-      createdAt: dateTimeNow(),
-      createdBy: 0,
+      id: null,
       email: '',
       avatar: {
         color: '',
@@ -24,12 +22,14 @@ export function useAnzuUserFactory(system = '', resourceName = 'user') {
         lastName: '',
       },
       enabled: false,
-      modifiedAt: dateTimeNow(),
-      modifiedBy: 0,
       permissionGroups: [],
       permissions: {},
       resolvedPermissions: {},
       roles: [],
+      modifiedAt: dateTimeNow(),
+      modifiedBy: null,
+      createdAt: dateTimeNow(),
+      createdBy: null,
       _system: _system,
       _resourceName: _resourceName,
     }

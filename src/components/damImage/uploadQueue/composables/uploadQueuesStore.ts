@@ -415,5 +415,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     stopUpload,
     getQueueItemsTypes,
     updateFromDetail,
+    forceReloadFileInput,
   }
 })

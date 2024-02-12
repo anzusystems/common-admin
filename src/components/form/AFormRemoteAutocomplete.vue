@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
-import type { Ref } from 'vue'
-import { computed, inject, ref, toRefs, watch } from 'vue'
+import { computed, inject, type Ref, ref, toRefs, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
@@ -23,7 +22,6 @@ type fetchItemsByIdsType =
 
 const props = withDefaults(
   defineProps<{
-    modelValue: any
     label?: string | undefined
     required?: boolean | undefined
     multiple?: boolean
@@ -40,7 +38,8 @@ const props = withDefaults(
     disableInitFetch?: boolean | undefined
     loading?: boolean
     collab?: CollabComponentConfig
-    disabled?: boolean
+    disabled?: boolean | undefined
+    chips?: boolean
   }>(),
   {
     label: undefined,
@@ -57,24 +56,32 @@ const props = withDefaults(
     loading: false,
     collab: undefined,
     disabled: undefined,
+    chips: false,
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: DocId | IntegerId | DocId[] | IntegerId[] | null): void
   (e: 'searchChange', data: string): void
   (e: 'searchChangeDebounced', data: string): void
   (e: 'blur', data: DocId | IntegerId | DocId[] | IntegerId[] | null): void
   (e: 'focus', data: DocId | IntegerId | DocId[] | IntegerId[] | null): void
 }>()
 
-const modelValue = computed({
-  get() {
-    return props.modelValue
-  },
-  set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null) {
-    emit('update:modelValue', cloneDeep<DocId | IntegerId | DocId[] | IntegerId[] | null>(newValue))
+const modelValue = defineModel<DocId | IntegerId | DocId[] | IntegerId[] | null | any>({
+  required: true,
+  set(newValue) {
+    return isArray(newValue) ? cloneDeep(newValue) : newValue
   },
 })
+
+const modelValueSelected = defineModel<DocId | IntegerId | DocId[] | IntegerId[] | null | any>('selected', {
+  required: false,
+  default: null,
+  set(newValue) {
+    return isArray(newValue) ? cloneDeep(newValue) : newValue
+  },
+})
+
+const modelValueAutocomplete = ref<DocId | IntegerId | DocId[] | IntegerId[] | null | any>(null)
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
@@ -105,7 +112,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     { immediate: true }
   )
   addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-    emit('update:modelValue', data.value as DocId | IntegerId | DocId[] | IntegerId[] | null)
+    modelValue.value = data.value as DocId | IntegerId | DocId[] | IntegerId[] | null
   })
 }
 
@@ -122,9 +129,9 @@ const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
 const onBlur = () => {
   isFocused.value = false
-  emit('blur', props.modelValue)
+  emit('blur', modelValue.value)
   props.v?.$touch()
-  releaseFieldLock.value(props.modelValue)
+  releaseFieldLock.value(modelValue.value)
 }
 
 const errorMessageComputed = computed(() => {
@@ -163,13 +170,13 @@ const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   const final = new Map()
   selectedItemsCache.value.forEach((value) => {
-    final.set(value.value, { value: value.value, title: value.title })
+    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
   })
   fetchedItems.value.forEach((value) => {
-    final.set(value.value, { value: value.value, title: value.title })
+    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
   })
   return Array.from(final, ([key, value]) => {
-    return { value: key, title: value.title }
+    return { value: key, title: value.title, subtitle: value.subtitle }
   })
 })
 
@@ -217,21 +224,15 @@ const autoFetch = async () => {
   clearAutoFetchTimer()
   if (autoFetched.value === true) return
   autoFetched.value = true
-  // if (
-  //   isNull(modelValue.value) ||
-  //   isUndefined(modelValue.value) ||
-  //   (isArray(modelValue.value) && modelValue.value.length === 0)
-  // ) {
   loadingLocal.value = true
   fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
   loadingLocal.value = false
-  // }
 }
 const onFocus = () => {
   isFocused.value = true
   clearAutoFetchTimer()
   autoFetch()
-  emit('focus', props.modelValue)
+  emit('focus', modelValue.value)
   acquireFieldLock.value()
 }
 
@@ -257,36 +258,6 @@ const onClickClear = async () => {
   modelValue.value = null
 }
 
-watch(
-  modelValue,
-  async (newValue, oldValue) => {
-    if (newValue === oldValue) return
-    if (collabOptions.value.enabled && isFocused.value) {
-      changeFieldData.value(newValue)
-    }
-    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
-      selectedItemsCache.value = []
-      if (props.disableInitFetch || autoFetched.value === true) return
-      autoFetchTimer.value = setTimeout(() => {
-        autoFetch()
-      }, 3000)
-      return
-    }
-    const found = await tryToLoadFromLocalData(newValue)
-    if (found) return
-    if (isArray<IntegerId | DocId>(newValue)) {
-      loadingLocal.value = true
-      selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
-      loadingLocal.value = false
-      return
-    }
-    loadingLocal.value = true
-    selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
-    loadingLocal.value = false
-  },
-  { immediate: true }
-)
-
 watchDebounced(
   search,
   (newValue, oldValue) => {
@@ -303,25 +274,118 @@ watch(search, (newValue, oldValue) => {
     emit('searchChange', newValue)
   }
 })
+
+const updateSelected = (newValue: any) => {
+  if (isArray(newValue)) {
+    return newValue.map((id: any) => {
+      const foundObject = allItems.value.find((obj) => obj.value === id)
+      return foundObject ? foundObject : { title: `${id}`, value: id }
+    })
+  }
+  const found = allItems.value.find((item) => item.value === newValue)
+  if (found) return found
+  return { value: newValue, title: newValue }
+}
+
+watch(
+  modelValue,
+  async (newValue, oldValue) => {
+    if (newValue === oldValue) return
+    if (collabOptions.value.enabled && isFocused.value) {
+      changeFieldData.value(newValue)
+    }
+    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+      selectedItemsCache.value = []
+      modelValueSelected.value = isArray(newValue) ? [] : null
+      modelValueAutocomplete.value = isArray(newValue) ? [] : null
+      if (props.disableInitFetch || autoFetched.value === true) return
+      autoFetchTimer.value = setTimeout(() => {
+        autoFetch()
+      }, 2000)
+      return
+    }
+    const found = await tryToLoadFromLocalData(newValue)
+    if (found) {
+      const selectedNewValue = updateSelected(newValue)
+      modelValueSelected.value = selectedNewValue
+      modelValueAutocomplete.value = selectedNewValue
+      return
+    }
+    if (isArray<IntegerId | DocId>(newValue)) {
+      loadingLocal.value = true
+      selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
+      const selectedNewValue = updateSelected(newValue)
+      modelValueSelected.value = selectedNewValue
+      modelValueAutocomplete.value = selectedNewValue
+      loadingLocal.value = false
+      return
+    }
+    loadingLocal.value = true
+    selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
+    const selectedNewValue = updateSelected(newValue)
+    modelValueSelected.value = selectedNewValue
+    modelValueAutocomplete.value = selectedNewValue
+    loadingLocal.value = false
+  },
+  { immediate: true }
+)
+
+const onAutocompleteModelUpdate = (newValue: any) => {
+  modelValueSelected.value = newValue
+  if (isNull(newValue)) {
+    modelValue.value = null
+    return
+  }
+  if (isArray(newValue)) {
+    modelValue.value = newValue.map((item: any) => item.value)
+    return
+  }
+  modelValue.value = newValue.value
+}
 </script>
 
 <template>
   <VAutocomplete
-    v-model="modelValue"
+    :model-value="modelValueAutocomplete"
     :items="allItems"
     no-filter
     :multiple="multipleComputedVuetifyTypeFix"
     :clearable="clearable"
     :error-messages="errorMessageComputed"
-    :chips="multiple"
+    :chips="chips || multiple"
     :hide-details="hideDetails"
     :loading="loadingComputed"
     :disabled="disabledComputed"
+    return-object
     @update:search="onSearchUpdate"
+    @update:model-value="onAutocompleteModelUpdate"
     @blur="onBlur"
     @focus="onFocus"
     @click:clear="onClickClear"
   >
+    <template #item="{ props: itemProps, item }">
+      <VListItem
+        v-bind="itemProps"
+        :title="item.raw.title"
+        :subtitle="item.raw.subtitle"
+      />
+    </template>
+    <template #chip="{ props: chipProps, item }">
+      <VChip
+        :closable="chipProps.closable as boolean"
+        size="small"
+        :text="`${item.title} (${item.raw.subtitle})`"
+        :disabled="item.props.disabled"
+      >
+        {{ item.raw.title }}
+        <span
+          v-if="item.raw.subtitle"
+          class="font-italic pl-1"
+        >
+          ({{ item.raw.subtitle }})
+        </span>
+      </VChip>
+    </template>
     <template #label>
       <span
         v-if="!hideLabel"

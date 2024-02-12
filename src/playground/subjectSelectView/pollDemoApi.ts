@@ -4,6 +4,7 @@ import { apiFetchList } from '@/services/api/apiFetchList'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { DatetimeUTCNullable, IntegerId } from '@/types/common'
+import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 
 // just a demo type
 export type PollDemo = AnzuUserAndTimeTrackingAware & {
@@ -22,3 +23,6 @@ export type PollDemo = AnzuUserAndTimeTrackingAware & {
 
 export const fetchPollListDemo = (pag: Pagination, fb: FilterBag) =>
   apiFetchList<PollDemo[]>(cmsClient, '/adm/v1/poll', {}, pag, fb, 'cms', 'poll')
+
+export const fetchPollListByIds = (ids: number[]) =>
+  apiFetchByIds<PollDemo[]>(cmsClient, ids, '/adm/v1/poll', {}, 'cms', 'poll')

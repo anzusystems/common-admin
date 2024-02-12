@@ -34,6 +34,8 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
 import { updateCurrentUser, useCurrentUser } from '@/playground/collabView/currentUser'
 import CopyTextView from '@/playground/copyTextView/CopyTextView.vue'
+import ImagePublicInputView from '@/playground/imagePublicInputView/ImagePublicInputView.vue'
+import RemoteAutocompleteView from '@/playground/remoteAutocompleteView/RemoteAutocompleteView.vue'
 
 const { createCollabRoom } = useCollabHelpers()
 
@@ -76,6 +78,11 @@ const router = createRouter({
       component: FormsView,
     },
     {
+      path: '/view/remote-autocomplete',
+      name: 'view-remote-autocomplete',
+      component: RemoteAutocompleteView,
+    },
+    {
       path: '/view/filters',
       name: 'view-filters',
       component: FilterView,
@@ -104,6 +111,11 @@ const router = createRouter({
       path: '/view/image-multiple',
       name: 'view-image-multiple',
       component: ImageMultipleView,
+    },
+    {
+      path: '/view/image-public-input',
+      name: 'view-image-public-input',
+      component: ImagePublicInputView,
     },
     {
       path: '/view/file',

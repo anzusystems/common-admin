@@ -25,6 +25,8 @@ export interface SortableEmit {
 
   (e: 'update:dirty', data: Array<DocId | IntegerId>): void
 
+  (e: 'onStart'): void
+
   (e: 'onEnd', data: SortableItemNewPositions): void
 
   (e: 'onAddAfter', data: SortableItem): void
@@ -41,6 +43,7 @@ export interface SortableActionsProps {
   keyField: string
   positionField: string
   updatePosition: boolean
+  positionMultiplier: number
 }
 
 export function useSortableActions(
@@ -113,11 +116,11 @@ export function useSortableActions(
     updatedPositions: SortableItemNewPositions = []
   ) => {
     const start = oldIndex > newIndex ? newIndex : oldIndex
-    let position = start + 1
+    let position = (props.positionMultiplier * start) + (props.positionMultiplier * 1)
     for (let i = start; i < items.length; i++) {
       objectSetValueByPath(items[i], props.positionField, position)
       touchDirty(items[i][props.keyField])
-      position++
+      position = position + (props.positionMultiplier * 1)
       updatedPositions.push({
         id: items[i].id,
         position: items[i].position,

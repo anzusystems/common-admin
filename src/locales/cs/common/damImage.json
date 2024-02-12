@@ -118,7 +118,16 @@
     "saveAndApply": "Uložiť a použiť",
     "title": "Nahrávanie",
     "titleDone": "Nahrávanie ukončené",
-    "stopConfirmQuestion": "Chcete ukončiť nahrávanie?"
+    "stopConfirmQuestion": "Chcete ukončiť nahrávanie?",
+    "limits": {
+      "uploadWarning": "Varovanie pri nahrávaní",
+      "onUploadLimit": "Dosiahli ste limit nahrávania ({limit}). Dokončite nahrávanie a skúste znova",
+      "addingOverLimit": "Pokúšate sa nahrať ďalšie súbory ({count}).",
+      "countAlreadyInProgress": "{count} súbor(y) prebiehajú.",
+      "onlyAllowedAtOnce": "Maximálne {count} súborov je možné nahrať súčasne",
+      "cancelOrUploadFirst": "Chcete zrušiť alebo nahrať iba prvých {count} súborov?",
+      "actionAddFirstItems": "Pridať prvých {count} súborov"
+    }
   },
   "keyword": {
     "model": {
@@ -158,5 +167,10 @@
     "offset": "Nesprávny offset",
     "mimeType": "Nesprávny formát súboru"
   },
-  "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne."
+  "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne.",
+  "public": {
+    "idOrUrl": "Image ID or public image URL",
+    "inputError": "Incorrect ID provided",
+    "imagePreview": "Image preview"
+  }
 }

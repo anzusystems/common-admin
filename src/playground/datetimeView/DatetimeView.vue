@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import ADatetime from '@/components/ADatetime.vue'
+import ADatetime from '@/components/datetime/ADatetime.vue'
 import type { DatetimeUTCNullable } from '@/types/common'
 import { ref } from 'vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import { dateTimeNow } from '@/utils/datetime'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
+import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
 
 const dateTime = ref<DatetimeUTCNullable>('2023-02-08T08:17:29.000000Z')
 const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)
@@ -20,6 +21,10 @@ const changeToNow = () => {
   <ActionbarWrapper />
 
   <VCard>
+    <VCardText>
+      dateTime: {{ dateTime }}<br>
+      dateTimeDefaultNull: {{ dateTimeDefaultNull }}
+    </VCardText>
     <VCardTitle>ADatetime component to display formatted datetime</VCardTitle>
     <VCardText>
       <VRow>
@@ -31,11 +36,42 @@ const changeToNow = () => {
   </VCard>
 
   <VCard>
-    <VCardTitle>ADatetime component basic</VCardTitle>
+    <VCardTitle>
+      ADatetimePicker component basic
+    </VCardTitle>
     <VCardText>
+      <p class="mb-4">
+        (always prefer to use AFormDatetimePicker or AFilterDatetimePicker version, this is a helper component
+        for them with main functionality of datetime picking)
+      </p>
       <VRow>
         <VCol>
-          <ADatetime :date-time="dateTime" />
+          <ADatetimePicker
+            v-model="dateTime"
+            label="default value null, not clearable, not required"
+            :default-value="null"
+          />
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
+          <ADatetimePicker
+            v-model="dateTimeDefaultNull"
+            label="init value null, default value null, clearable, not required"
+            :default-value="null"
+            clearable
+          />
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
+          <ADatetimePicker
+            v-model="dateTime"
+            label="default value 2020-01-01T09:15:00.000000Z, clearable, required"
+            default-value="2020-01-01T09:15:00.000000Z"
+            clearable
+            required
+          />
         </VCol>
       </VRow>
     </VCardText>

@@ -27,6 +27,7 @@ export default defineConfig({
         '@vuelidate/validators',
         '@vueuse/core',
         '@vueuse/integrations',
+        'socket.io-client',
       ],
     },
   },

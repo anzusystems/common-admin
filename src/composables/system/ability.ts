@@ -52,7 +52,7 @@ export function useAcl<T extends AclValue = AclValue>(options?: AclResolverConfi
       throw new Error('Composable useAcl can be used as a global state without providing current user as a parameter.')
     if (!isUndefined(customAclProvider) && !isUndefined(customAclProvider.canOwner))
       return customAclProvider.canOwner(subject)
-    if (currentUser.value) {
+    if (currentUser.value && currentUser.value.id) {
       if (isOwnerAware(subject)) {
         return subject.owners.includes(currentUser.value.id)
       }
