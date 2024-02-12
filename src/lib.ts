@@ -482,9 +482,10 @@ import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalPro
 import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
 import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
-import { fetchDamAssetLicenceListByIds, fetchDamAssetLicenceList } from '@/components/dam/user/assetLicenceApi'
-import { fetchDamExtSystemListByIds, fetchDamExtSystemList } from '@/components/dam/user/extSystemApi'
-import type { DamUserUpdateDto } from '@/components/dam/user/DamUser'
+import { fetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
+import { fetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
+import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
+import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
 
 export {
   // COMPONENTS
@@ -759,6 +760,7 @@ export {
   type DamAssetLicence,
   type DamAssetLicenceMinimal,
   type DamUserUpdateDto,
+  type DamUser,
 
   // FACTORIES
   useAnzuUserFactory,
@@ -860,6 +862,10 @@ export {
   fetchDamAssetLicenceList,
   fetchDamExtSystemListByIds,
   fetchDamExtSystemList,
+  fetchDamUserListByIds,
+  fetchDamUserList,
+  updateDamUser,
+  fetchDamUser,
 
   // TRANSLATIONS
   messagesCs,
