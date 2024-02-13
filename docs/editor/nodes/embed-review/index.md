@@ -1,22 +1,22 @@
 # embedReview
 
 ## Features
-- todo
+- User can select from existing reviews
 
 ## Node schema
 
 ```json
 {
-  "name": "embedFaq",
+  "name": "embedReview",
   "groups": [
     "embed"
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -26,18 +26,51 @@
 
 ```json
 {
-  "type": "embedFaq",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedReview",
+      "attrs": {
+        "id": "6dec11fb-34b2-42ec-8bc4-0bba216158a8",
+        "changeId": "dc62ffef-ccb8-4ac4-8046-406d03c5ee5d"
+      }
+    }
+  ]
 }
 ```
 
 ## API data
 
 ```ts
-interface EmbedKindMinute {
-  todo
+interface EmbedReviewAware {
+  id: DocId
+  review: IntegerId
+  detail: {
+    review: {
+      id: IntegerId
+      title: string
+      type: string // enum: product | book | movie | game
+      enabled: boolean
+      affiliate: boolean
+      rating: number
+      description: string
+      pros: ListItemDto[]
+      cons: ListItemDto[]
+      price: string
+      info: string
+      links: LinkDto[]
+    }
+  }
+}
+
+interface ListItemDto {
+  title: string
+  position: number
+}
+
+interface LinkDto {
+  title: string
+  url: string
+  position: number
 }
 ```

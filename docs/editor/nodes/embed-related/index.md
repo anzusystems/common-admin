@@ -3,10 +3,10 @@
 ## Features
 - User can insert internal articles from CMS using filterable dialog to item
 - User can insert external url for item and specify title fot his item
-- User can mix both types
 - User can override title
 
-NTH: copy/paste url of article -> embedRelated
+## Note
+- model supports mixing both types but for now only one item can be inserted at once
 
 ## Node schema
 
@@ -18,10 +18,10 @@ NTH: copy/paste url of article -> embedRelated
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -31,36 +31,81 @@ NTH: copy/paste url of article -> embedRelated
 
 ```json
 {
-  "type": "embedRelated",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedRelated",
+      "attrs": {
+        "id": "6dec11fb-34b2-42ec-8bc4-0bba216158a8",
+        "changeId": "dc62ffef-ccb8-4ac4-8046-406d03c5ee5d"
+      }
+    }
+  ]
 }
 ```
 
 ## API data
 
 ```ts
+import {IntegerIdNullable} from "./common";
+
 interface EmbedKindRelated {
-  id: IntegerId
+  id: DocId
   title: string
-  items: Array<{
-    source: DocId | string
-    title: string
-    type: 'article' | 'link'
-    external: boolean
-    nofollow: boolean
-  }>
-  article: IntegerId
+  items: RelatedItemKindArticle[] | RelatedItemKindLink[]
   detail: {
-    articles: Array<{
-      id: IntegerId
-      articleDocId: DocId
-      title: string
-      leadImage: IntegerIdNullable
-      listingImage: IntegerIdNullable
-    }>
+    items: Array<RelatedItemDetailKindArticle | RelatedItemDetailKindLink>
   }
+}
+
+interface RelatedItemKindArticle {
+  title: string
+  articleDocId: DocId
+  position: number
+  discriminator: 'article'
+}
+
+interface RelatedItemKindLink {
+  title: string
+  src: string
+  position: number
+  external: boolean
+  nofollow: boolean
+  discriminator: 'link'
+}
+
+interface RelatedItemDetailKindArticle {
+  id: DocId
+  position: number
+  title: string
+  article: {
+    id: IntegerId
+    docId: DocId
+    url: string
+    status: string // enum: draft | ready | published
+    dates: {
+      publishedAt: DatetimeUTCNullable
+      firstPublishedAt: DatetimeUTCNullable
+      expireAt: DatetimeUTCNullable
+      publicPublishedAt: DatetimeUTC
+      publicUpdatedAt: DatetimeUTCNullable
+    }
+    texts: {
+      title: string
+      leadText: string
+    }
+    listingImage: IntegerIdNullable
+  }
+  discriminator: 'article'
+}
+
+interface RelatedItemDetailKindLink {
+  id: DocId
+  position: number
+  title: string
+  src: string
+  external: boolean
+  nofollow: boolean
+  discriminator: 'link'
 }
 ```

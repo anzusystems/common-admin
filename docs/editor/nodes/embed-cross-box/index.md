@@ -69,4 +69,4 @@ interface EmbedCrossBoxAware {
 ```
 
 ## Crossbox JSONContent
- - theoretically can contain all doc with all nodes from these docs
+ - theoretically can contain doc with all nodes from these docs

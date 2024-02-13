@@ -1,22 +1,23 @@
 # embedMinute
 
 ## Features
-- todo
+- User can select minute topic using filterable dialog
+- User can set title, date from and to, enable or disable auto refresh
 
 ## Node schema
 
 ```json
 {
-  "name": "embedFaq",
+  "name": "embedMinute",
   "groups": [
     "embed"
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -26,18 +27,35 @@
 
 ```json
 {
-  "type": "embedFaq",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedMinute",
+      "attrs": {
+        "id": "6dec11fb-34b2-42ec-8bc4-0bba216158a8",
+        "changeId": "dc62ffef-ccb8-4ac4-8046-406d03c5ee5d"
+      }
+    }
+  ]
 }
 ```
 
 ## API data
 
 ```ts
-interface EmbedKindMinute {
-  todo
+interface EmbedMinuteAware {
+  id: DocId
+  minuteTopic: IntegerId
+  dateFrom: DatetimeUTC
+  dateUntil: DatetimeUTC
+  autoRefresh: boolean
+  title: string
+  detail: {
+    minuteTopic: {
+      id: IntegerId,
+      title: string
+      seoDescription: string
+    }
+  }
 }
 ```

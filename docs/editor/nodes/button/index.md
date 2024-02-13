@@ -1,6 +1,6 @@
 # button
 
-- similar attrs to [link mark](/editor/marks/link/) (same attrs), with some changes, and it's block node.
+- similar attrs to [link mark](/editor/marks/link/)
 
 ## Features
 - User can insert specially styled button node, it can be: link, email or anchor

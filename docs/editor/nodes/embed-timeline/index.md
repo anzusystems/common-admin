@@ -1,7 +1,7 @@
 # embedTimeline
 
 ## Features
-- todo
+- user can insert timeline using filterable dialog
 
 ## Node schema
 
@@ -26,14 +26,52 @@
 
 ```json
 {
-  "type": "embedTimeline",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedTimeline",
+      "attrs": {
+        "id": "6dec11fb-34b2-42ec-8bc4-0bba216158a8",
+        "changeId": "dc62ffef-ccb8-4ac4-8046-406d03c5ee5d"
+      }
+    }
+  ]
 }
 ```
 
 ## API data
 
-todo
+```ts
+interface EmbedTimelineAware {
+  id: DocId
+  timeline: IntegerId
+  detail: {
+    timeline: {
+      id: IntegerId
+      enabled: boolean
+      texts: {
+        title: string
+        description: string
+      }
+      items: TimelineEvent[]
+    }
+  }
+}
+
+interface TimelineEvent extends SortableItemDataAware {
+  id: IntegerId
+  enabled: boolean
+  texts: {
+    title: string
+    microdataTitle: string
+    description: string
+  }
+  dates: {
+    startDate: DatetimeUTCNullable
+    endDate: DatetimeUTCNullable
+  }
+  url: string
+  location: string
+  position: number
+}
+```

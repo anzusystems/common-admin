@@ -1,7 +1,7 @@
 # embedPoll
 
 ## Features
-- for now just select from existing polls
+- User can select from existing polls
 
 ## Node schema
 
@@ -13,10 +13,10 @@
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -43,9 +43,34 @@
 
 ```ts
 interface EmbedKindPoll {
-  id: IntegerId
-  article: IntegerId
+  id: DocId
   poll: IntegerId
-  detail: todo
+  detail: {
+    poll: {
+      id: IntegerId
+      enabled: boolean
+      texts: {
+        title: string
+        description: string
+      }
+      dates: {
+        startOfVoting: DatetimeUTCNullable
+        endOfVoting: DatetimeUTCNullable
+      }
+      attributes: {
+        displayType: PollDisplayType
+        hideVotes: boolean
+      }
+      options: Array<{
+        id: IntegerId
+        votes: number
+        votesCached: number
+        position: number
+        title: string
+      }>
+      votes: number
+      votesCached: number
+    }
+  }
 }
 ```

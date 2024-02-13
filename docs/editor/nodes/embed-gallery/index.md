@@ -1,8 +1,7 @@
 # embedGallery
 
 ## Features
-- User can insert existing gallery or choose from existing galleries.
-- User can create a new gallery and upload images to this gallery (it will be uploaded to DAM also) and user can also choose from existing DAM images and add them to gallery.
+- User can insert existing gallery from existing galleries' dialog.
 
 ## Node schema
 
@@ -14,10 +13,10 @@
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -27,11 +26,16 @@
 
 ```json
 {
-  "type": "embedGallery",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedGallery",
+      "attrs": {
+        "id": "6dec11fb-34b2-42ec-8bc4-0bba216158a8",
+        "changeId": "dc62ffef-ccb8-4ac4-8046-406d03c5ee5d"
+      }
+    }
+  ]
 }
 ```
 
@@ -39,11 +43,53 @@
 
 ```ts
 interface EmbedKindGallery {
-  id: IntegerId
-  article: IntegerId
+  id: DocId
   gallery: IntegerId
-  layoutType: 'thumb' | 'whole'
-  title: string
-  detail: todo
+  layout: string // enum: thumb | whole
+  texts: {
+    title: string
+    description: string
+  }
+  detail: {
+    gallery: {
+      id: IntegerId
+      enabled: boolean
+      texts: {
+        title: string
+        description: string
+      }
+      url: string
+      rubric: {
+        attributes: {
+          status: string // enum: show | hide
+        }
+        texts: {
+          title: string
+          shortTitle: string
+          seoTitle: string
+          description: string
+          seoDescription: string
+        }
+        site: {
+          name: string
+          domain: string
+        }
+      }
+      imagesCount: number
+      images: Array<{
+        position: number
+        texts: {
+          description: string
+          source: string
+        }
+        dam: {
+          damId: DocId
+          regionPosition: number
+          animation: boolean
+          licenceId: number
+        }
+      }>
+    }
+  }
 }
 ```
