@@ -1,6 +1,3 @@
-# anchor
+# Anchor extension
 
-// todo
-
-## Features
-- adds global attribute anchor
+- adds global attribute `anchor`

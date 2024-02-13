@@ -1,5 +1,3 @@
-# Character count
+# Character count extension
 
-## Features
 - prints character count of raw text
-

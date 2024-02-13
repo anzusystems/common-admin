@@ -1,5 +1,4 @@
-# Linter
+# Linter extension
 
-## Features
+- Highlight words that match list of unwanted words
 - wip
-

@@ -1,6 +1,6 @@
-# collaborationCursor
+# Collaboration cursor extension
 
-See [tiptap docs](https://tiptap.dev/api/extensions/collaboration-cursor).
+- see [tiptap docs](https://tiptap.dev/api/extensions/collaboration-cursor).
 
 ## Notes
 - only enabled when collaboration is enabled

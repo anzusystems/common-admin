@@ -1,9 +1,9 @@
-# textAlign
+# Text align extension
 
-See [tiptap docs](https://tiptap.dev/api/extensions/text-align).
+- see [tiptap docs](https://tiptap.dev/api/extensions/text-align).
 
 ## Features
-- User can align text on some nodes
+- User can align text on configured nodes
 
 ## Limitations
 - we allow only these alignments: `left`, `center`, `right`

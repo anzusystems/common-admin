@@ -1,5 +1,3 @@
 # Anzutap config
 
-## Features
-- todo
-
+- common configuration required for some embeds / nodes
