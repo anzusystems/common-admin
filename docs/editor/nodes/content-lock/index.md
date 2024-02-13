@@ -21,6 +21,37 @@
 
 ```json
 {
-  "type": "contentLock"
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lorem ipsum dolor sit amet."
+        }
+      ]
+    },
+    {
+      "type": "contentLock"
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Pulvinar mattis nunc sed blandit libero volutpat sed."
+        }
+      ]
+    }
+  ]
 }
 ```

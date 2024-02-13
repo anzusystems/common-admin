@@ -2,6 +2,9 @@
 
 - similar attrs to [link mark](/editor/marks/link/) (same attrs), with some changes, and it's block node.
 
+## Features
+- User can insert specially styled button node, it can be: link, email or anchor
+
 ## Node schema
 
 ```json
@@ -31,19 +34,24 @@
 
 ```json
 {
-  "type": "button",
+  "type": "doc",
   "content": [
     {
-      "type": "text",
-      "text": "bla bla bla"
+      "type": "button",
+      "attrs": {
+        "href": "https://www.sme.sk",
+        "external": false,
+        "nofollow": false,
+        "variant": "link",
+        "size": "large"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lorem"
+        }
+      ]
     }
-  ],
-  "attrs": {
-    "href": "https://www.sme.sk",
-    "size": "large",
-    "external": false,
-    "nofollow": false,
-    "variant": "link"
-  }
-} 
+  ]
+}
 ```

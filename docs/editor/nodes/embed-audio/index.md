@@ -26,11 +26,16 @@
 
 ```json
 {
-  "type": "embedAudio",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedAudio",
+      "attrs": {
+        "id": "6dec11fb-34b2-42ec-8bc4-0bba216158a8",
+        "changeId": "dc62ffef-ccb8-4ac4-8046-406d03c5ee5d"
+      }
+    }
+  ]
 }
 ```
 
@@ -38,6 +43,7 @@
 
 ```ts
 interface EmbedAudioAware {
+  id: DocId
   asset: DocId
   licence: IntegerId
   image: DocId

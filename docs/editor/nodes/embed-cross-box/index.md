@@ -1,25 +1,9 @@
 # embedCrossBox
 
-// todo specify fields: only body for now
-
-CrossBox is special entity with tiptap json body with specific schema.
+- CrossBox is special entity with own anzutap json body.
 
 ## Features
 - User can select infobox from list of existing.
-- User can create a new CrossBox or edit existing in new dialog
-- nodes:
-  - heading h2-h5
-  - paragraph
-  - text
-  - hardBreak
-  - orderedList
-  - bulletList
-  - embedImage
-  - embedImageInline
-  - embedGallery
-  - faq
-- marks:
-  - all
 
 ## Node schema
 
@@ -31,10 +15,10 @@ CrossBox is special entity with tiptap json body with specific schema.
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -44,21 +28,45 @@ CrossBox is special entity with tiptap json body with specific schema.
 
 ```json
 {
-  "type": "embedCrossBox",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedCrossBox",
+      "attrs": {
+        "id": "56f63eec-7f7d-49eb-b477-0f76a74d510f",
+        "changeId": "143e0575-8898-4ad1-a9bb-4d1ea27efec7"
+      }
+    }
+  ]
 }
 ```
 
 ## API data
 
 ```ts
-interface EmbedKindCrossBox {
-  id: IntegerId
-  article: IntegerId
-  crossBox: IntegerId
-  detail: todo
+interface EmbedCrossBoxAware {
+  id: DocId
+  embeddedCrossBox: IntegerId
+  detail?: {
+    crossBox: {
+      id: IntegerId
+      enabled: boolean
+      texts: {
+        title: string
+        description: string
+        body: JSONContent // 
+      }
+      dates: {
+        showAtFrom: DatetimeUTCNullable
+        showAtUntil: DatetimeUTCNullable
+      }
+      flags: {
+        allowAsEmbed: boolean
+      }
+    }
+  }
 }
 ```
+
+## Crossbox JSONContent
+ - theoretically can contain all doc with all nodes from these docs

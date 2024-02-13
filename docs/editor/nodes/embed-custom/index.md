@@ -1,9 +1,7 @@
 # embedCustom
 
-Same as other embeds that supports customData, but with no dedicated fields.
-Field `name` is used to specify customData fields setup.
-
-// todo add customData documentation
+- Same as other embeds that supports customData, but with no dedicated fields.
+- Field `name` is used to specify customData fields setup.
 
 ## Features
 - User can insert custom embed, choose name and input its fields.
@@ -19,10 +17,10 @@ Field `name` is used to specify customData fields setup.
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -43,11 +41,10 @@ Field `name` is used to specify customData fields setup.
 ## API data
 
 ```ts
-interface EmbedKindCustom {
-  id: IntegerId
-  article: IntegerId
+interface EmbedCustomAware {
+  id: DocId
   name: string
-  customData: object
+  customData: Record<string, any>
 }
 ```
 
@@ -68,7 +65,7 @@ interface EmbedKindCustom {
 ```json
 {
   "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-  "article": 60,
+  "name": "todo",
   "customData": {
     "id": "43264"
   }

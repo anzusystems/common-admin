@@ -1,26 +1,25 @@
 # embedExternal
 
-See [Media](/editor/media/general/) for general info and all supported options.
+- See [Scraper](/editor/scraper/general/) for info and all supported types.
 
 ## Features
-- User can open dialog, input supported code snippet inside textarea, and it will autodetect type of embed media and parse its content
-- User can input the media type and its fields manually.
-- // todo
+- User can open dialog, input supported code snippet inside textarea, and it will autodetect type of embed media and parse its content using scraper
+- if the media embed code is from DAM and according to some licence restrictions, convert it to embedAudio or embedVideo 
 
 ## Node schema
 
 ```json
 {
-  "name": "embedMedia",
+  "name": "embedExternal",
   "groups": [
     "embed"
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -30,7 +29,7 @@ See [Media](/editor/media/general/) for general info and all supported options.
 
 ```json
 {
-  "type": "embedMedia",
+  "type": "embedExternal",
   "attrs": {
     "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
     "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
@@ -41,16 +40,12 @@ See [Media](/editor/media/general/) for general info and all supported options.
 ## API data
 
 ```ts
-interface EmbedKindMedia {
-  id: IntegerId
-  article: IntegerId
-  variant: string // see Media docs
-  damId: DocIdNullable
-  damType: 'audio' | 'video'
-  align: 'left' | 'right' | 'center',
-  ratio: number,
-  dataHeight: number
-  data: object // see Media docs
+interface EmbedExternalAware {
+  id: DocId
+  variant: string // enum, see Scraper docs
+  scrapeStatus: string // enum: error | done | pending | unassigned
+  params: Record<string, any> // see Scraper docs
+  data: Record<string, any> // see Scraper docs
 }
 ```
 

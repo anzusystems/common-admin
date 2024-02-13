@@ -18,22 +18,49 @@
 
 ```json
 {
-  "type": "bulletList",
+  "type": "doc",
   "content": [
     {
-      "type": "listItem",
+      "type": "bulletList",
       "content": [
         {
-          "type": "paragraph",
+          "type": "listItem",
           "content": [
             {
-              "type": "text",
-              "text": "Lorem"
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "rhoncus"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "neque"
+                }
+              ]
             }
           ]
         }
       ]
     }
   ]
-} 
+}
 ```

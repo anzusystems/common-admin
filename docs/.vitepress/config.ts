@@ -144,6 +144,7 @@ function sidebarEditor() {
         { text: 'contentLock', link: '/editor/nodes/content-lock/' },
         { text: 'embedAudio', link: '/editor/nodes/embed-audio/' },
         { text: 'embedCustom', link: '/editor/nodes/embed-custom/' },
+        { text: 'embedExternal', link: '/editor/nodes/embed-external/' },
         { text: 'embedExternalImage', link: '/editor/nodes/embed-external-image/' },
         { text: 'embedExternalImageInline', link: '/editor/nodes/embed-external-image-inline/' },
         { text: 'embedGallery', link: '/editor/nodes/embed-gallery/' },
