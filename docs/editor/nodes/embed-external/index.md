@@ -47,7 +47,7 @@
 ```ts
 interface EmbedExternalAware {
   id: DocId
-  variant: string // enum, see Scraper docs
+  type: string // enum, see Scraper docs
   scrapeStatus: string // enum: error | done | pending | unassigned
   params: Record<string, any> // see Scraper docs
   data: Record<string, any> // see Scraper docs

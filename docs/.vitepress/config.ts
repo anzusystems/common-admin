@@ -223,7 +223,12 @@ function sidebarEditor() {
       collapsed: false,
       items: [
         { text: 'Scraper', link: '/editor/scraper/general/' },
-        { text: 'youtube', link: '/editor/scraper/youtube/' },
+        { text: 'fb_post', link: '/editor/scraper/fb_post/' },
+        { text: 'flr_visual', link: '/editor/scraper/flr_visual/' },
+        { text: 'ta3_video', link: '/editor/scraper/ta3_video/' },
+        { text: 'tw_post', link: '/editor/scraper/tw_post/' },
+        { text: 'vm_video', link: '/editor/scraper/vm_video/' },
+        { text: 'yt_video', link: '/editor/scraper/yt_video/' },
       ]
     },
   ]
