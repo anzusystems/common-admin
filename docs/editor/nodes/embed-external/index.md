@@ -1,4 +1,4 @@
-# embedMedia
+# embedExternal
 
 See [Media](/editor/media/general/) for general info and all supported options.
 

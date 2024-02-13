@@ -53,18 +53,15 @@ export default defineConfig({
       provider: 'local'
     },
     nav: nav(),
-
     sidebar: {
       '/guide/': sidebarGuide(),
       '/styleguide/': sidebarGuide(),
       '/editor/': sidebarEditor(),
       '/api/': getApiSidebarItems()
     },
-
     socialLinks: [
       { icon: 'github', link: 'https://github.com/anzusystems/common-admin' }
     ],
-
     footer: {
       message: 'Released under the Apache License 2.0.'
     },
@@ -132,15 +129,16 @@ function sidebarEditor() {
       collapsed: false,
       items: [
         { text: 'Introduction', link: '/editor/introduction/' },
-        { text: 'Editor', link: '/editor/editor/' },
-        { text: 'CMS status', link: '/editor/cms/' },
+        { text: 'Anzutap', link: '/editor/anzutap/' },
       ]
     },
     {
       text: 'Marks',
       collapsed: false,
       items: [
+        { text: 'Marks', link: '/editor/marks/general/' },
         { text: 'bold', link: '/editor/marks/bold/' },
+        { text: 'comment', link: '/editor/marks/comment/' },
         { text: 'italic', link: '/editor/marks/italic/' },
         { text: 'link', link: '/editor/marks/link/' },
         { text: 'strike', link: '/editor/marks/strike/' },
@@ -153,6 +151,7 @@ function sidebarEditor() {
       text: 'Nodes',
       collapsed: false,
       items: [
+        { text: 'Nodes', link: '/editor/nodes/general/' },
         { text: 'bulletList', link: '/editor/nodes/bullet-list/' },
         { text: 'button', link: '/editor/nodes/button/' },
         { text: 'contentBreak', link: '/editor/nodes/content-break/' },
@@ -195,32 +194,35 @@ function sidebarEditor() {
       ]
     },
     {
-      text: 'Media embeds',
+      text: 'Scraper',
       collapsed: false,
       items: [
-        { text: 'General', link: '/editor/media/general/' },
-        { text: 'youtube', link: '/editor/media/youtube/' },
+        { text: 'Scraper', link: '/editor/scraper/general/' },
+        { text: 'youtube', link: '/editor/scraper/youtube/' },
       ]
     },
     {
       text: 'Extensions',
       collapsed: false,
       items: [
-        { text: 'General', link: '/editor/extensions/general/' },
-        { text: 'anchor', link: '/editor/extensions/anchor/' },
+        { text: 'Extensions', link: '/editor/extensions/general/' },
         { text: 'addParagraph', link: '/editor/extensions/add-paragraph/' },
+        { text: 'anchor', link: '/editor/extensions/anchor/' },
+        { text: 'anzutapConfig', link: '/editor/extensions/anzutap-config/' },
+        { text: 'characterCount', link: '/editor/extensions/character-count/' },
         { text: 'collaboration', link: '/editor/extensions/collaboration/' },
         { text: 'collaborationCursor', link: '/editor/extensions/collaboration-cursor/' },
         { text: 'dropCursor', link: '/editor/extensions/drop-cursor/' },
         { text: 'gapCursor', link: '/editor/extensions/gap-cursor/' },
+        { text: 'history', link: '/editor/extensions/history/' },
+        { text: 'linter', link: '/editor/extensions/linter/' },
         { text: 'listKeymap', link: '/editor/extensions/list-keymap/' },
         { text: 'nodePreventDelete', link: '/editor/extensions/node-prevent-delete/' },
         { text: 'nodePreventPaste', link: '/editor/extensions/node-prevent-paste/' },
-        { text: 'tableCaption', link: '/editor/extensions/table-caption/' },
-        { text: 'tocGenerate', link: '/editor/extensions/toc-generate/' },
         { text: 'slashCommands', link: '/editor/extensions/slash-commands/' },
-        { text: 'history', link: '/editor/extensions/history/' },
+        { text: 'tableCaption', link: '/editor/extensions/table-caption/' },
         { text: 'textAlign', link: '/editor/extensions/text-align/' },
+        { text: 'tocGenerate', link: '/editor/extensions/toc-generate/' },
       ]
     },
   ]
