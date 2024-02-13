@@ -16,6 +16,7 @@ Similar to [embedImage](/editor/nodes/embed-image/), but it's inline node.
   "groups": [
     "inline"
   ],
+  "inline": true,
   "attrs": {
     "id": {
       "default": "" // string (uuid of embed)

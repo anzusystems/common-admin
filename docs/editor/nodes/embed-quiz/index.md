@@ -1,7 +1,7 @@
 # embedQuiz
 
 ## Features
-- todo
+- user can insert quiz using filterable dialog
 
 ## Node schema
 

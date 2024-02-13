@@ -1,7 +1,7 @@
 # embedGallery
 
 ## Features
-- User can insert existing gallery from existing galleries' dialog.
+- user can insert existing gallery from filterable dialog
 
 ## Node schema
 

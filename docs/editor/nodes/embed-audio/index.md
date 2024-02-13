@@ -1,7 +1,7 @@
 # embedAudio
 
 ## Features
-- User can insert audio from DAM using select dialog with filters.
+- user can insert audio from DAM using filterable dialog
 
 ## Node schema
 

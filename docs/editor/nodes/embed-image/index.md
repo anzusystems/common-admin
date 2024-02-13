@@ -1,12 +1,12 @@
 # embedImage
 
-- similar attrs to [link mark](/editor/marks/link/)
+- some attrs similar to [link mark](/editor/marks/link/)
 
 ## Features
-- User can select image from DAM using filterable dialog
-- User can upload image from local file, so it will be uploaded to DAM and then used as embed
-- User can drag and drop file directly to editor to upload to DAM and use as embed
-- User can input `decription` and `source` texts
+- user can select image from DAM using filterable dialog
+- user can upload image from local file, so it will be uploaded to DAM and then used as embed
+- user can drag and drop file directly to editor to upload to DAM and use as embed
+- user can input `decription` and `source` texts, they will be prefilled by upload if possible
 
 ## Node schema
 

@@ -1,7 +1,7 @@
 # embedPoll
 
 ## Features
-- User can select from existing polls
+- user can insert poll using filterable dialog
 
 ## Node schema
 

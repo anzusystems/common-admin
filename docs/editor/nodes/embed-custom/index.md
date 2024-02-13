@@ -1,11 +1,12 @@
 # embedCustom
 
-- Same as other embeds that supports customData, but with no dedicated fields.
-- Field `name` is used to specify customData fields setup.
+- todo: document customData
+- used for special custom features
+- same as other embeds that supports customData, but without its own fields
+- field `name` is used to specify customData fields setup
 
 ## Features
-- User can insert custom embed, choose name and input its fields.
-- Used for special custom features.
+- user can insert custom embed, choose name and fill form according its config
 
 ## Node schema
 

@@ -1,6 +1,6 @@
 # heading
 
-- See [tiptap docs](https://tiptap.dev/api/nodes/heading)
+- see [tiptap docs](https://tiptap.dev/api/nodes/heading)
 - textAlign attr is from [textAlign extension](/editor/extensions/text-align/) .
 - anchor attr is from [anchor extension](/editor/extensions/anchor/).
 

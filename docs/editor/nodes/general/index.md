@@ -1,9 +1,9 @@
 # Nodes
 
-If you think of the document as a tree, then nodes are just a type of content in that tree. Examples of nodes are paragraphs, headings, or code blocks. Nodes are mostly blocks, but nodes don’t have to be blocks. They can also be rendered inline with the text.
+- if you think of the document as a tree, then nodes are just a type of content in that tree. Examples of nodes are paragraphs, headings, or code blocks. Nodes are mostly blocks, but nodes don’t have to be blocks. They can also be rendered inline with the text.
 
 ## Embeds
-- all nodes starting with `embed...` follow same pattern
+- all nodes starting with `embed` follow similar pattern (similar json structure in editor)
 - example for `embedPoll` schema:
 
 ```json
@@ -33,8 +33,9 @@ If you think of the document as a tree, then nodes are just a type of content in
   }
 }
 ```
-- so in editor embeds are just placeholders where the embed should be rendered
-- all other data for embed are provided by API
+- basically embeds are just placeholders where are they inserted in content
+- all other data for embed is provided by embed API
+- all embeds supports customData (todo: document it)
 
 ## Notes
 

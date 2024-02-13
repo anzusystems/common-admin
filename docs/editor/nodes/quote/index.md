@@ -1,8 +1,8 @@
 # quote
 
 ## Features
-- User can set quote content
-- User can set quote author
+- user can set quote content directly in editor
+- user can set quote author directly in editor
 
 ## Node schema
 ```json

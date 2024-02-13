@@ -1,10 +1,10 @@
 # contentLock
 
 ## Features
-- User can add this separator to separate multiple 2 parts of document - free and paid part
+- user can add this separator to separate multiple 2 parts of document - free and paid part
 
-## Requirements
-- Only one per document
+## Limitations
+- only one per document
 
 ## Node schema
 

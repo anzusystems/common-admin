@@ -3,7 +3,8 @@
 - similar attrs to [link mark](/editor/marks/link/)
 
 ## Features
-- User can insert specially styled button node, it can be: link, email or anchor
+- user can insert specially styled button node
+- this button can lead to email, link (url) or anchor (hash url)
 
 ## Node schema
 

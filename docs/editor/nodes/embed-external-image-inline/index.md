@@ -2,8 +2,8 @@
 - inline node, so it can be inside of paragraph or heading nodes
 
 ## Features
-- only for migration or a readonly in editor
-- should be replaced by `embedImageInline` after media migration
+- only for migration or used as readonly in anzutap
+- should be replaced by `embedImage` after media migration
 
 ## Requirements
 - skip on render
@@ -16,6 +16,7 @@
   "groups": [
     "embed"
   ],
+  "inline": true,
   "attrs": {
     "id": {
       "default": "" // string (uuid of embed)

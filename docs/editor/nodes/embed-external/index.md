@@ -1,10 +1,10 @@
 # embedExternal
 
-- See [Scraper](/editor/scraper/general/) for info and all supported types.
+- see [Scraper](/editor/scraper/general/) for info and all supported types
 
 ## Features
-- User can open dialog, input supported code snippet inside textarea, and it will autodetect type of embed media and parse its content using scraper
-- if the media embed code is from DAM and according to some licence restrictions, convert it to embedAudio or embedVideo 
+- user can open dialog, input supported code snippet inside textarea, and it will autodetect type of embed media and parse its content using scraper
+- if the media embed code is distributed in DAM and matches some licence restrictions, it's converted to embedAudio or embedVideo by anzutap
 
 ## Node schema
 

@@ -1,12 +1,10 @@
 # contentBreak
 
 ## Features
-- User can add this separator to separate multiple parts of document
-- Only one per document
+- user can add this separator to separate multiple parts of document
 
-
-## Requirements
-- Only one per document
+## Limitations
+- only one per document
 
 
 ## Node schema

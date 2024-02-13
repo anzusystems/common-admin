@@ -1,9 +1,7 @@
 # embedCrossBox
 
-- CrossBox is special entity with own anzutap json body.
-
 ## Features
-- User can select infobox from list of existing.
+- user can select crossBox from filterable dialog.
 
 ## Node schema
 
@@ -54,7 +52,7 @@ interface EmbedCrossBoxAware {
       texts: {
         title: string
         description: string
-        body: JSONContent // 
+        body: JSONContent
       }
       dates: {
         showAtFrom: DatetimeUTCNullable
@@ -68,5 +66,5 @@ interface EmbedCrossBoxAware {
 }
 ```
 
-## Crossbox JSONContent
- - theoretically can contain doc with all nodes from these docs
+## CrossBox body JSONContent
+ - theoretically can contain doc with all nodes from these docs, of course starting with `doc`

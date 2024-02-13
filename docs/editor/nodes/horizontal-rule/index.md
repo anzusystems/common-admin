@@ -1,6 +1,6 @@
 # horizontalRule
 
-- See [tiptap docs](https://tiptap.dev/api/nodes/horizontal-rule)
+- see [tiptap docs](https://tiptap.dev/api/nodes/horizontal-rule)
 
 ## Node schema
 

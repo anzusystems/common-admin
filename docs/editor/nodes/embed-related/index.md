@@ -1,9 +1,9 @@
 # embedRelated
 
 ## Features
-- User can insert internal articles from CMS using filterable dialog to item
-- User can insert external url for item and specify title fot his item
-- User can override title
+- user can insert internal articles from CMS using filterable dialog to item
+- user can insert external url for item and specify title fot his item
+- user can override title
 
 ## Note
 - model supports mixing both types but for now only one item can be inserted at once
@@ -47,8 +47,6 @@
 ## API data
 
 ```ts
-import {IntegerIdNullable} from "./common";
-
 interface EmbedKindRelated {
   id: DocId
   title: string

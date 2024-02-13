@@ -1,7 +1,11 @@
 # orderedList
 
-- See [tiptap docs](https://tiptap.dev/api/nodes/ordered-list)
+- see [tiptap docs](https://tiptap.dev/api/nodes/ordered-list)
 - related to [bulletList](/editor/nodes/bullet-list/)
+
+## Features
+- user can toggle current node to ordered list, if possible (from paragraph or heading)
+
 
 ## Node schema
 

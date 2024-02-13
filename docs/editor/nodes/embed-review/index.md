@@ -1,7 +1,7 @@
 # embedReview
 
 ## Features
-- User can select from existing reviews
+- user can insert review using filterable dialog
 
 ## Node schema
 

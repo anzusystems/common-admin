@@ -1,8 +1,8 @@
 # embedWeather
 
 ## Features
-- User can insert locationId by putting it into input
-- User filter for existing location inside filterable dialog
+- user can insert locationId by putting it into input
+- user can select location using search input
 
 ## Node schema
 

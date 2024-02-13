@@ -1,8 +1,8 @@
 # embedMinute
 
 ## Features
-- User can select minute topic using filterable dialog
-- User can set title, date from and to, enable or disable auto refresh
+- user can insert minute topic using filterable dialog
+- user can set title, date from and to, enable or disable auto refresh
 
 ## Node schema
 

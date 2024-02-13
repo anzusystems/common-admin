@@ -1,7 +1,7 @@
 # embedVideo
 
 ## Features
-- User can insert video from DAM using select dialog with filters.
+- user can insert video from DAM using select dialog with filters.
 
 ## Node schema
 

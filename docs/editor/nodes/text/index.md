@@ -1,6 +1,6 @@
 # text
 
-- See [tiptap docs](https://tiptap.dev/api/nodes/text)
+- see [tiptap docs](https://tiptap.dev/api/nodes/text)
 
 ## Node schema
 

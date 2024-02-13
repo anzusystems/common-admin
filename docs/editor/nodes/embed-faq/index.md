@@ -1,7 +1,7 @@
 # embedFaq
 
 ## Features
-- User can insert existing FAQ into body
+- user can insert existing FAQ using filterable dialog
 
 ## Node schema
 
@@ -61,5 +61,5 @@ interface EmbedFaqAware {
 }
 ```
 
-## FAQ JSONContent
-- theoretically can contain doc with all non embed nodes from these docs
+## FAQ item answer JSONContent
+- theoretically can contain doc with all nodes from these docs, of course starting with `doc`

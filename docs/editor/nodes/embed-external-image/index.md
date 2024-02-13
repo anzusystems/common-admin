@@ -1,7 +1,7 @@
 # embedExternalImage
 
 ## Features
-- only for migration or a readonly in editor
+- only for migration or used as readonly in anzutap
 - should be replaced by `embedImage` after media migration
 
 ## Requirements

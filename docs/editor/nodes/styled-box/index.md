@@ -1,7 +1,7 @@
 # styledBox
 
 ## Features
-- User can insert styledBox inside document
+- User can insert styledBox to document
 - User can set styledBox title directly in editor
 - User can set styledBox content directly in editor
 - content of styledBoxContent:
