@@ -1,15 +1,14 @@
 # styledBox
 
-// todo
-
 ## Features
+- User can insert styledBox to document
+- User can set styledBox title directly in editor
+- User can set styledBox content directly in editor
 - content of styledBoxContent:
-  - heading
   - paragraph (text, embedImageInline)
   - hardBreak
   - orderedList
   - bulletList
-  - embedImage
 - marks of styledBoxContent:
   - all
 
@@ -23,7 +22,7 @@
   "group": "embed",
   "attrs": {
     "variant": {
-      "default": "summary" // summary | column
+      "default": "summary" // enum: summary | column
     }
   }
 }
@@ -33,33 +32,38 @@
 
 ```json
 {
-  "type": "styledBox",
-  "attrs": {
-    "variant": "summary"
-  },
+  "type": "doc",
   "content": [
     {
-      "type": "styledBoxTitle",
+      "type": "styledBox",
+      "attrs": {
+        "variant": "summary"
+      },
       "content": [
         {
-          "type": "text",
-          "text": "Lorem"
-        }
-      ]
-    },
-    {
-      "type": "styledBoxContent",
-      "content": [
-        {
-          "type": "paragraph",
-          "attrs": {
-            "anchor": null,
-            "textAlign": "left"
-          },
+          "type": "styledBoxTitle",
           "content": [
             {
               "type": "text",
-              "text": "Lorem"
+              "text": "Lorem ipsum dolor sit amet"
+            }
+          ]
+        },
+        {
+          "type": "styledBoxContent",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Lorem ipsum dolor sit amet"
+                }
+              ]
             }
           ]
         }

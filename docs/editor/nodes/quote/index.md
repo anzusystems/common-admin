@@ -1,8 +1,8 @@
 # quote
 
 ## Features
-- User can set quote content
-- User can set quote author
+- user can set quote content directly in editor
+- user can set quote author directly in editor
 
 ## Node schema
 ```json
@@ -17,23 +17,28 @@
 
 ```json
 {
-  "type": "quote",
+  "type": "doc",
   "content": [
     {
-      "type": "quoteContent",
+      "type": "quote",
       "content": [
         {
-          "type": "text",
-          "text": "Lorem"
-        }
-      ]
-    },
-    {
-      "type": "quoteAuthor",
-      "content": [
+          "type": "quoteContent",
+          "content": [
+            {
+              "type": "text",
+              "text": "Lorem ipsum dolor sit amet"
+            }
+          ]
+        },
         {
-          "type": "text",
-          "text": "Lorem"
+          "type": "quoteAuthor",
+          "content": [
+            {
+              "type": "text",
+              "text": "Lorem Ipsum"
+            }
+          ]
         }
       ]
     }

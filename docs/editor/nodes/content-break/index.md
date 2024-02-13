@@ -1,9 +1,10 @@
 # contentBreak
 
-todo: check if add validation to one item per doc
-
 ## Features
-- User can add this separator to separate multiple parts of document
+- user can add this separator to separate multiple parts of document
+
+## Limitations
+- only one per document
 
 
 ## Node schema
@@ -21,6 +22,37 @@ todo: check if add validation to one item per doc
 
 ```json
 {
-  "type": "contentBreak"
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lorem ipsum dolor sit amet."
+        }
+      ]
+    },
+    {
+      "type": "contentBreak"
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Pulvinar mattis nunc sed blandit libero volutpat sed."
+        }
+      ]
+    }
+  ]
 }
 ```

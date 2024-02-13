@@ -1,4 +1,3 @@
-# tableCaption
+# Table caption extension
 
-## Features
-- Extension that displays table caption before table with edit button
+- Extension that displays table caption before table with edit button, when set

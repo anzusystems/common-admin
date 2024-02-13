@@ -1,4 +1,4 @@
-# nodePreventDelete
+# Node prevent delete extension
 
-## Features
-- todo
+- prevents the node to be removed
+- wip

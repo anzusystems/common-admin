@@ -1,10 +1,12 @@
 # embedImage
 
+- some attrs similar to [link mark](/editor/marks/link/)
+
 ## Features
-- User can select image from DAM using filterable dialog
-- User can upload image from local file, so it will be uploaded to DAM and then used as embed
-- User can drag and drop file directly to editor to upload to DAM and use as embed
-- User can input `decription` and `source` texts
+- user can select image from DAM using filterable dialog
+- user can upload image from local file, so it will be uploaded to DAM and then used as embed
+- user can drag and drop file directly to editor to upload to DAM and use as embed
+- user can input `decription` and `source` texts, they will be prefilled by upload if possible
 
 ## Node schema
 
@@ -29,25 +31,32 @@
 
 ```json
 {
-  "type": "embedImage",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedImage",
+      "attrs": {
+        "id": "6dec11fb-34b2-42ec-8bc4-0bba216158a8",
+        "changeId": "dc62ffef-ccb8-4ac4-8046-406d03c5ee5d"
+      }
+    }
+  ]
 }
 ```
 
 ## API data
 
 ```ts
-interface EmbedKindImage {
-  id: IntegerId
-  article: IntegerId
+interface EmbedImageAware {
+  id: DocId
   image: IntegerId
-  link: string
-  layout: 'parallax' | 'size20' | 'size100' | 'size120'
-  align: 'right' | 'left' | 'center' | ''
-  detail: {
+  link: {
+    href: string
+    external: boolean
+    nofollow: boolean
+    variant: string // enum: link | email | anchor
+  }
+  detail?: {
     image: {
       id: IntegerId
       texts: {
@@ -56,13 +65,13 @@ interface EmbedKindImage {
       }
       dam: {
         damId: DocId
+        licenceId: IntegerId
         regionPosition: number
+        animation: boolean
       }
-      settings: {
-        reviewed: boolean
-      }
-      position: number
     }
   }
+  layout: string // enum: size100 | size20 | size120 | parallax
+  align: string // enum: none | left | right
 }
 ```

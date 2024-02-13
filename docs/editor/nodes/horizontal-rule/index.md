@@ -1,6 +1,6 @@
 # horizontalRule
 
-See [tiptap docs](https://tiptap.dev/api/nodes/horizontal-rule)
+- see [tiptap docs](https://tiptap.dev/api/nodes/horizontal-rule)
 
 ## Node schema
 
@@ -17,6 +17,37 @@ See [tiptap docs](https://tiptap.dev/api/nodes/horizontal-rule)
 
 ```json
 {
-  "type": "horizontalRule"
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lorem ipsum dolor sit amet"
+        }
+      ]
+    },
+    {
+      "type": "horizontalRule"
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lorem ipsum dolor sit amet"
+        }
+      ]
+    }
+  ]
 }
 ```

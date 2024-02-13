@@ -1,8 +1,6 @@
 # table
 
-See [tiptap docs](https://tiptap.dev/api/nodes/table)
-
-// todo
+- see [tiptap docs](https://tiptap.dev/api/nodes/table)
 
 ## Node schema
 
@@ -14,7 +12,7 @@ See [tiptap docs](https://tiptap.dev/api/nodes/table)
   ],
   "attrs": {
     "variant": {
-      "default": ""  // sportnetTvProgram | default
+      "default": ""  // enum: sportnetTvProgram | default
     },
     "caption": {
       "default": ""
@@ -27,17 +25,20 @@ See [tiptap docs](https://tiptap.dev/api/nodes/table)
 
 ```json
 {
+  "type": "doc",
+  "content": [
+    {
       "type": "table",
       "attrs": {
-        "variant": "",
-        "caption": "Lorem"
+        "variant": "default",
+        "caption": ""
       },
       "content": [
         {
           "type": "tableRow",
           "content": [
             {
-              "type": "tableCell",
+              "type": "tableHeader",
               "attrs": {
                 "colspan": 1,
                 "rowspan": 1,
@@ -49,7 +50,13 @@ See [tiptap docs](https://tiptap.dev/api/nodes/table)
                   "attrs": {
                     "anchor": null,
                     "textAlign": "left"
-                  }
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Lorem ipsum dolor sit amet"
+                    }
+                  ]
                 }
               ]
             }
@@ -57,4 +64,6 @@ See [tiptap docs](https://tiptap.dev/api/nodes/table)
         }
       ]
     }
+  ]
+}
 ```

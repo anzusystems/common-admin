@@ -1,7 +1,7 @@
 # embedPoll
 
 ## Features
-- for now just select from existing polls
+- user can insert poll using filterable dialog
 
 ## Node schema
 
@@ -13,10 +13,10 @@
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -26,11 +26,16 @@
 
 ```json
 {
-  "type": "embedPoll",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "embedPoll",
+      "attrs": {
+        "id": "6dec11fb-34b2-42ec-8bc4-0bba216158a8",
+        "changeId": "dc62ffef-ccb8-4ac4-8046-406d03c5ee5d"
+      }
+    }
+  ]
 }
 ```
 
@@ -38,9 +43,34 @@
 
 ```ts
 interface EmbedKindPoll {
-  id: IntegerId
-  article: IntegerId
+  id: DocId
   poll: IntegerId
-  detail: todo
+  detail: {
+    poll: {
+      id: IntegerId
+      enabled: boolean
+      texts: {
+        title: string
+        description: string
+      }
+      dates: {
+        startOfVoting: DatetimeUTCNullable
+        endOfVoting: DatetimeUTCNullable
+      }
+      attributes: {
+        displayType: PollDisplayType
+        hideVotes: boolean
+      }
+      options: Array<{
+        id: IntegerId
+        votes: number
+        votesCached: number
+        position: number
+        title: string
+      }>
+      votes: number
+      votesCached: number
+    }
+  }
 }
 ```

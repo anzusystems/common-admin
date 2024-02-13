@@ -1,4 +1,3 @@
-# gapCursor
+# Gap cursor extension
 
-See [tiptap docs](https://tiptap.dev/api/extensions/gapcursor).
-
+- see [tiptap docs](https://tiptap.dev/api/extensions/gapcursor).

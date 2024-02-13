@@ -53,18 +53,15 @@ export default defineConfig({
       provider: 'local'
     },
     nav: nav(),
-
     sidebar: {
       '/guide/': sidebarGuide(),
       '/styleguide/': sidebarGuide(),
       '/editor/': sidebarEditor(),
       '/api/': getApiSidebarItems()
     },
-
     socialLinks: [
       { icon: 'github', link: 'https://github.com/anzusystems/common-admin' }
     ],
-
     footer: {
       message: 'Released under the Apache License 2.0.'
     },
@@ -132,46 +129,37 @@ function sidebarEditor() {
       collapsed: false,
       items: [
         { text: 'Introduction', link: '/editor/introduction/' },
-        { text: 'Editor', link: '/editor/editor/' },
-        { text: 'CMS status', link: '/editor/cms/' },
-      ]
-    },
-    {
-      text: 'Marks',
-      collapsed: false,
-      items: [
-        { text: 'bold', link: '/editor/marks/bold/' },
-        { text: 'italic', link: '/editor/marks/italic/' },
-        { text: 'link', link: '/editor/marks/link/' },
-        { text: 'strike', link: '/editor/marks/strike/' },
-        { text: 'subscript', link: '/editor/marks/subscript/' },
-        { text: 'superscript', link: '/editor/marks/superscript/' },
-        { text: 'underline', link: '/editor/marks/underline/' },
+        { text: 'Anzutap', link: '/editor/anzutap/' },
       ]
     },
     {
       text: 'Nodes',
       collapsed: false,
       items: [
+        { text: 'Nodes', link: '/editor/nodes/general/' },
+        { text: 'doc', link: '/editor/nodes/doc/' },
         { text: 'bulletList', link: '/editor/nodes/bullet-list/' },
         { text: 'button', link: '/editor/nodes/button/' },
         { text: 'contentBreak', link: '/editor/nodes/content-break/' },
         { text: 'contentLock', link: '/editor/nodes/content-lock/' },
-        { text: 'doc', link: '/editor/nodes/doc/' },
+        { text: 'embedAudio', link: '/editor/nodes/embed-audio/' },
+        { text: 'embedCrossBox', link: '/editor/nodes/embed-cross-box/' },
         { text: 'embedCustom', link: '/editor/nodes/embed-custom/' },
+        { text: 'embedExternal', link: '/editor/nodes/embed-external/' },
         { text: 'embedExternalImage', link: '/editor/nodes/embed-external-image/' },
         { text: 'embedExternalImageInline', link: '/editor/nodes/embed-external-image-inline/' },
+        { text: 'embedFaq', link: '/editor/nodes/embed-faq/' },
         { text: 'embedGallery', link: '/editor/nodes/embed-gallery/' },
         { text: 'embedImage', link: '/editor/nodes/embed-image/' },
         { text: 'embedImageInline', link: '/editor/nodes/embed-image-inline/' },
-        { text: 'embedCrossBox', link: '/editor/nodes/embed-cross-box/' },
-        { text: 'embedFaq', link: '/editor/nodes/embed-faq/' },
-        { text: 'embedMedia', link: '/editor/nodes/embed-media/' },
+        { text: 'embedMinute', link: '/editor/nodes/embed-minute/' },
         { text: 'embedNewsletter', link: '/editor/nodes/embed-newsletter/' },
         { text: 'embedPoll', link: '/editor/nodes/embed-poll/' },
         { text: 'embedQuiz', link: '/editor/nodes/embed-quiz/' },
         { text: 'embedRelated', link: '/editor/nodes/embed-related/' },
+        { text: 'embedReview', link: '/editor/nodes/embed-review/' },
         { text: 'embedTimeline', link: '/editor/nodes/embed-timeline/' },
+        { text: 'embedVideo', link: '/editor/nodes/embed-video/' },
         { text: 'embedWeather', link: '/editor/nodes/embed-weather/' },
         { text: 'hardBreak', link: '/editor/nodes/hard-break/' },
         { text: 'heading', link: '/editor/nodes/heading/' },
@@ -182,7 +170,6 @@ function sidebarEditor() {
         { text: 'quote', link: '/editor/nodes/quote/' },
         { text: 'quoteContent', link: '/editor/nodes/quote-content/' },
         { text: 'quoteAuthor', link: '/editor/nodes/quote-author/' },
-        { text: 'review', link: '/editor/nodes/review/' },
         { text: 'styledBox', link: '/editor/nodes/styled-box/' },
         { text: 'styledBox', link: '/editor/nodes/styled-box/' },
         { text: 'styledBoxTitle', link: '/editor/nodes/styled-box-title/' },
@@ -195,32 +182,55 @@ function sidebarEditor() {
       ]
     },
     {
-      text: 'Media embeds',
+      text: 'Marks',
       collapsed: false,
       items: [
-        { text: 'General', link: '/editor/media/general/' },
-        { text: 'youtube', link: '/editor/media/youtube/' },
+        { text: 'Marks', link: '/editor/marks/general/' },
+        { text: 'bold', link: '/editor/marks/bold/' },
+        { text: 'comment', link: '/editor/marks/comment/' },
+        { text: 'italic', link: '/editor/marks/italic/' },
+        { text: 'link', link: '/editor/marks/link/' },
+        { text: 'strike', link: '/editor/marks/strike/' },
+        { text: 'subscript', link: '/editor/marks/subscript/' },
+        { text: 'superscript', link: '/editor/marks/superscript/' },
+        { text: 'underline', link: '/editor/marks/underline/' },
       ]
     },
     {
       text: 'Extensions',
       collapsed: false,
       items: [
-        { text: 'General', link: '/editor/extensions/general/' },
-        { text: 'anchor', link: '/editor/extensions/anchor/' },
+        { text: 'Extensions', link: '/editor/extensions/general/' },
         { text: 'addParagraph', link: '/editor/extensions/add-paragraph/' },
+        { text: 'anchor', link: '/editor/extensions/anchor/' },
+        { text: 'anzutapConfig', link: '/editor/extensions/anzutap-config/' },
+        { text: 'characterCount', link: '/editor/extensions/character-count/' },
         { text: 'collaboration', link: '/editor/extensions/collaboration/' },
         { text: 'collaborationCursor', link: '/editor/extensions/collaboration-cursor/' },
         { text: 'dropCursor', link: '/editor/extensions/drop-cursor/' },
         { text: 'gapCursor', link: '/editor/extensions/gap-cursor/' },
+        { text: 'history', link: '/editor/extensions/history/' },
+        { text: 'linter', link: '/editor/extensions/linter/' },
         { text: 'listKeymap', link: '/editor/extensions/list-keymap/' },
         { text: 'nodePreventDelete', link: '/editor/extensions/node-prevent-delete/' },
         { text: 'nodePreventPaste', link: '/editor/extensions/node-prevent-paste/' },
-        { text: 'tableCaption', link: '/editor/extensions/table-caption/' },
-        { text: 'tocGenerate', link: '/editor/extensions/toc-generate/' },
         { text: 'slashCommands', link: '/editor/extensions/slash-commands/' },
-        { text: 'history', link: '/editor/extensions/history/' },
+        { text: 'tableCaption', link: '/editor/extensions/table-caption/' },
         { text: 'textAlign', link: '/editor/extensions/text-align/' },
+        { text: 'tocGenerate', link: '/editor/extensions/toc-generate/' },
+      ]
+    },
+    {
+      text: 'Scraper',
+      collapsed: false,
+      items: [
+        { text: 'Scraper', link: '/editor/scraper/general/' },
+        { text: 'fb_post', link: '/editor/scraper/fb_post/' },
+        { text: 'flr_visual', link: '/editor/scraper/flr_visual/' },
+        { text: 'ta3_video', link: '/editor/scraper/ta3_video/' },
+        { text: 'tw_post', link: '/editor/scraper/tw_post/' },
+        { text: 'vm_video', link: '/editor/scraper/vm_video/' },
+        { text: 'yt_video', link: '/editor/scraper/yt_video/' },
       ]
     },
   ]

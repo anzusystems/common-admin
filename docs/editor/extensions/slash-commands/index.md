@@ -1,4 +1,3 @@
-# slashCommands
+# Slash commands extension
 
-## Features
-- When user hits / at empty line, dialog for most common inserts will appear
+- When user hits `/` at empty line, dialog for most common inserts will appear

@@ -1,8 +1,10 @@
 # contentLock
 
 ## Features
-- User can add this separator to separate multiple 2 parts of document - free and paid part
-- Only one per article, callback to set article field.
+- user can add this separator to separate multiple 2 parts of document - free and paid part
+
+## Limitations
+- only one per document
 
 ## Node schema
 
@@ -19,6 +21,37 @@
 
 ```json
 {
-  "type": "contentLock"
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lorem ipsum dolor sit amet."
+        }
+      ]
+    },
+    {
+      "type": "contentLock"
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Pulvinar mattis nunc sed blandit libero volutpat sed."
+        }
+      ]
+    }
+  ]
 }
 ```

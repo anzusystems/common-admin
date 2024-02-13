@@ -1,7 +1,10 @@
 # bulletList
 
-See [tiptap docs](https://tiptap.dev/api/nodes/bullet-list)
-See [orderedList](/editor/nodes/ordered-list/)
+- see [tiptap docs](https://tiptap.dev/api/nodes/bullet-list)
+- related to [orderedList](/editor/nodes/ordered-list/)
+
+## Features
+- user can toggle current node to bullet list, if possible (from paragraph or heading)
 
 ## Node schema
 
@@ -18,22 +21,49 @@ See [orderedList](/editor/nodes/ordered-list/)
 
 ```json
 {
-  "type": "bulletList",
+  "type": "doc",
   "content": [
     {
-      "type": "listItem",
+      "type": "bulletList",
       "content": [
         {
-          "type": "paragraph",
+          "type": "listItem",
           "content": [
             {
-              "type": "text",
-              "text": "Lorem"
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "rhoncus"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "neque"
+                }
+              ]
             }
           ]
         }
       ]
     }
   ]
-} 
+}
 ```

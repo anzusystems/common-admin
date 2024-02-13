@@ -1,7 +1,11 @@
 # orderedList
 
-See [tiptap docs](https://tiptap.dev/api/nodes/ordered-list)
-See [bulletList](/editor/nodes/bullet-list/)
+- see [tiptap docs](https://tiptap.dev/api/nodes/ordered-list)
+- related to [bulletList](/editor/nodes/bullet-list/)
+
+## Features
+- user can toggle current node to ordered list, if possible (from paragraph or heading)
+
 
 ## Node schema
 
@@ -23,22 +27,70 @@ See [bulletList](/editor/nodes/bullet-list/)
 
 ```json
 {
-  "type": "orderedList",
+  "type": "doc",
   "content": [
     {
-      "type": "listItem",
+      "type": "orderedList",
+      "attrs": {
+        "start": 1
+      },
       "content": [
         {
-          "type": "paragraph",
+          "type": "listItem",
           "content": [
             {
-              "type": "text",
-              "text": "Lorem"
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "vestibulum"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "rhoncus"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "pellentesque"
+                }
+              ]
             }
           ]
         }
       ]
     }
   ]
-} 
+}
 ```

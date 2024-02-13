@@ -1,14 +1,12 @@
 # embedImageInline
 
-Similar to [embedImage](/editor/nodes/embed-image/), possibility to define dimensions, with more placement possibilities.
-
-// todo setup groups
+Similar to [embedImage](/editor/nodes/embed-image/), but it's inline node.
 
 ## Features
-- User can select image from DAM using filterable dialog
-- User can upload image from local file, so it will be uploaded to DAM and then used as embed
-- User can drag and drop file directly to editor to upload to DAM and use as embed
-- User can input `decription` and `source` texts
+- User can insert file id from DAM
+
+## Requirements
+- DAM Image must have public original URL enabled.
 
 ## Node schema
 
@@ -18,12 +16,13 @@ Similar to [embedImage](/editor/nodes/embed-image/), possibility to define dimen
   "groups": [
     "inline"
   ],
+  "inline": true,
   "attrs": {
     "id": {
-      "default": ""
+      "default": "" // string (uuid of embed)
     },
     "changeId": {
-      "default": ""
+      "default": "" // string
     }
   }
 }
@@ -33,26 +32,49 @@ Similar to [embedImage](/editor/nodes/embed-image/), possibility to define dimen
 
 ```json
 {
-  "type": "embedImageInline",
-  "attrs": {
-    "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-    "changeId": "75f63c30-168f-11ee-b9a4-edda1c3364ed"
-  }
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lorem "
+        },
+        {
+          "type": "embedImageInline",
+          "attrs": {
+            "id": "03f64301-e423-4f56-9d68-ddbe8108a571",
+            "changeId": "37b51995-c284-4910-9580-b56d0533c19a"
+          }
+        },
+        {
+          "type": "text",
+          "text": " ipsum"
+        }
+      ]
+    }
+  ]
 }
 ```
 
 ## API data
 
 ```ts
-interface EmbedKindImage {
-  id: IntegerId
-  article: IntegerId
-  image: IntegerId
-  link: string
-  align: 'right' | 'left' | 'center' | ''
-  width: string // px
-  height: string // px
-  detail: {
+interface EmbedImageInlineAware {
+  id: DocId
+  image: IntegerIdNullable
+  link: {
+    href: string
+    external: boolean
+    nofollow: boolean
+    variant: string // enum: link | email | anchor
+  }
+  detail?: {
     image: {
       id: IntegerId
       texts: {
@@ -61,12 +83,10 @@ interface EmbedKindImage {
       }
       dam: {
         damId: DocId
+        licenceId: IntegerId
         regionPosition: number
+        animation: boolean
       }
-      settings: {
-        reviewed: boolean
-      }
-      position: number
     }
   }
 }

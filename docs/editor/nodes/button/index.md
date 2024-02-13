@@ -1,6 +1,10 @@
 # button
 
-Similar attrs to [link mark](/editor/marks/link/), with some changes, and it's block node.
+- similar attrs to [link mark](/editor/marks/link/)
+
+## Features
+- user can insert specially styled button node
+- this button can lead to email, link (url) or anchor (hash url)
 
 ## Node schema
 
@@ -12,16 +16,16 @@ Similar attrs to [link mark](/editor/marks/link/), with some changes, and it's b
   ],
   "attrs": {
     "nofollow": {
-      "default": false
+      "default": false // boolean
     },
     "external": {
-      "default": false
+      "default": false // boolean
     },
     "variant": {
-      "default": "link" // link | email | anchor
+      "default": "link" // enum: link | email | anchor
     },
     "size": {
-      "default": "small" // large | small
+      "default": "small" // enum: large | small
     }
   }
 }
@@ -31,19 +35,24 @@ Similar attrs to [link mark](/editor/marks/link/), with some changes, and it's b
 
 ```json
 {
-  "type": "button",
+  "type": "doc",
   "content": [
     {
-      "type": "text",
-      "text": "bla bla bla"
+      "type": "button",
+      "attrs": {
+        "href": "https://www.sme.sk",
+        "external": false,
+        "nofollow": false,
+        "variant": "link",
+        "size": "large"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lorem"
+        }
+      ]
     }
-  ],
-  "attrs": {
-    "href": "https://www.sme.sk",
-    "size": "large",
-    "external": false,
-    "nofollow": false,
-    "variant": "link"
-  }
-} 
+  ]
+}
 ```

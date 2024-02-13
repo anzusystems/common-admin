@@ -1,4 +1,3 @@
-# dropCursor
+# Drop cursor extension
 
-See [tiptap docs](https://tiptap.dev/api/extensions/dropcursor).
-
+- see [tiptap docs](https://tiptap.dev/api/extensions/dropcursor).

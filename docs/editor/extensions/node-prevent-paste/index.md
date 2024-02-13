@@ -1,4 +1,4 @@
-# nodePreventPaste
+# Node prevent paste extension
 
-## Features
-- todo
+- prevents the node to be pasted
+- wip

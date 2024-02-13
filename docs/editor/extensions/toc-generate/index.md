@@ -1,4 +1,3 @@
-# tocGenerate
+# Toc generate extension
 
-## Features
-- Generates bullet list according to all level 2 heading, just flat list, no descendants
+- Collects all level 2 headings in document and generates `styled-box` node with bullet list and links to anchor, also adds anchors on level 2 headings if missing

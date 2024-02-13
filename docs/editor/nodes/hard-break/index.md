@@ -1,6 +1,6 @@
 # hardBreak
 
-See [tiptap docs](https://tiptap.dev/api/nodes/hard-break)
+- see [tiptap docs](https://tiptap.dev/api/nodes/hard-break)
 
 ## Node schema
 
@@ -17,6 +17,50 @@ See [tiptap docs](https://tiptap.dev/api/nodes/hard-break)
 
 ```json
 {
-  "type": "hardBreak"
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lor"
+        },
+        {
+          "type": "hardBreak"
+        },
+        {
+          "type": "text",
+          "text": "em"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Consectetur adipiscing elit,"
+        },
+        {
+          "type": "hardBreak"
+        },
+        {
+          "type": "text",
+          "text": "sed do eiusmod tempor"
+        },
+        {
+          "type": "hardBreak"
+        },
+        {
+          "type": "text",
+          "text": "incididunt ut labore et dolore magna aliqua"
+        }
+      ]
+    }
+  ]
 }
 ```
