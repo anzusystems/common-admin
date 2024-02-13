@@ -1,3 +1,3 @@
 # quoteAuthor
 
-See [quote](/editor/nodes/quote/)
+- See [quote](/editor/nodes/quote/)

@@ -168,7 +168,6 @@ function sidebarEditor() {
         { text: 'quote', link: '/editor/nodes/quote/' },
         { text: 'quoteContent', link: '/editor/nodes/quote-content/' },
         { text: 'quoteAuthor', link: '/editor/nodes/quote-author/' },
-        { text: 'review', link: '/editor/nodes/review/' },
         { text: 'styledBox', link: '/editor/nodes/styled-box/' },
         { text: 'styledBox', link: '/editor/nodes/styled-box/' },
         { text: 'styledBoxTitle', link: '/editor/nodes/styled-box-title/' },

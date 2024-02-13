@@ -1,7 +1,8 @@
 # paragraph
 
-See [tiptap docs](https://tiptap.dev/api/nodes/paragraph)
-TextAlign attr is from [textAlign extension](/editor/extensions/text-align/) .
+- see [tiptap docs](https://tiptap.dev/api/nodes/paragraph)
+- textAlign attr is from [textAlign extension](/editor/extensions/text-align/) .
+- anchor attr is from [anchor extension](/editor/extensions/anchor/).
 
 ## Node schema
 
@@ -13,7 +14,7 @@ TextAlign attr is from [textAlign extension](/editor/extensions/text-align/) .
   ],
   "attrs": {
     "textAlign": {
-      "default": "left" // left | right | center
+      "default": "left" // enum: left | right | center
     }
   }
 }
@@ -23,15 +24,21 @@ TextAlign attr is from [textAlign extension](/editor/extensions/text-align/) .
 
 ```json
 {
-  "type": "paragraph",
-  "attrs": {
-    "textAlign": "left"
-  },
+  "type": "doc",
   "content": [
     {
-      "type": "text",
-      "text": "bla bla bla"
+      "type": "paragraph",
+      "attrs": {
+        "anchor": null,
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        }
+      ]
     }
   ]
-} 
+}
 ```
