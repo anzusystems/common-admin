@@ -1,7 +1,7 @@
 # bulletList
 
-See [tiptap docs](https://tiptap.dev/api/nodes/bullet-list)
-See [orderedList](/editor/nodes/ordered-list/)
+- see [tiptap docs](https://tiptap.dev/api/nodes/bullet-list)
+- related to [orderedList](/editor/nodes/ordered-list/)
 
 ## Node schema
 

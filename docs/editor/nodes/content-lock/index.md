@@ -2,7 +2,9 @@
 
 ## Features
 - User can add this separator to separate multiple 2 parts of document - free and paid part
-- Only one per article, callback to set article field.
+
+## Requirements
+- Only one per document
 
 ## Node schema
 

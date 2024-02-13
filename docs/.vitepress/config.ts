@@ -133,30 +133,16 @@ function sidebarEditor() {
       ]
     },
     {
-      text: 'Marks',
-      collapsed: false,
-      items: [
-        { text: 'Marks', link: '/editor/marks/general/' },
-        { text: 'bold', link: '/editor/marks/bold/' },
-        { text: 'comment', link: '/editor/marks/comment/' },
-        { text: 'italic', link: '/editor/marks/italic/' },
-        { text: 'link', link: '/editor/marks/link/' },
-        { text: 'strike', link: '/editor/marks/strike/' },
-        { text: 'subscript', link: '/editor/marks/subscript/' },
-        { text: 'superscript', link: '/editor/marks/superscript/' },
-        { text: 'underline', link: '/editor/marks/underline/' },
-      ]
-    },
-    {
       text: 'Nodes',
       collapsed: false,
       items: [
         { text: 'Nodes', link: '/editor/nodes/general/' },
+        { text: 'doc', link: '/editor/nodes/doc/' },
         { text: 'bulletList', link: '/editor/nodes/bullet-list/' },
         { text: 'button', link: '/editor/nodes/button/' },
         { text: 'contentBreak', link: '/editor/nodes/content-break/' },
         { text: 'contentLock', link: '/editor/nodes/content-lock/' },
-        { text: 'doc', link: '/editor/nodes/doc/' },
+        { text: 'embedAudio', link: '/editor/nodes/embed-audio/' },
         { text: 'embedCustom', link: '/editor/nodes/embed-custom/' },
         { text: 'embedExternalImage', link: '/editor/nodes/embed-external-image/' },
         { text: 'embedExternalImageInline', link: '/editor/nodes/embed-external-image-inline/' },
@@ -194,11 +180,18 @@ function sidebarEditor() {
       ]
     },
     {
-      text: 'Scraper',
+      text: 'Marks',
       collapsed: false,
       items: [
-        { text: 'Scraper', link: '/editor/scraper/general/' },
-        { text: 'youtube', link: '/editor/scraper/youtube/' },
+        { text: 'Marks', link: '/editor/marks/general/' },
+        { text: 'bold', link: '/editor/marks/bold/' },
+        { text: 'comment', link: '/editor/marks/comment/' },
+        { text: 'italic', link: '/editor/marks/italic/' },
+        { text: 'link', link: '/editor/marks/link/' },
+        { text: 'strike', link: '/editor/marks/strike/' },
+        { text: 'subscript', link: '/editor/marks/subscript/' },
+        { text: 'superscript', link: '/editor/marks/superscript/' },
+        { text: 'underline', link: '/editor/marks/underline/' },
       ]
     },
     {
@@ -223,6 +216,14 @@ function sidebarEditor() {
         { text: 'tableCaption', link: '/editor/extensions/table-caption/' },
         { text: 'textAlign', link: '/editor/extensions/text-align/' },
         { text: 'tocGenerate', link: '/editor/extensions/toc-generate/' },
+      ]
+    },
+    {
+      text: 'Scraper',
+      collapsed: false,
+      items: [
+        { text: 'Scraper', link: '/editor/scraper/general/' },
+        { text: 'youtube', link: '/editor/scraper/youtube/' },
       ]
     },
   ]

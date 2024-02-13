@@ -1,9 +1,12 @@
 # contentBreak
 
-todo: check if add validation to one item per doc
-
 ## Features
 - User can add this separator to separate multiple parts of document
+- Only one per document
+
+
+## Requirements
+- Only one per document
 
 
 ## Node schema

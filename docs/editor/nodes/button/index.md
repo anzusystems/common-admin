@@ -1,6 +1,6 @@
 # button
 
-Similar attrs to [link mark](/editor/marks/link/), with some changes, and it's block node.
+- similar attrs to [link mark](/editor/marks/link/) (same attrs), with some changes, and it's block node.
 
 ## Node schema
 
@@ -12,16 +12,16 @@ Similar attrs to [link mark](/editor/marks/link/), with some changes, and it's b
   ],
   "attrs": {
     "nofollow": {
-      "default": false
+      "default": false // boolean
     },
     "external": {
-      "default": false
+      "default": false // boolean
     },
     "variant": {
-      "default": "link" // link | email | anchor
+      "default": "link" // enum: link | email | anchor
     },
     "size": {
-      "default": "small" // large | small
+      "default": "small" // enum: large | small
     }
   }
 }
