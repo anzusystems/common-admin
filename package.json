@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-alpha18",
+  "version": "1.47.0-alpha19",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -82,11 +82,11 @@
     "vite-plugin-dts": "^3.7.2",
     "vite-plugin-vuetify": "^2.0.1",
     "vitepress": "1.0.0-rc.42",
-    "vue": "3.4.17",
+    "vue": "3.4.19",
     "vue-i18n": "9.9.1",
     "vue-router": "4.2.5",
     "vue-tsc": "1.8.27",
-    "vuetify": "3.5.3",
+    "vuetify": "3.5.4",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -98,10 +98,10 @@
     "dayjs": "1.11.10",
     "pinia": "2.1.7",
     "socket.io-client": "4.7.4",
-    "vue": "3.4.17",
+    "vue": "3.4.19",
     "vue-i18n": "9.9.1",
     "vue-router": "4.2.5",
-    "vuetify": "3.5.3"
+    "vuetify": "3.5.4"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {
