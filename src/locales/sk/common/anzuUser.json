@@ -34,8 +34,8 @@
     "noPermissions": "Žiadne oprávnenia"
   },
   "copyPermissions": {
-    "title": "Kopirovat rolu a oprávnenia",
-    "desc": "Potrebujete skopirovat rolu a opravnenia z uz existujuceho pouzivatela?",
-    "srcUser": "Zdrojovy uzivatel"
+    "title": "Kopírovať rolu a oprávnenia",
+    "desc": "Potrebujete skopírovať rolu a oprávnenia z už existujúceho používateľa?",
+    "srcUser": "Zdrojový používateľ"
   }
 }
