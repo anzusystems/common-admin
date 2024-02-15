@@ -6,6 +6,7 @@ import AFormRemoteAutocomplete from '@/components/form/AFormRemoteAutocomplete.v
 import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
 import { useAssetLicenceSelectActions } from '@/components/dam/user/assetLicenceActions'
 import type { AxiosInstance } from 'axios'
+import type { ValueObjectOption } from '@/types/ValueObject'
 
 const props = withDefaults(
   defineProps<{
@@ -44,6 +45,8 @@ const modelValueComputed = computed({
   },
 })
 
+const selected = defineModel<ValueObjectOption<IntegerId>[]>('selected', { required: false, default: () => [] })
+
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItems, fetchItemsByIds } = useAssetLicenceSelectActions(props.client)
 
@@ -72,6 +75,7 @@ watch(
   <AFormRemoteAutocomplete
     :key="selectedExtSystemId + ''"
     v-model="modelValueComputed"
+    v-model:selected="selected"
     :required="required"
     :label="label"
     :fetch-items="fetchItems"
