@@ -48,6 +48,8 @@ const search = ref('')
 const isFocused = ref(false)
 const autoFetchTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
 
+const apiRequestCounter = ref(0)
+
 const { t } = useI18n()
 
 const { innerFilter } = toRefs(props)
@@ -85,11 +87,12 @@ const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
 
 const loading = ref(false)
 
-const apiSearch = async (query: string) => {
+const apiSearch = async (query: string, requestCounter: number) => {
   loading.value = true
   const filterField = innerFilter.value[props.filterByField]
   filterField.model = query
-  fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
+  const res = await props.fetchItems(pagination, innerFilter.value)
+  if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
   loading.value = false
 }
 
@@ -120,15 +123,10 @@ const autoFetch = async () => {
   clearAutoFetchTimer()
   if (autoFetched.value === true) return
   autoFetched.value = true
-  // if (
-  //   isNull(modelValueComputed.value) ||
-  //   isUndefined(modelValueComputed.value) ||
-  //   (isArray(modelValueComputed.value) && modelValueComputed.value.length === 0)
-  // ) {
   loading.value = true
-  fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
+  const res = await props.fetchItems(pagination, innerFilter.value)
+  if (apiRequestCounter.value === 0) fetchedItems.value = res
   loading.value = false
-  // }
 }
 const onFocus = () => {
   isFocused.value = true
@@ -197,11 +195,13 @@ watch(
 watchDebounced(
   search,
   (newValue, oldValue) => {
+    apiRequestCounter.value++
     if (newValue !== oldValue) {
-      apiSearch(newValue)
+      apiRequestCounter.value++
+      apiSearch(newValue, apiRequestCounter.value)
     }
   },
-  { debounce: 300, maxWait: 1000 }
+  { debounce: 500, maxWait: 1500 }
 )
 </script>
 
