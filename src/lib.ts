@@ -486,6 +486,8 @@ import { fetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/compo
 import { fetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
 import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
+import { useImageActions } from '@/components/damImage/composables/imageActions'
+import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 
 export {
   // COMPONENTS
@@ -619,6 +621,8 @@ export {
   updateDamCurrentUser,
   useDamDistributionServiceType,
   useDamAssetLicenceFilter,
+  useImageActions,
+  useCommonAdminImageOptions,
 
   // VALUE OBJECTS
   Grant,

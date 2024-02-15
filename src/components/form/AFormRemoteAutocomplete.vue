@@ -83,6 +83,8 @@ const modelValueSelected = defineModel<DocId | IntegerId | DocId[] | IntegerId[]
 
 const modelValueAutocomplete = ref<DocId | IntegerId | DocId[] | IntegerId[] | null | any>(null)
 
+const apiRequestCounter = ref(0)
+
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -186,14 +188,15 @@ const loadingComputed = computed(() => {
   return props.loading
 })
 
-const apiSearch = async (query: string) => {
+const apiSearch = async (query: string, requestCounter: number) => {
   loadingLocal.value = true
   const filterField = innerFilter.value[props.filterByField]
   if (isUndefined(filterField)) {
     throw new Error('AFormRemoteAutocomplete incorrect innerFilter or filterByField setup.')
   }
   filterField.model = query
-  fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
+  const res = await props.fetchItems(pagination, innerFilter.value)
+  if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
   loadingLocal.value = false
 }
 
@@ -225,7 +228,8 @@ const autoFetch = async () => {
   if (autoFetched.value === true) return
   autoFetched.value = true
   loadingLocal.value = true
-  fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
+  const res = await props.fetchItems(pagination, innerFilter.value)
+  if (apiRequestCounter.value === 0) fetchedItems.value = res
   loadingLocal.value = false
 }
 const onFocus = () => {
@@ -262,11 +266,12 @@ watchDebounced(
   search,
   (newValue, oldValue) => {
     if (newValue !== oldValue) {
-      apiSearch(newValue)
+      apiRequestCounter.value++
+      apiSearch(newValue, apiRequestCounter.value)
       emit('searchChangeDebounced', newValue)
     }
   },
-  { debounce: 300, maxWait: 1000 }
+  { debounce: 500, maxWait: 1500 }
 )
 
 watch(search, (newValue, oldValue) => {

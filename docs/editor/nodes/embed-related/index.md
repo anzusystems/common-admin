@@ -47,7 +47,7 @@
 ## API data
 
 ```ts
-interface EmbedKindRelated {
+interface EmbedRelatedAware {
   id: DocId
   title: string
   items: RelatedItemKindArticle[] | RelatedItemKindLink[]

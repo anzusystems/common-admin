@@ -1,5 +1,6 @@
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import type { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
+import type { DocId } from '@/types/common'
 
 export function useImageActions(config: ReturnType<typeof useCommonAdminImageOptions>) {
   const widgetImageToDamImageUrl = (
@@ -35,8 +36,42 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
     )
   }
 
+  const damImageIdToDamImageUrl = (
+    imageId: DocId,
+    width = config.imageWidth,
+    height = config.imageHeight,
+    random = true
+  ) => {
+    return (
+      config.previewDomain +
+      '/image/w' +
+      width +
+      '-h' +
+      height +
+      '/' +
+      imageId +
+      '.jpg' +
+      (random ? '?random=' + Date.now() : '')
+    )
+  }
+
+  const damImageIdToDamImageOriginalUrl = (
+    imageId: DocId,
+    random = true
+  ) => {
+    return (
+      config.previewDomain +
+      '/image/original/' +
+      imageId +
+      '.jpg' +
+      (random ? '?random=' + Date.now() : '')
+    )
+  }
+
   return {
     widgetImageToDamImageUrl,
     widgetImageToDamImageOriginalUrl,
+    damImageIdToDamImageUrl,
+    damImageIdToDamImageOriginalUrl,
   }
 }
