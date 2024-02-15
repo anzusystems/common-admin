@@ -1,12 +1,15 @@
-# vm_video
+# sc_track
+
+## Params
 
 ```ts
 interface Params {
   id: string
-  width: number // optional
   height: number // optional
+  color: string // optional, hexadecimal color code
 }
 ```
+
 ## Data
 
 ```ts
@@ -28,7 +31,7 @@ interface Screenshot {
 }
 
 interface Author {
-  name: string;
+  username: string;
   image: ImageVariant;
 }
 

@@ -1,15 +1,13 @@
 # fb_post
 
-- WIP
-
 ## Params
 
 ```ts
 interface Params {
   id: string
   username: string
-  width: number
-  height: number
+  width: number // optional
+  height: number // optional
 }
 ```
 
@@ -17,6 +15,37 @@ interface Params {
 
 ```ts
 interface Data {
-  // wip
+  screenshots: Screenshot[];
+  scrapedAt: string; // datetime in RFC 3339 format
+  text: string;
+  author: Author;
+  publishedAt: string; // datetime in RFC 3339 format
+  images: Image[];
+}
+
+interface Screenshot {
+  damId: string; // UUID
+  type: string;
+  width: number;
+  height: number;
+  contentType: string; // e.g. image/png
+}
+
+interface Author {
+  username: string;
+  name: string;
+  image: ImageVariant;
+}
+
+interface ImageVariant {
+  url: string;
+  damId: string; // UUID
+  width: number;
+  height: number;
+  contentType: string;  // e.g. image/jpeg
+}
+
+interface Image {
+  variants: ImageVariant[];
 }
 ```

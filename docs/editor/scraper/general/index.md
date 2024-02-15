@@ -21,3 +21,4 @@
 - [tw_post](/editor/scraper/tw_post/)
 - [vm_video](/editor/scraper/vm_video/)
 - [yt_video](/editor/scraper/yt_video/)
+- [sc_track](/editor/scraper/sc_track/)
