@@ -1,13 +1,12 @@
-# fb_post
+# sc_track
 
 ## Params
 
 ```ts
 interface Params {
   id: string
-  username: string
-  width: number // optional
   height: number // optional
+  color: string // optional, hexadecimal color code
 }
 ```
 
@@ -17,7 +16,7 @@ interface Params {
 interface Data {
   screenshots: Screenshot[];
   scrapedAt: string; // datetime in RFC 3339 format
-  text: string;
+  title: string;
   author: Author;
   publishedAt: string; // datetime in RFC 3339 format
   images: Image[];
@@ -34,7 +33,6 @@ interface Screenshot {
 
 interface Author {
   username: string;
-  name: string;
   image: ImageVariant;
 }
 
