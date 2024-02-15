@@ -42,7 +42,7 @@
 ## API data
 
 ```ts
-interface EmbedKindGallery {
+interface EmbedGalleryAware {
   id: DocId
   gallery: IntegerId
   layout: string // enum: thumb | whole
