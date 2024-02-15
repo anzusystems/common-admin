@@ -42,7 +42,7 @@
 ## API data
 
 ```ts
-interface EmbedKindQuiz {
+interface EmbedQuizAware {
   id: DocId
   quiz: IntegerId
   detail: {

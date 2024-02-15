@@ -42,7 +42,7 @@
 ## API data
 
 ```ts
-interface EmbedKindPoll {
+interface EmbedPollAware {
   id: DocId
   poll: IntegerId
   detail: {

@@ -44,7 +44,7 @@
 
 ```ts
 interface EmbedWeatherAware {
-  id: IntegerId
+  id: DocId
   locationId: IntegerId
   variant: string // enum: day | week
 }
