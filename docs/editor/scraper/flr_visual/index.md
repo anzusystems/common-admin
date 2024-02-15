@@ -18,7 +18,6 @@ interface Data {
   scrapedAt: string; // datetime in RFC 3339 format
   title: string;
   subtitle: string;
-  status: string;
 }
 
 interface Screenshot {

@@ -19,7 +19,6 @@ interface Data {
   author: Author;
   publishedAt: string; // datetime in RFC 3339 format
   images: Image[];
-  status: string;
 }
 
 interface Screenshot {
