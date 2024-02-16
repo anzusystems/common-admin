@@ -21,6 +21,7 @@ const props = withDefaults(
     textOnly?: boolean
     fallbackIdText?: boolean
     wrapText?: boolean
+    closable?: boolean
   }>(),
   {
     id: null,
@@ -33,8 +34,13 @@ const props = withDefaults(
     textOnly: false,
     fallbackIdText: false,
     wrapText: false,
+    closable: false,
   }
 )
+
+const emit = defineEmits<{
+  (e: 'onClose', id: null | undefined | IntegerId | DocId): void
+}>()
 
 const router = useRouter()
 const cached = shallowRef<undefined | any>(undefined)
@@ -93,6 +99,8 @@ watch(
       v-else-if="disableClick"
       :size="size"
       :label="forceRounded ? undefined : true"
+      :closable="closable"
+      @click:close="() => emit('onClose', id)"
     >
       {{ displayTitle }}
       <VProgressCircular
@@ -108,7 +116,9 @@ watch(
       :size="size"
       :append-icon="openInNew ? COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL : COMMON_CONFIG.CHIP.ICON.LINK"
       :label="forceRounded ? undefined : true"
+      :closable="closable"
       @click.stop="onClick"
+      @click:close="() => emit('onClose', id)"
     >
       {{ displayTitle }}
       <VProgressCircular
