@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-alpha21",
+  "version": "1.47.0-alpha22",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -70,7 +70,7 @@
     "postcss-prefix-selector": "^1.16.0",
     "prettier": "^3.2.5",
     "rusha": "^0.8.14",
-    "sass": "^1.70.0",
+    "sass": "^1.71.0",
     "socket.io-client": "4.7.4",
     "sortablejs": "^1.15.2",
     "stylelint": "16.2.1",
