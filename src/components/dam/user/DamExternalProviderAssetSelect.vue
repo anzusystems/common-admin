@@ -7,7 +7,7 @@ import type { AxiosInstance } from 'axios'
 const props = withDefaults(
   defineProps<{
     modelValue: string[]
-    client: () => AxiosInstance,
+    client: () => AxiosInstance
     multiple?: boolean
     label?: string
     dataCy?: string
