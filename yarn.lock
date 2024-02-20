@@ -201,7 +201,7 @@ __metadata:
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
-    "@typescript-eslint/parser": "npm:^7.0.1"
+    "@typescript-eslint/parser": "npm:^7.0.2"
     "@vitejs/plugin-vue": "npm:^5.0.4"
     "@vue/eslint-config-prettier": "npm:^9.0.0"
     "@vue/eslint-config-typescript": "npm:^12.0.0"
@@ -235,7 +235,7 @@ __metadata:
     vite: "npm:5.1.3"
     vite-plugin-dts: "npm:^3.7.2"
     vite-plugin-vuetify: "npm:^2.0.1"
-    vitepress: "npm:1.0.0-rc.43"
+    vitepress: "npm:1.0.0-rc.44"
     vue: "npm:3.4.19"
     vue-i18n: "npm:9.9.1"
     vue-router: "npm:4.2.5"
@@ -1126,19 +1126,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shikijs/core@npm:1.1.5, @shikijs/core@npm:^1.1.3":
-  version: 1.1.5
-  resolution: "@shikijs/core@npm:1.1.5"
-  checksum: 10/08d205d901247374b1e22c787b1ef3b41606aa06b66d28460a74e15a4e000b6567bd6f7c30ae2568b93eebde144da021c0d3127397083c6e438000a176d8f57d
+"@shikijs/core@npm:1.1.6, @shikijs/core@npm:^1.1.5":
+  version: 1.1.6
+  resolution: "@shikijs/core@npm:1.1.6"
+  checksum: 10/3b36dfa431b359576405d6564e8e58e28f1a2f8becda666765815ca73539db8d76ccb7ecbaaded9446602268d25dfd35b028a0c2cebf0713f758203cffbe288b
   languageName: node
   linkType: hard
 
-"@shikijs/transformers@npm:^1.1.3":
-  version: 1.1.5
-  resolution: "@shikijs/transformers@npm:1.1.5"
+"@shikijs/transformers@npm:^1.1.5":
+  version: 1.1.6
+  resolution: "@shikijs/transformers@npm:1.1.6"
   dependencies:
-    shiki: "npm:1.1.5"
-  checksum: 10/88397b140eb1941e7ff2a3d6e75fd897bb1e4fdd6f768e000735e688bf8c924eb8e59318e61e52d0fad926009349a13ca94e47832c737a86f598aeb4dd0bbda4
+    shiki: "npm:1.1.6"
+  checksum: 10/ea00ac0b83e9d5cd837780f1796a724cbd3819362dcd41e9cd8a31891cf5b11096e7c965b985f2362820945cb0eeaec3b5a9d5f13a9fdd1a8a7c2c92533c90ce
   languageName: node
   linkType: hard
 
@@ -1399,21 +1399,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^7.0.1":
-  version: 7.0.1
-  resolution: "@typescript-eslint/parser@npm:7.0.1"
+"@typescript-eslint/parser@npm:^7.0.2":
+  version: 7.0.2
+  resolution: "@typescript-eslint/parser@npm:7.0.2"
   dependencies:
-    "@typescript-eslint/scope-manager": "npm:7.0.1"
-    "@typescript-eslint/types": "npm:7.0.1"
-    "@typescript-eslint/typescript-estree": "npm:7.0.1"
-    "@typescript-eslint/visitor-keys": "npm:7.0.1"
+    "@typescript-eslint/scope-manager": "npm:7.0.2"
+    "@typescript-eslint/types": "npm:7.0.2"
+    "@typescript-eslint/typescript-estree": "npm:7.0.2"
+    "@typescript-eslint/visitor-keys": "npm:7.0.2"
     debug: "npm:^4.3.4"
   peerDependencies:
     eslint: ^8.56.0
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10/b4ba1743ab730268a1924139f072e4a0a56959526fb6377e1b3964518b6c6851733ae446a44d29fed1cb96669e2913cca524895ce77a6205aaed8bda00e8cd5d
+  checksum: 10/18d6e1bda64013f7d66164164c57a10390f7979db55b265062ae9337e11e0921bffca10870e252cd0bd198f79ffa2e87a652e57110e5b1b4cc738453154c205c
   languageName: node
   linkType: hard
 
@@ -1447,13 +1447,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/scope-manager@npm:7.0.1":
-  version: 7.0.1
-  resolution: "@typescript-eslint/scope-manager@npm:7.0.1"
+"@typescript-eslint/scope-manager@npm:7.0.2":
+  version: 7.0.2
+  resolution: "@typescript-eslint/scope-manager@npm:7.0.2"
   dependencies:
-    "@typescript-eslint/types": "npm:7.0.1"
-    "@typescript-eslint/visitor-keys": "npm:7.0.1"
-  checksum: 10/dade6055bb853adb54de795cc3da5ab8550236d4186f108573fdb02e636ab7fc4300a55b506698ced4087ca43b143a5593931cb3195ab4790470b456d9ff8846
+    "@typescript-eslint/types": "npm:7.0.2"
+    "@typescript-eslint/visitor-keys": "npm:7.0.2"
+  checksum: 10/773ea6e61f741777e69a469641f3db0d3c2301c0102667825fb235ed5a65c95f6d6b31b19e734b9a215acc0c7c576c65497635b8d5928eeddb58653ceb13d2d5
   languageName: node
   linkType: hard
 
@@ -1495,10 +1495,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/types@npm:7.0.1":
-  version: 7.0.1
-  resolution: "@typescript-eslint/types@npm:7.0.1"
-  checksum: 10/c08b2d34bab2a877a45a1e4c2923f50d03022b682b7aaba929ae2a9a5ad32db0e46265544a6616ccb98654b434250621be0e282fc5b21b8ccaf6b78741d68f67
+"@typescript-eslint/types@npm:7.0.2":
+  version: 7.0.2
+  resolution: "@typescript-eslint/types@npm:7.0.2"
+  checksum: 10/2cba8a0355cc7357db142fa597d02cf39e1d1cb0ec87c80e91daaa2b87f2a794d2649def9d7b2aa435691c3810d2cbd4cdc21668b19b991863f0d54d4a22da82
   languageName: node
   linkType: hard
 
@@ -1557,12 +1557,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/typescript-estree@npm:7.0.1":
-  version: 7.0.1
-  resolution: "@typescript-eslint/typescript-estree@npm:7.0.1"
+"@typescript-eslint/typescript-estree@npm:7.0.2":
+  version: 7.0.2
+  resolution: "@typescript-eslint/typescript-estree@npm:7.0.2"
   dependencies:
-    "@typescript-eslint/types": "npm:7.0.1"
-    "@typescript-eslint/visitor-keys": "npm:7.0.1"
+    "@typescript-eslint/types": "npm:7.0.2"
+    "@typescript-eslint/visitor-keys": "npm:7.0.2"
     debug: "npm:^4.3.4"
     globby: "npm:^11.1.0"
     is-glob: "npm:^4.0.3"
@@ -1572,7 +1572,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10/b0b0adc84502d1ffcf3a0024179e0f2780be5f8b0a18328db46d430efc4e38a7965656b4392dd47d6176bbb1ee200aec6dd8581c39b606e260750574358cde9f
+  checksum: 10/307080e29c22fc69f0ce7ab7101e1629e05f45a9e541c250e03d06b61336ab0ccb5f0a7354ee3da4e38d5cade4dd2fb7bb396cd7cbe74c2c4b3e29706a70abcc
   languageName: node
   linkType: hard
 
@@ -1640,13 +1640,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/visitor-keys@npm:7.0.1":
-  version: 7.0.1
-  resolution: "@typescript-eslint/visitor-keys@npm:7.0.1"
+"@typescript-eslint/visitor-keys@npm:7.0.2":
+  version: 7.0.2
+  resolution: "@typescript-eslint/visitor-keys@npm:7.0.2"
   dependencies:
-    "@typescript-eslint/types": "npm:7.0.1"
+    "@typescript-eslint/types": "npm:7.0.2"
     eslint-visitor-keys: "npm:^3.4.1"
-  checksum: 10/915c5b19302a4c76e843cd2d04a9a2b11907e658d7018c8b55c338b090d9115d3719809aa05b8af130cc1b216c77626d210c20f705b732e83d04ceae0c112f6b
+  checksum: 10/da6c1b0729af99216cde3a65d4e91584a81fc6c9dff7ba291089f01bf7262de375f58c4c4246e5fbc29f51258db7725d9c830f82ccbd1cda812fd13c51480cda
   languageName: node
   linkType: hard
 
@@ -6187,12 +6187,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shiki@npm:1.1.5, shiki@npm:^1.1.3":
-  version: 1.1.5
-  resolution: "shiki@npm:1.1.5"
+"shiki@npm:1.1.6, shiki@npm:^1.1.5":
+  version: 1.1.6
+  resolution: "shiki@npm:1.1.6"
   dependencies:
-    "@shikijs/core": "npm:1.1.5"
-  checksum: 10/b42bf1ef0c5a474cdb1abff00006cf0de7caff90737a9de3e0a354193ecc75bea43b8db1db07ea8befda496f5e36bcc36dbd474c24032c40ae7b32b5b7aa8207
+    "@shikijs/core": "npm:1.1.6"
+  checksum: 10/c0e9b9f45b2f38476aac529d4fcfd156ef12e88ba31075909f4561785c1bc1c008c592cfc1903e90262b09e6ea32597d00b51bf357e53bebd34c54d7d882b243
   languageName: node
   linkType: hard
 
@@ -7040,14 +7040,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitepress@npm:1.0.0-rc.43":
-  version: 1.0.0-rc.43
-  resolution: "vitepress@npm:1.0.0-rc.43"
+"vitepress@npm:1.0.0-rc.44":
+  version: 1.0.0-rc.44
+  resolution: "vitepress@npm:1.0.0-rc.44"
   dependencies:
     "@docsearch/css": "npm:^3.5.2"
     "@docsearch/js": "npm:^3.5.2"
-    "@shikijs/core": "npm:^1.1.3"
-    "@shikijs/transformers": "npm:^1.1.3"
+    "@shikijs/core": "npm:^1.1.5"
+    "@shikijs/transformers": "npm:^1.1.5"
     "@types/markdown-it": "npm:^13.0.7"
     "@vitejs/plugin-vue": "npm:^5.0.4"
     "@vue/devtools-api": "npm:^7.0.14"
@@ -7056,7 +7056,7 @@ __metadata:
     focus-trap: "npm:^7.5.4"
     mark.js: "npm:8.11.1"
     minisearch: "npm:^6.3.0"
-    shiki: "npm:^1.1.3"
+    shiki: "npm:^1.1.5"
     vite: "npm:^5.1.3"
     vue: "npm:^3.4.19"
   peerDependencies:
@@ -7069,7 +7069,7 @@ __metadata:
       optional: true
   bin:
     vitepress: bin/vitepress.js
-  checksum: 10/b59535e10ff14e1a7f4ee3c87119aeb28bce770bed3b82a247e5d7eacf09f1324450f1f5610dfc3670b8ac8b8e620685f72e28fcff89edc4f5e5041102076056
+  checksum: 10/f9930e277a39706ee908586342e0bd1433e0b1d4bd3eeda037b11110823e50e3c2fc449af50a84bfeb753a3fbe5a9540aeaf0cd5b0db38e2f0326be21c0e46aa
   languageName: node
   linkType: hard
 
