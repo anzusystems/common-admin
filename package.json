@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-alpha24",
+  "version": "1.47.0-alpha25",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -56,8 +56,8 @@
     "@vue/tsconfig": "^0.5.1",
     "@vuelidate/core": "^2.0.3",
     "@vuelidate/validators": "^2.0.4",
-    "@vueuse/core": "^10.7.2",
-    "@vueuse/integrations": "^10.7.2",
+    "@vueuse/core": "^10.8.0",
+    "@vueuse/integrations": "^10.8.0",
     "axios": "1.6.7",
     "cropperjs": "^1.6.1",
     "dayjs": "1.11.10",
@@ -92,8 +92,8 @@
   "peerDependencies": {
     "@vuelidate/core": "2.0.3",
     "@vuelidate/validators": "2.0.4",
-    "@vueuse/core": "10.7.2",
-    "@vueuse/integrations": "10.7.2",
+    "@vueuse/core": "10.8.0",
+    "@vueuse/integrations": "10.8.0",
     "axios": "1.6.7",
     "dayjs": "1.11.10",
     "pinia": "2.1.7",
