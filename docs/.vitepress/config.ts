@@ -153,7 +153,6 @@ function sidebarEditor() {
         { text: 'embedImage', link: '/editor/nodes/embed-image/' },
         { text: 'embedImageInline', link: '/editor/nodes/embed-image-inline/' },
         { text: 'embedMinute', link: '/editor/nodes/embed-minute/' },
-        { text: 'embedNewsletter', link: '/editor/nodes/embed-newsletter/' },
         { text: 'embedPoll', link: '/editor/nodes/embed-poll/' },
         { text: 'embedQuiz', link: '/editor/nodes/embed-quiz/' },
         { text: 'embedRelated', link: '/editor/nodes/embed-related/' },
