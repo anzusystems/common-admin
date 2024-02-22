@@ -39,4 +39,4 @@
 
 ## Notes
 
-- embedAudio, embedVideo, embedNewsletter are still WIP
+- embedAudio, embedVideo are still WIP
