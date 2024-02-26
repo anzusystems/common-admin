@@ -367,8 +367,6 @@ import type {
   ImageAware,
   ImageCreateUpdateAware,
   ImageCreateUpdateAwareKeyed,
-  ImageWidgetSelectConfig,
-  ImageWidgetUploadConfig,
 } from '@/types/ImageAware'
 import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
@@ -758,8 +756,6 @@ export {
   DamAuthorType,
   type DamExtSystem,
   type DamExtSystemMinimal,
-  type ImageWidgetUploadConfig,
-  type ImageWidgetSelectConfig,
   type DamCurrentUserDto,
   type DamAssetLicence,
   type DamAssetLicenceMinimal,

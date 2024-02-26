@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { ImageAware, ImageCreateUpdateAware, ImageWidgetSelectConfig } from '@/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
 import { computed, ref, toRaw, watch } from 'vue'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
-import type { IntegerIdNullable } from '@/types/common'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { createImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
@@ -19,7 +19,7 @@ import { useValidate } from '@/validators/vuelidate/useValidate'
 
 const props = withDefaults(
   defineProps<{
-    selectConfig: ImageWidgetSelectConfig[]
+    selectLicences: IntegerId[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     labelT?: string | undefined
@@ -58,22 +58,22 @@ const extractUUID = (url: string): string | undefined => {
   return match ? match[1] : undefined
 }
 
-const validateAssetData = (asset: AssetDetailItemDto, configs: ImageWidgetSelectConfig[]) => {
-  return configs.some((config) => config.licence === asset.licence)
+const validateAssetData = (asset: AssetDetailItemDto, licences: IntegerId[]) => {
+  return licences.some((licence) => licence === asset.licence)
 }
 
 const { required, maxLength } = useValidate()
 
 const rules = {
   meta: {
-  description: {
-    maxLength: maxLength(255),
+    description: {
+      maxLength: maxLength(255),
+    },
+    source: {
+      required,
+      maxLength: maxLength(255),
+    },
   },
-  source: {
-    required,
-    maxLength: maxLength(255),
-  },
-  }
 }
 const v$ = useVuelidate(rules, { meta }, { $stopPropagation: true })
 
@@ -95,7 +95,7 @@ const validateField = async () => {
       isValid.value = false
       return Promise.reject('Incorrect asset mainFile')
     }
-    if (validateAssetData(assetRes, props.selectConfig)) {
+    if (validateAssetData(assetRes, props.selectLicences)) {
       isValid.value = true
       return Promise.resolve(assetRes)
     }
@@ -240,9 +240,10 @@ defineExpose({
       :disabled="disabled"
     />
   </ARow>
-  <ARow style="min-height: 50px;">
+  <ARow style="min-height: 50px">
     <div>{{ t('common.damImage.public.imagePreview') }}:</div>
     <img
+      v-if="resolvedSrc.length > 0"
       :src="resolvedSrc"
       alt=""
     >

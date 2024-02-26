@@ -4,8 +4,8 @@ import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
 import { type AssetSelectReturnData, AssetSelectReturnType } from '@/types/coreDam/AssetSelect'
-import type { ImageWidgetSelectConfig } from '@/types/ImageAware'
 import { cloneDeep } from '@/utils/common'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 
 export interface AssetSelectListItem {
   asset: AssetSearchListItemDto
@@ -16,7 +16,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   const assetListItems = ref<Array<AssetSelectListItem>>([])
   const loader = ref(false)
   const selectedLicenceId = ref<IntegerId>(0)
-  const selectConfig = ref<ImageWidgetSelectConfig[]>([])
+  const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
   const assetType = ref<AssetTypeValue>(AssetTypeValue.Default)
   const selectedAssets = ref<Map<DocId, AssetSelectListItem>>(new Map())
   const singleMode = ref(false)
@@ -31,7 +31,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     loader.value = false
   }
 
-  function setSelectConfig(value: ImageWidgetSelectConfig[]) {
+  function setSelectConfig(value: DamConfigLicenceExtSystemReturnType[]) {
     if (value.length === 0) return
     selectConfig.value = cloneDeep(value)
     selectedLicenceId.value = value[0].licence

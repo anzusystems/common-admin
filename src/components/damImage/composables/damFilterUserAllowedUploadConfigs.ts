@@ -1,8 +1,8 @@
 import { useDamCurrentUser } from '@/components/damImage/composables/damCurrentUser'
-import type { ImageWidgetSelectConfig, ImageWidgetUploadConfig } from '@/types/ImageAware'
 import { cloneDeep, isUndefined } from '@/utils/common'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 
-export function filterAllowedImageWidgetSelectConfigs(values: ImageWidgetSelectConfig[]) {
+export function filterAllowedImageWidgetSelectConfigs(values: DamConfigLicenceExtSystemReturnType[]) {
   const { damCurrentUser, damCurrentUserIsSuperAdmin } = useDamCurrentUser()
   if (damCurrentUserIsSuperAdmin.value) return cloneDeep(values)
   const currentUser = damCurrentUser.value
@@ -10,7 +10,7 @@ export function filterAllowedImageWidgetSelectConfigs(values: ImageWidgetSelectC
 
   const adminToExtSystems = currentUser.adminToExtSystems.map((extSystemValue) => extSystemValue.id)
   const assetLicences = currentUser.assetLicences.map((assetLicenceValue) => assetLicenceValue.id)
-  const allowed: ImageWidgetSelectConfig[] = []
+  const allowed: DamConfigLicenceExtSystemReturnType[] = []
   values.forEach((value) => {
     if (adminToExtSystems.includes(value.extSystem)) {
       allowed.push(value)
@@ -23,7 +23,7 @@ export function filterAllowedImageWidgetSelectConfigs(values: ImageWidgetSelectC
   return allowed
 }
 
-export function isImageWidgetUploadConfigAllowed(value: ImageWidgetUploadConfig) {
+export function isImageWidgetUploadConfigAllowed(value: DamConfigLicenceExtSystemReturnType) {
   const { damCurrentUser, damCurrentUserIsSuperAdmin } = useDamCurrentUser()
   if (damCurrentUserIsSuperAdmin.value) return true
 

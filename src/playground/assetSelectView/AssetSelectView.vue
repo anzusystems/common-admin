@@ -37,18 +37,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
           <AAssetSelect
             :min-count="1"
             :max-count="3"
-            :select-config="[
-              {
-                title: 'Default',
-                licence: 100000,
-                extSystem: 1,
-              },
-              {
-                title: 'Second',
-                licence: 100001,
-                extSystem: 1,
-              },
-            ]"
+            :select-licences="[100000, 100001]"
             :asset-type="DamAssetType.Image"
             @on-confirm="onConfirm"
           >
@@ -76,13 +65,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
           </VBtn>
           <AAssetSelect
             v-model="secondDialog"
-            :select-config="[
-              {
-                title: 'Default',
-                licence: 100000,
-                extSystem: 1,
-              }
-            ]"
+            :select-licences="[100000]"
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Video"
@@ -103,13 +86,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
           </VBtn>
           <AAssetSelect
             ref="thirdAssetSelect"
-            :select-config="[
-              {
-                title: 'Default',
-                licence: 100000,
-                extSystem: 1,
-              }
-            ]"
+            :select-licences="[100000]"
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Audio"

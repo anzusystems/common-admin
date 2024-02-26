@@ -1,12 +1,7 @@
 <script lang="ts" setup>
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
-import type {
-  ImageAware,
-  ImageCreateUpdateAware,
-  ImageWidgetSelectConfig,
-  ImageWidgetUploadConfig,
-} from '@/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
@@ -18,12 +13,11 @@ import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composab
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
-import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
-import { computed, inject, ref, type ShallowRef, toRaw, watch } from 'vue'
+import { computed, inject, ref, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -52,12 +46,13 @@ import {
   type CollabFieldLockStatusPayload,
   CollabFieldLockType,
 } from '@/components/collab/composables/collabEventBus'
+import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 
 const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
-    uploadConfig: ImageWidgetUploadConfig
-    selectConfig: ImageWidgetSelectConfig[]
+    uploadLicence: IntegerId
+    selectLicences: IntegerId[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -149,14 +144,12 @@ const releaseFieldLockLocal = (value: IntegerIdNullable) => {
   lockedLocal.value = false
 }
 
-const imageWidgetExtSystemConfigs = inject<ShallowRef<Map<IntegerId, DamExtSystemConfig>> | undefined>(
-  ImageWidgetExtSystemConfigs,
+const imageWidgetUploadConfig = inject<DamConfigLicenceExtSystemReturnType | undefined>(
+  ImageWidgetUploadConfig,
   undefined
 )
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageWidgetExtSystemConfig = imageWidgetExtSystemConfigs?.value?.get(props.uploadConfig.extSystem)
 
-if (isUndefined(imageWidgetExtSystemConfigs) || isUndefined(imageWidgetExtSystemConfig)) {
+if (isUndefined(imageWidgetUploadConfig)) {
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
 
@@ -239,11 +232,15 @@ const waitForFieldLockIsReallyAcquired = async () => {
 
 const onDrop = async (files: File[]) => {
   acquireFieldLockLocal()
-  console.log('acquire')
   try {
     await waitForFieldLockIsReallyAcquired()
-    cachedExtSystemId.value = props.uploadConfig.extSystem
-    uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
+    cachedExtSystemId.value = imageWidgetUploadConfig.extSystem
+    uploadQueuesStore.addByFiles(
+      props.queueKey,
+      imageWidgetUploadConfig.extSystem,
+      imageWidgetUploadConfig.licence,
+      files
+    )
     uploadQueueDialog.value = props.queueKey
   } catch (e) {
     showError('Unable to lock image widget by current user.')
@@ -251,12 +248,20 @@ const onDrop = async (files: File[]) => {
 }
 
 const onFileInput = (files: File[]) => {
-  cachedExtSystemId.value = props.uploadConfig.extSystem
-  uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
+  cachedExtSystemId.value = imageWidgetUploadConfig.extSystem
+  uploadQueuesStore.addByFiles(
+    props.queueKey,
+    imageWidgetUploadConfig.extSystem,
+    imageWidgetUploadConfig.licence,
+    files
+  )
   uploadQueueDialog.value = props.queueKey
 }
 
-const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(DamAssetType.Image, imageWidgetExtSystemConfig)
+const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
+  DamAssetType.Image,
+  imageWidgetUploadConfig.extSystemConfig
+)
 
 const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
   resolvedSrc.value = imagePlaceholderPath
@@ -657,7 +662,7 @@ defineExpose({
   </div>
   <AAssetSelect
     v-model="assetSelectDialog"
-    :select-config="selectConfig"
+    :select-licences="selectLicences"
     :min-count="1"
     :max-count="1"
     :asset-type="DamAssetType.Image"
@@ -672,8 +677,8 @@ defineExpose({
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog === queueKey"
     :queue-key="queueKey"
-    :ext-system="uploadConfig.extSystem"
-    :licence-id="uploadConfig.licence"
+    :ext-system="imageWidgetUploadConfig.extSystem"
+    :licence-id="imageWidgetUploadConfig.licence"
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"
     :max-sizes="uploadSizes"

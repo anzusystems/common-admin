@@ -1,22 +1,23 @@
 <script lang="ts" setup>
-import type { IntegerIdNullable } from '@/types/common'
-import { onMounted, provide, ref } from 'vue'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageAware, ImageWidgetSelectConfig, ImageWidgetUploadConfig } from '@/types/ImageAware'
+import type { ImageAware } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import ImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
-import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { isUndefined } from '@/utils/common'
 import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import type { CollabComponentConfig } from '@/components/collab/types/Collab'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerIdNullable
     queueKey: UploadQueueKey
-    uploadConfig: ImageWidgetUploadConfig
-    selectConfig: ImageWidgetSelectConfig[]
+    uploadLicence: IntegerId
+    selectLicences: IntegerId[]
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -59,16 +60,22 @@ const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading'
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
 const {
   initialized,
-  loadDamConfigExtSystem,
-  damConfigExtSystem,
   loadDamPrvConfig,
   loadDamConfigAssetCustomFormElements,
-  getDamConfigExtSystem,
   getDamConfigAssetCustomFormElements,
+  getOrLoadDamConfigExtSystemByLicence,
+  getOrLoadDamConfigExtSystemByLicences,
 } = useDamConfigState(damClient)
 
+const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
+
 onMounted(async () => {
-  if (!isImageWidgetUploadConfigAllowed(props.uploadConfig)) {
+  uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
+  if (isUndefined(uploadConfig.value)) {
+    status.value = 'error'
+    return
+  }
+  if (!isImageWidgetUploadConfigAllowed(uploadConfig.value)) {
     status.value = 'uploadNotAllowed'
     return
   }
@@ -76,13 +83,10 @@ onMounted(async () => {
   if (!initialized.damPrvConfig) {
     promises.push(loadDamPrvConfig())
   }
-  const config = getDamConfigExtSystem(props.uploadConfig.extSystem)
-  if (isUndefined(config)) {
-    promises.push(loadDamConfigExtSystem(props.uploadConfig.extSystem))
-  }
-  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.uploadConfig.extSystem)
+  promises.push(getOrLoadDamConfigExtSystemByLicences(props.selectLicences))
+  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(uploadConfig.value.extSystem)
   if (isUndefined(configAssetCustomFormElements)) {
-    promises.push(loadDamConfigAssetCustomFormElements(props.uploadConfig.extSystem))
+    promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }
   try {
     await Promise.all(promises)
@@ -92,7 +96,8 @@ onMounted(async () => {
   if (status.value !== 'error') status.value = 'ready'
 })
 
-provide(ImageWidgetExtSystemConfigs, damConfigExtSystem)
+// eslint-disable-next-line vue/no-ref-object-reactivity-loss
+provide(ImageWidgetUploadConfig, uploadConfig.value)
 
 const innerComponent = ref<InstanceType<typeof ImageWidgetInner> | null>(null)
 
