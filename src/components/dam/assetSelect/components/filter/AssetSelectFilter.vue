@@ -44,7 +44,6 @@ watch(
 </script>
 
 <template>
-  {{ selectConfig.length }}
   <div class="subject-select-filter">
     <div class="subject-select-filter__content">
       <VForm
