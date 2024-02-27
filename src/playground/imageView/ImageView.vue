@@ -74,7 +74,7 @@ const saveInsideDialog = () => {
           <AImageWidget
             v-model="imageId2"
             :upload-licence="100000"
-            :select-licences="[100000]"
+            :select-licences="[100000, 100001]"
             queue-key="listingImage"
             expand-options
           />
