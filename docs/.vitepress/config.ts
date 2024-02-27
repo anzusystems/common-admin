@@ -227,6 +227,7 @@ function sidebarEditor() {
         { text: 'fb_post', link: '/editor/scraper/fb_post/' },
         { text: 'flr_visual', link: '/editor/scraper/flr_visual/' },
         { text: 'ig_post', link: '/editor/scraper/ig_post/' },
+        { text: 'pb_episode', link: '/editor/scraper/pb_episode/' },
         { text: 'sc_track', link: '/editor/scraper/sc_track/' },
         { text: 'ta3_video', link: '/editor/scraper/ta3_video/' },
         { text: 'tw_post', link: '/editor/scraper/tw_post/' },

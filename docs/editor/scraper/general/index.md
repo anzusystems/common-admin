@@ -18,6 +18,7 @@
 - [fb_post](/editor/scraper/fb_post/)
 - [flr_visual](/editor/scraper/flr_visual/)
 - [ig_post](/editor/scraper/ig_post/)
+- [pb_episode](/editor/scraper/pb_episode/)
 - [sc_track](/editor/scraper/sc_track/)
 - [ta3_video](/editor/scraper/ta3_video/)
 - [tw_post](/editor/scraper/tw_post/)
