@@ -16,11 +16,14 @@
 
 ## Supported types:
 - [fb_post](/editor/scraper/fb_post/)
+- [fb_video](/editor/scraper/fb_video/)
 - [flr_visual](/editor/scraper/flr_visual/)
 - [ig_post](/editor/scraper/ig_post/)
 - [pb_episode](/editor/scraper/pb_episode/)
 - [sc_track](/editor/scraper/sc_track/)
+- [sfy_episode](/editor/scraper/sfy_episode/)
 - [ta3_video](/editor/scraper/ta3_video/)
 - [tw_post](/editor/scraper/tw_post/)
+- [tt_video](/editor/scraper/tt_video/)
 - [vm_video](/editor/scraper/vm_video/)
 - [yt_video](/editor/scraper/yt_video/)

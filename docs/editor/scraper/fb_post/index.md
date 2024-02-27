@@ -1,4 +1,17 @@
-# fb_post
+# fb_post: Facebook Post
+
+## Supported codes
+
+### URL
+
+```
+https://www.facebook.com/sme.sk/posts/pfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l 
+```
+
+### Embed
+```
+<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fsme.sk%2Fposts%2Fpfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l&show_text=true&width=500" width="500" height="516" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe> 
+```
 
 ## Params
 
@@ -17,6 +30,7 @@ interface Params {
 interface Data {
   screenshots: Screenshot[];
   scrapedAt: string; // datetime in RFC 3339 format
+  url: string;
   text: string;
   author: Author;
   publishedAt: string; // datetime in RFC 3339 format
@@ -35,6 +49,7 @@ interface Author {
   username: string;
   name: string;
   image: ImageVariant;
+  url: string;
 }
 
 interface ImageVariant {

@@ -1,4 +1,18 @@
-# flr_visual
+# flr_visual - Flourish Visualisation
+
+## Supported codes
+
+### URL
+
+```
+https://public.flourish.studio/visualisation/8830543/ 
+```
+
+### Embed
+
+```html
+<div class="flourish-embed flourish-chart" data-src="visualisation/8830543"><script src="https://public.flourish.studio/resources/embed.js"></script></div> 
+```
 
 ## Params
 
