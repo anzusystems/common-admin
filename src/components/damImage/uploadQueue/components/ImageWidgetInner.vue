@@ -17,7 +17,7 @@ import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamCon
 import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
-import { computed, inject, ref, toRaw, watch } from 'vue'
+import { computed, inject, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -144,12 +144,12 @@ const releaseFieldLockLocal = (value: IntegerIdNullable) => {
   lockedLocal.value = false
 }
 
-const imageWidgetUploadConfig = inject<DamConfigLicenceExtSystemReturnType | undefined>(
+const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
   ImageWidgetUploadConfig,
   undefined
 )
 
-if (isUndefined(imageWidgetUploadConfig)) {
+if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.value)) {
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
 
@@ -232,13 +232,15 @@ const waitForFieldLockIsReallyAcquired = async () => {
 
 const onDrop = async (files: File[]) => {
   acquireFieldLockLocal()
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
   try {
     await waitForFieldLockIsReallyAcquired()
-    cachedExtSystemId.value = imageWidgetUploadConfig.extSystem
+    cachedExtSystemId.value = config.extSystem
     uploadQueuesStore.addByFiles(
       props.queueKey,
-      imageWidgetUploadConfig.extSystem,
-      imageWidgetUploadConfig.licence,
+      config.extSystem,
+      config.licence,
       files
     )
     uploadQueueDialog.value = props.queueKey
@@ -248,11 +250,13 @@ const onDrop = async (files: File[]) => {
 }
 
 const onFileInput = (files: File[]) => {
-  cachedExtSystemId.value = imageWidgetUploadConfig.extSystem
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
+  cachedExtSystemId.value = config.extSystem
   uploadQueuesStore.addByFiles(
     props.queueKey,
-    imageWidgetUploadConfig.extSystem,
-    imageWidgetUploadConfig.licence,
+    config.extSystem,
+    config.licence,
     files
   )
   uploadQueueDialog.value = props.queueKey
@@ -260,7 +264,7 @@ const onFileInput = (files: File[]) => {
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   DamAssetType.Image,
-  imageWidgetUploadConfig.extSystemConfig
+  imageWidgetUploadConfig.value.extSystemConfig
 )
 
 const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
@@ -675,7 +679,7 @@ defineExpose({
     :ext-system="cachedExtSystemId"
   />
   <UploadQueueDialogSingle
-    v-if="uploadQueueDialog === queueKey"
+    v-if="uploadQueueDialog === queueKey && imageWidgetUploadConfig"
     :queue-key="queueKey"
     :ext-system="imageWidgetUploadConfig.extSystem"
     :licence-id="imageWidgetUploadConfig.licence"

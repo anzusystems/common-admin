@@ -96,8 +96,7 @@ onMounted(async () => {
   if (status.value !== 'error') status.value = 'ready'
 })
 
-// eslint-disable-next-line vue/no-ref-object-reactivity-loss
-provide(ImageWidgetUploadConfig, uploadConfig.value)
+provide(ImageWidgetUploadConfig, uploadConfig)
 
 const innerComponent = ref<InstanceType<typeof ImageWidgetInner> | null>(null)
 

@@ -90,8 +90,7 @@ const saveImages = async () => {
   return (await innerComponent.value.saveImages()) as boolean
 }
 
-// eslint-disable-next-line vue/no-ref-object-reactivity-loss
-provide(ImageWidgetUploadConfig, uploadConfig.value)
+provide(ImageWidgetUploadConfig, uploadConfig)
 
 defineExpose({
   saveImages,

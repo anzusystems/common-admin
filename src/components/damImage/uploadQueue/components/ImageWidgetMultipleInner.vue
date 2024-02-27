@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
-import { computed, inject, nextTick, onMounted, ref, toRaw } from 'vue'
+import { computed, inject, nextTick, onMounted, ref, type ShallowRef, toRaw } from 'vue'
 import { isNull, isString, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
@@ -75,12 +75,12 @@ const emit = defineEmits<{
 
 const assetSelectDialog = ref(false)
 
-const imageWidgetUploadConfig = inject<DamConfigLicenceExtSystemReturnType | undefined>(
+const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
   ImageWidgetUploadConfig,
   undefined
 )
 
-if (isUndefined(imageWidgetUploadConfig)) {
+if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.value)) {
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
 
@@ -92,7 +92,7 @@ const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   DamAssetType.Image,
-  imageWidgetUploadConfig.extSystemConfig
+  imageWidgetUploadConfig.value.extSystemConfig
 )
 
 const { t } = useI18n()
@@ -135,14 +135,18 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
-  cachedExtSystemId.value = imageWidgetUploadConfig.extSystem
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
+  cachedExtSystemId.value = config.extSystem
   // uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   limitDialogComponent.value?.check(files)
   uploadQueueDialog.value = props.queueKey
 }
 
 const onDrop = (files: File[]) => {
-  cachedExtSystemId.value = imageWidgetUploadConfig.extSystem
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
+  cachedExtSystemId.value = config.extSystem
   limitDialogComponent.value?.check(files)
   // uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   uploadQueueDialog.value = props.queueKey
@@ -439,7 +443,7 @@ onMounted(() => {
       />
     </div>
     <UploadQueueDialog
-      v-if="uploadQueueDialog === queueKey"
+      v-if="uploadQueueDialog === queueKey && imageWidgetUploadConfig"
       :queue-key="queueKey"
       :ext-system="imageWidgetUploadConfig.extSystem"
       :licence-id="imageWidgetUploadConfig.licence"
