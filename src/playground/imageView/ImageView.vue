@@ -48,17 +48,8 @@ const saveInsideDialog = () => {
         <VCol cols="4">
           <AImageWidget
             v-model="imageId2"
-            :upload-config="{
-              licence: 100000,
-              extSystem: 1,
-            }"
-            :select-config="[
-              {
-                title: 'Default',
-                licence: 100000,
-                extSystem: 1,
-              },
-            ]"
+            :upload-licence="100000"
+            :select-licences="[100000, 100001]"
             queue-key="heroImage"
             label="Lead image"
           />
@@ -66,17 +57,8 @@ const saveInsideDialog = () => {
         <VCol cols="4">
           <AImageWidget
             v-model="imageId3"
-            :upload-config="{
-              licence: 100000,
-              extSystem: 1,
-            }"
-            :select-config="[
-              {
-                title: 'Default',
-                licence: 100000,
-                extSystem: 1,
-              },
-            ]"
+            :upload-licence="100000"
+            :select-licences="[100000, 100001]"
             queue-key="heroImage2"
             label="Lead image 2 with global validation test"
           />
@@ -91,17 +73,8 @@ const saveInsideDialog = () => {
           Expanded actions:
           <AImageWidget
             v-model="imageId2"
-            :upload-config="{
-              licence: 100000,
-              extSystem: 1,
-            }"
-            :select-config="[
-              {
-                title: 'Default',
-                licence: 100000,
-                extSystem: 1,
-              },
-            ]"
+            :upload-licence="100000"
+            :select-licences="[100000, 100001]"
             queue-key="listingImage"
             expand-options
           />
@@ -125,17 +98,8 @@ const saveInsideDialog = () => {
                     <AImageWidget
                       ref="widgetComponent"
                       v-model="imageId2"
-                      :upload-config="{
-                        licence: 100000,
-                        extSystem: 1,
-                      }"
-                      :select-config="[
-                        {
-                          title: 'Default',
-                          licence: 100000,
-                          extSystem: 1,
-                        },
-                      ]"
+                      :upload-licence="100000"
+                      :select-licences="[100000, 100001]"
                       queue-key="embedImage"
                       expand-options
                       expand-metadata

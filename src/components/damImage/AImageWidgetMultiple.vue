@@ -1,21 +1,21 @@
 <script lang="ts" setup>
 import type { IntegerId } from '@/types/common'
-import { onMounted, provide, ref } from 'vue'
+import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import { isUndefined } from '@/utils/common'
-import type { ImageWidgetSelectConfig, ImageWidgetUploadConfig } from '@/types/ImageAware'
 import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerId[] // initial ids, updated only when save is called
     queueKey: UploadQueueKey
-    uploadConfig: ImageWidgetUploadConfig
-    selectConfig: ImageWidgetSelectConfig[]
+    uploadLicence: IntegerId
+    selectLicences: IntegerId[]
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -47,16 +47,22 @@ const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading'
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
 const {
   initialized,
-  loadDamConfigExtSystem,
-  damConfigExtSystem,
   loadDamPrvConfig,
   loadDamConfigAssetCustomFormElements,
-  getDamConfigExtSystem,
   getDamConfigAssetCustomFormElements,
+  getOrLoadDamConfigExtSystemByLicence,
+  getOrLoadDamConfigExtSystemByLicences,
 } = useDamConfigState(damClient)
 
+const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
+
 onMounted(async () => {
-  if (!isImageWidgetUploadConfigAllowed(props.uploadConfig)) {
+  uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
+  if (isUndefined(uploadConfig.value)) {
+    status.value = 'error'
+    return
+  }
+  if (!isImageWidgetUploadConfigAllowed(uploadConfig.value)) {
     status.value = 'uploadNotAllowed'
     return
   }
@@ -64,13 +70,10 @@ onMounted(async () => {
   if (!initialized.damPrvConfig) {
     promises.push(loadDamPrvConfig())
   }
-  const configExtSystem = getDamConfigExtSystem(props.uploadConfig.extSystem)
-  if (isUndefined(configExtSystem)) {
-    promises.push(loadDamConfigExtSystem(props.uploadConfig.extSystem))
-  }
-  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(props.uploadConfig.extSystem)
+  promises.push(getOrLoadDamConfigExtSystemByLicences(props.selectLicences))
+  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(uploadConfig.value.extSystem)
   if (isUndefined(configAssetCustomFormElements)) {
-    promises.push(loadDamConfigAssetCustomFormElements(props.uploadConfig.extSystem))
+    promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }
   try {
     await Promise.all(promises)
@@ -87,7 +90,7 @@ const saveImages = async () => {
   return (await innerComponent.value.saveImages()) as boolean
 }
 
-provide(ImageWidgetExtSystemConfigs, damConfigExtSystem)
+provide(ImageWidgetUploadConfig, uploadConfig)
 
 defineExpose({
   saveImages,

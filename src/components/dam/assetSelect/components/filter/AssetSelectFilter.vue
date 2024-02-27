@@ -57,7 +57,7 @@ watch(
               v-model="selectedLicenceId"
               :label="t('common.assetSelect.filter.licence')"
               :items="selectConfig"
-              item-title="title"
+              item-title="licenceName"
               item-value="licence"
             />
           </VCol>

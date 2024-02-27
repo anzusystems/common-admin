@@ -47,18 +47,7 @@ const onDialogConfirm = async () => {
             <AImagePublicInput
               ref="imagePublicInputComponent"
               v-model="image"
-              :select-config="[
-                {
-                  title: 'Default',
-                  licence: 100000,
-                  extSystem: 1,
-                },
-                {
-                  title: '2',
-                  licence: 100001,
-                  extSystem: 1,
-                },
-              ]"
+              :select-licences="[100000, 100001]"
             />
           </VCardText>
           <VCardActions>

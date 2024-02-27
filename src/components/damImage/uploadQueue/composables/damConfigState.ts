@@ -1,4 +1,6 @@
 import {
+  type DamConfigLicenceExtSystem,
+  type DamConfigLicenceExtSystemReturnType,
   type DamExtSystemConfig,
   type DamPrvConfig,
   type DamPubConfig,
@@ -7,7 +9,7 @@ import {
 import { DamAssetType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 import type { AxiosInstance } from 'axios'
-import { isUndefined } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 import {
   fetchConfiguration,
   fetchExtSystemConfiguration,
@@ -19,6 +21,7 @@ import {
   fetchDistributionCustomFormElements,
 } from '@/components/damImage/uploadQueue/composables/damAssetCustomFormApi'
 import { reactive, shallowRef } from 'vue'
+import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
 
 const initialized = reactive<{
   damPubConfig: boolean
@@ -52,6 +55,7 @@ const damPrvConfig = shallowRef<DamPrvConfig>({
 })
 
 const damConfigExtSystem = shallowRef(new Map<IntegerId, DamExtSystemConfig>())
+const damConfigLicenceExtSystem = shallowRef(new Map<IntegerId, DamConfigLicenceExtSystem>())
 
 const damConfigAssetCustomFormElements = shallowRef(
   new Map<IntegerId, { [key in DamAssetType]: CustomDataFormElement[] }>()
@@ -181,6 +185,53 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     return damConfigExtSystem.value.get(extSystemId)
   }
 
+  async function getOrLoadDamConfigExtSystemByLicence(
+    licence: IntegerId
+  ): Promise<DamConfigLicenceExtSystemReturnType | undefined> {
+    if (isUndefined(client)) {
+      return undefined
+    }
+    let foundLicenceConfig = damConfigLicenceExtSystem.value.get(licence)
+    if (isUndefined(foundLicenceConfig)) {
+      try {
+        const licenceRes = await fetchDamAssetLicence(client, licence)
+        if (isNull(licenceRes.extSystem)) return undefined
+        foundLicenceConfig = { extSystem: licenceRes.extSystem, name: licenceRes.name }
+        damConfigLicenceExtSystem.value.set(licence, foundLicenceConfig)
+      } catch (e) {
+        return undefined
+      }
+    }
+    let foundExtSystemConfig = damConfigExtSystem.value.get(foundLicenceConfig.extSystem)
+    if (isUndefined(foundExtSystemConfig)) {
+      try {
+        await loadDamConfigExtSystem(foundLicenceConfig.extSystem)
+        foundExtSystemConfig = damConfigExtSystem.value.get(foundLicenceConfig.extSystem)
+      } catch (e) {
+        return undefined
+      }
+    }
+    if (isUndefined(foundExtSystemConfig)) return undefined
+
+    return {
+      licence: licence,
+      extSystem: foundLicenceConfig.extSystem,
+      licenceName: foundLicenceConfig.name,
+      extSystemConfig: foundExtSystemConfig,
+    }
+  }
+
+  async function getOrLoadDamConfigExtSystemByLicences(
+    licences: IntegerId[]
+  ): Promise<DamConfigLicenceExtSystemReturnType[]> {
+    const promises: Array<Promise<DamConfigLicenceExtSystemReturnType | undefined>> = []
+    licences.forEach((licence: IntegerId) => {
+      promises.push(getOrLoadDamConfigExtSystemByLicence(licence))
+    })
+    const responses = await Promise.all(promises)
+    return responses.filter((response): response is DamConfigLicenceExtSystemReturnType => !isUndefined(response))
+  }
+
   // todo add support to load only selected types
   function loadDamConfigAssetCustomFormElements(extSystemId: IntegerId) {
     return new Promise((resolve, reject) => {
@@ -267,8 +318,11 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     damPubConfig,
     damPrvConfig,
     damConfigExtSystem,
+    damConfigLicenceExtSystem,
     damConfigAssetCustomFormElements,
     damConfigDistributionCustomFormElements,
+    getOrLoadDamConfigExtSystemByLicence,
+    getOrLoadDamConfigExtSystemByLicences,
     loadDamPrvConfig,
     loadDamPubConfig,
     loadDamConfigExtSystem,

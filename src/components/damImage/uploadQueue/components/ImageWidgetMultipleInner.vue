@@ -3,8 +3,7 @@ import type { DocId, IntegerId } from '@/types/common'
 import { computed, inject, nextTick, onMounted, ref, type ShallowRef, toRaw } from 'vue'
 import { isNull, isString, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import { ImageWidgetExtSystemConfigs } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleItem.vue'
 import { storeToRefs } from 'pinia'
@@ -24,7 +23,7 @@ import AssetDetailDialog from '@/components/damImage/uploadQueue/components/Asse
 import { fetchAssetByFileId, fetchAssetListByIds } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageCreateUpdateAware, ImageWidgetSelectConfig, ImageWidgetUploadConfig } from '@/types/ImageAware'
+import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
 import { CHOSEN_CLASS, DRAG_CLASS, GHOST_CLASS, GROUP_CLASS, HANDLE_CLASS } from '@/components/sortable/sortableActions'
 import { useSortable, type UseSortableReturn } from '@vueuse/integrations/useSortable'
@@ -38,13 +37,14 @@ import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/compo
 import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
+import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerId[]
     queueKey: UploadQueueKey
-    uploadConfig: ImageWidgetUploadConfig
-    selectConfig: ImageWidgetSelectConfig[]
+    uploadLicence: IntegerId
+    selectLicences: IntegerId[]
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -75,14 +75,12 @@ const emit = defineEmits<{
 
 const assetSelectDialog = ref(false)
 
-const imageWidgetExtSystemConfigs = inject<ShallowRef<Map<IntegerId, DamExtSystemConfig>> | undefined>(
-  ImageWidgetExtSystemConfigs,
+const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
+  ImageWidgetUploadConfig,
   undefined
 )
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const imageWidgetExtSystemConfig = imageWidgetExtSystemConfigs?.value?.get(props.uploadConfig.extSystem)
 
-if (isUndefined(imageWidgetExtSystemConfigs) || isUndefined(imageWidgetExtSystemConfig)) {
+if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.value)) {
   throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
 
@@ -92,7 +90,10 @@ const { imageClient } = imageOptions
 const { showErrorsDefault, showValidationError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
-const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(DamAssetType.Image, imageWidgetExtSystemConfig)
+const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
+  DamAssetType.Image,
+  imageWidgetUploadConfig.value.extSystemConfig
+)
 
 const { t } = useI18n()
 
@@ -134,14 +135,18 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const { uploadQueueDialog } = useUploadQueueDialog()
 
 const onFileInput = (files: File[]) => {
-  cachedExtSystemId.value = props.uploadConfig.extSystem
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
+  cachedExtSystemId.value = config.extSystem
   // uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   limitDialogComponent.value?.check(files)
   uploadQueueDialog.value = props.queueKey
 }
 
 const onDrop = (files: File[]) => {
-  cachedExtSystemId.value = props.uploadConfig.extSystem
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
+  cachedExtSystemId.value = config.extSystem
   limitDialogComponent.value?.check(files)
   // uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   uploadQueueDialog.value = props.queueKey
@@ -402,7 +407,7 @@ onMounted(() => {
     </div>
     <AAssetSelect
       v-model="assetSelectDialog"
-      :select-config="selectConfig"
+      :select-licences="selectLicences"
       :min-count="1"
       :max-count="50"
       :asset-type="DamAssetType.Image"
@@ -438,10 +443,10 @@ onMounted(() => {
       />
     </div>
     <UploadQueueDialog
-      v-if="uploadQueueDialog === queueKey"
+      v-if="uploadQueueDialog === queueKey && imageWidgetUploadConfig"
       :queue-key="queueKey"
-      :ext-system="uploadConfig.extSystem"
-      :licence-id="uploadConfig.licence"
+      :ext-system="imageWidgetUploadConfig.extSystem"
+      :licence-id="imageWidgetUploadConfig.licence"
       :file-input-key="uploadQueue?.fileInputKey ?? -1"
       :accept="uploadAccept"
       :max-sizes="uploadSizes"
@@ -456,7 +461,6 @@ onMounted(() => {
     <ImageWidgetMultipleLimitDialog
       ref="limitDialogComponent"
       :queue-key="queueKey"
-      :upload-config="uploadConfig"
       @after-add="afterLimitDialogAdd"
     />
   </div>

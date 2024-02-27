@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref, watch, withModifiers } from 'vue'
+import { computed, onMounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
@@ -18,11 +18,11 @@ import type {
   AssetSelectReturnTypeValues,
 } from '@/types/coreDam/AssetSelect'
 import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
-import type { ImageWidgetSelectConfig } from '@/types/ImageAware'
-import {
-  filterAllowedImageWidgetSelectConfigs
-} from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
+import { filterAllowedImageWidgetSelectConfigs } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/composables/system/alerts'
+import type { IntegerId } from '@/types/common'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 
 const props = withDefaults(
   defineProps<{
@@ -30,7 +30,7 @@ const props = withDefaults(
     assetType: DamAssetType | DamAssetTypeValues
     minCount: number
     maxCount: number
-    selectConfig: ImageWidgetSelectConfig[]
+    selectLicences: IntegerId[]
     returnType?: AssetSelectReturnType | AssetSelectReturnTypeValues
     configName?: string
     skipCurrentUserCheck?: boolean
@@ -51,6 +51,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const dialogLocal = ref(false)
+const loading = ref(false)
 const dialog = computed({
   get() {
     if (isUndefined(props.modelValue)) return dialogLocal.value
@@ -62,16 +63,28 @@ const dialog = computed({
   },
 })
 
-const { selectedCount, loader, pagination, fetchNextPage, resetAssetList, getSelectedData, initStoreContext } =
-  useAssetSelectActions()
+const {
+  damClient,
+  selectedCount,
+  loader,
+  pagination,
+  fetchNextPage,
+  resetAssetList,
+  getSelectedData,
+  initStoreContext,
+} = useAssetSelectActions()
+
+const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
+
+const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
 const { openSidebar, sidebarLeft } = useSidebar()
 const { showErrorT } = useAlerts()
 
 const onOpen = () => {
-  let selectConfigLocal = props.selectConfig
+  let selectConfigLocal = selectConfigs.value
   if (!props.skipCurrentUserCheck) {
-    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(props.selectConfig)
+    selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
   }
   if (selectConfigLocal.length === 0) {
     showErrorT('common.assetSelect.error.unallowedLicence')
@@ -131,82 +144,96 @@ const disabledSubmit = computed(() => {
   return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
 })
 
+onMounted(async () => {
+  loading.value = true
+  selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
+  loading.value = false
+})
+
 defineExpose({
   open: onOpen,
 })
 </script>
 
 <template>
-  <slot
-    name="activator"
-    :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
-  />
-  <VDialog
-    :model-value="dialog"
-    fullscreen
-    class="subject-select"
-    @update:model-value="emit('update:modelValue', $event)"
+  <div
+    v-if="loading"
+    class="w-100 d-flex align-center justify-center"
   >
-    <VCard
-      v-if="dialog"
-      class="subject-select__card"
+    <VProgressCircular indeterminate />
+  </div>
+  <template v-else>
+    <slot
+      name="activator"
+      :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
+    />
+    <VDialog
+      :model-value="dialog"
+      fullscreen
+      class="subject-select"
+      @update:model-value="emit('update:modelValue', $event)"
     >
-      <ADialogToolbar
-        class="subject-select__toolbar system-border-b"
-        @on-cancel="onClose"
+      <VCard
+        v-if="dialog"
+        class="subject-select__card"
       >
-        <slot name="title">
-          {{ t('common.assetSelect.meta.texts.title') }}
-        </slot>
-      </ADialogToolbar>
-      <AssetSelectListBar />
-      <div
-        class="subject-select__main"
-        :class="{ 'subject-select__main--sidebar-active': sidebarLeft }"
-      >
-        <div class="subject-select__sidebar system-border-r">
-          <AssetSelectFilter />
-        </div>
-        <div class="subject-select__content">
-          <component :is="componentComputed" />
-          <div class="d-flex w-100 align-center justify-center pa-4">
-            <ABtnSecondary
-              v-show="pagination.hasNextPage || loader"
-              v-intersect="autoloadOnIntersect"
-              :loading="loader"
-              size="small"
-              @click="fetchNextPage"
-            >
-              <slot name="button-confirm-title">
-                {{ t('common.button.loadMore') }}
-              </slot>
-            </ABtnSecondary>
+        <ADialogToolbar
+          class="subject-select__toolbar system-border-b"
+          @on-cancel="onClose"
+        >
+          <slot name="title">
+            {{ t('common.assetSelect.meta.texts.title') }}
+          </slot>
+        </ADialogToolbar>
+        <AssetSelectListBar />
+        <div
+          class="subject-select__main"
+          :class="{ 'subject-select__main--sidebar-active': sidebarLeft }"
+        >
+          <div class="subject-select__sidebar system-border-r">
+            <AssetSelectFilter />
+          </div>
+          <div class="subject-select__content">
+            <component :is="componentComputed" />
+            <div class="d-flex w-100 align-center justify-center pa-4">
+              <ABtnSecondary
+                v-show="pagination.hasNextPage || loader"
+                v-intersect="autoloadOnIntersect"
+                :loading="loader"
+                size="small"
+                @click="fetchNextPage"
+              >
+                <slot name="button-confirm-title">
+                  {{ t('common.button.loadMore') }}
+                </slot>
+              </ABtnSecondary>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="subject-select__actions system-border-t">
-        <div v-if="props.minCount === props.maxCount">
-          {{ t('common.assetSelect.meta.texts.pickExactCount', { count: props.minCount, selected: selectedCount }) }}
+        <div class="subject-select__actions system-border-t">
+          <div v-if="props.minCount === props.maxCount">
+            {{ t('common.assetSelect.meta.texts.pickExactCount', { count: props.minCount, selected: selectedCount }) }}
+          </div>
+          <div v-else>
+            {{
+              t('common.assetSelect.meta.texts.pickRangeCount', {
+                minCount: props.minCount,
+                maxCount: props.maxCount,
+                selected: selectedCount,
+              })
+            }}
+          </div>
+          <VSpacer />
+          <ABtnPrimary
+            :disabled="disabledSubmit"
+            @click.stop="onConfirm"
+          >
+            <slot name="button-confirm-title">
+              {{ t('common.button.confirm') }}
+            </slot>
+          </ABtnPrimary>
         </div>
-        <div v-else>
-          {{
-            t('common.assetSelect.meta.texts.pickRangeCount', {
-              minCount: props.minCount,
-              maxCount: props.maxCount,
-              selected: selectedCount,
-            })
-          }}
-        </div>
-        <VSpacer />
-        <ABtnPrimary
-          :disabled="disabledSubmit"
-          @click.stop="onConfirm"
-        >
-          <slot name="button-confirm-title">
-            {{ t('common.button.confirm') }}
-          </slot>
-        </ABtnPrimary>
-      </div>
-    </VCard>
-  </VDialog>
+      </VCard>
+    </VDialog>
+  </template>
 </template>

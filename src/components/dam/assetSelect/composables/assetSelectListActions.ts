@@ -10,7 +10,7 @@ import { useAlerts } from '@/composables/system/alerts'
 import type { DocId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetList as apiFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import type { ImageWidgetSelectConfig } from '@/types/ImageAware'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
@@ -70,7 +70,7 @@ export function useAssetSelectActions(configName = 'default') {
   }
 
   const initStoreContext = (
-    selectConfig: ImageWidgetSelectConfig[],
+    selectConfig: DamConfigLicenceExtSystemReturnType[],
     assetType: DamAssetType,
     singleMode: boolean,
     minCount: number,
@@ -85,6 +85,7 @@ export function useAssetSelectActions(configName = 'default') {
   }
 
   return {
+    damClient,
     filterIsTouched,
     filter,
     selectedCount,

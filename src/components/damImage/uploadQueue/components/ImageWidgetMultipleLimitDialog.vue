@@ -1,15 +1,16 @@
 <script lang="ts" setup>
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import type { ImageWidgetUploadConfig } from '@/types/ImageAware'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { isUndefined } from '@/utils/common'
+import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 
 const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
-    uploadConfig: ImageWidgetUploadConfig
   }>(),
   {}
 )
@@ -24,6 +25,15 @@ const uploadDialogLoader = ref(false)
 const fileCache = ref<File[]>([])
 
 const { t } = useI18n()
+
+const imageWidgetUploadConfig = inject<DamConfigLicenceExtSystemReturnType | undefined>(
+  ImageWidgetUploadConfig,
+  undefined
+)
+
+if (isUndefined(imageWidgetUploadConfig)) {
+  throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
+}
 
 const uploadQueuesStore = useUploadQueuesStore()
 
@@ -42,7 +52,12 @@ const openDialog = () => {
 const onDialogConfirm = async () => {
   uploadDialogLoader.value = true
   const files = fileCache.value.slice(0, MAX_UPLOAD_ITEMS - uploadQueueTotalCount.value)
-  await uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
+  await uploadQueuesStore.addByFiles(
+    props.queueKey,
+    imageWidgetUploadConfig.extSystem,
+    imageWidgetUploadConfig.licence,
+    files
+  )
   fileCache.value = []
   uploadDialogLoader.value = false
   dialog.value = false
