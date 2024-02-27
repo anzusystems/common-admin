@@ -44,6 +44,7 @@ watch(
 </script>
 
 <template>
+  {{ selectConfig.length }}
   <div class="subject-select-filter">
     <div class="subject-select-filter__content">
       <VForm
@@ -57,7 +58,7 @@ watch(
               v-model="selectedLicenceId"
               :label="t('common.assetSelect.filter.licence')"
               :items="selectConfig"
-              item-title="title"
+              item-title="licenceName"
               item-value="licence"
             />
           </VCol>

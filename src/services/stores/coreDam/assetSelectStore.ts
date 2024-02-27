@@ -4,7 +4,6 @@ import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
 import { type AssetSelectReturnData, AssetSelectReturnType } from '@/types/coreDam/AssetSelect'
-import { cloneDeep } from '@/utils/common'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 
 export interface AssetSelectListItem {
@@ -32,8 +31,11 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   }
 
   function setSelectConfig(value: DamConfigLicenceExtSystemReturnType[]) {
-    if (value.length === 0) return
-    selectConfig.value = cloneDeep(value)
+    selectConfig.value = value
+    if (value.length === 0) {
+      selectedLicenceId.value = 0
+      return
+    }
     selectedLicenceId.value = value[0].licence
   }
 

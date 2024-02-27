@@ -49,7 +49,7 @@ const saveInsideDialog = () => {
           <AImageWidget
             v-model="imageId2"
             :upload-licence="100000"
-            :select-licences="[100000]"
+            :select-licences="[100000, 100001]"
             queue-key="heroImage"
             label="Lead image"
           />
@@ -58,7 +58,7 @@ const saveInsideDialog = () => {
           <AImageWidget
             v-model="imageId3"
             :upload-licence="100000"
-            :select-licences="[100000]"
+            :select-licences="[100000, 100001]"
             queue-key="heroImage2"
             label="Lead image 2 with global validation test"
           />
@@ -99,7 +99,7 @@ const saveInsideDialog = () => {
                       ref="widgetComponent"
                       v-model="imageId2"
                       :upload-licence="100000"
-                      :select-licences="[100000]"
+                      :select-licences="[100000, 100001]"
                       queue-key="embedImage"
                       expand-options
                       expand-metadata
