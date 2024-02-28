@@ -15,6 +15,8 @@ https://vimeo.com/798891880
 <p><a href="https://vimeo.com/798891880">Another Young Couple</a> from <a href="https://vimeo.com/barryjenkins">Barry Jenkins</a> on <a href="https://vimeo.com">Vimeo</a>.</p> 
 ```
 
+## Params
+
 ```ts
 interface Params {
   id: string

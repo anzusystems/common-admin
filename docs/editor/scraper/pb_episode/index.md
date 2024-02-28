@@ -1,4 +1,4 @@
-# pb_episode
+# pb_episode - Podbean Episode
 
 ## Supported codes
 
@@ -43,7 +43,6 @@ interface Screenshot {
 
 interface Author {
   url: string;
-
   name: string;
   image: ImageVariant;
 }
