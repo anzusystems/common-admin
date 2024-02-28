@@ -33,6 +33,7 @@ interface Data {
   author: Author;
   publishedAt: string; // datetime in RFC 3339 format
   images: Image[];
+  videos: Video[];
 }
 
 interface Screenshot {
