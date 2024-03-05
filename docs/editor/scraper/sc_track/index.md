@@ -22,7 +22,7 @@ interface Params {
 
 ```ts
 interface Data {
-  screenshots: Screenshot[];
+  screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
   url: string
   title: string
