@@ -13,8 +13,8 @@
 ```ts
 interface Params {
   id: string
-  height: number // optional
-  color: string // optional, hexadecimal color code
+  height?: number
+  color?: string // hexadecimal color code
 }
 ```
 
@@ -23,37 +23,37 @@ interface Params {
 ```ts
 interface Data {
   screenshots: Screenshot[];
-  scrapedAt: string; // datetime in RFC 3339 format
-  url: string;
-  title: string;
-  author: Author;
-  publishedAt: string; // datetime in RFC 3339 format
-  images: Image[];
+  scrapedAt: DatetimeUTC
+  url: string
+  title: string
+  author: Author
+  publishedAt: DatetimeUTC
+  images: Image[]
 }
 
 interface Screenshot {
-  damId: string; // UUID
-  type: string;
-  width: number;
-  height: number;
-  contentType: string; // e.g. image/png
+  damId: DocId
+  type: string
+  width: number
+  height: number
+  contentType: string // e.g. image/png
 }
 
 interface Author {
-  username: string;
-  image: ImageVariant;
-  url: string;
+  username: string
+  image: ImageVariant
+  url: string
 }
 
 interface ImageVariant {
-  url: string;
-  damId: string; // UUID
-  width: number;
-  height: number;
-  contentType: string;  // e.g. image/jpeg
+  damId: DocId
+  url: string
+  width: number
+  height: number
+  contentType: string  // e.g. image/jpeg
 }
 
 interface Image {
-  variants: ImageVariant[];
+  variants: ImageVariant[]
 }
 ```

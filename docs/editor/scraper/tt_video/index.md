@@ -20,8 +20,8 @@ https://www.tiktok.com/@mandyj513/video/7179241045773815046?is_from_webapp=1&sen
 interface Params {
   id: string
   username: string
-  width: number // optional
-  height: number // optional
+  width?: number
+  height?: number
 }
 ```
 
@@ -29,37 +29,37 @@ interface Params {
 
 ```ts
 interface Data {
-  screenshots: Screenshot[];
-  scrapedAt: string; // datetime in RFC 3339 format
-  url: string;
-  text: string;
-  author: Author;
-  images: Image[];
+  screenshots: Screenshot[]
+  scrapedAt: DatetimeUTC
+  url: string
+  text: string
+  author: Author
+  images: Image[]
 }
 
 interface Screenshot {
-  damId: string; // UUID
-  type: string;
-  width: number;
-  height: number;
-  contentType: string; // e.g. image/png
+  damId: DocId
+  type: string
+  width: number
+  height: number
+  contentType: string // e.g. image/png
 }
 
 interface Author {
-  name: string;
-  image: ImageVariant;
-  url: string;
+  name: string
+  image: ImageVariant
+  url: string
 }
 
 interface ImageVariant {
-  url: string;
-  damId: string; // UUID
-  width: number;
-  height: number;
-  contentType: string;  // e.g. image/jpeg
+  damId: DocId
+  url: string
+  width: number
+  height: number
+  contentType: string  // e.g. image/jpeg
 }
 
 interface Image {
-  variants: ImageVariant[];
+  variants: ImageVariant[]
 }
 ```

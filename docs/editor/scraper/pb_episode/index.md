@@ -19,8 +19,8 @@ https://www.podbean.com/ew/pb-v47zv-1316d23
 ```ts
 interface Params {
   id: string
-  width: number // optional
-  height: number // optional
+  width?: number
+  height?: number
 }
 ```
 
@@ -28,36 +28,36 @@ interface Params {
 
 ```ts
 interface Data {
-  screenshots: Screenshot[];
-  scrapedAt: string; // datetime in RFC 3339 format
-  title: string;
-  author: Author;
-  url: string;
+  screenshots: Screenshot[]
+  scrapedAt: DatetimeUTC
+  title: string
+  author: Author
+  url: string
 }
 
 interface Screenshot {
-  damId: string; // UUID
-  type: string;
-  width: number;
-  height: number;
-  contentType: string; // e.g. image/png
+  damId: DocId
+  type: string
+  width: number
+  height: number
+  contentType: string // e.g. image/png
 }
 
 interface Author {
-  url: string;
-  name: string;
-  image: ImageVariant;
+  url: string
+  name: string
+  image: ImageVariant
 }
 
 interface ImageVariant {
-  url: string;
-  damId: string; // UUID
-  width: number;
-  height: number;
-  contentType: string;  // e.g. image/jpeg
+  damId: DocId
+  url: string
+  width: number
+  height: number
+  contentType: string  // e.g. image/jpeg
 }
 
 interface Image {
-  variants: ImageVariant[];
+  variants: ImageVariant[]
 }
 ```

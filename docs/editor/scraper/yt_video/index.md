@@ -24,9 +24,9 @@ https://youtu.be/fJZnasCyBvY
 ```ts
 interface Params {
   id: string
-  startTime: number // optional, start time in seconds
-  width: number; // optional
-  height: number; // optional
+  startTime?: number // start time in seconds
+  width?: number
+  height?: number
 }
 ```
 
@@ -34,37 +34,37 @@ interface Params {
 
 ```ts
 interface Data {
-  screenshots: Screenshot[];
-  scrapedAt: string; // datetime in RFC 3339 format
-  url: string;
-  title: string;
-  author: Author;
+  screenshots: Screenshot[]
+  scrapedAt: DatetimeUTC
+  url: string
+  title: string
+  author: Author
 }
 
 interface Screenshot {
-  damId: string; // UUID
-  type: string;
-  width: number;
-  height: number;
-  contentType: string; // e.g. image/png
+  damId: DocId
+  type: string
+  width: number
+  height: number
+  contentType: string // e.g. image/png
 }
 
 interface Author {
-  username: string;
-  name: string;
-  image: ImageVariant;
-  url: string;
+  username: string
+  name: string
+  image: ImageVariant
+  url: string
 }
 
 interface ImageVariant {
-  url: string;
-  damId: string; // UUID
-  width: number;
-  height: number;
-  contentType: string;  // e.g. image/jpeg
+  damId: DocId
+  url: string
+  width: number
+  height: number
+  contentType: string  // e.g. image/jpeg
 }
 
 interface Image {
-  variants: ImageVariant[];
+  variants: ImageVariant[]
 }
 ```
