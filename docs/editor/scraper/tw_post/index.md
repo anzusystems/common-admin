@@ -27,13 +27,13 @@ interface Params {
 
 ```ts
 interface Data {
-  screenshots: Screenshot[];
+  screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  text: string;
-  author: Author;
+  text: string
+  author: Author
   publishedAt: DatetimeUTC
-  images: Image[];
-  videos: Video[];
+  images: Image[]
+  videos: Video[]
 }
 
 interface Screenshot {
