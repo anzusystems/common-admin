@@ -1,17 +1,23 @@
-# fb_post: Facebook Post
+# fb_video: Facebook Video
 
 ## Supported codes
 
 ### URL
 
 ```
-https://www.facebook.com/sme.sk/posts/pfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l 
+https://www.facebook.com/JamesBond007AUS/videos/2427034044136560/ 
 ```
 
 ### Embed
 
 ```html
-<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fsme.sk%2Fposts%2Fpfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l&show_text=true&width=500" width="500" height="516" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe> 
+<iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Fkinolumiere%2Fvideos%2F677144637698465%2F&show_text=false&width=560&t=0" width="560" height="314" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+```
+
+### Short URL
+
+```
+https://fb.watch/iYK51sf0ZR/ 
 ```
 
 ## Params
@@ -20,6 +26,7 @@ https://www.facebook.com/sme.sk/posts/pfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8q
 interface Params {
   id: string
   username: string
+  startTime: number // optional, start time in seconds
   width: number // optional
   height: number // optional
 }
@@ -34,8 +41,8 @@ interface Data {
   url: string;
   text: string;
   author: Author;
-  publishedAt: string; // datetime in RFC 3339 format
   images: Image[];
+  videos: Video[];
 }
 
 interface Screenshot {
@@ -63,5 +70,15 @@ interface ImageVariant {
 
 interface Image {
   variants: ImageVariant[];
+}
+
+interface VideoVariant {
+  url: string;
+  bitrate: number;
+  contentType: string;  // e.g. video/mp4
+}
+
+interface Video {
+  variants: VideoVariant[];
 }
 ```
