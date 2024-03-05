@@ -147,17 +147,8 @@ const model = reactive({
           <VCol cols="4">
             <AImageWidget
               v-model="model.image"
-              :upload-config="{
-                licence: 100000,
-                extSystem: 1,
-              }"
-              :select-config="[
-                {
-                  title: 'Default',
-                  licence: 100000,
-                  extSystem: 1,
-                },
-              ]"
+              :upload-licence="100000"
+              :select-licences="[100000]"
               :collab="createCollabFieldConfig('collabImage', collab.room, cachedUsers)"
               queue-key="collabImage"
               label="Image"

@@ -22,20 +22,3 @@ export interface ImageCreateUpdateAware extends Omit<ImageAware, 'id'> {
 export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {
   key: string
 }
-
-// export interface ImageWidgetImageLicence {
-//   name: string // licencedBlog, licencedUser, etc.
-//   value: IntegerIdNullable
-// }
-
-export interface ImageWidgetUploadConfig {
-  licence: IntegerId
-  extSystem: IntegerId
-}
-
-export interface ImageWidgetSelectConfig {
-  title: string
-  licence: IntegerId
-  extSystem: IntegerId
-}
-

@@ -19,8 +19,8 @@ https://www.ta3.com/embed/20191010-hw-bae91537-77da-44e5-96dc-08ac3b0a6b90
 ```ts
 interface Params {
   id: string
-  width: number // optional
-  height: number // optional
+  width?: number
+  height?: number
 }
 ```
 
@@ -28,15 +28,15 @@ interface Params {
 
 ```ts
 interface Data {
-  screenshots: Screenshot[];
-  scrapedAt: string; // datetime in RFC 3339 format
+  screenshots: Screenshot[]
+  scrapedAt: DatetimeUTC
 }
 
 interface Screenshot {
-  damId: string; // UUID
-  type: string;
-  width: number;
-  height: number;
-  contentType: string; // e.g. image/png
+  damId: DocId
+  type: string
+  width: number
+  height: number
+  contentType: string // e.g. image/png
 }
 ```

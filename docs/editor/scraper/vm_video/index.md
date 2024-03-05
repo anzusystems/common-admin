@@ -20,47 +20,47 @@ https://vimeo.com/798891880
 ```ts
 interface Params {
   id: string
-  width: number // optional
-  height: number // optional
+  width?: number
+  height?: number
 }
 ```
 ## Data
 
 ```ts
 interface Data {
-  screenshots: Screenshot[];
-  scrapedAt: string; // datetime in RFC 3339 format
-  url: string;
-  title: string;
-  text: string;
-  author: Author;
-  publishedAt: string; // datetime in RFC 3339 format
-  images: Image[];
+  screenshots: Screenshot[]
+  scrapedAt: DatetimeUTC
+  url: string
+  title: string
+  text: string
+  author: Author
+  publishedAt: DatetimeUTC
+  images: Image[]
 }
 
 interface Screenshot {
-  damId: string; // UUID
-  type: string;
-  width: number;
-  height: number;
-  contentType: string; // e.g. image/png
+  damId: DatetimeUTC
+  type: string
+  width: number
+  height: number
+  contentType: string // e.g. image/png
 }
 
 interface Author {
-  name: string;
-  image: ImageVariant;
-  url: string;
+  name: string
+  image: ImageVariant
+  url: string
 }
 
 interface ImageVariant {
-  url: string;
-  damId: string; // UUID
-  width: number;
-  height: number;
-  contentType: string;  // e.g. image/jpeg
+  damId: DatetimeUTC
+  url: string
+  width: number
+  height: number
+  contentType: string  // e.g. image/jpeg
 }
 
 interface Image {
-  variants: ImageVariant[];
+  variants: ImageVariant[]
 }
 ```

@@ -1,4 +1,5 @@
 import type { DamAssetType, DamDistributionServiceName } from '@/types/coreDam/Asset'
+import type { IntegerId } from '@/types/common'
 
 export interface DamPrvConfig {
   assetExternalProviders: {
@@ -36,6 +37,18 @@ export interface DamExtSystemConfig extends Record<DamAssetType, DamExtSystemCon
   video: DamExtSystemConfigItem
   image: DamExtSystemConfigItem
   document: DamExtSystemConfigItem
+}
+
+export interface DamConfigLicenceExtSystem {
+  extSystem: IntegerId
+  name: string
+}
+
+export interface DamConfigLicenceExtSystemReturnType {
+  licence: IntegerId
+  extSystem: IntegerId
+  licenceName: string
+  extSystemConfig: DamExtSystemConfig
 }
 
 export interface DamExtSystemConfigItem {
