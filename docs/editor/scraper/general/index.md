@@ -21,6 +21,7 @@
 - [ig_post](/editor/scraper/ig_post/)
 - [pb_episode](/editor/scraper/pb_episode/)
 - [sc_track](/editor/scraper/sc_track/)
+- [sd_document](/editor/scraper/sd_document/)
 - [sfy_episode](/editor/scraper/sfy_episode/)
 - [ta3_video](/editor/scraper/ta3_video/)
 - [tw_post](/editor/scraper/tw_post/)

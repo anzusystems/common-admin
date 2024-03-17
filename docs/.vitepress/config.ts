@@ -230,6 +230,7 @@ function sidebarEditor() {
         { text: 'ig_post', link: '/editor/scraper/ig_post/' },
         { text: 'pb_episode', link: '/editor/scraper/pb_episode/' },
         { text: 'sc_track', link: '/editor/scraper/sc_track/' },
+        { text: 'sd_document', link: '/editor/scraper/sd_document/' },
         { text: 'sfy_episode', link: '/editor/scraper/sfy_episode/' },
         { text: 'ta3_video', link: '/editor/scraper/ta3_video/' },
         { text: 'tt_video', link: '/editor/scraper/tt_video/' },
