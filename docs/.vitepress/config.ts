@@ -227,6 +227,7 @@ function sidebarEditor() {
         { text: 'facebook_post', link: '/editor/scraper/facebook_post/' },
         { text: 'facebook_video', link: '/editor/scraper/facebook_video/' },
         { text: 'flourish_visual', link: '/editor/scraper/flourish_visual/' },
+        { text: 'google_map', link: '/editor/scraper/google_map/' },
         { text: 'instagram_post', link: '/editor/scraper/instagram_post/' },
         { text: 'podbean_episode', link: '/editor/scraper/podbean_episode/' },
         { text: 'soundcloud_track', link: '/editor/scraper/soundcloud_track/' },

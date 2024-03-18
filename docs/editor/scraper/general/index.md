@@ -18,6 +18,7 @@
 - [facebook_post](/editor/scraper/facebook_post/)
 - [facebook_video](/editor/scraper/facebook_video/)
 - [flourish_visual](/editor/scraper/flourish_visual/)
+- [google_map](/editor/scraper/google_map/)
 - [instagram_post](/editor/scraper/instagram_post/)
 - [podbean_episode](/editor/scraper/podbean_episode/)
 - [soundcloud_track](/editor/scraper/soundcloud_track/)
