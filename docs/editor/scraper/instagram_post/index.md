@@ -1,4 +1,4 @@
-# ig_post: Instagram Post
+# instagram_post: Instagram Post
 
 ## Supported codes
 

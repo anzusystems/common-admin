@@ -1,25 +1,30 @@
-# fb_post: Facebook Post
+# youtube_video: Youtube video
 
 ## Supported codes
 
 ### URL
 
 ```
-https://www.facebook.com/sme.sk/posts/pfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l 
+https://www.youtube.com/watch?v=fJZnasCyBvY 
+```
+
+### Short URL
+
+```
+https://youtu.be/fJZnasCyBvY 
 ```
 
 ### Embed
 
 ```html
-<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fsme.sk%2Fposts%2Fpfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l&show_text=true&width=500" width="500" height="516" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe> 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/fJZnasCyBvY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe> 
 ```
-
 ## Params
 
 ```ts
 interface Params {
   id: string
-  username: string
+  startTime?: number // start time in seconds
   width?: number
   height?: number
 }
@@ -32,10 +37,8 @@ interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
   url: string
-  text: string
+  title: string
   author: Author
-  publishedAt: DatetimeUTC
-  images: Image[]
 }
 
 interface Screenshot {
@@ -54,8 +57,8 @@ interface Author {
 }
 
 interface ImageVariant {
-  url: string
   damId: DocId
+  url: string
   width: number
   height: number
   contentType: string  // e.g. image/jpeg

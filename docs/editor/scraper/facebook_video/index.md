@@ -1,4 +1,4 @@
-# fb_video: Facebook Video
+# facebook_video: Facebook Video
 
 ## Supported codes
 

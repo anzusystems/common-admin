@@ -1,17 +1,18 @@
-# pb_episode - Podbean Episode
+# vimeo_video - Vimeo Video
 
 ## Supported codes
 
 ### URL
 
 ```
-https://www.podbean.com/ew/pb-v47zv-1316d23
+https://vimeo.com/798891880 
 ```
 
 ### Embed
 
 ```html
-<iframe title="EP 038: THE MONARCH OF MONTGOMERY STREET" allowtransparency="true" height="300" width="100%" style="border: none; min-width: min(100%, 430px);" scrolling="no" data-name="pb-iframe-player" src="https://www.podbean.com/player-v2/?from=embed&i=v47zv-1316d23-pb&square=1&share=1&download=1&fonts=Arial&skin=1&font-color=auto&rtl=0&logo_link=episode_page&btn-skin=2baf9e&size=300" allowfullscreen=""></iframe>
+<iframe src="https://player.vimeo.com/video/798891880?h=1ddb1aa75b" width="640" height="320" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+<p><a href="https://vimeo.com/798891880">Another Young Couple</a> from <a href="https://vimeo.com/barryjenkins">Barry Jenkins</a> on <a href="https://vimeo.com">Vimeo</a>.</p> 
 ```
 
 ## Params
@@ -23,20 +24,22 @@ interface Params {
   height?: number
 }
 ```
-
 ## Data
 
 ```ts
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  title: string
-  author: Author
   url: string
+  title: string
+  text: string
+  author: Author
+  publishedAt: DatetimeUTC
+  images: Image[]
 }
 
 interface Screenshot {
-  damId: DocId
+  damId: DatetimeUTC
   type: string
   width: number
   height: number
@@ -44,13 +47,13 @@ interface Screenshot {
 }
 
 interface Author {
-  url: string
   name: string
   image: ImageVariant
+  url: string
 }
 
 interface ImageVariant {
-  damId: DocId
+  damId: DatetimeUTC
   url: string
   width: number
   height: number

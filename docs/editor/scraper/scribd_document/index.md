@@ -1,4 +1,4 @@
-# sd_document - Scribd Document
+# scribd_document - Scribd Document
 
 ## Supported codes
 

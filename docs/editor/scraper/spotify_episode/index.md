@@ -1,18 +1,17 @@
-# vm_video - Vimeo Video
+# spotify_episode: Spotify Episode (Anchor/Spotify for Podcasters )
 
 ## Supported codes
 
 ### URL
 
 ```
-https://vimeo.com/798891880 
+https://open.spotify.com/episode/7cSXcf4bJOalk8Hf9cwE57?si=c39c232d9a1049c1 
 ```
 
 ### Embed
 
 ```html
-<iframe src="https://player.vimeo.com/video/798891880?h=1ddb1aa75b" width="640" height="320" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
-<p><a href="https://vimeo.com/798891880">Another Young Couple</a> from <a href="https://vimeo.com/barryjenkins">Barry Jenkins</a> on <a href="https://vimeo.com">Vimeo</a>.</p> 
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/episode/7cSXcf4bJOalk8Hf9cwE57?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
 ```
 
 ## Params
@@ -24,22 +23,20 @@ interface Params {
   height?: number
 }
 ```
+
 ## Data
 
 ```ts
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
   title: string
-  text: string
   author: Author
-  publishedAt: DatetimeUTC
-  images: Image[]
+  url: string
 }
 
 interface Screenshot {
-  damId: DatetimeUTC
+  damId: DocId
   type: string
   width: number
   height: number
@@ -47,13 +44,13 @@ interface Screenshot {
 }
 
 interface Author {
+  url: string
   name: string
   image: ImageVariant
-  url: string
 }
 
 interface ImageVariant {
-  damId: DatetimeUTC
+  damId: DocId
   url: string
   width: number
   height: number
