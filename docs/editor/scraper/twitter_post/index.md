@@ -1,4 +1,4 @@
-# tw_post: Twitter Post
+# twitter_post: Twitter Post
 
 ## Supported codes
 

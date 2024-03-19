@@ -1,30 +1,24 @@
-# yt_video: Youtube video
+# podbean_episode - Podbean Episode
 
 ## Supported codes
 
 ### URL
 
 ```
-https://www.youtube.com/watch?v=fJZnasCyBvY 
-```
-
-### Short URL
-
-```
-https://youtu.be/fJZnasCyBvY 
+https://www.podbean.com/ew/pb-v47zv-1316d23
 ```
 
 ### Embed
 
 ```html
-<iframe width="560" height="315" src="https://www.youtube.com/embed/fJZnasCyBvY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe> 
+<iframe title="EP 038: THE MONARCH OF MONTGOMERY STREET" allowtransparency="true" height="300" width="100%" style="border: none; min-width: min(100%, 430px);" scrolling="no" data-name="pb-iframe-player" src="https://www.podbean.com/player-v2/?from=embed&i=v47zv-1316d23-pb&square=1&share=1&download=1&fonts=Arial&skin=1&font-color=auto&rtl=0&logo_link=episode_page&btn-skin=2baf9e&size=300" allowfullscreen=""></iframe>
 ```
+
 ## Params
 
 ```ts
 interface Params {
   id: string
-  startTime?: number // start time in seconds
   width?: number
   height?: number
 }
@@ -36,9 +30,9 @@ interface Params {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
   title: string
   author: Author
+  url: string
 }
 
 interface Screenshot {
@@ -50,10 +44,9 @@ interface Screenshot {
 }
 
 interface Author {
-  username: string
+  url: string
   name: string
   image: ImageVariant
-  url: string
 }
 
 interface ImageVariant {

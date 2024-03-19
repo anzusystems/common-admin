@@ -1,4 +1,4 @@
-# sc_track - Soundcloud Track 
+# soundcloud_track - Soundcloud Track 
 
 ## Supported codes
 

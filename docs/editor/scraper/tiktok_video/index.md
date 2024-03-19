@@ -1,4 +1,4 @@
-# tt_video: TikTok Video
+# tiktok_video: TikTok Video
 
 ## Supported codes
 
