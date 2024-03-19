@@ -7,11 +7,13 @@ const props = withDefaults(
     user?: AnzuUserMinimal | undefined | null
     size?: number
     containerClass?: string
+    tooltip?: string | undefined
   }>(),
   {
     user: undefined,
     size: 36,
     containerClass: '',
+    tooltip: undefined,
   }
 )
 
@@ -48,6 +50,12 @@ const text = computed(() => {
     >
       {{ text }}
     </div>
+    <VTooltip
+      v-if="tooltip"
+      activator="parent"
+    >
+      {{ tooltip }}
+    </VTooltip>
   </VAvatar>
   <div />
 </template>

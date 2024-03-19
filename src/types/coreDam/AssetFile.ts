@@ -85,6 +85,7 @@ export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware, AssetFileM
   audioAttributes: AudioAttributes
   originAssetFile: DocIdNullable
   links?: AssetFileLinks
+  imagePreview: AssetFileImagePreviewNullable
   _resourceName: 'audioFile'
 }
 
