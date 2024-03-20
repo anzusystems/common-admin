@@ -53,7 +53,7 @@ interface EmbedTimelineAware {
         title: string
         description: string
       }
-      items: TimelineEvent[]
+      events: TimelineEvent[]
     }
   }
 }
