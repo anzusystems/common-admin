@@ -232,7 +232,7 @@ __metadata:
     stylelint-config-standard-scss: "npm:^13.0.0"
     typescript: "npm:5.3.3"
     uuid: "npm:^9.0.1"
-    vite: "npm:5.2.0"
+    vite: "npm:5.2.1"
     vite-plugin-dts: "npm:^3.7.3"
     vite-plugin-vuetify: "npm:^2.0.3"
     vitepress: "npm:1.0.0-rc.45"
@@ -7611,9 +7611,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:5.2.0":
-  version: 5.2.0
-  resolution: "vite@npm:5.2.0"
+"vite@npm:5.2.1":
+  version: 5.2.1
+  resolution: "vite@npm:5.2.1"
   dependencies:
     esbuild: "npm:^0.20.1"
     fsevents: "npm:~2.3.3"
@@ -7647,7 +7647,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10/bbe4defd9490dd7af862b3de0d595c88129d3facbd0727efb5b8a5205eb45a1fb52593e618cb73c006544361f58505cb535a716a5da0578f266c2f879a68d167
+  checksum: 10/a4aef524298c6136ccf57dd5a806b6687cbf7ecd5743947302eb3557c889f333e46f8c20bf1d45f242538c30095fdab4f3baca48b0323a5834edc7fe6d76a4ba
   languageName: node
   linkType: hard
 
