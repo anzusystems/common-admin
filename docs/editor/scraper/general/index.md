@@ -16,9 +16,13 @@
 
 ## Supported types:
 - [facebook_post](/editor/scraper/facebook_post/)
+- [dailymotion_video](/editor/scraper/dailymotion_video/)
 - [facebook_video](/editor/scraper/facebook_video/)
 - [flourish_visual](/editor/scraper/flourish_visual/)
+- [google_document](/editor/scraper/google_document/)
 - [google_map](/editor/scraper/google_map/)
+- [idnes_video](/editor/scraper/idnes_video/)
+- [iframe_basic](/editor/scraper/iframe_basic/)
 - [instagram_post](/editor/scraper/instagram_post/)
 - [podbean_episode](/editor/scraper/podbean_episode/)
 - [soundcloud_track](/editor/scraper/soundcloud_track/)
