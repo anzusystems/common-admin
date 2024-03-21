@@ -15,8 +15,8 @@
   - done: scraping done, data field is filled
 
 ## Supported types:
-- [facebook_post](/editor/scraper/facebook_post/)
 - [dailymotion_video](/editor/scraper/dailymotion_video/)
+- [facebook_post](/editor/scraper/facebook_post/)
 - [facebook_video](/editor/scraper/facebook_video/)
 - [flourish_visual](/editor/scraper/flourish_visual/)
 - [google_document](/editor/scraper/google_document/)
@@ -25,11 +25,12 @@
 - [iframe_basic](/editor/scraper/iframe_basic/)
 - [instagram_post](/editor/scraper/instagram_post/)
 - [podbean_episode](/editor/scraper/podbean_episode/)
-- [soundcloud_track](/editor/scraper/soundcloud_track/)
 - [scribd_document](/editor/scraper/scribd_document/)
+- [soundcloud_track](/editor/scraper/soundcloud_track/)
 - [spotify_episode](/editor/scraper/spotify_episode/)
 - [ta3_video](/editor/scraper/ta3_video/)
-- [twitter_post](/editor/scraper/twitter_post/)
+- [tableau_visual](/editor/scraper/tableau_visual/)
 - [tiktok_video](/editor/scraper/tiktok_video/)
+- [twitter_post](/editor/scraper/twitter_post/)
 - [vimeo_video](/editor/scraper/vimeo_video/)
 - [youtube_video](/editor/scraper/youtube_video/)
