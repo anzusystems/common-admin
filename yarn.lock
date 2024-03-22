@@ -187,10 +187,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anzusystems/common-admin@workspace:.":
+"@anzusystems/common-admin@workspace:*, @anzusystems/common-admin@workspace:.":
   version: 0.0.0-use.local
   resolution: "@anzusystems/common-admin@workspace:."
   dependencies:
+    "@anzusystems/common-admin": "workspace:*"
     "@intlify/unplugin-vue-i18n": "npm:^3.0.1"
     "@kyvg/vue3-notification": "npm:^3.2.1"
     "@mdi/font": "npm:^7.4.47"

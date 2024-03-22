@@ -1,4 +1,3 @@
-import { createRequire } from 'module'
 import { DefaultTheme, defineConfig } from 'vitepress'
 import { fileURLToPath, URL } from 'url'
 import vuetify from 'vite-plugin-vuetify'
@@ -7,10 +6,9 @@ import path, { dirname } from 'path'
 // @ts-ignore
 import { getApiSidebarItems } from './apiSidebar'
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
+import pkg from '../../package.json'
 
 const _dirname = dirname(fileURLToPath(import.meta.url))
-const require = createRequire(import.meta.url)
-const pkg = require('../../package.json')
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
