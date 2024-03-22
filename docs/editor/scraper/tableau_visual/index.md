@@ -32,6 +32,7 @@ interface Data {
   scrapedAt: DatetimeUTC
   url: string
   title: string
+  author: Author
 }
 
 interface Screenshot {
@@ -40,5 +41,10 @@ interface Screenshot {
   width: number
   height: number
   contentType: string // e.g. image/png
+}
+
+interface Author {
+  username: string
+  name: string
 }
 ```
