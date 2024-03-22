@@ -1,11 +1,12 @@
 import { createRequire } from 'module'
-import { defineConfig } from 'vitepress'
+import { DefaultTheme, defineConfig } from 'vitepress'
 import { fileURLToPath, URL } from 'url'
 import vuetify from 'vite-plugin-vuetify'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import path, { dirname } from 'path'
 // @ts-ignore
 import { getApiSidebarItems } from './apiSidebar'
+import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
 
 const _dirname = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
@@ -32,6 +33,11 @@ export default defineConfig({
         '@': fileURLToPath(new URL('../../src', import.meta.url)),
       },
     }
+  },
+  markdown: {
+    codeTransformers: [
+      transformerTwoslash()
+    ]
   },
   lang: 'en-US',
   lastUpdated: true,
@@ -68,7 +74,7 @@ export default defineConfig({
   }
 })
 
-function nav() {
+function nav(): DefaultTheme.NavItem[] {
   return [
     { text: 'Guide', link: '/guide/introduction/', activeMatch: '/guide/' },
     {
