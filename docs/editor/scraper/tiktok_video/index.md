@@ -47,7 +47,7 @@ interface Screenshot {
 
 interface Author {
   name: string
-  image: ImageVariant
+  image: Image
   url: string
 }
 

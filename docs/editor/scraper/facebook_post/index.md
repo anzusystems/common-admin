@@ -49,7 +49,7 @@ interface Screenshot {
 interface Author {
   username: string
   name: string
-  image: ImageVariant
+  image: Image
   url: string
 }
 
