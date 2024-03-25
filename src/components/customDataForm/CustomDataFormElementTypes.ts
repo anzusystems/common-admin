@@ -5,7 +5,7 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 export const CustomDataFormElementType = {
   String: 'string',
   Integer: 'integer',
-  StringArray: 'string_array',
+  StringArray: 'stringArray',
   Boolean: 'boolean',
 } as const
 export const CustomDataFormElementTypeDefault = CustomDataFormElementType.String
