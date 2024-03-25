@@ -1,17 +1,23 @@
-# facebook_post: Facebook Post
+# pinterest_pin: Pinterest Pin
 
 ## Supported codes
 
-### URL
+### Short URL
 
 ```
-https://www.facebook.com/sme.sk/posts/pfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l 
+https://pin.it/2hK5k3w 
+```
+
+### URl
+
+```
+https://www.pinterest.com/pin/651192427391236681/sent/?invite_code=807bdfd7341b40899585b2ad53f881f8&sfo=1
 ```
 
 ### Embed
 
 ```html
-<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fsme.sk%2Fposts%2Fpfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l&show_text=true&width=500" width="500" height="516" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe> 
+<iframe src="https://assets.pinterest.com/ext/embed.html?id=5629568271473963" height="988" width="600" frameborder="0" scrolling="no" ></iframe>
 ```
 
 ## Params
@@ -19,7 +25,6 @@ https://www.facebook.com/sme.sk/posts/pfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8q
 ```ts
 interface Params {
   id: string
-  username: string
   width?: number
   height?: number
 }
@@ -32,9 +37,8 @@ interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
   url: string
-  text: string
+  title: string
   author: Author
-  publishedAt: DatetimeUTC
   images: Image[]
 }
 
@@ -47,7 +51,6 @@ interface Screenshot {
 }
 
 interface Author {
-  username: string
   name: string
   image: Image
   url: string

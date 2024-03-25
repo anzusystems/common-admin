@@ -237,6 +237,8 @@ function sidebarEditor() {
         { text: 'idnes_video', link: '/editor/scraper/idnes_video/' },
         { text: 'iframe_basic', link: '/editor/scraper/iframe_basic/' },
         { text: 'instagram_post', link: '/editor/scraper/instagram_post/' },
+        { text: 'jw_video', link: '/editor/scraper/jw_video/' },
+        { text: 'pinterest_pin', link: '/editor/scraper/pinterest_pin/' },
         { text: 'podbean_episode', link: '/editor/scraper/podbean_episode/' },
         { text: 'scribd_document', link: '/editor/scraper/scribd_document/' },
         { text: 'soundcloud_track', link: '/editor/scraper/soundcloud_track/' },
