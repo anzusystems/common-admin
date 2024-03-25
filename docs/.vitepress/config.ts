@@ -231,6 +231,7 @@ function sidebarEditor() {
         { text: 'dailymotion_video', link: '/editor/scraper/dailymotion_video/' },
         { text: 'facebook_post', link: '/editor/scraper/facebook_post/' },
         { text: 'facebook_video', link: '/editor/scraper/facebook_video/' },
+        { text: 'flourish_story', link: '/editor/scraper/flourish_story/' },
         { text: 'flourish_visual', link: '/editor/scraper/flourish_visual/' },
         { text: 'google_document', link: '/editor/scraper/google_document/' },
         { text: 'google_map', link: '/editor/scraper/google_map/' },

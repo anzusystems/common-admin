@@ -18,6 +18,7 @@
 - [dailymotion_video](/editor/scraper/dailymotion_video/)
 - [facebook_post](/editor/scraper/facebook_post/)
 - [facebook_video](/editor/scraper/facebook_video/)
+- [flourish_story](/editor/scraper/flourish_story/)
 - [flourish_visual](/editor/scraper/flourish_visual/)
 - [google_document](/editor/scraper/google_document/)
 - [google_map](/editor/scraper/google_map/)
