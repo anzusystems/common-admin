@@ -19,7 +19,7 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build-only": "vitepress build docs",
-    "docs:build": "yarn build ; docs:build-only",
+    "docs:build": "yarn build ; yarn docs:build-only",
     "docs:preview": "vitepress preview docs",
     "playground:dev": "vite",
     "playground:build": "vite build",
