@@ -15,6 +15,8 @@ import '@mdi/font/css/materialdesignicons.css'
 import '../../../src/styles/main.scss'
 // @ts-ignore
 import DocsExample from '../DocsExample.vue'
+import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client'
+import '@shikijs/vitepress-twoslash/style.css'
 
 
 const { commonTheme, commonAliases, commonDefaults } = useCommonVuetifyConfig()
@@ -41,6 +43,7 @@ export default {
     // ...
     app.use(i18n)
     app.use(vuetify)
+    app.use(TwoslashFloatingVue)
     app.component('DocsExample', DocsExample)
   }
 }
