@@ -124,7 +124,7 @@ const assetMainFile = computed(() => {
             <div>DAM: {{ toolbarTitle }}</div>
           </div>
           <VSpacer />
-          <div>
+          <div class="pr-2">
             <VBtn
               :active="sidebar"
               :variant="sidebar ? 'flat' : 'text'"
