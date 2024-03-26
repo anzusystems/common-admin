@@ -244,7 +244,7 @@ const showDetail = async (id: DocId) => {
               />
               <div>{{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{ queueTotalCount }}</div>
             </div>
-            <div class="d-flex align-center">
+            <div class="d-flex align-center pr-3">
               <VDivider
                 v-show="isUploading"
                 vertical
