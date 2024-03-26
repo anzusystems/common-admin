@@ -336,7 +336,7 @@ onMounted(() => {
             </div>
           </div>
           <VSpacer />
-          <div>
+          <div class="pr-3">
             <VBtn
               :active="sidebar"
               :variant="sidebar ? 'flat' : 'text'"
