@@ -196,9 +196,9 @@ __metadata:
     "@kyvg/vue3-notification": "npm:^3.2.1"
     "@mdi/font": "npm:^7.4.47"
     "@rushstack/eslint-patch": "npm:^1.8.0"
-    "@shikijs/vitepress-twoslash": "npm:^1.2.0"
+    "@shikijs/vitepress-twoslash": "npm:^1.2.1"
     "@stylistic/eslint-plugin": "npm:^1.7.0"
-    "@tsconfig/node18": "npm:^18.2.3"
+    "@tsconfig/node18": "npm:^18.2.4"
     "@types/node": "npm:^20.11.30"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
@@ -242,7 +242,7 @@ __metadata:
     vue-i18n: "npm:9.10.2"
     vue-router: "npm:4.3.0"
     vue-tsc: "npm:2.0.7"
-    vuetify: "npm:3.5.11"
+    vuetify: "npm:3.5.12"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@vuelidate/core": 2.0.3
@@ -256,7 +256,7 @@ __metadata:
     vue: 3.4.21
     vue-i18n: 9.10.2
     vue-router: 4.3.0
-    vuetify: 3.5.11
+    vuetify: 3.5.12
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -1150,6 +1150,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shikijs/core@npm:1.2.1":
+  version: 1.2.1
+  resolution: "@shikijs/core@npm:1.2.1"
+  checksum: 10/8260aa10824f85b84528c916f7852d798f38f0698b64974de59cd203acacb2d5ccbbb57f63533e7f015978b63edb16c82ff88b29f1ae86505daf83f31faca5c4
+  languageName: node
+  linkType: hard
+
 "@shikijs/transformers@npm:^1.2.0":
   version: 1.2.0
   resolution: "@shikijs/transformers@npm:1.2.0"
@@ -1159,30 +1166,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shikijs/twoslash@npm:1.2.0":
-  version: 1.2.0
-  resolution: "@shikijs/twoslash@npm:1.2.0"
+"@shikijs/twoslash@npm:1.2.1":
+  version: 1.2.1
+  resolution: "@shikijs/twoslash@npm:1.2.1"
   dependencies:
-    "@shikijs/core": "npm:1.2.0"
-    twoslash: "npm:^0.2.4"
-  checksum: 10/856357910495bb5788f2d051866af74e769c0f00713444c397294e0d1daa9cad476fd3741af54736ec1d604e770b75d2192a400599e3584d68c5ae9fb4190f3b
+    "@shikijs/core": "npm:1.2.1"
+    twoslash: "npm:^0.2.5"
+  checksum: 10/51e10634f4fd127fb07dc6dea7dd7e80bd3e70a28fff37e2714e2b85a4c9a1c4b86a7775e46bf46345f6ed292e4688ea5c487fe02e21ffc25175fded6e0e8f31
   languageName: node
   linkType: hard
 
-"@shikijs/vitepress-twoslash@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@shikijs/vitepress-twoslash@npm:1.2.0"
+"@shikijs/vitepress-twoslash@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@shikijs/vitepress-twoslash@npm:1.2.1"
   dependencies:
-    "@shikijs/twoslash": "npm:1.2.0"
+    "@shikijs/twoslash": "npm:1.2.1"
     floating-vue: "npm:^5.2.2"
     mdast-util-from-markdown: "npm:^2.0.0"
     mdast-util-gfm: "npm:^3.0.0"
     mdast-util-to-hast: "npm:^13.1.0"
-    shiki: "npm:1.2.0"
-    twoslash: "npm:^0.2.4"
-    twoslash-vue: "npm:^0.2.4"
+    shiki: "npm:1.2.1"
+    twoslash: "npm:^0.2.5"
+    twoslash-vue: "npm:^0.2.5"
     vue: "npm:^3.4.21"
-  checksum: 10/d2d8c414030f9b5884a4302446b99c6fa958d6ac655c046a40dff59b9a51adf1fd9bd60d36f455686db4c87de510000b30a94ef21dde98a18d90b5d82439ec2c
+  checksum: 10/ece6a54a69c23dcb5ffd748e9027279f3f287f4a2ab56d4825aeaca2e99bdca79c9d402ba72a5cde5cd2aeabed9b377aef124111b6de1644ca85d0aba0aaf2b1
   languageName: node
   linkType: hard
 
@@ -1269,10 +1276,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node18@npm:^18.2.3":
-  version: 18.2.3
-  resolution: "@tsconfig/node18@npm:18.2.3"
-  checksum: 10/4957a02ff3ab9f64008ecaf0f2a2218773a10e0238c5d776304664f94b8309c2abdb334837a1214f08cc960921e0f87068aabc1ddc799174d0f2de3c65c4507b
+"@tsconfig/node18@npm:^18.2.4":
+  version: 18.2.4
+  resolution: "@tsconfig/node18@npm:18.2.4"
+  checksum: 10/80623cb9c129c78d51fe6c4a256ba986f12f02ff02dc2a1e5b33dd13a7983f767b6792cfcd51b3dd1c8256ea105f1fea31f64a2070564e37787ab3d9a1a1e7e3
   languageName: node
   linkType: hard
 
@@ -6773,6 +6780,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"shiki@npm:1.2.1":
+  version: 1.2.1
+  resolution: "shiki@npm:1.2.1"
+  dependencies:
+    "@shikijs/core": "npm:1.2.1"
+  checksum: 10/f8aa798b37c30ec16262d02b1281d210f315138e96c5f24e295cb0557b9133119f53f5c09a860692277af92f53a8c8f5043c72ba031d7303e5ea2f31e7c27630
+  languageName: node
+  linkType: hard
+
 "side-channel@npm:^1.0.4":
   version: 1.0.4
   resolution: "side-channel@npm:1.0.4"
@@ -7379,35 +7395,35 @@ __metadata:
   languageName: node
   linkType: hard
 
-"twoslash-protocol@npm:0.2.4":
-  version: 0.2.4
-  resolution: "twoslash-protocol@npm:0.2.4"
-  checksum: 10/db3a466a4377752ac311000ac74bd229f3776e9dee95ab3b54ea0a544f5e122fedf1d3f9532a826bdb3190a507a8628aea7e0babc740ac700a77bcdf1645eab6
+"twoslash-protocol@npm:0.2.5":
+  version: 0.2.5
+  resolution: "twoslash-protocol@npm:0.2.5"
+  checksum: 10/3676d22ded257ecf397c173bc7525f9bc35956763a34a54357c9e4c8f937e8408292237cf186b4ea0c6cfcdebbdaa030089625416ecdf652a821f75700838e4a
   languageName: node
   linkType: hard
 
-"twoslash-vue@npm:^0.2.4":
-  version: 0.2.4
-  resolution: "twoslash-vue@npm:0.2.4"
+"twoslash-vue@npm:^0.2.5":
+  version: 0.2.5
+  resolution: "twoslash-vue@npm:0.2.5"
   dependencies:
     "@vue/language-core": "npm:^1.8.27"
-    twoslash: "npm:0.2.4"
-    twoslash-protocol: "npm:0.2.4"
+    twoslash: "npm:0.2.5"
+    twoslash-protocol: "npm:0.2.5"
   peerDependencies:
     typescript: "*"
-  checksum: 10/be0bd2b5664210a011da3969c3cc4a5d691e4ade66d7fa8805284f9522d78f2dbd2f7290348ea7a657f055d3cbcfeb16fd29c6711f8887d36300d61d686f4bd0
+  checksum: 10/1d794706fc6d76429cf07e46126fe8ed5533effb132704f09454318ce142382e27fa36b7eb92f5a46394b8d00e675c5b3aef071fd513b7b7f938ca7820b60183
   languageName: node
   linkType: hard
 
-"twoslash@npm:0.2.4, twoslash@npm:^0.2.4":
-  version: 0.2.4
-  resolution: "twoslash@npm:0.2.4"
+"twoslash@npm:0.2.5, twoslash@npm:^0.2.5":
+  version: 0.2.5
+  resolution: "twoslash@npm:0.2.5"
   dependencies:
     "@typescript/vfs": "npm:1.5.0"
-    twoslash-protocol: "npm:0.2.4"
+    twoslash-protocol: "npm:0.2.5"
   peerDependencies:
     typescript: "*"
-  checksum: 10/c3dc8eefc36d350e4def9573ee73f5c1d2921fa8c553c11f5daf81f7e374f59ac21728bfe5d3d53117f6f38a32074e9203547a35cba2f696b316c34f649ab20f
+  checksum: 10/fb892c27b40fe1b50223ce55178cd443401a4e4d3a9073acdb8719d9918af280c4f7ce9aff238822e276437d89b9e845211a81794a7f63e8c8b5f7b92bd052db
   languageName: node
   linkType: hard
 
@@ -8236,15 +8252,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.5.11":
-  version: 3.5.11
-  resolution: "vuetify@npm:3.5.11"
+"vuetify@npm:3.5.12":
+  version: 3.5.12
+  resolution: "vuetify@npm:3.5.12"
   peerDependencies:
     typescript: ">=4.7"
-    vite-plugin-vuetify: ">=2.0.3"
+    vite-plugin-vuetify: ">=1.0.0"
     vue: ^3.3.0
     vue-i18n: ^9.0.0
-    webpack-plugin-vuetify: ">=2.0.0-alpha.11"
+    webpack-plugin-vuetify: ">=2.0.0"
   peerDependenciesMeta:
     typescript:
       optional: true
@@ -8254,7 +8270,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/f64a6b2ce00d4551df714d6bd030f0fd18f6bf5793b4a5321911e0e1d73476344dc46b4934c9299dbbe2103a76bd09490ee1bdff1583d9ceffe38b4759284d0e
+  checksum: 10/9c74440f4041aa504d5c536a5935e77ffdced87d5fc4b8084b2fa1bcb9605db328d25cc55a9362fd2a9c6df9a562465e7b0f3fc8f4a447f25383edefde337bab
   languageName: node
   linkType: hard
 
