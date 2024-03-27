@@ -1,4 +1,4 @@
-# vimeo_video - Vimeo Video
+# vimeo_video: Vimeo Video
 
 ## Supported codes
 

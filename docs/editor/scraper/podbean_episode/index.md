@@ -1,4 +1,4 @@
-# podbean_episode - Podbean Episode
+# podbean_episode: Podbean Episode
 
 ## Supported codes
 
