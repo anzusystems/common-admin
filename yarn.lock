@@ -256,7 +256,7 @@ __metadata:
     vue: 3.4.21
     vue-i18n: 9.10.2
     vue-router: 4.3.0
-    vuetify: 3.5.12
+    vuetify: 3.5.13
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
