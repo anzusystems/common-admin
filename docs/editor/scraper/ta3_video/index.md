@@ -1,4 +1,4 @@
-# ta3_video -  TA3 Video
+# ta3_video: TA3 Video
 
 ## Supported codes
 

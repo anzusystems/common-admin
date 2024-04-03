@@ -1,4 +1,4 @@
-# flourish_visual - Flourish Visualisation
+# flourish_visual: Flourish Visualisation
 
 ## Supported codes
 

@@ -1,4 +1,4 @@
-# flourish_story - Flourish Story
+# flourish_story: Flourish Story
 
 ## Supported codes
 
