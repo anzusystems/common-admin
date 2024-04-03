@@ -21,10 +21,16 @@ https://youtu.be/fJZnasCyBvY
 ```
 ## Params
 
-```ts
+```ts twoslash
+/**
+ * Time in seconds as integer.
+ */
+type Seconds = number
+
+// ---cut-before---
 interface Params {
   id: string
-  startTime?: number // start time in seconds
+  startTime?: Seconds
   width?: number
   height?: number
 }
@@ -32,39 +38,54 @@ interface Params {
 
 ## Data
 
-```ts
-interface Data {
-  screenshots: Screenshot[]
-  scrapedAt: DatetimeUTC
-  url: string
-  title: string
-  author: Author
-}
+```ts twoslash
+import {DocId,DatetimeUTC} from "@anzusystems/common-admin"
 
-interface Screenshot {
+/**
+ * @property damId - DocId of the DAM asset.
+ * @property type - Type of the screenshot.
+ * @property width - Width of the screenshot.
+ * @property height - Height of the screenshot.
+ * @property contentType - Content type of the screenshot (e.g., image/jpeg).
+ */
+type Screenshot = {
   damId: DocId
   type: string
   width: number
   height: number
-  contentType: string // e.g. image/png
+  contentType: string
 }
 
-interface Author {
+type Author = {
   username: string
   name: string
   image: Image
   url: string
 }
 
-interface ImageVariant {
-  damId: DocId
-  url: string
-  width: number
-  height: number
-  contentType: string  // e.g. image/jpeg
+/**
+ * @property url - URL of the image variant.
+ * @property damId - DocId of the DAM asset.
+ * @property width - Width of the image variant.
+ * @property height - Height of the image variant.
+ * @property contentType - Content type of the image variant (e.g., image/jpeg).
+ */
+type Image = {
+  variants: Array<{
+    url: string
+    damId: DocId
+    width: number
+    height: number
+    contentType: string
+  }>
 }
 
-interface Image {
-  variants: ImageVariant[]
+// ---cut-before---
+interface Data {
+  screenshots: Screenshot[]
+  scrapedAt: DatetimeUTC
+  url: string
+  title: string
+  author: Author
 }
 ```

@@ -30,7 +30,6 @@ interface Params {
 import {DocId,DatetimeUTC} from "@anzusystems/common-admin"
 
 /**
- * Represents a screenshot of scraped data.
  * @property damId - DocId of the DAM asset.
  * @property type - Type of the screenshot.
  * @property width - Width of the screenshot.
