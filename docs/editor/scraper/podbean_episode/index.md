@@ -16,7 +16,7 @@ https://www.podbean.com/ew/pb-v47zv-1316d23
 
 ## Params
 
-```ts
+```ts twoslash
 interface Params {
   id: string
   width?: number
@@ -26,38 +26,53 @@ interface Params {
 
 ## Data
 
-```ts
+```ts twoslash
+import {DocId,DatetimeUTC} from "@anzusystems/common-admin"
+
+/**
+ * @property damId - DocId of the DAM asset.
+ * @property type - Type of the screenshot.
+ * @property width - Width of the screenshot.
+ * @property height - Height of the screenshot.
+ * @property contentType - Content type of the screenshot (e.g., image/jpeg).
+ */
+type Screenshot = {
+  damId: DocId
+  type: string
+  width: number
+  height: number
+  contentType: string
+}
+
+type Author = {
+  name: string
+  image: Image
+  url: string
+}
+
+/**
+ * @property url - URL of the image variant.
+ * @property damId - DocId of the DAM asset.
+ * @property width - Width of the image variant.
+ * @property height - Height of the image variant.
+ * @property contentType - Content type of the image variant (e.g., image/jpeg).
+ */
+type Image = {
+  variants: Array<{
+    url: string
+    damId: DocId
+    width: number
+    height: number
+    contentType: string
+  }>
+}
+
+// ---cut-before---
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
   title: string
   author: Author
   url: string
-}
-
-interface Screenshot {
-  damId: DocId
-  type: string
-  width: number
-  height: number
-  contentType: string // e.g. image/png
-}
-
-interface Author {
-  url: string
-  name: string
-  image: Image
-}
-
-interface ImageVariant {
-  damId: DocId
-  url: string
-  width: number
-  height: number
-  contentType: string  // e.g. image/jpeg
-}
-
-interface Image {
-  variants: ImageVariant[]
 }
 ```

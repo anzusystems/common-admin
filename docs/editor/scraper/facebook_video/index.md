@@ -22,11 +22,17 @@ https://fb.watch/iYK51sf0ZR/
 
 ## Params
 
-```ts
+```ts twoslash
+/**
+ * Time in seconds as integer.
+ */
+type Seconds = number
+
+// ---cut-before---
 interface Params {
   id: string
   username: string
-  startTime?: number // start time in seconds
+  startTime?: Seconds
   width?: number
   height?: number
 }
@@ -34,7 +40,62 @@ interface Params {
 
 ## Data
 
-```ts
+```ts twoslash
+import {DocId,DatetimeUTC} from "@anzusystems/common-admin"
+
+/**
+ * @property damId - DocId of the DAM asset.
+ * @property type - Type of the screenshot.
+ * @property width - Width of the screenshot.
+ * @property height - Height of the screenshot.
+ * @property contentType - Content type of the screenshot (e.g., image/jpeg).
+ */
+type Screenshot = {
+  damId: DocId
+  type: string
+  width: number
+  height: number
+  contentType: string
+}
+
+type Author = {
+  username: string
+  name: string
+  image: Image
+  url: string
+}
+
+/**
+ * @property url - URL of the image variant.
+ * @property damId - DocId of the DAM asset.
+ * @property width - Width of the image variant.
+ * @property height - Height of the image variant.
+ * @property contentType - Content type of the image variant (e.g., image/jpeg).
+ */
+type Image = {
+  variants: Array<{
+    url: string
+    damId: DocId
+    width: number
+    height: number
+    contentType: string
+  }>
+}
+
+/**
+ * @property url - URL of the video variant.
+ * @property bitrate - bitrate of the video variant.
+ * @property contentType - Content type of the video variant (e.g., video/mp4).
+ */
+type Video = {
+  variants: Array<{
+    url: string
+    bitrate: number
+    contentType: string
+  }>
+}
+
+// ---cut-before---
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
@@ -43,42 +104,5 @@ interface Data {
   author: Author
   images: Image[]
   videos: Video[]
-}
-
-interface Screenshot {
-  damId: DocId
-  type: string
-  width: number
-  height: number
-  contentType: string // e.g. image/png
-}
-
-interface Author {
-  username: string
-  name: string
-  image: Image
-  url: string
-}
-
-interface ImageVariant {
-  damId: DocId
-  url: string
-  width: number
-  height: number
-  contentType: string  // e.g. image/jpeg
-}
-
-interface Image {
-  variants: ImageVariant[]
-}
-
-interface VideoVariant {
-  url: string
-  bitrate: number
-  contentType: string  // e.g. video/mp4
-}
-
-interface Video {
-  variants: VideoVariant[]
 }
 ```
