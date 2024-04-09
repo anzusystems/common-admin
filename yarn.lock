@@ -242,7 +242,7 @@ __metadata:
     vue-i18n: "npm:9.11.0"
     vue-router: "npm:4.3.0"
     vue-tsc: "npm:2.0.10"
-    vuetify: "npm:3.5.14"
+    vuetify: "npm:3.5.15"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@vuelidate/core": 2.0.3
@@ -256,7 +256,7 @@ __metadata:
     vue: 3.4.21
     vue-i18n: 9.11.0
     vue-router: 4.3.0
-    vuetify: 3.5.14
+    vuetify: 3.5.15
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -8277,9 +8277,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.5.14":
-  version: 3.5.14
-  resolution: "vuetify@npm:3.5.14"
+"vuetify@npm:3.5.15":
+  version: 3.5.15
+  resolution: "vuetify@npm:3.5.15"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=1.0.0"
@@ -8295,7 +8295,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/0ec91cd8b0ca7e6307be8ed8516dcc7cd56c0e052b06f07421d807a3563b8e61d96614031feafe332bf4ff20225e2eab1d01a30031711986d6f1f437a2943dcb
+  checksum: 10/23a04c5cd04ece7b8297e08d9ea82d501db17626e65b1e62ec1f9618d342625737b5bc7f4eda5362b5c374e05ae3520bb1dff07da9b9f0c5695d46281aab087d
   languageName: node
   linkType: hard
 
