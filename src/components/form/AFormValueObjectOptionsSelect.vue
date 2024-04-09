@@ -84,9 +84,11 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-    emit('update:modelValue', data.value as any)
-  })
+  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
+    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
+      emit('update:modelValue', data.value as any)
+    })
+  }
 }
 
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)

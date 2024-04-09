@@ -113,9 +113,11 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-    modelValue.value = data.value as DocId | IntegerId | DocId[] | IntegerId[] | null
-  })
+  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
+    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
+      modelValue.value = data.value as DocId | IntegerId | DocId[] | IntegerId[] | null
+    })
+  }
 }
 
 const search = ref('')

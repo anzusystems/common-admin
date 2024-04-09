@@ -65,6 +65,7 @@ export type CommonAdminCoreDamOptions =
 export type CommonAdminCollabOptions =
   | {
       enabled: boolean
+      disableCollabFieldDataChangeListener: boolean
       socketUrl: string
     }
 
