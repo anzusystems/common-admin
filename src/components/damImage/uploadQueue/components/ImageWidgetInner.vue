@@ -116,10 +116,12 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-    modelValue.value = data.value as IntegerIdNullable
-    reload(undefined, modelValue.value)
-  })
+  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
+    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
+      modelValue.value = data.value as IntegerIdNullable
+      reload(undefined, modelValue.value)
+    })
+  }
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
     if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Acquire) {
       collabFieldLockReallyLocked.value = true

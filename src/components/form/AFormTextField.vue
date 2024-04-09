@@ -96,9 +96,11 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-    emit('update:modelValue', data.value as string | number | null | undefined)
-  })
+  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
+    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
+      emit('update:modelValue', data.value as string | number | null | undefined)
+    })
+  }
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
     if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
       textFieldRef.value?.blur()

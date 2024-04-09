@@ -79,9 +79,11 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-    emit('update:modelValue', data.value as DatetimeUTCNullable | undefined)
-  })
+  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
+    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
+      emit('update:modelValue', data.value as DatetimeUTCNullable | undefined)
+    })
+  }
 }
 
 const { t } = useI18n()
