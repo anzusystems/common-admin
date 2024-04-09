@@ -14,7 +14,7 @@ import { useCommonAdminCollabOptions } from '@/components/collab/composables/com
 import { useCollabState } from '@/components/collab/composables/collabState'
 import { isUndefined } from '@/utils/common'
 
-export function useCollabAnyDataChange(room: CollabRoom) {
+export function useCollabAnyDataChange(room: CollabRoom, autoUnsubscribe: boolean = true) {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { collabSocket } = useCollabState()
   const changeEventBus = useCollabRoomDataChangeEventBus()
@@ -44,12 +44,13 @@ export function useCollabAnyDataChange(room: CollabRoom) {
   }
 
   onBeforeUnmount(() => {
-    if (isUndefined(unsubscribeCollabAnyDataChangeListener.value)) return
+    if (autoUnsubscribe === false || isUndefined(unsubscribeCollabAnyDataChangeListener.value)) return
     unsubscribeCollabAnyDataChangeListener.value()
   })
 
   return {
     addCollabAnyDataChangeListener,
+    unsubscribeCollabAnyDataChangeListener,
     changeCollabAnyData,
   }
 }
