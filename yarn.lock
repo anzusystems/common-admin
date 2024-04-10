@@ -254,7 +254,7 @@ __metadata:
     pinia: 2.1.7
     socket.io-client: 4.7.5
     vue: 3.4.21
-    vue-i18n: 9.11.0
+    vue-i18n: 9.11.1
     vue-router: 4.3.0
     vuetify: 3.5.15
   peerDependenciesMeta:
