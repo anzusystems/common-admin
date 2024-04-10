@@ -4,7 +4,7 @@ import type {
   CollabFieldName,
   CollabRoom,
 } from '@/components/collab/types/Collab'
-import { onBeforeUnmount, ref } from 'vue'
+import { ref } from 'vue'
 import {
   type CollabRoomDataChangedEvent,
   useCollabRoomDataChangeEventBus,
@@ -14,7 +14,7 @@ import { useCommonAdminCollabOptions } from '@/components/collab/composables/com
 import { useCollabState } from '@/components/collab/composables/collabState'
 import { isUndefined } from '@/utils/common'
 
-export function useCollabAnyDataChange(room: CollabRoom, autoUnsubscribe: boolean = true) {
+export function useCollabAnyDataChange(room: CollabRoom) {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { collabSocket } = useCollabState()
   const changeEventBus = useCollabRoomDataChangeEventBus()
@@ -40,13 +40,6 @@ export function useCollabAnyDataChange(room: CollabRoom, autoUnsubscribe: boolea
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('changeFieldData', room, field, data, () => {
       if (!isUndefined(callback)) callback()
-    })
-  }
-
-  if(autoUnsubscribe === false) {
-    onBeforeUnmount(() => {
-      if (isUndefined(unsubscribeCollabAnyDataChangeListener.value)) return
-      unsubscribeCollabAnyDataChangeListener.value()
     })
   }
 
