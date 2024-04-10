@@ -199,7 +199,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^1.3.0"
     "@stylistic/eslint-plugin": "npm:^1.7.0"
     "@tsconfig/node18": "npm:^18.2.4"
-    "@types/node": "npm:^20.12.6"
+    "@types/node": "npm:^20.12.7"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -239,7 +239,7 @@ __metadata:
     vite-plugin-vuetify: "npm:^2.0.3"
     vitepress: "npm:1.1.0"
     vue: "npm:3.4.21"
-    vue-i18n: "npm:9.11.0"
+    vue-i18n: "npm:9.11.1"
     vue-router: "npm:4.3.0"
     vue-tsc: "npm:2.0.10"
     vuetify: "npm:3.5.15"
@@ -755,23 +755,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@intlify/core-base@npm:9.11.0":
-  version: 9.11.0
-  resolution: "@intlify/core-base@npm:9.11.0"
+"@intlify/core-base@npm:9.11.1":
+  version: 9.11.1
+  resolution: "@intlify/core-base@npm:9.11.1"
   dependencies:
-    "@intlify/message-compiler": "npm:9.11.0"
-    "@intlify/shared": "npm:9.11.0"
-  checksum: 10/db1c5b11144b1538eb2e23badcc3b1ddf20fc44c3b93e6ae443bbfa80f5e5f03689c7b8e7364381aae987b4897ea7ee22ac1c11d79c7bcff02329f4ef20c4c39
+    "@intlify/message-compiler": "npm:9.11.1"
+    "@intlify/shared": "npm:9.11.1"
+  checksum: 10/e3ebc8dbd78c88564e1fc1a5452b8ca2111838ac02ff920b15a5a8f252e7be89e8497ad71e437c26498447551dfa63e4ed1cf0969fe363ff8350cfe86535be5a
   languageName: node
   linkType: hard
 
-"@intlify/message-compiler@npm:9.11.0":
-  version: 9.11.0
-  resolution: "@intlify/message-compiler@npm:9.11.0"
+"@intlify/message-compiler@npm:9.11.1":
+  version: 9.11.1
+  resolution: "@intlify/message-compiler@npm:9.11.1"
   dependencies:
-    "@intlify/shared": "npm:9.11.0"
+    "@intlify/shared": "npm:9.11.1"
     source-map-js: "npm:^1.0.2"
-  checksum: 10/4b4056f2dcb65bae0205ad6318113452859d1925d2a8c032cc73f36c7ab03d974f7fcc53b5c2b86c017f990c7c87dba92198fb6e3f97a6d745cf9512ad9591ea
+  checksum: 10/7549200663585d22e62ec4e6ce0cc57c96d35c7e3ae6f3efbd0ba668734cb69dd90715bd64b506d912e6f8d86c13f1d90c11c239a280c264ccc504c6ffc2b09c
   languageName: node
   linkType: hard
 
@@ -785,10 +785,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@intlify/shared@npm:9.11.0":
-  version: 9.11.0
-  resolution: "@intlify/shared@npm:9.11.0"
-  checksum: 10/4396c4597219fd23a6eec0c682fa20fb25495e6d0318083680d7b344ca750a4795f0ebb86467b78680b143ff3214ab6801141fa715fd19d72ab96a2ffdfaa8ee
+"@intlify/shared@npm:9.11.1":
+  version: 9.11.1
+  resolution: "@intlify/shared@npm:9.11.1"
+  checksum: 10/71d4f07e6efc6f3044fc0aa8943623e9f4c5d9f512f5c6c342e377164b9e0466ab2055f7049ac31a99ec47637e13e62452e070a4348b9908c38e6b50a5457e35
   languageName: node
   linkType: hard
 
@@ -1410,12 +1410,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.12.6":
-  version: 20.12.6
-  resolution: "@types/node@npm:20.12.6"
+"@types/node@npm:^20.12.7":
+  version: 20.12.7
+  resolution: "@types/node@npm:20.12.7"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 10/9feaa7f1c86b2541638f5446bdc4fd949a0ef6a53784db3d01296c503bb6e3e224bec4964f9a55b3ea669a200de824bfc6c944caf573019975e3c83fdc5f696e
+  checksum: 10/b4a28a3b593a9bdca5650880b6a9acef46911d58cf7cfa57268f048e9a7157a7c3196421b96cea576850ddb732e3b54bc982c8eb5e1e5ef0635d4424c2fce801
   languageName: node
   linkType: hard
 
@@ -8186,16 +8186,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-i18n@npm:9.11.0":
-  version: 9.11.0
-  resolution: "vue-i18n@npm:9.11.0"
+"vue-i18n@npm:9.11.1":
+  version: 9.11.1
+  resolution: "vue-i18n@npm:9.11.1"
   dependencies:
-    "@intlify/core-base": "npm:9.11.0"
-    "@intlify/shared": "npm:9.11.0"
+    "@intlify/core-base": "npm:9.11.1"
+    "@intlify/shared": "npm:9.11.1"
     "@vue/devtools-api": "npm:^6.5.0"
   peerDependencies:
     vue: ^3.0.0
-  checksum: 10/cbe940c5a4dd43b3348b99dc50dc40eaabb58eca96291d2c70c1e30f92194bceb15c571a24956c192d09fe830e5ab06468c9c8234de0a55ed6d1bc3dbc26287c
+  checksum: 10/d9421b40c60c239c13e268dec3f21b85a0452e573928f018f812368db66146cd1e1e5d133717e4e7c523e2b2924e1241187ffbde219b0711c56faea238cb9fb8
   languageName: node
   linkType: hard
 

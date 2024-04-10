@@ -43,10 +43,12 @@ export function useCollabAnyDataChange(room: CollabRoom, autoUnsubscribe: boolea
     })
   }
 
-  onBeforeUnmount(() => {
-    if (autoUnsubscribe === false || isUndefined(unsubscribeCollabAnyDataChangeListener.value)) return
-    unsubscribeCollabAnyDataChangeListener.value()
-  })
+  if(autoUnsubscribe === false) {
+    onBeforeUnmount(() => {
+      if (isUndefined(unsubscribeCollabAnyDataChangeListener.value)) return
+      unsubscribeCollabAnyDataChangeListener.value()
+    })
+  }
 
   return {
     addCollabAnyDataChangeListener,
