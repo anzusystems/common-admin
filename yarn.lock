@@ -195,7 +195,7 @@ __metadata:
     "@intlify/unplugin-vue-i18n": "npm:^4.0.0"
     "@kyvg/vue3-notification": "npm:^3.2.1"
     "@mdi/font": "npm:^7.4.47"
-    "@rushstack/eslint-patch": "npm:^1.10.1"
+    "@rushstack/eslint-patch": "npm:^1.10.2"
     "@shikijs/vitepress-twoslash": "npm:^1.3.0"
     "@stylistic/eslint-plugin": "npm:^1.7.0"
     "@tsconfig/node18": "npm:^18.2.4"
@@ -226,20 +226,20 @@ __metadata:
     postcss-prefix-selector: "npm:^1.16.0"
     prettier: "npm:^3.2.5"
     rusha: "npm:^0.8.14"
-    sass: "npm:^1.74.1"
+    sass: "npm:^1.75.0"
     socket.io-client: "npm:4.7.5"
     sortablejs: "npm:^1.15.2"
     stylelint: "npm:16.3.1"
     stylelint-config-recommended-vue: "npm:^1.5.0"
     stylelint-config-standard-scss: "npm:^13.1.0"
-    typescript: "npm:5.4.4"
+    typescript: "npm:5.4.5"
     uuid: "npm:^9.0.1"
     vite: "npm:5.2.8"
     vite-plugin-dts: "npm:^3.8.1"
     vite-plugin-vuetify: "npm:^2.0.3"
     vitepress: "npm:1.1.0"
     vue: "npm:3.4.21"
-    vue-i18n: "npm:9.11.1"
+    vue-i18n: "npm:9.12.0"
     vue-router: "npm:4.3.0"
     vue-tsc: "npm:2.0.7"
     vuetify: "npm:3.5.15"
@@ -254,7 +254,7 @@ __metadata:
     pinia: 2.1.7
     socket.io-client: 4.7.5
     vue: 3.4.21
-    vue-i18n: 9.11.1
+    vue-i18n: 9.12.0
     vue-router: 4.3.0
     vuetify: 3.5.15
   peerDependenciesMeta:
@@ -755,23 +755,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@intlify/core-base@npm:9.11.1":
-  version: 9.11.1
-  resolution: "@intlify/core-base@npm:9.11.1"
+"@intlify/core-base@npm:9.12.0":
+  version: 9.12.0
+  resolution: "@intlify/core-base@npm:9.12.0"
   dependencies:
-    "@intlify/message-compiler": "npm:9.11.1"
-    "@intlify/shared": "npm:9.11.1"
-  checksum: 10/e3ebc8dbd78c88564e1fc1a5452b8ca2111838ac02ff920b15a5a8f252e7be89e8497ad71e437c26498447551dfa63e4ed1cf0969fe363ff8350cfe86535be5a
+    "@intlify/message-compiler": "npm:9.12.0"
+    "@intlify/shared": "npm:9.12.0"
+  checksum: 10/11b9b8475994e293d449c78944196d0618e32050c261a868719a508739b523a077d9efaafe73941045eb05aa00cd31d0ad54163f658d01e474a6cb497e785c58
   languageName: node
   linkType: hard
 
-"@intlify/message-compiler@npm:9.11.1":
-  version: 9.11.1
-  resolution: "@intlify/message-compiler@npm:9.11.1"
+"@intlify/message-compiler@npm:9.12.0":
+  version: 9.12.0
+  resolution: "@intlify/message-compiler@npm:9.12.0"
   dependencies:
-    "@intlify/shared": "npm:9.11.1"
+    "@intlify/shared": "npm:9.12.0"
     source-map-js: "npm:^1.0.2"
-  checksum: 10/7549200663585d22e62ec4e6ce0cc57c96d35c7e3ae6f3efbd0ba668734cb69dd90715bd64b506d912e6f8d86c13f1d90c11c239a280c264ccc504c6ffc2b09c
+  checksum: 10/3ede9214bc15c31f6c23c0dba52570bcc5b4f269ca95523bb73fbb630471ce10ac0db6fdcfa3533eefa0508a9a87cb67387da5a0a36abdf18f28672a63765562
   languageName: node
   linkType: hard
 
@@ -785,10 +785,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@intlify/shared@npm:9.11.1":
-  version: 9.11.1
-  resolution: "@intlify/shared@npm:9.11.1"
-  checksum: 10/71d4f07e6efc6f3044fc0aa8943623e9f4c5d9f512f5c6c342e377164b9e0466ab2055f7049ac31a99ec47637e13e62452e070a4348b9908c38e6b50a5457e35
+"@intlify/shared@npm:9.12.0":
+  version: 9.12.0
+  resolution: "@intlify/shared@npm:9.12.0"
+  checksum: 10/c0016a0ca82b5d6643b20a80f84212a9539f8f1f016fa770d54102f54b31a742c572ceb140fde465cfd30121bee3832f7889b1da5952dee6dcd82e341221d882
   languageName: node
   linkType: hard
 
@@ -1102,10 +1102,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rushstack/eslint-patch@npm:^1.10.1":
-  version: 1.10.1
-  resolution: "@rushstack/eslint-patch@npm:1.10.1"
-  checksum: 10/fdb29ab19f9106eada23d9f46fca7ccc4d15996d2c25ad3a9b8df03d4d105d9a746c3f7d3c7a4a41d89b5de554c3d617ea68205499852426c8fc0f3fd03ebcfa
+"@rushstack/eslint-patch@npm:^1.10.2":
+  version: 1.10.2
+  resolution: "@rushstack/eslint-patch@npm:1.10.2"
+  checksum: 10/a92563ee28aa903ee37f5d34c747a8f5641c0a5a7020881902da8fccf94e208c923ed708aef41989f4b1d328cb4c216166ab108c6c2d72ebf0b5b6c18d1461d0
   languageName: node
   linkType: hard
 
@@ -6700,16 +6700,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.74.1":
-  version: 1.74.1
-  resolution: "sass@npm:1.74.1"
+"sass@npm:^1.75.0":
+  version: 1.75.0
+  resolution: "sass@npm:1.75.0"
   dependencies:
     chokidar: "npm:>=3.0.0 <4.0.0"
     immutable: "npm:^4.0.0"
     source-map-js: "npm:>=0.6.2 <2.0.0"
   bin:
     sass: sass.js
-  checksum: 10/fe49406d1ed37541cf69b842b76109a9ede6efe565b2aa0fa3f0f041d310673a713404677c1f82747089dfea4f5a873a761b8d3f94f4da3883ca402768cd58aa
+  checksum: 10/9f2d1b5adfe0b008e7062ef2f42fd9b26672e39e36ef3d234166636a4082d1f66c01804070e4e07b50ec872cdd9485ccf10fae8f87b3c00b9de6400c6e73efe8
   languageName: node
   linkType: hard
 
@@ -7517,13 +7517,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.4.4":
-  version: 5.4.4
-  resolution: "typescript@npm:5.4.4"
+"typescript@npm:5.4.5":
+  version: 5.4.5
+  resolution: "typescript@npm:5.4.5"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/bade322d88fd93c8179e262aca9ba7f7b4417c09117879819c87946578c782ab123e3acb4733046a6e38714c47ef927360045a1f9292a1bff3a05a6577d27ca2
+  checksum: 10/d04a9e27e6d83861f2126665aa8d84847e8ebabcea9125b9ebc30370b98cb38b5dff2508d74e2326a744938191a83a69aa9fddab41f193ffa43eabfdf3f190a5
   languageName: node
   linkType: hard
 
@@ -7537,13 +7537,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.4.4#optional!builtin<compat/typescript>":
-  version: 5.4.4
-  resolution: "typescript@patch:typescript@npm%3A5.4.4#optional!builtin<compat/typescript>::version=5.4.4&hash=5adc0c"
+"typescript@patch:typescript@npm%3A5.4.5#optional!builtin<compat/typescript>":
+  version: 5.4.5
+  resolution: "typescript@patch:typescript@npm%3A5.4.5#optional!builtin<compat/typescript>::version=5.4.5&hash=5adc0c"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/88aff3244c31d4c6ede05b4fd28732fc8935a7fc638f2a3dcbbb767d1ac98e4b077f21ec74bc97f43c9307bc3f27e2359def1d793f9918c3429a744408fd75b4
+  checksum: 10/760f7d92fb383dbf7dee2443bf902f4365db2117f96f875cf809167f6103d55064de973db9f78fe8f31ec08fff52b2c969aee0d310939c0a3798ec75d0bca2e1
   languageName: node
   linkType: hard
 
@@ -8186,16 +8186,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-i18n@npm:9.11.1":
-  version: 9.11.1
-  resolution: "vue-i18n@npm:9.11.1"
+"vue-i18n@npm:9.12.0":
+  version: 9.12.0
+  resolution: "vue-i18n@npm:9.12.0"
   dependencies:
-    "@intlify/core-base": "npm:9.11.1"
-    "@intlify/shared": "npm:9.11.1"
+    "@intlify/core-base": "npm:9.12.0"
+    "@intlify/shared": "npm:9.12.0"
     "@vue/devtools-api": "npm:^6.5.0"
   peerDependencies:
     vue: ^3.0.0
-  checksum: 10/d9421b40c60c239c13e268dec3f21b85a0452e573928f018f812368db66146cd1e1e5d133717e4e7c523e2b2924e1241187ffbde219b0711c56faea238cb9fb8
+  checksum: 10/954ad05b19d0bfddd999ab6d141d421522b720b70b28f225d914298e8a346ea018f71e7873f1a29d58460621e53092e2c49c50e6a5914c91c2cb1a46dddfc0ad
   languageName: node
   linkType: hard
 
