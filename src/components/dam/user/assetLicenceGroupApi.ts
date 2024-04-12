@@ -7,7 +7,7 @@ import { apiFetchList } from '@/services/api/apiFetchList'
 import type { IntegerId } from '@/types/common'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 
-const END_POINT = '/adm/v1/asset-licence'
+const END_POINT = '/adm/v1/asset-licence-group'
 export const ENTITY = 'assetLicenceGroup'
 
 export const fetchDamAssetLicenceGroupListByIds = (client: () => AxiosInstance, ids: IntegerId[]) =>
