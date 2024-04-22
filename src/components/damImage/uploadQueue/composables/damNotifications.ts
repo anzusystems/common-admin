@@ -23,21 +23,21 @@ export function initDamNotifications() {
     immediate: false,
     autoClose: false,
     autoReconnect: {
-      retries: 10,
+      retries: 5,
       delay: 5000,
+      onFailed() {
+        if (!enabled) return
+        const { showWarning } = useAlerts()
+        setTimeout(() => {
+          showWarning(t('common.damImage.notificationsNotConnected'))
+        }, 3000)
+      },
     },
     onMessage(ws, event) {
       if (!enabled) return
       const message = JSON.parse(event.data as string)
       const data = message.data.length ? JSON.parse(message.data) : undefined
       eventBus.emit({ name: message.eventName, data })
-    },
-    onError() {
-      if (!enabled) return
-      const { showWarning } = useAlerts()
-      setTimeout(() => {
-        showWarning(t('common.damImage.notificationsNotConnected'), -1)
-      }, 3000)
     },
   })
 
