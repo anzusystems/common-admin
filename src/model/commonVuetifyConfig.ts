@@ -68,6 +68,7 @@ export const useCommonVuetifyConfig = () => {
         variant: 'underlined',
         density: 'compact',
         color: 'primary',
+        clearOnSelect: true,
       },
       VCombobox: {
         variant: 'underlined',
