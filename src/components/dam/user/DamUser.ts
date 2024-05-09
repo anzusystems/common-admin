@@ -7,6 +7,7 @@ export interface DamUserUpdateDto {
   allowedAssetExternalProviders: string[]
   allowedDistributionServices: string[]
   adminToExtSystems: IntegerId[]
+  licenceGroups: IntegerId[]
   readonly userToExtSystems: IntegerId[]
   plainPassword?: string
 }

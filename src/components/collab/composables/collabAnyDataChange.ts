@@ -4,7 +4,7 @@ import type {
   CollabFieldName,
   CollabRoom,
 } from '@/components/collab/types/Collab'
-import { onBeforeUnmount, ref } from 'vue'
+import { ref } from 'vue'
 import {
   type CollabRoomDataChangedEvent,
   useCollabRoomDataChangeEventBus,
@@ -43,13 +43,9 @@ export function useCollabAnyDataChange(room: CollabRoom) {
     })
   }
 
-  onBeforeUnmount(() => {
-    if (isUndefined(unsubscribeCollabAnyDataChangeListener.value)) return
-    unsubscribeCollabAnyDataChangeListener.value()
-  })
-
   return {
     addCollabAnyDataChangeListener,
+    unsubscribeCollabAnyDataChangeListener,
     changeCollabAnyData,
   }
 }

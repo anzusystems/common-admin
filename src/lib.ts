@@ -384,6 +384,7 @@ import {
   useDamCurrentUser,
 } from '@/components/damImage/composables/damCurrentUser'
 import type { DamAssetLicence, DamAssetLicenceMinimal } from '@/types/coreDam/AssetLicence'
+import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 import { useCollabInit } from '@/components/collab/composables/collabInit'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
@@ -475,12 +476,14 @@ import {
   isCollabSuccessChangeRoomLockCallback,
 } from '@/components/collab/types/Collab'
 import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
+import DamAssetLicenceGroupRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceGroupRemoteAutocomplete.vue'
 import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRemoteAutocomplete.vue'
 import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
 import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
 import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
 import { fetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
+import { fetchDamAssetLicenceGroupList, fetchDamAssetLicenceGroupListByIds } from '@/components/dam/user/assetLicenceGroupApi'
 import { fetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
 import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
@@ -578,6 +581,7 @@ export {
   DamExternalProviderAssetSelect,
   DamDistributionServiceSelect,
   DamAssetLicenceRemoteAutocomplete,
+  DamAssetLicenceGroupRemoteAutocomplete,
 
   // VIEWS
   ALoginView,
@@ -759,6 +763,7 @@ export {
   type DamCurrentUserDto,
   type DamAssetLicence,
   type DamAssetLicenceMinimal,
+  type DamAssetLicenceGroup,
   type DamUserUpdateDto,
   type DamUser,
 
@@ -860,6 +865,8 @@ export {
   cropToRegion,
   fetchDamAssetLicenceListByIds,
   fetchDamAssetLicenceList,
+  fetchDamAssetLicenceGroupListByIds,
+  fetchDamAssetLicenceGroupList,
   fetchDamExtSystemListByIds,
   fetchDamExtSystemList,
   fetchDamUserListByIds,
