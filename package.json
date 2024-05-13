@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-alpha59",
+  "version": "1.47.0-alpha60",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -44,7 +44,7 @@
     "@mdi/font": "^7.4.47",
     "@rushstack/eslint-patch": "^1.10.2",
     "@shikijs/vitepress-twoslash": "^1.5.1",
-    "@stylistic/eslint-plugin": "^2.0.0",
+    "@stylistic/eslint-plugin": "^2.1.0",
     "@tsconfig/node18": "^18.2.4",
     "@types/node": "^20.12.11",
     "@types/rusha": "^0.8.3",
@@ -73,7 +73,7 @@
     "postcss-prefix-selector": "^1.16.1",
     "prettier": "^3.2.5",
     "rusha": "^0.8.14",
-    "sass": "^1.77.0",
+    "sass": "^1.77.1",
     "socket.io-client": "4.7.5",
     "sortablejs": "^1.15.2",
     "stylelint": "16.5.0",
@@ -88,8 +88,8 @@
     "vue": "3.4.27",
     "vue-i18n": "9.13.1",
     "vue-router": "4.3.2",
-    "vue-tsc": "2.0.16",
-    "vuetify": "3.6.4",
+    "vue-tsc": "2.0.17",
+    "vuetify": "3.6.5",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -104,7 +104,7 @@
     "vue": "3.4.27",
     "vue-i18n": "9.13.1",
     "vue-router": "4.3.2",
-    "vuetify": "3.6.3"
+    "vuetify": "3.6.5"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {
