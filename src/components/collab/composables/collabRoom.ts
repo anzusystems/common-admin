@@ -19,7 +19,7 @@ import {
   CollabStatus,
   isCollabSuccessAccessRoomCallback,
 } from '@/components/collab/types/Collab'
-import { computed, getCurrentInstance, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
   type CollabApprovedJoinRequestEvent,
   type CollabApprovedRequestToTakeModerationEvent,
@@ -40,6 +40,7 @@ import {
   useCollabStartingEventBus,
 } from '@/components/collab/composables/collabEventBus'
 import type { Fn, Promisify } from '@vueuse/core'
+import { tryOnBeforeUnmount } from '@vueuse/core'
 import { useCollabState } from '@/components/collab/composables/collabState'
 import { isDefined, isUndefined } from '@/utils/common'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
@@ -52,7 +53,8 @@ export function useCollabRoom(
   room: CollabRoom,
   watchForNewUsers: boolean = false,
   addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined = undefined,
-  fetchCachedUsers: (() => Promisify<Promise<any>>) | undefined = undefined
+  fetchCachedUsers: (() => Promisify<Promise<any>>) | undefined = undefined,
+  unsubscribeBeforeUnmount = true
 ) {
   const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState } = useCollabState()
 
@@ -197,34 +199,33 @@ export function useCollabRoom(
     unsubscribeCollabStartingListener.value = collabStartingEventBus.on(collabStartingEventBusListener)
   }
 
-  if (getCurrentInstance()) {
-    onBeforeUnmount(() => {
-      if (isDefined(unsubscribeJoinRequestListener.value)) {
-        unsubscribeJoinRequestListener.value()
-      }
-      if (isDefined(unsubscribeApprovedJoinRequestListener.value)) {
-        unsubscribeApprovedJoinRequestListener.value()
-      }
-      if (isDefined(unsubscribeRejectedJoinRequestListener.value)) {
-        unsubscribeRejectedJoinRequestListener.value()
-      }
-      if (isDefined(unsubscribeRequestToTakeModerationListener.value)) {
-        unsubscribeRequestToTakeModerationListener.value()
-      }
-      if (isDefined(unsubscribeApprovedRequestToTakeModerationListener.value)) {
-        unsubscribeApprovedRequestToTakeModerationListener.value()
-      }
-      if (isDefined(unsubscribeRejectedRequestToTakeModerationListener.value)) {
-        unsubscribeRejectedRequestToTakeModerationListener.value()
-      }
-      if (isDefined(unsubscribeKickedFromRoomListener.value)) {
-        unsubscribeKickedFromRoomListener.value()
-      }
-      if (isDefined(unsubscribeCollabStartingListener.value)) {
-        unsubscribeCollabStartingListener.value()
-      }
-    })
-  }
+  tryOnBeforeUnmount(() => {
+    if (!unsubscribeBeforeUnmount) return
+    if (isDefined(unsubscribeJoinRequestListener.value)) {
+      unsubscribeJoinRequestListener.value()
+    }
+    if (isDefined(unsubscribeApprovedJoinRequestListener.value)) {
+      unsubscribeApprovedJoinRequestListener.value()
+    }
+    if (isDefined(unsubscribeRejectedJoinRequestListener.value)) {
+      unsubscribeRejectedJoinRequestListener.value()
+    }
+    if (isDefined(unsubscribeRequestToTakeModerationListener.value)) {
+      unsubscribeRequestToTakeModerationListener.value()
+    }
+    if (isDefined(unsubscribeApprovedRequestToTakeModerationListener.value)) {
+      unsubscribeApprovedRequestToTakeModerationListener.value()
+    }
+    if (isDefined(unsubscribeRejectedRequestToTakeModerationListener.value)) {
+      unsubscribeRejectedRequestToTakeModerationListener.value()
+    }
+    if (isDefined(unsubscribeKickedFromRoomListener.value)) {
+      unsubscribeKickedFromRoomListener.value()
+    }
+    if (isDefined(unsubscribeCollabStartingListener.value)) {
+      unsubscribeCollabStartingListener.value()
+    }
+  })
 
   const { collabOptions } = useCommonAdminCollabOptions()
 
@@ -412,5 +413,13 @@ export function useCollabRoom(
     collabRoomLocks,
     collabFieldDataBufferState,
     alertedOccupiedRooms,
+    unsubscribeJoinRequestListener,
+    unsubscribeApprovedJoinRequestListener,
+    unsubscribeRejectedJoinRequestListener,
+    unsubscribeRequestToTakeModerationListener,
+    unsubscribeApprovedRequestToTakeModerationListener,
+    unsubscribeRejectedRequestToTakeModerationListener,
+    unsubscribeKickedFromRoomListener,
+    unsubscribeCollabStartingListener,
   }
 }
