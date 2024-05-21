@@ -102,7 +102,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
     addCollabFieldLockStatusListener,
     lockedByUser,
     // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -116,12 +115,10 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      modelValue.value = data.value as IntegerIdNullable
-      reload(undefined, modelValue.value)
-    })
-  }
+  // addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
+  //   modelValue.value = data.value as IntegerIdNullable
+  //   reload(undefined, modelValue.value)
+  // })
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
     if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Acquire) {
       collabFieldLockReallyLocked.value = true
@@ -239,12 +236,7 @@ const onDrop = async (files: File[]) => {
   try {
     await waitForFieldLockIsReallyAcquired()
     cachedExtSystemId.value = config.extSystem
-    uploadQueuesStore.addByFiles(
-      props.queueKey,
-      config.extSystem,
-      config.licence,
-      files
-    )
+    uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
     uploadQueueDialog.value = props.queueKey
   } catch (e) {
     showError('Unable to lock image widget by current user.')
@@ -255,12 +247,7 @@ const onFileInput = (files: File[]) => {
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
-  uploadQueuesStore.addByFiles(
-    props.queueKey,
-    config.extSystem,
-    config.licence,
-    files
-  )
+  uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
   uploadQueueDialog.value = props.queueKey
 }
 

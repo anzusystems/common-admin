@@ -7,7 +7,7 @@ import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKey
 import { useI18n } from 'vue-i18n'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import { useCollabField } from '@/components/collab/composables/collabField'
-import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
+import type { CollabComponentConfig, CollabFieldData } from '@/components/collab/types/Collab'
 import type { IntegerIdNullable } from '@/types/common'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
@@ -70,7 +70,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     releaseCollabFieldLock,
     changeCollabFieldData,
     acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
     lockedByUser,
     // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   } = useCollabField(props.collab.room, props.collab.field)
@@ -84,11 +83,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      emit('update:modelValue', data.value as any)
-    })
-  }
 }
 
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)

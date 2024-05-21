@@ -12,7 +12,7 @@ import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
-import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
+import type { CollabComponentConfig, CollabFieldData } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
@@ -99,7 +99,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     releaseCollabFieldLock,
     changeCollabFieldData,
     acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
     lockedByUser,
     // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   } = useCollabField(props.collab.room, props.collab.field)
@@ -113,11 +112,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      modelValue.value = data.value as DocId | IntegerId | DocId[] | IntegerId[] | null
-    })
-  }
 }
 
 const search = ref('')

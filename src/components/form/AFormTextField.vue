@@ -12,12 +12,7 @@ import {
   type CollabFieldLockStatusPayload,
   CollabFieldLockType,
 } from '@/components/collab/composables/collabEventBus'
-import type {
-  CollabComponentConfig,
-  CollabFieldData,
-  CollabFieldDataEnvelope,
-  CollabFieldLockOptions,
-} from '@/components/collab/types/Collab'
+import type { CollabComponentConfig, CollabFieldData, CollabFieldLockOptions } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import type { IntegerIdNullable } from '@/types/common'
 import type { VTextField } from 'vuetify/components/VTextField'
@@ -81,7 +76,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
     addCollabFieldLockStatusListener,
     addCollabGatheringBufferDataListener,
     lockedByUser,
@@ -96,11 +90,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      emit('update:modelValue', data.value as string | number | null | undefined)
-    })
-  }
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
     if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
       textFieldRef.value?.blur()
