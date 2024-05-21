@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useCollabHelpers } from '@/components/collab/composables/collabHelpers'
 import { useCachedUsers } from '@/playground/collabView/cachedUsers'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
-import { onBeforeUnmount, onMounted, reactive } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import type { CollabConfig } from '@/components/collab/types/Collab'
 import { useCollabState } from '@/components/collab/composables/collabState'
 import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
@@ -16,6 +16,20 @@ import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.v
 import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
 import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
 import AImageWidget from '@/components/damImage/AImageWidget.vue'
+import { useCollabAnyDataChange } from '@/components/collab/composables/collabAnyDataChange'
+
+const model = ref({
+  inputOne: '',
+  inputTwo: '',
+  inputThree: '',
+  inputFour: '',
+  inputFive: '',
+  editor: { type: 'doc', content: [] },
+  switch: false,
+  date1: null,
+  date2: null,
+  image: null,
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -38,6 +52,7 @@ const {
   collabRoomInfo,
   collabFieldDataBufferState,
 } = useCollabRoom(collab.room, true, addToCachedUsers, fetchCachedUsers)
+const { addCollabAnyDataChangeListener, objectSetDataByField } = useCollabAnyDataChange(collab.room)
 const { gatherBufferData } = useCollabState()
 
 addCollabReconnectListener(async () => {
@@ -58,6 +73,11 @@ addCollabStartingListener((startedCallback) => {
   startedCallback(gatherBufferData(collab.room))
 })
 
+addCollabAnyDataChangeListener((field, data) => {
+  console.log(field, data)
+  objectSetDataByField(field, data, model)
+})
+
 onMounted(() => {
   enteredCollabRoom()
 })
@@ -66,18 +86,6 @@ onBeforeUnmount(() => {
   collabFieldDataBufferState.delete(collab.room)
 })
 
-const model = reactive({
-  inputOne: '',
-  inputTwo: '',
-  inputThree: '',
-  inputFour: '',
-  inputFive: '',
-  editor: { type: 'doc', content: [] },
-  switch: false,
-  date1: null,
-  date2: null,
-  image: null,
-})
 </script>
 
 <template>
