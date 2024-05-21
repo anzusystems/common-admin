@@ -22,7 +22,7 @@ import {
 import { type Fn, tryOnBeforeUnmount } from '@vueuse/core'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useCollabState } from '@/components/collab/composables/collabState'
-import { isDefined, isUndefined } from '@/utils/common'
+import { cloneDeep, isDefined, isUndefined } from '@/utils/common'
 import { objectSetValueByPath } from '@/utils/object'
 
 export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe = false) {
@@ -61,7 +61,16 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
     objectToUpdate: MaybeRef<T>
   ) => {
     const object = unref(objectToUpdate)
-    objectSetValueByPath(object, field, data)
+    switch (data.type) {
+      case 'json':
+        {
+          objectSetValueByPath(object, field, cloneDeep(data.value))
+        }
+        break
+      default: {
+        objectSetValueByPath(object, field, data.value)
+      }
+    }
   }
 
   tryOnBeforeUnmount(() => {
