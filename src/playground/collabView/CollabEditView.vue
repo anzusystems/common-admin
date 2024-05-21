@@ -74,7 +74,6 @@ addCollabStartingListener((startedCallback) => {
 })
 
 addCollabAnyDataChangeListener((field, data) => {
-  console.log(field, data)
   objectSetDataByField(field, data, model)
 })
 
