@@ -28,7 +28,7 @@ import { isDefined, isUndefined } from '@/utils/common'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
 
-export function useCollabField(room: CollabRoom, field: CollabFieldName, unsubscribeBeforeUnmount = true) {
+export function useCollabField(room: CollabRoom, field: CollabFieldName, disableAutoUnsubscribe = false) {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { currentUserId } = useCollabCurrentUserId()
   const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } = useCollabState()
@@ -95,7 +95,7 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName, unsubsc
   }
 
   tryOnBeforeUnmount(() => {
-    if (!unsubscribeBeforeUnmount) return
+    if (disableAutoUnsubscribe) return
     if (isDefined(unsubscribeCollabFieldDataChangeListener.value)) {
       unsubscribeCollabFieldDataChangeListener.value()
     }

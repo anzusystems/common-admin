@@ -54,7 +54,7 @@ export function useCollabRoom(
   watchForNewUsers: boolean = false,
   addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined = undefined,
   fetchCachedUsers: (() => Promisify<Promise<any>>) | undefined = undefined,
-  unsubscribeBeforeUnmount = true
+  disableAutoUnsubscribe = false
 ) {
   const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState } = useCollabState()
 
@@ -200,7 +200,7 @@ export function useCollabRoom(
   }
 
   tryOnBeforeUnmount(() => {
-    if (!unsubscribeBeforeUnmount) return
+    if (disableAutoUnsubscribe) return
     if (isDefined(unsubscribeJoinRequestListener.value)) {
       unsubscribeJoinRequestListener.value()
     }

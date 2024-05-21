@@ -4,17 +4,18 @@ import type {
   CollabFieldName,
   CollabRoom,
 } from '@/components/collab/types/Collab'
-import { ref } from 'vue'
+import { type MaybeRef, ref, unref } from 'vue'
 import {
   type CollabRoomDataChangedEvent,
   useCollabRoomDataChangeEventBus,
 } from '@/components/collab/composables/collabEventBus'
-import type { Fn } from '@vueuse/core'
+import { type Fn, tryOnBeforeUnmount } from '@vueuse/core'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useCollabState } from '@/components/collab/composables/collabState'
-import { isUndefined } from '@/utils/common'
+import { isDefined, isUndefined } from '@/utils/common'
+import { objectSetValueByPath } from '@/utils/object'
 
-export function useCollabAnyDataChange(room: CollabRoom) {
+export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe = false) {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { collabSocket } = useCollabState()
   const changeEventBus = useCollabRoomDataChangeEventBus()
@@ -43,9 +44,26 @@ export function useCollabAnyDataChange(room: CollabRoom) {
     })
   }
 
+  const objectSetDataByField = <T extends object>(
+    field: CollabFieldName,
+    data: CollabFieldDataEnvelope,
+    objectToUpdate: MaybeRef<T>
+  ) => {
+    const object = unref(objectToUpdate)
+    objectSetValueByPath(object, field, data)
+  }
+
+  tryOnBeforeUnmount(() => {
+    if (disableAutoUnsubscribe) return
+    if (isDefined(unsubscribeCollabAnyDataChangeListener.value)) {
+      unsubscribeCollabAnyDataChangeListener.value()
+    }
+  })
+
   return {
     addCollabAnyDataChangeListener,
     unsubscribeCollabAnyDataChangeListener,
     changeCollabAnyData,
+    objectSetDataByField,
   }
 }
