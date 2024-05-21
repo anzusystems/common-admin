@@ -55,7 +55,6 @@ createApp(App)
     },
     collab: {
       enabled: true,
-      disableCollabFieldDataChangeListener: false,
       socketUrl: 'ws://collaboration.sme.localhost',
     },
   })
