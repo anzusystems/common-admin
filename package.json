@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-alpha63",
+  "version": "1.47.0-alpha64",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -61,7 +61,7 @@
     "@vuelidate/validators": "^2.0.4",
     "@vueuse/core": "^10.9.0",
     "@vueuse/integrations": "^10.9.0",
-    "axios": "1.7.1",
+    "axios": "1.7.2",
     "cropperjs": "^1.6.2",
     "dayjs": "1.11.11",
     "eslint": "8.57.0",
@@ -89,7 +89,7 @@
     "vue-i18n": "9.13.1",
     "vue-router": "4.3.2",
     "vue-tsc": "2.0.19",
-    "vuetify": "3.6.6",
+    "vuetify": "3.6.7",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -97,14 +97,14 @@
     "@vuelidate/validators": "2.0.4",
     "@vueuse/core": "10.9.0",
     "@vueuse/integrations": "10.9.0",
-    "axios": "1.7.1",
+    "axios": "1.7.2",
     "dayjs": "1.11.11",
     "pinia": "2.1.7",
     "socket.io-client": "4.7.5",
     "vue": "3.4.27",
     "vue-i18n": "9.13.1",
     "vue-router": "4.3.2",
-    "vuetify": "3.6.6"
+    "vuetify": "3.6.7"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {

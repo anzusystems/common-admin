@@ -214,7 +214,7 @@ __metadata:
     "@vuelidate/validators": "npm:^2.0.4"
     "@vueuse/core": "npm:^10.9.0"
     "@vueuse/integrations": "npm:^10.9.0"
-    axios: "npm:1.7.1"
+    axios: "npm:1.7.2"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.11"
     eslint: "npm:8.57.0"
@@ -242,21 +242,21 @@ __metadata:
     vue-i18n: "npm:9.13.1"
     vue-router: "npm:4.3.2"
     vue-tsc: "npm:2.0.19"
-    vuetify: "npm:3.6.6"
+    vuetify: "npm:3.6.7"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@vuelidate/core": 2.0.3
     "@vuelidate/validators": 2.0.4
     "@vueuse/core": 10.9.0
     "@vueuse/integrations": 10.9.0
-    axios: 1.7.1
+    axios: 1.7.2
     dayjs: 1.11.11
     pinia: 2.1.7
     socket.io-client: 4.7.5
     vue: 3.4.27
     vue-i18n: 9.13.1
     vue-router: 4.3.2
-    vuetify: 3.6.6
+    vuetify: 3.6.7
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -2635,14 +2635,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.7.1":
-  version: 1.7.1
-  resolution: "axios@npm:1.7.1"
+"axios@npm:1.7.2":
+  version: 1.7.2
+  resolution: "axios@npm:1.7.2"
   dependencies:
     follow-redirects: "npm:^1.15.6"
     form-data: "npm:^4.0.0"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10/38de04929014eca46c04fddb916f8f8cfdf3b62f05f85f87a181898587a8e23478737bc6e9ba211fb8fe137a494032e4575741bb598bec9049159de6a5ad8edf
+  checksum: 10/6ae80dda9736bb4762ce717f1a26ff997d94672d3a5799ad9941c24d4fb019c1dff45be8272f08d1975d7950bac281f3ba24aff5ecd49ef5a04d872ec428782f
   languageName: node
   linkType: hard
 
@@ -8330,9 +8330,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.6.6":
-  version: 3.6.6
-  resolution: "vuetify@npm:3.6.6"
+"vuetify@npm:3.6.7":
+  version: 3.6.7
+  resolution: "vuetify@npm:3.6.7"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=1.0.0"
@@ -8348,7 +8348,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/25fc3e57de26b88e0dcc822eb02190336c11036f2361da5035cb77661a9d4b2e4e043f67f6744e8dc9f02ecd3f4683d55440efc6cdba64f93b54af5cee290231
+  checksum: 10/9b9d6036cb6135c13d3d57b6742dab01b861f35c76d4b268d950530641e50b94c3c02bf287327d60921713c7a36f8935824065340e8193fb75a2451445186b8c
   languageName: node
   linkType: hard
 
