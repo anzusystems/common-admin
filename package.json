@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-alpha65",
+  "version": "1.47.0-alpha66",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -46,7 +46,7 @@
     "@shikijs/vitepress-twoslash": "^1.6.1",
     "@stylistic/eslint-plugin": "^2.1.0",
     "@tsconfig/node18": "^18.2.4",
-    "@types/node": "^20.12.12",
+    "@types/node": "^20.12.13",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.8",
     "@types/webfontloader": "^1.6.38",
@@ -89,7 +89,7 @@
     "vue-i18n": "9.13.1",
     "vue-router": "4.3.2",
     "vue-tsc": "2.0.19",
-    "vuetify": "3.6.7",
+    "vuetify": "3.6.8",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -104,7 +104,7 @@
     "vue": "3.4.27",
     "vue-i18n": "9.13.1",
     "vue-router": "4.3.2",
-    "vuetify": "3.6.7"
+    "vuetify": "3.6.8"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {
