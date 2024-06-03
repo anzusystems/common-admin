@@ -196,10 +196,10 @@ __metadata:
     "@kyvg/vue3-notification": "npm:^3.2.1"
     "@mdi/font": "npm:^7.4.47"
     "@rushstack/eslint-patch": "npm:^1.10.3"
-    "@shikijs/vitepress-twoslash": "npm:^1.6.1"
+    "@shikijs/vitepress-twoslash": "npm:^1.6.2"
     "@stylistic/eslint-plugin": "npm:^2.1.0"
     "@tsconfig/node18": "npm:^18.2.4"
-    "@types/node": "npm:^20.13.0"
+    "@types/node": "npm:^20.14.0"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -224,7 +224,7 @@ __metadata:
     postcss: "npm:^8.4.38"
     postcss-html: "npm:^1.7.0"
     postcss-prefix-selector: "npm:^1.16.1"
-    prettier: "npm:^3.2.5"
+    prettier: "npm:^3.3.0"
     rusha: "npm:^0.8.14"
     sass: "npm:^1.77.4"
     socket.io-client: "npm:4.7.5"
@@ -1160,10 +1160,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shikijs/core@npm:1.6.1":
-  version: 1.6.1
-  resolution: "@shikijs/core@npm:1.6.1"
-  checksum: 10/5d2db4c36a9c3e3051ee0619926ddd4f5e13f873db6ebcb8c0b726523d08d9265d139b1f51cb6aab6952388db839ab844917b0a69c3e9aa81b3a5d088ce35798
+"@shikijs/core@npm:1.6.2":
+  version: 1.6.2
+  resolution: "@shikijs/core@npm:1.6.2"
+  checksum: 10/071788ffc78c43331b98654a0416bf3765d4f8bc3476f225354b3afb7de83d8244bbe01059642550908b317a74409106ca11c9b36b1e3fbe4720a3bb4a3681ee
   languageName: node
   linkType: hard
 
@@ -1176,30 +1176,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shikijs/twoslash@npm:1.6.1":
-  version: 1.6.1
-  resolution: "@shikijs/twoslash@npm:1.6.1"
+"@shikijs/twoslash@npm:1.6.2":
+  version: 1.6.2
+  resolution: "@shikijs/twoslash@npm:1.6.2"
   dependencies:
-    "@shikijs/core": "npm:1.6.1"
+    "@shikijs/core": "npm:1.6.2"
     twoslash: "npm:^0.2.6"
-  checksum: 10/518ba6a58154978f912d8e04c2dcb75e774dcc274ddd0e1ec1601c4bea7c96612ac5d727513b7b27a6d650a57fd3c2037db2f70fd85da79a201a6322aa5c93dc
+  checksum: 10/b6403417e66b6bc3541b2b17a2177a9aa952eea275750401c2d1267ea4d8719e28bd37c9b36bcecc4d62ed3a49880a8c5850f4412aeb59779e6333a540711ee8
   languageName: node
   linkType: hard
 
-"@shikijs/vitepress-twoslash@npm:^1.6.1":
-  version: 1.6.1
-  resolution: "@shikijs/vitepress-twoslash@npm:1.6.1"
+"@shikijs/vitepress-twoslash@npm:^1.6.2":
+  version: 1.6.2
+  resolution: "@shikijs/vitepress-twoslash@npm:1.6.2"
   dependencies:
-    "@shikijs/twoslash": "npm:1.6.1"
+    "@shikijs/twoslash": "npm:1.6.2"
     floating-vue: "npm:^5.2.2"
     mdast-util-from-markdown: "npm:^2.0.1"
     mdast-util-gfm: "npm:^3.0.0"
     mdast-util-to-hast: "npm:^13.1.0"
-    shiki: "npm:1.6.1"
+    shiki: "npm:1.6.2"
     twoslash: "npm:^0.2.6"
     twoslash-vue: "npm:^0.2.6"
     vue: "npm:^3.4.27"
-  checksum: 10/1a9f674235e8e2b9f90056782d77b40ba8325756b257d6de09083ce32274b9bb44848322dd7a8964e0a0a6a7febc4d4ba08588abbd27ec7ef0b8c9dc9498a35d
+  checksum: 10/4895dda2bffea9ab5e2797177211a1b763c27a3fc5f08a3f7b0fdce79a09ee130a955ea65a95033be3d6141acb0ff636130332a73d49696181b2af6be79dc724
   languageName: node
   linkType: hard
 
@@ -1404,12 +1404,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.13.0":
-  version: 20.13.0
-  resolution: "@types/node@npm:20.13.0"
+"@types/node@npm:^20.14.0":
+  version: 20.14.0
+  resolution: "@types/node@npm:20.14.0"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 10/82f0e999078fa5e251de002c755d18f63c47ff09c192fdd1381ca91774327563ad778244ab51f52304a9432b5ba678c1328585ef5e92ffdc5eed8e950a6ad1b9
+  checksum: 10/49b332fbf8aee4dc4f61cc1f1f6e130632510f795dd7b274e55894516feaf4bec8a3d13ea764e2443e340a64ce9bbeb006d14513bf6ccdd4f21161eccc7f311e
   languageName: node
   linkType: hard
 
@@ -6432,12 +6432,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.2.5":
-  version: 3.2.5
-  resolution: "prettier@npm:3.2.5"
+"prettier@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "prettier@npm:3.3.0"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/d509f9da0b70e8cacc561a1911c0d99ec75117faed27b95cc8534cb2349667dee6351b0ca83fa9d5703f14127faa52b798de40f5705f02d843da133fc3aa416a
+  checksum: 10/e55233f8e4b5f96f52180dbfa424ae797a98a9b8a9a7a79de5004e522c02b423e71927ed99d855dbfcd00dc3b82e5f6fb304cfe117cc4e7c8477d883df2d8984
   languageName: node
   linkType: hard
 
@@ -6906,12 +6906,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shiki@npm:1.6.1":
-  version: 1.6.1
-  resolution: "shiki@npm:1.6.1"
+"shiki@npm:1.6.2":
+  version: 1.6.2
+  resolution: "shiki@npm:1.6.2"
   dependencies:
-    "@shikijs/core": "npm:1.6.1"
-  checksum: 10/e307c8a1f74c8f9fa1593291060baf9c5f3ebeed7577adf9f8ed6060883b4fc0c71a6d71d467522d1cb64216e78585e28c2e7ef44e1ab73ba679985af39b42fc
+    "@shikijs/core": "npm:1.6.2"
+  checksum: 10/e2037c24de2e95729ed5889faa43d7cc643fb40f0825c28be9f03e720963690dabc475adfcd9b24616f6d642a2a7b4cc9a4c084a91b148a42c7ea0d391b834f8
   languageName: node
   linkType: hard
 
