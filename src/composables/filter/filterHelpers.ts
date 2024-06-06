@@ -9,6 +9,7 @@ export interface MakeFilterOptions<T = any> {
   default: T | null
   field: string
   multiple: boolean
+  clearable: boolean
   mandatory: boolean
   exclude: boolean
 }
@@ -32,6 +33,7 @@ export function makeFilterHelper<T = any>(system?: string, subject?: string) {
       default: defaultValue,
       field: isUndefined(options.field) ? '' : options.field,
       multiple: isArray(defaultValue),
+      clearable: isUndefined(options.clearable) ? true : options.clearable,
       mandatory: isUndefined(options.mandatory) ? false : options.mandatory,
       exclude: isUndefined(options.exclude) ? false : options.exclude,
       model: cloneDeep(defaultValue),
@@ -42,6 +44,7 @@ export function makeFilterHelper<T = any>(system?: string, subject?: string) {
 
 export function useFilterHelpers() {
   const clearOne = (filter: Filter) => {
+    if (!filter.clearable) return
     filter.model = filter.default
     filter.error = ''
   }

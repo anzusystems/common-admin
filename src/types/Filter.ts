@@ -5,6 +5,7 @@ export interface FilterBag {
 export interface Filter<T = any> {
   field: string
   multiple: boolean
+  clearable: boolean
   variant: FilterVariant
   model: T | null
   default: T | null
