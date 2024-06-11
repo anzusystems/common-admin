@@ -81,6 +81,7 @@ defineExpose({
         <AFormTextarea
           v-model="imageDetail.texts.description"
           :label="t('common.damImage.image.model.texts.description')"
+          :help="t('common.damImage.image.help.texts.description')"
         />
       </VCol>
     </VRow>
@@ -133,6 +134,7 @@ defineExpose({
               <AFormTextarea
                 v-model="imageDetail.texts.description"
                 :label="t('common.damImage.image.model.texts.description')"
+                :help="t('common.damImage.image.help.texts.description')"
               />
             </VCol>
           </VRow>

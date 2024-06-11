@@ -36,6 +36,7 @@ const props = withDefaults(
     disabled?: boolean
     placeholder?: undefined | string
     persistentPlaceholder?: boolean
+    help?: string | undefined
   }>(),
   {
     label: undefined,
@@ -53,6 +54,7 @@ const props = withDefaults(
     disabled: undefined,
     placeholder: undefined,
     persistentPlaceholder: false,
+    help: undefined,
   }
 )
 const emit = defineEmits<{
@@ -189,6 +191,15 @@ const disabledComputed = computed(() => {
           :users="collab.cachedUsers"
         />
       </slot>
+    </template>
+    <template
+      v-if="help"
+      #append
+    >
+      <VIcon
+        v-tooltip="help"
+        icon="mdi-help-circle-outline"
+      />
     </template>
   </VTextField>
 </template>

@@ -21,17 +21,18 @@ import { useCommonAdminCollabOptions } from '@/components/collab/composables/com
 const props = withDefaults(
   defineProps<{
     modelValue: string | null | undefined // todo check number and null
-    label?: string
-    errorMessage?: string
-    required?: boolean
+    label?: string | undefined
+    errorMessage?: string | undefined
+    required?: boolean | undefined
     v?: any
-    prependIcon?: VuetifyIconValue
-    appendIcon?: VuetifyIconValue
-    dataCy?: string
+    prependIcon?: VuetifyIconValue | undefined
+    appendIcon?: VuetifyIconValue | undefined
+    dataCy?: string | undefined
     hideLabel?: boolean
     rows?: number
-    collab?: CollabComponentConfig
-    disabled?: boolean
+    collab?: CollabComponentConfig | undefined
+    disabled?: boolean | undefined
+    help?: string | undefined
   }>(),
   {
     label: undefined,
@@ -45,6 +46,7 @@ const props = withDefaults(
     rows: 1,
     collab: undefined,
     disabled: undefined,
+    help: undefined,
   }
 )
 
@@ -179,6 +181,15 @@ const disabledComputed = computed(() => {
           :users="collab.cachedUsers"
         />
       </slot>
+    </template>
+    <template
+      v-if="help"
+      #append
+    >
+      <VIcon
+        v-tooltip="help"
+        icon="mdi-help-circle-outline"
+      />
     </template>
   </VTextarea>
 </template>

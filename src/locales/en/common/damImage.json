@@ -16,6 +16,11 @@
       "addFromDam": "Pridať z DAM",
       "replaceFromDam": "Vymeniť z DAM",
       "removeImage": "Odstrániť obrázok"
+    },
+    "help": {
+      "texts": {
+        "description": "Ak prepíšete popis na tomto mieste, nezmeníte ho v úložisku obrázkov."
+      }
     }
   },
   "queueItem": {
