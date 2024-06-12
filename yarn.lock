@@ -196,7 +196,7 @@ __metadata:
     "@kyvg/vue3-notification": "npm:^3.2.1"
     "@mdi/font": "npm:^7.4.47"
     "@rushstack/eslint-patch": "npm:^1.10.3"
-    "@shikijs/vitepress-twoslash": "npm:^1.6.3"
+    "@shikijs/vitepress-twoslash": "npm:^1.6.4"
     "@stylistic/eslint-plugin": "npm:^2.1.0"
     "@tsconfig/node18": "npm:^18.2.4"
     "@types/node": "npm:^20.14.2"
@@ -212,8 +212,8 @@ __metadata:
     "@vue/tsconfig": "npm:^0.5.1"
     "@vuelidate/core": "npm:^2.0.3"
     "@vuelidate/validators": "npm:^2.0.4"
-    "@vueuse/core": "npm:^10.10.0"
-    "@vueuse/integrations": "npm:^10.10.0"
+    "@vueuse/core": "npm:^10.10.1"
+    "@vueuse/integrations": "npm:^10.10.1"
     axios: "npm:1.7.2"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.11"
@@ -226,7 +226,7 @@ __metadata:
     postcss-prefix-selector: "npm:^1.16.1"
     prettier: "npm:^3.3.2"
     rusha: "npm:^0.8.14"
-    sass: "npm:^1.77.4"
+    sass: "npm:^1.77.5"
     socket.io-client: "npm:4.7.5"
     sortablejs: "npm:^1.15.2"
     stylelint: "npm:16.6.1"
@@ -242,13 +242,13 @@ __metadata:
     vue-i18n: "npm:9.13.1"
     vue-router: "npm:4.3.3"
     vue-tsc: "npm:2.0.21"
-    vuetify: "npm:3.6.8"
+    vuetify: "npm:3.6.9"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@vuelidate/core": 2.0.3
     "@vuelidate/validators": 2.0.4
-    "@vueuse/core": 10.10.0
-    "@vueuse/integrations": 10.10.0
+    "@vueuse/core": 10.10.1
+    "@vueuse/integrations": 10.10.1
     axios: 1.7.2
     dayjs: 1.11.11
     pinia: 2.1.7
@@ -256,7 +256,7 @@ __metadata:
     vue: 3.4.27
     vue-i18n: 9.13.1
     vue-router: 4.3.3
-    vuetify: 3.6.8
+    vuetify: 3.6.9
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -1160,10 +1160,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shikijs/core@npm:1.6.3":
-  version: 1.6.3
-  resolution: "@shikijs/core@npm:1.6.3"
-  checksum: 10/bcf4335a7cb1b40de02f3f304aa3226ee37ad7472730641ab105029ade71026eaff946dc92dc1e3ced265496fee20d11ce526bc0484ee09f86bc0b3f94008588
+"@shikijs/core@npm:1.6.4":
+  version: 1.6.4
+  resolution: "@shikijs/core@npm:1.6.4"
+  checksum: 10/8410ee947c19419f3395aebabba82d1644c623cbcb2b50e28517b439e38b2162a0c4349c4f7c99ee859d4f112b1ea8447723ed184c3b36af898700d3da1b053a
   languageName: node
   linkType: hard
 
@@ -1176,30 +1176,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shikijs/twoslash@npm:1.6.3":
-  version: 1.6.3
-  resolution: "@shikijs/twoslash@npm:1.6.3"
+"@shikijs/twoslash@npm:1.6.4":
+  version: 1.6.4
+  resolution: "@shikijs/twoslash@npm:1.6.4"
   dependencies:
-    "@shikijs/core": "npm:1.6.3"
-    twoslash: "npm:^0.2.6"
-  checksum: 10/e3a98787eeccd609948b0d55340effc951b3515a6ed0c4051b47c615b8ede7dcc9aca2366fc9e8b447b2126eb1975ef38138034d60f9380e2b4c5ec36bc1ab77
+    "@shikijs/core": "npm:1.6.4"
+    twoslash: "npm:^0.2.7"
+  checksum: 10/9665e23012cb74269f2d04b71f0814360d002020749890e44db876b74bee449fd3b9f05e8fafb5acb8a8bd580f29609adf5b074ad81278845677a569842dcda8
   languageName: node
   linkType: hard
 
-"@shikijs/vitepress-twoslash@npm:^1.6.3":
-  version: 1.6.3
-  resolution: "@shikijs/vitepress-twoslash@npm:1.6.3"
+"@shikijs/vitepress-twoslash@npm:^1.6.4":
+  version: 1.6.4
+  resolution: "@shikijs/vitepress-twoslash@npm:1.6.4"
   dependencies:
-    "@shikijs/twoslash": "npm:1.6.3"
+    "@shikijs/twoslash": "npm:1.6.4"
     floating-vue: "npm:^5.2.2"
     mdast-util-from-markdown: "npm:^2.0.1"
     mdast-util-gfm: "npm:^3.0.0"
-    mdast-util-to-hast: "npm:^13.1.0"
-    shiki: "npm:1.6.3"
-    twoslash: "npm:^0.2.6"
-    twoslash-vue: "npm:^0.2.6"
+    mdast-util-to-hast: "npm:^13.2.0"
+    shiki: "npm:1.6.4"
+    twoslash: "npm:^0.2.7"
+    twoslash-vue: "npm:^0.2.7"
     vue: "npm:^3.4.27"
-  checksum: 10/f2b22d4c2dba0a68d4ed1390642bdc4412794af60abd629067099e7c55196526a8e58f9fd12249b0ebc82a7a2ec7a4f63ca39c34a17542e06bc14ec86146e639
+  checksum: 10/ada77b8bf661bb19b95a1a95f392cf21cc224f3506b4e308ef26bc37943cafcee6d732ee0756af9a5dd3f4c180b0eb184aca9a2a068d669f811a95018a42a397
   languageName: node
   linkType: hard
 
@@ -2093,7 +2093,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/language-core@npm:2.0.21":
+"@vue/language-core@npm:2.0.21, @vue/language-core@npm:^2.0.21":
   version: 2.0.21
   resolution: "@vue/language-core@npm:2.0.21"
   dependencies:
@@ -2300,6 +2300,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vueuse/core@npm:10.10.1, @vueuse/core@npm:^10.10.1":
+  version: 10.10.1
+  resolution: "@vueuse/core@npm:10.10.1"
+  dependencies:
+    "@types/web-bluetooth": "npm:^0.0.20"
+    "@vueuse/metadata": "npm:10.10.1"
+    "@vueuse/shared": "npm:10.10.1"
+    vue-demi: "npm:>=0.14.8"
+  checksum: 10/bd44e7e36959b686f0b032f16c5ec7e835e48dc3757b563d0fa4f43fec9c031b31953c34b253f9bf221cca9452f50d2fb1a983545de9ffbbfb8862d280ba0401
+  languageName: node
+  linkType: hard
+
 "@vueuse/integrations@npm:^10.10.0":
   version: 10.10.0
   resolution: "@vueuse/integrations@npm:10.10.0"
@@ -2349,10 +2361,66 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vueuse/integrations@npm:^10.10.1":
+  version: 10.10.1
+  resolution: "@vueuse/integrations@npm:10.10.1"
+  dependencies:
+    "@vueuse/core": "npm:10.10.1"
+    "@vueuse/shared": "npm:10.10.1"
+    vue-demi: "npm:>=0.14.8"
+  peerDependencies:
+    async-validator: "*"
+    axios: "*"
+    change-case: "*"
+    drauu: "*"
+    focus-trap: "*"
+    fuse.js: "*"
+    idb-keyval: "*"
+    jwt-decode: "*"
+    nprogress: "*"
+    qrcode: "*"
+    sortablejs: "*"
+    universal-cookie: "*"
+  peerDependenciesMeta:
+    async-validator:
+      optional: true
+    axios:
+      optional: true
+    change-case:
+      optional: true
+    drauu:
+      optional: true
+    focus-trap:
+      optional: true
+    fuse.js:
+      optional: true
+    idb-keyval:
+      optional: true
+    jwt-decode:
+      optional: true
+    nprogress:
+      optional: true
+    qrcode:
+      optional: true
+    sortablejs:
+      optional: true
+    universal-cookie:
+      optional: true
+  checksum: 10/aaaa0453762fc9dbe77a9dcdd0fa3d580503457174b5ed6229a67c8d79a541f21515edc7076749515890eeda272f2879d59f55488a6e7be3854b9a057c37c5c5
+  languageName: node
+  linkType: hard
+
 "@vueuse/metadata@npm:10.10.0":
   version: 10.10.0
   resolution: "@vueuse/metadata@npm:10.10.0"
   checksum: 10/b7cfda1f4e874f198cca8f8d9f6b82c59cdbb9e769073b5e4f49f795d895b86121d53cdb60c11b5949e8cd676b7988556aeff68098068129d032d4b3c6ea919c
+  languageName: node
+  linkType: hard
+
+"@vueuse/metadata@npm:10.10.1":
+  version: 10.10.1
+  resolution: "@vueuse/metadata@npm:10.10.1"
+  checksum: 10/89f9fa7383d9bdb268ca7399f94b3cbb022ec2e6f87eb34ada5526c5356e3877f2471b1f92bb907a6c30217ebb2c4f08605cb02131f313472410479bb1273977
   languageName: node
   linkType: hard
 
@@ -2362,6 +2430,15 @@ __metadata:
   dependencies:
     vue-demi: "npm:>=0.14.7"
   checksum: 10/20d1c40a15ae0f9f474da9d748c53b43eb1c38be2ef2ebe22261e92914748f1d1b6b00359aab7b41d42f76f39ebb5fb8da7345d0bb034c4d36bebe020f3e5255
+  languageName: node
+  linkType: hard
+
+"@vueuse/shared@npm:10.10.1":
+  version: 10.10.1
+  resolution: "@vueuse/shared@npm:10.10.1"
+  dependencies:
+    vue-demi: "npm:>=0.14.8"
+  checksum: 10/c1f37e4bb153a623c7744601487710d13b420d1143f22287ac04ad8cef6c4577b10b64bf69678a532033350ebe02ee01fc4584b59cf02b5f34f3359d0ccd1887
   languageName: node
   linkType: hard
 
@@ -5217,9 +5294,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mdast-util-to-hast@npm:^13.1.0":
-  version: 13.1.0
-  resolution: "mdast-util-to-hast@npm:13.1.0"
+"mdast-util-to-hast@npm:^13.2.0":
+  version: 13.2.0
+  resolution: "mdast-util-to-hast@npm:13.2.0"
   dependencies:
     "@types/hast": "npm:^3.0.0"
     "@types/mdast": "npm:^4.0.0"
@@ -5230,7 +5307,7 @@ __metadata:
     unist-util-position: "npm:^5.0.0"
     unist-util-visit: "npm:^5.0.0"
     vfile: "npm:^6.0.0"
-  checksum: 10/50886f3fcbf23d74653287446f22f0b18b8f5297ae1ae74d904cd5751e47dd9e36efb9ffa81305dd136a9498a2660ba94024291887f22e06a910a5923d7dbadd
+  checksum: 10/b17ee338f843af31a1c7a2ebf0df6f0b41c9380b7119a63ab521d271df665456578e1234bb7617883e8d860fe878038dcf2b76ab2f21e0f7451215a096d26cce
   languageName: node
   linkType: hard
 
@@ -6699,16 +6776,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.77.4":
-  version: 1.77.4
-  resolution: "sass@npm:1.77.4"
+"sass@npm:^1.77.5":
+  version: 1.77.5
+  resolution: "sass@npm:1.77.5"
   dependencies:
     chokidar: "npm:>=3.0.0 <4.0.0"
     immutable: "npm:^4.0.0"
     source-map-js: "npm:>=0.6.2 <2.0.0"
   bin:
     sass: sass.js
-  checksum: 10/04e31ce4961a7b90238c274a268945cd67177d992273073e6fa5df09fe7a03ff378f1608fe646ec512c8691038ac9487e06ef5abb2185f56eb36204952538eea
+  checksum: 10/40e4eb70665f10494ede0fd3b17bf7f33352f02d1536b08c84eadd0a4e397ef2b475a70290f02b3c5421b3c77f312fd0e139920814daa49dc2c32b8e618f93ba
   languageName: node
   linkType: hard
 
@@ -6820,12 +6897,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shiki@npm:1.6.3":
-  version: 1.6.3
-  resolution: "shiki@npm:1.6.3"
+"shiki@npm:1.6.4":
+  version: 1.6.4
+  resolution: "shiki@npm:1.6.4"
   dependencies:
-    "@shikijs/core": "npm:1.6.3"
-  checksum: 10/a0e83398beb5f4ee8a46949cc3b39b37a7fc6d49a5b8f0b592171c476f204183252b0edc522e30e4b540e4ec8233a380e032d4861b2ecd4923b8536514472a54
+    "@shikijs/core": "npm:1.6.4"
+  checksum: 10/aecfa98fc2911924aec988c6e992f6278fc29d754fdf5ecce8b15e46aad92c4a742564e85e884fc9bb21b096ab68e70989ec4b144c60382f54f83adacd569a75
   languageName: node
   linkType: hard
 
@@ -7436,35 +7513,35 @@ __metadata:
   languageName: node
   linkType: hard
 
-"twoslash-protocol@npm:0.2.6":
-  version: 0.2.6
-  resolution: "twoslash-protocol@npm:0.2.6"
-  checksum: 10/32fae6190f0a21fa3e0e9f3cdd07b790f21558cab1bf0505c3ae0ecfad562f61099255fb4ee4295f091a4995a7ab3edf2128340cf908b2ad3c99200a25890d12
+"twoslash-protocol@npm:0.2.8":
+  version: 0.2.8
+  resolution: "twoslash-protocol@npm:0.2.8"
+  checksum: 10/58b4ced1d58ed3d9654b6380f9af5ebd7adbeb48eb5073ec1afb321cbc70f5db5daed2f0c09ccf55ccd56e2d596379b51364076e4b5dfa0f083eaef641f0f54a
   languageName: node
   linkType: hard
 
-"twoslash-vue@npm:^0.2.6":
-  version: 0.2.6
-  resolution: "twoslash-vue@npm:0.2.6"
+"twoslash-vue@npm:^0.2.7":
+  version: 0.2.8
+  resolution: "twoslash-vue@npm:0.2.8"
   dependencies:
-    "@vue/language-core": "npm:^1.8.27"
-    twoslash: "npm:0.2.6"
-    twoslash-protocol: "npm:0.2.6"
+    "@vue/language-core": "npm:^2.0.21"
+    twoslash: "npm:0.2.8"
+    twoslash-protocol: "npm:0.2.8"
   peerDependencies:
     typescript: "*"
-  checksum: 10/30b454c7ad74bbd30665f3d0829d7f8b872dd2dd7ed423f9a0f4258821e7c648c8b7bfb89bced8c96f3d095b11cf33c5b26837fbc3214afb2ea16f4709186aa9
+  checksum: 10/bfe1c5668dc5084b27fa9206b2fe34e72bca2c8577c8c2e065ef0994f3a5fb67313fce808fb66d156852ea2b9a8cba29d11459c70a78e0b8df53aa6ce73043a3
   languageName: node
   linkType: hard
 
-"twoslash@npm:0.2.6, twoslash@npm:^0.2.6":
-  version: 0.2.6
-  resolution: "twoslash@npm:0.2.6"
+"twoslash@npm:0.2.8, twoslash@npm:^0.2.7":
+  version: 0.2.8
+  resolution: "twoslash@npm:0.2.8"
   dependencies:
     "@typescript/vfs": "npm:1.5.0"
-    twoslash-protocol: "npm:0.2.6"
+    twoslash-protocol: "npm:0.2.8"
   peerDependencies:
     typescript: "*"
-  checksum: 10/d9facd173fb03783a699e8426d5a26a773af6f94c2045895d205a868f7f09a2153af87bb6d9bd7ed5ddb39750c561303c3808ea0cad7ab957bd679626058e05b
+  checksum: 10/03756ef749d6bef39488a22a6071f0efaeca4831ef11a86d06e85068714125576f4604c99bd47c4d1f4bf3c0434a9b7ec609b323d1241a5620e986a21cf3f3a7
   languageName: node
   linkType: hard
 
@@ -8174,6 +8251,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"vue-demi@npm:>=0.14.8":
+  version: 0.14.8
+  resolution: "vue-demi@npm:0.14.8"
+  peerDependencies:
+    "@vue/composition-api": ^1.0.0-rc.1
+    vue: ^3.0.0-0 || ^2.6.0
+  peerDependenciesMeta:
+    "@vue/composition-api":
+      optional: true
+  bin:
+    vue-demi-fix: bin/vue-demi-fix.js
+    vue-demi-switch: bin/vue-demi-switch.js
+  checksum: 10/88af227aa3a83607584c4f614efee9ac2fb8ea124db85f2f88bab62382cdfbd6611d9d2489ca757d3518afc7df7ea69257bf182705d20e473404e64959e9f838
+  languageName: node
+  linkType: hard
+
 "vue-demi@npm:^0.13.11":
   version: 0.13.11
   resolution: "vue-demi@npm:0.13.11"
@@ -8315,9 +8408,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.6.8":
-  version: 3.6.8
-  resolution: "vuetify@npm:3.6.8"
+"vuetify@npm:3.6.9":
+  version: 3.6.9
+  resolution: "vuetify@npm:3.6.9"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=1.0.0"
@@ -8333,7 +8426,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/d71a6104003aab5dc52db638a243ad96e48d3cf70efc20fad38c0b8721d5dd2fb9135f268c563117e5378beb71e44e3a1b50bff9aa44198cbec8ce84d6119764
+  checksum: 10/eef3c4cb6ba5b3a8131b331e53afce916345e1455caaa062d447dd45ff962e31ed6eec28a716e433b230eff0b29ec7503df76537a5b641d01cab8a028915c2d9
   languageName: node
   linkType: hard
 
