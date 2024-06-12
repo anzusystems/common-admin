@@ -46,7 +46,8 @@ export function createDatatableColumnsConfig(
   subject: string | undefined = undefined,
   disableActions: boolean = false,
   customPagination: Pagination | undefined = undefined,
-  customI18n: undefined | any = undefined
+  customI18n: undefined | any = undefined,
+  showExpand: undefined| boolean = undefined
 ) {
   const localI18n = customI18n ?? i18n
   const { t } = localI18n.global || localI18n
@@ -76,6 +77,7 @@ export function createDatatableColumnsConfig(
 
   const columnsVisible = computed(() => {
     const columns: any = []
+    if (showExpand) columns.push({ key: 'data-table-expand', sortable: false })
     columnsAll.forEach((column) => {
       if (!columnsHidden.value.includes(column.key)) {
         columns.push(column)
