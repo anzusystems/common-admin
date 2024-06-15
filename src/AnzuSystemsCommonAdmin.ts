@@ -71,7 +71,7 @@ export type CommonAdminCollabOptions =
 export default {
   install<T extends AclValue = AclValue>(app: App, options: PluginOptions<T>): void {
     app.provide(CurrentUserSymbol, options.currentUser)
-    app.provide(CustomAclResolverSymbol, options.customAclResolver)
+    app.provide(CustomAclResolverSymbol, options.customAclResolver as any)
     app.provide(AvailableLanguagesSymbol, options.languages.available)
     app.provide(DefaultLanguageSymbol, options.languages.default)
     app.component('Acl', Acl)

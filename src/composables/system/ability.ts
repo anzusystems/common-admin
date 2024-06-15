@@ -8,6 +8,7 @@ import type { CurrentUserType, CustomAclResolver } from '@/AnzuSystemsCommonAdmi
 import type { AclValue } from '@/types/Permission'
 import { CurrentUserSymbol, CustomAclResolverSymbol } from '@/components/injectionKeys'
 
+// @todo: deprecated, remove
 export const ROLE_SUPER_ADMIN = 'ROLE_ADMIN'
 
 export type AclResolverConfig = {
@@ -16,6 +17,9 @@ export type AclResolverConfig = {
   customAclProvider?: CustomAclResolver
 }
 
+/**
+ * @deprecated This function is deprecated and will be removed in future versions.
+ */
 export function useAcl<T extends AclValue = AclValue>(options?: AclResolverConfig) {
   const shouldInject = isUndefined(options) || isUndefined(options.disableInject)
   const currentUser =
