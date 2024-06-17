@@ -182,7 +182,10 @@ const disabledComputed = computed(() => {
         />
       </slot>
     </template>
-    <template #prepend>
+    <template
+      v-if="$slots.prepend"
+      #prepend
+    >
       <slot name="prepend" />
     </template>
     <template
