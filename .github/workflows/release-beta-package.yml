@@ -20,9 +20,9 @@ jobs:
 
       - name: Setup Node
         if: steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'yarn'
           cache-dependency-path: 'yarn.lock'
 
