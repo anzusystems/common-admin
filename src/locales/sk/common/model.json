@@ -1,6 +1,7 @@
 {
   "system": "Systém",
   "notSelected": "Nevybrané",
+  "all": "Všetko",
   "boolean": {
     "true": "áno",
     "false": "nie"
