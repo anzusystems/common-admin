@@ -16,7 +16,7 @@ jobs:
       - id: check
         uses: EndBug/version-check@v2
         with:
-            diff-search: true
+          diff-search: true
 
       - name: Setup Node
         if: steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
