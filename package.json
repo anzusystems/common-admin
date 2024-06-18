@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-alpha76",
+  "version": "1.47.0-alpha77",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -46,7 +46,7 @@
     "@shikijs/vitepress-twoslash": "^1.7.0",
     "@stylistic/eslint-plugin": "^2.2.1",
     "@tsconfig/node18": "^18.2.4",
-    "@types/node": "^20.14.2",
+    "@types/node": "^20.14.5",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.8",
     "@types/webfontloader": "^1.6.38",
@@ -73,7 +73,7 @@
     "postcss-prefix-selector": "^1.16.1",
     "prettier": "^3.3.2",
     "rusha": "^0.8.14",
-    "sass": "^1.77.5",
+    "sass": "^1.77.6",
     "socket.io-client": "4.7.5",
     "sortablejs": "^1.15.2",
     "stylelint": "16.6.1",
