@@ -44,7 +44,7 @@
     "@mdi/font": "^7.4.47",
     "@rushstack/eslint-patch": "^1.10.3",
     "@shikijs/vitepress-twoslash": "^1.7.0",
-    "@stylistic/eslint-plugin": "^2.2.1",
+    "@stylistic/eslint-plugin": "^2.2.2",
     "@tsconfig/node18": "^18.2.4",
     "@types/node": "^20.14.5",
     "@types/rusha": "^0.8.3",
