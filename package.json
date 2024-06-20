@@ -46,7 +46,7 @@
     "@shikijs/vitepress-twoslash": "^1.7.0",
     "@stylistic/eslint-plugin": "^2.2.2",
     "@tsconfig/node18": "^18.2.4",
-    "@types/node": "^20.14.5",
+    "@types/node": "^20.14.6",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.8",
     "@types/webfontloader": "^1.6.38",
@@ -89,7 +89,7 @@
     "vue-i18n": "9.13.1",
     "vue-router": "4.3.3",
     "vue-tsc": "2.0.21",
-    "vuetify": "3.6.9",
+    "vuetify": "3.6.10",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -104,7 +104,7 @@
     "vue": "3.4.29",
     "vue-i18n": "9.13.1",
     "vue-router": "4.3.3",
-    "vuetify": "3.6.9"
+    "vuetify": "3.6.10"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {
