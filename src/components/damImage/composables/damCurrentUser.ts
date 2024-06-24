@@ -4,9 +4,18 @@ import { fetchDamCurrentUser } from '@/components/damImage/uploadQueue/api/damCu
 import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
 import type { AxiosInstance } from 'axios'
 
+/**
+ * @deprecated This const is deprecated and will be removed in future versions.
+ */
 export const damCurrentUser = ref<DamCurrentUserDto | undefined>(undefined)
+/**
+ * @deprecated This const is deprecated and will be removed in future versions.
+ */
 export const damCurrentUserIsSuperAdmin = ref(false)
 
+/**
+ * @deprecated This function is deprecated and will be removed in future versions.
+ */
 export function updateDamCurrentUser(client: () => AxiosInstance) {
   return new Promise((resolve, reject) => {
     fetchDamCurrentUser(client)
@@ -23,6 +32,9 @@ export function updateDamCurrentUser(client: () => AxiosInstance) {
   })
 }
 
+/**
+ * @deprecated This function is deprecated and will be removed in future versions.
+ */
 export function useDamCurrentUser() {
   return {
     damCurrentUser,
