@@ -489,6 +489,7 @@ import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
 import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
+import { defineAuth } from '@/composables/auth/defineAuth'
 
 export {
   // COMPONENTS
@@ -625,6 +626,7 @@ export {
   useDamAssetLicenceFilter,
   useImageActions,
   useCommonAdminImageOptions,
+  defineAuth,
 
   // VALUE OBJECTS
   Grant,
