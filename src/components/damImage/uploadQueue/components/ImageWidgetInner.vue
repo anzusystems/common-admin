@@ -585,7 +585,7 @@ defineExpose({
                     <template #activator="{ props: fileInputProps }">
                       <VListItem
                         @click="
-                          ($event) => {
+                          ($event: any) => {
                             fileInputProps.onClick($event)
                             clickMenuOpened = false
                           }

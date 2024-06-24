@@ -256,7 +256,7 @@ const now = () => {
         location="bottom end"
         origin="top end"
         :close-on-content-click="false"
-        @update:model-value="(value) => (pickerOpened = value)"
+        @update:model-value="(value: boolean) => (pickerOpened = value)"
       >
         <template #activator="{ props: menuProps }">
           <VIcon
