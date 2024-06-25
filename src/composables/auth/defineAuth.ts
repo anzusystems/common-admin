@@ -11,18 +11,7 @@ import type { AnzuUser } from '@/types/AnzuUser'
 import type { UrlParams } from '@/services/api/apiHelper'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 
-// todo cleanup roles after BE changes
 export const ROLE_SUPER_ADMIN = 'ROLE_SUPER_ADMIN'
-export const ROLE_ADMIN = 'ROLE_ADMIN'
-export const IS_ADMIN_ROLES = [
-  'ROLE_SUPER_ADMIN',
-  'ROLE_ADMIN',
-  'ROLE_DAM_ADMIN',
-  'ROLE_CMS_ADMIN',
-  'ROLE_CONTENT_HUB_ADMIN',
-  'ROLE_WEATHER_ADMIN',
-  'ROLE_BLOG_ADMIN',
-]
 
 /**
  * @param mainCurrentUserSystem - By this system currentUser object is used to get user ID.
@@ -36,7 +25,7 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
   }
 
   const isAdmin = (userRoles: string[]) => {
-    return userRoles.some((item) => IS_ADMIN_ROLES.includes(item))
+    return userRoles.includes(ROLE_SUPER_ADMIN)
   }
 
   const can = (acl: TAclValue, subject?: object) => {
