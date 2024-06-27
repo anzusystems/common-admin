@@ -363,11 +363,7 @@ import {
   DamNotificationName,
   type DamNotificationNameType,
 } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
-import type {
-  ImageAware,
-  ImageCreateUpdateAware,
-  ImageCreateUpdateAwareKeyed,
-} from '@/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware, ImageCreateUpdateAwareKeyed } from '@/types/ImageAware'
 import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import type { DamExtSystem, DamExtSystemMinimal } from '@/components/damImage/uploadQueue/composables/DamExtSystem'
@@ -483,13 +479,17 @@ import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionS
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
 import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
 import { fetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
-import { fetchDamAssetLicenceGroupList, fetchDamAssetLicenceGroupListByIds } from '@/components/dam/user/assetLicenceGroupApi'
+import {
+  fetchDamAssetLicenceGroupList,
+  fetchDamAssetLicenceGroupListByIds,
+} from '@/components/dam/user/assetLicenceGroupApi'
 import { fetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
 import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth } from '@/composables/auth/defineAuth'
+import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/composables/system/breadcrumbs'
 
 export {
   // COMPONENTS
@@ -627,6 +627,7 @@ export {
   useImageActions,
   useCommonAdminImageOptions,
   defineAuth,
+  defineBreadcrumbs,
 
   // VALUE OBJECTS
   Grant,
@@ -768,6 +769,8 @@ export {
   type DamAssetLicenceGroup,
   type DamUserUpdateDto,
   type DamUser,
+  type BreadcrumbItem,
+  type Breadcrumbs,
 
   // FACTORIES
   useAnzuUserFactory,
