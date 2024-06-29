@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import type { AclValue } from '@/types/Permission'
 import { defineAuth } from '@/composables/auth/defineAuth'
+import { isUndefined } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
@@ -24,11 +25,19 @@ const { can, useCurrentUser } = defineAuth<AclValue>(getSystemFromAcl(props.perm
 const { currentUser } = useCurrentUser(getSystemFromAcl(props.permission))
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const allowed = ref<boolean>(can(props.permission, props.subject))
+const allowed = ref<boolean>(false)
 
-watch(currentUser, () => {
-  allowed.value = can(props.permission, props.subject)
-})
+watch(
+  currentUser,
+  (newValue) => {
+    if (!isUndefined(newValue)) {
+      allowed.value = can(props.permission, props.subject)
+    }
+  },
+  {
+    immediate: true,
+  }
+)
 </script>
 
 <template>
