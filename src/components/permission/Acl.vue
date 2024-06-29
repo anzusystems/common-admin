@@ -1,13 +1,11 @@
-<script lang="ts" setup>
-import { useAcl } from '@/composables/system/ability'
-import { inject, ref, watch } from 'vue'
-import type { CurrentUserType } from '@/AnzuSystemsCommonAdmin'
+<script lang="ts" setup generic="TAclValue extends AclValue">
+import { ref, watch } from 'vue'
 import type { AclValue } from '@/types/Permission'
-import { CurrentUserSymbol } from '@/components/injectionKeys'
+import { defineAuth } from '@/composables/auth/defineAuth'
 
 const props = withDefaults(
   defineProps<{
-    permission: AclValue
+    permission: TAclValue
     subject?: object
   }>(),
   {
@@ -15,8 +13,16 @@ const props = withDefaults(
   }
 )
 
-const currentUser = inject(CurrentUserSymbol) as CurrentUserType
-const { can } = useAcl()
+const getSystemFromAcl = (acl: TAclValue) => {
+  const parts = acl.split('_')
+  return parts[0]
+}
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { can, useCurrentUser } = defineAuth<AclValue>(getSystemFromAcl(props.permission))
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { currentUser } = useCurrentUser(getSystemFromAcl(props.permission))
+
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const allowed = ref<boolean>(can(props.permission, props.subject))
 
