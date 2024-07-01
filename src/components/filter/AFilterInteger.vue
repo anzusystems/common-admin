@@ -4,6 +4,7 @@ import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { stringToInt } from '@/utils/string'
+import { isNull } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
@@ -11,7 +12,7 @@ const props = withDefaults(
     dataCy?: string
   }>(),
   {
-    dataCy: 'filter-string',
+    dataCy: 'filter-integer',
   }
 )
 const emit = defineEmits<{
@@ -23,7 +24,10 @@ const value = computed({
     return props.modelValue.model
   },
   set(newValue) {
-    emit('update:modelValue', { ...props.modelValue, ...{ model: stringToInt(newValue + '') } })
+    emit('update:modelValue', {
+      ...props.modelValue,
+      ...{ model: isNull(newValue) ? null : stringToInt(newValue + '') },
+    })
   },
 })
 
