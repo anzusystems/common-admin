@@ -226,12 +226,7 @@ import {
   type JobBaseResource,
   useJobBaseResource,
 } from '@/model/valueObject/JobBaseResource'
-import { useAcl } from '@/composables/system/ability'
-import AnzuSystemsCommonAdmin, {
-  type CurrentUserType,
-  type CustomAclResolver,
-  type PluginOptions,
-} from '@/AnzuSystemsCommonAdmin'
+import AnzuSystemsCommonAdmin, { type CurrentUserType, type PluginOptions } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue, Permissions } from '@/types/Permission'
 import { Theme, useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
@@ -373,12 +368,6 @@ import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/Au
 import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import { fetchDamCurrentUser } from '@/components/damImage/uploadQueue/api/damCurrentUserApi'
-import {
-  damCurrentUser,
-  damCurrentUserIsSuperAdmin,
-  updateDamCurrentUser,
-  useDamCurrentUser,
-} from '@/components/damImage/composables/damCurrentUser'
 import type { DamAssetLicence, DamAssetLicenceMinimal } from '@/types/coreDam/AssetLicence'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 import { useCollabInit } from '@/components/collab/composables/collabInit'
@@ -620,8 +609,6 @@ export {
   useDamKeywordFactory,
   useDamAuthorFactory,
   useDamAuthorType,
-  useDamCurrentUser,
-  updateDamCurrentUser,
   useDamDistributionServiceType,
   useDamAssetLicenceFilter,
   useImageActions,
@@ -671,7 +658,6 @@ export {
   type CurrentUserType,
   type AclValue,
   type Permissions,
-  type CustomAclResolver,
   type PluginOptions,
   type LanguageCode,
   type Immutable,
@@ -866,7 +852,6 @@ export {
   useJobApi,
   useJobBaseResource,
   useJobStatus,
-  useAcl,
   regionToCrop,
   cropToRegion,
   fetchDamAssetLicenceListByIds,
@@ -1014,6 +999,4 @@ export {
   getAssetTypeByMimeType,
   damFileTypeFix,
   fetchDamCurrentUser,
-  damCurrentUser,
-  damCurrentUserIsSuperAdmin,
 }

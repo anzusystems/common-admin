@@ -7,12 +7,9 @@ import router from '@/router/playground'
 import AnzuSystemsCommonAdmin from '@/AnzuSystemsCommonAdmin'
 import { damClient } from '@/playground/mock/coreDamClient'
 import '@/styles/main.scss'
-import { currentUser } from '@/playground/system/currentUser'
 import type { LanguageCode } from '@/composables/languageSettings'
 import { loadCommonFonts } from '@/plugins/webfontloader'
 import { cmsClient } from '@/playground/mock/cmsClient'
-
-export type CustomAclValue = 'anzu_entity_create' | 'anzu_entity_view'
 
 export const DEFAULT_LANGUAGE: LanguageCode = 'sk'
 export const AVAILABLE_LANGUAGES: Array<LanguageCode> = ['sk', 'en']
@@ -25,7 +22,6 @@ createApp(App)
   .use(i18n)
   .use(vuetify)
   .use(AnzuSystemsCommonAdmin, {
-    currentUser,
     languages: {
       available: ['en', 'sk'],
       default: 'sk',

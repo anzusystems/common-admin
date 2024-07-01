@@ -3,12 +3,12 @@ import { Grant } from '@/model/valueObject/Grant'
 import { GrantOrigin } from '@/model/valueObject/GrantOrigin'
 import PermissionValueChip from '@/components/permission/APermissionValueChip.vue'
 import PermissionGrantEditor from '@/components/permission/APermissionGrantEditor.vue'
-import { useAcl } from '@/composables/system/ability'
-import type { CustomAclValue } from '@/playground'
 import ARow from '@/components/ARow.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
+import { defineAuth } from '@/composables/auth/defineAuth'
+import type { AclValue } from '@/types/Permission'
 
-const { can } = useAcl<CustomAclValue>()
+const { can } = defineAuth<AclValue>('cms')
 </script>
 
 <template>

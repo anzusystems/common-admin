@@ -1,7 +1,7 @@
 import type { AnzuUser } from '@/types/AnzuUser'
-import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
 import { Grant } from '@/model/valueObject/Grant'
 import { readonly, ref } from 'vue'
+import { ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
 
 const currentUserObject: AnzuUser = {
   id: 1,
