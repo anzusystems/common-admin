@@ -3,12 +3,12 @@ import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamCon
 import { defineAuth } from '@/composables/auth/defineAuth'
 import type { AclValue } from '@/types/Permission'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 export function filterAllowedImageWidgetSelectConfigs(values: DamConfigLicenceExtSystemReturnType[]) {
-  const { useCurrentUser } = defineAuth<AclValue>(SYSTEM_CORE_DAM)
+  const { useCurrentUser } = defineAuth<AclValue>(SYSTEM_DAM)
   const { currentUser: damCurrentUser, isSuperAdmin: damCurrentUserIsSuperAdmin } =
-    useCurrentUser<DamCurrentUserDto>(SYSTEM_CORE_DAM)
+    useCurrentUser<DamCurrentUserDto>(SYSTEM_DAM)
 
   if (damCurrentUserIsSuperAdmin.value) return cloneDeep(values)
   const currentUser = damCurrentUser.value
@@ -30,9 +30,10 @@ export function filterAllowedImageWidgetSelectConfigs(values: DamConfigLicenceEx
 }
 
 export function isImageWidgetUploadConfigAllowed(value: DamConfigLicenceExtSystemReturnType) {
-  const { useCurrentUser } = defineAuth<AclValue>(SYSTEM_CORE_DAM)
+  const { useCurrentUser } = defineAuth<AclValue>(SYSTEM_DAM)
   const { currentUser: damCurrentUser, isSuperAdmin: damCurrentUserIsSuperAdmin } =
-    useCurrentUser<DamCurrentUserDto>(SYSTEM_CORE_DAM)
+    useCurrentUser<DamCurrentUserDto>(SYSTEM_DAM)
+
   if (damCurrentUserIsSuperAdmin.value) return true
 
   const currentUser = damCurrentUser.value

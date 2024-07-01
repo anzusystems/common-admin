@@ -27,6 +27,7 @@ const END_POINT = '/adm/v1/asset'
 const BULK_METADATA_LIMIT = 10
 export const ENTITY = 'asset'
 export const SYSTEM_CORE_DAM = 'coreDam'
+export const SYSTEM_DAM = 'dam'
 const FETCH_BY_IDS_MAX_LIMIT = 25
 
 export interface AssetMetadataBulkItem {
