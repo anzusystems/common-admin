@@ -9,7 +9,7 @@ import type { AclValue } from '@/types/Permission'
 import { CurrentUserSymbol, CustomAclResolverSymbol } from '@/components/injectionKeys'
 
 // @todo: deprecated, remove
-export const ROLE_SUPER_ADMIN = 'ROLE_ADMIN'
+export const ROLE_SUPER_ADMIN = 'ROLE_SUPER_ADMIN'
 
 export type AclResolverConfig = {
   disableInject?: true | undefined

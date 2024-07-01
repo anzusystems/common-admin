@@ -226,7 +226,7 @@ import {
   type JobBaseResource,
   useJobBaseResource,
 } from '@/model/valueObject/JobBaseResource'
-import { ROLE_SUPER_ADMIN, useAcl } from '@/composables/system/ability'
+import { useAcl } from '@/composables/system/ability'
 import AnzuSystemsCommonAdmin, {
   type CurrentUserType,
   type CustomAclResolver,
@@ -488,7 +488,7 @@ import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
 import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
-import { defineAuth } from '@/composables/auth/defineAuth'
+import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
 import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/composables/system/breadcrumbs'
 
 export {
