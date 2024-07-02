@@ -6,6 +6,7 @@ export const CustomDataFormElementType = {
   String: 'string',
   Integer: 'integer',
   StringArray: 'stringArray',
+  StringArrayLegacy: 'string_array', // todo: remove
   Boolean: 'boolean',
 } as const
 export const CustomDataFormElementTypeDefault = CustomDataFormElementType.String
@@ -24,7 +25,11 @@ export function useCustomDataFormElementType() {
     },
     {
       value: CustomDataFormElementType.StringArray,
-      title: t('common.customFormElement.type.stringArray'),
+      title: t('common.customFormElement.type.C'),
+    },
+    {
+      value: CustomDataFormElementType.StringArrayLegacy,
+      title: t('common.customFormElement.type.stringArrayLegacy'),
     },
     {
       value: CustomDataFormElementType.Boolean,

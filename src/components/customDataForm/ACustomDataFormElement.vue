@@ -142,7 +142,10 @@ const onBlur = () => {
     </template>
   </VTextField>
   <VCombobox
-    v-else-if="config.attributes.type === CustomDataFormElementType.StringArray"
+    v-else-if="
+      config.attributes.type === CustomDataFormElementType.StringArray ||
+        config.attributes.type === CustomDataFormElementType.StringArrayLegacy
+    "
     :model-value="modelValueComputed"
     :label="config.name"
     multiple
