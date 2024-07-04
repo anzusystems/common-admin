@@ -37,7 +37,12 @@ const updateModelValue = (value: any) => {
 
 const modelValueComputed = computed(() => {
   const value = isProxy(props.modelValue) ? toRaw(props.modelValue) : props.modelValue
-  if (props.config.attributes.type === CustomDataFormElementType.StringArray && isEmptyObject(value)) return []
+  if (
+    (props.config.attributes.type === CustomDataFormElementType.StringArray ||
+      props.config.attributes.type === CustomDataFormElementType.StringArrayLegacy) &&
+    isEmptyObject(value)
+  )
+    return []
   return value
 })
 
