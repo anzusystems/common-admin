@@ -96,6 +96,7 @@ export function defineCached<
    * For general usage.
    */
   const fetch = () => {
+    console.log(cache.value.size)
     return debouncedFetch()
   }
 
@@ -104,6 +105,7 @@ export function defineCached<
    * Use for special cases.
    */
   const immediateFetch = () => {
+    console.log(cache.value.size)
     return apiFetch()
   }
 
