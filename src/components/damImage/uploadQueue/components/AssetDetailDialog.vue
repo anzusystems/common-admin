@@ -103,6 +103,7 @@ const assetMainFile = computed(() => {
   <VDialog
     :model-value="true"
     fullscreen
+    eager
   >
     <AssetDetailDialogLoader
       v-if="loading"

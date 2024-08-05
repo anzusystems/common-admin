@@ -201,15 +201,16 @@ const checkCollab = async (to: RouteLocationNormalized, from: RouteLocationNorma
 }
 
 router.beforeEach(async (to, from, next) => {
-  const { currentUser } = useCurrentUser()
   if (!initLanguageMessagesLoaded.value) await initLoadLanguageMessages()
   if (!initialized.value) {
+    const { currentUser } = useCurrentUser()
     await updateCurrentUser()
     // init what needed
     const { setCollabUserCurrentId } = useCollabCurrentUserId()
     setCollabUserCurrentId(currentUser.value?.id ?? null)
     const { initCollab } = useCollabInit()
     initCollab()
+    initialized.value = true
   }
   await checkCollab(to, from, next)
 })

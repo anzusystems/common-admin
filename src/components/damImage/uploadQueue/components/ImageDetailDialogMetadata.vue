@@ -99,6 +99,7 @@ defineExpose({
     v-else
     :model-value="modelValue"
     :max-width="500"
+    eager
     @update:model-value="onDialogModelUpdate"
   >
     <VCard v-if="modelValue">

@@ -170,6 +170,7 @@ defineExpose({
     <VDialog
       :model-value="dialog"
       fullscreen
+      eager
       class="subject-select"
       @update:model-value="emit('update:modelValue', $event)"
     >
