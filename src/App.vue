@@ -45,8 +45,8 @@ onMounted(async () => {
   openConnection()
   initGlobalDragState()
 
-  const { useCurrentUser } = defineAuth('coreDam')
-  const { fetchCurrentUser } = useCurrentUser('coreDam')
+  const { useCurrentUser } = defineAuth('dam')
+  const { fetchCurrentUser } = useCurrentUser('dam')
   await fetchCurrentUser(damClient)
   ready.value = true
 })

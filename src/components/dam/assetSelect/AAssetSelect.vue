@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, shallowRef, watch, withModifiers } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
@@ -11,7 +11,6 @@ import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/c
 import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import AssetSelectFilter from '@/components/dam/assetSelect/components/filter/AssetSelectFilter.vue'
-import { isUndefined } from '@/utils/common'
 import type {
   AssetSelectReturnData,
   AssetSelectReturnType,
@@ -23,10 +22,10 @@ import { useAlerts } from '@/composables/system/alerts'
 import type { IntegerId } from '@/types/common'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { cloneDeep } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: boolean | undefined
     assetType: DamAssetType | DamAssetTypeValues
     minCount: number
     maxCount: number
@@ -36,7 +35,6 @@ const props = withDefaults(
     skipCurrentUserCheck?: boolean
   }>(),
   {
-    modelValue: undefined,
     returnType: 'mainFileId',
     configName: 'default',
     skipCurrentUserCheck: false,
@@ -44,24 +42,13 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: boolean): void
   (e: 'onConfirm', data: AssetSelectReturnData): void
 }>()
 
-const { t } = useI18n()
-
-const dialogLocal = ref(false)
+const modelValue = defineModel<boolean>({ default: false, required: false })
 const loading = ref(false)
-const dialog = computed({
-  get() {
-    if (isUndefined(props.modelValue)) return dialogLocal.value
-    return props.modelValue
-  },
-  set(newValue: boolean) {
-    dialogLocal.value = newValue
-    emit('update:modelValue', newValue)
-  },
-})
+
+const { t } = useI18n()
 
 const {
   damClient,
@@ -82,7 +69,7 @@ const { openSidebar, sidebarLeft } = useSidebar()
 const { showErrorT } = useAlerts()
 
 const onOpen = () => {
-  let selectConfigLocal = selectConfigs.value
+  let selectConfigLocal = cloneDeep(selectConfigs.value)
   if (!props.skipCurrentUserCheck) {
     selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
   }
@@ -100,11 +87,11 @@ const onOpen = () => {
   )
   resetAssetList()
   openSidebar()
-  dialog.value = true
+  modelValue.value = true
 }
 
 watch(
-  dialog,
+  modelValue,
   async (newValue, oldValue) => {
     if (newValue === oldValue || !newValue) return
     onOpen()
@@ -113,7 +100,7 @@ watch(
 )
 
 const onClose = () => {
-  dialog.value = false
+  modelValue.value = false
 }
 
 const onConfirm = () => {
@@ -150,6 +137,10 @@ onMounted(async () => {
   loading.value = false
 })
 
+onUnmounted( () => {
+  selectConfigs.value = []
+})
+
 defineExpose({
   open: onOpen,
 })
@@ -162,20 +153,18 @@ defineExpose({
   >
     <VProgressCircular indeterminate />
   </div>
-  <template v-else>
+  <template v-else-if="selectConfigs.length > 0">
     <slot
       name="activator"
       :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
     />
     <VDialog
-      :model-value="dialog"
+      v-model="modelValue"
       fullscreen
-      eager
       class="subject-select"
-      @update:model-value="emit('update:modelValue', $event)"
     >
       <VCard
-        v-if="dialog"
+        v-if="modelValue"
         class="subject-select__card"
       >
         <ADialogToolbar
@@ -237,4 +226,7 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
+  <div v-else>
+    Error, no select licence.
+  </div>
 </template>

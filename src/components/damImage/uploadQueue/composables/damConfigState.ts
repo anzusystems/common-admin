@@ -1,78 +1,36 @@
-import {
-  type DamConfigLicenceExtSystem,
-  type DamConfigLicenceExtSystemReturnType,
-  type DamExtSystemConfig,
-  type DamPrvConfig,
-  type DamPubConfig,
-  UserAuthType,
-} from '@/types/coreDam/DamConfig'
-import { DamAssetType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
-import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 import type { AxiosInstance } from 'axios'
-import { isNull, isUndefined } from '@/utils/common'
+import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import {
   fetchConfiguration,
   fetchExtSystemConfiguration,
   fetchPubConfiguration,
 } from '@/components/damImage/uploadQueue/composables/damConfigApi'
+import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
+import type {
+  DamConfigLicenceExtSystemReturnType,
+  DamExtSystemConfig,
+  DamPrvConfig,
+  DamPubConfig,
+} from '@/types/coreDam/DamConfig'
 import type { IntegerId } from '@/types/common'
 import {
   fetchAssetCustomFormElements,
   fetchDistributionCustomFormElements,
 } from '@/components/damImage/uploadQueue/composables/damAssetCustomFormApi'
-import { reactive, shallowRef } from 'vue'
+import { DamAssetType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
+import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
 
-const initialized = reactive<{
-  damPubConfig: boolean
-  damPrvConfig: boolean
-}>({
-  damPubConfig: false,
-  damPrvConfig: false,
-})
-
-const damPubConfig = shallowRef<DamPubConfig>({
-  userAuthType: UserAuthType.JsonCredentials,
-})
-
-const damPrvConfig = shallowRef<DamPrvConfig>({
-  colorSet: {},
-  assetExternalProviders: {},
-  distributionServices: {},
-  settings: {
-    aclCheckEnabled: true,
-    adminAllowListName: 'root',
-    allowSelectExtSystem: false,
-    allowSelectLicenceId: false,
-    defaultAssetLicenceId: 0,
-    defaultExtSystemId: 0,
-    imageChunkConfig: {
-      minSize: 0,
-      maxSize: 0,
-    },
-    maxBulkItemCount: 0,
-  },
-})
-
-const damConfigExtSystem = shallowRef(new Map<IntegerId, DamExtSystemConfig>())
-const damConfigLicenceExtSystem = shallowRef(new Map<IntegerId, DamConfigLicenceExtSystem>())
-
-const damConfigAssetCustomFormElements = shallowRef(
-  new Map<IntegerId, { [key in DamAssetType]: CustomDataFormElement[] }>()
-)
-
-const damConfigDistributionCustomFormElements = shallowRef(
-  new Map<DamDistributionServiceName, CustomDataFormElement[]>()
-)
-
 export function useDamConfigState(client: undefined | (() => AxiosInstance) = undefined) {
+  const damConfigStore = useDamConfigStore()
+
   function onConfigError(error: Error) {
     console.error(error)
   }
 
   function loadDamPubConfig() {
     return new Promise((resolve, reject) => {
-      initialized.damPubConfig = false
+      damConfigStore.initialized.damPubConfig = false
       if (isUndefined(client)) {
         reject(false)
         return
@@ -94,21 +52,16 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
 
   function setDamPubConfig(data: DamPubConfig) {
     try {
-      damPubConfig.value.userAuthType = data.userAuthType
-
-      initialized.damPubConfig = true
+      damConfigStore.damPubConfig.userAuthType = data.userAuthType
+      damConfigStore.initialized.damPubConfig = true
     } catch (err) {
       throw new Error('Unable to load dam pub config. Incorrect fields in json.')
     }
   }
 
-  function isDamPubConfigLoaded() {
-    return initialized.damPubConfig
-  }
-
   function loadDamPrvConfig() {
     return new Promise((resolve, reject) => {
-      initialized.damPubConfig = false
+      damConfigStore.initialized.damPubConfig = false
       if (isUndefined(client)) {
         reject(false)
         return
@@ -130,19 +83,14 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
 
   function setDamPrvConfig(data: DamPrvConfig) {
     try {
-      damPrvConfig.value.settings = data.settings
-      damPrvConfig.value.colorSet = data.colorSet
-      damPrvConfig.value.assetExternalProviders = data.assetExternalProviders
-      damPrvConfig.value.distributionServices = data.distributionServices
-
-      initialized.damPrvConfig = true
+      damConfigStore.damPrvConfig.settings = data.settings
+      damConfigStore.damPrvConfig.colorSet = data.colorSet
+      damConfigStore.damPrvConfig.assetExternalProviders = data.assetExternalProviders
+      damConfigStore.damPrvConfig.distributionServices = data.distributionServices
+      damConfigStore.initialized.damPrvConfig = true
     } catch (err) {
       throw new Error('Unable to load dam config. Incorrect fields in json.')
     }
-  }
-
-  function isDamPrvConfigLoaded() {
-    return initialized.damPrvConfig
   }
 
   function loadDamConfigExtSystem(extSystemId: IntegerId) {
@@ -175,64 +123,12 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
         image: data.image,
         video: data.video,
       }
-      damConfigExtSystem.value.set(extSystemId, config)
+      damConfigStore.damConfigExtSystem.set(extSystemId, config)
     } catch (err) {
       throw new Error('Unable to load dam ext system config. Incorrect fields in json.')
     }
   }
 
-  function getDamConfigExtSystem(extSystemId: IntegerId) {
-    return damConfigExtSystem.value.get(extSystemId)
-  }
-
-  async function getOrLoadDamConfigExtSystemByLicence(
-    licence: IntegerId
-  ): Promise<DamConfigLicenceExtSystemReturnType | undefined> {
-    if (isUndefined(client)) {
-      return undefined
-    }
-    let foundLicenceConfig = damConfigLicenceExtSystem.value.get(licence)
-    if (isUndefined(foundLicenceConfig)) {
-      try {
-        const licenceRes = await fetchDamAssetLicence(client, licence)
-        if (isNull(licenceRes.extSystem)) return undefined
-        foundLicenceConfig = { extSystem: licenceRes.extSystem, name: licenceRes.name }
-        damConfigLicenceExtSystem.value.set(licence, foundLicenceConfig)
-      } catch (e) {
-        return undefined
-      }
-    }
-    let foundExtSystemConfig = damConfigExtSystem.value.get(foundLicenceConfig.extSystem)
-    if (isUndefined(foundExtSystemConfig)) {
-      try {
-        await loadDamConfigExtSystem(foundLicenceConfig.extSystem)
-        foundExtSystemConfig = damConfigExtSystem.value.get(foundLicenceConfig.extSystem)
-      } catch (e) {
-        return undefined
-      }
-    }
-    if (isUndefined(foundExtSystemConfig)) return undefined
-
-    return {
-      licence: licence,
-      extSystem: foundLicenceConfig.extSystem,
-      licenceName: foundLicenceConfig.name,
-      extSystemConfig: foundExtSystemConfig,
-    }
-  }
-
-  async function getOrLoadDamConfigExtSystemByLicences(
-    licences: IntegerId[]
-  ): Promise<DamConfigLicenceExtSystemReturnType[]> {
-    const promises: Array<Promise<DamConfigLicenceExtSystemReturnType | undefined>> = []
-    licences.forEach((licence: IntegerId) => {
-      promises.push(getOrLoadDamConfigExtSystemByLicence(licence))
-    })
-    const responses = await Promise.all(promises)
-    return responses.filter((response): response is DamConfigLicenceExtSystemReturnType => !isUndefined(response))
-  }
-
-  // todo add support to load only selected types
   function loadDamConfigAssetCustomFormElements(extSystemId: IntegerId) {
     return new Promise((resolve, reject) => {
       if (isUndefined(client)) {
@@ -280,29 +176,25 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
         video: responses[2].data,
         document: responses[3].data,
       }
-      damConfigAssetCustomFormElements.value.set(extSystemId, config)
+      damConfigStore.damConfigAssetCustomFormElements.set(extSystemId, config)
     } catch (err) {
       throw new Error('Unable to load asset custom form config. Incorrect fields in json.')
     }
   }
 
-  function getDamConfigAssetCustomFormElements(extSystemId: IntegerId) {
-    return damConfigAssetCustomFormElements.value.get(extSystemId)
-  }
-
-  function loadDamConfigDistributionCustomFormElements (distributionServiceName: DamDistributionServiceName) {
+  function loadDamConfigDistributionCustomFormElements(distributionServiceName: DamDistributionServiceName) {
     return new Promise((resolve, reject) => {
       if (isUndefined(client)) {
         reject(false)
         return
       }
-      if (damConfigDistributionCustomFormElements.value.has(distributionServiceName)) {
+      if (damConfigStore.damConfigDistributionCustomFormElements.has(distributionServiceName)) {
         resolve(true)
         return
       }
       fetchDistributionCustomFormElements(client, distributionServiceName)
         .then((res) => {
-          damConfigDistributionCustomFormElements.value.set(distributionServiceName , res.data)
+          damConfigStore.damConfigDistributionCustomFormElements.set(distributionServiceName, res.data)
           resolve(true)
           return
         })
@@ -313,16 +205,92 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     })
   }
 
+  function isDamPubConfigLoaded() {
+    return damConfigStore.initialized.damPubConfig
+  }
+
+  function isDamPrvConfigLoaded() {
+    return damConfigStore.initialized.damPrvConfig
+  }
+
+  function getDamConfigExtSystem(extSystemId: IntegerId) {
+    return damConfigStore.damConfigExtSystem.get(extSystemId)
+  }
+
+  function getDamConfigAssetCustomFormElements(extSystemId: IntegerId) {
+    return damConfigStore.damConfigAssetCustomFormElements.get(extSystemId)
+  }
+
+  async function getOrLoadDamConfigExtSystemByLicences(
+    licences: IntegerId[]
+  ): Promise<DamConfigLicenceExtSystemReturnType[]> {
+    const results: DamConfigLicenceExtSystemReturnType[] = []
+
+    for (const licence of licences) {
+      try {
+        const result = await getOrLoadDamConfigExtSystemByLicence(licence)
+        if (!isUndefined(result)) {
+          results.push(result)
+        }
+      } catch (error) {
+        console.error(`Error fetching licence ${licence}:`, error)
+      }
+    }
+
+    return results
+  }
+
+  async function getOrLoadDamConfigExtSystemByLicence(
+    licence: IntegerId
+  ): Promise<DamConfigLicenceExtSystemReturnType | undefined> {
+    if (isUndefined(client)) {
+      console.warn('Client is undefined')
+      return undefined
+    }
+
+    let foundLicenceConfig = damConfigStore.damConfigLicenceExtSystem.get(licence)
+
+    if (isUndefined(foundLicenceConfig)) {
+      try {
+        const licenceRes = await fetchDamAssetLicence(client, licence)
+        if (isNull(licenceRes.extSystem)) return undefined
+
+        foundLicenceConfig = {
+          extSystem: licenceRes.extSystem,
+          name: licenceRes.name,
+        }
+        damConfigStore.damConfigLicenceExtSystem.set(licence, foundLicenceConfig)
+      } catch (error) {
+        console.error(`Error fetching asset licence for ${licence}:`, error)
+        return undefined
+      }
+    }
+
+    let foundExtSystemConfig = damConfigStore.damConfigExtSystem.get(foundLicenceConfig.extSystem)
+
+    if (isUndefined(foundExtSystemConfig)) {
+      try {
+        await loadDamConfigExtSystem(foundLicenceConfig.extSystem)
+        foundExtSystemConfig = damConfigStore.damConfigExtSystem.get(foundLicenceConfig.extSystem)
+      } catch (error) {
+        console.error(`Error loading extension system ${foundLicenceConfig.extSystem}:`, error)
+        return undefined
+      }
+    }
+
+    if (isUndefined(foundExtSystemConfig)) return undefined
+
+    return {
+      licence,
+      extSystem: foundLicenceConfig.extSystem,
+      licenceName: foundLicenceConfig.name,
+      extSystemConfig: cloneDeep(foundExtSystemConfig),
+    }
+  }
+
   return {
-    initialized,
-    damPubConfig,
-    damPrvConfig,
-    damConfigExtSystem,
-    damConfigLicenceExtSystem,
-    damConfigAssetCustomFormElements,
-    damConfigDistributionCustomFormElements,
-    getOrLoadDamConfigExtSystemByLicence,
     getOrLoadDamConfigExtSystemByLicences,
+    getOrLoadDamConfigExtSystemByLicence,
     loadDamPrvConfig,
     loadDamPubConfig,
     loadDamConfigExtSystem,

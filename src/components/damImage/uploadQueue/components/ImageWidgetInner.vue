@@ -171,16 +171,10 @@ const withoutImage = computed(() => {
   return isNull(modelValue.value)
 })
 
-// const { image, modelValue } = toRefs(props)
-
 const resolvedSrc = ref('')
 
 const uploadQueue = computed(() => {
   return uploadQueuesStore.getQueue(props.queueKey)
-})
-
-const enabledInteractionComputed = computed(() => {
-  return true
 })
 
 const imageLoaded = computed(() => {
@@ -502,7 +496,7 @@ defineExpose({
             :users="collab.cachedUsers"
           />
         </div>
-        <div v-show="enabledInteractionComputed">
+        <div>
           <div
             v-if="expandOptions"
             class="d-flex flex-row"
@@ -616,7 +610,6 @@ defineExpose({
         cover
         max-width="100%"
         class="disable-radius"
-        :class="{ aaa: true }"
       >
         <template #placeholder>
           <div class="d-flex align-center justify-center h-100">

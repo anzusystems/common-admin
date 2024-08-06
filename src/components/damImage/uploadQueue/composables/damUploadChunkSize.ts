@@ -1,12 +1,12 @@
 import { ref } from 'vue'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isNull } from '@/utils/common'
+import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 
 const chunkSize = ref<number | undefined>(undefined)
 
 export function useDamUploadChunkSize(apiTimeout: number = 30) {
-  const { damPrvConfig } = useDamConfigState()
-  const lastChunkSize = ref(chunkSize.value || damPrvConfig.value.settings.imageChunkConfig.minSize)
+  const damConfigStore = useDamConfigStore()
+  const lastChunkSize = ref(chunkSize.value || damConfigStore.damPrvConfig.settings.imageChunkConfig.minSize)
 
   const minUploadTimeThreshold = apiTimeout / 5
   const idealUploadTimeThreshold = apiTimeout / 4
@@ -35,11 +35,11 @@ export function useDamUploadChunkSize(apiTimeout: number = 30) {
   }
 
   const returnFromRange = (value: number) => {
-    if (value > damPrvConfig.value.settings.imageChunkConfig.maxSize) {
-      return damPrvConfig.value.settings.imageChunkConfig.maxSize
+    if (value > damConfigStore.damPrvConfig.settings.imageChunkConfig.maxSize) {
+      return damConfigStore.damPrvConfig.settings.imageChunkConfig.maxSize
     }
-    if (value < damPrvConfig.value.settings.imageChunkConfig.minSize) {
-      return damPrvConfig.value.settings.imageChunkConfig.minSize
+    if (value < damConfigStore.damPrvConfig.settings.imageChunkConfig.minSize) {
+      return damConfigStore.damPrvConfig.settings.imageChunkConfig.minSize
     }
 
     return value
