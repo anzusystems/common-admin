@@ -479,6 +479,7 @@ import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
 import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/composables/system/breadcrumbs'
+import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 
 export {
   // COMPONENTS
@@ -974,6 +975,9 @@ export {
   type CollabComponentConfig,
   COLLAB_FIELD_PREFIX_EMBED,
   COLLAB_FIELD_PREFIX_COMMENT,
+
+  //  STORES
+  useDamConfigStore,
 
   // OTHER
   i18n,
