@@ -224,20 +224,21 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
   async function getOrLoadDamConfigExtSystemByLicences(
     licences: IntegerId[]
   ): Promise<DamConfigLicenceExtSystemReturnType[]> {
-    const results: DamConfigLicenceExtSystemReturnType[] = []
-
-    for (const licence of licences) {
-      try {
-        const result = await getOrLoadDamConfigExtSystemByLicence(licence)
-        if (!isUndefined(result)) {
-          results.push(result)
-        }
-      } catch (error) {
+    const promises = licences.map((licence) =>
+      getOrLoadDamConfigExtSystemByLicence(licence).catch((error) => {
         console.error(`Error fetching licence ${licence}:`, error)
-      }
-    }
+        return undefined
+      })
+    )
 
-    return results
+    const responses = await Promise.allSettled(promises)
+
+    return responses
+      .filter(
+        (result): result is PromiseFulfilledResult<DamConfigLicenceExtSystemReturnType> =>
+          result.status === 'fulfilled' && !isUndefined(result.value)
+      )
+      .map((result) => result.value)
   }
 
   async function getOrLoadDamConfigExtSystemByLicence(
