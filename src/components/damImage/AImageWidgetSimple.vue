@@ -54,6 +54,8 @@ const resolvedSrc = ref('')
 const { t } = useI18n()
 
 const getImageUrl = (image: ImageAware | ImageCreateUpdateAware) => {
+  console.log(props.damWidth, isNumber(props.damWidth))
+  console.log(props.damHeight, isNumber(props.damHeight))
   if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
     return widgetImageToDamImageUrl(image, props.damWidth, props.damHeight)
   }
