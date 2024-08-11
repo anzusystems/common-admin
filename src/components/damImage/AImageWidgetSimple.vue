@@ -21,8 +21,8 @@ const props = withDefaults(
     aspectRatio?: number | string
     showDescription?: boolean
     showSource?: boolean
-    damWidth?: undefined
-    damHeight?: undefined
+    damWidth?: undefined | number
+    damHeight?: undefined | number
   }>(),
   {
     configName: 'default',
