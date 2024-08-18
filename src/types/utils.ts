@@ -9,17 +9,21 @@ type Join<K, P> = K extends string | number
 export type ObjectPaths<T, D extends number = 10> = [D] extends [never]
   ? never
   : T extends object
-  ? {
-      [K in keyof T]-?: K extends string | number ? `${K}` | Join<K, ObjectPaths<T[K], Prev[D]>> : never
-    }[keyof T]
-  : ''
+    ? {
+        [K in keyof T]-?: K extends string | number ? `${K}` | Join<K, ObjectPaths<T[K], Prev[D]>> : never
+      }[keyof T]
+    : ''
 
 export type ObjectLeaves<T, D extends number = 10> = [D] extends [never]
   ? never
   : T extends object
-  ? { [K in keyof T]-?: Join<K, ObjectLeaves<T[K], Prev[D]>> }[keyof T]
-  : ''
+    ? { [K in keyof T]-?: Join<K, ObjectLeaves<T[K], Prev[D]>> }[keyof T]
+    : ''
 
 export type Prettify<T> = {
   [K in keyof T]: T[K]
 } & {}
+
+export type UniqueValues<T extends Record<string, any>> = {
+  [K in keyof T]: Exclude<T[K], T[Exclude<keyof T, K>]>
+}
