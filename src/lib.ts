@@ -261,6 +261,7 @@ import {
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { type CachedItem, defineCached } from '@/composables/system/defineCached'
 import type { ObjectLeaves, ObjectPaths, Prettify, UniqueValues } from '@/types/utils'
+import { ensureUniqueValues } from '@/types/utils'
 import { loadCommonFonts } from '@/plugins/webfontloader'
 import {
   AnzuApiForbiddenError,
@@ -674,6 +675,7 @@ export {
   type ObjectLeaves,
   type Prettify,
   type UniqueValues,
+  ensureUniqueValues,
   type EnableDisable,
   type CachedItem,
   type RecordWasType,

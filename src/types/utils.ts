@@ -27,3 +27,7 @@ export type Prettify<T> = {
 export type UniqueValues<T extends Record<string, any>> = {
   [K in keyof T]: Exclude<T[K], T[Exclude<keyof T, K>]>
 }
+
+export function ensureUniqueValues<T extends Record<string, any>>(obj: UniqueValues<T>): UniqueValues<T> {
+  return obj
+}
