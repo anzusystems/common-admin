@@ -1,4 +1,4 @@
-import { cloneDeep, isArray, isEmptyObject, isObject, isUndefined } from '@/utils/common'
+import { cloneDeep, isArray, isEmptyArray, isEmptyObject, isNull, isObject, isUndefined } from '@/utils/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 
@@ -86,7 +86,15 @@ export function useFilterHelpers(storeId: string | undefined = undefined) {
     const data: Record<string, any> = {}
     for (const filterName in filterBag) {
       try {
-        data[filterName] = filterBag[filterName].model
+        if (
+          !filterName.startsWith('_') &&
+          !isUndefined(filterBag[filterName].model) &&
+          !isNull(filterBag[filterName].model) &&
+          !isEmptyObject(filterBag[filterName].model) &&
+          !isEmptyArray(filterBag[filterName].model)
+        ) {
+          data[filterName] = filterBag[filterName].model
+        }
       } catch (e) {
         //
       }
