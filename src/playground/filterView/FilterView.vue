@@ -4,8 +4,9 @@ import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { useTestListFilter } from '@/playground/filterView/testFilter'
 import { usePagination } from '@/composables/system/pagination'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
+import { onMounted } from 'vue'
 
-const { resetFilter, submitFilter } = useFilterHelpers()
+const { resetFilter, submitFilter, loadStoredFilter } = useFilterHelpers('filterDemo')
 const pagination = usePagination()
 
 const filter = useTestListFilter()
@@ -13,6 +14,10 @@ const filter = useTestListFilter()
 const getList = () => {
   console.log('submit')
 }
+
+onMounted(() => {
+  loadStoredFilter(filter)
+})
 </script>
 
 <template>

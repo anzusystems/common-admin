@@ -1,4 +1,4 @@
-import { cloneDeep, isArray, isUndefined } from '@/utils/common'
+import { cloneDeep, isArray, isEmptyObject, isObject, isUndefined } from '@/utils/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 
@@ -42,7 +42,7 @@ export function makeFilterHelper<T = any>(system?: string, subject?: string) {
   }
 }
 
-export function useFilterHelpers() {
+export function useFilterHelpers(storeId: string | undefined = undefined) {
   const clearOne = (filter: Filter) => {
     if (!filter.clearable) return
     filter.model = filter.default
@@ -61,14 +61,52 @@ export function useFilterHelpers() {
     }
   }
 
+  const loadStoredFilter = (filterBag: FilterBag, callback?: any) => {
+    if (!storeId || !localStorage) return
+    const stored = localStorage.getItem(storeId)
+    if (!stored) return
+    const storedData = JSON.parse(stored)
+    if (!isObject(storedData)) return
+    for (const filterName in filterBag) {
+      try {
+        // @ts-ignore
+        if (!isUndefined(storedData[filterName])) {
+          // @ts-ignore
+          filterBag[filterName].model = storedData[filterName]
+        }
+      } catch (e) {
+        //
+      }
+    }
+    if (callback) callback()
+  }
+
+  const storeFilter = (filterBag: FilterBag) => {
+    if (!storeId || !localStorage) return
+    const data: Record<string, any> = {}
+    for (const filterName in filterBag) {
+      try {
+        data[filterName] = filterBag[filterName].model
+      } catch (e) {
+        //
+      }
+    }
+    if (isEmptyObject(data)) return
+    localStorage.setItem(storeId, JSON.stringify(data))
+  }
+
   const resetFilter = (filterBag: FilterBag, pagination: Pagination, callback?: any) => {
     clearAll(filterBag)
     pagination.page = 1
+    if (storeId && localStorage) {
+      localStorage.removeItem(storeId)
+    }
     if (callback) callback()
   }
 
   const submitFilter = (filterBag: FilterBag, pagination: Pagination, callback: () => any) => {
     clearAllErrors(filterBag)
+    storeFilter(filterBag)
     pagination.page = 1
     callback()
   }
@@ -79,5 +117,6 @@ export function useFilterHelpers() {
     clearOne,
     resetFilter,
     submitFilter,
+    loadStoredFilter,
   }
 }
