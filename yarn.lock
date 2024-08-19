@@ -199,7 +199,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^1.14.1"
     "@stylistic/eslint-plugin": "npm:^2.6.4"
     "@tsconfig/node18": "npm:^18.2.4"
-    "@types/node": "npm:^20.16.0"
+    "@types/node": "npm:^20.16.1"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -210,8 +210,8 @@ __metadata:
     "@vue/tsconfig": "npm:^0.5.1"
     "@vuelidate/core": "npm:^2.0.3"
     "@vuelidate/validators": "npm:^2.0.4"
-    "@vueuse/core": "npm:^11.0.0"
-    "@vueuse/integrations": "npm:^11.0.0"
+    "@vueuse/core": "npm:^11.0.1"
+    "@vueuse/integrations": "npm:^11.0.1"
     axios: "npm:1.7.4"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.12"
@@ -245,8 +245,8 @@ __metadata:
   peerDependencies:
     "@vuelidate/core": 2.0.3
     "@vuelidate/validators": 2.0.4
-    "@vueuse/core": 11.0.0
-    "@vueuse/integrations": 11.0.0
+    "@vueuse/core": 11.0.1
+    "@vueuse/integrations": 11.0.1
     axios: 1.7.4
     dayjs: 1.11.12
     pinia: 2.2.2
@@ -1368,12 +1368,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.16.0":
-  version: 20.16.0
-  resolution: "@types/node@npm:20.16.0"
+"@types/node@npm:^20.16.1":
+  version: 20.16.1
+  resolution: "@types/node@npm:20.16.1"
   dependencies:
     undici-types: "npm:~6.19.2"
-  checksum: 10/ad6d50982d1ced0f29ed1fc01b6ed24b03dac15f11f0ff0806af0c74d658be95ea4faef9b1b05c04e7d112c562126449326f44f9819875a6e45036b929a1bc94
+  checksum: 10/9bae1dffd2094694147a91ebec51dc89a60a607d16d47a0d770320f1a75d3ba58663708fd93c37954a63acb701a4e0fd64245139c57ae810d3ad524e75481d4e
   languageName: node
   linkType: hard
 
@@ -2060,6 +2060,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vueuse/core@npm:11.0.1, @vueuse/core@npm:^11.0.1":
+  version: 11.0.1
+  resolution: "@vueuse/core@npm:11.0.1"
+  dependencies:
+    "@types/web-bluetooth": "npm:^0.0.20"
+    "@vueuse/metadata": "npm:11.0.1"
+    "@vueuse/shared": "npm:11.0.1"
+    vue-demi: "npm:>=0.14.10"
+  checksum: 10/c512c03cb8d450c33f2a6ec5f8df55e2b8428bcce024749f56d2f93d6c82f7c54f2a035458c2d988cba6143f9a83da34fa9d5b24e775f0870abffb1d2dcee3f7
+  languageName: node
+  linkType: hard
+
 "@vueuse/integrations@npm:^11.0.0":
   version: 11.0.0
   resolution: "@vueuse/integrations@npm:11.0.0"
@@ -2109,10 +2121,66 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vueuse/integrations@npm:^11.0.1":
+  version: 11.0.1
+  resolution: "@vueuse/integrations@npm:11.0.1"
+  dependencies:
+    "@vueuse/core": "npm:11.0.1"
+    "@vueuse/shared": "npm:11.0.1"
+    vue-demi: "npm:>=0.14.10"
+  peerDependencies:
+    async-validator: ^4
+    axios: ^1
+    change-case: ^5
+    drauu: ^0.4
+    focus-trap: ^7
+    fuse.js: ^7
+    idb-keyval: ^6
+    jwt-decode: ^4
+    nprogress: ^0.2
+    qrcode: ^1.5
+    sortablejs: ^1
+    universal-cookie: ^7
+  peerDependenciesMeta:
+    async-validator:
+      optional: true
+    axios:
+      optional: true
+    change-case:
+      optional: true
+    drauu:
+      optional: true
+    focus-trap:
+      optional: true
+    fuse.js:
+      optional: true
+    idb-keyval:
+      optional: true
+    jwt-decode:
+      optional: true
+    nprogress:
+      optional: true
+    qrcode:
+      optional: true
+    sortablejs:
+      optional: true
+    universal-cookie:
+      optional: true
+  checksum: 10/ab64d67da7d82bfa15eea3b59ba459830679c241c88884ff7fe0aabaa83aa833319d5abbadc72a5135001e843af4db2920053f5d9ae95b6eebacd38de202b1da
+  languageName: node
+  linkType: hard
+
 "@vueuse/metadata@npm:11.0.0":
   version: 11.0.0
   resolution: "@vueuse/metadata@npm:11.0.0"
   checksum: 10/586506c426f48ea4db9aca5174058699a4bdb6ff444ccca3e7772b0260a4c8fa276d82d6bcf01dceb23ed1908bac46d4667a15f295cab57e253319d9858f057d
+  languageName: node
+  linkType: hard
+
+"@vueuse/metadata@npm:11.0.1":
+  version: 11.0.1
+  resolution: "@vueuse/metadata@npm:11.0.1"
+  checksum: 10/ed1c617a2e875180ba1c223e16bad330bc18a03698a4305285f6d5c714da7c3ebdaea0050e1e4bb1226b07a2a5164af146d0ce209f8b1f92084d205e6313d2c8
   languageName: node
   linkType: hard
 
@@ -2122,6 +2190,15 @@ __metadata:
   dependencies:
     vue-demi: "npm:>=0.14.10"
   checksum: 10/1e532e7677ae629e16bb4036f62aa496b96f5c6e53dfa46d256bfaf94f527eec2266baf4674a159ab79c32316d512225e3dd64a71c3788a83c3d747e31cfce85
+  languageName: node
+  linkType: hard
+
+"@vueuse/shared@npm:11.0.1":
+  version: 11.0.1
+  resolution: "@vueuse/shared@npm:11.0.1"
+  dependencies:
+    vue-demi: "npm:>=0.14.10"
+  checksum: 10/2800cad5c1ed73a5bb812d130f34d035ab3cd5beadec4075d86c7bcc5428b81a2a5950b42de869d3cef3c3dc690e005a100957d3ad7efdfca899ab100ba7581d
   languageName: node
   linkType: hard
 
