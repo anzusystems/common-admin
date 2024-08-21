@@ -197,6 +197,7 @@ import {
   HTTP_STATUS_OK,
   HTTP_STATUS_UNAUTHORIZED,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
+  HTTP_STATUS_NOT_FOUND,
 } from '@/composables/statusCodes'
 import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import {
@@ -885,6 +886,7 @@ export {
   HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_UNAUTHORIZED,
   HTTP_STATUS_FORBIDDEN,
+  HTTP_STATUS_NOT_FOUND,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
   ROLE_SUPER_ADMIN,
   NEW_LINE_MARK,
