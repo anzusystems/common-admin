@@ -193,7 +193,7 @@ __metadata:
   dependencies:
     "@anzusystems/common-admin": "workspace:*"
     "@intlify/unplugin-vue-i18n": "npm:^4.0.0"
-    "@kyvg/vue3-notification": "npm:^3.2.1"
+    "@kyvg/vue3-notification": "npm:^3.3.0"
     "@mdi/font": "npm:^7.4.47"
     "@rushstack/eslint-patch": "npm:^1.10.4"
     "@shikijs/vitepress-twoslash": "npm:^1.14.1"
@@ -212,7 +212,7 @@ __metadata:
     "@vuelidate/validators": "npm:^2.0.4"
     "@vueuse/core": "npm:^11.0.1"
     "@vueuse/integrations": "npm:^11.0.1"
-    axios: "npm:1.7.4"
+    axios: "npm:1.7.5"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.13"
     eslint: "npm:8.57.0"
@@ -247,7 +247,7 @@ __metadata:
     "@vuelidate/validators": 2.0.4
     "@vueuse/core": 11.0.1
     "@vueuse/integrations": 11.0.1
-    axios: 1.7.4
+    axios: 1.7.5
     dayjs: 1.11.13
     pinia: 2.2.2
     socket.io-client: 4.7.5
@@ -817,12 +817,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@kyvg/vue3-notification@npm:^3.2.1":
-  version: 3.2.1
-  resolution: "@kyvg/vue3-notification@npm:3.2.1"
+"@kyvg/vue3-notification@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "@kyvg/vue3-notification@npm:3.3.0"
   peerDependencies:
     vue: ^3.0.0
-  checksum: 10/c3237a8798fc866f1fbdee61fb93d64dbe585f780ffc8b88e3422539a507df105e5aff40e5eebc0b37a1137ad8cd670f3a8247dddc53f1510afed80e817a1333
+  checksum: 10/a5dfc03fe176e9cd435961dd944bd84803faa22377fe0bf4815ccbb387c20493b5ec8ac3d982f204aa2d00ba63732a1040bec5af2879227ae738787f6d617113
   languageName: node
   linkType: hard
 
@@ -2660,14 +2660,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.7.4":
-  version: 1.7.4
-  resolution: "axios@npm:1.7.4"
+"axios@npm:1.7.5":
+  version: 1.7.5
+  resolution: "axios@npm:1.7.5"
   dependencies:
     follow-redirects: "npm:^1.15.6"
     form-data: "npm:^4.0.0"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10/7a1429be1e3d0c2e1b96d4bba4d113efbfabc7c724bed107beb535c782c7bea447ff634886b0c7c43395a264d085450d009eb1154b5f38a8bae49d469fdcbc61
+  checksum: 10/6cbcfe943a84089f420a900a3a3aeb54ee94dcc9c2b81b150434896357be5d1079eff0b1bbb628597371e79f896b1bc5776df04184756ba99656ff31df9a75bf
   languageName: node
   linkType: hard
 
