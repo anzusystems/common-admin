@@ -146,7 +146,7 @@ const apiSearch = async (query: string) => {
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   const final: Map<IntegerId | DocId, string> = new Map()
   if (isArray(modelValue.value)) {
-    modelValue.value.forEach((value) => {
+    modelValue.value.forEach((value: any) => {
       final.set(value, '')
     })
   } else if (modelValue.value) {
