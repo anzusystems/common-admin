@@ -196,10 +196,10 @@ __metadata:
     "@kyvg/vue3-notification": "npm:^3.3.0"
     "@mdi/font": "npm:^7.4.47"
     "@rushstack/eslint-patch": "npm:^1.10.4"
-    "@shikijs/vitepress-twoslash": "npm:^1.16.1"
+    "@shikijs/vitepress-twoslash": "npm:^1.16.2"
     "@stylistic/eslint-plugin": "npm:^2.7.2"
     "@tsconfig/node18": "npm:^18.2.4"
-    "@types/node": "npm:^20.16.4"
+    "@types/node": "npm:^20.16.5"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -1286,6 +1286,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shikijs/core@npm:1.16.2":
+  version: 1.16.2
+  resolution: "@shikijs/core@npm:1.16.2"
+  dependencies:
+    "@shikijs/vscode-textmate": "npm:^9.2.0"
+    "@types/hast": "npm:^3.0.4"
+  checksum: 10/4114403a0928b9b0027c7f23f9014d81263342ef8e2d30ad62c697241a3d702d25b245fe1c3897053f86ed0c8cc31b514a4e17d6ce27b8d5a15e757d4ce7f5eb
+  languageName: node
+  linkType: hard
+
 "@shikijs/transformers@npm:^1.13.0":
   version: 1.13.0
   resolution: "@shikijs/transformers@npm:1.13.0"
@@ -1305,20 +1315,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shikijs/vitepress-twoslash@npm:^1.16.1":
-  version: 1.16.1
-  resolution: "@shikijs/vitepress-twoslash@npm:1.16.1"
+"@shikijs/vitepress-twoslash@npm:^1.16.2":
+  version: 1.16.2
+  resolution: "@shikijs/vitepress-twoslash@npm:1.16.2"
   dependencies:
     "@shikijs/twoslash": "npm:"
     floating-vue: "npm:^5.2.2"
     mdast-util-from-markdown: "npm:^2.0.1"
     mdast-util-gfm: "npm:^3.0.0"
     mdast-util-to-hast: "npm:^13.2.0"
-    shiki: "npm:1.16.1"
+    shiki: "npm:1.16.2"
     twoslash: "npm:^0.2.10"
     twoslash-vue: "npm:^0.2.10"
-    vue: "npm:^3.4.38"
-  checksum: 10/2c7e19d31910d9d990de9f43d334e139fab1ec7a31b57d84407c7e8010518ed99f8504a6d45b3d25cefcf22929cdd6aa5c9fd6d4cccdcc28a8754db4e9983f6d
+    vue: "npm:^3.5.1"
+  checksum: 10/81d8370d3a046c46ec0509afb022ca0d5f48ee6f18a50d95b8c59ee16e35e3e117a10f047ccde16c63da3db8beaa9a5c8e9a676218aa1545a1098614794468cb
   languageName: node
   linkType: hard
 
@@ -1471,12 +1481,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.16.4":
-  version: 20.16.4
-  resolution: "@types/node@npm:20.16.4"
+"@types/node@npm:^20.16.5":
+  version: 20.16.5
+  resolution: "@types/node@npm:20.16.5"
   dependencies:
     undici-types: "npm:~6.19.2"
-  checksum: 10/3c6ecc81ee77b67938004a0ffc7459ad9df242218a3eea8249036950262ba32061cfac0d7b74781d50cd9399bfd9b903c3b250caa2f4e76f526c4b55b929b670
+  checksum: 10/39a8457149dc17cdea57afc90d4da53182fdb8b958d5bb065a15d123d81d4efa6b51a0de92428d05ead2e63ce07195586f71083401b99cdbcd04662344fbf7a1
   languageName: node
   linkType: hard
 
@@ -7146,14 +7156,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shiki@npm:1.16.1":
-  version: 1.16.1
-  resolution: "shiki@npm:1.16.1"
+"shiki@npm:1.16.2":
+  version: 1.16.2
+  resolution: "shiki@npm:1.16.2"
   dependencies:
-    "@shikijs/core": "npm:1.16.1"
+    "@shikijs/core": "npm:1.16.2"
     "@shikijs/vscode-textmate": "npm:^9.2.0"
     "@types/hast": "npm:^3.0.4"
-  checksum: 10/068359962e8812e238ed0e8bbc2e5c4c68875ca8098a36e8d641467027a4eb5539193659b08b2ad5277d73fc82ec1f4ee345066ac6bd11f51cb53b88bc8ee8b3
+  checksum: 10/9c5ffd2e82f781a1f2c33fed756e093bea7b01cc744c3dcf3deed611dc9e7caba30d5b7ef5a99bdef512b38269e63704b3727db732779ebae253a0352a57b288
   languageName: node
   linkType: hard
 
@@ -8346,7 +8356,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue@npm:3.5.1":
+"vue@npm:3.5.1, vue@npm:^3.5.1":
   version: 3.5.1
   resolution: "vue@npm:3.5.1"
   dependencies:
