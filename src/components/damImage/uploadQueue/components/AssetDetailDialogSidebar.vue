@@ -5,8 +5,8 @@ import {
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import type { DocId, IntegerId } from '@/types/common'
-import type { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
-import type { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
+import type { DamAssetStatusType, DamAssetTypeType } from '@/types/coreDam/Asset'
+import type { AssetFileFailReasonType, AssetFileProcessStatusType } from '@/types/coreDam/AssetFile'
 import { useI18n } from 'vue-i18n'
 import AssetInfobox from '@/components/damImage/uploadQueue/components/AssetInfobox.vue'
 import AssetDetailSidebarMetadata from '@/components/damImage/uploadQueue/components/AssetDetailSidebarMetadata.vue'
@@ -24,10 +24,10 @@ withDefaults(
     isImage: boolean
     isDocument: boolean
     dataCy?: string
-    assetStatus: DamAssetStatus
-    assetType: DamAssetType
-    assetMainFileStatus?: AssetFileProcessStatus | undefined
-    assetMainFileFailReason?: AssetFileFailReason | undefined
+    assetStatus: DamAssetStatusType
+    assetType: DamAssetTypeType
+    assetMainFileStatus?: AssetFileProcessStatusType | undefined
+    assetMainFileFailReason?: AssetFileFailReasonType | undefined
   }>(),
   {
     assetMainFileStatus: undefined,

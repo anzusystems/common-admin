@@ -1,45 +1,48 @@
 import type { DocId, DocIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 
-export enum AssetFileProcessStatus {
-  Uploading = 'uploading', // file entity created and ready to receive chunks
-  Uploaded = 'uploaded', // all chunks were sent
-  Stored = 'stored', // File is stored and ready to processing
-  Duplicate = 'duplicate', // AssetFile is duplicate of another asset
-  Processed = 'processed', // file processed and ready to serve
-  Failed = 'failed',
-}
+export const AssetFileProcessStatus = {
+  Uploading: 'uploading', // file entity created and ready to receive chunks
+  Uploaded: 'uploaded', // all chunks were sent
+  Stored: 'stored', // File is stored and ready to processing
+  Duplicate: 'duplicate', // AssetFile is duplicate of another asset
+  Processed: 'processed', // file processed and ready to serve
+  Failed: 'failed',
+} as const
+export type AssetFileProcessStatusType = (typeof AssetFileProcessStatus)[keyof typeof AssetFileProcessStatus]
 
-export enum AssetFileFailReason {
-  None = 'none',
-  Unknown = 'unknown',
-  InvalidChecksum = 'invalid_checksum',
-  InvalidMimeType = 'invalid_mime_type',
-  DownloadFailed = 'download_failed',
-  InvalidSize = 'invalid_size',
-  Default = None,
-}
+export const AssetFileFailReason = {
+  None: 'none',
+  Unknown: 'unknown',
+  InvalidChecksum: 'invalid_checksum',
+  InvalidMimeType: 'invalid_mime_type',
+  DownloadFailed: 'download_failed',
+  InvalidSize: 'invalid_size',
+} as const
+export type AssetFileFailReasonType = (typeof AssetFileFailReason)[keyof typeof AssetFileFailReason]
+export const AssetFileFailReasonDefault = AssetFileFailReason.None
 
-export enum AssetFileRouteStatus {
-  Disabled = 'disabled',
-  Active = 'active',
-  Default = Disabled,
-}
+export const AssetFileRouteStatus = {
+  Disabled: 'disabled',
+  Active: 'active',
+} as const
+export type AssetFileRouteStatusType = (typeof AssetFileRouteStatus)[keyof typeof AssetFileRouteStatus]
+export const AssetFileRouteStatusDefault = AssetFileRouteStatus.Disabled
 
 interface FileAttributes {
-  status: AssetFileProcessStatus
+  status: AssetFileProcessStatusType
   mimeType: string
   size: number
   originFileName: string
   originUrl: string
-  failReason: AssetFileFailReason
+  failReason: AssetFileFailReasonType
 }
 
-export enum AssetFileLinkType {
-  Image = 'image',
-  Audio = 'audio',
-  Default = Image,
-}
+export const AssetFileLinkType = {
+  Image: 'image',
+  Audio: 'audio',
+} as const
+export type AssetFileLinkTypeType = (typeof AssetFileLinkType)[keyof typeof AssetFileLinkType]
 
 export interface AssetFileLink {
   width: number
@@ -48,12 +51,12 @@ export interface AssetFileLink {
   requestedHeight: number
   url: string
   title: string
-  type: AssetFileLinkType
+  type: AssetFileLinkTypeType
 }
 
 export interface AssetFileRoute {
   id: DocId
-  status: AssetFileRouteStatus
+  status: AssetFileRouteStatusType
   main: boolean,
   publicUrl: string
   _resourceName: 'assetFileRoute'

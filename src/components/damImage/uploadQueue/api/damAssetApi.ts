@@ -1,6 +1,6 @@
 import type { AxiosInstance, AxiosResponse } from 'axios'
 import type { DocId, IntegerId } from '@/types/common'
-import type { AssetDetailItemDto, AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
+import type { AssetDetailItemDto, AssetSearchListItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
@@ -76,7 +76,7 @@ export const bulkUpdateAssetsMetadata = (client: () => AxiosInstance, items: Upl
             return res.status === HTTP_STATUS_OK
           })
         ) {
-          const bulkItemsRes: AssetMetadataBulkItem[] = responses.flatMap(response => response.data)
+          const bulkItemsRes: AssetMetadataBulkItem[] = responses.flatMap((response) => response.data)
           return resolve(bulkItemsRes)
         } else {
           return reject(responses)
@@ -150,7 +150,7 @@ async function updateMetadataSequence(client: () => AxiosInstance, bulkItems: As
   return responses
 }
 
-function listItemsToMetadataBulkItems (items: UploadQueueItem[]) {
+function listItemsToMetadataBulkItems(items: UploadQueueItem[]) {
   const dtoItems: AssetMetadataBulkItem[] = []
   items.forEach((item) => {
     if (!isNull(item.assetId) && item.canEditMetadata) {
@@ -169,7 +169,7 @@ function listItemsToMetadataBulkItems (items: UploadQueueItem[]) {
 
 const { showUnknownError, showApiValidationError } = useAlerts()
 
-const handleMetadataValidationError = (error: any, assetType: DamAssetType, extSystem: IntegerId) => {
+const handleMetadataValidationError = (error: any, assetType: DamAssetTypeType, extSystem: IntegerId) => {
   const { getDamConfigAssetCustomFormElements } = useDamConfigState()
   const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(extSystem)
   if (isUndefined(configAssetCustomFormElements)) {

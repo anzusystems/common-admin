@@ -7,7 +7,12 @@ import {
   AssetDetailTabImageWithRoi,
   useAssetDetailStore,
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
-import { type AssetDetailItemDto, DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import {
+  type AssetDetailItemDto,
+  DamAssetStatusDefault,
+  DamAssetType,
+  DamAssetTypeDefault,
+} from '@/types/coreDam/Asset'
 import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/components/AssetDetailDialogLoader.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
 import { AssetFileFailReason, assetFileIsImageFile } from '@/types/coreDam/AssetFile'
@@ -15,7 +20,11 @@ import AssetImageRoiSelect from '@/components/damImage/uploadQueue/components/As
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
-import { type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
+import {
+  type UploadQueueItem,
+  UploadQueueItemStatus,
+  type UploadQueueItemStatusType,
+} from '@/types/coreDam/UploadQueue'
 import { dateTimeNow } from '@/utils/datetime'
 import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
 import { useAlerts } from '@/composables/system/alerts'
@@ -123,11 +132,11 @@ const onImageLoad = () => {
 }
 
 const assetType = computed(() => {
-  return asset.value?.attributes.assetType || DamAssetType.Default
+  return asset.value?.attributes.assetType || DamAssetTypeDefault
 })
 
 const assetStatus = computed(() => {
-  if (!asset.value) return DamAssetStatus.Default
+  if (!asset.value) return DamAssetStatusDefault
   return asset.value.attributes.assetStatus
 })
 
@@ -170,10 +179,12 @@ const assetMainFile = computed(() => {
   return asset.value?.mainFile || undefined
 })
 
+const processingStatuses: readonly UploadQueueItemStatusType[] = [
+  UploadQueueItemStatus.Processing,
+  UploadQueueItemStatus.Loading,
+]
 const processing = computed(() => {
-  return (
-    !isNull(item.value) && [UploadQueueItemStatus.Processing, UploadQueueItemStatus.Loading].includes(item.value.status)
-  )
+  return !isNull(item.value) && processingStatuses.includes(item.value.status)
 })
 const waiting = computed(() => {
   return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Waiting

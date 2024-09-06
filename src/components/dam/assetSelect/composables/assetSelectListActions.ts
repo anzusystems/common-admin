@@ -3,7 +3,7 @@ import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import { usePagination } from '@/composables/system/pagination'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { useAlerts } from '@/composables/system/alerts'
@@ -71,7 +71,7 @@ export function useAssetSelectActions(configName = 'default') {
 
   const initStoreContext = (
     selectConfig: DamConfigLicenceExtSystemReturnType[],
-    assetType: DamAssetType,
+    assetType: DamAssetTypeType,
     singleMode: boolean,
     minCount: number,
     maxCount: number

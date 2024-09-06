@@ -1,10 +1,10 @@
 import { computed } from 'vue'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
 
-export const useDamAuthorAssetTypeConfig = (assetType: DamAssetType, extSystem: IntegerId) => {
+export const useDamAuthorAssetTypeConfig = (assetType: DamAssetTypeType, extSystem: IntegerId) => {
   const { getDamConfigExtSystem } = useDamConfigState()
   const configExtSystem = getDamConfigExtSystem(extSystem)
 

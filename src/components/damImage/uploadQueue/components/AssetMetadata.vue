@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
-import { DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetType, DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import { type AssetFile, assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -33,7 +33,7 @@ const assetDetailStore = useAssetDetailStore()
 const { asset, authorConflicts, metadataAreTouched } = storeToRefs(assetDetailStore)
 
 const assetType = computed(() => {
-  return asset.value?.attributes.assetType || DamAssetType.Default
+  return asset.value?.attributes.assetType || DamAssetTypeDefault
 })
 
 const isTypeImage = computed(() => {

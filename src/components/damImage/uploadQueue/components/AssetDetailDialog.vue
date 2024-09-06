@@ -7,7 +7,7 @@ import {
   AssetDetailTabImageWithRoi,
   useAssetDetailStore,
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
-import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetStatusDefault, DamAssetType, DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/components/AssetDetailDialogLoader.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
 import AssetDetailDialogSidebar from '@/components/damImage/uploadQueue/components/AssetDetailDialogSidebar.vue'
@@ -47,11 +47,11 @@ const onImageLoad = () => {
 }
 
 const assetType = computed(() => {
-  return asset.value?.attributes.assetType || DamAssetType.Default
+  return asset.value?.attributes.assetType || DamAssetTypeDefault
 })
 
 const assetStatus = computed(() => {
-  if (!asset.value) return DamAssetStatus.Default
+  if (!asset.value) return DamAssetStatusDefault
   return asset.value.attributes.assetStatus
 })
 

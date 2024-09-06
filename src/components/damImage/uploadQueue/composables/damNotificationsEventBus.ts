@@ -1,8 +1,8 @@
 import { type EventBusKey, useEventBus } from '@vueuse/core'
 import type { DocId } from '@/types/common'
-import type { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
-import type { DamAssetType, DamDistributionServiceName } from '@/types/coreDam/Asset'
-import type { DamDistributionStatus } from '@/types/coreDam/DamConfig'
+import type { AssetFileFailReasonType, AssetFileProcessStatusType } from '@/types/coreDam/AssetFile'
+import type { DamAssetTypeType, DamDistributionServiceName } from '@/types/coreDam/Asset'
+import type { DamDistributionStatusType } from '@/types/coreDam/DamConfig'
 
 export const damNotificationsEventBusKey: EventBusKey<DamNotification> = Symbol('anzu:damNotificationsEventBusKey')
 
@@ -41,9 +41,9 @@ interface DamNotificationAssetFileData {
 interface DamNotificationAssetFileStatusData {
   id: DocId
   asset: DocId
-  status: AssetFileProcessStatus
-  failReason: AssetFileFailReason
-  assetType: DamAssetType
+  status: AssetFileProcessStatusType
+  failReason: AssetFileFailReasonType
+  assetType: DamAssetTypeType
   originAssetFile: DocId
 }
 
@@ -51,7 +51,7 @@ interface DamNotificationDistributionData {
   id: DocId
   asset: DocId
   assetFile: DocId
-  status: DamDistributionStatus
+  status: DamDistributionStatusType
 }
 
 interface DamNotificationAssetData {
@@ -137,4 +137,3 @@ export type DamNotification =
   | DamNotificationDistributionFailed
   | DamNotificationDistributionAuthorized
   | DamNotificationUserUpdated
-

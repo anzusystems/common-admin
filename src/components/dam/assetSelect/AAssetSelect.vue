@@ -2,8 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
-import { damAssetTypeValueToEnum } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -11,12 +10,11 @@ import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/c
 import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import AssetSelectFilter from '@/components/dam/assetSelect/components/filter/AssetSelectFilter.vue'
-import type {
-  AssetSelectReturnData,
+import {
+  type AssetSelectReturnData,
   AssetSelectReturnType,
-  AssetSelectReturnTypeValues,
+  type AssetSelectReturnTypeType,
 } from '@/types/coreDam/AssetSelect'
-import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
 import { filterAllowedImageWidgetSelectConfigs } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/composables/system/alerts'
 import type { IntegerId } from '@/types/common'
@@ -26,16 +24,16 @@ import { cloneDeep } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
-    assetType: DamAssetType | DamAssetTypeValues
+    assetType: DamAssetTypeType
     minCount: number
     maxCount: number
     selectLicences: IntegerId[]
-    returnType?: AssetSelectReturnType | AssetSelectReturnTypeValues
+    returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
   }>(),
   {
-    returnType: 'mainFileId',
+    returnType: AssetSelectReturnType.MainFileId,
     configName: 'default',
     skipCurrentUserCheck: false,
   }
@@ -80,7 +78,7 @@ const onOpen = () => {
 
   initStoreContext(
     selectConfigLocal,
-    damAssetTypeValueToEnum(props.assetType),
+    props.assetType,
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
     props.maxCount
@@ -104,7 +102,7 @@ const onClose = () => {
 }
 
 const onConfirm = () => {
-  emit('onConfirm', getSelectedData(assetSelectReturnTypeValuesToEnum(props.returnType)))
+  emit('onConfirm', getSelectedData(props.returnType))
   onClose()
 }
 
@@ -137,7 +135,7 @@ onMounted(async () => {
   loading.value = false
 })
 
-onUnmounted( () => {
+onUnmounted(() => {
   selectConfigs.value = []
 })
 

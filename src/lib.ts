@@ -154,8 +154,8 @@ import {
   timestampCurrent,
   yearNow,
 } from '@/utils/datetime'
-import { Grant, useGrant } from '@/model/valueObject/Grant'
-import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
+import { Grant, useGrant, type GrantType, GrantDefault } from '@/model/valueObject/Grant'
+import { GrantOrigin, type GrantOriginType, GrantOriginDefault, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
 import { useAnzuUserFactory } from '@/model/factory/AnzuUserFactory'
 import { usePermissionConfigFactory } from '@/model/factory/PermissionConfigFactory'
 import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactory'
@@ -194,10 +194,10 @@ import {
   HTTP_STATUS_CREATED,
   HTTP_STATUS_FORBIDDEN,
   HTTP_STATUS_NO_CONTENT,
+  HTTP_STATUS_NOT_FOUND,
   HTTP_STATUS_OK,
   HTTP_STATUS_UNAUTHORIZED,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
-  HTTP_STATUS_NOT_FOUND,
 } from '@/composables/statusCodes'
 import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import {
@@ -219,7 +219,7 @@ import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { NEW_LINE_MARK, type RecordWasType, useAlerts } from '@/composables/system/alerts'
 import { useErrors } from '@/composables/system/error'
-import { JobStatus, useJobStatus } from '@/model/valueObject/JobStatus'
+import { JobStatus, JobStatusDefault, type JobStatusType, useJobStatus } from '@/model/valueObject/JobStatus'
 import type { JobBase, JobUserDataDelete } from '@/types/Job'
 import { useJobApi } from '@/services/api/job/jobApi'
 import {
@@ -248,7 +248,7 @@ import messagesCs from '@/locales/cs'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
 import type { Log } from '@/types/Log'
-import { LogLevel, useLogLevel } from '@/model/valueObject/LogLevel'
+import { LogLevel, LogLevelDefault, type LogLevelType, useLogLevel } from '@/model/valueObject/LogLevel'
 import '@/styles/main.scss'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { useValidate } from '@/validators/vuelidate/useValidate'
@@ -287,7 +287,11 @@ import {
   type AssetMetadataSuggestions,
   type AssetSearchListItemDto,
   DamAssetStatus,
+  type DamAssetStatusType,
+  DamAssetStatusDefault,
   DamAssetType,
+  type DamAssetTypeType,
+  DamAssetTypeDefault,
   type DamDistributionServiceName,
 } from '@/types/coreDam/Asset'
 import {
@@ -296,6 +300,7 @@ import {
   type AssetFileDocument,
   type AssetFileDownloadLink,
   AssetFileFailReason,
+  type AssetFileFailReasonType,
   type AssetFileImage,
   type AssetFileImagePreviewNullable,
   assetFileIsAudioFile,
@@ -305,11 +310,15 @@ import {
   type AssetFileLink,
   type AssetFileLinks,
   AssetFileLinkType,
+  type AssetFileLinkTypeType,
   type AssetFileMainRouteAware,
   type AssetFileNullable,
   AssetFileProcessStatus,
+  type AssetFileProcessStatusType,
   type AssetFileRoute,
-  type AssetFileRouteStatus,
+  AssetFileRouteStatus,
+  type AssetFileRouteStatusType,
+  AssetFileRouteStatusDefault,
   type AssetFileVideo,
 } from '@/types/coreDam/AssetFile'
 import {
@@ -318,6 +327,8 @@ import {
   type UploadQueueItem,
   UploadQueueItemStatus,
   UploadQueueItemType,
+  type UploadQueueItemTypeType,
+  type UploadQueueItemStatusType,
 } from '@/types/coreDam/UploadQueue'
 import type {
   CustomDataAware,
@@ -334,8 +345,13 @@ import {
   type DamDistributionRequirementsCategorySelectConfig,
   type DamDistributionRequirementsConfig,
   DamDistributionRequirementStrategy,
+  DamDistributionRequirementStrategyDefault,
+  type DamDistributionRequirementStrategyType,
   DamDistributionServiceType,
+  type DamDistributionServiceTypeType,
   DamDistributionStatus,
+  DamDistributionStatusDefault,
+  type DamDistributionStatusType,
   type DamExternalProviderAssetConfig,
   type DamExternalProviderAssetName,
   type DamExtSystemAssetTypeExifMetadata,
@@ -344,6 +360,8 @@ import {
   type DamPrvConfig,
   type DamPubConfig,
   UserAuthType,
+  type UserAuthTypeType,
+  UserAuthTypeDefault,
 } from '@/types/coreDam/DamConfig'
 import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
 import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
@@ -364,7 +382,12 @@ import type { ImageAware, ImageCreateUpdateAware, ImageCreateUpdateAwareKeyed } 
 import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import type { DamExtSystem, DamExtSystemMinimal } from '@/components/damImage/uploadQueue/composables/DamExtSystem'
-import { DamAuthorType, useDamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
+import {
+  DamAuthorType,
+  DamAuthorTypeDefault,
+  type DamAuthorTypeType,
+  useDamAuthorType,
+} from '@/components/damImage/uploadQueue/author/DamAuthorType'
 import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
 import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
@@ -620,11 +643,17 @@ export {
   defineBreadcrumbs,
 
   // VALUE OBJECTS
+  type GrantType,
   Grant,
+  GrantDefault,
   useGrant,
+  type GrantOriginType,
   GrantOrigin,
+  GrantOriginDefault,
   useGrantOrigin,
   LogLevel,
+  type LogLevelType,
+  LogLevelDefault,
   useLogLevel,
 
   // TYPES
@@ -656,6 +685,8 @@ export {
   type JobUserDataDelete,
   JOB_RESOURCE_USER_DATA_DELETE,
   JobStatus,
+  JobStatusDefault,
+  type JobStatusType,
   type JobBaseResource,
   useCommonJobFactory,
   type CurrentUserType,
@@ -695,8 +726,11 @@ export {
   type AssetCustomData,
   type AssetMetadataSuggestions,
   AssetFileFailReason,
+  type AssetFileFailReasonType,
   AssetFileProcessStatus,
+  type AssetFileProcessStatusType,
   AssetFileLinkType,
+  type AssetFileLinkTypeType,
   type AssetFile,
   type AssetFileDocument,
   type AssetFileVideo,
@@ -706,7 +740,9 @@ export {
   type AssetFileLink,
   type AssetFileLinks,
   type AssetFileRoute,
-  type AssetFileRouteStatus,
+  AssetFileRouteStatus,
+  AssetFileRouteStatusDefault,
+  type AssetFileRouteStatusType,
   type AssetFileMainRouteAware,
   type AssetFileDownloadLink,
   type AssetFileImagePreviewNullable,
@@ -717,7 +753,9 @@ export {
   type UploadQueue,
   type UploadQueueItem,
   UploadQueueItemStatus,
+  type UploadQueueItemStatusType,
   UploadQueueItemType,
+  type UploadQueueItemTypeType,
   type CustomDataAware,
   type CustomDataFormElement,
   type CustomDataFormElementAttributes,
@@ -725,7 +763,11 @@ export {
   CustomDataFormElementTypeDefault,
   type CustomDataFormElementTypeType,
   DamAssetType,
+  DamAssetTypeDefault,
+  type DamAssetTypeType,
   DamAssetStatus,
+  DamAssetStatusDefault,
+  type DamAssetStatusType,
   type DamPubConfig,
   type DamPrvConfig,
   type DamExtSystemConfig,
@@ -736,11 +778,18 @@ export {
   type DamDistributionConfig,
   type DamDistributionRequirementsConfig,
   DamDistributionRequirementStrategy,
+  DamDistributionRequirementStrategyDefault,
+  type DamDistributionRequirementStrategyType,
   type DamDistributionRequirementsCategorySelectConfig,
   type DamExtSystemAssetTypeExifMetadata,
   DamDistributionServiceType,
+  type DamDistributionServiceTypeType,
   DamDistributionStatus,
+  DamDistributionStatusDefault,
+  type DamDistributionStatusType,
   UserAuthType,
+  type UserAuthTypeType,
+  UserAuthTypeDefault,
   type DamUploadStartResponse,
   type DamNotificationNameType,
   DamNotificationName,
@@ -752,6 +801,8 @@ export {
   type DamKeyword,
   type DamKeywordMinimal,
   DamAuthorType,
+  DamAuthorTypeDefault,
+  type DamAuthorTypeType,
   type DamExtSystem,
   type DamExtSystemMinimal,
   type DamCurrentUserDto,

@@ -1,9 +1,14 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { type AssetCustomData, DamAssetStatus } from '@/types/coreDam/Asset'
+import { type AssetCustomData, DamAssetStatusDefault } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
-import { type UploadQueueItem, UploadQueueItemStatus, type UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import {
+  type UploadQueueItem,
+  UploadQueueItemStatus,
+  type UploadQueueItemStatusType,
+  type UploadQueueKey,
+} from '@/types/coreDam/UploadQueue'
 import { AssetFileFailReason } from '@/types/coreDam/AssetFile'
 import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
 import { prettyBytes } from '@/utils/file'
@@ -74,8 +79,12 @@ const authors = computed({
 
 const { t } = useI18n()
 
+const processingStatuses: readonly UploadQueueItemStatusType[] = [
+  UploadQueueItemStatus.Processing,
+  UploadQueueItemStatus.Loading,
+]
 const processing = computed(() => {
-  return [UploadQueueItemStatus.Processing, UploadQueueItemStatus.Loading].includes(props.item.status)
+  return processingStatuses.includes(props.item.status)
 })
 const waiting = computed(() => {
   return props.item.status === UploadQueueItemStatus.Waiting
@@ -97,7 +106,7 @@ const assetType = computed(() => {
   return props.item.assetType
 })
 const status = computed(() => {
-  if (!props.item) return DamAssetStatus.Default
+  if (!props.item) return DamAssetStatusDefault
   return props.item.assetStatus
 })
 
@@ -105,10 +114,13 @@ const cancelItem = () => {
   emit('cancelItem', { index: props.index, item: props.item, queueKey: props.queueKey })
 }
 
+const showCancelStatuses: readonly UploadQueueItemStatusType[] = [
+  UploadQueueItemStatus.Loading,
+  UploadQueueItemStatus.Waiting,
+  UploadQueueItemStatus.Uploading,
+]
 const showCancel = computed(() => {
-  return [UploadQueueItemStatus.Loading, UploadQueueItemStatus.Waiting, UploadQueueItemStatus.Uploading].includes(
-    props.item.status
-  )
+  return showCancelStatuses.includes(props.item.status)
 })
 
 const showDetail = async () => {

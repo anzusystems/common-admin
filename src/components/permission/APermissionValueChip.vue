@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { Grant, useGrant } from '@/model/valueObject/Grant'
-import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
+import { type GrantType, useGrant } from '@/model/valueObject/Grant'
+import { GrantOriginDefault, type GrantOriginType, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
 import { computed } from 'vue'
 
 const props = defineProps<{
-  grant: Grant
-  grantOrigin: GrantOrigin
+  grant: GrantType
+  grantOrigin: GrantOriginType
 }>()
 
 const { getGrantOption } = useGrant()
@@ -24,7 +24,7 @@ const grantOriginOption = computed(() => getGrantOriginOption(props.grantOrigin)
   >
     {{ grantOption.title }}
     <span
-      v-if="grantOrigin !== GrantOrigin.DefaultGrant"
+      v-if="grantOrigin !== GrantOriginDefault"
       class="ml-1"
     >({{ grantOriginOption?.title }})</span>
   </VChip>

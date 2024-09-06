@@ -1,5 +1,5 @@
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import { DamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
+import { DamAuthorTypeDefault } from '@/components/damImage/uploadQueue/author/DamAuthorType'
 import { dateTimeNow } from '@/utils/datetime'
 import { ENTITY } from '@/components/damImage/uploadQueue/api/authorApi'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
@@ -14,7 +14,7 @@ export function useDamAuthorFactory() {
       flags: {
         reviewed: reviewed ?? false,
       },
-      type: DamAuthorType.Default,
+      type: DamAuthorTypeDefault,
       createdAt: dateTimeNow(),
       modifiedAt: dateTimeNow(),
       createdBy: 0,

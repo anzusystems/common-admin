@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
@@ -9,7 +9,7 @@ import { isUndefined } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
-    assetType: DamAssetType
+    assetType: DamAssetTypeType
     extSystem: IntegerId
     modelValue: { [key: string]: any }
     dataCy?: string

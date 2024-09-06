@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { type AssetFileProperties, DamAssetType } from '@/types/coreDam/Asset'
+import { type AssetFileProperties, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import {
   DIMENSIONS_CONFIG,
   ICON_LOW,
@@ -13,7 +13,7 @@ import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables
 
 const props = withDefaults(
   defineProps<{
-    assetType: DamAssetType
+    assetType: DamAssetTypeType
     assetFileProperties: AssetFileProperties
     disableAbsolute?: boolean
   }>(),

@@ -1,7 +1,7 @@
 import type { DocId, IntegerId } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
-import type { DamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
+import type { DamAuthorTypeType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
 
 export interface Flags {
   reviewed: boolean
@@ -16,5 +16,5 @@ export interface DamAuthorMinimal {
 export interface DamAuthor extends DamAuthorMinimal, AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   extSystem: IntegerId
   flags: Flags
-  type: DamAuthorType
+  type: DamAuthorTypeType
 }

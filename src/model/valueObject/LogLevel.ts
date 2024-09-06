@@ -1,20 +1,21 @@
 import { ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 
-export enum LogLevel {
-  Debug = 'DEBUG',
-  Info = 'INFO',
-  Notice = 'NOTICE',
-  Warning = 'WARNING',
-  Error = 'ERROR',
-  Critical = 'CRITICAL',
-  Alert = 'ALERT',
-  Emergency = 'EMERGENCY',
-  Default = Info,
-}
+export const LogLevel = {
+  Debug: 'DEBUG',
+  Info: 'INFO',
+  Notice: 'NOTICE',
+  Warning: 'WARNING',
+  Error: 'ERROR',
+  Critical: 'CRITICAL',
+  Alert: 'ALERT',
+  Emergency: 'EMERGENCY',
+} as const
+export type LogLevelType = (typeof LogLevel)[keyof typeof LogLevel]
+export const LogLevelDefault = LogLevel.Info
 
 export function useLogLevel() {
-  const logLevelOptions = ref<ValueObjectOption<LogLevel>[]>([
+  const logLevelOptions = ref<ValueObjectOption<LogLevelType>[]>([
     {
       value: LogLevel.Debug,
       title: LogLevel.Debug,
@@ -57,7 +58,7 @@ export function useLogLevel() {
     },
   ])
 
-  const getLogLevelOption = (value: LogLevel) => {
+  const getLogLevelOption = (value: LogLevelType) => {
     return logLevelOptions.value.find((item) => item.value === value)
   }
 

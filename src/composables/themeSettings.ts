@@ -1,27 +1,29 @@
 import { computed, readonly, ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 
-export enum ThemeSettings {
-  Light = 'light',
-  Dark = 'dark',
-  Auto = 'auto',
-}
+export const ThemeSettings = {
+  Light: 'light',
+  Dark: 'dark',
+  Auto: 'auto',
+} as const
+export type ThemeSettingsType = (typeof ThemeSettings)[keyof typeof ThemeSettings]
 
-export enum Theme {
-  Light = 'light',
-  Dark = 'dark',
-}
+export const Theme = {
+  Light: 'light',
+  Dark: 'dark',
+} as const
+export type ThemeType = (typeof Theme)[keyof typeof Theme]
 
 const storedSettings = useStorage('theme', ThemeSettings.Light)
 
 const QUERY = '(prefers-color-scheme: dark)'
 
-const settings = ref<ThemeSettings>(
+const settings = ref<ThemeSettingsType>(
   Object.values(ThemeSettings).some((val) => val === storedSettings.value)
-    ? <ThemeSettings>storedSettings.value
+    ? <ThemeSettingsType>storedSettings.value
     : ThemeSettings.Light
 )
-const theme = ref<Theme>(Theme.Light)
+const theme = ref<ThemeType>(Theme.Light)
 const systemHasDarkPreference = ref(window.matchMedia && window.matchMedia(QUERY).matches)
 
 const setTheme = () => {
@@ -39,7 +41,7 @@ const setTheme = () => {
 }
 setTheme()
 
-const setThemeSettings = (value: ThemeSettings) => {
+const setThemeSettings = (value: ThemeSettingsType) => {
   settings.value = value
   storedSettings.value = value
 }

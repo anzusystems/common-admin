@@ -9,41 +9,26 @@ interface Texts {
 
 export type DamDistributionServiceName = string
 
-export enum DamAssetStatus {
-  Draft = 'draft',
-  WithFile = 'with_file',
-  Deleting = 'deleting',
-  Default = Draft,
-}
+export const DamAssetStatus = {
+  Draft: 'draft',
+  WithFile: 'with_file',
+  Deleting: 'deleting',
+} as const
+export type DamAssetStatusType = (typeof DamAssetStatus)[keyof typeof DamAssetStatus]
+export const DamAssetStatusDefault = DamAssetStatus.Draft
 
-export enum DamAssetType {
-  Image = 'image',
-  Audio = 'audio',
-  Video = 'video',
-  Document = 'document',
-  Default = Image,
-}
-
-export type DamAssetTypeValues = `${DamAssetType}`
-
-export const damAssetTypeValueToEnum = (value: DamAssetTypeValues) => {
-  switch (value) {
-    case 'image':
-      return DamAssetType.Image
-    case 'audio':
-      return DamAssetType.Audio
-    case 'video':
-      return DamAssetType.Video
-    case 'document':
-      return DamAssetType.Document
-    default:
-      return DamAssetType.Default
-  }
-}
+export const DamAssetType = {
+  Image: 'image',
+  Audio: 'audio',
+  Video: 'video',
+  Document: 'document',
+} as const
+export type DamAssetTypeType = (typeof DamAssetType)[keyof typeof DamAssetType]
+export const DamAssetTypeDefault = DamAssetType.Image
 
 interface Attributes {
-  assetType: DamAssetType
-  assetStatus: DamAssetStatus
+  assetType: DamAssetTypeType
+  assetStatus: DamAssetStatusType
 }
 
 export interface AssetFileProperties {

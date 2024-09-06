@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
 import { useAlerts } from '@/composables/system/alerts'
 import useVuelidate from '@vuelidate/core'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
@@ -21,7 +21,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     isActive: boolean
     dataCy?: string
-    assetType: DamAssetType
+    assetType: DamAssetTypeType
     extSystem: IntegerId
   }>(),
   {

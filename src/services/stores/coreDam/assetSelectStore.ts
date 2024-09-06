@@ -1,10 +1,14 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import type { AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
-import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
+import type { AssetSearchListItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
-import { type AssetSelectReturnData, AssetSelectReturnType } from '@/types/coreDam/AssetSelect'
+import {
+  type AssetSelectReturnData,
+  AssetSelectReturnType,
+  type AssetSelectReturnTypeType
+} from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { DamAssetTypeDefault } from '@/types/coreDam/Asset'
 
 export interface AssetSelectListItem {
   asset: AssetSearchListItemDto
@@ -16,7 +20,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   const loader = ref(false)
   const selectedLicenceId = ref<IntegerId>(0)
   const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
-  const assetType = ref<AssetTypeValue>(AssetTypeValue.Default)
+  const assetType = ref<DamAssetTypeType>(DamAssetTypeDefault)
   const selectedAssets = ref<Map<DocId, AssetSelectListItem>>(new Map())
   const singleMode = ref(false)
   const minCount = ref(0)
@@ -43,7 +47,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     singleMode.value = value
   }
 
-  function setAssetType(value: DamAssetType) {
+  function setAssetType(value: DamAssetTypeType) {
     assetType.value = value
   }
 
@@ -145,7 +149,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return assets
   }
 
-  function getSelectedData(type: AssetSelectReturnType): AssetSelectReturnData {
+  function getSelectedData(type: AssetSelectReturnTypeType): AssetSelectReturnData {
     switch (type) {
       case AssetSelectReturnType.AssetId:
         return {

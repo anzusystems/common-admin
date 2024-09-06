@@ -5,10 +5,10 @@ import {
   type DamExtSystemConfig,
   type DamPrvConfig,
   type DamPubConfig,
-  UserAuthType
+  UserAuthType,
 } from '@/types/coreDam/DamConfig'
 import type { IntegerId } from '@/types/common'
-import { DamAssetType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
+import { type DamAssetTypeType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 
 const damPubConfigDefault = () => ({
@@ -20,14 +20,14 @@ const damPrvConfigDefault = () => ({
   distributionServices: {},
   settings: {
     aclCheckEnabled: true,
-      adminAllowListName: 'root',
-      allowSelectExtSystem: false,
-      allowSelectLicenceId: false,
-      defaultAssetLicenceId: 0,
-      defaultExtSystemId: 0,
-      imageChunkConfig: {
+    adminAllowListName: 'root',
+    allowSelectExtSystem: false,
+    allowSelectLicenceId: false,
+    defaultAssetLicenceId: 0,
+    defaultExtSystemId: 0,
+    imageChunkConfig: {
       minSize: 0,
-        maxSize: 0,
+      maxSize: 0,
     },
     maxBulkItemCount: 0,
   },
@@ -46,7 +46,7 @@ export const useDamConfigStore = defineStore('commonAdminDamConfigStore', () => 
   const damConfigExtSystem = shallowRef(new Map<IntegerId, DamExtSystemConfig>())
   const damConfigLicenceExtSystem = shallowRef(new Map<IntegerId, DamConfigLicenceExtSystem>())
   const damConfigAssetCustomFormElements = shallowRef(
-    new Map<IntegerId, { [key in DamAssetType]: CustomDataFormElement[] }>()
+    new Map<IntegerId, { [key in DamAssetTypeType]: CustomDataFormElement[] }>()
   )
   const damConfigDistributionCustomFormElements = shallowRef(
     new Map<DamDistributionServiceName, CustomDataFormElement[]>()

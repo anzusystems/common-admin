@@ -1,39 +1,26 @@
 import type { DocId } from '@/types/common'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 
-export enum AssetSelectReturnType {
-  MainFileId = 'mainFileId',
-  AssetId = 'assetId',
-  Asset = 'asset',
-}
-
-export type AssetSelectReturnTypeValues = `${AssetSelectReturnType}`
+export const AssetSelectReturnType = {
+  MainFileId: 'mainFileId',
+  AssetId: 'assetId',
+  Asset: 'asset',
+} as const
+export type AssetSelectReturnTypeType = (typeof AssetSelectReturnType)[keyof typeof AssetSelectReturnType]
 
 export type AssetSelectReturnData = AssetSelectReturnMainFileId | AssetSelectReturnAssetId | AssetSelectReturnAsset
 
 interface AssetSelectReturnMainFileId {
-  type: 'mainFileId'
+  type: typeof AssetSelectReturnType.MainFileId,
   value: Array<DocId>
 }
 
 interface AssetSelectReturnAssetId {
-  type: 'assetId'
+  type: typeof AssetSelectReturnType.AssetId
   value: Array<DocId>
 }
 
 interface AssetSelectReturnAsset {
-  type: 'asset'
+  type: typeof AssetSelectReturnType.Asset
   value: Array<AssetSearchListItemDto>
-}
-
-export const assetSelectReturnTypeValuesToEnum = (value: AssetSelectReturnTypeValues) => {
-  switch (value) {
-    case 'assetId':
-      return AssetSelectReturnType.AssetId
-    case 'asset':
-      return AssetSelectReturnType.Asset
-    case 'mainFileId':
-    default:
-      return AssetSelectReturnType.MainFileId
-  }
 }
