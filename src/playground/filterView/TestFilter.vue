@@ -1,16 +1,19 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { useTestListFilter } from '@/playground/filterView/testFilter'
+import { useArticleStatus, useTestListFilter } from '@/playground/filterView/testFilter'
 import AFilterWrapper from '@/components/filter/AFilterWrapper.vue'
 import AFilterInteger from '@/components/filter/AFilterInteger.vue'
 import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterMixed from '@/components/filter/AFilterMixed.vue'
 import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
+import AFilterValueObjectOptionsSelect from '@/components/filter/AFilterValueObjectOptionsSelect.vue'
 
 const emit = defineEmits<{
   (e: 'submitFilter'): void
   (e: 'resetFilter'): void
 }>()
+
+const { subjectStatusOptions } = useArticleStatus()
 
 const filter = useTestListFilter()
 const touched = ref(false)
@@ -69,6 +72,13 @@ const onAnyFilterUpdate = () => {
         >
           <AFilterString
             v-model="filter.text"
+            @update:model-value="onAnyFilterUpdate"
+          />
+        </VCol>
+        <VCol>
+          <AFilterValueObjectOptionsSelect
+            v-model="filter.status"
+            :items="subjectStatusOptions"
             @update:model-value="onAnyFilterUpdate"
           />
         </VCol>
