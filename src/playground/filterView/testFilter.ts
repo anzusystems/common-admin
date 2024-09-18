@@ -2,7 +2,7 @@ import { reactive, ref } from 'vue'
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 import { dateTimeEndOfDay, dateTimeStartOfDay } from '@/utils/datetime'
 import { useI18n } from 'vue-i18n'
-import type { ValueObjectOption } from '@anzusystems/common-admin'
+import type { ValueObjectOption } from '@/types/ValueObject'
 
 const makeFilter = makeFilterHelper('system', 'subject')
 
