@@ -240,14 +240,14 @@ const calculateWaitingSeconds = (timestamp: number) => {
 
 <template>
   <div>
-    moderator:
+    {{ t('common.collab.moderator') }}:
     <ACollabLockedByUser
       v-if="collabRoomInfo.moderator"
       :id="collabRoomInfo.moderator"
       :key="collabRoomInfo.moderator"
       :users="cachedUsers"
     />
-    users:
+    {{ t('common.collab.users') }}:
     <ACollabLockedByUser
       v-for="userId in collabRoomInfo.users.filter((user) => user !== collabRoomInfo.moderator)"
       :id="userId"
