@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.47",
+  "version": "1.47.0-beta.48",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -44,7 +44,7 @@
     "@kyvg/vue3-notification": "^3.3.0",
     "@mdi/font": "^7.4.47",
     "@rushstack/eslint-patch": "^1.10.4",
-    "@shikijs/vitepress-twoslash": "^1.20.0",
+    "@shikijs/vitepress-twoslash": "^1.21.0",
     "@stylistic/eslint-plugin": "^2.8.0",
     "@tsconfig/node18": "^18.2.4",
     "@types/node": "^20.16.10",
@@ -101,7 +101,7 @@
     "pinia": "2.2.2",
     "socket.io-client": "4.8.0",
     "vue": "3.5.10",
-    "vue-i18n": "9.14.0",
+    "vue-i18n": "9.14.1",
     "vue-router": "4.4.5",
     "vuetify": "3.7.2"
   },
