@@ -71,6 +71,7 @@ type Image = {
 
 // ---cut-before---
 interface Data {
+  id: number
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
   url: string

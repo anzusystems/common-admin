@@ -154,8 +154,8 @@ import {
   timestampCurrent,
   yearNow,
 } from '@/utils/datetime'
-import { Grant, useGrant, type GrantType, GrantDefault } from '@/model/valueObject/Grant'
-import { GrantOrigin, type GrantOriginType, GrantOriginDefault, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
+import { Grant, useGrant } from '@/model/valueObject/Grant'
+import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
 import { useAnzuUserFactory } from '@/model/factory/AnzuUserFactory'
 import { usePermissionConfigFactory } from '@/model/factory/PermissionConfigFactory'
 import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactory'

@@ -25,6 +25,7 @@
 - [idnes_video](/editor/scraper/idnes_video/)
 - [iframe_basic](/editor/scraper/iframe_basic/)
 - [instagram_post](/editor/scraper/instagram_post/)
+- [instagram_reel](/editor/scraper/instagram_reel/)
 - [jw_video](/editor/scraper/jw_video/)
 - [pinterest_pin](/editor/scraper/pinterest_pin/)
 - [podbean_episode](/editor/scraper/podbean_episode/)
