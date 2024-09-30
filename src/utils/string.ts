@@ -79,14 +79,16 @@ export const stringTrimLength = (value: string, maxLength = 80): string => {
 export const stringUrlTemplateReplace = (template: string, params: UrlParams) => {
   if (template.indexOf(':') === -1) return template
   const newParts: string[] = []
-  const parts = template.split('/')
+  const [path, queryString] = template.split('?')
+  const parts = path.split('/')
   parts.forEach((part, index) => {
     newParts[index] = part
     if (!part.startsWith(':')) return
     const key = part.substring(1)
     if (!isUndefined(params[key])) newParts[index] = params[part.substring(1)] + ''
   })
-  return newParts.join('/')
+
+  return newParts.join('/') + (queryString ? `?${queryString}` : '')
 }
 
 /**
