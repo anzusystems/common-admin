@@ -218,7 +218,7 @@ __metadata:
     eslint: "npm:8.57.1"
     eslint-plugin-vue: "npm:9.28.0"
     npm-run-all: "npm:^4.1.5"
-    pinia: "npm:2.2.3"
+    pinia: "npm:2.2.4"
     postcss: "npm:^8.4.47"
     postcss-html: "npm:^1.7.0"
     postcss-prefix-selector: "npm:^1.16.1"
@@ -249,7 +249,7 @@ __metadata:
     "@vueuse/integrations": 11.1.0
     axios: 1.7.7
     dayjs: 1.11.13
-    pinia: 2.2.3
+    pinia: 2.2.4
     socket.io-client: 4.8.0
     vue: 3.5.10
     vue-i18n: 9.14.1
@@ -6525,9 +6525,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pinia@npm:2.2.3":
-  version: 2.2.3
-  resolution: "pinia@npm:2.2.3"
+"pinia@npm:2.2.4":
+  version: 2.2.4
+  resolution: "pinia@npm:2.2.4"
   dependencies:
     "@vue/devtools-api": "npm:^6.6.3"
     vue-demi: "npm:^0.14.10"
@@ -6540,7 +6540,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10/b016f9899a968901a1702ea9f283b294308064c7cef0f94e2259f8ab1c967c42cdb346aa590967611810caf830ea035f91f8c7b57c6e6f31f74d10b6eb87c11f
+  checksum: 10/0496358bab0b66d31bbff788dbb1f45238d49ac3cfd12323f1092d32d2311a3ea75bad012aff45ba552544051afd91cc3c6573f7a290b6c605acc96d95f3b684
   languageName: node
   linkType: hard
 
