@@ -630,6 +630,10 @@ defineExpose({
         @on-drop="onDrop"
       />
     </div>
+    <slot
+      name="append"
+      :image="resImage"
+    />
     <ImageDetailDialogMetadata
       ref="detailDialogMetadataComponent"
       v-model="metadataDialog"

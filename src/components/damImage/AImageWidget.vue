@@ -117,7 +117,14 @@ defineExpose({
     v-bind="props"
     @update:model-value="emit('update:modelValue', $event)"
     @after-metadata-save-success="emit('afterMetadataSaveSuccess')"
-  />
+  >
+    <template #append="{ image: appendImage }">
+      <slot
+        name="append"
+        :image="appendImage"
+      />
+    </template>
+  </ImageWidgetInner>
   <div
     v-else-if="status === 'error'"
     class="text-error"

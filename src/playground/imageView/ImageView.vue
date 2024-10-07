@@ -77,7 +77,11 @@ const saveInsideDialog = () => {
             :select-licences="[100000, 100001]"
             queue-key="listingImage"
             expand-options
-          />
+          >
+            <template #append="{ image }">
+              {{ image }}
+            </template>
+          </AImageWidget>
         </VCol>
         <VCol cols="4">
           Expanded actions & metadata - only one at once in dialogs like embed:
