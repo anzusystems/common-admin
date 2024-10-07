@@ -1,7 +1,18 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { fetchAsset, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
+import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { useDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
+import { DamNotificationName } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
+import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
+import { uploadStop, useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
+import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
+import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
+import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import type { AssetFileFailReasonType } from '@/types/coreDam/AssetFile'
 import {
   type UploadQueue,
   type UploadQueueItem,
@@ -10,20 +21,9 @@ import {
   UploadQueueItemType,
   type UploadQueueKey,
 } from '@/types/coreDam/UploadQueue'
-import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
-import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import { uploadStop, useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
-import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
-import type { AssetFileFailReasonType } from '@/types/coreDam/AssetFile'
-import { DamNotificationName } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
-import { useDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
-import { fetchAsset, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
-import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
-import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import { isNull, isUndefined } from '@/utils/common'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760

@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import type { IntegerId } from '@/types/common'
-import { onMounted, provide, ref, shallowRef } from 'vue'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
-import { isUndefined } from '@/utils/common'
-import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
-import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
+import type { IntegerId } from '@/types/common'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import { isUndefined } from '@/utils/common'
+import { onMounted, provide, ref, shallowRef } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -77,7 +77,7 @@ onMounted(async () => {
     promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }
   try {
-    await Promise.all(promises)
+    await Promise.allSettled(promises)
   } catch (e) {
     status.value = 'error'
   }

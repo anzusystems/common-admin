@@ -90,7 +90,7 @@ onMounted(async () => {
     promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }
   try {
-    await Promise.all(promises)
+    await Promise.allSettled(promises)
   } catch (e) {
     status.value = 'error'
   }

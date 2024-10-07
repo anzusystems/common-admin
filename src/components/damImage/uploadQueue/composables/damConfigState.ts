@@ -1,25 +1,25 @@
-import type { AxiosInstance } from 'axios'
-import { cloneDeep, isNull, isUndefined } from '@/utils/common'
+import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
+import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
+import {
+  fetchAssetCustomFormElements,
+  fetchDistributionCustomFormElements,
+} from '@/components/damImage/uploadQueue/composables/damAssetCustomFormApi'
 import {
   fetchConfiguration,
   fetchExtSystemConfiguration,
   fetchPubConfiguration,
 } from '@/components/damImage/uploadQueue/composables/damConfigApi'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
+import type { IntegerId } from '@/types/common'
+import { DamAssetType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type {
   DamConfigLicenceExtSystemReturnType,
   DamExtSystemConfig,
   DamPrvConfig,
   DamPubConfig,
 } from '@/types/coreDam/DamConfig'
-import type { IntegerId } from '@/types/common'
-import {
-  fetchAssetCustomFormElements,
-  fetchDistributionCustomFormElements,
-} from '@/components/damImage/uploadQueue/composables/damAssetCustomFormApi'
-import { DamAssetType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
-import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
-import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
+import { cloneDeep, isNull, isUndefined } from '@/utils/common'
+import type { AxiosInstance } from 'axios'
 
 export function useDamConfigState(client: undefined | (() => AxiosInstance) = undefined) {
   const damConfigStore = useDamConfigStore()
