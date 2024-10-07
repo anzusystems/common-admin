@@ -71,7 +71,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
 
   async function addByFiles(queueKey: UploadQueueKey, extSystem: IntegerId, assetLicence: IntegerId, files: File[]) {
     const { getDamConfigExtSystem } = useDamConfigState()
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
     const configExtSystem = getDamConfigExtSystem(extSystem)
     if (isUndefined(configExtSystem)) {
       throw new Error('Ext system must be initialised.')

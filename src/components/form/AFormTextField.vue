@@ -81,7 +81,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     addCollabFieldLockStatusListener,
     addCollabGatheringBufferDataListener,
     lockedByUser,
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
   } = useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock

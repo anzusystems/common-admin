@@ -66,7 +66,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     changeCollabFieldData,
     acquireCollabFieldLock,
     lockedByUser,
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
   } = useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData

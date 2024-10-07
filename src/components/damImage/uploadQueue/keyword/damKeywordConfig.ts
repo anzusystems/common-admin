@@ -6,7 +6,7 @@ import { isUndefined } from '@/utils/common'
 
 export const useDamKeywordAssetTypeConfig = (assetType: DamAssetTypeType, extSystem: IntegerId) => {
   const { getDamConfigExtSystem } = useDamConfigState()
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
   const configExtSystem = getDamConfigExtSystem(extSystem)
 
   if (isUndefined(configExtSystem)) {

@@ -37,7 +37,6 @@ const onBlur = () => {
   emit('blur', modelValueComputed.value)
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { allExternalProviderAssetTypeOptions } = useDamExternalProviderAssetType()
 </script>
 
