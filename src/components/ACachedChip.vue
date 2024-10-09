@@ -154,7 +154,7 @@ watch(
   .v-chip .v-chip__content {
     max-width: 100%;
     height: auto;
-    min-height: 32px;
+    min-height: 26px;
     white-space: pre-wrap;
   }
 }
