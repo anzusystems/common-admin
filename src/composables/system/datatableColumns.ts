@@ -23,6 +23,7 @@ export type ColumnConfig = {
   title?: string
   sortable?: boolean
   fixed?: boolean
+  maxWidth?: number
 }
 
 export type ColumnInternalValues = {
