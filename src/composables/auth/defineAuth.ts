@@ -29,9 +29,14 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
   }
 
   const can = (acl: TAclValue, subject?: object) => {
-    const user = authStore.getCurrentUserBySystem(getSystemFromAcl(acl))
+    const system = getSystemFromAcl(acl)
+    const user = authStore.getCurrentUserBySystem(system)
+    const userIsLoaded = authStore.isCurrentUserLoadedBySystem(system)
+    if (isUndefined(userIsLoaded)) {
+      throw new Error('Composable defineAuth must try to load currentUser first to use can function.')
+    }
     if (isUndefined(user) || isUndefined(user.id) || isNull(user.id) || user.id === 0) {
-      throw new Error('Composable defineAuth must load currentUser first.')
+      return false
     }
     if (isAdmin(user.roles)) return true
     const permission = objectGetValueByPath(user, 'resolvedPermissions.' + acl)
@@ -52,8 +57,12 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
 
   function canOwner(subject: object) {
     const user = authStore.getCurrentUserBySystem(mainCurrentUserSystem)
+    const userIsLoaded = authStore.isCurrentUserLoadedBySystem(mainCurrentUserSystem)
+    if (isUndefined(userIsLoaded)) {
+      throw new Error('Composable defineAuth must try to load currentUser first to use canOwner function.')
+    }
     if (isUndefined(user) || isUndefined(user.id) || isNull(user.id) || user.id === 0) {
-      throw new Error('Composable defineAuth must load currentUser first.')
+      return false
     }
     if (isOwnerAware(subject)) {
       return subject.owners.includes(user.id)
@@ -85,10 +94,15 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
   function useCurrentUser<TCurrentUser extends AnzuUser | undefined>(system: string) {
     const setCurrentUser = (user: TCurrentUser) => {
       authStore.currentUsers.value.set(system, user)
+      authStore.currentUsersLoaded.value.set(system, true)
     }
 
     const currentUser = computed((): TCurrentUser | undefined => {
       return authStore.currentUsers.value.get(system) as TCurrentUser | undefined
+    })
+
+    const isCurrentUserLoaded = computed((): boolean | undefined => {
+      return authStore.currentUsersLoaded.value.get(system) as boolean | undefined
     })
 
     const isSuperAdmin = computed(() => {
@@ -102,6 +116,11 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
       return currentUser.value ?? false
     })
 
+    const isAnonymous = computed(() => {
+      if (isUndefined(isCurrentUserLoaded.value)) return undefined
+      return !hasCurrentUser.value
+    })
+
     const fetchCurrentUser = async (
       client: () => AxiosInstance,
       endPoint = '/adm/v1/user/current',
@@ -111,8 +130,10 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
       try {
         const res = await apiFetchOne<TCurrentUser>(client, endPoint, urlParams, system, entity)
         setCurrentUser(res)
+        authStore.currentUsersLoaded.value.set(system, true)
         return currentUser.value
       } catch (error) {
+        authStore.currentUsersLoaded.value.set(system, true)
         return undefined
       }
     }
@@ -121,6 +142,7 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
       currentUser,
       setCurrentUser,
       isSuperAdmin,
+      isAnonymous,
       hasCurrentUser,
       fetchCurrentUser,
     }
