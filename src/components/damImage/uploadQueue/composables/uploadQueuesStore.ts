@@ -170,6 +170,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   async function queueItemProcessed(assetId: DocId) {
     try {
       const asset = await fetchAsset(damClient, assetId)
+      console.log('queueItemProcessed asset', asset)
       if (!asset) return
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
@@ -261,6 +262,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
     try {
       const asset = await fetchAsset(damClient, assetId)
+      console.log('queueItemMetadataProcessed asset', asset)
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && item.type) {
