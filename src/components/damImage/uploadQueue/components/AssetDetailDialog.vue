@@ -71,7 +71,7 @@ const isTypeDocument = computed(() => {
 const imageProperties = computed(() => {
   if (asset.value?.mainFile && asset.value.mainFile.links && asset.value.mainFile.links.image_detail) {
     return {
-      url: asset.value.mainFile.links.image_detail.url,
+      url: asset.value.mainFile.links.image_detail.url + '?random=' + Date.now(),
       width: asset.value.mainFile.links.image_detail.width,
       height: asset.value.mainFile.links.image_detail.height,
       bgColor:
