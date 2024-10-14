@@ -31,7 +31,13 @@ import type { VBtn } from 'vuetify/components'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
-import type { CollabComponentConfig, CollabFieldData, CollabFieldLockOptions } from '@/components/collab/types/Collab'
+import {
+  type CollabComponentConfig,
+  type CollabFieldData,
+  type CollabFieldLockOptions,
+  CollabStatus,
+  type CollabStatusType,
+} from '@/components/collab/types/Collab'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
@@ -51,6 +57,7 @@ const props = withDefaults(
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
+    collabStatus?: CollabStatusType
     label?: string | undefined
     required?: boolean
     readonly?: boolean
@@ -64,6 +71,7 @@ const props = withDefaults(
   {
     configName: 'default',
     collab: undefined,
+    collabStatus: CollabStatus.Inactive,
     label: undefined,
     required: false,
     image: undefined,
@@ -94,13 +102,8 @@ const acquireFieldLock = ref((options?: Partial<CollabFieldLockOptions>) => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const {
-    releaseCollabFieldLock,
-    acquireCollabFieldLock,
-    addCollabFieldLockStatusListener,
-    lockedByUser,
-
-  } = useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, acquireCollabFieldLock, addCollabFieldLockStatusListener, lockedByUser } =
+    useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock
   watch(
@@ -128,12 +131,12 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
 }
 const lockedLocal = ref(false)
 const acquireFieldLockLocal = () => {
-  if (lockedLocal.value === true) return
+  if (lockedLocal.value === true || props.collabStatus === CollabStatus.Inactive) return
   acquireFieldLock.value()
   lockedLocal.value = true
 }
 const releaseFieldLockLocal = (value: IntegerIdNullable) => {
-  if (lockedLocal.value === false) return
+  if (lockedLocal.value === false || props.collabStatus === CollabStatus.Inactive) return
   releaseFieldLock.value(value)
   lockedLocal.value = false
 }
@@ -196,7 +199,7 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const collabFieldLockReallyLocked = ref(false)
 
 const waitForFieldLockIsReallyAcquired = async () => {
-  if (!collabOptions.value.enabled || isUndefined(props.collab)) {
+  if (!collabOptions.value.enabled || isUndefined(props.collab) || props.collabStatus === CollabStatus.Inactive) {
     return Promise.resolve(true)
   }
 
