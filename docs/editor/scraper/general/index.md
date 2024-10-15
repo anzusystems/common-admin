@@ -22,6 +22,7 @@
 - [flourish_visual](/editor/scraper/flourish_visual/)
 - [google_document](/editor/scraper/google_document/)
 - [google_map](/editor/scraper/google_map/)
+- [google_mymap](/editor/scraper/google_mymap/)
 - [idnes_video](/editor/scraper/idnes_video/)
 - [iframe_basic](/editor/scraper/iframe_basic/)
 - [instagram_post](/editor/scraper/instagram_post/)
