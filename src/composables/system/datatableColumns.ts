@@ -46,18 +46,18 @@ export function createDatatableColumnsConfig(
   system: string | undefined = undefined,
   subject: string | undefined = undefined,
   disableActions: boolean = false,
-  customPagination: Pagination | undefined = undefined,
+  customInitialPagination: Pagination | undefined = undefined,
   customI18n: undefined | any = undefined,
   showExpand: undefined| boolean = undefined
 ) {
   const localI18n = customI18n ?? i18n
   const { t } = localI18n.global || localI18n
   const pagination: Pagination = usePagination()
-  if (customPagination) {
+  if (customInitialPagination) {
     for (const prop of Object.keys(pagination)) {
-      if (prop in customPagination) {
+      if (prop in customInitialPagination) {
         // @ts-ignore
-        pagination[prop] = customPagination[prop]
+        pagination[prop] = customInitialPagination[prop]
       }
     }
   }
