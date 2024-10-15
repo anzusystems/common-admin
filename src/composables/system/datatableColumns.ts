@@ -88,7 +88,7 @@ export function createDatatableColumnsConfig(
     return columns
   })
 
-  const updateSortBy = (sortBy: any) => {
+  const updateSortBy = (sortBy: { key: string, order: 'asc' | 'desc' } | undefined) => {
     if (sortBy) {
       pagination.sortBy = sortBy.key
       pagination.descending = sortBy.order === 'desc' ? true : false
