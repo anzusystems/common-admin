@@ -244,6 +244,7 @@ function sidebarEditor() {
         { text: 'pinterest_pin', link: '/editor/scraper/pinterest_pin/' },
         { text: 'podbean_episode', link: '/editor/scraper/podbean_episode/' },
         { text: 'scribd_document', link: '/editor/scraper/scribd_document/' },
+        { text: 'seznam_map', link: '/editor/scraper/seznam_map/' },
         { text: 'soundcloud_track', link: '/editor/scraper/soundcloud_track/' },
         { text: 'spotify_episode', link: '/editor/scraper/spotify_episode/' },
         { text: 'ta3_video', link: '/editor/scraper/ta3_video/' },

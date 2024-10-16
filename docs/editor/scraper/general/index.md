@@ -31,6 +31,7 @@
 - [pinterest_pin](/editor/scraper/pinterest_pin/)
 - [podbean_episode](/editor/scraper/podbean_episode/)
 - [scribd_document](/editor/scraper/scribd_document/)
+- [seznam_map](/editor/scraper/seznam_map/)
 - [soundcloud_track](/editor/scraper/soundcloud_track/)
 - [spotify_episode](/editor/scraper/spotify_episode/)
 - [ta3_video](/editor/scraper/ta3_video/)
