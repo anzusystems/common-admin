@@ -201,7 +201,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^1.22.0"
     "@stylistic/eslint-plugin": "npm:^2.9.0"
     "@tsconfig/node18": "npm:^18.2.4"
-    "@types/node": "npm:^20.16.11"
+    "@types/node": "npm:^20.16.12"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -226,7 +226,7 @@ __metadata:
     postcss-prefix-selector: "npm:^2.1.0"
     prettier: "npm:^3.3.3"
     rusha: "npm:^0.8.14"
-    sass: "npm:^1.79.5"
+    sass: "npm:^1.80.1"
     socket.io-client: "npm:4.8.0"
     sortablejs: "npm:^1.15.3"
     stylelint: "npm:16.10.0"
@@ -1642,12 +1642,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.16.11":
-  version: 20.16.11
-  resolution: "@types/node@npm:20.16.11"
+"@types/node@npm:^20.16.12":
+  version: 20.16.12
+  resolution: "@types/node@npm:20.16.12"
   dependencies:
     undici-types: "npm:~6.19.2"
-  checksum: 10/6d2f92b7b320c32ba0c2bc54d21651bd21690998a2e27f00d15019d4db3e0ec30fce85332efed5e37d4cda078ff93ea86ee3e92b76b7a25a9b92a52a039b60b2
+  checksum: 10/689badb5af2a1a03553a6d21880fa4aabb8cf028b7db1a03be889c0026047a780ac37c83df5dca036f02f5dc3cc4000254fa40d2cadd5df0e9bd6f43dae6eac6
   languageName: node
   linkType: hard
 
@@ -6681,9 +6681,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.79.5":
-  version: 1.79.5
-  resolution: "sass@npm:1.79.5"
+"sass@npm:^1.80.1":
+  version: 1.80.1
+  resolution: "sass@npm:1.80.1"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^4.0.0"
@@ -6691,7 +6691,7 @@ __metadata:
     source-map-js: "npm:>=0.6.2 <2.0.0"
   bin:
     sass: sass.js
-  checksum: 10/86f6ebe9c3c8d86cf8fff2e12f93109697140090604fb6180c8792c0e4fc98377c433dbd4c86a0272c47ba4c307edf24435a06d7e5995956048a23f9e187fedc
+  checksum: 10/e45d392f474b50b7f20b9f7426312fb093ca42c74e058a9023ba73cc59702052ea1769836753970ed6320b473678399d50cc96da6cbf5e771b0b5a23ef685f55
   languageName: node
   linkType: hard
 
