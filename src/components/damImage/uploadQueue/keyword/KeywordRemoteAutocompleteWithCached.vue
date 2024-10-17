@@ -10,7 +10,7 @@ import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/
 import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import { isArray } from '@/utils/common'
 import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
-import { useDamCachedAuthorsForRemoteAutocomplete } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useCachedKeywordsForRemoteAutocomplete } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import KeywordRemoteAutocompleteCachedKeywordChip from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteCachedKeywordChip.vue'
 import KeywordCreateButton from '@/components/damImage/uploadQueue/keyword/KeywordCreateButton.vue'
 
@@ -100,7 +100,7 @@ const itemSlotIsSelected = (item: DocId) => {
   <div class="d-flex">
     <AFormRemoteAutocompleteWithCached
       v-model="modelValueComputed"
-      :use-cached="useDamCachedAuthorsForRemoteAutocomplete"
+      :use-cached="useCachedKeywordsForRemoteAutocomplete"
       :v="v$"
       :required="requiredComputed"
       :label="label"
