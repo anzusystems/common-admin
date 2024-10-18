@@ -14,8 +14,8 @@ export function filterAllowedImageWidgetSelectConfigs(values: DamConfigLicenceEx
   const currentUser = damCurrentUser.value
   if (isUndefined(currentUser)) return []
 
-  const adminToExtSystems = currentUser.adminToExtSystems.map((extSystemValue) => extSystemValue.id)
-  const assetLicences = currentUser.assetLicences.map((assetLicenceValue) => assetLicenceValue.id)
+  const adminToExtSystems = currentUser.adminToExtSystems
+  const assetLicences = currentUser.resolvedAssetLicences.map((assetLicenceValue) => assetLicenceValue.id)
   const allowed: DamConfigLicenceExtSystemReturnType[] = []
   values.forEach((value) => {
     if (adminToExtSystems.includes(value.extSystem)) {
@@ -39,12 +39,12 @@ export function isImageWidgetUploadConfigAllowed(value: DamConfigLicenceExtSyste
   const currentUser = damCurrentUser.value
   if (isUndefined(currentUser)) return []
 
-  const adminToExtSystems = currentUser.adminToExtSystems.map((extSystemValue) => extSystemValue.id)
+  const adminToExtSystems = currentUser.adminToExtSystems
   if (adminToExtSystems.includes(value.extSystem)) {
     return true
   }
 
-  const assetLicences = currentUser.assetLicences.map((assetLicenceValue) => assetLicenceValue.id)
+  const assetLicences = currentUser.resolvedAssetLicences.map((assetLicenceValue) => assetLicenceValue.id)
   if (assetLicences.includes(value.licence)) {
     return true
   }
