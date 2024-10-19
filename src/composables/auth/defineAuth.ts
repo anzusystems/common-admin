@@ -123,7 +123,7 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
 
     const fetchCurrentUser = async (
       client: () => AxiosInstance,
-      endPoint = '/adm/v1/user/current',
+      endPoint = '/adm/v1/users/current',
       urlParams: UrlParams | undefined = undefined,
       entity = 'user'
     ) => {
