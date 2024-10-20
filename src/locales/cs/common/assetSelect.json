@@ -35,7 +35,11 @@
     "text": "Text",
     "described": "Popsáno",
     "visible": "Viditelné",
-    "generatedBySystem": "Generováno systémem"
+    "generatedBySystem": "Generováno systémem",
+    "assetAndMainFileIds": "Id",
+    "keywordIds": "Klúčové slová",
+    "authorIds": "Autori",
+    "createdByIds": "Založené používateľmi"
   },
   "error": {
     "unallowedLicence": "Nemáte práva na licenciu v DAM"

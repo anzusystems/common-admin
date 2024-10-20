@@ -505,6 +505,9 @@ import { useCommonAdminImageOptions } from '@/components/damImage/composables/co
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
 import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/composables/system/breadcrumbs'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
+import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
+import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
+import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
 
 export {
   // COMPONENTS
@@ -598,6 +601,9 @@ export {
   DamDistributionServiceSelect,
   DamAssetLicenceRemoteAutocomplete,
   DamAssetLicenceGroupRemoteAutocomplete,
+  DamAuthorFilterRemoteAutocomplete,
+  DamKeywordFilterRemoteAutocomplete,
+  DamUserFilterRemoteAutocomplete,
 
   // VIEWS
   ALoginView,

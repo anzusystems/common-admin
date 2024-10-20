@@ -47,7 +47,7 @@ onMounted(async () => {
 
   const { useCurrentUser } = defineAuth('dam')
   const { fetchCurrentUser } = useCurrentUser('dam')
-  await fetchCurrentUser(damClient)
+  await fetchCurrentUser(damClient, '/adm/users/current')
   ready.value = true
 })
 </script>
