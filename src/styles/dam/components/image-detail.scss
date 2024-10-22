@@ -1,3 +1,4 @@
+@use "sass:map";
 @use 'vuetify/lib/styles/settings/_variables.scss' as vars;
 
 $class-name-root: 'dam-image-detail';
@@ -31,11 +32,11 @@ $bg-sidebar-color-dark: #1a1a1a;
     top: 0;
     right: 0;
 
-    @media #{map-get(vars.$display-breakpoints, 'sm-and-down')} {
+    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
       width: 100%;
     }
 
-    @media #{map-get(vars.$display-breakpoints, 'md-and-up')} {
+    @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
       width: $sidebar-width;
     }
   }
@@ -60,11 +61,11 @@ $bg-sidebar-color-dark: #1a1a1a;
     }
 
     .#{$class-name-root}__left {
-      @media #{map-get(vars.$display-breakpoints, 'sm-and-down')} {
+      @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
         width: 100%;
       }
 
-      @media #{map-get(vars.$display-breakpoints, 'md-and-up')} {
+      @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
         padding-right: $sidebar-width;
       }
     }
