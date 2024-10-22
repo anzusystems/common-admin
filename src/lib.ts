@@ -157,6 +157,7 @@ import {
 import { Grant, useGrant, GrantDefault, type GrantType } from '@/model/valueObject/Grant'
 import { GrantOrigin, useGrantOrigin, type GrantOriginType, GrantOriginDefault } from '@/model/valueObject/GrantOrigin'
 import { useAnzuUserFactory } from '@/model/factory/AnzuUserFactory'
+import { useBaseUserFactory } from '@/model/factory/BaseUserFactory'
 import { usePermissionConfigFactory } from '@/model/factory/PermissionConfigFactory'
 import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactory'
 import type {
@@ -172,7 +173,7 @@ import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 import type { OwnerAware } from '@/types/OwnerAware'
 import { isOwnerAware } from '@/types/OwnerAware'
-import type { AnzuUser, AnzuUserMinimal } from '@/types/AnzuUser'
+import type { AnzuUser, BaseUser, AnzuUserMinimal } from '@/types/AnzuUser'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { PermissionConfig, PermissionTranslationGroup } from '@/types/PermissionConfig'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
@@ -670,6 +671,7 @@ export {
   type DatetimeUTCNullable,
   type DatetimeUTC,
   type AnzuUser,
+  type BaseUser,
   type AnzuUserMinimal,
   type AnzuUserAndTimeTrackingAware,
   type ValueObjectOption,
@@ -822,6 +824,7 @@ export {
 
   // FACTORIES
   useAnzuUserFactory,
+  useBaseUserFactory,
   usePermissionConfigFactory,
   usePermissionGroupFactory,
 
