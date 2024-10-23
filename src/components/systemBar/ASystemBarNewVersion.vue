@@ -11,7 +11,7 @@ const reloadAdmin = () => {
 <template>
   <span
     v-once
-    class="system-bar-new-version"
+    class="system-bar-new-version pa-3"
   >
     {{ t('common.system.newVersionText') }}
     <span
