@@ -136,7 +136,7 @@ watch([timePickerValue, datePickerValue], ([newTimePickerValue, newDatePickerVal
   } else if (!isNull(props.modelValue)) {
     newDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
   } else {
-    newDate = dayjs().hour(12).minute(0).second(0).millisecond(0)
+    newDate = dayjs().hour(0).minute(0).second(0).millisecond(0)
   }
 
   newDate = watchTimePicker(newTimePickerValue, newDate!)
