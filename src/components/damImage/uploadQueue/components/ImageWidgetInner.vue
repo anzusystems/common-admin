@@ -480,6 +480,7 @@ defineExpose({
   <div
     class="a-image-widget"
     :class="{ 'a-image-widget--locked': isLocked }"
+    :style="width ? 'max-width: ' + width + 'px' : undefined"
   >
     <div class="a-image-widget__options">
       <h4
