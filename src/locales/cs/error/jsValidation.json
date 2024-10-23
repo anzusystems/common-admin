@@ -8,6 +8,6 @@
   "email": "Nesprávný formát e-mailu.",
   "url": "Nesprávný formát URL.",
   "numeric": "Musí být zadána pouze čísla.",
-  "slug": "Povolené znaky pro slug jsou a-z, - a 0-9.",
+  "slug": "Povolené znaky pro slug jsou a-z a 0-9.",
   "stringArrayItemLength": "Délka znaků každé položky musí být mezi {min} a {max} znaků."
 }

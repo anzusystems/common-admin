@@ -8,6 +8,6 @@
   "email": "Incorrect email format.",
   "url": "Incorrect url format.",
   "numeric": "Allowed only numbers.",
-  "slug": "Allowed only characters a-z, - and numbers 0-9.",
+  "slug": "Allowed only characters a-z and numbers 0-9.",
   "stringArrayItemLength": "Item length in list must have between {min} and {max} characters."
 }
