@@ -53,5 +53,9 @@
     "title": "Oops, 401",
     "text": "You don't have access to this page",
     "backButton": "Return to login"
+  },
+  "dropzone": {
+    "dropPossibility": "Upload or move files",
+    "dropHere": "Upload files"
   }
 }
