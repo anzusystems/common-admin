@@ -31,6 +31,7 @@ const props = withDefaults(
     expandMetadata?: boolean
     disableOnClickMenu?: boolean
     width?: number | undefined
+    maxWidth?: number | undefined
     height?: number | undefined
     callDeleteApiOnRemove?: boolean
     damWidth?: undefined | number
@@ -51,6 +52,7 @@ const props = withDefaults(
     expandMetadata: false,
     disableOnClickMenu: false,
     width: undefined,
+    maxWidth: undefined,
     height: undefined,
     callDeleteApiOnRemove: false,
     damWidth: undefined,

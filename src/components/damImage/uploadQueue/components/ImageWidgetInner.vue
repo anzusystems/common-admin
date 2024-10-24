@@ -66,6 +66,7 @@ const props = withDefaults(
     expandMetadata?: boolean // only one at once, use in dialogs
     disableOnClickMenu?: boolean
     width?: number | undefined
+    maxWidth?: number | undefined
     height?: number | undefined
     callDeleteApiOnRemove?: boolean
     damWidth?: undefined | number
@@ -86,6 +87,7 @@ const props = withDefaults(
     expandMetadata: false,
     disableOnClickMenu: false,
     width: undefined,
+    maxWidth: undefined,
     height: undefined,
     callDeleteApiOnRemove: false,
     damWidth: undefined,
@@ -494,7 +496,7 @@ defineExpose({
   <div
     class="a-image-widget"
     :class="{ 'a-image-widget--locked': isLocked }"
-    :style="width ? 'max-width: ' + width + 'px' : undefined"
+    :style="{ width : width ? width + 'px' : undefined, maxWidth : maxWidth ? maxWidth + 'px' : undefined }"
   >
     <div class="a-image-widget__options">
       <h4
