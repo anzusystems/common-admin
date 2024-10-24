@@ -264,7 +264,7 @@ const actionLibrary = () => {
   assetSelectDialog.value = true
 }
 
-const v$ = useVuelidate({}, {}, { $scope: AImageMetadataValidationScopeSymbol })
+const v$ = useVuelidate({}, {}, { $scope: AImageMetadataValidationScopeSymbol, $stopPropagation: true })
 
 const saveImages = async () => {
   v$.value.$touch()

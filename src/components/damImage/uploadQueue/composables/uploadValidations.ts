@@ -27,7 +27,7 @@ export function useImageValidation(
       },
     },
   }))
-  const v$ = useVuelidate(rules, { image }, { $scope: AImageMetadataValidationScopeSymbol, $stopPropagation: true })
+  const v$ = useVuelidate(rules, { image }, { $scope: AImageMetadataValidationScopeSymbol })
 
   return {
     v$,
