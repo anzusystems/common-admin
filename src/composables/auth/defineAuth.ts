@@ -91,6 +91,18 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
     })
   }
 
+  const currentUserId = computed(() => {
+    const user = authStore.getCurrentUserBySystem(mainCurrentUserSystem)
+    const userIsLoaded = authStore.isCurrentUserLoadedBySystem(mainCurrentUserSystem)
+    if (isUndefined(userIsLoaded)) {
+      return undefined
+    }
+    if (isUndefined(user) || isUndefined(user.id) || isNull(user.id) || user.id === 0) {
+      return undefined
+    }
+    return user.id
+  })
+
   function useCurrentUser<TCurrentUser extends AnzuUser | undefined>(system: string) {
     const setCurrentUser = (user: TCurrentUser) => {
       authStore.currentUsers.value.set(system, user)
@@ -153,5 +165,6 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
     canForAll,
     canForSome,
     useCurrentUser,
+    currentUserId,
   }
 }
