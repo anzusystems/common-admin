@@ -5,7 +5,7 @@ import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
-import { cloneDeep, isDefined, isNull, isString, isUndefined } from '@/utils/common'
+import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
 import { DamAssetType } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
@@ -66,7 +66,10 @@ const props = withDefaults(
     expandMetadata?: boolean // only one at once, use in dialogs
     disableOnClickMenu?: boolean
     width?: number | undefined
+    height?: number | undefined
     callDeleteApiOnRemove?: boolean
+    damWidth?: undefined | number
+    damHeight?: undefined | number
   }>(),
   {
     configName: 'default',
@@ -83,7 +86,10 @@ const props = withDefaults(
     expandMetadata: false,
     disableOnClickMenu: false,
     width: undefined,
+    height: undefined,
     callDeleteApiOnRemove: false,
+    damWidth: undefined,
+    damHeight: undefined,
   }
 )
 
@@ -253,7 +259,11 @@ const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: 
   if ((newImage && isNull(resImage.value)) || (newImage && force)) {
     resImage.value = cloneDeep(newImage)
     if (resImage.value) {
-      resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+      if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value), props.damWidth, props.damHeight)
+      } else {
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+      }
       if (props.expandMetadata) {
         imageStore.setImageDetail(toRaw(resImage.value))
       }
@@ -267,7 +277,11 @@ const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: 
       showErrorsDefault(error)
     }
     if (!isNull(resImage.value)) {
-      resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+      if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value), props.damWidth, props.damHeight)
+      } else {
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+      }
       if (props.expandMetadata) {
         imageStore.setImageDetail(toRaw(resImage.value))
       }
@@ -611,6 +625,7 @@ defineExpose({
         :lazy-src="imagePlaceholderPath"
         :src="resolvedSrc"
         :width="width"
+        :height="height"
         cover
         max-width="100%"
         class="disable-radius"
