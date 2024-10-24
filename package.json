@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.72",
+  "version": "1.47.0-beta.73",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -43,7 +43,7 @@
     "@intlify/unplugin-vue-i18n": "^5.2.0",
     "@kyvg/vue3-notification": "^3.4.0",
     "@mdi/font": "^7.4.47",
-    "@shikijs/vitepress-twoslash": "^1.22.0",
+    "@shikijs/vitepress-twoslash": "^1.22.1",
     "@stylistic/eslint-plugin": "^2.9.0",
     "@tsconfig/node18": "^18.2.4",
     "@types/node": "^22.7.9",
@@ -70,7 +70,7 @@
     "postcss-prefix-selector": "^2.1.0",
     "prettier": "^3.3.3",
     "rusha": "^0.8.14",
-    "sass": "^1.80.3",
+    "sass": "^1.80.4",
     "socket.io-client": "4.8.0",
     "sortablejs": "^1.15.3",
     "stylelint": "16.10.0",
