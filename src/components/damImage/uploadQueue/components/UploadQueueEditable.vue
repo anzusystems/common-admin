@@ -65,6 +65,7 @@ onMounted(() => {
             v-model:custom-data="item.customData"
             v-model:keywords="item.keywords"
             v-model:authors="item.authors"
+            v-model:main-file-single-use="item.mainFileSingleUse"
             :ext-system="extSystem"
             :item="item"
             :index="index"

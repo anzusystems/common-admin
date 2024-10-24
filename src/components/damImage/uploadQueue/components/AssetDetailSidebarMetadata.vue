@@ -32,7 +32,7 @@ const props = withDefaults(
 const { t } = useI18n()
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, updateUploadStore } = storeToRefs(assetDetailStore)
+const { asset, updateUploadStore, mainFileSingleUse } = storeToRefs(assetDetailStore)
 const uploadQueueStore = useUploadQueuesStore()
 
 const saveButtonLoading = ref(false)
@@ -53,7 +53,7 @@ const onSave = async () => {
     return
   }
   try {
-    await updateAssetMetadata(damClient, asset.value, props.extSystem)
+    await updateAssetMetadata(damClient, asset.value, props.extSystem, mainFileSingleUse.value)
     if (updateUploadStore.value && !isNull(asset.value)) {
       await uploadQueueStore.updateFromDetail(asset.value)
     }

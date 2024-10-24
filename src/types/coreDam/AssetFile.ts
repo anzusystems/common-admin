@@ -57,7 +57,7 @@ export interface AssetFileLink {
 export interface AssetFileRoute {
   id: DocId
   status: AssetFileRouteStatusType
-  main: boolean,
+  main: boolean
   publicUrl: string
   _resourceName: 'assetFileRoute'
 }
@@ -70,7 +70,14 @@ export type AssetFileLinks =
   | Record<'image_list' | 'image_table' | 'image_detail' | 'image_animated' | 'audio', AssetFileLink>
   | Record<string, never>
 
-export interface AssetFileImage extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
+export interface AssetFileAware {
+  flags: {
+    public: boolean
+    singleUse: boolean
+  }
+}
+
+export interface AssetFileImage extends AssetFileAware, AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -81,7 +88,7 @@ export interface AssetFileImage extends AnzuUserAndTimeTrackingAware, AssetFileM
   _resourceName: 'imageFile'
 }
 
-export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
+export interface AssetFileAudio extends AssetFileAware, AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -92,7 +99,7 @@ export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware, AssetFileM
   _resourceName: 'audioFile'
 }
 
-export interface AssetFileVideo extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileVideo extends AssetFileAware, AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -103,7 +110,7 @@ export interface AssetFileVideo extends AnzuUserAndTimeTrackingAware {
   _resourceName: 'videoFile'
 }
 
-export interface AssetFileDocument extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
+export interface AssetFileDocument extends AssetFileAware, AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes

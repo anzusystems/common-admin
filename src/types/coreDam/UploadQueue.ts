@@ -82,6 +82,7 @@ export interface UploadQueueItem {
   notificationFallbackTry: number
   slotName: string | null
   image: undefined | ImageAware // todo check
+  mainFileSingleUse: boolean | null
 }
 
 export interface DamUploadStartResponse {

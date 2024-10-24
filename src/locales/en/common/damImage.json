@@ -32,7 +32,8 @@
   "asset": {
     "model": {
       "authors": "Authors",
-      "keywords": "Keywords"
+      "keywords": "Keywords",
+      "mainFileSingleUse": "mainFileSingleUse"
     },
     "assetType": {
       "image": "Image",

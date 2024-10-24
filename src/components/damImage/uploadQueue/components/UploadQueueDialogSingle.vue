@@ -90,6 +90,7 @@ const asset = computed<AssetDetailItemDto | null>(() => {
       assetType: item.value.assetType,
       assetStatus: item.value.assetStatus,
     },
+    mainFileSingleUse: false,
     flags: {
       described: false,
       visible: false,

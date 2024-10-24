@@ -20,13 +20,16 @@ export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
   const metadataAreTouched = ref(false)
   const activeTab = ref<AssetDetailTabImageWithRoiType>(AssetDetailTabImageWithRoiDefault)
   const updateUploadStore = ref(false)
+  const mainFileSingleUse = ref(false)
 
   function setAsset(data: AssetDetailItemDto | null) {
     asset.value = data
+    mainFileSingleUse.value = data?.mainFileSingleUse || false
   }
 
   function reset() {
     asset.value = null
+    mainFileSingleUse.value = false
   }
 
   return {
@@ -37,6 +40,7 @@ export const useAssetDetailStore = defineStore('commonAssetDetailStore', () => {
     dialog,
     activeTab,
     updateUploadStore,
+    mainFileSingleUse,
     setAsset,
     reset,
   }

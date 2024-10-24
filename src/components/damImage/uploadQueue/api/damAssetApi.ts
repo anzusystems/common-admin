@@ -36,6 +36,7 @@ export interface AssetMetadataBulkItem {
   authors: DocId[]
   described: boolean
   customData: AssetCustomData
+  mainFileSingleUse: boolean | null
 }
 
 export declare type AssetCustomData = Record<string, any>
@@ -160,6 +161,7 @@ function listItemsToMetadataBulkItems(items: UploadQueueItem[]) {
         authors: item.authors,
         described: true,
         customData: item.customData,
+        mainFileSingleUse: item.mainFileSingleUse,
       })
     }
   })
@@ -195,14 +197,21 @@ const handleMetadataValidationError = (error: any, assetType: DamAssetTypeType, 
   showUnknownError()
 }
 
-export const updateAssetMetadata = (client: () => AxiosInstance, asset: AssetDetailItemDto, extSystem: IntegerId) => {
+export const updateAssetMetadata = (
+  client: () => AxiosInstance,
+  asset: AssetDetailItemDto,
+  extSystem: IntegerId,
+  mainFileSingleUse: boolean | null
+) => {
   return new Promise((resolve, reject) => {
-    const data = {
+    console.log('tralala')
+    const data: AssetMetadataBulkItem = {
       id: asset.id,
       keywords: asset.keywords,
       authors: asset.authors,
       described: true,
       customData: asset.metadata.customData,
+      mainFileSingleUse: mainFileSingleUse,
     }
     client()
       .patch(END_POINT + '/metadata-bulk-update', JSON.stringify([data]))

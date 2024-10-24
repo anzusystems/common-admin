@@ -32,7 +32,8 @@
   "asset": {
     "model": {
       "authors": "Autori",
-      "keywords": "Kľúčové slová"
+      "keywords": "Kľúčové slová",
+      "mainFileSingleUse": "mainFileSingleUse"
     },
     "assetType": {
       "image": "Obrázok",

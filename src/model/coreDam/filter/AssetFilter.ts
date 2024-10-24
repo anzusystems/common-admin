@@ -130,6 +130,9 @@ const filter = reactive({
   createdAtUntil: {
     ...makeFilter({ name: 'createdAtUntil', default: null }),
   },
+  mainFileSingleUse: {
+    ...makeFilter({ name: 'mainFileSingleUse', default: false }),
+  },
 })
 
 export function useAssetListFilter() {

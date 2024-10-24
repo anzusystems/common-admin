@@ -52,6 +52,7 @@ export function useUploadQueueItemFactory() {
       notificationFallbackTry: 1,
       slotName: null,
       image: undefined,
+      mainFileSingleUse: null,
     }
   }
 
