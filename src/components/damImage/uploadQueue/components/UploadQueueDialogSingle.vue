@@ -413,7 +413,7 @@ onMounted(() => {
                   v-if="item && item.error.hasError"
                   :class="
                     'dam-upload-queue__overlay dam-upload-queue__overlay--error ' +
-                      'd-flex align-center justify-center flex-column'
+                    'd-flex align-center justify-center flex-column'
                   "
                 >
                   <VIcon
@@ -462,7 +462,16 @@ onMounted(() => {
               :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
               @on-save="onSave"
               @on-save-and-apply="onSaveAndApply"
-            />
+            >
+              <template #prepend-sidebar>
+                <div v-if="item?.isDuplicate" class="text-caption text-warning px-3 py-2">
+                  {{ t('common.damImage.asset.detail.info.status.duplicate') }}
+                </div>
+                <div v-if="item?.isDuplicate && item?.mainFileSingleUse" class="text-caption text-error px-3 py-2">
+                  {{ t('common.damImage.asset.model.mainFileSingleUse') }}
+                </div>
+              </template>
+            </UploadQueueDialogSingleSidebar>
           </div>
         </div>
       </div>
