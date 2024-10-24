@@ -387,6 +387,7 @@ onMounted(() => {
         :file-input-key="uploadQueue?.fileInputKey"
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
+        multiple
         @files-input="onFileInput"
       >
         <template #activator="{ props: fileInputProps }">

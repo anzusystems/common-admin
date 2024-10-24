@@ -22,7 +22,7 @@ const props = withDefaults(
     fileInputKey: undefined,
     accept: undefined,
     maxSizes: undefined,
-    multiple: true,
+    multiple: false,
     useDropzone: false,
     dropzoneVariant: 'default',
     onDropzoneClickCallback: undefined,

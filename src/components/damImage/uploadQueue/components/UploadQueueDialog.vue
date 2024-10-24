@@ -283,6 +283,7 @@ const showDetail = async (id: DocId) => {
                 :file-input-key="fileInputKey"
                 :accept="accept"
                 :max-sizes="maxSizes"
+                multiple
                 @files-input="emit('onFilesInput', $event)"
               >
                 <template #activator="{ props: fileInputProps }">
