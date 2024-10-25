@@ -63,9 +63,13 @@ export const fetchAsset = (client: () => AxiosInstance, id: DocId) =>
 export const fetchAssetByFileId = (client: () => AxiosInstance, assetFileId: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/asset-file/:id', { id: assetFileId }, SYSTEM_CORE_DAM, ENTITY)
 
-export const bulkUpdateAssetsMetadata = (client: () => AxiosInstance, items: UploadQueueItem[]) => {
+export const bulkUpdateAssetsMetadata = (
+  client: () => AxiosInstance,
+  items: UploadQueueItem[],
+  mainFileSingleUseOverride: boolean | undefined = undefined
+) => {
   return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
-    const bulkItems = listItemsToMetadataBulkItems(items)
+    const bulkItems = listItemsToMetadataBulkItems(items, mainFileSingleUseOverride)
     updateMetadataSequence(client, bulkItems)
       .then((responses) => {
         if (bulkItems.length === 0) {
@@ -151,7 +155,10 @@ async function updateMetadataSequence(client: () => AxiosInstance, bulkItems: As
   return responses
 }
 
-function listItemsToMetadataBulkItems(items: UploadQueueItem[]) {
+function listItemsToMetadataBulkItems(
+  items: UploadQueueItem[],
+  mainFileSingleUseOverride: boolean | undefined = undefined
+) {
   const dtoItems: AssetMetadataBulkItem[] = []
   items.forEach((item) => {
     if (!isNull(item.assetId) && item.canEditMetadata) {
@@ -161,7 +168,7 @@ function listItemsToMetadataBulkItems(items: UploadQueueItem[]) {
         authors: item.authors,
         described: true,
         customData: item.customData,
-        mainFileSingleUse: item.mainFileSingleUse,
+        mainFileSingleUse: isUndefined(mainFileSingleUseOverride) ? item.mainFileSingleUse : mainFileSingleUseOverride,
       })
     }
   })
@@ -204,7 +211,6 @@ export const updateAssetMetadata = (
   mainFileSingleUse: boolean | null
 ) => {
   return new Promise((resolve, reject) => {
-    console.log('tralala')
     const data: AssetMetadataBulkItem = {
       id: asset.id,
       keywords: asset.keywords,

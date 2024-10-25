@@ -254,7 +254,8 @@ const onSaveAndApply = async () => {
   let description = ''
   let source = ''
   try {
-    const assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, items.value)
+    console.log(items.value)
+    const assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, items.value, assetDetailStore.mainFileSingleUse)
     if (!assetsMetadataRes[0]) {
       throw new Error('Fatal error updating asset metadata')
     }
