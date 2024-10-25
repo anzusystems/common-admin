@@ -13,7 +13,7 @@
     "./styles": "./dist/style.css",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.75",
+  "version": "1.47.0-beta.76",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -71,7 +71,7 @@
     "prettier": "^3.3.3",
     "rusha": "^0.8.14",
     "sass": "^1.80.4",
-    "socket.io-client": "4.8.0",
+    "socket.io-client": "4.8.1",
     "sortablejs": "^1.15.3",
     "stylelint": "16.10.0",
     "stylelint-config-recommended-vue": "^1.5.0",
@@ -98,7 +98,7 @@
     "axios": "1.7.7",
     "dayjs": "1.11.13",
     "pinia": "2.2.4",
-    "socket.io-client": "4.8.0",
+    "socket.io-client": "4.8.1",
     "unplugin": "1.14.1",
     "vue": "3.5.12",
     "vue-i18n": "10.0.4",
