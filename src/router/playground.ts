@@ -36,6 +36,7 @@ import { updateCurrentUser, useCurrentUser } from '@/playground/collabView/curre
 import CopyTextView from '@/playground/copyTextView/CopyTextView.vue'
 import ImagePublicInputView from '@/playground/imagePublicInputView/ImagePublicInputView.vue'
 import RemoteAutocompleteView from '@/playground/remoteAutocompleteView/RemoteAutocompleteView.vue'
+import FilterNewView from '@/playground/filterNewView/FilterNewView.vue'
 
 const { createCollabRoom } = useCollabHelpers()
 
@@ -87,6 +88,11 @@ const router = createRouter({
       name: 'view-filters',
       component: FilterView,
     },
+    // {
+    //   path: '/view/filters-new',
+    //   name: 'view-filters-new',
+    //   component: FilterNewView,
+    // },
     {
       path: '/view/split-buttons',
       name: 'view-split-buttons',
