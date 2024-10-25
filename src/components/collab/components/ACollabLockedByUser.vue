@@ -27,6 +27,13 @@ const item = computed(() => {
   return undefined
 })
 
+const tooltip = computed(() => {
+  if (item.value) {
+    return item.value.person.fullName.length ? item.value.person.fullName : item.value.email.split('@')[0]
+  }
+  return undefined
+})
+
 watch(
   item,
   async (newValue) => {
@@ -47,6 +54,7 @@ watch(
       :user="cached ?? undefined"
       container-class=""
       :size="20"
+      :tooltip="tooltip"
     />
     <VProgressCircular
       v-else
