@@ -71,7 +71,7 @@ const isFinished = computed(() => {
 
 const { t } = useI18n()
 const { toolbarColor } = useTheme()
-const v$ = useVuelidate()
+const v$ = useVuelidate({ $stopPropagation: true })
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
 const { damClient } = useCommonAdminCoreDamOptions()
 
