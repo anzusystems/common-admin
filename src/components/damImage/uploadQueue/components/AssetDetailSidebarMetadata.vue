@@ -39,7 +39,7 @@ const saveButtonLoading = ref(false)
 
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
 
-const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
+const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol, $stopPropagation: true })
 
 const { damClient } = useCommonAdminCoreDamOptions()
 
