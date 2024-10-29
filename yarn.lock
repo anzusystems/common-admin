@@ -248,7 +248,7 @@ __metadata:
     "@vueuse/integrations": 11.1.0
     axios: 1.7.7
     dayjs: 1.11.13
-    pinia: 2.2.4
+    pinia: 2.2.5
     socket.io-client: 4.8.1
     unplugin: 1.15.0
     vue: 3.5.12
