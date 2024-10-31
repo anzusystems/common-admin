@@ -31,5 +31,6 @@ const innerFilter = useDamUserFilter()
     :fetch-items-by-ids="fetchItemsByIds"
     :inner-filter="innerFilter"
     filter-by-field="lastName"
+    :filter-sort-by="null"
   />
 </template>

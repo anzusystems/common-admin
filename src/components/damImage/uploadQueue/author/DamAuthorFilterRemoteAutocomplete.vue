@@ -28,5 +28,6 @@ const innerFilter = useAuthorFilter()
     :fetch-items-by-ids="fetchItemsByIds"
     :inner-filter="innerFilter"
     filter-by-field="text"
+    :filter-sort-by="null"
   />
 </template>

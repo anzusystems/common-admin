@@ -62,7 +62,7 @@ watch(
             />
           </VCol>
         </VRow>
-        <Component :is="componentComputed" />
+        <component :is="componentComputed" />
       </VForm>
     </div>
     <div class="subject-select-filter__actions">
