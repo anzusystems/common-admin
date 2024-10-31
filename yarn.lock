@@ -198,7 +198,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^1.22.2"
     "@stylistic/eslint-plugin": "npm:^2.10.0"
     "@tsconfig/node18": "npm:^18.2.4"
-    "@types/node": "npm:^22.8.5"
+    "@types/node": "npm:^22.8.6"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -234,7 +234,7 @@ __metadata:
     vite: "npm:5.4.10"
     vite-plugin-dts: "npm:4.3.0"
     vite-plugin-vuetify: "npm:^2.0.4"
-    vitepress: "npm:1.4.2"
+    vitepress: "npm:1.4.3"
     vue: "npm:3.5.12"
     vue-i18n: "npm:10.0.4"
     vue-router: "npm:4.4.5"
@@ -1618,12 +1618,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^22.8.5":
-  version: 22.8.5
-  resolution: "@types/node@npm:22.8.5"
+"@types/node@npm:^22.8.6":
+  version: 22.8.6
+  resolution: "@types/node@npm:22.8.6"
   dependencies:
     undici-types: "npm:~6.19.8"
-  checksum: 10/60f51f980fa3949a4f698e6aee28e943c5fbbf8af56568c4ab50d30afa94fc652053fdb9cd91818256fb253a8ae55ed2f78437295339c8c1a949451d14dda136
+  checksum: 10/27bb73f033eeec05b4ed52dbc521cac28fb7ac14af267119c9bae0318c97848cd790ac7f0a65924ace7ea717eae62e91bd227da4bd6c0217d0016a7a6cd0a156
   languageName: node
   linkType: hard
 
@@ -7919,9 +7919,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitepress@npm:1.4.2":
-  version: 1.4.2
-  resolution: "vitepress@npm:1.4.2"
+"vitepress@npm:1.4.3":
+  version: 1.4.3
+  resolution: "vitepress@npm:1.4.3"
   dependencies:
     "@docsearch/css": "npm:^3.6.2"
     "@docsearch/js": "npm:^3.6.2"
@@ -7950,7 +7950,7 @@ __metadata:
       optional: true
   bin:
     vitepress: bin/vitepress.js
-  checksum: 10/4605967576968690fb0dd9c1de25a116e4b7165bfaa27f3287832679ae53c0fc62c51915450f74d7c0ad203d91e94ad3d5815f6558954fdee16f17e9cc5d240c
+  checksum: 10/c405f19cb9b3c0aee1f24afc9487ec303dea0f9f84675c045dfff283a0f5f8970d2c4a603527391c5ab749685c86f90e0ea5b9806fcb79edd67df7b06eaf6fbd
   languageName: node
   linkType: hard
 
