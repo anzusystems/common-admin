@@ -234,7 +234,7 @@ __metadata:
     vite: "npm:5.4.10"
     vite-plugin-dts: "npm:4.3.0"
     vite-plugin-vuetify: "npm:^2.0.4"
-    vitepress: "npm:1.4.5"
+    vitepress: "npm:1.5.0"
     vue: "npm:3.5.12"
     vue-i18n: "npm:10.0.4"
     vue-router: "npm:4.4.5"
@@ -804,6 +804,22 @@ __metadata:
   version: 0.4.0
   resolution: "@humanwhocodes/retry@npm:0.4.0"
   checksum: 10/5d6725b5f2b3a6d15e13e8159d3f7c8e06c6987e90ec0f11ad85bb22ff94bdb6d9289e63d3eaa3b5b31c6d3848d9a2818ba5e86228e271d97a43c0312df48bd8
+  languageName: node
+  linkType: hard
+
+"@iconify-json/simple-icons@npm:^1.2.10":
+  version: 1.2.10
+  resolution: "@iconify-json/simple-icons@npm:1.2.10"
+  dependencies:
+    "@iconify/types": "npm:*"
+  checksum: 10/f91e2e477abfe210945e35014ce32b746910192035136400a3e07284c38d5632e95a1f80b0cd6e81eea1db2bea2315e234c11da9cb6bf51c6d235da7f55eece3
+  languageName: node
+  linkType: hard
+
+"@iconify/types@npm:*":
+  version: 2.0.0
+  resolution: "@iconify/types@npm:2.0.0"
+  checksum: 10/1b3425ecbc0eef44f23d3f27355ae7ef306d5119c566f013ef1849995b016e1fdcc5af6b74c3bc0554485d70cf5179cb9c1095b14d662a55abcae1148e1a13c9
   languageName: node
   linkType: hard
 
@@ -7929,12 +7945,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitepress@npm:1.4.5":
-  version: 1.4.5
-  resolution: "vitepress@npm:1.4.5"
+"vitepress@npm:1.5.0":
+  version: 1.5.0
+  resolution: "vitepress@npm:1.5.0"
   dependencies:
     "@docsearch/css": "npm:^3.6.2"
     "@docsearch/js": "npm:^3.6.2"
+    "@iconify-json/simple-icons": "npm:^1.2.10"
     "@shikijs/core": "npm:^1.22.2"
     "@shikijs/transformers": "npm:^1.22.2"
     "@shikijs/types": "npm:^1.22.2"
@@ -7960,7 +7977,7 @@ __metadata:
       optional: true
   bin:
     vitepress: bin/vitepress.js
-  checksum: 10/bb3612aa6b26cc36be8809bbfbd26cb2ce75ad58094add79cdb4b24adafba40c20a17c076dead3641b4cea4d24dd1ed7ed29466ce5683d7532f46ebf68c4bebb
+  checksum: 10/51f564333ca94bfff59fb00bd8fab4623b51d2fd058b58952b3b1cdb353cd77e445f928006ac5d98a2446994345c5d4ff9689bc4ef023c2d14af144e52d54242
   languageName: node
   linkType: hard
 
