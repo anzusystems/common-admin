@@ -144,7 +144,8 @@
     },
     "meta": {
       "create": "Vytvoriť kľúčové slovo"
-    }
+    },
+    "filterMinChars": "Zadajte minimálne 3 znaky"
   },
   "author": {
     "model": {
@@ -164,7 +165,8 @@
     "meta": {
       "create": "Vytvorenie autora"
     },
-    "conflicts": "Konflikt autorov"
+    "conflicts": "Konflikt autorov",
+    "filterMinChars": "Zadajte minimálne 3 znaky"
   },
   "uploadErrors": {
     "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",

@@ -46,7 +46,7 @@
     "@shikijs/vitepress-twoslash": "^1.22.2",
     "@stylistic/eslint-plugin": "^2.10.1",
     "@tsconfig/node18": "^18.2.4",
-    "@types/node": "^22.8.7",
+    "@types/node": "^22.9.0",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.8",
     "@types/webfontloader": "^1.6.38",

@@ -42,6 +42,8 @@ const props = withDefaults(
     useCached: UseCachedType
     itemTitle?: string
     itemValue?: string
+    minSearchChars?: number
+    minSearchText?: string
   }>(),
   {
     label: undefined,
@@ -56,6 +58,8 @@ const props = withDefaults(
     loading: false,
     itemTitle: 'name',
     itemValue: 'id',
+    minSearchChars: 1,
+    minSearchText: '',
   }
 )
 const emit = defineEmits<{
@@ -68,6 +72,22 @@ const emit = defineEmits<{
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetch, add, addManualMinimal } = props.useCached()
+
+const MIN_SEARCH_CHARS = 3
+
+const noDataText = computed(() => {
+  if (loadingLocal.value) {
+    return '$vuetify.loading'
+  }
+  if (
+    fetchedItemsMinimal.value.size === 0 &&
+    search.value.length < MIN_SEARCH_CHARS &&
+    props.minSearchText.length > 0
+  ) {
+    return props.minSearchText
+  }
+  return undefined
+})
 
 const modelValue = computed({
   get() {
@@ -121,17 +141,16 @@ const requiredComputed = computed(() => {
   return props.v?.required && props.v?.required.$params.type === 'required'
 })
 
-const multipleComputedVuetifyTypeFix = computed(() => {
-  if (props.multiple === false) return false
-  return true as unknown as undefined
-})
-
 const onSearchUpdate = (query: string) => {
-  if (!props.multiple && !isFocused.value && query.length === 0) return // vuetify fix
+  // if (!props.multiple && !isFocused.value && query.length === 0) return // vuetify fix
   search.value = query
 }
 
 const apiSearch = async (query: string) => {
+  if (query.length < MIN_SEARCH_CHARS) {
+    fetchedItemsMinimal.value.clear()
+    return
+  }
   loadingLocal.value = true
   const filterField = innerFilter.value[props.filterByField]
   filterField.model = query
@@ -180,10 +199,10 @@ const onClickClear = () => {
   modelValue.value = null
 }
 
-const deleteWasPressedTime = ref(0)
-const onKeydownDelete = () => {
-  deleteWasPressedTime.value = Date.now()
-}
+// const deleteWasPressedTime = ref(0)
+// const onKeydownDelete = () => {
+//   deleteWasPressedTime.value = Date.now()
+// }
 
 watchDebounced(
   search,
@@ -197,13 +216,13 @@ watchDebounced(
 )
 
 watch(search, (newValue, oldValue) => {
-  if (newValue.length === 0 && isFocused.value === true) {
-    const now = Date.now()
-    if (now - deleteWasPressedTime.value > 200) {
-      search.value = oldValue
-      return
-    }
-  }
+  // if (newValue.length === 0 && isFocused.value === true) {
+  //   const now = Date.now()
+  //   if (now - deleteWasPressedTime.value > 200) {
+  //     search.value = oldValue
+  //     return
+  //   }
+  // }
   if (newValue !== oldValue) {
     emit('searchChange', newValue)
   }
@@ -231,19 +250,19 @@ watch(
 <template>
   <VAutocomplete
     v-model="modelValue"
-    :search="search"
+    v-model:search="search"
     chips
     :items="allItems"
     no-filter
-    :multiple="multipleComputedVuetifyTypeFix"
+    :multiple="multiple"
     :clearable="clearable"
     :error-messages="errorMessageComputed"
     :loading="loadingLocal"
+    :no-data-text="noDataText"
     @blur="onBlur"
     @focus="onFocus"
     @update:search="onSearchUpdate"
     @click:clear="onClickClear"
-    @keydown.delete="onKeydownDelete"
   >
     <template #label>
       <span

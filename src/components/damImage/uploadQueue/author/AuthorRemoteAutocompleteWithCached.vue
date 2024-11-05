@@ -133,6 +133,8 @@ onMounted(() => {
       :data-cy="dataCy"
       item-title="name"
       item-value="id"
+      :min-search-chars="3"
+      min-search-text="common.damImage.author.filterMinChars"
       @search-change="searchChange"
     >
       <template #item="{ props: itemSlotProps, item: itemSlotItem }">

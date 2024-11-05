@@ -113,6 +113,8 @@ const itemSlotIsSelected = (item: DocId) => {
       item-title="name"
       item-value="id"
       :data-cy="dataCy"
+      :min-search-chars="3"
+      min-search-text="common.damImage.keyword.filterMinChars"
       @search-change="searchChange"
     >
       <template #item="{ props: itemSlotProps, item: itemSlotItem }">
