@@ -164,6 +164,7 @@ const apiSearch = async (query: string) => {
 
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   const final: Map<IntegerId | DocId, string> = new Map()
+  const finalRaw: Map<IntegerId | DocId, any> = new Map()
   if (isArray(modelValue.value)) {
     modelValue.value.forEach((value: any) => {
       final.set(value, '')
@@ -173,9 +174,10 @@ const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   }
   fetchedItemsMinimal.value.forEach((value) => {
     final.set(value[props.itemValue], value[props.itemTitle])
+    finalRaw.set(value[props.itemValue], cloneDeep(value))
   })
   return Array.from(final, ([key, value]) => {
-    return { value: key, title: value }
+    return { value: key, title: value, raw: finalRaw.get(key) }
   })
 })
 

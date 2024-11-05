@@ -11,9 +11,13 @@ export interface DamAuthorMinimal {
   id: DocId
   name: string
   identifier: string
+  reviewed: boolean
 }
 
-export interface DamAuthor extends DamAuthorMinimal, AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
+export interface DamAuthor
+  extends Pick<DamAuthorMinimal, 'id' | 'name' | 'identifier'>,
+    AnzuUserAndTimeTrackingAware,
+    ResourceNameSystemAware {
   extSystem: IntegerId
   flags: Flags
   type: DamAuthorTypeType

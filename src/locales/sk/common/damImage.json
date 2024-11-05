@@ -151,7 +151,10 @@
     "model": {
       "name": "Meno",
       "identifier": "Identifikátor",
-      "type": "Typ"
+      "type": "Typ",
+      "flags": {
+        "reviewed": "Schválený"
+      }
     },
     "authorType": {
       "none": "Žiaden",

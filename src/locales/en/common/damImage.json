@@ -144,13 +144,17 @@
     },
     "meta": {
       "create": "Create keyword"
-    }
+    },
+    "filterMinChars": "Enter at least 3 characters"
   },
   "author": {
     "model": {
       "name": "Name",
       "identifier": "Identifier",
-      "type": "Type"
+      "type": "Type",
+      "flags": {
+        "reviewed": "Reviewed"
+      }
     },
     "authorType": {
       "none": "None",
@@ -164,7 +168,8 @@
     "meta": {
       "create": "Creating author"
     },
-    "conflicts": "Author conflicts"
+    "conflicts": "Author conflicts",
+    "filterMinChars": "Enter at least 3 characters"
   },
   "uploadErrors": {
     "unknownError": "System error. Please try again later or contact the administrator.",

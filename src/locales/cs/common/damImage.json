@@ -144,13 +144,17 @@
     },
     "meta": {
       "create": "Vytvoriť kľúčové slovo"
-    }
+    },
+    "filterMinChars": "Zadajte minimálne 3 znaky"
   },
   "author": {
     "model": {
       "name": "Meno",
       "identifier": "Identifikátor",
-      "type": "Typ"
+      "type": "Typ",
+      "flags": {
+        "reviewed": "Schválený"
+      }
     },
     "authorType": {
       "none": "Žiaden",
@@ -164,7 +168,8 @@
     "meta": {
       "create": "Vytvorenie autora"
     },
-    "conflicts": "Konflikt autorov"
+    "conflicts": "Konflikt autorov",
+    "filterMinChars": "Zadajte minimálne 3 znaky"
   },
   "uploadErrors": {
     "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",

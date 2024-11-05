@@ -158,6 +158,7 @@ onMounted(() => {
               :queue-id="queueId"
               :title="itemSlotItem.title"
               text-only
+              :force-reviewed="itemSlotItem.raw?.raw?.reviewed"
             />
           </template>
         </VListItem>
