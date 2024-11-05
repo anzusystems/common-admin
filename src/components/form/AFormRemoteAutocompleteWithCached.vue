@@ -214,7 +214,7 @@ watchDebounced(
       emit('searchChangeDebounced', newValue)
     }
   },
-  { debounce: 300, maxWait: 1000 }
+  { debounce: 300 }
 )
 
 watch(search, (newValue, oldValue) => {

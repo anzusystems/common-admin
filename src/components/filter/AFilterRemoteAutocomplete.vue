@@ -201,7 +201,7 @@ watchDebounced(
       apiSearch(newValue, apiRequestCounter.value)
     }
   },
-  { debounce: 500, maxWait: 1500 }
+  { debounce: 300 }
 )
 </script>
 
