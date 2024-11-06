@@ -16,6 +16,11 @@ export interface MakeFilterOptions<T = any> {
   exclude: boolean
 }
 
+interface LoadStoredFilterOptions {
+  showAdvancedFilter?: Ref<boolean>
+  callback?: (containsAdvanced: boolean) => void
+}
+
 export function makeFilterHelper<T = any>(system?: string, subject?: string) {
   return (options: Partial<MakeFilterOptions<T>> = {}): Filter<T> => {
     const variant = isUndefined(options.variant) ? 'eq' : options.variant
@@ -66,10 +71,10 @@ export function useFilterHelpers(storeId: string | undefined = undefined) {
 
   const loadStoredFilter = (
     filterBag: FilterBag,
-    showAdvancedFilterRef?: Ref<boolean>,
-    callback?: (containsAdvanced: boolean) => void
+    options: LoadStoredFilterOptions = {},
   ) => {
     if (!storeId || !localStorage) return
+    const { showAdvancedFilter, callback } = options
     let containsAdvanced = false
     const stored = localStorage.getItem(storeId)
     if (!stored) return
@@ -89,7 +94,7 @@ export function useFilterHelpers(storeId: string | undefined = undefined) {
         //
       }
     }
-    if (showAdvancedFilterRef && containsAdvanced) showAdvancedFilterRef.value = true
+    if (showAdvancedFilter && containsAdvanced) showAdvancedFilter.value = true
     if (callback) callback(containsAdvanced)
   }
 

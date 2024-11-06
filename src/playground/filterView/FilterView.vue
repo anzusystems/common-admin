@@ -17,7 +17,7 @@ const getList = () => {
 }
 
 onMounted(() => {
-  loadStoredFilter(filter, showAdvancedFilter)
+  loadStoredFilter(filter, { showAdvancedFilter })
 })
 </script>
 
