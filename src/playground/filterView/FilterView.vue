@@ -17,9 +17,7 @@ const getList = () => {
 }
 
 onMounted(() => {
-  loadStoredFilter(filter, (containsAdvanced) => {
-    if (containsAdvanced) showAdvancedFilter.value = true
-  })
+  loadStoredFilter(filter, showAdvancedFilter)
 })
 </script>
 

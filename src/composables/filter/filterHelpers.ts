@@ -1,6 +1,7 @@
 import { cloneDeep, isArray, isEmptyArray, isEmptyObject, isNull, isObject, isUndefined } from '@/utils/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
+import type { Ref } from 'vue'
 
 export interface MakeFilterOptions<T = any> {
   name: string
@@ -63,7 +64,11 @@ export function useFilterHelpers(storeId: string | undefined = undefined) {
     }
   }
 
-  const loadStoredFilter = (filterBag: FilterBag, callback?: (containsAdvanced: boolean) => void) => {
+  const loadStoredFilter = (
+    filterBag: FilterBag,
+    showAdvancedFilterRef?: Ref<boolean>,
+    callback?: (containsAdvanced: boolean) => void
+  ) => {
     if (!storeId || !localStorage) return
     let containsAdvanced = false
     const stored = localStorage.getItem(storeId)
@@ -84,6 +89,7 @@ export function useFilterHelpers(storeId: string | undefined = undefined) {
         //
       }
     }
+    if (showAdvancedFilterRef && containsAdvanced) showAdvancedFilterRef.value = true
     if (callback) callback(containsAdvanced)
   }
 
