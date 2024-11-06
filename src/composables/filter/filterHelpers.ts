@@ -11,6 +11,7 @@ export interface MakeFilterOptions<T = any> {
   multiple: boolean
   clearable: boolean
   mandatory: boolean
+  advanced: boolean
   exclude: boolean
 }
 
@@ -35,6 +36,7 @@ export function makeFilterHelper<T = any>(system?: string, subject?: string) {
       multiple: isArray(defaultValue),
       clearable: isUndefined(options.clearable) ? true : options.clearable,
       mandatory: isUndefined(options.mandatory) ? false : options.mandatory,
+      advanced: isUndefined(options.advanced) ? false : options.advanced,
       exclude: isUndefined(options.exclude) ? false : options.exclude,
       model: cloneDeep(defaultValue),
       error: '',
@@ -61,8 +63,9 @@ export function useFilterHelpers(storeId: string | undefined = undefined) {
     }
   }
 
-  const loadStoredFilter = (filterBag: FilterBag, callback?: any) => {
+  const loadStoredFilter = (filterBag: FilterBag, callback?: (containsAdvanced: boolean) => void) => {
     if (!storeId || !localStorage) return
+    let containsAdvanced = false
     const stored = localStorage.getItem(storeId)
     if (!stored) return
     const storedData = JSON.parse(stored)
@@ -73,12 +76,15 @@ export function useFilterHelpers(storeId: string | undefined = undefined) {
         if (!isUndefined(storedData[filterName])) {
           // @ts-ignore
           filterBag[filterName].model = storedData[filterName]
+          if (filterBag[filterName].advanced) {
+            containsAdvanced = true
+          }
         }
       } catch (e) {
         //
       }
     }
-    if (callback) callback()
+    if (callback) callback(containsAdvanced)
   }
 
   const storeFilter = (filterBag: FilterBag) => {
@@ -91,7 +97,8 @@ export function useFilterHelpers(storeId: string | undefined = undefined) {
           !isUndefined(filterBag[filterName].model) &&
           !isNull(filterBag[filterName].model) &&
           !isEmptyObject(filterBag[filterName].model) &&
-          !isEmptyArray(filterBag[filterName].model)
+          !isEmptyArray(filterBag[filterName].model) &&
+          filterBag[filterName].model !== filterBag[filterName].default
         ) {
           data[filterName] = filterBag[filterName].model
         }

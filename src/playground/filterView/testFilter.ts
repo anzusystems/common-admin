@@ -10,23 +10,26 @@ const filter = reactive({
   _elastic: {
     ...makeFilter({ exclude: true }),
   },
-  id: {
-    ...makeFilter({ name: 'id' }),
-  },
-  docId: {
-    ...makeFilter({ name: 'docId' }),
-  },
   text: {
     ...makeFilter({ name: 'text', variant: 'contains' }),
   },
+  id: {
+    ...makeFilter({ name: 'id' }),
+  },
+  status: {
+    ...makeFilter({ name: 'status' }),
+  },
+  docId: {
+    ...makeFilter({ name: 'docId', advanced: true }),
+  },
   title: {
-    ...makeFilter({ name: 'title', variant: 'contains' }),
+    ...makeFilter({ name: 'title', variant: 'contains', advanced: true }),
   },
   blog: {
-    ...makeFilter({ name: 'blog', variant: 'in', field: 'blogId' }),
+    ...makeFilter({ name: 'blog', variant: 'in', field: 'blogId', advanced: true }),
   },
   url: {
-    ...makeFilter({ name: 'url' }),
+    ...makeFilter({ name: 'url', advanced: true }),
   },
   publishedAtFrom: {
     ...makeFilter({
@@ -35,6 +38,7 @@ const filter = reactive({
       variant: 'gte',
       default: dateTimeStartOfDay(-100),
       mandatory: true,
+      advanced: true,
     }),
   },
   publishedAtUntil: {
@@ -44,10 +48,8 @@ const filter = reactive({
       variant: 'lte',
       default: dateTimeEndOfDay(),
       mandatory: true,
+      advanced: true,
     }),
-  },
-  status: {
-    ...makeFilter({ name: 'status' }),
   },
 })
 
