@@ -27,7 +27,9 @@
     "edit": "Edit in DAM",
     "displayTitle": "Original Name",
     "error": "Error",
-    "copyAssetId": "Copy asset ID"
+    "copyAssetId": "Copy asset ID",
+    "stillUploadingOrProcessing": "Asset is still uploading or processing by server",
+    "removeFromQueue": "Remove item from queue?"
   },
   "asset": {
     "model": {
