@@ -97,7 +97,7 @@ async function notificationFallbackCallback(client: () => AxiosInstance, item: U
       uploadQueuesStore.queueItemProcessed(asset.id)
       return
     } else if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
-      uploadQueuesStore.queueItemDuplicate(asset.id)
+      uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, asset.attributes.assetType)
       return
     } else if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Failed) {
       uploadQueuesStore.queueItemFailed(asset.id, asset.mainFile.fileAttributes.failReason)

@@ -9,8 +9,9 @@ import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/ca
 import type { DocId, IntegerId } from '@/types/common'
 import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi.ts'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions.ts'
-import { DamAssetStatus } from '@/types/coreDam/Asset.ts'
+import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset.ts'
 import { useAlerts } from '@/composables/system/alerts.ts'
+import { AssetFileProcessStatus } from '@/types/coreDam/AssetFile.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -54,6 +55,8 @@ const refreshItem = async (data: { index: number; assetId: DocId }) => {
     const asset = await fetchAsset(damClient, data.assetId)
     if (asset.attributes.assetStatus === DamAssetStatus.WithFile) {
       await uploadQueuesStore.queueItemProcessed(asset.id)
+    } else if(asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
+      await uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, DamAssetType.Image)
     } else {
       showWarningT('common.damImage.queueItem.stillUploadingOrProcessing')
     }
