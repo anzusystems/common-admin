@@ -453,6 +453,7 @@ onMounted(() => {
       :max-sizes="uploadSizes"
       multiple
       @on-apply="onAssetUploadConfirm"
+      @on-files-input="onFileInput"
     />
     <AssetDetailDialog
       v-if="assetDialog === queueKey"
