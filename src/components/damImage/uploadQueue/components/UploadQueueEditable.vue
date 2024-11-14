@@ -7,11 +7,11 @@ import AssetQueueSelectedSidebar from '@/components/damImage/uploadQueue/compone
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import type { DocId, IntegerId } from '@/types/common'
-import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi.ts'
-import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions.ts'
-import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset.ts'
-import { useAlerts } from '@/composables/system/alerts.ts'
-import { AssetFileProcessStatus } from '@/types/coreDam/AssetFile.ts'
+import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import { useAlerts } from '@/composables/system/alerts'
+import { AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 
 const props = withDefaults(
   defineProps<{
