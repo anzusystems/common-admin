@@ -77,7 +77,7 @@
       },
       "roi": {
         "title": "Náhľady",
-        "description": "Náhľad obrázku na mobile, počítači alebo v aplikácii.",
+        "description": "Náhľady sú určené pre hlavný obrázok v článku, zoznamy článkov, titulky a rubriky. V tele článku sa zobrazuje formát bez orezania.",
         "refresh": "Znovu načítať náhľady",
         "rotate": {
           "rotateMainFileImage": "Otočenie obrázku (hlavného súboru)",
