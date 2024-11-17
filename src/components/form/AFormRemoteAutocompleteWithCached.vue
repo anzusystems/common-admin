@@ -70,6 +70,8 @@ const emit = defineEmits<{
   (e: 'searchChangeDebounced', data: string): void
 }>()
 
+const search = defineModel<string>('search', { default: '', required: false })
+
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetch, add, addManualMinimal } = props.useCached()
 
@@ -103,7 +105,6 @@ const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
 const isFocused = ref(false)
-const search = ref('')
 const loadingLocal = ref(false)
 const { innerFilter } = toRefs(props)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss

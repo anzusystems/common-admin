@@ -111,15 +111,30 @@ const itemSlotIsSelected = (item: DocId) => {
   return false
 }
 
-onMounted(() => {
-  //
-})
+const search = ref('')
+const authorCreateButton = ref<InstanceType<typeof AuthorCreateButton> | null>(null)
+
+const removeLastComma = (value: string) => {
+  if (value.endsWith(',')) return value.slice(0, -1)
+  return value
+}
+
+const onEnterKeyup = () => {
+  const value = removeLastComma(search.value)
+  authorCreateButton.value?.open(value)
+}
+
+const onCommaKeyup = () => {
+  const value = removeLastComma(search.value)
+  authorCreateButton.value?.open(value)
+}
 </script>
 
 <template>
   <div class="d-flex">
     <AFormRemoteAutocompleteWithCached
       v-model="modelValueComputed"
+      v-model:search="search"
       :use-cached="useDamCachedAuthorsForRemoteAutocomplete"
       :v="v$"
       :required="requiredComputed"
@@ -136,6 +151,8 @@ onMounted(() => {
       :min-search-chars="3"
       min-search-text="common.damImage.author.filterMinChars"
       @search-change="searchChange"
+      @keyup.enter="onEnterKeyup"
+      @keyup.,="onCommaKeyup"
     >
       <template #item="{ props: itemSlotProps, item: itemSlotItem }">
         <VListItem
@@ -175,6 +192,7 @@ onMounted(() => {
     </AFormRemoteAutocompleteWithCached>
     <div>
       <AuthorCreateButton
+        ref="authorCreateButton"
         variant="icon"
         :ext-system="extSystem"
         data-cy="add-author"

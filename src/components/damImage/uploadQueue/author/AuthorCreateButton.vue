@@ -61,12 +61,12 @@ const author = ref<DamAuthor>(createDefault(props.extSystem))
 const dialog = ref(false)
 const buttonLoading = ref(false)
 
-const onClick = () => {
+const onClick = (textOverride?: string) => {
   if (isUndefined(configExtSystem)) {
     throw new Error('Ext system must be initialised.')
   }
   author.value = createDefault(props.extSystem, true)
-  author.value.name = props.initialValue
+  textOverride ? author.value.name = textOverride : author.value.name = props.initialValue
   dialog.value = true
 }
 
@@ -104,6 +104,10 @@ const onConfirm = async () => {
 }
 
 const { authorTypeOptions } = useDamAuthorType()
+
+defineExpose({
+  open: onClick,
+})
 </script>
 
 <template>

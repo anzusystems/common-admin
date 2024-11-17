@@ -8,11 +8,16 @@ import { useKeywordSelectActions } from '@/components/damImage/uploadQueue/keywo
 import { useKeywordFilter } from '@/components/damImage/uploadQueue/keyword/KeywordFilter'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
-import { isArray } from '@/utils/common'
+import { isArray, isUndefined } from '@/utils/common'
 import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
 import { useCachedKeywordsForRemoteAutocomplete } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import KeywordRemoteAutocompleteCachedKeywordChip from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteCachedKeywordChip.vue'
 import KeywordCreateButton from '@/components/damImage/uploadQueue/keyword/KeywordCreateButton.vue'
+import { createKeyword } from '@/components/damImage/uploadQueue/api/keywordApi'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useAlerts } from '@/composables/system/alerts'
+import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const props = withDefaults(
   defineProps<{
@@ -64,6 +69,14 @@ const rules = {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validationScope })
 
+const { damClient } = useCommonAdminCoreDamOptions()
+const { getDamConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configExtSystem = getDamConfigExtSystem(props.extSystem)
+if (isUndefined(configExtSystem)) {
+  throw new Error('Ext system must be initialised.')
+}
+
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItemsMinimal } = useKeywordSelectActions(props.extSystem)
 
@@ -84,6 +97,7 @@ const afterCreate = (keyword: DamKeyword) => {
     return
   }
   modelValueComputed.value = keyword.id
+  search.value = ''
 }
 
 const itemSlotIsSelected = (item: DocId) => {
@@ -94,12 +108,44 @@ const itemSlotIsSelected = (item: DocId) => {
   }
   return false
 }
+
+const { showErrorsDefault } = useAlerts()
+const { createDefault } = useDamKeywordFactory()
+
+const createOrSelectKeyword = async (name: string) => {
+  const keywordCreate = createDefault(props.extSystem, true)
+  keywordCreate.name = removeLastComma(name)
+  try {
+    const keywordRes = await createKeyword(damClient, keywordCreate)
+    afterCreate(keywordRes)
+  } catch (error) {
+    showErrorsDefault(error)
+  }
+}
+
+const removeLastComma = (value: string) => {
+  if (value.endsWith(',')) return value.slice(0, -1)
+  return value
+}
+
+const search = ref('')
+
+const onEnterKeyup = () => {
+  const value = removeLastComma(search.value)
+  createOrSelectKeyword(value)
+}
+
+const onCommaKeyup = () => {
+  const value = removeLastComma(search.value)
+  createOrSelectKeyword(value)
+}
 </script>
 
 <template>
   <div class="d-flex">
     <AFormRemoteAutocompleteWithCached
       v-model="modelValueComputed"
+      v-model:search="search"
       :use-cached="useCachedKeywordsForRemoteAutocomplete"
       :v="v$"
       :required="requiredComputed"
@@ -116,6 +162,8 @@ const itemSlotIsSelected = (item: DocId) => {
       :min-search-chars="3"
       min-search-text="common.damImage.keyword.filterMinChars"
       @search-change="searchChange"
+      @keyup.enter="onEnterKeyup"
+      @keyup.,="onCommaKeyup"
     >
       <template #item="{ props: itemSlotProps, item: itemSlotItem }">
         <VListItem
