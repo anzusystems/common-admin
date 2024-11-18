@@ -94,6 +94,7 @@ const afterCreate = (keyword: DamKeyword) => {
   addManualToCachedKeywords(keyword)
   if (isArray(modelValueComputed.value)) {
     modelValueComputed.value = [...modelValueComputed.value, keyword.id]
+    search.value = ''
     return
   }
   modelValueComputed.value = keyword.id

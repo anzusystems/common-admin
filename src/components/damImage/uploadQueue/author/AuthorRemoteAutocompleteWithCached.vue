@@ -97,9 +97,11 @@ const afterCreate = (author: DamAuthor) => {
   addManualToCachedAuthors(author)
   if (isArray(modelValueComputed.value)) {
     modelValueComputed.value = [...modelValueComputed.value, author.id]
+    search.value = ''
     return
   }
   modelValueComputed.value = author.id
+  search.value = ''
 }
 
 const itemSlotIsSelected = (item: DocId) => {
