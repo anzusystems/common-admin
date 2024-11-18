@@ -117,7 +117,7 @@ defineExpose({
     :data-cy="dataCy"
     :disabled="disabled"
     rounded="pill"
-    @click.stop="onClick"
+    @click.stop="onClick(undefined)"
   >
     {{ t(buttonT) }}
   </ABtnPrimary>
