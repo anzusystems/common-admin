@@ -61,7 +61,7 @@ const author = ref<DamAuthor>(createDefault(props.extSystem))
 const dialog = ref(false)
 const buttonLoading = ref(false)
 
-const onClick = (textOverride?: string) => {
+const onClick = (textOverride: string | undefined) => {
   if (isUndefined(configExtSystem)) {
     throw new Error('Ext system must be initialised.')
   }
@@ -129,7 +129,7 @@ defineExpose({
     :disabled="disabled"
     variant="text"
     size="small"
-    @click.stop="onClick"
+    @click.stop="onClick(undefined)"
   >
     <VIcon icon="mdi-plus" />
     <VTooltip
