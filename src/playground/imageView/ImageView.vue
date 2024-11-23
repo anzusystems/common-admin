@@ -11,7 +11,7 @@ const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)
 const imageId3 = ref<IntegerIdNullable>(null)
 
-const v$ = useVuelidate()
+const v$ = useVuelidate({ $scope: 'aaa' })
 const isValid = ref<boolean | null>(null)
 
 const validate = async () => {
@@ -62,7 +62,7 @@ const saveInsideDialog = () => {
             queue-key="heroImage2"
             label="Lead image 2 with global validation test"
           />
-          <div>isvalid (should be always true): {{ isValid }}</div>
+          <div>isvalid (should be always true, use scope, always): {{ isValid }}</div>
           <VBtn @click.stop="validate">
             validate should not fire nested widget validation
           </VBtn>

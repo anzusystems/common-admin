@@ -71,11 +71,16 @@ const emit = defineEmits<{
 }>()
 
 const search = defineModel<string>('search', { default: '', required: false })
+const loadingLocal = defineModel<boolean>('loadingLocal', { default: false, required: false })
+const fetchedItemsMinimal = defineModel<Map<IntegerId | DocId, any>>('fetchedItemsMinimal', {
+  default: new Map(),
+  required: false,
+})
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetch, add, addManualMinimal } = props.useCached()
 
-const MIN_SEARCH_CHARS = 3
+const MIN_SEARCH_CHARS = 2
 
 const noDataText = computed(() => {
   if (loadingLocal.value) {
@@ -105,13 +110,9 @@ const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
 const isFocused = ref(false)
-const loadingLocal = ref(false)
 const { innerFilter } = toRefs(props)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const pagination = usePagination(props.filterSortBy)
-
-const fetchedItemsMinimal = ref<Map<IntegerId | DocId, any>>(new Map())
-// const fetchedItems = ref<Map<IntegerId | DocId, string>>(new Map())
 
 const onFocus = () => {
   isFocused.value = true
@@ -142,13 +143,13 @@ const requiredComputed = computed(() => {
   return props.v?.required && props.v?.required.$params.type === 'required'
 })
 
-const onSearchUpdate = (query: string) => {
-  // if (!props.multiple && !isFocused.value && query.length === 0) return // vuetify fix
-  search.value = query
-}
+// const onSearchUpdate = (query: string) => {
+//   // if (!props.multiple && !isFocused.value && query.length === 0) return // vuetify fix
+//   search.value = query
+// }
 
-const apiSearch = async (query: string) => {
-  if (query.length < MIN_SEARCH_CHARS) {
+const apiSearch = async (query: string | null) => {
+  if (isNull(query) || query.length < MIN_SEARCH_CHARS) {
     fetchedItemsMinimal.value.clear()
     return
   }
@@ -194,6 +195,7 @@ const tryToAddFromFetchedItems = (ids: Set<DocId | IntegerId>) => {
 }
 
 const onClickClear = () => {
+  search.value = ''
   apiSearch('')
   if (props.multiple) {
     modelValue.value = []
@@ -264,7 +266,6 @@ watch(
     :no-data-text="noDataText"
     @blur="onBlur"
     @focus="onFocus"
-    @update:search="onSearchUpdate"
     @click:clear="onClickClear"
   >
     <template #label>
@@ -278,6 +279,9 @@ watch(
           class="required"
         />
       </span>
+    </template>
+    <template #append-item>
+      <slot name="append-item" />
     </template>
     <template
       v-if="!multiple"

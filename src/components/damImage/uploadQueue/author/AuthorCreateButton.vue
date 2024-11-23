@@ -25,7 +25,7 @@ const props = withDefaults(
     extSystem: IntegerId
     initialValue?: string
     disableRedirect?: boolean
-    variant?: 'button' | 'icon'
+    variant?: 'button' | 'icon' | 'listItem'
     buttonT?: string
     buttonClass?: string
     dataCy?: string
@@ -111,8 +111,16 @@ defineExpose({
 </script>
 
 <template>
+  <VListItem v-if="variant === 'listItem'">
+    <ABtnSecondary
+      size="small"
+      :text="initialValue"
+      prepend-icon="mdi-plus-circle"
+      @click.stop="onClick"
+    />
+  </VListItem>
   <ABtnPrimary
-    v-if="variant === 'button'"
+    v-else-if="variant === 'button'"
     :class="buttonClass"
     :data-cy="dataCy"
     :disabled="disabled"

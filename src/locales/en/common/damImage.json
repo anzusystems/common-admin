@@ -147,7 +147,7 @@
     "meta": {
       "create": "Create keyword"
     },
-    "filterMinChars": "Enter at least 3 characters"
+    "filterMinChars": "Enter at least 2 characters"
   },
   "author": {
     "model": {
@@ -171,7 +171,7 @@
       "create": "Creating author"
     },
     "conflicts": "Author conflicts",
-    "filterMinChars": "Enter at least 3 characters"
+    "filterMinChars": "Enter at least 2 characters"
   },
   "uploadErrors": {
     "unknownError": "System error. Please try again later or contact the administrator.",
