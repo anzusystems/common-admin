@@ -14,7 +14,6 @@ import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKe
 import { isArray, isUndefined } from '@/utils/common'
 import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteCachedKeywordChip from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteCachedKeywordChip.vue'
-import KeywordCreateButton from '@/components/damImage/uploadQueue/keyword/KeywordCreateButton.vue'
 import { createKeyword } from '@/components/damImage/uploadQueue/api/keywordApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useAlerts } from '@/composables/system/alerts'
@@ -91,7 +90,7 @@ const innerFilter = useKeywordFilter()
 const addNewKeywordText = ref('')
 
 const searchChange = (newValue: string) => {
-  if (newValue.length > 0) addNewKeywordText.value = newValue
+  if (newValue.length > 0) addNewKeywordText.value = removeLastComma(newValue)
 }
 
 const { addManualToCachedKeywords } = useDamCachedKeywords()
@@ -217,16 +216,14 @@ const showAdd = computed(() => {
         />
       </template>
       <template #append-item>
-        <KeywordCreateButton
-          v-if="showAdd"
-          data-cy="add-keyword"
-          :ext-system="extSystem"
-          :initial-value="addNewKeywordText"
-          disable-redirect
-          :disabled="disabled"
-          variant="listItem"
-          @on-success="afterCreate"
-        />
+        <VListItem v-if="showAdd">
+          <ABtnSecondary
+            size="small"
+            :text="addNewKeywordText"
+            prepend-icon="mdi-plus-circle"
+            @click.stop="onCommaKeyup"
+          />
+        </VListItem>
       </template>
     </AFormRemoteAutocompleteWithCached>
   </div>
