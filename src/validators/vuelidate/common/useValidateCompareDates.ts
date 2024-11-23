@@ -1,6 +1,7 @@
-import { type DatetimeUTCNullable, i18n } from '@anzusystems/common-admin'
 import { createI18nMessage } from '@vuelidate/validators'
 import { type ComputedRef, type Ref, type ShallowRef, unref, type WritableComputedRef } from 'vue'
+import { i18n } from '@/plugins/i18n'
+import type { DatetimeUTCNullable } from '@/types/common'
 
 const { t } = i18n.global
 
