@@ -57,6 +57,8 @@ const refreshItem = async (data: { index: number; assetId: DocId }) => {
       await uploadQueuesStore.queueItemProcessed(asset.id)
     } else if(asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
       await uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, DamAssetType.Image)
+    } else if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Failed) {
+      await uploadQueuesStore.queueItemFailed(data.assetId, asset.mainFile.fileAttributes.failReason)
     } else {
       showWarningT('common.damImage.queueItem.stillUploadingOrProcessing')
     }
