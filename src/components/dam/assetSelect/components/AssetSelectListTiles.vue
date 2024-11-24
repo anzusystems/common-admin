@@ -54,7 +54,7 @@ $bg-color-actions-dark: #1a1a1a;
   &__item {
     user-select: none;
     flex-grow: 2;
-    max-width: 800px;
+    max-width: 600px;
     padding: 10px;
     position: relative;
     overflow: hidden;
