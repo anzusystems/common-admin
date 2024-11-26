@@ -121,7 +121,7 @@ const { createDefault } = useDamKeywordFactory()
 const createOrSelectKeyword = async (name: string) => {
   const keywordCreate = createDefault(props.extSystem, true)
   keywordCreate.name = removeLastComma(name)
-  if (keywordCreate.name.length < 3) return
+  if (keywordCreate.name.length < 2) return
   try {
     const keywordRes = await createKeyword(damClient, keywordCreate)
     afterCreate(keywordRes)
@@ -175,7 +175,7 @@ const showAdd = computed(() => {
       item-title="name"
       item-value="id"
       :data-cy="dataCy"
-      :min-search-chars="3"
+      :min-search-chars="2"
       min-search-text="common.damImage.keyword.filterMinChars"
       @search-change="searchChange"
       @keyup.enter="onEnterKeyup"

@@ -164,7 +164,7 @@ const showAdd = computed(() => {
       :data-cy="dataCy"
       item-title="name"
       item-value="id"
-      :min-search-chars="3"
+      :min-search-chars="2"
       min-search-text="common.damImage.author.filterMinChars"
       @search-change="searchChange"
       @keyup.enter="onEnterKeyup"
