@@ -216,7 +216,10 @@ const showAdd = computed(() => {
         />
       </template>
       <template #append-item>
-        <VListItem v-if="showAdd">
+        <VListItem
+          v-if="showAdd"
+          class="a-keywords-append-item"
+        >
           <ABtnSecondary
             size="small"
             :text="addNewKeywordText"
@@ -228,3 +231,12 @@ const showAdd = computed(() => {
     </AFormRemoteAutocompleteWithCached>
   </div>
 </template>
+
+<style lang="scss" scoped>
+.a-keywords-append-item {
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  transform: translateY(8px);
+}
+</style>

@@ -206,7 +206,10 @@ const showAdd = computed(() => {
         />
       </template>
       <template #append-item>
-        <VListItem v-if="showAdd">
+        <VListItem
+          v-if="showAdd"
+          class="a-authors-append-item"
+        >
           <ABtnSecondary
             size="small"
             :text="addNewAuthorText"
@@ -247,3 +250,12 @@ const showAdd = computed(() => {
     </div>
   </div>
 </template>
+
+<style lang="scss" scoped>
+.a-authors-append-item {
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  transform: translateY(8px);
+}
+</style>
