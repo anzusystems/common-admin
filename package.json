@@ -10,10 +10,10 @@
     ".": {
       "import": "./dist/common-admin.es.js"
     },
-    "./styles": "./dist/style.css",
+    "./styles": "./dist/common-admin.css",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.100",
+  "version": "1.47.0-beta.101",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
