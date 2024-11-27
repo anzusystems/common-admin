@@ -9,7 +9,7 @@ import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 
-type fetchItemsByIdsType =
+type FetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
   | ((ids: DocId[]) => Promise<ValueObjectOption<DocId>[]>)
 
@@ -17,7 +17,7 @@ const props = withDefaults(
   defineProps<{
     modelValue: Filter
     fetchItems: (pagination: Pagination, filterBag: FilterBag) => Promise<ValueObjectOption<string | number>[]>
-    fetchItemsByIds: fetchItemsByIdsType
+    fetchItemsByIds: FetchItemsByIdsType
     innerFilter: FilterBag
     filterByField?: string
     filterSortBy?: string | null
