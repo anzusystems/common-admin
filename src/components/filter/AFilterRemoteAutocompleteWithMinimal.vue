@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
-import { computed, ref, toRefs, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import type { Filter, FilterBag } from '@/types/Filter'
-import type { Pagination } from '@/types/Pagination'
-import type { DocId, IntegerId } from '@/types/common'
-import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
-import { usePagination } from '@/composables/system/pagination'
+import { computed, type Ref, ref, toRefs, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import type { Pagination } from '@/types/Pagination'
+import type { Filter, FilterBag } from '@/types/Filter'
+import { usePagination } from '@/composables/system/pagination'
+import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
+import { useI18n } from 'vue-i18n'
+import type { DocId, IntegerId } from '@/types/common'
 
 type FetchItemsMinimalByIdsType = ((ids: IntegerId[]) => Promise<any[]>) | ((ids: DocId[]) => Promise<any[]>)
 
@@ -21,36 +21,23 @@ const props = withDefaults(
     innerFilter: FilterBag
     filterByField?: string
     filterSortBy?: string | null
+    disableInitFetch?: boolean | undefined
+    placeholder?: string | undefined
     itemTitle?: string
     itemValue?: string
-    placeholder?: string | undefined
   }>(),
   {
     filterByField: 'name',
     filterSortBy: 'createdAt',
+    disableInitFetch: false,
+    placeholder: undefined,
     itemTitle: 'name',
     itemValue: 'id',
-    placeholder: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: Filter): void
-  (e: 'blur', data: DocId | IntegerId | DocId[] | IntegerId[] | null | undefined): void
-  (e: 'focus', data: DocId | IntegerId | DocId[] | IntegerId[] | null | undefined): void
-  (e: 'searchChange', data: string): void
-  (e: 'searchChangeDebounced', data: string): void
 }>()
-
-const search = defineModel<string>('search', { default: '', required: false })
-const loadingLocal = defineModel<boolean>('loadingLocal', { default: false, required: false })
-// const fetchedItemsMinimal = defineModel<Map<IntegerId | DocId, any>>('fetchedItemsMinimal', {
-//   default: new Map(),
-//   required: false,
-// }) // todo check why its not working
-
-const fetchedItemsMinimal = ref<Map<IntegerId | DocId, any>>(new Map())
-
-const MIN_SEARCH_CHARS = 2
 
 const modelValueComputed = computed({
   get() {
@@ -61,64 +48,124 @@ const modelValueComputed = computed({
   },
 })
 
-const selectedItemsCache = ref<any[]>([])
+const search = ref('')
+const isFocused = ref(false)
+const autoFetchTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
+
+const apiRequestCounter = ref(0)
+
 const { t } = useI18n()
 
-const isFocused = ref(false)
 const { innerFilter } = toRefs(props)
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const pagination = usePagination(props.filterSortBy)
-
-const onFocus = () => {
-  isFocused.value = true
-  emit('focus', modelValueComputed.value)
-}
 
 const onBlur = () => {
-  isFocused.value = false
-  emit('blur', modelValueComputed.value)
+  isFocused.value = true
 }
 
 const label = computed(() => {
   return props.modelValue.titleT ? t(props.modelValue.titleT) : undefined
 })
 
-const apiSearch = async (query: string | null) => {
-  if (isNull(query) || query.length < MIN_SEARCH_CHARS) {
-    fetchedItemsMinimal.value.clear()
-    return
-  }
-  loadingLocal.value = true
-  const filterField = innerFilter.value[props.filterByField]
-  filterField.model = query
-  fetchedItemsMinimal.value.clear()
-  const res = await props.fetchItemsMinimal(pagination, innerFilter.value)
-  res.forEach((item: any) => {
-    fetchedItemsMinimal.value.set(item[props.itemValue], cloneDeep(item))
-  })
-  fetchedItemsMinimal.value = fetchedItemsMinimal.value
-  loadingLocal.value = false
-}
+const multipleComputedVuetifyTypeFix = computed(() => {
+  if (props.modelValue.multiple === false) return false
+  return true as unknown as undefined
+})
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const pagination = usePagination(props.filterSortBy)
+const fetchedItems = ref<any[]>([])
+const selectedItemsCache = ref<any[]>([])
 
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
-  const final: Map<IntegerId | DocId, string> = new Map()
+  const final = new Map()
   const finalRaw: Map<IntegerId | DocId, any> = new Map()
   selectedItemsCache.value.forEach((value) => {
-    final.set(value[props.itemValue], value[props.itemTitle])
-    finalRaw.set(value[props.itemValue], cloneDeep(value))
+    if (value.raw) {
+      final.set(value.raw[props.itemValue], value.raw[props.itemTitle])
+      finalRaw.set(value.raw[props.itemValue], cloneDeep(value.raw))
+    } else {
+      final.set(value[props.itemValue], value[props.itemTitle])
+      finalRaw.set(value[props.itemValue], cloneDeep(value))
+    }
   })
-  fetchedItemsMinimal.value.forEach((value) => {
-    final.set(value[props.itemValue], value[props.itemTitle])
-    finalRaw.set(value[props.itemValue], cloneDeep(value))
+  fetchedItems.value.forEach((value) => {
+    if (value.raw) {
+      final.set(value.raw[props.itemValue], value.raw[props.itemTitle])
+      finalRaw.set(value.raw[props.itemValue], cloneDeep(value.raw))
+    } else {
+      final.set(value[props.itemValue], value[props.itemTitle])
+      finalRaw.set(value[props.itemValue], cloneDeep(value))
+    }
   })
   return Array.from(final, ([key, value]) => {
     return { value: key, title: value, raw: finalRaw.get(key) }
   })
 })
 
-const onClickClear = () => {
-  search.value = ''
-  apiSearch('')
+const loading = ref(false)
+
+const apiSearch = async (query: string, requestCounter: number) => {
+  loading.value = true
+  const filterField = innerFilter.value[props.filterByField]
+  filterField.model = query
+  const res = await props.fetchItemsMinimal(pagination, innerFilter.value)
+  if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
+  loading.value = false
+}
+
+const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
+  const found = allItems.value.filter((item: ValueObjectOption<string | number>) => values.includes(item.value))
+  return ([] as ValueObjectOption<string | number>[]).concat(found)
+}
+
+const tryToLoadFromLocalData = async (value: string | number | string[] | number[]) => {
+  let count = 1
+  let foundItems = []
+  if (isArray(value)) {
+    count = value.length
+    foundItems = findLocalDataByValues(value)
+  } else {
+    foundItems = findLocalDataByValues([value])
+  }
+  selectedItemsCache.value = foundItems
+  return foundItems.length === count
+}
+
+const autoFetched = ref(false)
+const clearAutoFetchTimer = () => {
+  clearTimeout(autoFetchTimer.value)
+  autoFetchTimer.value = undefined
+}
+const autoFetch = async () => {
+  clearAutoFetchTimer()
+  if (autoFetched.value === true) return
+  autoFetched.value = true
+  loading.value = true
+  const res = await props.fetchItemsMinimal(pagination, innerFilter.value)
+  if (apiRequestCounter.value === 0) fetchedItems.value = res
+  loading.value = false
+}
+const onFocus = () => {
+  isFocused.value = true
+  clearAutoFetchTimer()
+  autoFetch()
+}
+
+const singleItemSelectedTitle = computed(() => {
+  if (!props.modelValue.multiple && selectedItemsCache.value[0]) {
+    return selectedItemsCache.value[0].title
+  }
+  return undefined
+})
+
+const onSearchUpdate = (query: string) => {
+  if (!props.modelValue.multiple && !isFocused.value && query.length === 0) return // vuetify fix
+  if (singleItemSelectedTitle.value === query) return
+  search.value = query
+}
+
+const onClickClear = async () => {
+  fetchedItems.value = await props.fetchItemsMinimal(pagination, innerFilter.value)
   if (props.modelValue.multiple) {
     modelValueComputed.value = []
     return
@@ -135,49 +182,49 @@ const placeholderComputed = computed(() => {
   return ''
 })
 
-const multipleComputedVuetifyTypeFix = computed(() => {
-  if (props.modelValue.multiple === false) return false
-  return true as unknown as undefined
-})
+watch(
+  modelValueComputed,
+  async (newValue, oldValue) => {
+    if (newValue === oldValue) return
+    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+      selectedItemsCache.value = []
+      if (props.disableInitFetch || autoFetched.value === true) return
+      autoFetchTimer.value = setTimeout(() => {
+        autoFetch()
+      }, 3000)
+      return
+    }
+    const found = await tryToLoadFromLocalData(newValue)
+    if (found) return
+    if (isArray<IntegerId | DocId>(newValue)) {
+      loading.value = true
+      selectedItemsCache.value = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
+      loading.value = false
+      return
+    }
+    loading.value = true
+    selectedItemsCache.value = await props.fetchItemsMinimalByIds([newValue as DocId & IntegerId])
+    loading.value = false
+  },
+  { immediate: true }
+)
 
 watchDebounced(
   search,
   (newValue, oldValue) => {
+    apiRequestCounter.value++
     if (newValue !== oldValue) {
-      apiSearch(newValue)
-      emit('searchChangeDebounced', newValue)
+      apiRequestCounter.value++
+      apiSearch(newValue, apiRequestCounter.value)
     }
   },
   { debounce: 300 }
-)
-
-watch(search, (newValue, oldValue) => {
-  if (newValue !== oldValue) {
-    emit('searchChange', newValue)
-  }
-})
-
-watch(
-  modelValueComputed,
-  async (newValue) => {
-    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
-      return
-    }
-    const values = isArray(newValue) ? newValue : [newValue]
-    const idsToFetch = new Set(values)
-    selectedItemsCache.value = []
-    if (idsToFetch.size > 0) {
-      selectedItemsCache.value = await props.fetchItemsMinimalByIds(Array.from(idsToFetch) as Array<DocId & IntegerId>)
-    }
-  },
-  { immediate: true }
 )
 </script>
 
 <template>
   <VAutocomplete
     v-model="modelValueComputed"
-    v-model:search="search"
     :items="allItems"
     no-filter
     :placeholder="placeholderComputed"
@@ -185,13 +232,25 @@ watch(
     :clearable="!modelValue.mandatory"
     :label="label"
     :chips="modelValue.multiple"
-    :loading="loadingLocal"
+    :loading="loading"
+    @update:search="onSearchUpdate"
     @blur="onBlur"
     @focus="onFocus"
     @click:clear="onClickClear"
   >
-    <template #append-item>
-      <slot name="append-item" />
+    <!-- @vue-skip -->
+    <template #item="{ props: itemProps, item }">
+      <slot
+        name="item"
+        :item="item"
+        :props="itemProps"
+      >
+        <VListItem
+          v-bind="itemProps"
+          :title="item.raw.title"
+          :subtitle="item.raw.subtitle"
+        />
+      </slot>
     </template>
     <!-- @vue-skip -->
     <template #chip="{ props: chipProps, item: chipItem }">
@@ -205,14 +264,6 @@ watch(
           :text="chipItem.title"
         />
       </slot>
-    </template>
-    <!-- @vue-skip -->
-    <template #item="{ props: itemProps, item }">
-      <slot
-        name="item"
-        :item="item"
-        :props="itemProps"
-      />
     </template>
   </VAutocomplete>
 </template>
