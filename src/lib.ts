@@ -34,6 +34,7 @@ import AFormRemoteSwitch from '@/components/form/AFormRemoteSwitch.vue'
 import AFormValueObjectOptionsSelect from '@/components/form/AFormValueObjectOptionsSelect.vue'
 import AFilterValueObjectOptionsSelect from '@/components/filter/AFilterValueObjectOptionsSelect.vue'
 import AFilterRemoteAutocomplete from '@/components/filter/AFilterRemoteAutocomplete.vue'
+import AFilterRemoteAutocompleteWithMinimal from '@/components/filter/AFilterRemoteAutocompleteWithMinimal.vue'
 import AFilterBooleanGroup from '@/components/filter/AFilterBooleanGroup.vue'
 import AFilterBooleanSelect from '@/components/filter/AFilterBooleanSelect.vue'
 import AJobStatusChip from '@/components/job/AJobStatusChip.vue'
@@ -534,6 +535,7 @@ export {
   AFilterString,
   AFilterInteger,
   AFilterRemoteAutocomplete,
+  AFilterRemoteAutocompleteWithMinimal,
   AFilterValueObjectOptionsSelect,
   AFilterBooleanGroup,
   AFilterBooleanSelect,
