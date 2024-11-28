@@ -1,6 +1,6 @@
 {
   "name": "@anzusystems/common-admin",
-  "packageManager": "yarn@4.5.1",
+  "packageManager": "yarn@4.5.3",
   "files": [
     "dist"
   ],
@@ -43,10 +43,10 @@
     "@intlify/unplugin-vue-i18n": "^6.0.0",
     "@kyvg/vue3-notification": "^3.4.1",
     "@mdi/font": "^7.4.47",
-    "@shikijs/vitepress-twoslash": "^1.23.1",
+    "@shikijs/vitepress-twoslash": "^1.24.0",
     "@stylistic/eslint-plugin": "^2.11.0",
     "@tsconfig/node18": "^18.2.4",
-    "@types/node": "^22.10.0",
+    "@types/node": "^22.10.1",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.8",
     "@types/webfontloader": "^1.6.38",
@@ -72,7 +72,7 @@
     "rusha": "^0.8.14",
     "sass": "^1.81.0",
     "socket.io-client": "4.8.1",
-    "sortablejs": "^1.15.4",
+    "sortablejs": "^1.15.5",
     "stylelint": "16.10.0",
     "stylelint-config-recommended-vue": "^1.5.0",
     "stylelint-config-standard-scss": "^13.1.0",
@@ -84,7 +84,7 @@
     "vite-plugin-vuetify": "^2.0.4",
     "vitepress": "1.5.0",
     "vue": "3.5.13",
-    "vue-i18n": "10.0.4",
+    "vue-i18n": "10.0.5",
     "vue-router": "4.5.0",
     "vue-tsc": "2.1.10",
     "vuetify": "3.7.4",
@@ -101,7 +101,7 @@
     "socket.io-client": "4.8.1",
     "unplugin": "1.16.0",
     "vue": "3.5.13",
-    "vue-i18n": "10.0.4",
+    "vue-i18n": "10.0.5",
     "vue-router": "4.5.0",
     "vuetify": "3.7.4"
   },

@@ -49,10 +49,15 @@ export const useAuthorSelectActions = (extSystem: IntegerId) => {
     return mapToValueObjects(await fetchAuthorListByIds(damClient, extSystem, ids))
   }
 
+  const fetchItemsMinimalByIds = async (ids: string[]) => {
+    return mapToMinimals(await fetchAuthorListByIds(damClient, extSystem, ids))
+  }
+
   return {
     mapToValueObject,
     fetchItems,
     fetchItemsByIds,
     fetchItemsMinimal,
+    fetchItemsMinimalByIds,
   }
 }
