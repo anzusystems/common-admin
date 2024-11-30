@@ -12,6 +12,7 @@ import PermissionView from '@/playground/permissionView/PermissionView.vue'
 import DatetimeView from '@/playground/datetimeView/DatetimeView.vue'
 import FormsView from '@/playground/formsView/FormsView.vue'
 import FilterView from '@/playground/filterView/FilterView.vue'
+import TableView from '@/playground/tableView/TableView.vue'
 import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
 import ApiFetchListBatchView from '@/playground/apiFetchListBatchView/ApiFetchListBatchView.vue'
@@ -86,6 +87,11 @@ const router = createRouter({
       path: '/view/filters',
       name: 'view-filters',
       component: FilterView,
+    },
+    {
+      path: '/view/table',
+      name: 'view-table',
+      component: TableView,
     },
     {
       path: '/view/split-buttons',
