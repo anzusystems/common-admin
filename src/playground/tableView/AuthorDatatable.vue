@@ -36,7 +36,12 @@ const { columnsVisible, columnsAll, columnsHidden, updateSortBy, pagination } = 
   ],
   datatableHiddenColumns,
   'coreDam',
-  'author'
+  'author',
+  false,
+  undefined,
+  undefined,
+  undefined,
+  'damAuthorTable',
 )
 
 const sortByChange = (option: DatatableOrderingOption) => {

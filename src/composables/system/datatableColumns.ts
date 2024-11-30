@@ -1,8 +1,8 @@
-import { computed, type Ref } from 'vue'
+import { computed, onMounted, type Ref, watch } from 'vue'
 import { i18n } from '@/plugins/i18n'
 import type { Pagination } from '@/types/Pagination'
 import { usePagination } from '@/composables/system/pagination'
-import { isUndefined } from '@/utils/common'
+import { isArray, isObject, isUndefined } from '@/utils/common'
 
 export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']
 
@@ -48,7 +48,8 @@ export function createDatatableColumnsConfig(
   disableActions: boolean = false,
   customInitialPagination: Pagination | undefined = undefined,
   customI18n: undefined | any = undefined,
-  showExpand: undefined| boolean = undefined
+  showExpand: undefined | boolean = undefined,
+  storeId: string | undefined = undefined
 ) {
   const localI18n = customI18n ?? i18n
   const { t } = localI18n.global || localI18n
@@ -88,7 +89,7 @@ export function createDatatableColumnsConfig(
     return columns
   })
 
-  const updateSortBy = (sortBy: { key: string, order: 'asc' | 'desc' } | undefined | null) => {
+  const updateSortBy = (sortBy: { key: string; order: 'asc' | 'desc' } | undefined | null) => {
     if (sortBy) {
       pagination.sortBy = sortBy.key
       pagination.descending = sortBy.order === 'desc' ? true : false
@@ -96,6 +97,29 @@ export function createDatatableColumnsConfig(
     }
     pagination.sortBy = null
   }
+
+  const loadStoredColumns = () => {
+    if (!storeId || !localStorage) return
+    const stored = localStorage.getItem(storeId)
+    if (!stored) return
+    const storedData = JSON.parse(stored)
+    if (!isObject(storedData)) return
+    if (!isArray(storedData.hidden)) return
+    columnsHidden.value = storedData.hidden as string[]
+  }
+
+  const storeColumns = (columns: string[]) => {
+    if (!storeId || !localStorage) return
+    localStorage.setItem(storeId, JSON.stringify({ hidden: columns }))
+  }
+
+  onMounted(() => {
+    loadStoredColumns()
+  })
+
+  watch(columnsHidden, (newValue) => {
+    storeColumns(newValue)
+  })
 
   return {
     columnsAll,
