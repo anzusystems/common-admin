@@ -33,6 +33,10 @@ export type ColumnInternalValues = {
   fixed: boolean
 }
 
+export type StoredData = {
+  hidden?: string[]
+}
+
 const defaultColumn: ColumnInternalValues = {
   key: '',
   title: undefined,
@@ -102,7 +106,7 @@ export function createDatatableColumnsConfig(
     if (!storeId || !localStorage) return
     const stored = localStorage.getItem(storeId)
     if (!stored) return
-    const storedData = JSON.parse(stored)
+    const storedData = JSON.parse(stored) as StoredData
     if (!isObject(storedData)) return
     if (!isArray(storedData.hidden)) return
     columnsHidden.value = storedData.hidden as string[]
