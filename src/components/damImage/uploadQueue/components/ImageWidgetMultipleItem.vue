@@ -100,7 +100,19 @@ const removeItem = () => {
 </template>
 
 <style lang="scss">
-.asset-list-tiles--thumbnail.a-sortable-widget__group .asset-list-tiles__item img:not(.img-svg) {
-  padding: 0;
+.asset-list-tiles--thumbnail.a-sortable-widget__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .asset-list-tiles__item {
+    flex: 1 1 260px;
+    min-width: 260px;
+    max-width: 400px;
+
+    img:not(.img-svg) {
+      padding: 0;
+    }
+  }
 }
 </style>
