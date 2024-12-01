@@ -84,6 +84,7 @@ import AImageWidget from '@/components/damImage/AImageWidget.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
+import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
 import ADatatable from '@/components/datatable/ADatatable.vue'
@@ -591,6 +592,7 @@ export {
   AImageWidgetSimple,
   AImageWidgetMultiple,
   AImageWidgetMultipleSimple,
+  ImageMassOperations,
   AImagePublicInput,
   ACropperjs,
   ACollabLockedByUser,

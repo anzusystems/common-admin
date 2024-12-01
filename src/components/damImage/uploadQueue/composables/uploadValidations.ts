@@ -12,14 +12,14 @@ export const ADamKeywordCreateValidationScopeSymbol = Symbol.for('anzu:common:ke
 
 export const ADamAuthorCreateValidationScopeSymbol = Symbol.for('anzu:common:author-create-validation-scope')
 
-const { required, maxLength } = useValidate()
-
-export function useImageValidation(
-  image: Ref<ImageCreateUpdateAware | null>,
-) {
+export function useImageValidation(image: Ref<ImageCreateUpdateAware | null>) {
+  const { required, maxLength } = useValidate()
   const rules = computed(() => ({
     image: {
       texts: {
+        description: {
+          maxLength: maxLength(2000),
+        },
         source: {
           required,
           maxLength: maxLength(255),
