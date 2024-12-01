@@ -87,7 +87,10 @@ const v$ = useVuelidate(rules, { texts }, { $scope: false })
     >
       <VCol>
         <div class="d-flex">
-          <AFormTextarea v-model="texts.source" />
+          <AFormTextarea
+            v-model="texts.source"
+            :label="t('common.damImage.image.model.texts.source')"
+          />
           <VBtn
             icon
             size="small"
