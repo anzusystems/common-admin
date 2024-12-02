@@ -231,7 +231,7 @@ __metadata:
     typescript: "npm:5.6.3"
     unplugin: "npm:1.16.0"
     uuid: "npm:^11.0.3"
-    vite: "npm:6.0.1"
+    vite: "npm:6.0.2"
     vite-plugin-dts: "npm:4.3.0"
     vite-plugin-vuetify: "npm:^2.0.4"
     vitepress: "npm:1.5.0"
@@ -8534,9 +8534,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:6.0.1":
-  version: 6.0.1
-  resolution: "vite@npm:6.0.1"
+"vite@npm:6.0.2":
+  version: 6.0.2
+  resolution: "vite@npm:6.0.2"
   dependencies:
     esbuild: "npm:^0.24.0"
     fsevents: "npm:~2.3.3"
@@ -8582,7 +8582,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10/a42bf6e92425920335175b59d0e4d98cae8f2bfa473c1e32bd62e1feb4b808341992f92632d1883103351f8e9ec4ae53179266b0a815731e9c109a2e3768cde5
+  checksum: 10/24fea725676da1812ec0f073d1748a09f6fd8552a86b9b2b3002326d8cb8ada72e0abfe0837b00077412dc5bbd1773aec38d1fc3462709b0ecc1512332b5d2a0
   languageName: node
   linkType: hard
 
