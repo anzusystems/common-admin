@@ -1,23 +1,41 @@
 import { ref } from 'vue'
 
 const sidebarLeft = ref(false)
+const sidebarRight = ref(false)
 
 export function useSidebar() {
-  const toggleSidebar = () => {
-    sidebarLeft.value ? closeSidebar() : openSidebar()
+  const toggleSidebarLeft = () => {
+    sidebarLeft.value ? closeSidebarLeft() : openSidebarLeft()
   }
 
-  const openSidebar = () => {
+  const openSidebarLeft = () => {
     sidebarLeft.value = true
   }
 
-  const closeSidebar = () => {
+  const closeSidebarLeft = () => {
     sidebarLeft.value = false
+  }
+
+  const toggleSidebarRight = () => {
+    sidebarRight.value ? closeSidebarRight() : openSidebarRight()
+  }
+
+  const openSidebarRight = () => {
+    sidebarRight.value = true
+  }
+
+  const closeSidebarRight = () => {
+    sidebarRight.value = false
   }
 
   return {
     sidebarLeft,
-    toggleSidebar,
-    openSidebar,
+    sidebarRight,
+    toggleSidebarLeft,
+    openSidebarLeft,
+    closeSidebarLeft,
+    toggleSidebarRight,
+    openSidebarRight,
+    closeSidebarRight,
   }
 }

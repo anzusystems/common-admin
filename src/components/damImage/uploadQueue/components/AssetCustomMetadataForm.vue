@@ -13,9 +13,11 @@ const props = withDefaults(
     extSystem: IntegerId
     modelValue: { [key: string]: any }
     dataCy?: string
+    readonly?: boolean
   }>(),
   {
     dataCy: undefined,
+    readonly: false,
   }
 )
 const emit = defineEmits<{
@@ -51,6 +53,7 @@ const pinnedCount = computed(() => {
     :model-value="modelValue"
     :pinned-count="pinnedCount"
     :elements="elements"
+    :readonly="readonly"
     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
     @any-change="emit('anyChange')"
     @update:model-value="emit('update:modelValue', $event)"

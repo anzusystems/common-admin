@@ -17,6 +17,7 @@ import AuthorRemoteAutocompleteCachedAuthorChipConflicts from '@/components/damI
 import { useAuthorSelectActions } from '@/components/damImage/uploadQueue/author/authorActions'
 import { useAuthorFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
 import AuthorCreateButton from '@/components/damImage/uploadQueue/author/AuthorCreateButton.vue'
+import ARow from '@/components/ARow.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -146,7 +147,32 @@ const showAdd = computed(() => {
 
 <template>
   <div class="d-flex">
+    <ARow
+      v-if="disabled && multiple"
+      :title="label"
+    >
+      <AuthorRemoteAutocompleteCachedAuthorChip
+        v-for="id in modelValueComputed"
+        :id="id"
+        :key="id"
+        :queue-id="queueId"
+        force-rounded
+        class="mr-1 mb-1"
+      />
+    </ARow>
+    <ARow
+      v-else-if="disabled && !multiple"
+      :title="label"
+    >
+      <AuthorRemoteAutocompleteCachedAuthorChip
+        :id="modelValueComputed"
+        :key="modelValueComputed"
+        :queue-id="queueId"
+        force-rounded
+      />
+    </ARow>
     <AFormRemoteAutocompleteWithCached
+      v-else
       v-model="modelValueComputed"
       v-model:search="search"
       v-model:loading-local="loadingLocal"
@@ -219,7 +245,7 @@ const showAdd = computed(() => {
         </VListItem>
       </template>
     </AFormRemoteAutocompleteWithCached>
-    <div>
+    <div v-show="!disabled">
       <AuthorCreateButton
         ref="authorCreateButton"
         variant="icon"

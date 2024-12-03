@@ -20,7 +20,11 @@ import { useAlerts } from '@/composables/system/alerts'
 import type { IntegerId } from '@/types/common'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
-import { cloneDeep } from '@/utils/common'
+import { cloneDeep, isUndefined } from '@/utils/common'
+import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import { storeToRefs } from 'pinia'
+import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 
 const props = withDefaults(
   defineProps<{
@@ -57,13 +61,20 @@ const {
   resetAssetList,
   getSelectedData,
   initStoreContext,
+  detailLoading,
 } = useAssetSelectActions()
 
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
+
 const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
+const assetDetailStore = useAssetDetailStore()
+const { asset } = storeToRefs(assetDetailStore)
+const assetSelectStore = useAssetSelectStore()
+const { selectedLicenceId } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
-const { openSidebar, sidebarLeft } = useSidebar()
+const { openSidebarLeft, sidebarLeft, sidebarRight } = useSidebar()
 const { showErrorT } = useAlerts()
 
 const onOpen = () => {
@@ -84,7 +95,7 @@ const onOpen = () => {
     props.maxCount
   )
   resetAssetList()
-  openSidebar()
+  openSidebarLeft()
   modelValue.value = true
 }
 
@@ -128,6 +139,40 @@ const componentComputed = computed(() => {
 const disabledSubmit = computed(() => {
   return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
 })
+
+const extId = computed(() => {
+  if (selectConfigs.value.length === 0) return undefined
+  if (selectedLicenceId.value > 0) {
+    const found = selectConfigs.value.find((config) => config.licence === selectedLicenceId.value)
+    if (found) return found.extSystem
+  }
+  return undefined
+})
+
+const loadingSidebarRight = computed(() => {
+  return customFormConfigLoading.value || detailLoading.value
+})
+
+const { showErrorsDefault } = useAlerts()
+const customFormConfigLoading = ref(true)
+
+watch(
+  extId,
+  async (newValue) => {
+    if (isUndefined(newValue)) return
+    customFormConfigLoading.value = true
+    const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(newValue)
+    if (isUndefined(configAssetCustomFormElements)) {
+      try {
+        await loadDamConfigAssetCustomFormElements(newValue)
+        customFormConfigLoading.value = false
+      } catch (e) {
+        showErrorsDefault(e)
+      }
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(async () => {
   loading.value = true
@@ -176,13 +221,20 @@ defineExpose({
         <AssetSelectListBar />
         <div
           class="subject-select__main"
-          :class="{ 'subject-select__main--sidebar-active': sidebarLeft }"
+          :class="{
+            'subject-select__main--sidebar-active': sidebarLeft,
+            'subject-select__main--sidebar-right-active': sidebarRight,
+          }"
         >
           <div class="subject-select__sidebar system-border-r">
             <AssetSelectFilter />
           </div>
           <div class="subject-select__content">
-            <component :is="componentComputed" />
+            <component
+              v-if="extId"
+              :is="componentComputed"
+              :ext-system="extId"
+            />
             <div class="d-flex w-100 align-center justify-center pa-4">
               <ABtnSecondary
                 v-show="pagination.hasNextPage || loader"
@@ -195,6 +247,27 @@ defineExpose({
                   {{ t('common.button.loadMore') }}
                 </slot>
               </ABtnSecondary>
+            </div>
+          </div>
+          <div class="subject-select__sidebar-right system-border-l">
+            <div
+              v-if="loadingSidebarRight"
+              class="d-flex w-100 align-center justify-center"
+            >
+              <VProgressCircular indeterminate />
+            </div>
+            <div
+              v-else-if="!asset"
+              class="d-flex w-100 align-center justify-center"
+            >
+              {{ t('common.assetSelect.meta.info.noAssetSelected') }}
+            </div>
+            <div v-else>
+              <AssetMetadata
+                v-if="extId && !customFormConfigLoading"
+                :ext-system="extId"
+                readonly
+              />
             </div>
           </div>
         </div>
@@ -224,7 +297,5 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
-  <div v-else>
-    Error, no select licence.
-  </div>
+  <div v-else>Error, no select licence.</div>
 </template>

@@ -23,6 +23,10 @@
     "filter": {
       "toggle": "Filter"
     },
+    "info": {
+      "toggle": "Info karta",
+      "noAssetSelected": "Žiadne vybrané assety"
+    },
     "texts": {
       "title": "Select asset",
       "noItemsFound": "No matching assets found",

@@ -5,7 +5,7 @@ import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelect
 
 const { t } = useI18n()
 const { setGridView } = useGridView()
-const { toggleSidebar } = useSidebar()
+const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = useSidebar()
 </script>
 
 <template>
@@ -24,7 +24,8 @@ const { toggleSidebar } = useSidebar()
               icon
               :width="30"
               :height="30"
-              @click="toggleSidebar"
+              @click="toggleSidebarLeft"
+              :active="sidebarLeft"
             >
               <VIcon
                 icon="mdi-tune"
@@ -81,6 +82,28 @@ const { toggleSidebar } = useSidebar()
                 location="bottom"
               >
                 {{ t('common.assetSelect.meta.grid.table') }}
+              </VTooltip>
+            </VBtn>
+            <VDivider
+              vertical
+              class="mx-1 my-2"
+            />
+            <VBtn
+              icon
+              :width="30"
+              :height="30"
+              @click="toggleSidebarRight"
+              :active="sidebarRight"
+            >
+              <VIcon
+                icon="mdi-information-outline"
+                :size="16"
+              />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.assetSelect.meta.info.toggle') }}
               </VTooltip>
             </VBtn>
           </div>

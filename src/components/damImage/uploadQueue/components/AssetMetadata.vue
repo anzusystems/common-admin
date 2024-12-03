@@ -17,12 +17,17 @@ import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQue
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
 import type { IntegerId } from '@/types/common'
+import ABooleanValue from '@/components/ABooleanValue.vue'
+import ARow from '@/components/ARow.vue'
 
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
+    readonly?: boolean
   }>(),
-  {}
+  {
+    readonly: false,
+  }
 )
 
 const { t } = useI18n()
@@ -72,6 +77,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
           v-model="asset.metadata.customData"
           :ext-system="extSystem"
           :asset-type="assetType"
+          :readonly="readonly"
           @any-change="onAnyMetadataChange"
         >
           <template #after-pinned>
@@ -92,6 +98,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                     data-cy="custom-field-keywords"
                     clearable
                     multiple
+                    :disabled="readonly"
                     :required="keywordRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
@@ -117,6 +124,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                     data-cy="custom-field-authors"
                     clearable
                     multiple
+                    :disabled="readonly"
                     :required="authorRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
@@ -129,7 +137,14 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
               class="my-2"
             >
               <VCol>
+                <ARow
+                  v-if="readonly"
+                  :title="t('common.damImage.asset.model.mainFileSingleUse')"
+                >
+                  <ABooleanValue :value="mainFileSingleUse" />
+                </ARow>
                 <VSwitch
+                  v-else
                   :label="t('common.damImage.asset.model.mainFileSingleUse')"
                   v-model="mainFileSingleUse"
                 />
