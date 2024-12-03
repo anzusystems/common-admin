@@ -19,14 +19,18 @@ import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/a
 import type { IntegerId } from '@/types/common'
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
+import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
+import ACachedUserChip from '@/components/ACachedUserChip.vue'
 
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
     readonly?: boolean
+    cachedUsers?: CollabCachedUsersMap | undefined
   }>(),
   {
     readonly: false,
+    cachedUsers: undefined,
   }
 )
 
@@ -183,6 +187,10 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
           </VCol>
           <VCol cols="9">
             {{ dateTimePretty(asset.createdAt) }}
+            <ACachedUserChip
+              :id="asset.createdBy"
+              :cached-users="cachedUsers"
+            />
           </VCol>
         </VRow>
         <VRow>
@@ -191,6 +199,10 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
           </VCol>
           <VCol cols="9">
             {{ dateTimePretty(asset.modifiedAt) }}
+            <ACachedUserChip
+              :id="asset.modifiedBy"
+              :cached-users="cachedUsers"
+            />
           </VCol>
         </VRow>
         <div v-if="assetMainFile">

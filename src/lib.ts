@@ -89,6 +89,7 @@ import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
 import ADatatable from '@/components/datatable/ADatatable.vue'
 import ABooleanSelect from '@/components/ABooleanSelect.vue'
+import ACachedUserChip from '@/components/ACachedUserChip.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
@@ -551,6 +552,7 @@ export {
   ALogData,
   AJobStatusChip,
   ACachedChip,
+  ACachedUserChip,
   AAdminSwitcher,
   AEmptyRouterView,
   ATimeTrackingFields,

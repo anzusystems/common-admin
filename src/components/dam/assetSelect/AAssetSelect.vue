@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import type { DamAssetTypeType } from '@/types/coreDam/Asset'
+import type { AssetDetailItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -25,6 +25,7 @@ import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMet
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
+import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
 
 const props = withDefaults(
   defineProps<{
@@ -35,11 +36,15 @@ const props = withDefaults(
     returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
+    cachedUsers?: CollabCachedUsersMap | undefined
+    onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
   }>(),
   {
     returnType: AssetSelectReturnType.MainFileId,
     configName: 'default',
     skipCurrentUserCheck: false,
+    cachedUsers: undefined,
+    onDetailLoadedCallback: undefined,
   }
 )
 
@@ -62,7 +67,7 @@ const {
   getSelectedData,
   initStoreContext,
   detailLoading,
-} = useAssetSelectActions()
+} = useAssetSelectActions(props.onDetailLoadedCallback)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 
@@ -269,6 +274,7 @@ defineExpose({
                 v-if="extId && !customFormConfigLoading"
                 :ext-system="extId"
                 readonly
+                :cached-users="cachedUsers"
               />
             </div>
           </div>

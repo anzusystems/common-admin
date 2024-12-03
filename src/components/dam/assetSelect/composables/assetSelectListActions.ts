@@ -3,7 +3,7 @@ import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
-import type { DamAssetTypeType } from '@/types/coreDam/Asset'
+import type { AssetDetailItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
 import { usePagination } from '@/composables/system/pagination'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { useAlerts } from '@/composables/system/alerts'
@@ -15,13 +15,17 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
+import { isUndefined } from '@/utils/common'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
 const filterIsTouched = ref(false)
 const detailLoading = ref(false)
 
-export function useAssetSelectActions(configName = 'default') {
+export function useAssetSelectActions(
+  configName = 'default',
+  onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void)
+) {
   const { damClient } = useCommonAdminCoreDamOptions(configName)
 
   const assetSelectStore = useAssetSelectStore()
@@ -72,6 +76,7 @@ export function useAssetSelectActions(configName = 'default') {
       addToCachedKeywords(asset.keywords)
       fetchCachedAuthors()
       fetchCachedKeywords()
+      if (!isUndefined(onDetailLoadedCallback)) onDetailLoadedCallback(asset)
       assetDetailStore.setAsset(asset)
     } catch (e) {
       showErrorsDefault(e)
