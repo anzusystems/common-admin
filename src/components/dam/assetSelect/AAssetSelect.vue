@@ -110,6 +110,7 @@ watch(
 
 const onClose = () => {
   modelValue.value = false
+  assetDetailStore.reset()
 }
 
 const onConfirm = () => {
@@ -182,6 +183,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   selectConfigs.value = []
+  assetDetailStore.reset()
 })
 
 defineExpose({
