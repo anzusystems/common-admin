@@ -67,7 +67,8 @@ const {
   getSelectedData,
   initStoreContext,
   detailLoading,
-} = useAssetSelectActions(props.onDetailLoadedCallback)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+} = useAssetSelectActions('default', props.onDetailLoadedCallback)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 
