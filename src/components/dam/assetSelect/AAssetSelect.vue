@@ -173,6 +173,8 @@ watch(
       } catch (e) {
         showErrorsDefault(e)
       }
+    } else {
+      customFormConfigLoading.value = false
     }
   },
   { immediate: true }
