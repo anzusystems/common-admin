@@ -163,7 +163,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
       :title="t('common.damImage.asset.detail.info.file')"
       value="file"
     >
-      <VExpansionPanelText class="text-caption">
+      <VExpansionPanelText class="text-caption" style="overflow-wrap: normal">
         <!-- all types -->
         <VRow>
           <VCol cols="3">
