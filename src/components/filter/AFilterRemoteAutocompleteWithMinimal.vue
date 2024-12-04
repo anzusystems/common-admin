@@ -239,16 +239,16 @@ watchDebounced(
     @click:clear="onClickClear"
   >
     <!-- @vue-skip -->
-    <template #item="{ props: itemProps, item }">
+    <template #item="{ props: itemProps, item: itemItem }">
       <slot
         name="item"
-        :item="item"
+        :item="itemItem"
         :props="itemProps"
       >
         <VListItem
           v-bind="itemProps"
-          :title="item.raw.title"
-          :subtitle="item.raw.subtitle"
+          :title="itemItem.raw.title"
+          :subtitle="itemItem.raw.subtitle"
         />
       </slot>
     </template>

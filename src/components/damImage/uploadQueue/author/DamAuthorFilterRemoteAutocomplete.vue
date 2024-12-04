@@ -32,15 +32,15 @@ const { t } = useI18n()
     filter-by-field="text"
     :filter-sort-by="null"
   >
-    <template #item="{ props: itemProps, item }">
+    <template #item="{ props: itemProps, item: itemItem }">
       <VListItem
         v-bind="itemProps"
         title=""
       >
         <VListItemTitle>
-          {{ item.title }}
+          {{ itemItem.title }}
           <VIcon
-            v-if="item.raw.raw.reviewed"
+            v-if="itemItem.raw?.raw?.reviewed || itemItem.raw?.reviewed"
             icon="mdi-shield-check"
             class="text-success ml-1"
             size="small"
@@ -53,7 +53,7 @@ const { t } = useI18n()
       <VChip v-bind="chipProps">
         {{ chipItem.title }}
         <VIcon
-          v-if="chipItem.raw.raw.reviewed"
+          v-if="chipItem.raw?.raw?.reviewed || chipItem.raw?.reviewed"
           icon="mdi-shield-check"
           class="text-success ml-1"
           size="small"
