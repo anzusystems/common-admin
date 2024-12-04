@@ -16,6 +16,7 @@ import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/ca
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { isUndefined } from '@/utils/common'
+import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
@@ -24,7 +25,7 @@ const detailLoading = ref(false)
 
 export function useAssetSelectActions(
   configName = 'default',
-  onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void)
+  onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void
 ) {
   const { damClient } = useCommonAdminCoreDamOptions(configName)
 
@@ -64,6 +65,7 @@ export function useAssetSelectActions(
 
   const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
   const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
+  const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers()
 
   const onItemClick = async (data: { assetId: DocId; index: number }, extSystem: IntegerId) => {
     const { cachedExtSystemId } = useExtSystemIdForCached()
@@ -75,8 +77,10 @@ export function useAssetSelectActions(
       cachedExtSystemId.value = extSystem
       addToCachedAuthors(asset.authors)
       addToCachedKeywords(asset.keywords)
+      addToCachedUsers(asset.modifiedBy, asset.createdBy)
       fetchCachedAuthors()
       fetchCachedKeywords()
+      fetchCachedUsers()
       if (!isUndefined(onDetailLoadedCallback)) onDetailLoadedCallback(asset)
       assetDetailStore.setAsset(asset)
     } catch (e) {

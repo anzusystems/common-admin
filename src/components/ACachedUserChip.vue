@@ -7,17 +7,18 @@ import { isNull, isUndefined } from '@/utils/common'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import AAnzuUserAvatar from '@/components/AAnzuUserAvatar.vue'
 import { useRouter } from 'vue-router'
+import { replaceUrlParameters } from '@/services/api/apiHelper'
 
 const props = withDefaults(
   defineProps<{
     id: null | undefined | IntegerId
     routeName?: string | undefined
-    externalUrl?: string | undefined
+    externalUrlTemplate?: string | undefined
     cachedUsers?: CollabCachedUsersMap | undefined
   }>(),
   {
     routeName: undefined,
-    externalUrl: undefined,
+    externalUrlTemplate: undefined,
     cachedUsers: undefined,
   }
 )
@@ -41,7 +42,7 @@ const text = computed(() => {
 })
 
 const appendIcon = computed(() => {
-  if (props.externalUrl) {
+  if (props.externalUrlTemplate) {
     return COMMON_CONFIG.CHIP.ICON.LINK
   }
   if (props.routeName) {
@@ -51,8 +52,9 @@ const appendIcon = computed(() => {
 })
 
 const onClick = () => {
-  if (props.externalUrl) {
-    window.open(props.externalUrl, '_blank')
+  if (props.externalUrlTemplate && props.id) {
+    const url = replaceUrlParameters(props.externalUrlTemplate, { id: props.id })
+    window.open(url, '_blank')
     return
   }
   if (!props.routeName) return
@@ -84,6 +86,7 @@ watch(
     <VChip
       v-else
       class="pl-1"
+      :class="appendIcon ? '' : 'non-clickable'"
       size="small"
       :append-icon="appendIcon"
       @click.stop="onClick"
@@ -105,3 +108,9 @@ watch(
     </VChip>
   </div>
 </template>
+
+<style lang="scss" scoped>
+.non-clickable {
+  cursor: default;
+}
+</style>
