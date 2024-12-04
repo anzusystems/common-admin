@@ -68,6 +68,7 @@ export function useAssetSelectActions(
   const onItemClick = async (data: { assetId: DocId; index: number }, extSystem: IntegerId) => {
     const { cachedExtSystemId } = useExtSystemIdForCached()
     assetSelectStore.toggleSelectedByIndex(data.index)
+    assetSelectStore.setActiveByIndex(data.index)
     detailLoading.value = true
     try {
       const asset = await fetchAsset(damClient, data.assetId)

@@ -37,7 +37,7 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(i
 <template>
   <div
     class="asset-list-tiles__item asset-list-tiles__item--pointer"
-    :class="{ 'asset-list-tiles__item--selected': item.selected }"
+    :class="{ 'asset-list-tiles__item--selected': item.selected, 'asset-list-tiles__item--active': item.active }"
     @click.stop.exact="onItemClick"
   >
     <div class="asset-list-tiles__item-card">
@@ -50,7 +50,7 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(i
           class="asset-list-tiles__selected-triangle__icon"
           icon="mdi-check"
           color="white"
-          size="x-small"
+          size="large"
         />
       </div>
       <AssetImagePreview

@@ -126,8 +126,8 @@ $bg-color-actions-dark: #1a1a1a;
 
   .#{$class-name-root}__selected-triangle {
     position: absolute;
-    top: 11px;
-    right: 11px;
+    top: 10px;
+    right: 10px;
     z-index: 1;
 
     &__bg {
@@ -135,7 +135,7 @@ $bg-color-actions-dark: #1a1a1a;
       width: 0;
       height: 0;
       border-style: solid;
-      border-width: 0 30px 30px 0;
+      border-width: 0 60px 60px 0;
       border-color: transparent #608a32 transparent transparent;
       top: 0;
       right: 0;
