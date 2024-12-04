@@ -12,10 +12,12 @@ const props = withDefaults(
   defineProps<{
     id: null | undefined | IntegerId
     routeName?: string | undefined
+    externalUrl?: string | undefined
     cachedUsers?: CollabCachedUsersMap | undefined
   }>(),
   {
     routeName: undefined,
+    externalUrl: undefined,
     cachedUsers: undefined,
   }
 )
@@ -38,7 +40,21 @@ const text = computed(() => {
   return ''
 })
 
+const appendIcon = computed(() => {
+  if (props.externalUrl) {
+    return COMMON_CONFIG.CHIP.ICON.LINK
+  }
+  if (props.routeName) {
+    return COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL
+  }
+  return undefined
+})
+
 const onClick = () => {
+  if (props.externalUrl) {
+    window.open(props.externalUrl, '_blank')
+    return
+  }
   if (!props.routeName) return
   router.push({ name: props.routeName, params: { id: props.id } })
 }
@@ -69,7 +85,7 @@ watch(
       v-else
       class="pl-1"
       size="small"
-      :append-icon="COMMON_CONFIG.CHIP.ICON.LINK"
+      :append-icon="appendIcon"
       @click.stop="onClick"
     >
       <AAnzuUserAvatar

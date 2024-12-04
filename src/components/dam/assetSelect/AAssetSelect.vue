@@ -25,7 +25,6 @@ import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMet
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
-import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
 
 const props = withDefaults(
   defineProps<{
@@ -36,14 +35,12 @@ const props = withDefaults(
     returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
-    cachedUsers?: CollabCachedUsersMap | undefined
     onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
   }>(),
   {
     returnType: AssetSelectReturnType.MainFileId,
     configName: 'default',
     skipCurrentUserCheck: false,
-    cachedUsers: undefined,
     onDetailLoadedCallback: undefined,
   }
 )
@@ -67,7 +64,7 @@ const {
   getSelectedData,
   initStoreContext,
   detailLoading,
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
@@ -275,7 +272,6 @@ defineExpose({
                 v-if="extId && !customFormConfigLoading"
                 :ext-system="extId"
                 readonly
-                :cached-users="cachedUsers"
               />
             </div>
           </div>

@@ -512,6 +512,7 @@ import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables
 import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
+import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 
 export {
   // COMPONENTS
@@ -654,6 +655,7 @@ export {
   useCommonAdminImageOptions,
   defineAuth,
   defineBreadcrumbs,
+  useDamCachedUsers,
 
   // VALUE OBJECTS
   type GrantType,

@@ -19,18 +19,16 @@ import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/a
 import type { IntegerId } from '@/types/common'
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
-import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
 import ACachedUserChip from '@/components/ACachedUserChip.vue'
+import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
     readonly?: boolean
-    cachedUsers?: CollabCachedUsersMap | undefined
   }>(),
   {
     readonly: false,
-    cachedUsers: undefined,
   }
 )
 
@@ -61,6 +59,8 @@ const onAnyMetadataChange = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
+
+const { cachedUsers } = useDamCachedUsers()
 </script>
 
 <template>
@@ -163,7 +163,10 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
       :title="t('common.damImage.asset.detail.info.file')"
       value="file"
     >
-      <VExpansionPanelText class="text-caption" style="overflow-wrap: normal">
+      <VExpansionPanelText
+        class="text-caption"
+        style="overflow-wrap: normal"
+      >
         <!-- all types -->
         <VRow>
           <VCol cols="3">
