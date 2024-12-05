@@ -17,6 +17,10 @@ import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { isUndefined } from '@/utils/common'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
+import {
+  useAssetDetailSidebarActionbar
+} from '@/components/damImage/uploadQueue/composables/assetDetailSidebarActionbar'
+import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
@@ -32,6 +36,7 @@ export function useAssetSelectActions(
   const assetSelectStore = useAssetSelectStore()
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
   const assetDetailStore = useAssetDetailStore()
+  const { openSidebarRight } = useSidebar()
 
   const { resetFilter } = useFilterHelpers()
   const { showErrorsDefault } = useAlerts()
@@ -69,6 +74,7 @@ export function useAssetSelectActions(
 
   const onItemClick = async (data: { assetId: DocId; index: number }, extSystem: IntegerId) => {
     const { cachedExtSystemId } = useExtSystemIdForCached()
+    openSidebarRight()
     assetSelectStore.toggleSelectedByIndex(data.index)
     assetSelectStore.setActiveByIndex(data.index)
     detailLoading.value = true

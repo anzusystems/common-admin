@@ -189,7 +189,7 @@ const { cachedUsers } = useDamCachedUsers()
             {{ t('common.model.tracking.created') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.createdAt) }}
+            {{ dateTimePretty(asset.createdAt) }}<br>
             <ACachedUserChip
               :id="asset.createdBy"
               :cached-users="cachedUsers"
@@ -201,7 +201,7 @@ const { cachedUsers } = useDamCachedUsers()
             {{ t('common.model.tracking.modified') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.modifiedAt) }}
+            {{ dateTimePretty(asset.modifiedAt) }}<br>
             <ACachedUserChip
               :id="asset.modifiedBy"
               :cached-users="cachedUsers"
