@@ -192,7 +192,7 @@ __metadata:
   resolution: "@anzusystems/common-admin@workspace:."
   dependencies:
     "@anzusystems/common-admin": "workspace:*"
-    "@intlify/unplugin-vue-i18n": "npm:^6.0.0"
+    "@intlify/unplugin-vue-i18n": "npm:^6.0.1"
     "@kyvg/vue3-notification": "npm:^3.4.1"
     "@mdi/font": "npm:^7.4.47"
     "@shikijs/vitepress-twoslash": "npm:^1.24.0"
@@ -229,7 +229,7 @@ __metadata:
     stylelint-config-recommended-vue: "npm:^1.5.0"
     stylelint-config-standard-scss: "npm:^14.0.0"
     typescript: "npm:5.6.3"
-    unplugin: "npm:1.16.0"
+    unplugin: "npm:2.0.0"
     uuid: "npm:^11.0.3"
     vite: "npm:6.0.3"
     vite-plugin-dts: "npm:4.3.0"
@@ -976,9 +976,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@intlify/unplugin-vue-i18n@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@intlify/unplugin-vue-i18n@npm:6.0.0"
+"@intlify/unplugin-vue-i18n@npm:^6.0.1":
+  version: 6.0.1
+  resolution: "@intlify/unplugin-vue-i18n@npm:6.0.1"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.4.0"
     "@intlify/bundle-utils": "npm:^10.0.0"
@@ -1005,7 +1005,7 @@ __metadata:
       optional: true
     vue-i18n:
       optional: true
-  checksum: 10/f0a4b864df61852ab8c840f8c0f8207df6f7cef2ba6120cee470cb010935d53f36a1c4f84c6d93181f360d163a78ce5996a0c2999d32f58ba447b4288e4e796e
+  checksum: 10/61f3daee606c971d55433cc74cda7a646c7490dfafe03554b1f8e5db8da68167858dd0052e00a82912e483c3d0dc78e8ec7104355a4b53eccc6b8c4f2f689ad5
   languageName: node
   linkType: hard
 
@@ -7279,7 +7279,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin@npm:1.16.0, unplugin@npm:^1.1.0":
+"unplugin@npm:2.0.0":
+  version: 2.0.0
+  resolution: "unplugin@npm:2.0.0"
+  dependencies:
+    acorn: "npm:^8.14.0"
+    webpack-virtual-modules: "npm:^0.6.2"
+  checksum: 10/6772bd118e6faa9360dbc738ba6e930b371ab5b3664f3ce22b789c974ab9d07b25a308978243f8efa0c04bdd163e85a371edcbc5a1d24ebde0f048146c452afc
+  languageName: node
+  linkType: hard
+
+"unplugin@npm:^1.1.0":
   version: 1.16.0
   resolution: "unplugin@npm:1.16.0"
   dependencies:
