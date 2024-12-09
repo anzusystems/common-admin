@@ -17,9 +17,6 @@ import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { isUndefined } from '@/utils/common'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
-import {
-  useAssetDetailSidebarActionbar
-} from '@/components/damImage/uploadQueue/composables/assetDetailSidebarActionbar'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 
 const filter = useAssetListFilter()
