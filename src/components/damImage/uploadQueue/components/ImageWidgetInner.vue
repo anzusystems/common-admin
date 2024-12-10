@@ -21,7 +21,11 @@ import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
-import { fetchAsset, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  fetchAsset,
+  fetchAssetByFileId,
+  updateAssetAuthors,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
@@ -100,6 +104,7 @@ const emit = defineEmits<{
 }>()
 
 const modelValue = defineModel<IntegerIdNullable>({ required: true })
+const showDamAuthorsInCmsImage = ref(false)
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
@@ -308,11 +313,13 @@ watch(
   { immediate: true }
 )
 
+const assetSelectStore = useAssetSelectStore()
+
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
-  const assetSelectStore = useAssetSelectStore()
   metadataDialogLoading.value = true
   imageStore.setImageDetail(null)
   metadataDialog.value = true
+  showDamAuthorsInCmsImage.value = false
   let description = ''
   let source = ''
   if (data.type === 'asset') {
@@ -329,6 +336,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
           assetRes.authors
         )
         source = authorsRes.map((author) => author.name).join(', ')
+      } else if (assetRes.authors.length === 0) {
+        showDamAuthorsInCmsImage.value = true
+        asset.value = assetRes
       }
     } catch (e) {
       showErrorsDefault(e)
@@ -355,19 +365,19 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 }
 
 const assetDetailStore = useAssetDetailStore()
-const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
+const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
 const { damClient } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey
   try {
-    const asset = await fetchAssetByFileId(damClient, assetFileId)
-    const licence = await fetchDamAssetLicence(damClient, asset.licence)
+    const assetRes = await fetchAssetByFileId(damClient, assetFileId)
+    const licence = await fetchDamAssetLicence(damClient, assetRes.licence)
     if (licence.extSystem) {
       cachedExtSystemId.value = licence.extSystem
     }
-    assetDetailStore.setAsset(asset)
+    assetDetailStore.setAsset(assetRes)
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -384,6 +394,18 @@ const onMetadataDialogConfirm = async () => {
   if (isNull(imageStore.imageDetail)) return
   metadataDialogSaving.value = true
   try {
+    if(showDamAuthorsInCmsImage.value && asset.value) {
+      if (asset.value.authors.length > 0) {
+        const authorsRes = await fetchAuthorListByIds(
+          damClient,
+          assetSelectStore.selectedSelectConfig.extSystem,
+          asset.value.authors
+        )
+        imageStore.imageDetail.texts.source = authorsRes.map((author) => author.name).join(', ')
+        await updateAssetAuthors(damClient, asset.value, assetSelectStore.selectedSelectConfig.extSystem)
+        showDamAuthorsInCmsImage.value = false
+      }
+    }
     const res = imageStore.imageDetail.id
       ? await updateImage(imageClient, imageStore.imageDetail.id, imageStore.imageDetail)
       : await createImage(imageClient, imageStore.imageDetail)
@@ -662,6 +684,7 @@ defineExpose({
     <ImageDetailDialogMetadata
       ref="detailDialogMetadataComponent"
       v-model="metadataDialog"
+      :show-dam-authors="showDamAuthorsInCmsImage"
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"

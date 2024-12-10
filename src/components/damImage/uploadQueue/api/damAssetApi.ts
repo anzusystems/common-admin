@@ -244,3 +244,40 @@ export const updateAssetMetadata = (
       })
   })
 }
+
+export const updateAssetAuthors = (
+  client: () => AxiosInstance,
+  asset: AssetDetailItemDto,
+  extSystem: IntegerId,
+) => {
+  return new Promise((resolve, reject) => {
+    const data: Partial<AssetMetadataBulkItem> = {
+      id: asset.id,
+      authors: asset.authors,
+      described: true,
+    }
+    client()
+      .patch(END_POINT + '/metadata-bulk-update', JSON.stringify([data]))
+      .then((res) => {
+        if (res.status === HTTP_STATUS_OK) {
+          resolve(res.data)
+        } else {
+          //
+          reject()
+        }
+      })
+      .catch((err) => {
+        if (axiosErrorResponseIsForbidden(err)) {
+          return reject(new AnzuApiForbiddenError(err))
+        }
+        if (axiosErrorResponseHasValidationData(err)) {
+          handleMetadataValidationError(err, asset.attributes.assetType, extSystem)
+          return reject(new AnzuApiValidationError(err, SYSTEM_CORE_DAM, ENTITY, err))
+        }
+        if (axiosErrorResponseHasForbiddenOperationData(err)) {
+          return reject(new AnzuApiForbiddenOperationError(err, err))
+        }
+        return reject(new AnzuFatalError(err))
+      })
+  })
+}
