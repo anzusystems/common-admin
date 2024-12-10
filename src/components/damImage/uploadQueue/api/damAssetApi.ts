@@ -245,11 +245,7 @@ export const updateAssetMetadata = (
   })
 }
 
-export const updateAssetAuthors = (
-  client: () => AxiosInstance,
-  asset: AssetDetailItemDto,
-  extSystem: IntegerId,
-) => {
+export const updateAssetAuthors = (client: () => AxiosInstance, asset: AssetDetailItemDto, extSystem: IntegerId) => {
   return new Promise((resolve, reject) => {
     const data: Partial<AssetMetadataBulkItem> = {
       id: asset.id,
@@ -280,4 +276,20 @@ export const updateAssetAuthors = (
         return reject(new AnzuFatalError(err))
       })
   })
+}
+
+export type IdsGroupedByLicences = Map<IntegerId, DocId[]>
+
+export const fetchAssetListByIdsMultipleLicences = async (
+  client: () => AxiosInstance,
+  groupedIds: IdsGroupedByLicences
+) => {
+  const results: AssetDetailItemDto[] = []
+
+  for (const [key, value] of groupedIds) {
+    const res = await fetchAssetListByIds(client, value, key)
+    results.push(...res)
+  }
+
+  return results
 }

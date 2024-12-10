@@ -20,10 +20,15 @@ import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import UploadQueueDialog from '@/components/damImage/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
-import { fetchAssetByFileId, fetchAssetListByIds } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  fetchAssetByFileId,
+  fetchAssetListByIds,
+  fetchAssetListByIdsMultipleLicences,
+  type IdsGroupedByLicences,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { ImageStoreItem } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
 import { CHOSEN_CLASS, DRAG_CLASS, GHOST_CLASS, GROUP_CLASS, HANDLE_CLASS } from '@/components/sortable/sortableActions'
 import { useSortable, type UseSortableReturn } from '@vueuse/integrations/useSortable'
@@ -106,13 +111,30 @@ const fetchImagesOnLoad = async () => {
   try {
     imagesLoading.value = true
     const imagesRes = await fetchImageListByIds(imageClient, props.modelValue)
+    const groupedIds: IdsGroupedByLicences = new Map()
+    imagesRes.forEach((image) => {
+      const group = groupedIds.get(image.dam.licenceId)
+      if (group) {
+        group.push(image.dam.damId)
+      } else {
+        groupedIds.set(image.dam.licenceId, [image.dam.damId])
+      }
+    })
+
+    const assetsRes = await fetchAssetListByIdsMultipleLicences(damClient, groupedIds)
+
     imageStore.setImages(
       imagesRes.map((imageRes) => {
         if (isUndefined(imageRes.position)) throw new Error('Image object needs position field!')
         imageStore.updateMaxPositionIfGreater(imageRes.position)
+        const found = assetsRes.find((asset) => asset.mainFile?.id === imageRes.dam.damId)
         return {
           key: generateUUIDv1(),
           ...imageRes,
+          ...{
+            damAuthors: found ? found.authors : [],
+            showDamAuthors: found ? found.authors.length > 0 : false,
+          },
         }
       })
     )
@@ -156,7 +178,7 @@ const afterLimitDialogAdd = () => {
   uploadQueueDialog.value = props.queueKey
 }
 
-const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
+const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<ImageStoreItem[]> => {
   const assetSelectStore = useAssetSelectStore()
   const ids = items.map((item) => item.id)
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
@@ -199,6 +221,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
         authorNames.push(name)
       }
     })
+
     return {
       key: generateUUIDv1(),
       texts: {
@@ -211,6 +234,8 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
         licenceId: asset.licence,
       },
       position: maxPosition.value,
+      damAuthors: asset.authors,
+      showDamAuthors: asset.authors.length > 0,
     }
   })
 }
@@ -244,13 +269,12 @@ const onEditAsset = async (assetFileId: DocId) => {
   }
 }
 
-const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
+const onAssetUploadConfirm = (items: ImageStoreItem[]) => {
   if (items.length === 0) return
   imageStore.addImages(
     items.map((item) => {
       maxPosition.value++
       return {
-        key: generateUUIDv1(),
         ...item,
         position: maxPosition.value,
       }
@@ -277,12 +301,27 @@ const saveImages = async () => {
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
       ids.push(resItem.id)
+
       return {
         key: generateUUIDv1(),
         ...resItem,
+        damAuthors: [],
+        showDamAuthors: false,
       }
     })
-    imageStore.setImages(items)
+    if (imageStore.images.length > 0) {
+      items.map((item) => {
+        const found = imageStore.images.find((storeItem) => storeItem.dam.damId === item.dam.damId)
+
+        return {
+          ...item,
+          damAuthors: found ? found.damAuthors : item.damAuthors,
+          showDamAuthors: found ? found.damAuthors.length > 0 : item.damAuthors.length > 0,
+        }
+      })
+    } else {
+      imageStore.setImages(items)
+    }
     emit('update:modelValue', ids)
     return true
   } catch (e) {

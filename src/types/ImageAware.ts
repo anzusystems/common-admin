@@ -12,7 +12,6 @@ export interface ImageAware {
     regionPosition: number
   }
   position?: number
-  // licences: ImageWidgetImageLicence[]
 }
 
 export interface ImageCreateUpdateAware extends Omit<ImageAware, 'id'> {
@@ -21,4 +20,9 @@ export interface ImageCreateUpdateAware extends Omit<ImageAware, 'id'> {
 
 export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {
   key: string
+}
+
+export interface ImageStoreItem extends ImageCreateUpdateAwareKeyed {
+  damAuthors: DocId[]
+  showDamAuthors: boolean
 }

@@ -16,7 +16,7 @@ import {
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
-import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { ImageStoreItem } from '@/types/ImageAware'
 import type { DocId, IntegerId } from '@/types/common'
 import { isNull, isString, isUndefined } from '@/utils/common'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
@@ -41,7 +41,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'onDrop', files: File[]): void
   (e: 'onFilesInput', files: File[]): void
-  (e: 'onApply', items: ImageCreateUpdateAware[]): void
+  (e: 'onApply', items: ImageStoreItem[]): void
 }>()
 
 const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
@@ -104,7 +104,10 @@ const onSave = async () => {
   }
 }
 
-const metadataMap = async (queueItems: UploadQueueItem[], bulkItems: AssetMetadataBulkItem[]) => {
+const metadataMap = async (
+  queueItems: UploadQueueItem[],
+  bulkItems: AssetMetadataBulkItem[]
+): Promise<ImageStoreItem[]> => {
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
   const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
@@ -137,13 +140,17 @@ const metadataMap = async (queueItems: UploadQueueItem[], bulkItems: AssetMetada
   return queueItemsWithAssetId.map((queueItem) => {
     maxPosition.value++
     const description = assetMetadataMap.get(queueItem.assetId!)?.description
+    const authorIds = assetMetadataMap.get(queueItem.assetId!)?.authorIds
     const authorNames: string[] = []
-    assetMetadataMap.get(queueItem.assetId!)?.authorIds.forEach((authorId) => {
-      const name = authorsMap.get(authorId)
-      if (!isUndefined(name) && name.trim().length > 0) {
-        authorNames.push(name)
-      }
-    })
+    if (authorIds) {
+      authorIds.forEach((authorId) => {
+        const name = authorsMap.get(authorId)
+        if (!isUndefined(name) && name.trim().length > 0) {
+          authorNames.push(name)
+        }
+      })
+    }
+
     return {
       key: generateUUIDv1(),
       texts: {
@@ -156,6 +163,8 @@ const metadataMap = async (queueItems: UploadQueueItem[], bulkItems: AssetMetada
         licenceId: props.licenceId,
       },
       position: maxPosition.value,
+      damAuthors: authorIds || [],
+      showDamAuthors: !!(authorIds && authorIds.length > 0),
     }
   })
 }
