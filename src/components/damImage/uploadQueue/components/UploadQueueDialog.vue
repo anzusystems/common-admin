@@ -164,7 +164,7 @@ const metadataMap = async (
       },
       position: maxPosition.value,
       damAuthors: authorIds || [],
-      showDamAuthors: authorIds && authorIds.length === 0,
+      showDamAuthors: !!(authorIds && authorIds.length === 0),
     }
   })
 }
