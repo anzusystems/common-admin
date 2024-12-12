@@ -37,7 +37,8 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 const authorConflicts = ref<DocId[]>([])
 const image = computed(() => imageStore.images[props.index])
 const imageSourceRequired = computed(() => {
-  return !image.value.showDamAuthors
+  if (isNull(image.value) || isUndefined(image.value)) return true
+  return image.value.showDamAuthors === false
 })
 
 const { v$ } = useImageValidation(image, imageSourceRequired)
@@ -97,15 +98,6 @@ const removeItem = () => {
             />
           </VCol>
         </VRow>
-        <VRow dense>
-          <VCol>
-            <AFormTextarea
-              v-model="image.texts.source"
-              :label="t('common.damImage.image.model.texts.source')"
-              :v="v$.image.texts.source"
-            />
-          </VCol>
-        </VRow>
         <VRow dense v-if="image.showDamAuthors">
           <VCol>
             <ASystemEntityScope
@@ -123,6 +115,15 @@ const removeItem = () => {
                 :validation-scope="AImageMetadataValidationScopeSymbol"
               />
             </ASystemEntityScope>
+          </VCol>
+        </VRow>
+        <VRow dense v-else>
+          <VCol>
+            <AFormTextarea
+              v-model="image.texts.source"
+              :label="t('common.damImage.image.model.texts.source')"
+              :v="v$.image.texts.source"
+            />
           </VCol>
         </VRow>
       </div>

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { ImageCreateUpdateAware, ImageStoreItem } from '@/types/ImageAware'
 import { cloneDeep, isNull } from '@/utils/common'
 

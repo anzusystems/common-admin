@@ -196,9 +196,9 @@ __metadata:
     "@kyvg/vue3-notification": "npm:^3.4.1"
     "@mdi/font": "npm:^7.4.47"
     "@shikijs/vitepress-twoslash": "npm:^1.24.2"
-    "@stylistic/eslint-plugin": "npm:^2.12.0"
+    "@stylistic/eslint-plugin": "npm:^2.12.1"
     "@tsconfig/node18": "npm:^18.2.4"
-    "@types/node": "npm:^22.10.1"
+    "@types/node": "npm:^22.10.2"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -229,7 +229,7 @@ __metadata:
     stylelint-config-recommended-vue: "npm:^1.5.0"
     stylelint-config-standard-scss: "npm:^14.0.0"
     typescript: "npm:5.6.3"
-    unplugin: "npm:2.0.0"
+    unplugin: "npm:2.1.0"
     uuid: "npm:^11.0.3"
     vite: "npm:6.0.3"
     vite-plugin-dts: "npm:4.3.0"
@@ -1649,9 +1649,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@stylistic/eslint-plugin@npm:^2.12.0":
-  version: 2.12.0
-  resolution: "@stylistic/eslint-plugin@npm:2.12.0"
+"@stylistic/eslint-plugin@npm:^2.12.1":
+  version: 2.12.1
+  resolution: "@stylistic/eslint-plugin@npm:2.12.1"
   dependencies:
     "@typescript-eslint/utils": "npm:^8.13.0"
     eslint-visitor-keys: "npm:^4.2.0"
@@ -1660,7 +1660,7 @@ __metadata:
     picomatch: "npm:^4.0.2"
   peerDependencies:
     eslint: ">=8.40.0"
-  checksum: 10/a0caebcfffdc32f5e2869547ca0a942d228413da822d4692d5c30083ed7ebcda94d5cd12865d500e9db88fb4362863d4f8b00de1bf5e4a6556e6a97b1abf6290
+  checksum: 10/acc6a7b7cddbd7b26a32b9aded5a49193b6e7df61169845a4130d60ce38a171b8a25365b2e500d8560d29d040d5850ddaa26150a65c22213891696652f0b8d91
   languageName: node
   linkType: hard
 
@@ -1757,12 +1757,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.10.1":
-  version: 22.10.1
-  resolution: "@types/node@npm:22.10.1"
+"@types/node@npm:*, @types/node@npm:^22.10.2":
+  version: 22.10.2
+  resolution: "@types/node@npm:22.10.2"
   dependencies:
     undici-types: "npm:~6.20.0"
-  checksum: 10/c802a526da2f3fa3ccefd00a71244e7cb825329951719e79e8fec62b1dbc2855388c830489770611584665ce10be23c05ed585982038b24924e1ba2c2cce03fd
+  checksum: 10/451adfefed4add58b069407173e616220fd4aaa3307cdde1bb701aa053b65b54ced8483db2f870dcedec7a58cb3b06101fbc19d85852716672ec1fd3660947fa
   languageName: node
   linkType: hard
 
@@ -7279,13 +7279,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin@npm:2.0.0":
-  version: 2.0.0
-  resolution: "unplugin@npm:2.0.0"
+"unplugin@npm:2.1.0":
+  version: 2.1.0
+  resolution: "unplugin@npm:2.1.0"
   dependencies:
     acorn: "npm:^8.14.0"
     webpack-virtual-modules: "npm:^0.6.2"
-  checksum: 10/6772bd118e6faa9360dbc738ba6e930b371ab5b3664f3ce22b789c974ab9d07b25a308978243f8efa0c04bdd163e85a371edcbc5a1d24ebde0f048146c452afc
+  checksum: 10/b01041839c25ff5b0997677e00ffe8d98aa532443833968d652c0165eab3159702c3c3d1237afa58db35af5ccf25dd0a05782d78b7c22000742797e382362bcd
   languageName: node
   linkType: hard
 

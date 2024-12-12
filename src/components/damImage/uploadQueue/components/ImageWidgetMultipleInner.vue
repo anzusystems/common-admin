@@ -133,7 +133,7 @@ const fetchImagesOnLoad = async () => {
           ...imageRes,
           ...{
             damAuthors: found ? found.authors : [],
-            showDamAuthors: found ? found.authors.length > 0 : false,
+            showDamAuthors: found ? found.authors.length === 0 : false,
           },
         }
       })
@@ -213,7 +213,8 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
 
   return items.map((asset) => {
     maxPosition.value++
-    const description = assetMetadataMap.get(asset.id)?.description
+    const authorIds = assetMetadataMap.get(asset.id)?.authorIds || []
+    const description = assetMetadataMap.get(asset.id)?.description ?? ''
     const authorNames: string[] = []
     assetMetadataMap.get(asset.id)?.authorIds.forEach((authorId) => {
       const name = authorsMap.get(authorId)
@@ -225,7 +226,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
     return {
       key: generateUUIDv1(),
       texts: {
-        description: description ?? '',
+        description: description,
         source: authorNames.join(', '),
       },
       dam: {
@@ -234,8 +235,8 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
         licenceId: asset.licence,
       },
       position: maxPosition.value,
-      damAuthors: asset.authors,
-      showDamAuthors: asset.authors.length > 0,
+      damAuthors: authorIds,
+      showDamAuthors: authorIds.length === 0,
     }
   })
 }
@@ -316,7 +317,7 @@ const saveImages = async () => {
         return {
           ...item,
           damAuthors: found ? found.damAuthors : item.damAuthors,
-          showDamAuthors: found ? found.damAuthors.length > 0 : item.damAuthors.length > 0,
+          showDamAuthors: found ? found.damAuthors.length === 0 : item.damAuthors.length === 0,
         }
       })
     } else {

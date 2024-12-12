@@ -61,8 +61,6 @@ export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, Re
   flags: Flags
   licence: IntegerId
   mainFile: null | AssetFile
-  keywords: DocId[]
-  authors: DocId[]
   podcasts: DocId[]
   assetFileProperties: AssetFileProperties
   mainFileSingleUse: Readonly<boolean | null>
