@@ -293,3 +293,52 @@ export const fetchAssetListByIdsMultipleLicences = async (
 
   return results
 }
+
+export type AssetAuthorsItems = AssetAuthorsItem[]
+export interface AssetAuthorsItem {
+  id: DocId
+  authors: DocId[]
+}
+
+async function updateAuthorsSequence(client: () => AxiosInstance, items: AssetAuthorsItems) {
+  const totalCalls = Math.ceil(items.length / BULK_METADATA_LIMIT)
+  const responses: AxiosResponse[] = []
+  if (items.length === 0) return Promise.resolve([])
+
+  for (let i = 0; i < totalCalls; i++) {
+    const offset = i * BULK_METADATA_LIMIT
+    const reduced = items.slice(offset, offset + BULK_METADATA_LIMIT)
+    const res = await client().patch(END_POINT + '/metadata-bulk-update', JSON.stringify(reduced))
+    responses.push(res)
+  }
+  return responses
+}
+
+export const bulkUpdateAssetsAuthors = (
+  client: () => AxiosInstance,
+  items: AssetAuthorsItems,
+) => {
+  return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
+    updateAuthorsSequence(client, items)
+      .then((responses) => {
+        if (items.length === 0) {
+          return resolve([])
+        } else if (responses.length === 0) {
+          return reject(responses)
+        } else if (
+          responses.every((res) => {
+            return res.status === HTTP_STATUS_OK
+          })
+        ) {
+          const bulkItemsRes: AssetMetadataBulkItem[] = responses.flatMap((response) => response.data)
+          return resolve(bulkItemsRes)
+        } else {
+          return reject(responses)
+        }
+      })
+      .catch((err) => {
+        //
+        return reject(err)
+      })
+  })
+}

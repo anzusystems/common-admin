@@ -21,6 +21,8 @@ import UploadQueueDialog from '@/components/damImage/uploadQueue/components/Uplo
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import {
+  type AssetAuthorsItems,
+  bulkUpdateAssetsAuthors,
   fetchAssetByFileId,
   fetchAssetListByIds,
   fetchAssetListByIdsMultipleLicences,
@@ -298,6 +300,15 @@ const saveImages = async () => {
     return false
   }
   try {
+    const assetUpdateItems: AssetAuthorsItems = []
+    toRaw(images.value).forEach((image) => {
+      if (image.showDamAuthors) {
+        assetUpdateItems.push({ id: image.dam.damId, authors: image.damAuthors })
+      }
+    })
+    if (assetUpdateItems.length) {
+      await bulkUpdateAssetsAuthors(damClient, assetUpdateItems)
+    }
     const resItems = await bulkUpdateImages(imageClient, toRaw(images.value))
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
