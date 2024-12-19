@@ -165,6 +165,7 @@ const metadataMap = async (
       position: maxPosition.value,
       damAuthors: authorIds || [],
       showDamAuthors: !!(authorIds && authorIds.length === 0),
+      assetId: queueItem.assetId || undefined,
     }
   })
 }

@@ -280,20 +280,6 @@ export const updateAssetAuthors = (client: () => AxiosInstance, asset: AssetDeta
 
 export type IdsGroupedByLicences = Map<IntegerId, DocId[]>
 
-export const fetchAssetListByIdsMultipleLicences = async (
-  client: () => AxiosInstance,
-  groupedIds: IdsGroupedByLicences
-) => {
-  const results: AssetDetailItemDto[] = []
-
-  for (const [key, value] of groupedIds) {
-    const res = await fetchAssetListByIds(client, value, key)
-    results.push(...res)
-  }
-
-  return results
-}
-
 export type AssetAuthorsItems = AssetAuthorsItem[]
 export interface AssetAuthorsItem {
   id: DocId
@@ -314,10 +300,7 @@ async function updateAuthorsSequence(client: () => AxiosInstance, items: AssetAu
   return responses
 }
 
-export const bulkUpdateAssetsAuthors = (
-  client: () => AxiosInstance,
-  items: AssetAuthorsItems,
-) => {
+export const bulkUpdateAssetsAuthors = (client: () => AxiosInstance, items: AssetAuthorsItems) => {
   return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
     updateAuthorsSequence(client, items)
       .then((responses) => {

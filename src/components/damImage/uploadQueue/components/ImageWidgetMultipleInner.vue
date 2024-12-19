@@ -25,7 +25,6 @@ import {
   bulkUpdateAssetsAuthors,
   fetchAssetByFileId,
   fetchAssetListByIds,
-  fetchAssetListByIdsMultipleLicences,
   type IdsGroupedByLicences,
 } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -45,6 +44,9 @@ import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damA
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import {
+  fetchAssetListByFileIdsMultipleLicences
+} from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 
 const props = withDefaults(
   defineProps<{
@@ -123,7 +125,7 @@ const fetchImagesOnLoad = async () => {
       }
     })
 
-    const assetsRes = await fetchAssetListByIdsMultipleLicences(damClient, groupedIds)
+    const assetsRes = await fetchAssetListByFileIdsMultipleLicences(damClient, groupedIds)
 
     imageStore.setImages(
       imagesRes.map((imageRes) => {
@@ -136,6 +138,7 @@ const fetchImagesOnLoad = async () => {
           ...{
             damAuthors: found ? found.authors : [],
             showDamAuthors: found ? found.authors.length === 0 : false,
+            assetId: found ? found.id : undefined,
           },
         }
       })
@@ -239,6 +242,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
       position: maxPosition.value,
       damAuthors: authorIds,
       showDamAuthors: authorIds.length === 0,
+      assetId: asset.id,
     }
   })
 }
@@ -302,8 +306,8 @@ const saveImages = async () => {
   try {
     const assetUpdateItems: AssetAuthorsItems = []
     toRaw(images.value).forEach((image) => {
-      if (image.showDamAuthors) {
-        assetUpdateItems.push({ id: image.dam.damId, authors: image.damAuthors })
+      if (image.showDamAuthors && image.assetId) {
+        assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
       }
     })
     if (assetUpdateItems.length) {
@@ -319,6 +323,7 @@ const saveImages = async () => {
         ...resItem,
         damAuthors: [],
         showDamAuthors: false,
+        assetId: undefined,
       }
     })
     if (imageStore.images.length > 0) {
@@ -329,6 +334,7 @@ const saveImages = async () => {
           ...item,
           damAuthors: found ? found.damAuthors : item.damAuthors,
           showDamAuthors: found ? found.damAuthors.length === 0 : item.damAuthors.length === 0,
+          assetId: item.assetId,
         }
       })
     } else {
