@@ -144,6 +144,14 @@ const disabledComputed = computed(() => {
   if (isDefined(props.disabled)) return props.disabled
   return !!lockedByUserLocal.value
 })
+
+const focus = () => {
+  textFieldRef.value?.focus()
+}
+
+defineExpose({
+  focus,
+})
 </script>
 
 <template>

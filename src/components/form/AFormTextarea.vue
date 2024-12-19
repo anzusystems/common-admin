@@ -145,6 +145,14 @@ const showCounterWarning = (counterValue: string | number | undefined) => {
   }
   return false
 }
+
+const focus = () => {
+  textareaRef.value?.focus()
+}
+
+defineExpose({
+  focus,
+})
 </script>
 
 <template>
