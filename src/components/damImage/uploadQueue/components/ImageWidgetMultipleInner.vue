@@ -44,9 +44,7 @@ import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damA
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import {
-  fetchAssetListByFileIdsMultipleLicences
-} from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
+import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 
 const props = withDefaults(
   defineProps<{
@@ -305,11 +303,16 @@ const saveImages = async () => {
   }
   try {
     const assetUpdateItems: AssetAuthorsItems = []
-    toRaw(images.value).forEach((image) => {
+    const imagesRaw = toRaw(images.value)
+    for (const image of imagesRaw) {
       if (image.showDamAuthors && image.assetId) {
         assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
       }
-    })
+      if (image.damAuthors.length > 0) {
+        const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, image.damAuthors)
+        image.texts.source = authorsRes.map((author) => author.name).join(', ')
+      }
+    }
     if (assetUpdateItems.length) {
       await bulkUpdateAssetsAuthors(damClient, assetUpdateItems)
     }
@@ -326,20 +329,21 @@ const saveImages = async () => {
         assetId: undefined,
       }
     })
-    if (imageStore.images.length > 0) {
-      items.map((item) => {
-        const found = imageStore.images.find((storeItem) => storeItem.dam.damId === item.dam.damId)
+    if (imageStore.images.length === 0) return
 
-        return {
-          ...item,
-          damAuthors: found ? found.damAuthors : item.damAuthors,
-          showDamAuthors: found ? found.damAuthors.length === 0 : item.damAuthors.length === 0,
-          assetId: item.assetId,
-        }
-      })
-    } else {
-      imageStore.setImages(items)
+    const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
+      const matchedImage = imageStore.images.find((storeItem) => storeItem.dam.damId === item.dam.damId)
+
+      return {
+        ...item,
+        damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
+        showDamAuthors: matchedImage ? matchedImage.damAuthors.length === 0 : item.damAuthors.length === 0,
+        assetId: item.assetId,
+      }
     }
+
+    const updatedItems = await Promise.all(items.map((item) => getUpdatedItem(item)))
+    imageStore.setImages(updatedItems)
     emit('update:modelValue', ids)
     return true
   } catch (e) {
