@@ -208,8 +208,8 @@ __metadata:
     "@vue/tsconfig": "npm:0.5.1"
     "@vuelidate/core": "npm:^2.0.3"
     "@vuelidate/validators": "npm:^2.0.4"
-    "@vueuse/core": "npm:^12.1.0"
-    "@vueuse/integrations": "npm:^12.1.0"
+    "@vueuse/core": "npm:^12.2.0"
+    "@vueuse/integrations": "npm:^12.2.0"
     axios: "npm:1.7.9"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.13"
@@ -244,8 +244,8 @@ __metadata:
   peerDependencies:
     "@vuelidate/core": 2.0.3
     "@vuelidate/validators": 2.0.4
-    "@vueuse/core": 12.1.0
-    "@vueuse/integrations": 12.1.0
+    "@vueuse/core": 12.2.0
+    "@vueuse/integrations": 12.2.0
     axios: 1.7.9
     dayjs: 1.11.13
     pinia: 2.3.0
@@ -2243,15 +2243,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/core@npm:12.1.0, @vueuse/core@npm:^12.1.0":
-  version: 12.1.0
-  resolution: "@vueuse/core@npm:12.1.0"
+"@vueuse/core@npm:12.2.0, @vueuse/core@npm:^12.2.0":
+  version: 12.2.0
+  resolution: "@vueuse/core@npm:12.2.0"
   dependencies:
     "@types/web-bluetooth": "npm:^0.0.20"
-    "@vueuse/metadata": "npm:12.1.0"
-    "@vueuse/shared": "npm:12.1.0"
+    "@vueuse/metadata": "npm:12.2.0"
+    "@vueuse/shared": "npm:12.2.0"
     vue: "npm:^3.5.13"
-  checksum: 10/d76f17065afc3337b819117fdd9392bf7d89c8f95ce9928c101207b82b232321280ca387d421b00e1f91d88a0cdbf009d7b86abec3b7ef6b919642d32b56e9cb
+  checksum: 10/93df9f58aae35efd8ffc5de16f28bd8cec61bf388999ea4abcf966ae5fcb3738fefa667f4fa6afba1f0f91a9140125911786e5ab50394e7f5bcefe5fd6d6c4b8
   languageName: node
   linkType: hard
 
@@ -2304,12 +2304,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/integrations@npm:^12.1.0":
-  version: 12.1.0
-  resolution: "@vueuse/integrations@npm:12.1.0"
+"@vueuse/integrations@npm:^12.2.0":
+  version: 12.2.0
+  resolution: "@vueuse/integrations@npm:12.2.0"
   dependencies:
-    "@vueuse/core": "npm:12.1.0"
-    "@vueuse/shared": "npm:12.1.0"
+    "@vueuse/core": "npm:12.2.0"
+    "@vueuse/shared": "npm:12.2.0"
     vue: "npm:^3.5.13"
   peerDependencies:
     async-validator: ^4
@@ -2349,7 +2349,7 @@ __metadata:
       optional: true
     universal-cookie:
       optional: true
-  checksum: 10/c846bb22331aa133cff7144581da17171b04aebad77df6096745310c5e2f28181d3671939d121fdb248ef2ab4e0fecb4c8e5f12f0ce51cc955167bc57c1f9b66
+  checksum: 10/2e019546b73faf5f4b2f942ee56ab257857e951dcbfd4eeb2c3e0649778b4982700107c500fbfb30c0593bffb95ce7a70fd9fbc750646ec90ea56037633bafde
   languageName: node
   linkType: hard
 
@@ -2360,10 +2360,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/metadata@npm:12.1.0":
-  version: 12.1.0
-  resolution: "@vueuse/metadata@npm:12.1.0"
-  checksum: 10/8b6a6e93a92c1069e5295fc9d6525d5a5868a64ea91aab5702971b971eda527a96c6ac8edbc545a8f709c6df4bec30ffba1f3f210bcf9fb74d936e0d8842a26b
+"@vueuse/metadata@npm:12.2.0":
+  version: 12.2.0
+  resolution: "@vueuse/metadata@npm:12.2.0"
+  checksum: 10/8e9d8cb6299485f8e8f234d93c6e7ae874494297ded6b42c1bbffd8f50caef416112297c4eb349f24da3bfa626c2104567b3f029c8c9aa4ee4eda60f3fac2fb9
   languageName: node
   linkType: hard
 
@@ -2376,12 +2376,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/shared@npm:12.1.0":
-  version: 12.1.0
-  resolution: "@vueuse/shared@npm:12.1.0"
+"@vueuse/shared@npm:12.2.0":
+  version: 12.2.0
+  resolution: "@vueuse/shared@npm:12.2.0"
   dependencies:
     vue: "npm:^3.5.13"
-  checksum: 10/69b71f56bdf20777715da589e6f1cd2b2925d9b07656fb0d7b407dcc9b6d1af0ae58f5c6ba5afb53190403163ff5d1f29714f47167c0c27b60968cd8e7501c0c
+  checksum: 10/e889c4b13445dacbde131fab7617b46a1b430a9edccf9330924d34732b6d4927b2116438a2b4be69f4a378783ebb7e32633de186deb65463a64b9cd63935f6f3
   languageName: node
   linkType: hard
 
