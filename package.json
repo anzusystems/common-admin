@@ -45,7 +45,7 @@
     "@mdi/font": "^7.4.47",
     "@shikijs/vitepress-twoslash": "^1.24.4",
     "@stylistic/eslint-plugin": "^2.12.1",
-    "@tsconfig/node18": "^18.2.4",
+    "@tsconfig/node22": "^22.0.0",
     "@types/node": "^22.10.2",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.8",
