@@ -43,7 +43,7 @@
     "@intlify/unplugin-vue-i18n": "^6.0.3",
     "@kyvg/vue3-notification": "^3.4.1",
     "@mdi/font": "^7.4.47",
-    "@shikijs/vitepress-twoslash": "^1.26.2",
+    "@shikijs/vitepress-twoslash": "^1.27.2",
     "@stylistic/eslint-plugin": "^2.13.0",
     "@tsconfig/node22": "^22.0.0",
     "@types/node": "^22.10.6",
