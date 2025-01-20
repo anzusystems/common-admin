@@ -14,7 +14,7 @@ export const fetchAssetListByFileIdsMultipleLicences = async (
     const res = await apiAnyRequest<object ,{ data: AssetSearchListItemDto[] }>(
       client,
       'GET',
-      '/adm/v1/asset/licence/:licenceId?assetAndMainFileIds=' + value.join(','),
+      `/adm/v1/asset/licence/:licenceId/search?assetAndMainFileIds=${value.join(',')}&limit=${value.length}`,
       {
         licenceId: key,
       },
