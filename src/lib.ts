@@ -518,6 +518,7 @@ import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue
 import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
+import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 
 export {
   // COMPONENTS
@@ -1056,6 +1057,7 @@ export {
 
   //  STORES
   useDamConfigStore,
+  useImageStore,
 
   // OTHER
   i18n,
