@@ -211,6 +211,11 @@ import {
   isAnzuApiValidationError,
   type ValidationError,
 } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+  isAnzuApiDependencyExistsError,
+} from '@/model/error/AnzuApiDependencyExistsError'
 import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
@@ -1070,6 +1075,9 @@ export {
   AnzuFatalError,
   type ValidationError,
   type AnzuApiValidationResponseData,
+  isAnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+  AnzuApiDependencyExistsError,
   AnzuSystemsCommonAdmin,
   useCommonVuetifyConfig,
   loadCommonFonts,

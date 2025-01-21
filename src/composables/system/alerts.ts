@@ -5,6 +5,7 @@ import { isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
 import { isAnzuApiValidationError, type ValidationError } from '@/model/error/AnzuApiValidationError'
 import { isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
+import { isAnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyExistsError'
 
 const DEFAULT_DURATION_SECONDS = 3
 
@@ -161,6 +162,10 @@ export function useAlerts() {
     }
     if (isAnzuApiValidationError(error)) {
       showApiValidationError(error.fields)
+      return true
+    }
+    if (isAnzuApiDependencyExistsError(error)) {
+      showErrorT('error.apiDependencyExists.message')
       return true
     }
     if (isAnzuApiForbiddenOperationError(error)) {

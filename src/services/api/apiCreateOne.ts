@@ -10,6 +10,10 @@ import {
   axiosErrorResponseHasForbiddenOperationData,
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
+import {
+  AnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+} from '@/model/error/AnzuApiDependencyExistsError'
 
 /**
  * @template T Type used for request payload, by default same as Response type
@@ -45,6 +49,9 @@ export const apiCreateOne = <T, R = T>(
         }
         if (axiosErrorResponseHasValidationData(err)) {
           return reject(new AnzuApiValidationError(err, system, entity, err))
+        }
+        if (axiosErrorResponseHasDependencyExistsData(err)) {
+          return reject(new AnzuApiDependencyExistsError(err, system, entity, err))
         }
         if (axiosErrorResponseHasForbiddenOperationData(err)) {
           return reject(new AnzuApiForbiddenOperationError(err, err))
