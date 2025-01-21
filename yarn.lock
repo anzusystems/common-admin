@@ -241,10 +241,10 @@ __metadata:
     typescript: "npm:5.6.3"
     unplugin: "npm:2.1.2"
     uuid: "npm:^11.0.5"
-    vite: "npm:6.0.9"
+    vite: "npm:6.0.11"
     vite-plugin-dts: "npm:4.5.0"
     vite-plugin-vuetify: "npm:^2.0.4"
-    vitepress: "npm:1.6.0"
+    vitepress: "npm:1.6.1"
     vue: "npm:3.5.13"
     vue-i18n: "npm:11.0.1"
     vue-router: "npm:4.5.0"
@@ -7388,9 +7388,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:6.0.9":
-  version: 6.0.9
-  resolution: "vite@npm:6.0.9"
+"vite@npm:6.0.11":
+  version: 6.0.11
+  resolution: "vite@npm:6.0.11"
   dependencies:
     esbuild: "npm:^0.24.2"
     fsevents: "npm:~2.3.3"
@@ -7436,7 +7436,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10/6f4f27c602f997537df26cc9665763b402f5978a7381146f6c0b146888ee257484a7f140df79e495b922082ca608bd1f563b0be9e272d22c689aad2b1e1da440
+  checksum: 10/753d06b07a4d90863d3478162cfb18fa5cd7f6eb22a74525348a8fd46593a82875d0f92352c2f4833e15cb6581fc97d6ab434c0c5d83d8d58cfbbe6e7267726d
   languageName: node
   linkType: hard
 
@@ -7483,9 +7483,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitepress@npm:1.6.0":
-  version: 1.6.0
-  resolution: "vitepress@npm:1.6.0"
+"vitepress@npm:1.6.1":
+  version: 1.6.1
+  resolution: "vitepress@npm:1.6.1"
   dependencies:
     "@docsearch/css": "npm:^3.8.2"
     "@docsearch/js": "npm:^3.8.2"
@@ -7515,7 +7515,7 @@ __metadata:
       optional: true
   bin:
     vitepress: bin/vitepress.js
-  checksum: 10/0ee6035fd8126e6670f43f1bdd8df56dfa6f4509f6e8c0fd9fc433b0b8f7e2a990c3c6bdffde3714d2dd096477f73493b905f3ce5aefaa3a8a87d782df791bf2
+  checksum: 10/534e8a3d60b0bcfa6671f57c66c05646d285c75b25e9406714502cbad3aab885d48227117ea6147b45b1c9526c3715cb7f99fd7c069611c191ff54357b3182d4
   languageName: node
   linkType: hard
 
