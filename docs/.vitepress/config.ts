@@ -253,6 +253,7 @@ function sidebarEditor() {
         { text: 'spotify_episode', link: '/editor/scraper/spotify_episode/' },
         { text: 'ta3_video', link: '/editor/scraper/ta3_video/' },
         { text: 'tableau_visual', link: '/editor/scraper/tableau_visual/' },
+        { text: 'telegram_post', link: '/editor/scraper/telegram_post/' },
         { text: 'tiktok_video', link: '/editor/scraper/tiktok_video/' },
         { text: 'twitter_post', link: '/editor/scraper/twitter_post/' },
         { text: 'twitter_video', link: '/editor/scraper/twitter_video/' },
