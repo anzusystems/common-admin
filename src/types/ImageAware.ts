@@ -11,6 +11,9 @@ export interface ImageAware {
     licenceId: IntegerId
     regionPosition: number
   }
+  flags: {
+    showSource: boolean
+  }
   position?: number
 }
 

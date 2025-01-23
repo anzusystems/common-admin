@@ -21,11 +21,7 @@ import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
-import {
-  fetchAsset,
-  fetchAssetByFileId,
-  updateAssetAuthors,
-} from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAsset, fetchAssetByFileId, updateAssetAuthors } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
@@ -348,6 +344,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         description: description,
         source: source,
       },
+      flags: {
+        showSource: true,
+      },
       dam: {
         damId: data.value[0].mainFile.id,
         regionPosition: 0,
@@ -394,7 +393,7 @@ const onMetadataDialogConfirm = async () => {
   if (isNull(imageStore.imageDetail)) return
   metadataDialogSaving.value = true
   try {
-    if(showDamAuthorsInCmsImage.value && asset.value) {
+    if (showDamAuthorsInCmsImage.value && asset.value) {
       if (asset.value.authors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(
           damClient,

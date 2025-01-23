@@ -274,6 +274,9 @@ const onSaveAndApply = async () => {
             description: description,
             source: source,
           },
+          flags: {
+            showSource: true,
+          },
           dam: {
             damId: item.fileId ?? '',
             regionPosition: 0,

@@ -157,6 +157,9 @@ const metadataMap = async (
         description: description ?? '',
         source: authorNames.join(', '),
       },
+      flags: {
+        showSource: true,
+      },
       dam: {
         damId: queueItem.fileId as DocId,
         regionPosition: 0,

@@ -120,6 +120,9 @@ const submit = async () => {
         description: meta.value.description.trim(),
         source: meta.value.source.trim(),
       },
+      flags: {
+        showSource: true,
+      },
       dam: {
         damId: asset.mainFile!.id,
         licenceId: asset.licence,
@@ -146,6 +149,9 @@ const updatePreviewAndTexts = () => {
     texts: {
       description: '',
       source: '',
+    },
+    flags: {
+      showSource: true,
     },
     dam: {
       damId: inputField.value,

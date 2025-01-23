@@ -232,6 +232,9 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
         description: description,
         source: authorNames.join(', '),
       },
+      flags: {
+        showSource: true,
+      },
       dam: {
         damId: asset.mainFile!.id,
         regionPosition: 0,
