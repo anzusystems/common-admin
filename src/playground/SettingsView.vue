@@ -44,7 +44,7 @@ const afterLanguageChange = async (language: LanguageCode) => {
             </VCol>
             <VCol>
               <ALanguageSelect
-                system="cms"
+                is-administrator
                 @after-change="afterLanguageChange"
               />
             </VCol>
