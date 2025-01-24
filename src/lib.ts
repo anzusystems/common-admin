@@ -139,6 +139,7 @@ import {
   stringUrlTemplateReplaceVueRouter,
 } from '@/utils/string'
 import { booleanToInteger } from '@/utils/boolean'
+import { isOneOf } from '@/utils/enum'
 import {
   dateDiff,
   dateModifyMinutes,
@@ -916,6 +917,8 @@ export {
   // generator
   generateUUIDv1,
   generateUUIDv4,
+  // enum
+  isOneOf,
 
   // SERVICES
   apiAnyRequest,
