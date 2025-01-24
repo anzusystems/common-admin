@@ -95,6 +95,7 @@ const asset = computed<AssetDetailItemDto | null>(() => {
       described: false,
       visible: false,
     },
+    siblingToAsset: null,
     licence: item.value.licenceId,
     mainFile: null,
     keywords: [],

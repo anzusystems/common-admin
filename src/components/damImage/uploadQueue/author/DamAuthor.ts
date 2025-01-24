@@ -5,6 +5,7 @@ import type { DamAuthorTypeType } from '@/components/damImage/uploadQueue/author
 
 export interface Flags {
   reviewed: boolean
+  canBeCurrentAuthor: boolean
 }
 
 export interface DamAuthorMinimal {
@@ -21,4 +22,6 @@ export interface DamAuthor
   extSystem: IntegerId
   flags: Flags
   type: DamAuthorTypeType
+  currentAuthors: DocId[]
+  childAuthors: DocId[]
 }

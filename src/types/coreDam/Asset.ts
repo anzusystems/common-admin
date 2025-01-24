@@ -77,6 +77,7 @@ export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, Resour
   authors: DocId[]
   podcasts: DocId[]
   metadata: Metadata
+  siblingToAsset: DocIdNullable
   distributionCategory: DocIdNullable
   assetFileProperties: AssetFileProperties
   mainFileSingleUse: Readonly<boolean | null>
