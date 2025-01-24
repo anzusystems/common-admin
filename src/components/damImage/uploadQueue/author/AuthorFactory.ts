@@ -13,7 +13,10 @@ export function useDamAuthorFactory() {
       extSystem: extSystemId,
       flags: {
         reviewed: reviewed ?? false,
+        canBeCurrentAuthor: true
       },
+      currentAuthors: [],
+      childAuthors: [],
       type: DamAuthorType.Default,
       createdAt: dateTimeNow(),
       modifiedAt: dateTimeNow(),

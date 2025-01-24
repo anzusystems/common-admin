@@ -5,6 +5,7 @@ import type { DamAuthorType } from '@/components/damImage/uploadQueue/author/Dam
 
 export interface Flags {
   reviewed: boolean
+  canBeCurrentAuthor: boolean
 }
 
 export interface DamAuthorMinimal {
@@ -16,5 +17,7 @@ export interface DamAuthorMinimal {
 export interface DamAuthor extends DamAuthorMinimal, AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   extSystem: IntegerId
   flags: Flags
-  type: DamAuthorType
+  type: DamAuthorType,
+  currentAuthors: DocId[],
+  childAuthors: DocId[]
 }
