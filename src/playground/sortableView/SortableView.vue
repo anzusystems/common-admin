@@ -309,6 +309,22 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
           {{ item.raw.id }} {{ item.raw.text }}
         </template>
       </ASortable>
+      <h2 class="text-h5 mt-5 mb-2">
+        ASortable as chips
+      </h2>
+      <ASortable
+        v-model="itemsBasic"
+        chips
+        show-add-last-button
+        show-delete-button
+        disable-delete-dialog
+        add-last-button-t="custom.translation.addItem"
+        @on-add-last="onAddLastClickBasic"
+      >
+        <template #item="{ item }: { item: SortableItem<BasicItemDemo> }">
+          {{ item.raw.id }} {{ item.raw.text }}
+        </template>
+      </ASortable>
 
       <h2 class="text-h5 mt-5 mb-2">
         ASortable disabled dragging

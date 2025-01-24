@@ -12,22 +12,22 @@ export const ADamKeywordCreateValidationScopeSymbol = Symbol.for('anzu:common:ke
 
 export const ADamAuthorCreateValidationScopeSymbol = Symbol.for('anzu:common:author-create-validation-scope')
 
-const { required, maxLength } = useValidate()
-
-export function useImageValidation(
-  image: Ref<ImageCreateUpdateAware | null>,
-) {
+export function useImageValidation(image: Ref<ImageCreateUpdateAware | null>, sourceRequired: Ref<boolean>) {
+  const { requiredIf, maxLength } = useValidate()
   const rules = computed(() => ({
     image: {
       texts: {
+        description: {
+          maxLength: maxLength(2000),
+        },
         source: {
-          required,
+          required: requiredIf(sourceRequired.value),
           maxLength: maxLength(255),
         },
       },
     },
   }))
-  const v$ = useVuelidate(rules, { image }, { $scope: AImageMetadataValidationScopeSymbol, $stopPropagation: true })
+  const v$ = useVuelidate(rules, { image }, { $scope: AImageMetadataValidationScopeSymbol })
 
   return {
     v$,

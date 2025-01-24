@@ -11,10 +11,12 @@ const props = withDefaults(
   defineProps<{
     value: number | string
     notifyT?: string
+    tooltipT?: string
     dataCy?: string
   }>(),
   {
     notifyT: 'common.alert.textWasCopied',
+    tooltipT: 'common.button.copy',
     dataCy: 'copy-text',
   }
 )
@@ -43,7 +45,7 @@ const onClick = (event: Event) => {
     name="activator"
     :props="{
       onClick: withModifiers((e) => onClick(e), ['stop']),
-      disabled: !isSupported
+      disabled: !isSupported,
     }"
   >
     <div
@@ -60,10 +62,11 @@ const onClick = (event: Event) => {
         icon="mdi-content-copy"
       />
       <VTooltip
+        v-if="tooltipT"
         activator="parent"
         location="bottom"
       >
-        Copy
+        {{ t(tooltipT) }}
       </VTooltip>
     </div>
   </slot>

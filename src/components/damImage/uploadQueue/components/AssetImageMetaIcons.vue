@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { type AssetFileProperties, DamAssetType } from '@/types/coreDam/Asset'
+import { type AssetFileProperties, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import {
   DIMENSIONS_CONFIG,
   ICON_LOW,
@@ -9,11 +9,11 @@ import {
   ICON_SLOTS,
   LOW_DIMENSION,
 } from '@/components/damImage/uploadQueue/composables/assetImageIconsConfig'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 
 const props = withDefaults(
   defineProps<{
-    assetType: DamAssetType
+    assetType: DamAssetTypeType
     assetFileProperties: AssetFileProperties
     disableAbsolute?: boolean
   }>(),
@@ -47,13 +47,15 @@ const checkDimensions = (icons: string[], titles: string[]) => {
 }
 
 const checkDistributions = (icons: string[], titles: string[]) => {
-  const { damPrvConfig } = useDamConfigState()
+  const damConfigStore = useDamConfigStore()
   for (let i = 0; i < props.assetFileProperties.distributesInServices.length; i++) {
     const iconPath =
-      damPrvConfig.value.distributionServices[props.assetFileProperties.distributesInServices[i]]?.iconPath
+      damConfigStore.damPrvConfig.distributionServices[props.assetFileProperties.distributesInServices[i]]?.iconPath
     if (iconPath.length > 0 && !icons.includes(iconPath)) {
       icons.push(iconPath)
-      titles.push(damPrvConfig.value.distributionServices[props.assetFileProperties.distributesInServices[i]].title)
+      titles.push(
+        damConfigStore.damPrvConfig.distributionServices[props.assetFileProperties.distributesInServices[i]].title
+      )
     }
   }
 }

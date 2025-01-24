@@ -1,11 +1,10 @@
 import { ref } from 'vue'
-import type { AxiosInstance } from 'axios'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 
-export function useDamDistributionServiceType(client: () => AxiosInstance) {
-  const { damPrvConfig } = useDamConfigState(client)
-  const all = Object.entries(damPrvConfig.value.distributionServices).map(
+export function useDamDistributionServiceType() {
+  const damConfigStore = useDamConfigStore()
+  const all = Object.entries(damConfigStore.damPrvConfig.distributionServices).map(
     ([serviceName, value]): ValueObjectOption<string> => {
       return {
         value: serviceName,

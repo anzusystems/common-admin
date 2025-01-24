@@ -23,6 +23,10 @@
     "filter": {
       "toggle": "Filter"
     },
+    "info": {
+      "toggle": "Info karta",
+      "noAssetSelected": "Žiadne vybrané assety"
+    },
     "texts": {
       "title": "Vyberte asset",
       "noItemsFound": "Žiadne nájdené assety",
@@ -35,7 +39,11 @@
     "text": "Text",
     "described": "Popísané",
     "visible": "Viditeľné",
-    "generatedBySystem": "Generované systémom"
+    "generatedBySystem": "Generované systémom",
+    "assetAndMainFileIds": "Id",
+    "keywordIds": "Klúčové slová",
+    "authorIds": "Autori",
+    "createdByIds": "Založené používateľmi"
   },
   "error": {
     "unallowedLicence": "Nemáte práva na licenciu v DAM"

@@ -8,10 +8,16 @@ const props = withDefaults(
     modelValue: boolean | null
     dataCy?: string
     label?: string | undefined
+    allT?: string
+    trueT?: string
+    falseT?: string
   }>(),
   {
     dataCy: 'optional-boolean',
     label: undefined,
+    allT: 'common.model.all',
+    trueT: 'common.model.boolean.true',
+    falseT: 'common.model.boolean.false',
   }
 )
 const emit = defineEmits<{
@@ -35,9 +41,9 @@ const { t } = useI18n()
 
 const items = computed(() => {
   return [
-    { value: -1, title: t('common.model.notSelected') },
-    { value: 1, title: t('common.model.boolean.true') },
-    { value: 0, title: t('common.model.boolean.false') },
+    { value: -1, title: t(props.allT) },
+    { value: 1, title: t(props.trueT) },
+    { value: 0, title: t(props.falseT) },
   ]
 })
 </script>

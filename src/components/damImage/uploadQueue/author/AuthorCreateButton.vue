@@ -25,7 +25,7 @@ const props = withDefaults(
     extSystem: IntegerId
     initialValue?: string
     disableRedirect?: boolean
-    variant?: 'button' | 'icon'
+    variant?: 'button' | 'icon' | 'listItem'
     buttonT?: string
     buttonClass?: string
     dataCy?: string
@@ -61,12 +61,12 @@ const author = ref<DamAuthor>(createDefault(props.extSystem))
 const dialog = ref(false)
 const buttonLoading = ref(false)
 
-const onClick = () => {
+const onClick = (textOverride: string | undefined) => {
   if (isUndefined(configExtSystem)) {
     throw new Error('Ext system must be initialised.')
   }
   author.value = createDefault(props.extSystem, true)
-  author.value.name = props.initialValue
+  textOverride ? author.value.name = textOverride : author.value.name = props.initialValue
   dialog.value = true
 }
 
@@ -104,16 +104,28 @@ const onConfirm = async () => {
 }
 
 const { authorTypeOptions } = useDamAuthorType()
+
+defineExpose({
+  open: onClick,
+})
 </script>
 
 <template>
+  <VListItem v-if="variant === 'listItem'">
+    <ABtnSecondary
+      size="small"
+      :text="initialValue"
+      prepend-icon="mdi-plus-circle"
+      @click.stop="onClick"
+    />
+  </VListItem>
   <ABtnPrimary
-    v-if="variant === 'button'"
+    v-else-if="variant === 'button'"
     :class="buttonClass"
     :data-cy="dataCy"
     :disabled="disabled"
     rounded="pill"
-    @click.stop="onClick"
+    @click.stop="onClick(undefined)"
   >
     {{ t(buttonT) }}
   </ABtnPrimary>
@@ -125,7 +137,7 @@ const { authorTypeOptions } = useDamAuthorType()
     :disabled="disabled"
     variant="text"
     size="small"
-    @click.stop="onClick"
+    @click.stop="onClick(undefined)"
   >
     <VIcon icon="mdi-plus" />
     <VTooltip

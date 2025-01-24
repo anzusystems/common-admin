@@ -55,7 +55,8 @@
     "backButton": "Vráť ma na prihlásenie"
   },
   "dropzone": {
-    "dropPossibility": "Sem presuň nahrávané súbory",
-    "dropHere": "Sem presuň súbor"
-  }
+    "dropPossibility": "Nahrať alebo presunúť súbory",
+    "dropHere": "Nahrať súbory"
+  },
+  "inputSuggestedMax": "{current} / max {max}"
 }

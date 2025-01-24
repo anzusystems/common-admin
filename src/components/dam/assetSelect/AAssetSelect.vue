@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, shallowRef, watch, withModifiers } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
-import { damAssetTypeValueToEnum } from '@/types/coreDam/Asset'
+import type { AssetDetailItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -11,57 +10,49 @@ import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/c
 import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import AssetSelectFilter from '@/components/dam/assetSelect/components/filter/AssetSelectFilter.vue'
-import { isUndefined } from '@/utils/common'
-import type {
-  AssetSelectReturnData,
+import {
+  type AssetSelectReturnData,
   AssetSelectReturnType,
-  AssetSelectReturnTypeValues,
+  type AssetSelectReturnTypeType,
 } from '@/types/coreDam/AssetSelect'
-import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
 import { filterAllowedImageWidgetSelectConfigs } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/composables/system/alerts'
 import type { IntegerId } from '@/types/common'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { cloneDeep, isUndefined } from '@/utils/common'
+import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import { storeToRefs } from 'pinia'
+import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: boolean | undefined
-    assetType: DamAssetType | DamAssetTypeValues
+    assetType: DamAssetTypeType
     minCount: number
     maxCount: number
     selectLicences: IntegerId[]
-    returnType?: AssetSelectReturnType | AssetSelectReturnTypeValues
+    returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
+    onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
   }>(),
   {
-    modelValue: undefined,
-    returnType: 'mainFileId',
+    returnType: AssetSelectReturnType.MainFileId,
     configName: 'default',
     skipCurrentUserCheck: false,
+    onDetailLoadedCallback: undefined,
   }
 )
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: boolean): void
   (e: 'onConfirm', data: AssetSelectReturnData): void
 }>()
 
-const { t } = useI18n()
-
-const dialogLocal = ref(false)
+const modelValue = defineModel<boolean>({ default: false, required: false })
 const loading = ref(false)
-const dialog = computed({
-  get() {
-    if (isUndefined(props.modelValue)) return dialogLocal.value
-    return props.modelValue
-  },
-  set(newValue: boolean) {
-    dialogLocal.value = newValue
-    emit('update:modelValue', newValue)
-  },
-})
+
+const { t } = useI18n()
 
 const {
   damClient,
@@ -72,17 +63,25 @@ const {
   resetAssetList,
   getSelectedData,
   initStoreContext,
-} = useAssetSelectActions()
+  detailLoading,
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+} = useAssetSelectActions('default', props.onDetailLoadedCallback)
+
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 
 const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
+const assetDetailStore = useAssetDetailStore()
+const { asset } = storeToRefs(assetDetailStore)
+const assetSelectStore = useAssetSelectStore()
+const { selectedLicenceId } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
-const { openSidebar, sidebarLeft } = useSidebar()
+const { openSidebarLeft, sidebarLeft, sidebarRight } = useSidebar()
 const { showErrorT } = useAlerts()
 
 const onOpen = () => {
-  let selectConfigLocal = selectConfigs.value
+  let selectConfigLocal = cloneDeep(selectConfigs.value)
   if (!props.skipCurrentUserCheck) {
     selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
   }
@@ -93,18 +92,18 @@ const onOpen = () => {
 
   initStoreContext(
     selectConfigLocal,
-    damAssetTypeValueToEnum(props.assetType),
+    props.assetType,
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
     props.maxCount
   )
   resetAssetList()
-  openSidebar()
-  dialog.value = true
+  openSidebarLeft()
+  modelValue.value = true
 }
 
 watch(
-  dialog,
+  modelValue,
   async (newValue, oldValue) => {
     if (newValue === oldValue || !newValue) return
     onOpen()
@@ -113,11 +112,12 @@ watch(
 )
 
 const onClose = () => {
-  dialog.value = false
+  modelValue.value = false
+  assetDetailStore.reset()
 }
 
 const onConfirm = () => {
-  emit('onConfirm', getSelectedData(assetSelectReturnTypeValuesToEnum(props.returnType)))
+  emit('onConfirm', getSelectedData(props.returnType))
   onClose()
 }
 
@@ -144,10 +144,51 @@ const disabledSubmit = computed(() => {
   return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
 })
 
+const extId = computed(() => {
+  if (selectConfigs.value.length === 0) return undefined
+  if (selectedLicenceId.value > 0) {
+    const found = selectConfigs.value.find((config) => config.licence === selectedLicenceId.value)
+    if (found) return found.extSystem
+  }
+  return undefined
+})
+
+const loadingSidebarRight = computed(() => {
+  return customFormConfigLoading.value || detailLoading.value
+})
+
+const { showErrorsDefault } = useAlerts()
+const customFormConfigLoading = ref(true)
+
+watch(
+  extId,
+  async (newValue) => {
+    if (isUndefined(newValue)) return
+    customFormConfigLoading.value = true
+    const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(newValue)
+    if (isUndefined(configAssetCustomFormElements)) {
+      try {
+        await loadDamConfigAssetCustomFormElements(newValue)
+        customFormConfigLoading.value = false
+      } catch (e) {
+        showErrorsDefault(e)
+      }
+    } else {
+      customFormConfigLoading.value = false
+    }
+  },
+  { immediate: true }
+)
+
 onMounted(async () => {
   loading.value = true
   selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
   loading.value = false
+})
+
+onUnmounted(() => {
+  selectConfigs.value = []
+  assetDetailStore.reset()
 })
 
 defineExpose({
@@ -162,19 +203,18 @@ defineExpose({
   >
     <VProgressCircular indeterminate />
   </div>
-  <template v-else>
+  <template v-else-if="selectConfigs.length > 0">
     <slot
       name="activator"
       :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
     />
     <VDialog
-      :model-value="dialog"
+      v-model="modelValue"
       fullscreen
       class="subject-select"
-      @update:model-value="emit('update:modelValue', $event)"
     >
       <VCard
-        v-if="dialog"
+        v-if="modelValue"
         class="subject-select__card"
       >
         <ADialogToolbar
@@ -188,13 +228,20 @@ defineExpose({
         <AssetSelectListBar />
         <div
           class="subject-select__main"
-          :class="{ 'subject-select__main--sidebar-active': sidebarLeft }"
+          :class="{
+            'subject-select__main--sidebar-active': sidebarLeft,
+            'subject-select__main--sidebar-right-active': sidebarRight,
+          }"
         >
           <div class="subject-select__sidebar system-border-r">
             <AssetSelectFilter />
           </div>
           <div class="subject-select__content">
-            <component :is="componentComputed" />
+            <component
+              v-if="extId"
+              :is="componentComputed"
+              :ext-system="extId"
+            />
             <div class="d-flex w-100 align-center justify-center pa-4">
               <ABtnSecondary
                 v-show="pagination.hasNextPage || loader"
@@ -207,6 +254,27 @@ defineExpose({
                   {{ t('common.button.loadMore') }}
                 </slot>
               </ABtnSecondary>
+            </div>
+          </div>
+          <div class="subject-select__sidebar-right system-border-l">
+            <div
+              v-if="loadingSidebarRight"
+              class="d-flex w-100 align-center justify-center"
+            >
+              <VProgressCircular indeterminate />
+            </div>
+            <div
+              v-else-if="!asset"
+              class="d-flex w-100 align-center justify-center"
+            >
+              {{ t('common.assetSelect.meta.info.noAssetSelected') }}
+            </div>
+            <div v-else>
+              <AssetMetadata
+                v-if="extId && !customFormConfigLoading"
+                :ext-system="extId"
+                readonly
+              />
             </div>
           </div>
         </div>
@@ -236,4 +304,5 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
+  <div v-else>Error, no select licence.</div>
 </template>

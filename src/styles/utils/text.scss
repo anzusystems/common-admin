@@ -3,6 +3,8 @@
   -webkit-line-clamp: 1;
   display: box;
   -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .line-clamp-2 {
@@ -35,5 +37,5 @@
 }
 
 .white-space-pre {
-  white-space: pre;
+  white-space: pre !important;
 }

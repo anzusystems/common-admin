@@ -2,18 +2,19 @@ import { ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { useI18n } from 'vue-i18n'
 
-export enum GrantOrigin {
-  Role = 'role',
-  Group = 'group',
-  User = 'user',
-  DefaultGrant = 'default',
-  Default = DefaultGrant,
-}
+export const GrantOrigin = {
+  Role: 'role',
+  Group: 'group',
+  User: 'user',
+  Default: 'default',
+} as const
+export type GrantOriginType = (typeof GrantOrigin)[keyof typeof GrantOrigin]
+export const GrantOriginDefault = GrantOrigin.Default
 
 export function useGrantOrigin() {
   const { t } = useI18n()
 
-  const grantOriginOptions = ref<ValueObjectOption<GrantOrigin>[]>([
+  const grantOriginOptions = ref<ValueObjectOption<GrantOriginType>[]>([
     {
       value: GrantOrigin.Role,
       title: t('common.permission.grantOrigin.role'),
@@ -27,13 +28,13 @@ export function useGrantOrigin() {
       title: t('common.permission.grantOrigin.user'),
     },
     {
-      value: GrantOrigin.DefaultGrant,
+      value: GrantOriginDefault,
       title: t('common.permission.grantOrigin.defaultGrant'),
     },
   ])
 
-  const getGrantOriginOption = (value: GrantOrigin): ValueObjectOption<GrantOrigin> => {
-    return grantOriginOptions.value.find((item) => item.value === value) as ValueObjectOption<GrantOrigin>
+  const getGrantOriginOption = (value: GrantOriginType): ValueObjectOption<GrantOriginType> => {
+    return grantOriginOptions.value.find((item) => item.value === value) as ValueObjectOption<GrantOriginType>
   }
 
   return {

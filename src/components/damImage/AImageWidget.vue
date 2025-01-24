@@ -9,8 +9,9 @@ import ImageWidgetInner from '@/components/damImage/uploadQueue/components/Image
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { isUndefined } from '@/utils/common'
 import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
-import type { CollabComponentConfig } from '@/components/collab/types/Collab'
+import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from '@/components/collab/types/Collab'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 
 const props = withDefaults(
   defineProps<{
@@ -21,6 +22,7 @@ const props = withDefaults(
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
+    collabStatus?: CollabStatusType
     label?: string | undefined
     readonly?: boolean
     required?: boolean
@@ -29,11 +31,16 @@ const props = withDefaults(
     expandMetadata?: boolean
     disableOnClickMenu?: boolean
     width?: number | undefined
+    maxWidth?: number | undefined
+    height?: number | undefined
     callDeleteApiOnRemove?: boolean
+    damWidth?: undefined | number
+    damHeight?: undefined | number
   }>(),
   {
     configName: 'default',
     collab: undefined,
+    collabStatus: CollabStatus.Inactive,
     label: undefined,
     image: undefined,
     readonly: false,
@@ -45,7 +52,11 @@ const props = withDefaults(
     expandMetadata: false,
     disableOnClickMenu: false,
     width: undefined,
+    maxWidth: undefined,
+    height: undefined,
     callDeleteApiOnRemove: false,
+    damWidth: undefined,
+    damHeight: undefined,
   }
 )
 
@@ -59,7 +70,6 @@ const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading'
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
 const {
-  initialized,
   loadDamPrvConfig,
   loadDamConfigAssetCustomFormElements,
   getDamConfigAssetCustomFormElements,
@@ -70,6 +80,7 @@ const {
 const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
 
 onMounted(async () => {
+  const damConfigStore =  useDamConfigStore()
   uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
   if (isUndefined(uploadConfig.value)) {
     status.value = 'error'
@@ -80,7 +91,7 @@ onMounted(async () => {
     return
   }
   const promises: Promise<any>[] = []
-  if (!initialized.damPrvConfig) {
+  if (!damConfigStore.initialized.damPrvConfig) {
     promises.push(loadDamPrvConfig())
   }
   promises.push(getOrLoadDamConfigExtSystemByLicences(props.selectLicences))
@@ -89,7 +100,7 @@ onMounted(async () => {
     promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }
   try {
-    await Promise.all(promises)
+    await Promise.allSettled(promises)
   } catch (e) {
     status.value = 'error'
   }
@@ -116,7 +127,14 @@ defineExpose({
     v-bind="props"
     @update:model-value="emit('update:modelValue', $event)"
     @after-metadata-save-success="emit('afterMetadataSaveSuccess')"
-  />
+  >
+    <template #append="{ image: appendImage }">
+      <slot
+        name="append"
+        :image="appendImage"
+      />
+    </template>
+  </ImageWidgetInner>
   <div
     v-else-if="status === 'error'"
     class="text-error"

@@ -12,7 +12,7 @@ export function useKeywordValidation(keyword: Ref<DamKeyword>, validationScope: 
     keyword: {
       name: {
         required,
-        minLength: minLength(3),
+        minLength: minLength(2),
       },
     },
   }))

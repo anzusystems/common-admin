@@ -3,10 +3,10 @@ import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
 import type {
   AssetExternalProviderIdNullable,
   AssetExternalProviderMetadata,
-  DamAssetStatus,
-  DamAssetType
+  DamAssetStatusType,
+  DamAssetTypeType,
 } from '@/types/coreDam/Asset'
-import type { AssetFileFailReason,  AssetFileLink } from '@/types/coreDam/AssetFile'
+import type { AssetFileFailReasonType, AssetFileLink } from '@/types/coreDam/AssetFile'
 import type { ImageAware } from '@/types/ImageAware'
 
 export type UploadQueueKey = string
@@ -23,31 +23,33 @@ export interface UploadQueue {
   }
 }
 
-export enum UploadQueueItemType {
-  File = 'file',
-  Asset = 'asset',
-  ExternalProviderAsset = 'externalProviderAsset',
-  SlotFile = 'slotFile',
-}
+export const UploadQueueItemType = {
+  File: 'file',
+  Asset: 'asset',
+  ExternalProviderAsset: 'externalProviderAsset',
+  SlotFile: 'slotFile',
+} as const
+export type UploadQueueItemTypeType = (typeof UploadQueueItemType)[keyof typeof UploadQueueItemType]
 
-export enum UploadQueueItemStatus {
-  Loading = 'loading', // loading additional api data
-  Waiting = 'waiting', // waiting to be uploaded
-  Uploading = 'uploading', // uploading right now
-  Processing = 'processing', // all data sent by FE, server processing, waiting for notification, todo
-  Failed = 'failed', // any error
-  Uploaded = 'uploaded', // uploaded/ready after loading
-  Stop = 'stop', // after hitting stop upload
-}
+export const UploadQueueItemStatus = {
+  Loading: 'loading', // loading additional api data
+  Waiting: 'waiting', // waiting to be uploaded
+  Uploading: 'uploading', // uploading right now
+  Processing: 'processing', // all data sent by FE, server processing, waiting for notification, todo
+  Failed: 'failed', // any error
+  Uploaded: 'uploaded', // uploaded/ready after loading
+  Stop: 'stop', // after hitting stop upload
+} as const
+export type UploadQueueItemStatusType = (typeof UploadQueueItemStatus)[keyof typeof UploadQueueItemStatus]
 
 export interface UploadQueueItem {
   key: string
   file: File | null
-  status: UploadQueueItemStatus
-  assetStatus: DamAssetStatus
+  status: UploadQueueItemStatusType
+  assetStatus: DamAssetStatusType
   isDuplicate: boolean
-  type: UploadQueueItemType
-  assetType: DamAssetType
+  type: UploadQueueItemTypeType
+  assetType: DamAssetTypeType
   displayTitle: string
   assetId: DocIdNullable
   duplicateAssetId: DocIdNullable
@@ -74,12 +76,13 @@ export interface UploadQueueItem {
   error: {
     hasError: boolean
     message: string
-    assetFileFailReason: AssetFileFailReason
+    assetFileFailReason: AssetFileFailReasonType
   }
   notificationFallbackTimer: ReturnType<typeof setTimeout> | undefined
   notificationFallbackTry: number
   slotName: string | null
   image: undefined | ImageAware // todo check
+  mainFileSingleUse: boolean | null
 }
 
 export interface DamUploadStartResponse {

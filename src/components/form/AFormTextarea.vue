@@ -1,18 +1,13 @@
 <script lang="ts" setup>
 import { computed, inject, ref, watch } from 'vue'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
-import { isDefined, isUndefined } from '@/utils/common'
+import { isDefined, isNumber, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import type { ErrorObject } from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
 import type { VTextField } from 'vuetify/components/VTextField'
-import type {
-  CollabComponentConfig,
-  CollabFieldData,
-  CollabFieldDataEnvelope,
-  CollabFieldLockOptions,
-} from '@/components/collab/types/Collab'
+import type { CollabComponentConfig, CollabFieldData, CollabFieldLockOptions } from '@/components/collab/types/Collab'
 import type { IntegerIdNullable } from '@/types/common'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import {
@@ -26,17 +21,19 @@ import { useCommonAdminCollabOptions } from '@/components/collab/composables/com
 const props = withDefaults(
   defineProps<{
     modelValue: string | null | undefined // todo check number and null
-    label?: string
-    errorMessage?: string
-    required?: boolean
+    label?: string | undefined
+    errorMessage?: string | undefined
+    required?: boolean | undefined
     v?: any
-    prependIcon?: VuetifyIconValue
-    appendIcon?: VuetifyIconValue
-    dataCy?: string
+    prependIcon?: VuetifyIconValue | undefined
+    appendIcon?: VuetifyIconValue | undefined
+    dataCy?: string | undefined
     hideLabel?: boolean
     rows?: number
-    collab?: CollabComponentConfig
-    disabled?: boolean
+    collab?: CollabComponentConfig | undefined
+    disabled?: boolean | undefined
+    help?: string | undefined
+    suggestedLength?: number | undefined
   }>(),
   {
     label: undefined,
@@ -50,6 +47,8 @@ const props = withDefaults(
     rows: 1,
     collab: undefined,
     disabled: undefined,
+    help: undefined,
+    suggestedLength: undefined,
   }
 )
 
@@ -74,11 +73,9 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
     addCollabFieldLockStatusListener,
     addCollabGatheringBufferDataListener,
     lockedByUser,
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   } = useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock
@@ -89,11 +86,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      emit('update:modelValue', data.value as string | null | undefined)
-    })
-  }
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
     if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
       textareaRef.value?.blur()
@@ -146,6 +138,21 @@ const disabledComputed = computed(() => {
   if (isDefined(props.disabled)) return props.disabled
   return !!lockedByUserLocal.value
 })
+
+const showCounterWarning = (counterValue: string | number | undefined) => {
+  if (isNumber(counterValue) && !isUndefined(props.suggestedLength)) {
+    return counterValue > props.suggestedLength
+  }
+  return false
+}
+
+const focus = () => {
+  textareaRef.value?.focus()
+}
+
+defineExpose({
+  focus,
+})
 </script>
 
 <template>
@@ -190,6 +197,38 @@ const disabledComputed = computed(() => {
           :users="collab.cachedUsers"
         />
       </slot>
+    </template>
+    <template
+      v-if="$slots.prepend"
+      #prepend
+    >
+      <slot name="prepend" />
+    </template>
+    <template
+      v-if="$slots.counter"
+      #counter="counterProps"
+    >
+      <slot
+        name="counter"
+        :props="counterProps"
+      />
+    </template>
+    <template
+      v-else-if="suggestedLength"
+      #counter="{ value: counterValue }"
+    >
+      <span :class="{ 'text-warning': showCounterWarning(counterValue) }">
+        {{ t('common.system.inputSuggestedMax', { current: counterValue, max: suggestedLength }) }}
+      </span>
+    </template>
+    <template
+      v-if="help"
+      #append
+    >
+      <VIcon
+        v-tooltip="help"
+        icon="mdi-help-circle-outline"
+      />
     </template>
   </VTextarea>
 </template>

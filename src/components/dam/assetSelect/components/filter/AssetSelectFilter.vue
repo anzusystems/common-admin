@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { computed, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
+import { DamAssetType } from '@/types/coreDam/Asset'
 import AssetSelectFilterFormImage from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormImage.vue'
 import AssetSelectFilterFormDefault from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormDefault.vue'
 import { storeToRefs } from 'pinia'
@@ -26,7 +26,7 @@ const resetFilter = () => {
 
 const componentComputed = computed(() => {
   switch (assetSelectStore.assetType) {
-    case AssetTypeValue.Image:
+    case DamAssetType.Image:
       return AssetSelectFilterFormImage
     default:
       return AssetSelectFilterFormDefault
@@ -62,7 +62,7 @@ watch(
             />
           </VCol>
         </VRow>
-        <Component :is="componentComputed" />
+        <component :is="componentComputed" />
       </VForm>
     </div>
     <div class="subject-select-filter__actions">

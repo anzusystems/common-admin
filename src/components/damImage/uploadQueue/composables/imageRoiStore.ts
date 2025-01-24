@@ -1,50 +1,61 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import type { AssetFileImage } from '@/types/coreDam/AssetFile'
 import type { RegionOfInterest } from '@/types/coreDam/Roi'
+import { ref } from 'vue'
 
-interface State {
-  imageFile: null | AssetFileImage
-  loader: boolean
-  roi: null | RegionOfInterest
-  timestampCropper: number
-  timestampRoiPreviews: number
-}
+export const useImageRoiStore = defineStore('damImageRoiStore', () => {
+  const imageFile = ref<null | AssetFileImage>(null)
+  const loader = ref(false)
+  const roi = ref<null | RegionOfInterest>(null)
+  const timestampCropper = ref(Date.now())
+  const timestampRoiPreviews = ref(Date.now())
 
-export const useImageRoiStore = defineStore('damImageRoiStore', {
-  state: (): State => ({
-    imageFile: null,
-    loader: false,
-    roi: null,
-    timestampCropper: Date.now(),
-    timestampRoiPreviews: Date.now(),
-  }),
-  actions: {
-    setImageFile(file: AssetFileImage | null) {
-      this.imageFile = file
-    },
-    setRoi(roi: RegionOfInterest | null) {
-      this.roi = roi
-    },
-    showLoader() {
-      this.loader = true
-    },
-    hideLoader() {
-      this.loader = false
-    },
-    forceReloadRoiPreviews() {
-      this.timestampRoiPreviews = Date.now()
-    },
-    forceReloadCropper() {
-      this.timestampCropper = Date.now()
-    },
-    reset() {
-      this.imageFile = null
-      this.loader = false
-      this.roi = null
-      this.timestampCropper = Date.now()
-      this.timestampRoiPreviews = Date.now()
-    },
-  },
+  function setImageFile(newFile: AssetFileImage | null) {
+    imageFile.value = newFile
+  }
+
+  function setRoi(newRoi: RegionOfInterest | null) {
+    roi.value = newRoi
+  }
+
+  function showLoader() {
+    loader.value = true
+  }
+
+  function hideLoader() {
+    loader.value = false
+  }
+
+  function forceReloadRoiPreviews() {
+    timestampRoiPreviews.value = Date.now()
+  }
+
+  function forceReloadCropper() {
+    timestampCropper.value = Date.now()
+  }
+
+  function reset() {
+    imageFile.value = null
+    loader.value = false
+    roi.value = null
+    timestampCropper.value = Date.now()
+    timestampRoiPreviews.value = Date.now()
+  }
+
+  return {
+    imageFile,
+    loader,
+    roi,
+    timestampCropper,
+    timestampRoiPreviews,
+    setImageFile,
+    setRoi,
+    showLoader,
+    hideLoader,
+    forceReloadRoiPreviews,
+    forceReloadCropper,
+    reset,
+  }
 })
 
 if (import.meta.hot) {

@@ -16,8 +16,12 @@ import {
   axiosErrorResponseHasForbiddenOperationData,
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
+import {
+  AnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+} from '@/model/error/AnzuApiDependencyExistsError'
 
-const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag): string => {
+export const apiGenerateListQuery = (pagination: Pagination, filterBag: FilterBag): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
   querySetLimit(pagination.rowsPerPage)
   querySetOffset(pagination.page, pagination.rowsPerPage)
@@ -43,7 +47,7 @@ export const apiFetchList = <R>(
     const searchApi = isUndefined(filterBag._elastic) ? '' : '/search'
     client()
       .get(
-        replaceUrlParameters(urlTemplate, urlParams) + searchApi + generateListApiQuery(pagination, filterBag),
+        replaceUrlParameters(urlTemplate, urlParams) + searchApi + apiGenerateListQuery(pagination, filterBag),
         options
       )
       .then((res) => {
@@ -71,6 +75,9 @@ export const apiFetchList = <R>(
         }
         if (axiosErrorResponseHasValidationData(err)) {
           return reject(new AnzuApiValidationError(err, system, entity, err))
+        }
+        if (axiosErrorResponseHasDependencyExistsData(err)) {
+          return reject(new AnzuApiDependencyExistsError(err, system, entity, err))
         }
         if (axiosErrorResponseHasForbiddenOperationData(err)) {
           return reject(new AnzuApiForbiddenOperationError(err, err))

@@ -4,15 +4,26 @@ import { ALL_LANGUAGES, modifyLanguageSettings, useLanguageSettings } from '@/co
 import { computed, inject } from 'vue'
 import { isUndefined } from '@/utils/common'
 import FlagCountry from '@/components/flags/FlagCountry.vue'
-import type { CurrentUserType } from '@/AnzuSystemsCommonAdmin'
-import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
-import { AvailableLanguagesSymbol, CurrentUserSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
+import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
+import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
+import type { AclValue } from '@/types/Permission'
+
+const props = withDefaults(
+  defineProps<{
+    system: string
+  }>(),
+  {}
+)
 
 const emit = defineEmits<{
   (e: 'afterChange', code: LanguageCode): void
 }>()
 
-const currentUser = inject(CurrentUserSymbol) as CurrentUserType
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { useCurrentUser } = defineAuth<AclValue>(props.system)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { currentUser } = useCurrentUser(props.system)
+
 const configAvailableLanguages = inject(AvailableLanguagesSymbol) as LanguageCode[]
 const configDefaultLanguage = inject(DefaultLanguageSymbol) as LanguageCode
 // @ts-ignore
@@ -43,11 +54,11 @@ const availableLocales = computed(() => {
 
 <template>
   <VMenu>
-    <template #activator="{ props }">
+    <template #activator="{ props: activatorProps }">
       <VBtn
         class="pl-1"
         rounded="pill"
-        v-bind="props"
+        v-bind="activatorProps"
         variant="text"
         data-cy="settings-language"
       >

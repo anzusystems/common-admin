@@ -1,6 +1,7 @@
 $class-name-root: "subject-select";
 $class-name-filter: "subject-select-filter";
 $sidebar-width: 320px;
+$sidebar-right-width: 300px;
 
 .#{$class-name-root} {
   &__card {
@@ -32,6 +33,16 @@ $sidebar-width: 320px;
 
       .#{$class-name-root}__content {
         margin-left: $sidebar-width;
+      }
+    }
+
+    &--sidebar-right-active {
+      .#{$class-name-root}__sidebar-right {
+        transform: translateX(0%);
+      }
+
+      .#{$class-name-root}__content {
+        margin-right: $sidebar-right-width;
       }
     }
   }
@@ -69,10 +80,24 @@ $sidebar-width: 320px;
     }
   }
 
+  &__sidebar-right {
+    display: flex;
+    overflow: hidden;
+    transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(110%);
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: $sidebar-right-width;
+    height: 100%;
+    z-index: 0;
+    overflow-y: auto;
+  }
+
   &__content {
     width: 100%;
     transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: auto auto;
+    overflow: auto;
   }
 
   &__actions {

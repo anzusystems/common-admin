@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
-import type { DamAssetType, DamDistributionServiceName } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType, DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 
@@ -13,7 +13,7 @@ const ENTITY = 'assetCustomForm'
 export const fetchAssetCustomFormElements = (
   damClient: () => AxiosInstance,
   extSystem: IntegerId,
-  assetType: DamAssetType
+  assetType: DamAssetTypeType
 ) =>
   apiFetchOne<{ data: CustomDataFormElement[] }>(
     damClient,

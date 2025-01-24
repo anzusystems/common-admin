@@ -5,8 +5,8 @@ import {
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import type { DocId, IntegerId } from '@/types/common'
-import type { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
-import type { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
+import type { DamAssetStatusType, DamAssetTypeType } from '@/types/coreDam/Asset'
+import type { AssetFileFailReasonType, AssetFileProcessStatusType } from '@/types/coreDam/AssetFile'
 import { useI18n } from 'vue-i18n'
 import AssetDetailSidebarROI from '@/components/damImage/uploadQueue/components/AssetDetailSidebarROI.vue'
 import AssetDetailSidebarActionsTeleportTarget from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsTeleportTarget.vue'
@@ -24,10 +24,10 @@ withDefaults(
     enableRoiTab: boolean
     showFileInfo: boolean
     dataCy?: string
-    assetStatus: DamAssetStatus
-    assetType: DamAssetType
-    assetMainFileStatus?: AssetFileProcessStatus | undefined
-    assetMainFileFailReason?: AssetFileFailReason | undefined
+    assetStatus: DamAssetStatusType
+    assetType: DamAssetTypeType
+    assetMainFileStatus?: AssetFileProcessStatusType | undefined
+    assetMainFileFailReason?: AssetFileFailReasonType | undefined
   }>(),
   {
     assetMainFileStatus: undefined,
@@ -70,6 +70,7 @@ const { activeTab } = storeToRefs(assetDetailStore)
       </VTabs>
 
       <div class="sidebar-info__content">
+        <slot name="prepend-sidebar"></slot>
         <div
           v-if="activeTab === AssetDetailTabImageWithRoi.Info"
           class="py-2"

@@ -12,12 +12,7 @@ import {
   type CollabFieldLockStatusPayload,
   CollabFieldLockType,
 } from '@/components/collab/composables/collabEventBus'
-import type {
-  CollabComponentConfig,
-  CollabFieldData,
-  CollabFieldDataEnvelope,
-  CollabFieldLockOptions,
-} from '@/components/collab/types/Collab'
+import type { CollabComponentConfig, CollabFieldData, CollabFieldLockOptions } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import type { IntegerIdNullable } from '@/types/common'
 import type { VTextField } from 'vuetify/components/VTextField'
@@ -41,6 +36,7 @@ const props = withDefaults(
     disabled?: boolean
     placeholder?: undefined | string
     persistentPlaceholder?: boolean
+    help?: string | undefined
   }>(),
   {
     label: undefined,
@@ -58,6 +54,7 @@ const props = withDefaults(
     disabled: undefined,
     placeholder: undefined,
     persistentPlaceholder: false,
+    help: undefined,
   }
 )
 const emit = defineEmits<{
@@ -81,11 +78,10 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
     addCollabFieldLockStatusListener,
     addCollabGatheringBufferDataListener,
     lockedByUser,
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
   } = useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock
@@ -96,11 +92,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      emit('update:modelValue', data.value as string | number | null | undefined)
-    })
-  }
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
     if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
       textFieldRef.value?.blur()
@@ -153,6 +144,14 @@ const disabledComputed = computed(() => {
   if (isDefined(props.disabled)) return props.disabled
   return !!lockedByUserLocal.value
 })
+
+const focus = () => {
+  textFieldRef.value?.focus()
+}
+
+defineExpose({
+  focus,
+})
 </script>
 
 <template>
@@ -200,6 +199,21 @@ const disabledComputed = computed(() => {
           :users="collab.cachedUsers"
         />
       </slot>
+    </template>
+    <template
+      v-if="$slots.prepend"
+      #prepend
+    >
+      <slot name="prepend" />
+    </template>
+    <template
+      v-if="help"
+      #append
+    >
+      <VIcon
+        v-tooltip="help"
+        icon="mdi-help-circle-outline"
+      />
     </template>
   </VTextField>
 </template>

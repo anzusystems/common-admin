@@ -1,4 +1,4 @@
-import type { IntegerId } from '@/types/common'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUser } from '@/types/AnzuUser'
 
 export interface DamCurrentUserExtSystem {
@@ -12,20 +12,25 @@ export interface DamCurrentUserAssetLicence {
   extSystem: IntegerId
 }
 
+export interface DamCurrentUserAssetLicenceGroup {
+  id: IntegerId
+  name:	string
+  extSystem: IntegerId
+  licences: IntegerId[]
+}
+
 export interface DamCurrentUserDto extends AnzuUser {
-  selectedLicence: DamCurrentUserAssetLicence | null
-  adminToExtSystems: DamCurrentUserExtSystem[]
-  userToExtSystems: DamCurrentUserExtSystem[]
-  assetLicences: DamCurrentUserAssetLicence[]
-  person: {
-    firstName: string
-    lastName: string
-    fullName: string
-  }
-  avatar: {
-    color: string
-    text: string
-  }
+  selectedLicence: IntegerIdNullable
+  selectedLicenceDto:	DamCurrentUserAssetLicence | null
+  adminToExtSystems: IntegerId[]
+  adminToExtSystemsDto: DamCurrentUserExtSystem[]
+  userToExtSystems: IntegerId[]
+  userToExtSystemsDto: DamCurrentUserExtSystem[]
+  assetLicences: IntegerId[]
+  assetLicencesDto: DamCurrentUserAssetLicence[]
+  licenceGroups: IntegerId[]
+  licenceGroupsDto: DamCurrentUserAssetLicenceGroup[]
+  resolvedAssetLicences: DamCurrentUserAssetLicence[]
   allowedAssetExternalProviders: string[]
   allowedDistributionServices: string[]
 }

@@ -1,12 +1,12 @@
 import { computed } from 'vue'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
 
-export const useDamKeywordAssetTypeConfig = (assetType: DamAssetType, extSystem: IntegerId) => {
+export const useDamKeywordAssetTypeConfig = (assetType: DamAssetTypeType, extSystem: IntegerId) => {
   const { getDamConfigExtSystem } = useDamConfigState()
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
   const configExtSystem = getDamConfigExtSystem(extSystem)
 
   if (isUndefined(configExtSystem)) {

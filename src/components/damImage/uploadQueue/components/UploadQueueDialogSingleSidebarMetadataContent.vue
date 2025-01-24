@@ -33,7 +33,7 @@ const { t } = useI18n()
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched } = storeToRefs(assetDetailStore)
+const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
 
 const uploadQueuesStore = useUploadQueuesStore()
 
@@ -138,6 +138,17 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                       @update:model-value="onAnyMetadataChange"
                     />
                   </ASystemEntityScope>
+                </VCol>
+              </VRow>
+              <VRow
+                dense
+                class="my-2"
+              >
+                <VCol>
+                  <VSwitch
+                    :label="t('common.damImage.asset.model.mainFileSingleUse')"
+                    v-model="mainFileSingleUse"
+                  />
                 </VCol>
               </VRow>
             </template>

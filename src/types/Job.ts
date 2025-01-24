@@ -1,13 +1,13 @@
 import type { DatetimeUTC, DatetimeUTCNullable, IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { JobBaseResource } from '@/model/valueObject/JobBaseResource'
-import type { JobStatus } from '@/model/valueObject/JobStatus'
+import type { JobStatusType } from '@/model/valueObject/JobStatus'
 
 export interface JobBase<T extends JobBaseResource = JobBaseResource> extends AnzuUserAndTimeTrackingAware {
   readonly id: IntegerId
   scheduledAt: DatetimeUTC
   priority: number
-  readonly status: JobStatus
+  readonly status: JobStatusType
   readonly startedAt: DatetimeUTCNullable
   readonly finishedAt: DatetimeUTCNullable
   readonly lastBatchProcessedRecord: string

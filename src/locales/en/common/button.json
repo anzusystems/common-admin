@@ -23,5 +23,7 @@
   "backwards": "Backwards",
   "next": "Next",
   "prev": "Prev",
-  "loadMore": "Load more"
+  "loadMore": "Load more",
+  "copy": "Copy",
+  "advanced": "Advanced"
 }

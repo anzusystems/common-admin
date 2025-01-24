@@ -23,5 +23,7 @@
   "backwards": "Zpět",
   "next": "Vpřed",
   "prev": "Zpět",
-  "loadMore": "Načti další"
+  "loadMore": "Načti další",
+  "copy": "Kopírovat",
+  "advanced": "Pokročilé"
 }

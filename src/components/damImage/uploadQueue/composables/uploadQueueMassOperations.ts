@@ -1,13 +1,13 @@
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import { isUndefined } from '@/utils/common'
 
 export function useUploadQueueMassOperations(queueKey: UploadQueueKey) {
   const uploadQueuesStore = useUploadQueuesStore()
 
   const replaceEmptyCustomDataValue = (
-    data: { assetType: DamAssetType; elementProperty: string; value: any },
+    data: { assetType: DamAssetTypeType; elementProperty: string; value: any },
     forceReplace = false
   ) => {
     const items = uploadQueuesStore.getQueueItems(queueKey)

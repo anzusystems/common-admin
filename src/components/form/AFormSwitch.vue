@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import { isDefined } from '@/utils/common'
-import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
+import type { CollabComponentConfig, CollabFieldData } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import type { IntegerIdNullable } from '@/types/common'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
@@ -41,9 +41,8 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
     lockedByUser,
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
   } = useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock
@@ -54,11 +53,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      emit('update:modelValue', data.value as boolean)
-    })
-  }
 }
 
 const onClick = () => {

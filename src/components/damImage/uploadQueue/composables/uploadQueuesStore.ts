@@ -1,28 +1,29 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { fetchAsset, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
+import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { useDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
+import { DamNotificationName } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
+import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
+import { uploadStop, useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
+import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
+import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
+import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import type { AssetFileFailReasonType } from '@/types/coreDam/AssetFile'
 import {
   type UploadQueue,
   type UploadQueueItem,
   UploadQueueItemStatus,
+  type UploadQueueItemStatusType,
   UploadQueueItemType,
   type UploadQueueKey,
 } from '@/types/coreDam/UploadQueue'
-import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
-import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import { uploadStop, useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
-import { type AssetDetailItemDto, DamAssetType } from '@/types/coreDam/Asset'
-import type { AssetFileFailReason } from '@/types/coreDam/AssetFile'
-import { DamNotificationName } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
-import { useDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
-import { fetchAsset, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
-import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
-import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import { isNull, isUndefined } from '@/utils/common'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
 const QUEUE_MAX_PARALLEL_UPLOADS = 2
 const QUEUE_CHUNK_SIZE = 10485760
@@ -70,7 +71,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
 
   async function addByFiles(queueKey: UploadQueueKey, extSystem: IntegerId, assetLicence: IntegerId, files: File[]) {
     const { getDamConfigExtSystem } = useDamConfigState()
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
     const configExtSystem = getDamConfigExtSystem(extSystem)
     if (isUndefined(configExtSystem)) {
       throw new Error('Ext system must be initialised.')
@@ -122,7 +123,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Failed).length
   }
 
-  function getQueueItemsByStatus(queueKey: UploadQueueKey, status: UploadQueueItemStatus) {
+  function getQueueItemsByStatus(queueKey: UploadQueueKey, status: UploadQueueItemStatusType) {
     const queue = queues.value.get(queueKey)
     if (!queue) return []
     return queue.items.filter((item) => item.status === status)
@@ -179,6 +180,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             if (asset.mainFile.links?.image_detail) {
               item.imagePreview = asset.mainFile.links.image_detail
             }
+            item.mainFileSingleUse = asset.mainFileSingleUse
             processUpload(queueKey)
           }
         })
@@ -192,7 +194,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   async function queueItemDuplicate(
     assetId: DocId,
     originAssetFile: DocIdNullable = null,
-    assetType: DamAssetType | null = null
+    assetType: DamAssetTypeType | null = null
   ) {
     const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
     if (!originAssetFile || !assetType || assetType !== DamAssetType.Image) return
@@ -225,6 +227,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
           addToCachedAuthors(item.authors)
           addToCachedAuthors(item.authorConflicts)
           item.assetId = assetRes.id
+          item.mainFileSingleUse = assetRes.mainFileSingleUse
           item.canEditMetadata = true
           processUpload(queueKey)
         }
@@ -235,7 +238,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     })
   }
 
-  async function queueItemFailed(assetId: DocId, failReason: AssetFileFailReason) {
+  async function queueItemFailed(assetId: DocId, failReason: AssetFileFailReasonType) {
     try {
       const asset = await fetchAsset(damClient, assetId)
       queues.value.forEach((queue, queueKey) => {
@@ -267,6 +270,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             item.keywords = asset.keywords
             item.authors = asset.authors
             item.customData = asset.metadata.customData
+            item.mainFileSingleUse = asset.mainFileSingleUse
             updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
             updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
             item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
@@ -285,7 +289,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
-  function removeByIndex (queueKey: UploadQueueKey, index: number) {
+  function removeByIndex(queueKey: UploadQueueKey, index: number) {
     const queue = queues.value.get(queueKey)
     if (!queue || !queue.items[index]) return
     queue.items.splice(index, 1)
@@ -331,19 +335,19 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
-  function getQueueTotalCount (queueKey: UploadQueueKey) {
+  function getQueueTotalCount(queueKey: UploadQueueKey) {
     const queue = queues.value.get(queueKey)
     if (!queue) return 0
     return queue.totalCount
   }
 
-  function getQueueProcessedCount (queueKey: UploadQueueKey) {
+  function getQueueProcessedCount(queueKey: UploadQueueKey) {
     const queue = queues.value.get(queueKey)
     if (!queue) return 0
     return queue.processedCount
   }
 
-  function stopUpload (queueKey: UploadQueueKey) {
+  function stopUpload(queueKey: UploadQueueKey) {
     const queue = queues.value.get(queueKey)
     if (!queue || queue.items.length === 0) return
     const currentItems = getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Uploading)
@@ -361,14 +365,14 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     forceReloadFileInput(queueKey)
   }
 
-  function forceReloadFileInput (queueKey: UploadQueueKey) {
+  function forceReloadFileInput(queueKey: UploadQueueKey) {
     createQueue(queueKey)
     const queue = queues.value.get(queueKey)
     if (!queue) return
     queue.fileInputKey++
   }
 
-  function getQueueFileInputKey (queueKey: UploadQueueKey) {
+  function getQueueFileInputKey(queueKey: UploadQueueKey) {
     const queue = queues.value.get(queueKey)
     if (!queue) return -1
     return queue.fileInputKey
@@ -387,7 +391,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   }
 
   function getQueueItemsTypes(queueKey: UploadQueueKey) {
-      const types: Array<DamAssetType> = []
+    const types: Array<DamAssetTypeType> = []
     const queue = queues.value.get(queueKey)
     if (!queue) return types
     if (queue.items.length > 0) {
