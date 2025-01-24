@@ -40,6 +40,7 @@
 - [spotify_episode](/editor/scraper/spotify_episode/)
 - [ta3_video](/editor/scraper/ta3_video/)
 - [tableau_visual](/editor/scraper/tableau_visual/)
+- [telegram_post](/editor/scraper/telegram_post/)
 - [tiktok_video](/editor/scraper/tiktok_video/)
 - [twitter_post](/editor/scraper/twitter_post/)
 - [twitter_video](/editor/scraper/twitter_video/)
