@@ -5,12 +5,10 @@ import { computed, inject } from 'vue'
 import { isUndefined } from '@/utils/common'
 import FlagCountry from '@/components/flags/FlagCountry.vue'
 import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
-import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
-import type { AclValue } from '@/types/Permission'
 
 const props = withDefaults(
   defineProps<{
-    system: string
+    isAdministrator: boolean
   }>(),
   {}
 )
@@ -18,11 +16,6 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'afterChange', code: LanguageCode): void
 }>()
-
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { useCurrentUser } = defineAuth<AclValue>(props.system)
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { currentUser } = useCurrentUser(props.system)
 
 const configAvailableLanguages = inject(AvailableLanguagesSymbol) as LanguageCode[]
 const configDefaultLanguage = inject(DefaultLanguageSymbol) as LanguageCode
@@ -46,8 +39,7 @@ const currentLocale = computed(() => {
 const availableLocales = computed(() => {
   return ALL_LANGUAGES.filter(
     (item) =>
-      (configAvailableLanguages.includes(item.code) || item.code === 'xx') &&
-      (!item.adminOnly || currentUser.value?.roles.includes(ROLE_SUPER_ADMIN))
+      (configAvailableLanguages.includes(item.code) || item.code === 'xx') && (!item.adminOnly || props.isAdministrator)
   )
 })
 </script>

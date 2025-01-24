@@ -11,12 +11,25 @@ import type { AnzuUser } from '@/types/AnzuUser'
 import type { UrlParams } from '@/services/api/apiHelper'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 
+export type DefineAuthConfig = {
+  adminRole: string
+}
+
 export const ROLE_SUPER_ADMIN = 'ROLE_SUPER_ADMIN'
+
+const defaultConfig: DefineAuthConfig = {
+  adminRole: ROLE_SUPER_ADMIN,
+}
 
 /**
  * @param mainCurrentUserSystem - By this system currentUser object is used to get user ID.
+ * @param config
  */
-export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: string) {
+export function defineAuth<TAclValue extends AclValue>(
+  mainCurrentUserSystem: string,
+  config: Partial<DefineAuthConfig> = {}
+) {
+  const mergedConfig = { ...defaultConfig, ...config }
   const authStore = useAuthStore()
 
   const getSystemFromAcl = (acl: TAclValue) => {
@@ -25,7 +38,7 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
   }
 
   const isAdmin = (userRoles: string[]) => {
-    return userRoles.includes(ROLE_SUPER_ADMIN)
+    return userRoles.includes(mergedConfig.adminRole)
   }
 
   const can = (acl: TAclValue, subject?: object) => {
@@ -166,5 +179,6 @@ export function defineAuth<TAclValue extends AclValue>(mainCurrentUserSystem: st
     canForSome,
     useCurrentUser,
     currentUserId,
+    config: mergedConfig,
   }
 }
