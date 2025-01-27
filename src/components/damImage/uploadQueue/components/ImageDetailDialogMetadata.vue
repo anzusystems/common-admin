@@ -131,6 +131,16 @@ defineExpose({
           />
         </VCol>
       </VRow>
+      <VRow>
+        <VCol>
+          <VSwitch
+            v-model="imageDetail.flags.showSource"
+            :label="t('common.damImage.image.model.flags.showSource')"
+            density="compact"
+            hide-details
+          />
+        </VCol>
+      </VRow>
     </template>
   </div>
   <VDialog
@@ -203,6 +213,16 @@ defineExpose({
                 :label="t('common.damImage.image.model.texts.source')"
                 :v="v$.image.texts.source"
                 required
+              />
+            </VCol>
+          </VRow>
+          <VRow>
+            <VCol>
+              <VSwitch
+                v-model="imageDetail.flags.showSource"
+                :label="t('common.damImage.image.model.flags.showSource')"
+                density="compact"
+                hide-details
               />
             </VCol>
           </VRow>

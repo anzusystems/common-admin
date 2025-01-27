@@ -80,7 +80,7 @@ const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
 if (isUndefined(configExtSystem)) {
-  throw new Error('Ext system must be initialised.')
+  throw new Error('KeywordRemoteAutocompleteWithCached: Ext system must be initialised.')
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss

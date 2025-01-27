@@ -4,6 +4,9 @@
       "texts": {
         "description": "Popis",
         "source": "Zdroj"
+      },
+      "flags": {
+        "showSource": "Zobraziť zdroj"
       }
     },
     "meta": {

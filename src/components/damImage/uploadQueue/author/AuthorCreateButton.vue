@@ -52,7 +52,7 @@ const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
 if (isUndefined(configExtSystem)) {
-  throw new Error('Ext system must be initialised.')
+  throw new Error('AuthorCreateButton: Ext system must be initialised.')
 }
 
 const { createDefault } = useDamAuthorFactory()
@@ -63,7 +63,7 @@ const buttonLoading = ref(false)
 
 const onClick = (textOverride: string | undefined) => {
   if (isUndefined(configExtSystem)) {
-    throw new Error('Ext system must be initialised.')
+    throw new Error('AuthorCreateButton: Ext system must be initialised.')
   }
   author.value = createDefault(props.extSystem, true)
   textOverride ? author.value.name = textOverride : author.value.name = props.initialValue

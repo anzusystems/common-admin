@@ -4,6 +4,9 @@
       "texts": {
         "description": "Description",
         "source": "Source"
+      },
+      "flags": {
+        "showSource": "Show source"
       }
     },
     "meta": {

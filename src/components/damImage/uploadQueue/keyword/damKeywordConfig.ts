@@ -10,7 +10,7 @@ export const useDamKeywordAssetTypeConfig = (assetType: DamAssetTypeType, extSys
   const configExtSystem = getDamConfigExtSystem(extSystem)
 
   if (isUndefined(configExtSystem)) {
-    throw new Error('Ext system must be initialised.')
+    throw new Error('useDamKeywordAssetTypeConfig: Ext system must be initialised.')
   }
 
   const keywordEnabled = computed(() => {

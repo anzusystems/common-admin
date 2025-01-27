@@ -126,6 +126,16 @@ const removeItem = () => {
             />
           </VCol>
         </VRow>
+        <VRow>
+          <VCol>
+            <VSwitch
+              v-model="image.flags.showSource"
+              :label="t('common.damImage.image.model.flags.showSource')"
+              density="compact"
+              hide-details
+            />
+          </VCol>
+        </VRow>
       </div>
     </div>
   </div>

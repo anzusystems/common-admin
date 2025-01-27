@@ -74,7 +74,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
 
     const configExtSystem = getDamConfigExtSystem(extSystem)
     if (isUndefined(configExtSystem)) {
-      throw new Error('Ext system must be initialised.')
+      throw new Error('useUploadQueuesStore.addByFiles: Ext system must be initialised.')
     }
     for await (const file of files) {
       const type = getAssetTypeByMimeType(damFileTypeFix(file), configExtSystem)

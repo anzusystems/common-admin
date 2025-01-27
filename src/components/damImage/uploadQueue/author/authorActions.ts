@@ -14,7 +14,7 @@ export const useAuthorSelectActions = (extSystem: IntegerId) => {
 
   const configExtSystem = getDamConfigExtSystem(extSystem)
   if (isUndefined(configExtSystem)) {
-    throw new Error('Ext system must be initialised.')
+    throw new Error('useAuthorSelectActions: Ext system must be initialised.')
   }
 
   const mapToMinimal = (author: DamAuthor): DamAuthorMinimal => ({
