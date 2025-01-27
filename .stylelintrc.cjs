@@ -9,5 +9,6 @@ module.exports = {
     "no-duplicate-selectors": null,
     "scss/double-slash-comment-whitespace-inside": null,
     "color-function-notation": ["modern", { "ignore": ["with-var-inside"] }],
+    "declaration-property-value-no-unknown": null,
   },
 }
