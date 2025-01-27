@@ -10,6 +10,7 @@ import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamCon
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { isUndefined } from '@/utils/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -56,6 +57,8 @@ const {
 
 const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
 
+const {cachedExtSystemId} = useExtSystemIdForCached()
+
 onMounted(async () => {
   const damConfigStore = useDamConfigStore()
   uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
@@ -67,6 +70,7 @@ onMounted(async () => {
     status.value = 'uploadNotAllowed'
     return
   }
+  cachedExtSystemId.value = uploadConfig.value.extSystem
   const promises: Promise<any>[] = []
   if (!damConfigStore.initialized.damPrvConfig) {
     promises.push(loadDamPrvConfig())
