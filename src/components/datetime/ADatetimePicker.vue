@@ -192,7 +192,7 @@ const onTextFieldBlur = () => {
   if (parsed.isValid()) {
     // keep seconds from original model
     let seconds = 0
-    if(!isNull(props.modelValue)) {
+    if (!isNull(props.modelValue)) {
       const modelDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
       if (modelDate.isValid()) seconds = modelDate.second()
     }

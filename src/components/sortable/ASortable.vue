@@ -193,7 +193,7 @@ defineExpose({
             :size="chipSize"
             class="mr-1"
             :prepend-icon="disableDraggable ? undefined : 'mdi-drag'"
-            :append-icon="showDeleteButton ? 'mdi-drag': undefined"
+            :append-icon="showDeleteButton ? 'mdi-drag' : undefined"
             @click:close="onDeleteClick(item)"
           >
             <template
@@ -231,9 +231,7 @@ defineExpose({
                 :item="item"
               />
             </div>
-            <div
-              class="a-sortable-widget__item"
-            >
+            <div class="a-sortable-widget__item">
               <VIcon
                 :class="{
                   [HANDLE_CLASS]: true,

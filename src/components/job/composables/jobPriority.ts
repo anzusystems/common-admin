@@ -14,10 +14,14 @@ export const useJobPriority = () => {
 
   const getPriorityColor = (priority: number): string => {
     switch (priority) {
-      case 0: return 'amber'
-      case 1: return 'primary'
-      case 2: return 'red'
-      default: return 'default'
+      case 0:
+        return 'amber'
+      case 1:
+        return 'primary'
+      case 2:
+        return 'red'
+      default:
+        return 'default'
     }
   }
 

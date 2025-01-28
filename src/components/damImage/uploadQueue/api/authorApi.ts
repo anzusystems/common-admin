@@ -45,4 +45,3 @@ export const fetchAuthorList = (
 
 export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) =>
   apiCreateOne<DamAuthor>(client, data, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
-

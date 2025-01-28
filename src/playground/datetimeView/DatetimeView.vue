@@ -39,7 +39,7 @@ const datesCompareValidate = () => {
 
   <VCard>
     <VCardText>
-      dateTime: {{ dateTime }}<br />
+      dateTime: {{ dateTime }}<br>
       dateTimeDefaultNull: {{ dateTimeDefaultNull }}
     </VCardText>
     <VCardTitle>ADatetime component to display formatted datetime</VCardTitle>
@@ -119,7 +119,9 @@ const datesCompareValidate = () => {
       </VRow>
       <VRow>
         <VCol>
-          <ABtnPrimary @click="changeToNow"> Change to now</ABtnPrimary>
+          <ABtnPrimary @click="changeToNow">
+            Change to now
+          </ABtnPrimary>
         </VCol>
       </VRow>
     </VCardText>
@@ -170,7 +172,9 @@ const datesCompareValidate = () => {
           :v="v$.article.dates.publishedAt"
         />
       </ARow>
-      <VBtn @click.stop="datesCompareValidate">Validate</VBtn>
+      <VBtn @click.stop="datesCompareValidate">
+        Validate
+      </VBtn>
     </VCardText>
   </VCard>
 </template>

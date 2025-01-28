@@ -10,10 +10,9 @@ import { HANDLE_CLASS } from '@/components/sortable/sortableActions'
 import { useI18n } from 'vue-i18n'
 import {
   AImageMetadataValidationScopeSymbol,
-  useImageValidation
+  useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
-import AuthorRemoteAutocompleteWithCached
-  from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
@@ -98,7 +97,10 @@ const removeItem = () => {
             />
           </VCol>
         </VRow>
-        <VRow dense v-if="image.showDamAuthors">
+        <VRow
+          v-if="image.showDamAuthors"
+          dense
+        >
           <VCol>
             <ASystemEntityScope
               subject="author"
@@ -117,7 +119,10 @@ const removeItem = () => {
             </ASystemEntityScope>
           </VCol>
         </VRow>
-        <VRow dense v-else>
+        <VRow
+          v-else
+          dense
+        >
           <VCol>
             <AFormTextarea
               v-model="image.texts.source"

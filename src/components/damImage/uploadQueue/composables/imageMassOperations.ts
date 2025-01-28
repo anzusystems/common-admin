@@ -34,9 +34,7 @@ export function useImageMassOperations() {
   const replaceEmptyAuthors = async (value: DocId[], forceReplace = false) => {
     const authorsMap = new Map<DocId, string>()
     const authorNames: string[] = []
-    const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, [
-      ...value,
-    ])
+    const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, [...value])
     authorsRes.forEach((author) => {
       authorsMap.set(author.id, author.name)
     })

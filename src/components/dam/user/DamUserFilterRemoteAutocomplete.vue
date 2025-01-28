@@ -10,7 +10,7 @@ const props = withDefaults(
     configName?: string
   }>(),
   {
-    configName: 'default'
+    configName: 'default',
   }
 )
 

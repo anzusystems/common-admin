@@ -20,7 +20,7 @@ const fetchItems = async (pagination: Pagination, filterBag: FilterBag) => {
   return rubrics.map((poll: PollDemo) => ({
     title: poll.texts.title,
     value: poll.id,
-    subtitle: poll.votes + ''
+    subtitle: poll.votes + '',
   })) as ValueObjectOption<IntegerId>[]
 }
 
@@ -30,7 +30,7 @@ const fetchItemsByIds = async (ids: IntegerId[]) => {
   return rubrics.map((poll: PollDemo) => ({
     title: poll.texts.title,
     value: poll.id,
-    subtitle: poll.votes + ''
+    subtitle: poll.votes + '',
   })) as ValueObjectOption<IntegerId>[]
 }
 

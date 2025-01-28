@@ -6,7 +6,7 @@ import type { IntegerId } from '@/types/common'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 import {
   fetchDamAssetLicenceGroupList,
-  fetchDamAssetLicenceGroupListByIds
+  fetchDamAssetLicenceGroupListByIds,
 } from '@/components/dam/user/assetLicenceGroupApi'
 
 export const useAssetLicenceGroupSelectActions = (client: () => AxiosInstance) => {

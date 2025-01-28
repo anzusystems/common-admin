@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+/* eslint-disable @stylistic/max-len */
 </script>
 
 <template>

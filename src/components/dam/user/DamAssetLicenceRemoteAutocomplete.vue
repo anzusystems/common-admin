@@ -11,7 +11,7 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerId | null | IntegerId[] | any
-    client: () => AxiosInstance,
+    client: () => AxiosInstance
     label?: string | undefined
     required?: boolean | undefined
     multiple?: boolean

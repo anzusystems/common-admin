@@ -69,10 +69,7 @@ export function useFilterHelpers(storeId: string | undefined = undefined) {
     }
   }
 
-  const loadStoredFilter = (
-    filterBag: FilterBag,
-    options: LoadStoredFilterOptions = {},
-  ) => {
+  const loadStoredFilter = (filterBag: FilterBag, options: LoadStoredFilterOptions = {}) => {
     if (!storeId || !localStorage) return
     const { showAdvancedFilter, callback } = options
     let containsAdvanced = false

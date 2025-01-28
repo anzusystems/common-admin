@@ -33,7 +33,7 @@ const value = computed({
     let returnValue: null | boolean = null
     if (newValue === 1) returnValue = true
     if (newValue === 0) returnValue = false
-    emit('update:modelValue', returnValue )
+    emit('update:modelValue', returnValue)
   },
 })
 

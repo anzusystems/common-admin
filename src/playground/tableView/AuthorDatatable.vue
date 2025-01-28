@@ -41,7 +41,7 @@ const { columnsVisible, columnsAll, columnsHidden, updateSortBy, pagination } = 
   undefined,
   undefined,
   undefined,
-  'damAuthorTable',
+  'damAuthorTable'
 )
 
 const sortByChange = (option: DatatableOrderingOption) => {

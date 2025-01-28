@@ -66,7 +66,7 @@ const onClick = (textOverride: string | undefined) => {
     throw new Error('AuthorCreateButton: Ext system must be initialised.')
   }
   author.value = createDefault(props.extSystem, true)
-  textOverride ? author.value.name = textOverride : author.value.name = props.initialValue
+  textOverride ? (author.value.name = textOverride) : (author.value.name = props.initialValue)
   dialog.value = true
 }
 

@@ -77,7 +77,7 @@ watch(
   <div
     v-if="isUndefined(cachedUsers)"
     class="d-inline-flex"
-  ></div>
+  />
   <div
     v-else
     class="d-inline-flex"

@@ -47,11 +47,10 @@ export type CommonAdminCoreDamOptions =
       }
     }
 
-export type CommonAdminCollabOptions =
-  | {
-      enabled: boolean
-      socketUrl: string
-    }
+export type CommonAdminCollabOptions = {
+  enabled: boolean
+  socketUrl: string
+}
 
 export default {
   install(app: App, options: PluginOptions): void {

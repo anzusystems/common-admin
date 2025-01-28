@@ -3,7 +3,7 @@ import {
   createWebHistory,
   type NavigationGuardNext,
   type RouteLocationNormalized,
-  type RouteParams
+  type RouteParams,
 } from 'vue-router'
 import HomepageView from '@/playground/HomepageView.vue'
 import SettingsView from '@/playground/SettingsView.vue'

@@ -238,8 +238,8 @@ defineExpose({
           </div>
           <div class="subject-select__content">
             <component
-              v-if="extId"
               :is="componentComputed"
+              v-if="extId"
               :ext-system="extId"
             />
             <div class="d-flex w-100 align-center justify-center pa-4">
@@ -304,5 +304,7 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
-  <div v-else>Error, no select licence.</div>
+  <div v-else>
+    Error, no select licence.
+  </div>
 </template>

@@ -79,9 +79,8 @@ export const collabRequestToTakeModerationEventBusKey: EventBusKey<CollabRequest
   'anzu:collabRequestToTakeModeration'
 )
 
-export const collabKickedFromRoomEventBusKey: EventBusKey<CollabKickedFromRoomEvent> = Symbol(
-  'anzu:collabKickedFromRoom'
-)
+export const collabKickedFromRoomEventBusKey: EventBusKey<CollabKickedFromRoomEvent> =
+  Symbol('anzu:collabKickedFromRoom')
 
 export function useCollabRoomDataChangeEventBus() {
   return useEventBus<CollabRoomDataChangedEvent, CollabFieldDataEnvelope>(collabRoomDataChangedEventBusKey)

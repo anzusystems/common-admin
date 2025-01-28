@@ -7,7 +7,7 @@ import {
   DamAssetStatus,
   type DamAssetStatusType,
   DamAssetType,
-  type DamAssetTypeType
+  type DamAssetTypeType,
 } from '@/types/coreDam/Asset'
 import { isUndefined } from '@/utils/common'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'

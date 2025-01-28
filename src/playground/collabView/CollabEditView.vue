@@ -84,7 +84,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   collabFieldDataBufferState.delete(collab.room)
 })
-
 </script>
 
 <template>

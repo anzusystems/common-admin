@@ -9,20 +9,20 @@ export const COLLAB_FIELD_PREFIX_COMMENT = 'comment:'
 export type CollabCachedUsersMap = Map<IntegerId, CachedItem<AnzuUserMinimal>>
 
 export function useCollabHelpers() {
-    const createCollabRoom = (id: IntegerId | DocId, entity: string, system: string) => {
+  const createCollabRoom = (id: IntegerId | DocId, entity: string, system: string) => {
     return (system + ':' + entity + ':' + id) as CollabRoom
   }
 
-  const createCollabFieldConfig = (name: CollabFieldName, room: CollabRoom, cachedUsers: CollabCachedUsersMap ) => {
+  const createCollabFieldConfig = (name: CollabFieldName, room: CollabRoom, cachedUsers: CollabCachedUsersMap) => {
     return { room, field: name, cachedUsers }
   }
 
   const createCollabEmbedFieldName = (id: DocId) => {
-    return COLLAB_FIELD_PREFIX_EMBED + id as CollabFieldName
+    return (COLLAB_FIELD_PREFIX_EMBED + id) as CollabFieldName
   }
 
   const createCollabCommentFieldName = (id: DocId) => {
-    return COLLAB_FIELD_PREFIX_COMMENT + id as CollabFieldName
+    return (COLLAB_FIELD_PREFIX_COMMENT + id) as CollabFieldName
   }
 
   return {

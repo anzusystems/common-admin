@@ -13,7 +13,7 @@ export function useDamAuthorFactory() {
       extSystem: extSystemId,
       flags: {
         reviewed: reviewed ?? false,
-        canBeCurrentAuthor: true
+        canBeCurrentAuthor: true,
       },
       currentAuthors: [],
       childAuthors: [],

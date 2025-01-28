@@ -9,7 +9,7 @@ const mapFullToMinimal = (author: DamAuthor): DamAuthorMinimal => ({
   id: author.id,
   name: author.name,
   identifier: author.identifier,
-  reviewed: author.flags.reviewed
+  reviewed: author.flags.reviewed,
 })
 
 const mapIdToMinimal = (id: DocId): DamAuthorMinimal => {

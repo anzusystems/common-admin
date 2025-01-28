@@ -9,8 +9,7 @@ const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
   }>(),
-  {
-  }
+  {}
 )
 
 const modelValue = defineModel<Filter>({ required: true })

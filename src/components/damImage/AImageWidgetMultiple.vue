@@ -57,7 +57,7 @@ const {
 
 const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
 
-const {cachedExtSystemId} = useExtSystemIdForCached()
+const { cachedExtSystemId } = useExtSystemIdForCached()
 
 onMounted(async () => {
   const damConfigStore = useDamConfigStore()

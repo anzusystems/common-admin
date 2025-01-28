@@ -14,14 +14,14 @@ export interface DamCurrentUserAssetLicence {
 
 export interface DamCurrentUserAssetLicenceGroup {
   id: IntegerId
-  name:	string
+  name: string
   extSystem: IntegerId
   licences: IntegerId[]
 }
 
 export interface DamCurrentUserDto extends AnzuUser {
   selectedLicence: IntegerIdNullable
-  selectedLicenceDto:	DamCurrentUserAssetLicence | null
+  selectedLicenceDto: DamCurrentUserAssetLicence | null
   adminToExtSystems: IntegerId[]
   adminToExtSystemsDto: DamCurrentUserExtSystem[]
   userToExtSystems: IntegerId[]

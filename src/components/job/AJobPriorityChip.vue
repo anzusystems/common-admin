@@ -13,13 +13,10 @@ const priorityColor = computed(() => {
 const priorityLabel = computed(() => {
   return getPriorityLabel(props.priority)
 })
-
 </script>
 
 <template>
-  <AChipNoLink
-    :color="priorityColor"
-  >
+  <AChipNoLink :color="priorityColor">
     {{ priorityLabel }}
   </AChipNoLink>
 </template>

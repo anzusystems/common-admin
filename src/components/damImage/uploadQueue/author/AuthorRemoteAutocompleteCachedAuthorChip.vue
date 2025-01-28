@@ -26,7 +26,7 @@ const props = withDefaults(
     textOnly: false,
     size: 'small',
     containerClass: 'd-inline-flex',
-    forceReviewed: undefined
+    forceReviewed: undefined,
   }
 )
 
@@ -79,7 +79,9 @@ const { t } = useI18n()
 <template>
   <div :class="containerClass">
     <template v-if="isNull(id) || isUndefined(id)">
-      <slot name="empty"> - </slot>
+      <slot name="empty">
+        -
+      </slot>
     </template>
     <div v-else-if="textOnly">
       {{ displayTitle }}

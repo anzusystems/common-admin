@@ -24,8 +24,8 @@ const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = use
               icon
               :width="30"
               :height="30"
-              @click="toggleSidebarLeft"
               :active="sidebarLeft"
+              @click="toggleSidebarLeft"
             >
               <VIcon
                 icon="mdi-tune"
@@ -92,8 +92,8 @@ const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = use
               icon
               :width="30"
               :height="30"
-              @click="toggleSidebarRight"
               :active="sidebarRight"
+              @click="toggleSidebarRight"
             >
               <VIcon
                 icon="mdi-information-outline"

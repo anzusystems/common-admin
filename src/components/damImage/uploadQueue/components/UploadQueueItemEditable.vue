@@ -212,7 +212,7 @@ onUnmounted(() => {
             v-if="item.error.hasError"
             :class="
               'dam-upload-queue__overlay dam-upload-queue__overlay--error ' +
-              'd-flex align-center justify-center flex-column'
+                'd-flex align-center justify-center flex-column'
             "
           >
             <VIcon
@@ -269,8 +269,8 @@ onUnmounted(() => {
                   icon
                   size="small"
                   variant="text"
-                  @click.stop="refresh"
                   :disabled="refreshDisabled"
+                  @click.stop="refresh"
                 >
                   <VIcon icon="mdi-refresh" />
                   <VTooltip
@@ -387,8 +387,8 @@ onUnmounted(() => {
               >
                 <VCol>
                   <VSwitch
-                    :label="t('common.damImage.asset.model.mainFileSingleUse')"
                     v-model="mainFileSingleUse"
+                    :label="t('common.damImage.asset.model.mainFileSingleUse')"
                   />
                 </VCol>
               </VRow>

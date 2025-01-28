@@ -11,7 +11,7 @@ export type AssetSelectReturnTypeType = (typeof AssetSelectReturnType)[keyof typ
 export type AssetSelectReturnData = AssetSelectReturnMainFileId | AssetSelectReturnAssetId | AssetSelectReturnAsset
 
 interface AssetSelectReturnMainFileId {
-  type: typeof AssetSelectReturnType.MainFileId,
+  type: typeof AssetSelectReturnType.MainFileId
   value: Array<DocId>
 }
 

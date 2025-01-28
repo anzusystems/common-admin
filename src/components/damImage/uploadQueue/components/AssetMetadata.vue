@@ -149,8 +149,8 @@ const { cachedUsers } = useDamCachedUsers()
                 </ARow>
                 <VSwitch
                   v-else
-                  :label="t('common.damImage.asset.model.mainFileSingleUse')"
                   v-model="mainFileSingleUse"
+                  :label="t('common.damImage.asset.model.mainFileSingleUse')"
                 />
               </VCol>
             </VRow>

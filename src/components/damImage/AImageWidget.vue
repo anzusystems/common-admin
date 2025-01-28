@@ -80,7 +80,7 @@ const {
 const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
 
 onMounted(async () => {
-  const damConfigStore =  useDamConfigStore()
+  const damConfigStore = useDamConfigStore()
   uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
   if (isUndefined(uploadConfig.value)) {
     status.value = 'error'

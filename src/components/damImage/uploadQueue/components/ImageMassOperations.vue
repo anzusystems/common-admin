@@ -48,10 +48,7 @@ const v$ = useVuelidate(rules, { texts }, { $scope: false })
 
 const showDamAuthorsAtLeastOne = computed(() => {
   if (images.value.length === 0) return false
-  return (
-    images.value.length &&
-    images.value.some((item) => item?.showDamAuthors)
-  )
+  return images.value.length && images.value.some((item) => item?.showDamAuthors)
 })
 </script>
 
@@ -64,9 +61,9 @@ const showDamAuthorsAtLeastOne = computed(() => {
       <VCol>
         <div class="d-flex">
           <AFormTextarea
+            v-model="texts.description"
             :v="v$"
             :label="t('common.damImage.image.model.texts.description')"
-            v-model="texts.description"
           />
           <VBtn
             icon
@@ -101,9 +98,9 @@ const showDamAuthorsAtLeastOne = computed(() => {
       </VCol>
     </VRow>
     <VRow
+      v-if="showDamAuthorsAtLeastOne"
       dense
       class="mt-1"
-      v-if="showDamAuthorsAtLeastOne"
     >
       <VCol>
         <ASystemEntityScope
