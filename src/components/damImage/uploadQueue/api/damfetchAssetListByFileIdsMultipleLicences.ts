@@ -26,7 +26,6 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
   client: () => AxiosInstance,
   groupedIds: IdsGroupedByLicences
 ) => {
-  // Fetch all asset search results in parallel
   const searchResults = await Promise.all(
     Array.from(groupedIds.entries()).map(([licenceId, docIds]) =>
       apiAnyRequest<object, { data: AssetSearchListItemDto[] }>(
