@@ -479,7 +479,15 @@ onMounted(() => {
       return-type="asset"
       @on-confirm="onAssetSelectConfirm"
     />
-
+    <div
+      v-if="imagesLoading"
+      class="w-100 d-flex align-center justify-center"
+    >
+      <VProgressCircular
+        indeterminate
+        color="primary"
+      />
+    </div>
     <div
       class="position-relative w-100"
       style="min-height: 140px"
