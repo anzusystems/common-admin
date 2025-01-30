@@ -65,14 +65,19 @@ export const yearNow = () => {
 
 export const dateTimePretty = (
   isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
-  edgeDateValue = ''
+  edgeDateValue = '',
+  showSeconds = false
 ): string => {
   if (isoDate === DATETIME_MAX || isoDate === DATETIME_MIN || isoDate === '' || isNull(isoDate) || isUndefined(isoDate))
     return edgeDateValue
-  return dayjs(isoDate).format('DD.MM.YYYY HH:mm')
+  return dayjs(isoDate).format(showSeconds ? 'DD.MM.YYYY HH:mm:ss' : 'DD.MM.YYYY HH:mm')
 }
 
-export const dateTimeFriendly = (isoDate: DatetimeUTC | DatetimeUTCNullable | string | null, edgeDateValue = '') => {
+export const dateTimeFriendly = (
+  isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
+  edgeDateValue = '',
+  showSeconds = false
+) => {
   if (
     isoDate === DATETIME_MAX ||
     isoDate === DATETIME_MIN ||
@@ -92,9 +97,9 @@ export const dateTimeFriendly = (isoDate: DatetimeUTC | DatetimeUTCNullable | st
   if (now.format('YYYY-MM-DD') === date.format('YYYY-MM-DD')) {
     displayDayMonth = false
   }
-  if (!displayYear && !displayDayMonth) return dayjs(date).format('H:mm')
-  if (!displayYear) return dayjs(date).format('D.M. H:mm')
-  return dayjs(date).format('D.M.YYYY H:mm')
+  if (!displayYear && !displayDayMonth) return dayjs(date).format(showSeconds ? 'H:mm:ss' : 'H:mm')
+  if (!displayYear) return dayjs(date).format(showSeconds ? 'D.M. H:mm:ss' : 'D.M. H:mm')
+  return dayjs(date).format(showSeconds ? 'D.M.YYYY H:mm:ss' : 'D.M.YYYY H:mm')
 }
 
 export const datePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string | null, edgeDateValue = ''): string => {
