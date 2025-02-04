@@ -10,7 +10,7 @@ import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamCon
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { isUndefined } from '@/utils/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
-import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached.ts'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const props = withDefaults(
   defineProps<{
