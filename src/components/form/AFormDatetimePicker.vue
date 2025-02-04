@@ -149,6 +149,7 @@ watch(modelValueComputed, (newValue, oldValue) => {
     :disabled="disabledComputed"
     :label="labelComputed"
     :clearable="clearable"
+    v-bind="$attrs"
     @blur="onBlur"
     @focus="onFocus"
     @on-open="onOpen"

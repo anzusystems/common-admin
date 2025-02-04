@@ -40,5 +40,6 @@ const label = computed(() => {
     :clearable="!modelValue.mandatory"
     :default-value="modelValue.default"
     :label="label"
+    v-bind="$attrs"
   />
 </template>

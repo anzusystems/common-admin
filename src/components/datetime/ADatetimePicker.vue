@@ -274,6 +274,7 @@ const now = () => {
             class="a-datetime-picker-calendar"
             color="primary"
             show-adjacent-months
+            v-bind="$attrs"
           />
           <TimePicker
             :key="timeKey"
