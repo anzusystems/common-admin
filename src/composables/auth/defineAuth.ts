@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import { useAuthStore } from '@/composables/auth/authStore'
 import { type AxiosInstance } from 'axios'
 import type { AclValue } from '@/types/Permission'
-import { isNull, isUndefined } from '@/utils/common'
+import { isArray, isNull, isString, isUndefined } from '@/utils/common'
 import { objectGetValueByPath } from '@/utils/object'
 import { Grant } from '@/model/valueObject/Grant'
 import { isOwnerAware } from '@/types/OwnerAware'
@@ -12,7 +12,7 @@ import type { UrlParams } from '@/services/api/apiHelper'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 
 export type DefineAuthConfig = {
-  adminRole: string
+  adminRole: string | string[] | Array<{ system: string; adminRole: string }>
 }
 
 export const ROLE_SUPER_ADMIN = 'ROLE_SUPER_ADMIN'
@@ -37,7 +37,15 @@ export function defineAuth<TAclValue extends AclValue>(
     return parts[0]
   }
 
-  const isAdmin = (userRoles: string[]) => {
+  const isAdmin = (userRoles: string[], system: string) => {
+    if (isArray(mergedConfig.adminRole)) {
+      return mergedConfig.adminRole.some((role) => {
+        if (isString(role)) {
+          return userRoles.includes(role)
+        }
+        return role.system === system && userRoles.includes(role.adminRole)
+      })
+    }
     return userRoles.includes(mergedConfig.adminRole)
   }
 
@@ -51,7 +59,7 @@ export function defineAuth<TAclValue extends AclValue>(
     if (isUndefined(user) || isUndefined(user.id) || isNull(user.id) || user.id === 0) {
       return false
     }
-    if (isAdmin(user.roles)) return true
+    if (isAdmin(user.roles, system)) return true
     const permission = objectGetValueByPath(user, 'resolvedPermissions.' + acl)
     if (isUndefined(permission)) return false
     switch (permission) {
@@ -132,7 +140,7 @@ export function defineAuth<TAclValue extends AclValue>(
 
     const isSuperAdmin = computed(() => {
       if (currentUser.value) {
-        return isAdmin(currentUser.value.roles)
+        return isAdmin(currentUser.value.roles, system)
       }
       return false
     })
