@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios'
-import type { AssetDetailItemDto, AssetSearchListItemDto } from '@/types/coreDam/Asset'
+import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { IdsGroupedByLicences } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { ENTITY, fetchAssetListByIds, SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'

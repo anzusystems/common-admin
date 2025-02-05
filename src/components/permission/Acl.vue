@@ -1,5 +1,5 @@
 <script lang="ts" setup generic="TAclValue extends AclValue">
-import { computed, ref, watch, type WatchStopHandle } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { AclValue } from '@/types/Permission'
 import { useAuthHelpers } from '@/composables/auth/defineAuth'
 import { isArray } from '@/utils/common'
@@ -19,16 +19,6 @@ const allowed = ref<boolean>(false)
 
 const authStore = useAuthStore()
 
-const system = computed(() => {
-  let parts = []
-  if (isArray(props.permission)) {
-    parts = props.permission[0].split('_')
-  } else {
-    parts = props.permission.split('_')
-  }
-  return parts[0] || ''
-})
-
 const currentUsers = computed(() => {
   return authStore.currentUsers.value
 })
@@ -43,8 +33,7 @@ const can = (acls: TAclValue[] | TAclValue, subject?: object) => {
   return canHelper(acls, subject)
 }
 
-let watchHandle: WatchStopHandle
-watchHandle = watch(
+const watchHandle = watch(
   currentUsers,
   (newValue) => {
     if (newValue.size > 0) {

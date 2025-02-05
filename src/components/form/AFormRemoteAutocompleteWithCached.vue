@@ -73,8 +73,7 @@ const emit = defineEmits<{
 const search = defineModel<string>('search', { default: '', required: false })
 const loadingLocal = defineModel<boolean>('loadingLocal', { default: false, required: false })
 const fetchedItemsMinimal = defineModel<Map<IntegerId | DocId, any>>('fetchedItemsMinimal', {
-  default: new Map(),
-  required: false,
+  required: true,
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
