@@ -223,10 +223,10 @@ __metadata:
     axios: "npm:1.7.9"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.13"
-    eslint: "npm:9.20.0"
+    eslint: "npm:9.20.1"
     eslint-plugin-vue: "npm:9.32.0"
     npm-run-all: "npm:^4.1.5"
-    pinia: "npm:2.3.1"
+    pinia: "npm:3.0.0"
     postcss: "npm:^8.5.2"
     postcss-html: "npm:^1.8.0"
     postcss-prefix-selector: "npm:^2.1.0"
@@ -239,7 +239,7 @@ __metadata:
     stylelint-config-recommended-vue: "npm:^1.6.0"
     stylelint-config-standard-scss: "npm:^14.0.0"
     typescript: "npm:5.7.3"
-    unplugin: "npm:2.1.2"
+    unplugin: "npm:2.2.0"
     uuid: "npm:^11.0.5"
     vite: "npm:6.1.0"
     vite-plugin-dts: "npm:4.5.0"
@@ -249,7 +249,7 @@ __metadata:
     vue-i18n: "npm:11.1.1"
     vue-router: "npm:4.5.0"
     vue-tsc: "npm:2.2.0"
-    vuetify: "npm:3.7.11"
+    vuetify: "npm:3.7.12"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@vuelidate/core": 2.0.3
@@ -258,13 +258,13 @@ __metadata:
     "@vueuse/integrations": 12.5.0
     axios: 1.7.9
     dayjs: 1.11.13
-    pinia: 2.3.1
+    pinia: 3.0.0
     socket.io-client: 4.8.1
-    unplugin: 2.1.2
+    unplugin: 2.2.0
     vue: 3.5.13
     vue-i18n: 11.1.1
     vue-router: 4.5.0
-    vuetify: 3.7.11
+    vuetify: 3.7.12
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -2128,43 +2128,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/devtools-api@npm:^6.5.0, @vue/devtools-api@npm:^6.6.3, @vue/devtools-api@npm:^6.6.4":
+"@vue/devtools-api@npm:^6.5.0, @vue/devtools-api@npm:^6.6.4":
   version: 6.6.4
   resolution: "@vue/devtools-api@npm:6.6.4"
   checksum: 10/0fca4912b6ae0185b9375f5d113d417984077db0681c74cf39eb8522eb82c27f662a72e1ae3e0d79e105fdd0a99a7cbd65ed111465d238f60cce10922e02a812
   languageName: node
   linkType: hard
 
-"@vue/devtools-api@npm:^7.7.0":
-  version: 7.7.0
-  resolution: "@vue/devtools-api@npm:7.7.0"
+"@vue/devtools-api@npm:^7.7.0, @vue/devtools-api@npm:^7.7.1":
+  version: 7.7.1
+  resolution: "@vue/devtools-api@npm:7.7.1"
   dependencies:
-    "@vue/devtools-kit": "npm:^7.7.0"
-  checksum: 10/54a47d381ade37852996965896a1cfec7b19bc0831c18cf96c98b8d2e85932d13c664f99f62b321aa926e87c0d0b962c4387dfbe16eb2e3a5d20a0901e2311c6
+    "@vue/devtools-kit": "npm:^7.7.1"
+  checksum: 10/0ce0d8291caa9f0d6707bb27bb5f3cc2a21003221c51a9c69221f6c327431df6f37cfc174aa8cb9f5d7f55435e4fde8f683aad413527b980966878a15c70d519
   languageName: node
   linkType: hard
 
-"@vue/devtools-kit@npm:^7.7.0":
-  version: 7.7.0
-  resolution: "@vue/devtools-kit@npm:7.7.0"
+"@vue/devtools-kit@npm:^7.7.1":
+  version: 7.7.1
+  resolution: "@vue/devtools-kit@npm:7.7.1"
   dependencies:
-    "@vue/devtools-shared": "npm:^7.7.0"
+    "@vue/devtools-shared": "npm:^7.7.1"
     birpc: "npm:^0.2.19"
     hookable: "npm:^5.5.3"
     mitt: "npm:^3.0.1"
     perfect-debounce: "npm:^1.0.0"
     speakingurl: "npm:^14.0.1"
     superjson: "npm:^2.2.1"
-  checksum: 10/9f5d505408a9115e54c893c25be029bcb02d155502a29771e5402914f88fd1a6c89068c93630c947a17a0d89d0533e22d6b827cb260693f75305c84405e33628
+  checksum: 10/f66114c66df081392970d357fbc5b248528d02684f0a9a2810c8682e48d99fc5ab015795b15e20730f4af8708b77bb273e471faa91e943bc70fa028c5075aa2f
   languageName: node
   linkType: hard
 
-"@vue/devtools-shared@npm:^7.7.0":
-  version: 7.7.0
-  resolution: "@vue/devtools-shared@npm:7.7.0"
+"@vue/devtools-shared@npm:^7.7.1":
+  version: 7.7.1
+  resolution: "@vue/devtools-shared@npm:7.7.1"
   dependencies:
     rfdc: "npm:^1.4.1"
-  checksum: 10/ea17f252f97eaa22ace6f6f5a31a7ccd17d4817b0a913dc1f9d68eb5aac7284c2915182ab46afe111510b5519d313331bc40dd1101322932ad7a75f8293bce8c
+  checksum: 10/dc0fdea0c253c2e8c5d3f6c8350605e5a83ad2ee8ebb83f1902b27fd6d7d80733e67799bd8c534346374fe14d7b83d9ef3a74248c06c0a8cd096e61b196f0b7c
   languageName: node
   linkType: hard
 
@@ -3659,9 +3659,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:9.20.0":
-  version: 9.20.0
-  resolution: "eslint@npm:9.20.0"
+"eslint@npm:9.20.1":
+  version: 9.20.1
+  resolution: "eslint@npm:9.20.1"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.2.0"
     "@eslint-community/regexpp": "npm:^4.12.1"
@@ -3704,7 +3704,7 @@ __metadata:
       optional: true
   bin:
     eslint: bin/eslint.js
-  checksum: 10/6a7686fbda51a0dfe812ef39c251e2c2b0e828196059732d280be6aa375a1f4b5b0b34fed98de30ee363c3bf1b7e8d2a4eccf20b4112f3ad6709f067404a815c
+  checksum: 10/b1d870135c8ff628685e72c0e9cd161476835e8e69e803d89d87fc4aebe85fc6b51ca422c3c4bc62f0ef7bbd9b10feda76e37e4801706e75931c1791d0e051a8
   languageName: node
   linkType: hard
 
@@ -5992,19 +5992,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pinia@npm:2.3.1":
-  version: 2.3.1
-  resolution: "pinia@npm:2.3.1"
+"pinia@npm:3.0.0":
+  version: 3.0.0
+  resolution: "pinia@npm:3.0.0"
   dependencies:
-    "@vue/devtools-api": "npm:^6.6.3"
-    vue-demi: "npm:^0.14.10"
+    "@vue/devtools-api": "npm:^7.7.1"
   peerDependencies:
     typescript: ">=4.4.4"
     vue: ^2.7.0 || ^3.5.11
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10/2c490c7252ca66921d46ae1bbbb1aa0daa2b531b5bb1c59dc99611e5ac3db2755e51d8919bccb51a87682de0afda9aea8ebb3412e65f8f2c92cf038c08abb7eb
+  checksum: 10/c1ec7c0562bd63c3c5a6d9dfa0c0466d8401078fc362d3bf5fc5cdc6108eee23989ba069dffc28da48b898baf1b3230015a1511b547c86cc6c72c2e1383c188e
   languageName: node
   linkType: hard
 
@@ -7360,13 +7359,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin@npm:2.1.2":
-  version: 2.1.2
-  resolution: "unplugin@npm:2.1.2"
+"unplugin@npm:2.2.0":
+  version: 2.2.0
+  resolution: "unplugin@npm:2.2.0"
   dependencies:
     acorn: "npm:^8.14.0"
     webpack-virtual-modules: "npm:^0.6.2"
-  checksum: 10/4f269e720a649a9327c6ae59c3813b114a6b956c69e3cfaeeb7829d9315c0b4933e9dd06b1ecec89539514224b2346794e017b42f13af67c6f12287e200849e3
+  checksum: 10/971f86f27c3bdef2e07ffc94bfc5def37a0c9ae822bf7ef5ecbec7a0afef4fff6f5d0b9035a70598d244033d3209e13e2e24d8896c3a042e4298d5767ce3225e
   languageName: node
   linkType: hard
 
@@ -7635,22 +7634,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-demi@npm:^0.14.10":
-  version: 0.14.10
-  resolution: "vue-demi@npm:0.14.10"
-  peerDependencies:
-    "@vue/composition-api": ^1.0.0-rc.1
-    vue: ^3.0.0-0 || ^2.6.0
-  peerDependenciesMeta:
-    "@vue/composition-api":
-      optional: true
-  bin:
-    vue-demi-fix: bin/vue-demi-fix.js
-    vue-demi-switch: bin/vue-demi-switch.js
-  checksum: 10/3028239c0c25a84361a13ab936fcc9a199f54e0320c2ec1d2f4fdf7da8bae663382b7c1e5b1f5a1a43f6aebc73b955892cd4b6c7b3eaf2b766e18cc2a6f7ebea
-  languageName: node
-  linkType: hard
-
 "vue-eslint-parser@npm:^9.4.3":
   version: 9.4.3
   resolution: "vue-eslint-parser@npm:9.4.3"
@@ -7746,9 +7729,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.7.11":
-  version: 3.7.11
-  resolution: "vuetify@npm:3.7.11"
+"vuetify@npm:3.7.12":
+  version: 3.7.12
+  resolution: "vuetify@npm:3.7.12"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=1.0.0"
@@ -7761,7 +7744,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/0b0821be877fc132b909ba1e33fde480706c97c699a9e922c18ac69016c2db47f1023539d88144f35a61e2f73e6a9bf9491a06e759d8262b3a1d15020824c387
+  checksum: 10/4e70a052ba19568da00e1464feca7a21817cb38d4c6bfc87af479c2afce8c1e9e47ed2ebbb891e32a9f22fb8c2aa12b55e586af40411a0af9079618c8cf2ef9f
   languageName: node
   linkType: hard
 
