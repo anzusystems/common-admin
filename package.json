@@ -13,7 +13,7 @@
     "./styles": "./dist/common-admin.css",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.144",
+  "version": "1.47.0-beta.145",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -46,7 +46,7 @@
     "@shikijs/vitepress-twoslash": "^2.3.2",
     "@stylistic/eslint-plugin": "^3.1.0",
     "@tsconfig/node22": "^22.0.0",
-    "@types/node": "^22.13.1",
+    "@types/node": "^22.13.2",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.8",
     "@types/webfontloader": "^1.6.38",
