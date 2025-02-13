@@ -9,7 +9,7 @@ import {
   isCollabFailedChangeRoomLockCallback,
   isCollabSuccessChangeRoomLockCallback,
 } from '@/components/collab/types/Collab'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, ref } from 'vue'
 import {
   CollabFieldLockStatus,
   type CollabFieldLockStatusEvent,
@@ -22,13 +22,13 @@ import {
   useCollabGatheringBufferDataEventBus,
   useCollabRoomDataChangeEventBus,
 } from '@/components/collab/composables/collabEventBus'
-import type { Fn } from '@vueuse/core'
+import { type Fn, tryOnBeforeUnmount } from '@vueuse/core'
 import { useCollabState } from '@/components/collab/composables/collabState'
 import { isDefined, isUndefined } from '@/utils/common'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
 
-export function useCollabField(room: CollabRoom, field: CollabFieldName) {
+export function useCollabField(room: CollabRoom, field: CollabFieldName, disableAutoUnsubscribe = false) {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { currentUserId } = useCollabCurrentUserId()
   const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } = useCollabState()
@@ -94,7 +94,8 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName) {
     )
   }
 
-  onBeforeUnmount(() => {
+  tryOnBeforeUnmount(() => {
+    if (disableAutoUnsubscribe) return
     if (isDefined(unsubscribeCollabFieldDataChangeListener.value)) {
       unsubscribeCollabFieldDataChangeListener.value()
     }
@@ -194,13 +195,16 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName) {
   }
 
   return {
-    lockedByUser,
     addCollabFieldDataChangeListener,
     addCollabFieldLockStatusListener,
     addCollabGatheringBufferDataListener,
     acquireCollabFieldLock,
     releaseCollabFieldLock,
     changeCollabFieldData,
+    lockedByUser,
     collabFieldDataBufferState,
+    unsubscribeCollabFieldDataChangeListener,
+    unsubscribeCollabFieldLockStatusListener,
+    unsubscribeCollabGatheringBufferData,
   }
 }

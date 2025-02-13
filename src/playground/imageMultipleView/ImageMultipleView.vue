@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import type { IntegerId } from '@/types/common'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
+import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 
 const imageIds = ref<IntegerId[]>([])
 
@@ -52,6 +53,9 @@ const save = () => {
             :select-licences="[100000]"
             queue-key="gallery"
           />
+        </VCol>
+        <VCol cols="3">
+          <ImageMassOperations />
         </VCol>
       </VRow>
     </VCardText>

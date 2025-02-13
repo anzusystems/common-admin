@@ -1,6 +1,7 @@
 {
   "system": "Systém",
   "notSelected": "Nevybráno",
+  "all": "Všechno",
   "boolean": {
     "true": "ano",
     "false": "ne"

@@ -6,7 +6,6 @@ import ACopyText from '@/components/ACopyText.vue'
 const copyTextFirst = ref('copyTextFirst')
 const copyTextSecond = ref('copyTextSecond')
 const copyTextThird = ref('copyTextThird')
-
 </script>
 
 <template>
@@ -35,9 +34,7 @@ const copyTextThird = ref('copyTextThird')
         <VCol cols="4">
           <ACopyText :value="copyTextThird">
             <template #activator="{ props }">
-              <VBtn
-                v-bind="props"
-              >
+              <VBtn v-bind="props">
                 <VIcon icon="mdi-content-copy" />
               </VBtn>
             </template>

@@ -1,6 +1,7 @@
 {
   "system": "System",
   "notSelected": "Not selected",
+  "all": "All",
   "boolean": {
     "true": "Yes",
     "false": "No"

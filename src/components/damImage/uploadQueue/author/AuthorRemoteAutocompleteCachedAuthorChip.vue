@@ -6,6 +6,7 @@ import type { CachedItem } from '@/composables/system/defineCached'
 import type { DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { isNull, isUndefined } from '@/utils/common'
 import type { DocId } from '@/types/common'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -16,6 +17,7 @@ const props = withDefaults(
     textOnly?: boolean
     size?: string
     containerClass?: undefined | string
+    forceReviewed?: undefined | boolean
   }>(),
   {
     queueId: undefined,
@@ -24,6 +26,7 @@ const props = withDefaults(
     textOnly: false,
     size: 'small',
     containerClass: 'd-inline-flex',
+    forceReviewed: undefined,
   }
 )
 
@@ -53,6 +56,12 @@ const displayTitle = computed(() => {
   return ''
 })
 
+const displayReviewed = computed(() => {
+  if (props.forceReviewed) return true
+  if (item.value?.reviewed) return true
+  return false
+})
+
 watch(
   item,
   async (newValue) => {
@@ -63,6 +72,8 @@ watch(
   },
   { immediate: true }
 )
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -81,12 +92,20 @@ watch(
         indeterminate
         class="mx-1"
       />
+      <VIcon
+        v-if="displayReviewed"
+        icon="mdi-shield-check"
+        size="small"
+        class="text-success ml-1"
+        :title="t('common.damImage.author.model.flags.reviewed')"
+      />
     </div>
     <VChip
       v-else
       :size="size"
       :append-icon="displayNewIcon"
       :label="forceRounded ? undefined : true"
+      :title="displayReviewed ? t('common.damImage.author.model.flags.reviewed') : undefined"
     >
       {{ displayTitle }}
       <VProgressCircular
@@ -95,6 +114,13 @@ watch(
         :width="2"
         indeterminate
         class="mx-1"
+      />
+      <VIcon
+        v-if="displayReviewed"
+        icon="mdi-shield-check"
+        class="text-success ml-1"
+        size="small"
+        :title="t('common.damImage.author.model.flags.reviewed')"
       />
     </VChip>
   </div>

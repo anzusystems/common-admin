@@ -11,7 +11,7 @@ import type { IntegerId } from '@/types/common'
 export const useKeywordSelectActions = (extSystem: IntegerId) => {
   const { damClient } = useCommonAdminCoreDamOptions()
   const { getDamConfigExtSystem } = useDamConfigState()
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
   const configExtSystem = getDamConfigExtSystem(extSystem)
   if (isUndefined(configExtSystem)) {
     throw new Error('Ext system must be initialised.')

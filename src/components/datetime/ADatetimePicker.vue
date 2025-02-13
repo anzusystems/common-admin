@@ -136,7 +136,7 @@ watch([timePickerValue, datePickerValue], ([newTimePickerValue, newDatePickerVal
   } else if (!isNull(props.modelValue)) {
     newDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
   } else {
-    newDate = dayjs().hour(12).minute(0).second(0).millisecond(0)
+    newDate = dayjs().hour(0).minute(0).second(0).millisecond(0)
   }
 
   newDate = watchTimePicker(newTimePickerValue, newDate!)
@@ -192,7 +192,7 @@ const onTextFieldBlur = () => {
   if (parsed.isValid()) {
     // keep seconds from original model
     let seconds = 0
-    if(!isNull(props.modelValue)) {
+    if (!isNull(props.modelValue)) {
       const modelDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
       if (modelDate.isValid()) seconds = modelDate.second()
     }
@@ -256,7 +256,7 @@ const now = () => {
         location="bottom end"
         origin="top end"
         :close-on-content-click="false"
-        @update:model-value="(value) => (pickerOpened = value)"
+        @update:model-value="(value: boolean) => (pickerOpened = value)"
       >
         <template #activator="{ props: menuProps }">
           <VIcon
@@ -274,6 +274,7 @@ const now = () => {
             class="a-datetime-picker-calendar"
             color="primary"
             show-adjacent-months
+            v-bind="$attrs"
           />
           <TimePicker
             :key="timeKey"

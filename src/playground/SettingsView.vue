@@ -43,7 +43,10 @@ const afterLanguageChange = async (language: LanguageCode) => {
               {{ t('system.settings.locale') }}
             </VCol>
             <VCol>
-              <ALanguageSelect @after-change="afterLanguageChange" />
+              <ALanguageSelect
+                is-administrator
+                @after-change="afterLanguageChange"
+              />
             </VCol>
           </VRow>
           <VRow

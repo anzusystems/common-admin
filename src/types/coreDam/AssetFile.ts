@@ -1,45 +1,48 @@
 import type { DocId, DocIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 
-export enum AssetFileProcessStatus {
-  Uploading = 'uploading', // file entity created and ready to receive chunks
-  Uploaded = 'uploaded', // all chunks were sent
-  Stored = 'stored', // File is stored and ready to processing
-  Duplicate = 'duplicate', // AssetFile is duplicate of another asset
-  Processed = 'processed', // file processed and ready to serve
-  Failed = 'failed',
-}
+export const AssetFileProcessStatus = {
+  Uploading: 'uploading', // file entity created and ready to receive chunks
+  Uploaded: 'uploaded', // all chunks were sent
+  Stored: 'stored', // File is stored and ready to processing
+  Duplicate: 'duplicate', // AssetFile is duplicate of another asset
+  Processed: 'processed', // file processed and ready to serve
+  Failed: 'failed',
+} as const
+export type AssetFileProcessStatusType = (typeof AssetFileProcessStatus)[keyof typeof AssetFileProcessStatus]
 
-export enum AssetFileFailReason {
-  None = 'none',
-  Unknown = 'unknown',
-  InvalidChecksum = 'invalid_checksum',
-  InvalidMimeType = 'invalid_mime_type',
-  DownloadFailed = 'download_failed',
-  InvalidSize = 'invalid_size',
-  Default = None,
-}
+export const AssetFileFailReason = {
+  None: 'none',
+  Unknown: 'unknown',
+  InvalidChecksum: 'invalid_checksum',
+  InvalidMimeType: 'invalid_mime_type',
+  DownloadFailed: 'download_failed',
+  InvalidSize: 'invalid_size',
+} as const
+export type AssetFileFailReasonType = (typeof AssetFileFailReason)[keyof typeof AssetFileFailReason]
+export const AssetFileFailReasonDefault = AssetFileFailReason.None
 
-export enum AssetFileRouteStatus {
-  Disabled = 'disabled',
-  Active = 'active',
-  Default = Disabled,
-}
+export const AssetFileRouteStatus = {
+  Disabled: 'disabled',
+  Active: 'active',
+} as const
+export type AssetFileRouteStatusType = (typeof AssetFileRouteStatus)[keyof typeof AssetFileRouteStatus]
+export const AssetFileRouteStatusDefault = AssetFileRouteStatus.Disabled
 
 interface FileAttributes {
-  status: AssetFileProcessStatus
+  status: AssetFileProcessStatusType
   mimeType: string
   size: number
   originFileName: string
   originUrl: string
-  failReason: AssetFileFailReason
+  failReason: AssetFileFailReasonType
 }
 
-export enum AssetFileLinkType {
-  Image = 'image',
-  Audio = 'audio',
-  Default = Image,
-}
+export const AssetFileLinkType = {
+  Image: 'image',
+  Audio: 'audio',
+} as const
+export type AssetFileLinkTypeType = (typeof AssetFileLinkType)[keyof typeof AssetFileLinkType]
 
 export interface AssetFileLink {
   width: number
@@ -48,13 +51,13 @@ export interface AssetFileLink {
   requestedHeight: number
   url: string
   title: string
-  type: AssetFileLinkType
+  type: AssetFileLinkTypeType
 }
 
 export interface AssetFileRoute {
   id: DocId
-  status: AssetFileRouteStatus
-  main: boolean,
+  status: AssetFileRouteStatusType
+  main: boolean
   publicUrl: string
   _resourceName: 'assetFileRoute'
 }
@@ -67,7 +70,14 @@ export type AssetFileLinks =
   | Record<'image_list' | 'image_table' | 'image_detail' | 'image_animated' | 'audio', AssetFileLink>
   | Record<string, never>
 
-export interface AssetFileImage extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
+export interface AssetFileAware {
+  flags: {
+    public: boolean
+    singleUse: boolean
+  }
+}
+
+export interface AssetFileImage extends AssetFileAware, AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -78,7 +88,7 @@ export interface AssetFileImage extends AnzuUserAndTimeTrackingAware, AssetFileM
   _resourceName: 'imageFile'
 }
 
-export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
+export interface AssetFileAudio extends AssetFileAware, AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -89,7 +99,7 @@ export interface AssetFileAudio extends AnzuUserAndTimeTrackingAware, AssetFileM
   _resourceName: 'audioFile'
 }
 
-export interface AssetFileVideo extends AnzuUserAndTimeTrackingAware {
+export interface AssetFileVideo extends AssetFileAware, AnzuUserAndTimeTrackingAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes
@@ -100,7 +110,7 @@ export interface AssetFileVideo extends AnzuUserAndTimeTrackingAware {
   _resourceName: 'videoFile'
 }
 
-export interface AssetFileDocument extends AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
+export interface AssetFileDocument extends AssetFileAware, AnzuUserAndTimeTrackingAware, AssetFileMainRouteAware {
   id: DocId
   asset: DocId
   fileAttributes: FileAttributes

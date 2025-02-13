@@ -1,14 +1,16 @@
 <script lang="ts" setup>
-import type { IntegerId } from '@/types/common'
-import { onMounted, provide, ref, shallowRef } from 'vue'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
-import { isUndefined } from '@/utils/common'
-import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
+import type { IntegerId } from '@/types/common'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import { isUndefined } from '@/utils/common'
+import { onMounted, provide, ref, shallowRef } from 'vue'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const props = withDefaults(
   defineProps<{
@@ -46,7 +48,6 @@ const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading'
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { damClient } = useCommonAdminCoreDamOptions(props.configName)
 const {
-  initialized,
   loadDamPrvConfig,
   loadDamConfigAssetCustomFormElements,
   getDamConfigAssetCustomFormElements,
@@ -56,7 +57,10 @@ const {
 
 const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
 
+const { cachedExtSystemId } = useExtSystemIdForCached()
+
 onMounted(async () => {
+  const damConfigStore = useDamConfigStore()
   uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
   if (isUndefined(uploadConfig.value)) {
     status.value = 'error'
@@ -66,8 +70,9 @@ onMounted(async () => {
     status.value = 'uploadNotAllowed'
     return
   }
+  cachedExtSystemId.value = uploadConfig.value.extSystem
   const promises: Promise<any>[] = []
-  if (!initialized.damPrvConfig) {
+  if (!damConfigStore.initialized.damPrvConfig) {
     promises.push(loadDamPrvConfig())
   }
   promises.push(getOrLoadDamConfigExtSystemByLicences(props.selectLicences))
@@ -76,7 +81,7 @@ onMounted(async () => {
     promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }
   try {
-    await Promise.all(promises)
+    await Promise.allSettled(promises)
   } catch (e) {
     status.value = 'error'
   }

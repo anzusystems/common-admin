@@ -2,7 +2,7 @@
 import AssetDetailSidebarActionsWrapper from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsWrapper.vue'
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import UploadQueueDialogSingleSidebarMetadataContent from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebarMetadataContent.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useAlerts } from '@/composables/system/alerts'
@@ -14,7 +14,7 @@ withDefaults(
     extSystem: IntegerId
     isActive: boolean
     dataCy?: string
-    assetType: DamAssetType
+    assetType: DamAssetTypeType
   }>(),
   {
     dataCy: undefined,
@@ -27,7 +27,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
+const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol })
 
 const { showValidationError } = useAlerts()
 

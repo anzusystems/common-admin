@@ -1,13 +1,13 @@
-<script lang="ts" setup>
-import { useAcl } from '@/composables/system/ability'
-import { inject, ref, watch } from 'vue'
-import type { CurrentUserType } from '@/AnzuSystemsCommonAdmin'
+<script lang="ts" setup generic="TAclValue extends AclValue">
+import { computed, ref, watch } from 'vue'
 import type { AclValue } from '@/types/Permission'
-import { CurrentUserSymbol } from '@/components/injectionKeys'
+import { useAuthHelpers } from '@/composables/auth/defineAuth'
+import { isArray } from '@/utils/common'
+import { useAuthStore } from '@/composables/auth/authStore'
 
 const props = withDefaults(
   defineProps<{
-    permission: AclValue
+    permission: TAclValue | TAclValue[] // multiple values must be from same system!
     subject?: object
   }>(),
   {
@@ -15,14 +15,43 @@ const props = withDefaults(
   }
 )
 
-const currentUser = inject(CurrentUserSymbol) as CurrentUserType
-const { can } = useAcl()
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const allowed = ref<boolean>(can(props.permission, props.subject))
+const allowed = ref<boolean>(false)
 
-watch(currentUser, () => {
-  allowed.value = can(props.permission, props.subject)
+const authStore = useAuthStore()
+
+const currentUsers = computed(() => {
+  return authStore.currentUsers.value
 })
+
+const { canHelper, canForAllHelper } = useAuthHelpers()
+
+const can = (acls: TAclValue[] | TAclValue, subject?: object) => {
+  if (isArray(acls)) {
+    return canForAllHelper(acls, subject)
+  }
+
+  return canHelper(acls, subject)
+}
+
+const watchHandle = watch(
+  currentUsers,
+  (newValue) => {
+    if (newValue.size > 0) {
+      const show = can(props.permission, props.subject)
+      if (show) {
+        allowed.value = show
+        stopWatch()
+      }
+    }
+  },
+  {
+    immediate: true,
+  }
+)
+
+function stopWatch() {
+  setTimeout(() => watchHandle?.(), 0)
+}
 </script>
 
 <template>

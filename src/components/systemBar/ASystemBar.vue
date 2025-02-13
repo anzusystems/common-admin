@@ -66,7 +66,7 @@ onBeforeUnmount(() => {
 <template>
   <VAppBar
     v-if="showSystemBar"
-    height="24"
+    height="48"
     color="orange accent-3"
     elevation="0"
     :order="-1"

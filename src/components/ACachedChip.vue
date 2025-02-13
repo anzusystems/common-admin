@@ -22,6 +22,12 @@ const props = withDefaults(
     fallbackIdText?: boolean
     wrapText?: boolean
     closable?: boolean
+    customTitleFn?: (
+      cachedItem: any,
+      defaultTitle: string,
+      displayTextPath: string,
+      fallbackIdText: boolean
+    ) => string | undefined
   }>(),
   {
     id: null,
@@ -35,6 +41,7 @@ const props = withDefaults(
     fallbackIdText: false,
     wrapText: false,
     closable: false,
+    customTitleFn: undefined,
   }
 )
 
@@ -55,6 +62,12 @@ const containerClassComputed = computed(() => {
 })
 
 const displayTitle = computed(() => {
+  if (props.customTitleFn && cached.value) {
+    const customTitle = props.customTitleFn(cached.value, props.title, props.displayTextPath, props.fallbackIdText)
+    if (customTitle !== undefined) {
+      return customTitle
+    }
+  }
   if (props.title.length > 0) return props.title
   if (cached.value) {
     return objectGetValueByPath(cached.value, props.displayTextPath)
@@ -141,7 +154,7 @@ watch(
   .v-chip .v-chip__content {
     max-width: 100%;
     height: auto;
-    min-height: 32px;
+    min-height: 26px;
     white-space: pre-wrap;
   }
 }

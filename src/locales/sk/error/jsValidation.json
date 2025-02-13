@@ -8,6 +8,12 @@
   "email": "Nesprávny formát emailu.",
   "url": "Nesprávny formát URL.",
   "numeric": "Musia byť zadané iba čísla.",
-  "slug": "Povolené znaky pre slug sú a-z, - a 0-9.",
-  "stringArrayItemLength": "Dĺžka znakov každej položky musí byť medzi {min} a {max} znakov."
+  "slug": "Povolené znaky pre slug sú a-z a 0-9",
+  "stringArrayItemLength": "Dĺžka znakov každej položky musí byť medzi {min} a {max} znakov.",
+  "datesCompare": {
+    "laterThan": "Dátum musí byť vyšší ako \"{otherDateName}\"",
+    "onOrAfter": "Dátum musí byť vyšší alebo rovnaký ako \"{otherDateName}\"",
+    "earlierThan": "Dátum musí byť nižší ako \"{otherDateName}\"",
+    "onOrBefore": "Dátum musí byť nižší alebo rovnaký ako \"{otherDateName}\""
+  }
 }

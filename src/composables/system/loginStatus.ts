@@ -2,12 +2,13 @@ import { readonly, ref } from 'vue'
 import type { RouteLocationNormalized } from 'vue-router'
 import { isNull } from '@/utils/common'
 
-enum LoginState {
-  Success = 'success',
-  FailureSsoCommunicationFailed = 'failure-sso-communication',
-  FailureInternalError = 'failure-internal-error',
-  FailureUnauthorized = 'failure-unauthorized',
-}
+export const LoginState = {
+  Success: 'success',
+  FailureSsoCommunicationFailed: 'failure-sso-communication',
+  FailureInternalError: 'failure-internal-error',
+  FailureUnauthorized: 'failure-unauthorized',
+} as const
+export type JobStatusType = (typeof LoginState)[keyof typeof LoginState]
 
 const status = ref<string | null>(null)
 

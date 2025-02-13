@@ -92,7 +92,7 @@
       "item": "Hodnotenie {0} z {1}"
     }
   },
-  "loading": "Loading...",
+  "loading": "Načítám...",
   "infiniteScroll": {
     "loadMore": "Load more",
     "empty": "No more"

@@ -12,7 +12,7 @@ import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
-import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
+import type { CollabComponentConfig, CollabFieldData } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
@@ -95,14 +95,10 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const {
-    releaseCollabFieldLock,
-    changeCollabFieldData,
-    acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
-    lockedByUser,
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-  } = useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } = useCollabField(
+    props.collab.room,
+    props.collab.field
+  )
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -113,11 +109,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     },
     { immediate: true }
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      modelValue.value = data.value as DocId | IntegerId | DocId[] | IntegerId[] | null
-    })
-  }
 }
 
 const search = ref('')
@@ -273,7 +264,7 @@ watchDebounced(
       emit('searchChangeDebounced', newValue)
     }
   },
-  { debounce: 500, maxWait: 1500 }
+  { debounce: 300 }
 )
 
 watch(search, (newValue, oldValue) => {

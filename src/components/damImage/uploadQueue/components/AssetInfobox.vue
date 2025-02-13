@@ -1,14 +1,18 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { AssetFileFailReason, AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
-import { DamAssetStatus } from '@/types/coreDam/Asset'
+import {
+  type AssetFileFailReasonType,
+  AssetFileProcessStatus,
+  type AssetFileProcessStatusType,
+} from '@/types/coreDam/AssetFile'
+import { DamAssetStatus, type DamAssetStatusType } from '@/types/coreDam/Asset'
 import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
 
 withDefaults(
   defineProps<{
-    assetStatus: DamAssetStatus
-    assetMainFileStatus?: AssetFileProcessStatus | undefined
-    assetMainFileFailReason?: AssetFileFailReason | undefined
+    assetStatus: DamAssetStatusType
+    assetMainFileStatus?: AssetFileProcessStatusType | undefined
+    assetMainFileFailReason?: AssetFileFailReasonType | undefined
   }>(),
   {
     assetMainFileStatus: undefined,

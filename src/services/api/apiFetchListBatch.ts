@@ -21,6 +21,10 @@ import {
   isApiResponseList,
 } from '@/types/ApiResponse'
 import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
+import {
+  AnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+} from '@/model/error/AnzuApiDependencyExistsError'
 
 const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag | undefined = undefined): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
@@ -64,7 +68,7 @@ export const apiFetchListBatch = async <R>(
   forceElastic = false,
   options: AxiosRequestConfig = {}
 ): Promise<R> => {
-  const searchApi = (isDefined(filterBag?._elastic) || forceElastic) ? '/search' : ''
+  const searchApi = isDefined(filterBag?._elastic) || forceElastic ? '/search' : ''
   const pagination = usePagination(sortBy)
   pagination.rowsPerPage = batchSize
   pagination.sortBy = sortBy
@@ -135,6 +139,9 @@ export const apiFetchListBatch = async <R>(
     }
     if (axiosErrorResponseHasValidationData(err)) {
       return Promise.reject(new AnzuApiValidationError(err, system, entity, err))
+    }
+    if (axiosErrorResponseHasDependencyExistsData(err)) {
+      return Promise.reject(new AnzuApiDependencyExistsError(err, system, entity, err))
     }
     if (axiosErrorResponseHasForbiddenOperationData(err)) {
       return Promise.reject(new AnzuApiForbiddenOperationError(err, err))

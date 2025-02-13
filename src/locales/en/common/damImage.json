@@ -2,95 +2,106 @@
   "image": {
     "model": {
       "texts": {
-        "description": "Popis",
-        "source": "Zdroj"
+        "description": "Description",
+        "source": "Source"
+      },
+      "flags": {
+        "showSource": "Show source"
       }
     },
     "meta": {
-      "edit": "Upraviť obrázok"
+      "edit": "Edit image"
     },
     "button": {
-      "options": "Upraviť obrázok",
-      "editAsset": "Upraviť v DAM",
-      "upload": "Nahrať",
-      "addFromDam": "Pridať z DAM",
-      "replaceFromDam": "Vymeniť z DAM",
-      "removeImage": "Odstrániť obrázok"
+      "options": "Edit image",
+      "editAsset": "Edit in DAM",
+      "upload": "Upload",
+      "addFromDam": "Add from DAM",
+      "replaceFromDam": "Replace from DAM",
+      "removeImage": "Remove image"
+    },
+    "help": {
+      "texts": {
+        "description": "If you overwrite the description here, it will not change in the image storage."
+      }
     }
   },
   "queueItem": {
-    "edit": "Upraviť v DAM",
-    "displayTitle": "Meno originálu",
-    "error": "Chyba",
-    "copyAssetId": "Kopírovať asset ID"
+    "edit": "Edit in DAM",
+    "displayTitle": "Original Name",
+    "error": "Error",
+    "copyAssetId": "Copy asset ID",
+    "stillUploadingOrProcessing": "Asset is still uploading or processing by server",
+    "removeFromQueue": "Remove item from queue?"
   },
   "asset": {
     "model": {
-      "authors": "Autori",
-      "keywords": "Kľúčové slová"
+      "authors": "Authors",
+      "keywords": "Keywords",
+      "mainFileSingleUse": "Single-use license"
     },
     "assetType": {
-      "image": "Obrázok",
+      "image": "Image",
       "audio": "Audio",
       "video": "Video",
-      "document": "Dokument"
+      "document": "Document"
     },
     "detail": {
-      "toggleInfo": "Info karta",
+      "toggleInfo": "Info card",
       "metadataToggle": {
-        "show": "Skryť viac detailov",
-        "hide": "Zobraziť viac detailov"
+        "show": "Hide more details",
+        "hide": "Show more details"
       },
       "tabs": {
         "info": "Info",
-        "roi": "Fókus"
+        "roi": "Focus"
       },
       "info": {
         "status": {
-          "duplicate": "Hlavný súbor je duplikát.",
-          "draft": "Neobsahuje žiaden súbor.",
-          "deleting": "Čoskoro bude zmazaný.",
-          "failed": "Spracovávanie súboru zlyhalo."
+          "duplicate": "The main file is a duplicate.",
+          "draft": "Does not contain any file.",
+          "deleting": "Will be deleted soon.",
+          "failed": "File processing failed."
         },
-        "metadata": "Metaúdaje",
-        "file": "Info o súbore",
+        "metadata": "Metadata",
+        "file": "File info",
         "field": {
           "id": "Asset ID",
-          "mainFileId": "ID hlavného súboru",
-          "type": "Typ",
-          "mimeType": "Formát",
-          "size": "Veľkosť",
-          "dominantColor": "Farba",
-          "width": "Šírka",
-          "height": "Výška",
-          "ratio": "Pomer strán",
-          "animated": "Animované"
+          "mainFileId": "Main file ID",
+          "type": "Type",
+          "mimeType": "Format",
+          "size": "Size",
+          "dominantColor": "Color",
+          "width": "Width",
+          "height": "Height",
+          "ratio": "Aspect ratio",
+          "animated": "Animated"
         }
       },
       "roi": {
-        "title": "Náhľady",
-        "description": "Náhľad obrázku na mobile, počítači alebo v aplikácii.",
-        "refresh": "Znovu načítať náhľady",
+        "title": "Previews",
+        "description": "Previews are intended for the main image in the article, article lists, titles, and sections. In the body of the article, the format is displayed without cropping.",
+        "refresh": "Reload previews",
         "rotate": {
-          "rotateMainFileImage": "Otočenie obrázku (hlavného súboru)",
-          "rotateClockwise": "Otočiť doprava",
-          "rotateCounterclockwise": "Otočiť doľava"
+          "rotateMainFileImage": "Rotate image (main file)",
+          "rotateClockwise": "Rotate right",
+          "rotateCounterclockwise": "Rotate left"
         }
       }
     },
     "massOperations": {
-      "title": "Hromadné operácie",
-      "description": "Hromadná úprava metaúdajov. Ak chcete upravovať metaúdaje po riadkoch, použite tlačidlo vedľa riadka. Ak chcete upraviť všetky riadky naraz, použite tlačidlá úplne dole.",
-      "fillOneEmpty": "Vyplňte prázdne pole",
-      "fillAllEmpty": "Vyplniť len prázdne",
-      "replaceOne": "Nahradiť všade",
-      "replaceAll": "Nahradiť všetko",
-      "clearForm": "Vyčistiť",
-      "general": "Hlavné"
+      "title": "Mass operations",
+      "description": "Bulk edit of metadata. To edit metadata line by line, use the button next to the line. To edit all lines at once, use the buttons at the very bottom.",
+      "fillOneEmpty": "Fill empty field",
+      "fillAllEmpty": "Fill only empty",
+      "replaceOne": "Replace everywhere",
+      "replaceAll": "Replace all",
+      "clearForm": "Clear",
+      "general": "Main"
     },
     "metaIcons": {
-      "low": "Nízka kvalita",
-      "slots": "Sloty",
+      "low": "Low quality",
+      "slots": "Slots",
       "rss": "RSS",
       "fullHd": "FullHD",
       "2k": "2K",
@@ -99,26 +110,26 @@
       "8k": "8K"
     },
     "assetFileFailReason": {
-      "none": "Žiadny",
-      "unknown": "Neznámy",
-      "invalidChecksum": "Neplatný kontrolný súčet",
-      "invalidMimeType": "Neplatný typ súboru",
-      "downloadFailed": "Sťahovanie zlyhalo",
-      "invalidSize": "Neplatná veľkosť"
+      "none": "None",
+      "unknown": "Unknown",
+      "invalidChecksum": "Invalid checksum",
+      "invalidMimeType": "Invalid file type",
+      "downloadFailed": "Download failed",
+      "invalidSize": "Invalid size"
     }
   },
   "upload": {
-    "waiting": "Čakanie",
-    "processing": "Spracováva sa",
-    "uploading": "Nahrávanie",
-    "done": "Hotovo",
-    "stop": "Zatvoriť",
-    "add": "Pridať do nahrávania",
-    "save": "Uložiť a pokračovať",
-    "saveAndApply": "Uložiť a použiť",
-    "title": "Nahrávanie",
-    "titleDone": "Nahrávanie ukončené",
-    "stopConfirmQuestion": "Chcete ukončiť nahrávanie?",
+    "waiting": "Waiting",
+    "processing": "Processing",
+    "uploading": "Uploading",
+    "done": "Done",
+    "stop": "Close",
+    "add": "Add to upload",
+    "save": "Save and continue",
+    "saveAndApply": "Save and apply",
+    "title": "Uploading",
+    "titleDone": "Uploading completed",
+    "stopConfirmQuestion": "Do you want to stop the upload?",
     "limits": {
       "uploadWarning": "Upload warning",
       "onUploadLimit": "You are already on upload limit ({limit}). Finish upload, then try again.",
@@ -131,43 +142,48 @@
   },
   "keyword": {
     "model": {
-      "name": "Meno"
+      "name": "Name"
     },
     "button": {
-      "add": "Pridať kľúčové slovo"
+      "add": "Add keyword"
     },
     "meta": {
-      "create": "Vytvoriť kľúčové slovo"
-    }
+      "create": "Create keyword"
+    },
+    "filterMinChars": "Enter at least 2 characters"
   },
   "author": {
     "model": {
-      "name": "Meno",
-      "identifier": "Identifikátor",
-      "type": "Typ"
+      "name": "Name",
+      "identifier": "Identifier",
+      "type": "Type",
+      "flags": {
+        "reviewed": "Reviewed"
+      }
     },
     "authorType": {
-      "none": "Žiaden",
-      "internal": "Interný",
-      "external": "Externý",
-      "agency": "Agentúra"
+      "none": "None",
+      "internal": "Internal",
+      "external": "External",
+      "agency": "Agency"
     },
     "button": {
-      "add": "Pridať nového autora"
+      "add": "Add new author"
     },
     "meta": {
-      "create": "Vytvorenie autora"
+      "create": "Creating author"
     },
-    "conflicts": "Konflikt autorov"
+    "conflicts": "Author conflicts",
+    "filterMinChars": "Enter at least 2 characters"
   },
   "uploadErrors": {
-    "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",
-    "systemError": "Chyba",
-    "size": "Nesprávna veľkosť",
-    "offset": "Nesprávny offset",
-    "mimeType": "Nesprávny formát súboru"
+    "unknownError": "System error. Please try again later or contact the administrator.",
+    "systemError": "Error",
+    "size": "Invalid size",
+    "offset": "Invalid offset",
+    "mimeType": "Invalid file format"
   },
-  "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne.",
+  "notificationsNotConnected": "The notification service is temporarily down, some features may not behave correctly.",
   "public": {
     "idOrUrl": "Image ID or public image URL",
     "inputError": "Incorrect ID provided",

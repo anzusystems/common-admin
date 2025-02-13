@@ -30,5 +30,7 @@
     "kickUser": "Vyhodiť z kolaborácie",
     "kickYourself": "Odísť z kolaborácie",
     "transferModeration": "Presunúť moderovanie"
-  }
+  },
+  "moderator": "Moderátor",
+  "users": "Používatelia"
 }

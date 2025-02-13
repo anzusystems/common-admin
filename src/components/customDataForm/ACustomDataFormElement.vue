@@ -37,7 +37,12 @@ const updateModelValue = (value: any) => {
 
 const modelValueComputed = computed(() => {
   const value = isProxy(props.modelValue) ? toRaw(props.modelValue) : props.modelValue
-  if (props.config.attributes.type === CustomDataFormElementType.StringArray && isEmptyObject(value)) return []
+  if (
+    (props.config.attributes.type === CustomDataFormElementType.StringArray ||
+      props.config.attributes.type === CustomDataFormElementType.StringArrayLegacy) &&
+    isEmptyObject(value)
+  )
+    return []
   return value
 })
 
@@ -142,7 +147,10 @@ const onBlur = () => {
     </template>
   </VTextField>
   <VCombobox
-    v-else-if="config.attributes.type === CustomDataFormElementType.StringArray"
+    v-else-if="
+      config.attributes.type === CustomDataFormElementType.StringArray ||
+        config.attributes.type === CustomDataFormElementType.StringArrayLegacy
+    "
     :model-value="modelValueComputed"
     :label="config.name"
     multiple

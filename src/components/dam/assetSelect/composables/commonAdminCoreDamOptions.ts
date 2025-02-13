@@ -24,10 +24,7 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
 }
 
 export function useCommonAdminCoreDamOptionsGlobal() {
-  if (
-    isUndefined(commonAdminCoreDamOptions.value) ||
-    isUndefined(commonAdminCoreDamOptions.value.configs)
-  ) {
+  if (isUndefined(commonAdminCoreDamOptions.value) || isUndefined(commonAdminCoreDamOptions.value.configs)) {
     throw new Error("Composable can't be used without properly configured common admin.")
   }
 

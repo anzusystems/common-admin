@@ -20,10 +20,16 @@ import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import UploadQueueDialog from '@/components/damImage/uploadQueue/components/UploadQueueDialog.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
-import { fetchAssetByFileId, fetchAssetListByIds } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  type AssetAuthorsItems,
+  bulkUpdateAssetsAuthors,
+  fetchAssetByFileId,
+  fetchAssetListByIds,
+  type IdsGroupedByLicences,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { ImageStoreItem } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
 import { CHOSEN_CLASS, DRAG_CLASS, GHOST_CLASS, GROUP_CLASS, HANDLE_CLASS } from '@/components/sortable/sortableActions'
 import { useSortable, type UseSortableReturn } from '@vueuse/integrations/useSortable'
@@ -38,6 +44,7 @@ import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damA
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 
 const props = withDefaults(
   defineProps<{
@@ -106,13 +113,31 @@ const fetchImagesOnLoad = async () => {
   try {
     imagesLoading.value = true
     const imagesRes = await fetchImageListByIds(imageClient, props.modelValue)
+    const groupedIds: IdsGroupedByLicences = new Map()
+    imagesRes.forEach((image) => {
+      const group = groupedIds.get(image.dam.licenceId)
+      if (group) {
+        group.push(image.dam.damId)
+      } else {
+        groupedIds.set(image.dam.licenceId, [image.dam.damId])
+      }
+    })
+
+    const assetsRes = await fetchAssetListByFileIdsMultipleLicences(damClient, groupedIds)
+
     imageStore.setImages(
       imagesRes.map((imageRes) => {
         if (isUndefined(imageRes.position)) throw new Error('Image object needs position field!')
         imageStore.updateMaxPositionIfGreater(imageRes.position)
+        const found = assetsRes.find((asset) => asset.mainFile?.id === imageRes.dam.damId)
         return {
           key: generateUUIDv1(),
           ...imageRes,
+          ...{
+            damAuthors: found ? found.authors : [],
+            showDamAuthors: found ? found.authors.length === 0 : false,
+            assetId: found ? found.id : undefined,
+          },
         }
       })
     )
@@ -156,7 +181,7 @@ const afterLimitDialogAdd = () => {
   uploadQueueDialog.value = props.queueKey
 }
 
-const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
+const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<ImageStoreItem[]> => {
   const assetSelectStore = useAssetSelectStore()
   const ids = items.map((item) => item.id)
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
@@ -191,7 +216,8 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
 
   return items.map((asset) => {
     maxPosition.value++
-    const description = assetMetadataMap.get(asset.id)?.description
+    const authorIds = assetMetadataMap.get(asset.id)?.authorIds || []
+    const description = assetMetadataMap.get(asset.id)?.description ?? ''
     const authorNames: string[] = []
     assetMetadataMap.get(asset.id)?.authorIds.forEach((authorId) => {
       const name = authorsMap.get(authorId)
@@ -199,11 +225,15 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
         authorNames.push(name)
       }
     })
+
     return {
       key: generateUUIDv1(),
       texts: {
-        description: description ?? '',
+        description: description,
         source: authorNames.join(', '),
+      },
+      flags: {
+        showSource: true,
       },
       dam: {
         damId: asset.mainFile!.id,
@@ -211,6 +241,9 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]) => {
         licenceId: asset.licence,
       },
       position: maxPosition.value,
+      damAuthors: authorIds,
+      showDamAuthors: authorIds.length === 0,
+      assetId: asset.id,
     }
   })
 }
@@ -244,13 +277,12 @@ const onEditAsset = async (assetFileId: DocId) => {
   }
 }
 
-const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
+const onAssetUploadConfirm = (items: ImageStoreItem[]) => {
   if (items.length === 0) return
   imageStore.addImages(
     items.map((item) => {
       maxPosition.value++
       return {
-        key: generateUUIDv1(),
         ...item,
         position: maxPosition.value,
       }
@@ -264,7 +296,7 @@ const actionLibrary = () => {
   assetSelectDialog.value = true
 }
 
-const v$ = useVuelidate({}, {}, { $scope: AImageMetadataValidationScopeSymbol })
+const v$ = useVuelidate({ $scope: AImageMetadataValidationScopeSymbol })
 
 const saveImages = async () => {
   v$.value.$touch()
@@ -273,16 +305,48 @@ const saveImages = async () => {
     return false
   }
   try {
+    const assetUpdateItems: AssetAuthorsItems = []
+    const imagesRaw = toRaw(images.value)
+    for (const image of imagesRaw) {
+      if (image.showDamAuthors && image.assetId) {
+        assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
+      }
+      if (image.damAuthors.length > 0) {
+        const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, image.damAuthors)
+        image.texts.source = authorsRes.map((author) => author.name).join(', ')
+      }
+    }
+    if (assetUpdateItems.length) {
+      await bulkUpdateAssetsAuthors(damClient, assetUpdateItems)
+    }
     const resItems = await bulkUpdateImages(imageClient, toRaw(images.value))
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
       ids.push(resItem.id)
+
       return {
         key: generateUUIDv1(),
         ...resItem,
+        damAuthors: [],
+        showDamAuthors: false,
+        assetId: undefined,
       }
     })
-    imageStore.setImages(items)
+    if (imageStore.images.length === 0) return
+
+    const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
+      const matchedImage = imageStore.images.find((storeItem) => storeItem.dam.damId === item.dam.damId)
+
+      return {
+        ...item,
+        damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
+        showDamAuthors: matchedImage ? matchedImage.damAuthors.length === 0 : item.damAuthors.length === 0,
+        assetId: item.assetId,
+      }
+    }
+
+    const updatedItems = await Promise.all(items.map((item) => getUpdatedItem(item)))
+    imageStore.setImages(updatedItems)
     emit('update:modelValue', ids)
     return true
   } catch (e) {
@@ -387,6 +451,7 @@ onMounted(() => {
         :file-input-key="uploadQueue?.fileInputKey"
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
+        multiple
         @files-input="onFileInput"
       >
         <template #activator="{ props: fileInputProps }">
@@ -414,7 +479,15 @@ onMounted(() => {
       return-type="asset"
       @on-confirm="onAssetSelectConfirm"
     />
-
+    <div
+      v-if="imagesLoading"
+      class="w-100 d-flex align-center justify-center"
+    >
+      <VProgressCircular
+        indeterminate
+        color="primary"
+      />
+    </div>
     <div
       class="position-relative w-100"
       style="min-height: 140px"
@@ -452,6 +525,7 @@ onMounted(() => {
       :max-sizes="uploadSizes"
       multiple
       @on-apply="onAssetUploadConfirm"
+      @on-files-input="onFileInput"
     />
     <AssetDetailDialog
       v-if="assetDialog === queueKey"

@@ -22,7 +22,8 @@ export function defineCached<
   mapFullToMinimal: (source: T) => M,
   mapIdToMinimal: (id: I) => M,
   fetchCallback: (ids: I[]) => Promise<T[]>,
-  idProp = 'id'
+  idProp = 'id',
+  maxLimit = 1000
 ) {
   const cache: Ref<Map<I, CachedItem<M>>> = ref(new Map()) // todo check
   const toFetch = ref(new Set()) as Ref<Set<I>> // todo check
@@ -61,6 +62,9 @@ export function defineCached<
   }
 
   const updateMap = (data: T[]) => {
+    if (cache.value.size >= maxLimit) {
+      cache.value.clear()
+    }
     for (let i = 0; i < data.length; i += 1) {
       cache.value.set(data[i][idProp] as I, { ...mapFullToMinimal(data[i]), ...{ _loaded: true } })
     }
@@ -117,6 +121,10 @@ export function defineCached<
     return cache.value.has(id)
   }
 
+  const clear = () => {
+    return cache.value.clear()
+  }
+
   const isLoaded = (id: I | null | undefined): boolean => {
     if (!id) return false
     const item = cache.value.get(id)
@@ -134,6 +142,7 @@ export function defineCached<
     addManualMinimal,
     has,
     get,
+    clear,
     isLoaded,
   }
 }

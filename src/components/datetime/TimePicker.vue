@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue'
 
-// eslint-disable-next-line vue/no-ref-object-reactivity-loss
 const modelValue = defineModel<null | { hours: number; minutes: number }>('modelValue', {
   required: true,
 })

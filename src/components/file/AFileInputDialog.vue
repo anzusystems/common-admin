@@ -21,7 +21,7 @@ withDefaults(
     fileInputKey: undefined,
     accept: undefined,
     maxSizes: undefined,
-    multiple: true,
+    multiple: false,
   }
 )
 

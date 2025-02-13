@@ -1,0 +1,47 @@
+name: Node.js Package Release Beta
+
+on:
+  push:
+    branches:
+      - beta
+
+jobs:
+  build-publish-beta-pkg:
+    name: Build and push beta package on node 22
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: check
+        uses: EndBug/version-check@v2
+        with:
+          diff-search: true
+
+      - name: Enable corepack
+        if: steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
+        run: corepack enable
+
+      - name: Setup Node
+        if: steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: Install dependencies
+        if: steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
+        run: yarn install --immutable
+
+      - name: Run Yarn Build
+        if: steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
+        run: yarn lib:build
+
+      - name: Publish beta package to npmjs
+        if: steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          npm publish --tag beta

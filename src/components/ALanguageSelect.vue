@@ -4,15 +4,19 @@ import { ALL_LANGUAGES, modifyLanguageSettings, useLanguageSettings } from '@/co
 import { computed, inject } from 'vue'
 import { isUndefined } from '@/utils/common'
 import FlagCountry from '@/components/flags/FlagCountry.vue'
-import type { CurrentUserType } from '@/AnzuSystemsCommonAdmin'
-import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
-import { AvailableLanguagesSymbol, CurrentUserSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
+import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
+
+const props = withDefaults(
+  defineProps<{
+    isAdministrator: boolean
+  }>(),
+  {}
+)
 
 const emit = defineEmits<{
   (e: 'afterChange', code: LanguageCode): void
 }>()
 
-const currentUser = inject(CurrentUserSymbol) as CurrentUserType
 const configAvailableLanguages = inject(AvailableLanguagesSymbol) as LanguageCode[]
 const configDefaultLanguage = inject(DefaultLanguageSymbol) as LanguageCode
 // @ts-ignore
@@ -35,19 +39,18 @@ const currentLocale = computed(() => {
 const availableLocales = computed(() => {
   return ALL_LANGUAGES.filter(
     (item) =>
-      (configAvailableLanguages.includes(item.code) || item.code === 'xx') &&
-      (!item.adminOnly || currentUser.value?.roles.includes(ROLE_SUPER_ADMIN))
+      (configAvailableLanguages.includes(item.code) || item.code === 'xx') && (!item.adminOnly || props.isAdministrator)
   )
 })
 </script>
 
 <template>
   <VMenu>
-    <template #activator="{ props }">
+    <template #activator="{ props: activatorProps }">
       <VBtn
         class="pl-1"
         rounded="pill"
-        v-bind="props"
+        v-bind="activatorProps"
         variant="text"
         data-cy="settings-language"
       >

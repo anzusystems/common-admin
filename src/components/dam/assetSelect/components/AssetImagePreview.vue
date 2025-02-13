@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetStatus, type DamAssetStatusType, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import placeholder16x9 from '@/assets/image/placeholder16x9.jpg'
 import { isUndefined } from '@/lib'
 
 const props = withDefaults(
   defineProps<{
     src?: string
-    assetType?: DamAssetType
-    assetStatus?: DamAssetStatus
+    assetType?: DamAssetTypeType
+    assetStatus?: DamAssetStatusType
     backgroundColor?: string
     width?: number
     height?: number

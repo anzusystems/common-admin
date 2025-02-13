@@ -7,7 +7,7 @@ import type { AxiosInstance } from 'axios'
 const props = withDefaults(
   defineProps<{
     modelValue: string[]
-    client: () => AxiosInstance,
+    client: () => AxiosInstance
     multiple?: boolean
     label?: string
     dataCy?: string
@@ -37,8 +37,7 @@ const onBlur = () => {
   emit('blur', modelValueComputed.value)
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { allDistributionServiceTypeOptions } = useDamDistributionServiceType(props.client)
+const { allDistributionServiceTypeOptions } = useDamDistributionServiceType()
 </script>
 
 <template>

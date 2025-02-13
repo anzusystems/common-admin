@@ -1,14 +1,20 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import type { AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
-import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
+import type { AssetSearchListItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
+import { DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
-import { type AssetSelectReturnData, AssetSelectReturnType } from '@/types/coreDam/AssetSelect'
+import {
+  type AssetSelectReturnData,
+  AssetSelectReturnType,
+  type AssetSelectReturnTypeType,
+} from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { isNull } from '@/utils/common'
 
 export interface AssetSelectListItem {
   asset: AssetSearchListItemDto
   selected: boolean
+  active: boolean
 }
 
 export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
@@ -16,11 +22,12 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   const loader = ref(false)
   const selectedLicenceId = ref<IntegerId>(0)
   const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
-  const assetType = ref<AssetTypeValue>(AssetTypeValue.Default)
+  const assetType = ref<DamAssetTypeType>(DamAssetTypeDefault)
   const selectedAssets = ref<Map<DocId, AssetSelectListItem>>(new Map())
   const singleMode = ref(false)
   const minCount = ref(0)
   const maxCount = ref(0)
+  const activeItemIndex = ref<null | number>(null)
 
   function showLoader() {
     loader.value = true
@@ -43,7 +50,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     singleMode.value = value
   }
 
-  function setAssetType(value: DamAssetType) {
+  function setAssetType(value: DamAssetTypeType) {
     assetType.value = value
   }
 
@@ -60,6 +67,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
       return {
         asset: item,
         selected: false,
+        active: false,
       }
     })
   }
@@ -69,6 +77,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
       return {
         asset: asset,
         selected: false,
+        active: false,
       }
     })
     assetListItems.value = assetListItems.value.concat(assets)
@@ -96,6 +105,17 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     }
 
     removeFromSelected(assetListItems.value[index].asset.id)
+  }
+
+  function setActiveByIndex(index: number) {
+    const oldActiveIndex = activeItemIndex.value
+    if (index === activeItemIndex.value) return
+    if (!assetListItems.value[index]) return
+    assetListItems.value[index].active = true
+    activeItemIndex.value = index
+    if (isNull(oldActiveIndex)) return
+    if (!(oldActiveIndex in assetListItems.value)) return
+    assetListItems.value[oldActiveIndex].active = false
   }
 
   function unselectAllExcept(ignoreIndex: number) {
@@ -145,7 +165,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return assets
   }
 
-  function getSelectedData(type: AssetSelectReturnType): AssetSelectReturnData {
+  function getSelectedData(type: AssetSelectReturnTypeType): AssetSelectReturnData {
     switch (type) {
       case AssetSelectReturnType.AssetId:
         return {
@@ -181,7 +201,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   }
 
   const selectedSelectConfig = computed(() => {
-    const found = selectConfig.value.find((configItem ) => configItem.licence === selectedLicenceId.value)
+    const found = selectConfig.value.find((configItem) => configItem.licence === selectedLicenceId.value)
     if (found) return found
     return selectConfig.value[0]
   })
@@ -197,6 +217,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     selectedAssets,
     loader,
     assetListItems,
+    setActiveByIndex,
     getSelectedData,
     setAssetType,
     setSelectConfig,

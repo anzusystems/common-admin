@@ -116,11 +116,11 @@ export function useSortableActions(
     updatedPositions: SortableItemNewPositions = []
   ) => {
     const start = oldIndex > newIndex ? newIndex : oldIndex
-    let position = (props.positionMultiplier * start) + (props.positionMultiplier * 1)
+    let position = props.positionMultiplier * start + props.positionMultiplier * 1
     for (let i = start; i < items.length; i++) {
       objectSetValueByPath(items[i], props.positionField, position)
       touchDirty(items[i][props.keyField])
-      position = position + (props.positionMultiplier * 1)
+      position = position + props.positionMultiplier * 1
       updatedPositions.push({
         id: items[i].id,
         position: items[i].position,

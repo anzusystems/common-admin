@@ -7,7 +7,12 @@ import {
   AssetDetailTabImageWithRoi,
   useAssetDetailStore,
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
-import { type AssetDetailItemDto, DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import {
+  type AssetDetailItemDto,
+  DamAssetStatusDefault,
+  DamAssetType,
+  DamAssetTypeDefault,
+} from '@/types/coreDam/Asset'
 import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/components/AssetDetailDialogLoader.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
 import { AssetFileFailReason, assetFileIsImageFile } from '@/types/coreDam/AssetFile'
@@ -15,7 +20,11 @@ import AssetImageRoiSelect from '@/components/damImage/uploadQueue/components/As
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
-import { type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
+import {
+  type UploadQueueItem,
+  UploadQueueItemStatus,
+  type UploadQueueItemStatusType,
+} from '@/types/coreDam/UploadQueue'
 import { dateTimeNow } from '@/utils/datetime'
 import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
 import { useAlerts } from '@/composables/system/alerts'
@@ -81,10 +90,12 @@ const asset = computed<AssetDetailItemDto | null>(() => {
       assetType: item.value.assetType,
       assetStatus: item.value.assetStatus,
     },
+    mainFileSingleUse: false,
     flags: {
       described: false,
       visible: false,
     },
+    siblingToAsset: null,
     licence: item.value.licenceId,
     mainFile: null,
     keywords: [],
@@ -123,11 +134,11 @@ const onImageLoad = () => {
 }
 
 const assetType = computed(() => {
-  return asset.value?.attributes.assetType || DamAssetType.Default
+  return asset.value?.attributes.assetType || DamAssetTypeDefault
 })
 
 const assetStatus = computed(() => {
-  if (!asset.value) return DamAssetStatus.Default
+  if (!asset.value) return DamAssetStatusDefault
   return asset.value.attributes.assetStatus
 })
 
@@ -147,7 +158,7 @@ const isTypeDocument = computed(() => {
 const imageProperties = computed(() => {
   if (item.value?.imagePreview) {
     return {
-      url: item.value.imagePreview.url,
+      url: item.value.imagePreview.url + '?random=' + Date.now(),
       width: item.value.imagePreview.requestedWidth || undefined,
       height: item.value.imagePreview.requestedHeight || undefined,
       bgColor:
@@ -170,10 +181,12 @@ const assetMainFile = computed(() => {
   return asset.value?.mainFile || undefined
 })
 
+const processingStatuses: readonly UploadQueueItemStatusType[] = [
+  UploadQueueItemStatus.Processing,
+  UploadQueueItemStatus.Loading,
+]
 const processing = computed(() => {
-  return (
-    !isNull(item.value) && [UploadQueueItemStatus.Processing, UploadQueueItemStatus.Loading].includes(item.value.status)
-  )
+  return !isNull(item.value) && processingStatuses.includes(item.value.status)
 })
 const waiting = computed(() => {
   return !isNull(item.value) && item.value.status === UploadQueueItemStatus.Waiting
@@ -242,7 +255,7 @@ const onSaveAndApply = async () => {
   let description = ''
   let source = ''
   try {
-    const assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, items.value)
+    const assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, items.value, assetDetailStore.mainFileSingleUse)
     if (!assetsMetadataRes[0]) {
       throw new Error('Fatal error updating asset metadata')
     }
@@ -261,6 +274,9 @@ const onSaveAndApply = async () => {
           texts: {
             description: description,
             source: source,
+          },
+          flags: {
+            showSource: true,
           },
           dam: {
             damId: item.fileId ?? '',
@@ -304,6 +320,7 @@ onMounted(() => {
   <VDialog
     :model-value="true"
     fullscreen
+    eager
   >
     <AssetDetailDialogLoader
       v-if="loading || !item"
@@ -449,7 +466,22 @@ onMounted(() => {
               :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
               @on-save="onSave"
               @on-save-and-apply="onSaveAndApply"
-            />
+            >
+              <template #prepend-sidebar>
+                <div
+                  v-if="item?.isDuplicate"
+                  class="text-caption text-warning px-3 py-2"
+                >
+                  {{ t('common.damImage.asset.detail.info.status.duplicate') }}
+                </div>
+                <div
+                  v-if="item?.isDuplicate && item?.mainFileSingleUse"
+                  class="text-caption text-error px-3 py-2"
+                >
+                  {{ t('common.damImage.asset.model.mainFileSingleUse') }}
+                </div>
+              </template>
+            </UploadQueueDialogSingleSidebar>
           </div>
         </div>
       </div>

@@ -11,16 +11,17 @@ import type { IntegerId } from '@/types/common'
 export const useAuthorSelectActions = (extSystem: IntegerId) => {
   const { damClient } = useCommonAdminCoreDamOptions()
   const { getDamConfigExtSystem } = useDamConfigState()
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+
   const configExtSystem = getDamConfigExtSystem(extSystem)
   if (isUndefined(configExtSystem)) {
-    throw new Error('Ext system must be initialised.')
+    throw new Error('useAuthorSelectActions: Ext system must be initialised.')
   }
 
   const mapToMinimal = (author: DamAuthor): DamAuthorMinimal => ({
     id: author.id,
     name: author.name,
     identifier: author.identifier,
+    reviewed: author.flags.reviewed,
   })
 
   const mapToValueObject = (author: DamAuthor): ValueObjectOption<string> => ({
@@ -48,10 +49,15 @@ export const useAuthorSelectActions = (extSystem: IntegerId) => {
     return mapToValueObjects(await fetchAuthorListByIds(damClient, extSystem, ids))
   }
 
+  const fetchItemsMinimalByIds = async (ids: string[]) => {
+    return mapToMinimals(await fetchAuthorListByIds(damClient, extSystem, ids))
+  }
+
   return {
     mapToValueObject,
     fetchItems,
     fetchItemsByIds,
     fetchItemsMinimal,
+    fetchItemsMinimalByIds,
   }
 }

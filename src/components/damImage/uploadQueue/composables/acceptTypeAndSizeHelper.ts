@@ -1,12 +1,12 @@
-import { DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { computed } from 'vue'
 import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 
 export function useDamAcceptTypeAndSizeHelper(
-  assetType: undefined | DamAssetType = undefined,
+  assetType: undefined | DamAssetTypeType = undefined,
   damConfigExtSystem: DamExtSystemConfig
 ) {
-  const createSizesByAssetType = (assetType: DamAssetType) => {
+  const createSizesByAssetType = (assetType: DamAssetTypeType) => {
     const sizes: Record<string, number> = {}
     for (let i = 0; i < damConfigExtSystem[assetType].mimeTypes.length; i++) {
       sizes[damConfigExtSystem[assetType].mimeTypes[i]] = damConfigExtSystem[assetType].sizeLimit
@@ -37,4 +37,3 @@ export function useDamAcceptTypeAndSizeHelper(
     uploadAccept,
   }
 }
-

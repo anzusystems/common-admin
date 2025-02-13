@@ -7,6 +7,8 @@ import { dateTimeNow } from '@/utils/datetime'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
+import { type DemoCompareDates, useCompareValidators } from '@/playground/datetimeView/validators'
+import ARow from '@/components/ARow.vue'
 
 const dateTime = ref<DatetimeUTCNullable>('2023-02-08T08:17:29.000000Z')
 const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)
@@ -14,6 +16,21 @@ const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)
 const changeToNow = () => {
   dateTimeDefaultNull.value = dateTimeNow()
   dateTime.value = dateTimeNow()
+}
+
+const article = ref<DemoCompareDates>({
+  dates: {
+    publicPublishedAt: '2024-11-23T20:25:00.000000Z',
+    publicUpdatedAt: null,
+    publishedAt: '2020-11-23T20:25:00.000000Z',
+  },
+})
+
+const { v$ } = useCompareValidators(article)
+
+const datesCompareValidate = () => {
+  v$.value.$touch()
+  console.log(v$.value.$invalid)
 }
 </script>
 
@@ -36,13 +53,11 @@ const changeToNow = () => {
   </VCard>
 
   <VCard>
-    <VCardTitle>
-      ADatetimePicker component basic
-    </VCardTitle>
+    <VCardTitle> ADatetimePicker component basic</VCardTitle>
     <VCardText>
       <p class="mb-4">
-        (always prefer to use AFormDatetimePicker or AFilterDatetimePicker version, this is a helper component
-        for them with main functionality of datetime picking)
+        (always prefer to use AFormDatetimePicker or AFilterDatetimePicker version, this is a helper component for them
+        with main functionality of datetime picking)
       </p>
       <VRow>
         <VCol>
@@ -130,6 +145,36 @@ const changeToNow = () => {
           />
         </VCol>
       </VRow>
+    </VCardText>
+  </VCard>
+  <VCard>
+    <VCardTitle>AFormDatetimePicker useValidateDate dates compare test</VCardTitle>
+    <VCardText>
+      <ARow>
+        <AFormDatetimePicker
+          v-model="article.dates.publicPublishedAt"
+          label="publicPublishedAt"
+          :v="v$.article.dates.publicPublishedAt"
+        />
+      </ARow>
+      <ARow>
+        <AFormDatetimePicker
+          v-model="article.dates.publicUpdatedAt"
+          clearable
+          label="publicUpdatedAt"
+          :v="v$.article.dates.publicUpdatedAt"
+        />
+      </ARow>
+      <ARow>
+        <AFormDatetimePicker
+          v-model="article.dates.publishedAt"
+          label="publishedAt"
+          :v="v$.article.dates.publishedAt"
+        />
+      </ARow>
+      <VBtn @click.stop="datesCompareValidate">
+        Validate
+      </VBtn>
     </VCardText>
   </VCard>
 </template>

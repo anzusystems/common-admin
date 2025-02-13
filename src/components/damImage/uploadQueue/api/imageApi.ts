@@ -42,7 +42,7 @@ export const bulkUpdateImages = (client: () => AxiosInstance, items: ImageCreate
             return res.status === HTTP_STATUS_OK
           })
         ) {
-          const images: ImageAware[] = responses.flatMap(response => response.data.images)
+          const images: ImageAware[] = responses.flatMap((response) => response.data.images)
           return resolve(images)
         } else {
           return reject(responses)

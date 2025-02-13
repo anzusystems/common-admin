@@ -23,7 +23,7 @@ const props = withDefaults(
     extSystem: IntegerId
     initialValue?: string
     disableRedirect?: boolean
-    variant?: 'button' | 'icon'
+    variant?: 'button' | 'icon' | 'listItem'
     buttonT?: string
     buttonClass?: string
     dataCy?: string
@@ -50,7 +50,7 @@ const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
 if (isUndefined(configExtSystem)) {
-  throw new Error('Ext system must be initialised.')
+  throw new Error('KeywordCreateButton: Ext system must be initialised.')
 }
 
 const { createDefault } = useDamKeywordFactory()
@@ -61,7 +61,7 @@ const buttonLoading = ref(false)
 
 const onClick = () => {
   if (isUndefined(configExtSystem)) {
-    throw new Error('Ext system must be initialised.')
+    throw new Error('KeywordCreateButton: Ext system must be initialised.')
   }
   keyword.value = createDefault(props.extSystem, true)
   keyword.value.name = props.initialValue
@@ -103,8 +103,16 @@ const onConfirm = async () => {
 </script>
 
 <template>
+  <VListItem v-if="variant === 'listItem'">
+    <ABtnSecondary
+      size="small"
+      :text="initialValue"
+      prepend-icon="mdi-plus-circle"
+      @click.stop="onClick"
+    />
+  </VListItem>
   <ABtnPrimary
-    v-if="variant === 'button'"
+    v-else-if="variant === 'button'"
     :class="buttonClass"
     :data-cy="dataCy"
     :disabled="disabled"

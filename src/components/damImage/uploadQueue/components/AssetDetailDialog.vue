@@ -7,7 +7,7 @@ import {
   AssetDetailTabImageWithRoi,
   useAssetDetailStore,
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
-import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetStatusDefault, DamAssetType, DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/components/AssetDetailDialogLoader.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
 import AssetDetailDialogSidebar from '@/components/damImage/uploadQueue/components/AssetDetailDialogSidebar.vue'
@@ -47,11 +47,11 @@ const onImageLoad = () => {
 }
 
 const assetType = computed(() => {
-  return asset.value?.attributes.assetType || DamAssetType.Default
+  return asset.value?.attributes.assetType || DamAssetTypeDefault
 })
 
 const assetStatus = computed(() => {
-  if (!asset.value) return DamAssetStatus.Default
+  if (!asset.value) return DamAssetStatusDefault
   return asset.value.attributes.assetStatus
 })
 
@@ -71,7 +71,7 @@ const isTypeDocument = computed(() => {
 const imageProperties = computed(() => {
   if (asset.value?.mainFile && asset.value.mainFile.links && asset.value.mainFile.links.image_detail) {
     return {
-      url: asset.value.mainFile.links.image_detail.url,
+      url: asset.value.mainFile.links.image_detail.url + '?random=' + Date.now(),
       width: asset.value.mainFile.links.image_detail.width,
       height: asset.value.mainFile.links.image_detail.height,
       bgColor:
@@ -103,6 +103,7 @@ const assetMainFile = computed(() => {
   <VDialog
     :model-value="true"
     fullscreen
+    eager
   >
     <AssetDetailDialogLoader
       v-if="loading"
