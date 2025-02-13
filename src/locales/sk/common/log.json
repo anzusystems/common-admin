@@ -14,7 +14,9 @@
     "datetimeFrom": "Dátum od",
     "datetimeTo": "Dátum do",
     "message": "Správa",
-    "appVersion": "Verzia"
+    "appVersion": "Verzia",
+    "resourceName": "Názov entity",
+    "resourceIds": "ID entity"
   },
   "model": {
     "id": "ID",
