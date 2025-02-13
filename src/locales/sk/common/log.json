@@ -30,7 +30,9 @@
       "content": "Obsah požiadavky",
       "response": "Obsah odpovede",
       "path": "URL",
-      "httpStatus": "Kód stavu"
+      "httpStatus": "Kód stavu",
+      "resourceName": "Názov entity",
+      "resourceIds": "ID entity"
     }
   }
 }

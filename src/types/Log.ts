@@ -14,6 +14,8 @@ export interface Log {
     method: string
     contextId: string
     userId: IntegerIdNullable
+    resourceName: string
+    resourceIds: string[]
     ip: string
     response: string
     content?: string

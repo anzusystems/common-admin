@@ -30,7 +30,9 @@
       "content": "Request content",
       "response": "Response content",
       "path": "URL",
-      "httpStatus": "Status code"
+      "httpStatus": "Status code",
+      "resourceName": "Entity name",
+      "resourceIds": "Entity ID"
     }
   }
 }
