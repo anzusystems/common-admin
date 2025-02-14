@@ -208,7 +208,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^2.3.2"
     "@stylistic/eslint-plugin": "npm:^3.1.0"
     "@tsconfig/node22": "npm:^22.0.0"
-    "@types/node": "npm:^22.13.2"
+    "@types/node": "npm:^22.13.4"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -218,8 +218,8 @@ __metadata:
     "@vue/tsconfig": "npm:0.7.0"
     "@vuelidate/core": "npm:^2.0.3"
     "@vuelidate/validators": "npm:^2.0.4"
-    "@vueuse/core": "npm:^12.5.0"
-    "@vueuse/integrations": "npm:^12.5.0"
+    "@vueuse/core": "npm:^12.6.1"
+    "@vueuse/integrations": "npm:^12.6.1"
     axios: "npm:1.7.9"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.13"
@@ -230,9 +230,9 @@ __metadata:
     postcss: "npm:^8.5.2"
     postcss-html: "npm:^1.8.0"
     postcss-prefix-selector: "npm:^2.1.0"
-    prettier: "npm:^3.5.0"
+    prettier: "npm:^3.5.1"
     rusha: "npm:^0.8.14"
-    sass: "npm:^1.84.0"
+    sass: "npm:^1.85.0"
     socket.io-client: "npm:4.8.1"
     sortablejs: "npm:^1.15.6"
     stylelint: "npm:16.14.1"
@@ -254,8 +254,8 @@ __metadata:
   peerDependencies:
     "@vuelidate/core": 2.0.3
     "@vuelidate/validators": 2.0.4
-    "@vueuse/core": 12.5.0
-    "@vueuse/integrations": 12.5.0
+    "@vueuse/core": 12.6.1
+    "@vueuse/integrations": 12.6.1
     axios: 1.7.9
     dayjs: 1.11.13
     pinia: 3.0.1
@@ -1855,12 +1855,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.13.2":
-  version: 22.13.2
-  resolution: "@types/node@npm:22.13.2"
+"@types/node@npm:*, @types/node@npm:^22.13.4":
+  version: 22.13.4
+  resolution: "@types/node@npm:22.13.4"
   dependencies:
     undici-types: "npm:~6.20.0"
-  checksum: 10/1d033a01a3dbcd0e305f46b0e61b8d697e5675392e6ca5a14b1f44240da14bb4949dd2731aff528a4cd5f160883d44df17e64b7f741aab4d735201dd6321182d
+  checksum: 10/716e05b1b84d9da3b2cbba9f642d7294549a89c85d27148b48815f321e0081d0546366e97d11c7710a3280160828512eb945f4e9361dda980f708473758ac0a7
   languageName: node
   linkType: hard
 
@@ -2349,24 +2349,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/core@npm:12.5.0, @vueuse/core@npm:^12.4.0, @vueuse/core@npm:^12.5.0":
-  version: 12.5.0
-  resolution: "@vueuse/core@npm:12.5.0"
+"@vueuse/core@npm:12.6.1, @vueuse/core@npm:^12.4.0, @vueuse/core@npm:^12.6.1":
+  version: 12.6.1
+  resolution: "@vueuse/core@npm:12.6.1"
   dependencies:
     "@types/web-bluetooth": "npm:^0.0.20"
-    "@vueuse/metadata": "npm:12.5.0"
-    "@vueuse/shared": "npm:12.5.0"
+    "@vueuse/metadata": "npm:12.6.1"
+    "@vueuse/shared": "npm:12.6.1"
     vue: "npm:^3.5.13"
-  checksum: 10/c9bfe7f5e33ce57df2a2dea51a3e4c9b094f365e34e97348138f2ed831fb1a6b0af812c5259b7ddab22769f6ca6a6b9d04a357bcabd1d21cd14f22b5eb4b961f
+  checksum: 10/4f410b85747307e6fbcecf29252a8a4c5fbc16d6c6462180c27982d7cd2a679ab994ec843816985731fdf402f3573c55cb8cf050722d78b8c801512520611c44
   languageName: node
   linkType: hard
 
-"@vueuse/integrations@npm:^12.4.0, @vueuse/integrations@npm:^12.5.0":
-  version: 12.5.0
-  resolution: "@vueuse/integrations@npm:12.5.0"
+"@vueuse/integrations@npm:^12.4.0, @vueuse/integrations@npm:^12.6.1":
+  version: 12.6.1
+  resolution: "@vueuse/integrations@npm:12.6.1"
   dependencies:
-    "@vueuse/core": "npm:12.5.0"
-    "@vueuse/shared": "npm:12.5.0"
+    "@vueuse/core": "npm:12.6.1"
+    "@vueuse/shared": "npm:12.6.1"
     vue: "npm:^3.5.13"
   peerDependencies:
     async-validator: ^4
@@ -2406,23 +2406,23 @@ __metadata:
       optional: true
     universal-cookie:
       optional: true
-  checksum: 10/abccd8748a0051ba5a76f4fb715aa5b6ebe53e3a4002248c9cbf9516636524d52e5724fba3d7613d88d9bfef1baa9bce72fb6e69ed503dec6251ac33d2335f6e
+  checksum: 10/74f4f12ea13f0497c0d5bf03dec405b28b07d49267af57b092ea2d9cc979bb800203ad423f139a0f5864ca40cf00fde397c42926aa48439a5015242e3a7e1ff8
   languageName: node
   linkType: hard
 
-"@vueuse/metadata@npm:12.5.0":
-  version: 12.5.0
-  resolution: "@vueuse/metadata@npm:12.5.0"
-  checksum: 10/f28b7a2ecbee1654e2c4171ccdca7eb6c255d57201add002762b8b93352059f2837d8b405a23f0efd2ce4f26070b45d3f3af395e247acfc6c30622b4222e24e6
+"@vueuse/metadata@npm:12.6.1":
+  version: 12.6.1
+  resolution: "@vueuse/metadata@npm:12.6.1"
+  checksum: 10/0a62a6671f140eeec4abdc53753253fd0f2e6e02305b3a75a2f0596bc4982b6f337c7a3eb87bcd5304793feafdf942e14b37c995799e3bf8b14df952be8855a5
   languageName: node
   linkType: hard
 
-"@vueuse/shared@npm:12.5.0":
-  version: 12.5.0
-  resolution: "@vueuse/shared@npm:12.5.0"
+"@vueuse/shared@npm:12.6.1":
+  version: 12.6.1
+  resolution: "@vueuse/shared@npm:12.6.1"
   dependencies:
     vue: "npm:^3.5.13"
-  checksum: 10/276c2ae6e565dd5762a2b75023d8dfd4551a26abd3ad8c7bd8a5a1f8a64cd3747fc2b46c6914ef78ef9ebd17196b4ec1c70df043aa0b1ab6b630346a39dca150
+  checksum: 10/fb7ea951acd42c9f67a29c6909d0203611995fc2849d79ca03a4f260edaefa5f2de4ceacf76e90636f6d23473107176d952f31828a75814b98f13219a3dd42c6
   languageName: node
   linkType: hard
 
@@ -6141,12 +6141,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.5.0":
-  version: 3.5.0
-  resolution: "prettier@npm:3.5.0"
+"prettier@npm:^3.5.1":
+  version: 3.5.1
+  resolution: "prettier@npm:3.5.1"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/fc26c74bd317282f2a49ffe3ac0ffa79adbe6b2d7a1cdcadd96acf7fec77d3fa45b15f3728c1a2f281f4beccb35d97207187452a581d4919d18b460d0c37e480
+  checksum: 10/09ab168e651e50c2c79804d65f17a68129ce1c573830b2fb08c988b585add8076b8d995789034d66a14338d6b8835e8c591e0fc1bc90f4344af9645738636d01
   languageName: node
   linkType: hard
 
@@ -6471,9 +6471,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.84.0":
-  version: 1.84.0
-  resolution: "sass@npm:1.84.0"
+"sass@npm:^1.85.0":
+  version: 1.85.0
+  resolution: "sass@npm:1.85.0"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^4.0.0"
@@ -6484,7 +6484,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10/e0c093f13800276f7441c6925aa707dbba59a7ecd6e21925f1e04980970c3fb18b1cc5e7193f9bbed569a87dfb41ed780f5c6153f0b3def3e0ae1ccf80cf282e
+  checksum: 10/4af4627505087b692a29c575f346b12e30a3f58dd0254832ebc9ccff456e6f8a2c16d1f9b45d83d6aaae867e6fb54b98c485ddf79a226e328d595b54725c7f84
   languageName: node
   linkType: hard
 
