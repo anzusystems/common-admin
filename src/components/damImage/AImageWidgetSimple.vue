@@ -17,24 +17,30 @@ const props = withDefaults(
     configName?: string
     label?: string | undefined
     width?: number | undefined
+    height?: undefined | number
     disableAspectRatio?: boolean
     aspectRatio?: number | string
     showDescription?: boolean
     showSource?: boolean
     damWidth?: undefined | number
     damHeight?: undefined | number
+    useHtmlImg?: boolean
+    widgetClass?: string | undefined
   }>(),
   {
     configName: 'default',
     label: undefined,
     image: undefined,
     width: undefined,
+    height: undefined,
     disableAspectRatio: false,
     aspectRatio: 1.777, // 16/9
     showDescription: false,
     showSource: false,
     damWidth: undefined,
     damHeight: undefined,
+    useHtmlImg: false,
+    widgetClass: undefined,
   }
 )
 
@@ -94,13 +100,24 @@ watch(
   >
     {{ label }}
   </h4>
+  <img
+    v-if="useHtmlImg"
+    alt=""
+    :src="resolvedSrc"
+    :width="width"
+    :height="height"
+    :class="widgetClass"
+  />
   <VImg
+    v-else
     :lazy-src="imagePlaceholderPath"
     :src="resolvedSrc"
     :width="width"
+    :height="height"
     cover
     max-width="100%"
     class="disable-radius"
+    :class="widgetClass"
     :aspect-ratio="disableAspectRatio ? undefined : aspectRatio"
   >
     <template #placeholder>
@@ -112,23 +129,26 @@ watch(
       </div>
     </template>
   </VImg>
-  <div class="pa-2">
+  <div
+    class="pa-2"
+    v-if="resImage && (showDescription || showSource)"
+  >
     <VRow
-      v-if="showDescription && resImage"
+      v-if="showDescription"
       dense
     >
       <VCol>
         <span class="text-caption text-medium-emphasis">{{ t('common.damImage.image.model.texts.description') }}:</span>
-        <br>{{ resImage.texts.description }}
+        <br />{{ resImage.texts.description }}
       </VCol>
     </VRow>
     <VRow
-      v-if="showSource && resImage"
+      v-if="showSource"
       dense
     >
       <VCol>
         <span class="text-caption text-medium-emphasis"> {{ t('common.damImage.image.model.texts.source') }}:</span>
-        <br>{{ resImage.texts.source }}
+        <br />{{ resImage.texts.source }}
       </VCol>
     </VRow>
   </div>
