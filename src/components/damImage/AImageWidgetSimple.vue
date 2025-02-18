@@ -107,7 +107,7 @@ watch(
     :width="width"
     :height="height"
     :class="widgetClass"
-  />
+  >
   <VImg
     v-else
     :lazy-src="imagePlaceholderPath"
@@ -130,8 +130,8 @@ watch(
     </template>
   </VImg>
   <div
-    class="pa-2"
     v-if="resImage && (showDescription || showSource)"
+    class="pa-2"
   >
     <VRow
       v-if="showDescription"
@@ -139,7 +139,7 @@ watch(
     >
       <VCol>
         <span class="text-caption text-medium-emphasis">{{ t('common.damImage.image.model.texts.description') }}:</span>
-        <br />{{ resImage.texts.description }}
+        <br>{{ resImage.texts.description }}
       </VCol>
     </VRow>
     <VRow
@@ -148,7 +148,7 @@ watch(
     >
       <VCol>
         <span class="text-caption text-medium-emphasis"> {{ t('common.damImage.image.model.texts.source') }}:</span>
-        <br />{{ resImage.texts.source }}
+        <br>{{ resImage.texts.source }}
       </VCol>
     </VRow>
   </div>
