@@ -10,6 +10,8 @@ import useVuelidate from '@vuelidate/core'
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)
 const imageId3 = ref<IntegerIdNullable>(null)
+const media = ref<IntegerIdNullable>(null)
+const imageId4 = ref<IntegerIdNullable>(null)
 
 const v$ = useVuelidate({ $scope: 'aaa' })
 const isValid = ref<boolean | null>(null)
@@ -120,6 +122,18 @@ const saveInsideDialog = () => {
               </VCardActions>
             </VCard>
           </VDialog>
+        </VCol>
+        <VCol cols="4">
+          Media
+          <AImageWidget
+            v-model="imageId4"
+            v-model:media="media"
+            :upload-licence="100000"
+            :select-licences="[100000, 100001]"
+            queue-key="media"
+            mode="media"
+            label="Priority content"
+          />
         </VCol>
       </VRow>
     </VCardText>

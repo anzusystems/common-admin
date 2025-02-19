@@ -48,12 +48,14 @@ import {
   CollabFieldLockType,
 } from '@/components/collab/composables/collabEventBus'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import AAssetSelectMedia from '@/components/dam/assetSelect/AAssetSelectMedia.vue'
 
 const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    mode?: 'image' | 'media'
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -73,6 +75,7 @@ const props = withDefaults(
     damHeight?: undefined | number
   }>(),
   {
+    mode: 'image',
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
@@ -99,7 +102,8 @@ const emit = defineEmits<{
   (e: 'afterMetadataSaveSuccess'): void
 }>()
 
-const modelValue = defineModel<IntegerIdNullable>({ required: true })
+const modelValue = defineModel<IntegerIdNullable>({ required: true }) // image
+const media = defineModel<IntegerIdNullable>('media', { default: null, required: false }) // media
 const showDamAuthorsInCmsImage = ref(false)
 
 // Collaboration
@@ -319,6 +323,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   let description = ''
   let source = ''
   if (data.type === 'asset') {
+    console.log(data.value[0])
     if (!data.value[0] || !data.value[0].mainFile) return
     try {
       const assetRes = await fetchAsset(damClient, data.value[0].id)
@@ -566,6 +571,7 @@ defineExpose({
               :file-input-key="uploadQueue?.fileInputKey"
               :accept="uploadAccept"
               :max-sizes="uploadSizes"
+              toolbar-t="common.damImage.image.button.upload"
               @files-input="onFileInput"
             >
               <template #activator="{ props: fileInputProps }">
@@ -619,6 +625,7 @@ defineExpose({
                     :file-input-key="uploadQueue?.fileInputKey"
                     :accept="uploadAccept"
                     :max-sizes="uploadSizes"
+                    toolbar-t="common.damImage.image.button.upload"
                     @files-input="onFileInput"
                   >
                     <template #activator="{ props: fileInputProps }">
@@ -693,11 +700,21 @@ defineExpose({
     />
   </div>
   <AAssetSelect
+    v-if="mode==='image'"
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
     :min-count="1"
     :max-count="1"
     :asset-type="DamAssetType.Image"
+    return-type="asset"
+    @on-confirm="onAssetSelectConfirm"
+  />
+  <AAssetSelectMedia
+    v-if="mode==='media'"
+    v-model="assetSelectDialog"
+    :select-licences="selectLicences"
+    :min-count="1"
+    :max-count="1"
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
   />

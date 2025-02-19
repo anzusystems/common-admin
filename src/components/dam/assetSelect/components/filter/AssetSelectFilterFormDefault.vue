@@ -1,12 +1,16 @@
 <script lang="ts" setup>
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AFilterString from '@/components/filter/AFilterString.vue'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore.ts'
+import { storeToRefs } from 'pinia'
 
 const { filter, fetchAssetList, filterTouch, filterUnTouch } = useAssetSelectActions()
+const assetSelectStore = useAssetSelectStore()
+const { assetType } = storeToRefs(assetSelectStore)
 
 const submitFilter = () => {
   filterUnTouch()
-  fetchAssetList()
+  fetchAssetList(assetType.value)
 }
 
 const onAnyFilterUpdate = () => {

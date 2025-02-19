@@ -15,7 +15,7 @@
     "button": {
       "options": "Upraviť obrázok",
       "editAsset": "Upraviť v DAM",
-      "upload": "Nahrať",
+      "upload": "Nahrať obrázok",
       "addFromDam": "Pridať z DAM",
       "replaceFromDam": "Vymeniť z DAM",
       "removeImage": "Odstrániť obrázok"

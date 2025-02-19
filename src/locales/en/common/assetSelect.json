@@ -43,7 +43,14 @@
     "assetAndMainFileIds": "Id",
     "keywordIds": "Klúčové slová",
     "authorIds": "Autori",
-    "createdByIds": "Založené používateľmi"
+    "createdByIds": "Založené používateľmi",
+    "inPodcast": "Podcast"
+  },
+  "assetType": {
+    "image": "Image",
+    "audio": "Audio",
+    "video": "Video",
+    "document": "Document"
   },
   "error": {
     "unallowedLicence": "Nemáte práva na licenciu v DAM"

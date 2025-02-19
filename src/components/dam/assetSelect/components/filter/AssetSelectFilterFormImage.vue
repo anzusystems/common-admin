@@ -12,7 +12,7 @@ import { storeToRefs } from 'pinia'
 const { filter, filterTouch, filterUnTouch, fetchAssetList } = useAssetSelectActions()
 
 const assetSelectStore = useAssetSelectStore()
-const { selectConfig, selectedLicenceId } = storeToRefs(assetSelectStore)
+const { selectConfig, selectedLicenceId, assetType } = storeToRefs(assetSelectStore)
 
 const extSystem = computed(() => {
   const found = selectConfig.value.find((config) => config.licence === selectedLicenceId.value)
@@ -28,7 +28,7 @@ const onAnyFilterUpdate = () => {
 
 const submitFilter = () => {
   filterUnTouch()
-  fetchAssetList()
+  fetchAssetList(assetType.value)
 }
 
 watch(extSystem, (newValue, oldValue) => {

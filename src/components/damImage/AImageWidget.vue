@@ -15,10 +15,11 @@ import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables
 
 const props = withDefaults(
   defineProps<{
-    modelValue: IntegerIdNullable
+    modelValue: IntegerIdNullable // image
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    mode?: 'image' | 'media'
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -38,6 +39,7 @@ const props = withDefaults(
     damHeight?: undefined | number
   }>(),
   {
+    mode: 'image',
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
@@ -65,6 +67,7 @@ const emit = defineEmits<{
   (e: 'afterMetadataSaveSuccess'): void
 }>()
 
+const media = defineModel<IntegerIdNullable>('media', { default: null, required: false }) // media
 const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading')
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -124,6 +127,7 @@ defineExpose({
   <ImageWidgetInner
     v-if="status === 'ready'"
     ref="innerComponent"
+    v-model:media="media"
     v-bind="props"
     @update:model-value="emit('update:modelValue', $event)"
     @after-metadata-save-success="emit('afterMetadataSaveSuccess')"

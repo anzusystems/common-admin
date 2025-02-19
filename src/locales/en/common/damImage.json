@@ -15,7 +15,7 @@
     "button": {
       "options": "Edit image",
       "editAsset": "Edit in DAM",
-      "upload": "Upload",
+      "upload": "Upload image",
       "addFromDam": "Add from DAM",
       "replaceFromDam": "Replace from DAM",
       "removeImage": "Remove image"

@@ -3,7 +3,7 @@ import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
-import type { AssetDetailItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
+import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { usePagination } from '@/composables/system/pagination'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { useAlerts } from '@/composables/system/alerts'
@@ -21,8 +21,19 @@ import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelect
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
+pagination.sortBy = null
 const filterIsTouched = ref(false)
 const detailLoading = ref(false)
+
+function resolveTypeFilter(assetType: DamAssetTypeType | 'podcast') {
+  if (assetType === 'podcast') {
+    filter.type.model = [DamAssetType.Audio]
+    filter.inPodcast.model = true
+    return
+  }
+  filter.type.model = [assetType]
+  filter.inPodcast.model = false
+}
 
 export function useAssetSelectActions(
   configName = 'default',
@@ -38,8 +49,9 @@ export function useAssetSelectActions(
   const { resetFilter } = useFilterHelpers()
   const { showErrorsDefault } = useAlerts()
 
-  const fetchAssetList = async () => {
+  const fetchAssetList = async (assetType: DamAssetTypeType | 'podcast') => {
     pagination.page = 1
+    resolveTypeFilter(assetType)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.setList(
@@ -51,8 +63,10 @@ export function useAssetSelectActions(
       assetSelectStore.hideLoader()
     }
   }
-  const fetchNextPage = async () => {
+
+  const fetchNextPage = async (assetType: DamAssetTypeType | 'podcast') => {
     pagination.page = pagination.page + 1
+    resolveTypeFilter(assetType)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.appendList(
@@ -96,7 +110,9 @@ export function useAssetSelectActions(
   const resetAssetList = async () => {
     assetSelectStore.reset()
     filter.type.default = [assetSelectStore.assetType]
-    resetFilter(filter, pagination, fetchAssetList)
+    resetFilter(filter, pagination)
+    resolveTypeFilter(assetSelectStore.assetType)
+    await fetchAssetList(assetSelectStore.assetType)
   }
 
   const filterTouch = () => {
@@ -108,7 +124,7 @@ export function useAssetSelectActions(
 
   const initStoreContext = (
     selectConfig: DamConfigLicenceExtSystemReturnType[],
-    assetType: DamAssetTypeType,
+    assetType: DamAssetTypeType | 'podcast',
     singleMode: boolean,
     minCount: number,
     maxCount: number

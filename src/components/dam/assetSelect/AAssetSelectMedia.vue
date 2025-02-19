@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import type { AssetDetailItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
+import { type AssetDetailItemDto } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -28,7 +28,6 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 
 const props = withDefaults(
   defineProps<{
-    assetType: DamAssetTypeType
     minCount: number
     maxCount: number
     selectLicences: IntegerId[]
@@ -60,6 +59,7 @@ const {
   loader,
   pagination,
   fetchNextPage,
+  fetchAssetList,
   resetAssetList,
   getSelectedData,
   initStoreContext,
@@ -68,12 +68,11 @@ const {
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
-
 const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId, assetType: assetTypeStore } = storeToRefs(assetSelectStore)
+const { selectedLicenceId, assetType } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
@@ -92,7 +91,7 @@ const onOpen = () => {
 
   initStoreContext(
     selectConfigLocal,
-    props.assetType,
+    assetType.value,
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
     props.maxCount
@@ -123,7 +122,7 @@ const onConfirm = () => {
 
 const autoloadOnIntersect = (isIntersecting: boolean) => {
   if (isIntersecting && pagination.hasNextPage === true) {
-    fetchNextPage(assetTypeStore.value)
+    fetchNextPage(assetType.value)
   }
 }
 
@@ -225,7 +224,10 @@ defineExpose({
             {{ t('common.assetSelect.meta.texts.title') }}
           </slot>
         </ADialogToolbar>
-        <AssetSelectListBar />
+        <AssetSelectListBar
+          show-types
+          @type-change="fetchAssetList(assetType)"
+        />
         <div
           class="subject-select__main"
           :class="{
@@ -304,7 +306,5 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
-  <div v-else>
-    Error, no select licence.
-  </div>
+  <div v-else>Error, no select licence.</div>
 </template>
