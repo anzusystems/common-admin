@@ -1,8 +1,7 @@
 import type { DocIdNullable, IntegerId } from '@/types/common.ts'
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 
-export interface MediaAware extends AnzuUserAndTimeTrackingAware {
-  id: IntegerId
+export interface MediaAware {
+  id?: IntegerId
   extService: MediaExtServiceType
   dam: DamMedia
 }

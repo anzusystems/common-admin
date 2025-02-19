@@ -49,6 +49,9 @@ import {
 } from '@/components/collab/composables/collabEventBus'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import AAssetSelectMedia from '@/components/dam/assetSelect/AAssetSelectMedia.vue'
+import { useMediaStore } from '@/components/damImage/uploadQueue/composables/mediaStore.ts'
+import { type MediaAware, MediaExtService } from '@/types/MediaAware.ts'
+import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -314,19 +317,54 @@ watch(
 )
 
 const assetSelectStore = useAssetSelectStore()
+const mediaStore = useMediaStore()
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
+  if (data.type !== 'asset' || !data.value[0]) return
   metadataDialogLoading.value = true
   imageStore.setImageDetail(null)
   metadataDialog.value = true
   showDamAuthorsInCmsImage.value = false
   let description = ''
   let source = ''
-  if (data.type === 'asset') {
-    console.log(data.value[0])
-    if (!data.value[0] || !data.value[0].mainFile) return
+  const selectedAsset = data.value[0]
+  if (!selectedAsset.mainFile) return
+  if (selectedAsset.attributes.assetType === 'video' && assetFileIsVideoFile(selectedAsset.mainFile)) {
+    // video
+    const mediaData: MediaAware = {
+      extService: MediaExtService.DamVideo,
+      dam: {
+        imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
+        assetId: selectedAsset.id,
+        licenceId: selectedAsset.licence,
+      },
+    }
+    if (!isNull(media.value)) {
+      mediaData.id = media.value
+    }
+    mediaStore.mediaDetail = mediaData
+  } else if (
+    selectedAsset.attributes.assetType === 'audio' &&
+    selectedAsset.podcasts.length > 0 &&
+    assetFileIsAudioFile(selectedAsset.mainFile)
+  ) {
+    // podcast audio
+    const mediaData: MediaAware = {
+      extService: MediaExtService.DamPodcast,
+      dam: {
+        imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
+        assetId: selectedAsset.id,
+        licenceId: selectedAsset.licence,
+      },
+    }
+    if (!isNull(media.value)) {
+      mediaData.id = media.value
+    }
+    mediaStore.mediaDetail = mediaData
+  } else if (selectedAsset.attributes.assetType === 'image') {
+    // image
     try {
-      const assetRes = await fetchAsset(damClient, data.value[0].id)
+      const assetRes = await fetchAsset(damClient, selectedAsset.id)
       if (isString(assetRes.metadata.customData?.description)) {
         description = assetRes.metadata.customData.description.trim()
       }
@@ -353,9 +391,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         showSource: true,
       },
       dam: {
-        damId: data.value[0].mainFile.id,
+        damId: selectedAsset.mainFile.id,
         regionPosition: 0,
-        licenceId: data.value[0].licence,
+        licenceId: selectedAsset.licence,
       },
       position: 1,
     }
@@ -363,9 +401,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       image.id = modelValue.value
     }
     imageStore.setImageDetail(image)
-    metadataDialogLoading.value = false
-    forceReloadViewWithExpandMetadata()
   }
+  metadataDialogLoading.value = false
+  forceReloadViewWithExpandMetadata()
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -700,7 +738,7 @@ defineExpose({
     />
   </div>
   <AAssetSelect
-    v-if="mode==='image'"
+    v-if="mode === 'image'"
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
     :min-count="1"
@@ -710,7 +748,7 @@ defineExpose({
     @on-confirm="onAssetSelectConfirm"
   />
   <AAssetSelectMedia
-    v-if="mode==='media'"
+    v-if="mode === 'media'"
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
     :min-count="1"

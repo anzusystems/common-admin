@@ -32,7 +32,7 @@ function resolveTypeFilter(assetType: DamAssetTypeType | 'podcast') {
     return
   }
   filter.type.model = [assetType]
-  filter.inPodcast.model = false
+  filter.inPodcast.model = null
 }
 
 export function useAssetSelectActions(

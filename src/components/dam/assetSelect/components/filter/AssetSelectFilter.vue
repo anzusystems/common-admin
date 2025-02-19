@@ -3,10 +3,8 @@ import { useI18n } from 'vue-i18n'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { computed, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import { DamAssetType } from '@/types/coreDam/Asset'
-import AssetSelectFilterFormImage from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormImage.vue'
-import AssetSelectFilterFormDefault from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormDefault.vue'
 import { storeToRefs } from 'pinia'
+import AssetSelectFilterFormImage from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormImage.vue'
 
 const { t } = useI18n()
 const { fetchAssetList, resetAssetList, filterUnTouch, filterIsTouched } = useAssetSelectActions()
@@ -26,10 +24,10 @@ const resetFilter = () => {
 
 const componentComputed = computed(() => {
   switch (assetSelectStore.assetType) {
-    case DamAssetType.Image:
-      return AssetSelectFilterFormImage
+    // case DamAssetType.Image: // todo
+    //   return AssetSelectFilterFormImage
     default:
-      return AssetSelectFilterFormDefault
+      return AssetSelectFilterFormImage
   }
 })
 

@@ -159,6 +159,12 @@ const loadingSidebarRight = computed(() => {
 const { showErrorsDefault } = useAlerts()
 const customFormConfigLoading = ref(true)
 
+const typeChange = () => {
+  assetSelectStore.reset()
+  assetDetailStore.reset()
+  fetchAssetList(assetType.value)
+}
+
 watch(
   extId,
   async (newValue) => {
@@ -226,7 +232,7 @@ defineExpose({
         </ADialogToolbar>
         <AssetSelectListBar
           show-types
-          @type-change="fetchAssetList(assetType)"
+          @type-change="typeChange"
         />
         <div
           class="subject-select__main"
