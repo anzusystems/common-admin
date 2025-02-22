@@ -26,6 +26,14 @@
       }
     }
   },
+  "media": {
+    "meta": {
+      "edit": "Edit medium"
+    },
+    "button": {
+      "remove": "Edit medium"
+    }
+  },
   "queueItem": {
     "edit": "Edit in DAM",
     "displayTitle": "Original Name",

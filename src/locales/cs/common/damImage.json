@@ -26,6 +26,14 @@
       }
     }
   },
+  "media": {
+    "meta": {
+      "edit": "Upraviť médium"
+    },
+    "button": {
+      "remove": "Odstrániť médium"
+    }
+  },
   "queueItem": {
     "edit": "Upraviť v DAM",
     "displayTitle": "Meno originálu",
