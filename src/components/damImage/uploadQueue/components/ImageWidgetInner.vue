@@ -702,14 +702,13 @@ defineExpose({
             <VBtn
               v-if="imageMediaLoaded && !expandMetadata"
               class="mr-2 mb-2"
-              @click="actionEditMeta"
               :text="
                 type === DamAssetType.Image
                   ? t('common.damImage.image.meta.edit')
                   : t('common.damImage.media.meta.edit')
               "
-            >
-            </VBtn>
+              @click="actionEditMeta"
+            />
             <VBtn
               class="mr-2 mb-2"
               @click="actionLibrary"
@@ -840,8 +839,8 @@ defineExpose({
         </template>
       </VImg>
       <div
-        class="a-image-widget__icons"
         v-if="type"
+        class="a-image-widget__icons"
       >
         <div v-if="type === 'podcast'">
           <VIcon

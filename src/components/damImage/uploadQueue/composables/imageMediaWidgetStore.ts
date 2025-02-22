@@ -9,7 +9,9 @@ export const isMediaAware = (item: MediaAware | ImageCreateUpdateAware | null): 
   return 'extService' in item
 }
 
-export const isImageCreateUpdateAware = (item: MediaAware | ImageCreateUpdateAware | null): item is ImageCreateUpdateAware => {
+export const isImageCreateUpdateAware = (
+  item: MediaAware | ImageCreateUpdateAware | null
+): item is ImageCreateUpdateAware => {
   if (isNull(item)) return false
   return !('extService' in item) && 'texts' in item
 }

@@ -241,7 +241,9 @@ defineExpose({
           v-else-if="isMediaAware(detail)"
           class="position-relative"
         >
-          <div class="my-4">{{ detail.dam }}</div>
+          <div class="my-4">
+            {{ detail.dam }}
+          </div>
         </div>
       </VCardText>
       <VCardActions>

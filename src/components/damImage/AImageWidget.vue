@@ -181,9 +181,9 @@ $class-name-root: 'a-image-widget';
     div {
       width: 26px;
       height: 26px;
-      opacity: 50%;
+      opacity: 0.5;
       border-radius: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
+      background-color: rgb(0 0 0 / 50%);
       color: white;
       display: flex;
       justify-content: center;

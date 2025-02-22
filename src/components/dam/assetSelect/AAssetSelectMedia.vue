@@ -312,5 +312,7 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
-  <div v-else>Error, no select licence.</div>
+  <div v-else>
+    Error, no select licence.
+  </div>
 </template>
