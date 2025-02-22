@@ -172,5 +172,23 @@ $class-name-root: 'a-image-widget';
   &--locked .v-img {
     opacity: 0.6;
   }
+
+  &__icons {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+
+    div {
+      width: 26px;
+      height: 26px;
+      opacity: 50%;
+      border-radius: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
 }
 </style>

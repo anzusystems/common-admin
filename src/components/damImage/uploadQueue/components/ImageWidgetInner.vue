@@ -7,7 +7,7 @@ import { useCommonAdminImageOptions } from '@/components/damImage/composables/co
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
-import { DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
@@ -316,7 +316,11 @@ const reloadMedia = async (newMedia: MediaAware | undefined, newMediaId: Integer
     resImageMedia.value = cloneDeep(newMedia)
     if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.dam.imageFileId)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId, props.damWidth, props.damHeight)
+        resolvedSrc.value = damImageIdToDamImageUrl(
+          resImageMedia.value.dam.imageFileId,
+          props.damWidth,
+          props.damHeight
+        )
       } else {
         resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId)
       }
@@ -332,9 +336,13 @@ const reloadMedia = async (newMedia: MediaAware | undefined, newMediaId: Integer
     } catch (error) {
       showErrorsDefault(error)
     }
-    if (isMediaAware(resImageMedia.value)&& !isNull(resImageMedia.value.dam.imageFileId)) {
+    if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.dam.imageFileId)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId, props.damWidth, props.damHeight)
+        resolvedSrc.value = damImageIdToDamImageUrl(
+          resImageMedia.value.dam.imageFileId,
+          props.damWidth,
+          props.damHeight
+        )
       } else {
         resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId)
       }
@@ -615,6 +623,15 @@ const isLocked = computed(() => {
   return !isNull(lockedByUserLocal.value)
 })
 
+const type = computed<DamAssetTypeType | 'podcast' | null>(() => {
+  if (isMediaAware(resImageMedia.value)) {
+    return resImageMedia.value.extService === MediaExtService.DamVideo ? DamAssetType.Video : 'podcast'
+  } else if (isImageCreateUpdateAware(resImageMedia.value)) {
+    return DamAssetType.Image
+  }
+  return null
+})
+
 watch(
   clickMenuOpened,
   (newValue, oldValue) => {
@@ -793,6 +810,23 @@ defineExpose({
           </div>
         </template>
       </VImg>
+      <div
+        class="a-image-widget__icons"
+        v-if="type"
+      >
+        <div v-if="type === 'podcast'">
+          <VIcon
+            size="x-small"
+            icon="mdi-podcast"
+          />
+        </div>
+        <div v-else-if="type === DamAssetType.Video">
+          <VIcon
+            size="x-small"
+            icon="mdi-video"
+          />
+        </div>
+      </div>
       <AImageDropzone
         variant="fill"
         transparent
