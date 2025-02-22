@@ -17,6 +17,10 @@ import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { computed } from 'vue'
+import {
+  isImageCreateUpdateAware, isMediaAware,
+  useImageMediaWidgetStore
+} from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -39,8 +43,8 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const imageStore = useImageStore()
-const { imageDetail } = storeToRefs(imageStore)
+const imageMediaWidgetStore = useImageMediaWidgetStore()
+const { detail } = storeToRefs(imageMediaWidgetStore)
 const assetDetailStore = useAssetDetailStore()
 const { asset, authorConflicts } = storeToRefs(assetDetailStore)
 const { cachedExtSystemId } = useExtSystemIdForCached()
@@ -49,7 +53,7 @@ const imageSourceRequired = computed(() => {
   return !props.showDamAuthors
 })
 
-const { v$ } = useImageValidation(imageDetail, imageSourceRequired)
+const { v$ } = useImageValidation(detail, imageSourceRequired)
 
 const { showValidationError } = useAlerts()
 
@@ -68,8 +72,8 @@ const onDialogModelUpdate = (newValue: boolean) => {
 }
 
 const onEditAsset = () => {
-  if (isNull(imageDetail.value)) return
-  emit('editAsset', imageDetail.value.dam.damId)
+  if (!isImageCreateUpdateAware(detail.value)) return
+  emit('editAsset', detail.value.dam.damId)
 }
 
 defineExpose({
@@ -86,7 +90,7 @@ defineExpose({
         </div>
       </VCol>
     </VRow>
-    <template v-if="imageDetail">
+    <template v-if="isImageCreateUpdateAware(detail)">
       <VRow>
         <VCol>
           <VBtn @click.stop="onEditAsset">
@@ -97,7 +101,7 @@ defineExpose({
       <VRow>
         <VCol>
           <AFormTextarea
-            v-model="imageDetail.texts.description"
+            v-model="detail.texts.description"
             :label="t('common.damImage.image.model.texts.description')"
             :help="t('common.damImage.image.help.texts.description')"
           />
@@ -125,7 +129,7 @@ defineExpose({
       <VRow v-else>
         <VCol>
           <AFormTextarea
-            v-model="imageDetail.texts.source"
+            v-model="detail.texts.source"
             :label="t('common.damImage.image.model.texts.source')"
             :v="v$.image.texts.source"
           />
@@ -134,13 +138,16 @@ defineExpose({
       <VRow>
         <VCol>
           <VSwitch
-            v-model="imageDetail.flags.showSource"
+            v-model="detail.flags.showSource"
             :label="t('common.damImage.image.model.flags.showSource')"
             density="compact"
             hide-details
           />
         </VCol>
       </VRow>
+    </template>
+    <template v-else-if="isMediaAware(detail)">
+      media todo
     </template>
   </div>
   <VDialog
@@ -162,13 +169,13 @@ defineExpose({
           <VProgressCircular indeterminate />
         </div>
         <div
-          v-else-if="imageDetail"
+          v-else-if="isImageCreateUpdateAware(detail)"
           class="position-relative"
         >
           <div class="my-4">
             <AImageWidgetSimple
-              :model-value="imageDetail.id"
-              :image="imageDetail"
+              :model-value="detail.id"
+              :image="detail"
             />
           </div>
           <VRow>
@@ -181,7 +188,7 @@ defineExpose({
           <VRow>
             <VCol>
               <AFormTextarea
-                v-model="imageDetail.texts.description"
+                v-model="detail.texts.description"
                 :label="t('common.damImage.image.model.texts.description')"
                 :help="t('common.damImage.image.help.texts.description')"
               />
@@ -209,7 +216,7 @@ defineExpose({
           <VRow v-else>
             <VCol>
               <AFormTextarea
-                v-model="imageDetail.texts.source"
+                v-model="detail.texts.source"
                 :label="t('common.damImage.image.model.texts.source')"
                 :v="v$.image.texts.source"
                 required
@@ -219,13 +226,21 @@ defineExpose({
           <VRow>
             <VCol>
               <VSwitch
-                v-model="imageDetail.flags.showSource"
+                v-model="detail.flags.showSource"
                 :label="t('common.damImage.image.model.flags.showSource')"
                 density="compact"
                 hide-details
               />
             </VCol>
           </VRow>
+        </div>
+        <div
+          v-else-if="isMediaAware(detail)"
+          class="position-relative"
+        >
+          <div class="my-4">
+            todo media
+          </div>
         </div>
       </VCardText>
       <VCardActions>

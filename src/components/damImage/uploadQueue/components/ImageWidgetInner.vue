@@ -191,8 +191,8 @@ const metadataDialogSaving = ref(false)
 const metadataDialogLoading = ref(false)
 const fileInputDialog = ref(false)
 
-const withoutImage = computed(() => {
-  return isNull(modelValue.value)
+const hideDropzoneText = computed(() => {
+  return !isNull(modelValue.value) || !isNull(mediaModel.value)
 })
 
 const resolvedSrc = ref('')
@@ -201,7 +201,7 @@ const uploadQueue = computed(() => {
   return uploadQueuesStore.getQueue(props.queueKey)
 })
 
-const imageLoaded = computed(() => {
+const imageMediaLoaded = computed(() => {
   return !isNull(resImageMedia.value)
 })
 
@@ -672,7 +672,7 @@ defineExpose({
             class="d-flex flex-row"
           >
             <VBtn
-              v-if="imageLoaded && !expandMetadata"
+              v-if="imageMediaLoaded && !expandMetadata"
               class="mr-2 mb-2"
               @click="actionEditMeta"
             >
@@ -682,7 +682,7 @@ defineExpose({
               class="mr-2 mb-2"
               @click="actionLibrary"
             >
-              <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
+              <span v-if="imageMediaLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
               <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
             </VBtn>
             <AFileInputDialog
@@ -729,14 +729,14 @@ defineExpose({
               <VCard>
                 <VList density="compact">
                   <VListItem
-                    v-if="imageLoaded && !expandMetadata"
+                    v-if="imageMediaLoaded && !expandMetadata"
                     @click="actionEditMeta"
                   >
                     <VListItemTitle>{{ t('common.damImage.image.meta.edit') }}</VListItemTitle>
                   </VListItem>
                   <VListItem @click="actionLibrary">
                     <VListItemTitle>
-                      <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
+                      <span v-if="imageMediaLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
                       <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
                     </VListItemTitle>
                   </VListItem>
@@ -762,7 +762,7 @@ defineExpose({
                     </template>
                   </AFileInputDialog>
                   <VListItem
-                    v-if="imageLoaded"
+                    v-if="imageMediaLoaded"
                     @click="onImageDelete"
                   >
                     <VListItemTitle>{{ t('common.damImage.image.button.removeImage') }}</VListItemTitle>
@@ -798,7 +798,7 @@ defineExpose({
         transparent
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
-        :hide-text="!withoutImage || isLocked"
+        :hide-text="hideDropzoneText || isLocked"
         @on-click="onDropzoneClick"
         @on-drop="onDrop"
       />
