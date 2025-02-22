@@ -3,10 +3,8 @@ import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
-import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { storeToRefs } from 'pinia'
 import type { DocId } from '@/types/common'
-import { isNull } from '@/utils/common'
 import {
   AImageMetadataValidationScopeSymbol,
   useImageValidation,
@@ -18,15 +16,18 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { computed } from 'vue'
 import {
-  isImageCreateUpdateAware, isMediaAware,
-  useImageMediaWidgetStore
+  isImageCreateUpdateAware,
+  isMediaAware,
+  useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore.ts'
+import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset.ts'
 
 const props = withDefaults(
   defineProps<{
     modelValue: boolean
     saving: boolean
     loading: boolean
+    type: DamAssetTypeType | 'podcast' | null
     expand?: boolean
     showDamAuthors?: boolean
   }>(),
@@ -131,7 +132,7 @@ defineExpose({
           <AFormTextarea
             v-model="detail.texts.source"
             :label="t('common.damImage.image.model.texts.source')"
-            :v="v$.image.texts.source"
+            :v="v$.image?.texts.source"
           />
         </VCol>
       </VRow>
@@ -147,7 +148,9 @@ defineExpose({
       </VRow>
     </template>
     <template v-else-if="isMediaAware(detail)">
-      media todo
+      <div>
+        {{ detail.dam }}
+      </div>
     </template>
   </div>
   <VDialog
@@ -159,7 +162,7 @@ defineExpose({
   >
     <VCard v-if="modelValue">
       <ADialogToolbar @on-cancel="onDialogModelUpdate(false)">
-        {{ t('common.damImage.image.meta.edit') }}
+        {{ type === DamAssetType.Image ? t('common.damImage.image.meta.edit') : t('common.damImage.media.meta.edit') }}
       </ADialogToolbar>
       <VCardText>
         <div
@@ -218,7 +221,7 @@ defineExpose({
               <AFormTextarea
                 v-model="detail.texts.source"
                 :label="t('common.damImage.image.model.texts.source')"
-                :v="v$.image.texts.source"
+                :v="v$.image?.texts.source"
                 required
               />
             </VCol>
@@ -238,9 +241,7 @@ defineExpose({
           v-else-if="isMediaAware(detail)"
           class="position-relative"
         >
-          <div class="my-4">
-            todo media
-          </div>
+          <div class="my-4">{{ detail.dam }}</div>
         </div>
       </VCardText>
       <VCardActions>

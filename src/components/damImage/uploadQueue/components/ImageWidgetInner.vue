@@ -55,7 +55,7 @@ import {
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore.ts'
 import { type MediaAware, MediaExtService } from '@/types/MediaAware.ts'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile.ts'
-import { createMedia, fetchMedia, updateMedia } from '@/components/damImage/uploadQueue/api/mediaApi.ts'
+import { createMedia, deleteMedia, fetchMedia, updateMedia } from '@/components/damImage/uploadQueue/api/mediaApi.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -359,6 +359,8 @@ const reset = () => {
   resolvedSrc.value = imagePlaceholderPath
   resImageMedia.value = null
   modelValue.value = null
+  mediaModel.value = null
+  imageMediaWidgetStore.reset()
   releaseFieldLock.value(null)
 }
 
@@ -504,6 +506,7 @@ const tryMediaConfirm = async () => {
       : await createMedia(imageClient, detail.value)
     metadataDialog.value = false
     mediaModel.value = res.id!
+    modelValue.value = null
     imageMediaWidgetStore.setDetail(null)
     await reloadMedia(res, res.id!, true)
     emit('afterMetadataSaveSuccess')
@@ -536,6 +539,7 @@ const tryImageConfirm = async () => {
       : await createImage(imageClient, detail.value)
     metadataDialog.value = false
     modelValue.value = res.id
+    mediaModel.value = null
     imageMediaWidgetStore.setDetail(null)
     await reloadImage(res, res.id, true)
     emit('afterMetadataSaveSuccess')
@@ -552,11 +556,18 @@ const onMetadataDialogConfirm = async () => {
   await tryImageConfirm()
 }
 
-const onImageDelete = async () => {
-  if (isNull(modelValue.value)) return
-  if (props.callDeleteApiOnRemove) {
+const onImageMediaDelete = async () => {
+  if (props.callDeleteApiOnRemove && isMediaAware(detail.value) && detail.value.id) {
     try {
-      await deleteImage(imageClient, modelValue.value)
+      await deleteMedia(imageClient, detail.value.id)
+      reset()
+    } catch (e) {
+      showErrorsDefault(e)
+    }
+    return
+  } else if (props.callDeleteApiOnRemove && isImageCreateUpdateAware(detail.value) && detail.value.id) {
+    try {
+      await deleteImage(imageClient, detail.value.id)
       reset()
     } catch (e) {
       showErrorsDefault(e)
@@ -692,8 +703,12 @@ defineExpose({
               v-if="imageMediaLoaded && !expandMetadata"
               class="mr-2 mb-2"
               @click="actionEditMeta"
+              :text="
+                type === DamAssetType.Image
+                  ? t('common.damImage.image.meta.edit')
+                  : t('common.damImage.media.meta.edit')
+              "
             >
-              {{ t('common.damImage.image.meta.edit') }}
             </VBtn>
             <VBtn
               class="mr-2 mb-2"
@@ -703,6 +718,7 @@ defineExpose({
               <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
             </VBtn>
             <AFileInputDialog
+              v-if="isNull(type) || type === DamAssetType.Image"
               ref="expandedUploadDialog"
               v-model="fileInputDialog"
               :file-input-key="uploadQueue?.fileInputKey"
@@ -749,7 +765,13 @@ defineExpose({
                     v-if="imageMediaLoaded && !expandMetadata"
                     @click="actionEditMeta"
                   >
-                    <VListItemTitle>{{ t('common.damImage.image.meta.edit') }}</VListItemTitle>
+                    <VListItemTitle>
+                      {{
+                        type === DamAssetType.Image
+                          ? t('common.damImage.image.meta.edit')
+                          : t('common.damImage.media.meta.edit')
+                      }}
+                    </VListItemTitle>
                   </VListItem>
                   <VListItem @click="actionLibrary">
                     <VListItemTitle>
@@ -758,6 +780,7 @@ defineExpose({
                     </VListItemTitle>
                   </VListItem>
                   <AFileInputDialog
+                    v-if="isNull(type) || type === DamAssetType.Image"
                     v-model="fileInputDialog"
                     :file-input-key="uploadQueue?.fileInputKey"
                     :accept="uploadAccept"
@@ -780,9 +803,15 @@ defineExpose({
                   </AFileInputDialog>
                   <VListItem
                     v-if="imageMediaLoaded"
-                    @click="onImageDelete"
+                    @click="onImageMediaDelete"
                   >
-                    <VListItemTitle>{{ t('common.damImage.image.button.removeImage') }}</VListItemTitle>
+                    <VListItemTitle>
+                      {{
+                        type === DamAssetType.Image
+                          ? t('common.damImage.image.button.removeImage')
+                          : t('common.damImage.media.button.remove')
+                      }}
+                    </VListItemTitle>
                   </VListItem>
                 </VList>
               </VCard>
@@ -848,6 +877,7 @@ defineExpose({
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"
+      :type="type"
       @edit-asset="onEditAsset"
       @on-confirm="onMetadataDialogConfirm"
       @on-close="onMetadataDialogClose"
