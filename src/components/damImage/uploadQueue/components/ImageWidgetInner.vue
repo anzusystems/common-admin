@@ -16,7 +16,6 @@ import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
-import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -49,9 +48,14 @@ import {
 } from '@/components/collab/composables/collabEventBus'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import AAssetSelectMedia from '@/components/dam/assetSelect/AAssetSelectMedia.vue'
-import { useMediaStore } from '@/components/damImage/uploadQueue/composables/mediaStore.ts'
+import {
+  isImageCreateUpdateAware,
+  isMediaAware,
+  useImageMediaWidgetStore,
+} from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore.ts'
 import { type MediaAware, MediaExtService } from '@/types/MediaAware.ts'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile.ts'
+import { createMedia, fetchMedia, updateMedia } from '@/components/damImage/uploadQueue/api/mediaApi.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -60,6 +64,7 @@ const props = withDefaults(
     selectLicences: IntegerId[]
     mode?: 'image' | 'media'
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
+    initialMedia?: MediaAware | undefined // optional, if available, no need to fetch media data
     configName?: string
     collab?: CollabComponentConfig
     collabStatus?: CollabStatusType
@@ -85,6 +90,7 @@ const props = withDefaults(
     label: undefined,
     required: false,
     image: undefined,
+    initialMedia: undefined,
     readonly: false,
     lockable: false,
     lockedById: undefined,
@@ -106,7 +112,7 @@ const emit = defineEmits<{
 }>()
 
 const modelValue = defineModel<IntegerIdNullable>({ required: true }) // image
-const media = defineModel<IntegerIdNullable>('media', { default: null, required: false }) // media
+const mediaModel = defineModel<IntegerIdNullable>('media', { default: null, required: false }) // media
 const showDamAuthorsInCmsImage = ref(false)
 
 // Collaboration
@@ -173,12 +179,11 @@ const { showErrorsDefault, showError } = useAlerts()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient } = imageOptions
-const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
+const { widgetImageToDamImageUrl, damImageIdToDamImageUrl } = useImageActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
-const imageStore = useImageStore()
 const { uploadQueueDialog } = useUploadQueueDialog()
 
-const resImage = ref<null | ImageCreateUpdateAware>(null)
+const resImageMedia = ref<null | ImageCreateUpdateAware | MediaAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
 const metadataDialog = ref(false)
@@ -197,11 +202,11 @@ const uploadQueue = computed(() => {
 })
 
 const imageLoaded = computed(() => {
-  return !isNull(resImage.value)
+  return !isNull(resImageMedia.value)
 })
 
 const actionEditMeta = () => {
-  imageStore.setImageDetail(toRaw(resImage.value))
+  imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
   metadataDialog.value = true
 }
 
@@ -264,46 +269,87 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   imageWidgetUploadConfig.value.extSystemConfig
 )
 
-const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
+const reloadImage = async (
+  newImage: ImageCreateUpdateAware | undefined,
+  newImageId: IntegerIdNullable,
+  force = false
+) => {
   resolvedSrc.value = imagePlaceholderPath
-  if ((newImage && isNull(resImage.value)) || (newImage && force)) {
-    resImage.value = cloneDeep(newImage)
-    if (resImage.value) {
+  if ((newImage && isNull(resImageMedia.value)) || (newImage && force)) {
+    resImageMedia.value = cloneDeep(newImage)
+    if (isImageCreateUpdateAware(resImageMedia.value)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value), props.damWidth, props.damHeight)
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value), props.damWidth, props.damHeight)
       } else {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value))
       }
       if (props.expandMetadata) {
-        imageStore.setImageDetail(toRaw(resImage.value))
+        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
       }
     }
     return
   }
   if (newImageId) {
     try {
-      resImage.value = await fetchImage(imageClient, newImageId)
+      resImageMedia.value = await fetchImage(imageClient, newImageId)
     } catch (error) {
       showErrorsDefault(error)
     }
-    if (!isNull(resImage.value)) {
+    if (isImageCreateUpdateAware(resImageMedia.value)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value), props.damWidth, props.damHeight)
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value), props.damWidth, props.damHeight)
       } else {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value))
       }
       if (props.expandMetadata) {
-        imageStore.setImageDetail(toRaw(resImage.value))
+        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
       }
     }
     return
   }
-  resImage.value = null
+  resImageMedia.value = null
+}
+
+const reloadMedia = async (newMedia: MediaAware | undefined, newMediaId: IntegerIdNullable, force = false) => {
+  resolvedSrc.value = imagePlaceholderPath
+  if ((newMedia && isNull(resImageMedia.value)) || (newMedia && force)) {
+    resImageMedia.value = cloneDeep(newMedia)
+    if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.dam.imageFileId)) {
+      if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
+        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId, props.damWidth, props.damHeight)
+      } else {
+        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId)
+      }
+      if (props.expandMetadata) {
+        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
+      }
+    }
+    return
+  }
+  if (newMediaId) {
+    try {
+      resImageMedia.value = await fetchMedia(imageClient, newMediaId)
+    } catch (error) {
+      showErrorsDefault(error)
+    }
+    if (isMediaAware(resImageMedia.value)&& !isNull(resImageMedia.value.dam.imageFileId)) {
+      if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
+        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId, props.damWidth, props.damHeight)
+      } else {
+        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId)
+      }
+      if (props.expandMetadata) {
+        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
+      }
+    }
+    return
+  }
+  resImageMedia.value = null
 }
 
 const reset = () => {
   resolvedSrc.value = imagePlaceholderPath
-  resImage.value = null
+  resImageMedia.value = null
   modelValue.value = null
   releaseFieldLock.value(null)
 }
@@ -311,18 +357,27 @@ const reset = () => {
 watch(
   [() => props.image, modelValue],
   async ([newImage, newImageId]) => {
-    await reload(newImage, newImageId)
+    await reloadImage(newImage, newImageId)
+  },
+  { immediate: true }
+)
+
+watch(
+  [() => props.initialMedia, mediaModel],
+  async ([newMedia, newMediaId]) => {
+    await reloadMedia(newMedia, newMediaId)
   },
   { immediate: true }
 )
 
 const assetSelectStore = useAssetSelectStore()
-const mediaStore = useMediaStore()
+const imageMediaWidgetStore = useImageMediaWidgetStore()
+const { detail } = storeToRefs(imageMediaWidgetStore)
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || !data.value[0]) return
   metadataDialogLoading.value = true
-  imageStore.setImageDetail(null)
+  imageMediaWidgetStore.setDetail(null)
   metadataDialog.value = true
   showDamAuthorsInCmsImage.value = false
   let description = ''
@@ -339,10 +394,10 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         licenceId: selectedAsset.licence,
       },
     }
-    if (!isNull(media.value)) {
-      mediaData.id = media.value
+    if (!isNull(mediaModel.value)) {
+      mediaData.id = mediaModel.value
     }
-    mediaStore.mediaDetail = mediaData
+    imageMediaWidgetStore.setDetail(mediaData)
   } else if (
     selectedAsset.attributes.assetType === 'audio' &&
     selectedAsset.podcasts.length > 0 &&
@@ -357,10 +412,10 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         licenceId: selectedAsset.licence,
       },
     }
-    if (!isNull(media.value)) {
-      mediaData.id = media.value
+    if (!isNull(mediaModel.value)) {
+      mediaData.id = mediaModel.value
     }
-    mediaStore.mediaDetail = mediaData
+    imageMediaWidgetStore.setDetail(mediaData)
   } else if (selectedAsset.attributes.assetType === 'image') {
     // image
     try {
@@ -400,7 +455,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     if (!isNull(modelValue.value)) {
       image.id = modelValue.value
     }
-    imageStore.setImageDetail(image)
+    imageMediaWidgetStore.setDetail(image)
   }
   metadataDialogLoading.value = false
   forceReloadViewWithExpandMetadata()
@@ -428,12 +483,32 @@ const onEditAsset = async (assetFileId: DocId) => {
 }
 
 const onMetadataDialogClose = () => {
-  imageStore.setImageDetail(null)
+  imageMediaWidgetStore.setDetail(null)
   metadataDialog.value = false
 }
 
-const onMetadataDialogConfirm = async () => {
-  if (isNull(imageStore.imageDetail)) return
+const tryMediaConfirm = async () => {
+  if (!isMediaAware(detail.value)) return
+  metadataDialogSaving.value = true
+  try {
+    const res = detail.value.id
+      ? await updateMedia(imageClient, detail.value.id, detail.value)
+      : await createMedia(imageClient, detail.value)
+    metadataDialog.value = false
+    mediaModel.value = res.id!
+    imageMediaWidgetStore.setDetail(null)
+    await reloadMedia(res, res.id!, true)
+    emit('afterMetadataSaveSuccess')
+    releaseFieldLock.value(res.id)
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    metadataDialogSaving.value = false
+  }
+}
+
+const tryImageConfirm = async () => {
+  if (!isImageCreateUpdateAware(detail.value)) return
   metadataDialogSaving.value = true
   try {
     if (showDamAuthorsInCmsImage.value && asset.value) {
@@ -443,18 +518,18 @@ const onMetadataDialogConfirm = async () => {
           assetSelectStore.selectedSelectConfig.extSystem,
           asset.value.authors
         )
-        imageStore.imageDetail.texts.source = authorsRes.map((author) => author.name).join(', ')
+        detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
         await updateAssetAuthors(damClient, asset.value, assetSelectStore.selectedSelectConfig.extSystem)
         showDamAuthorsInCmsImage.value = false
       }
     }
-    const res = imageStore.imageDetail.id
-      ? await updateImage(imageClient, imageStore.imageDetail.id, imageStore.imageDetail)
-      : await createImage(imageClient, imageStore.imageDetail)
+    const res = detail.value.id
+      ? await updateImage(imageClient, detail.value.id, detail.value)
+      : await createImage(imageClient, detail.value)
     metadataDialog.value = false
     modelValue.value = res.id
-    imageStore.setImageDetail(null)
-    await reload(res, res.id, true)
+    imageMediaWidgetStore.setDetail(null)
+    await reloadImage(res, res.id, true)
     emit('afterMetadataSaveSuccess')
     releaseFieldLock.value(res.id)
   } catch (e) {
@@ -462,6 +537,11 @@ const onMetadataDialogConfirm = async () => {
   } finally {
     metadataDialogSaving.value = false
   }
+}
+
+const onMetadataDialogConfirm = async () => {
+  await tryMediaConfirm()
+  await tryImageConfirm()
 }
 
 const onImageDelete = async () => {
@@ -479,9 +559,11 @@ const onImageDelete = async () => {
 }
 
 const forceReloadViewWithExpandMetadata = () => {
-  const detail = imageStore.imageDetail
-  if (!isNull(detail)) {
-    reload(detail, null, true)
+  if (isMediaAware(detail.value)) {
+    reloadMedia(detail.value, null, true)
+    return
+  } else if (isImageCreateUpdateAware(detail.value)) {
+    reloadImage(detail.value, null, true)
   }
 }
 
@@ -491,7 +573,7 @@ const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
   if (!isNull(modelValue.value)) {
     items[0].id = modelValue.value
   }
-  imageStore.setImageDetail(items[0])
+  imageMediaWidgetStore.setDetail(items[0])
   metadataDialog.value = true
   if (props.expandMetadata) {
     forceReloadViewWithExpandMetadata()
@@ -552,7 +634,7 @@ watch(
 )
 
 onMounted(() => {
-  imageStore.reset()
+  imageMediaWidgetStore.reset()
 })
 
 defineExpose({
@@ -723,7 +805,7 @@ defineExpose({
     </div>
     <slot
       name="append"
-      :image="resImage"
+      :image="resImageMedia"
     />
     <ImageDetailDialogMetadata
       ref="detailDialogMetadataComponent"

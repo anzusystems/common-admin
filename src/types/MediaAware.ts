@@ -1,4 +1,6 @@
 import type { DocIdNullable, IntegerId } from '@/types/common.ts'
+import type { ImageCreateUpdateAware } from '@/types/ImageAware.ts'
+import { isNull } from '@/utils/common.ts'
 
 export interface MediaAware {
   id?: IntegerId
