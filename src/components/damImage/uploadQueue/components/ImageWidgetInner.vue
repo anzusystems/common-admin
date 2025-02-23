@@ -7,7 +7,7 @@ import { useCommonAdminImageOptions } from '@/components/damImage/composables/co
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
-import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import { DamAssetType } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
@@ -47,24 +47,17 @@ import {
   CollabFieldLockType,
 } from '@/components/collab/composables/collabEventBus'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import AAssetSelectMedia from '@/components/dam/assetSelect/AAssetSelectMedia.vue'
 import {
   isImageCreateUpdateAware,
-  isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { type MediaAware, MediaExtService } from '@/types/MediaAware'
-import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile'
-import { createMedia, deleteMedia, fetchMedia, updateMedia } from '@/components/damImage/uploadQueue/api/mediaApi'
 
 const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
-    mode?: 'image' | 'media'
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
-    initialMedia?: MediaAware | undefined // optional, if available, no need to fetch media data
     configName?: string
     collab?: CollabComponentConfig
     collabStatus?: CollabStatusType
@@ -83,14 +76,12 @@ const props = withDefaults(
     damHeight?: undefined | number
   }>(),
   {
-    mode: 'image',
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
     label: undefined,
     required: false,
     image: undefined,
-    initialMedia: undefined,
     readonly: false,
     lockable: false,
     lockedById: undefined,
@@ -111,8 +102,7 @@ const emit = defineEmits<{
   (e: 'afterMetadataSaveSuccess'): void
 }>()
 
-const modelValue = defineModel<IntegerIdNullable>({ required: true }) // image
-const mediaModel = defineModel<IntegerIdNullable>('media', { default: null, required: false }) // media
+const modelValue = defineModel<IntegerIdNullable>({ required: true })
 const showDamAuthorsInCmsImage = ref(false)
 
 // Collaboration
@@ -179,11 +169,13 @@ const { showErrorsDefault, showError } = useAlerts()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient } = imageOptions
-const { widgetImageToDamImageUrl, damImageIdToDamImageUrl } = useImageActions(imageOptions)
+const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
+const imageMediaWidgetStore = useImageMediaWidgetStore()
+const { detail } = storeToRefs(imageMediaWidgetStore)
 const { uploadQueueDialog } = useUploadQueueDialog()
 
-const resImageMedia = ref<null | ImageCreateUpdateAware | MediaAware>(null)
+const resImage = ref<null | ImageCreateUpdateAware>(null)
 const clickMenuOpened = ref(false)
 const assetSelectDialog = ref(false)
 const metadataDialog = ref(false)
@@ -191,8 +183,8 @@ const metadataDialogSaving = ref(false)
 const metadataDialogLoading = ref(false)
 const fileInputDialog = ref(false)
 
-const hideDropzoneText = computed(() => {
-  return !isNull(modelValue.value) || !isNull(mediaModel.value)
+const withoutImage = computed(() => {
+  return isNull(modelValue.value)
 })
 
 const resolvedSrc = ref('')
@@ -201,12 +193,12 @@ const uploadQueue = computed(() => {
   return uploadQueuesStore.getQueue(props.queueKey)
 })
 
-const imageMediaLoaded = computed(() => {
-  return !isNull(resImageMedia.value)
+const imageLoaded = computed(() => {
+  return !isNull(resImage.value)
 })
 
 const actionEditMeta = () => {
-  imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
+  imageMediaWidgetStore.setDetail(toRaw(resImage.value))
   metadataDialog.value = true
 }
 
@@ -269,167 +261,71 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   imageWidgetUploadConfig.value.extSystemConfig
 )
 
-const reloadImage = async (
-  newImage: ImageCreateUpdateAware | undefined,
-  newImageId: IntegerIdNullable,
-  force = false
-) => {
+const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
   resolvedSrc.value = imagePlaceholderPath
-  if ((newImage && isNull(resImageMedia.value)) || (newImage && force)) {
-    resImageMedia.value = cloneDeep(newImage)
-    if (isImageCreateUpdateAware(resImageMedia.value)) {
+  if ((newImage && isNull(resImage.value)) || (newImage && force)) {
+    resImage.value = cloneDeep(newImage)
+    if (resImage.value) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value), props.damWidth, props.damHeight)
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value), props.damWidth, props.damHeight)
       } else {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value))
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
       }
       if (props.expandMetadata) {
-        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
+        imageMediaWidgetStore.setDetail(toRaw(resImage.value))
       }
     }
     return
   }
   if (newImageId) {
     try {
-      resImageMedia.value = await fetchImage(imageClient, newImageId)
+      resImage.value = await fetchImage(imageClient, newImageId)
     } catch (error) {
       showErrorsDefault(error)
     }
-    if (isImageCreateUpdateAware(resImageMedia.value)) {
+    if (!isNull(resImage.value)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value), props.damWidth, props.damHeight)
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value), props.damWidth, props.damHeight)
       } else {
-        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value))
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImage.value))
       }
       if (props.expandMetadata) {
-        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
+        imageMediaWidgetStore.setDetail(toRaw(resImage.value))
       }
     }
     return
   }
-  resImageMedia.value = null
-}
-
-const reloadMedia = async (newMedia: MediaAware | undefined, newMediaId: IntegerIdNullable, force = false) => {
-  resolvedSrc.value = imagePlaceholderPath
-  if ((newMedia && isNull(resImageMedia.value)) || (newMedia && force)) {
-    resImageMedia.value = cloneDeep(newMedia)
-    if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.dam.imageFileId)) {
-      if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = damImageIdToDamImageUrl(
-          resImageMedia.value.dam.imageFileId,
-          props.damWidth,
-          props.damHeight
-        )
-      } else {
-        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId)
-      }
-      if (props.expandMetadata) {
-        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
-      }
-    }
-    return
-  }
-  if (newMediaId) {
-    try {
-      resImageMedia.value = await fetchMedia(imageClient, newMediaId)
-    } catch (error) {
-      showErrorsDefault(error)
-    }
-    if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.dam.imageFileId)) {
-      if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = damImageIdToDamImageUrl(
-          resImageMedia.value.dam.imageFileId,
-          props.damWidth,
-          props.damHeight
-        )
-      } else {
-        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId)
-      }
-      if (props.expandMetadata) {
-        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
-      }
-    }
-    return
-  }
-  resImageMedia.value = null
+  resImage.value = null
 }
 
 const reset = () => {
   resolvedSrc.value = imagePlaceholderPath
-  resImageMedia.value = null
+  resImage.value = null
   modelValue.value = null
-  mediaModel.value = null
-  imageMediaWidgetStore.reset()
   releaseFieldLock.value(null)
 }
 
 watch(
   [() => props.image, modelValue],
   async ([newImage, newImageId]) => {
-    await reloadImage(newImage, newImageId)
-  },
-  { immediate: true }
-)
-
-watch(
-  [() => props.initialMedia, mediaModel],
-  async ([newMedia, newMediaId]) => {
-    await reloadMedia(newMedia, newMediaId)
+    await reload(newImage, newImageId)
   },
   { immediate: true }
 )
 
 const assetSelectStore = useAssetSelectStore()
-const imageMediaWidgetStore = useImageMediaWidgetStore()
-const { detail } = storeToRefs(imageMediaWidgetStore)
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
-  if (data.type !== 'asset' || !data.value[0]) return
   metadataDialogLoading.value = true
   imageMediaWidgetStore.setDetail(null)
   metadataDialog.value = true
   showDamAuthorsInCmsImage.value = false
   let description = ''
   let source = ''
-  const selectedAsset = data.value[0]
-  if (!selectedAsset.mainFile) return
-  if (selectedAsset.attributes.assetType === 'video' && assetFileIsVideoFile(selectedAsset.mainFile)) {
-    // video
-    const mediaData: MediaAware = {
-      extService: MediaExtService.DamVideo,
-      dam: {
-        imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
-        assetId: selectedAsset.id,
-        licenceId: selectedAsset.licence,
-      },
-    }
-    if (!isNull(mediaModel.value)) {
-      mediaData.id = mediaModel.value
-    }
-    imageMediaWidgetStore.setDetail(mediaData)
-  } else if (
-    selectedAsset.attributes.assetType === 'audio' &&
-    selectedAsset.podcasts.length > 0 &&
-    assetFileIsAudioFile(selectedAsset.mainFile)
-  ) {
-    // podcast audio
-    const mediaData: MediaAware = {
-      extService: MediaExtService.DamPodcast,
-      dam: {
-        imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
-        assetId: selectedAsset.id,
-        licenceId: selectedAsset.licence,
-      },
-    }
-    if (!isNull(mediaModel.value)) {
-      mediaData.id = mediaModel.value
-    }
-    imageMediaWidgetStore.setDetail(mediaData)
-  } else if (selectedAsset.attributes.assetType === 'image') {
-    // image
+  if (data.type === 'asset') {
+    if (!data.value[0] || !data.value[0].mainFile) return
     try {
-      const assetRes = await fetchAsset(damClient, selectedAsset.id)
+      const assetRes = await fetchAsset(damClient, data.value[0].id)
       if (isString(assetRes.metadata.customData?.description)) {
         description = assetRes.metadata.customData.description.trim()
       }
@@ -456,9 +352,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         showSource: true,
       },
       dam: {
-        damId: selectedAsset.mainFile.id,
+        damId: data.value[0].mainFile.id,
         regionPosition: 0,
-        licenceId: selectedAsset.licence,
+        licenceId: data.value[0].licence,
       },
       position: 1,
     }
@@ -466,9 +362,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       image.id = modelValue.value
     }
     imageMediaWidgetStore.setDetail(image)
+    metadataDialogLoading.value = false
+    forceReloadViewWithExpandMetadata()
   }
-  metadataDialogLoading.value = false
-  forceReloadViewWithExpandMetadata()
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -497,28 +393,7 @@ const onMetadataDialogClose = () => {
   metadataDialog.value = false
 }
 
-const tryMediaConfirm = async () => {
-  if (!isMediaAware(detail.value)) return
-  metadataDialogSaving.value = true
-  try {
-    const res = detail.value.id
-      ? await updateMedia(imageClient, detail.value.id, detail.value)
-      : await createMedia(imageClient, detail.value)
-    metadataDialog.value = false
-    mediaModel.value = res.id!
-    modelValue.value = null
-    imageMediaWidgetStore.setDetail(null)
-    await reloadMedia(res, res.id!, true)
-    emit('afterMetadataSaveSuccess')
-    releaseFieldLock.value(res.id)
-  } catch (e) {
-    showErrorsDefault(e)
-  } finally {
-    metadataDialogSaving.value = false
-  }
-}
-
-const tryImageConfirm = async () => {
+const onMetadataDialogConfirm = async () => {
   if (!isImageCreateUpdateAware(detail.value)) return
   metadataDialogSaving.value = true
   try {
@@ -539,9 +414,8 @@ const tryImageConfirm = async () => {
       : await createImage(imageClient, detail.value)
     metadataDialog.value = false
     modelValue.value = res.id
-    mediaModel.value = null
     imageMediaWidgetStore.setDetail(null)
-    await reloadImage(res, res.id, true)
+    await reload(res, res.id, true)
     emit('afterMetadataSaveSuccess')
     releaseFieldLock.value(res.id)
   } catch (e) {
@@ -551,23 +425,11 @@ const tryImageConfirm = async () => {
   }
 }
 
-const onMetadataDialogConfirm = async () => {
-  await tryMediaConfirm()
-  await tryImageConfirm()
-}
-
-const onImageMediaDelete = async () => {
-  if (props.callDeleteApiOnRemove && isMediaAware(detail.value) && detail.value.id) {
+const onImageDelete = async () => {
+  if (isNull(modelValue.value)) return
+  if (props.callDeleteApiOnRemove) {
     try {
-      await deleteMedia(imageClient, detail.value.id)
-      reset()
-    } catch (e) {
-      showErrorsDefault(e)
-    }
-    return
-  } else if (props.callDeleteApiOnRemove && isImageCreateUpdateAware(detail.value) && detail.value.id) {
-    try {
-      await deleteImage(imageClient, detail.value.id)
+      await deleteImage(imageClient, modelValue.value)
       reset()
     } catch (e) {
       showErrorsDefault(e)
@@ -578,12 +440,8 @@ const onImageMediaDelete = async () => {
 }
 
 const forceReloadViewWithExpandMetadata = () => {
-  if (isMediaAware(detail.value)) {
-    reloadMedia(detail.value, null, true)
-    return
-  } else if (isImageCreateUpdateAware(detail.value)) {
-    reloadImage(detail.value, null, true)
-  }
+  if (!isImageCreateUpdateAware(detail.value)) return
+  reload(detail.value, null, true)
 }
 
 const onAssetUploadConfirm = (items: ImageCreateUpdateAware[]) => {
@@ -632,15 +490,6 @@ const anyWidgetDialogOpened = computed(() => {
 
 const isLocked = computed(() => {
   return !isNull(lockedByUserLocal.value)
-})
-
-const type = computed<DamAssetTypeType | 'podcast' | null>(() => {
-  if (isMediaAware(resImageMedia.value)) {
-    return resImageMedia.value.extService === MediaExtService.DamVideo ? DamAssetType.Video : 'podcast'
-  } else if (isImageCreateUpdateAware(resImageMedia.value)) {
-    return DamAssetType.Image
-  }
-  return null
 })
 
 watch(
@@ -700,30 +549,25 @@ defineExpose({
             class="d-flex flex-row"
           >
             <VBtn
-              v-if="imageMediaLoaded && !expandMetadata"
+              v-if="imageLoaded && !expandMetadata"
               class="mr-2 mb-2"
-              :text="
-                type === DamAssetType.Image
-                  ? t('common.damImage.image.meta.edit')
-                  : t('common.damImage.media.meta.edit')
-              "
               @click="actionEditMeta"
-            />
+            >
+              {{ t('common.damImage.image.meta.edit') }}
+            </VBtn>
             <VBtn
               class="mr-2 mb-2"
               @click="actionLibrary"
             >
-              <span v-if="imageMediaLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
+              <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
               <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
             </VBtn>
             <AFileInputDialog
-              v-if="isNull(type) || type === DamAssetType.Image"
               ref="expandedUploadDialog"
               v-model="fileInputDialog"
               :file-input-key="uploadQueue?.fileInputKey"
               :accept="uploadAccept"
               :max-sizes="uploadSizes"
-              toolbar-t="common.damImage.image.button.upload"
               @files-input="onFileInput"
             >
               <template #activator="{ props: fileInputProps }">
@@ -761,30 +605,22 @@ defineExpose({
               <VCard>
                 <VList density="compact">
                   <VListItem
-                    v-if="imageMediaLoaded && !expandMetadata"
+                    v-if="imageLoaded && !expandMetadata"
                     @click="actionEditMeta"
                   >
-                    <VListItemTitle>
-                      {{
-                        type === DamAssetType.Image
-                          ? t('common.damImage.image.meta.edit')
-                          : t('common.damImage.media.meta.edit')
-                      }}
-                    </VListItemTitle>
+                    <VListItemTitle>{{ t('common.damImage.image.meta.edit') }}</VListItemTitle>
                   </VListItem>
                   <VListItem @click="actionLibrary">
                     <VListItemTitle>
-                      <span v-if="imageMediaLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
+                      <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
                       <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
                     </VListItemTitle>
                   </VListItem>
                   <AFileInputDialog
-                    v-if="isNull(type) || type === DamAssetType.Image"
                     v-model="fileInputDialog"
                     :file-input-key="uploadQueue?.fileInputKey"
                     :accept="uploadAccept"
                     :max-sizes="uploadSizes"
-                    toolbar-t="common.damImage.image.button.upload"
                     @files-input="onFileInput"
                   >
                     <template #activator="{ props: fileInputProps }">
@@ -801,16 +637,10 @@ defineExpose({
                     </template>
                   </AFileInputDialog>
                   <VListItem
-                    v-if="imageMediaLoaded"
-                    @click="onImageMediaDelete"
+                    v-if="imageLoaded"
+                    @click="onImageDelete"
                   >
-                    <VListItemTitle>
-                      {{
-                        type === DamAssetType.Image
-                          ? t('common.damImage.image.button.removeImage')
-                          : t('common.damImage.media.button.remove')
-                      }}
-                    </VListItemTitle>
+                    <VListItemTitle>{{ t('common.damImage.image.button.removeImage') }}</VListItemTitle>
                   </VListItem>
                 </VList>
               </VCard>
@@ -838,36 +668,19 @@ defineExpose({
           </div>
         </template>
       </VImg>
-      <div
-        v-if="type"
-        class="a-image-widget__icons"
-      >
-        <div v-if="type === 'podcast'">
-          <VIcon
-            size="x-small"
-            icon="mdi-podcast"
-          />
-        </div>
-        <div v-else-if="type === DamAssetType.Video">
-          <VIcon
-            size="x-small"
-            icon="mdi-video"
-          />
-        </div>
-      </div>
       <AImageDropzone
         variant="fill"
         transparent
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
-        :hide-text="hideDropzoneText || isLocked"
+        :hide-text="!withoutImage || isLocked"
         @on-click="onDropzoneClick"
         @on-drop="onDrop"
       />
     </div>
     <slot
       name="append"
-      :image="resImageMedia"
+      :image="resImage"
     />
     <ImageDetailDialogMetadata
       ref="detailDialogMetadataComponent"
@@ -876,28 +689,18 @@ defineExpose({
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"
-      :type="type"
+      :type="DamAssetType.Image"
       @edit-asset="onEditAsset"
       @on-confirm="onMetadataDialogConfirm"
       @on-close="onMetadataDialogClose"
     />
   </div>
   <AAssetSelect
-    v-if="mode === 'image'"
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
     :min-count="1"
     :max-count="1"
     :asset-type="DamAssetType.Image"
-    return-type="asset"
-    @on-confirm="onAssetSelectConfirm"
-  />
-  <AAssetSelectMedia
-    v-if="mode === 'media'"
-    v-model="assetSelectDialog"
-    :select-licences="selectLicences"
-    :min-count="1"
-    :max-count="1"
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
   />

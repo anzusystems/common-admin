@@ -81,6 +81,7 @@ import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
 import AImageWidget from '@/components/damImage/AImageWidget.vue'
+import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
@@ -599,6 +600,7 @@ export {
   ACustomDataForm,
   ACustomDataFormElement,
   AImageWidget,
+  AImageMediaWidget,
   AImageWidgetSimple,
   AImageWidgetMultiple,
   AImageWidgetMultipleSimple,
