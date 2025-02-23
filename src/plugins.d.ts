@@ -20,9 +20,3 @@ declare module '@vue/runtime-core' {
     dataCy?: string
   }
 }
-
-declare module 'vuetify/lib/components/index' {
-  export type VInputSlot = any
-  export type LoaderSlotProps = any
-  export type GroupItemProvide = any
-}
