@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { MediaAware } from '@/types/MediaAware.ts'
-import type { ImageCreateUpdateAware } from '@/types/ImageAware.ts'
-import { cloneDeep, isNull } from '@/utils/common.ts'
+import type { MediaAware } from '@/types/MediaAware'
+import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import { cloneDeep, isNull } from '@/utils/common'
 
 export const isMediaAware = (item: MediaAware | ImageCreateUpdateAware | null): item is MediaAware => {
   if (isNull(item)) return false

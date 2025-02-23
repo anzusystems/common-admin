@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
-import type { MediaAware } from '@/types/MediaAware.ts'
-import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore.ts'
+import type { MediaAware } from '@/types/MediaAware'
+import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 
 export const ADamAssetMetadataValidationScopeSymbol = Symbol.for('anzu:common:asset-metadata-validation-scope')
 

@@ -19,8 +19,8 @@ import {
   isImageCreateUpdateAware,
   isMediaAware,
   useImageMediaWidgetStore,
-} from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore.ts'
-import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset.ts'
+} from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
+import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 
 const props = withDefaults(
   defineProps<{

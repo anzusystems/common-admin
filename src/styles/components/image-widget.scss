@@ -1,0 +1,31 @@
+$class-name-root: 'a-image-widget';
+
+.#{$class-name-root} {
+  &__options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &--locked .v-img {
+    opacity: 0.6;
+  }
+
+  &__icons {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+
+    div {
+      width: 26px;
+      height: 26px;
+      opacity: 0.5;
+      border-radius: 100%;
+      background-color: rgb(0 0 0 / 50%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+}

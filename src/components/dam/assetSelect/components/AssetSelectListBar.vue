@@ -3,8 +3,8 @@ import { useI18n } from 'vue-i18n'
 import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { computed } from 'vue'
-import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset.ts'
-import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore.ts'
+import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 
 withDefaults(

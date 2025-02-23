@@ -1,4 +1,4 @@
-import type { DocIdNullable, IntegerId } from '@/types/common.ts'
+import type { DocIdNullable, IntegerId } from '@/types/common'
 
 export interface MediaAware {
   id?: IntegerId

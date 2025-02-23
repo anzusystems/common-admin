@@ -12,6 +12,7 @@ import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composab
 import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from '@/components/collab/types/Collab'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
+import ImageMediaWidgetInner from '@/components/damImage/uploadQueue/components/ImageMediaWidgetInner.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -124,7 +125,7 @@ defineExpose({
 </script>
 
 <template>
-  <ImageWidgetInner
+  <ImageMediaWidgetInner
     v-if="status === 'ready'"
     ref="innerComponent"
     v-model:media="media"
@@ -138,7 +139,7 @@ defineExpose({
         :image="appendImage"
       />
     </template>
-  </ImageWidgetInner>
+  </ImageMediaWidgetInner>
   <div
     v-else-if="status === 'error'"
     class="text-error"
