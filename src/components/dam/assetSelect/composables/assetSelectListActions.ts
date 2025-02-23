@@ -49,9 +49,9 @@ export function useAssetSelectActions(
   const { resetFilter } = useFilterHelpers()
   const { showErrorsDefault } = useAlerts()
 
-  const fetchAssetList = async (assetType: DamAssetTypeType | 'podcast') => {
+  const fetchAssetList = async () => {
     pagination.page = 1
-    resolveTypeFilter(assetType)
+    resolveTypeFilter(assetSelectStore.assetType)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.setList(
@@ -64,9 +64,9 @@ export function useAssetSelectActions(
     }
   }
 
-  const fetchNextPage = async (assetType: DamAssetTypeType | 'podcast') => {
+  const fetchNextPage = async () => {
     pagination.page = pagination.page + 1
-    resolveTypeFilter(assetType)
+    resolveTypeFilter(assetSelectStore.assetType)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.appendList(
@@ -112,7 +112,7 @@ export function useAssetSelectActions(
     filter.type.default = [assetSelectStore.assetType]
     resetFilter(filter, pagination)
     resolveTypeFilter(assetSelectStore.assetType)
-    await fetchAssetList(assetSelectStore.assetType)
+    await fetchAssetList()
   }
 
   const filterTouch = () => {

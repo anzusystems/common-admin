@@ -10,11 +10,11 @@ const { t } = useI18n()
 const { fetchAssetList, resetAssetList, filterUnTouch, filterIsTouched } = useAssetSelectActions()
 
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId, selectConfig, assetType } = storeToRefs(assetSelectStore)
+const { selectedLicenceId, selectConfig } = storeToRefs(assetSelectStore)
 
 const submitFilter = () => {
   filterUnTouch()
-  fetchAssetList(assetType.value)
+  fetchAssetList()
 }
 
 const resetFilter = () => {

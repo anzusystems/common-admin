@@ -73,7 +73,7 @@ const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId, assetType: assetTypeStore } = storeToRefs(assetSelectStore)
+const { selectedLicenceId } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
@@ -123,7 +123,7 @@ const onConfirm = () => {
 
 const autoloadOnIntersect = (isIntersecting: boolean) => {
   if (isIntersecting && pagination.hasNextPage === true) {
-    fetchNextPage(assetTypeStore.value)
+    fetchNextPage()
   }
 }
 

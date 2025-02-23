@@ -122,7 +122,7 @@ const onConfirm = () => {
 
 const autoloadOnIntersect = (isIntersecting: boolean) => {
   if (isIntersecting && pagination.hasNextPage === true) {
-    fetchNextPage(assetType.value)
+    fetchNextPage()
   }
 }
 
@@ -162,7 +162,7 @@ const customFormConfigLoading = ref(true)
 const typeChange = () => {
   assetSelectStore.reset()
   assetDetailStore.reset()
-  fetchAssetList(assetType.value)
+  fetchAssetList()
 }
 
 watch(
