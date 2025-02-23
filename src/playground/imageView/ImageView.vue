@@ -6,6 +6,7 @@ import { ref } from 'vue'
 import type { IntegerIdNullable } from '@/types/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import useVuelidate from '@vuelidate/core'
+import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
 
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)
@@ -125,7 +126,7 @@ const saveInsideDialog = () => {
         </VCol>
         <VCol cols="4">
           Media
-          <AImageWidget
+          <AImageMediaWidget
             v-model="imageId4"
             v-model:media="media"
             :upload-licence="100000"
