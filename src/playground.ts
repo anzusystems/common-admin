@@ -4,7 +4,7 @@ import { vuetify } from '@/plugins/vuetify'
 import { i18n } from '@/plugins/i18n'
 import { createPinia } from 'pinia'
 import router from '@/router/playground'
-import AnzuSystemsCommonAdmin from '@/AnzuSystemsCommonAdmin'
+import AnzuSystemsCommonAdmin, { type PluginOptions } from '@/AnzuSystemsCommonAdmin'
 import { damClient } from '@/playground/mock/coreDamClient'
 import '@/styles/main.scss'
 import type { LanguageCode } from '@/composables/languageSettings'
@@ -21,7 +21,7 @@ createApp(App)
   .use(router)
   .use(i18n)
   .use(vuetify)
-  .use(AnzuSystemsCommonAdmin, {
+  .use<PluginOptions>(AnzuSystemsCommonAdmin, {
     languages: {
       available: ['en', 'sk'],
       default: 'sk',
