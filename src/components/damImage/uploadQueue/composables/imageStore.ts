@@ -1,17 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { ImageCreateUpdateAware, ImageStoreItem } from '@/types/ImageAware'
-import { cloneDeep, isNull } from '@/utils/common'
+import type { ImageStoreItem } from '@/types/ImageAware'
 
 export const useImageStore = defineStore('commonImageStore', () => {
   const images = ref<ImageStoreItem[]>([])
-  const imageDetail = ref<ImageCreateUpdateAware | null>(null)
   const maxPosition = ref(0)
-
-  function setImageDetail(data: ImageCreateUpdateAware | null) {
-    if (isNull(data)) imageDetail.value = null
-    imageDetail.value = cloneDeep(data)
-  }
 
   function setImages(data: ImageStoreItem[]) {
     images.value = data
@@ -33,16 +26,13 @@ export const useImageStore = defineStore('commonImageStore', () => {
 
   function reset() {
     images.value = []
-    imageDetail.value = null
   }
 
   return {
     images,
-    imageDetail,
     maxPosition,
     setImages,
     addImages,
-    setImageDetail,
     updateMaxPositionIfGreater,
     removeImageByIndex,
     reset,

@@ -15,7 +15,7 @@
     "button": {
       "options": "Edit image",
       "editAsset": "Edit in DAM",
-      "upload": "Upload",
+      "upload": "Upload image",
       "addFromDam": "Add from DAM",
       "replaceFromDam": "Replace from DAM",
       "removeImage": "Remove image"
@@ -24,6 +24,22 @@
       "texts": {
         "description": "If you overwrite the description here, it will not change in the image storage."
       }
+    }
+  },
+  "media": {
+    "model": {
+      "dam": {
+        "imageFileId": "Preview",
+        "assetId": "Asset ID",
+        "licenceId": "Licence"
+      }
+    },
+    "meta": {
+      "edit": "Edit medium"
+    },
+    "button": {
+      "remove": "Edit medium",
+      "editInDam": "Edit in DAM"
     }
   },
   "queueItem": {

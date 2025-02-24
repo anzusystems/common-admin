@@ -15,7 +15,7 @@
     "button": {
       "options": "Upraviť obrázok",
       "editAsset": "Upraviť v DAM",
-      "upload": "Nahrať",
+      "upload": "Nahrať obrázok",
       "addFromDam": "Pridať z DAM",
       "replaceFromDam": "Vymeniť z DAM",
       "removeImage": "Odstrániť obrázok"
@@ -24,6 +24,22 @@
       "texts": {
         "description": "Ak prepíšete popis na tomto mieste, nezmeníte ho v úložisku obrázkov."
       }
+    }
+  },
+  "media": {
+    "model": {
+      "dam": {
+        "imageFileId": "Náhľad",
+        "assetId": "ID assetu",
+        "licenceId": "Licencia"
+      }
+    },
+    "meta": {
+      "edit": "Upraviť médium"
+    },
+    "button": {
+      "remove": "Odstrániť médium",
+      "editInDam": "Upraviť v DAM"
     }
   },
   "queueItem": {

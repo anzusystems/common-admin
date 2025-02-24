@@ -3,7 +3,7 @@ import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
-import type { AssetDetailItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
+import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { usePagination } from '@/composables/system/pagination'
 import { useFilterHelpers } from '@/composables/filter/filterHelpers'
 import { useAlerts } from '@/composables/system/alerts'
@@ -21,8 +21,19 @@ import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelect
 
 const filter = useAssetListFilter()
 const pagination = usePagination()
+pagination.sortBy = null
 const filterIsTouched = ref(false)
 const detailLoading = ref(false)
+
+function resolveTypeFilter(assetType: DamAssetTypeType, inPodcast: boolean | null) {
+  if (inPodcast === true) {
+    filter.type.model = [DamAssetType.Audio]
+    filter.inPodcast.model = true
+    return
+  }
+  filter.type.model = [assetType]
+  filter.inPodcast.model = null
+}
 
 export function useAssetSelectActions(
   configName = 'default',
@@ -40,6 +51,7 @@ export function useAssetSelectActions(
 
   const fetchAssetList = async () => {
     pagination.page = 1
+    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.setList(
@@ -51,8 +63,10 @@ export function useAssetSelectActions(
       assetSelectStore.hideLoader()
     }
   }
+
   const fetchNextPage = async () => {
     pagination.page = pagination.page + 1
+    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.appendList(
@@ -96,7 +110,9 @@ export function useAssetSelectActions(
   const resetAssetList = async () => {
     assetSelectStore.reset()
     filter.type.default = [assetSelectStore.assetType]
-    resetFilter(filter, pagination, fetchAssetList)
+    resetFilter(filter, pagination)
+    resolveTypeFilter(assetSelectStore.assetType,  assetSelectStore.inPodcast)
+    await fetchAssetList()
   }
 
   const filterTouch = () => {

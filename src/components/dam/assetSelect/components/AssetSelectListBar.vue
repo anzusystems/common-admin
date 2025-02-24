@@ -2,10 +2,58 @@
 import { useI18n } from 'vue-i18n'
 import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
+import { computed } from 'vue'
+import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import { storeToRefs } from 'pinia'
+
+withDefaults(
+  defineProps<{
+    showTypes?: boolean
+  }>(),
+  {
+    showTypes: false,
+  }
+)
+const emit = defineEmits<{
+  (e: 'typeChange', data: { type: DamAssetTypeType, inPodcast: boolean | null }): void
+}>()
 
 const { t } = useI18n()
 const { setGridView } = useGridView()
 const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = useSidebar()
+const assetSelectStore = useAssetSelectStore()
+const { assetType, inPodcast } = storeToRefs(assetSelectStore)
+
+const isImageActive = computed(() => {
+  return assetType.value === DamAssetType.Image
+})
+
+const isVideoActive = computed(() => {
+  return assetType.value === DamAssetType.Video
+})
+
+const isPodcastActive = computed(() => {
+  return assetType.value === DamAssetType.Audio && inPodcast.value === true
+})
+
+const setFilterImage = () => {
+  assetType.value = DamAssetType.Image
+  inPodcast.value = null
+  emit('typeChange', { type: DamAssetType.Image, inPodcast: null })
+}
+
+const setFilterVideo = () => {
+  assetType.value = DamAssetType.Video
+  inPodcast.value = null
+  emit('typeChange', { type: DamAssetType.Video, inPodcast: null })
+}
+
+const setFilterPodcast = () => {
+  assetType.value = DamAssetType.Audio
+  inPodcast.value = true
+  emit('typeChange', { type: DamAssetType.Audio, inPodcast: true })
+}
 </script>
 
 <template>
@@ -38,6 +86,77 @@ const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = use
                 {{ t('common.assetSelect.meta.filter.toggle') }}
               </VTooltip>
             </VBtn>
+            <template v-if="showTypes">
+              <VDivider
+                vertical
+                class="ml-1 mr-2 my-2"
+              />
+              <VBtn
+                icon
+                :width="30"
+                :height="30"
+                class="mr-1"
+                data-cy="button-image-types"
+                :active="isImageActive"
+                :color="isImageActive ? 'secondary' : ''"
+                :variant="isImageActive ? 'flat' : 'text'"
+                @click.stop="setFilterImage"
+              >
+                <VIcon
+                  icon="mdi-image"
+                  :size="16"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                >
+                  {{ t('common.assetSelect.assetType.image') }}
+                </VTooltip>
+              </VBtn>
+              <VBtn
+                icon
+                :width="30"
+                :height="30"
+                class="mr-1"
+                data-cy="button-video-types"
+                :active="isVideoActive"
+                :color="isVideoActive ? 'secondary' : ''"
+                :variant="isVideoActive ? 'flat' : 'text'"
+                @click.stop="setFilterVideo"
+              >
+                <VIcon
+                  icon="mdi-video"
+                  :size="16"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                >
+                  {{ t('common.assetSelect.assetType.video') }}
+                </VTooltip>
+              </VBtn>
+              <VBtn
+                icon
+                :width="30"
+                :height="30"
+                data-cy="button-in-podcast-types"
+                :active="isPodcastActive"
+                :color="isPodcastActive ? 'secondary' : ''"
+                :variant="isPodcastActive ? 'flat' : 'text'"
+                @click.stop="setFilterPodcast"
+              >
+                <VIcon
+                  icon="mdi-podcast"
+                  :size="16"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                >
+                  {{ t('common.assetSelect.filter.inPodcast') }}
+                </VTooltip>
+              </VBtn>
+            </template>
             <slot name="second-bar-left" />
           </div>
           <div class="d-flex align-center">

@@ -23,6 +23,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   const selectedLicenceId = ref<IntegerId>(0)
   const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
   const assetType = ref<DamAssetTypeType>(DamAssetTypeDefault)
+  const inPodcast = ref<boolean | null>(null)
   const selectedAssets = ref<Map<DocId, AssetSelectListItem>>(new Map())
   const singleMode = ref(false)
   const minCount = ref(0)
@@ -210,6 +211,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     selectedLicenceId,
     selectConfig,
     assetType,
+    inPodcast,
     singleMode,
     minCount,
     maxCount,
