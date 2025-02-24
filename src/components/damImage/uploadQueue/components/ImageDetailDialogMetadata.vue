@@ -21,6 +21,8 @@ import {
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import type { ImageCreateUpdateAware } from '@/types/ImageAware.ts'
+import ARow from '@/components/ARow.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -52,6 +54,25 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 
 const imageSourceRequired = computed(() => {
   return !props.showDamAuthors
+})
+
+const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
+  if (!isMediaAware(detail.value)) return undefined
+
+  return {
+    texts: {
+      description: '',
+      source: '',
+    },
+    dam: {
+      damId: detail.value.dam.imageFileId,
+      licenceId: detail.value.dam.licenceId,
+      regionPosition: 0,
+    },
+    flags: {
+      showSource: false,
+    },
+  }
 })
 
 const { v$ } = useImageValidation(detail, imageSourceRequired)
@@ -242,8 +263,20 @@ defineExpose({
           class="position-relative"
         >
           <div class="my-4">
-            {{ detail.dam }}
+            <h4 class="font-weight-bold text-subtitle-2">
+              {{ t('common.damImage.media.model.dam.imageFileId') }}:
+            </h4>
+            <AImageWidgetSimple
+              :model-value="null"
+              :image="imageMedia"
+            />
           </div>
+          <ARow :title="t('common.damImage.media.model.dam.assetId')">
+            {{ detail.dam.assetId }}
+          </ARow>
+          <ARow :title="t('common.damImage.media.model.dam.licenceId')">
+            {{ detail.dam.licenceId }}
+          </ARow>
         </div>
       </VCardText>
       <VCardActions>

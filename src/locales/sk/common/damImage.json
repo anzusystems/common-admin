@@ -27,6 +27,13 @@
     }
   },
   "media": {
+    "model": {
+      "dam": {
+        "imageFileId": "Náhľad",
+        "assetId": "ID assetu",
+        "licenceId": "Licencia"
+      }
+    },
     "meta": {
       "edit": "Upraviť médium"
     },

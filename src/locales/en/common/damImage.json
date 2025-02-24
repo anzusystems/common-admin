@@ -27,6 +27,13 @@
     }
   },
   "media": {
+    "model": {
+      "dam": {
+        "imageFileId": "Preview",
+        "assetId": "Asset ID",
+        "licenceId": "Licence"
+      }
+    },
     "meta": {
       "edit": "Edit medium"
     },
