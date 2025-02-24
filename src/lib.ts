@@ -521,6 +521,8 @@ import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueu
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
+import { isImageCreateUpdateAware, isMediaAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
+import type { MediaAware } from '@/types/MediaAware'
 
 export {
   // COMPONENTS
@@ -821,6 +823,9 @@ export {
   type ImageAware,
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,
+  isImageCreateUpdateAware,
+  type MediaAware,
+  isMediaAware,
   type DamAuthor,
   type DamAuthorMinimal,
   type DamKeyword,

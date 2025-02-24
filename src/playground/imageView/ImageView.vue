@@ -7,6 +7,7 @@ import type { IntegerIdNullable } from '@/types/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import useVuelidate from '@vuelidate/core'
 import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
+import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore.ts'
 
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)
@@ -127,14 +128,23 @@ const saveInsideDialog = () => {
         <VCol cols="4">
           Media
           <AImageMediaWidget
-            v-model="imageId4"
+            v-model:image="imageId4"
             v-model:media="media"
             :upload-licence="100000"
             :select-licences="[100000, 100001]"
             queue-key="media"
-            mode="media"
             label="Priority content"
-          />
+          >
+            <template #append="{ imageMedia }">
+              <div
+                v-if="isImageCreateUpdateAware(imageMedia)"
+                class="text-caption"
+              >
+                <p>description: {{ imageMedia.texts.description }}</p>
+                <p>source: {{ imageMedia.texts.source }}</p>
+              </div>
+            </template>
+          </AImageMediaWidget>
         </VCol>
       </VRow>
     </VCardText>

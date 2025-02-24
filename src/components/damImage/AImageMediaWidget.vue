@@ -13,15 +13,15 @@ import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from 
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import ImageMediaWidgetInner from '@/components/damImage/uploadQueue/components/ImageMediaWidgetInner.vue'
+import type { MediaAware } from '@/types/MediaAware.ts'
 
 const props = withDefaults(
   defineProps<{
-    modelValue: IntegerIdNullable // image
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
-    mode?: 'image' | 'media'
-    image?: ImageAware | undefined // optional, if available, no need to fetch image data
+    initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
+    initialMedia?: MediaAware | undefined // optional, if available, no need to fetch media data
     configName?: string
     collab?: CollabComponentConfig
     collabStatus?: CollabStatusType
@@ -40,12 +40,12 @@ const props = withDefaults(
     damHeight?: undefined | number
   }>(),
   {
-    mode: 'image',
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
     label: undefined,
-    image: undefined,
+    initialImage: undefined,
+    initialMedia: undefined,
     readonly: false,
     required: false,
     lockable: false,
@@ -64,11 +64,11 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: IntegerIdNullable): void
   (e: 'afterMetadataSaveSuccess'): void
 }>()
 
-const media = defineModel<IntegerIdNullable>('media', { default: null, required: false }) // media
+const mediaModel = defineModel<IntegerIdNullable>('media', { required: true })
+const imageModel = defineModel<IntegerIdNullable>('image', { required: true })
 const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading')
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -128,15 +128,15 @@ defineExpose({
   <ImageMediaWidgetInner
     v-if="status === 'ready'"
     ref="innerComponent"
-    v-model:media="media"
+    v-model:media="mediaModel"
+    v-model:image="imageModel"
     v-bind="props"
-    @update:model-value="emit('update:modelValue', $event)"
     @after-metadata-save-success="emit('afterMetadataSaveSuccess')"
   >
-    <template #append="{ image: appendImage }">
+    <template #append="{ imageMedia: appendImage }">
       <slot
         name="append"
-        :image="appendImage"
+        :image-media="appendImage"
       />
     </template>
   </ImageMediaWidgetInner>
