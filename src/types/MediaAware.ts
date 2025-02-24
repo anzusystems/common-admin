@@ -14,7 +14,7 @@ export interface DamMedia {
 
 export const MediaExtService = {
   DamVideo: 'damVideo',
-  DamPodcast: 'damAudio',
+  DamPodcast: 'damPodcast',
 } as const
 export type MediaExtServiceType = (typeof MediaExtService)[keyof typeof MediaExtService]
 export const MediaExtServiceDefault = MediaExtService.DamVideo
