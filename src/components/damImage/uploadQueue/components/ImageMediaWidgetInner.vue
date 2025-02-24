@@ -394,7 +394,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   let source = ''
   const selectedAsset = data.value[0]
   if (!selectedAsset.mainFile) return
-  if (selectedAsset.attributes.assetType === 'video' && assetFileIsVideoFile(selectedAsset.mainFile)) {
+  if (selectedAsset.attributes.assetType === DamAssetType.Video && assetFileIsVideoFile(selectedAsset.mainFile)) {
     // video
     const mediaData: MediaAware = {
       extService: MediaExtService.DamVideo,
@@ -409,7 +409,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     }
     imageMediaWidgetStore.setDetail(mediaData)
   } else if (
-    selectedAsset.attributes.assetType === 'audio' &&
+    selectedAsset.attributes.assetType === DamAssetType.Audio &&
     selectedAsset.podcasts.length > 0 &&
     assetFileIsAudioFile(selectedAsset.mainFile)
   ) {
@@ -426,7 +426,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       mediaData.id = mediaModel.value
     }
     imageMediaWidgetStore.setDetail(mediaData)
-  } else if (selectedAsset.attributes.assetType === 'image') {
+  } else if (selectedAsset.attributes.assetType === DamAssetType.Image) {
     // image
     try {
       const assetRes = await fetchAsset(damClient, selectedAsset.id)
@@ -468,7 +468,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     imageMediaWidgetStore.setDetail(image)
   }
   metadataDialogLoading.value = false
-  forceReloadViewWithExpandMetadata()
+  // forceReloadViewWithExpandMetadata()
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -634,9 +634,9 @@ const isLocked = computed(() => {
   return !isNull(lockedByUserLocal.value)
 })
 
-const type = computed<DamAssetTypeType | 'podcast' | null>(() => {
+const type = computed<DamAssetTypeType | null>(() => {
   if (isMediaAware(resImageMedia.value)) {
-    return resImageMedia.value.extService === MediaExtService.DamVideo ? DamAssetType.Video : 'podcast'
+    return resImageMedia.value.extService === MediaExtService.DamVideo ? DamAssetType.Video : DamAssetType.Audio
   } else if (isImageCreateUpdateAware(resImageMedia.value)) {
     return DamAssetType.Image
   }
@@ -840,18 +840,22 @@ defineExpose({
       </VImg>
       <div
         v-if="type"
-        class="a-image-widget__icons"
+        class="a-image-widget__icon"
       >
-        <div v-if="type === 'podcast'">
+        <div
+          v-if="type === DamAssetType.Audio"
+        >
           <VIcon
-            size="x-small"
-            icon="mdi-podcast"
+            size="80"
+            icon="mdi-music"
+            color="#505050"
           />
         </div>
         <div v-else-if="type === DamAssetType.Video">
           <VIcon
-            size="x-small"
+            size="80"
             icon="mdi-video"
+            color="#505050"
           />
         </div>
       </div>

@@ -16,14 +16,14 @@ withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'typeChange', data: DamAssetTypeType | 'podcast'): void
+  (e: 'typeChange', data: { type: DamAssetTypeType, inPodcast: boolean | null }): void
 }>()
 
 const { t } = useI18n()
 const { setGridView } = useGridView()
 const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = useSidebar()
 const assetSelectStore = useAssetSelectStore()
-const { assetType } = storeToRefs(assetSelectStore)
+const { assetType, inPodcast } = storeToRefs(assetSelectStore)
 
 const isImageActive = computed(() => {
   return assetType.value === DamAssetType.Image
@@ -34,22 +34,25 @@ const isVideoActive = computed(() => {
 })
 
 const isPodcastActive = computed(() => {
-  return assetType.value === 'podcast'
+  return assetType.value === DamAssetType.Audio && inPodcast.value === true
 })
 
 const setFilterImage = () => {
   assetType.value = DamAssetType.Image
-  emit('typeChange', DamAssetType.Image)
+  inPodcast.value = null
+  emit('typeChange', { type: DamAssetType.Image, inPodcast: null })
 }
 
 const setFilterVideo = () => {
   assetType.value = DamAssetType.Video
-  emit('typeChange', DamAssetType.Video)
+  inPodcast.value = null
+  emit('typeChange', { type: DamAssetType.Video, inPodcast: null })
 }
 
 const setFilterPodcast = () => {
-  assetType.value = 'podcast'
-  emit('typeChange', 'podcast')
+  assetType.value = DamAssetType.Audio
+  inPodcast.value = true
+  emit('typeChange', { type: DamAssetType.Audio, inPodcast: true })
 }
 </script>
 

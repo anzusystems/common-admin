@@ -25,8 +25,8 @@ pagination.sortBy = null
 const filterIsTouched = ref(false)
 const detailLoading = ref(false)
 
-function resolveTypeFilter(assetType: DamAssetTypeType | 'podcast') {
-  if (assetType === 'podcast') {
+function resolveTypeFilter(assetType: DamAssetTypeType, inPodcast: boolean | null) {
+  if (inPodcast === true) {
     filter.type.model = [DamAssetType.Audio]
     filter.inPodcast.model = true
     return
@@ -51,7 +51,7 @@ export function useAssetSelectActions(
 
   const fetchAssetList = async () => {
     pagination.page = 1
-    resolveTypeFilter(assetSelectStore.assetType)
+    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.setList(
@@ -66,7 +66,7 @@ export function useAssetSelectActions(
 
   const fetchNextPage = async () => {
     pagination.page = pagination.page + 1
-    resolveTypeFilter(assetSelectStore.assetType)
+    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.appendList(
@@ -111,7 +111,7 @@ export function useAssetSelectActions(
     assetSelectStore.reset()
     filter.type.default = [assetSelectStore.assetType]
     resetFilter(filter, pagination)
-    resolveTypeFilter(assetSelectStore.assetType)
+    resolveTypeFilter(assetSelectStore.assetType,  assetSelectStore.inPodcast)
     await fetchAssetList()
   }
 
@@ -124,7 +124,7 @@ export function useAssetSelectActions(
 
   const initStoreContext = (
     selectConfig: DamConfigLicenceExtSystemReturnType[],
-    assetType: DamAssetTypeType | 'podcast',
+    assetType: DamAssetTypeType,
     singleMode: boolean,
     minCount: number,
     maxCount: number

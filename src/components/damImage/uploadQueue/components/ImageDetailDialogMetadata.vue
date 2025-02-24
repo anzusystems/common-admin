@@ -27,7 +27,7 @@ const props = withDefaults(
     modelValue: boolean
     saving: boolean
     loading: boolean
-    type: DamAssetTypeType | 'podcast' | null
+    type: DamAssetTypeType | null
     expand?: boolean
     showDamAuthors?: boolean
   }>(),
