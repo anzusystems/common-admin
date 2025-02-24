@@ -38,7 +38,8 @@
       "edit": "Edit medium"
     },
     "button": {
-      "remove": "Edit medium"
+      "remove": "Edit medium",
+      "editInDam": "Edit in DAM"
     }
   },
   "queueItem": {

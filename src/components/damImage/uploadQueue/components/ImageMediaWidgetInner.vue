@@ -11,7 +11,6 @@ import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
@@ -834,9 +833,7 @@ defineExpose({
         v-if="type"
         class="a-image-widget__icon"
       >
-        <div
-          v-if="type === DamAssetType.Audio"
-        >
+        <div v-if="type === DamAssetType.Audio">
           <VIcon
             size="80"
             icon="mdi-music"

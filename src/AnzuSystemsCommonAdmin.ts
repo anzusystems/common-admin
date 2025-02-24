@@ -41,6 +41,7 @@ export type CommonAdminCoreDamOptions =
       configs: { [key: string]: CommonAdminCoreDamConfig }
       apiTimeout: number
       uploadStatusFallback: boolean
+      adminDomain: string
       notification: {
         enabled: boolean
         webSocketUrl: string

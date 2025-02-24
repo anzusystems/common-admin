@@ -38,7 +38,8 @@
       "edit": "Upraviť médium"
     },
     "button": {
-      "remove": "Odstrániť médium"
+      "remove": "Odstrániť médium",
+      "editInDam": "Upraviť v DAM"
     }
   },
   "queueItem": {

@@ -32,5 +32,6 @@ export function useCommonAdminCoreDamOptionsGlobal() {
     apiTimeout: commonAdminCoreDamOptions.value.apiTimeout,
     uploadStatusFallback: commonAdminCoreDamOptions.value.uploadStatusFallback,
     notification: commonAdminCoreDamOptions.value.notification,
+    adminDomain: commonAdminCoreDamOptions.value.adminDomain,
   }
 }

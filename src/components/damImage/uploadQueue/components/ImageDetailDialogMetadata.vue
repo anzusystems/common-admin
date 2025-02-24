@@ -23,6 +23,8 @@ import {
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware.ts'
 import ARow from '@/components/ARow.vue'
+import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
+import { isNull } from '@/utils/common.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -57,7 +59,7 @@ const imageSourceRequired = computed(() => {
 })
 
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
-  if (!isMediaAware(detail.value)) return undefined
+  if (!isMediaAware(detail.value) || isNull(detail.value.dam.imageFileId)) return undefined
 
   return {
     texts: {
@@ -272,7 +274,10 @@ defineExpose({
             />
           </div>
           <ARow :title="t('common.damImage.media.model.dam.assetId')">
-            {{ detail.dam.assetId }}
+            <div class="d-flex align-center justify-space-between">
+              <div>{{ detail.dam.assetId }}</div>
+              <DamAdminAssetLink :asset-id="detail.dam.assetId" />
+            </div>
           </ARow>
           <ARow :title="t('common.damImage.media.model.dam.licenceId')">
             {{ detail.dam.licenceId }}

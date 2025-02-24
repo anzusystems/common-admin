@@ -34,6 +34,7 @@ createApp(App)
       },
       apiTimeout: 30,
       uploadStatusFallback: false,
+      adminDomain: 'http://admin-dam.sme.localhost:8150',
       notification: {
         enabled: true,
         webSocketUrl: 'ws://notification-server.sme.localhost/ws',
