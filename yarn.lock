@@ -220,7 +220,7 @@ __metadata:
     "@vuelidate/validators": "npm:^2.0.4"
     "@vueuse/core": "npm:^12.7.0"
     "@vueuse/integrations": "npm:^12.7.0"
-    axios: "npm:1.8.0"
+    axios: "npm:1.8.1"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.13"
     eslint: "npm:9.21.0"
@@ -256,7 +256,7 @@ __metadata:
     "@vuelidate/validators": 2.0.4
     "@vueuse/core": 12.7.0
     "@vueuse/integrations": 12.7.0
-    axios: 1.8.0
+    axios: 1.8.1
     dayjs: 1.11.13
     pinia: 3.0.1
     socket.io-client: 4.8.1
@@ -2766,14 +2766,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.8.0":
-  version: 1.8.0
-  resolution: "axios@npm:1.8.0"
+"axios@npm:1.8.1":
+  version: 1.8.1
+  resolution: "axios@npm:1.8.1"
   dependencies:
     follow-redirects: "npm:^1.15.6"
     form-data: "npm:^4.0.0"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10/4eab6c9eed00fdb07295f6991010a3d3a8affad7d0791f819a76de3f01ca0c5943e539e93a1eb72f2bfa182728401e19f5f5f6bb1ffde68b67f9934989bf9aa6
+  checksum: 10/5a09a2b39e724e018bc94d0424bb1a6042e71864039fbcc8c8d9dd50f3acd9d01f81b895994c9b46bc82c026afa3dfd1ec343a27bfe4723b70841f3b3dd6edfa
   languageName: node
   linkType: hard
 

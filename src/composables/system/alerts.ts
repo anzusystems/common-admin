@@ -155,29 +155,29 @@ export function useAlerts() {
     })
   }
 
-  const showErrorsDefault = (error: any) => {
+  const showErrorsDefault = (error: any, duration = -1) => {
     if (isAnzuApiForbiddenError(error)) {
-      showForbiddenError()
+      showForbiddenError(duration)
       return true
     }
     if (isAnzuApiValidationError(error)) {
-      showApiValidationError(error.fields)
+      showApiValidationError(error.fields, duration)
       return true
     }
     if (isAnzuApiDependencyExistsError(error)) {
-      showErrorT('error.apiDependencyExists.message')
+      showErrorT('error.apiDependencyExists.message', duration)
       return true
     }
     if (isAnzuApiForbiddenOperationError(error)) {
-      showApiForbiddenOperationError(error.detail)
+      showApiForbiddenOperationError(error.detail, duration)
       return true
     }
     if (isAnzuFatalError(error)) {
-      showUnknownError()
+      showUnknownError(duration)
       return true
     }
     if (isAnzuApiResponseCodeError(error)) {
-      showUnknownError()
+      showUnknownError(duration)
       return true
     }
     return false
