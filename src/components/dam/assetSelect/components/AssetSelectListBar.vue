@@ -6,18 +6,29 @@ import { computed } from 'vue'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
+import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
+import type { DatatableOrderingOption, DatatableOrderingOptions } from '@/composables/system/datatableColumns.ts'
 
 withDefaults(
   defineProps<{
     showTypes?: boolean
+    sortVariant?: 'default' | 'most-relevant'
+    disableSort?: boolean
+    customSortOptions?: undefined | DatatableOrderingOptions
   }>(),
   {
     showTypes: false,
+    sortVariant: 'most-relevant',
+    disableSort: false,
+    customSortOptions: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'typeChange', data: { type: DamAssetTypeType, inPodcast: boolean | null }): void
+  (e: 'sortByChange', data: DatatableOrderingOption): void
 }>()
+
+const sortModel = defineModel<number>('sort', { default: 1, required: false })
 
 const { t } = useI18n()
 const { setGridView } = useGridView()
@@ -161,6 +172,13 @@ const setFilterPodcast = () => {
           </div>
           <div class="d-flex align-center">
             <slot name="second-bar-right" />
+            <ADatatableOrdering
+              v-if="!disableSort"
+              v-model="sortModel"
+              :variant="sortVariant"
+              :custom-options="customSortOptions"
+              @sort-by-change="emit('sortByChange', $event)"
+            />
             <VBtn
               size="x-small"
               icon

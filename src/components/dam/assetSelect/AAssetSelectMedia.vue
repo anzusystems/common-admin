@@ -25,6 +25,11 @@ import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMet
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
+import type {
+  DatatableOrderingOption,
+  DatatableOrderingOptions,
+  DatatableSortBy
+} from '@/composables/system/datatableColumns.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -35,12 +40,20 @@ const props = withDefaults(
     configName?: string
     skipCurrentUserCheck?: boolean
     onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
+    sortVariant?: 'default' | 'most-relevant'
+    disableSort?: boolean
+    customSortOptions?: undefined | DatatableOrderingOptions
+    initialPaginationSort?: DatatableSortBy
   }>(),
   {
     returnType: AssetSelectReturnType.MainFileId,
     configName: 'default',
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
+    sortVariant: 'most-relevant',
+    disableSort: false,
+    customSortOptions: undefined,
+    initialPaginationSort: () => ({ key: 'createdAt', order: 'desc' }),
   }
 )
 
@@ -49,6 +62,7 @@ const emit = defineEmits<{
 }>()
 
 const modelValue = defineModel<boolean>({ default: false, required: false })
+const sortModel = defineModel<number>('sort', { default: 1, required: false })
 const loading = ref(false)
 
 const { t } = useI18n()
@@ -165,6 +179,15 @@ const typeChange = () => {
   fetchAssetList()
 }
 
+const sortByChange = (option: DatatableOrderingOption) => {
+  pagination.sortBy = null
+  if (option.sortBy) {
+    pagination.sortBy = option.sortBy.key
+    pagination.descending = option.sortBy.order === 'desc'
+  }
+  fetchAssetList()
+}
+
 watch(
   extId,
   async (newValue) => {
@@ -186,6 +209,10 @@ watch(
 )
 
 onMounted(async () => {
+  if (props.initialPaginationSort) {
+    pagination.sortBy = props.initialPaginationSort.key
+    pagination.descending = props.initialPaginationSort.order === 'desc'
+  }
   loading.value = true
   selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
   loading.value = false
@@ -231,8 +258,13 @@ defineExpose({
           </slot>
         </ADialogToolbar>
         <AssetSelectListBar
+          v-model:sort="sortModel"
+          :sort-variant="sortVariant"
+          :disable-sort="disableSort"
+          :custom-sort-options="customSortOptions"
           show-types
           @type-change="typeChange"
+          @sort-by-change="sortByChange"
         />
         <div
           class="subject-select__main"
