@@ -105,21 +105,23 @@ export function useCollabInit() {
     collabSocket.value?.on('startCollab', async (room, callback: (data: CollabRoomPlainData) => void) => {
       collabStartingEventBus.emit({ room, startedCallback: callback })
     })
-    collabSocket.value.on('connect', () => {
+    collabSocket.value.on('connect', async () => {
       collabRoomInfoState.clear()
       const connectedBefore = collabConnected.value
       collabConnected.value = collabSocket.value?.connected ?? false
       if (!connectedBefore) {
+        await collabOptions.value.refreshUserToken()
         reconnectEventBus.emit('reconnect')
       }
     })
     collabSocket.value.on('connect_error', () => {
       collabConnected.value = collabSocket.value?.connected ?? false
     })
-    collabSocket.value.on('disconnect', (reason) => {
+    collabSocket.value.on('disconnect', async (reason) => {
       collabRoomInfoState.forEach((roomInfo: CollabRoomInfo) => (roomInfo.status = CollabStatus.Inactive))
       collabConnected.value = collabSocket.value?.connected ?? false
       if (reason === 'io server disconnect') {
+        await collabOptions.value.refreshUserToken()
         collabSocket.value?.connect()
       }
     })

@@ -288,7 +288,7 @@ import {
 import { useCommonJobFactory } from '@/model/factory/JobFactory'
 import type { UrlParams } from '@/services/api/apiHelper'
 import { generateUUIDv1, generateUUIDv4 } from '@/utils/generator'
-import { useLoginStatus } from '@/composables/system/loginStatus'
+import { useLoginStatus, localTimeShiftInSeconds } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import {
   type AssetCustomData,
@@ -1096,4 +1096,5 @@ export {
   getAssetTypeByMimeType,
   damFileTypeFix,
   fetchDamCurrentUser,
+  localTimeShiftInSeconds,
 }
