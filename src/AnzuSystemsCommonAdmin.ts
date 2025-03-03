@@ -51,7 +51,7 @@ export type CommonAdminCoreDamOptions =
 export type CommonAdminCollabOptions = {
   enabled: boolean
   socketUrl: string
-  refreshUserToken: () => Promise<void>
+  beforeReconnect: () => Promise<void>
 }
 
 export default {
