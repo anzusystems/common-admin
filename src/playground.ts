@@ -53,6 +53,7 @@ createApp(App)
     collab: {
       enabled: true,
       socketUrl: 'ws://collaboration.sme.localhost',
+      beforeReconnect: () => new Promise((resolve) => resolve()),
     },
   })
   .mount('#app')
