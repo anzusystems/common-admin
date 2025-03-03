@@ -1,6 +1,6 @@
 import { readonly, ref } from 'vue'
 import type { RouteLocationNormalized } from 'vue-router'
-import { isDefined, isNull } from '@/utils/common'
+import { isNull } from '@/utils/common'
 import { stringToInt } from '@/utils/string'
 
 export const LoginState = {
