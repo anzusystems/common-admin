@@ -7,7 +7,7 @@ import type { IntegerIdNullable } from '@/types/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import useVuelidate from '@vuelidate/core'
 import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
-import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore.ts'
+import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)

@@ -2,7 +2,7 @@
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { computed } from 'vue'
 import type { DocIdNullable } from '@/types/common.ts'
-import { useCommonAdminCoreDamOptionsGlobal } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions.ts'
+import { useCommonAdminCoreDamOptionsGlobal } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
