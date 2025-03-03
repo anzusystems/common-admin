@@ -110,7 +110,7 @@ export function useCollabInit() {
       const connectedBefore = collabConnected.value
       collabConnected.value = collabSocket.value?.connected ?? false
       if (!connectedBefore) {
-        await collabOptions.value.refreshUserToken()
+        await collabOptions.value.beforeReconnect()
         reconnectEventBus.emit('reconnect')
       }
     })
@@ -121,7 +121,7 @@ export function useCollabInit() {
       collabRoomInfoState.forEach((roomInfo: CollabRoomInfo) => (roomInfo.status = CollabStatus.Inactive))
       collabConnected.value = collabSocket.value?.connected ?? false
       if (reason === 'io server disconnect') {
-        await collabOptions.value.refreshUserToken()
+        await collabOptions.value.beforeReconnect()
         collabSocket.value?.connect()
       }
     })
