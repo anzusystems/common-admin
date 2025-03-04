@@ -46,7 +46,7 @@
     "@shikijs/vitepress-twoslash": "^3.1.0",
     "@stylistic/eslint-plugin": "^4.2.0",
     "@tsconfig/node22": "^22.0.0",
-    "@types/node": "^22.13.8",
+    "@types/node": "^22.13.9",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.8",
     "@types/webfontloader": "^1.6.38",
@@ -86,7 +86,7 @@
     "vue": "3.5.13",
     "vue-i18n": "11.1.1",
     "vue-router": "4.5.0",
-    "vue-tsc": "2.2.4",
+    "vue-tsc": "2.2.8",
     "vuetify": "3.7.14",
     "webfontloader": "^1.6.28"
   },
