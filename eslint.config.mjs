@@ -22,7 +22,6 @@ export default [
     },
     rules: {
       '@typescript-eslint/ban-ts-comment': 'off',
-      'vue/script-setup-uses-vars': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-empty-interface': 'off',
       '@stylistic/semi': ['error', 'never'],
