@@ -201,7 +201,7 @@ export function useSortableActions(
   const addAfterIndex = (targetIndex: number | null, data: SortablePropItem): SortableItemNewPositions => {
     const clonedData = cloneDeep(model.value)
 
-    if (isNull(targetIndex)) {
+    if (isNull(targetIndex) || targetIndex < 0) {
       clonedData.push(cloneDeep(data))
       forceRerenderWidgetHtml(clonedData)
       return []
