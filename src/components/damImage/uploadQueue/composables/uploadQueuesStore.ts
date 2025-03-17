@@ -39,6 +39,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   const { damClient } = useCommonAdminCoreDamOptions()
   const { addDamNotificationListener } = useDamNotifications()
   addDamNotificationListener((event) => {
+    console.log('notif', event)
     switch (event.name) {
       case DamNotificationName.AssetFileProcessed:
         queueItemProcessed(event.data.asset)
@@ -67,6 +68,34 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       return queues.value.get(queueKey)?.items || []
     }
     return []
+  }
+
+  async function addByCopyToLicence(
+    queueKey: UploadQueueKey,
+    extSystem: IntegerId,
+    assetLicence: IntegerId,
+    assets: DocId[]
+  ) {
+    const { getDamConfigExtSystem } = useDamConfigState()
+
+    const configExtSystem = getDamConfigExtSystem(extSystem)
+    if (isUndefined(configExtSystem)) {
+      throw new Error('useUploadQueuesStore.addByCopyToLicence: Ext system must be initialised.')
+    }
+    for await (const assetId of assets) {
+      const queueItem = createDefault(
+        'asset_' + assetId,
+        UploadQueueItemType.Asset,
+        UploadQueueItemStatus.Uploaded,
+        DamAssetType.Image, // only image now
+        QUEUE_CHUNK_SIZE,
+        assetLicence
+      )
+      createQueue(queueKey)
+      addQueueItem(queueKey, queueItem)
+      recalculateQueueCounts(queueKey)
+      processUpload(queueKey)
+    }
   }
 
   async function addByFiles(queueKey: UploadQueueKey, extSystem: IntegerId, assetLicence: IntegerId, files: File[]) {
@@ -409,6 +438,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     getQueue,
     getQueueItems,
     addByFiles,
+    addByCopyToLicence,
     queueItemProcessed,
     queueItemDuplicate,
     queueItemFailed,

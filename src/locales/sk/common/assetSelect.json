@@ -31,7 +31,8 @@
       "title": "Vyberte asset",
       "noItemsFound": "Žiadne nájdené assety",
       "pickExactCount": "Vyberte assety: {count}. Zvolených: {selected}." ,
-      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetov. Zvolených: {selected}."
+      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetov. Zvolených: {selected}.",
+      "copyToLicence": "Copy to licence"
     }
   },
   "filter": {

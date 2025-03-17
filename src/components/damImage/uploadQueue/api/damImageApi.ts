@@ -7,6 +7,7 @@ import type { AssetFileImage } from '@/types/coreDam/AssetFile'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset.ts'
 
 const END_POINT = '/adm/v1/image'
 const CHUNK_UPLOAD_TIMEOUT = 420
@@ -127,6 +128,24 @@ export const rotateImage = (client: () => AxiosInstance, imageId: DocId, angle: 
       })
       .catch((err) => {
         //
+        reject(err)
+      })
+  })
+}
+
+export const copyToLicence = (client: () => AxiosInstance, items: DamImageCopyToLicenceRequest) => {
+  return new Promise<DamImageCopyToLicenceResponse>((resolve, reject) => {
+    const url = END_POINT + '/copy-to-licence'
+    client()
+      .patch(url, JSON.stringify(items))
+      .then((res) => {
+        if (res.status === HTTP_STATUS_OK) {
+          resolve(res.data)
+        } else {
+          reject()
+        }
+      })
+      .catch((err) => {
         reject(err)
       })
   })

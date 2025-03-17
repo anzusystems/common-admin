@@ -31,7 +31,8 @@
       "title": "Select asset",
       "noItemsFound": "No matching assets found",
       "pickExactCount": "Select assets: {count}. Selected: {selected}.",
-      "pickRangeCount": "Select from {minCount} to {maxCount} assets. Selected: {selected}."
+      "pickRangeCount": "Select from {minCount} to {maxCount} assets. Selected: {selected}.",
+      "copyToLicence": "Copy to licence"
     }
   },
   "filter": {
