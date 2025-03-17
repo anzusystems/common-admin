@@ -26,7 +26,6 @@ import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/component
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useI18n } from 'vue-i18n'
-import type { VBtn } from 'vuetify/components'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'

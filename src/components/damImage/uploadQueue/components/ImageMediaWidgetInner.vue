@@ -7,7 +7,7 @@ import { useCommonAdminImageOptions } from '@/components/damImage/composables/co
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
-import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import { DamAssetType, type DamAssetTypeType, type DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
@@ -55,6 +55,7 @@ import {
 import { type MediaAware, MediaExtService } from '@/types/MediaAware'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile'
 import { createMedia, deleteMedia, fetchMedia, updateMedia } from '@/components/damImage/uploadQueue/api/mediaApi'
+import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -249,6 +250,15 @@ const onDrop = async (files: File[]) => {
   }
 }
 
+const onCopyToLicence = async (data: DamImageCopyToLicenceResponse) => {
+  if (data[0] && data[0].result !== 'copy') return
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
+  cachedExtSystemId.value = config.extSystem
+  uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
+  uploadQueueDialog.value = props.queueKey
+}
+
 const onFileInput = (files: File[]) => {
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
@@ -381,7 +391,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || !data.value[0]) return
   metadataDialogLoading.value = true
   imageMediaWidgetStore.setDetail(null)
-  metadataDialog.value = true
+  // metadataDialog.value = true
   showDamAuthorsInCmsImage.value = false
   let description = ''
   let source = ''
@@ -389,6 +399,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (!selectedAsset.mainFile) return
   if (selectedAsset.attributes.assetType === DamAssetType.Video && assetFileIsVideoFile(selectedAsset.mainFile)) {
     // video
+    metadataDialog.value = true
     const mediaData: MediaAware = {
       extService: MediaExtService.DamVideo,
       dam: {
@@ -407,6 +418,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     assetFileIsAudioFile(selectedAsset.mainFile)
   ) {
     // podcast audio
+    metadataDialog.value = true
     const mediaData: MediaAware = {
       extService: MediaExtService.DamPodcast,
       dam: {
@@ -421,6 +433,18 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     imageMediaWidgetStore.setDetail(mediaData)
   } else if (selectedAsset.attributes.assetType === DamAssetType.Image) {
     // image
+    if (!isUndefined(data.copyToLicence)) {
+      try {
+        const copyRes = await copyToLicence(damClient, [
+          { asset: data.value[0].id, targetAssetLicence: data.copyToLicence },
+        ])
+        onCopyToLicence(copyRes)
+      } catch (e) {
+        showErrorsDefault(e)
+      }
+      return
+    }
+    metadataDialog.value = true
     try {
       const assetRes = await fetchAsset(damClient, selectedAsset.id)
       if (isString(assetRes.metadata.customData?.description)) {
@@ -878,6 +902,7 @@ defineExpose({
   <AAssetSelectMedia
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
+    :upload-licence="uploadLicence"
     :min-count="1"
     :max-count="1"
     return-type="asset"
