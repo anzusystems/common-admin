@@ -129,10 +129,6 @@ const toggleSidebar = () => {
   sidebar.value = !sidebar.value
 }
 
-const onImageLoad = () => {
-  // imageLoading.value = false
-}
-
 const assetType = computed(() => {
   return asset.value?.attributes.assetType || DamAssetTypeDefault
 })
@@ -226,32 +222,16 @@ const isUploading = computed(() => {
 
 const onSave = async () => {
   if (items.value.length === 0) return
-  // saveAndCloseButtonLoading.value = true
-  // v$.value.$touch()
-  // if (v$.value.$invalid) {
-  //   showValidationError()
-  //   saveAndCloseButtonLoading.value = false
-  //   return
-  // }
   try {
     await bulkUpdateAssetsMetadata(damClient, items.value)
     showRecordWas('updated')
   } catch (error) {
     showErrorsDefault(error)
-  } finally {
-    // saveAndCloseButtonLoading.value = false
   }
 }
 
 const onSaveAndApply = async () => {
   if (items.value.length === 0) return
-  // saveAndCloseButtonLoading.value = true
-  // v$.value.$touch()
-  // if (v$.value.$invalid) {
-  //   showValidationError()
-  //   saveAndCloseButtonLoading.value = false
-  //   return
-  // }
   let description = ''
   let source = ''
   try {
@@ -291,8 +271,6 @@ const onSaveAndApply = async () => {
     await onStopConfirm()
   } catch (error) {
     showErrorsDefault(error)
-  } finally {
-    // saveAndCloseButtonLoading.value = false
   }
 }
 
@@ -410,8 +388,6 @@ onMounted(() => {
                   use-component
                   cover
                   :aspect-ratio="IMAGE_ASPECT_RATIO"
-                  @load="onImageLoad"
-                  @error="onImageLoad"
                 />
                 <div
                   v-if="item && item.error.hasError"

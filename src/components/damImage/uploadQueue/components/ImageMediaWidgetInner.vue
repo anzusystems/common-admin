@@ -250,7 +250,7 @@ const onDrop = async (files: File[]) => {
   }
 }
 
-const onCopyToLicence = async (data: DamImageCopyToLicenceResponse) => {
+const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   if (data[0] && data[0].result !== 'copy') return
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
@@ -441,6 +441,8 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         onCopyToLicence(copyRes)
       } catch (e) {
         showErrorsDefault(e)
+      } finally {
+        metadataDialogLoading.value = false
       }
       return
     }
