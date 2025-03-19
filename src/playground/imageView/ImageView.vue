@@ -130,7 +130,7 @@ const saveInsideDialog = () => {
           <AImageMediaWidget
             v-model:image="imageId4"
             v-model:media="media"
-            :upload-licence="100000"
+            :upload-licence="100001"
             :select-licences="[100000, 100001]"
             queue-key="media"
             label="Priority content"
