@@ -249,7 +249,7 @@ const onDrop = async (files: File[]) => {
 }
 
 const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
-  if (data[0] && data[0].result !== 'copy') return
+  if (data[0] && data[0].result !== 'copy') return // todo another results
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem

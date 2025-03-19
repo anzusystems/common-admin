@@ -133,20 +133,38 @@ export const rotateImage = (client: () => AxiosInstance, imageId: DocId, angle: 
   })
 }
 
-export const copyToLicence = (client: () => AxiosInstance, items: DamImageCopyToLicenceRequest) => {
-  return new Promise<DamImageCopyToLicenceResponse>((resolve, reject) => {
-    const url = END_POINT + '/copy-to-licence'
-    client()
-      .patch(url, JSON.stringify(items))
-      .then((res) => {
-        if (res.status === HTTP_STATUS_OK) {
-          resolve(res.data)
-        } else {
-          reject()
-        }
-      })
-      .catch((err) => {
-        reject(err)
-      })
-  })
+const COPY_TO_LICENCE_MAX_LIMIT = 50
+const COPY_TO_LICENCE_API_LIMIT = 1 // todo back to 20
+
+export const copyToLicence = async (
+  client: () => AxiosInstance,
+  items: DamImageCopyToLicenceRequest
+): Promise<DamImageCopyToLicenceResponse> => {
+  if (items.length > COPY_TO_LICENCE_MAX_LIMIT) {
+    return Promise.reject('Exceeded max limit')
+  }
+
+  const url = END_POINT + '/copy-to-licence'
+
+  const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
+    return Array.from({ length: Math.ceil(arr.length / chunkSize) }, (_, i) =>
+      arr.slice(i * chunkSize, i * chunkSize + chunkSize)
+    )
+  }
+
+  const itemChunks = chunkArray(items, COPY_TO_LICENCE_API_LIMIT)
+
+  try {
+    const responses = await Promise.all(
+      itemChunks.map((chunk) =>
+        client()
+          .patch(url, JSON.stringify(chunk))
+          .then((res) => (res.status === HTTP_STATUS_OK ? res.data : []))
+      )
+    )
+
+    return responses.flat()
+  } catch (error) {
+    return Promise.reject(error)
+  }
 }
