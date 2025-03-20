@@ -13,7 +13,7 @@ import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from 
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import ImageMediaWidgetInner from '@/components/damImage/uploadQueue/components/ImageMediaWidgetInner.vue'
-import type { MediaAware } from '@/types/MediaAware.ts'
+import type { MediaAware } from '@/types/MediaAware'
 
 const props = withDefaults(
   defineProps<{

@@ -29,7 +29,7 @@ import type {
   DatatableOrderingOption,
   DatatableOrderingOptions,
   DatatableSortBy
-} from '@/composables/system/datatableColumns.ts'
+} from '@/composables/system/datatableColumns'
 
 const props = withDefaults(
   defineProps<{
