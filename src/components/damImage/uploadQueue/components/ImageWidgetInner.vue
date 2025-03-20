@@ -164,7 +164,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 
 const { t } = useI18n()
 
-const { showErrorsDefault, showError } = useAlerts()
+const { showErrorsDefault, showError, showErrorT } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
@@ -249,11 +249,19 @@ const onDrop = async (files: File[]) => {
 }
 
 const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
-  if (data[0] && data[0].result !== 'copy') return // todo another results
+  if (!data[0]) return
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
-  uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
+  if (data[0].result === 'copy') {
+    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
+  } else if (data[0].result === 'exists') {
+    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
+    uploadQueuesStore.queueItemDuplicate(data[0].targetAsset, data[0].targetMainFile, DamAssetType.Image)
+  } else {
+    showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
+    return
+  }
   uploadQueueDialog.value = props.queueKey
 }
 

@@ -95,7 +95,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient } = imageOptions
-const { showErrorsDefault, showValidationError } = useAlerts()
+const { showErrorsDefault, showValidationError, showErrorT } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -182,8 +182,14 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
   data.forEach((item) => {
-    if (item.result === 'copy') { // todo another results
+    if (item.result === 'copy') {
       uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
+    } else if (item.result === 'exists') {
+      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
+      uploadQueuesStore.queueItemDuplicate(item.targetAsset, item.targetMainFile, DamAssetType.Image)
+    } else {
+      showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
+      return
     }
   })
   uploadQueueDialog.value = props.queueKey
