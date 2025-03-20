@@ -1,55 +1,68 @@
 import { reactive, ref } from 'vue'
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
-import { dateTimeEndOfDay, dateTimeStartOfDay } from '@/utils/datetime'
 import { useI18n } from 'vue-i18n'
 import type { ValueObjectOption } from '@/types/ValueObject'
 
-const makeFilter = makeFilterHelper('system', 'subject')
+const makeFilter = makeFilterHelper('cms', 'subject')
 
 const filter = reactive({
   _elastic: {
     ...makeFilter({ exclude: true }),
   },
-  text: {
-    ...makeFilter({ name: 'text', variant: 'contains' }),
-  },
-  id: {
-    ...makeFilter({ name: 'id' }),
-  },
-  status: {
-    ...makeFilter({ name: 'status' }),
-  },
   docId: {
     ...makeFilter({ name: 'docId', advanced: true }),
   },
-  title: {
-    ...makeFilter({ name: 'title', variant: 'contains', advanced: true }),
+  text: {
+    ...makeFilter({ name: 'text' }),
   },
-  blog: {
-    ...makeFilter({ name: 'blog', variant: 'in', field: 'blogId', advanced: true }),
+  headline: {
+    ...makeFilter({ name: 'headline' }),
   },
   url: {
     ...makeFilter({ name: 'url', advanced: true }),
   },
-  publishedAtFrom: {
-    ...makeFilter({
-      name: 'publishedAtFrom',
-      field: 'publishedAt',
-      variant: 'gte',
-      default: dateTimeStartOfDay(-100),
-      mandatory: true,
-      advanced: true,
-    }),
+  site: {
+    ...makeFilter({ name: 'site', field: 'siteIds', default: [] }),
   },
-  publishedAtUntil: {
-    ...makeFilter({
-      name: 'publishedAtUntil',
-      field: 'publishedAt',
-      variant: 'lte',
-      default: dateTimeEndOfDay(),
-      mandatory: true,
-      advanced: true,
-    }),
+  rubric: {
+    ...makeFilter({ name: 'rubrics', field: 'rubricIds', default: [] }),
+  },
+  desk: {
+    ...makeFilter({ name: 'desks', field: 'deskIds', default: [], advanced: true }),
+  },
+  status: {
+    ...makeFilter({ name: 'status' }),
+  },
+  linkedList: {
+    ...makeFilter({ name: 'linkedList', field: 'linkedListIds' }),
+  },
+  discriminator: {
+    // todo remove later
+    ...makeFilter({ name: 'discriminator' }),
+  },
+  lockType: {
+    ...makeFilter({ name: 'lockType', advanced: true }),
+  },
+  publicPublishedAtFrom: {
+    ...makeFilter({ name: 'publicPublishedAtFrom', advanced: true }),
+  },
+  publicPublishedAtUntil: {
+    ...makeFilter({ name: 'publicPublishedAtUntil', advanced: true }),
+  },
+  modifiedAtFrom: {
+    ...makeFilter({ name: 'modifiedAtFrom', advanced: true }),
+  },
+  modifiedAtUntil: {
+    ...makeFilter({ name: 'modifiedAtUntil', advanced: true }),
+  },
+  owners: {
+    ...makeFilter({ name: 'owners', field: 'ownerIds', default: [], advanced: true }),
+  },
+  keywords: {
+    ...makeFilter({ name: 'keywords', field: 'keywordIds', default: [] }),
+  },
+  articleAuthors: {
+    ...makeFilter({ name: 'articleAuthors', field: 'authorIds', default: [] }),
   },
 })
 
@@ -65,7 +78,7 @@ export const SubjectStatus = {
 
 export type SubjectStatusType = (typeof SubjectStatus)[keyof typeof SubjectStatus]
 
-export function useArticleStatus() {
+export function useSubjectStatus() {
   const { t } = useI18n()
 
   const subjectStatusOptions = ref<ValueObjectOption<SubjectStatusType>[]>([
@@ -93,5 +106,36 @@ export function useArticleStatus() {
   return {
     subjectStatusOptions,
     getSubjectStatusOption,
+  }
+}
+
+export const SubjectLockType = {
+  Free: 'free',
+  Locked: 'locked',
+} as const
+export type SubjectLockTypeType = (typeof SubjectLockType)[keyof typeof SubjectLockType]
+export const SubjectLockTypeDefault = SubjectLockType.Free
+
+export function useSubjectLockType() {
+  const { t } = useI18n()
+
+  const subjectLockTypeOptions = ref<ValueObjectOption<SubjectLockTypeType>[]>([
+    {
+      value: SubjectLockType.Free,
+      title: t('system.subject.articleLockType.free'),
+    },
+    {
+      value: SubjectLockType.Locked,
+      title: t('system.subject.articleLockType.locked'),
+    },
+  ])
+
+  const getSubjectLockTypeOption = (value: SubjectLockTypeType) => {
+    return subjectLockTypeOptions.value.find((item) => item.value === value)
+  }
+
+  return {
+    subjectLockTypeOptions,
+    getSubjectLockTypeOption,
   }
 }
