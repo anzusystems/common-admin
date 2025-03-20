@@ -59,34 +59,36 @@ const { subjectLockTypeOptions } = useSubjectLockType()
             @update:model-value="onAnyFilterUpdate"
           />
         </VCol>
-        <VCol cols="2">
-          <FilterSubjectSiteRemoteAutocomplete
-            v-model="filter.site"
-            @update:model-value="onAnyFilterUpdate"
-          />
-        </VCol>
-        <VCol cols="3">
-          <FilterSubjectRubricRemoteAutocomplete
-            v-model="filter.rubric"
-            :site-id="filter.site.model"
-            @update:model-value="onAnyFilterUpdate"
-          />
-        </VCol>
-        <VCol cols="2">
-          <FilterSubjectAuthorRemoteAutocomplete
-            v-model="filter.articleAuthors"
-            @update:model-value="onAnyFilterUpdate"
-          />
-        </VCol>
-        <VCol cols="2">
-          <AFilterValueObjectOptionsSelect
-            v-model="filter.status"
-            :items="subjectStatusOptions"
-            @update:model-value="onAnyFilterUpdate"
-          />
-        </VCol>
       </VRow>
       <template #advanced>
+        <VRow>
+          <VCol cols="2">
+            <FilterSubjectSiteRemoteAutocomplete
+              v-model="filter.site"
+              @update:model-value="onAnyFilterUpdate"
+            />
+          </VCol>
+          <VCol cols="3">
+            <FilterSubjectRubricRemoteAutocomplete
+              v-model="filter.rubric"
+              :site-id="filter.site.model"
+              @update:model-value="onAnyFilterUpdate"
+            />
+          </VCol>
+          <VCol cols="2">
+            <FilterSubjectAuthorRemoteAutocomplete
+              v-model="filter.articleAuthors"
+              @update:model-value="onAnyFilterUpdate"
+            />
+          </VCol>
+          <VCol cols="2">
+            <AFilterValueObjectOptionsSelect
+              v-model="filter.status"
+              :items="subjectStatusOptions"
+              @update:model-value="onAnyFilterUpdate"
+            />
+          </VCol>
+        </VRow>
         <VRow>
           <VCol cols="3">
             <AFilterString

@@ -1,72 +1,27 @@
-import { reactive, ref } from 'vue'
-import { makeFilterHelper } from '@/composables/filter/filterHelpers'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import { dateTimeEndOfDay, dateTimeStartOfDay } from '@anzusystems/common-admin'
+import { createFilter } from '@/composables/filter/filterFactory.ts'
 
-const makeFilter = makeFilterHelper('cms', 'subject')
+const filterFields = [
+    { name: 'docId', advanced: true, default: null },
+    { name: 'text', default: '' },
+    { name: 'count', default: 0 },
+    { name: 'modifiedAtFrom', default: dateTimeStartOfDay(-100) },
+    { name: 'modifiedAtUntil', default: dateTimeEndOfDay() },
+  ] as const
 
-const filter = reactive({
-  _elastic: {
-    ...makeFilter({ exclude: true }),
-  },
-  docId: {
-    ...makeFilter({ name: 'docId', advanced: true }),
-  },
-  text: {
-    ...makeFilter({ name: 'text' }),
-  },
-  headline: {
-    ...makeFilter({ name: 'headline' }),
-  },
-  url: {
-    ...makeFilter({ name: 'url', advanced: true }),
-  },
-  site: {
-    ...makeFilter({ name: 'site', field: 'siteIds', default: [] }),
-  },
-  rubric: {
-    ...makeFilter({ name: 'rubrics', field: 'rubricIds', default: [] }),
-  },
-  desk: {
-    ...makeFilter({ name: 'desks', field: 'deskIds', default: [], advanced: true }),
-  },
-  status: {
-    ...makeFilter({ name: 'status' }),
-  },
-  linkedList: {
-    ...makeFilter({ name: 'linkedList', field: 'linkedListIds' }),
-  },
-  discriminator: {
-    ...makeFilter({ name: 'discriminator' }),
-  },
-  lockType: {
-    ...makeFilter({ name: 'lockType', advanced: true }),
-  },
-  publicPublishedAtFrom: {
-    ...makeFilter({ name: 'publicPublishedAtFrom', advanced: true }),
-  },
-  publicPublishedAtUntil: {
-    ...makeFilter({ name: 'publicPublishedAtUntil', advanced: true }),
-  },
-  modifiedAtFrom: {
-    ...makeFilter({ name: 'modifiedAtFrom', advanced: true }),
-  },
-  modifiedAtUntil: {
-    ...makeFilter({ name: 'modifiedAtUntil', advanced: true }),
-  },
-  owners: {
-    ...makeFilter({ name: 'owners', field: 'ownerIds', default: [], advanced: true }),
-  },
-  keywords: {
-    ...makeFilter({ name: 'keywords', field: 'keywordIds', default: [] }),
-  },
-  articleAuthors: {
-    ...makeFilter({ name: 'articleAuthors', field: 'authorIds', default: [] }),
-  },
-})
+const { filterConfig, filterData } = createFilter(
+  filterFields,
+  { elastic: true }
+)
 
 export function useTestListFilter() {
-  return filter
+  return {
+    filterConfig,
+    filterData,
+  }
 }
 
 export const SubjectStatus = {
