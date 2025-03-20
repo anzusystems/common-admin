@@ -4,7 +4,7 @@ import { useTestListFilter } from '@/playground/filterV2View/testFilterV2'
 import { usePagination } from '@/composables/system/pagination'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { onMounted, ref } from 'vue'
-import TestFilterV2 from '@/playground/filterV2View/TestFilterV2.vue'
+import TestFilterV22 from '@/playground/filterV2View/TestFilterV22.vue'
 
 const { resetFilter, submitFilter, loadStoredFilter } = useFilterHelpers('filterDemo')
 const pagination = usePagination()
@@ -28,7 +28,7 @@ onMounted(() => {
     <VCardTitle>Filters</VCardTitle>
     <VCardText>
       <VForm>
-        <TestFilterV2
+        <TestFilterV22
           v-model:show-advanced="showAdvancedFilter"
           @submit-filter="submitFilter(filter, pagination, getList)"
           @reset-filter="resetFilter(filter, pagination, getList)"

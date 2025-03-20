@@ -1,26 +1,19 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { dateTimeEndOfDay, dateTimeStartOfDay } from '@anzusystems/common-admin'
-import { createFilter } from '@/composables/filter/filterFactory.ts'
+import { createFilter, type MakeFilterOptions } from '@/composables/filter/filterFactory.ts'
 
-const filterFields = [
-    { name: 'docId', advanced: true, default: null },
-    { name: 'text', default: '' },
-    { name: 'count', default: 0 },
-    { name: 'modifiedAtFrom', default: dateTimeStartOfDay(-100) },
-    { name: 'modifiedAtUntil', default: dateTimeEndOfDay() },
-  ] as const
+const filterFields: MakeFilterOptions = [
+  { name: 'text', default: '' },
+  { name: 'status', default: [] },
+]
 
-const { filterConfig, filterData } = createFilter(
-  filterFields,
-  { elastic: true }
-)
+const { filterConfig, filterData } = createFilter(filterFields, { elastic: true, system: 'cms', subject: 'subject' })
 
 export function useTestListFilter() {
   return {
-    filterConfig,
-    filterData,
+    filterConfigSubject: filterConfig,
+    filterDataSubject: filterData,
   }
 }
 
