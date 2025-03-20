@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import type { AssetDetailItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
+import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -37,6 +37,7 @@ const props = withDefaults(
     minCount: number
     maxCount: number
     selectLicences: IntegerId[]
+    uploadLicence?: IntegerId | undefined
     returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
@@ -47,6 +48,7 @@ const props = withDefaults(
     initialPaginationSort?: DatatableSortBy
   }>(),
   {
+    uploadLicence: undefined,
     returnType: AssetSelectReturnType.MainFileId,
     configName: 'default',
     skipCurrentUserCheck: false,
@@ -65,6 +67,7 @@ const emit = defineEmits<{
 const modelValue = defineModel<boolean>({ default: false, required: false })
 const sortModel = defineModel<number>('sort', { default: 1, required: false })
 const loading = ref(false)
+const copyToLicence = ref(false)
 
 const { t } = useI18n()
 
@@ -131,8 +134,15 @@ const onClose = () => {
   assetDetailStore.reset()
 }
 
+const getCopyToLicenceId = () => {
+  if (copyToLicence.value && props.uploadLicence) {
+    return props.uploadLicence
+  }
+  return undefined
+}
+
 const onConfirm = () => {
-  emit('onConfirm', getSelectedData(props.returnType))
+  emit('onConfirm', getSelectedData(props.returnType, getCopyToLicenceId()))
   onClose()
 }
 
@@ -143,6 +153,15 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
 }
 
 const { gridView } = useGridView()
+
+const showCopyToLicence = computed(() => {
+  return (
+    props.assetType === DamAssetType.Image &&
+    selectedLicenceId.value > 0 &&
+    !isUndefined(props.uploadLicence) &&
+    selectedLicenceId.value !== props.uploadLicence
+  )
+})
 
 const componentComputed = computed(() => {
   switch (gridView.value) {
@@ -326,6 +345,13 @@ defineExpose({
             }}
           </div>
           <VSpacer />
+          <VSwitch
+            v-if="showCopyToLicence"
+            v-model="copyToLicence"
+            :label="t('common.assetSelect.meta.texts.copyToLicence')"
+            hide-details
+            class="mr-2"
+          />
           <ABtnPrimary
             :disabled="disabledSubmit"
             @click.stop="onConfirm"

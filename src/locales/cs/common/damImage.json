@@ -48,7 +48,8 @@
     "error": "Chyba",
     "copyAssetId": "Kopírovať asset ID",
     "stillUploadingOrProcessing": "Asset sa stále nahráva alebo spracováva serverom",
-    "removeFromQueue": "Ostrániť z fronty nahrávania?"
+    "removeFromQueue": "Ostrániť z fronty nahrávania?",
+    "errorUnableToCopyToLicence": "Chyba, nie je možné kopírovať assety do licencie"
   },
   "asset": {
     "model": {

@@ -52,7 +52,7 @@ const saveInsideDialog = () => {
         <VCol cols="4">
           <AImageWidget
             v-model="imageId2"
-            :upload-licence="100000"
+            :upload-licence="100001"
             :select-licences="[100000, 100001]"
             queue-key="heroImage"
             label="Lead image"
@@ -61,7 +61,7 @@ const saveInsideDialog = () => {
         <VCol cols="4">
           <AImageWidget
             v-model="imageId3"
-            :upload-licence="100000"
+            :upload-licence="100001"
             :select-licences="[100000, 100001]"
             queue-key="heroImage2"
             label="Lead image 2 with global validation test"
@@ -77,7 +77,7 @@ const saveInsideDialog = () => {
           Expanded actions:
           <AImageWidget
             v-model="imageId2"
-            :upload-licence="100000"
+            :upload-licence="100001"
             :select-licences="[100000, 100001]"
             queue-key="listingImage"
             expand-options
@@ -106,7 +106,7 @@ const saveInsideDialog = () => {
                     <AImageWidget
                       ref="widgetComponent"
                       v-model="imageId2"
-                      :upload-licence="100000"
+                      :upload-licence="100001"
                       :select-licences="[100000, 100001]"
                       queue-key="embedImage"
                       expand-options
@@ -130,7 +130,7 @@ const saveInsideDialog = () => {
           <AImageMediaWidget
             v-model:image="imageId4"
             v-model:media="media"
-            :upload-licence="100000"
+            :upload-licence="100001"
             :select-licences="[100000, 100001]"
             queue-key="media"
             label="Priority content"

@@ -10,7 +10,7 @@ import { storeToRefs } from 'pinia'
 import { bulkUpdateImages, deleteImage, fetchImageListByIds } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
-import { type AssetSearchListItemDto, DamAssetType } from '@/types/coreDam/Asset'
+import { type AssetSearchListItemDto, DamAssetType, type DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
@@ -45,6 +45,7 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
+import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -94,7 +95,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient } = imageOptions
-const { showErrorsDefault, showValidationError } = useAlerts()
+const { showErrorsDefault, showValidationError, showErrorT } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -163,7 +164,6 @@ const onFileInput = (files: File[]) => {
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
-  // uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
   limitDialogComponent.value?.check(files)
   uploadQueueDialog.value = props.queueKey
 }
@@ -173,7 +173,25 @@ const onDrop = (files: File[]) => {
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
   limitDialogComponent.value?.check(files)
-  // uploadQueuesStore.addByFiles(props.queueKey, props.uploadConfig.extSystem, props.uploadConfig.licence, files)
+  uploadQueueDialog.value = props.queueKey
+}
+
+const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
+  if (data.length === 0) return
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
+  cachedExtSystemId.value = config.extSystem
+  data.forEach((item) => {
+    if (item.result === 'copy') {
+      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
+    } else if (item.result === 'exists') {
+      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
+      uploadQueuesStore.queueItemDuplicate(item.targetAsset, item.targetMainFile, DamAssetType.Image)
+    } else {
+      showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
+      return
+    }
+  })
   uploadQueueDialog.value = props.queueKey
 }
 
@@ -249,11 +267,20 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
 }
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
-  if (data.type === 'asset') {
-    if (data.value.length === 0) return
-    const items = await assetSelectConfirmMap(data.value.filter((asset) => !isNull(asset.mainFile)))
-    imageStore.addImages(items)
+  if (data.type !== 'asset' || data.value.length === 0) return
+  if (!isUndefined(data.copyToLicence)) {
+    try {
+      const copyRes = await copyToLicence(damClient, data.value
+        .filter((asset) => !isNull(asset.mainFile))
+        .map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! })))
+      onCopyToLicence(copyRes)
+    } catch (e) {
+      showErrorsDefault(e)
+    }
+    return
   }
+  const items = await assetSelectConfirmMap(data.value.filter((asset) => !isNull(asset.mainFile)))
+  imageStore.addImages(items)
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -473,6 +500,7 @@ onMounted(() => {
     <AAssetSelect
       v-model="assetSelectDialog"
       :select-licences="selectLicences"
+      :upload-licence="uploadLicence"
       :min-count="1"
       :max-count="50"
       :asset-type="DamAssetType.Image"

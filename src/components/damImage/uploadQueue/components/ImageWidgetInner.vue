@@ -7,7 +7,7 @@ import { useCommonAdminImageOptions } from '@/components/damImage/composables/co
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import { useAlerts } from '@/composables/system/alerts'
-import { DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetType, type DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
@@ -26,7 +26,6 @@ import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/component
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useI18n } from 'vue-i18n'
-import type { VBtn } from 'vuetify/components'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
@@ -51,6 +50,7 @@ import {
   isImageCreateUpdateAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
+import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -164,7 +164,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 
 const { t } = useI18n()
 
-const { showErrorsDefault, showError } = useAlerts()
+const { showErrorsDefault, showError, showErrorT } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
@@ -248,6 +248,23 @@ const onDrop = async (files: File[]) => {
   }
 }
 
+const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
+  if (!data[0]) return
+  const config = imageWidgetUploadConfig.value
+  if (isUndefined(config)) return
+  cachedExtSystemId.value = config.extSystem
+  if (data[0].result === 'copy') {
+    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
+  } else if (data[0].result === 'exists') {
+    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
+    uploadQueuesStore.queueItemDuplicate(data[0].targetAsset, data[0].targetMainFile, DamAssetType.Image)
+  } else {
+    showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
+    return
+  }
+  uploadQueueDialog.value = props.queueKey
+}
+
 const onFileInput = (files: File[]) => {
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
@@ -318,12 +335,25 @@ const assetSelectStore = useAssetSelectStore()
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   metadataDialogLoading.value = true
   imageMediaWidgetStore.setDetail(null)
-  metadataDialog.value = true
   showDamAuthorsInCmsImage.value = false
   let description = ''
   let source = ''
   if (data.type === 'asset') {
     if (!data.value[0] || !data.value[0].mainFile) return
+    if (!isUndefined(data.copyToLicence)) {
+      try {
+        const copyRes = await copyToLicence(damClient, [
+          { asset: data.value[0].id, targetAssetLicence: data.copyToLicence },
+        ])
+        onCopyToLicence(copyRes)
+      } catch (e) {
+        showErrorsDefault(e)
+      } finally {
+        metadataDialogLoading.value = false
+      }
+      return
+    }
+    metadataDialog.value = true
     try {
       const assetRes = await fetchAsset(damClient, data.value[0].id)
       if (isString(assetRes.metadata.customData?.description)) {
@@ -698,6 +728,7 @@ defineExpose({
   <AAssetSelect
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
+    :upload-licence="uploadLicence"
     :min-count="1"
     :max-count="1"
     :asset-type="DamAssetType.Image"

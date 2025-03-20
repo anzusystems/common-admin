@@ -166,22 +166,28 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return assets
   }
 
-  function getSelectedData(type: AssetSelectReturnTypeType): AssetSelectReturnData {
+  function getSelectedData(
+    type: AssetSelectReturnTypeType,
+    copyToLicence: undefined | IntegerId
+  ): AssetSelectReturnData {
     switch (type) {
       case AssetSelectReturnType.AssetId:
         return {
           type: AssetSelectReturnType.AssetId,
+          copyToLicence,
           value: getSelectedAssetIds(),
         }
       case AssetSelectReturnType.Asset:
         return {
           type: AssetSelectReturnType.Asset,
+          copyToLicence,
           value: getSelectedAssets(),
         }
       case AssetSelectReturnType.MainFileId:
       default:
         return {
           type: AssetSelectReturnType.MainFileId,
+          copyToLicence,
           value: getSelectedMainFileIds(),
         }
     }

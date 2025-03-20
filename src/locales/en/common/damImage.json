@@ -48,7 +48,8 @@
     "error": "Error",
     "copyAssetId": "Copy asset ID",
     "stillUploadingOrProcessing": "Asset is still uploading or processing by server",
-    "removeFromQueue": "Remove item from queue?"
+    "removeFromQueue": "Remove item from queue?",
+    "errorUnableToCopyToLicence": "Error, unable to copy assets to licence"
   },
   "asset": {
     "model": {

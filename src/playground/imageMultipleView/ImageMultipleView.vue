@@ -49,8 +49,8 @@ const save = () => {
           <AImageWidgetMultiple
             ref="component"
             v-model="imageIds"
-            :upload-licence="100000"
-            :select-licences="[100000]"
+            :upload-licence="100001"
+            :select-licences="[100000, 100001]"
             queue-key="gallery"
           />
         </VCol>

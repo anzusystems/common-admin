@@ -52,6 +52,9 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       case DamNotificationName.AssetMetadataProcessed:
         queueItemMetadataProcessed(event.data.asset)
         break
+      case DamNotificationName.AssetFileCopied:
+        queueItemCopied(event.data.asset)
+        break
     }
   })
 
@@ -67,6 +70,35 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       return queues.value.get(queueKey)?.items || []
     }
     return []
+  }
+
+  async function addByCopyToLicence(
+    queueKey: UploadQueueKey,
+    extSystem: IntegerId,
+    assetLicence: IntegerId,
+    assets: DocId[]
+  ) {
+    const { getDamConfigExtSystem } = useDamConfigState()
+
+    const configExtSystem = getDamConfigExtSystem(extSystem)
+    if (isUndefined(configExtSystem)) {
+      throw new Error('useUploadQueuesStore.addByCopyToLicence: Ext system must be initialised.')
+    }
+    for (const assetId of assets) {
+      const queueItem = createDefault(
+        'asset_' + assetId,
+        UploadQueueItemType.Asset,
+        UploadQueueItemStatus.Uploaded,
+        DamAssetType.Image, // only image now
+        QUEUE_CHUNK_SIZE,
+        assetLicence
+      )
+      queueItem.assetId = assetId
+      createQueue(queueKey)
+      addQueueItem(queueKey, queueItem)
+      recalculateQueueCounts(queueKey)
+      processUpload(queueKey)
+    }
   }
 
   async function addByFiles(queueKey: UploadQueueKey, extSystem: IntegerId, assetLicence: IntegerId, files: File[]) {
@@ -289,6 +321,43 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
+  async function queueItemCopied(assetId: DocId) {
+    const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
+    try {
+      const asset = await fetchAsset(damClient, assetId)
+      queues.value.forEach((queue, queueKey) => {
+        queue.items.forEach((item) => {
+          if (item.assetId === asset.id && asset.mainFile && item.type) {
+            clearTimeout(item.notificationFallbackTimer)
+            item.fileId = asset.mainFile.id
+            item.status = UploadQueueItemStatus.Uploaded
+            item.assetStatus = asset.attributes.assetStatus
+            if (asset.mainFile.links?.image_detail) {
+              item.imagePreview = asset.mainFile.links.image_detail
+            }
+            item.mainFileSingleUse = asset.mainFileSingleUse
+            item.keywords = asset.keywords
+            item.authors = asset.authors
+            item.customData = asset.metadata.customData
+            updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
+            updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
+            item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
+            addToCachedKeywords(item.keywords)
+            addToCachedAuthors(item.authors)
+            addToCachedAuthors(item.authorConflicts)
+            item.canEditMetadata = true
+            processUpload(queueKey)
+          }
+        })
+        recalculateQueueCounts(queueKey)
+        fetchCachedAuthors()
+        fetchCachedKeywords()
+      })
+    } catch (e) {
+      //
+    }
+  }
+
   function removeByIndex(queueKey: UploadQueueKey, index: number) {
     const queue = queues.value.get(queueKey)
     if (!queue || !queue.items[index]) return
@@ -409,6 +478,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     getQueue,
     getQueueItems,
     addByFiles,
+    addByCopyToLicence,
     queueItemProcessed,
     queueItemDuplicate,
     queueItemFailed,
