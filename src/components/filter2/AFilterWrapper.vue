@@ -2,33 +2,47 @@
 import AFilterAdvancedButton from '@/components/buttons/filter/AFilterAdvancedButton.vue'
 import AFilterSubmitButton from '@/components/buttons/filter/AFilterSubmitButton.vue'
 import AFilterResetButton from '@/components/buttons/filter/AFilterResetButton.vue'
+import { provide, ref } from 'vue'
+import { FilterSelectedKey, FilterSubmitResetCounterKey } from '@/components/filter2/filterInjectionKeys.ts'
+import FiltersSelected from '@/components/filter2/FiltersSelected.vue'
+import type { ValueObjectOption } from '@/types/ValueObject.ts'
 
 withDefaults(
   defineProps<{
-    enableAdvanced?: boolean
     enableTop?: boolean
     hideButtons?: boolean
     touched?: boolean
   }>(),
   {
-    enableAdvanced: false,
     enableTop: false,
     hideButtons: false,
     touched: true,
   }
 )
 const emit = defineEmits<{
+  (e: 'submitFilter'): void
   (e: 'resetFilter'): void
 }>()
 
-const showAdvanced = defineModel<boolean>('showAdvanced', { default: false, required: false })
+const showDetail = defineModel<boolean>('showDetail', { default: false, required: false })
+
+const submitResetCounter = ref(0)
+provide(FilterSubmitResetCounterKey, submitResetCounter)
+const selectedFilters = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
+provide(FilterSelectedKey, selectedFilters)
+
+const submitFilter = () => {
+  emit('submitFilter')
+  submitResetCounter.value++
+}
 
 const resetFilter = () => {
   emit('resetFilter')
+  submitResetCounter.value++
 }
 
-const toggleAdvancedFilter = () => {
-  showAdvanced.value = !showAdvanced.value
+const toggleFilterDetail = () => {
+  showDetail.value = !showDetail.value
 }
 </script>
 
@@ -44,25 +58,38 @@ const toggleAdvancedFilter = () => {
   <VRow
     dense
     class="a-filter-advanced"
-    :class="{ 'a-filter-advanced--active': showAdvanced }"
+    :class="{ 'a-filter-advanced--active': showDetail }"
   >
     <VCol
-      v-if="enableAdvanced"
       class="v-col-filters--show-hide"
       cols="auto"
     >
       <AFilterAdvancedButton
-        :button-active="showAdvanced"
-        @advanced-filter="toggleAdvancedFilter"
+        :button-active="showDetail"
+        @advanced-filter="toggleFilterDetail"
       />
     </VCol>
     <VCol class="">
-      <slot name="default" />
+      <VRow align="start">
+        <VCol
+          cols="12"
+          sm="6"
+          md="4"
+        >
+          <slot name="search" />
+        </VCol>
+        <VCol
+          cols="auto"
+          class="flex-grow-1"
+        >
+          <FiltersSelected />
+        </VCol>
+      </VRow>
       <div
-        v-show="showAdvanced"
+        v-show="showDetail"
         class="a-filter-advanced__content"
       >
-        <slot name="advanced" />
+        <slot name="detail" />
       </div>
     </VCol>
     <VCol
@@ -71,7 +98,10 @@ const toggleAdvancedFilter = () => {
       cols="auto"
     >
       <slot name="buttons">
-        <AFilterSubmitButton :touched="touched" />
+        <AFilterSubmitButton
+          :touched="touched"
+          @click="submitFilter"
+        />
         <AFilterResetButton @reset="resetFilter" />
       </slot>
     </VCol>

@@ -1,5 +1,6 @@
 import { reactive, type Ref } from 'vue'
 import { cloneDeep, isArray, isUndefined } from '@/utils/common.ts'
+import type { ValueObjectOption } from '@/types/ValueObject.ts'
 
 export type AllowedFilterData = number | number[] | string | string[] | null | undefined | boolean
 
@@ -26,8 +27,10 @@ export type FilterVariant =
   | 'lte'
   | 'custom'
 
-// eslint-disable-next-line @stylistic/max-len
-export interface MakeFilterOption<TName extends string = string, TDefault extends AllowedFilterData = AllowedFilterData> {
+export interface MakeFilterOption<
+  TName extends string = string,
+  TDefault extends AllowedFilterData = AllowedFilterData,
+> {
   name: TName
   variant?: FilterVariant
   titleT?: string
@@ -39,11 +42,11 @@ export interface MakeFilterOption<TName extends string = string, TDefault extend
   exclude?: boolean
 }
 
-export type MakeFilterOptions = MakeFilterOption<any, any>[]
+// export type MakeFilterOptions = MakeFilterOption<any, any>[]
 
 export type FilterFieldStore<T extends string, V> = {
-  name: T;
-  default: V;
+  name: T
+  default: V
 }
 
 export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
@@ -53,6 +56,7 @@ export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
   default: T
   field: string
   clearable: boolean
+  selected: ValueObjectOption<string | number>[]
   mandatory: boolean
   multiple: boolean
   advanced: boolean
@@ -75,7 +79,7 @@ export type FilterData<F extends readonly MakeFilterOption[]> = {
 // }
 
 export type FilterStore<T extends readonly FilterFieldStore<string, any>[]> = {
-  [K in T[number]['name']]: Extract<T[number], { name: K }>['default'];
+  [K in T[number]['name']]: Extract<T[number], { name: K }>['default']
 }
 
 export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
@@ -88,7 +92,6 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
   type ConfigMap = {
     [P in F[number]['name']]: FilterField
   }
-  // We'll define DataMap with an index signature to avoid TS errors:
   type DataMap = {
     [key: string]: AllowedFilterData
   }
@@ -109,6 +112,7 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
         titleT,
         field: isUndefined(filter.field) ? '' : filter.field,
         clearable: isUndefined(filter.clearable) ? true : filter.clearable,
+        selected: [],
         mandatory: isUndefined(filter.mandatory) ? false : filter.mandatory,
         multiple: isArray(defaultValue),
         advanced: isUndefined(filter.advanced) ? false : filter.advanced,
@@ -162,6 +166,21 @@ export function useFilterHelpers() {
     model.value = cloneDeep(fieldConfig.default)
   }
 
+  const clearAll = (filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+    for (const filterName in filterConfig.fields) {
+      filterData[filterName] = cloneDeep(filterConfig.fields[filterName].default)
+    }
+  }
+
+  const resetFilter = (filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+    clearAll(filterData, filterConfig)
+    // pagination.page = 1
+    // if (storeId && localStorage) {
+    //   localStorage.removeItem(storeId)
+    // }
+    // if (callback) callback()
+  }
+
   const iterateFilterDataKeys = (filterData: Record<string, AllowedFilterData>) => {
     Object.keys(filterData).forEach((key: string) => {
       const value = filterData[key]
@@ -171,6 +190,8 @@ export function useFilterHelpers() {
 
   return {
     clearOne,
+    clearAll,
+    resetFilter,
     iterateFilterDataKeys,
   }
 }
