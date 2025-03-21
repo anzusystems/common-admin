@@ -36,8 +36,6 @@ const { subjectStatusOptions } = useSubjectStatus()
 </script>
 
 <template>
-  {{ filterDataSubject }}<br><br>
-  {{ filterConfigSubject }}
   <VForm
     name="search"
     @submit.prevent="submitFilter"
@@ -49,19 +47,17 @@ const { subjectStatusOptions } = useSubjectStatus()
     >
       <template #search>
         <AFilterString
-          v-model="filterDataSubject.text"
-          :config="filterConfigSubject.fields.text"
-          @update:model-value="onAnyFilterUpdate"
+          name="text"
+          @change="onAnyFilterUpdate"
         />
       </template>
       <template #detail>
         <VRow>
           <VCol cols="2">
             <AFilterValueObjectOptionsSelect
-              v-model="filterDataSubject.status"
-              :config="filterConfigSubject.fields.status"
+              name="status"
               :items="subjectStatusOptions"
-              @update:model-value="onAnyFilterUpdate"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
         </VRow>

@@ -35,12 +35,12 @@ const clickClose = (name: string, optionValue: number | string) => {
     filterSelected.value.delete(name)
   } else if (selectedFound) {
     const foundIndex = selectedFound.findIndex(item => item.value === optionValue)
-    selectedFound.splice(foundIndex)
+    selectedFound.splice(foundIndex, 1)
   }
   // update data
   if (isArray(filterData[name]) && filterData[name].length > 0) {
     const foundIndex = filterData[name].findIndex(item => item === optionValue)
-    filterData[name].splice(foundIndex)
+    filterData[name].splice(foundIndex, 1)
   } else if (isString(filterData[name]) || isNumber(filterData[name])) {
     filterData[name] = filterConfig.fields[name].default
   }

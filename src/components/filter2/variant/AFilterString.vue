@@ -2,12 +2,17 @@
 import { computed, inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { isString, isUndefined } from '@/utils/common.ts'
-import { type AllowedFilterData, type FilterField, useFilterHelpers } from '@/composables/filter/filterFactory.ts'
-import { FilterSelectedKey, FilterSubmitResetCounterKey } from '@/components/filter2/filterInjectionKeys.ts'
+import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+import {
+  FilterConfigKey,
+  FilterDataKey,
+  FilterSelectedKey,
+  FilterSubmitResetCounterKey,
+} from '@/components/filter2/filterInjectionKeys.ts'
 
 const props = withDefaults(
   defineProps<{
-    config: FilterField
+    name: string
     placeholder?: string | undefined
     dataCy?: string
   }>(),
@@ -16,27 +21,51 @@ const props = withDefaults(
     dataCy: 'filter-string',
   }
 )
-
-const modelValue = defineModel<AllowedFilterData>({ required: true })
+const emit = defineEmits<{
+  (e: 'change'): void
+}>()
 
 const submitResetCounter = inject(FilterSubmitResetCounterKey)
 const filterSelected = inject(FilterSelectedKey)
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
 
-if (isUndefined(submitResetCounter) || isUndefined(filterSelected)) {
+if (
+  isUndefined(submitResetCounter) ||
+  isUndefined(filterSelected) ||
+  isUndefined(filterConfig) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterConfig.fields[props.name]) ||
+  isUndefined(filterData) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterData[props.name])
+) {
   throw new Error('Incorrect provide/inject config.')
 }
+
+const modelValue = computed({
+  get() {
+    return filterData[props.name]
+  },
+  set(newValue) {
+    filterData[props.name] = newValue
+    emit('change')
+  },
+})
+
+const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
 
 const { t } = useI18n()
 
 const label = computed(() => {
-  return props.config.titleT ? t(props.config.titleT) : undefined
+  return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
 const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
-  if (props.config.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
-  if (props.config.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (props.config.variant === 'contains' || props.config.variant === 'search')
+  if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
+  if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
+  if (filterConfigCurrent.value.variant === 'contains' || filterConfigCurrent.value.variant === 'search')
     return t('common.model.filterPlaceholder.contains')
   return ''
 })
@@ -44,13 +73,13 @@ const placeholderComputed = computed(() => {
 const { clearOne } = useFilterHelpers()
 
 const clearField = () => {
-  clearOne(modelValue, props.config)
-  filterSelected.value.delete(props.config.name)
+  clearOne(props.name, filterData, filterConfig)
+  filterSelected.value.delete(props.name)
 }
 
 const updateSelected = () => {
   if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
-  filterSelected.value.set(props.config.name, [{ title: modelValue.value, value: '' }])
+  filterSelected.value.set(props.name, [{ title: modelValue.value, value: '' }])
 }
 
 watch(submitResetCounter, () => {
@@ -63,7 +92,7 @@ watch(submitResetCounter, () => {
     v-model="modelValue"
     :label
     :placeholder="placeholderComputed"
-    :clearable="!config.mandatory"
+    :clearable="!filterConfigCurrent.mandatory"
     :data-cy
     hide-details
     @click:clear.stop="clearField"

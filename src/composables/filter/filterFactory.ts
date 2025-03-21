@@ -161,14 +161,14 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
 }
 
 export function useFilterHelpers() {
-  const clearOne = (model: Ref<AllowedFilterData>, fieldConfig: FilterField) => {
-    if (!fieldConfig.clearable) return
-    model.value = cloneDeep(fieldConfig.default)
+  const clearOne = (name: string, filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+    if (!filterConfig.fields[name]?.clearable) return
+    filterData[name] = cloneDeep(filterConfig.fields[name].default)
   }
 
   const clearAll = (filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
     for (const filterName in filterConfig.fields) {
-      filterData[filterName] = cloneDeep(filterConfig.fields[filterName].default)
+      clearOne(filterName, filterData, filterConfig)
     }
   }
 
