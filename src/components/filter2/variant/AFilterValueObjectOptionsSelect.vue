@@ -2,7 +2,7 @@
 import type { ValueObjectOption } from '@/types/ValueObject.ts'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { type AllowedDefault, type FilterField, useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+import { type AllowedFilterData, type FilterField, useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -15,7 +15,7 @@ const emit = defineEmits<{
   (e: 'change'): void
 }>()
 
-const modelValue = defineModel<AllowedDefault>({ required: true })
+const modelValue = defineModel<AllowedFilterData>({ required: true })
 
 const { t } = useI18n()
 

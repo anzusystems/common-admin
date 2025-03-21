@@ -1,12 +1,13 @@
 import { reactive, type Ref } from 'vue'
 import { cloneDeep, isArray, isUndefined } from '@/utils/common.ts'
 
-export type AllowedDefault = number | number[] | string | string[] | null | undefined | boolean
+export type AllowedFilterData = number | number[] | string | string[] | null | undefined | boolean
 
 export interface GeneralFilterOptions {
   elastic: boolean
   system: string | undefined
   subject: string | undefined
+  globalStore: Record<string, AllowedFilterData> | undefined
 }
 
 export type FilterVariant =
@@ -25,7 +26,7 @@ export type FilterVariant =
   | 'lte'
   | 'custom'
 
-export interface MakeFilterOption<T extends AllowedDefault = AllowedDefault> {
+export interface MakeFilterOption<T extends AllowedFilterData = AllowedFilterData> {
   name: string
   variant?: FilterVariant
   titleT?: string
@@ -39,7 +40,7 @@ export interface MakeFilterOption<T extends AllowedDefault = AllowedDefault> {
 
 export type MakeFilterOptions = MakeFilterOption[]
 
-export interface FilterField<T extends AllowedDefault = AllowedDefault> {
+export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
   name: string
   variant: FilterVariant
   titleT?: string
@@ -52,34 +53,39 @@ export interface FilterField<T extends AllowedDefault = AllowedDefault> {
   exclude: boolean
 }
 
-export type FilterConfig<F extends readonly MakeFilterOption[]> = {
+// Mapped type that builds a config object with keys exactly from filter names.
+export type FilterConfig<F extends MakeFilterOption[]> = {
   _general: GeneralFilterOptions
   fields: {
-    [K in F[number] as K['name']]: FilterField
+    [P in F[number]['name']]: FilterField
   }
 }
 
-export type FilterData<F extends readonly MakeFilterOption[]> = {
-  [K in F[number] as K['name']]: K['default']
+// Mapped type for filter data: keys are the filter names and values are their default values.
+export type FilterData<F extends MakeFilterOption[]> = {
+  [P in F[number]['name']]: F[number] extends { default: infer D } ? D : never
+}
+
+export type FilterStore<T extends { name: string; default: any }[]> = {
+  [K in T[number]['name']]: Extract<T[number], { name: K }>['default'];
 }
 
 /**
- * Accepts an array of filter options and an optional global options object.
- * Returns two reactive objects:
- * - filterConfig: { _general: global options, fields: mapping from filter name to its configuration }
- * - filterData: flat mapping from filter name to its current value.
+ * createFilter creates:
+ * - a local reactive filterConfig object (composable, cleaned up when the component unmounts)
+ * - a filterData store that is either:
+ *    a) the provided reactive store via generalOptions.globalStore or
+ *    b) a new reactive store (local)
  *
- * Usage (with as const for best inference):
+ * Usage:
  *
- * const { filterConfig, filterData } = createFilters(
+ * const { filterConfig, filterData } = createFilter(
  *   [
  *     { name: 'docId', advanced: true, default: null },
  *     { name: 'text', default: '' },
  *     { name: 'count', default: 0 },
- *     { name: 'modifiedAtFrom', default: dateTimeStartOfDay(-100) },
- *     { name: 'modifiedAtUntil', default: dateTimeEndOfDay() }
  *   ] as const,
- *   { elastic: true }
+ *   { elastic: true, system: 'mySystem', subject: 'mySubject' }
  * );
  */
 export function createFilter<F extends MakeFilterOptions>(
@@ -90,12 +96,13 @@ export function createFilter<F extends MakeFilterOptions>(
   filterData: FilterData<F>
 } {
   type ConfigMap = {
-    [K in F[number] as K['name']]: FilterField
+    [P in F[number]['name']]: FilterField
   }
   type DataMap = {
-    [K in F[number] as K['name']]: K['default']
+    [P in F[number]['name']]: F[number] extends { default: infer D } ? D : never
   }
 
+  // Build filter configuration mapping.
   const config = filters.reduce((acc, filter) => {
     const key = filter.name
     const variant: FilterVariant = isUndefined(filter.variant) ? 'eq' : filter.variant
@@ -121,6 +128,7 @@ export function createFilter<F extends MakeFilterOptions>(
     }
   }, {} as ConfigMap)
 
+  // Build initial filter data mapping.
   const data = filters.reduce((acc, filter) => {
     const key = filter.name
     return {
@@ -129,117 +137,50 @@ export function createFilter<F extends MakeFilterOptions>(
     }
   }, {} as DataMap)
 
-  // Merge provided global options with a default.
+  // Merge provided global options with defaults.
   const defaultGlobalOptions: GeneralFilterOptions = {
     elastic: false,
     system: undefined,
     subject: undefined,
+    globalStore: undefined,
     ...generalOptions,
   }
 
+  // Use provided globalStore if available, otherwise create a new reactive store.
+  const store: Record<string, AllowedFilterData> = defaultGlobalOptions.globalStore
+    ? defaultGlobalOptions.globalStore
+    : reactive({})
+
+  // Merge the filter data into the chosen store.
+  Object.assign(store, data)
+
+  // Create local reactive filter configuration.
+  const filterConfig = reactive({
+    _general: defaultGlobalOptions,
+    fields: reactive(config),
+  }) as FilterConfig<F>
+
   return {
-    filterConfig: reactive({
-      _general: defaultGlobalOptions,
-      fields: reactive(config),
-    }) as {
-      _general: GeneralFilterOptions
-      fields: ConfigMap
-    },
-    filterData: reactive(data) as DataMap,
+    filterConfig,
+    filterData: store as FilterData<F>,
   }
 }
 
-// export function useFilterHelpers(storeId: string | undefined = undefined) {
 export function useFilterHelpers() {
-  const clearOne = (model: Ref<AllowedDefault>, fieldConfig: FilterField) => {
+  const clearOne = (model: Ref<AllowedFilterData>, fieldConfig: FilterField) => {
     if (!fieldConfig.clearable) return
     model.value = cloneDeep(fieldConfig.default)
-    // fieldConfig.error = ''
   }
 
-  // const clearAll = (filterBag: FilterBag) => {
-  //   for (const filterName in filterBag) {
-  //     clearOne(filterBag[filterName])
-  //   }
-  // }
-
-  // const clearAllErrors = (filterBag: FilterBag) => {
-  //   for (const filterName in filterBag) {
-  //     filterBag[filterName].error = ''
-  //   }
-  // }
-
-  // const loadStoredFilter = (filterBag: FilterBag, options: LoadStoredFilterOptions = {}) => {
-  //   if (!storeId || !localStorage) return
-  //   const { showAdvancedFilter, callback } = options
-  //   let containsAdvanced = false
-  //   const stored = localStorage.getItem(storeId)
-  //   if (!stored) return
-  //   const storedData = JSON.parse(stored)
-  //   if (!isObject(storedData)) return
-  //   for (const filterName in filterBag) {
-  //     try {
-  //       // @ts-ignore
-  //       if (!isUndefined(storedData[filterName])) {
-  //         // @ts-ignore
-  //         filterBag[filterName].model = storedData[filterName]
-  //         if (filterBag[filterName].advanced) {
-  //           containsAdvanced = true
-  //         }
-  //       }
-  //     } catch (e) {
-  //       //
-  //     }
-  //   }
-  //   if (showAdvancedFilter && containsAdvanced) showAdvancedFilter.value = true
-  //   if (callback) callback(containsAdvanced)
-  // }
-
-  // const storeFilter = (filterBag: FilterBag) => {
-  //   if (!storeId || !localStorage) return
-  //   const data: Record<string, any> = {}
-  //   for (const filterName in filterBag) {
-  //     try {
-  //       if (
-  //         !filterName.startsWith('_') &&
-  //         !isUndefined(filterBag[filterName].model) &&
-  //         !isNull(filterBag[filterName].model) &&
-  //         !isEmptyObject(filterBag[filterName].model) &&
-  //         !isEmptyArray(filterBag[filterName].model) &&
-  //         filterBag[filterName].model !== filterBag[filterName].default
-  //       ) {
-  //         data[filterName] = filterBag[filterName].model
-  //       }
-  //     } catch (e) {
-  //       //
-  //     }
-  //   }
-  //   if (isEmptyObject(data)) return
-  //   localStorage.setItem(storeId, JSON.stringify(data))
-  // }
-
-  // const resetFilter = (filterBag: FilterBag, pagination: Pagination, callback?: any) => {
-  //   clearAll(filterBag)
-  //   pagination.page = 1
-  //   if (storeId && localStorage) {
-  //     localStorage.removeItem(storeId)
-  //   }
-  //   if (callback) callback()
-  // }
-
-  // const submitFilter = (filterBag: FilterBag, pagination: Pagination, callback: () => any) => {
-  //   clearAllErrors(filterBag)
-  //   storeFilter(filterBag)
-  //   pagination.page = 1
-  //   callback()
-  // }
+  const iterateFilterDataKeys = (filterData: Record<string, AllowedFilterData>) => {
+    Object.keys(filterData).forEach((key: string) => {
+      const value = filterData[key]
+      console.log(`Key: ${key}, Value: ${value}`)
+    })
+  }
 
   return {
-    // clearAllErrors,
-    // clearAll,
     clearOne,
-    // resetFilter,
-    // submitFilter,
-    // loadStoredFilter,
+    iterateFilterDataKeys,
   }
 }

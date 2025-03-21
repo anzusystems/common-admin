@@ -158,18 +158,16 @@ const { subjectStatusOptions } = useSubjectStatus()
   padding: 4px 4px 4px 12px;
   margin: 0 4px 2px 0;
   gap: 8px;
-  //flex-wrap: wrap; /* Allow wrapping */
-  max-width: 100%; /* Prevent overflow */
+  max-width: 100%;
 
   .group-label {
-    //font-weight: bold;
     white-space: nowrap;
   }
 
   .chips {
     display: flex;
     gap: 4px;
-    flex-wrap: wrap; /* Enables line breaking */
+    flex-wrap: wrap;
   }
 
   .chip-item {
