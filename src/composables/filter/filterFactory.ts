@@ -11,7 +11,7 @@ export interface GeneralFilterOptions {
 }
 
 export type FilterVariant =
-  | 'search' // used for elastic fields
+  | 'search'
   | 'lt'
   | 'in'
   | 'notIn'
@@ -26,11 +26,12 @@ export type FilterVariant =
   | 'lte'
   | 'custom'
 
-export interface MakeFilterOption<T extends AllowedFilterData = AllowedFilterData> {
-  name: string
+// eslint-disable-next-line @stylistic/max-len
+export interface MakeFilterOption<TName extends string = string, TDefault extends AllowedFilterData = AllowedFilterData> {
+  name: TName
   variant?: FilterVariant
   titleT?: string
-  default: T
+  default: TDefault
   field?: string
   clearable?: boolean
   mandatory?: boolean
@@ -38,7 +39,12 @@ export interface MakeFilterOption<T extends AllowedFilterData = AllowedFilterDat
   exclude?: boolean
 }
 
-export type MakeFilterOptions = MakeFilterOption[]
+export type MakeFilterOptions = MakeFilterOption<any, any>[]
+
+export type FilterFieldStore<T extends string, V> = {
+  name: T;
+  default: V;
+}
 
 export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
   name: string
@@ -53,42 +59,26 @@ export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
   exclude: boolean
 }
 
-// Mapped type that builds a config object with keys exactly from filter names.
-export type FilterConfig<F extends MakeFilterOption[]> = {
+export type FilterConfig<F extends readonly MakeFilterOption[]> = {
   _general: GeneralFilterOptions
   fields: {
     [P in F[number]['name']]: FilterField
   }
 }
 
-// Mapped type for filter data: keys are the filter names and values are their default values.
-export type FilterData<F extends MakeFilterOption[]> = {
+export type FilterData<F extends readonly MakeFilterOption[]> = {
   [P in F[number]['name']]: F[number] extends { default: infer D } ? D : never
 }
 
-export type FilterStore<T extends { name: string; default: any }[]> = {
+// export type FilterStore<T extends { name: string; default: any }[]> = {
+//   [K in T[number]['name']]: Extract<T[number], { name: K }>['default']
+// }
+
+export type FilterStore<T extends readonly FilterFieldStore<string, any>[]> = {
   [K in T[number]['name']]: Extract<T[number], { name: K }>['default'];
 }
 
-/**
- * createFilter creates:
- * - a local reactive filterConfig object (composable, cleaned up when the component unmounts)
- * - a filterData store that is either:
- *    a) the provided reactive store via generalOptions.globalStore or
- *    b) a new reactive store (local)
- *
- * Usage:
- *
- * const { filterConfig, filterData } = createFilter(
- *   [
- *     { name: 'docId', advanced: true, default: null },
- *     { name: 'text', default: '' },
- *     { name: 'count', default: 0 },
- *   ] as const,
- *   { elastic: true, system: 'mySystem', subject: 'mySubject' }
- * );
- */
-export function createFilter<F extends MakeFilterOptions>(
+export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
   filters: F,
   generalOptions?: Partial<GeneralFilterOptions>
 ): {
@@ -98,18 +88,18 @@ export function createFilter<F extends MakeFilterOptions>(
   type ConfigMap = {
     [P in F[number]['name']]: FilterField
   }
+  // We'll define DataMap with an index signature to avoid TS errors:
   type DataMap = {
-    [P in F[number]['name']]: F[number] extends { default: infer D } ? D : never
+    [key: string]: AllowedFilterData
   }
 
-  // Build filter configuration mapping.
   const config = filters.reduce((acc, filter) => {
     const key = filter.name
     const variant: FilterVariant = isUndefined(filter.variant) ? 'eq' : filter.variant
     const defaultValue = filter.default
     let titleT = filter.titleT
     if (isUndefined(titleT) && generalOptions?.system && generalOptions?.subject && filter.name) {
-      titleT = generalOptions.system + '.' + generalOptions.subject + '.filter.' + filter.name
+      titleT = `${generalOptions.system}.${generalOptions.subject}.filter.${filter.name}`
     }
     return {
       ...acc,
@@ -128,7 +118,6 @@ export function createFilter<F extends MakeFilterOptions>(
     }
   }, {} as ConfigMap)
 
-  // Build initial filter data mapping.
   const data = filters.reduce((acc, filter) => {
     const key = filter.name
     return {
@@ -137,7 +126,6 @@ export function createFilter<F extends MakeFilterOptions>(
     }
   }, {} as DataMap)
 
-  // Merge provided global options with defaults.
   const defaultGlobalOptions: GeneralFilterOptions = {
     elastic: false,
     system: undefined,
@@ -146,15 +134,17 @@ export function createFilter<F extends MakeFilterOptions>(
     ...generalOptions,
   }
 
-  // Use provided globalStore if available, otherwise create a new reactive store.
   const store: Record<string, AllowedFilterData> = defaultGlobalOptions.globalStore
     ? defaultGlobalOptions.globalStore
     : reactive({})
 
-  // Merge the filter data into the chosen store.
-  Object.assign(store, data)
+  if (isUndefined(defaultGlobalOptions.globalStore)) {
+    Object.keys(data).forEach((key) => {
+      // Type assertion to satisfy TS:
+      ;(store as DataMap)[key] = data[key]
+    })
+  }
 
-  // Create local reactive filter configuration.
   const filterConfig = reactive({
     _general: defaultGlobalOptions,
     fields: reactive(config),

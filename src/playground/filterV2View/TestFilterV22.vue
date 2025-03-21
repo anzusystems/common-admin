@@ -32,6 +32,7 @@ const { subjectStatusOptions } = useSubjectStatus()
 </script>
 
 <template>
+  {{ filterDataSubject }}
   <VForm
     name="search"
     @submit.prevent="submitFilter"

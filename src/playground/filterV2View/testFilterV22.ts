@@ -1,9 +1,9 @@
 import { reactive } from 'vue'
-import { createFilter, type FilterStore, type MakeFilterOptions } from '@/composables/filter/filterFactory.ts'
+import { createFilter, type FilterStore } from '@/composables/filter/filterFactory.ts'
 
-const filterFields: MakeFilterOptions = [
-  { name: 'text', default: '' },
-  { name: 'status', default: [] },
+const filterFields = [
+  { name: 'text' as const, default: '' },
+  { name: 'status' as const, default: [] as string[] },
 ]
 
 const listFiltersStore = reactive<FilterStore<typeof filterFields>>({
