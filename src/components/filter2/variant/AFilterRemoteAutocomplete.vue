@@ -1,13 +1,21 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
-import { computed, type Ref, ref, toRefs, watch } from 'vue'
+import { computed, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject.ts'
 import type { Pagination } from '@/types/Pagination.ts'
-import type { Filter, FilterBag } from '@/types/Filter.ts'
 import { usePagination } from '@/composables/system/pagination.ts'
-import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common.ts'
+import { isArray, isNull, isUndefined } from '@/utils/common.ts'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common.ts'
+import {
+  FilterConfigKey,
+  FilterDataKey,
+  FilterInnerConfigKey,
+  FilterInnerDataKey,
+  FilterSelectedKey,
+  FilterSubmitResetCounterKey,
+} from '@/components/filter2/filterInjectionKeys.ts'
+import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
 
 type FetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
@@ -15,10 +23,13 @@ type FetchItemsByIdsType =
 
 const props = withDefaults(
   defineProps<{
-    modelValue: Filter
-    fetchItems: (pagination: Pagination, filterBag: FilterBag) => Promise<ValueObjectOption<string | number>[]>
+    name: string
+    fetchItems: (
+      pagination: Pagination,
+      filterData: FilterData<any>,
+      filterConfig: FilterConfig<any>
+    ) => Promise<ValueObjectOption<string | number>[]>
     fetchItemsByIds: FetchItemsByIdsType
-    innerFilter: FilterBag
     filterByField?: string
     filterSortBy?: string | null
     disableInitFetch?: boolean | undefined
@@ -26,23 +37,59 @@ const props = withDefaults(
   }>(),
   {
     filterByField: 'name',
-    filterSortBy: 'createdAt',
+    filterSortBy: null,
     disableInitFetch: false,
     placeholder: undefined,
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: Filter): void
+  (e: 'change'): void
 }>()
 
-const modelValueComputed = computed({
+const submitResetCounter = inject(FilterSubmitResetCounterKey)
+const filterSelected = inject(FilterSelectedKey)
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+const filterInnerConfig = inject(FilterInnerConfigKey)
+const filterInnerData = inject(FilterInnerDataKey)
+
+if (
+  isUndefined(submitResetCounter) ||
+  isUndefined(filterSelected) ||
+  isUndefined(filterConfig) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterConfig.fields[props.name]) ||
+  isUndefined(filterData) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterData[props.name]) ||
+  isUndefined(filterInnerConfig) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterInnerConfig.fields[props.filterByField]) ||
+  isUndefined(filterInnerData) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterInnerData[props.filterByField])
+) {
+  throw new Error('Incorrect provide/inject config.')
+}
+
+const modelValue = computed({
   get() {
-    return props.modelValue.model
+    return filterData[props.name] as string | number | string[] | number[] | null
   },
-  set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null) {
-    emit('update:modelValue', { ...props.modelValue, ...{ model: cloneDeep(newValue) } })
+  set(newValue: string | number | string[] | number[] | null) {
+    filterData[props.name] = newValue
+    emit('change')
   },
 })
+
+// const modelValueComputed = computed({
+//   get() {
+//     return props.modelValue.model
+//   },
+//   set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null) {
+//     emit('update:modelValue', { ...props.modelValue, ...{ model: cloneDeep(newValue) } })
+//   },
+// })
 
 const search = ref('')
 const isFocused = ref(false)
@@ -52,19 +99,14 @@ const apiRequestCounter = ref(0)
 
 const { t } = useI18n()
 
-const { innerFilter } = toRefs(props)
+const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
 
 const onBlur = () => {
   isFocused.value = true
 }
 
 const label = computed(() => {
-  return props.modelValue.titleT ? t(props.modelValue.titleT) : undefined
-})
-
-const multipleComputedVuetifyTypeFix = computed(() => {
-  if (props.modelValue.multiple === false) return false
-  return true as unknown as undefined
+  return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -89,9 +131,8 @@ const loading = ref(false)
 
 const apiSearch = async (query: string, requestCounter: number) => {
   loading.value = true
-  const filterField = innerFilter.value[props.filterByField]
-  filterField.model = query
-  const res = await props.fetchItems(pagination, innerFilter.value)
+  filterInnerData[props.filterByField] = query
+  const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
   if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
   loading.value = false
 }
@@ -124,7 +165,7 @@ const autoFetch = async () => {
   if (autoFetched.value === true) return
   autoFetched.value = true
   loading.value = true
-  const res = await props.fetchItems(pagination, innerFilter.value)
+  const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
   if (apiRequestCounter.value === 0) fetchedItems.value = res
   loading.value = false
 }
@@ -135,38 +176,38 @@ const onFocus = () => {
 }
 
 const singleItemSelectedTitle = computed(() => {
-  if (!props.modelValue.multiple && selectedItemsCache.value[0]) {
+  if (!filterConfigCurrent.value.multiple && selectedItemsCache.value[0]) {
     return selectedItemsCache.value[0].title
   }
   return undefined
 })
 
 const onSearchUpdate = (query: string) => {
-  if (!props.modelValue.multiple && !isFocused.value && query.length === 0) return // vuetify fix
+  if (!filterConfigCurrent.value.multiple && !isFocused.value && query.length === 0) return // vuetify fix
   if (singleItemSelectedTitle.value === query) return
   search.value = query
 }
 
 const onClickClear = async () => {
-  fetchedItems.value = await props.fetchItems(pagination, innerFilter.value)
-  if (props.modelValue.multiple) {
-    modelValueComputed.value = []
+  fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
+  if (filterConfigCurrent.value.multiple) {
+    modelValue.value = []
     return
   }
-  modelValueComputed.value = null
+  modelValue.value = null
 }
 
 const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
-  if (props.modelValue.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
-  if (props.modelValue.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (props.modelValue.variant === 'contains' || props.modelValue.variant === 'search')
+  if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
+  if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
+  if (filterConfigCurrent.value.variant === 'contains' || filterConfigCurrent.value.variant === 'search')
     return t('common.model.filterPlaceholder.contains')
   return ''
 })
 
 watch(
-  modelValueComputed,
+  modelValue,
   async (newValue, oldValue) => {
     if (newValue === oldValue) return
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
@@ -207,14 +248,14 @@ watchDebounced(
 
 <template>
   <VAutocomplete
-    v-model="modelValueComputed"
+    v-model="modelValue"
     :items="allItems"
     no-filter
     :placeholder="placeholderComputed"
-    :multiple="multipleComputedVuetifyTypeFix"
-    :clearable="!modelValue.mandatory"
+    :multiple="filterConfigCurrent.multiple"
+    :clearable="!filterConfigCurrent.mandatory"
     :label="label"
-    :chips="modelValue.multiple"
+    :chips="filterConfigCurrent.multiple"
     :loading="loading"
     @update:search="onSearchUpdate"
     @blur="onBlur"

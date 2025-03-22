@@ -64,7 +64,7 @@ export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
 }
 
 export type FilterConfig<F extends readonly MakeFilterOption[]> = {
-  _general: GeneralFilterOptions
+  general: GeneralFilterOptions
   fields: {
     [P in F[number]['name']]: FilterField
   }
@@ -146,7 +146,7 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
   }
 
   const filterConfig = reactive({
-    _general: defaultGlobalOptions,
+    general: defaultGlobalOptions,
     fields: reactive(config),
   }) as FilterConfig<F>
 
