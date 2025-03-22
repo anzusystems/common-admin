@@ -14,7 +14,7 @@ const listFiltersStore = reactive<FilterStore<typeof filterFields>>({
 export function useTestListFilter() {
   const { filterConfig, filterData } = createFilter(filterFields, {
     elastic: true,
-    system: 'cms',
+    system: 'system',
     subject: 'subject',
     globalStore: listFiltersStore,
   })

@@ -37,6 +37,20 @@ export default {
     damImage,
     collab,
   },
+  // todo remove before merge !!!
+  system: {
+    subject: {
+      filter: {
+        text: 'Fulltext',
+        status: 'Stav',
+      },
+      subjectStatus: {
+        draft: 'Draft',
+        ready: 'Ready',
+        published: 'Published',
+      }
+    },
+  },
   $vuetify: vuetify,
   error: {
     apiValidation: {

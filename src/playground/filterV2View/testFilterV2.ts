@@ -83,17 +83,17 @@ export function useSubjectStatus() {
   const subjectStatusOptions = ref<ValueObjectOption<SubjectStatusType>[]>([
     {
       value: SubjectStatus.Draft,
-      title: t('system.subject.articleStatus.draft'),
+      title: t('system.subject.subjectStatus.draft'),
       color: 'default',
     },
     {
       value: SubjectStatus.Ready,
-      title: t('system.subject.articleStatus.ready'),
+      title: t('system.subject.subjectStatus.ready'),
       color: 'warning',
     },
     {
       value: SubjectStatus.Published,
-      title: t('system.subject.articleStatus.published'),
+      title: t('system.subject.subjectStatus.published'),
       color: 'success',
     },
   ])
