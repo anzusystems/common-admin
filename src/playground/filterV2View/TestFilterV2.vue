@@ -1,36 +1,38 @@
 <script lang="ts" setup>
-import {
-  AFilterDatetimePicker,
-  AFilterString,
-  AFilterValueObjectOptionsSelect,
-  AFilterWrapper,
-} from '@anzusystems/common-admin'
-import { ref } from 'vue'
-import { useSubjectLockType, useSubjectStatus, useTestListFilter } from '@/playground/filterV2View/testFilterV2'
+import { provide, ref } from 'vue'
+import { useTestListFilter } from '@/playground/filterV2View/testFilterV2.ts'
+import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
+import AFilterString from '@/components/filter2/variant/AFilterString.vue'
+import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
+import { useSubjectLockType, useSubjectStatus } from '@/playground/filterV2View/subjectTools.ts'
+import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
 import FilterSubjectSiteRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectSiteRemoteAutocomplete.vue'
-import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectRubricRemoteAutocomplete.vue'
 import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectAuthorRemoteAutocomplete.vue'
+import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectRubricRemoteAutocomplete.vue'
 import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectDeskRemoteAutocomplete.vue'
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
+import type { IntegerId, IntegerIdNullable } from '@/types/common.ts'
+import AFilterDatetimePicker from '@/components/filter2/variant/AFilterDatetimePicker.vue'
 
 const emit = defineEmits<{
-  (e: 'submitFilter'): void
-  (e: 'resetFilter'): void
+  (e: 'afterReset'): void
+  (e: 'afterSubmit'): void
 }>()
 
-const showAdvanced = defineModel<boolean>('showAdvanced', { default: false, required: false })
+const { filterConfig, filterData } = useTestListFilter()
+provide(FilterConfigKey, filterConfig)
+provide(FilterDataKey, filterData)
 
-const filter = useTestListFilter()
 const touched = ref(false)
 
 const submitFilter = () => {
   touched.value = false
-  emit('submitFilter')
+  emit('afterSubmit')
 }
 
 const resetFilter = () => {
   touched.value = false
-  emit('resetFilter')
+  emit('afterReset')
 }
 
 const onAnyFilterUpdate = () => {
@@ -47,104 +49,97 @@ const { subjectLockTypeOptions } = useSubjectLockType()
     @submit.prevent="submitFilter"
   >
     <AFilterWrapper
-      v-model:show-advanced="showAdvanced"
-      enable-advanced
       :touched="touched"
+      @submit-filter="submitFilter"
       @reset-filter="resetFilter"
     >
-      <VRow align="start">
-        <VCol cols="3">
-          <AFilterString
-            v-model="filter.text"
-            @update:model-value="onAnyFilterUpdate"
-          />
-        </VCol>
-      </VRow>
-      <template #advanced>
+      <template #search>
+        <AFilterString
+          name="text"
+          @change="onAnyFilterUpdate"
+        />
+      </template>
+      <template #detail>
         <VRow>
           <VCol cols="2">
             <FilterSubjectSiteRemoteAutocomplete
-              v-model="filter.site"
-              @update:model-value="onAnyFilterUpdate"
+              name="site"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="3">
             <FilterSubjectRubricRemoteAutocomplete
-              v-model="filter.rubric"
-              :site-id="filter.site.model"
-              @update:model-value="onAnyFilterUpdate"
+              name="rubric"
+              :site-id="(filterData.site as IntegerIdNullable | IntegerId[])"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="2">
             <FilterSubjectAuthorRemoteAutocomplete
-              v-model="filter.articleAuthors"
-              @update:model-value="onAnyFilterUpdate"
+              name="articleAuthors"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="2">
             <AFilterValueObjectOptionsSelect
-              v-model="filter.status"
+              name="status"
               :items="subjectStatusOptions"
-              @update:model-value="onAnyFilterUpdate"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
-        </VRow>
-        <VRow>
           <VCol cols="3">
             <AFilterString
-              v-model="filter.docId"
-              @update:model-value="onAnyFilterUpdate"
+              name="docId"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="2">
             <FilterSubjectDeskRemoteAutocomplete
-              v-model="filter.desk"
-              @update:model-value="onAnyFilterUpdate"
+              name="desk"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="3">
             <AFilterDatetimePicker
-              v-model="filter.publicPublishedAtFrom"
-              @update:model-value="onAnyFilterUpdate"
+              name="publicPublishedAtFrom"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="3">
             <AFilterDatetimePicker
-              v-model="filter.publicPublishedAtUntil"
-              @update:model-value="onAnyFilterUpdate"
+              name="publicPublishedAtUntil"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="3">
             <FilterSubjectUserRemoteAutocomplete
-              v-model="filter.owners"
-              @update:model-value="onAnyFilterUpdate"
+              name="owners"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="3">
             <AFilterString
-              v-model="filter.url"
-              @update:model-value="onAnyFilterUpdate"
-            />
-          </VCol>
-        </VRow>
-        <VRow>
-          <VCol cols="3">
-            <AFilterDatetimePicker
-              v-model="filter.modifiedAtFrom"
-              @update:model-value="onAnyFilterUpdate"
+              name="url"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="3">
             <AFilterDatetimePicker
-              v-model="filter.modifiedAtUntil"
-              @update:model-value="onAnyFilterUpdate"
+              name="modifiedAtFrom"
+              @change="onAnyFilterUpdate"
+            />
+          </VCol>
+          <VCol cols="3">
+            <AFilterDatetimePicker
+              name="modifiedAtUntil"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
           <VCol cols="2">
             <AFilterValueObjectOptionsSelect
-              v-model="filter.lockType"
+              name="lockType"
               :items="subjectLockTypeOptions"
-              @update:model-value="onAnyFilterUpdate"
+              @change="onAnyFilterUpdate"
             />
           </VCol>
         </VRow>

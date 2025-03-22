@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import TestFilterV22 from '@/playground/filterV2View/TestFilterV22.vue'
+import TestFilterV2 from '@/playground/filterV2View/TestFilterV2.vue'
 
 const afterSubmit = () => {
   console.log('afterSubmit')
@@ -18,7 +18,7 @@ const afterReset = () => {
     <VCardTitle>Filters</VCardTitle>
     <VCardText>
       <VForm>
-        <TestFilterV22
+        <TestFilterV2
           @after-reset="afterReset"
           @after-submit="afterSubmit"
         />

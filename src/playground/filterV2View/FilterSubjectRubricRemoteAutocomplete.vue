@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import type { Filter, IntegerId } from '@anzusystems/common-admin'
-import { AFilterRemoteAutocomplete, cloneDeep, isArray, isNull } from '@anzusystems/common-admin'
 import { computed, reactive, ref, watch } from 'vue'
 import { makeFilterHelper } from '@/composables/filter/filterHelpers.ts'
 import type { ValueObjectOption } from '@/types/ValueObject.ts'

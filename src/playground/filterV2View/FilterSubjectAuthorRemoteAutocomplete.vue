@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { AFilterRemoteAutocomplete, type Filter } from '@anzusystems/common-admin'
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 import { reactive } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'

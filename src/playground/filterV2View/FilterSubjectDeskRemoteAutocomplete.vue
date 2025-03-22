@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { AFilterRemoteAutocomplete } from '@anzusystems/common-admin'
 import { reactive } from 'vue'
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 import type { Pagination } from '@/types/Pagination'

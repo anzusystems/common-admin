@@ -1,140 +1,57 @@
-import { reactive, ref } from 'vue'
-import { makeFilterHelper } from '@/composables/filter/filterHelpers'
-import { useI18n } from 'vue-i18n'
-import type { ValueObjectOption } from '@/types/ValueObject'
+import { reactive } from 'vue'
+import { createFilter, type FilterStore } from '@/composables/filter/filterFactory.ts'
+import type { IntegerId } from '@/types/common.ts'
 
-const makeFilter = makeFilterHelper('cms', 'subject')
+const filterFields = [
+  { name: 'docId' as const, default: null },
+  { name: 'text' as const, default: null },
+  { name: 'headline' as const, default: null },
+  { name: 'url' as const, default: null },
+  { name: 'site' as const, field: 'siteIds', default: [] as IntegerId[] },
+  { name: 'rubric' as const, field: 'rubricIds', default: [] as IntegerId[] },
+  { name: 'desks' as const, field: 'deskIds', default: [] as IntegerId[] },
+  { name: 'status' as const, default: [] as string[] },
+  { name: 'linkedList' as const, field: 'linkedListIds', default: [] as IntegerId[] },
+  { name: 'lockType' as const, default: null },
+  { name: 'publicPublishedAtFrom' as const, default: null },
+  { name: 'publicPublishedAtUntil' as const, default: null },
+  { name: 'modifiedAtFrom' as const, default: null },
+  { name: 'modifiedAtUntil' as const, default: null },
+  { name: 'owners' as const, field: 'ownerIds', default: [] as IntegerId[] },
+  { name: 'keywords' as const, field: 'keywordIds', default: [] as IntegerId[] },
+  { name: 'articleAuthors' as const, field: 'authorIds', default: [] as IntegerId[] },
+]
 
-const filter = reactive({
-  _elastic: {
-    ...makeFilter({ exclude: true }),
-  },
-  docId: {
-    ...makeFilter({ name: 'docId', advanced: true }),
-  },
-  text: {
-    ...makeFilter({ name: 'text' }),
-  },
-  headline: {
-    ...makeFilter({ name: 'headline' }),
-  },
-  url: {
-    ...makeFilter({ name: 'url', advanced: true }),
-  },
-  site: {
-    ...makeFilter({ name: 'site', field: 'siteIds', default: [] }),
-  },
-  rubric: {
-    ...makeFilter({ name: 'rubrics', field: 'rubricIds', default: [] }),
-  },
-  desk: {
-    ...makeFilter({ name: 'desks', field: 'deskIds', default: [], advanced: true }),
-  },
-  status: {
-    ...makeFilter({ name: 'status' }),
-  },
-  linkedList: {
-    ...makeFilter({ name: 'linkedList', field: 'linkedListIds' }),
-  },
-  discriminator: {
-    ...makeFilter({ name: 'discriminator' }),
-  },
-  lockType: {
-    ...makeFilter({ name: 'lockType', advanced: true }),
-  },
-  publicPublishedAtFrom: {
-    ...makeFilter({ name: 'publicPublishedAtFrom', advanced: true }),
-  },
-  publicPublishedAtUntil: {
-    ...makeFilter({ name: 'publicPublishedAtUntil', advanced: true }),
-  },
-  modifiedAtFrom: {
-    ...makeFilter({ name: 'modifiedAtFrom', advanced: true }),
-  },
-  modifiedAtUntil: {
-    ...makeFilter({ name: 'modifiedAtUntil', advanced: true }),
-  },
-  owners: {
-    ...makeFilter({ name: 'owners', field: 'ownerIds', default: [], advanced: true }),
-  },
-  keywords: {
-    ...makeFilter({ name: 'keywords', field: 'keywordIds', default: [] }),
-  },
-  articleAuthors: {
-    ...makeFilter({ name: 'articleAuthors', field: 'authorIds', default: [] }),
-  },
+const listFiltersStore = reactive<FilterStore<typeof filterFields>>({
+  docId: null,
+  text: null,
+  headline: null,
+  url: null,
+  site: [],
+  rubric: [],
+  desks: [],
+  status: [],
+  linkedList: [],
+  lockType: null,
+  publicPublishedAtFrom: null,
+  publicPublishedAtUntil: null,
+  modifiedAtFrom: null,
+  modifiedAtUntil: null,
+  owners: [],
+  keywords: [],
+  articleAuthors: [],
 })
 
 export function useTestListFilter() {
-  return filter
-}
-
-export const SubjectStatus = {
-  Draft: 'draft',
-  Ready: 'ready',
-  Published: 'published',
-} as const
-
-export type SubjectStatusType = (typeof SubjectStatus)[keyof typeof SubjectStatus]
-
-export function useSubjectStatus() {
-  const { t } = useI18n()
-
-  const subjectStatusOptions = ref<ValueObjectOption<SubjectStatusType>[]>([
-    {
-      value: SubjectStatus.Draft,
-      title: t('system.subject.subjectStatus.draft'),
-      color: 'default',
-    },
-    {
-      value: SubjectStatus.Ready,
-      title: t('system.subject.subjectStatus.ready'),
-      color: 'warning',
-    },
-    {
-      value: SubjectStatus.Published,
-      title: t('system.subject.subjectStatus.published'),
-      color: 'success',
-    },
-  ])
-
-  const getSubjectStatusOption = (value: SubjectStatusType) => {
-    return subjectStatusOptions.value.find((item) => item.value === value)
-  }
+  const { filterConfig, filterData } = createFilter(filterFields, {
+    elastic: true,
+    system: 'system',
+    subject: 'subject',
+    globalStore: listFiltersStore,
+  })
 
   return {
-    subjectStatusOptions,
-    getSubjectStatusOption,
-  }
-}
-
-export const SubjectLockType = {
-  Free: 'free',
-  Locked: 'locked',
-} as const
-export type SubjectLockTypeType = (typeof SubjectLockType)[keyof typeof SubjectLockType]
-export const SubjectLockTypeDefault = SubjectLockType.Free
-
-export function useSubjectLockType() {
-  const { t } = useI18n()
-
-  const subjectLockTypeOptions = ref<ValueObjectOption<SubjectLockTypeType>[]>([
-    {
-      value: SubjectLockType.Free,
-      title: t('system.subject.articleLockType.free'),
-    },
-    {
-      value: SubjectLockType.Locked,
-      title: t('system.subject.articleLockType.locked'),
-    },
-  ])
-
-  const getSubjectLockTypeOption = (value: SubjectLockTypeType) => {
-    return subjectLockTypeOptions.value.find((item) => item.value === value)
-  }
-
-  return {
-    subjectLockTypeOptions,
-    getSubjectLockTypeOption,
+    filterConfig,
+    filterData,
   }
 }
