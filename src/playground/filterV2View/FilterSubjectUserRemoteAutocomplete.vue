@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import type { Filter } from '@anzusystems/common-admin'
 import { AFilterRemoteAutocomplete } from '@anzusystems/common-admin'
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 import type { AnzuUser } from '@/types/AnzuUser'
@@ -11,6 +10,16 @@ import { apiFetchList } from '@/services/api/apiFetchList'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import type { ValueObjectOption } from '@/types/ValueObject'
+
+const props = withDefaults(
+  defineProps<{
+    name: string
+  }>(),
+  {}
+)
+const emit = defineEmits<{
+  (e: 'change'): void
+}>()
 
 export interface User extends AnzuUser {
   mainSite: IntegerIdNullable
@@ -29,7 +38,7 @@ export interface User extends AnzuUser {
   _system: string
 }
 
-const modelValue = defineModel<Filter>({ required: true })
+// const modelValue = defineModel<Filter>({ required: true })
 
 const END_POINT = '/adm/users'
 

@@ -1,4 +1,4 @@
-import { reactive, type Ref } from 'vue'
+import { reactive } from 'vue'
 import { cloneDeep, isArray, isUndefined } from '@/utils/common.ts'
 import type { ValueObjectOption } from '@/types/ValueObject.ts'
 
@@ -74,10 +74,6 @@ export type FilterData<F extends readonly MakeFilterOption[]> = {
   [P in F[number]['name']]: F[number] extends { default: infer D } ? D : never
 }
 
-// export type FilterStore<T extends { name: string; default: any }[]> = {
-//   [K in T[number]['name']]: Extract<T[number], { name: K }>['default']
-// }
-
 export type FilterStore<T extends readonly FilterFieldStore<string, any>[]> = {
   [K in T[number]['name']]: Extract<T[number], { name: K }>['default']
 }
@@ -99,7 +95,7 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
   const config = filters.reduce((acc, filter) => {
     const key = filter.name
     const variant: FilterVariant = isUndefined(filter.variant) ? 'eq' : filter.variant
-    const defaultValue = filter.default
+    const defaultValue = (isUndefined(filter.default) ? null : filter.default) as AllowedFilterData
     let titleT = filter.titleT
     if (isUndefined(titleT) && generalOptions?.system && generalOptions?.subject && filter.name) {
       titleT = `${generalOptions.system}.${generalOptions.subject}.filter.${filter.name}`

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { AFilterRemoteAutocomplete, type Filter } from '@anzusystems/common-admin'
+import { AFilterRemoteAutocomplete } from '@anzusystems/common-admin'
 import { reactive } from 'vue'
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 import type { Pagination } from '@/types/Pagination'
@@ -10,6 +10,16 @@ import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTracki
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchList } from '@/services/api/apiFetchList'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
+
+const props = withDefaults(
+  defineProps<{
+    name: string
+  }>(),
+  {}
+)
+const emit = defineEmits<{
+  (e: 'change'): void
+}>()
 
 export interface Desk extends AnzuUserAndTimeTrackingAware {
   name: string
@@ -26,7 +36,7 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
   _system: 'cms'
 }
 
-const modelValue = defineModel<Filter>({ required: true })
+// const modelValue = defineModel<Filter>({ required: true })
 
 const END_POINT = '/adm/desks'
 

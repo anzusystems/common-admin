@@ -11,6 +11,16 @@ import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { apiFetchList } from '@/services/api/apiFetchList'
 
+const props = withDefaults(
+  defineProps<{
+    name: string
+  }>(),
+  {}
+)
+const emit = defineEmits<{
+  (e: 'change'): void
+}>()
+
 const AuthorDiscriminator = {
   Person: 'person',
   Source: 'source',
@@ -65,7 +75,7 @@ const isAuthorKindSource = (author: AuthorKind): author is AuthorKindSource => {
   return author.discriminator === AuthorDiscriminator.Source && Object.hasOwn(author, 'title')
 }
 
-const modelValue = defineModel<Filter>({ required: true })
+// const modelValue = defineModel<Filter>({ required: true })
 
 const getAuthorDisplayName = (author: AuthorKind) => {
   return isAuthorKindPerson(author)

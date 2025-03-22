@@ -59,7 +59,7 @@ interface Rubric extends AnzuUserAndTimeTrackingAware {
 
 const props = withDefaults(
   defineProps<{
-    modelValue: Filter
+    name: string
     siteId?: IntegerId | IntegerId[] | null
   }>(),
   {
@@ -68,7 +68,9 @@ const props = withDefaults(
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: Filter): void
+  (e: 'change'): void
 }>()
+
 const modelValueComputed = computed({
   get() {
     return props.modelValue

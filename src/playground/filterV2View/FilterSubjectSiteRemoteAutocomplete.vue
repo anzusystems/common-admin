@@ -1,16 +1,26 @@
 <script lang="ts" setup>
-import type { Filter } from '@anzusystems/common-admin'
-import { AFilterRemoteAutocomplete } from '@anzusystems/common-admin'
 import { reactive } from 'vue'
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
-import type { FilterBag } from '@/types/Filter'
+import type { Filter, FilterBag } from '@/types/Filter'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { apiFetchList } from '@/services/api/apiFetchList'
+import AFilterRemoteAutocomplete from '@/components/filter2/variant/AFilterRemoteAutocomplete.vue'
+
+const props = withDefaults(
+  defineProps<{
+    name: string
+  }>(),
+  {
+  }
+)
+const emit = defineEmits<{
+  (e: 'change'): void
+}>()
 
 export interface SiteMinimal {
   id: IntegerId
@@ -69,7 +79,7 @@ interface Site extends SiteMinimal, AnzuUserAndTimeTrackingAware {
   _system: 'cms'
 }
 
-const modelValue = defineModel<Filter>({ required: true })
+// const modelValue = defineModel<Filter>({ required: true })
 
 const END_POINT = '/adm/v1/site'
 

@@ -49,6 +49,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: DatetimeUTC | null | undefined): void
   (e: 'onOpen'): void
   (e: 'onClose'): void
+  (e: 'afterClear'): void
 }>()
 
 dayjs.extend(utc)
@@ -213,9 +214,11 @@ const onClear = () => {
     datetimeInternal.value = null
     datePickerValue.value = null
     timePickerValue.value = null
+    emit('afterClear')
     return
   }
   datetimeInternal.value = dayjs(props.defaultValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
+  emit('afterClear')
 }
 
 const onTextFieldFocus = () => {
