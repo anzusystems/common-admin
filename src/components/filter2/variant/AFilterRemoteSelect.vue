@@ -190,6 +190,7 @@ const onFocus = () => {
 }
 
 const onMouseEnter = () => {
+  if (props.prefetch === 'focus') return
   clearAutoFetchTimer()
   autoFetch()
 }
@@ -210,11 +211,6 @@ const onSearchUpdate = (query: string) => {
 const onClickClear = async () => {
   fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
   clearField()
-  // if (filterConfigCurrent.value.multiple) {
-  //   modelValue.value = []
-  //   return
-  // }
-  // modelValue.value = null
 }
 
 const placeholderComputed = computed(() => {
