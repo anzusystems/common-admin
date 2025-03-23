@@ -90,10 +90,10 @@ watch(submitResetCounter, () => {
 <template>
   <VTextField
     v-model="modelValue"
-    :label
+    :label="label"
     :placeholder="placeholderComputed"
     :clearable="!filterConfigCurrent.mandatory"
-    :data-cy
+    :data-cy="dataCy"
     hide-details
     @click:clear.stop="clearField"
   />

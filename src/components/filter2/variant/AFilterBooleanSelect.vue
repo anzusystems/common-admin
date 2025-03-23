@@ -1,16 +1,23 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { computed } from 'vue'
-import type { Filter } from '@/types/Filter.ts'
+import { computed, inject, watch } from 'vue'
 import { isNull, isUndefined } from '@/utils/common.ts'
+import {
+  FilterConfigKey,
+  FilterDataKey,
+  FilterSelectedKey,
+  FilterSubmitResetCounterKey,
+} from '@/components/filter2/filterInjectionKeys.ts'
+import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+import type { ValueObjectOption } from '@/types/ValueObject.ts'
 
 const props = withDefaults(
   defineProps<{
-    modelValue: Filter
-    dataCy?: string
+    name: string
     allT?: string
     trueT?: string
     falseT?: string
+    dataCy?: string
   }>(),
   {
     dataCy: 'filter-boolean',
@@ -20,42 +27,86 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: any): void
+  (e: 'change'): void
 }>()
 
-const value = computed({
+const submitResetCounter = inject(FilterSubmitResetCounterKey)
+const filterSelected = inject(FilterSelectedKey)
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+
+if (
+  isUndefined(submitResetCounter) ||
+  isUndefined(filterSelected) ||
+  isUndefined(filterConfig) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterConfig.fields[props.name]) ||
+  isUndefined(filterData) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterData[props.name])
+) {
+  throw new Error('Incorrect provide/inject config.')
+}
+
+const modelValue = computed({
   get() {
-    if (isUndefined(props.modelValue.model) || isNull(props.modelValue.model)) return -1
-    return props.modelValue.model ? 1 : 0
+    if (isUndefined(filterData[props.name]) || isNull(filterData[props.name]))
+      return {
+        value: -1,
+        title: t(props.allT),
+      }
+    return filterData[props.name] ? { value: 1, title: t(props.trueT) } : { value: 0, title: t(props.falseT) }
   },
-  set(newValue) {
+  set(newValue: ValueObjectOption<number> | null) {
     let returnValue: null | boolean = null
-    if (newValue === 1) returnValue = true
-    if (newValue === 0) returnValue = false
-    emit('update:modelValue', { ...props.modelValue, ...{ model: returnValue } })
+    if (newValue?.value === 1) returnValue = true
+    if (newValue?.value === 0) returnValue = false
+    filterData[props.name] = returnValue
+    emit('change')
   },
 })
+
+const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
 
 const { t } = useI18n()
 
 const label = computed(() => {
-  return props.modelValue.titleT ? t(props.modelValue.titleT) : undefined
+  return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
-const items = computed(() => {
+const items = computed<ValueObjectOption<number>[]>(() => {
   return [
     { value: -1, title: t(props.allT) },
     { value: 1, title: t(props.trueT) },
     { value: 0, title: t(props.falseT) },
   ]
 })
+
+const { clearOne } = useFilterHelpers()
+
+const clearField = () => {
+  clearOne(props.name, filterData, filterConfig)
+  filterSelected.value.delete(props.name)
+}
+
+const updateSelected = () => {
+  filterSelected.value.set(props.name, [{ title: modelValue.value.title, value: modelValue.value.value }])
+}
+
+watch(submitResetCounter, () => {
+  updateSelected()
+})
 </script>
 
 <template>
   <VSelect
-    v-model="value"
+    v-model="modelValue"
     :data-cy="dataCy"
     :label="label"
     :items="items"
+    :clearable="!filterConfigCurrent.mandatory"
+    return-object
+    hide-details
+    @click:clear.stop="clearField"
   />
 </template>
