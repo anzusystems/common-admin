@@ -1,6 +1,5 @@
 import { reactive } from 'vue'
 import { cloneDeep, isArray, isUndefined } from '@/utils/common.ts'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
 
 export type AllowedFilterData = number | number[] | string | string[] | null | undefined | boolean
 
@@ -27,13 +26,7 @@ export type FilterVariant =
   | 'lte'
   | 'custom'
 
-export type FilterType =
-  | 'boolean'
-  | 'datetime'
-  | 'integer'
-  | 'string'
-  | 'valueObject'
-  | 'custom'
+export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'valueObject' | 'custom'
 
 export interface MakeFilterOption<
   TName extends string = string,

@@ -1,13 +1,26 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import TestFilterV2 from '@/playground/filterV2View/TestFilterV2.vue'
+import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
 
-const filterSubmit = (a, b) => {
-  console.log('filterSubmit', a, b)
+const filterSubmit = ({
+  filterData,
+  filterConfig,
+}: {
+  filterData: FilterData<any>
+  filterConfig: FilterConfig<any>
+}) => {
+  console.log('filterSubmit', filterData, filterConfig)
 }
 
-const filterReset = () => {
-  console.log('filterReset', a, b)
+const filterReset = ({
+  filterData,
+  filterConfig,
+}: {
+  filterData: FilterData<any>
+  filterConfig: FilterConfig<any>
+}) => {
+  console.log('filterReset', filterData, filterConfig)
 }
 </script>
 

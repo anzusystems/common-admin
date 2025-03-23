@@ -153,7 +153,7 @@ const loading = ref(false)
 const apiSearch = async (query: string, requestCounter: number) => {
   loading.value = true
   filterInnerData[props.filterByField] = query
-  const res = await props.fetchItemsMinimal(pagination, innerFilter.value)
+  const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
   if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
   loading.value = false
 }
@@ -163,14 +163,16 @@ const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
   return ([] as ValueObjectOption<string | number>[]).concat(found)
 }
 
-const tryToLoadFromLocalData = async (value: string | number | string[] | number[]) => {
+const tryToLoadFromLocalData = async (
+  value: ValueObjectOption<string | number> | ValueObjectOption<string | number>[]
+) => {
   let count = 1
   let foundItems = []
   if (isArray(value)) {
     count = value.length
-    foundItems = findLocalDataByValues(value)
+    foundItems = findLocalDataByValues(value.map((item) => item.value))
   } else {
-    foundItems = findLocalDataByValues([value])
+    foundItems = findLocalDataByValues([value.value])
   }
   selectedItemsCache.value = foundItems
   return foundItems.length === count
@@ -188,7 +190,7 @@ const autoFetch = async () => {
   if (autoFetched.value === true) return
   autoFetched.value = true
   loading.value = true
-  const res = await props.fetchItemsMinimal(pagination, innerFilter.value)
+  const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
   if (apiRequestCounter.value === 0) fetchedItems.value = res
   loading.value = false
 }
@@ -219,7 +221,7 @@ const onSearchUpdate = (query: string) => {
 }
 
 const onClickClear = async () => {
-  fetchedItems.value = await props.fetchItemsMinimal(pagination, innerFilter.value)
+  fetchedItems.value = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
   clearField()
 }
 
@@ -297,7 +299,7 @@ watchDebounced(
 
 <template>
   <VAutocomplete
-    v-model="modelValueComputed"
+    v-model="modelValue"
     :items="allItems"
     no-filter
     :placeholder="placeholderComputed"
@@ -306,6 +308,8 @@ watchDebounced(
     :label="label"
     :chips="filterConfigCurrent.multiple"
     :loading="loading"
+    hide-details
+    return-object
     @update:search="onSearchUpdate"
     @blur="onBlur"
     @focus="onFocus"

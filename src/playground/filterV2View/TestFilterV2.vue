@@ -11,14 +11,14 @@ import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterV2View/Fil
 import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectRubricRemoteAutocomplete.vue'
 import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectDeskRemoteAutocomplete.vue'
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
-import type { IntegerIdNullable } from '@/types/common.ts'
+import type { IntegerIdNullable, IntegerId } from '@/types/common.ts'
 import AFilterDatetimePicker from '@/components/filter2/variant/AFilterDatetimePicker.vue'
 import AFilterBooleanSelect from '@/components/filter2/variant/AFilterBooleanSelect.vue'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
 
 const emit = defineEmits<{
-  (e: 'submit', filterData: FilterData<any>, filterConfig: FilterConfig<any>): void
-  (e: 'reset', filterData: FilterData<any>, filterConfig: FilterConfig<any>): void
+  (e: 'submit', value: { filterData: FilterData<any>; filterConfig: FilterConfig<any> }): void
+  (e: 'reset', value: { filterData: FilterData<any>; filterConfig: FilterConfig<any> }): void
 }>()
 
 const { filterConfig, filterData } = useTestListFilter()
@@ -35,8 +35,8 @@ const { subjectLockTypeOptions } = useSubjectLockType()
 
 <template>
   <AFilterWrapper
-    @submit="emit('submit', filterData, filterConfig)"
-    @reset="emit('reset', filterData, filterConfig)"
+    @submit="emit('submit', { filterData, filterConfig })"
+    @reset="emit('reset', { filterData, filterConfig })"
   >
     <template #search>
       <AFilterString name="text" />
