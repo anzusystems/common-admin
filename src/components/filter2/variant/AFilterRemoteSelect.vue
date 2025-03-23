@@ -13,7 +13,7 @@ import {
   FilterInnerConfigKey,
   FilterInnerDataKey,
   FilterSelectedKey,
-  FilterSubmitResetCounterKey,
+  FilterSubmitResetCounterKey, FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys.ts'
 import { type FilterConfig, type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 import { isOneOf } from '@/utils/enum.ts'
@@ -49,6 +49,7 @@ const emit = defineEmits<{
 }>()
 
 const submitResetCounter = inject(FilterSubmitResetCounterKey)
+const touched = inject(FilterTouchedKey)
 const filterSelected = inject(FilterSelectedKey)
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
@@ -57,6 +58,7 @@ const filterInnerData = inject(FilterInnerDataKey)
 
 if (props.debug) {
   console.log(submitResetCounter)
+  console.log(touched)
   console.log(filterSelected)
   console.log(filterConfig)
   console.log(filterConfig?.fields[props.name])
@@ -69,6 +71,7 @@ if (props.debug) {
 
 if (
   isUndefined(submitResetCounter) ||
+  isUndefined(touched) ||
   isUndefined(filterSelected) ||
   isUndefined(filterConfig) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -92,6 +95,7 @@ const modelValue = computed({
   },
   set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
     filterData[props.name] = newValue
+    touched.value = true
     emit('change')
   },
 })

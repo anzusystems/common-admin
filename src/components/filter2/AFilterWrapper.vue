@@ -2,43 +2,64 @@
 import AFilterAdvancedButton from '@/components/buttons/filter/AFilterAdvancedButton.vue'
 import AFilterSubmitButton from '@/components/buttons/filter/AFilterSubmitButton.vue'
 import AFilterResetButton from '@/components/buttons/filter/AFilterResetButton.vue'
-import { provide, ref } from 'vue'
-import { FilterSelectedKey, FilterSubmitResetCounterKey } from '@/components/filter2/filterInjectionKeys.ts'
+import { inject, provide, ref } from 'vue'
+import {
+  FilterConfigKey,
+  FilterDataKey,
+  FilterSelectedKey,
+  FilterSubmitResetCounterKey, FilterTouchedKey,
+} from '@/components/filter2/filterInjectionKeys.ts'
 import FiltersSelected from '@/components/filter2/FiltersSelected.vue'
 import type { ValueObjectOption } from '@/types/ValueObject.ts'
+import { isUndefined } from '@/utils/common.ts'
+import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 
 withDefaults(
   defineProps<{
     enableTop?: boolean
     hideButtons?: boolean
-    touched?: boolean
+    formName?: string
   }>(),
   {
     enableTop: false,
     hideButtons: false,
-    touched: true,
+    formName: 'search',
   }
 )
 const emit = defineEmits<{
-  (e: 'submitFilter'): void
-  (e: 'resetFilter'): void
+  (e: 'submit'): void
+  (e: 'reset'): void
 }>()
 
 const showDetail = defineModel<boolean>('showDetail', { default: false, required: false })
+const touched = defineModel<boolean>('touched', { default: false, required: false })
+provide(FilterTouchedKey, touched)
+
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+if (isUndefined(filterConfig) || isUndefined(filterData)) {
+  throw new Error('Incorrect provide/inject config.')
+}
 
 const submitResetCounter = ref(0)
 provide(FilterSubmitResetCounterKey, submitResetCounter)
-const selectedFilters = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
-provide(FilterSelectedKey, selectedFilters)
+const filterSelected = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
+provide(FilterSelectedKey, filterSelected)
 
 const submitFilter = () => {
-  emit('submitFilter')
+  touched.value = false
   submitResetCounter.value++
+  emit('submit')
 }
 
+const { clearAll } = useFilterHelpers()
+
 const resetFilter = () => {
-  emit('resetFilter')
+  touched.value = false
+  clearAll(filterData, filterConfig)
+  filterSelected.value.clear()
   submitResetCounter.value++
+  emit('reset')
 }
 
 const toggleFilterDetail = () => {
@@ -47,63 +68,65 @@ const toggleFilterDetail = () => {
 </script>
 
 <template>
-  <VRow
-    v-if="enableTop"
-    dense
+  <VForm
+    :name="formName"
+    @submit.prevent="submitFilter"
   >
-    <VCol class="">
-      <slot name="top" />
-    </VCol>
-  </VRow>
-  <VRow
-    dense
-    class="a-filter-advanced"
-    :class="{ 'a-filter-advanced--active': showDetail }"
-  >
-    <VCol
-      class="v-col-filters--show-hide"
-      cols="auto"
+    <VRow
+      v-if="enableTop"
+      dense
     >
-      <AFilterAdvancedButton
-        :button-active="showDetail"
-        @advanced-filter="toggleFilterDetail"
-      />
-    </VCol>
-    <VCol class="">
-      <VRow align="start">
-        <VCol
-          cols="12"
-          sm="6"
-          md="4"
-        >
-          <slot name="search" />
-        </VCol>
-        <VCol
-          cols="auto"
-          class="flex-grow-1"
-        >
-          <FiltersSelected />
-        </VCol>
-      </VRow>
-      <div
-        v-show="showDetail"
-        class="a-filter-advanced__content"
+      <VCol class="">
+        <slot name="top" />
+      </VCol>
+    </VRow>
+    <VRow
+      dense
+      class="a-filter-advanced"
+      :class="{ 'a-filter-advanced--active': showDetail }"
+    >
+      <VCol
+        class="v-col-filters--show-hide"
+        cols="auto"
       >
-        <slot name="detail" />
-      </div>
-    </VCol>
-    <VCol
-      v-if="!hideButtons"
-      class="v-col-filters--buttons text-right"
-      cols="auto"
-    >
-      <slot name="buttons">
-        <AFilterSubmitButton
-          :touched="touched"
-          @click="submitFilter"
+        <AFilterAdvancedButton
+          :button-active="showDetail"
+          @advanced-filter="toggleFilterDetail"
         />
-        <AFilterResetButton @reset="resetFilter" />
-      </slot>
-    </VCol>
-  </VRow>
+      </VCol>
+      <VCol class="">
+        <VRow align="start">
+          <VCol
+            cols="12"
+            sm="6"
+            md="4"
+          >
+            <slot name="search" />
+          </VCol>
+          <VCol
+            cols="auto"
+            class="flex-grow-1"
+          >
+            <FiltersSelected />
+          </VCol>
+        </VRow>
+        <div
+          v-show="showDetail"
+          class="a-filter-advanced__content"
+        >
+          <slot name="detail" />
+        </div>
+      </VCol>
+      <VCol
+        v-if="!hideButtons"
+        class="v-col-filters--buttons text-right"
+        cols="auto"
+      >
+        <slot name="buttons">
+          <AFilterSubmitButton :touched="touched" />
+          <AFilterResetButton @reset="resetFilter" />
+        </slot>
+      </VCol>
+    </VRow>
+  </VForm>
 </template>

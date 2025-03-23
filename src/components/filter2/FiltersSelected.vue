@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
 import { FilterConfigKey, FilterDataKey, FilterSelectedKey } from '@/components/filter2/filterInjectionKeys.ts'
-import { isArray, isNumber, isString, isUndefined } from '@/utils/common.ts'
+import { isArray, isBoolean, isNumber, isString, isUndefined } from '@/utils/common.ts'
 import { useI18n } from 'vue-i18n'
 
 const filterConfig = inject(FilterConfigKey)
@@ -38,10 +38,13 @@ const clickClose = (name: string, optionValue: number | string) => {
     selectedFound.splice(foundIndex, 1)
   }
   // update data
+  console.log(filterData[name])
   if (isArray(filterData[name]) && filterData[name].length > 0) {
     const foundIndex = filterData[name].findIndex((item) => item === optionValue)
     filterData[name].splice(foundIndex, 1)
   } else if (isString(filterData[name]) || isNumber(filterData[name])) {
+    filterData[name] = filterConfig.fields[name].default
+  }  else if (isBoolean(filterData[name])) {
     filterData[name] = filterConfig.fields[name].default
   }
 }

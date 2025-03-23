@@ -27,11 +27,20 @@ export type FilterVariant =
   | 'lte'
   | 'custom'
 
+export type FilterType =
+  | 'boolean'
+  | 'datetime'
+  | 'integer'
+  | 'string'
+  | 'valueObject'
+  | 'custom'
+
 export interface MakeFilterOption<
   TName extends string = string,
   TDefault extends AllowedFilterData = AllowedFilterData,
 > {
   name: TName
+  type?: FilterType
   variant?: FilterVariant
   titleT?: string
   default: TDefault
@@ -42,8 +51,6 @@ export interface MakeFilterOption<
   exclude?: boolean
 }
 
-// export type MakeFilterOptions = MakeFilterOption<any, any>[]
-
 export type FilterFieldStore<T extends string, V> = {
   name: T
   default: V
@@ -51,12 +58,12 @@ export type FilterFieldStore<T extends string, V> = {
 
 export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
   name: string
+  type: FilterType
   variant: FilterVariant
   titleT?: string
   default: T
   field: string
   clearable: boolean
-  selected: ValueObjectOption<string | number>[]
   mandatory: boolean
   multiple: boolean
   advanced: boolean
@@ -94,6 +101,7 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
 
   const config = filters.reduce((acc, filter) => {
     const key = filter.name
+    const type: FilterType = isUndefined(filter.type) ? 'custom' : filter.type
     const variant: FilterVariant = isUndefined(filter.variant) ? 'eq' : filter.variant
     const defaultValue = (isUndefined(filter.default) ? null : filter.default) as AllowedFilterData
     let titleT = filter.titleT
@@ -105,10 +113,10 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
       [key]: {
         name: key,
         variant,
+        type,
         titleT,
         field: isUndefined(filter.field) ? '' : filter.field,
         clearable: isUndefined(filter.clearable) ? true : filter.clearable,
-        selected: [],
         mandatory: isUndefined(filter.mandatory) ? false : filter.mandatory,
         multiple: isArray(defaultValue),
         advanced: isUndefined(filter.advanced) ? false : filter.advanced,

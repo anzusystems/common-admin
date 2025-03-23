@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { provide, ref } from 'vue'
+import { computed, provide } from 'vue'
 import { useTestListFilter } from '@/playground/filterV2View/testFilterV2.ts'
 import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
 import AFilterString from '@/components/filter2/variant/AFilterString.vue'
@@ -11,152 +11,95 @@ import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterV2View/Fil
 import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectRubricRemoteAutocomplete.vue'
 import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectDeskRemoteAutocomplete.vue'
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
-import type { IntegerId, IntegerIdNullable } from '@/types/common.ts'
+import type { IntegerIdNullable } from '@/types/common.ts'
 import AFilterDatetimePicker from '@/components/filter2/variant/AFilterDatetimePicker.vue'
 import AFilterBooleanSelect from '@/components/filter2/variant/AFilterBooleanSelect.vue'
 
 const emit = defineEmits<{
-  (e: 'afterReset'): void
-  (e: 'afterSubmit'): void
+  (e: 'submit'): void
+  (e: 'reset'): void
 }>()
 
 const { filterConfig, filterData } = useTestListFilter()
 provide(FilterConfigKey, filterConfig)
 provide(FilterDataKey, filterData)
 
-const touched = ref(false)
-
-const submitFilter = () => {
-  touched.value = false
-  emit('afterSubmit')
-}
-
-const resetFilter = () => {
-  touched.value = false
-  emit('afterReset')
-}
-
-const onAnyFilterUpdate = () => {
-  touched.value = true
-}
+const siteId = computed(() => {
+  return filterData.site as IntegerIdNullable | IntegerId[]
+})
 
 const { subjectStatusOptions } = useSubjectStatus()
 const { subjectLockTypeOptions } = useSubjectLockType()
 </script>
 
 <template>
-  <VForm
-    name="search"
-    @submit.prevent="submitFilter"
+  <AFilterWrapper
+    @submit="emit('submit')"
+    @reset="emit('reset')"
   >
-    <AFilterWrapper
-      :touched="touched"
-      @submit-filter="submitFilter"
-      @reset-filter="resetFilter"
-    >
-      <template #search>
-        <AFilterString
-          name="text"
-          @change="onAnyFilterUpdate"
-        />
-      </template>
-      <template #detail>
-        <VRow>
-          <VCol cols="3">
-            <FilterSubjectSiteRemoteAutocomplete
-              name="site"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <FilterSubjectRubricRemoteAutocomplete
-              name="rubric"
-              :site-id="(filterData.site as IntegerIdNullable | IntegerId[])"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <FilterSubjectAuthorRemoteAutocomplete
-              name="articleAuthors"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <AFilterValueObjectOptionsSelect
-              name="status"
-              :items="subjectStatusOptions"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <AFilterString
-              name="docId"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <FilterSubjectDeskRemoteAutocomplete
-              name="desks"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <AFilterDatetimePicker
-              name="publicPublishedAtFrom"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <AFilterDatetimePicker
-              name="publicPublishedAtUntil"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <FilterSubjectUserRemoteAutocomplete
-              name="owners"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <AFilterString
-              name="url"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <AFilterDatetimePicker
-              name="modifiedAtFrom"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <AFilterDatetimePicker
-              name="modifiedAtUntil"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <AFilterValueObjectOptionsSelect
-              name="lockType"
-              :items="subjectLockTypeOptions"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-          <VCol cols="3">
-            <AFilterBooleanSelect
-              name="enableAds"
-              @change="onAnyFilterUpdate"
-            />
-          </VCol>
-        </VRow>
-      </template>
-    </AFilterWrapper>
-    <div class="my-2">
-      {{ filterData }}
-    </div>
-    <div class="my-2">
-      {{ filterConfig }}
-    </div>
-  </VForm>
+    <template #search>
+      <AFilterString name="text" />
+    </template>
+    <template #detail>
+      <VRow>
+        <VCol cols="3">
+          <FilterSubjectSiteRemoteAutocomplete name="site" />
+        </VCol>
+        <VCol cols="3">
+          <FilterSubjectRubricRemoteAutocomplete
+            name="rubric"
+            :site-id="siteId"
+          />
+        </VCol>
+        <VCol cols="3">
+          <FilterSubjectAuthorRemoteAutocomplete name="articleAuthors" />
+        </VCol>
+        <VCol cols="3">
+          <AFilterValueObjectOptionsSelect
+            name="status"
+            :items="subjectStatusOptions"
+          />
+        </VCol>
+        <VCol cols="3">
+          <AFilterString name="docId" />
+        </VCol>
+        <VCol cols="3">
+          <FilterSubjectDeskRemoteAutocomplete name="desks" />
+        </VCol>
+        <VCol cols="3">
+          <AFilterDatetimePicker name="publicPublishedAtFrom" />
+        </VCol>
+        <VCol cols="3">
+          <AFilterDatetimePicker name="publicPublishedAtUntil" />
+        </VCol>
+        <VCol cols="3">
+          <FilterSubjectUserRemoteAutocomplete name="owners" />
+        </VCol>
+        <VCol cols="3">
+          <AFilterString name="url" />
+        </VCol>
+        <VCol cols="3">
+          <AFilterDatetimePicker name="modifiedAtFrom" />
+        </VCol>
+        <VCol cols="3">
+          <AFilterDatetimePicker name="modifiedAtUntil" />
+        </VCol>
+        <VCol cols="3">
+          <AFilterValueObjectOptionsSelect
+            name="lockType"
+            :items="subjectLockTypeOptions"
+          />
+        </VCol>
+        <VCol cols="3">
+          <AFilterBooleanSelect name="enableAds" />
+        </VCol>
+      </VRow>
+    </template>
+  </AFilterWrapper>
+  <div class="my-2">
+    {{ filterData }}
+  </div>
+  <div class="my-2">
+    {{ filterConfig }}
+  </div>
 </template>

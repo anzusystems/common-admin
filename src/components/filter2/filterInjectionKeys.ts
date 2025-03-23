@@ -11,3 +11,4 @@ export const FilterInnerConfigKey: InjectionKey<FilterConfig<any>> = Symbol.for(
 export const FilterSubmitResetCounterKey: InjectionKey<Ref<number>> = Symbol.for('anzu:FilterSubmitResetCounterKey')
 export const FilterSelectedKey: InjectionKey<Ref<Map<string, ValueObjectOption<string | number>[]>>> =
   Symbol.for('anzu:FilterSelectedKey')
+export const FilterTouchedKey: InjectionKey<Ref<boolean>> = Symbol.for('anzu:FilterTouchedKey')
