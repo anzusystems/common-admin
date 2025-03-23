@@ -16,6 +16,7 @@ import {
   FilterSubmitResetCounterKey,
 } from '@/components/filter2/filterInjectionKeys.ts'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
+import { isOneOf } from '@/utils/enum.ts'
 
 type FetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
@@ -32,14 +33,14 @@ const props = withDefaults(
     fetchItemsByIds: FetchItemsByIdsType
     filterByField: string
     filterSortBy?: string | null
-    disableInitFetch?: boolean | undefined
     placeholder?: string | undefined
+    prefetch?: 'hover' | 'focus' | 'mounted'
     debug?: boolean
   }>(),
   {
     filterSortBy: null,
-    disableInitFetch: false,
     placeholder: undefined,
+    prefetch: 'hover',
     debug: false,
   }
 )
@@ -160,10 +161,12 @@ const tryToLoadFromLocalData = async (value: string | number | string[] | number
 }
 
 const autoFetched = ref(false)
+
 const clearAutoFetchTimer = () => {
   clearTimeout(autoFetchTimer.value)
   autoFetchTimer.value = undefined
 }
+
 const autoFetch = async () => {
   clearAutoFetchTimer()
   if (autoFetched.value === true) return
@@ -173,8 +176,14 @@ const autoFetch = async () => {
   if (apiRequestCounter.value === 0) fetchedItems.value = res
   loading.value = false
 }
+
 const onFocus = () => {
   isFocused.value = true
+  clearAutoFetchTimer()
+  autoFetch()
+}
+
+const onMouseEnter = () => {
   clearAutoFetchTimer()
   autoFetch()
 }
@@ -216,7 +225,7 @@ watch(
     if (newValue === oldValue) return
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []
-      if (props.disableInitFetch || autoFetched.value === true) return
+      if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
       autoFetchTimer.value = setTimeout(() => {
         autoFetch()
       }, 3000)
@@ -265,8 +274,17 @@ watchDebounced(
     @update:search="onSearchUpdate"
     @blur="onBlur"
     @focus="onFocus"
+    @mouseenter="onMouseEnter"
     @click:clear="onClickClear"
   >
+    <template
+      v-if="loading"
+      #no-data
+    >
+      <VListItem
+        :title="t('$vuetify.loading')"
+      />
+    </template>
     <template #item="{ props: itemProps, item }">
       <VListItem
         v-bind="itemProps"
