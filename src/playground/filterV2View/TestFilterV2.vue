@@ -95,7 +95,7 @@ const { subjectLockTypeOptions } = useSubjectLockType()
           </VCol>
           <VCol cols="2">
             <FilterSubjectDeskRemoteAutocomplete
-              name="desk"
+              name="desks"
               @change="onAnyFilterUpdate"
             />
           </VCol>

@@ -30,16 +30,17 @@ const props = withDefaults(
       filterConfig: FilterConfig<any>
     ) => Promise<ValueObjectOption<string | number>[]>
     fetchItemsByIds: FetchItemsByIdsType
-    filterByField?: string
+    filterByField: string
     filterSortBy?: string | null
     disableInitFetch?: boolean | undefined
     placeholder?: string | undefined
+    debug?: boolean
   }>(),
   {
-    filterByField: 'name',
     filterSortBy: null,
     disableInitFetch: false,
     placeholder: undefined,
+    debug: false,
   }
 )
 const emit = defineEmits<{
@@ -52,6 +53,18 @@ const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 const filterInnerConfig = inject(FilterInnerConfigKey)
 const filterInnerData = inject(FilterInnerDataKey)
+
+if (props.debug) {
+  console.log(submitResetCounter)
+  console.log(filterSelected)
+  console.log(filterConfig)
+  console.log(filterConfig?.fields[props.name])
+  console.log(filterData)
+  console.log(filterInnerConfig)
+  console.log(filterInnerConfig?.fields[props.filterByField])
+  console.log(filterInnerData)
+  console.log(filterInnerData?.[props.filterByField])
+}
 
 if (
   isUndefined(submitResetCounter) ||
@@ -81,15 +94,6 @@ const modelValue = computed({
     emit('change')
   },
 })
-
-// const modelValueComputed = computed({
-//   get() {
-//     return props.modelValue.model
-//   },
-//   set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null) {
-//     emit('update:modelValue', { ...props.modelValue, ...{ model: cloneDeep(newValue) } })
-//   },
-// })
 
 const search = ref('')
 const isFocused = ref(false)

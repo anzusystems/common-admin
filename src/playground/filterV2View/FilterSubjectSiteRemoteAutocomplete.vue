@@ -28,6 +28,7 @@ provide(FilterInnerDataKey, filterData)
     :name="name"
     :fetch-items="fetchItems"
     :fetch-items-by-ids="fetchItemsByIds"
+    filter-by-field="name"
     @change="emit('change')"
   />
 </template>
