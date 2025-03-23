@@ -13,6 +13,7 @@ import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/Filte
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
 import type { IntegerId, IntegerIdNullable } from '@/types/common.ts'
 import AFilterDatetimePicker from '@/components/filter2/variant/AFilterDatetimePicker.vue'
+import AFilterBooleanSelect from '@/components/filter2/variant/AFilterBooleanSelect.vue'
 
 const emit = defineEmits<{
   (e: 'afterReset'): void
@@ -61,7 +62,7 @@ const { subjectLockTypeOptions } = useSubjectLockType()
       </template>
       <template #detail>
         <VRow>
-          <VCol cols="2">
+          <VCol cols="3">
             <FilterSubjectSiteRemoteAutocomplete
               name="site"
               @change="onAnyFilterUpdate"
@@ -74,13 +75,13 @@ const { subjectLockTypeOptions } = useSubjectLockType()
               @change="onAnyFilterUpdate"
             />
           </VCol>
-          <VCol cols="2">
+          <VCol cols="3">
             <FilterSubjectAuthorRemoteAutocomplete
               name="articleAuthors"
               @change="onAnyFilterUpdate"
             />
           </VCol>
-          <VCol cols="2">
+          <VCol cols="3">
             <AFilterValueObjectOptionsSelect
               name="status"
               :items="subjectStatusOptions"
@@ -93,7 +94,7 @@ const { subjectLockTypeOptions } = useSubjectLockType()
               @change="onAnyFilterUpdate"
             />
           </VCol>
-          <VCol cols="2">
+          <VCol cols="3">
             <FilterSubjectDeskRemoteAutocomplete
               name="desks"
               @change="onAnyFilterUpdate"
@@ -135,15 +136,27 @@ const { subjectLockTypeOptions } = useSubjectLockType()
               @change="onAnyFilterUpdate"
             />
           </VCol>
-          <VCol cols="2">
+          <VCol cols="3">
             <AFilterValueObjectOptionsSelect
               name="lockType"
               :items="subjectLockTypeOptions"
               @change="onAnyFilterUpdate"
             />
           </VCol>
+          <VCol cols="3">
+            <AFilterBooleanSelect
+              name="enableAds"
+              @change="onAnyFilterUpdate"
+            />
+          </VCol>
         </VRow>
       </template>
     </AFilterWrapper>
+    <div class="my-2">
+      {{ filterData }}
+    </div>
+    <div class="my-2">
+      {{ filterConfig }}
+    </div>
   </VForm>
 </template>

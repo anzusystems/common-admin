@@ -9,7 +9,11 @@ import {
   FilterSubmitResetCounterKey,
 } from '@/components/filter2/filterInjectionKeys.ts'
 import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
+
+interface BooleanSelectOption {
+  value: 0 | 1 | -1
+  title: string
+}
 
 const props = withDefaults(
   defineProps<{
@@ -49,7 +53,7 @@ if (
 }
 
 const modelValue = computed({
-  get() {
+  get(): BooleanSelectOption {
     if (isUndefined(filterData[props.name]) || isNull(filterData[props.name]))
       return {
         value: -1,
@@ -57,7 +61,7 @@ const modelValue = computed({
       }
     return filterData[props.name] ? { value: 1, title: t(props.trueT) } : { value: 0, title: t(props.falseT) }
   },
-  set(newValue: ValueObjectOption<number> | null) {
+  set(newValue: BooleanSelectOption) {
     let returnValue: null | boolean = null
     if (newValue?.value === 1) returnValue = true
     if (newValue?.value === 0) returnValue = false
@@ -74,7 +78,7 @@ const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
-const items = computed<ValueObjectOption<number>[]>(() => {
+const items = computed<BooleanSelectOption[]>(() => {
   return [
     { value: -1, title: t(props.allT) },
     { value: 1, title: t(props.trueT) },
@@ -90,6 +94,10 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
+  if (modelValue.value.value === -1) {
+    filterSelected.value.delete(props.name)
+    return
+  }
   filterSelected.value.set(props.name, [{ title: modelValue.value.title, value: modelValue.value.value }])
 }
 
@@ -104,7 +112,7 @@ watch(submitResetCounter, () => {
     :data-cy="dataCy"
     :label="label"
     :items="items"
-    :clearable="!filterConfigCurrent.mandatory"
+    :clearable="!filterConfigCurrent.mandatory && modelValue.value !== -1"
     return-object
     hide-details
     @click:clear.stop="clearField"

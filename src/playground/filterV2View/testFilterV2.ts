@@ -20,6 +20,7 @@ const filterFields = [
   { name: 'owners' as const, field: 'ownerIds', default: [] as IntegerId[] },
   { name: 'keywords' as const, field: 'keywordIds', default: [] as IntegerId[] },
   { name: 'articleAuthors' as const, field: 'authorIds', default: [] as IntegerId[] },
+  { name: 'enableAds' as const, field: 'flagsStandard.enableAds', default: null },
 ]
 
 const listFiltersStore = reactive<FilterStore<typeof filterFields>>({
@@ -40,6 +41,7 @@ const listFiltersStore = reactive<FilterStore<typeof filterFields>>({
   owners: [],
   keywords: [],
   articleAuthors: [],
+  enableAds: null,
 })
 
 export function useTestListFilter() {

@@ -54,11 +54,11 @@ export function useSubjectLockType() {
   const subjectLockTypeOptions = ref<ValueObjectOption<SubjectLockTypeType>[]>([
     {
       value: SubjectLockType.Free,
-      title: t('system.subject.articleLockType.free'),
+      title: t('system.subject.subjectLockType.free'),
     },
     {
       value: SubjectLockType.Locked,
-      title: t('system.subject.articleLockType.locked'),
+      title: t('system.subject.subjectLockType.locked'),
     },
   ])
 

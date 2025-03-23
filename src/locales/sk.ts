@@ -61,11 +61,16 @@ export default {
         articleAuthors: 'Autori',
         url: 'Url',
         lockType: 'Typ zámku',
+        enableAds: 'Enable ads',
       },
       subjectStatus: {
         draft: 'Draft',
         ready: 'Ready',
         published: 'Published',
+      },
+      subjectLockType: {
+        free: 'Neplatený článok',
+        locked: 'Platený článok',
       },
     },
   },
