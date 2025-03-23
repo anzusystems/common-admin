@@ -7,7 +7,8 @@ import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
-  FilterSubmitResetCounterKey, FilterTouchedKey,
+  FilterSubmitResetCounterKey,
+  FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys.ts'
 import FiltersSelected from '@/components/filter2/FiltersSelected.vue'
 import type { ValueObjectOption } from '@/types/ValueObject.ts'
@@ -112,7 +113,7 @@ const toggleFilterDetail = () => {
         </VRow>
         <div
           v-show="showDetail"
-          class="a-filter-advanced__content"
+          class="a-filter-advanced__content mt-4"
         >
           <slot name="detail" />
         </div>
