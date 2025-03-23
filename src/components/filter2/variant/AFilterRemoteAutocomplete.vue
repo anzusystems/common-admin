@@ -261,6 +261,7 @@ watchDebounced(
     :label="label"
     :chips="filterConfigCurrent.multiple"
     :loading="loading"
+    hide-details
     @update:search="onSearchUpdate"
     @blur="onBlur"
     @focus="onFocus"

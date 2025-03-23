@@ -242,6 +242,7 @@ const now = () => {
     :persistent-placeholder="true"
     :placeholder="placeholderComputed"
     class="a-datetime-picker"
+    hide-details="auto"
     :disabled="disabled"
     @blur="onTextFieldBlur"
     @focus="onTextFieldFocus"

@@ -91,6 +91,7 @@ watch(submitResetCounter, () => {
     :multiple="filterConfigCurrent.multiple"
     :clearable="!filterConfigCurrent.mandatory"
     data-cy="filter-value"
+    hide-details
     @click:clear.stop="clearField"
   />
 </template>
