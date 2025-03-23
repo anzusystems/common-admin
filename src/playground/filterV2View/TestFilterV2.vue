@@ -11,10 +11,9 @@ import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterV2View/Fil
 import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectRubricRemoteAutocomplete.vue'
 import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectDeskRemoteAutocomplete.vue'
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
-import type { IntegerIdNullable, IntegerId } from '@/types/common.ts'
-import AFilterDatetimePicker from '@/components/filter2/variant/AFilterDatetimePicker.vue'
-import AFilterBooleanSelect from '@/components/filter2/variant/AFilterBooleanSelect.vue'
+import type { IntegerId, IntegerIdNullable } from '@/types/common.ts'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
+import AFilterForm from '@/components/filter2/AFilterForm.vue'
 
 const emit = defineEmits<{
   (e: 'submit', value: { filterData: FilterData<any>; filterConfig: FilterConfig<any> }): void
@@ -42,59 +41,38 @@ const { subjectLockTypeOptions } = useSubjectLockType()
       <AFilterString name="text" />
     </template>
     <template #detail>
-      <VRow>
-        <VCol cols="3">
+      <AFilterForm>
+        <template #item.site>
           <FilterSubjectSiteRemoteAutocomplete name="site" />
-        </VCol>
-        <VCol cols="3">
+        </template>
+        <template #item.rubric>
           <FilterSubjectRubricRemoteAutocomplete
             name="rubric"
             :site-id="siteId"
           />
-        </VCol>
-        <VCol cols="3">
+        </template>
+        <template #item.articleAuthors>
           <FilterSubjectAuthorRemoteAutocomplete name="articleAuthors" />
-        </VCol>
-        <VCol cols="3">
+        </template>
+        <template #item.status>
           <AFilterValueObjectOptionsSelect
             name="status"
             :items="subjectStatusOptions"
           />
-        </VCol>
-        <VCol cols="3">
-          <AFilterString name="docId" />
-        </VCol>
-        <VCol cols="3">
+        </template>
+        <template #item.desks>
           <FilterSubjectDeskRemoteAutocomplete name="desks" />
-        </VCol>
-        <VCol cols="3">
-          <AFilterDatetimePicker name="publicPublishedAtFrom" />
-        </VCol>
-        <VCol cols="3">
-          <AFilterDatetimePicker name="publicPublishedAtUntil" />
-        </VCol>
-        <VCol cols="3">
+        </template>
+        <template #item.owners>
           <FilterSubjectUserRemoteAutocomplete name="owners" />
-        </VCol>
-        <VCol cols="3">
-          <AFilterString name="url" />
-        </VCol>
-        <VCol cols="3">
-          <AFilterDatetimePicker name="modifiedAtFrom" />
-        </VCol>
-        <VCol cols="3">
-          <AFilterDatetimePicker name="modifiedAtUntil" />
-        </VCol>
-        <VCol cols="3">
+        </template>
+        <template #item.lockType>
           <AFilterValueObjectOptionsSelect
             name="lockType"
             :items="subjectLockTypeOptions"
           />
-        </VCol>
-        <VCol cols="3">
-          <AFilterBooleanSelect name="enableAds" />
-        </VCol>
-      </VRow>
+        </template>
+      </AFilterForm>
     </template>
   </AFilterWrapper>
   <div class="my-2">

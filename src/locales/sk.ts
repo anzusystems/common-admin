@@ -43,6 +43,7 @@ export default {
       filter: {
         id: 'Systémové Id',
         discriminator: 'Typ',
+        headline: 'Headline',
         docId: 'Id',
         version: 'Verzia',
         text: 'Fulltext',

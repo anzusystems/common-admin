@@ -10,6 +10,15 @@ export interface GeneralFilterOptions {
   globalStore: Record<string, AllowedFilterData> | undefined
 }
 
+export interface FilerRenderOptions {
+  skip: boolean
+  xs: number
+  sm: number
+  md: number
+  lg: number
+  xl: number
+}
+
 export type FilterVariant =
   | 'search'
   | 'lt'
@@ -28,10 +37,8 @@ export type FilterVariant =
 
 export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'valueObject' | 'custom'
 
-export interface MakeFilterOption<
-  TName extends string = string,
-  TDefault extends AllowedFilterData = AllowedFilterData,
-> {
+// eslint-disable-next-line @stylistic/max-len
+export interface MakeFilterOption<TName extends string = string, TDefault extends AllowedFilterData = AllowedFilterData> {
   name: TName
   type?: FilterType
   variant?: FilterVariant
@@ -42,6 +49,7 @@ export interface MakeFilterOption<
   mandatory?: boolean
   advanced?: boolean
   exclude?: boolean
+  render?: Partial<FilerRenderOptions>
 }
 
 export type FilterFieldStore<T extends string, V> = {
@@ -61,6 +69,7 @@ export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
   multiple: boolean
   advanced: boolean
   exclude: boolean
+  render: FilerRenderOptions
 }
 
 export type FilterConfig<F extends readonly MakeFilterOption[]> = {
@@ -92,6 +101,15 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
     [key: string]: AllowedFilterData
   }
 
+  const defaultRenderOptions: FilerRenderOptions = {
+    skip: false,
+    xs: 12,
+    sm: 6,
+    md: 4,
+    lg: 3,
+    xl: 2,
+  }
+
   const config = filters.reduce((acc, filter) => {
     const key = filter.name
     const type: FilterType = isUndefined(filter.type) ? 'custom' : filter.type
@@ -115,6 +133,9 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
         advanced: isUndefined(filter.advanced) ? false : filter.advanced,
         exclude: isUndefined(filter.exclude) ? false : filter.exclude,
         default: defaultValue,
+        render: isUndefined(filter.render)
+          ? { ...defaultRenderOptions }
+          : { ...defaultRenderOptions, ...filter.render  },
       },
     }
   }, {} as ConfigMap)
