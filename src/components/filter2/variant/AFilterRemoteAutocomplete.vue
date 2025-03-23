@@ -15,7 +15,7 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
 } from '@/components/filter2/filterInjectionKeys.ts'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
+import { type FilterConfig, type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 import { isOneOf } from '@/utils/enum.ts'
 
 type FetchItemsByIdsType =
@@ -88,9 +88,9 @@ if (
 
 const modelValue = computed({
   get() {
-    return filterData[props.name] as string | number | string[] | number[] | null
+    return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
   },
-  set(newValue: string | number | string[] | number[] | null) {
+  set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
     filterData[props.name] = newValue
     emit('change')
   },
@@ -147,14 +147,16 @@ const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
   return ([] as ValueObjectOption<string | number>[]).concat(found)
 }
 
-const tryToLoadFromLocalData = async (value: string | number | string[] | number[]) => {
+const tryToLoadFromLocalData = async (
+  value: ValueObjectOption<string | number> | ValueObjectOption<string | number>[]
+) => {
   let count = 1
-  let foundItems = []
+  let foundItems: ValueObjectOption<string | number>[] = []
   if (isArray(value)) {
     count = value.length
-    foundItems = findLocalDataByValues(value)
+    foundItems = findLocalDataByValues(value.map((item) => item.value))
   } else {
-    foundItems = findLocalDataByValues([value])
+    foundItems = findLocalDataByValues([value.value])
   }
   selectedItemsCache.value = foundItems
   return foundItems.length === count
@@ -203,11 +205,12 @@ const onSearchUpdate = (query: string) => {
 
 const onClickClear = async () => {
   fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
-  if (filterConfigCurrent.value.multiple) {
-    modelValue.value = []
-    return
-  }
-  modelValue.value = null
+  clearField()
+  // if (filterConfigCurrent.value.multiple) {
+  //   modelValue.value = []
+  //   return
+  // }
+  // modelValue.value = null
 }
 
 const placeholderComputed = computed(() => {
@@ -217,6 +220,29 @@ const placeholderComputed = computed(() => {
   if (filterConfigCurrent.value.variant === 'contains' || filterConfigCurrent.value.variant === 'search')
     return t('common.model.filterPlaceholder.contains')
   return ''
+})
+
+const { clearOne } = useFilterHelpers()
+
+const clearField = () => {
+  clearOne(props.name, filterData, filterConfig)
+  filterSelected.value.delete(props.name)
+}
+
+const updateSelected = () => {
+  if ((isArray(modelValue.value) && modelValue.value.length === 0) || isNull(modelValue.value)) return
+  if (isArray(modelValue.value)) {
+    filterSelected.value.set(
+      props.name,
+      modelValue.value.map((item) => ({ title: item.title, value: item.value }))
+    )
+    return
+  }
+  filterSelected.value.set(props.name, [{ title: modelValue.value.title, value: modelValue.value.value }])
+}
+
+watch(submitResetCounter, () => {
+  updateSelected()
 })
 
 watch(
@@ -271,6 +297,7 @@ watchDebounced(
     :chips="filterConfigCurrent.multiple"
     :loading="loading"
     hide-details
+    return-object
     @update:search="onSearchUpdate"
     @blur="onBlur"
     @focus="onFocus"
@@ -281,9 +308,7 @@ watchDebounced(
       v-if="loading"
       #no-data
     >
-      <VListItem
-        :title="t('$vuetify.loading')"
-      />
+      <VListItem :title="t('$vuetify.loading')" />
     </template>
     <template #item="{ props: itemProps, item }">
       <VListItem

@@ -11,6 +11,7 @@ import {
 import { isString, isUndefined } from '@/utils/common.ts'
 import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 import type { DatetimeUTCNullable } from '@/types/common.ts'
+import { dateTimePretty } from '@/utils/datetime.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -70,7 +71,7 @@ const clearField = () => {
 
 const updateSelected = () => {
   if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
-  filterSelected.value.set(props.name, [{ title: modelValue.value, value: '' }])
+  filterSelected.value.set(props.name, [{ title: dateTimePretty(modelValue.value), value: modelValue.value }])
 }
 
 watch(submitResetCounter, () => {

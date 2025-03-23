@@ -79,7 +79,7 @@ const clearField = () => {
 
 const updateSelected = () => {
   if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
-  filterSelected.value.set(props.name, [{ title: modelValue.value, value: '' }])
+  filterSelected.value.set(props.name, [{ title: modelValue.value, value: modelValue.value }])
 }
 
 watch(submitResetCounter, () => {
