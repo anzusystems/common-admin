@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import { computed, provide } from 'vue'
-import { useTestListFilter } from '@/playground/filterV2View/testFilterV2'
+import {
+  type SubjectFilterConfig,
+  type SubjectFilterData,
+  useTestListFilter,
+} from '@/playground/filterV2View/testFilterV2'
 import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
 import AFilterString from '@/components/filter2/variant/AFilterString.vue'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
@@ -10,13 +14,12 @@ import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/Fil
 import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectDeskRemoteAutocomplete.vue'
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
 import { useSubjectLockType, useSubjectStatus } from '@/playground/filterV2View/subjectTools.ts'
 
 const emit = defineEmits<{
-  (e: 'submit', value: { filterData: FilterData; filterConfig: FilterConfig }): void
-  (e: 'reset', value: { filterData: FilterData; filterConfig: FilterConfig }): void
+  (e: 'submit', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
+  (e: 'reset', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
 }>()
 
 const { filterConfig, filterData } = useTestListFilter()
