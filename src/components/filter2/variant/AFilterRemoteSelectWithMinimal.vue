@@ -78,12 +78,13 @@ if (
 ) {
   throw new Error('Incorrect provide/inject config.')
 }
-
+const filterSelectedCache = ref<ValueObjectOption<string | number>[]>([])
 const modelValue = computed({
   get() {
     return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
   },
   set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
+    updateFilterSelectedCache(newValue)
     let final: null | string | number | string[] | number[] = null
     if (isArray(newValue)) {
       final = newValue.map((item) => item.value) as string[] | number[]
@@ -239,15 +240,23 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
-  if ((isArray(modelValue.value) && modelValue.value.length === 0) || isNull(modelValue.value)) return
-  if (isArray(modelValue.value)) {
-    filterSelected.value.set(
-      props.name,
-      modelValue.value.map((item) => ({ title: item.title, value: item.value }))
-    )
+  filterSelected.value.delete(props.name)
+  if (filterSelectedCache.value.length === 0) return
+  filterSelected.value.set(props.name, cloneDeep(filterSelectedCache.value))
+}
+
+const updateFilterSelectedCache = (
+  newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
+) => {
+  if ((isArray(newValue) && newValue.length === 0) || isNull(newValue)) {
+    filterSelectedCache.value = []
     return
   }
-  filterSelected.value.set(props.name, [{ title: modelValue.value.title, value: modelValue.value.value }])
+  if (isArray(newValue)) {
+    filterSelectedCache.value = newValue.map((item) => ({ title: item.title, value: item.value }))
+    return
+  }
+  filterSelectedCache.value = [{ title: newValue.title, value: newValue.value }]
 }
 
 watch(submitResetCounter, () => {
