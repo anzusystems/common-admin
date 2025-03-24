@@ -1,6 +1,6 @@
 import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import { i18n } from '@/plugins/i18n'
 
 export const SubjectStatus = {
   Draft: 'draft',
@@ -11,7 +11,7 @@ export const SubjectStatus = {
 export type SubjectStatusType = (typeof SubjectStatus)[keyof typeof SubjectStatus]
 
 export function useSubjectStatus() {
-  const { t } = useI18n()
+  const { t } = i18n.global
 
   const subjectStatusOptions = ref<ValueObjectOption<SubjectStatusType>[]>([
     {
@@ -49,7 +49,7 @@ export type SubjectLockTypeType = (typeof SubjectLockType)[keyof typeof SubjectL
 export const SubjectLockTypeDefault = SubjectLockType.Free
 
 export function useSubjectLockType() {
-  const { t } = useI18n()
+  const { t } = i18n.global
 
   const subjectLockTypeOptions = ref<ValueObjectOption<SubjectLockTypeType>[]>([
     {

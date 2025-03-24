@@ -7,6 +7,7 @@ import AFilterString from '@/components/filter2/variant/AFilterString.vue'
 import AFilterBooleanSelect from '@/components/filter2/variant/AFilterBooleanSelect.vue'
 import AFilterDatetimePicker from '@/components/filter2/variant/AFilterDatetimePicker.vue'
 import AFilterInteger from '@/components/filter2/variant/AFilterInteger.vue'
+import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -38,6 +39,8 @@ const componentComputed = computed(() => {
       return AFilterBooleanSelect
     case 'integer':
       return AFilterInteger
+    case 'valueObject':
+      return AFilterValueObjectOptionsSelect
     default:
       return AFilterEmpty
   }

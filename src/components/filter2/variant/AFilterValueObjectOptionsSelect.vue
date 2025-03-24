@@ -1,22 +1,25 @@
 <script lang="ts" setup>
 import type { ValueObjectOption } from '@/types/ValueObject.ts'
-import { computed, inject, watch } from 'vue'
+import { computed, inject, unref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
-  FilterSubmitResetCounterKey, FilterTouchedKey,
+  FilterSubmitResetCounterKey,
+  FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys.ts'
-import { isArray, isUndefined } from '@/utils/common.ts'
+import { isArray, isDefined, isUndefined } from '@/utils/common.ts'
 import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 
 const props = withDefaults(
   defineProps<{
     name: string
-    items: ValueObjectOption<string | number>[]
+    items?: ValueObjectOption<string | number>[] | undefined
   }>(),
-  {}
+  {
+    items: undefined,
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -55,6 +58,13 @@ const modelValue = computed({
 
 const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
 
+const itemsComputed = computed(() => {
+  if (isDefined(props.items)) return props.items
+  const fromConfig = unref(filterConfigCurrent.value?.items)
+  if (isDefined(fromConfig)) return fromConfig
+  return []
+})
+
 const { t } = useI18n()
 
 const label = computed(() => {
@@ -74,14 +84,14 @@ const updateSelected = () => {
     filterSelected.value.set(
       props.name,
       modelValue.value.map((modelItemValue) => {
-        const found = props.items.find((item) => item.value === modelItemValue)
+        const found = itemsComputed.value.find((item) => item.value === modelItemValue)
         if (found) return { title: found.title, value: found.value }
         return { title: modelItemValue as string, value: modelItemValue as string }
       })
     )
     return
   }
-  const found = props.items.find((item) => item.value === modelValue.value)
+  const found = itemsComputed.value.find((item) => item.value === modelValue.value)
   if (found) {
     filterSelected.value.set(props.name, [{ title: found.title as string, value: found.value as string }])
   }
@@ -95,7 +105,7 @@ watch(submitResetCounter, () => {
 <template>
   <VAutocomplete
     v-model="modelValue"
-    :items="items"
+    :items="itemsComputed"
     :chips="filterConfigCurrent.multiple"
     :label="label"
     :multiple="filterConfigCurrent.multiple"

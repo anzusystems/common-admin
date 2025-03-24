@@ -3,8 +3,6 @@ import { computed, provide } from 'vue'
 import { type FilterFieldsType, useTestListFilter } from '@/playground/filterV2View/testFilterV2.ts'
 import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
 import AFilterString from '@/components/filter2/variant/AFilterString.vue'
-import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
-import { useSubjectLockType, useSubjectStatus } from '@/playground/filterV2View/subjectTools.ts'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
 import FilterSubjectSiteRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectSiteRemoteAutocomplete.vue'
 import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectAuthorRemoteAutocomplete.vue'
@@ -27,9 +25,6 @@ provide(FilterDataKey, filterData)
 const siteId = computed(() => {
   return filterData.site as IntegerIdNullable | IntegerId[]
 })
-
-const { subjectStatusOptions } = useSubjectStatus()
-const { subjectLockTypeOptions } = useSubjectLockType()
 </script>
 
 <template>
@@ -54,23 +49,11 @@ const { subjectLockTypeOptions } = useSubjectLockType()
         <template #item.articleAuthors>
           <FilterSubjectAuthorRemoteAutocomplete name="articleAuthors" />
         </template>
-        <template #item.status>
-          <AFilterValueObjectOptionsSelect
-            name="status"
-            :items="subjectStatusOptions"
-          />
-        </template>
         <template #item.desks>
           <FilterSubjectDeskRemoteAutocomplete name="desks" />
         </template>
         <template #item.owners>
           <FilterSubjectUserRemoteAutocomplete name="owners" />
-        </template>
-        <template #item.lockType>
-          <AFilterValueObjectOptionsSelect
-            name="lockType"
-            :items="subjectLockTypeOptions"
-          />
         </template>
       </AFilterForm>
     </template>
