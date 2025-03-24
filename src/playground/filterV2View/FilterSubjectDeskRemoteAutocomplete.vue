@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import AFilterRemoteSelect from '@/components/filter2/variant/AFilterRemoteSelect.vue'
+import AFilterRemoteAutocomplete from '@/components/filter2/variant/AFilterRemoteAutocomplete.vue'
 import { fetchItems, fetchItemsByIds } from '@/playground/filterV2View/FilterSubjectDeskTools.ts'
 import { provide } from 'vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys.ts'
@@ -21,7 +21,7 @@ provide(FilterInnerDataKey, filterData)
 </script>
 
 <template>
-  <AFilterRemoteSelect
+  <AFilterRemoteAutocomplete
     :name="name"
     :fetch-items="fetchItems"
     :fetch-items-by-ids="fetchItemsByIds"

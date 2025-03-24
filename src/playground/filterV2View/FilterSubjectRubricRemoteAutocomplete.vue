@@ -2,7 +2,7 @@
 import { computed, provide, watch } from 'vue'
 import type { IntegerId } from '@/types/common.ts'
 import { isArray, isNull } from '@/utils/common.ts'
-import AFilterRemoteSelect from '@/components/filter2/variant/AFilterRemoteSelect.vue'
+import AFilterRemoteAutocomplete from '@/components/filter2/variant/AFilterRemoteAutocomplete.vue'
 import {
   fetchItems,
   fetchItemsByIds,
@@ -43,7 +43,7 @@ watch(
 </script>
 
 <template>
-  <AFilterRemoteSelect
+  <AFilterRemoteAutocomplete
     :key="siteModel.join('-')"
     :name="name"
     :fetch-items="fetchItems"
