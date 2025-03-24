@@ -23,8 +23,8 @@ type FetchItemsMinimalByIdsType = ((ids: IntegerId[]) => Promise<any[]>) | ((ids
 
 type FetchItemsMinimalType = (
   pagination: Pagination,
-  filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
+  filterData: FilterData,
+  filterConfig: FilterConfig
 ) => Promise<any[]>
 
 const props = withDefaults(

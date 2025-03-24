@@ -72,14 +72,14 @@ export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
   render: FilerRenderOptions
 }
 
-export type FilterConfig<F extends readonly MakeFilterOption[]> = {
+export type FilterConfig<F extends readonly MakeFilterOption[] = any> = {
   general: GeneralFilterOptions
   fields: {
     [P in F[number]['name']]: FilterField
   }
 }
 
-export type FilterData<F extends readonly MakeFilterOption[]> = {
+export type FilterData<F extends readonly MakeFilterOption[] = any> = {
   [P in F[number]['name']]: F[number] extends { default: infer D } ? D : never
 }
 

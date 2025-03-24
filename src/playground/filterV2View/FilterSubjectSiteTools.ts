@@ -70,13 +70,13 @@ const END_POINT = '/adm/v1/site'
 
 const fetchSiteListByIds = (ids: IntegerId[]) => apiFetchByIds<Site[]>(cmsClient, ids, END_POINT, {}, 'cms', 'site')
 
-const fetchSiteList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
+const fetchSiteList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<Site[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'site')
 
 export const fetchItems = async (
   pagination: Pagination,
-  filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
+  filterData: FilterData,
+  filterConfig: FilterConfig
 ) => {
   const sites = await fetchSiteList(pagination, filterData, filterConfig)
 

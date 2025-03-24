@@ -57,13 +57,13 @@ const END_POINT = '/adm/v1/rubric'
 const fetchRubricListByIds = (ids: IntegerId[]) =>
   apiFetchByIds<Rubric[]>(cmsClient, ids, END_POINT, {}, 'cms', 'rubric')
 
-const fetchRubricList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
+const fetchRubricList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<Rubric[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'rubric')
 
 export const fetchItems = async (
   pagination: Pagination,
-  filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
+  filterData: FilterData,
+  filterConfig: FilterConfig
 ) => {
   const rubrics = await fetchRubricList(pagination, filterData, filterConfig)
 

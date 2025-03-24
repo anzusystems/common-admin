@@ -83,13 +83,13 @@ const END_POINT = '/adm/v1/author-kind'
 const fetchAuthorListByIds = (ids: IntegerId[]) =>
   apiFetchByIds<AuthorKind[]>(cmsClient, ids, END_POINT + '/search', {}, 'cmw', 'authorKind', undefined, true)
 
-const fetchAuthorList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
+const fetchAuthorList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<AuthorKind[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'authorKind')
 
 export const fetchItems = async (
   pagination: Pagination,
-  filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
+  filterData: FilterData,
+  filterConfig: FilterConfig
 ) => {
   const authors = await fetchAuthorList(pagination, filterData, filterConfig)
 

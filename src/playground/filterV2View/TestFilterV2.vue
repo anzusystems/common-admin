@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, provide } from 'vue'
-import { useTestListFilter } from '@/playground/filterV2View/testFilterV2.ts'
+import { type FilterFieldsType, useTestListFilter } from '@/playground/filterV2View/testFilterV2.ts'
 import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
 import AFilterString from '@/components/filter2/variant/AFilterString.vue'
 import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
@@ -16,8 +16,8 @@ import type { FilterConfig, FilterData } from '@/composables/filter/filterFactor
 import AFilterForm from '@/components/filter2/AFilterForm.vue'
 
 const emit = defineEmits<{
-  (e: 'submit', value: { filterData: FilterData<any>; filterConfig: FilterConfig<any> }): void
-  (e: 'reset', value: { filterData: FilterData<any>; filterConfig: FilterConfig<any> }): void
+  (e: 'submit', value: { filterData: FilterData<FilterFieldsType>; filterConfig: FilterConfig<FilterFieldsType> }): void
+  (e: 'reset', value: { filterData: FilterData<FilterFieldsType>; filterConfig: FilterConfig<FilterFieldsType> }): void
 }>()
 
 const { filterConfig, filterData } = useTestListFilter()

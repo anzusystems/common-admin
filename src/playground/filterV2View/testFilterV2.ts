@@ -2,7 +2,7 @@ import { reactive } from 'vue'
 import { createFilter, type FilterStore, type MakeFilterOption } from '@/composables/filter/filterFactory.ts'
 import type { IntegerId } from '@/types/common.ts'
 
-const filterFields: MakeFilterOption[] = [
+export const filterFields: MakeFilterOption[] = [
   { name: 'text' as const, type: 'string', default: null, render: { skip: true } },
   { name: 'site' as const, field: 'siteIds', default: [] as IntegerId[] },
   { name: 'rubric' as const, field: 'rubricIds', default: [] as IntegerId[] },
@@ -23,7 +23,9 @@ const filterFields: MakeFilterOption[] = [
   { name: 'enableAds' as const, type: 'boolean', field: 'flagsStandard.enableAds', default: null },
 ]
 
-const listFiltersStore = reactive<FilterStore<typeof filterFields>>({
+export type FilterFieldsType = typeof filterFields
+
+const listFiltersStore = reactive<FilterStore<FilterFieldsType>>({
   text: null,
   site: [],
   rubric: [],
