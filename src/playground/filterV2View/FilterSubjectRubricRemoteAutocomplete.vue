@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { computed, provide, watch } from 'vue'
-import type { IntegerId } from '@/types/common.ts'
-import { isArray, isNull } from '@/utils/common.ts'
+import type { IntegerId } from '@/types/common'
+import { isArray, isNull } from '@/utils/common'
 import AFilterRemoteAutocomplete from '@/components/filter2/variant/AFilterRemoteAutocomplete.vue'
 import {
   fetchItems,
   fetchItemsByIds,
   useSubjectRubricInnerFilter,
-} from '@/playground/filterV2View/FilterSubjectRubricTools.ts'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys.ts'
+} from '@/playground/filterV2View/FilterSubjectRubricTools'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{

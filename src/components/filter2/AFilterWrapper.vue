@@ -9,11 +9,11 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys.ts'
+} from '@/components/filter2/filterInjectionKeys'
 import FiltersSelected from '@/components/filter2/FiltersSelected.vue'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
-import { isUndefined } from '@/utils/common.ts'
-import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+import type { ValueObjectOption } from '@/types/ValueObject'
+import { isUndefined } from '@/utils/common'
+import { useFilterHelpers } from '@/composables/filter/filterFactory'
 
 withDefaults(
   defineProps<{

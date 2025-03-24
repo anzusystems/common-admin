@@ -1,6 +1,6 @@
 import { type MaybeRef, reactive, ref } from 'vue'
-import { cloneDeep, isArray, isUndefined } from '@/utils/common.ts'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
+import { cloneDeep, isArray, isUndefined } from '@/utils/common'
+import type { ValueObjectOption } from '@/types/ValueObject'
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,

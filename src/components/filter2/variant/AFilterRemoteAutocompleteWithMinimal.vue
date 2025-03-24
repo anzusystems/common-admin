@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
 import { computed, inject, type Ref, ref, watch } from 'vue'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
-import type { Pagination } from '@/types/Pagination.ts'
-import { usePagination } from '@/composables/system/pagination.ts'
-import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common.ts'
+import type { ValueObjectOption } from '@/types/ValueObject'
+import type { Pagination } from '@/types/Pagination'
+import { usePagination } from '@/composables/system/pagination'
+import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import type { DocId, IntegerId } from '@/types/common.ts'
+import type { DocId, IntegerId } from '@/types/common'
 import {
   FilterConfigKey,
   FilterDataKey,
@@ -15,9 +15,9 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys.ts'
-import { type FilterConfig, type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory.ts'
-import { isOneOf } from '@/utils/enum.ts'
+} from '@/components/filter2/filterInjectionKeys'
+import { type FilterConfig, type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory'
+import { isOneOf } from '@/utils/enum'
 
 type FetchItemsMinimalByIdsType = ((ids: IntegerId[]) => Promise<any[]>) | ((ids: DocId[]) => Promise<any[]>)
 

@@ -1,6 +1,6 @@
 import type { InjectionKey, Ref } from 'vue'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
+import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
+import type { ValueObjectOption } from '@/types/ValueObject'
 
 export const FilterDataKey: InjectionKey<FilterData> = Symbol.for('anzu:FilterDataKey')
 export const FilterConfigKey: InjectionKey<FilterConfig> = Symbol.for('anzu:FilterConfigKey')

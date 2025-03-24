@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { computed, inject, watch } from 'vue'
-import { isNull, isUndefined } from '@/utils/common.ts'
+import { isNull, isUndefined } from '@/utils/common'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey, FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys.ts'
-import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+} from '@/components/filter2/filterInjectionKeys'
+import { useFilterHelpers } from '@/composables/filter/filterFactory'
 
 interface BooleanSelectOption {
   value: 0 | 1 | -1

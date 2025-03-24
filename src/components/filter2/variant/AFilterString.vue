@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { computed, inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { isString, isUndefined } from '@/utils/common.ts'
-import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+import { isString, isUndefined } from '@/utils/common'
+import { useFilterHelpers } from '@/composables/filter/filterFactory'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey, FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys.ts'
+} from '@/components/filter2/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{

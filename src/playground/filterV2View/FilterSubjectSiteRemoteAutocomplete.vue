@@ -4,9 +4,9 @@ import {
   fetchItems,
   fetchItemsByIds,
   useSubjectSiteInnerFilter,
-} from '@/playground/filterV2View/FilterSubjectSiteTools.ts'
+} from '@/playground/filterV2View/FilterSubjectSiteTools'
 import { provide } from 'vue'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys.ts'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
 
 withDefaults(
   defineProps<{

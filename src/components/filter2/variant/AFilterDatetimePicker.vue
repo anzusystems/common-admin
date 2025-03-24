@@ -7,11 +7,11 @@ import {
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey, FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys.ts'
-import { isString, isUndefined } from '@/utils/common.ts'
-import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
-import type { DatetimeUTCNullable } from '@/types/common.ts'
-import { dateTimePretty } from '@/utils/datetime.ts'
+} from '@/components/filter2/filterInjectionKeys'
+import { isString, isUndefined } from '@/utils/common'
+import { useFilterHelpers } from '@/composables/filter/filterFactory'
+import type { DatetimeUTCNullable } from '@/types/common'
+import { dateTimePretty } from '@/utils/datetime'
 
 const props = withDefaults(
   defineProps<{

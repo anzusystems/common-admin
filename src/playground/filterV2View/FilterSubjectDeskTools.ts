@@ -3,7 +3,7 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
+import { apiFetchList } from '@/services/api/v2/apiFetchList'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import {
   createFilter,
@@ -11,7 +11,7 @@ import {
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-} from '@/composables/filter/filterFactory.ts'
+} from '@/composables/filter/filterFactory'
 import { reactive } from 'vue'
 
 export interface Desk extends AnzuUserAndTimeTrackingAware {

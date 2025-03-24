@@ -18,7 +18,7 @@ import {
   AnzuApiDependencyExistsError,
   axiosErrorResponseHasDependencyExistsData,
 } from '@/model/error/AnzuApiDependencyExistsError'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
+import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 
 export const apiGenerateListQuery = (
   pagination: Pagination,

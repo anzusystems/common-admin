@@ -4,14 +4,14 @@ import {
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-} from '@/composables/filter/filterFactory.ts'
-import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
-import { apiFetchByIds } from '@/services/api/v2/apiFetchByIds.ts'
-import type { IntegerId, IntegerIdNullable } from '@/types/common.ts'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
-import { cmsClient } from '@/playground/mock/cmsClient.ts'
-import type { Pagination } from '@/types/Pagination.ts'
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware.ts'
+} from '@/composables/filter/filterFactory'
+import { apiFetchList } from '@/services/api/v2/apiFetchList'
+import { apiFetchByIds } from '@/services/api/v2/apiFetchByIds'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { ValueObjectOption } from '@/types/ValueObject'
+import { cmsClient } from '@/playground/mock/cmsClient'
+import type { Pagination } from '@/types/Pagination'
+import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { reactive } from 'vue'
 
 interface Rubric extends AnzuUserAndTimeTrackingAware {

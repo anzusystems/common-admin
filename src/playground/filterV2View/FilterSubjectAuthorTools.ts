@@ -4,14 +4,14 @@ import type { Pagination } from '@/types/Pagination'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
-import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
+import { apiFetchList } from '@/services/api/v2/apiFetchList'
 import {
   createFilter,
   type FilterConfig,
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-} from '@/composables/filter/filterFactory.ts'
+} from '@/composables/filter/filterFactory'
 import { reactive } from 'vue'
 
 const AuthorDiscriminator = {

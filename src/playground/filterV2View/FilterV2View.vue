@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import TestFilterV2 from '@/playground/filterV2View/TestFilterV2.vue'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
-import type { FilterFieldsType } from '@/playground/filterV2View/testFilterV2.ts'
+import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
+import type { FilterFieldsType } from '@/playground/filterV2View/testFilterV2'
 
 const filterSubmit = ({
   filterData,

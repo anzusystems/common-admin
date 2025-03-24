@@ -2,7 +2,7 @@ import type { AnzuUser } from '@/types/AnzuUser'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
-import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
+import { apiFetchList } from '@/services/api/v2/apiFetchList'
 import type { Pagination } from '@/types/Pagination'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import {
@@ -11,7 +11,7 @@ import {
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-} from '@/composables/filter/filterFactory.ts'
+} from '@/composables/filter/filterFactory'
 import { reactive } from 'vue'
 
 export interface User extends AnzuUser {

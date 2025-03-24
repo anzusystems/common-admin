@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import { FilterConfigKey, FilterDataKey, FilterSelectedKey } from '@/components/filter2/filterInjectionKeys.ts'
-import { isArray, isBoolean, isNumber, isString, isUndefined } from '@/utils/common.ts'
+import { FilterConfigKey, FilterDataKey, FilterSelectedKey } from '@/components/filter2/filterInjectionKeys'
+import { isArray, isBoolean, isNumber, isString, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 
 const filterConfig = inject(FilterConfigKey)

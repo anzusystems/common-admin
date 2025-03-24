@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
-import { createFilter, type FilterStore, type MakeFilterOption } from '@/composables/filter/filterFactory.ts'
-import { useSubjectLockType, useSubjectStatus } from '@/playground/filterV2View/subjectTools.ts'
+import { createFilter, type FilterStore, type MakeFilterOption } from '@/composables/filter/filterFactory'
+import { useSubjectLockType, useSubjectStatus } from '@/playground/filterV2View/subjectTools'
 
 const { subjectStatusOptions } = useSubjectStatus()
 const { subjectLockTypeOptions } = useSubjectLockType()

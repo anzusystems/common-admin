@@ -1,17 +1,17 @@
-import type { IntegerId, IntegerIdNullable } from '@/types/common.ts'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
-import { apiFetchByIds } from '@/services/api/v2/apiFetchByIds.ts'
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware.ts'
-import type { Pagination } from '@/types/Pagination.ts'
-import { cmsClient } from '@/playground/mock/cmsClient.ts'
-import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { ValueObjectOption } from '@/types/ValueObject'
+import { apiFetchByIds } from '@/services/api/v2/apiFetchByIds'
+import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { Pagination } from '@/types/Pagination'
+import { cmsClient } from '@/playground/mock/cmsClient'
+import { apiFetchList } from '@/services/api/v2/apiFetchList'
 import {
   createFilter,
   type FilterConfig,
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-} from '@/composables/filter/filterFactory.ts'
+} from '@/composables/filter/filterFactory'
 import { reactive } from 'vue'
 
 export interface SiteMinimal {

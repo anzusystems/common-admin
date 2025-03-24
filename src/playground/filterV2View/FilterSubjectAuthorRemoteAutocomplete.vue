@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { provide } from 'vue'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys.ts'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
 import {
   fetchItems,
   fetchItemsByIds,
   useSubjectAuthorInnerFilter,
-} from '@/playground/filterV2View/FilterSubjectAuthorTools.ts'
+} from '@/playground/filterV2View/FilterSubjectAuthorTools'
 import AFilterRemoteAutocomplete from '@/components/filter2/variant/AFilterRemoteAutocomplete.vue'
 
 withDefaults(

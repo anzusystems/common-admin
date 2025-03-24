@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { FilterConfigKey } from '@/components/filter2/filterInjectionKeys.ts'
-import { isUndefined } from '@/utils/common.ts'
+import { FilterConfigKey } from '@/components/filter2/filterInjectionKeys'
+import { isUndefined } from '@/utils/common'
 import AFilterFormItem from '@/components/filter2/AFilterFormItem.vue'
-import { datatableSlotName } from '@/components/datatable/datatable.ts'
+import { datatableSlotName } from '@/components/datatable/datatable'
 
 const filterConfig = inject(FilterConfigKey)
 

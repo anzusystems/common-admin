@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, provide } from 'vue'
-import { type FilterFieldsType, useTestListFilter } from '@/playground/filterV2View/testFilterV2.ts'
+import { type FilterFieldsType, useTestListFilter } from '@/playground/filterV2View/testFilterV2'
 import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
 import AFilterString from '@/components/filter2/variant/AFilterString.vue'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
@@ -9,8 +9,8 @@ import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterV2View/Fil
 import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectRubricRemoteAutocomplete.vue'
 import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectDeskRemoteAutocomplete.vue'
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
-import type { IntegerId, IntegerIdNullable } from '@/types/common.ts'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 import AFilterForm from '@/components/filter2/AFilterForm.vue'
 
 const emit = defineEmits<{

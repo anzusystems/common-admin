@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
+import type { ValueObjectOption } from '@/types/ValueObject'
 import { computed, inject, unref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -8,9 +8,9 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys.ts'
-import { isArray, isDefined, isUndefined } from '@/utils/common.ts'
-import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+} from '@/components/filter2/filterInjectionKeys'
+import { isArray, isDefined, isUndefined } from '@/utils/common'
+import { useFilterHelpers } from '@/composables/filter/filterFactory'
 
 const props = withDefaults(
   defineProps<{

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
-import { FilterConfigKey } from '@/components/filter2/filterInjectionKeys.ts'
-import { isUndefined } from '@/utils/common.ts'
+import { FilterConfigKey } from '@/components/filter2/filterInjectionKeys'
+import { isUndefined } from '@/utils/common'
 import AFilterEmpty from '@/components/filter2/variant/AFilterEmpty.vue'
 import AFilterString from '@/components/filter2/variant/AFilterString.vue'
 import AFilterBooleanSelect from '@/components/filter2/variant/AFilterBooleanSelect.vue'
