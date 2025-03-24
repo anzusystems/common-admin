@@ -84,20 +84,17 @@ const modelValue = computed({
     return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
   },
   set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
-    filterData[props.name] = newValue
+    let final: null | string | number | string[] | number[] = null
+    if (isArray(newValue)) {
+      final = newValue.map((item) => item.value) as string[] | number[]
+    } else if (!isNull(newValue)) {
+      final = newValue.value
+    }
+    filterData[props.name] = final
     touched.value = true
     emit('change')
   },
 })
-
-// const modelValueComputed = computed({
-//   get() {
-//     return props.modelValue.model
-//   },
-//   set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null) {
-//     emit('update:modelValue', { ...props.modelValue, ...{ model: cloneDeep(newValue) } })
-//   },
-// })
 
 const search = ref('')
 const isFocused = ref(false)

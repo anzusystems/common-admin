@@ -13,7 +13,8 @@ import {
   FilterInnerConfigKey,
   FilterInnerDataKey,
   FilterSelectedKey,
-  FilterSubmitResetCounterKey, FilterTouchedKey,
+  FilterSubmitResetCounterKey,
+  FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys.ts'
 import { type FilterConfig, type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 import { isOneOf } from '@/utils/enum.ts'
@@ -94,7 +95,13 @@ const modelValue = computed({
     return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
   },
   set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
-    filterData[props.name] = newValue
+    let final: null | string | number | string[] | number[] = null
+    if (isArray(newValue)) {
+      final = newValue.map((item) => item.value) as string[] | number[]
+    } else if (!isNull(newValue)) {
+      final = newValue.value
+    }
+    filterData[props.name] = final
     touched.value = true
     emit('change')
   },
