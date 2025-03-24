@@ -64,11 +64,10 @@ const END_POINT = '/adm/v1/rubric'
 const fetchRubricListByIds = (ids: IntegerId[]) =>
   apiFetchByIds<Rubric[]>(cmsClient, ids, END_POINT, {}, 'cms', 'rubric')
 
-const fetchRubricList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
+const fetchRubricList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<Rubric[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'rubric')
 
-// eslint-disable-next-line @stylistic/max-len
-export const fetchItems = async (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const rubrics = await fetchRubricList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({
@@ -94,9 +93,9 @@ export function useSubjectRubricInnerFilter() {
     { name: 'siteGroup' as const, field: 'siteGroupIds' },
     { name: 'desk' as const, field: 'deskIds' },
     { name: 'linkedList' as const, field: 'linkedListId' },
-  ] satisfies readonly MakeFilterOption<any>[]
+  ] satisfies readonly MakeFilterOption[]
 
-  const store = reactive<FilterStore<typeof filterFields>>({
+  const store = reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
     id: null,
     text: null,
     site: [],

@@ -35,13 +35,13 @@ const END_POINT = '/adm/users'
 
 const fetchUserListByIds = (ids: IntegerId[]) => apiFetchByIds<User[]>(cmsClient, ids, END_POINT, {}, 'cms', 'user')
 
-const fetchUserList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
+const fetchUserList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<User[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'user')
 
 export const fetchItems = async (
   pagination: Pagination,
-  filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
+  filterData: FilterData,
+  filterConfig: FilterConfig
 ) => {
   const users = await fetchUserList(pagination, filterData, filterConfig)
 
@@ -64,9 +64,9 @@ export function useSubjectUserInnerFilter() {
   const filterFields = [
     { name: 'id' as const, variant: 'in' },
     { name: 'lastName' as const, variant: 'startsWith', field: 'person.lastName' },
-  ] satisfies readonly MakeFilterOption<any>[]
+  ] satisfies readonly MakeFilterOption[]
 
-  const store = reactive<FilterStore<typeof filterFields>>({
+  const store = reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
     id: null,
     lastName: null,
   })

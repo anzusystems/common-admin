@@ -31,15 +31,15 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
 
 const END_POINT = '/adm/desks'
 
-const fetchDeskList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
+const fetchDeskList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<Desk[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'desk')
 
 const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
 
 export const fetchItems = async (
   pagination: Pagination,
-  filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
+  filterData: FilterData,
+  filterConfig: FilterConfig
 ) => {
   const desks = await fetchDeskList(pagination, filterData, filterConfig)
 
@@ -63,9 +63,9 @@ export function useSubjectDeskInnerFilter() {
     { name: 'id' },
     { name: 'ids', variant: 'in', field: 'id' },
     { name: 'name', variant: 'startsWith' },
-  ] satisfies readonly MakeFilterOption<any>[]
+  ] satisfies readonly MakeFilterOption[]
 
-  const store = reactive<FilterStore<typeof filterFields>>({
+  const store = reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
     id: null,
     ids: [] as IntegerId[],
     name: null,

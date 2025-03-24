@@ -10,6 +10,14 @@ const defaultRenderOptions: FilerRenderOptions = {
   xl: 2,
 }
 
+/**
+ * Creates a filter configuration and reactive data store for managing filters.
+ *
+ * @param filterFields - Definitions for the available filters.
+ * @param store - Reactive object holding the current state of the filter data.
+ * @param options - Optional global options for the filter configuration.
+ * @returns An object containing the filter configuration and reactive data store.
+ */
 export function createFilter<F extends readonly MakeFilterOption<any>[]>(
   filterFields: F,
   store: FilterData<F>,
@@ -18,39 +26,35 @@ export function createFilter<F extends readonly MakeFilterOption<any>[]>(
   filterConfig: FilterConfig<F>
   filterData: FilterData<F>
 } {
-  type ConfigMap = {
-    [P in F[number]['name']]: FilterField
-  }
+  const config = filterFields.reduce(
+    (acc, filter) => {
+      const key = filter.name as keyof FilterData<F>
+      const defaultValue = cloneDeep(store[key] as AllowedFilterData)
 
-  const config = filterFields.reduce((acc, filter) => {
-    const key = filter.name as keyof FilterData<F>
-    const defaultValue = cloneDeep(store[key] as AllowedFilterData)
-    const type: FilterType = isUndefined(filter.type) ? 'custom' : filter.type
-    const variant: FilterVariant = isUndefined(filter.variant) ? 'eq' : filter.variant
-    let titleT = filter.titleT
-    if (isUndefined(titleT) && options?.system && options?.subject && filter.name) {
-      titleT = `${options.system}.${options.subject}.filter.${filter.name}`
-    }
-    return {
-      ...acc,
-      [key]: {
-        name: key as string,
-        variant,
-        type,
-        titleT,
-        field: isUndefined(filter.field) ? '' : filter.field,
-        clearable: isUndefined(filter.clearable) ? true : filter.clearable,
-        mandatory: isUndefined(filter.mandatory) ? false : filter.mandatory,
-        multiple: isArray(defaultValue),
-        advanced: isUndefined(filter.advanced) ? false : filter.advanced,
-        exclude: isUndefined(filter.exclude) ? false : filter.exclude,
-        default: defaultValue,
-        render: isUndefined(filter.render)
-          ? { ...defaultRenderOptions }
-          : { ...defaultRenderOptions, ...filter.render },
-      },
-    }
-  }, {} as ConfigMap)
+      return {
+        ...acc,
+        [key]: {
+          name: key as string,
+          variant: resolveValue(filter.variant, 'eq'),
+          type: resolveValue(filter.type, 'custom'),
+          titleT:
+            filter.titleT ??
+            (options?.system && options?.subject && filter.name
+              ? `${options.system}.${options.subject}.filter.${filter.name}`
+              : undefined),
+          field: resolveValue(filter.field, ''),
+          clearable: resolveValue(filter.clearable, true),
+          mandatory: resolveValue(filter.mandatory, false),
+          multiple: isArray(defaultValue),
+          advanced: resolveValue(filter.advanced, false),
+          exclude: resolveValue(filter.exclude, false),
+          default: defaultValue,
+          render: { ...defaultRenderOptions, ...resolveValue(filter.render, {}) },
+        },
+      }
+    },
+    {} as FilterConfig<typeof filterFields>['fields']
+  )
 
   const defaultGlobalOptions: GeneralFilterOptions = {
     elastic: false,
@@ -61,7 +65,7 @@ export function createFilter<F extends readonly MakeFilterOption<any>[]>(
 
   const filterConfig = reactive({
     general: defaultGlobalOptions,
-    fields: reactive(config),
+    fields: config,
   }) as FilterConfig<F>
 
   return {
@@ -70,37 +74,35 @@ export function createFilter<F extends readonly MakeFilterOption<any>[]>(
   }
 }
 
+/**
+ * Resolves a value, falling back to a default if the value is undefined.
+ */
+function resolveValue<T>(value: T | undefined, fallback: T): T {
+  return isUndefined(value) ? fallback : value
+}
+
+/**
+ * Provides utility functions for managing filter data.
+ */
 export function useFilterHelpers() {
-  const clearOne = (
-    name: string,
-    filterData: FilterData<any>,
-    filterConfig: FilterConfig<any>
-  ) => {
+  const clearOne = (name: string, filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
     if (!filterConfig.fields[name]?.clearable) return
     filterData[name] = cloneDeep(filterConfig.fields[name].default)
   }
 
-  const clearAll = (
-    filterData: FilterData<any>,
-    filterConfig: FilterConfig<any>
-  ) => {
+  const clearAll = (filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
     for (const filterName in filterConfig.fields) {
       clearOne(filterName, filterData, filterConfig)
     }
   }
 
-  const resetFilter = (
-    filterData: FilterData<any>,
-    filterConfig: FilterConfig<any>
-  ) => {
+  const resetFilter = (filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
     clearAll(filterData, filterConfig)
-    // Additional reset logic (pagination, callbacks, etc.) can be added here.
   }
 
   const iterateFilterDataKeys = (filterData: Record<string, AllowedFilterData>) => {
     Object.keys(filterData).forEach((key: string) => {
-      const value = filterData[key]
-      console.log(`Key: ${key}, Value: ${value}`)
+      console.log(`Key: ${key}, Value: ${filterData[key]}`)
     })
   }
 
@@ -112,15 +114,7 @@ export function useFilterHelpers() {
   }
 }
 
-/** Allowed filter data types */
-export type AllowedFilterData =
-  | number
-  | number[]
-  | string
-  | string[]
-  | null
-  | undefined
-  | boolean
+export type AllowedFilterData = number | number[] | string | string[] | null | undefined | boolean
 
 export interface GeneralFilterOptions {
   system?: string
@@ -153,16 +147,9 @@ export type FilterVariant =
   | 'lte'
   | 'custom'
 
-export type FilterType =
-  | 'boolean'
-  | 'datetime'
-  | 'integer'
-  | 'string'
-  | 'valueObject'
-  | 'custom'
+export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'valueObject' | 'custom'
 
-/** A filter make definition. */
-export interface MakeFilterOption<TName extends string> {
+export interface MakeFilterOption<TName extends string = string> {
   name: TName
   type?: FilterType
   variant?: FilterVariant
@@ -175,7 +162,6 @@ export interface MakeFilterOption<TName extends string> {
   render?: Partial<FilerRenderOptions>
 }
 
-/** Representation of a filter field in the configuration object. */
 export interface FilterField {
   name: string
   type: FilterType
@@ -191,20 +177,17 @@ export interface FilterField {
   render: FilerRenderOptions
 }
 
-/** FilterConfig uses the literal names from filter definitions as keys. */
-export type FilterConfig<F extends readonly MakeFilterOption<any>[]> = {
+export type FilterConfig<F extends readonly MakeFilterOption<any>[] = readonly MakeFilterOption<any>[]> = {
   general: GeneralFilterOptions
   fields: {
     [P in F[number]['name']]: FilterField
   }
 }
 
-/** FilterData is a mapping of filter names to default values. */
-export type FilterData<F extends readonly MakeFilterOption<any>[]> = {
+export type FilterData<F extends readonly MakeFilterOption<any>[] = readonly MakeFilterOption<any>[]> = {
   [P in F[number]['name']]: AllowedFilterData
 }
 
-/** FilterStore for external usage (if needed). */
 export type FilterStore<T extends readonly { name: string }[]> = {
   [K in T[number]['name']]: AllowedFilterData
 }

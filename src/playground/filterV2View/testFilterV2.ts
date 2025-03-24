@@ -20,11 +20,11 @@ export const filterFields = [
   { name: 'lockType' as const },
   { name: 'keywords' as const, field: 'keywordIds', render: { skip: true } },
   { name: 'enableAds' as const, type: 'boolean', field: 'flagsStandard.enableAds' },
-] satisfies readonly MakeFilterOption<any>[]
+] satisfies readonly MakeFilterOption[]
 
 export type FilterFieldsType = typeof filterFields
 
-const listFiltersStore = reactive<FilterStore<FilterFieldsType>>({
+const listFiltersStore = reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
   text: null,
   site: [],
   rubric: [],
