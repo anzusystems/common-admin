@@ -1,6 +1,5 @@
-import { type MaybeRef, reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { cloneDeep, isArray, isUndefined } from '@/utils/common'
-import type { ValueObjectOption } from '@/types/ValueObject'
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,
@@ -42,7 +41,6 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
           advanced: resolveValue(filter.advanced, false),
           exclude: resolveValue(filter.exclude, false),
           default: defaultValue,
-          items: resolveValue(filter.items, ref([])),
           render: { ...defaultRenderOptions, ...resolveValue(filter.render, {}) },
         },
       }
@@ -137,7 +135,7 @@ export type FilterVariant =
   | 'lte'
   | 'custom'
 
-export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'valueObject' | 'custom'
+export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'custom'
 
 export interface MakeFilterOption<TName extends string = string> {
   name: TName
@@ -149,7 +147,6 @@ export interface MakeFilterOption<TName extends string = string> {
   mandatory?: boolean
   advanced?: boolean
   exclude?: boolean
-  items?: MaybeRef<ValueObjectOption<string>[]> | MaybeRef<ValueObjectOption<number>[]>
   render?: Partial<FilerRenderOptions>
 }
 
@@ -165,7 +162,6 @@ export interface FilterField {
   multiple: boolean
   advanced: boolean
   exclude: boolean
-  items: MaybeRef<ValueObjectOption<string>[]> | MaybeRef<ValueObjectOption<number>[]>
   render: FilerRenderOptions
 }
 

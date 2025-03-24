@@ -37,6 +37,43 @@ export default {
     damImage,
     collab,
   },
+  system: {
+    subject: {
+      filter: {
+        id: 'Systémové Id',
+        discriminator: 'Typ',
+        headline: 'Headline',
+        docId: 'Id',
+        version: 'Verzia',
+        text: 'Fulltext',
+        title: 'Názov',
+        site: 'Web',
+        rubric: 'Rubriky',
+        status: 'Status',
+        desks: 'Desk/Tím',
+        publicPublishedAtFrom: 'Zverejnené od',
+        publicPublishedAtUntil: 'Zverejnené do',
+        modifiedAtFrom: 'Upravené od',
+        modifiedAtUntil: 'Upravené do',
+        articleType: 'Typ',
+        owners: 'Vlastníci',
+        keywords: 'Kľúčové slová',
+        articleAuthors: 'Autori',
+        url: 'Url',
+        lockType: 'Typ zámku',
+        enableAds: 'Enable ads',
+      },
+      subjectStatus: {
+        draft: 'Draft',
+        ready: 'Ready',
+        published: 'Published',
+      },
+      subjectLockType: {
+        free: 'Neplatený článok',
+        locked: 'Platený článok',
+      },
+    },
+  },
   $vuetify: vuetify,
   error: {
     apiValidation: {

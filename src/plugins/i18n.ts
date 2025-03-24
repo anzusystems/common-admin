@@ -8,7 +8,6 @@ const REQUIRED_LOCALES = ['en', 'sk']
 
 export const i18n = createI18n<[MessageSchema]>({
   globalInjection: false,
-  legacy: false,
   locale: REQUIRED_LOCALES[0],
   fallbackLocale: false,
   missing: (locale: Locale, key: Path) => {

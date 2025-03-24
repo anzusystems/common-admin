@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, provide } from 'vue'
-import { type FilterFieldsType, useTestListFilter } from '@/playground/filterV2View/testFilterV2'
+import { useTestListFilter } from '@/playground/filterV2View/testFilterV2'
 import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
 import AFilterString from '@/components/filter2/variant/AFilterString.vue'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
@@ -11,11 +11,12 @@ import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/Filte
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
-import AFilterForm from '@/components/filter2/AFilterForm.vue'
+import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
+import { useSubjectLockType, useSubjectStatus } from '@/playground/filterV2View/subjectTools.ts'
 
 const emit = defineEmits<{
-  (e: 'submit', value: { filterData: FilterData<FilterFieldsType>; filterConfig: FilterConfig<FilterFieldsType> }): void
-  (e: 'reset', value: { filterData: FilterData<FilterFieldsType>; filterConfig: FilterConfig<FilterFieldsType> }): void
+  (e: 'submit', value: { filterData: FilterData; filterConfig: FilterConfig }): void
+  (e: 'reset', value: { filterData: FilterData; filterConfig: FilterConfig }): void
 }>()
 
 const { filterConfig, filterData } = useTestListFilter()
@@ -25,6 +26,9 @@ provide(FilterDataKey, filterData)
 const siteId = computed(() => {
   return filterData.site as IntegerIdNullable | IntegerId[]
 })
+
+const { subjectStatusOptions } = useSubjectStatus()
+const { subjectLockTypeOptions } = useSubjectLockType()
 </script>
 
 <template>
@@ -35,27 +39,35 @@ const siteId = computed(() => {
     <template #search>
       <AFilterString name="text" />
     </template>
-    <template #detail>
-      <AFilterForm>
-        <template #item.site>
-          <FilterSubjectSiteRemoteAutocomplete name="site" />
-        </template>
-        <template #item.rubric>
-          <FilterSubjectRubricRemoteAutocomplete
-            name="rubric"
-            :site-id="siteId"
-          />
-        </template>
-        <template #item.articleAuthors>
-          <FilterSubjectAuthorRemoteAutocomplete name="articleAuthors" />
-        </template>
-        <template #item.desks>
-          <FilterSubjectDeskRemoteAutocomplete name="desks" />
-        </template>
-        <template #item.owners>
-          <FilterSubjectUserRemoteAutocomplete name="owners" />
-        </template>
-      </AFilterForm>
+    <template #item.status>
+      <AFilterValueObjectOptionsSelect
+        name="status"
+        :items="subjectStatusOptions"
+      />
+    </template>
+    <template #item.lockType>
+      <AFilterValueObjectOptionsSelect
+        name="lockType"
+        :items="subjectLockTypeOptions"
+      />
+    </template>
+    <template #item.site>
+      <FilterSubjectSiteRemoteAutocomplete name="site" />
+    </template>
+    <template #item.rubric>
+      <FilterSubjectRubricRemoteAutocomplete
+        name="rubric"
+        :site-id="siteId"
+      />
+    </template>
+    <template #item.articleAuthors>
+      <FilterSubjectAuthorRemoteAutocomplete name="articleAuthors" />
+    </template>
+    <template #item.desks>
+      <FilterSubjectDeskRemoteAutocomplete name="desks" />
+    </template>
+    <template #item.owners>
+      <FilterSubjectUserRemoteAutocomplete name="owners" />
     </template>
   </AFilterWrapper>
   <br>

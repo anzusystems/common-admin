@@ -14,6 +14,8 @@ import FiltersSelected from '@/components/filter2/FiltersSelected.vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { isUndefined } from '@/utils/common'
 import { useFilterHelpers } from '@/composables/filter/filterFactory'
+import { datatableSlotName } from '@/components/datatable/datatable.ts'
+import FilterDetailItem from '@/components/filter2/FilterDetailItem.vue'
 
 withDefaults(
   defineProps<{
@@ -118,7 +120,27 @@ const toggleFilterDetail = () => {
           v-show="showDetail"
           class="a-filter-advanced__content mt-4"
         >
-          <slot name="detail" />
+          <slot name="detail">
+            <VRow>
+              <VCol
+                v-for="field in filterConfig.fields"
+                :key="field.name"
+                :cols="field.render.xs"
+                :sm="field.render.sm"
+                :md="field.render.md"
+                :lg="field.render.lg"
+                :xl="field.render.xl"
+                :class="{ 'd-none': field.render.skip }"
+              >
+                <slot
+                  :name="datatableSlotName(field.name)"
+                  :item-config="field"
+                >
+                  <FilterDetailItem :name="field.name" />
+                </slot>
+              </VCol>
+            </VRow>
+          </slot>
         </div>
       </VCol>
       <VCol

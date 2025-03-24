@@ -13,6 +13,7 @@ export type SubjectStatusType = (typeof SubjectStatus)[keyof typeof SubjectStatu
 export function useSubjectStatus() {
   const { t } = i18n.global
 
+  // const subjectStatusOptions = computed<ValueObjectOption<SubjectStatusType>[]>(() => [
   const subjectStatusOptions = ref<ValueObjectOption<SubjectStatusType>[]>([
     {
       value: SubjectStatus.Draft,
@@ -51,6 +52,7 @@ export const SubjectLockTypeDefault = SubjectLockType.Free
 export function useSubjectLockType() {
   const { t } = i18n.global
 
+  // const subjectLockTypeOptions = computed<ValueObjectOption<SubjectLockTypeType>[]>(() => [
   const subjectLockTypeOptions = ref<ValueObjectOption<SubjectLockTypeType>[]>([
     {
       value: SubjectLockType.Free,

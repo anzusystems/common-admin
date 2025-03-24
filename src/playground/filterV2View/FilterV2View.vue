@@ -2,25 +2,12 @@
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import TestFilterV2 from '@/playground/filterV2View/TestFilterV2.vue'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
-import type { FilterFieldsType } from '@/playground/filterV2View/testFilterV2'
 
-const filterSubmit = ({
-  filterData,
-  filterConfig,
-}: {
-  filterData: FilterData<FilterFieldsType>
-  filterConfig: FilterConfig<FilterFieldsType>
-}) => {
+const filterSubmit = ({ filterData, filterConfig }: { filterData: FilterData; filterConfig: FilterConfig }) => {
   console.log('filterSubmit', filterData, filterConfig)
 }
 
-const filterReset = ({
-  filterData,
-  filterConfig,
-}: {
-  filterData: FilterData<FilterFieldsType>
-  filterConfig: FilterConfig<FilterFieldsType>
-}) => {
+const filterReset = ({ filterData, filterConfig }: { filterData: FilterData; filterConfig: FilterConfig }) => {
   console.log('filterReset', filterData, filterConfig)
 }
 </script>

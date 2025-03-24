@@ -1,16 +1,12 @@
 import { reactive } from 'vue'
 import { createFilter, type FilterStore, type MakeFilterOption } from '@/composables/filter/filterFactory'
-import { useSubjectLockType, useSubjectStatus } from '@/playground/filterV2View/subjectTools'
-
-const { subjectStatusOptions } = useSubjectStatus()
-const { subjectLockTypeOptions } = useSubjectLockType()
 
 export const filterFields = [
   { name: 'text' as const, type: 'string', render: { skip: true } },
   { name: 'site' as const, field: 'siteIds' },
   { name: 'rubric' as const, field: 'rubricIds' },
   { name: 'articleAuthors' as const, field: 'authorIds' },
-  { name: 'status' as const, type: 'valueObject', items: subjectStatusOptions },
+  { name: 'status' as const },
   { name: 'docId' as const, type: 'string' },
   { name: 'desks' as const, field: 'deskIds' },
   { name: 'publicPublishedAtFrom' as const, type: 'datetime' },
@@ -21,12 +17,10 @@ export const filterFields = [
   { name: 'modifiedAtUntil' as const, type: 'datetime' },
   { name: 'headline' as const, type: 'string' },
   { name: 'linkedList' as const, field: 'linkedListIds', render: { skip: true } },
-  { name: 'lockType' as const, type: 'valueObject', items: subjectLockTypeOptions },
+  { name: 'lockType' as const },
   { name: 'keywords' as const, field: 'keywordIds', render: { skip: true } },
   { name: 'enableAds' as const, type: 'boolean', field: 'flagsStandard.enableAds' },
 ] satisfies readonly MakeFilterOption[]
-
-export type FilterFieldsType = typeof filterFields
 
 const listFiltersStore = reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
   text: null,
