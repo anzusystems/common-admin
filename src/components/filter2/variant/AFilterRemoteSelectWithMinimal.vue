@@ -11,7 +11,7 @@ import {
   FilterConfigKey,
   FilterDataKey,
   FilterInnerConfigKey,
-  FilterInnerDataKey,
+  FilterInnerDataKey, FilterSelectedFutureKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
@@ -54,6 +54,7 @@ const emit = defineEmits<{
 const submitResetCounter = inject(FilterSubmitResetCounterKey)
 const touched = inject(FilterTouchedKey)
 const filterSelected = inject(FilterSelectedKey)
+const filterSelectedFuture = inject(FilterSelectedFutureKey)
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 const filterInnerConfig = inject(FilterInnerConfigKey)
@@ -63,6 +64,7 @@ if (
   isUndefined(submitResetCounter) ||
   isUndefined(touched) ||
   isUndefined(filterSelected) ||
+  isUndefined(filterSelectedFuture) ||
   isUndefined(filterConfig) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isUndefined(filterConfig.fields[props.name]) ||
@@ -78,13 +80,13 @@ if (
 ) {
   throw new Error('Incorrect provide/inject config.')
 }
-const filterSelectedCache = ref<ValueObjectOption<string | number>[]>([])
+
 const modelValue = computed({
   get() {
     return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
   },
   set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
-    updateFilterSelectedCache(newValue)
+    updateFilterSelectedFuture(newValue)
     let final: null | string | number | string[] | number[] = null
     if (isArray(newValue)) {
       final = newValue.map((item) => item.value) as string[] | number[]
@@ -237,26 +239,31 @@ const { clearOne } = useFilterHelpers()
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)
   filterSelected.value.delete(props.name)
+  filterSelectedFuture.value.delete(props.name)
 }
 
 const updateSelected = () => {
   filterSelected.value.delete(props.name)
-  if (filterSelectedCache.value.length === 0) return
-  filterSelected.value.set(props.name, cloneDeep(filterSelectedCache.value))
+  const future = filterSelectedFuture.value.get(props.name)
+  if (!future || future.length === 0) return
+  filterSelected.value.set(props.name, cloneDeep(future))
 }
 
-const updateFilterSelectedCache = (
+const updateFilterSelectedFuture = (
   newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
 ) => {
   if ((isArray(newValue) && newValue.length === 0) || isNull(newValue)) {
-    filterSelectedCache.value = []
+    filterSelectedFuture.value.delete(props.name)
     return
   }
   if (isArray(newValue)) {
-    filterSelectedCache.value = newValue.map((item) => ({ title: item.title, value: item.value }))
+    filterSelectedFuture.value.set(
+      props.name,
+      newValue.map((item) => ({ title: item.title, value: item.value }))
+    )
     return
   }
-  filterSelectedCache.value = [{ title: newValue.title, value: newValue.value }]
+  filterSelectedFuture.value.set(props.name, [{ title: newValue.title, value: newValue.value }])
 }
 
 watch(submitResetCounter, () => {

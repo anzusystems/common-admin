@@ -5,7 +5,7 @@ import AFilterResetButton from '@/components/buttons/filter/AFilterResetButton.v
 import { inject, provide, ref } from 'vue'
 import {
   FilterConfigKey,
-  FilterDataKey,
+  FilterDataKey, FilterSelectedFutureKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
@@ -46,6 +46,8 @@ const submitResetCounter = ref(0)
 provide(FilterSubmitResetCounterKey, submitResetCounter)
 const filterSelected = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
 provide(FilterSelectedKey, filterSelected)
+const filterSelectedFuture = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
+provide(FilterSelectedFutureKey, filterSelectedFuture)
 
 const submitFilter = () => {
   touched.value = false
@@ -59,6 +61,7 @@ const resetFilter = () => {
   touched.value = false
   clearAll(filterData, filterConfig)
   filterSelected.value.clear()
+  filterSelectedFuture.value.clear()
   submitResetCounter.value++
   emit('reset')
 }
