@@ -2,10 +2,11 @@
 import AFilterAdvancedButton from '@/components/buttons/filter/AFilterAdvancedButton.vue'
 import AFilterSubmitButton from '@/components/buttons/filter/AFilterSubmitButton.vue'
 import AFilterResetButton from '@/components/buttons/filter/AFilterResetButton.vue'
-import { inject, provide, ref } from 'vue'
+import { inject, nextTick, provide, ref } from 'vue'
 import {
   FilterConfigKey,
-  FilterDataKey, FilterSelectedFutureKey,
+  FilterDataKey,
+  FilterSelectedFutureKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
@@ -54,7 +55,10 @@ provide(FilterSelectedFutureKey, filterSelectedFuture)
 const submitFilter = () => {
   touched.value = false
   submitResetCounter.value++
-  emit('submit')
+  nextTick(() => {
+    filterSelectedFuture.value.clear()
+    emit('submit')
+  })
 }
 
 const { clearAll } = useFilterHelpers()
@@ -64,8 +68,10 @@ const resetFilter = () => {
   clearAll(filterData, filterConfig)
   filterSelected.value.clear()
   filterSelectedFuture.value.clear()
-  submitResetCounter.value++
-  emit('reset')
+  nextTick(() => {
+    submitResetCounter.value++
+    emit('reset')
+  })
 }
 
 const toggleFilterDetail = () => {
@@ -82,70 +88,57 @@ const toggleFilterDetail = () => {
       v-if="enableTop"
       dense
     >
-      <VCol class="">
+      <VCol>
         <slot name="top" />
       </VCol>
     </VRow>
-    <VRow
-      dense
-      class="a-filter-advanced"
-      :class="{ 'a-filter-advanced--active': showDetail }"
-    >
-      <VCol
-        class="v-col-filters--show-hide"
-        cols="auto"
-      >
+    <VRow dense>
+      <VCol cols="auto">
         <AFilterAdvancedButton
           :button-active="showDetail"
           @advanced-filter="toggleFilterDetail"
         />
       </VCol>
-      <VCol class="">
-        <VRow align="start">
-          <VCol
-            cols="12"
-            sm="6"
-            md="4"
-          >
+      <VCol>
+        <div class="a-filter__container">
+          <div class="a-filter__search">
             <slot name="search" />
-          </VCol>
-          <VCol
-            cols="auto"
-            class="flex-grow-1"
-          >
-            <FiltersSelected />
-          </VCol>
-        </VRow>
-        <div
-          v-show="showDetail"
-          class="a-filter-advanced__content mt-4"
-        >
-          <slot name="detail">
-            <VRow>
-              <VCol
-                v-for="field in filterConfig.fields"
-                :key="field.name"
-                :cols="field.render.xs"
-                :sm="field.render.sm"
-                :md="field.render.md"
-                :lg="field.render.lg"
-                :xl="field.render.xl"
-                :class="{ 'd-none': field.render.skip }"
-              >
-                <slot
-                  :name="datatableSlotName(field.name)"
-                  :item-config="field"
-                >
-                  <FilterDetailItem :name="field.name" />
-                </slot>
-              </VCol>
-            </VRow>
-          </slot>
+          </div>
+          <FiltersSelected />
         </div>
+        <VSlideYTransition>
+          <div
+            v-show="showDetail"
+            class="mt-8 pt-4"
+            :class="{ 'system-border-t': filterSelected.size > 0 }"
+          >
+            <slot name="detail">
+              <VRow>
+                <VCol
+                  v-for="field in filterConfig.fields"
+                  :key="field.name"
+                  :cols="field.render.xs"
+                  :sm="field.render.sm"
+                  :md="field.render.md"
+                  :lg="field.render.lg"
+                  :xl="field.render.xl"
+                  :class="{ 'd-none': field.render.skip }"
+                >
+                  <slot
+                    :name="datatableSlotName(field.name)"
+                    :item-config="field"
+                  >
+                    <FilterDetailItem :name="field.name" />
+                  </slot>
+                </VCol>
+              </VRow>
+            </slot>
+          </div>
+        </VSlideYTransition>
       </VCol>
       <VCol
         v-if="!hideButtons"
-        class="v-col-filters--buttons text-right"
+        class="text-right"
         cols="auto"
       >
         <slot name="buttons">
@@ -156,3 +149,33 @@ const toggleFilterDetail = () => {
     </VRow>
   </VForm>
 </template>
+
+<style lang="scss">
+@use 'vuetify/tools' as *;
+
+.a-filter {
+  &__container {
+    width: 100%;
+  }
+
+  &__search {
+    display: inline-flex;
+    vertical-align: middle;
+    min-width: 100%;
+    height: 34px;
+
+    @include media-breakpoint-up(sm) {
+      min-width: 50%;
+      margin-right: 8px;
+    }
+
+    @include media-breakpoint-up(md) {
+      min-width: 40%;
+    }
+
+    @include media-breakpoint-up(lg) {
+      min-width: 30%;
+    }
+  }
+}
+</style>

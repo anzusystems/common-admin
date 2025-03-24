@@ -1,14 +1,28 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import { FilterConfigKey, FilterDataKey, FilterSelectedKey } from '@/components/filter2/filterInjectionKeys'
+import {
+  FilterConfigKey,
+  FilterDataKey,
+  FilterSelectedFutureKey,
+  FilterSelectedKey,
+  FilterTouchedKey,
+} from '@/components/filter2/filterInjectionKeys'
 import { isArray, isBoolean, isNumber, isString, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 const filterSelected = inject(FilterSelectedKey)
+const filterSelectedFuture = inject(FilterSelectedFutureKey)
+const touched = inject(FilterTouchedKey)
 
-if (isUndefined(filterConfig) || isUndefined(filterData) || isUndefined(filterSelected)) {
+if (
+  isUndefined(filterConfig) ||
+  isUndefined(filterData) ||
+  isUndefined(filterSelected) ||
+  isUndefined(filterSelectedFuture) ||
+  isUndefined(touched)
+) {
   throw new Error('Incorrect provide/inject config.')
 }
 
@@ -49,6 +63,7 @@ const clickClose = (name: string, optionValue: number | string) => {
   } else if (isBoolean(filterData[name])) {
     filterData[name] = filterConfig.fields[name].default
   }
+  touched.value = true
 }
 </script>
 
@@ -108,6 +123,10 @@ const clickClose = (name: string, optionValue: number | string) => {
   &__chip {
     background: white;
     box-shadow: none;
+
+    .v-chip__content {
+      max-width: 40vw;
+    }
 
     &:hover .v-chip__close {
       opacity: 0.8;
