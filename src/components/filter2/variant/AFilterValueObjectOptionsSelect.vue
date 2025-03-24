@@ -66,15 +66,22 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
-  if (!isArray(modelValue.value) || (isArray(modelValue.value) && modelValue.value.length === 0)) return
-  filterSelected.value.set(
-    props.name,
-    modelValue.value.map((modelItemValue) => {
-      const found = props.items.find((item) => item.value === modelItemValue)
-      if (found) return { title: found.title, value: found.value }
-      return { title: modelItemValue as string, value: modelItemValue as string }
-    })
-  )
+  if (isArray(modelValue.value) && modelValue.value.length === 0) return
+  if (isArray(modelValue.value)) {
+    filterSelected.value.set(
+      props.name,
+      modelValue.value.map((modelItemValue) => {
+        const found = props.items.find((item) => item.value === modelItemValue)
+        if (found) return { title: found.title, value: found.value }
+        return { title: modelItemValue as string, value: modelItemValue as string }
+      })
+    )
+    return
+  }
+  const found = props.items.find((item) => item.value === modelValue.value)
+  if (found) {
+    filterSelected.value.set(props.name, [{ title: found.title as string, value: found.value as string }])
+  }
 }
 
 watch(submitResetCounter, () => {
