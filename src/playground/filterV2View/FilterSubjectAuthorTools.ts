@@ -90,10 +90,14 @@ const END_POINT = '/adm/v1/author-kind'
 const fetchAuthorListByIds = (ids: IntegerId[]) =>
   apiFetchByIds<AuthorKind[]>(cmsClient, ids, END_POINT + '/search', {}, 'cmw', 'authorKind', undefined, true)
 
-const fetchAuthorList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchAuthorList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
   apiFetchList<AuthorKind[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'authorKind')
 
-export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (
+  pagination: Pagination,
+  filterData: FilterData<any>,
+  filterConfig: FilterConfig<any>
+) => {
   const authors = await fetchAuthorList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
@@ -106,12 +110,12 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectAuthorInnerFilter() {
-  const filterFields: MakeFilterOption[] = [
-    { name: 'id' as const, default: null },
-    { name: 'discriminator' as const, default: null },
-    { name: 'siteGroup' as const, field: 'siteGroupId', default: null },
-    { name: 'text' as const, default: null },
-  ]
+  const filterFields = [
+    { name: 'id' as const },
+    { name: 'discriminator' as const },
+    { name: 'siteGroup' as const, field: 'siteGroupId' },
+    { name: 'text' as const },
+  ] satisfies readonly MakeFilterOption<any>[]
 
   const store = reactive<FilterStore<typeof filterFields>>({
     id: null,

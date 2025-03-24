@@ -1,10 +1,19 @@
 import { reactive } from 'vue'
 import { cloneDeep, isArray, isUndefined } from '@/utils/common.ts'
 
-export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
+const defaultRenderOptions: FilerRenderOptions = {
+  skip: false,
+  xs: 12,
+  sm: 6,
+  md: 4,
+  lg: 3,
+  xl: 2,
+}
+
+export function createFilter<F extends readonly MakeFilterOption<any>[]>(
   filterFields: F,
   store: FilterData<F>,
-  options?: Partial<GeneralFilterOptions>,
+  options?: Partial<GeneralFilterOptions>
 ): {
   filterConfig: FilterConfig<F>
   filterData: FilterData<F>
@@ -13,20 +22,11 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
     [P in F[number]['name']]: FilterField
   }
 
-  const defaultRenderOptions: FilerRenderOptions = {
-    skip: false,
-    xs: 12,
-    sm: 6,
-    md: 4,
-    lg: 3,
-    xl: 2,
-  }
-
   const config = filterFields.reduce((acc, filter) => {
-    const key = filter.name
+    const key = filter.name as keyof FilterData<F>
+    const defaultValue = cloneDeep(store[key] as AllowedFilterData)
     const type: FilterType = isUndefined(filter.type) ? 'custom' : filter.type
     const variant: FilterVariant = isUndefined(filter.variant) ? 'eq' : filter.variant
-    const defaultValue = (isUndefined(filter.default) ? null : filter.default) as AllowedFilterData
     let titleT = filter.titleT
     if (isUndefined(titleT) && options?.system && options?.subject && filter.name) {
       titleT = `${options.system}.${options.subject}.filter.${filter.name}`
@@ -34,7 +34,7 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
     return {
       ...acc,
       [key]: {
-        name: key,
+        name: key as string,
         variant,
         type,
         titleT,
@@ -47,7 +47,7 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
         default: defaultValue,
         render: isUndefined(filter.render)
           ? { ...defaultRenderOptions }
-          : { ...defaultRenderOptions, ...filter.render  },
+          : { ...defaultRenderOptions, ...filter.render },
       },
     }
   }, {} as ConfigMap)
@@ -71,24 +71,30 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
 }
 
 export function useFilterHelpers() {
-  const clearOne = (name: string, filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+  const clearOne = (
+    name: string,
+    filterData: FilterData<any>,
+    filterConfig: FilterConfig<any>
+  ) => {
     if (!filterConfig.fields[name]?.clearable) return
     filterData[name] = cloneDeep(filterConfig.fields[name].default)
   }
 
-  const clearAll = (filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+  const clearAll = (
+    filterData: FilterData<any>,
+    filterConfig: FilterConfig<any>
+  ) => {
     for (const filterName in filterConfig.fields) {
       clearOne(filterName, filterData, filterConfig)
     }
   }
 
-  const resetFilter = (filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+  const resetFilter = (
+    filterData: FilterData<any>,
+    filterConfig: FilterConfig<any>
+  ) => {
     clearAll(filterData, filterConfig)
-    // pagination.page = 1
-    // if (storeId && localStorage) {
-    //   localStorage.removeItem(storeId)
-    // }
-    // if (callback) callback()
+    // Additional reset logic (pagination, callbacks, etc.) can be added here.
   }
 
   const iterateFilterDataKeys = (filterData: Record<string, AllowedFilterData>) => {
@@ -106,10 +112,18 @@ export function useFilterHelpers() {
   }
 }
 
-export type AllowedFilterData = number | number[] | string | string[] | null | undefined | boolean
+/** Allowed filter data types */
+export type AllowedFilterData =
+  | number
+  | number[]
+  | string
+  | string[]
+  | null
+  | undefined
+  | boolean
 
 export interface GeneralFilterOptions {
-  system?: string | undefined
+  system?: string
   subject?: string
   elastic?: boolean
 }
@@ -139,15 +153,20 @@ export type FilterVariant =
   | 'lte'
   | 'custom'
 
-export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'valueObject' | 'custom'
+export type FilterType =
+  | 'boolean'
+  | 'datetime'
+  | 'integer'
+  | 'string'
+  | 'valueObject'
+  | 'custom'
 
-// eslint-disable-next-line @stylistic/max-len
-export interface MakeFilterOption<TName extends string = string, TDefault extends AllowedFilterData = AllowedFilterData> {
+/** A filter make definition. */
+export interface MakeFilterOption<TName extends string> {
   name: TName
   type?: FilterType
   variant?: FilterVariant
   titleT?: string
-  default: TDefault
   field?: string
   clearable?: boolean
   mandatory?: boolean
@@ -156,17 +175,13 @@ export interface MakeFilterOption<TName extends string = string, TDefault extend
   render?: Partial<FilerRenderOptions>
 }
 
-export type FilterFieldStore<T extends string, V extends AllowedFilterData> = {
-  name: T
-  default: V
-}
-
-export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
+/** Representation of a filter field in the configuration object. */
+export interface FilterField {
   name: string
   type: FilterType
   variant: FilterVariant
   titleT?: string
-  default: T
+  default: AllowedFilterData
   field: string
   clearable: boolean
   mandatory: boolean
@@ -176,17 +191,20 @@ export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
   render: FilerRenderOptions
 }
 
-export type FilterConfig<F extends readonly MakeFilterOption[] = any> = {
+/** FilterConfig uses the literal names from filter definitions as keys. */
+export type FilterConfig<F extends readonly MakeFilterOption<any>[]> = {
   general: GeneralFilterOptions
   fields: {
     [P in F[number]['name']]: FilterField
   }
 }
 
-export type FilterData<F extends readonly MakeFilterOption[] = any> = {
-  [P in F[number]['name']]: F[number] extends { default: infer D } ? D : never
+/** FilterData is a mapping of filter names to default values. */
+export type FilterData<F extends readonly MakeFilterOption<any>[]> = {
+  [P in F[number]['name']]: AllowedFilterData
 }
 
-export type FilterStore<T extends readonly FilterFieldStore<string, AllowedFilterData>[]> = {
-  [K in T[number]['name']]: Extract<T[number], { name: K }>['default']
+/** FilterStore for external usage (if needed). */
+export type FilterStore<T extends readonly { name: string }[]> = {
+  [K in T[number]['name']]: AllowedFilterData
 }

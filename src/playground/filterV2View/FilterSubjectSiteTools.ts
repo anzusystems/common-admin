@@ -77,10 +77,14 @@ const END_POINT = '/adm/v1/site'
 
 const fetchSiteListByIds = (ids: IntegerId[]) => apiFetchByIds<Site[]>(cmsClient, ids, END_POINT, {}, 'cms', 'site')
 
-const fetchSiteList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchSiteList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
   apiFetchList<Site[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'site')
 
-export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (
+  pagination: Pagination,
+  filterData: FilterData<any>,
+  filterConfig: FilterConfig<any>
+) => {
   const sites = await fetchSiteList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>sites.map((site: Site) => ({
@@ -99,12 +103,12 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectSiteInnerFilter() {
-  const filterFields: MakeFilterOption[] = [
-    { name: 'id' as const, variant: 'in', default: null },
-    { name: 'name' as const, variant: 'startsWith', default: null },
-    { name: 'siteGroup' as const, default: null },
-    { name: 'linkedList' as const, default: null },
-  ]
+  const filterFields = [
+    { name: 'id' as const, variant: 'in' },
+    { name: 'name' as const, variant: 'startsWith' },
+    { name: 'siteGroup' as const },
+    { name: 'linkedList' as const },
+  ] satisfies readonly MakeFilterOption<any>[]
 
   const store = reactive<FilterStore<typeof filterFields>>({
     id: null,

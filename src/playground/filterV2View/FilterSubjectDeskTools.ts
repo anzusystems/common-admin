@@ -31,12 +31,16 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
 
 const END_POINT = '/adm/desks'
 
-const fetchDeskList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchDeskList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
   apiFetchList<Desk[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'desk')
 
 const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
 
-export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (
+  pagination: Pagination,
+  filterData: FilterData<any>,
+  filterConfig: FilterConfig<any>
+) => {
   const desks = await fetchDeskList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
@@ -55,15 +59,15 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectDeskInnerFilter() {
-  const filterFields: MakeFilterOption[] = [
-    { name: 'id' as const, default: null },
-    { name: 'ids' as const, variant: 'in', field: 'id', default: [] },
-    { name: 'name' as const, variant: 'startsWith', default: null },
-  ]
+  const filterFields = [
+    { name: 'id' },
+    { name: 'ids', variant: 'in', field: 'id' },
+    { name: 'name', variant: 'startsWith' },
+  ] satisfies readonly MakeFilterOption<any>[]
 
   const store = reactive<FilterStore<typeof filterFields>>({
     id: null,
-    ids: [],
+    ids: [] as IntegerId[],
     name: null,
   })
 

@@ -35,10 +35,14 @@ const END_POINT = '/adm/users'
 
 const fetchUserListByIds = (ids: IntegerId[]) => apiFetchByIds<User[]>(cmsClient, ids, END_POINT, {}, 'cms', 'user')
 
-const fetchUserList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchUserList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
   apiFetchList<User[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'user')
 
-export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (
+  pagination: Pagination,
+  filterData: FilterData<any>,
+  filterConfig: FilterConfig<any>
+) => {
   const users = await fetchUserList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>users.map((user: User) => ({
@@ -57,10 +61,10 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectUserInnerFilter() {
-  const filterFields: MakeFilterOption[] = [
-    { name: 'id' as const, variant: 'in', default: null },
-    { name: 'lastName' as const, variant: 'startsWith', field: 'person.lastName', default: null },
-  ]
+  const filterFields = [
+    { name: 'id' as const, variant: 'in' },
+    { name: 'lastName' as const, variant: 'startsWith', field: 'person.lastName' },
+  ] satisfies readonly MakeFilterOption<any>[]
 
   const store = reactive<FilterStore<typeof filterFields>>({
     id: null,

@@ -29,8 +29,8 @@ const props = withDefaults(
     name: string
     fetchItems: (
       pagination: Pagination,
-      filterData: FilterData,
-      filterConfig: FilterConfig
+      filterData: FilterData<any>,
+      filterConfig: FilterConfig<any>
     ) => Promise<ValueObjectOption<string | number>[]>
     fetchItemsByIds: FetchItemsByIdsType
     filterByField: string

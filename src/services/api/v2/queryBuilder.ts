@@ -35,7 +35,7 @@ export function useApiQueryBuilder() {
 
   const getValue = (
     value: AllowedFilterData,
-    config: FilterField<AllowedFilterData>
+    config: FilterField
   ): string | number | boolean | null => {
     if (isNull(value)) {
       if (config.mandatory && !isUndefined(config.default)) {

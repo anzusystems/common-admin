@@ -1,8 +1,9 @@
 import {
   createFilter,
   type FilterConfig,
-  type FilterData, type FilterStore,
-  type MakeFilterOption
+  type FilterData,
+  type FilterStore,
+  type MakeFilterOption,
 } from '@/composables/filter/filterFactory.ts'
 import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
 import { apiFetchByIds } from '@/services/api/v2/apiFetchByIds.ts'
@@ -63,14 +64,11 @@ const END_POINT = '/adm/v1/rubric'
 const fetchRubricListByIds = (ids: IntegerId[]) =>
   apiFetchByIds<Rubric[]>(cmsClient, ids, END_POINT, {}, 'cms', 'rubric')
 
-const fetchRubricList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchRubricList = (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) =>
   apiFetchList<Rubric[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'rubric')
 
-export const fetchItems = async (
-  pagination: Pagination,
-  filterData: FilterData,
-  filterConfig: FilterConfig
-) => {
+// eslint-disable-next-line @stylistic/max-len
+export const fetchItems = async (pagination: Pagination, filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
   const rubrics = await fetchRubricList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({
@@ -89,14 +87,14 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectRubricInnerFilter() {
-  const filterFields: MakeFilterOption[] = [
-    { name: 'id' as const, variant: 'in', default: null },
-    { name: 'text' as const, default: null },
-    { name: 'site' as const, field: 'siteIds', default: [] as IntegerId[] },
-    { name: 'siteGroup' as const, field: 'siteGroupIds', default: [] as IntegerId[] },
-    { name: 'desk' as const, field: 'deskIds', default: [] as IntegerId[] },
-    { name: 'linkedList' as const, field: 'linkedListId', default: null },
-  ]
+  const filterFields = [
+    { name: 'id' as const, variant: 'in' },
+    { name: 'text' as const },
+    { name: 'site' as const, field: 'siteIds' },
+    { name: 'siteGroup' as const, field: 'siteGroupIds' },
+    { name: 'desk' as const, field: 'deskIds' },
+    { name: 'linkedList' as const, field: 'linkedListId' },
+  ] satisfies readonly MakeFilterOption<any>[]
 
   const store = reactive<FilterStore<typeof filterFields>>({
     id: null,
@@ -107,15 +105,11 @@ export function useSubjectRubricInnerFilter() {
     linkedList: null,
   })
 
-  const { filterConfig, filterData } = createFilter(
-    filterFields,
-    store,
-    {
-      elastic: true,
-      system: 'cms',
-      subject: 'rubric',
-    }
-  )
+  const { filterConfig, filterData } = createFilter(filterFields, store, {
+    elastic: true,
+    system: 'cms',
+    subject: 'rubric',
+  })
 
   return {
     filterConfig,
