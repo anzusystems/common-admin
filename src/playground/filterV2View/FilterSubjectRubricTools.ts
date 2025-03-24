@@ -1,4 +1,9 @@
-import { createFilter, type FilterConfig, type FilterData } from '@/composables/filter/filterFactory.ts'
+import {
+  createFilter,
+  type FilterConfig,
+  type FilterData, type FilterStore,
+  type MakeFilterOption
+} from '@/composables/filter/filterFactory.ts'
 import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
 import { apiFetchByIds } from '@/services/api/v2/apiFetchByIds.ts'
 import type { IntegerId, IntegerIdNullable } from '@/types/common.ts'
@@ -6,6 +11,7 @@ import type { ValueObjectOption } from '@/types/ValueObject.ts'
 import { cmsClient } from '@/playground/mock/cmsClient.ts'
 import type { Pagination } from '@/types/Pagination.ts'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware.ts'
+import { reactive } from 'vue'
 
 interface Rubric extends AnzuUserAndTimeTrackingAware {
   id: IntegerId
@@ -83,15 +89,27 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectRubricInnerFilter() {
+  const filterFields: MakeFilterOption[] = [
+    { name: 'id' as const, variant: 'in', default: null },
+    { name: 'text' as const, default: null },
+    { name: 'site' as const, field: 'siteIds', default: [] as IntegerId[] },
+    { name: 'siteGroup' as const, field: 'siteGroupIds', default: [] as IntegerId[] },
+    { name: 'desk' as const, field: 'deskIds', default: [] as IntegerId[] },
+    { name: 'linkedList' as const, field: 'linkedListId', default: null },
+  ]
+
+  const store = reactive<FilterStore<typeof filterFields>>({
+    id: null,
+    text: null,
+    site: [],
+    siteGroup: [],
+    desk: [],
+    linkedList: null,
+  })
+
   const { filterConfig, filterData } = createFilter(
-    [
-      { name: 'id' as const, variant: 'in', default: null },
-      { name: 'text' as const, default: null },
-      { name: 'site' as const, field: 'siteIds', default: [] as IntegerId[] },
-      { name: 'siteGroup' as const, field: 'siteGroupIds', default: [] as IntegerId[] },
-      { name: 'desk' as const, field: 'deskIds', default: [] as IntegerId[] },
-      { name: 'linkedList' as const, field: 'linkedListId', default: null },
-    ],
+    filterFields,
+    store,
     {
       elastic: true,
       system: 'cms',

@@ -5,7 +5,14 @@ import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTracki
 import type { Pagination } from '@/types/Pagination.ts'
 import { cmsClient } from '@/playground/mock/cmsClient.ts'
 import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
-import { createFilter, type FilterConfig, type FilterData } from '@/composables/filter/filterFactory.ts'
+import {
+  createFilter,
+  type FilterConfig,
+  type FilterData,
+  type FilterStore,
+  type MakeFilterOption,
+} from '@/composables/filter/filterFactory.ts'
+import { reactive } from 'vue'
 
 export interface SiteMinimal {
   id: IntegerId
@@ -73,11 +80,7 @@ const fetchSiteListByIds = (ids: IntegerId[]) => apiFetchByIds<Site[]>(cmsClient
 const fetchSiteList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<Site[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'site')
 
-export const fetchItems = async (
-  pagination: Pagination,
-  filterData: FilterData,
-  filterConfig: FilterConfig
-) => {
+export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const sites = await fetchSiteList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>sites.map((site: Site) => ({
@@ -96,18 +99,24 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectSiteInnerFilter() {
-  const { filterConfig, filterData } = createFilter(
-    [
-      { name: 'id' as const, variant: 'in', default: null },
-      { name: 'name' as const, variant: 'startsWith', default: null },
-      { name: 'siteGroup' as const, default: null },
-      { name: 'linkedList' as const, default: null },
-    ],
-    {
-      system: 'cms',
-      subject: 'site',
-    }
-  )
+  const filterFields: MakeFilterOption[] = [
+    { name: 'id' as const, variant: 'in', default: null },
+    { name: 'name' as const, variant: 'startsWith', default: null },
+    { name: 'siteGroup' as const, default: null },
+    { name: 'linkedList' as const, default: null },
+  ]
+
+  const store = reactive<FilterStore<typeof filterFields>>({
+    id: null,
+    name: null,
+    siteGroup: null,
+    linkedList: null,
+  })
+
+  const { filterConfig, filterData } = createFilter(filterFields, store, {
+    system: 'cms',
+    subject: 'site',
+  })
 
   return {
     filterConfig,

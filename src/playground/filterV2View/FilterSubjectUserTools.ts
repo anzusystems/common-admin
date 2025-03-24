@@ -5,7 +5,14 @@ import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
 import type { Pagination } from '@/types/Pagination'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { createFilter, type FilterConfig, type FilterData } from '@/composables/filter/filterFactory.ts'
+import {
+  createFilter,
+  type FilterConfig,
+  type FilterData,
+  type FilterStore,
+  type MakeFilterOption,
+} from '@/composables/filter/filterFactory.ts'
+import { reactive } from 'vue'
 
 export interface User extends AnzuUser {
   mainSite: IntegerIdNullable
@@ -31,11 +38,7 @@ const fetchUserListByIds = (ids: IntegerId[]) => apiFetchByIds<User[]>(cmsClient
 const fetchUserList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<User[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'user')
 
-export const fetchItems = async (
-  pagination: Pagination,
-  filterData: FilterData,
-  filterConfig: FilterConfig
-) => {
+export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const users = await fetchUserList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>users.map((user: User) => ({
@@ -54,16 +57,20 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectUserInnerFilter() {
-  const { filterConfig, filterData } = createFilter(
-    [
-      { name: 'id' as const, variant: 'in', default: null },
-      { name: 'lastName' as const, variant: 'startsWith', field: 'person.lastName', default: null },
-    ],
-    {
-      system: 'cms',
-      subject: 'user',
-    }
-  )
+  const filterFields: MakeFilterOption[] = [
+    { name: 'id' as const, variant: 'in', default: null },
+    { name: 'lastName' as const, variant: 'startsWith', field: 'person.lastName', default: null },
+  ]
+
+  const store = reactive<FilterStore<typeof filterFields>>({
+    id: null,
+    lastName: null,
+  })
+
+  const { filterConfig, filterData } = createFilter(filterFields, store, {
+    system: 'cms',
+    subject: 'user',
+  })
 
   return {
     filterConfig,

@@ -1,104 +1,16 @@
 import { reactive } from 'vue'
 import { cloneDeep, isArray, isUndefined } from '@/utils/common.ts'
 
-export type AllowedFilterData = number | number[] | string | string[] | null | undefined | boolean
-
-export interface GeneralFilterOptions {
-  elastic: boolean
-  system: string | undefined
-  subject: string | undefined
-  globalStore: Record<string, AllowedFilterData> | undefined
-}
-
-export interface FilerRenderOptions {
-  skip: boolean
-  xs: number
-  sm: number
-  md: number
-  lg: number
-  xl: number
-}
-
-export type FilterVariant =
-  | 'search'
-  | 'lt'
-  | 'in'
-  | 'notIn'
-  | 'endsWith'
-  | 'startsWith'
-  | 'memberOf'
-  | 'contains'
-  | 'neq'
-  | 'gte'
-  | 'gt'
-  | 'eq'
-  | 'lte'
-  | 'custom'
-
-export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'valueObject' | 'custom'
-
-// eslint-disable-next-line @stylistic/max-len
-export interface MakeFilterOption<TName extends string = string, TDefault extends AllowedFilterData = AllowedFilterData> {
-  name: TName
-  type?: FilterType
-  variant?: FilterVariant
-  titleT?: string
-  default: TDefault
-  field?: string
-  clearable?: boolean
-  mandatory?: boolean
-  advanced?: boolean
-  exclude?: boolean
-  render?: Partial<FilerRenderOptions>
-}
-
-export type FilterFieldStore<T extends string, V> = {
-  name: T
-  default: V
-}
-
-export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
-  name: string
-  type: FilterType
-  variant: FilterVariant
-  titleT?: string
-  default: T
-  field: string
-  clearable: boolean
-  mandatory: boolean
-  multiple: boolean
-  advanced: boolean
-  exclude: boolean
-  render: FilerRenderOptions
-}
-
-export type FilterConfig<F extends readonly MakeFilterOption[] = any> = {
-  general: GeneralFilterOptions
-  fields: {
-    [P in F[number]['name']]: FilterField
-  }
-}
-
-export type FilterData<F extends readonly MakeFilterOption[] = any> = {
-  [P in F[number]['name']]: F[number] extends { default: infer D } ? D : never
-}
-
-export type FilterStore<T extends readonly FilterFieldStore<string, any>[]> = {
-  [K in T[number]['name']]: Extract<T[number], { name: K }>['default']
-}
-
 export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
-  filters: F,
-  generalOptions?: Partial<GeneralFilterOptions>
+  filterFields: F,
+  store: FilterData<F>,
+  options?: Partial<GeneralFilterOptions>,
 ): {
   filterConfig: FilterConfig<F>
   filterData: FilterData<F>
 } {
   type ConfigMap = {
     [P in F[number]['name']]: FilterField
-  }
-  type DataMap = {
-    [key: string]: AllowedFilterData
   }
 
   const defaultRenderOptions: FilerRenderOptions = {
@@ -110,14 +22,14 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
     xl: 2,
   }
 
-  const config = filters.reduce((acc, filter) => {
+  const config = filterFields.reduce((acc, filter) => {
     const key = filter.name
     const type: FilterType = isUndefined(filter.type) ? 'custom' : filter.type
     const variant: FilterVariant = isUndefined(filter.variant) ? 'eq' : filter.variant
     const defaultValue = (isUndefined(filter.default) ? null : filter.default) as AllowedFilterData
     let titleT = filter.titleT
-    if (isUndefined(titleT) && generalOptions?.system && generalOptions?.subject && filter.name) {
-      titleT = `${generalOptions.system}.${generalOptions.subject}.filter.${filter.name}`
+    if (isUndefined(titleT) && options?.system && options?.subject && filter.name) {
+      titleT = `${options.system}.${options.subject}.filter.${filter.name}`
     }
     return {
       ...acc,
@@ -140,31 +52,11 @@ export function createFilter<F extends readonly MakeFilterOption<any, any>[]>(
     }
   }, {} as ConfigMap)
 
-  const data = filters.reduce((acc, filter) => {
-    const key = filter.name
-    return {
-      ...acc,
-      [key]: cloneDeep(filter.default),
-    }
-  }, {} as DataMap)
-
   const defaultGlobalOptions: GeneralFilterOptions = {
     elastic: false,
     system: undefined,
     subject: undefined,
-    globalStore: undefined,
-    ...generalOptions,
-  }
-
-  const store: Record<string, AllowedFilterData> = defaultGlobalOptions.globalStore
-    ? defaultGlobalOptions.globalStore
-    : reactive({})
-
-  if (isUndefined(defaultGlobalOptions.globalStore)) {
-    Object.keys(data).forEach((key) => {
-      // Type assertion to satisfy TS:
-      ;(store as DataMap)[key] = data[key]
-    })
+    ...options,
   }
 
   const filterConfig = reactive({
@@ -212,4 +104,89 @@ export function useFilterHelpers() {
     resetFilter,
     iterateFilterDataKeys,
   }
+}
+
+export type AllowedFilterData = number | number[] | string | string[] | null | undefined | boolean
+
+export interface GeneralFilterOptions {
+  system?: string | undefined
+  subject?: string
+  elastic?: boolean
+}
+
+export interface FilerRenderOptions {
+  skip: boolean
+  xs: number
+  sm: number
+  md: number
+  lg: number
+  xl: number
+}
+
+export type FilterVariant =
+  | 'search'
+  | 'lt'
+  | 'in'
+  | 'notIn'
+  | 'endsWith'
+  | 'startsWith'
+  | 'memberOf'
+  | 'contains'
+  | 'neq'
+  | 'gte'
+  | 'gt'
+  | 'eq'
+  | 'lte'
+  | 'custom'
+
+export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'valueObject' | 'custom'
+
+// eslint-disable-next-line @stylistic/max-len
+export interface MakeFilterOption<TName extends string = string, TDefault extends AllowedFilterData = AllowedFilterData> {
+  name: TName
+  type?: FilterType
+  variant?: FilterVariant
+  titleT?: string
+  default: TDefault
+  field?: string
+  clearable?: boolean
+  mandatory?: boolean
+  advanced?: boolean
+  exclude?: boolean
+  render?: Partial<FilerRenderOptions>
+}
+
+export type FilterFieldStore<T extends string, V extends AllowedFilterData> = {
+  name: T
+  default: V
+}
+
+export interface FilterField<T extends AllowedFilterData = AllowedFilterData> {
+  name: string
+  type: FilterType
+  variant: FilterVariant
+  titleT?: string
+  default: T
+  field: string
+  clearable: boolean
+  mandatory: boolean
+  multiple: boolean
+  advanced: boolean
+  exclude: boolean
+  render: FilerRenderOptions
+}
+
+export type FilterConfig<F extends readonly MakeFilterOption[] = any> = {
+  general: GeneralFilterOptions
+  fields: {
+    [P in F[number]['name']]: FilterField
+  }
+}
+
+export type FilterData<F extends readonly MakeFilterOption[] = any> = {
+  [P in F[number]['name']]: F[number] extends { default: infer D } ? D : never
+}
+
+export type FilterStore<T extends readonly FilterFieldStore<string, AllowedFilterData>[]> = {
+  [K in T[number]['name']]: Extract<T[number], { name: K }>['default']
 }

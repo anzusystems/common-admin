@@ -5,7 +5,14 @@ import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTracki
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
-import { createFilter, type FilterConfig, type FilterData } from '@/composables/filter/filterFactory.ts'
+import {
+  createFilter,
+  type FilterConfig,
+  type FilterData,
+  type FilterStore,
+  type MakeFilterOption,
+} from '@/composables/filter/filterFactory.ts'
+import { reactive } from 'vue'
 
 const AuthorDiscriminator = {
   Person: 'person',
@@ -86,11 +93,7 @@ const fetchAuthorListByIds = (ids: IntegerId[]) =>
 const fetchAuthorList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<AuthorKind[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'authorKind')
 
-export const fetchItems = async (
-  pagination: Pagination,
-  filterData: FilterData,
-  filterConfig: FilterConfig
-) => {
+export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const authors = await fetchAuthorList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
@@ -103,19 +106,25 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectAuthorInnerFilter() {
-  const { filterConfig, filterData } = createFilter(
-    [
-      { name: 'id' as const, default: null },
-      { name: 'discriminator' as const, default: null },
-      { name: 'siteGroup' as const, field: 'siteGroupId', default: null },
-      { name: 'text' as const, default: null },
-    ],
-    {
-      elastic: true,
-      system: 'cms',
-      subject: 'authorKind',
-    }
-  )
+  const filterFields: MakeFilterOption[] = [
+    { name: 'id' as const, default: null },
+    { name: 'discriminator' as const, default: null },
+    { name: 'siteGroup' as const, field: 'siteGroupId', default: null },
+    { name: 'text' as const, default: null },
+  ]
+
+  const store = reactive<FilterStore<typeof filterFields>>({
+    id: null,
+    discriminator: null,
+    siteGroup: null,
+    text: null,
+  })
+
+  const { filterConfig, filterData } = createFilter(filterFields, store, {
+    elastic: true,
+    system: 'cms',
+    subject: 'authorKind',
+  })
 
   return {
     filterConfig,

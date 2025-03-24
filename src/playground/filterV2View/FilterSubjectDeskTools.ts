@@ -5,7 +5,14 @@ import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTracki
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
-import { createFilter, type FilterConfig, type FilterData } from '@/composables/filter/filterFactory.ts'
+import {
+  createFilter,
+  type FilterConfig,
+  type FilterData,
+  type FilterStore,
+  type MakeFilterOption,
+} from '@/composables/filter/filterFactory.ts'
+import { reactive } from 'vue'
 
 export interface Desk extends AnzuUserAndTimeTrackingAware {
   name: string
@@ -29,11 +36,7 @@ const fetchDeskList = (pagination: Pagination, filterData: FilterData, filterCon
 
 const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
 
-export const fetchItems = async (
-  pagination: Pagination,
-  filterData: FilterData,
-  filterConfig: FilterConfig
-) => {
+export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const desks = await fetchDeskList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
@@ -52,17 +55,22 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 }
 
 export function useSubjectDeskInnerFilter() {
-  const { filterConfig, filterData } = createFilter(
-    [
-      { name: 'id' as const, default: null },
-      { name: 'ids' as const, variant: 'in', field: 'id', default: [] },
-      { name: 'name' as const, variant: 'startsWith', default: null },
-    ],
-    {
-      system: 'cms',
-      subject: 'desk',
-    }
-  )
+  const filterFields: MakeFilterOption[] = [
+    { name: 'id' as const, default: null },
+    { name: 'ids' as const, variant: 'in', field: 'id', default: [] },
+    { name: 'name' as const, variant: 'startsWith', default: null },
+  ]
+
+  const store = reactive<FilterStore<typeof filterFields>>({
+    id: null,
+    ids: [],
+    name: null,
+  })
+
+  const { filterConfig, filterData } = createFilter(filterFields, store, {
+    system: 'cms',
+    subject: 'desk',
+  })
 
   return {
     filterConfig,
