@@ -20,13 +20,16 @@ const getTitleFromConfig = (name: string) => {
   return name
 }
 
-const selectedArray = computed(() =>
-  Array.from(filterSelected.value).map(([key, valueArray]) => ({
-    name: key,
-    title: getTitleFromConfig(key),
-    options: valueArray,
-  }))
-)
+const selectedArray = computed(() => {
+  const fieldOrder = Object.keys(filterConfig.fields)
+  return Array.from(filterSelected.value)
+    .map(([key, valueArray]) => ({
+      name: key,
+      title: getTitleFromConfig(key),
+      options: valueArray,
+    }))
+    .sort((a, b) => fieldOrder.indexOf(a.name) - fieldOrder.indexOf(b.name))
+})
 
 const clickClose = (name: string, optionValue: number | string) => {
   // update selected
@@ -38,13 +41,12 @@ const clickClose = (name: string, optionValue: number | string) => {
     selectedFound.splice(foundIndex, 1)
   }
   // update data
-  console.log(filterData[name])
   if (isArray(filterData[name]) && filterData[name].length > 0) {
     const foundIndex = filterData[name].findIndex((item) => item === optionValue)
     filterData[name].splice(foundIndex, 1)
   } else if (isString(filterData[name]) || isNumber(filterData[name])) {
     filterData[name] = filterConfig.fields[name].default
-  }  else if (isBoolean(filterData[name])) {
+  } else if (isBoolean(filterData[name])) {
     filterData[name] = filterConfig.fields[name].default
   }
 }
