@@ -36,11 +36,7 @@ const fetchDeskList = (pagination: Pagination, filterData: FilterData, filterCon
 
 const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
 
-export const fetchItems = async (
-  pagination: Pagination,
-  filterData: FilterData,
-  filterConfig: FilterConfig
-) => {
+export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const desks = await fetchDeskList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
@@ -65,16 +61,18 @@ export function useSubjectDeskInnerFilter() {
     { name: 'name', variant: 'startsWith' },
   ] satisfies readonly MakeFilterOption[]
 
-  const store = reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
-    id: null,
-    ids: [] as IntegerId[],
-    name: null,
-  })
-
-  const { filterConfig, filterData } = createFilter(filterFields, store, {
-    system: 'cms',
-    subject: 'desk',
-  })
+  const { filterConfig, filterData } = createFilter(
+    filterFields,
+    reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
+      id: null,
+      ids: [] as IntegerId[],
+      name: null,
+    }),
+    {
+      system: 'cms',
+      subject: 'desk',
+    }
+  )
 
   return {
     filterConfig,

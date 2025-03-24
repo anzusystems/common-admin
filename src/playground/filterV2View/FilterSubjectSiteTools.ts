@@ -80,11 +80,7 @@ const fetchSiteListByIds = (ids: IntegerId[]) => apiFetchByIds<Site[]>(cmsClient
 const fetchSiteList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList<Site[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'site')
 
-export const fetchItems = async (
-  pagination: Pagination,
-  filterData: FilterData,
-  filterConfig: FilterConfig
-) => {
+export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const sites = await fetchSiteList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>sites.map((site: Site) => ({
@@ -110,17 +106,19 @@ export function useSubjectSiteInnerFilter() {
     { name: 'linkedList' as const },
   ] satisfies readonly MakeFilterOption[]
 
-  const store = reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
-    id: null,
-    name: null,
-    siteGroup: null,
-    linkedList: null,
-  })
-
-  const { filterConfig, filterData } = createFilter(filterFields, store, {
-    system: 'cms',
-    subject: 'site',
-  })
+  const { filterConfig, filterData } = createFilter(
+    filterFields,
+    reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
+      id: null,
+      name: null,
+      siteGroup: null,
+      linkedList: null,
+    }),
+    {
+      system: 'cms',
+      subject: 'site',
+    }
+  )
 
   return {
     filterConfig,

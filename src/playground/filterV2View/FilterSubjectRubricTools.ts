@@ -95,20 +95,22 @@ export function useSubjectRubricInnerFilter() {
     { name: 'linkedList' as const, field: 'linkedListId' },
   ] satisfies readonly MakeFilterOption[]
 
-  const store = reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
-    id: null,
-    text: null,
-    site: [],
-    siteGroup: [],
-    desk: [],
-    linkedList: null,
-  })
-
-  const { filterConfig, filterData } = createFilter(filterFields, store, {
-    elastic: true,
-    system: 'cms',
-    subject: 'rubric',
-  })
+  const { filterConfig, filterData } = createFilter(
+    filterFields,
+    reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
+      id: null,
+      text: null,
+      site: [],
+      siteGroup: [],
+      desk: [],
+      linkedList: null,
+    }),
+    {
+      elastic: true,
+      system: 'cms',
+      subject: 'rubric',
+    }
+  )
 
   return {
     filterConfig,
