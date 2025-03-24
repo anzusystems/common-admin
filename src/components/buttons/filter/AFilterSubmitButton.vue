@@ -15,14 +15,6 @@ withDefaults(
     touched: true,
   }
 )
-// const emit = defineEmits<{
-//   (e: 'submit'): void
-// }>()
-
-// const onClick = (event: Event) => {
-//   eventClickBlur(event)
-//   emit('submit')
-// }
 
 const { t } = useI18n()
 </script>

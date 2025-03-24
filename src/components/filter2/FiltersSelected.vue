@@ -54,6 +54,14 @@ const clickClose = (name: string, optionValue: number | string) => {
     const foundIndex = selectedFound.findIndex((item) => item.value === optionValue)
     selectedFound.splice(foundIndex, 1)
   }
+  // update future selected
+  const selectedFutureFound = filterSelectedFuture.value.get(name)
+  if (selectedFutureFound && selectedFutureFound.length === 1) {
+    filterSelectedFuture.value.delete(name)
+  } else if (selectedFutureFound) {
+    const foundIndex = selectedFutureFound.findIndex((item) => item.value === optionValue)
+    selectedFutureFound.splice(foundIndex, 1)
+  }
   // update data
   if (isArray(filterData[name]) && filterData[name].length > 0) {
     const foundIndex = filterData[name].findIndex((item) => item === optionValue)

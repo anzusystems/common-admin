@@ -17,6 +17,7 @@ import { isUndefined } from '@/utils/common'
 import { useFilterHelpers } from '@/composables/filter/filterFactory'
 import { datatableSlotName } from '@/components/datatable/datatable.ts'
 import FilterDetailItem from '@/components/filter2/FilterDetailItem.vue'
+import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
 
 withDefaults(
   defineProps<{
@@ -56,7 +57,7 @@ const submitFilter = () => {
   touched.value = false
   submitResetCounter.value++
   nextTick(() => {
-    filterSelectedFuture.value.clear()
+    // filterSelectedFuture.value.clear()
     emit('submit')
   })
 }
@@ -76,6 +77,10 @@ const resetFilter = () => {
 
 const toggleFilterDetail = () => {
   showDetail.value = !showDetail.value
+}
+
+const addBookmark = () => {
+  console.log('todo')
 }
 </script>
 
@@ -144,6 +149,7 @@ const toggleFilterDetail = () => {
         <slot name="buttons">
           <AFilterSubmitButton :touched="touched" />
           <AFilterResetButton @reset="resetFilter" />
+          <AFilterBookmarkButton @add-bookmark="addBookmark" />
         </slot>
       </VCol>
     </VRow>
