@@ -10,15 +10,7 @@ const defaultRenderOptions: FilerRenderOptions = {
   xl: 2,
 }
 
-/**
- * Creates a filter configuration and reactive data store for managing filters.
- *
- * @param filterFields - Definitions for the available filters.
- * @param store - Reactive object holding the current state of the filter data.
- * @param options - Optional global options for the filter configuration.
- * @returns An object containing the filter configuration and reactive data store.
- */
-export function createFilter<F extends readonly MakeFilterOption<any>[]>(
+export function createFilter<F extends readonly MakeFilterOption<string>[]>(
   filterFields: F,
   store: FilterData<F>,
   options?: Partial<GeneralFilterOptions>
@@ -53,7 +45,7 @@ export function createFilter<F extends readonly MakeFilterOption<any>[]>(
         },
       }
     },
-    {} as FilterConfig<typeof filterFields>['fields']
+    {} as FilterConfig<F>['fields']
   )
 
   const defaultGlobalOptions: GeneralFilterOptions = {
@@ -74,35 +66,31 @@ export function createFilter<F extends readonly MakeFilterOption<any>[]>(
   }
 }
 
-/**
- * Resolves a value, falling back to a default if the value is undefined.
- */
 function resolveValue<T>(value: T | undefined, fallback: T): T {
   return isUndefined(value) ? fallback : value
 }
 
-/**
- * Provides utility functions for managing filter data.
- */
-export function useFilterHelpers() {
-  const clearOne = (name: string, filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+export function useFilterHelpers<
+  F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[],
+>() {
+  const clearOne = (name: keyof FilterData<F>, filterData: FilterData<F>, filterConfig: FilterConfig<F>) => {
     if (!filterConfig.fields[name]?.clearable) return
     filterData[name] = cloneDeep(filterConfig.fields[name].default)
   }
 
-  const clearAll = (filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+  const clearAll = (filterData: FilterData<F>, filterConfig: FilterConfig<F>) => {
     for (const filterName in filterConfig.fields) {
-      clearOne(filterName, filterData, filterConfig)
+      clearOne(filterName as keyof FilterData<F>, filterData, filterConfig)
     }
   }
 
-  const resetFilter = (filterData: FilterData<any>, filterConfig: FilterConfig<any>) => {
+  const resetFilter = (filterData: FilterData<F>, filterConfig: FilterConfig<F>) => {
     clearAll(filterData, filterConfig)
   }
 
-  const iterateFilterDataKeys = (filterData: Record<string, AllowedFilterValues>) => {
-    Object.keys(filterData).forEach((key: string) => {
-      console.log(`Key: ${key}, Value: ${filterData[key]}`)
+  const iterateFilterDataKeys = (filterData: FilterData<F>) => {
+    ;(Object.keys(filterData) as Array<keyof FilterData<F>>).forEach((key) => {
+      console.log(`Key: ${String(key)}, Value: ${filterData[key]}`)
     })
   }
 
@@ -177,14 +165,14 @@ export interface FilterField {
   render: FilerRenderOptions
 }
 
-export type FilterConfig<F extends readonly MakeFilterOption<any>[] = readonly MakeFilterOption<any>[]> = {
+export type FilterConfig<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]> = {
   general: GeneralFilterOptions
   fields: {
     [P in F[number]['name']]: FilterField
   }
 }
 
-export type FilterData<F extends readonly MakeFilterOption<any>[] = readonly MakeFilterOption<any>[]> = {
+export type FilterData<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]> = {
   [P in F[number]['name']]: AllowedFilterValues
 }
 
