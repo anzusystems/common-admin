@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { isArray, isBoolean, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import type { FilterVariant } from '@/types/Filter'
-import type { AllowedFilterData, FilterConfig, FilterData, FilterField } from '@/composables/filter/filterFactory.ts'
+import type { AllowedFilterValues, FilterConfig, FilterData, FilterField } from '@/composables/filter/filterFactory.ts'
 
 /**
  * Docs: /doc/Admin-Cms-Doc/Filters.md
@@ -34,7 +34,7 @@ export function useApiQueryBuilder() {
   }
 
   const getValue = (
-    value: AllowedFilterData,
+    value: AllowedFilterValues,
     config: FilterField
   ): string | number | boolean | null => {
     if (isNull(value)) {
@@ -79,7 +79,7 @@ export function useApiQueryBuilder() {
   const querySetFilters = (filterData: FilterData<any>, filterConfig: FilterConfig<any>): void => {
     const isSearchApi = filterConfig.general.elastic
     for (const filterName in filterData) {
-      const filterFieldValue = filterData[filterName] as AllowedFilterData
+      const filterFieldValue = filterData[filterName] as AllowedFilterValues
       const filterFieldConfig = filterConfig.fields[filterName]
       if (filterFieldConfig.exclude) {
         continue

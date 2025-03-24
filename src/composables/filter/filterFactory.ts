@@ -29,7 +29,7 @@ export function createFilter<F extends readonly MakeFilterOption<any>[]>(
   const config = filterFields.reduce(
     (acc, filter) => {
       const key = filter.name as keyof FilterData<F>
-      const defaultValue = cloneDeep(store[key] as AllowedFilterData)
+      const defaultValue = cloneDeep(store[key] as AllowedFilterValues)
 
       return {
         ...acc,
@@ -100,7 +100,7 @@ export function useFilterHelpers() {
     clearAll(filterData, filterConfig)
   }
 
-  const iterateFilterDataKeys = (filterData: Record<string, AllowedFilterData>) => {
+  const iterateFilterDataKeys = (filterData: Record<string, AllowedFilterValues>) => {
     Object.keys(filterData).forEach((key: string) => {
       console.log(`Key: ${key}, Value: ${filterData[key]}`)
     })
@@ -114,7 +114,7 @@ export function useFilterHelpers() {
   }
 }
 
-export type AllowedFilterData = number | number[] | string | string[] | null | undefined | boolean
+export type AllowedFilterValues = number | number[] | string | string[] | null | undefined | boolean
 
 export interface GeneralFilterOptions {
   system?: string
@@ -167,7 +167,7 @@ export interface FilterField {
   type: FilterType
   variant: FilterVariant
   titleT?: string
-  default: AllowedFilterData
+  default: AllowedFilterValues
   field: string
   clearable: boolean
   mandatory: boolean
@@ -185,9 +185,9 @@ export type FilterConfig<F extends readonly MakeFilterOption<any>[] = readonly M
 }
 
 export type FilterData<F extends readonly MakeFilterOption<any>[] = readonly MakeFilterOption<any>[]> = {
-  [P in F[number]['name']]: AllowedFilterData
+  [P in F[number]['name']]: AllowedFilterValues
 }
 
 export type FilterStore<T extends readonly { name: string }[]> = {
-  [K in T[number]['name']]: AllowedFilterData
+  [K in T[number]['name']]: AllowedFilterValues
 }
