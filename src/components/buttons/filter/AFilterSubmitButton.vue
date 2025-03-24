@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
+import { eventClickBlur } from '@/utils/event'
 
 withDefaults(
   defineProps<{
@@ -16,7 +17,16 @@ withDefaults(
   }
 )
 
+const emit = defineEmits<{
+  (e: 'submit'): void
+}>()
+
 const { t } = useI18n()
+
+const onClick = (event: Event) => {
+  eventClickBlur(event)
+  emit('submit')
+}
 </script>
 
 <template>
@@ -26,6 +36,7 @@ const { t } = useI18n()
     color="primary"
     type="submit"
     :variant="touched ? 'flat' : 'text'"
+    @click="onClick"
   >
     {{ t(buttonT) }}
   </VBtn>
