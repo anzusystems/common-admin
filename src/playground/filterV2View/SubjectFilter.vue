@@ -3,8 +3,8 @@ import { computed, provide } from 'vue'
 import {
   type SubjectFilterConfig,
   type SubjectFilterData,
-  useTestListFilter,
-} from '@/playground/filterV2View/testFilterV2'
+  useSubjectListFilter,
+} from '@/playground/filterV2View/subjectFilter.ts'
 import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
 import AFilterString from '@/components/filter2/variant/AFilterString.vue'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
@@ -22,7 +22,7 @@ const emit = defineEmits<{
   (e: 'reset', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
 }>()
 
-const { filterConfig, filterData } = useTestListFilter()
+const { filterConfig, filterData } = useSubjectListFilter()
 provide(FilterConfigKey, filterConfig)
 provide(FilterDataKey, filterData)
 
@@ -73,17 +73,4 @@ const { subjectLockTypeOptions } = useSubjectLockType()
       <FilterSubjectUserRemoteAutocomplete name="owners" />
     </template>
   </AFilterWrapper>
-  <br>
-  <br>
-  <br>
-  <br>
-  <br>
-  <br>
-  <br>
-  <div class="my-2">
-    {{ filterData }}
-  </div>
-  <div class="my-2">
-    {{ filterConfig }}
-  </div>
 </template>

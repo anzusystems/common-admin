@@ -1,9 +1,10 @@
 import { reactive } from 'vue'
 import {
-  createFilter, type FilterConfig,
+  createFilter,
+  type FilterConfig,
   type FilterData,
   type FilterStore,
-  type MakeFilterOption
+  type MakeFilterOption,
 } from '@/composables/filter/filterFactory'
 
 export const filterFields = [
@@ -25,6 +26,7 @@ export const filterFields = [
   { name: 'lockType' as const },
   { name: 'keywords' as const, field: 'keywordIds', render: { skip: true } },
   { name: 'enableAds' as const, type: 'boolean', field: 'flagsStandard.enableAds' },
+  { name: 'discriminator' as const, render: { skip: true } },
 ] satisfies readonly MakeFilterOption[]
 
 const listFiltersStore = reactive<SubjectFilterStore>({
@@ -46,9 +48,10 @@ const listFiltersStore = reactive<SubjectFilterStore>({
   lockType: null,
   keywords: [],
   enableAds: null,
+  discriminator: 'standard',
 })
 
-export function useTestListFilter() {
+export function useSubjectListFilter() {
   const { filterConfig, filterData } = createFilter(filterFields, listFiltersStore, {
     elastic: true,
     system: 'system',
@@ -62,5 +65,5 @@ export function useTestListFilter() {
 }
 type SubjectFilterFields = { name: (typeof filterFields)[number]['name'] }[]
 export type SubjectFilterStore = FilterStore<SubjectFilterFields>
-export type SubjectFilterData =  FilterData<SubjectFilterFields>
-export type SubjectFilterConfig =FilterConfig<SubjectFilterFields>
+export type SubjectFilterData = FilterData<SubjectFilterFields>
+export type SubjectFilterConfig = FilterConfig<SubjectFilterFields>

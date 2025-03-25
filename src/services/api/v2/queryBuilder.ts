@@ -81,7 +81,7 @@ export function useApiQueryBuilder() {
     for (const filterName in filterData) {
       const filterFieldValue = filterData[filterName] as AllowedFilterValues
       const filterFieldConfig = filterConfig.fields[filterName]
-      if (filterFieldConfig.exclude) {
+      if (isUndefined(filterFieldConfig) || filterFieldConfig.exclude) {
         continue
       }
       const value = getValue(filterFieldValue, filterFieldConfig)
