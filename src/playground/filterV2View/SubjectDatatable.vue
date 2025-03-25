@@ -88,8 +88,8 @@ defineExpose({
 <template>
   <div>
     <SubjectFilter
-      @submit-filter="submitFilter(pagination, getList)"
-      @reset-filter="resetFilter(pagination, getList)"
+      @submit="submitFilter(pagination, getList)"
+      @reset="resetFilter(pagination, getList)"
     />
     <div>
       <div class="d-flex align-center">

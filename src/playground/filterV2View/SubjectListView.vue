@@ -1,34 +1,18 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import SubjectDatatable from '@/playground/filterV2View/SubjectDatatable.vue'
+import { useSubjectListActions } from '@/playground/filterV2View/subjectTools.ts'
+import ACard from '@/components/ACard.vue'
 
-// const filterSubmit = ({
-//   filterData,
-//   filterConfig,
-// }: {
-//   filterData: SubjectFilterData
-//   filterConfig: SubjectFilterConfig
-// }) => {
-//   console.log('filterSubmit', filterData, filterConfig)
-// }
-//
-// const filterReset = ({
-//   filterData,
-//   filterConfig,
-// }: {
-//   filterData: SubjectFilterData
-//   filterConfig: SubjectFilterConfig
-// }) => {
-//   console.log('filterReset', filterData, filterConfig)
-// }
+const { listLoading } = useSubjectListActions()
 </script>
 
 <template>
   <ActionbarWrapper />
 
-  <VCard>
+  <ACard :loading="listLoading">
     <VCardText>
       <SubjectDatatable />
     </VCardText>
-  </VCard>
+  </ACard>
 </template>
