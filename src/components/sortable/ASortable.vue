@@ -185,7 +185,7 @@ defineExpose({
         :class="GROUP_CLASS"
       >
         <template
-          v-for="item of items"
+          v-for="(item, index) of items"
           :key="item.key"
         >
           <VChip
@@ -231,7 +231,13 @@ defineExpose({
                 :item="item"
               />
             </div>
-            <div class="a-sortable-widget__item">
+            <div
+              class="a-sortable-widget__item"
+              :class="{
+                'a-sortable-widget__item--last': index + 1 === items.length,
+                'a-sortable-widget__item--first': index === 0,
+              }"
+            >
               <VIcon
                 :class="{
                   [HANDLE_CLASS]: true,
@@ -373,12 +379,12 @@ $ghost-bg-color: color.scale(#3f6ad8, $lightness: 95%);
     border: 1px solid $border-color;
     border-bottom: none;
 
-    &:first-child {
+    &--first {
       border-top-left-radius: 5px;
       border-top-right-radius: 5px;
     }
 
-    &:last-child {
+    &--last {
       border-bottom-left-radius: 5px;
       border-bottom-right-radius: 5px;
       border-bottom: 1px solid $border-color;
