@@ -18,6 +18,8 @@ import { useFilterHelpers } from '@/composables/filter/filterFactory'
 import { datatableSlotName } from '@/components/datatable/datatable.ts'
 import FilterDetailItem from '@/components/filter2/FilterDetailItem.vue'
 import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
+import FilterBookmarks from '@/components/filter2/FilterBookmarks.vue'
+import FilterBookmarkDialog from '@/components/filter2/FilterBookmarkDialog.vue'
 
 withDefaults(
   defineProps<{
@@ -38,14 +40,14 @@ const emit = defineEmits<{
 
 const showDetail = defineModel<boolean>('showDetail', { default: false, required: false })
 const touched = defineModel<boolean>('touched', { default: false, required: false })
-provide(FilterTouchedKey, touched)
+const bookmarkDialog = defineModel<boolean>('bookmarkDialog', { default: false, required: false })
 
+provide(FilterTouchedKey, touched)
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 if (isUndefined(filterConfig) || isUndefined(filterData)) {
   throw new Error('Incorrect provide/inject config.')
 }
-
 const submitResetCounter = ref(0)
 provide(FilterSubmitResetCounterKey, submitResetCounter)
 const filterSelected = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
@@ -78,10 +80,6 @@ const resetFilter = () => {
 const toggleFilterDetail = () => {
   showDetail.value = !showDetail.value
 }
-
-const addBookmark = () => {
-  console.log('todo')
-}
 </script>
 
 <template>
@@ -95,6 +93,15 @@ const addBookmark = () => {
     >
       <VCol>
         <slot name="top" />
+      </VCol>
+    </VRow>
+    <VRow dense>
+      <VCol>
+        <slot name="bookmarks">
+          <div class="d-flex flex-wrap align-center">
+            <FilterBookmarks />
+          </div>
+        </slot>
       </VCol>
     </VRow>
     <VRow dense>
@@ -114,8 +121,7 @@ const addBookmark = () => {
         <VSlideYTransition>
           <div
             v-show="showDetail"
-            class="mt-8 pt-4"
-            :class="{ 'system-border-t': filterSelected.size > 0 }"
+            class="mt-6 pa-4 system-border-a"
           >
             <slot name="detail">
               <VRow>
@@ -149,7 +155,11 @@ const addBookmark = () => {
         <slot name="buttons">
           <AFilterSubmitButton :touched="touched" />
           <AFilterResetButton @reset="resetFilter" />
-          <AFilterBookmarkButton @add-bookmark="addBookmark" />
+          <AFilterBookmarkButton @on-click="bookmarkDialog = true" />
+          <FilterBookmarkDialog
+            v-if="bookmarkDialog"
+            @on-close="bookmarkDialog = false"
+          />
         </slot>
       </VCol>
     </VRow>

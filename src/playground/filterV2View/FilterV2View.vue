@@ -28,7 +28,6 @@ const filterReset = ({
   <ActionbarWrapper />
 
   <VCard>
-    <VCardTitle>Filters</VCardTitle>
     <VCardText>
       <VForm>
         <TestFilterV2

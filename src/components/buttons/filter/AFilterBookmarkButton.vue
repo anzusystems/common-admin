@@ -15,12 +15,12 @@ withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'addBookmark'): void
+  (e: 'onClick'): void
 }>()
 
 const onClick = (event: Event) => {
   eventClickBlur(event)
-  emit('addBookmark')
+  emit('onClick')
 }
 
 const { t } = useI18n()
