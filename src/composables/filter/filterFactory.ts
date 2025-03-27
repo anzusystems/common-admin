@@ -135,7 +135,7 @@ export type FilterVariant =
   | 'lte'
   | 'custom'
 
-export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'custom'
+export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'custom' | 'timeInterval'
 
 export interface MakeFilterOption<TName extends string = string> {
   name: TName

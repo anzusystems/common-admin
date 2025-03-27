@@ -1,6 +1,12 @@
-<script lang="ts" setup>
+<script setup lang="ts">
+const props = withDefaults(
+  defineProps<{
+    name: string
+  }>(),
+  {}
+)
 </script>
 
 <template>
-  <div />
+  <div>{{ props.name }}</div>
 </template>

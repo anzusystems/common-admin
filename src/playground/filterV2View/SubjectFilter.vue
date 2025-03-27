@@ -16,6 +16,7 @@ import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/Filte
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
 import { useSubjectLockType, useSubjectStatus } from '@/playground/filterV2View/subjectTools.ts'
+import AFilterTimeInterval from '@/components/filter2/variant/AFilterTimeInterval.vue'
 
 const emit = defineEmits<{
   (e: 'submit', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
@@ -71,6 +72,12 @@ const { subjectLockTypeOptions } = useSubjectLockType()
     </template>
     <template #item.owners>
       <FilterSubjectUserRemoteAutocomplete name="owners" />
+    </template>
+    <template #item.publicPublishedAtFrom>
+      <AFilterTimeInterval
+        name-from="publicPublishedAtFrom"
+        name-until="publicPublishedAtUntil"
+      />
     </template>
   </AFilterWrapper>
 </template>
