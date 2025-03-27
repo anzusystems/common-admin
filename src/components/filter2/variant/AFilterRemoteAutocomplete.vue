@@ -17,7 +17,7 @@ import {
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys'
-import { type FilterConfig, type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory'
+import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/composables/filter/filterFactory'
 import { isOneOf } from '@/utils/enum'
 
 type FetchItemsByIdsType =
@@ -233,7 +233,7 @@ const placeholderComputed = computed(() => {
   return ''
 })
 
-const { clearOne } = useFilterHelpers()
+const { clearOne } = useFilterClearHelpers()
 
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)

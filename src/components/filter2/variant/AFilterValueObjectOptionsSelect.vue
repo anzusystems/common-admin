@@ -10,7 +10,7 @@ import {
   FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys'
 import { isArray, isUndefined } from '@/utils/common'
-import { useFilterHelpers } from '@/composables/filter/filterFactory'
+import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
 
 const props = withDefaults(
   defineProps<{
@@ -62,7 +62,7 @@ const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
-const { clearOne } = useFilterHelpers()
+const { clearOne } = useFilterClearHelpers()
 
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)

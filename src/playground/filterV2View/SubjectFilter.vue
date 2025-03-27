@@ -40,7 +40,6 @@ const { subjectLockTypeOptions } = useSubjectLockType()
 </script>
 
 <template>
-  {{ filterData }}
   <AFilterWrapper
     @submit="emit('submit', { filterData, filterConfig })"
     @reset="emit('reset', { filterData, filterConfig })"

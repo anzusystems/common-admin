@@ -8,18 +8,16 @@ import ADatatablePagination from '@/components/ADatatablePagination.vue'
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSubjectListActions } from '@/playground/filterV2View/subjectTools.ts'
-import type { Pagination } from '@/types/Pagination.ts'
-import type { AnyFn } from '@vueuse/core'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import ATableEditButton from '@/components/buttons/table/ATableEditButton.vue'
 import ATableDetailButton from '@/components/buttons/table/ATableDetailButton.vue'
+import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 
 type DatatableItem = any
 
 const { t } = useI18n()
 
 const { filterData, filterConfig } = useSubjectListFilter()
-// const { resetFilter, submitFilter, loadStoredFilter } = useFilterHelpers(FILTER_KEY.rubric)
 const { fetchList, listItems, datatableHiddenColumns } = useSubjectListActions()
 
 const onRowClick = (event: unknown, { item }: { item: DatatableItem }) => {
@@ -61,35 +59,42 @@ const sortByChange = (option: DatatableOrderingOption) => {
   getList()
 }
 
-onMounted(() => {
-  // loadStoredFilter(filter)
-  getList()
-})
+// const resetFilter = (pagination: Pagination, callback?: AnyFn) => {
+//   pagination.page = 1
+//   // if (storeId && localStorage) {
+//   //   localStorage.removeItem(storeId)
+//   // }
+//   if (callback) callback()
+// }
 
-const resetFilter = (pagination: Pagination, callback?: AnyFn) => {
-  pagination.page = 1
-  // if (storeId && localStorage) {
-  //   localStorage.removeItem(storeId)
-  // }
-  // if (callback) callback()
-}
+// const submitFilter = (pagination: Pagination, callback?: AnyFn) => {
+//   // storeFilter(filterBag)
+//   pagination.page = 1
+//   if (callback) callback()
+// }
 
-const submitFilter = (pagination: Pagination, callback?: AnyFn) => {
-  // storeFilter(filterBag)
-  pagination.page = 1
-  // if (callback) callback()
-}
+const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(
+  filterData,
+  filterConfig,
+  pagination,
+  columnsHidden
+)
 
 defineExpose({
   refresh: getList,
+})
+
+onMounted(() => {
+  loadStoredFilters()
+  getList()
 })
 </script>
 
 <template>
   <div>
     <SubjectFilter
-      @submit="submitFilter(pagination, getList)"
-      @reset="resetFilter(pagination, getList)"
+      @submit="submitFilter(getList)"
+      @reset="resetFilter(getList)"
     />
     <div>
       <div class="d-flex align-center">

@@ -9,7 +9,7 @@ import {
 } from '@/components/filter2/filterInjectionKeys.ts'
 import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common.ts'
 import { useI18n } from 'vue-i18n'
-import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+import { useFilterClearHelpers } from '@/composables/filter/filterFactory.ts'
 import {
   TimeIntervalSpecialOptions,
   type TimeIntervalToolsValue,
@@ -96,7 +96,7 @@ const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
-const { clearOne } = useFilterHelpers()
+const { clearOne } = useFilterClearHelpers()
 const { showValidationError } = useAlerts()
 
 const onClear = () => {

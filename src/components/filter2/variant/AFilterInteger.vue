@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useFilterHelpers } from '@/composables/filter/filterFactory'
+import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
 import { computed, inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { isString, isUndefined } from '@/utils/common'
@@ -73,7 +73,7 @@ const placeholderComputed = computed(() => {
   return ''
 })
 
-const { clearOne } = useFilterHelpers()
+const { clearOne } = useFilterClearHelpers()
 
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)

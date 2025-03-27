@@ -9,7 +9,7 @@ import {
   FilterSubmitResetCounterKey, FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys'
 import { isString, isUndefined } from '@/utils/common'
-import { useFilterHelpers } from '@/composables/filter/filterFactory'
+import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
 import type { DatetimeUTCNullable } from '@/types/common'
 import { dateTimePretty } from '@/utils/datetime'
 
@@ -65,7 +65,7 @@ const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
-const { clearOne } = useFilterHelpers()
+const { clearOne } = useFilterClearHelpers()
 
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)

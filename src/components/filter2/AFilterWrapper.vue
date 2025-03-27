@@ -14,7 +14,7 @@ import {
 import FiltersSelected from '@/components/filter2/FiltersSelected.vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { isUndefined } from '@/utils/common'
-import { useFilterHelpers } from '@/composables/filter/filterFactory'
+import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
 import { datatableSlotName } from '@/components/datatable/datatable.ts'
 import FilterDetailItem from '@/components/filter2/FilterDetailItem.vue'
 import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
@@ -26,11 +26,13 @@ withDefaults(
     enableTop?: boolean
     hideButtons?: boolean
     formName?: string
+    disableFilterUrlSync?: boolean
   }>(),
   {
     enableTop: false,
     hideButtons: false,
     formName: 'search',
+    disableFilterUrlSync: false,
   }
 )
 const emit = defineEmits<{
@@ -59,12 +61,11 @@ const submitFilter = () => {
   touched.value = false
   submitResetCounter.value++
   nextTick(() => {
-    // filterSelectedFuture.value.clear()
     emit('submit')
   })
 }
 
-const { clearAll } = useFilterHelpers()
+const { clearAll } = useFilterClearHelpers()
 
 const resetFilter = () => {
   touched.value = false
@@ -83,7 +84,6 @@ const toggleFilterDetail = () => {
 </script>
 
 <template>
-  {{ filterSelected }}
   <VForm
     :name="formName"
     @submit.prevent="submitFilter"

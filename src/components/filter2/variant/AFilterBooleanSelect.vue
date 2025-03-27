@@ -8,7 +8,7 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey, FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys'
-import { useFilterHelpers } from '@/composables/filter/filterFactory'
+import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
 
 interface BooleanSelectOption {
   value: 0 | 1 | -1
@@ -89,7 +89,7 @@ const items = computed<BooleanSelectOption[]>(() => {
   ]
 })
 
-const { clearOne } = useFilterHelpers()
+const { clearOne } = useFilterClearHelpers()
 
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)

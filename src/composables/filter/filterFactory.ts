@@ -1,5 +1,17 @@
-import { reactive } from 'vue'
-import { cloneDeep, isArray, isUndefined } from '@/utils/common'
+import { type Reactive, reactive, type Ref } from 'vue'
+import {
+  cloneDeep,
+  isArray,
+  isEmptyArray,
+  isEmptyObject,
+  isNull,
+  isObject,
+  isString,
+  isUndefined
+} from '@/utils/common'
+import type { Pagination } from '@/types/Pagination.ts'
+import type { AnyFn } from '@vueuse/core'
+import type { FilterBag } from '@/types/Filter.ts'
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,
@@ -70,7 +82,7 @@ function resolveValue<T>(value: T | undefined, fallback: T): T {
   return isUndefined(value) ? fallback : value
 }
 
-export function useFilterHelpers<
+export function useFilterClearHelpers<
   F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[],
 >() {
   const clearOne = (name: keyof FilterData<F>, filterData: FilterData<F>, filterConfig: FilterConfig<F>) => {
@@ -84,21 +96,123 @@ export function useFilterHelpers<
     }
   }
 
-  const resetFilter = (filterData: FilterData<F>, filterConfig: FilterConfig<F>) => {
-    clearAll(filterData, filterConfig)
-  }
-
-  const iterateFilterDataKeys = (filterData: FilterData<F>) => {
-    ;(Object.keys(filterData) as Array<keyof FilterData<F>>).forEach((key) => {
-      console.log(`Key: ${String(key)}, Value: ${filterData[key]}`)
-    })
-  }
-
   return {
     clearOne,
     clearAll,
+    // resetFilter,
+  }
+}
+
+export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
+  filterData: FilterData<F>,
+  filterConfig: FilterConfig<F>,
+  pagination: Reactive<Pagination>,
+  datatableColumnsHidden: Ref<string[]>,
+  storeId: string | undefined = undefined
+) {
+  const getFilterDataForStoring = () => {
+    const data: Record<string, AllowedFilterValues> = {}
+    for (const filterName in filterData) {
+      try {
+        const key = filterName as keyof FilterData<F>
+        const value = filterData[key]
+        if (
+          !isUndefined(value) &&
+          !isNull(value) &&
+          !isEmptyArray(value) &&
+          value !== filterConfig.fields[key].default
+        ) {
+          data[filterName] = value
+        }
+      } catch (e) {
+        //
+      }
+    }
+
+    return data
+  }
+
+  const END_FILTER_MARKER = '~'
+
+  const serializeFilters = (data: Record<string, AllowedFilterValues>): string => {
+    const params = new URLSearchParams(data as Record<string, string>)
+    if (params.size === 0) return ''
+    return params.toString() + END_FILTER_MARKER
+  }
+
+  const deserializeFilters = (hash: string): Record<string, AllowedFilterValues> => {
+    if (!hash) return {}
+    if (hash.startsWith('#')) hash = hash.substring(1)
+    if (!hash.endsWith(END_FILTER_MARKER)) {
+      const lastAmpersand = hash.lastIndexOf('&')
+      if (lastAmpersand !== -1) {
+        hash = hash.substring(0, lastAmpersand)
+      } else {
+        return {}
+      }
+    } else {
+      hash = hash.slice(0, -1)
+    }
+    return Object.fromEntries(new URLSearchParams(hash))
+  }
+
+  const updateLocationHash = (serialized: string) => {
+    window.location.hash = serialized
+  }
+
+  const parseLocationHash = (): Record<string, AllowedFilterValues> => {
+    return deserializeFilters(window.location.hash)
+  }
+
+  const storeFilterLocalStorage = (serialized: string) => {
+    if (!storeId || !localStorage) return
+    localStorage.setItem(storeId, serialized)
+  }
+
+  const loadFilterLocalStorage = () => {
+    if (!storeId || !localStorage) return {}
+    const stored = localStorage.getItem(storeId)
+    if (!stored || !isString(stored)) return {}
+    return deserializeFilters(stored)
+  }
+
+  const resetFilter = (callback?: AnyFn) => {
+    pagination.page = 1
+    if (storeId && localStorage) {
+      localStorage.removeItem(storeId)
+    }
+    window.location.hash = ''
+    if (callback) callback()
+  }
+
+  const submitFilter = (callback?: AnyFn) => {
+    const data = getFilterDataForStoring()
+    const serialized = serializeFilters(data)
+    updateLocationHash(serialized)
+    storeFilterLocalStorage(serialized)
+    pagination.page = 1
+    if (callback) callback()
+  }
+
+  const loadStoredFilters = () => {
+    let stored = parseLocationHash()
+    if (isEmptyObject(stored)) {
+      stored = loadFilterLocalStorage()
+    }
+    if (isEmptyObject(stored)) return false
+    for (const filterName in filterData) {
+      const key = filterName as keyof FilterData<F>
+      const value = stored[key]
+      if (isUndefined(value)) continue
+      filterData[key] = value
+    }
+    return true
+  }
+
+  return {
+    loadStoredFilters,
     resetFilter,
-    iterateFilterDataKeys,
+    submitFilter,
   }
 }
 
