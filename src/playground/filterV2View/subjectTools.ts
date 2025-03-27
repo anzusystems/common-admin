@@ -8,6 +8,8 @@ import type { Pagination } from '@/types/Pagination.ts'
 import type { IntegerId } from '@/types/common.ts'
 import { isUndefined } from '@/utils/common.ts'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
+import type { TimeIntervalToolsValue } from '@/components/filter2/variant/filterTimeIntervalTools.ts'
+import { TimeIntervalSpecialOptions } from '@/components/filter2/variant/filterTimeIntervalTools.ts'
 
 export const SubjectStatus = {
   Draft: 'draft',
@@ -179,3 +181,13 @@ export const useSubjectListActions = () => {
     listItems,
   }
 }
+
+export const allowedTimeIntervalValuesSubject: TimeIntervalToolsValue[] = [
+  1_440,
+  10_080,
+  40_320,
+  TimeIntervalSpecialOptions.CurrentMonth,
+  TimeIntervalSpecialOptions.LastMonth,
+  TimeIntervalSpecialOptions.Last3Months,
+  TimeIntervalSpecialOptions.Custom,
+]

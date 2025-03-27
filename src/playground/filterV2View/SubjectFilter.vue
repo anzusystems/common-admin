@@ -15,7 +15,11 @@ import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/Filte
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
-import { useSubjectLockType, useSubjectStatus } from '@/playground/filterV2View/subjectTools.ts'
+import {
+  allowedTimeIntervalValuesSubject,
+  useSubjectLockType,
+  useSubjectStatus
+} from '@/playground/filterV2View/subjectTools.ts'
 import AFilterTimeInterval from '@/components/filter2/variant/AFilterTimeInterval.vue'
 
 const emit = defineEmits<{
@@ -77,6 +81,7 @@ const { subjectLockTypeOptions } = useSubjectLockType()
       <AFilterTimeInterval
         name-from="publicPublishedAtFrom"
         name-until="publicPublishedAtUntil"
+        :allowed="allowedTimeIntervalValuesSubject"
       />
     </template>
   </AFilterWrapper>
