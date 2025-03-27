@@ -119,3 +119,7 @@ export const dateDiff = (date1: Date, date2: Date, unit: QUnitType | OpUnitType 
   const date2dayjs = dayjs(date2)
   return date1dayjs.diff(date2dayjs, unit)
 }
+
+export const isDatetimeUTC = (value: unknown): value is DatetimeUTC => {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3,6})?Z$/.test(value)
+}

@@ -71,13 +71,13 @@ const resetFilter = (pagination: Pagination, callback?: AnyFn) => {
   // if (storeId && localStorage) {
   //   localStorage.removeItem(storeId)
   // }
-  if (callback) callback()
+  // if (callback) callback()
 }
 
 const submitFilter = (pagination: Pagination, callback?: AnyFn) => {
   // storeFilter(filterBag)
   pagination.page = 1
-  if (callback) callback()
+  // if (callback) callback()
 }
 
 defineExpose({

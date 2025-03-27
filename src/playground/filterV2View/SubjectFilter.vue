@@ -40,6 +40,7 @@ const { subjectLockTypeOptions } = useSubjectLockType()
 </script>
 
 <template>
+  {{ filterData }}
   <AFilterWrapper
     @submit="emit('submit', { filterData, filterConfig })"
     @reset="emit('reset', { filterData, filterConfig })"
@@ -81,6 +82,13 @@ const { subjectLockTypeOptions } = useSubjectLockType()
       <AFilterTimeInterval
         name-from="publicPublishedAtFrom"
         name-until="publicPublishedAtUntil"
+        :allowed="allowedTimeIntervalValuesSubject"
+      />
+    </template>
+    <template #item.modifiedAtFrom>
+      <AFilterTimeInterval
+        name-from="modifiedAtFrom"
+        name-until="modifiedAtUntil"
         :allowed="allowedTimeIntervalValuesSubject"
       />
     </template>

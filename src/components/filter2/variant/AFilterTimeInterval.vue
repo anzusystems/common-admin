@@ -7,19 +7,21 @@ import {
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys.ts'
-import { isNull, isString, isUndefined } from '@/utils/common.ts'
+import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common.ts'
 import { useI18n } from 'vue-i18n'
 import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 import {
   TimeIntervalSpecialOptions,
   type TimeIntervalToolsValue,
+  useFilterTimeIntervalValidators,
   useTimeIntervalOptions,
 } from '@/components/filter2/variant/filterTimeIntervalTools.ts'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import type { DatetimeUTCNullable } from '@/types/common.ts'
 import ARow from '@/components/ARow.vue'
-import ADatetime from '@/components/datetime/ADatetime.vue'
+import { dateTimeNow, dateTimePretty, isDatetimeUTC } from '@/utils/datetime.ts'
+import { useAlerts } from '@/composables/system/alerts.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -63,16 +65,6 @@ if (
   throw new Error('Incorrect provide/inject config.')
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { timeIntervalOptions } = useTimeIntervalOptions(props.allowed)
-const modelInternal = ref<TimeIntervalToolsValue>(null)
-const dialogCustom = ref(false)
-const dialogData = ref<{ from: DatetimeUTCNullable; until: DatetimeUTCNullable }>({
-  from: null,
-  until: null,
-})
-const displayFromTo = ref(false)
-
 const modelValue = computed({
   get() {
     return filterData[props.nameFrom]
@@ -84,6 +76,18 @@ const modelValue = computed({
   },
 })
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { timeIntervalOptions, getTimeIntervalOption } = useTimeIntervalOptions(props.allowed)
+const modelInternal = ref<TimeIntervalToolsValue>(null)
+const dialogCustom = ref(false)
+const dialogData = ref<{ from: DatetimeUTCNullable; until: DatetimeUTCNullable }>({
+  from: null,
+  until: dateTimeNow(),
+})
+const displayFromTo = ref(false)
+
+const { v$ } = useFilterTimeIntervalValidators(dialogData)
+
 const filterConfigCurrent = computed(() => filterConfig.fields[props.nameFrom])
 
 const { t } = useI18n()
@@ -93,18 +97,24 @@ const label = computed(() => {
 })
 
 const { clearOne } = useFilterHelpers()
+const { showValidationError } = useAlerts()
 
 const onClear = () => {
-  console.log('onClear')
   displayFromTo.value = false
   modelInternal.value = null
   clearField()
 }
 
 const onDialogConfirm = () => {
+  v$.value.$touch()
+  if (v$.value.$invalid) {
+    showValidationError()
+    return
+  }
   displayFromTo.value = true
   dialogCustom.value = false
-  console.log('onDialogConfirm')
+  filterData[props.nameUntil] = dialogData.value.until
+  modelValue.value = dialogData.value.from
 }
 
 const onDialogClose = () => {
@@ -118,22 +128,68 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
-  if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
-  filterSelected.value.set(props.nameFrom, [{ title: modelValue.value, value: modelValue.value }])
+  if (isArray(modelValue.value) || isBoolean(modelValue.value)) return
+  if (isNull(modelValue.value) || isUndefined(modelValue.value)) {
+    filterSelected.value.delete(props.nameFrom)
+    return
+  }
+  const found = getTimeIntervalOption(modelValue.value as TimeIntervalToolsValue)
+  if (!found && isDatetimeUTC(modelValue.value)) {
+    const customOption = getTimeIntervalOption(TimeIntervalSpecialOptions.Custom)!
+    filterSelected.value.set(props.nameFrom, [
+      {
+        title:
+          customOption.title +
+          ': ' +
+          dateTimePretty(dialogData.value.from) +
+          ' - ' +
+          dateTimePretty(dialogData.value.until),
+        value: modelValue.value,
+      },
+    ])
+    return
+  }
+  if (!found) return
+  filterSelected.value.set(props.nameFrom, [{ title: found.title, value: modelValue.value }])
 }
 
-watch(
-  modelInternal,
-  (newValue) => {
-    console.log('modelInternal', newValue)
-    if (newValue === TimeIntervalSpecialOptions.Custom) {
-      dialogData.value = { from: null, until: null }
-      dialogCustom.value = true
-      return
-    }
-  },
-  { immediate: true }
-)
+const onEditInterval = (clear = false) => {
+  v$.value.$reset()
+  if (clear) {
+    dialogData.value.from = null
+    dialogData.value.until = dateTimeNow()
+  }
+  dialogCustom.value = true
+}
+
+watch(modelInternal, (newValue) => {
+  if (newValue === TimeIntervalSpecialOptions.Custom) {
+    onEditInterval(true)
+    return
+  }
+  filterData[props.nameUntil] = null
+  modelValue.value = newValue
+})
+
+watch(modelValue, (newValue) => {
+  if (isArray(newValue) || isBoolean(newValue)) return
+  displayFromTo.value = false
+  if (isUndefined(newValue) || isNull(newValue)) {
+    modelInternal.value = null
+    return
+  }
+  const found = getTimeIntervalOption(modelValue.value as TimeIntervalToolsValue)
+  const filterDataUntil = filterData[props.nameUntil]
+  if (!found && isDatetimeUTC(modelValue.value) && isDatetimeUTC(filterDataUntil)) {
+    modelInternal.value = TimeIntervalSpecialOptions.Custom
+    dialogData.value.from = modelValue.value
+    dialogData.value.until = filterDataUntil
+    displayFromTo.value = true
+  }
+  if (found) {
+    modelInternal.value = found.value
+  }
+})
 
 watch(submitResetCounter, () => {
   updateSelected()
@@ -141,26 +197,20 @@ watch(submitResetCounter, () => {
 </script>
 
 <template>
-  <div
+  <VTextarea
     v-if="displayFromTo"
-    class="d-flex align-center justify-space-between"
-  >
-    <div class="text-caption">
-      <span class="text-medium-emphasis">{{ label }}</span><br>
-      <ADatetime :date-time="dialogData.from" /> - <ADatetime :date-time="dialogData.until" />
-    </div>
-    <div>
-      <VIcon
-        class="mr-1"
-        icon="mdi-pencil-circle opacity-50"
-        @click.stop="onClear"
-      />
-      <VIcon
-        icon="mdi-close-circle opacity-50"
-        @click.stop="onClear"
-      />
-    </div>
-  </div>
+    :label="label"
+    :model-value="dateTimePretty(dialogData.from) + ' - ' + dateTimePretty(dialogData.until)"
+    readonly
+    rows="1"
+    auto-grow
+    hide-details
+    append-inner-icon="mdi-menu-down"
+    clearable
+    class="cursor-pointer"
+    @click:clear.stop="onClear"
+    @click.stop="onEditInterval()"
+  />
   <VSelect
     v-else
     v-model="modelInternal"
@@ -190,13 +240,17 @@ watch(submitResetCounter, () => {
         <ARow>
           <AFormDatetimePicker
             v-model="dialogData.from"
+            :v="v$.dialogData.from"
             label="From"
+            required
           />
         </ARow>
         <ARow>
           <AFormDatetimePicker
             v-model="dialogData.until"
+            :v="v$.dialogData.until"
             label="Until"
+            required
           />
         </ARow>
       </VCardText>
@@ -218,3 +272,12 @@ watch(submitResetCounter, () => {
     </VCard>
   </VDialog>
 </template>
+
+<style lang="scss" scoped>
+.v-text-field.cursor-pointer {
+  ::v-deep(.v-field),
+  ::v-deep(.v-field__input) {
+    cursor: pointer;
+  }
+}
+</style>

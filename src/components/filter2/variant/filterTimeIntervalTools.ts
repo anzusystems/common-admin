@@ -1,7 +1,10 @@
-import { computed } from 'vue'
+import { computed, type Ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject.ts'
 import { isNull, isUndefined } from '@/utils/common.ts'
 import { useI18n } from 'vue-i18n'
+import { useValidate } from '@/validators/vuelidate/useValidate.ts'
+import useVuelidate from '@vuelidate/core'
+import type { DatetimeUTCNullable } from '@/types/common.ts'
 
 /** note: number value represents time interval in minutes, null represent unselected */
 export type TimeIntervalToolsValue = number | TimeIntervalSpecialOptionsType | null
@@ -72,3 +75,41 @@ export function useTimeIntervalOptions(allowed: TimeIntervalToolsValue[] | undef
     getTimeIntervalOption,
   }
 }
+
+export function useFilterTimeIntervalValidators(
+  dialogData: Ref<{
+    from: DatetimeUTCNullable
+    until: DatetimeUTCNullable
+  }>
+) {
+  // const { t } = useI18n()
+  const { datesCompare, required } = useValidate()
+
+  const fromComputed = computed(() => {
+    return dialogData.value.from
+  })
+
+  const untilComputed = computed(() => {
+    return dialogData.value.until
+  })
+
+  const rules = {
+    dialogData: {
+      from: {
+        required,
+        datesCompare: datesCompare(untilComputed, 'Until', 'onOrBefore'),
+      },
+      until: {
+        required,
+        datesCompare: datesCompare(fromComputed, 'From', 'laterThan'),
+      },
+    },
+  }
+
+  const v$ = useVuelidate(rules, { dialogData }, { $scope: 'AFilterTimeIntervalScope' })
+
+  return {
+    v$,
+  }
+}
+
