@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useFilterBookmarkStore } from '@/components/filter2/bookmarksStore.ts'
 import { useUserAdminConfigApi } from '@/services/api/userAdminConfig/userAdminConfig.ts'
 import type { AxiosInstance } from 'axios'
@@ -99,10 +99,10 @@ const itemsComputed = computed(() => {
   }
 })
 
-nextTick(() => {
-  if (toolbarRef.value) {
-    toolbarWidth.value = toolbarRef.value.clientWidth
-  }
+watch(loading, (newValue) => {
+  if (newValue === true || isNull(toolbarRef.value)) return
+  toolbarWidth.value = toolbarRef.value.clientWidth
+  calculateVisible(toolbarWidth.value)
 })
 
 onMounted(() => {
@@ -113,7 +113,7 @@ onMounted(() => {
 <template>
   <div
     ref="toolbarRef"
-    class="w-100 d-flex overflow-hidden"
+    class="w-100 d-flex overflow-hidden align-center"
   >
     <div v-if="loading" />
     <template v-else>
@@ -138,7 +138,8 @@ onMounted(() => {
         <template #activator="{ props: activatorProps }">
           <VBtn
             icon="mdi-menu-down"
-            size="small"
+            size="x-small"
+            variant="text"
             v-bind="activatorProps"
           />
         </template>
