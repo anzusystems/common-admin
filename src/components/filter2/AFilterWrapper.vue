@@ -13,13 +13,14 @@ import {
 } from '@/components/filter2/filterInjectionKeys'
 import FiltersSelected from '@/components/filter2/FiltersSelected.vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { isUndefined } from '@/utils/common'
+import { isDefined, isUndefined } from '@/utils/common'
 import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
 import { datatableSlotName } from '@/components/datatable/datatable.ts'
 import FilterDetailItem from '@/components/filter2/FilterDetailItem.vue'
 import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
 import FilterBookmarks from '@/components/filter2/FilterBookmarks.vue'
-import FilterBookmarkDialog from '@/components/filter2/FilterBookmarkDialog.vue'
+import type { IntegerId } from '@/types/common.ts'
+import type { AxiosInstance } from 'axios'
 
 withDefaults(
   defineProps<{
@@ -27,12 +28,20 @@ withDefaults(
     hideButtons?: boolean
     formName?: string
     disableFilterUrlSync?: boolean
+    system?: string | undefined
+    user?: IntegerId | undefined
+    client?: (() => AxiosInstance) | undefined
+    bookmarkSystemResource?: string | undefined
   }>(),
   {
     enableTop: false,
     hideButtons: false,
     formName: 'search',
     disableFilterUrlSync: false,
+    system: undefined,
+    user: undefined,
+    client: undefined,
+    bookmarkSystemResource: undefined,
   }
 )
 const emit = defineEmits<{
@@ -42,7 +51,6 @@ const emit = defineEmits<{
 
 const showDetail = defineModel<boolean>('showDetail', { default: false, required: false })
 const touched = defineModel<boolean>('touched', { default: false, required: false })
-const bookmarkDialog = defineModel<boolean>('bookmarkDialog', { default: false, required: false })
 
 provide(FilterTouchedKey, touched)
 const filterConfig = inject(FilterConfigKey)
@@ -97,10 +105,15 @@ const toggleFilterDetail = () => {
       </VCol>
     </VRow>
     <VRow dense>
-      <VCol>
+      <VCol v-if="bookmarkSystemResource && user && system && isDefined(client)">
         <slot name="bookmarks">
           <div class="d-flex flex-wrap align-center">
-            <FilterBookmarks />
+            <FilterBookmarks
+              :client="client"
+              :system="system"
+              :user="user"
+              :system-resource="bookmarkSystemResource"
+            />
           </div>
         </slot>
       </VCol>
@@ -119,34 +132,6 @@ const toggleFilterDetail = () => {
           </div>
           <FiltersSelected />
         </div>
-        <VSlideYTransition>
-          <div
-            v-show="showDetail"
-            class="mt-6 pa-4 system-border-a"
-          >
-            <slot name="detail">
-              <VRow>
-                <VCol
-                  v-for="field in filterConfig.fields"
-                  :key="field.name"
-                  :cols="field.render.xs"
-                  :sm="field.render.sm"
-                  :md="field.render.md"
-                  :lg="field.render.lg"
-                  :xl="field.render.xl"
-                  :class="{ 'd-none': field.render.skip }"
-                >
-                  <slot
-                    :name="datatableSlotName(field.name)"
-                    :item-config="field"
-                  >
-                    <FilterDetailItem :name="field.name" />
-                  </slot>
-                </VCol>
-              </VRow>
-            </slot>
-          </div>
-        </VSlideYTransition>
       </VCol>
       <VCol
         v-if="!hideButtons"
@@ -156,14 +141,46 @@ const toggleFilterDetail = () => {
         <slot name="buttons">
           <AFilterSubmitButton :touched="touched" />
           <AFilterResetButton @reset="resetFilter" />
-          <AFilterBookmarkButton @on-click="bookmarkDialog = true" />
-          <FilterBookmarkDialog
-            v-if="bookmarkDialog"
-            @on-close="bookmarkDialog = false"
+          <AFilterBookmarkButton
+            v-if="bookmarkSystemResource && user && system && isDefined(client)"
+            :client="client"
+            :system="system"
+            :user="user"
+            :system-resource="bookmarkSystemResource"
           />
         </slot>
       </VCol>
     </VRow>
+    <div>
+      <VSlideYTransition>
+        <div
+          v-show="showDetail"
+          class="mt-6 pa-4 system-border-a"
+        >
+          <slot name="detail">
+            <VRow>
+              <VCol
+                v-for="field in filterConfig.fields"
+                :key="field.name"
+                :cols="field.render.xs"
+                :sm="field.render.sm"
+                :md="field.render.md"
+                :lg="field.render.lg"
+                :xl="field.render.xl"
+                :class="{ 'd-none': field.render.skip }"
+              >
+                <slot
+                  :name="datatableSlotName(field.name)"
+                  :item-config="field"
+                >
+                  <FilterDetailItem :name="field.name" />
+                </slot>
+              </VCol>
+            </VRow>
+          </slot>
+        </div>
+      </VSlideYTransition>
+    </div>
   </VForm>
 </template>
 

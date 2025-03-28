@@ -1,0 +1,56 @@
+import type { AxiosInstance } from 'axios'
+import type { Pagination } from '@/types/Pagination.ts'
+import { apiFetchList } from '@/services/api/v2/apiFetchList.ts'
+import { apiCreateOne } from '@/services/api/v2/apiCreateOne.ts'
+import { apiUpdateOne } from '@/services/api/v2/apiUpdateOne.ts'
+import type { IntegerId } from '@/types/common.ts'
+import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
+import { apiDeleteOne } from '@/services/api/v2/apiDeleteOne.ts'
+import { apiFetchOne } from '@/services/api/apiFetchOne.ts'
+import type { UserAdminConfig } from '@/types/UserAdminConfig.ts'
+import { apiAnyRequest } from '@/services/api/v2/apiAnyRequest.ts'
+
+const END_POINT = '/adm/v1/user-admin-config'
+const ENTITY = 'userAdminConfig'
+
+export function useUserAdminConfigApi(
+  client: () => AxiosInstance,
+  system: string,
+  entity: string = ENTITY,
+  endPoint: string = END_POINT
+) {
+  const fetchUserAdminConfigList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+    apiFetchList<UserAdminConfig[]>(client, endPoint, {}, pagination, filterData, filterConfig, system, entity)
+
+  const fetchUserAdminConfig = (id: IntegerId) =>
+    apiFetchOne<UserAdminConfig>(client, END_POINT + '/:id', { id }, system, ENTITY)
+
+  const createUserAdminConfig = (data: UserAdminConfig) =>
+    apiCreateOne<UserAdminConfig>(client, data, endPoint, {}, system, entity)
+
+  const updateUserAdminConfig = (id: IntegerId, data: UserAdminConfig) =>
+    apiUpdateOne<UserAdminConfig>(client, data, endPoint + '/:id', { id }, system, entity)
+
+  const deleteUserAdminConfig = (id: IntegerId) =>
+    apiDeleteOne<UserAdminConfig>(client, endPoint + '/:id', { id }, system, entity)
+
+  const updateUserAdminConfigPositions = (ids: IntegerId[]) =>
+    apiAnyRequest<{ userAdminConfigs: IntegerId[] }, any>(
+      client,
+      'PATCH',
+      endPoint + '/update-positions',
+      undefined,
+      { userAdminConfigs: ids },
+      system,
+      entity
+    )
+
+  return {
+    fetchUserAdminConfigList,
+    fetchUserAdminConfig,
+    createUserAdminConfig,
+    updateUserAdminConfig,
+    deleteUserAdminConfig,
+    updateUserAdminConfigPositions,
+  }
+}

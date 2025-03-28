@@ -109,17 +109,7 @@ onMounted(() => {
           <ADatetime :date-time="item.createdAt" />
         </template>
         <template #item.actions="{ item }: { item: DatatableItem }">
-          <ATableEditButton
-            :record-id="item.id"
-            route-name="view-filters2"
-            ac
-            button-class="btn--a-table-action mr-1"
-          />
-          <ATableDetailButton
-            :record-id="item.id"
-            route-name="view-filters2"
-            button-class="btn--a-table-action mr-1"
-          />
+          {{ item.id }}
         </template>
         <template #bottom>
           <ADatatablePagination

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
+import FilterBookmarkDialog from '@/components/filter2/FilterBookmarkDialog.vue'
 
 withDefaults(
   defineProps<{
@@ -14,13 +15,12 @@ withDefaults(
     dataCy: 'filter-bookmark',
   }
 )
-const emit = defineEmits<{
-  (e: 'onClick'): void
-}>()
+
+const dialog = defineModel<boolean>('dialog', { default: false, required: false })
 
 const onClick = (event: Event) => {
   eventClickBlur(event)
-  emit('onClick')
+  dialog.value = true
 }
 
 const { t } = useI18n()
@@ -38,7 +38,7 @@ const { t } = useI18n()
   >
     <VIcon
       color="grey darken-1"
-      icon="mdi-bookmark-plus-outline"
+      icon="mdi-bookmark-outline"
     />
     <VTooltip
       activator="parent"
@@ -47,4 +47,8 @@ const { t } = useI18n()
       {{ t(tooltipT) }}
     </VTooltip>
   </VBtn>
+  <FilterBookmarkDialog
+    v-if="dialog"
+    @on-close="dialog = false"
+  />
 </template>

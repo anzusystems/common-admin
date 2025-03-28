@@ -21,6 +21,7 @@ import {
   useSubjectStatus
 } from '@/playground/filterV2View/subjectTools.ts'
 import AFilterTimeInterval from '@/components/filter2/variant/AFilterTimeInterval.vue'
+import { cmsClient } from '@/playground/mock/cmsClient.ts'
 
 const emit = defineEmits<{
   (e: 'submit', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
@@ -41,6 +42,10 @@ const { subjectLockTypeOptions } = useSubjectLockType()
 
 <template>
   <AFilterWrapper
+    :client="cmsClient"
+    system="cms"
+    :user="10001039"
+    bookmark-system-resource="subject"
     @submit="emit('submit', { filterData, filterConfig })"
     @reset="emit('reset', { filterData, filterConfig })"
   >
