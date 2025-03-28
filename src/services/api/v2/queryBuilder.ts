@@ -2,6 +2,12 @@ import { ref } from 'vue'
 import { isArray, isBoolean, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import type { FilterVariant } from '@/types/Filter'
 import type { AllowedFilterValues, FilterConfig, FilterData, FilterField } from '@/composables/filter/filterFactory'
+import type { DatetimeUTCNullable } from '@/types/common.ts'
+import {
+  TimeIntervalSpecialOptions,
+  type TimeIntervalToolsValue,
+} from '@/components/filter2/variant/filterTimeIntervalTools.ts'
+import { dateModifyMinutes, dateTimeNow, dateTimeToDate, dateToUtc, getMonthInterval } from '@/utils/datetime.ts'
 
 /**
  * Docs: /doc/Admin-Cms-Doc/Filters.md
@@ -31,6 +37,54 @@ export function useApiQueryBuilder() {
   const queryAddFilter = (filterVariant: FilterVariant, field: string, value: string | number | boolean): void => {
     if (isString(value) && value.length === 0) return
     q.value.push('filter_' + filterVariant + '[' + field + ']=' + formatValue(value))
+  }
+
+  const resolveTimeIntervalFilter = (
+    fromName: string,
+    untilName: string,
+    filterData: FilterData<any>,
+    filterConfig: FilterConfig<any>,
+    mandatory: boolean
+  ): null | {
+    from: DatetimeUTCNullable
+    until: DatetimeUTCNullable
+  } => {
+    let fromValue = filterData[fromName] as TimeIntervalToolsValue
+    let untilValue = filterData[untilName] as DatetimeUTCNullable
+    if (isNull(fromValue) && mandatory) {
+      fromValue = filterConfig.fields[fromName].default as TimeIntervalToolsValue
+    }
+    if (isNull(untilValue) && mandatory) {
+      untilValue = filterConfig.fields[fromName].default as DatetimeUTCNullable
+    }
+    const now = dateTimeNow()
+    const nowDate = dateTimeToDate(now)
+    switch (fromValue) {
+      case TimeIntervalSpecialOptions.CurrentMonth: {
+        return getMonthInterval(nowDate, 'utc', 0, false)
+      }
+      case TimeIntervalSpecialOptions.LastMonth: {
+        return getMonthInterval(nowDate, 'utc', -1, false)
+      }
+      case TimeIntervalSpecialOptions.Last3Months: {
+        return getMonthInterval(nowDate, 'utc', -2, true)
+      }
+      case TimeIntervalSpecialOptions.Custom: {
+        return {
+          from: fromValue,
+          until: untilValue,
+        }
+      }
+      default: {
+        if (isNumber(fromValue)) {
+          return {
+            from: dateToUtc(dateModifyMinutes(fromValue * -1, nowDate)),
+            until: now,
+          }
+        }
+      }
+    }
+    return null
   }
 
   const getValue = (
@@ -82,6 +136,26 @@ export function useApiQueryBuilder() {
       const filterFieldValue = filterData[filterName] as AllowedFilterValues
       const filterFieldConfig = filterConfig.fields[filterName]
       if (isUndefined(filterFieldConfig) || filterFieldConfig.exclude) {
+        continue
+      }
+      if (filterFieldConfig.type === 'timeInterval' && !isUndefined(filterFieldConfig.related)) {
+        const data = resolveTimeIntervalFilter(
+          filterName,
+          filterFieldConfig.related,
+          filterData,
+          filterConfig,
+          filterFieldConfig.mandatory
+        )
+        if (isNull(data)) {
+          continue
+        }
+        if (isSearchApi) {
+          queryAdd(filterName, data.from)
+          queryAdd(filterFieldConfig.related, data.until)
+          continue
+        }
+        if (data.from) queryAddFilter('gte', filterName, data.from)
+        if (data.until) queryAddFilter('lte', filterFieldConfig.related, data.until)
         continue
       }
       const value = getValue(filterFieldValue, filterFieldConfig)

@@ -41,7 +41,7 @@ const innerFilter = reactive({
     ...makeFilter({ name: 'id' }),
   },
   title: {
-    ...makeFilter({ name: 'title', variant: 'startsWith', field: 'texts.title' }),
+    ...makeFilter({ name: 'title', variant: 'startsWith', apiName: 'texts.title' }),
   },
 })
 </script>

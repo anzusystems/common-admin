@@ -10,24 +10,24 @@ const filter = reactive({
     ...makeFilter({ name: 'id' }),
   },
   title: {
-    ...makeFilter({ name: 'title', variant: 'startsWith', field: 'texts.title' }),
+    ...makeFilter({ name: 'title', variant: 'startsWith', apiName: 'texts.title' }),
   },
   startOfVotingFrom: {
     ...makeFilter({
       name: 'startOfVotingFrom',
       variant: 'gte',
-      field: 'dates.startOfVoting',
+      apiName: 'dates.startOfVoting',
     }),
   },
   startOfVotingTo: {
     ...makeFilter({
       name: 'startOfVotingTo',
       variant: 'lte',
-      field: 'dates.startOfVoting',
+      apiName: 'dates.startOfVoting',
     }),
   },
   displayType: {
-    ...makeFilter({ name: 'displayType', variant: 'in', field: 'attributes.displayType' }),
+    ...makeFilter({ name: 'displayType', variant: 'in', apiName: 'attributes.displayType' }),
   },
 })
 

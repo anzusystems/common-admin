@@ -26,7 +26,7 @@ const filter = reactive({
     ...makeFilter({ name: 'title', variant: 'contains', advanced: true }),
   },
   blog: {
-    ...makeFilter({ name: 'blog', variant: 'in', field: 'blogId', advanced: true }),
+    ...makeFilter({ name: 'blog', variant: 'in', apiName: 'blogId', advanced: true }),
   },
   url: {
     ...makeFilter({ name: 'url', advanced: true }),
@@ -34,7 +34,7 @@ const filter = reactive({
   publishedAtFrom: {
     ...makeFilter({
       name: 'publishedAtFrom',
-      field: 'publishedAt',
+      apiName: 'publishedAt',
       variant: 'gte',
       default: dateTimeStartOfDay(-100),
       mandatory: true,
@@ -44,7 +44,7 @@ const filter = reactive({
   publishedAtUntil: {
     ...makeFilter({
       name: 'publishedAtUntil',
-      field: 'publishedAt',
+      apiName: 'publishedAt',
       variant: 'lte',
       default: dateTimeEndOfDay(),
       mandatory: true,

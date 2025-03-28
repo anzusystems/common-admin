@@ -36,11 +36,12 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
             (options?.system && options?.subject && filter.name
               ? `${options.system}.${options.subject}.filter.${filter.name}`
               : undefined),
-          field: resolveValue(filter.field, ''),
+          apiName: resolveValue(filter.apiName, ''),
           clearable: resolveValue(filter.clearable, true),
           mandatory: resolveValue(filter.mandatory, false),
           multiple: isArray(defaultValue),
           advanced: resolveValue(filter.advanced, false),
+          related: resolveValue(filter.related, undefined),
           exclude: resolveValue(filter.exclude, false),
           default: defaultValue,
           render: { ...defaultRenderOptions, ...resolveValue(filter.render, {}) },
@@ -271,11 +272,12 @@ export interface MakeFilterOption<TName extends string = string> {
   type?: FilterType
   variant?: FilterVariant
   titleT?: string
-  field?: string
+  apiName?: string
   clearable?: boolean
   mandatory?: boolean
   advanced?: boolean
   exclude?: boolean
+  related?: string | undefined
   render?: Partial<FilerRenderOptions>
 }
 
@@ -285,12 +287,13 @@ export interface FilterField {
   variant: FilterVariant
   titleT?: string
   default: AllowedFilterValues
-  field: string
+  apiName: string
   clearable: boolean
   mandatory: boolean
   multiple: boolean
   advanced: boolean
   exclude: boolean
+  related: string | undefined
   render: FilerRenderOptions
 }
 

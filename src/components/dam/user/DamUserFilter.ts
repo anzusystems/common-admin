@@ -14,7 +14,7 @@ const filter = reactive({
     ...makeFilter({ name: 'enabled' }),
   },
   lastName: {
-    ...makeFilter({ name: 'lastName', variant: 'startsWith', field: 'person.lastName' }),
+    ...makeFilter({ name: 'lastName', variant: 'startsWith', apiName: 'person.lastName' }),
   },
   permissionGroups: {
     ...makeFilter({ name: 'permissionGroups', variant: 'custom', multiple: true, default: [] }),

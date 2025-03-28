@@ -89,10 +89,10 @@ export function useSubjectRubricInnerFilter() {
   const filterFields = [
     { name: 'id' as const, variant: 'in' },
     { name: 'text' as const },
-    { name: 'site' as const, field: 'siteIds' },
-    { name: 'siteGroup' as const, field: 'siteGroupIds' },
-    { name: 'desk' as const, field: 'deskIds' },
-    { name: 'linkedList' as const, field: 'linkedListId' },
+    { name: 'site' as const, apiName: 'siteIds' },
+    { name: 'siteGroup' as const, apiName: 'siteGroupIds' },
+    { name: 'desk' as const, apiName: 'deskIds' },
+    { name: 'linkedList' as const, apiName: 'linkedListId' },
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(

@@ -57,7 +57,7 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 export function useSubjectDeskInnerFilter() {
   const filterFields = [
     { name: 'id' },
-    { name: 'ids', variant: 'in', field: 'id' },
+    { name: 'ids', variant: 'in', apiName: 'id' },
     { name: 'name', variant: 'startsWith' },
   ] satisfies readonly MakeFilterOption[]
 

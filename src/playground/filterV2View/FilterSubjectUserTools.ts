@@ -59,7 +59,7 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 export function useSubjectUserInnerFilter() {
   const filterFields = [
     { name: 'id' as const, variant: 'in' },
-    { name: 'lastName' as const, variant: 'startsWith', field: 'person.lastName' },
+    { name: 'lastName' as const, variant: 'startsWith', apiName: 'person.lastName' },
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(

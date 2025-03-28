@@ -192,7 +192,7 @@ const handleMetadataValidationError = (error: any, assetType: DamAssetTypeType, 
     const found = configAssetCustomFormElements[assetType].find((item) => item.property === field)
     if (found) {
       items.push({
-        field: found.name,
+        apiName: found.name,
         errors: values,
       })
     }

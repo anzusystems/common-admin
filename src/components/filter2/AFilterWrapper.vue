@@ -40,7 +40,7 @@ const emit = defineEmits<{
   (e: 'reset'): void
 }>()
 
-const showDetail = defineModel<boolean>('showDetail', { default: true, required: false })
+const showDetail = defineModel<boolean>('showDetail', { default: false, required: false })
 const touched = defineModel<boolean>('touched', { default: false, required: false })
 const bookmarkDialog = defineModel<boolean>('bookmarkDialog', { default: false, required: false })
 

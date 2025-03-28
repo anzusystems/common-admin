@@ -59,20 +59,6 @@ const sortByChange = (option: DatatableOrderingOption) => {
   getList()
 }
 
-// const resetFilter = (pagination: Pagination, callback?: AnyFn) => {
-//   pagination.page = 1
-//   // if (storeId && localStorage) {
-//   //   localStorage.removeItem(storeId)
-//   // }
-//   if (callback) callback()
-// }
-
-// const submitFilter = (pagination: Pagination, callback?: AnyFn) => {
-//   // storeFilter(filterBag)
-//   pagination.page = 1
-//   if (callback) callback()
-// }
-
 const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(
   filterData,
   filterConfig,

@@ -109,7 +109,7 @@ export function useSubjectAuthorInnerFilter() {
   const filterFields = [
     { name: 'id' as const },
     { name: 'discriminator' as const },
-    { name: 'siteGroup' as const, field: 'siteGroupId' },
+    { name: 'siteGroup' as const, apiName: 'siteGroupId' },
     { name: 'text' as const },
   ] satisfies readonly MakeFilterOption[]
 
