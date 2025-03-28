@@ -67,7 +67,7 @@
     "pinia": "3.0.1",
     "postcss": "^8.5.3",
     "postcss-html": "^1.8.0",
-    "postcss-prefix-selector": "^2.1.0",
+    "postcss-prefix-selector": "^2.1.1",
     "prettier": "^3.5.3",
     "rusha": "^0.8.14",
     "sass": "^1.86.0",

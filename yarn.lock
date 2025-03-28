@@ -229,7 +229,7 @@ __metadata:
     pinia: "npm:3.0.1"
     postcss: "npm:^8.5.3"
     postcss-html: "npm:^1.8.0"
-    postcss-prefix-selector: "npm:^2.1.0"
+    postcss-prefix-selector: "npm:^2.1.1"
     prettier: "npm:^3.5.3"
     rusha: "npm:^0.8.14"
     sass: "npm:^1.86.0"
@@ -6181,12 +6181,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-prefix-selector@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "postcss-prefix-selector@npm:2.1.0"
+"postcss-prefix-selector@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "postcss-prefix-selector@npm:2.1.1"
   peerDependencies:
     postcss: ^8.0.0
-  checksum: 10/cb530fce0a8703640c853ae57894bd80a982f4933a4d4b1833f007eb1c7211f51a6f48d4f1e4f348b37b3a890411d9f106eecf91f34efcecb00d9ac14e24f66b
+  checksum: 10/d8f6758713a9a1f3d5e66eb29e067e9ab8de8aec2c7801b806e896a1f58e6f28c86d406ae09c5d85608c8172ad396bd3c5b3e354f9a5c8b1d047f7a1714d4abe
   languageName: node
   linkType: hard
 
