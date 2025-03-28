@@ -15,6 +15,8 @@ import { useAlerts } from '@/composables/system/alerts.ts'
 import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactory.ts'
 import { UserAdminConfigLayoutType, UserAdminConfigType } from '@/types/UserAdminConfig.ts'
 import { useDisplay } from 'vuetify'
+import useVuelidate from '@vuelidate/core'
+import { useValidate } from '@/validators/vuelidate/useValidate.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -37,11 +39,20 @@ const activeTab = ref<'add' | 'manage'>('add')
 const customName = ref('')
 const saveButtonLoading = ref(false)
 
+const { required, maxLength } = useValidate()
+const rules = {
+  customName: {
+      required,
+      maxLength: maxLength(100),
+    },
+}
+const v$ = useVuelidate(rules, { customName }, { $stopPropagation: true })
+
 const filterBookmarkStore = useFilterBookmarkStore()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { createUserAdminConfig } = useUserAdminConfigApi(props.client, props.system)
 const { t } = useI18n()
-const { showErrorsDefault } = useAlerts()
+const { showErrorsDefault, showValidationError } = useAlerts()
 const { createDefaultUserAdminConfig } = useUserAdminConfigFactory()
 const { mobile } = useDisplay()
 
@@ -63,6 +74,7 @@ const addBookmark = async () => {
   config.position = 0 // todo
   try {
     await createUserAdminConfig(config)
+    emit('onClose')
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -72,6 +84,11 @@ const addBookmark = async () => {
 
 const onConfirm = () => {
   if (activeTab.value === 'add') {
+    v$.value.$touch()
+    if (v$.value.$invalid) {
+      showValidationError()
+      return
+    }
     addBookmark()
   } else if (activeTab.value === 'manage') {
     // todo
@@ -109,6 +126,7 @@ const onConfirm = () => {
             <AFormTextField
               v-model="customName"
               label="Name"
+              :v="v$.customName"
             />
           </ARow>
           <ARow>
@@ -143,6 +161,7 @@ const onConfirm = () => {
         </ABtnTertiary>
         <ABtnPrimary
           data-cy="button-confirm"
+          :loading="saveButtonLoading"
           @click.stop="onConfirm"
         >
           {{ t('common.button.confirm') }}
