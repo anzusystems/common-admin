@@ -17,11 +17,15 @@ interface CacheItem<T = UserAdminConfig> {
 }
 
 const MAX_BOOKMARKS = 3
-const MAX_BOOKMARK_ITEMS = 25
+export const MAX_BOOKMARK_ITEMS = 8
 
 export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
   const bookmarks = ref(new Map<string, CacheItem>())
   const error = ref(false)
+
+  function generateKey(system: string, layoutType: UserAdminConfigLayoutTypeType, systemResource: string) {
+    return `${system}/userAdminConfig/${layoutType}/${systemResource}`
+  }
 
   function removeOldestBookmark() {
     let oldestKey: string | null = null
@@ -52,7 +56,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     forceFetch: boolean = false
   ): Promise<UserAdminConfig[]> {
     error.value = false
-    const key = `${identifier.system}/userAdminConfig/${identifier.layoutType}/${identifier.systemResource}`
+    const key = generateKey(identifier.system, identifier.layoutType, identifier.systemResource)
     const now = Date.now()
 
     if (!forceFetch) {
@@ -87,10 +91,54 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     return items
   }
 
+  async function fetchBookmarksCount(
+    identifier: {
+      system: string
+      user: IntegerId
+      layoutType: UserAdminConfigLayoutTypeType
+      systemResource: string
+    },
+    apiFetch: (
+      pagination: Pagination,
+      filterData: FilterData,
+      filterConfig: FilterConfig
+    ) => Promise<UserAdminConfig[]>,
+  ): Promise<number> {
+    error.value = false
+    const pagination = usePagination('position')
+    pagination.descending = false
+    pagination.rowsPerPage = MAX_BOOKMARK_ITEMS + 1
+
+    const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
+    filterData.configType = UserAdminConfigType.FilterBookmark
+    filterData.layoutType = identifier.layoutType
+    filterData.systemResource = identifier.systemResource
+
+    let length = Infinity
+    try {
+      const res = await apiFetch(pagination, filterData, filterConfig)
+      length = res.length
+    } catch (e) {
+      error.value = true
+    }
+
+    return length
+  }
+
+  function addOne(
+    key: string,
+    data: UserAdminConfig
+  ) {
+    bookmarks.value.get(key)?.items.push(data)
+  }
+
   return {
     bookmarks,
     error,
     getBookmarks,
+    generateKey,
+    addOne,
+    fetchBookmarksCount,
   }
 })
 

@@ -24,7 +24,6 @@ const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHidde
   required: true,
 })
 
-const items = ref<UserAdminConfig[]>([])
 const loading = ref(false)
 const toolbarRef = useTemplateRef('toolbarRef')
 const toolbarWidth = ref(300)
@@ -37,7 +36,7 @@ const { mobile } = useDisplay()
 
 const loadBookmarks = async (force = false) => {
   loading.value = true
-  items.value = await filterBookmarkStore.getBookmarks(
+  await filterBookmarkStore.getBookmarks(
     {
       system: props.system,
       user: props.user,
@@ -91,6 +90,16 @@ watchThrottled(
   { throttle: 1000 }
 )
 
+const items = computed(() => {
+  const key = filterBookmarkStore.generateKey(
+    props.system,
+    mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
+    props.systemResource
+  )
+  const result = filterBookmarkStore.bookmarks.get(key)
+  return result?.items ?? []
+})
+
 const itemsComputed = computed(() => {
   const visible = visibleItemsCount.value
   return {
@@ -99,8 +108,8 @@ const itemsComputed = computed(() => {
   }
 })
 
-watch(loading, (newValue) => {
-  if (newValue === true || isNull(toolbarRef.value)) return
+watch([loading, () => items.value.length], ([newLoading]) => {
+  if (newLoading === true || isNull(toolbarRef.value)) return
   toolbarWidth.value = toolbarRef.value.clientWidth
   calculateVisible(toolbarWidth.value)
 })
@@ -113,6 +122,7 @@ onMounted(() => {
 <template>
   <div
     ref="toolbarRef"
+    :key="items.length"
     class="w-100 d-flex overflow-hidden align-center"
   >
     <div v-if="loading" />
@@ -139,6 +149,8 @@ onMounted(() => {
           <VBtn
             icon="mdi-menu-down"
             size="x-small"
+            :width="28"
+            :height="28"
             variant="text"
             v-bind="activatorProps"
           />

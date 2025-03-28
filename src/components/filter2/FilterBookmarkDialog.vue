@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import ARow from '@/components/ARow.vue'
 import AFormSwitch from '@/components/form/AFormSwitch.vue'
@@ -9,7 +9,7 @@ import type { SortableItem } from '@/components/sortable/sortableActions.ts'
 import ASortable from '@/components/sortable/ASortable.vue'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common.ts'
-import { useFilterBookmarkStore } from '@/components/filter2/bookmarksStore.ts'
+import { MAX_BOOKMARK_ITEMS, useFilterBookmarkStore } from '@/components/filter2/bookmarksStore.ts'
 import { useUserAdminConfigApi } from '@/services/api/userAdminConfig/userAdminConfig.ts'
 import { useAlerts } from '@/composables/system/alerts.ts'
 import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactory.ts'
@@ -38,19 +38,20 @@ const emit = defineEmits<{
 const activeTab = ref<'add' | 'manage'>('add')
 const customName = ref('')
 const saveButtonLoading = ref(false)
+const errorCount = ref(false)
 
 const { required, maxLength } = useValidate()
 const rules = {
   customName: {
-      required,
-      maxLength: maxLength(100),
-    },
+    required,
+    maxLength: maxLength(100),
+  },
 }
 const v$ = useVuelidate(rules, { customName }, { $stopPropagation: true })
 
 const filterBookmarkStore = useFilterBookmarkStore()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { createUserAdminConfig } = useUserAdminConfigApi(props.client, props.system)
+const { createUserAdminConfig, fetchUserAdminConfigList } = useUserAdminConfigApi(props.client, props.system)
 const { t } = useI18n()
 const { showErrorsDefault, showValidationError } = useAlerts()
 const { createDefaultUserAdminConfig } = useUserAdminConfigFactory()
@@ -65,15 +66,37 @@ const itemsBasic = ref<Array<any>>([
 
 const addBookmark = async () => {
   saveButtonLoading.value = true
+  errorCount.value = false
   const config = createDefaultUserAdminConfig(props.system)
   config.user = props.user
   config.configType = UserAdminConfigType.FilterBookmark
   config.layoutType = mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop
   config.systemResource = props.systemResource
   config.customName = customName.value
-  config.position = 0 // todo
   try {
-    await createUserAdminConfig(config)
+    const count = await filterBookmarkStore.fetchBookmarksCount(
+      {
+        system: props.system,
+        user: props.user,
+        layoutType: mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
+        systemResource: props.systemResource,
+      },
+      fetchUserAdminConfigList
+    )
+    if (count >= MAX_BOOKMARK_ITEMS) {
+      errorCount.value = true
+      return
+    }
+    config.position = count + 1 // todo check +1 or not
+    const res = await createUserAdminConfig(config)
+    filterBookmarkStore.addOne(
+      filterBookmarkStore.generateKey(
+        props.system,
+        mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
+        props.systemResource
+      ),
+      res
+    )
     emit('onClose')
   } catch (e) {
     showErrorsDefault(e)
@@ -94,6 +117,10 @@ const onConfirm = () => {
     // todo
   }
 }
+
+watch(activeTab, () => {
+  errorCount.value = false
+})
 </script>
 
 <template>
@@ -122,6 +149,11 @@ const onConfirm = () => {
           class="w-100 pt-4"
         >
           <ARow title="Current selected filters will be stored with this bookmark." />
+          <ARow
+            v-if="errorCount"
+            class="text-error"
+            title="Max numbers of bookmarks reached. You can delete some bookmarks to add new one."
+          />
           <ARow>
             <AFormTextField
               v-model="customName"
