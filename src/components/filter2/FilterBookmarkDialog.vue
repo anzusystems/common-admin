@@ -13,7 +13,7 @@ import { MAX_BOOKMARK_ITEMS, useFilterBookmarkStore } from '@/components/filter2
 import { useUserAdminConfigApi } from '@/services/api/userAdminConfig/userAdminConfig.ts'
 import { useAlerts } from '@/composables/system/alerts.ts'
 import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactory.ts'
-import { UserAdminConfigLayoutType, UserAdminConfigType } from '@/types/UserAdminConfig.ts'
+import { type UserAdminConfig, UserAdminConfigLayoutType, UserAdminConfigType } from '@/types/UserAdminConfig.ts'
 import { useDisplay } from 'vuetify'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate.ts'
@@ -38,6 +38,7 @@ const emit = defineEmits<{
 const activeTab = ref<'add' | 'manage'>('add')
 const customName = ref('')
 const saveButtonLoading = ref(false)
+const listLoading = ref(false)
 const errorCount = ref(false)
 
 const { required, maxLength } = useValidate()
@@ -51,18 +52,30 @@ const v$ = useVuelidate(rules, { customName }, { $stopPropagation: true })
 
 const filterBookmarkStore = useFilterBookmarkStore()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { createUserAdminConfig, fetchUserAdminConfigList } = useUserAdminConfigApi(props.client, props.system)
+const { createUserAdminConfig, fetchUserAdminConfigList, updateUserAdminConfigPositions } = useUserAdminConfigApi(
+  props.client,
+  props.system
+)
 const { t } = useI18n()
 const { showErrorsDefault, showValidationError } = useAlerts()
 const { createDefaultUserAdminConfig } = useUserAdminConfigFactory()
 const { mobile } = useDisplay()
 
-const itemsBasic = ref<Array<any>>([
-  { id: 1, text: 'One', position: 100 },
-  { id: 2, text: 'Two', position: 200 },
-  { id: 3, text: 'Tree', position: 300 },
-  { id: 4, text: 'Four', position: 400 },
-])
+const itemsManage = ref<Array<UserAdminConfig>>([])
+
+const sortItems = async () => {
+  saveButtonLoading.value = true
+  const items = itemsManage.value
+  const ids = items.map((item) => item.id)
+  try {
+    await updateUserAdminConfigPositions(ids)
+    saveButtonLoading.value = false
+    emit('onClose')
+  } catch (e) {
+    showErrorsDefault(e)
+    saveButtonLoading.value = false
+  }
+}
 
 const addBookmark = async () => {
   saveButtonLoading.value = true
@@ -97,10 +110,10 @@ const addBookmark = async () => {
       ),
       res
     )
+    saveButtonLoading.value = false
     emit('onClose')
   } catch (e) {
     showErrorsDefault(e)
-  } finally {
     saveButtonLoading.value = false
   }
 }
@@ -113,13 +126,36 @@ const onConfirm = () => {
       return
     }
     addBookmark()
-  } else if (activeTab.value === 'manage') {
-    // todo
+  } else if (activeTab.value === 'manage' && itemsManage.value.length > 0) {
+    sortItems()
+  }
+}
+
+const reloadItems = async () => {
+  listLoading.value = true
+  try {
+    itemsManage.value = await filterBookmarkStore.getBookmarks(
+      {
+        system: props.system,
+        user: props.user,
+        layoutType: mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
+        systemResource: props.systemResource,
+      },
+      fetchUserAdminConfigList,
+      true
+    )
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    listLoading.value = false
   }
 }
 
 watch(activeTab, () => {
   errorCount.value = false
+  if (activeTab.value === 'manage') {
+    reloadItems()
+  }
 })
 </script>
 
@@ -172,13 +208,20 @@ watch(activeTab, () => {
           v-else-if="activeTab === 'manage'"
           class="w-100 pt-4"
         >
+          <div
+            v-if="listLoading"
+            class="d-flex w-100 align-center justify-center"
+          >
+            <VProgressCircular indeterminate />
+          </div>
           <ASortable
-            v-model="itemsBasic"
+            v-else
+            v-model="itemsManage"
             show-edit-button
             show-delete-button
           >
-            <template #item="{ item }: { item: SortableItem<any> }">
-              {{ item.raw.id }} {{ item.raw.text }}
+            <template #item="{ item }: { item: SortableItem<UserAdminConfig> }">
+              {{ item.raw.customName }}
             </template>
           </ASortable>
         </div>
