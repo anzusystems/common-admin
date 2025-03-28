@@ -34,7 +34,7 @@ const listFiltersStore = reactive<SubjectFilterStore>({
   site: [],
   rubric: [],
   articleAuthors: [],
-  status: [],
+  status: null,
   docId: null,
   desks: [],
   publicPublishedAtFrom: null,

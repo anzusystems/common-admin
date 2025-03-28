@@ -1,17 +1,7 @@
 import { type Reactive, reactive, type Ref } from 'vue'
-import {
-  cloneDeep,
-  isArray,
-  isEmptyArray,
-  isEmptyObject,
-  isNull,
-  isObject,
-  isString,
-  isUndefined
-} from '@/utils/common'
+import { cloneDeep, isArray, isEmptyArray, isEmptyObject, isNull, isString, isUndefined } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination.ts'
 import type { AnyFn } from '@vueuse/core'
-import type { FilterBag } from '@/types/Filter.ts'
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,
@@ -110,7 +100,9 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   datatableColumnsHidden: Ref<string[]>,
   storeId: string | undefined = undefined
 ) {
-  const getFilterDataForStoring = () => {
+  const END_FILTER_MARKER = '~'
+
+  const getFilterDataForStoring = (): Record<string, AllowedFilterValues> => {
     const data: Record<string, AllowedFilterValues> = {}
     for (const filterName in filterData) {
       try {
@@ -125,17 +117,23 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
           data[filterName] = value
         }
       } catch (e) {
-        //
+        // Ignore errors
       }
     }
-
     return data
   }
 
-  const END_FILTER_MARKER = '~'
-
   const serializeFilters = (data: Record<string, AllowedFilterValues>): string => {
-    const params = new URLSearchParams(data as Record<string, string>)
+    const params = new URLSearchParams()
+
+    for (const key in data) {
+      const value = data[key]
+      if (Array.isArray(value)) {
+        value.forEach((item) => params.append(key, String(item)))
+      } else {
+        params.set(key, String(value))
+      }
+    }
     if (params.size === 0) return ''
     return params.toString() + END_FILTER_MARKER
   }
@@ -143,6 +141,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   const deserializeFilters = (hash: string): Record<string, AllowedFilterValues> => {
     if (!hash) return {}
     if (hash.startsWith('#')) hash = hash.substring(1)
+
     if (!hash.endsWith(END_FILTER_MARKER)) {
       const lastAmpersand = hash.lastIndexOf('&')
       if (lastAmpersand !== -1) {
@@ -153,7 +152,22 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     } else {
       hash = hash.slice(0, -1)
     }
-    return Object.fromEntries(new URLSearchParams(hash))
+
+    const params = new URLSearchParams(hash)
+    const result: Record<string, AllowedFilterValues> = {}
+
+    for (const [key, value] of params.entries()) {
+      if (result[key]) {
+        if (!Array.isArray(result[key])) {
+          result[key] = [result[key] as string]
+        }
+        ;(result[key] as string[]).push(value)
+      } else {
+        result[key] = value
+      }
+    }
+
+    return result
   }
 
   const updateLocationHash = (serialized: string) => {
@@ -200,6 +214,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       stored = loadFilterLocalStorage()
     }
     if (isEmptyObject(stored)) return false
+
     for (const filterName in filterData) {
       const key = filterName as keyof FilterData<F>
       const value = stored[key]
