@@ -7,14 +7,43 @@ import ARow from '@/components/ARow.vue'
 import AFormSwitch from '@/components/form/AFormSwitch.vue'
 import type { SortableItem } from '@/components/sortable/sortableActions.ts'
 import ASortable from '@/components/sortable/ASortable.vue'
+import type { AxiosInstance } from 'axios'
+import type { IntegerId } from '@/types/common.ts'
+import { useFilterBookmarkStore } from '@/components/filter2/bookmarksStore.ts'
+import { useUserAdminConfigApi } from '@/services/api/userAdminConfig/userAdminConfig.ts'
+import { useAlerts } from '@/composables/system/alerts.ts'
+import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactory.ts'
+import { UserAdminConfigLayoutType, UserAdminConfigType } from '@/types/UserAdminConfig.ts'
+import { useDisplay } from 'vuetify'
+
+const props = withDefaults(
+  defineProps<{
+    client: () => AxiosInstance
+    system: string
+    user: IntegerId
+    systemResource: string
+    datatableHiddenColumns?: string[] | undefined
+  }>(),
+  {
+    datatableHiddenColumns: undefined,
+  }
+)
 
 const emit = defineEmits<{
   (e: 'onClose'): void
 }>()
 
 const activeTab = ref<'add' | 'manage'>('add')
+const customName = ref('')
+const saveButtonLoading = ref(false)
 
+const filterBookmarkStore = useFilterBookmarkStore()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { createUserAdminConfig } = useUserAdminConfigApi(props.client, props.system)
 const { t } = useI18n()
+const { showErrorsDefault } = useAlerts()
+const { createDefaultUserAdminConfig } = useUserAdminConfigFactory()
+const { mobile } = useDisplay()
 
 const itemsBasic = ref<Array<any>>([
   { id: 1, text: 'One', position: 100 },
@@ -23,8 +52,30 @@ const itemsBasic = ref<Array<any>>([
   { id: 4, text: 'Four', position: 400 },
 ])
 
+const addBookmark = async () => {
+  saveButtonLoading.value = true
+  const config = createDefaultUserAdminConfig(props.system)
+  config.user = props.user
+  config.configType = UserAdminConfigType.FilterBookmark
+  config.layoutType = mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop
+  config.systemResource = props.systemResource
+  config.customName = customName.value
+  config.position = 0 // todo
+  try {
+    await createUserAdminConfig(config)
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    saveButtonLoading.value = false
+  }
+}
+
 const onConfirm = () => {
-  console.log('onConfirm')
+  if (activeTab.value === 'add') {
+    addBookmark()
+  } else if (activeTab.value === 'manage') {
+    // todo
+  }
 }
 </script>
 
@@ -56,8 +107,8 @@ const onConfirm = () => {
           <ARow title="Current selected filters will be stored with this bookmark." />
           <ARow>
             <AFormTextField
+              v-model="customName"
               label="Name"
-              :model-value="''"
             />
           </ARow>
           <ARow>

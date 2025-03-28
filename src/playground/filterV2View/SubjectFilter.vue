@@ -17,8 +17,9 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
 import {
   allowedTimeIntervalValuesSubject,
+  useSubjectListActions,
   useSubjectLockType,
-  useSubjectStatus
+  useSubjectStatus,
 } from '@/playground/filterV2View/subjectTools.ts'
 import AFilterTimeInterval from '@/components/filter2/variant/AFilterTimeInterval.vue'
 import { cmsClient } from '@/playground/mock/cmsClient.ts'
@@ -38,10 +39,12 @@ const siteId = computed(() => {
 
 const { subjectStatusOptions } = useSubjectStatus()
 const { subjectLockTypeOptions } = useSubjectLockType()
+const { datatableHiddenColumns } = useSubjectListActions()
 </script>
 
 <template>
   <AFilterWrapper
+    v-model:datatable-hidden-columns="datatableHiddenColumns"
     :client="cmsClient"
     system="cms"
     :user="10001039"

@@ -9,8 +9,6 @@ import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSubjectListActions } from '@/playground/filterV2View/subjectTools.ts'
 import ADatetime from '@/components/datetime/ADatetime.vue'
-import ATableEditButton from '@/components/buttons/table/ATableEditButton.vue'
-import ATableDetailButton from '@/components/buttons/table/ATableDetailButton.vue'
 import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 
 type DatatableItem = any

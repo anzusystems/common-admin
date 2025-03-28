@@ -2,17 +2,25 @@
 import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
 import FilterBookmarkDialog from '@/components/filter2/FilterBookmarkDialog.vue'
+import type { AxiosInstance } from 'axios'
+import type { IntegerId } from '@/types/common.ts'
 
 withDefaults(
   defineProps<{
+    client: () => AxiosInstance
+    system: string
+    user: IntegerId
+    systemResource: string
     tooltipT?: string
     buttonClass?: string
     dataCy?: string
+    datatableHiddenColumns?: string[] | undefined
   }>(),
   {
     tooltipT: 'common.button.bookmarkFilter',
     buttonClass: 'ml-2',
     dataCy: 'filter-bookmark',
+    datatableHiddenColumns: undefined,
   }
 )
 
@@ -49,6 +57,11 @@ const { t } = useI18n()
   </VBtn>
   <FilterBookmarkDialog
     v-if="dialog"
+    :client="client"
+    :system="system"
+    :user="user"
+    :system-resource="systemResource"
+    :datatable-hidden-columns="datatableHiddenColumns"
     @on-close="dialog = false"
   />
 </template>

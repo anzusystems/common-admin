@@ -18,7 +18,7 @@ export interface UserAdminConfig<TData = any> extends AnzuUserAndTimeTrackingAwa
 
 export const UserAdminConfigType = {
   PinnedWidgets: 'pinnedWidgets',
-  Filter: 'filter',
+  FilterBookmark: 'filterBookmark',
 } as const
 export const UserAdminConfigTypeDefault = UserAdminConfigType.PinnedWidgets
 export type UserAdminConfigTypeType = (typeof UserAdminConfigType)[keyof typeof UserAdminConfigType]

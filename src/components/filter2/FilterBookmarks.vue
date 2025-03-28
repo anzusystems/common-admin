@@ -16,6 +16,12 @@ const props = withDefaults(
   }>(),
   {}
 )
+
+const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
+  default: undefined,
+  required: true,
+})
+
 const items = ref<UserAdminConfig[]>([])
 const loading = ref(false)
 const filterBookmarkStore = useFilterBookmarkStore()
@@ -38,6 +44,11 @@ const loadBookmarks = async (force = false) => {
   loading.value = false
 }
 
+const onItemClick = (item: UserAdminConfig) => {
+  console.log(item)
+  console.log(datatableHiddenColumns.value)
+}
+
 onMounted(() => {
   loadBookmarks()
 })
@@ -49,7 +60,7 @@ onMounted(() => {
     :key="item.id"
     size="small"
     text
-    @click.stop=""
+    @click.stop="onItemClick(item)"
   >
     {{ item.customName }}
   </VBtn>

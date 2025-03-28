@@ -49,6 +49,10 @@ const emit = defineEmits<{
   (e: 'reset'): void
 }>()
 
+const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
+  default: undefined,
+  required: false,
+})
 const showDetail = defineModel<boolean>('showDetail', { default: false, required: false })
 const touched = defineModel<boolean>('touched', { default: false, required: false })
 
@@ -109,6 +113,7 @@ const toggleFilterDetail = () => {
         <slot name="bookmarks">
           <div class="d-flex flex-wrap align-center">
             <FilterBookmarks
+              v-model:datatable-hidden-columns="datatableHiddenColumns"
               :client="client"
               :system="system"
               :user="user"
@@ -147,6 +152,7 @@ const toggleFilterDetail = () => {
             :system="system"
             :user="user"
             :system-resource="bookmarkSystemResource"
+            :datatable-hidden-columns="datatableHiddenColumns"
           />
         </slot>
       </VCol>

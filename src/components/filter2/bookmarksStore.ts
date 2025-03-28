@@ -68,7 +68,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     pagination.rowsPerPage = MAX_BOOKMARK_ITEMS
 
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
-    filterData.configType = UserAdminConfigType.Filter
+    filterData.configType = UserAdminConfigType.FilterBookmark
     filterData.layoutType = identifier.layoutType
     filterData.systemResource = identifier.systemResource
 
