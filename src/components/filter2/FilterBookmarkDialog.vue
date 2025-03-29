@@ -83,6 +83,7 @@ const sortItems = async () => {
   try {
     await updateUserAdminConfigPositions(ids)
     saveButtonLoading.value = false
+    await reloadItems()
     emit('onClose')
   } catch (e) {
     showErrorsDefault(e)
