@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import { ref, watch } from 'vue'
+import { nextTick, ref, useTemplateRef, watch } from 'vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import ARow from '@/components/ARow.vue'
 import AFormSwitch from '@/components/form/AFormSwitch.vue'
@@ -17,6 +17,7 @@ import { type UserAdminConfig, UserAdminConfigLayoutType, UserAdminConfigType } 
 import { useDisplay } from 'vuetify'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate.ts'
+import { cloneDeep, isNull } from '@/utils/common.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -40,28 +41,40 @@ const customName = ref('')
 const saveButtonLoading = ref(false)
 const listLoading = ref(false)
 const errorCount = ref(false)
+const itemsManage = ref<Array<UserAdminConfig>>([])
+const itemEdit = ref<{ id: IntegerId; customName: string } | null>(null)
 
 const { required, maxLength } = useValidate()
-const rules = {
+const rulesCreate = {
   customName: {
     required,
     maxLength: maxLength(100),
   },
 }
-const v$ = useVuelidate(rules, { customName }, { $stopPropagation: true })
+const vCreate$ = useVuelidate(rulesCreate, { customName }, { $stopPropagation: true })
+const rulesEdit = {
+  itemEdit: {
+    required,
+    maxLength: maxLength(100),
+  },
+}
+const vEdit$ = useVuelidate(rulesEdit, { itemEdit }, { $stopPropagation: true })
 
 const filterBookmarkStore = useFilterBookmarkStore()
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { createUserAdminConfig, fetchUserAdminConfigList, updateUserAdminConfigPositions } = useUserAdminConfigApi(
-  props.client,
-  props.system
-)
+
+const {
+  createUserAdminConfig,
+  fetchUserAdminConfigList,
+  updateUserAdminConfigPositions,
+  deleteUserAdminConfig,
+  updateUserAdminConfig,
+} =
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  useUserAdminConfigApi(props.client, props.system)
 const { t } = useI18n()
 const { showErrorsDefault, showValidationError } = useAlerts()
 const { createDefaultUserAdminConfig } = useUserAdminConfigFactory()
 const { mobile } = useDisplay()
-
-const itemsManage = ref<Array<UserAdminConfig>>([])
 
 const sortItems = async () => {
   saveButtonLoading.value = true
@@ -120,8 +133,8 @@ const addBookmark = async () => {
 
 const onConfirm = () => {
   if (activeTab.value === 'add') {
-    v$.value.$touch()
-    if (v$.value.$invalid) {
+    vCreate$.value.$touch()
+    if (vCreate$.value.$invalid) {
       showValidationError()
       return
     }
@@ -129,6 +142,47 @@ const onConfirm = () => {
   } else if (activeTab.value === 'manage' && itemsManage.value.length > 0) {
     sortItems()
   }
+}
+
+const onDelete = async (data: SortableItem<UserAdminConfig>) => {
+  listLoading.value = true
+  try {
+    await deleteUserAdminConfig(data.raw.id)
+    await reloadItems()
+    onItemCancel()
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    listLoading.value = false
+  }
+}
+
+const inputRef = useTemplateRef('inputRef')
+
+const onEdit = async (data: SortableItem<UserAdminConfig>) => {
+  itemEdit.value = { id: data.raw.id, customName: data.raw.customName }
+  await nextTick()
+  inputRef.value?.focus()
+}
+
+const onItemConfirm = async (data: SortableItem<UserAdminConfig>) => {
+  if (isNull(itemEdit.value)) return
+  listLoading.value = true
+  const modified = cloneDeep(data.raw)
+  modified.customName = itemEdit.value.customName
+  try {
+    await updateUserAdminConfig(modified.id, modified)
+    await reloadItems()
+    onItemCancel()
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    listLoading.value = false
+  }
+}
+
+const onItemCancel = () => {
+  itemEdit.value = null
 }
 
 const reloadItems = async () => {
@@ -194,7 +248,8 @@ watch(activeTab, () => {
             <AFormTextField
               v-model="customName"
               label="Name"
-              :v="v$.customName"
+              required
+              :v="vCreate$.customName"
             />
           </ARow>
           <ARow>
@@ -219,9 +274,58 @@ watch(activeTab, () => {
             v-model="itemsManage"
             show-edit-button
             show-delete-button
+            @on-delete="onDelete"
+            @on-edit="onEdit"
           >
             <template #item="{ item }: { item: SortableItem<UserAdminConfig> }">
-              {{ item.raw.customName }}
+              <AFormTextField
+                v-if="itemEdit && itemEdit.id === item.raw.id"
+                ref="inputRef"
+                v-model="itemEdit.customName"
+                hide-details="auto"
+                :v="vEdit$"
+              />
+              <div v-else>
+                {{ item.raw.customName }}
+              </div>
+            </template>
+            <template
+              v-if="!isNull(itemEdit)"
+              #item-buttons="{ item }: { item: SortableItem<UserAdminConfig> }"
+            >
+              <div
+                v-if="itemEdit && itemEdit.id === item.raw.id"
+                class="d-flex align-center justify-end"
+              >
+                <VBtn
+                  icon
+                  size="x-small"
+                  variant="text"
+                  class="mx-1"
+                  @click.stop="onItemConfirm(item)"
+                >
+                  <VIcon icon="mdi-check" />
+                  <VTooltip
+                    anchor="bottom"
+                    activator="parent"
+                    :text="t('common.button.confirm')"
+                  />
+                </VBtn>
+                <VBtn
+                  icon
+                  size="x-small"
+                  variant="text"
+                  class="mx-1"
+                  @click.stop="onItemCancel(item)"
+                >
+                  <VIcon icon="mdi-close" />
+                  <VTooltip
+                    anchor="bottom"
+                    activator="parent"
+                    :text="t('common.button.cancel')"
+                  />
+                </VBtn>
+              </div>
             </template>
           </ASortable>
         </div>
@@ -237,6 +341,7 @@ watch(activeTab, () => {
         <ABtnPrimary
           data-cy="button-confirm"
           :loading="saveButtonLoading"
+          :disabled="!isNull(itemEdit)"
           @click.stop="onConfirm"
         >
           {{ t('common.button.confirm') }}
