@@ -325,14 +325,13 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
     try {
       const asset = await fetchAsset(damClient, assetId)
-      console.log(asset)
       queues.value.forEach((queue, queueKey) => {
         queue.items.forEach((item) => {
           if (item.assetId === asset.id && asset.mainFile && item.type) {
             clearTimeout(item.notificationFallbackTimer)
             item.fileId = asset.mainFile.id
             item.status = UploadQueueItemStatus.Uploaded
-            console.log(asset.attributes.assetStatus)
+            console.log('queueItemCopied', asset.attributes.assetStatus, asset)
             item.assetStatus = asset.attributes.assetStatus
             if (asset.mainFile.links?.image_detail) {
               item.imagePreview = asset.mainFile.links.image_detail
