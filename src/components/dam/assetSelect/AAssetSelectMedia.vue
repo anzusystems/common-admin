@@ -30,6 +30,7 @@ import type {
   DatatableOrderingOptions,
   DatatableSortBy
 } from '@/composables/system/datatableColumns.ts'
+import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -153,7 +154,9 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
 const { gridView } = useGridView()
 
 const showCopyToLicence = computed(() => {
+  console.log(showUnreleasedFeatures.value)
   return (
+    showUnreleasedFeatures.value &&
     assetType.value === DamAssetType.Image &&
     selectedLicenceId.value > 0 &&
     !isUndefined(props.uploadLicence) &&
@@ -206,6 +209,8 @@ const sortByChange = (option: DatatableOrderingOption) => {
   }
   fetchAssetList()
 }
+
+const { showUnreleasedFeatures } = useUnreleasedFeatures()
 
 watch(
   extId,
