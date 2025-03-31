@@ -331,7 +331,6 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             clearTimeout(item.notificationFallbackTimer)
             item.fileId = asset.mainFile.id
             item.status = UploadQueueItemStatus.Uploaded
-            console.log('queueItemCopied', asset.attributes.assetStatus, asset)
             item.assetStatus = asset.attributes.assetStatus
             if (asset.mainFile.links?.image_detail) {
               item.imagePreview = asset.mainFile.links.image_detail

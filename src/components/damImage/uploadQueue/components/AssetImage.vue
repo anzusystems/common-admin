@@ -124,9 +124,6 @@ const { remainingTimeShort } = useRemainingTime()
 </script>
 
 <template>
-  {{ assetStatus }}<br>
-  {{ src }}<br>
-  {{ useComponent }}<br>
   <VImg
     v-if="showUploading || showProcessing || showWaiting"
     :aspect-ratio="aspectRatio"

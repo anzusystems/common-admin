@@ -303,7 +303,6 @@ watch(
     if (!newValue || !item.value?.assetId) return
     try {
       const res = await fetchAsset(damClient, item.value.assetId)
-      console.log('UploadQueueDialogSingle isDone watch', res)
       assetDetailStore.setAsset(res)
       enableRoiTab.value = true
     } catch (e) {
