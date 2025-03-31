@@ -30,7 +30,6 @@ const { v$ } = useCompareValidators(article)
 
 const datesCompareValidate = () => {
   v$.value.$touch()
-  console.log(v$.value.$invalid)
 }
 </script>
 

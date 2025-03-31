@@ -154,7 +154,6 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
 const { gridView } = useGridView()
 
 const showCopyToLicence = computed(() => {
-  console.log(showUnreleasedFeatures.value)
   return (
     showUnreleasedFeatures.value &&
     assetType.value === DamAssetType.Image &&
