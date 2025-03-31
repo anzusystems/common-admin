@@ -173,29 +173,6 @@ const imageProperties = computed(() => {
   }
 })
 
-const imagePropertiesDelayed = ref<{
-  url: string
-  width: number | undefined
-  height: number | undefined
-  bgColor: string
-}>({
-  url: '',
-  width: 356,
-  height: 200,
-  bgColor: '#ccc',
-})
-
-watch(
-  imageProperties,
-  (newValue) => {
-    if (newValue.url.length === 0) return
-    setTimeout(() => {
-      imagePropertiesDelayed.value = newValue
-    }, 1000)
-  },
-  { immediate: true }
-)
-
 const assetMainFile = computed(() => {
   return asset.value?.mainFile || undefined
 })
@@ -398,10 +375,10 @@ onMounted(() => {
                   v-if="item"
                   :asset-type="assetType"
                   :asset-status="assetStatus"
-                  :src="imagePropertiesDelayed.url"
-                  :background-color="imagePropertiesDelayed.bgColor"
-                  :width="imagePropertiesDelayed.width"
-                  :height="imagePropertiesDelayed.height"
+                  :src="imageProperties.url"
+                  :background-color="imageProperties.bgColor"
+                  :width="imageProperties.width"
+                  :height="imageProperties.height"
                   :show-uploading="uploading"
                   :show-processing="processing"
                   :show-waiting="waiting"
