@@ -38,7 +38,7 @@ export function makeFilterHelper<T = any>(system?: string, subject?: string) {
       variant,
       titleT,
       default: defaultValue,
-      apiName: isUndefined(options.apiName) ? '' : options.apiName,
+      field: isUndefined(options.apiName) ? '' : options.apiName,
       multiple: isArray(defaultValue),
       clearable: isUndefined(options.clearable) ? true : options.clearable,
       mandatory: isUndefined(options.mandatory) ? false : options.mandatory,

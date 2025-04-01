@@ -317,7 +317,7 @@ watch(activeTab, () => {
                   size="x-small"
                   variant="text"
                   class="mx-1"
-                  @click.stop="onItemCancel(item)"
+                  @click.stop="onItemCancel()"
                 >
                   <VIcon icon="mdi-close" />
                   <VTooltip

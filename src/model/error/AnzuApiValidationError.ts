@@ -36,7 +36,7 @@ function resolveResponseData(axiosError: AxiosError, system: string, entity: str
   const items = [] as ValidationError[]
   for (const [key, values] of Object.entries(data.fields)) {
     items.push({
-      apiName: system + '.' + entity + '.model.' + key,
+      field: system + '.' + entity + '.model.' + key,
       errors: values,
     })
   }

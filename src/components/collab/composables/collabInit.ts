@@ -74,7 +74,7 @@ export function useCollabInit() {
     collabSocket.value.on('collabRoomDataChanged', (room: CollabRoom, data: CollabRoomData) => {
       const dataEntries = Object.entries(data)
       for (const [field, fieldData] of dataEntries) {
-        changeEventBus.emit({ room, field: apiName }, fieldData)
+        changeEventBus.emit({ room, field }, fieldData)
       }
     })
     collabSocket.value?.on('requestToJoin', (room: CollabRoom, userId: number, timestamp: number) => {

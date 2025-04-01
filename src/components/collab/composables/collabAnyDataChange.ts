@@ -87,7 +87,7 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
     collabSocket.value
       ?.timeout(1000)
       .emit('acquireFieldLock', room, field, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
-        const statusEvent: CollabFieldLockStatusEvent = { field: apiName, room }
+        const statusEvent: CollabFieldLockStatusEvent = { field, room }
         if (error || isCollabFailedChangeRoomLockCallback(response)) {
           return void fieldLockStatusEventBus.emit(
             statusEvent,
@@ -128,7 +128,7 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
     collabSocket.value
       ?.timeout(1000)
       .emit('releaseFieldLock', room, field, data, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
-        const statusEvent: CollabFieldLockStatusEvent = { field: apiName, room }
+        const statusEvent: CollabFieldLockStatusEvent = { field, room }
         if (error || isCollabFailedChangeRoomLockCallback(response)) {
           return void fieldLockStatusEventBus.emit(
             statusEvent,
