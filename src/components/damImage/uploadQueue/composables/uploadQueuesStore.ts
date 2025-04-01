@@ -88,7 +88,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       const queueItem = createDefault(
         'asset_' + assetId,
         UploadQueueItemType.Asset,
-        UploadQueueItemStatus.Uploaded,
+        UploadQueueItemStatus.Processing,
         DamAssetType.Image, // only image now
         QUEUE_CHUNK_SIZE,
         assetLicence
