@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
-import { useFilterBookmarkStore } from '@/components/filter2/bookmarksStore.ts'
-import { useUserAdminConfigApi } from '@/services/api/userAdminConfig/userAdminConfig.ts'
+import { useFilterBookmarkStore } from '@/components/filter2/bookmarksStore'
+import { useUserAdminConfigApi } from '@/services/api/userAdminConfig/userAdminConfig'
 import type { AxiosInstance } from 'axios'
-import { type UserAdminConfig, UserAdminConfigLayoutType } from '@/types/UserAdminConfig.ts'
+import { type UserAdminConfig, UserAdminConfigLayoutType } from '@/types/UserAdminConfig'
 import { useDisplay } from 'vuetify'
-import type { IntegerId } from '@/types/common.ts'
+import type { IntegerId } from '@/types/common'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
-import { isNull } from '@/utils/common.ts'
+import { isNull } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{

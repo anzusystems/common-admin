@@ -15,11 +15,11 @@ import FiltersSelected from '@/components/filter2/FiltersSelected.vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { isDefined, isUndefined } from '@/utils/common'
 import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
-import { datatableSlotName } from '@/components/datatable/datatable.ts'
+import { datatableSlotName } from '@/components/datatable/datatable'
 import FilterDetailItem from '@/components/filter2/FilterDetailItem.vue'
 import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
 import FilterBookmarks from '@/components/filter2/FilterBookmarks.vue'
-import type { IntegerId } from '@/types/common.ts'
+import type { IntegerId } from '@/types/common'
 import type { AxiosInstance } from 'axios'
 
 withDefaults(

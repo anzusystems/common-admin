@@ -2,12 +2,12 @@ import { ref } from 'vue'
 import { isArray, isBoolean, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import type { FilterVariant } from '@/types/Filter'
 import type { AllowedFilterValues, FilterConfig, FilterData, FilterField } from '@/composables/filter/filterFactory'
-import type { DatetimeUTCNullable } from '@/types/common.ts'
+import type { DatetimeUTCNullable } from '@/types/common'
 import {
   TimeIntervalSpecialOptions,
   type TimeIntervalToolsValue,
-} from '@/components/filter2/variant/filterTimeIntervalTools.ts'
-import { dateModifyMinutes, dateTimeNow, dateTimeToDate, dateToUtc, getMonthInterval } from '@/utils/datetime.ts'
+} from '@/components/filter2/variant/filterTimeIntervalTools'
+import { dateModifyMinutes, dateTimeNow, dateTimeToDate, dateToUtc, getMonthInterval } from '@/utils/datetime'
 
 /**
  * Docs: /doc/Admin-Cms-Doc/Filters.md

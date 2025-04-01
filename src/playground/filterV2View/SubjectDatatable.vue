@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import { useSubjectListFilter } from '@/playground/filterV2View/subjectFilter.ts'
-import { createDatatableColumnsConfig, type DatatableOrderingOption } from '@/composables/system/datatableColumns.ts'
+import { useSubjectListFilter } from '@/playground/filterV2View/subjectFilter'
+import { createDatatableColumnsConfig, type DatatableOrderingOption } from '@/composables/system/datatableColumns'
 import SubjectFilter from '@/playground/filterV2View/SubjectFilter.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ADatatablePagination from '@/components/ADatatablePagination.vue'
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useSubjectListActions } from '@/playground/filterV2View/subjectTools.ts'
+import { useSubjectListActions } from '@/playground/filterV2View/subjectTools'
 import ADatetime from '@/components/datetime/ADatetime.vue'
-import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+import { useFilterHelpers } from '@/composables/filter/filterFactory'
 
 type DatatableItem = any
 

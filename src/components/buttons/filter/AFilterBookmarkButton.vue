@@ -3,7 +3,7 @@ import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
 import FilterBookmarkDialog from '@/components/filter2/FilterBookmarkDialog.vue'
 import type { AxiosInstance } from 'axios'
-import type { IntegerId } from '@/types/common.ts'
+import type { IntegerId } from '@/types/common'
 
 withDefaults(
   defineProps<{

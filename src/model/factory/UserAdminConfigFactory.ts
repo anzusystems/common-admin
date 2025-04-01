@@ -1,6 +1,6 @@
-import type { UserAdminConfig } from '@/types/UserAdminConfig.ts'
-import { UserAdminConfigLayoutTypeDefault, UserAdminConfigTypeDefault } from '@/types/UserAdminConfig.ts'
-import { dateTimeNow } from '@/utils/datetime.ts'
+import type { UserAdminConfig } from '@/types/UserAdminConfig'
+import { UserAdminConfigLayoutTypeDefault, UserAdminConfigTypeDefault } from '@/types/UserAdminConfig'
+import { dateTimeNow } from '@/utils/datetime'
 
 export function useUserAdminConfigFactory() {
   const createDefaultUserAdminConfig = (system: string): UserAdminConfig => {

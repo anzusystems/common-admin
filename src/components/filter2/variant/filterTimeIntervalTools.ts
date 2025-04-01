@@ -1,10 +1,10 @@
 import { computed, type Ref } from 'vue'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
-import { isNull, isUndefined } from '@/utils/common.ts'
+import type { ValueObjectOption } from '@/types/ValueObject'
+import { isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import { useValidate } from '@/validators/vuelidate/useValidate.ts'
+import { useValidate } from '@/validators/vuelidate/useValidate'
 import useVuelidate from '@vuelidate/core'
-import type { DatetimeUTCNullable } from '@/types/common.ts'
+import type { DatetimeUTCNullable } from '@/types/common'
 
 /** note: number value represents time interval in minutes, null represent unselected */
 export type TimeIntervalToolsValue = number | TimeIntervalSpecialOptionsType | null

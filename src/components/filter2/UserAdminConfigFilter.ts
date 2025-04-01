@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { createFilter, type FilterStore, type MakeFilterOption } from '@/composables/filter/filterFactory.ts'
+import { createFilter, type FilterStore, type MakeFilterOption } from '@/composables/filter/filterFactory'
 
 export function useUserAdminConfigInnerFilter(system: string, subject: string = 'userAdminConfig') {
   const filterFields = [

@@ -4,7 +4,7 @@ import {
   type SubjectFilterConfig,
   type SubjectFilterData,
   useSubjectListFilter,
-} from '@/playground/filterV2View/subjectFilter.ts'
+} from '@/playground/filterV2View/subjectFilter'
 import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
 import AFilterString from '@/components/filter2/variant/AFilterString.vue'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
@@ -20,9 +20,9 @@ import {
   useSubjectListActions,
   useSubjectLockType,
   useSubjectStatus,
-} from '@/playground/filterV2View/subjectTools.ts'
+} from '@/playground/filterV2View/subjectTools'
 import AFilterTimeInterval from '@/components/filter2/variant/AFilterTimeInterval.vue'
-import { cmsClient } from '@/playground/mock/cmsClient.ts'
+import { cmsClient } from '@/playground/mock/cmsClient'
 
 const emit = defineEmits<{
   (e: 'submit', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void

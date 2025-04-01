@@ -6,22 +6,22 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys.ts'
-import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common.ts'
+} from '@/components/filter2/filterInjectionKeys'
+import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import { useFilterClearHelpers } from '@/composables/filter/filterFactory.ts'
+import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
 import {
   TimeIntervalSpecialOptions,
   type TimeIntervalToolsValue,
   useFilterTimeIntervalValidators,
   useTimeIntervalOptions,
-} from '@/components/filter2/variant/filterTimeIntervalTools.ts'
+} from '@/components/filter2/variant/filterTimeIntervalTools'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
-import type { DatetimeUTCNullable } from '@/types/common.ts'
+import type { DatetimeUTCNullable } from '@/types/common'
 import ARow from '@/components/ARow.vue'
-import { dateTimeNow, dateTimePretty, isDatetimeUTC } from '@/utils/datetime.ts'
-import { useAlerts } from '@/composables/system/alerts.ts'
+import { dateTimeNow, dateTimePretty, isDatetimeUTC } from '@/utils/datetime'
+import { useAlerts } from '@/composables/system/alerts'
 
 const props = withDefaults(
   defineProps<{

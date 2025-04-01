@@ -1,15 +1,15 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Pagination } from '@/types/Pagination.ts'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory.ts'
-import { usePagination } from '@/composables/system/pagination.ts'
-import { useUserAdminConfigInnerFilter } from '@/components/filter2/UserAdminConfigFilter.ts'
+import type { Pagination } from '@/types/Pagination'
+import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
+import { usePagination } from '@/composables/system/pagination'
+import { useUserAdminConfigInnerFilter } from '@/components/filter2/UserAdminConfigFilter'
 import {
   type UserAdminConfig,
   type UserAdminConfigLayoutTypeType,
   UserAdminConfigType,
-} from '@/types/UserAdminConfig.ts'
-import type { IntegerId } from '@/types/common.ts'
+} from '@/types/UserAdminConfig'
+import type { IntegerId } from '@/types/common'
 
 interface CacheItem<T = UserAdminConfig> {
   lastUsed: number

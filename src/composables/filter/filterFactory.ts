@@ -1,6 +1,6 @@
 import { type Reactive, reactive, type Ref } from 'vue'
 import { cloneDeep, isArray, isEmptyArray, isEmptyObject, isNull, isString, isUndefined } from '@/utils/common'
-import type { Pagination } from '@/types/Pagination.ts'
+import type { Pagination } from '@/types/Pagination'
 import type { AnyFn } from '@vueuse/core'
 
 const defaultRenderOptions: FilerRenderOptions = {

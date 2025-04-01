@@ -1,6 +1,6 @@
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware.ts'
-import type { SortableItemDataAware } from '@/components/sortable/sortableUtils.ts'
-import type { IntegerId } from '@/types/common.ts'
+import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { SortableItemDataAware } from '@/components/sortable/sortableUtils'
+import type { IntegerId } from '@/types/common'
 
 export interface UserAdminConfig<TData = any> extends AnzuUserAndTimeTrackingAware, SortableItemDataAware {
   id: IntegerId
