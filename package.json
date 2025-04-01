@@ -88,7 +88,7 @@
     "vue-i18n": "11.1.2",
     "vue-router": "4.5.0",
     "vue-tsc": "2.2.8",
-    "vuetify": "3.7.19",
+    "vuetify": "3.8.0",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -104,7 +104,7 @@
     "vue": "3.5.13",
     "vue-i18n": "11.1.2",
     "vue-router": "4.5.0",
-    "vuetify": "3.7.19"
+    "vuetify": "3.8.0"
   },
   "peerDependenciesMeta": {
     "@vueuse/core": {
