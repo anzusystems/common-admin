@@ -1,13 +1,19 @@
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, inject, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useFilterBookmarkStore } from '@/components/filter2/bookmarksStore'
 import { useUserAdminConfigApi } from '@/services/api/userAdminConfig/userAdminConfig'
 import type { AxiosInstance } from 'axios'
-import { type UserAdminConfig, UserAdminConfigLayoutType } from '@/types/UserAdminConfig'
+import {
+  type UserAdminConfig,
+  type UserAdminConfigDataFilterBookmark,
+  UserAdminConfigLayoutType,
+} from '@/types/UserAdminConfig'
 import { useDisplay } from 'vuetify'
 import type { IntegerId } from '@/types/common'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
-import { isNull } from '@/utils/common'
+import { isDefined, isNull, isUndefined } from '@/utils/common'
+import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys.ts'
+import { type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -19,10 +25,17 @@ const props = withDefaults(
   {}
 )
 
-const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
-  default: undefined,
+const datatableHiddenColumns = defineModel<string[]>('datatableHiddenColumns', {
+  default: () => [],
   required: true,
 })
+
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+
+if (isUndefined(filterConfig) || isUndefined(filterData)) {
+  throw new Error('Incorrect provide/inject config.')
+}
 
 const loading = ref(false)
 const toolbarRef = useTemplateRef('toolbarRef')
@@ -49,9 +62,21 @@ const loadBookmarks = async (force = false) => {
   loading.value = false
 }
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { deserializeFilters } = useFilterHelpers(filterData, filterConfig, props.systemResource)
+
 const onItemClick = (item: UserAdminConfig) => {
-  console.log(item)
-  console.log(datatableHiddenColumns.value)
+  const config = item.data as UserAdminConfigDataFilterBookmark
+  if (isDefined(config.datatableHiddenColumns)) {
+    datatableHiddenColumns.value = config.datatableHiddenColumns
+  }
+  const deserialized = deserializeFilters(config.filter)
+  for (const filterName in filterData) {
+    const key = filterName as keyof FilterData
+    const value = deserialized[key]
+    if (isUndefined(value)) continue
+    filterData[key] = value
+  }
 }
 
 const THREE_DOTS_WIDTH = 32

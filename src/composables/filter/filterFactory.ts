@@ -97,8 +97,6 @@ export function useFilterClearHelpers<
 export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
   filterData: FilterData<F>,
   filterConfig: FilterConfig<F>,
-  pagination: Reactive<Pagination>,
-  datatableColumnsHidden: Ref<string[]>,
   storeId: string | undefined = undefined
 ) {
   const END_FILTER_MARKER = '~'
@@ -191,7 +189,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     return deserializeFilters(stored)
   }
 
-  const resetFilter = (callback?: AnyFn) => {
+  const resetFilter = (pagination: Reactive<Pagination>, callback?: AnyFn) => {
     pagination.page = 1
     if (storeId && localStorage) {
       localStorage.removeItem(storeId)
@@ -200,7 +198,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     if (callback) callback()
   }
 
-  const submitFilter = (callback?: AnyFn) => {
+  const submitFilter = (pagination: Reactive<Pagination>, callback?: AnyFn) => {
     const data = getFilterDataForStoring()
     const serialized = serializeFilters(data)
     updateLocationHash(serialized)
@@ -229,6 +227,8 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     loadStoredFilters,
     resetFilter,
     submitFilter,
+    serializeFilters,
+    deserializeFilters,
   }
 }
 

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import { nextTick, ref, useTemplateRef, watch } from 'vue'
+import { inject, nextTick, ref, useTemplateRef, watch } from 'vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import ARow from '@/components/ARow.vue'
 import AFormSwitch from '@/components/form/AFormSwitch.vue'
@@ -17,7 +17,9 @@ import { type UserAdminConfig, UserAdminConfigLayoutType, UserAdminConfigType } 
 import { useDisplay } from 'vuetify'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
-import { cloneDeep, isNull } from '@/utils/common'
+import { cloneDeep, isNull, isUndefined } from '@/utils/common'
+import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys.ts'
+import { useFilterHelpers } from '@/composables/filter/filterFactory.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -36,8 +38,16 @@ const emit = defineEmits<{
   (e: 'onClose'): void
 }>()
 
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+
+if (isUndefined(filterConfig) || isUndefined(filterData)) {
+  throw new Error('Incorrect provide/inject config.')
+}
+
 const activeTab = ref<'add' | 'manage'>('add')
 const customName = ref('')
+const storeDatatableHiddenColumns = ref(false)
 const saveButtonLoading = ref(false)
 const listLoading = ref(false)
 const errorCount = ref(false)
@@ -91,6 +101,9 @@ const sortItems = async () => {
   }
 }
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { serializeFilters } = useFilterHelpers(filterData, filterConfig, props.systemResource)
+
 const addBookmark = async () => {
   saveButtonLoading.value = true
   errorCount.value = false
@@ -100,6 +113,11 @@ const addBookmark = async () => {
   config.layoutType = mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop
   config.systemResource = props.systemResource
   config.customName = customName.value
+  config.data = {
+    filter: serializeFilters(filterData),
+    datatableHiddenColumns:
+      storeDatatableHiddenColumns.value && props.datatableHiddenColumns ? props.datatableHiddenColumns : undefined,
+  }
   try {
     const count = await filterBookmarkStore.fetchBookmarksCount(
       {
@@ -255,8 +273,8 @@ watch(activeTab, () => {
           </ARow>
           <ARow>
             <AFormSwitch
+              v-model="storeDatatableHiddenColumns"
               label="Save datatable columns also"
-              :model-value="true"
             />
           </ARow>
         </div>

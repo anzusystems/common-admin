@@ -2,7 +2,9 @@ import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTracki
 import type { SortableItemDataAware } from '@/components/sortable/sortableUtils'
 import type { IntegerId } from '@/types/common'
 
-export interface UserAdminConfig<TData = any> extends AnzuUserAndTimeTrackingAware, SortableItemDataAware {
+export interface UserAdminConfig<TData = UserAdminConfigDataFilterBookmark | UserAdminConfigDataPinnedWidgets>
+  extends AnzuUserAndTimeTrackingAware,
+    SortableItemDataAware {
   id: IntegerId
   user: IntegerId
   configType: UserAdminConfigTypeType
@@ -29,3 +31,13 @@ export const UserAdminConfigLayoutType = {
 } as const
 export const UserAdminConfigLayoutTypeDefault = UserAdminConfigLayoutType.Desktop
 export type UserAdminConfigLayoutTypeType = (typeof UserAdminConfigLayoutType)[keyof typeof UserAdminConfigLayoutType]
+
+export interface UserAdminConfigDataFilterBookmark {
+  filter: string
+  datatableHiddenColumns?: string[]
+}
+
+export type UserAdminConfigDataPinnedWidgets<TVariant extends string = string> = Array<{
+  variant: TVariant
+  position: number
+}>
