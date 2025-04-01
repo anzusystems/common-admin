@@ -1,5 +1,14 @@
-import { type Reactive, reactive, type Ref } from 'vue'
-import { cloneDeep, isArray, isEmptyArray, isEmptyObject, isNull, isString, isUndefined } from '@/utils/common'
+import { type Reactive, reactive } from 'vue'
+import {
+  cloneDeep,
+  isArray,
+  isEmptyArray,
+  isEmptyObject,
+  isNull,
+  isObject,
+  isString,
+  isUndefined
+} from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
 import type { AnyFn } from '@vueuse/core'
 
@@ -124,11 +133,14 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 
   const serializeFilters = (data: Record<string, AllowedFilterValues>): string => {
     const params = new URLSearchParams()
-
     for (const key in data) {
       const value = data[key]
-      if (Array.isArray(value)) {
-        value.forEach((item) => params.append(key, String(item)))
+      if (isUndefined(value) || isNull(value)) continue
+      if (isArray(value) && isEmptyArray(value)) continue
+      if (isObject(value) && isEmptyObject(value)) continue
+
+      if (isArray(value)) {
+        params.set(key, value.join(','))
       } else {
         params.set(key, String(value))
       }
@@ -156,11 +168,15 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     const result: Record<string, AllowedFilterValues> = {}
 
     for (const [key, value] of params.entries()) {
-      if (result[key]) {
-        if (!Array.isArray(result[key])) {
-          result[key] = [result[key] as string]
-        }
-        ;(result[key] as string[]).push(value)
+      const fieldConfig = filterConfig.fields[key as keyof typeof filterConfig.fields]
+      const isMultiple = fieldConfig.multiple ?? false
+
+      if (isMultiple) {
+        const items = value.split(',')
+
+        const allNumeric = items.every((item) => !isNaN(Number(item)))
+
+        result[key] = allNumeric ? items.map(Number) : items
       } else {
         result[key] = value
       }

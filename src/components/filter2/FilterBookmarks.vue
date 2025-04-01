@@ -25,8 +25,8 @@ const props = withDefaults(
   {}
 )
 
-const datatableHiddenColumns = defineModel<string[]>('datatableHiddenColumns', {
-  default: () => [],
+const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
+  default: undefined,
   required: true,
 })
 

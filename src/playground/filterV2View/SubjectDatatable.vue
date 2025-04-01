@@ -60,8 +60,6 @@ const sortByChange = (option: DatatableOrderingOption) => {
 const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(
   filterData,
   filterConfig,
-  pagination,
-  columnsHidden
 )
 
 defineExpose({
@@ -77,8 +75,8 @@ onMounted(() => {
 <template>
   <div>
     <SubjectFilter
-      @submit="submitFilter(getList)"
-      @reset="resetFilter(getList)"
+      @submit="submitFilter(pagination,getList)"
+      @reset="resetFilter(pagination,getList)"
     />
     <div>
       <div class="d-flex align-center">
