@@ -4,7 +4,7 @@ import { computed, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
 import { usePagination } from '@/composables/system/pagination'
-import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
+import { cloneDeep, isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 import {
@@ -93,23 +93,24 @@ if (
   throw new Error('Incorrect provide/inject config.')
 }
 
-const modelValue = computed({
-  get() {
-    return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
-  },
-  set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
-    updateFilterSelectedFuture(newValue)
-    let final: null | string | number | string[] | number[] = null
-    if (isArray(newValue)) {
-      final = newValue.map((item) => item.value) as string[] | number[]
-    } else if (!isNull(newValue)) {
-      final = newValue.value
-    }
-    filterData[props.name] = final
-    touched.value = true
-    emit('change')
-  },
-})
+const selected = ref<any>([])
+
+// const modelValue = computed({
+//   get() {
+//     return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
+//   },
+//   set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
+//     let final: null | string | number | string[] | number[] = null
+//     if (isArray(newValue)) {
+//       final = newValue.map((item) => item.value) as string[] | number[]
+//     } else if (!isNull(newValue)) {
+//       final = newValue.value
+//     }
+//     filterData[props.name] = final
+//     touched.value = true
+//     emit('change')
+//   },
+// })
 
 const search = ref('')
 const isFocused = ref(false)
@@ -269,10 +270,39 @@ watch(submitResetCounter, () => {
   updateSelected()
 })
 
+// watch(
+//   modelValue,
+//   async (newValue, oldValue) => {
+//     if (newValue === oldValue) return
+//     console.log(newValue)
+//     updateFilterSelectedFuture(newValue)
+//     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+//       selectedItemsCache.value = []
+//       if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
+//       autoFetchTimer.value = setTimeout(() => {
+//         autoFetch()
+//       }, 3000)
+//       return
+//     }
+//     const found = await tryToLoadFromLocalData(newValue)
+//     if (found) return
+//     if (isArray<IntegerId | DocId>(newValue)) {
+//       loading.value = true
+//       selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
+//       loading.value = false
+//       return
+//     }
+//     loading.value = true
+//     selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
+//     loading.value = false
+//   },
+//   { immediate: true }
+// )
+
 watch(
-  modelValue,
+  () => filterData[props.name],
   async (newValue, oldValue) => {
-    if (newValue === oldValue) return
+    if (newValue === oldValue || isBoolean(newValue)) return
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []
       if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
@@ -281,11 +311,12 @@ watch(
       }, 3000)
       return
     }
-    const found = await tryToLoadFromLocalData(newValue)
-    if (found) return
+    // const found = await tryToLoadFromLocalData(newValue)
+    // if (found) return
     if (isArray<IntegerId | DocId>(newValue)) {
       loading.value = true
       selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
+      selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))
       loading.value = false
       return
     }
@@ -311,7 +342,7 @@ watchDebounced(
 
 <template>
   <VAutocomplete
-    v-model="modelValue"
+    v-model="selected"
     :items="allItems"
     no-filter
     :placeholder="placeholderComputed"
