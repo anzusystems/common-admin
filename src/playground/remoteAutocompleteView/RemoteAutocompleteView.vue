@@ -10,9 +10,13 @@ import type { Pagination } from '@/types/Pagination'
 import type { FilterBag } from '@/types/Filter'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { fetchPollListByIds, fetchPollListDemo, type PollDemo } from '@/playground/subjectSelectView/pollDemoApi'
+import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
+import { damClient } from '@/playground/mock/coreDamClient.ts'
 
-const value = ref<any>([1])
+const value = ref<any>([])
 const selected = ref<any>([])
+
+const valueLicence = ref<IntegerId[]>([])
 
 const fetchItems = async (pagination: Pagination, filterBag: FilterBag) => {
   const rubrics = await fetchPollListDemo(pagination, filterBag)
@@ -73,6 +77,18 @@ const innerFilter = reactive({
               chips
               multiple
               filter-by-field="title"
+            />
+          </ARow>
+          <ARow title="v-model">
+            {{ valueLicence }}
+          </ARow>
+          <ARow>
+            <DamAssetLicenceRemoteAutocomplete
+              v-model="valueLicence"
+              :client="damClient"
+              label="DAM Asset Licence multiple"
+              multiple
+              clearable
             />
           </ARow>
         </ASystemEntityScope>

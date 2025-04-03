@@ -208,7 +208,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^3.2.1"
     "@stylistic/eslint-plugin": "npm:^4.2.0"
     "@tsconfig/node22": "npm:^22.0.1"
-    "@types/node": "npm:^22.13.14"
+    "@types/node": "npm:^22.14.0"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -232,7 +232,7 @@ __metadata:
     postcss-prefix-selector: "npm:^2.1.1"
     prettier: "npm:^3.5.3"
     rusha: "npm:^0.8.14"
-    sass: "npm:^1.86.0"
+    sass: "npm:^1.86.2"
     socket.io-client: "npm:4.8.1"
     sortablejs: "npm:^1.15.6"
     stylelint: "npm:16.17.0"
@@ -250,7 +250,7 @@ __metadata:
     vue-i18n: "npm:11.1.2"
     vue-router: "npm:4.5.0"
     vue-tsc: "npm:2.2.8"
-    vuetify: "npm:3.7.19"
+    vuetify: "npm:3.8.0"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@vuelidate/core": 2.0.3
@@ -265,7 +265,7 @@ __metadata:
     vue: 3.5.13
     vue-i18n: 11.1.2
     vue-router: 4.5.0
-    vuetify: 3.7.19
+    vuetify: 3.8.0
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -1891,12 +1891,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.13.14":
-  version: 22.13.14
-  resolution: "@types/node@npm:22.13.14"
+"@types/node@npm:*, @types/node@npm:^22.14.0":
+  version: 22.14.0
+  resolution: "@types/node@npm:22.14.0"
   dependencies:
-    undici-types: "npm:~6.20.0"
-  checksum: 10/5fafad441c7bb27f963aa8fdfa0787ffb1142b27f4dd2047a2cc27a39f981b432acc71a9b5a428a258f93daeb72f12b7468ab9163a41fe4f98584bc5d42ade6e
+    undici-types: "npm:~6.21.0"
+  checksum: 10/d0669a8a37a18532c886ccfa51eb3fe1e46088deb4d3d27ebcd5d7d68bd6343ad1c7a3fcb85164780a57629359c33a6c917ecff748ea232bceac7692acc96537
   languageName: node
   linkType: hard
 
@@ -6622,9 +6622,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.86.0":
-  version: 1.86.0
-  resolution: "sass@npm:1.86.0"
+"sass@npm:^1.86.2":
+  version: 1.86.2
+  resolution: "sass@npm:1.86.2"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^4.0.0"
@@ -6635,7 +6635,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10/d943e114340781d1d77bf8dc09c7daa8e1310bbdcdcf9cdd798e3d67c339132b19f6a88838800d11f48fc32e6726266fb87528d4aa087682a95abe690af1009c
+  checksum: 10/0c4a7f169576083369ccee9523b5f875383efdd44e45fbe3f1fee80c6d46fbaac3110f60ac4ae3fa64430dc5c5e5fbf5a6d8d6e038981f7757face257b506ebc
   languageName: node
   linkType: hard
 
@@ -7438,10 +7438,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~6.20.0":
-  version: 6.20.0
-  resolution: "undici-types@npm:6.20.0"
-  checksum: 10/583ac7bbf4ff69931d3985f4762cde2690bb607844c16a5e2fbb92ed312fe4fa1b365e953032d469fa28ba8b224e88a595f0b10a449332f83fa77c695e567dbe
+"undici-types@npm:~6.21.0":
+  version: 6.21.0
+  resolution: "undici-types@npm:6.21.0"
+  checksum: 10/ec8f41aa4359d50f9b59fa61fe3efce3477cc681908c8f84354d8567bb3701fafdddf36ef6bff307024d3feb42c837cf6f670314ba37fc8145e219560e473d14
   languageName: node
   linkType: hard
 
@@ -7888,14 +7888,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.7.19":
-  version: 3.7.19
-  resolution: "vuetify@npm:3.7.19"
+"vuetify@npm:3.8.0":
+  version: 3.8.0
+  resolution: "vuetify@npm:3.8.0"
   peerDependencies:
     typescript: ">=4.7"
-    vite-plugin-vuetify: ">=1.0.0"
-    vue: ^3.3.0
-    webpack-plugin-vuetify: ">=2.0.0"
+    vite-plugin-vuetify: ">=2.1.0"
+    vue: ^3.5.0
+    webpack-plugin-vuetify: ">=3.1.0"
   peerDependenciesMeta:
     typescript:
       optional: true
@@ -7903,7 +7903,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/fed3bc857c7fd313d62d09a3a6b709df0f364a2d62a210ec2aad6136e3dd0af0847721682cfdd1cdb4056c867c9e3eca301889d72548a697bcd6e848c3ee9f50
+  checksum: 10/edf0d1d7d4c9519c36df7593b30993a937bea65dfad5d17a10cab336bde75a432215a96c300baec4037513e315ccb7a2b2f0a7ee8ca39a8817a53a0e472d5488
   languageName: node
   linkType: hard
 

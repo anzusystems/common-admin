@@ -38,9 +38,11 @@ const emit = defineEmits<{
 
 const modelValueComputed = computed({
   get() {
+    console.log('modelValueComputed get', props.modelValue)
     return props.modelValue
   },
   set(newValue: IntegerId | null | IntegerId[] | any) {
+    console.log('modelValueComputed set', newValue)
     emit('update:modelValue', cloneDeep<IntegerId | null | IntegerId[] | any>(newValue))
   },
 })
@@ -51,29 +53,22 @@ const selected = defineModel<ValueObjectOption<IntegerId>[]>('selected', { requi
 const { fetchItems, fetchItemsByIds } = useAssetLicenceSelectActions(props.client)
 
 const innerFilter = useDamAssetLicenceFilter()
-
-const selectedExtSystemId = computed(() => {
-  return props.extSystemId
-})
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+innerFilter.extSystem.model = props.extSystemId
 
 watch(
-  selectedExtSystemId,
+  () => props.extSystemId,
   (newValue, oldValue) => {
     if (newValue === oldValue) return
-    modelValueComputed.value = null
-    if (newValue) {
-      innerFilter.extSystem.model = newValue
-      return
-    }
-    innerFilter.extSystem.model = null
-  },
-  { immediate: true }
+    modelValueComputed.value = props.multiple ? [] : null
+    innerFilter.extSystem.model = newValue
+  }
 )
 </script>
 
 <template>
   <AFormRemoteAutocomplete
-    :key="selectedExtSystemId + ''"
+    :key="extSystemId + ''"
     v-model="modelValueComputed"
     v-model:selected="selected"
     :required="required"
