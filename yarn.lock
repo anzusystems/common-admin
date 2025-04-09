@@ -218,8 +218,8 @@ __metadata:
     "@vue/tsconfig": "npm:0.7.0"
     "@vuelidate/core": "npm:^2.0.3"
     "@vuelidate/validators": "npm:^2.0.4"
-    "@vueuse/core": "npm:^13.0.0"
-    "@vueuse/integrations": "npm:^13.0.0"
+    "@vueuse/core": "npm:^13.1.0"
+    "@vueuse/integrations": "npm:^13.1.0"
     axios: "npm:1.8.4"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.13"
@@ -250,13 +250,13 @@ __metadata:
     vue-i18n: "npm:11.1.3"
     vue-router: "npm:4.5.0"
     vue-tsc: "npm:2.2.8"
-    vuetify: "npm:3.8.0"
+    vuetify: "npm:3.8.1"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@vuelidate/core": 2.0.3
     "@vuelidate/validators": 2.0.4
-    "@vueuse/core": 13.0.0
-    "@vueuse/integrations": 13.0.0
+    "@vueuse/core": 13.1.0
+    "@vueuse/integrations": 13.1.0
     axios: 1.8.4
     dayjs: 1.11.13
     pinia: 3.0.1
@@ -265,7 +265,7 @@ __metadata:
     vue: 3.5.13
     vue-i18n: 11.1.3
     vue-router: 4.5.0
-    vuetify: 3.8.0
+    vuetify: 3.8.1
   peerDependenciesMeta:
     "@vueuse/core":
       optional: true
@@ -2435,16 +2435,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/core@npm:13.0.0, @vueuse/core@npm:^13.0.0":
-  version: 13.0.0
-  resolution: "@vueuse/core@npm:13.0.0"
+"@vueuse/core@npm:13.1.0, @vueuse/core@npm:^13.1.0":
+  version: 13.1.0
+  resolution: "@vueuse/core@npm:13.1.0"
   dependencies:
     "@types/web-bluetooth": "npm:^0.0.21"
-    "@vueuse/metadata": "npm:13.0.0"
-    "@vueuse/shared": "npm:13.0.0"
+    "@vueuse/metadata": "npm:13.1.0"
+    "@vueuse/shared": "npm:13.1.0"
   peerDependencies:
     vue: ^3.5.0
-  checksum: 10/b6d7db7db2592312567efa93e38f49f3d983269ad370e6505139f3a5f24f0f87879661a9aa3e0ee376baa25d86894e4a6d71fadc7cf525f21c6e0b858d33638a
+  checksum: 10/1de662afc7663693fc880498506964a37cfe86778c94ecff546ec6d45fe81ea482b628c86a23151bfb0c73c318cd9ffa2e984e15426a4a1c048647391c13861d
   languageName: node
   linkType: hard
 
@@ -2497,12 +2497,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/integrations@npm:^13.0.0":
-  version: 13.0.0
-  resolution: "@vueuse/integrations@npm:13.0.0"
+"@vueuse/integrations@npm:^13.1.0":
+  version: 13.1.0
+  resolution: "@vueuse/integrations@npm:13.1.0"
   dependencies:
-    "@vueuse/core": "npm:13.0.0"
-    "@vueuse/shared": "npm:13.0.0"
+    "@vueuse/core": "npm:13.1.0"
+    "@vueuse/shared": "npm:13.1.0"
   peerDependencies:
     async-validator: ^4
     axios: ^1
@@ -2542,7 +2542,7 @@ __metadata:
       optional: true
     universal-cookie:
       optional: true
-  checksum: 10/8a298333a9775f74236a8969e730350934493a5351db37d2b6ef09e24162d5a99ee8ffcebcfc03f9b4da9093773eec986ba5bf5eea0cf21d3c95f8918467ee4d
+  checksum: 10/a41743a62218d62e1268a1cc470a2ae8eb1c501a157bdfcb606750a36a0d772a5b5c1e216382622ce954787f14d6ba883f07f3c321e3e5458e128d046da26d80
   languageName: node
   linkType: hard
 
@@ -2553,10 +2553,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/metadata@npm:13.0.0":
-  version: 13.0.0
-  resolution: "@vueuse/metadata@npm:13.0.0"
-  checksum: 10/bbb33ce433f49d5de9ce7b75c6311077d6e79b7f53a9b462ca3dc16bddae5b86175109ce5477766da7c178b1c610befdcd3b2b6884cc191584a4a24b3c4503ef
+"@vueuse/metadata@npm:13.1.0":
+  version: 13.1.0
+  resolution: "@vueuse/metadata@npm:13.1.0"
+  checksum: 10/2e0fd331c0a9e9b1a5c5b20b7169c10305cf5f19b22c035d76188d83e00551e6d79089bdf98ace41308983deab544fb853e818cd4b9af594a03deb2ee8cfc992
   languageName: node
   linkType: hard
 
@@ -2569,12 +2569,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/shared@npm:13.0.0":
-  version: 13.0.0
-  resolution: "@vueuse/shared@npm:13.0.0"
+"@vueuse/shared@npm:13.1.0":
+  version: 13.1.0
+  resolution: "@vueuse/shared@npm:13.1.0"
   peerDependencies:
     vue: ^3.5.0
-  checksum: 10/11090e729cc4c1846c3fc0e9e0ba040f8fb10f2413c7d6a83bd80949576fe8873065c33867216bb14f4b32fd5d8a2de11945103ebd5b1a48de707ccdf80fad7c
+  checksum: 10/e988cc2dee8d2dd4f0a15566399ae352ffd460447884b360f605371f3e786c54e8780b12b6597ce799de83ca7f72c747b6b0fca4a009560dda44da0109bed3bf
   languageName: node
   linkType: hard
 
@@ -7922,9 +7922,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.8.0":
-  version: 3.8.0
-  resolution: "vuetify@npm:3.8.0"
+"vuetify@npm:3.8.1":
+  version: 3.8.1
+  resolution: "vuetify@npm:3.8.1"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=2.1.0"
@@ -7937,7 +7937,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/edf0d1d7d4c9519c36df7593b30993a937bea65dfad5d17a10cab336bde75a432215a96c300baec4037513e315ccb7a2b2f0a7ee8ca39a8817a53a0e472d5488
+  checksum: 10/b76f7ddbc70228ea901b0e7c5d251849d9beb66617d3181903c2555bf827c07c15f151f14b60c72066905616d0f026848da1b6df02b736d140ac139b350b9a97
   languageName: node
   linkType: hard
 

@@ -1,6 +1,7 @@
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
 import AAlerts from '@/components/AAlerts.vue'
+import AProgress from '@/components/AProgress.vue'
 import ACard from '@/components/ACard.vue'
 import ACardLoader from '@/components/ACardLoader.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
@@ -528,6 +529,7 @@ export {
   // COMPONENTS
   ACard,
   ACardLoader,
+  AProgress,
   ARow,
   AChipNoLink,
   AAlerts,
