@@ -29,8 +29,8 @@ import type {
   DatatableOrderingOption,
   DatatableOrderingOptions,
   DatatableSortBy
-} from '@/composables/system/datatableColumns.ts'
-import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures.ts'
+} from '@/composables/system/datatableColumns'
+import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
 
 const props = withDefaults(
   defineProps<{

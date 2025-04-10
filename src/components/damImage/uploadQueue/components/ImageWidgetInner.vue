@@ -50,7 +50,7 @@ import {
   isImageCreateUpdateAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi.ts'
+import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 
 const props = withDefaults(
   defineProps<{

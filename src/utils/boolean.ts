@@ -1,4 +1,4 @@
-import { isNumber, isString } from '@/utils/common.ts'
+import { isNumber, isString } from '@/utils/common'
 
 export const booleanToInteger = (value: boolean) => {
   return value ? 1 : 0

@@ -21,7 +21,7 @@ import {
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
-import type { ImageCreateUpdateAware } from '@/types/ImageAware.ts'
+import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import ARow from '@/components/ARow.vue'
 import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'

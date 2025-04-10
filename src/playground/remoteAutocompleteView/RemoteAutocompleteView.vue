@@ -11,7 +11,7 @@ import type { FilterBag } from '@/types/Filter'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { fetchPollListByIds, fetchPollListDemo, type PollDemo } from '@/playground/subjectSelectView/pollDemoApi'
 import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
-import { damClient } from '@/playground/mock/coreDamClient.ts'
+import { damClient } from '@/playground/mock/coreDamClient'
 
 const value = ref<any>([])
 const selected = ref<any>([])

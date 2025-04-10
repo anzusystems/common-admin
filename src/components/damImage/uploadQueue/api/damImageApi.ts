@@ -7,7 +7,7 @@ import type { AssetFileImage } from '@/types/coreDam/AssetFile'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset.ts'
+import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
 
 const END_POINT = '/adm/v1/image'
 const CHUNK_UPLOAD_TIMEOUT = 420

@@ -7,7 +7,7 @@ import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
-import type { DatatableOrderingOption, DatatableOrderingOptions } from '@/composables/system/datatableColumns.ts'
+import type { DatatableOrderingOption, DatatableOrderingOptions } from '@/composables/system/datatableColumns'
 
 withDefaults(
   defineProps<{

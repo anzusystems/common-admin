@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { computed } from 'vue'
-import type { DocIdNullable } from '@/types/common.ts'
+import type { DocIdNullable } from '@/types/common'
 import { useCommonAdminCoreDamOptionsGlobal } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useI18n } from 'vue-i18n'
 

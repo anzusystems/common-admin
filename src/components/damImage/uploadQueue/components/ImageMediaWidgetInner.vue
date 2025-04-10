@@ -55,7 +55,7 @@ import {
 import { type MediaAware, MediaExtService } from '@/types/MediaAware'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile'
 import { createMedia, deleteMedia, fetchMedia, updateMedia } from '@/components/damImage/uploadQueue/api/mediaApi'
-import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi.ts'
+import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 
 const props = withDefaults(
   defineProps<{
