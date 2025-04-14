@@ -208,7 +208,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^3.2.2"
     "@stylistic/eslint-plugin": "npm:^4.2.0"
     "@tsconfig/node22": "npm:^22.0.1"
-    "@types/node": "npm:^22.14.0"
+    "@types/node": "npm:^22.14.1"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -239,7 +239,7 @@ __metadata:
     stylelint-config-recommended-vue: "npm:^1.6.0"
     stylelint-config-standard-scss: "npm:^14.0.0"
     typescript: "npm:5.7.3"
-    unplugin: "npm:2.3.0"
+    unplugin: "npm:2.3.2"
     uuid: "npm:^11.1.0"
     vite: "npm:6.2.6"
     vite-plugin-dts: "npm:4.5.3"
@@ -261,7 +261,7 @@ __metadata:
     dayjs: 1.11.13
     pinia: 3.0.2
     socket.io-client: 4.8.1
-    unplugin: 2.3.0
+    unplugin: 2.3.2
     vue: 3.5.13
     vue-i18n: 11.1.3
     vue-router: 4.5.0
@@ -1891,12 +1891,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.14.0":
+"@types/node@npm:*":
   version: 22.14.0
   resolution: "@types/node@npm:22.14.0"
   dependencies:
     undici-types: "npm:~6.21.0"
   checksum: 10/d0669a8a37a18532c886ccfa51eb3fe1e46088deb4d3d27ebcd5d7d68bd6343ad1c7a3fcb85164780a57629359c33a6c917ecff748ea232bceac7692acc96537
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^22.14.1":
+  version: 22.14.1
+  resolution: "@types/node@npm:22.14.1"
+  dependencies:
+    undici-types: "npm:~6.21.0"
+  checksum: 10/561b1ad98ef5176d6da856ffbbe494f16655149f6a7d561de0423c8784910c81267d7d6459f59d68a97b3cbae9b5996b3b5dfe64f4de3de2239d295dcf4a4dcc
   languageName: node
   linkType: hard
 
@@ -7518,14 +7527,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin@npm:2.3.0":
-  version: 2.3.0
-  resolution: "unplugin@npm:2.3.0"
+"unplugin@npm:2.3.2":
+  version: 2.3.2
+  resolution: "unplugin@npm:2.3.2"
   dependencies:
     acorn: "npm:^8.14.1"
     picomatch: "npm:^4.0.2"
     webpack-virtual-modules: "npm:^0.6.2"
-  checksum: 10/cb8d96d70bdbe84f57b2fd9c9e9259b8bd9c5d6757f28247c9022cd28743f515aad1d95d8775052f52a3f7aef9563a5bdfbec90a8cb42b0c0faee73d33f4e2d1
+  checksum: 10/4dafcb07405d53522db25f5d53126bd3d059a2ad877218a94fe5f22f8cb37b419933661c5f93b75ec1ce302b9228433d733cfc0cec191073742cb67218a62b52
   languageName: node
   linkType: hard
 
