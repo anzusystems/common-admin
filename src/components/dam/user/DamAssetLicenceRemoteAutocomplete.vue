@@ -38,11 +38,9 @@ const emit = defineEmits<{
 
 const modelValueComputed = computed({
   get() {
-    console.log('modelValueComputed get', props.modelValue)
     return props.modelValue
   },
   set(newValue: IntegerId | null | IntegerId[] | any) {
-    console.log('modelValueComputed set', newValue)
     emit('update:modelValue', cloneDeep<IntegerId | null | IntegerId[] | any>(newValue))
   },
 })
