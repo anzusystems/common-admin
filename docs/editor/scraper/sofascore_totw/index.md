@@ -1,4 +1,4 @@
-# sofascore_totw: Team of the Week
+# sofascore_totw: Sofascore Team of the Week
 
 ## Supported codes
 
