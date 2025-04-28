@@ -524,6 +524,7 @@ import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cach
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { isImageCreateUpdateAware, isMediaAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 import type { MediaAware } from '@/types/MediaAware'
+import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
 
 export {
   // COMPONENTS
@@ -669,6 +670,7 @@ export {
   defineAuth,
   defineBreadcrumbs,
   useDamCachedUsers,
+  useUnreleasedFeatures,
 
   // VALUE OBJECTS
   type GrantType,

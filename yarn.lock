@@ -208,7 +208,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^3.3.0"
     "@stylistic/eslint-plugin": "npm:^4.2.0"
     "@tsconfig/node22": "npm:^22.0.1"
-    "@types/node": "npm:^22.15.1"
+    "@types/node": "npm:^22.15.3"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -235,7 +235,7 @@ __metadata:
     sass: "npm:^1.87.0"
     socket.io-client: "npm:4.8.1"
     sortablejs: "npm:^1.15.6"
-    stylelint: "npm:16.19.0"
+    stylelint: "npm:16.19.1"
     stylelint-config-recommended-vue: "npm:^1.6.0"
     stylelint-config-standard-scss: "npm:^14.0.0"
     typescript: "npm:5.7.3"
@@ -248,7 +248,7 @@ __metadata:
     vue: "npm:3.5.13"
     vue-eslint-parser: "npm:^10.1.3"
     vue-i18n: "npm:11.1.3"
-    vue-router: "npm:4.5.0"
+    vue-router: "npm:4.5.1"
     vue-tsc: "npm:2.2.10"
     vuetify: "npm:3.8.2"
     webfontloader: "npm:^1.6.28"
@@ -264,7 +264,7 @@ __metadata:
     unplugin: 2.3.2
     vue: 3.5.13
     vue-i18n: 11.1.3
-    vue-router: 4.5.0
+    vue-router: 4.5.1
     vuetify: 3.8.2
   peerDependenciesMeta:
     "@vueuse/core":
@@ -1898,12 +1898,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.15.1":
-  version: 22.15.1
-  resolution: "@types/node@npm:22.15.1"
+"@types/node@npm:*, @types/node@npm:^22.15.3":
+  version: 22.15.3
+  resolution: "@types/node@npm:22.15.3"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10/b43757e2fbd53482ec9bcf903a2b69510539251804b5b962431910cf0d765802dc1bf643c04d0a43b2ebaff3620f2a2ca1feef706c403696daa5680764476c0f
+  checksum: 10/6b4ff03c36598432b419980f828281aa16383e2de6eb61f73275495ef8d2cbf8cb5607659b4cae5ff8b2b2ff69913ea07ffcc0be029e4280b6e8bc138dc6629b
   languageName: node
   linkType: hard
 
@@ -7152,9 +7152,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stylelint@npm:16.19.0":
-  version: 16.19.0
-  resolution: "stylelint@npm:16.19.0"
+"stylelint@npm:16.19.1":
+  version: 16.19.1
+  resolution: "stylelint@npm:16.19.1"
   dependencies:
     "@csstools/css-parser-algorithms": "npm:^3.0.4"
     "@csstools/css-tokenizer": "npm:^3.0.3"
@@ -7196,7 +7196,7 @@ __metadata:
     write-file-atomic: "npm:^5.0.1"
   bin:
     stylelint: bin/stylelint.mjs
-  checksum: 10/bc214d084b1cabd8500707b32700d43f99a3ac0e0bddcb2274187c7108b57f4118e5fd1fa0bcf76fb9ae1041a81f70097b6ec56996bc960a1715a3826f7feeb8
+  checksum: 10/3ab6170d1ca7a0cea83bf13e048fee39fbec7d067c81623ec325f9ee2028afa267e6360f84f4adfdcc846a80ecd508e0670fb24303b3a4fb84f2543dcfa69a03
   languageName: node
   linkType: hard
 
@@ -7888,14 +7888,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-router@npm:4.5.0":
-  version: 4.5.0
-  resolution: "vue-router@npm:4.5.0"
+"vue-router@npm:4.5.1":
+  version: 4.5.1
+  resolution: "vue-router@npm:4.5.1"
   dependencies:
     "@vue/devtools-api": "npm:^6.6.4"
   peerDependencies:
     vue: ^3.2.0
-  checksum: 10/0dc76635924c84960614592c3dbf9919961cea765802c86e401d7d0747674ebbe4d7562ddbe1f349112e97e9ccb985b56037b12c7036dd7562c8da78b9cce9b5
+  checksum: 10/98a17fd0dd44c47e7010fca554bc9f63ddee5c1659409878ef624981570c4c3ea35a7e2f4d9a5084150ef671ca546219a9165de71878c8777f6b12ea2af94109
   languageName: node
   linkType: hard
 
