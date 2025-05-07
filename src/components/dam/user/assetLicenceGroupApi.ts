@@ -11,7 +11,7 @@ const END_POINT = '/adm/v1/asset-licence-group'
 export const ENTITY = 'assetLicenceGroup'
 
 export const fetchDamAssetLicenceGroupListByIds = (client: () => AxiosInstance, ids: IntegerId[]) =>
-  apiFetchByIds<DamAssetLicenceGroup[]>(client, ids, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY, {}, true)
+  apiFetchByIds<DamAssetLicenceGroup[]>(client, ids, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY, {}, false)
 
 export const fetchDamAssetLicenceGroupList = (
   client: () => AxiosInstance,

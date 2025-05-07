@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
-import { useIntervalFn } from '@vueuse/core'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useDocumentVisibility, useIntervalFn } from '@vueuse/core'
 import ASystemBarNewVersion from '@/components/systemBar/ASystemBarNewVersion.vue'
 import { isUndefined } from '@/utils/common'
 import { AnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
@@ -18,10 +18,23 @@ const props = withDefaults(
 )
 
 const showSystemBar = ref(false)
+const abortController = ref<AbortController | null>(null)
 
 const checkNewVersion = async () => {
+  if (abortController.value) {
+    abortController.value.abort()
+  }
+
+  abortController.value = new AbortController()
+
+  const isAbortError = (error: unknown): error is Error => {
+    return error instanceof Error && error.name === 'AbortError'
+  }
+
   try {
-    const res = await fetch(`/${props.jsonRelativePath}?random=${Date.now()}`)
+    const res = await fetch(`/${props.jsonRelativePath}?random=${Date.now()}`, {
+      signal: abortController.value.signal,
+    })
     if (res.ok) {
       const contentType = res.headers.get('content-type')
       if (!contentType || !contentType.includes('application/json')) {
@@ -37,6 +50,10 @@ const checkNewVersion = async () => {
     }
     throw new AnzuNewVersionFetchError('Unable to load env config. Incorrect response code.')
   } catch (error) {
+    if (isAbortError(error)) {
+      return
+    }
+
     if (error instanceof AnzuNewVersionFetchError) {
       console.log(error.message)
       return
@@ -54,12 +71,21 @@ const systemBarComponent = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { pause } = useIntervalFn(() => {
+useIntervalFn(() => {
   checkNewVersion()
 }, props.checkInterval)
 
+const visibility = useDocumentVisibility()
+watch(visibility, (newValue) => {
+  if (newValue === 'visible') {
+    checkNewVersion()
+  }
+})
+
 onBeforeUnmount(() => {
-  pause()
+  if (abortController.value) {
+    abortController.value.abort()
+  }
 })
 </script>
 
