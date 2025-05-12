@@ -253,6 +253,7 @@ __metadata:
     vuetify: "npm:3.8.4"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
+    "@sentry/vue": ^9.15.0
     "@vuelidate/core": 2.0.3
     "@vuelidate/validators": 2.0.4
     "@vueuse/core": 13.1.0
@@ -267,6 +268,8 @@ __metadata:
     vue-router: 4.5.1
     vuetify: 3.8.4
   peerDependenciesMeta:
+    "@sentry/vue":
+      optional: true
     "@vueuse/core":
       optional: true
     "@vueuse/integrations":
