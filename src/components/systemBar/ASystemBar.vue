@@ -1,26 +1,30 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useDocumentVisibility, useIntervalFn } from '@vueuse/core'
+import { useIntervalFn } from '@vueuse/core'
 import ASystemBarNewVersion from '@/components/systemBar/ASystemBarNewVersion.vue'
 import { isUndefined } from '@/utils/common'
-import { AnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
+import { AnzuNewVersionFetchError, isAnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
+import { useUserActivity } from '@/composables/useUserActivity.ts'
 
 const props = withDefaults(
   defineProps<{
     currentVersion: string
     checkInterval?: number
     jsonRelativePath?: string
+    minInactiveTime?: number // New prop for minimum inactive time before check
   }>(),
   {
     checkInterval: 60000,
     jsonRelativePath: 'config.json',
+    minInactiveTime: 5000, // 5 seconds default
   }
 )
 
-const showSystemBar = ref(false)
+const showSystemBar = ref<boolean>(false)
 const abortController = ref<AbortController | null>(null)
+const lastInactiveTime = ref<number>(0)
 
-const checkNewVersion = async () => {
+const checkNewVersion = async (): Promise<void> => {
   if (abortController.value) {
     abortController.value.abort()
   }
@@ -53,16 +57,13 @@ const checkNewVersion = async () => {
     if (isAbortError(error)) {
       return
     }
-
-    if (error instanceof AnzuNewVersionFetchError) {
-      console.log(error.message)
-      return
+    if (isAnzuNewVersionFetchError(error)) {
+      throw error
     }
     if (error instanceof SyntaxError) {
-      console.log('There was a SyntaxError', error)
-      return
+      throw new AnzuNewVersionFetchError('Unable to load env config. Syntax error.', error)
     }
-    console.log('There was an error in new version fetch', error)
+    throw new AnzuNewVersionFetchError('Unable to load env config. Unknown error.', error as any)
   }
 }
 
@@ -71,16 +72,30 @@ const systemBarComponent = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-useIntervalFn(() => {
+const { pause, resume } = useIntervalFn(() => {
   checkNewVersion()
 }, props.checkInterval)
 
-const visibility = useDocumentVisibility()
-watch(visibility, (newValue) => {
-  if (newValue === 'visible') {
-    checkNewVersion()
-  }
-})
+const { isWindowActive } = useUserActivity()
+
+watch(
+  isWindowActive,
+  (newValue: boolean) => {
+    const now: number = Date.now()
+
+    if (newValue) {
+      const inactiveDuration: number = now - lastInactiveTime.value
+      resume()
+      if (inactiveDuration > props.minInactiveTime) {
+        checkNewVersion()
+      }
+    } else {
+      lastInactiveTime.value = now
+      pause()
+    }
+  },
+  { immediate: true }
+)
 
 onBeforeUnmount(() => {
   if (abortController.value) {

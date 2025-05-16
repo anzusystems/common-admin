@@ -22,12 +22,14 @@ import {
 import { useCollabState } from '@/components/collab/composables/collabState'
 import { useAlerts } from '@/composables/system/alerts'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
-import { logError } from '@/services/sentry'
+import { useSentry } from '@/services/sentry'
 
 export function useCollabInit() {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { showWarningT, showSuccessT } = useAlerts()
   const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState } = useCollabState()
+
+  const { logError } = useSentry()
 
   const initCollab = () => {
     const changeEventBus = useCollabRoomDataChangeEventBus()
