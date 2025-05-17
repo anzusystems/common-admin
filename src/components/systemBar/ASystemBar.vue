@@ -11,12 +11,12 @@ const props = withDefaults(
     currentVersion: string
     checkInterval?: number
     jsonRelativePath?: string
-    minInactiveTime?: number // New prop for minimum inactive time before check
+    minInactiveTime?: number
   }>(),
   {
     checkInterval: 60000,
     jsonRelativePath: 'config.json',
-    minInactiveTime: 5000, // 5 seconds default
+    minInactiveTime: 5000,
   }
 )
 
