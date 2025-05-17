@@ -19,7 +19,7 @@ $duplicate-bg-color-dark: rgb(0 0 0 / 70%);
 
   &__icon-circle {
     border-radius: 100%;
-    background-color: rgba(204 204 204 / 50%);
+    background-color: rgb(204 204 204 / 50%);
   }
 
   &__icon {
@@ -27,7 +27,7 @@ $duplicate-bg-color-dark: rgb(0 0 0 / 70%);
   }
 
   .asset-image--loading-bg .v-responsive__content {
-    background-color: rgba(255 255 255 / 50%); // todo dark
+    background-color: rgb(255 255 255 / 50%); // todo dark
   }
 
   .asset-image__progress {
@@ -41,7 +41,7 @@ $duplicate-bg-color-dark: rgb(0 0 0 / 70%);
   }
 
   .asset-image__progress--animate-done {
-    background-color: rgba(255 255 255 / 50%); // todo dark
+    background-color: rgb(255 255 255 / 50%); // todo dark
     animation: animate-upload-done 2s forwards;
   }
 }

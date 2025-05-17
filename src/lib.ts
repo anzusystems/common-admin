@@ -525,6 +525,8 @@ import { useImageStore } from '@/components/damImage/uploadQueue/composables/ima
 import { isImageCreateUpdateAware, isMediaAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 import type { MediaAware } from '@/types/MediaAware'
 import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
+import { useSentry } from '@/services/sentry'
+import { useUserActivity } from '@/composables/useUserActivity'
 
 export {
   // COMPONENTS
@@ -671,6 +673,8 @@ export {
   defineBreadcrumbs,
   useDamCachedUsers,
   useUnreleasedFeatures,
+  useSentry,
+  useUserActivity,
 
   // VALUE OBJECTS
   type GrantType,
