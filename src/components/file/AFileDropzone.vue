@@ -149,7 +149,7 @@ $class-name-root: 'a-file-dropzone';
 .v-theme--light {
   .#{$class-name-root} {
     .text {
-      background-color: rgba(212 212 212 / 50%);
+      background-color: rgb(212 212 212 / 50%);
     }
 
     &--bg {
@@ -171,7 +171,7 @@ $class-name-root: 'a-file-dropzone';
 .v-theme--dark {
   .#{$class-name-root} {
     .text {
-      background-color: rgba(57 57 57 / 50%);
+      background-color: rgb(57 57 57 / 50%);
     }
 
     &--bg {

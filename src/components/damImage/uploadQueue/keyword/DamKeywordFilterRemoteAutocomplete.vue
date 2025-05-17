@@ -9,8 +9,7 @@ const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
   }>(),
-  {
-  }
+  {}
 )
 
 const modelValue = defineModel<Filter>({ required: true })
@@ -28,5 +27,6 @@ const innerFilter = useKeywordListFilter()
     :fetch-items-by-ids="fetchItemsByIds"
     :inner-filter="innerFilter"
     filter-by-field="text"
+    :filter-sort-by="null"
   />
 </template>

@@ -1,12 +1,13 @@
 <script lang="ts" setup generic="TAclValue extends AclValue">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { AclValue } from '@/types/Permission'
-import { defineAuth } from '@/composables/auth/defineAuth'
-import { isUndefined } from '@/utils/common'
+import { useAuthHelpers } from '@/composables/auth/defineAuth'
+import { isArray } from '@/utils/common'
+import { useAuthStore } from '@/composables/auth/authStore'
 
 const props = withDefaults(
   defineProps<{
-    permission: TAclValue
+    permission: TAclValue | TAclValue[] // multiple values must be from same system!
     subject?: object
   }>(),
   {
@@ -16,28 +17,41 @@ const props = withDefaults(
 
 const allowed = ref<boolean>(false)
 
-const system = computed(() => {
-  const parts = props.permission.split('_')
-  return parts[0] || ''
+const authStore = useAuthStore()
+
+const currentUsers = computed(() => {
+  return authStore.currentUsers.value
 })
 
-onMounted(() => {
-  const { can, useCurrentUser } = defineAuth<AclValue>(system.value)
+const { canHelper, canForAllHelper } = useAuthHelpers()
 
-  const { currentUser } = useCurrentUser(system.value)
+const can = (acls: TAclValue[] | TAclValue, subject?: object) => {
+  if (isArray(acls)) {
+    return canForAllHelper(acls, subject)
+  }
 
-  watch(
-    currentUser,
-    (newValue) => {
-      if (!isUndefined(newValue)) {
-        allowed.value = can(props.permission, props.subject)
+  return canHelper(acls, subject)
+}
+
+const watchHandle = watch(
+  currentUsers,
+  (newValue) => {
+    if (newValue.size > 0) {
+      const show = can(props.permission, props.subject)
+      if (show) {
+        allowed.value = show
+        stopWatch()
       }
-    },
-    {
-      immediate: true,
     }
-  )
-})
+  },
+  {
+    immediate: true,
+  }
+)
+
+function stopWatch() {
+  setTimeout(() => watchHandle?.(), 0)
+}
 </script>
 
 <template>

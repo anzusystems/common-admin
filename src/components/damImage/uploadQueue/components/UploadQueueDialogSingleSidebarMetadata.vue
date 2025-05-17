@@ -27,7 +27,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
+const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol })
 
 const { showValidationError } = useAlerts()
 

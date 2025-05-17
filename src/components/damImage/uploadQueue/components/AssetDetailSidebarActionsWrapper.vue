@@ -6,8 +6,7 @@ const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
   }>(),
-  {
-  }
+  {}
 )
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss

@@ -23,16 +23,9 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
     )
   }
 
-  const widgetImageToDamImageOriginalUrl = (
-    image: ImageAware | ImageCreateUpdateAware,
-    random = true
-  ) => {
+  const widgetImageToDamImageOriginalUrl = (image: ImageAware | ImageCreateUpdateAware, random = true) => {
     return (
-      config.previewDomain +
-      '/image/original/' +
-      image.dam.damId +
-      '.jpg' +
-      (random ? '?random=' + Date.now() : '')
+      config.previewDomain + '/image/original/' + image.dam.damId + '.jpg' + (random ? '?random=' + Date.now() : '')
     )
   }
 
@@ -55,17 +48,8 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
     )
   }
 
-  const damImageIdToDamImageOriginalUrl = (
-    imageId: DocId,
-    random = true
-  ) => {
-    return (
-      config.previewDomain +
-      '/image/original/' +
-      imageId +
-      '.jpg' +
-      (random ? '?random=' + Date.now() : '')
-    )
+  const damImageIdToDamImageOriginalUrl = (imageId: DocId, random = true) => {
+    return config.previewDomain + '/image/original/' + imageId + '.jpg' + (random ? '?random=' + Date.now() : '')
   }
 
   return {

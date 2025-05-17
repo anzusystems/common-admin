@@ -81,7 +81,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     addCollabFieldLockStatusListener,
     addCollabGatheringBufferDataListener,
     lockedByUser,
-
   } = useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock
@@ -143,6 +142,14 @@ const requiredComputed = computed(() => {
 const disabledComputed = computed(() => {
   if (isDefined(props.disabled)) return props.disabled
   return !!lockedByUserLocal.value
+})
+
+const focus = () => {
+  textFieldRef.value?.focus()
+}
+
+defineExpose({
+  focus,
 })
 </script>
 

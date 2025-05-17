@@ -9,5 +9,11 @@
   "url": "Incorrect url format.",
   "numeric": "Allowed only numbers.",
   "slug": "Allowed only characters a-z and numbers 0-9.",
-  "stringArrayItemLength": "Item length in list must have between {min} and {max} characters."
+  "stringArrayItemLength": "Item length in list must have between {min} and {max} characters.",
+  "datesCompare": {
+    "laterThan": "Date must be later than \"{otherDateName}\"",
+    "onOrAfter": "Date must be on or after \"{otherDateName}\"",
+    "earlierThan": "Date must be earlier than \"{otherDateName}\"",
+    "onOrBefore": "Date must be on or before \"{otherDateName}\""
+  }
 }

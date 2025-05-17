@@ -13,9 +13,11 @@ const props = withDefaults(
     extSystem: IntegerId
     modelValue: { [key: string]: any }
     dataCy?: string
+    readonly?: boolean
   }>(),
   {
     dataCy: undefined,
+    readonly: false,
   }
 )
 const emit = defineEmits<{
@@ -38,7 +40,7 @@ const elements = computed(() => {
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
 
 if (isUndefined(configExtSystem)) {
-  throw new Error('Ext system must be initialised.')
+  throw new Error('AssetCustomMetadataForm: Ext system must be initialised.')
 }
 
 const pinnedCount = computed(() => {
@@ -51,6 +53,7 @@ const pinnedCount = computed(() => {
     :model-value="modelValue"
     :pinned-count="pinnedCount"
     :elements="elements"
+    :readonly="readonly"
     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
     @any-change="emit('anyChange')"
     @update:model-value="emit('update:modelValue', $event)"

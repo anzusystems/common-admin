@@ -16,6 +16,10 @@ import {
   axiosErrorResponseHasForbiddenOperationData,
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
+import {
+  AnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+} from '@/model/error/AnzuApiDependencyExistsError'
 
 export const apiGenerateListQuery = (pagination: Pagination, filterBag: FilterBag): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
@@ -71,6 +75,9 @@ export const apiFetchList = <R>(
         }
         if (axiosErrorResponseHasValidationData(err)) {
           return reject(new AnzuApiValidationError(err, system, entity, err))
+        }
+        if (axiosErrorResponseHasDependencyExistsData(err)) {
+          return reject(new AnzuApiDependencyExistsError(err, system, entity, err))
         }
         if (axiosErrorResponseHasForbiddenOperationData(err)) {
           return reject(new AnzuApiForbiddenOperationError(err, err))

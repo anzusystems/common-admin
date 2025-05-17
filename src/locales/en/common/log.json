@@ -14,7 +14,9 @@
     "datetimeFrom": "Date from",
     "datetimeTo": "Date until",
     "message": "Message",
-    "appVersion": "Version"
+    "appVersion": "Version",
+    "resourceName": "Entity name",
+    "resourceIds": "Entity ID"
   },
   "model": {
     "id": "ID",
@@ -30,7 +32,9 @@
       "content": "Request content",
       "response": "Response content",
       "path": "URL",
-      "httpStatus": "Status code"
+      "httpStatus": "Status code",
+      "resourceName": "Entity name",
+      "resourceIds": "Entity ID"
     }
   }
 }

@@ -40,6 +40,7 @@ const props = withDefaults(
     collab?: CollabComponentConfig
     disabled?: boolean | undefined
     chips?: boolean
+    autoSelectIfSingleAndEmptyOnInit?: boolean
   }>(),
   {
     label: undefined,
@@ -57,6 +58,7 @@ const props = withDefaults(
     collab: undefined,
     disabled: undefined,
     chips: false,
+    autoSelectIfSingleAndEmptyOnInit: false,
   }
 )
 const emit = defineEmits<{
@@ -95,13 +97,10 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const {
-    releaseCollabFieldLock,
-    changeCollabFieldData,
-    acquireCollabFieldLock,
-    lockedByUser,
-
-  } = useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } = useCollabField(
+    props.collab.room,
+    props.collab.field
+  )
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -225,7 +224,16 @@ const autoFetch = async () => {
   autoFetched.value = true
   loadingLocal.value = true
   const res = await props.fetchItems(pagination, innerFilter.value)
-  if (apiRequestCounter.value === 0) fetchedItems.value = res
+  if (apiRequestCounter.value === 0) {
+    fetchedItems.value = res
+    if (
+      props.autoSelectIfSingleAndEmptyOnInit &&
+      res.length === 1 &&
+      isNull(modelValue.value || (isArray(modelValue.value) && modelValue.value.length === 0))
+    ) {
+      modelValue.value = props.multiple ? [res[0].value] : res[0].value
+    }
+  }
   loadingLocal.value = false
 }
 const onFocus = () => {
@@ -267,7 +275,7 @@ watchDebounced(
       emit('searchChangeDebounced', newValue)
     }
   },
-  { debounce: 500, maxWait: 1500 }
+  { debounce: 300 }
 )
 
 watch(search, (newValue, oldValue) => {

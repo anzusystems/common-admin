@@ -4,6 +4,9 @@
       "texts": {
         "description": "Popis",
         "source": "Zdroj"
+      },
+      "flags": {
+        "showSource": "Zobraziť zdroj"
       }
     },
     "meta": {
@@ -12,7 +15,7 @@
     "button": {
       "options": "Upraviť obrázok",
       "editAsset": "Upraviť v DAM",
-      "upload": "Nahrať",
+      "upload": "Nahrať obrázok",
       "addFromDam": "Pridať z DAM",
       "replaceFromDam": "Vymeniť z DAM",
       "removeImage": "Odstrániť obrázok"
@@ -23,11 +26,30 @@
       }
     }
   },
+  "media": {
+    "model": {
+      "dam": {
+        "imageFileId": "Náhľad",
+        "assetId": "ID assetu",
+        "licenceId": "Licencia"
+      }
+    },
+    "meta": {
+      "edit": "Upraviť médium"
+    },
+    "button": {
+      "remove": "Odstrániť médium",
+      "editInDam": "Upraviť v DAM"
+    }
+  },
   "queueItem": {
     "edit": "Upraviť v DAM",
     "displayTitle": "Meno originálu",
     "error": "Chyba",
-    "copyAssetId": "Kopírovať asset ID"
+    "copyAssetId": "Kopírovať asset ID",
+    "stillUploadingOrProcessing": "Asset sa stále nahráva alebo spracováva serverom",
+    "removeFromQueue": "Ostrániť z fronty nahrávania?",
+    "errorUnableToCopyToLicence": "Chyba, nie je možné kopírovať assety do licencie"
   },
   "asset": {
     "model": {
@@ -75,7 +97,7 @@
       },
       "roi": {
         "title": "Náhľady",
-        "description": "Náhľad obrázku na mobile, počítači alebo v aplikácii.",
+        "description": "Náhľady sú určené pre hlavný obrázok v článku, zoznamy článkov, titulky a rubriky. V tele článku sa zobrazuje formát bez orezania.",
         "refresh": "Znovu načítať náhľady",
         "rotate": {
           "rotateMainFileImage": "Otočenie obrázku (hlavného súboru)",
@@ -144,13 +166,17 @@
     },
     "meta": {
       "create": "Vytvoriť kľúčové slovo"
-    }
+    },
+    "filterMinChars": "Zadajte minimálne 2 znaky"
   },
   "author": {
     "model": {
       "name": "Meno",
       "identifier": "Identifikátor",
-      "type": "Typ"
+      "type": "Typ",
+      "flags": {
+        "reviewed": "Schválený"
+      }
     },
     "authorType": {
       "none": "Žiaden",
@@ -164,7 +190,8 @@
     "meta": {
       "create": "Vytvorenie autora"
     },
-    "conflicts": "Konflikt autorov"
+    "conflicts": "Konflikt autorov",
+    "filterMinChars": "Zadajte minimálne 2 znaky"
   },
   "uploadErrors": {
     "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",

@@ -24,6 +24,7 @@ export const DamNotificationName = {
   DistributionFailed: 'distribution_failed',
   DistributionAuthorized: 'distribution_authorized',
   UserUpdated: 'user_updated',
+  AssetFileCopied: 'asset_file_copied',
 } as const
 
 export type DamNotificationNameType = (typeof DamNotificationName)[keyof typeof DamNotificationName]
@@ -123,6 +124,11 @@ type DamNotificationDistributionAuthorized = DamNotificationEvent<
 
 type DamNotificationUserUpdated = DamNotificationEvent<typeof DamNotificationName.UserUpdated, undefined>
 
+type DamNotificationAssetFileCopied = DamNotificationEvent<
+  typeof DamNotificationName.AssetFileCopied,
+  DamNotificationAssetFileStatusData
+>
+
 export type DamNotification =
   | DamNotificationAssetFileProcessed
   | DamNotificationAssetFileFailed
@@ -137,3 +143,4 @@ export type DamNotification =
   | DamNotificationDistributionFailed
   | DamNotificationDistributionAuthorized
   | DamNotificationUserUpdated
+  | DamNotificationAssetFileCopied

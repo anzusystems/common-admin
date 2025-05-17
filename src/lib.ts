@@ -1,6 +1,7 @@
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
 import AAlerts from '@/components/AAlerts.vue'
+import AProgress from '@/components/AProgress.vue'
 import ACard from '@/components/ACard.vue'
 import ACardLoader from '@/components/ACardLoader.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
@@ -34,6 +35,7 @@ import AFormRemoteSwitch from '@/components/form/AFormRemoteSwitch.vue'
 import AFormValueObjectOptionsSelect from '@/components/form/AFormValueObjectOptionsSelect.vue'
 import AFilterValueObjectOptionsSelect from '@/components/filter/AFilterValueObjectOptionsSelect.vue'
 import AFilterRemoteAutocomplete from '@/components/filter/AFilterRemoteAutocomplete.vue'
+import AFilterRemoteAutocompleteWithMinimal from '@/components/filter/AFilterRemoteAutocompleteWithMinimal.vue'
 import AFilterBooleanGroup from '@/components/filter/AFilterBooleanGroup.vue'
 import AFilterBooleanSelect from '@/components/filter/AFilterBooleanSelect.vue'
 import AJobStatusChip from '@/components/job/AJobStatusChip.vue'
@@ -80,13 +82,16 @@ import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
 import AImageWidget from '@/components/damImage/AImageWidget.vue'
+import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
+import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
 import ADatatable from '@/components/datatable/ADatatable.vue'
 import ABooleanSelect from '@/components/ABooleanSelect.vue'
+import ACachedUserChip from '@/components/ACachedUserChip.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
@@ -136,6 +141,7 @@ import {
   stringUrlTemplateReplaceVueRouter,
 } from '@/utils/string'
 import { booleanToInteger } from '@/utils/boolean'
+import { isOneOf } from '@/utils/enum'
 import {
   dateDiff,
   dateModifyMinutes,
@@ -208,6 +214,11 @@ import {
   isAnzuApiValidationError,
   type ValidationError,
 } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+  isAnzuApiDependencyExistsError,
+} from '@/model/error/AnzuApiDependencyExistsError'
 import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
@@ -278,7 +289,7 @@ import {
 import { useCommonJobFactory } from '@/model/factory/JobFactory'
 import type { UrlParams } from '@/services/api/apiHelper'
 import { generateUUIDv1, generateUUIDv4 } from '@/utils/generator'
-import { useLoginStatus } from '@/composables/system/loginStatus'
+import { useLoginStatus, localTimeShiftInSeconds } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import {
   type AssetCustomData,
@@ -509,11 +520,19 @@ import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables
 import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
+import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
+import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
+import { isImageCreateUpdateAware, isMediaAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
+import type { MediaAware } from '@/types/MediaAware'
+import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
+import { useSentry } from '@/services/sentry'
+import { useUserActivity } from '@/composables/useUserActivity'
 
 export {
   // COMPONENTS
   ACard,
   ACardLoader,
+  AProgress,
   ARow,
   AChipNoLink,
   AAlerts,
@@ -534,6 +553,7 @@ export {
   AFilterString,
   AFilterInteger,
   AFilterRemoteAutocomplete,
+  AFilterRemoteAutocompleteWithMinimal,
   AFilterValueObjectOptionsSelect,
   AFilterBooleanGroup,
   AFilterBooleanSelect,
@@ -548,6 +568,7 @@ export {
   ALogData,
   AJobStatusChip,
   ACachedChip,
+  ACachedUserChip,
   AAdminSwitcher,
   AEmptyRouterView,
   ATimeTrackingFields,
@@ -586,9 +607,11 @@ export {
   ACustomDataForm,
   ACustomDataFormElement,
   AImageWidget,
+  AImageMediaWidget,
   AImageWidgetSimple,
   AImageWidgetMultiple,
   AImageWidgetMultipleSimple,
+  ImageMassOperations,
   AImagePublicInput,
   ACropperjs,
   ACollabLockedByUser,
@@ -648,6 +671,10 @@ export {
   useCommonAdminImageOptions,
   defineAuth,
   defineBreadcrumbs,
+  useDamCachedUsers,
+  useUnreleasedFeatures,
+  useSentry,
+  useUserActivity,
 
   // VALUE OBJECTS
   type GrantType,
@@ -804,6 +831,9 @@ export {
   type ImageAware,
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,
+  isImageCreateUpdateAware,
+  type MediaAware,
+  isMediaAware,
   type DamAuthor,
   type DamAuthorMinimal,
   type DamKeyword,
@@ -902,6 +932,8 @@ export {
   // generator
   generateUUIDv1,
   generateUUIDv4,
+  // enum
+  isOneOf,
 
   // SERVICES
   apiAnyRequest,
@@ -1043,6 +1075,7 @@ export {
 
   //  STORES
   useDamConfigStore,
+  useImageStore,
 
   // OTHER
   i18n,
@@ -1062,10 +1095,14 @@ export {
   AnzuFatalError,
   type ValidationError,
   type AnzuApiValidationResponseData,
+  isAnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+  AnzuApiDependencyExistsError,
   AnzuSystemsCommonAdmin,
   useCommonVuetifyConfig,
   loadCommonFonts,
   getAssetTypeByMimeType,
   damFileTypeFix,
   fetchDamCurrentUser,
+  localTimeShiftInSeconds,
 }

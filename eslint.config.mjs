@@ -1,5 +1,5 @@
 import stylistic from '@stylistic/eslint-plugin'
-import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
+// import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
 import vueTsEslintConfig from '@vue/eslint-config-typescript'
 import pluginVue from 'eslint-plugin-vue'
 
@@ -13,6 +13,8 @@ export default [
     ignores: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '.stylelintrc.cjs', '**/cypress/**', '**/docs/**'],
   },
   ...pluginVue.configs['flat/essential'],
+  ...pluginVue.configs['flat/strongly-recommended'],
+  ...pluginVue.configs['flat/recommended'],
   ...vueTsEslintConfig(),
   {
     plugins: {
@@ -20,7 +22,6 @@ export default [
     },
     rules: {
       '@typescript-eslint/ban-ts-comment': 'off',
-      'vue/script-setup-uses-vars': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-empty-interface': 'off',
       '@stylistic/semi': ['error', 'never'],
@@ -65,5 +66,5 @@ export default [
       '@typescript-eslint/no-unused-expressions': 'off',
     },
   },
-  skipFormatting,
+  // skipFormatting,
 ]

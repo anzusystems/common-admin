@@ -4,6 +4,9 @@
       "texts": {
         "description": "Description",
         "source": "Source"
+      },
+      "flags": {
+        "showSource": "Show source"
       }
     },
     "meta": {
@@ -12,7 +15,7 @@
     "button": {
       "options": "Edit image",
       "editAsset": "Edit in DAM",
-      "upload": "Upload",
+      "upload": "Upload image",
       "addFromDam": "Add from DAM",
       "replaceFromDam": "Replace from DAM",
       "removeImage": "Remove image"
@@ -23,11 +26,30 @@
       }
     }
   },
+  "media": {
+    "model": {
+      "dam": {
+        "imageFileId": "Preview",
+        "assetId": "Asset ID",
+        "licenceId": "Licence"
+      }
+    },
+    "meta": {
+      "edit": "Edit medium"
+    },
+    "button": {
+      "remove": "Edit medium",
+      "editInDam": "Edit in DAM"
+    }
+  },
   "queueItem": {
     "edit": "Edit in DAM",
     "displayTitle": "Original Name",
     "error": "Error",
-    "copyAssetId": "Copy asset ID"
+    "copyAssetId": "Copy asset ID",
+    "stillUploadingOrProcessing": "Asset is still uploading or processing by server",
+    "removeFromQueue": "Remove item from queue?",
+    "errorUnableToCopyToLicence": "Error, unable to copy assets to licence"
   },
   "asset": {
     "model": {
@@ -75,7 +97,7 @@
       },
       "roi": {
         "title": "Previews",
-        "description": "Image preview on mobile, computer, or in the app.",
+        "description": "Previews are intended for the main image in the article, article lists, titles, and sections. In the body of the article, the format is displayed without cropping.",
         "refresh": "Reload previews",
         "rotate": {
           "rotateMainFileImage": "Rotate image (main file)",
@@ -144,13 +166,17 @@
     },
     "meta": {
       "create": "Create keyword"
-    }
+    },
+    "filterMinChars": "Enter at least 2 characters"
   },
   "author": {
     "model": {
       "name": "Name",
       "identifier": "Identifier",
-      "type": "Type"
+      "type": "Type",
+      "flags": {
+        "reviewed": "Reviewed"
+      }
     },
     "authorType": {
       "none": "None",
@@ -164,7 +190,8 @@
     "meta": {
       "create": "Creating author"
     },
-    "conflicts": "Author conflicts"
+    "conflicts": "Author conflicts",
+    "filterMinChars": "Enter at least 2 characters"
   },
   "uploadErrors": {
     "unknownError": "System error. Please try again later or contact the administrator.",

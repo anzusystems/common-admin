@@ -48,7 +48,7 @@ const onOpen = () => {
 }
 
 const onClose = () => {
-  modelValue.value = true
+  modelValue.value = false
   emit('onClose')
 }
 

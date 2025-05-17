@@ -10,6 +10,7 @@ import permissionGroup from '@/locales/cs/common/permissionGroup.json'
 import vuetify from '@/locales/cs/vuetify.json'
 import apiValidation from '@/locales/cs/error/apiValidation.json'
 import apiForbiddenOperation from '@/locales/cs/error/apiForbiddenOperation.json'
+import apiDependencyExists from '@/locales/cs/error/apiDependencyExists.json'
 import jsValidation from '@/locales/cs/error/jsValidation.json'
 import assetSelect from '@/locales/cs/common/assetSelect.json'
 import subjectSelect from '@/locales/cs/common/subjectSelect.json'
@@ -43,6 +44,9 @@ export default {
     },
     apiForbiddenOperation: {
       ...apiForbiddenOperation,
+    },
+    apiDependencyExists: {
+      ...apiDependencyExists,
     },
     jsValidation: {
       ...jsValidation,

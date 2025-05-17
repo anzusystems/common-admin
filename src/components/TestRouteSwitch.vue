@@ -54,7 +54,7 @@ function clickSecondElement() {
 
 watch(
   times,
-  async (newValue) => {
+  (newValue) => {
     numRepeats.value = newValue
   },
   { immediate: true }

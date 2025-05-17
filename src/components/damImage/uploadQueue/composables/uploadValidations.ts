@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { MediaAware } from '@/types/MediaAware'
+import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 
 export const ADamAssetMetadataValidationScopeSymbol = Symbol.for('anzu:common:asset-metadata-validation-scope')
 
@@ -12,21 +14,29 @@ export const ADamKeywordCreateValidationScopeSymbol = Symbol.for('anzu:common:ke
 
 export const ADamAuthorCreateValidationScopeSymbol = Symbol.for('anzu:common:author-create-validation-scope')
 
-const { required, maxLength } = useValidate()
-
 export function useImageValidation(
-  image: Ref<ImageCreateUpdateAware | null>,
+  image: Ref<ImageCreateUpdateAware | MediaAware | null>,
+  sourceRequired: Ref<boolean>
 ) {
-  const rules = computed(() => ({
-    image: {
-      texts: {
-        source: {
-          required,
-          maxLength: maxLength(255),
+  const { requiredIf, maxLength } = useValidate()
+  const rules = computed(() => {
+    if (isImageCreateUpdateAware(image.value)) {
+      return {
+        image: {
+          texts: {
+            description: {
+              maxLength: maxLength(2000),
+            },
+            source: {
+              required: requiredIf(sourceRequired.value),
+              maxLength: maxLength(255),
+            },
+          },
         },
-      },
-    },
-  }))
+      }
+    }
+    return {}
+  })
   const v$ = useVuelidate(rules, { image }, { $scope: AImageMetadataValidationScopeSymbol })
 
   return {

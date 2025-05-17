@@ -9,5 +9,11 @@
   "url": "Nesprávný formát URL.",
   "numeric": "Musí být zadána pouze čísla.",
   "slug": "Povolené znaky pro slug jsou a-z a 0-9.",
-  "stringArrayItemLength": "Délka znaků každé položky musí být mezi {min} a {max} znaků."
+  "stringArrayItemLength": "Délka znaků každé položky musí být mezi {min} a {max} znaků.",
+  "datesCompare": {
+    "laterThan": "Dátum musí byť vyšší ako \"{otherDateName}\"",
+    "onOrAfter": "Dátum musí byť vyšší alebo rovnaký ako \"{otherDateName}\"",
+    "earlierThan": "Dátum musí byť nižší ako \"{otherDateName}\"",
+    "onOrBefore": "Dátum musí byť nižší alebo rovnaký ako \"{otherDateName}\""
+  }
 }

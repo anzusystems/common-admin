@@ -61,8 +61,6 @@ export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, Re
   flags: Flags
   licence: IntegerId
   mainFile: null | AssetFile
-  keywords: DocId[]
-  authors: DocId[]
   podcasts: DocId[]
   assetFileProperties: AssetFileProperties
   mainFileSingleUse: Readonly<boolean | null>
@@ -79,6 +77,7 @@ export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, Resour
   authors: DocId[]
   podcasts: DocId[]
   metadata: Metadata
+  siblingToAsset: DocIdNullable
   distributionCategory: DocIdNullable
   assetFileProperties: AssetFileProperties
   mainFileSingleUse: Readonly<boolean | null>
@@ -93,3 +92,21 @@ export type AssetExternalProviderId = string | number
 export type AssetExternalProviderIdNullable = AssetExternalProviderId | null
 
 export type AssetExternalProviderMetadata = Record<string, string | number | number[] | string[] | boolean>
+
+export interface DamImageCopyToLicenceRequestItem {
+  asset: DocId
+  targetAssetLicence: IntegerId
+}
+
+export type DamImageCopyToLicenceRequest = Array<DamImageCopyToLicenceRequestItem>
+
+export interface DamImageCopyToLicenceResponseItem {
+  asset: DocId
+  targetAsset: DocId
+  targetMainFile: DocId
+  targetAssetLicence: IntegerId
+  result:  'exists' | 'copy' | 'notAllowed' | 'unassigned'
+  assetConflicts: DocId[]
+}
+
+export type DamImageCopyToLicenceResponse = Array<DamImageCopyToLicenceResponseItem>

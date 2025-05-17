@@ -9,10 +9,11 @@ const mapFullToMinimal = (author: DamAuthor): DamAuthorMinimal => ({
   id: author.id,
   name: author.name,
   identifier: author.identifier,
+  reviewed: author.flags.reviewed,
 })
 
 const mapIdToMinimal = (id: DocId): DamAuthorMinimal => {
-  return { id: id, name: '', identifier: '' }
+  return { id: id, name: '', identifier: '', reviewed: false }
 }
 
 const { cache, toFetch, fetch, add, addManual, addManualMinimal, has, get, isLoaded } = defineCached<

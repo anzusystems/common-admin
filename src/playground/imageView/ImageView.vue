@@ -6,12 +6,16 @@ import { ref } from 'vue'
 import type { IntegerIdNullable } from '@/types/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import useVuelidate from '@vuelidate/core'
+import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
+import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)
 const imageId3 = ref<IntegerIdNullable>(null)
+const media = ref<IntegerIdNullable>(null)
+const imageId4 = ref<IntegerIdNullable>(null)
 
-const v$ = useVuelidate()
+const v$ = useVuelidate({ $scope: 'aaa' })
 const isValid = ref<boolean | null>(null)
 
 const validate = async () => {
@@ -57,12 +61,12 @@ const saveInsideDialog = () => {
         <VCol cols="4">
           <AImageWidget
             v-model="imageId3"
-            :upload-licence="100000"
+            :upload-licence="100001"
             :select-licences="[100000, 100001]"
             queue-key="heroImage2"
             label="Lead image 2 with global validation test"
           />
-          <div>isvalid (should be always true): {{ isValid }}</div>
+          <div>isvalid (should be always true, use scope, always): {{ isValid }}</div>
           <VBtn @click.stop="validate">
             validate should not fire nested widget validation
           </VBtn>
@@ -73,7 +77,7 @@ const saveInsideDialog = () => {
           Expanded actions:
           <AImageWidget
             v-model="imageId2"
-            :upload-licence="100000"
+            :upload-licence="100001"
             :select-licences="[100000, 100001]"
             queue-key="listingImage"
             expand-options
@@ -102,7 +106,7 @@ const saveInsideDialog = () => {
                     <AImageWidget
                       ref="widgetComponent"
                       v-model="imageId2"
-                      :upload-licence="100000"
+                      :upload-licence="100001"
                       :select-licences="[100000, 100001]"
                       queue-key="embedImage"
                       expand-options
@@ -120,6 +124,27 @@ const saveInsideDialog = () => {
               </VCardActions>
             </VCard>
           </VDialog>
+        </VCol>
+        <VCol cols="4">
+          Media
+          <AImageMediaWidget
+            v-model:image="imageId4"
+            v-model:media="media"
+            :upload-licence="100001"
+            :select-licences="[100000, 100001]"
+            queue-key="media"
+            label="Priority content"
+          >
+            <template #append="{ imageMedia }">
+              <div
+                v-if="isImageCreateUpdateAware(imageMedia)"
+                class="text-caption"
+              >
+                <p>description: {{ imageMedia.texts.description }}</p>
+                <p>source: {{ imageMedia.texts.source }}</p>
+              </div>
+            </template>
+          </AImageMediaWidget>
         </VCol>
       </VRow>
     </VCardText>

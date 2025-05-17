@@ -95,6 +95,7 @@ const asset = computed<AssetDetailItemDto | null>(() => {
       described: false,
       visible: false,
     },
+    siblingToAsset: null,
     licence: item.value.licenceId,
     mainFile: null,
     keywords: [],
@@ -126,10 +127,6 @@ const sidebar = ref(true)
 
 const toggleSidebar = () => {
   sidebar.value = !sidebar.value
-}
-
-const onImageLoad = () => {
-  // imageLoading.value = false
 }
 
 const assetType = computed(() => {
@@ -225,36 +222,20 @@ const isUploading = computed(() => {
 
 const onSave = async () => {
   if (items.value.length === 0) return
-  // saveAndCloseButtonLoading.value = true
-  // v$.value.$touch()
-  // if (v$.value.$invalid) {
-  //   showValidationError()
-  //   saveAndCloseButtonLoading.value = false
-  //   return
-  // }
   try {
     await bulkUpdateAssetsMetadata(damClient, items.value)
     showRecordWas('updated')
   } catch (error) {
     showErrorsDefault(error)
-  } finally {
-    // saveAndCloseButtonLoading.value = false
   }
 }
 
 const onSaveAndApply = async () => {
   if (items.value.length === 0) return
-  // saveAndCloseButtonLoading.value = true
-  // v$.value.$touch()
-  // if (v$.value.$invalid) {
-  //   showValidationError()
-  //   saveAndCloseButtonLoading.value = false
-  //   return
-  // }
   let description = ''
   let source = ''
   try {
-    const assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, items.value)
+    const assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, items.value, assetDetailStore.mainFileSingleUse)
     if (!assetsMetadataRes[0]) {
       throw new Error('Fatal error updating asset metadata')
     }
@@ -274,6 +255,9 @@ const onSaveAndApply = async () => {
             description: description,
             source: source,
           },
+          flags: {
+            showSource: true,
+          },
           dam: {
             damId: item.fileId ?? '',
             regionPosition: 0,
@@ -287,8 +271,6 @@ const onSaveAndApply = async () => {
     await onStopConfirm()
   } catch (error) {
     showErrorsDefault(error)
-  } finally {
-    // saveAndCloseButtonLoading.value = false
   }
 }
 
@@ -406,14 +388,12 @@ onMounted(() => {
                   use-component
                   cover
                   :aspect-ratio="IMAGE_ASPECT_RATIO"
-                  @load="onImageLoad"
-                  @error="onImageLoad"
                 />
                 <div
                   v-if="item && item.error.hasError"
                   :class="
                     'dam-upload-queue__overlay dam-upload-queue__overlay--error ' +
-                    'd-flex align-center justify-center flex-column'
+                      'd-flex align-center justify-center flex-column'
                   "
                 >
                   <VIcon
@@ -464,10 +444,16 @@ onMounted(() => {
               @on-save-and-apply="onSaveAndApply"
             >
               <template #prepend-sidebar>
-                <div v-if="item?.isDuplicate" class="text-caption text-warning px-3 py-2">
+                <div
+                  v-if="item?.isDuplicate"
+                  class="text-caption text-warning px-3 py-2"
+                >
                   {{ t('common.damImage.asset.detail.info.status.duplicate') }}
                 </div>
-                <div v-if="item?.isDuplicate && item?.mainFileSingleUse" class="text-caption text-error px-3 py-2">
+                <div
+                  v-if="item?.isDuplicate && item?.mainFileSingleUse"
+                  class="text-caption text-error px-3 py-2"
+                >
                   {{ t('common.damImage.asset.model.mainFileSingleUse') }}
                 </div>
               </template>

@@ -6,13 +6,13 @@ import { isUndefined } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{
-    variant?: 'default' | 'most-relevant'
     modelValue?: number
+    variant?: 'default' | 'most-relevant'
     customOptions?: undefined | DatatableOrderingOptions
   }>(),
   {
-    variant: 'default',
     modelValue: 1,
+    variant: 'default',
     customOptions: undefined,
   }
 )

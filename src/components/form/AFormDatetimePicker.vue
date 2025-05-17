@@ -61,13 +61,10 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const {
-    releaseCollabFieldLock,
-    changeCollabFieldData,
-    acquireCollabFieldLock,
-    lockedByUser,
-
-  } = useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } = useCollabField(
+    props.collab.room,
+    props.collab.field
+  )
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -152,6 +149,7 @@ watch(modelValueComputed, (newValue, oldValue) => {
     :disabled="disabledComputed"
     :label="labelComputed"
     :clearable="clearable"
+    v-bind="$attrs"
     @blur="onBlur"
     @focus="onFocus"
     @on-open="onOpen"

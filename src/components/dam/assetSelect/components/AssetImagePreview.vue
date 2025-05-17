@@ -135,7 +135,7 @@ const showIconComputed = computed(() => {
 
   &__icon-circle {
     border-radius: 100%;
-    background-color: rgba(204 204 204 / 50%);
+    background-color: rgb(204 204 204 / 50%);
   }
 }
 </style>

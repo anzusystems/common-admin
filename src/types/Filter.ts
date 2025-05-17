@@ -12,6 +12,7 @@ export interface Filter<T = any> {
   titleT?: string
   error: string
   mandatory: boolean
+  advanced: boolean
   exclude: boolean
 }
 

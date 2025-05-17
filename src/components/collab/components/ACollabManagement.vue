@@ -253,6 +253,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
       :id="userId"
       :key="userId"
       :users="cachedUsers"
+      class="mr-1"
     />
     <VDivider
       class="mx-2"

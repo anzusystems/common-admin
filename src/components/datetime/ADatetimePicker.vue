@@ -192,7 +192,7 @@ const onTextFieldBlur = () => {
   if (parsed.isValid()) {
     // keep seconds from original model
     let seconds = 0
-    if(!isNull(props.modelValue)) {
+    if (!isNull(props.modelValue)) {
       const modelDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
       if (modelDate.isValid()) seconds = modelDate.second()
     }
@@ -274,6 +274,7 @@ const now = () => {
             class="a-datetime-picker-calendar"
             color="primary"
             show-adjacent-months
+            v-bind="$attrs"
           />
           <TimePicker
             :key="timeKey"
@@ -338,7 +339,7 @@ const now = () => {
     padding: 6px 0;
 
     &:hover {
-      background-color: rgba(0 0 0 / 5%);
+      background-color: rgb(0 0 0 / 5%);
     }
   }
 }

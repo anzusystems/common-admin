@@ -136,7 +136,7 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
-$hover-bg-color: rgba(0 0 0 / 5%);
+$hover-bg-color: rgb(0 0 0 / 5%);
 
 .a-datetime-picker-time {
   display: flex;

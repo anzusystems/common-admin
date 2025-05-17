@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, onUnmounted, ref, type Ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { type AssetCustomData, DamAssetStatusDefault } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
@@ -22,6 +22,7 @@ import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQue
 import { isNull } from '@/utils/common'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
+import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -32,6 +33,7 @@ const props = withDefaults(
     keywords: DocId[]
     authors: DocId[]
     item: UploadQueueItem
+    refreshDisabled: boolean
     mainFileSingleUse: boolean | null
     disableDoneAnimation?: boolean
   }>(),
@@ -48,6 +50,7 @@ const emit = defineEmits<{
   (e: 'cancelItem', data: { index: number; item: UploadQueueItem; queueKey: UploadQueueKey }): void
   (e: 'removeItem', index: number): void
   (e: 'showDetail', data: DocId): void
+  (e: 'refreshItem', data: { index: number; assetId: DocId }): void
 }>()
 
 const IMAGE_ASPECT_RATIO = 16 / 9
@@ -134,15 +137,49 @@ const showCancel = computed(() => {
   return showCancelStatuses.includes(props.item.status)
 })
 
+const SHOW_REFRESH_AFTER_SECONDS = 20
+const showRefresh = ref(false)
+const refreshTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
+
 const showDetail = async () => {
   if (isNull(props.item.assetId)) return
   emit('showDetail', props.item.assetId)
+}
+
+const refresh = () => {
+  if (props.item.assetId) {
+    emit('refreshItem', { index: props.index, assetId: props.item.assetId })
+  }
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
+
+watch(
+  () => props.item.status,
+  async (newValue) => {
+    if (newValue === UploadQueueItemStatus.Uploading || newValue === UploadQueueItemStatus.Processing) {
+      clearTimeout(refreshTimer.value)
+      refreshTimer.value = setTimeout(() => {
+        if (newValue === UploadQueueItemStatus.Uploading || newValue === UploadQueueItemStatus.Processing) {
+          showRefresh.value = true
+        }
+      }, SHOW_REFRESH_AFTER_SECONDS * 1000)
+    } else if (newValue === UploadQueueItemStatus.Uploaded) {
+      clearTimeout(refreshTimer.value)
+      refreshTimer.value = undefined
+      showRefresh.value = false
+    }
+  },
+  { immediate: true }
+)
+
+onUnmounted(() => {
+  clearTimeout(refreshTimer.value)
+  refreshTimer.value = undefined
+})
 </script>
 
 <template>
@@ -228,6 +265,22 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                   size="small"
                 />
                 <VBtn
+                  v-if="showRefresh"
+                  icon
+                  size="small"
+                  variant="text"
+                  :disabled="refreshDisabled"
+                  @click.stop="refresh"
+                >
+                  <VIcon icon="mdi-refresh" />
+                  <VTooltip
+                    activator="parent"
+                    location="bottom"
+                  >
+                    {{ t('common.button.refresh') }}
+                  </VTooltip>
+                </VBtn>
+                <VBtn
                   v-if="showCancel"
                   icon
                   size="small"
@@ -242,12 +295,13 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                     {{ t('common.button.cancel') }}
                   </VTooltip>
                 </VBtn>
-                <!--                <AActionDeleteButton-->
-                <!--                  variant="icon"-->
-                <!--                  :disabled="!item.canEditMetadata && !item.isDuplicate"-->
-                <!--                  button-class=""-->
-                <!--                  @delete-record="remove"-->
-                <!--                />-->
+                <AActionDeleteButton
+                  v-if="showRefresh"
+                  variant="icon"
+                  button-class=""
+                  dialog-message-t="common.damImage.queueItem.removeFromQueue"
+                  @delete-record="emit('removeItem', index)"
+                />
               </div>
             </div>
           </VCol>
@@ -333,8 +387,8 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
               >
                 <VCol>
                   <VSwitch
-                    :label="t('common.damImage.asset.model.mainFileSingleUse')"
                     v-model="mainFileSingleUse"
+                    :label="t('common.damImage.asset.model.mainFileSingleUse')"
                   />
                 </VCol>
               </VRow>

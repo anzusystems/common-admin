@@ -18,8 +18,7 @@ export const CollabStatus = {
   Inactive: 'inactive',
   Active: 'active',
 } as const
-export type CollabStatusType =
-  (typeof CollabStatus)[keyof typeof CollabStatus]
+export type CollabStatusType = (typeof CollabStatus)[keyof typeof CollabStatus]
 
 export interface CollabRoomInfo {
   name: CollabRoom
@@ -140,8 +139,7 @@ export const CollabRoomJoinStrategy = {
   Free: 'free',
   Moderated: 'moderated',
 } as const
-export type CollabRoomJoinStrategyType =
-  (typeof CollabRoomJoinStrategy)[keyof typeof CollabRoomJoinStrategy]
+export type CollabRoomJoinStrategyType = (typeof CollabRoomJoinStrategy)[keyof typeof CollabRoomJoinStrategy]
 
 export interface CollabRoomOptions {
   joinStrategy?: CollabRoomJoinStrategyType

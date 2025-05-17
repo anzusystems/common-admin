@@ -17,12 +17,19 @@ import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQue
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
 import type { IntegerId } from '@/types/common'
+import ABooleanValue from '@/components/ABooleanValue.vue'
+import ARow from '@/components/ARow.vue'
+import ACachedUserChip from '@/components/ACachedUserChip.vue'
+import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
+    readonly?: boolean
   }>(),
-  {}
+  {
+    readonly: false,
+  }
 )
 
 const { t } = useI18n()
@@ -52,6 +59,8 @@ const onAnyMetadataChange = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
+
+const { cachedUsers } = useDamCachedUsers()
 </script>
 
 <template>
@@ -72,6 +81,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
           v-model="asset.metadata.customData"
           :ext-system="extSystem"
           :asset-type="assetType"
+          :readonly="readonly"
           @any-change="onAnyMetadataChange"
         >
           <template #after-pinned>
@@ -92,6 +102,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                     data-cy="custom-field-keywords"
                     clearable
                     multiple
+                    :disabled="readonly"
                     :required="keywordRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
@@ -117,6 +128,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                     data-cy="custom-field-authors"
                     clearable
                     multiple
+                    :disabled="readonly"
                     :required="authorRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
@@ -129,9 +141,16 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
               class="my-2"
             >
               <VCol>
+                <ARow
+                  v-if="readonly"
+                  :title="t('common.damImage.asset.model.mainFileSingleUse')"
+                >
+                  <ABooleanValue :value="mainFileSingleUse" />
+                </ARow>
                 <VSwitch
-                  :label="t('common.damImage.asset.model.mainFileSingleUse')"
+                  v-else
                   v-model="mainFileSingleUse"
+                  :label="t('common.damImage.asset.model.mainFileSingleUse')"
                 />
               </VCol>
             </VRow>
@@ -144,7 +163,10 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
       :title="t('common.damImage.asset.detail.info.file')"
       value="file"
     >
-      <VExpansionPanelText class="text-caption">
+      <VExpansionPanelText
+        class="text-caption"
+        style="overflow-wrap: normal"
+      >
         <!-- all types -->
         <VRow>
           <VCol cols="3">
@@ -167,7 +189,11 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
             {{ t('common.model.tracking.created') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.createdAt) }}
+            {{ dateTimePretty(asset.createdAt) }}<br>
+            <ACachedUserChip
+              :id="asset.createdBy"
+              :cached-users="cachedUsers"
+            />
           </VCol>
         </VRow>
         <VRow>
@@ -175,7 +201,11 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
             {{ t('common.model.tracking.modified') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.modifiedAt) }}
+            {{ dateTimePretty(asset.modifiedAt) }}<br>
+            <ACachedUserChip
+              :id="asset.modifiedBy"
+              :cached-users="cachedUsers"
+            />
           </VCol>
         </VRow>
         <div v-if="assetMainFile">

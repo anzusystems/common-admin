@@ -2,6 +2,14 @@
 import { useI18n } from 'vue-i18n'
 import AssetSelectTableRowItem from '@/components/dam/assetSelect/components/AssetSelectTableRowItem.vue'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import type { IntegerId } from '@/types/common'
+
+withDefaults(
+  defineProps<{
+    extSystem: IntegerId
+  }>(),
+  {}
+)
 
 const { t } = useI18n()
 
@@ -39,7 +47,7 @@ const { onItemClick, assetListItems, loader } = useAssetSelectActions()
         :key="item.asset.id"
         :index="index"
         :item="item"
-        @item-click="onItemClick"
+        @item-click="onItemClick($event, extSystem)"
       />
       <tr v-if="!loader && assetListItems.length === 0">
         <td

@@ -23,11 +23,16 @@
     "filter": {
       "toggle": "Filtr"
     },
+    "info": {
+      "toggle": "Info karta",
+      "noAssetSelected": "Žiadne vybrané assety"
+    },
     "texts": {
       "title": "Vyberte asset",
       "noItemsFound": "Žádné nalezené assety",
       "pickExactCount": "Vyberte assety: {count}. Zvolených: {selected}." ,
-      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetů. Zvolených: {selected}."
+      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetů. Zvolených: {selected}.",
+      "copyToLicence": "Kopírovat do licence"
     }
   },
   "filter": {
@@ -39,7 +44,14 @@
     "assetAndMainFileIds": "Id",
     "keywordIds": "Klúčové slová",
     "authorIds": "Autori",
-    "createdByIds": "Založené používateľmi"
+    "createdByIds": "Založené používateľmi",
+    "inPodcast": "Podcast"
+  },
+  "assetType": {
+    "image": "Obrázok",
+    "audio": "Audio",
+    "video": "Video",
+    "document": "Dokument"
   },
   "error": {
     "unallowedLicence": "Nemáte práva na licenciu v DAM"

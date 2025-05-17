@@ -1,27 +1,44 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 import ASystemBarNewVersion from '@/components/systemBar/ASystemBarNewVersion.vue'
 import { isUndefined } from '@/utils/common'
-import { AnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
+import { AnzuNewVersionFetchError, isAnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
+import { useUserActivity } from '@/composables/useUserActivity.ts'
 
 const props = withDefaults(
   defineProps<{
     currentVersion: string
     checkInterval?: number
     jsonRelativePath?: string
+    minInactiveTime?: number
   }>(),
   {
     checkInterval: 60000,
     jsonRelativePath: 'config.json',
+    minInactiveTime: 5000,
   }
 )
 
-const showSystemBar = ref(false)
+const showSystemBar = ref<boolean>(false)
+const abortController = ref<AbortController | null>(null)
+const lastInactiveTime = ref<number>(0)
 
-const checkNewVersion = async () => {
+const checkNewVersion = async (): Promise<void> => {
+  if (abortController.value) {
+    abortController.value.abort()
+  }
+
+  abortController.value = new AbortController()
+
+  const isAbortError = (error: unknown): error is Error => {
+    return error instanceof Error && error.name === 'AbortError'
+  }
+
   try {
-    const res = await fetch(`/${props.jsonRelativePath}?random=${Date.now()}`)
+    const res = await fetch(`/${props.jsonRelativePath}?random=${Date.now()}`, {
+      signal: abortController.value.signal,
+    })
     if (res.ok) {
       const contentType = res.headers.get('content-type')
       if (!contentType || !contentType.includes('application/json')) {
@@ -37,15 +54,16 @@ const checkNewVersion = async () => {
     }
     throw new AnzuNewVersionFetchError('Unable to load env config. Incorrect response code.')
   } catch (error) {
-    if (error instanceof AnzuNewVersionFetchError) {
-      console.log(error.message)
+    if (isAbortError(error)) {
       return
+    }
+    if (isAnzuNewVersionFetchError(error)) {
+      throw error
     }
     if (error instanceof SyntaxError) {
-      console.log('There was a SyntaxError', error)
-      return
+      throw new AnzuNewVersionFetchError('Unable to load env config. Syntax error.', error)
     }
-    console.log('There was an error in new version fetch', error)
+    throw new AnzuNewVersionFetchError('Unable to load env config. Unknown error.', error as any)
   }
 }
 
@@ -54,12 +72,35 @@ const systemBarComponent = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { pause } = useIntervalFn(() => {
+const { pause, resume } = useIntervalFn(() => {
   checkNewVersion()
 }, props.checkInterval)
 
+const { isWindowActive } = useUserActivity()
+
+watch(
+  isWindowActive,
+  (newValue: boolean) => {
+    const now: number = Date.now()
+
+    if (newValue) {
+      const inactiveDuration: number = now - lastInactiveTime.value
+      resume()
+      if (inactiveDuration > props.minInactiveTime) {
+        checkNewVersion()
+      }
+    } else {
+      lastInactiveTime.value = now
+      pause()
+    }
+  },
+  { immediate: true }
+)
+
 onBeforeUnmount(() => {
-  pause()
+  if (abortController.value) {
+    abortController.value.abort()
+  }
 })
 </script>
 

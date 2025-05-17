@@ -7,6 +7,7 @@ import type { AssetFileImage } from '@/types/coreDam/AssetFile'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
 
 const END_POINT = '/adm/v1/image'
 const CHUNK_UPLOAD_TIMEOUT = 420
@@ -130,4 +131,40 @@ export const rotateImage = (client: () => AxiosInstance, imageId: DocId, angle: 
         reject(err)
       })
   })
+}
+
+const COPY_TO_LICENCE_MAX_LIMIT = 50
+const COPY_TO_LICENCE_API_LIMIT = 1 // todo back to 20
+
+export const copyToLicence = async (
+  client: () => AxiosInstance,
+  items: DamImageCopyToLicenceRequest
+): Promise<DamImageCopyToLicenceResponse> => {
+  if (items.length > COPY_TO_LICENCE_MAX_LIMIT) {
+    return Promise.reject('Exceeded max limit')
+  }
+
+  const url = END_POINT + '/copy-to-licence'
+
+  const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
+    return Array.from({ length: Math.ceil(arr.length / chunkSize) }, (_, i) =>
+      arr.slice(i * chunkSize, i * chunkSize + chunkSize)
+    )
+  }
+
+  const itemChunks = chunkArray(items, COPY_TO_LICENCE_API_LIMIT)
+
+  try {
+    const responses = await Promise.all(
+      itemChunks.map((chunk) =>
+        client()
+          .patch(url, JSON.stringify(chunk))
+          .then((res) => (res.status === HTTP_STATUS_OK ? res.data : []))
+      )
+    )
+
+    return responses.flat()
+  } catch (error) {
+    return Promise.reject(error)
+  }
 }

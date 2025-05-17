@@ -57,5 +57,6 @@
   "dropzone": {
     "dropPossibility": "Upload or move files",
     "dropHere": "Upload files"
-  }
+  },
+  "inputSuggestedMax": "{current} / max {max}"
 }

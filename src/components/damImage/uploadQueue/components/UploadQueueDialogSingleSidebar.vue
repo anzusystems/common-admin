@@ -70,7 +70,7 @@ const { activeTab } = storeToRefs(assetDetailStore)
       </VTabs>
 
       <div class="sidebar-info__content">
-        <slot name="prepend-sidebar"></slot>
+        <slot name="prepend-sidebar" />
         <div
           v-if="activeTab === AssetDetailTabImageWithRoi.Info"
           class="py-2"

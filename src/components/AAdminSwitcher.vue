@@ -89,10 +89,10 @@ onMounted(async () => {
     justify-content: center;
     flex-direction: column;
     text-decoration: none;
-    color: rgba(var(--v-theme-on-surface), var(--v-hover-opacity));
+    color: rgb(var(--v-theme-on-surface), var(--v-hover-opacity));
 
     &:hover {
-      background-color: rgba(var(--v-theme-on-surface), 10%);
+      background-color: rgb(var(--v-theme-on-surface), 10%);
       border-radius: 8px;
     }
 
@@ -101,7 +101,7 @@ onMounted(async () => {
       font-weight: normal;
       font-size: 14px;
       line-height: 14px;
-      color: rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity));
+      color: rgb(var(--v-theme-on-surface), var(--v-high-emphasis-opacity));
       padding: 8px 0;
     }
 

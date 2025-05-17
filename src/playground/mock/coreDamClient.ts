@@ -8,7 +8,7 @@ const damClient = function (): AxiosInstance {
   if (isNull(mainInstance)) {
     mainInstance = axios.create({
       baseURL: 'http://core-dam.sme.localhost/api',
-      timeout: 15 * 1000,
+      timeout: 30 * 1000,
       withCredentials: true,
       headers: {
         'Content-Type': 'application/json',

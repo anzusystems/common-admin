@@ -3,7 +3,7 @@ import {
   createWebHistory,
   type NavigationGuardNext,
   type RouteLocationNormalized,
-  type RouteParams
+  type RouteParams,
 } from 'vue-router'
 import HomepageView from '@/playground/HomepageView.vue'
 import SettingsView from '@/playground/SettingsView.vue'
@@ -12,6 +12,7 @@ import PermissionView from '@/playground/permissionView/PermissionView.vue'
 import DatetimeView from '@/playground/datetimeView/DatetimeView.vue'
 import FormsView from '@/playground/formsView/FormsView.vue'
 import FilterView from '@/playground/filterView/FilterView.vue'
+import TableView from '@/playground/tableView/TableView.vue'
 import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
 import ApiFetchListBatchView from '@/playground/apiFetchListBatchView/ApiFetchListBatchView.vue'
@@ -93,6 +94,11 @@ const router = createRouter({
     //   name: 'view-filters-new',
     //   component: FilterNewView,
     // },
+    {
+      path: '/view/table',
+      name: 'view-table',
+      component: TableView,
+    },
     {
       path: '/view/split-buttons',
       name: 'view-split-buttons',

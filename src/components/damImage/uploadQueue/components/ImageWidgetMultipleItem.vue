@@ -1,14 +1,20 @@
 <script lang="ts" setup>
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import type { DocId } from '@/types/common'
 import { isNull, isUndefined } from '@/utils/common'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
 import { HANDLE_CLASS } from '@/components/sortable/sortableActions'
 import { useI18n } from 'vue-i18n'
-import { useImageValidation } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import {
+  AImageMetadataValidationScopeSymbol,
+  useImageValidation,
+} from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
 const props = withDefaults(
   defineProps<{
@@ -26,9 +32,15 @@ const emit = defineEmits<{
 const imageStore = useImageStore()
 const { t } = useI18n()
 
+const { cachedExtSystemId } = useExtSystemIdForCached()
+const authorConflicts = ref<DocId[]>([])
 const image = computed(() => imageStore.images[props.index])
+const imageSourceRequired = computed(() => {
+  if (isNull(image.value) || isUndefined(image.value)) return true
+  return image.value.showDamAuthors === false
+})
 
-const { v$ } = useImageValidation(image)
+const { v$ } = useImageValidation(image, imageSourceRequired)
 
 const onEditAsset = () => {
   if (isNull(image.value) || isUndefined(image.value)) return
@@ -81,15 +93,51 @@ const removeItem = () => {
               v-model="image.texts.description"
               :label="t('common.damImage.image.model.texts.description')"
               :help="t('common.damImage.image.help.texts.description')"
+              :v="v$.image?.texts.description"
             />
           </VCol>
         </VRow>
-        <VRow dense>
+        <VRow
+          v-if="image.showDamAuthors"
+          dense
+        >
+          <VCol>
+            <ASystemEntityScope
+              subject="author"
+              system="dam"
+            >
+              <AuthorRemoteAutocompleteWithCached
+                v-model="image.damAuthors"
+                :ext-system="cachedExtSystemId"
+                :label="t('common.damImage.asset.model.authors')"
+                :author-conflicts="authorConflicts"
+                data-cy="custom-field-authors"
+                clearable
+                multiple
+                :validation-scope="AImageMetadataValidationScopeSymbol"
+              />
+            </ASystemEntityScope>
+          </VCol>
+        </VRow>
+        <VRow
+          v-else
+          dense
+        >
           <VCol>
             <AFormTextarea
               v-model="image.texts.source"
               :label="t('common.damImage.image.model.texts.source')"
-              :v="v$.image.texts.source"
+              :v="v$.image?.texts.source"
+            />
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol>
+            <VSwitch
+              v-model="image.flags.showSource"
+              :label="t('common.damImage.image.model.flags.showSource')"
+              density="compact"
+              hide-details
             />
           </VCol>
         </VRow>
@@ -99,7 +147,19 @@ const removeItem = () => {
 </template>
 
 <style lang="scss">
-.asset-list-tiles--thumbnail.a-sortable-widget__group .asset-list-tiles__item img:not(.img-svg) {
-  padding: 0;
+.asset-list-tiles--thumbnail.a-sortable-widget__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .asset-list-tiles__item {
+    flex: 1 1 260px;
+    min-width: 260px;
+    max-width: 400px;
+
+    img:not(.img-svg) {
+      padding: 0;
+    }
+  }
 }
 </style>

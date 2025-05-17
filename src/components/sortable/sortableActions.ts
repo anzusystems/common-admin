@@ -116,11 +116,11 @@ export function useSortableActions(
     updatedPositions: SortableItemNewPositions = []
   ) => {
     const start = oldIndex > newIndex ? newIndex : oldIndex
-    let position = (props.positionMultiplier * start) + (props.positionMultiplier * 1)
+    let position = props.positionMultiplier * start + props.positionMultiplier * 1
     for (let i = start; i < items.length; i++) {
       objectSetValueByPath(items[i], props.positionField, position)
       touchDirty(items[i][props.keyField])
-      position = position + (props.positionMultiplier * 1)
+      position = position + props.positionMultiplier * 1
       updatedPositions.push({
         id: items[i].id,
         position: items[i].position,
@@ -201,7 +201,7 @@ export function useSortableActions(
   const addAfterIndex = (targetIndex: number | null, data: SortablePropItem): SortableItemNewPositions => {
     const clonedData = cloneDeep(model.value)
 
-    if (isNull(targetIndex)) {
+    if (isNull(targetIndex) || targetIndex < 0) {
       clonedData.push(cloneDeep(data))
       forceRerenderWidgetHtml(clonedData)
       return []

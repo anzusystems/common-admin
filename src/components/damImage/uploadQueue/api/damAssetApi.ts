@@ -63,9 +63,13 @@ export const fetchAsset = (client: () => AxiosInstance, id: DocId) =>
 export const fetchAssetByFileId = (client: () => AxiosInstance, assetFileId: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/asset-file/:id', { id: assetFileId }, SYSTEM_CORE_DAM, ENTITY)
 
-export const bulkUpdateAssetsMetadata = (client: () => AxiosInstance, items: UploadQueueItem[]) => {
+export const bulkUpdateAssetsMetadata = (
+  client: () => AxiosInstance,
+  items: UploadQueueItem[],
+  mainFileSingleUseOverride: boolean | undefined = undefined
+) => {
   return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
-    const bulkItems = listItemsToMetadataBulkItems(items)
+    const bulkItems = listItemsToMetadataBulkItems(items, mainFileSingleUseOverride)
     updateMetadataSequence(client, bulkItems)
       .then((responses) => {
         if (bulkItems.length === 0) {
@@ -151,7 +155,10 @@ async function updateMetadataSequence(client: () => AxiosInstance, bulkItems: As
   return responses
 }
 
-function listItemsToMetadataBulkItems(items: UploadQueueItem[]) {
+function listItemsToMetadataBulkItems(
+  items: UploadQueueItem[],
+  mainFileSingleUseOverride: boolean | undefined = undefined
+) {
   const dtoItems: AssetMetadataBulkItem[] = []
   items.forEach((item) => {
     if (!isNull(item.assetId) && item.canEditMetadata) {
@@ -161,7 +168,7 @@ function listItemsToMetadataBulkItems(items: UploadQueueItem[]) {
         authors: item.authors,
         described: true,
         customData: item.customData,
-        mainFileSingleUse: item.mainFileSingleUse,
+        mainFileSingleUse: isUndefined(mainFileSingleUseOverride) ? item.mainFileSingleUse : mainFileSingleUseOverride,
       })
     }
   })
@@ -204,7 +211,6 @@ export const updateAssetMetadata = (
   mainFileSingleUse: boolean | null
 ) => {
   return new Promise((resolve, reject) => {
-    console.log('tralala')
     const data: AssetMetadataBulkItem = {
       id: asset.id,
       keywords: asset.keywords,
@@ -235,6 +241,87 @@ export const updateAssetMetadata = (
           return reject(new AnzuApiForbiddenOperationError(err, err))
         }
         return reject(new AnzuFatalError(err))
+      })
+  })
+}
+
+export const updateAssetAuthors = (client: () => AxiosInstance, asset: AssetDetailItemDto, extSystem: IntegerId) => {
+  return new Promise((resolve, reject) => {
+    const data: Partial<AssetMetadataBulkItem> = {
+      id: asset.id,
+      authors: asset.authors,
+      described: true,
+    }
+    client()
+      .patch(END_POINT + '/metadata-bulk-update', JSON.stringify([data]))
+      .then((res) => {
+        if (res.status === HTTP_STATUS_OK) {
+          resolve(res.data)
+        } else {
+          //
+          reject()
+        }
+      })
+      .catch((err) => {
+        if (axiosErrorResponseIsForbidden(err)) {
+          return reject(new AnzuApiForbiddenError(err))
+        }
+        if (axiosErrorResponseHasValidationData(err)) {
+          handleMetadataValidationError(err, asset.attributes.assetType, extSystem)
+          return reject(new AnzuApiValidationError(err, SYSTEM_CORE_DAM, ENTITY, err))
+        }
+        if (axiosErrorResponseHasForbiddenOperationData(err)) {
+          return reject(new AnzuApiForbiddenOperationError(err, err))
+        }
+        return reject(new AnzuFatalError(err))
+      })
+  })
+}
+
+export type IdsGroupedByLicences = Map<IntegerId, DocId[]>
+
+export type AssetAuthorsItems = AssetAuthorsItem[]
+export interface AssetAuthorsItem {
+  id: DocId
+  authors: DocId[]
+}
+
+async function updateAuthorsSequence(client: () => AxiosInstance, items: AssetAuthorsItems) {
+  const totalCalls = Math.ceil(items.length / BULK_METADATA_LIMIT)
+  const responses: AxiosResponse[] = []
+  if (items.length === 0) return Promise.resolve([])
+
+  for (let i = 0; i < totalCalls; i++) {
+    const offset = i * BULK_METADATA_LIMIT
+    const reduced = items.slice(offset, offset + BULK_METADATA_LIMIT)
+    const res = await client().patch(END_POINT + '/metadata-bulk-update', JSON.stringify(reduced))
+    responses.push(res)
+  }
+  return responses
+}
+
+export const bulkUpdateAssetsAuthors = (client: () => AxiosInstance, items: AssetAuthorsItems) => {
+  return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
+    updateAuthorsSequence(client, items)
+      .then((responses) => {
+        if (items.length === 0) {
+          return resolve([])
+        } else if (responses.length === 0) {
+          return reject(responses)
+        } else if (
+          responses.every((res) => {
+            return res.status === HTTP_STATUS_OK
+          })
+        ) {
+          const bulkItemsRes: AssetMetadataBulkItem[] = responses.flatMap((response) => response.data)
+          return resolve(bulkItemsRes)
+        } else {
+          return reject(responses)
+        }
+      })
+      .catch((err) => {
+        //
+        return reject(err)
       })
   })
 }

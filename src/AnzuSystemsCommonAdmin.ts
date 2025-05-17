@@ -41,17 +41,18 @@ export type CommonAdminCoreDamOptions =
       configs: { [key: string]: CommonAdminCoreDamConfig }
       apiTimeout: number
       uploadStatusFallback: boolean
+      adminDomain: string
       notification: {
         enabled: boolean
         webSocketUrl: string
       }
     }
 
-export type CommonAdminCollabOptions =
-  | {
-      enabled: boolean
-      socketUrl: string
-    }
+export type CommonAdminCollabOptions = {
+  enabled: boolean
+  socketUrl: string
+  beforeReconnect: () => Promise<void>
+}
 
 export default {
   install(app: App, options: PluginOptions): void {

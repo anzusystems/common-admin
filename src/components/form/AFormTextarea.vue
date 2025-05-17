@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, inject, ref, watch } from 'vue'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
-import { isDefined, isUndefined } from '@/utils/common'
+import { isDefined, isNumber, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import type { ErrorObject } from '@vuelidate/core'
@@ -33,6 +33,7 @@ const props = withDefaults(
     collab?: CollabComponentConfig | undefined
     disabled?: boolean | undefined
     help?: string | undefined
+    suggestedLength?: number | undefined
   }>(),
   {
     label: undefined,
@@ -47,6 +48,7 @@ const props = withDefaults(
     collab: undefined,
     disabled: undefined,
     help: undefined,
+    suggestedLength: undefined,
   }
 )
 
@@ -74,7 +76,6 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     addCollabFieldLockStatusListener,
     addCollabGatheringBufferDataListener,
     lockedByUser,
-
   } = useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock
@@ -137,6 +138,21 @@ const disabledComputed = computed(() => {
   if (isDefined(props.disabled)) return props.disabled
   return !!lockedByUserLocal.value
 })
+
+const showCounterWarning = (counterValue: string | number | undefined) => {
+  if (isNumber(counterValue) && !isUndefined(props.suggestedLength)) {
+    return counterValue > props.suggestedLength
+  }
+  return false
+}
+
+const focus = () => {
+  textareaRef.value?.focus()
+}
+
+defineExpose({
+  focus,
+})
 </script>
 
 <template>
@@ -187,6 +203,23 @@ const disabledComputed = computed(() => {
       #prepend
     >
       <slot name="prepend" />
+    </template>
+    <template
+      v-if="$slots.counter"
+      #counter="counterProps"
+    >
+      <slot
+        name="counter"
+        :props="counterProps"
+      />
+    </template>
+    <template
+      v-else-if="suggestedLength"
+      #counter="{ value: counterValue }"
+    >
+      <span :class="{ 'text-warning': showCounterWarning(counterValue) }">
+        {{ t('common.system.inputSuggestedMax', { current: counterValue, max: suggestedLength }) }}
+      </span>
     </template>
     <template
       v-if="help"

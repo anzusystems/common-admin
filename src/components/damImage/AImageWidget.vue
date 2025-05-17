@@ -80,7 +80,7 @@ const {
 const uploadConfig = shallowRef<DamConfigLicenceExtSystemReturnType | undefined>(undefined)
 
 onMounted(async () => {
-  const damConfigStore =  useDamConfigStore()
+  const damConfigStore = useDamConfigStore()
   uploadConfig.value = await getOrLoadDamConfigExtSystemByLicence(props.uploadLicence)
   if (isUndefined(uploadConfig.value)) {
     status.value = 'error'
@@ -154,19 +154,3 @@ defineExpose({
     indeterminate
   />
 </template>
-
-<style lang="scss">
-$class-name-root: 'a-image-widget';
-
-.#{$class-name-root} {
-  &__options {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  &--locked .v-img {
-    opacity: 0.6;
-  }
-}
-</style>

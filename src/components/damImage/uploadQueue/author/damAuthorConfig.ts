@@ -9,7 +9,7 @@ export const useDamAuthorAssetTypeConfig = (assetType: DamAssetTypeType, extSyst
   const configExtSystem = getDamConfigExtSystem(extSystem)
 
   if (isUndefined(configExtSystem)) {
-    throw new Error('Ext system must be initialised.')
+    throw new Error('useDamAuthorAssetTypeConfig: Ext system must be initialised.')
   }
 
   const authorEnabled = computed(() => {
