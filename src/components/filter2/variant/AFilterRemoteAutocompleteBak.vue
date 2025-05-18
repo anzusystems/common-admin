@@ -60,16 +60,16 @@ const filterInnerConfig = inject(FilterInnerConfigKey)
 const filterInnerData = inject(FilterInnerDataKey)
 
 if (props.debug) {
-  // console.log('submitResetCounter', submitResetCounter)
-  // console.log('touched', touched)
-  // console.log('filterSelected', filterSelected)
-  // console.log('filterConfig', filterConfig)
-  // console.log('filterConfig.fields[props.name]', filterConfig?.fields[props.name])
-  // console.log('filterData', filterData)
-  // console.log('filterInnerConfig', filterInnerConfig)
-  // console.log('filterInnerConfig.fields[props.filterByField]', filterInnerConfig?.fields[props.filterByField])
-  // console.log('filterInnerData', filterInnerData)
-  // console.log('filterInnerData.[props.filterByField]', filterInnerData?.[props.filterByField])
+  console.log('submitResetCounter', submitResetCounter)
+  console.log('touched', touched)
+  console.log('filterSelected', filterSelected)
+  console.log('filterConfig', filterConfig)
+  console.log('filterConfig.fields[props.name]', filterConfig?.fields[props.name])
+  console.log('filterData', filterData)
+  console.log('filterInnerConfig', filterInnerConfig)
+  console.log('filterInnerConfig.fields[props.filterByField]', filterInnerConfig?.fields[props.filterByField])
+  console.log('filterInnerData', filterInnerData)
+  console.log('filterInnerData.[props.filterByField]', filterInnerData?.[props.filterByField])
 }
 
 if (
@@ -95,22 +95,22 @@ if (
 
 const selected = ref<any>([])
 
-// const data = computed({
-//   get() {
-//     return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
-//   },
-//   set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
-//     let final: null | string | number | string[] | number[] = null
-//     if (isArray(newValue)) {
-//       final = newValue.map((item) => item.value) as string[] | number[]
-//     } else if (!isNull(newValue)) {
-//       final = newValue.value
-//     }
-//     filterData[props.name] = final
-//     touched.value = true
-//     emit('change')
-//   },
-// })
+const modelValue = computed({
+  get() {
+    return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
+  },
+  set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
+    let final: null | string | number | string[] | number[] = null
+    if (isArray(newValue)) {
+      final = newValue.map((item) => item.value) as string[] | number[]
+    } else if (!isNull(newValue)) {
+      final = newValue.value
+    }
+    filterData[props.name] = final
+    touched.value = true
+    emit('change')
+  },
+})
 
 const search = ref('')
 const isFocused = ref(false)
@@ -163,33 +163,20 @@ const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
   return ([] as ValueObjectOption<string | number>[]).concat(found)
 }
 
-const tryToLoadFromLocalData = async (newValue: string | number | Array<string | number>) => {
+const tryToLoadFromLocalData = async (
+  value: ValueObjectOption<string | number> | ValueObjectOption<string | number>[]
+) => {
   let count = 1
   let foundItems: ValueObjectOption<string | number>[] = []
-  if (isArray(newValue)) {
-    count = newValue.length
-    foundItems = findLocalDataByValues(newValue)
+  if (isArray(value)) {
+    count = value.length
+    foundItems = findLocalDataByValues(value.map((item) => item.value))
   } else {
-    foundItems = findLocalDataByValues([newValue])
+    foundItems = findLocalDataByValues([value.value])
   }
   selectedItemsCache.value = foundItems
   return foundItems.length === count
 }
-
-// const tryToLoadFromLocalData2 = async (
-//   value: ValueObjectOption<string | number> | ValueObjectOption<string | number>[]
-// ) => {
-//   let count = 1
-//   let foundItems: ValueObjectOption<string | number>[] = []
-//   if (isArray(value)) {
-//     count = value.length
-//     foundItems = findLocalDataByValues(value.map((item) => item.value))
-//   } else {
-//     foundItems = findLocalDataByValues([value.value])
-//   }
-//   selectedItemsCache.value = foundItems
-//   return foundItems.length === count
-// }
 
 const autoFetched = ref(false)
 
@@ -233,20 +220,6 @@ const onSearchUpdate = (query: string) => {
   search.value = query
 }
 
-const onSelectedUpdate = (newValue: any) => {
-  touched.value = true
-  // updateFilterSelectedFuture(newValue)
-  let final: null | string | number | string[] | number[] = null
-  if (isArray(newValue)) {
-    final = newValue.map((item) => item.value) as string[] | number[]
-  } else if (!isNull(newValue)) {
-    final = newValue.value
-  }
-  filterData[props.name] = final
-  touched.value = true
-  emit('change')
-}
-
 const onClickClear = async () => {
   fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
   clearField()
@@ -270,8 +243,10 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
+  console.log('updateSelected', filterSelected.value)
   filterSelected.value.delete(props.name)
   const future = filterSelectedFuture.value.get(props.name)
+  console.log(future)
   if (!future || future.length === 0) return
   filterSelected.value.set(props.name, cloneDeep(future))
 }
@@ -279,7 +254,7 @@ const updateSelected = () => {
 const updateFilterSelectedFuture = (
   newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
 ) => {
-  console.log('updateFilterSelectedFuture')
+  console.log('updateFilterSelectedFuture', newValue)
   if ((isArray(newValue) && newValue.length === 0) || isNull(newValue)) {
     filterSelectedFuture.value.delete(props.name)
     return
@@ -289,58 +264,23 @@ const updateFilterSelectedFuture = (
       props.name,
       newValue.map((item) => ({ title: item.title, value: item.value }))
     )
-    if (watchCallCountData.value === 2) updateSelected()
     return
   }
   filterSelectedFuture.value.set(props.name, [{ title: newValue.title, value: newValue.value }])
-  if (watchCallCountData.value === 2) updateSelected()
 }
 
 watch(submitResetCounter, () => {
   updateSelected()
 })
 
-// watch(
-//   data,
-//   async (newValue, oldValue) => {
-//     console.log('watch data', newValue, oldValue)
-//     return
-//     if (newValue === oldValue) return
-//     updateFilterSelectedFuture(newValue)
-//     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
-//       selectedItemsCache.value = []
-//       if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
-//       autoFetchTimer.value = setTimeout(() => {
-//         autoFetch()
-//       }, 3000)
-//       return
-//     }
-//     const found = await tryToLoadFromLocalData(newValue)
-//     if (found) return
-//     if (isArray<IntegerId | DocId>(newValue)) {
-//       loading.value = true
-//       selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
-//       loading.value = false
-//       return
-//     }
-//     loading.value = true
-//     selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
-//     loading.value = false
-//   },
-//   { immediate: true }
-// )
-
-const watchCallCountData = ref(0)
-
 watch(
-  () => filterData[props.name],
+  modelValue,
   async (newValue, oldValue) => {
-    watchCallCountData.value++
-    console.log('watch filterData', watchCallCountData.value, newValue)
-    if (newValue === oldValue || isBoolean(newValue)) return
+    if (newValue === oldValue) return
+    console.log('watch modelValue', newValue)
+    updateFilterSelectedFuture(newValue)
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []
-      filterConfigCurrent.value.multiple ? (selected.value = []) : (selected.value = null)
       if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
       autoFetchTimer.value = setTimeout(() => {
         autoFetch()
@@ -348,23 +288,43 @@ watch(
       return
     }
     const found = await tryToLoadFromLocalData(newValue)
-    if (found) {
-      selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))
-      updateFilterSelectedFuture(selected.value)
-      return
-    }
-    if (isArray(newValue)) {
+    if (found) return
+    if (isArray<IntegerId | DocId>(newValue)) {
       loading.value = true
       selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
-      selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))
-      updateFilterSelectedFuture(selected.value)
       loading.value = false
       return
     }
     loading.value = true
     selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
-    selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))[0]
-    updateFilterSelectedFuture(selected.value)
+    loading.value = false
+  },
+  { immediate: true }
+)
+
+watch(
+  () => filterData[props.name],
+  async (newValue, oldValue) => {
+    if (newValue === oldValue || isBoolean(newValue)) return
+    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+      selectedItemsCache.value = []
+      if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
+      autoFetchTimer.value = setTimeout(() => {
+        autoFetch()
+      }, 3000)
+      return
+    }
+    const found = await tryToLoadFromLocalData(newValue)
+    if (found) return
+    if (isArray<IntegerId | DocId>(newValue)) {
+      loading.value = true
+      selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
+      selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))
+      loading.value = false
+      return
+    }
+    loading.value = true
+    selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
     loading.value = false
   },
   { immediate: true }
@@ -397,7 +357,6 @@ watchDebounced(
     hide-details
     return-object
     @update:search="onSearchUpdate"
-    @update:model-value="onSelectedUpdate"
     @blur="onBlur"
     @focus="onFocus"
     @mouseenter="onMouseEnter"

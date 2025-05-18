@@ -5,7 +5,7 @@ import SubjectFilter from '@/playground/filterV2View/SubjectFilter.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ADatatablePagination from '@/components/ADatatablePagination.vue'
-import { onMounted } from 'vue'
+import { nextTick, onMounted, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSubjectListActions } from '@/playground/filterV2View/subjectTools'
 import ADatetime from '@/components/datetime/ADatetime.vue'
@@ -15,6 +15,7 @@ type DatatableItem = any
 
 const { t } = useI18n()
 
+const filterRef = useTemplateRef<typeof SubjectFilter>('filter')
 const { filterData, filterConfig } = useSubjectListFilter()
 const { fetchList, listItems, datatableHiddenColumns } = useSubjectListActions()
 
@@ -57,10 +58,7 @@ const sortByChange = (option: DatatableOrderingOption) => {
   getList()
 }
 
-const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(
-  filterData,
-  filterConfig,
-)
+const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filterData, filterConfig)
 
 defineExpose({
   refresh: getList,
@@ -68,15 +66,19 @@ defineExpose({
 
 onMounted(() => {
   loadStoredFilters()
-  getList()
+  console.log('onMounted', filterRef.value)
+  nextTick(() => {
+    filterRef.value?.submit()
+  })
 })
 </script>
 
 <template>
   <div>
     <SubjectFilter
-      @submit="submitFilter(pagination,getList)"
-      @reset="resetFilter(pagination,getList)"
+      ref="filter"
+      @submit="submitFilter(pagination, getList)"
+      @reset="resetFilter(pagination, getList)"
     />
     <div>
       <div class="d-flex align-center">

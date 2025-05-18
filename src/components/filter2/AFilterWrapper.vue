@@ -93,6 +93,11 @@ const resetFilter = () => {
 const toggleFilterDetail = () => {
   showDetail.value = !showDetail.value
 }
+
+defineExpose({
+  submit: submitFilter,
+  reset: resetFilter,
+})
 </script>
 
 <template>

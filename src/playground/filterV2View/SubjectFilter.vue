@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, provide } from 'vue'
+import { computed, provide, useTemplateRef } from 'vue'
 import {
   type SubjectFilterConfig,
   type SubjectFilterData,
@@ -29,6 +29,8 @@ const emit = defineEmits<{
   (e: 'reset', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
 }>()
 
+const filterRef = useTemplateRef<typeof AFilterWrapper>('filter')
+
 const { filterConfig, filterData } = useSubjectListFilter()
 provide(FilterConfigKey, filterConfig)
 provide(FilterDataKey, filterData)
@@ -40,10 +42,15 @@ const siteId = computed(() => {
 const { subjectStatusOptions } = useSubjectStatus()
 const { subjectLockTypeOptions } = useSubjectLockType()
 const { datatableHiddenColumns } = useSubjectListActions()
+
+defineExpose({
+  submit: () => filterRef.value?.submit(),
+})
 </script>
 
 <template>
   <AFilterWrapper
+    ref="filter"
     v-model:datatable-hidden-columns="datatableHiddenColumns"
     :client="cmsClient"
     system="cms"
