@@ -63,6 +63,9 @@ const checkNewVersion = async (): Promise<void> => {
     if (error instanceof SyntaxError) {
       throw new AnzuNewVersionFetchError('Unable to load env config. Syntax error.', error)
     }
+    if (error instanceof Error) {
+      throw new AnzuNewVersionFetchError('Unable to load env config. ' + error.message, error)
+    }
     throw new AnzuNewVersionFetchError('Unable to load env config. Unknown error.', error as any)
   }
 }
