@@ -1,26 +1,24 @@
 <script lang="ts" setup>
-import { computed, inject, toRaw, toValue } from 'vue'
+import { computed, inject, toRaw } from 'vue'
 import {
   FilterConfigKey,
   FilterDataKey,
-  FilterSelectedFutureKey,
   FilterSelectedKey,
   FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys'
 import { isArray, isBoolean, isNumber, isString, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
+import type { AllowedFilterValues } from '@/composables/filter/filterFactory.ts'
 
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 const filterSelected = inject(FilterSelectedKey)
-const filterSelectedFuture = inject(FilterSelectedFutureKey)
 const touched = inject(FilterTouchedKey)
 
 if (
   isUndefined(filterConfig) ||
   isUndefined(filterData) ||
   isUndefined(filterSelected) ||
-  isUndefined(filterSelectedFuture) ||
   isUndefined(touched)
 ) {
   throw new Error('Incorrect provide/inject config.')
@@ -55,21 +53,13 @@ const clickClose = (name: string, optionValue: number | string) => {
     const foundIndex = selectedFound.findIndex((item) => item.value === optionValue)
     selectedFound.splice(foundIndex, 1)
   }
-  // update future selected
-  const selectedFutureFound = filterSelectedFuture.value.get(name)
-  if (selectedFutureFound && selectedFutureFound.length === 1) {
-    filterSelectedFuture.value.delete(name)
-  } else if (selectedFutureFound) {
-    const foundIndex = selectedFutureFound.findIndex((item) => item.value === optionValue)
-    selectedFutureFound.splice(foundIndex, 1)
-  }
   // update data
   if (isArray(filterData[name]) && filterData[name].length > 0) {
     console.log(toRaw(filterData[name]))
     const foundIndex = filterData[name].findIndex((item) => item === optionValue)
     const newArray = [...toRaw(filterData[name])]
     newArray.splice(foundIndex, 1)
-    filterData[name] = newArray
+    filterData[name] = newArray as AllowedFilterValues
   } else if (isString(filterData[name]) || isNumber(filterData[name])) {
     filterData[name] = filterConfig.fields[name].default
   } else if (isBoolean(filterData[name])) {

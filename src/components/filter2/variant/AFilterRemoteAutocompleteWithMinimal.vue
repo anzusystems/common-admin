@@ -11,7 +11,7 @@ import {
   FilterConfigKey,
   FilterDataKey,
   FilterInnerConfigKey,
-  FilterInnerDataKey, FilterSelectedFutureKey,
+  FilterInnerDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
@@ -54,7 +54,6 @@ const emit = defineEmits<{
 const submitResetCounter = inject(FilterSubmitResetCounterKey)
 const touched = inject(FilterTouchedKey)
 const filterSelected = inject(FilterSelectedKey)
-const filterSelectedFuture = inject(FilterSelectedFutureKey)
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 const filterInnerConfig = inject(FilterInnerConfigKey)
@@ -64,7 +63,6 @@ if (
   isUndefined(submitResetCounter) ||
   isUndefined(touched) ||
   isUndefined(filterSelected) ||
-  isUndefined(filterSelectedFuture) ||
   isUndefined(filterConfig) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isUndefined(filterConfig.fields[props.name]) ||
@@ -86,7 +84,7 @@ const modelValue = computed({
     return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
   },
   set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
-    updateFilterSelectedFuture(newValue)
+    updateFilterSelected(newValue)
     let final: null | string | number | string[] | number[] = null
     if (isArray(newValue)) {
       final = newValue.map((item) => item.value) as string[] | number[]
@@ -239,36 +237,25 @@ const { clearOne } = useFilterClearHelpers()
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)
   filterSelected.value.delete(props.name)
-  filterSelectedFuture.value.delete(props.name)
 }
 
-const updateSelected = () => {
-  filterSelected.value.delete(props.name)
-  const future = filterSelectedFuture.value.get(props.name)
-  if (!future || future.length === 0) return
-  filterSelected.value.set(props.name, cloneDeep(future))
-}
-
-const updateFilterSelectedFuture = (
+const updateFilterSelected = (
   newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
 ) => {
+  filterSelected.value.delete(props.name)
   if ((isArray(newValue) && newValue.length === 0) || isNull(newValue)) {
-    filterSelectedFuture.value.delete(props.name)
+    filterSelected.value.delete(props.name)
     return
   }
   if (isArray(newValue)) {
-    filterSelectedFuture.value.set(
+    filterSelected.value.set(
       props.name,
       newValue.map((item) => ({ title: item.title, value: item.value }))
     )
     return
   }
-  filterSelectedFuture.value.set(props.name, [{ title: newValue.title, value: newValue.value }])
+  filterSelected.value.set(props.name, [{ title: newValue.title, value: newValue.value }])
 }
-
-watch(submitResetCounter, () => {
-  updateSelected()
-})
 
 watch(
   modelValue,

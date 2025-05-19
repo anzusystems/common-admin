@@ -84,10 +84,6 @@ const updateSelected = () => {
   if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
   filterSelected.value.set(props.name, [{ title: modelValue.value, value: modelValue.value }])
 }
-
-watch(submitResetCounter, () => {
-  updateSelected()
-})
 </script>
 
 <template>
@@ -98,6 +94,7 @@ watch(submitResetCounter, () => {
     :clearable="!filterConfigCurrent.mandatory"
     :data-cy="dataCy"
     hide-details
+    @blur="updateSelected"
     @click:clear.stop="clearField"
   />
 </template>

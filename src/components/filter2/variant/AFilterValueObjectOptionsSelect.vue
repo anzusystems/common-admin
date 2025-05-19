@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { computed, inject, watch } from 'vue'
+import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   FilterConfigKey,
@@ -49,6 +49,7 @@ const modelValue = computed({
   },
   set(newValue) {
     filterData[props.name] = newValue
+    updateSelected()
     touched.value = true
     emit('change')
   },
@@ -87,10 +88,6 @@ const updateSelected = () => {
     filterSelected.value.set(props.name, [{ title: found.title as string, value: found.value as string }])
   }
 }
-
-watch(submitResetCounter, () => {
-  updateSelected()
-})
 </script>
 
 <template>

@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
-import { computed, inject, watch } from 'vue'
+import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { isString, isUndefined } from '@/utils/common'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
-  FilterSubmitResetCounterKey, FilterTouchedKey,
+  FilterSubmitResetCounterKey,
+  FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys'
 
 const props = withDefaults(
@@ -84,10 +85,6 @@ const updateSelected = () => {
   if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
   filterSelected.value.set(props.name, [{ title: modelValue.value, value: modelValue.value }])
 }
-
-watch(submitResetCounter, () => {
-  updateSelected()
-})
 </script>
 
 <template>
@@ -98,6 +95,7 @@ watch(submitResetCounter, () => {
     :clearable="!filterConfigCurrent.mandatory"
     :data-cy="dataCy"
     hide-details
+    @blur="updateSelected"
     @click:clear.stop="clearField"
   />
 </template>

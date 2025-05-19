@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { computed, inject, watch } from 'vue'
+import { computed, inject } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
-  FilterSubmitResetCounterKey, FilterTouchedKey,
+  FilterSubmitResetCounterKey,
+  FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys'
 import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
 
@@ -68,6 +69,7 @@ const modelValue = computed({
     if (newValue?.value === 1) returnValue = true
     if (newValue?.value === 0) returnValue = false
     filterData[props.name] = returnValue
+    updateSelected()
     touched.value = true
     emit('change')
   },
@@ -103,10 +105,6 @@ const updateSelected = () => {
   }
   filterSelected.value.set(props.name, [{ title: modelValue.value.title, value: modelValue.value.value }])
 }
-
-watch(submitResetCounter, () => {
-  updateSelected()
-})
 </script>
 
 <template>

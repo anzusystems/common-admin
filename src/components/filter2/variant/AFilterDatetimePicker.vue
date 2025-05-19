@@ -52,6 +52,7 @@ const modelValue = computed({
   },
   set(newValue: DatetimeUTCNullable) {
     filterData[props.name] = newValue
+    updateSelected()
     touched.value = true
     emit('change')
   },
@@ -76,10 +77,6 @@ const updateSelected = () => {
   if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
   filterSelected.value.set(props.name, [{ title: dateTimePretty(modelValue.value), value: modelValue.value }])
 }
-
-watch(submitResetCounter, () => {
-  updateSelected()
-})
 </script>
 
 <template>

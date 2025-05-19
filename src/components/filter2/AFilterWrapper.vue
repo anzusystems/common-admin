@@ -6,7 +6,6 @@ import { inject, nextTick, provide, ref } from 'vue'
 import {
   FilterConfigKey,
   FilterDataKey,
-  FilterSelectedFutureKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
@@ -66,8 +65,6 @@ const submitResetCounter = ref(0)
 provide(FilterSubmitResetCounterKey, submitResetCounter)
 const filterSelected = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
 provide(FilterSelectedKey, filterSelected)
-const filterSelectedFuture = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
-provide(FilterSelectedFutureKey, filterSelectedFuture)
 
 const submitFilter = () => {
   touched.value = false
@@ -83,7 +80,6 @@ const resetFilter = () => {
   touched.value = false
   clearAll(filterData, filterConfig)
   filterSelected.value.clear()
-  filterSelectedFuture.value.clear()
   nextTick(() => {
     submitResetCounter.value++
     emit('reset')

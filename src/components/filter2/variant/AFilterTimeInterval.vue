@@ -71,6 +71,7 @@ const modelValue = computed({
   },
   set(newValue) {
     filterData[props.nameFrom] = newValue
+    updateSelected()
     touched.value = true
     emit('change')
   },
@@ -189,10 +190,6 @@ watch(modelValue, (newValue) => {
   if (found) {
     modelInternal.value = found.value
   }
-})
-
-watch(submitResetCounter, () => {
-  updateSelected()
 })
 </script>
 
