@@ -66,6 +66,7 @@ const checkNewVersion = async (): Promise<void> => {
     if (error instanceof Error) {
       throw new AnzuNewVersionFetchError('Unable to load env config. ' + error.message, error)
     }
+    console.error('Unable to load env config. Unknown error.', error)
     throw new AnzuNewVersionFetchError('Unable to load env config. Unknown error.', error as any)
   }
 }
