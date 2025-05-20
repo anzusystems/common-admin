@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
 
@@ -27,10 +27,6 @@ const onClick = (event: Event) => {
   emit('advancedFilter')
 }
 
-const icon = computed(() => {
-  return active.value ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'
-})
-
 const { t } = useI18n()
 </script>
 
@@ -43,7 +39,7 @@ const { t } = useI18n()
     variant="text"
     @click.stop="onClick"
   >
-    <VIcon :icon="icon" />
+    <VIcon icon="mdi-filter-variant" />
     <VTooltip
       activator="parent"
       location="bottom"

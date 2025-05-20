@@ -537,6 +537,13 @@ import AFilterTimeInterval2 from '@/components/filter2/variant/AFilterTimeInterv
 import AFilterValueObjectOptionsSelect2 from '@/components/filter2/variant/AFilterValueObjectOptionsSelect2.vue'
 import AFilterWrapper2 from '@/components/filter2/AFilterWrapper2.vue'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
+import {
+  createFilter,
+  type FilterConfig,
+  type FilterData,
+  type FilterStore,
+  type MakeFilterOption
+} from '@/composables/filter/filterFactory'
 
 export {
   // COMPONENTS
@@ -1128,4 +1135,9 @@ export {
   AFilterValueObjectOptionsSelect2,
   FilterConfigKey,
   FilterDataKey,
+  createFilter,
+  type FilterConfig,
+  type FilterData,
+  type FilterStore,
+  type MakeFilterOption,
 }
