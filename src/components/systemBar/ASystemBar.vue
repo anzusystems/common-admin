@@ -4,7 +4,7 @@ import { useIntervalFn } from '@vueuse/core'
 import ASystemBarNewVersion from '@/components/systemBar/ASystemBarNewVersion.vue'
 import { isUndefined } from '@/utils/common'
 import { AnzuNewVersionFetchError, isAnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
-import { useUserActivity } from '@/composables/useUserActivity.ts'
+import { useUserActivity } from '@/composables/useUserActivity'
 
 const props = withDefaults(
   defineProps<{

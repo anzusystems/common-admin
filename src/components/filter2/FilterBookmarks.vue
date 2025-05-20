@@ -12,8 +12,8 @@ import { useDisplay } from 'vuetify'
 import type { IntegerId } from '@/types/common'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
-import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys.ts'
-import { type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory.ts'
+import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
+import { type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory'
 
 const props = withDefaults(
   defineProps<{

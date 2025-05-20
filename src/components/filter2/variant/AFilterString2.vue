@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, inject, watch } from 'vue'
+import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { isString, isUndefined } from '@/utils/common'
 import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
@@ -7,7 +7,8 @@ import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
-  FilterSubmitResetCounterKey, FilterTouchedKey,
+  FilterSubmitResetCounterKey,
+  FilterTouchedKey,
 } from '@/components/filter2/filterInjectionKeys'
 
 const props = withDefaults(

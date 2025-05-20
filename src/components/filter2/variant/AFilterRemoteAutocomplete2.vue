@@ -201,7 +201,7 @@ const onSelectedUpdate = (newValue: any) => {
   touched.value = true
   let final: null | string | number | string[] | number[] = null
   if (isArray(newValue)) {
-    final = newValue.map((item) => item.value) as string[] | number[]
+    final = newValue.map((item: any) => item.value) as string[] | number[]
   } else if (!isNull(newValue)) {
     final = newValue.value
   }
