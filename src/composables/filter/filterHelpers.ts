@@ -8,7 +8,7 @@ export interface MakeFilterOptions<T = any> {
   variant: FilterVariant
   titleT?: string
   default: T | null
-  apiName: string
+  field: string
   multiple: boolean
   clearable: boolean
   mandatory: boolean
@@ -38,7 +38,7 @@ export function makeFilterHelper<T = any>(system?: string, subject?: string) {
       variant,
       titleT,
       default: defaultValue,
-      field: isUndefined(options.apiName) ? '' : options.apiName,
+      field: isUndefined(options.field) ? '' : options.field,
       multiple: isArray(defaultValue),
       clearable: isUndefined(options.clearable) ? true : options.clearable,
       mandatory: isUndefined(options.mandatory) ? false : options.mandatory,
