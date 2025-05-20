@@ -527,6 +527,16 @@ import type { MediaAware } from '@/types/MediaAware'
 import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
 import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
+import AFilterBooleanSelect2 from '@/components/filter2/variant/AFilterBooleanSelect2.vue'
+import AFilterDatetimePicker2 from '@/components/filter2/variant/AFilterDatetimePicker2.vue'
+import AFilterInteger2 from '@/components/filter2/variant/AFilterInteger2.vue'
+import AFilterRemoteAutocomplete2 from '@/components/filter2/variant/AFilterRemoteAutocomplete2.vue'
+import AFilterRemoteAutocompleteWithMinimal2 from '@/components/filter2/variant/AFilterRemoteAutocompleteWithMinimal2.vue'
+import AFilterString2 from '@/components/filter2/variant/AFilterString2.vue'
+import AFilterTimeInterval2 from '@/components/filter2/variant/AFilterTimeInterval2.vue'
+import AFilterValueObjectOptionsSelect2 from '@/components/filter2/variant/AFilterValueObjectOptionsSelect2.vue'
+import AFilterWrapper2 from '@/components/filter2/AFilterWrapper2.vue'
+import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
 
 export {
   // COMPONENTS
@@ -1105,4 +1115,17 @@ export {
   damFileTypeFix,
   fetchDamCurrentUser,
   localTimeShiftInSeconds,
+
+  // V2 FILTERS
+  AFilterWrapper2,
+  AFilterBooleanSelect2,
+  AFilterDatetimePicker2,
+  AFilterInteger2,
+  AFilterRemoteAutocomplete2,
+  AFilterRemoteAutocompleteWithMinimal2,
+  AFilterString2,
+  AFilterTimeInterval2,
+  AFilterValueObjectOptionsSelect2,
+  FilterConfigKey,
+  FilterDataKey,
 }

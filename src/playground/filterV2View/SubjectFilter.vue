@@ -5,8 +5,8 @@ import {
   type SubjectFilterData,
   useSubjectListFilter,
 } from '@/playground/filterV2View/subjectFilter'
-import AFilterWrapper from '@/components/filter2/AFilterWrapper.vue'
-import AFilterString from '@/components/filter2/variant/AFilterString.vue'
+import AFilterWrapper2 from '@/components/filter2/AFilterWrapper2.vue'
+import AFilterString2 from '@/components/filter2/variant/AFilterString2.vue'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
 import FilterSubjectSiteRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectSiteRemoteAutocomplete.vue'
 import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectAuthorRemoteAutocomplete.vue'
@@ -14,14 +14,14 @@ import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/Fil
 import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectDeskRemoteAutocomplete.vue'
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect.vue'
+import AFilterValueObjectOptionsSelect2 from '@/components/filter2/variant/AFilterValueObjectOptionsSelect2.vue'
 import {
   allowedTimeIntervalValuesSubject,
   useSubjectListActions,
   useSubjectLockType,
   useSubjectStatus,
 } from '@/playground/filterV2View/subjectTools'
-import AFilterTimeInterval from '@/components/filter2/variant/AFilterTimeInterval.vue'
+import AFilterTimeInterval2 from '@/components/filter2/variant/AFilterTimeInterval2.vue'
 import { cmsClient } from '@/playground/mock/cmsClient'
 
 const emit = defineEmits<{
@@ -29,7 +29,7 @@ const emit = defineEmits<{
   (e: 'reset', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
 }>()
 
-const filterRef = useTemplateRef<typeof AFilterWrapper>('filter')
+const filterRef = useTemplateRef<typeof AFilterWrapper2>('filter')
 
 const { filterConfig, filterData } = useSubjectListFilter()
 provide(FilterConfigKey, filterConfig)
@@ -49,7 +49,7 @@ defineExpose({
 </script>
 
 <template>
-  <AFilterWrapper
+  <AFilterWrapper2
     ref="filter"
     v-model:datatable-hidden-columns="datatableHiddenColumns"
     :client="cmsClient"
@@ -60,16 +60,16 @@ defineExpose({
     @reset="emit('reset', { filterData, filterConfig })"
   >
     <template #search>
-      <AFilterString name="text" />
+      <AFilterString2 name="text" />
     </template>
     <template #item.status>
-      <AFilterValueObjectOptionsSelect
+      <AFilterValueObjectOptionsSelect2
         name="status"
         :items="subjectStatusOptions"
       />
     </template>
     <template #item.lockType>
-      <AFilterValueObjectOptionsSelect
+      <AFilterValueObjectOptionsSelect2
         name="lockType"
         :items="subjectLockTypeOptions"
       />
@@ -93,18 +93,18 @@ defineExpose({
       <FilterSubjectUserRemoteAutocomplete name="owners" />
     </template>
     <template #item.publicPublishedAtFrom>
-      <AFilterTimeInterval
+      <AFilterTimeInterval2
         name-from="publicPublishedAtFrom"
         name-until="publicPublishedAtUntil"
         :allowed="allowedTimeIntervalValuesSubject"
       />
     </template>
     <template #item.modifiedAtFrom>
-      <AFilterTimeInterval
+      <AFilterTimeInterval2
         name-from="modifiedAtFrom"
         name-until="modifiedAtUntil"
         :allowed="allowedTimeIntervalValuesSubject"
       />
     </template>
-  </AFilterWrapper>
+  </AFilterWrapper2>
 </template>

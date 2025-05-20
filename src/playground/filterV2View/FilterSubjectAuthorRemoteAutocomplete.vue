@@ -6,7 +6,7 @@ import {
   fetchItemsByIds,
   useSubjectAuthorInnerFilter,
 } from '@/playground/filterV2View/FilterSubjectAuthorTools'
-import AFilterRemoteAutocomplete from '@/components/filter2/variant/AFilterRemoteAutocomplete.vue'
+import AFilterRemoteAutocomplete2 from '@/components/filter2/variant/AFilterRemoteAutocomplete2.vue'
 
 withDefaults(
   defineProps<{
@@ -24,7 +24,7 @@ provide(FilterInnerDataKey, filterData)
 </script>
 
 <template>
-  <AFilterRemoteAutocomplete
+  <AFilterRemoteAutocomplete2
     :name="name"
     :fetch-items="fetchItems"
     :fetch-items-by-ids="fetchItemsByIds"
