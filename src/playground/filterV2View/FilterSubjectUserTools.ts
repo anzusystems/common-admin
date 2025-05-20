@@ -31,6 +31,12 @@ export interface User extends AnzuUser {
   _system: string
 }
 
+export interface UserMinimal {
+  id: IntegerIdNullable | undefined
+  title: string
+  active: boolean
+}
+
 const END_POINT = '/adm/users'
 
 const fetchUserListByIds = (ids: IntegerId[]) => apiFetchByIds<User[]>(cmsClient, ids, END_POINT, {}, 'cms', 'user')
@@ -54,6 +60,24 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
     title: user.person.fullName,
     value: user.id,
   }))
+}
+
+const mapToMinimal = (user: User): UserMinimal => ({
+  id: user.id,
+  title: user.person.fullName || user.email,
+  active: true,
+})
+
+const mapToMinimals = (users: User[]): UserMinimal[] => {
+  return users.map((user: User) => mapToMinimal(user))
+}
+
+export const fetchItemsMinimal = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+  return mapToMinimals(await fetchUserList(pagination, filterData, filterConfig))
+}
+
+export const fetchItemsMinimalByIds = async (ids: IntegerId[]) => {
+  return mapToMinimals(await fetchUserListByIds(ids))
 }
 
 export function useSubjectUserInnerFilter() {
