@@ -187,6 +187,7 @@ import type { PermissionGroup, PermissionGroupMinimal } from '@/types/Permission
 import { type CreatedByAware, isCreatedByAware } from '@/types/CreatedByAware'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import { usePagination, usePaginationAutoHide } from '@/composables/system/pagination'
+import { usePagination2 } from '@/composables/system/pagination2'
 import { makeFilterHelper, type MakeFilterOptions, useFilterHelpers } from '@/composables/filter/filterHelpers'
 import {
   AvailableLanguagesSymbol,
@@ -271,6 +272,9 @@ import {
   type DatatableOrderingOptions,
   type DatatableSortBy,
 } from '@/composables/system/datatableColumns'
+import {
+  createDatatableColumnsConfig2,
+} from '@/composables/system/datatableColumns2'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { type CachedItem, defineCached } from '@/composables/system/defineCached'
 import type { ObjectLeaves, ObjectPaths, Prettify, UniqueValues } from '@/types/utils'
@@ -1155,4 +1159,6 @@ export {
   apiFetchByIds2,
   apiFetchList2,
   apiGenerateListQuery2,
+  usePagination2,
+  createDatatableColumnsConfig2,
 }
