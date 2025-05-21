@@ -540,6 +540,8 @@ import AFilterString2 from '@/components/filter2/variant/AFilterString2.vue'
 import AFilterTimeInterval2 from '@/components/filter2/variant/AFilterTimeInterval2.vue'
 import AFilterValueObjectOptionsSelect2 from '@/components/filter2/variant/AFilterValueObjectOptionsSelect2.vue'
 import AFilterWrapper2 from '@/components/filter2/AFilterWrapper2.vue'
+import ADatatableOrdering2 from '@/components/ADatatableOrdering2.vue'
+import ADatatablePagination2 from '@/components/ADatatablePagination2.vue'
 import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
 import { apiFetchList2, apiGenerateListQuery2 } from '@/services/api/v2/apiFetchList2'
 import { FilterConfigKey, FilterDataKey, FilterInnerConfigKey, FilterInnerDataKey, DatatablePaginationKey } from '@/components/filter2/filterInjectionKeys'
@@ -1162,4 +1164,6 @@ export {
   apiGenerateListQuery2,
   usePagination2,
   createDatatableColumnsConfig2,
+  ADatatableOrdering2,
+  ADatatablePagination2,
 }

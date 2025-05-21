@@ -45,6 +45,7 @@ withDefaults(
 )
 const emit = defineEmits<{
   (e: 'submit'): void
+  (e: 'bookmarkLoadAfter'): void
   (e: 'reset'): void
 }>()
 
@@ -119,7 +120,7 @@ defineExpose({
               :system="system"
               :user-id="userId"
               :system-resource="bookmarkSystemResource"
-              @submit="emit('submit')"
+              @submit="emit('bookmarkLoadAfter')"
             />
           </div>
         </slot>

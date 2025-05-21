@@ -51,6 +51,7 @@ const { datatableHiddenColumns } = useSubjectListActions()
     bookmark-system-resource="subject"
     @submit="emit('submit', { filterData, filterConfig })"
     @reset="emit('reset', { filterData, filterConfig })"
+    @bookmark-load-after="emit('submit', { filterData, filterConfig })"
   >
     <template #search>
       <AFilterString2 name="text" />
