@@ -3,7 +3,7 @@ import { watchDebounced } from '@vueuse/core'
 import { computed, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
-import { usePagination } from '@/composables/system/pagination'
+import { usePagination2 } from '@/composables/system/pagination2'
 import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
@@ -27,7 +27,7 @@ const props = withDefaults(
   defineProps<{
     name: string
     fetchItems: (
-      pagination: Pagination,
+      pagination: Ref<Pagination>,
       filterData: FilterData,
       filterConfig: FilterConfig
     ) => Promise<ValueObjectOption<string | number>[]>
@@ -110,7 +110,7 @@ const label = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const pagination = usePagination(props.filterSortBy)
+const pagination = usePagination2(props.filterSortBy)
 const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 

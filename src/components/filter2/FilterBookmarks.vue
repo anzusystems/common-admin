@@ -12,15 +12,14 @@ import { useDisplay } from 'vuetify'
 import type { IntegerId } from '@/types/common'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
-import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
 import { type FilterData, useFilterHelpers2 } from '@/composables/filter/filterFactory'
-import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
 
 const props = withDefaults(
   defineProps<{
     client: () => AxiosInstance
     system: string
-    user: IntegerId
+    userId: IntegerId
     systemResource: string
   }>(),
   {}
@@ -34,14 +33,12 @@ const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHidde
   default: undefined,
   required: true,
 })
-const datatableSortBy = defineModel<DatatableSortBy>('datatableSortBy', {
-  default: undefined,
-  required: false,
-})
+
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
+const pagination = inject(DatatablePaginationKey)
 
-if (isUndefined(filterConfig) || isUndefined(filterData)) {
+if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterData)) {
   throw new Error('Incorrect provide/inject config.')
 }
 
@@ -60,7 +57,7 @@ const loadBookmarks = async (force = false) => {
   await filterBookmarkStore.getBookmarks(
     {
       system: props.system,
-      user: props.user,
+      user: props.userId,
       layoutType: mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
       systemResource: props.systemResource,
     },
@@ -77,6 +74,12 @@ const onItemClick = (item: UserAdminConfig) => {
   const config = item.data as UserAdminConfigDataFilterBookmark
   if (isDefined(config.datatableHiddenColumns)) {
     datatableHiddenColumns.value = config.datatableHiddenColumns
+  }
+  if (isDefined(config.sortBy)) {
+    pagination.value = {
+      ...pagination.value,
+      ...{ sortBy: config.sortBy?.key || null, descending: config.sortBy?.order === 'desc' || false },
+    }
   }
   const deserialized = deserializeFilters(config.filter)
   for (const filterName in filterData) {

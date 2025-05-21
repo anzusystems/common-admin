@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { i18n } from '@/plugins/i18n'
 import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2'
@@ -142,7 +142,7 @@ export const useSubjectListActions = () => {
   }
 
   const fetchArticleListVersionData = async (
-    pagination: Pagination,
+    pagination: Ref<Pagination>,
     filterData: FilterData,
     filterConfig: FilterConfig
   ) => {
@@ -156,13 +156,13 @@ export const useSubjectListActions = () => {
       'cms',
       'subject'
     )
-    pagination.hasNextPage = res.hasNextPage
-    pagination.currentViewCount = res.data.length
+    pagination.value.hasNextPage = res.hasNextPage
+    pagination.value.currentViewCount = res.data.length
 
     return mapVersionDataStandard(res.data, res.versionsData)
   }
 
-  const fetchList = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchList = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     listLoading.value = true
     // try {
       const res = await fetchArticleListVersionData(pagination, filterData, filterConfig)

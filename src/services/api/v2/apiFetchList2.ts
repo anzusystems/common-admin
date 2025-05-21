@@ -19,16 +19,17 @@ import {
   axiosErrorResponseHasDependencyExistsData,
 } from '@/model/error/AnzuApiDependencyExistsError'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
+import type { Ref } from 'vue'
 
 export const apiGenerateListQuery2 = (
-  pagination: Pagination,
+  pagination: Ref<Pagination>,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>
 ): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
-  querySetLimit(pagination.rowsPerPage)
-  querySetOffset(pagination.page, pagination.rowsPerPage)
-  querySetOrder(pagination.sortBy, pagination.descending)
+  querySetLimit(pagination.value.rowsPerPage)
+  querySetOffset(pagination.value.page, pagination.value.rowsPerPage)
+  querySetOrder(pagination.value.sortBy, pagination.value.descending)
   querySetFilters(filterData, filterConfig)
   return queryBuild()
 }
@@ -40,7 +41,7 @@ export const apiFetchList2 = <R>(
   client: () => AxiosInstance,
   urlTemplate: string,
   urlParams: UrlParams = {},
-  pagination: Pagination,
+  pagination: Ref<Pagination>,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>,
   system: string,
@@ -63,11 +64,11 @@ export const apiFetchList2 = <R>(
         if (res.data) {
           const resData = res.data as unknown as ApiResponseList<R> | ApiInfiniteResponseList<R>
           if (isApiInfiniteResponseList(resData)) {
-            pagination.hasNextPage = res.data.hasNextPage
+            pagination.value.hasNextPage = res.data.hasNextPage
           } else if (isApiResponseList(resData)) {
-            pagination.totalCount = resData.totalCount
+            pagination.value.totalCount = resData.totalCount
           }
-          pagination.currentViewCount = res.data.data.length
+          pagination.value.currentViewCount = res.data.data.length
           return resolve(res.data.data)
         }
         if (res.status === HTTP_STATUS_NO_CONTENT) {

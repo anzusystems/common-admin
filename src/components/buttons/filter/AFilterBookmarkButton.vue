@@ -4,7 +4,10 @@ import { useI18n } from 'vue-i18n'
 import FilterBookmarkDialog from '@/components/filter2/FilterBookmarkDialog.vue'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
-import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns'
+import { inject } from 'vue'
+import { DatatablePaginationKey } from '@/components/filter2/filterInjectionKeys'
+import { isUndefined } from '@/utils/common'
 
 withDefaults(
   defineProps<{
@@ -65,7 +68,6 @@ const { t } = useI18n()
     :user="user"
     :system-resource="systemResource"
     :datatable-hidden-columns="datatableHiddenColumns"
-    :datatable-sort-by="datatableSortBy"
     @on-close="dialog = false"
   />
 </template>

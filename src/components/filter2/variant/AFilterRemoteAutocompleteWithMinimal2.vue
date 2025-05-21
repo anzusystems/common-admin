@@ -3,7 +3,7 @@ import { watchDebounced } from '@vueuse/core'
 import { computed, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/types/Pagination'
-import { usePagination } from '@/composables/system/pagination'
+import { usePagination2 } from '@/composables/system/pagination2'
 import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
@@ -22,7 +22,7 @@ import { isOneOf } from '@/utils/enum'
 type FetchItemsMinimalByIdsType = ((ids: IntegerId[]) => Promise<any[]>) | ((ids: DocId[]) => Promise<any[]>)
 
 type FetchItemsMinimalType = (
-  pagination: Pagination,
+  pagination: Ref<Pagination>,
   filterData: FilterData,
   filterConfig: FilterConfig
 ) => Promise<any[]>
@@ -116,7 +116,7 @@ const label = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const pagination = usePagination(props.filterSortBy)
+const pagination = usePagination2(props.filterSortBy)
 const fetchedItems = ref<any[]>([])
 const selectedItemsCache = ref<any[]>([])
 

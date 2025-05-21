@@ -18,9 +18,8 @@ import { useDisplay } from 'vuetify'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
-import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
 import { useFilterHelpers2 } from '@/composables/filter/filterFactory'
-import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -29,11 +28,9 @@ const props = withDefaults(
     user: IntegerId
     systemResource: string
     datatableHiddenColumns?: string[] | undefined
-    datatableSortBy?: DatatableSortBy
   }>(),
   {
     datatableHiddenColumns: undefined,
-    datatableSortBy: undefined,
   }
 )
 
@@ -43,8 +40,9 @@ const emit = defineEmits<{
 
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
+const pagination = inject(DatatablePaginationKey)
 
-if (isUndefined(filterConfig) || isUndefined(filterData)) {
+if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterData)) {
   throw new Error('Incorrect provide/inject config.')
 }
 
@@ -122,8 +120,11 @@ const addBookmark = async () => {
     datatableHiddenColumns:
       storeDatatableHiddenColumns.value && props.datatableHiddenColumns ? props.datatableHiddenColumns : undefined,
     sortBy:
-      storeDatatableOrder.value && props.datatableSortBy ? props.datatableSortBy : undefined,
+      storeDatatableOrder.value && pagination.value.sortBy
+        ? { key: pagination.value.sortBy, order: pagination.value.descending ? 'desc' : 'asc' }
+        : undefined,
   }
+  console.log('storing data', config.data)
   try {
     const count = await filterBookmarkStore.fetchBookmarksCount(
       {

@@ -12,7 +12,7 @@ import {
   type FilterStore,
   type MakeFilterOption,
 } from '@/composables/filter/filterFactory'
-import { reactive } from 'vue'
+import { reactive, type Ref } from 'vue'
 
 const AuthorDiscriminator = {
   Person: 'person',
@@ -90,10 +90,10 @@ const END_POINT = '/adm/v1/author-kind'
 const fetchAuthorListByIds = (ids: IntegerId[]) =>
   apiFetchByIds2<AuthorKind[]>(cmsClient, ids, END_POINT + '/search', {}, 'cms', 'authorKind', undefined, true)
 
-const fetchAuthorList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchAuthorList = (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<AuthorKind[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'authorKind')
 
-export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const authors = await fetchAuthorList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))

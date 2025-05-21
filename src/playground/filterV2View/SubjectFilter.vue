@@ -23,17 +23,11 @@ import {
 } from '@/playground/filterV2View/subjectTools'
 import AFilterTimeInterval2 from '@/components/filter2/variant/AFilterTimeInterval2.vue'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
 
 const emit = defineEmits<{
   (e: 'submit', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
   (e: 'reset', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
 }>()
-
-const datatableSortBy = defineModel<DatatableSortBy>('datatableSortBy', {
-  default: undefined,
-  required: false,
-})
 
 const { filterConfig, filterData } = useSubjectListFilter()
 provide(FilterConfigKey, filterConfig)
@@ -51,7 +45,6 @@ const { datatableHiddenColumns } = useSubjectListActions()
 <template>
   <AFilterWrapper2
     v-model:datatable-hidden-columns="datatableHiddenColumns"
-    v-model:datatable-sort-by="datatableSortBy"
     :client="cmsClient"
     system="cms"
     :user-id="10001039"

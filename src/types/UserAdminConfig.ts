@@ -1,7 +1,7 @@
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { SortableItemDataAware } from '@/components/sortable/sortableUtils'
 import type { IntegerId } from '@/types/common'
-import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 
 export interface UserAdminConfig<TData = UserAdminConfigDataFilterBookmark | UserAdminConfigDataPinnedWidgets>
   extends AnzuUserAndTimeTrackingAware,

@@ -12,7 +12,7 @@ import {
   type FilterStore,
   type MakeFilterOption,
 } from '@/composables/filter/filterFactory'
-import { reactive } from 'vue'
+import { reactive, type Ref } from 'vue'
 
 export interface Desk extends AnzuUserAndTimeTrackingAware {
   name: string
@@ -31,12 +31,12 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
 
 const END_POINT = '/adm/desks'
 
-const fetchDeskList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchDeskList = (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<Desk[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'desk')
 
 const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds2<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
 
-export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const desks = await fetchDeskList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({

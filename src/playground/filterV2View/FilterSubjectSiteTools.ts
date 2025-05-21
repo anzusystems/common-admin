@@ -12,7 +12,7 @@ import {
   type FilterStore,
   type MakeFilterOption,
 } from '@/composables/filter/filterFactory'
-import { reactive } from 'vue'
+import { reactive, type Ref } from 'vue'
 
 export interface SiteMinimal {
   id: IntegerId
@@ -77,10 +77,10 @@ const END_POINT = '/adm/v1/site'
 
 const fetchSiteListByIds = (ids: IntegerId[]) => apiFetchByIds2<Site[]>(cmsClient, ids, END_POINT, {}, 'cms', 'site')
 
-const fetchSiteList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchSiteList = (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<Site[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'site')
 
-export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const sites = await fetchSiteList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>sites.map((site: Site) => ({

@@ -1,15 +1,11 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { ref } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { Pagination } from '@/types/Pagination'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
-import { usePagination } from '@/composables/system/pagination'
 import { useUserAdminConfigInnerFilter } from '@/components/filter2/UserAdminConfigFilter'
-import {
-  type UserAdminConfig,
-  type UserAdminConfigLayoutTypeType,
-  UserAdminConfigType,
-} from '@/types/UserAdminConfig'
+import { type UserAdminConfig, type UserAdminConfigLayoutTypeType, UserAdminConfigType } from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
+import { usePagination2 } from '@/composables/system/pagination2'
 
 interface CacheItem<T = UserAdminConfig> {
   lastUsed: number
@@ -49,7 +45,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       systemResource: string
     },
     apiFetch: (
-      pagination: Pagination,
+      pagination: Ref<Pagination>,
       filterData: FilterData,
       filterConfig: FilterConfig
     ) => Promise<UserAdminConfig[]>,
@@ -67,9 +63,9 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       }
     }
 
-    const pagination = usePagination('position')
-    pagination.descending = false
-    pagination.rowsPerPage = MAX_BOOKMARK_ITEMS
+    const pagination = usePagination2('position')
+    pagination.value.descending = false
+    pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS
 
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
     filterData.configType = UserAdminConfigType.FilterBookmark
@@ -99,15 +95,15 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       systemResource: string
     },
     apiFetch: (
-      pagination: Pagination,
+      pagination: Ref<Pagination>,
       filterData: FilterData,
       filterConfig: FilterConfig
-    ) => Promise<UserAdminConfig[]>,
+    ) => Promise<UserAdminConfig[]>
   ): Promise<number> {
     error.value = false
-    const pagination = usePagination('position')
-    pagination.descending = false
-    pagination.rowsPerPage = MAX_BOOKMARK_ITEMS + 1
+    const pagination = usePagination2('position')
+    pagination.value.descending = false
+    pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS + 1
 
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
     filterData.configType = UserAdminConfigType.FilterBookmark
@@ -125,10 +121,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     return length
   }
 
-  function addOne(
-    key: string,
-    data: UserAdminConfig
-  ) {
+  function addOne(key: string, data: UserAdminConfig) {
     bookmarks.value.get(key)?.items.push(data)
   }
 

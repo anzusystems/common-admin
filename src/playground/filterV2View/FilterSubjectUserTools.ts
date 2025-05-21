@@ -12,7 +12,7 @@ import {
   type FilterStore,
   type MakeFilterOption,
 } from '@/composables/filter/filterFactory'
-import { reactive } from 'vue'
+import { reactive, type Ref } from 'vue'
 
 export interface User extends AnzuUser {
   mainSite: IntegerIdNullable
@@ -41,10 +41,10 @@ const END_POINT = '/adm/users'
 
 const fetchUserListByIds = (ids: IntegerId[]) => apiFetchByIds2<User[]>(cmsClient, ids, END_POINT, {}, 'cms', 'user')
 
-const fetchUserList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchUserList = (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<User[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'user')
 
-export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const users = await fetchUserList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>users.map((user: User) => ({
@@ -72,7 +72,11 @@ const mapToMinimals = (users: User[]): UserMinimal[] => {
   return users.map((user: User) => mapToMinimal(user))
 }
 
-export const fetchItemsMinimal = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItemsMinimal = async (
+  pagination: Ref<Pagination>,
+  filterData: FilterData,
+  filterConfig: FilterConfig
+) => {
   return mapToMinimals(await fetchUserList(pagination, filterData, filterConfig))
 }
 

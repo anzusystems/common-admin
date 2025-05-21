@@ -1,19 +1,24 @@
 <script lang="ts" setup>
 import { useSubjectListFilter } from '@/playground/filterV2View/subjectFilter'
-import { createDatatableColumnsConfig, type DatatableOrderingOption } from '@/composables/system/datatableColumns'
 import SubjectFilter from '@/playground/filterV2View/SubjectFilter.vue'
-import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
-import ADatatablePagination from '@/components/ADatatablePagination.vue'
-import { onMounted } from 'vue'
+import { onMounted, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSubjectListActions } from '@/playground/filterV2View/subjectTools'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import { useFilterHelpers2 } from '@/composables/filter/filterFactory'
+import ADatatableOrdering2 from '@/components/ADatatableOrdering2.vue'
+import { DatatablePaginationKey } from '@/components/filter2/filterInjectionKeys'
+import { usePagination2 } from '@/composables/system/pagination2'
+import ADatatablePagination2 from '@/components/ADatatablePagination2.vue'
+import { createDatatableColumnsConfig2 } from '@/composables/system/datatableColumns2'
 
 type DatatableItem = any
 
 const { t } = useI18n()
+
+const pagination = usePagination2()
+provide(DatatablePaginationKey, pagination)
 
 const { filterData, filterConfig } = useSubjectListFilter()
 const { fetchList, listItems, datatableHiddenColumns } = useSubjectListActions()
@@ -23,7 +28,7 @@ const onRowClick = (event: unknown, { item }: { item: DatatableItem }) => {
   console.log(item)
 }
 
-const { columnsVisible, columnsAll, columnsHidden, updateSortBy, pagination } = createDatatableColumnsConfig(
+const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConfig2(
   [
     { key: 'docId' },
     { key: 'version' },
@@ -48,20 +53,15 @@ const { columnsVisible, columnsAll, columnsHidden, updateSortBy, pagination } = 
 )
 
 const getList = () => {
-  pagination.sortBy = filterData.text ? null : 'id' // order by score if searching for text
+  pagination.value.sortBy = filterData.text ? null : 'createdAt'
   fetchList(pagination, filterData, filterConfig)
 }
 
-const sortByChange = (option: DatatableOrderingOption) => {
-  updateSortBy(option.sortBy)
+const sortByChange = () => {
   getList()
 }
 
-const { resetFilter, submitFilter, loadStoredFilters, datatableSortBy } = useFilterHelpers2(
-  filterData,
-  filterConfig,
-  pagination,
-)
+const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers2(filterData, filterConfig, pagination)
 
 defineExpose({
   refresh: getList,
@@ -76,14 +76,13 @@ onMounted(() => {
 <template>
   <div>
     <SubjectFilter
-      v-model:datatable-sort-by="datatableSortBy"
       @submit="submitFilter(pagination, getList)"
       @reset="resetFilter(pagination, getList)"
     />
     <div>
       <div class="d-flex align-center">
         <VSpacer />
-        <ADatatableOrdering @sort-by-change="sortByChange" />
+        <ADatatableOrdering2 @sort-by-change="sortByChange" />
         <ADatatableConfigButton
           v-model:columns-hidden="columnsHidden"
           :columns-all="columnsAll"
@@ -110,10 +109,7 @@ onMounted(() => {
           {{ item.id }}
         </template>
         <template #bottom>
-          <ADatatablePagination
-            v-model="pagination"
-            @change="getList"
-          />
+          <ADatatablePagination2 @change="getList" />
         </template>
       </VDataTableServer>
     </div>

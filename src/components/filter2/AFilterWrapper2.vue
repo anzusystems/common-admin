@@ -20,7 +20,6 @@ import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkBu
 import FilterBookmarks from '@/components/filter2/FilterBookmarks.vue'
 import type { IntegerIdNullable } from '@/types/common'
 import type { AxiosInstance } from 'axios'
-import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
 
 withDefaults(
   defineProps<{
@@ -50,10 +49,6 @@ const emit = defineEmits<{
 }>()
 
 const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
-  default: undefined,
-  required: false,
-})
-const datatableSortBy = defineModel<DatatableSortBy>('datatableSortBy', {
   default: undefined,
   required: false,
 })
@@ -120,10 +115,9 @@ defineExpose({
           <div class="d-flex flex-wrap align-center">
             <FilterBookmarks
               v-model:datatable-hidden-columns="datatableHiddenColumns"
-              v-model:datatable-sort-by="datatableSortBy"
               :client="client"
               :system="system"
-              :user="userId"
+              :user-id="userId"
               :system-resource="bookmarkSystemResource"
               @submit="emit('submit')"
             />
@@ -161,7 +155,6 @@ defineExpose({
             :user="userId"
             :system-resource="bookmarkSystemResource"
             :datatable-hidden-columns="datatableHiddenColumns"
-            :datatable-sort-by="datatableSortBy"
           />
         </slot>
       </VCol>

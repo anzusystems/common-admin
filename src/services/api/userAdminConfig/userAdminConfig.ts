@@ -9,6 +9,7 @@ import { apiDeleteOne2 } from '@/services/api/v2/apiDeleteOne2'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { UserAdminConfig } from '@/types/UserAdminConfig'
 import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2'
+import type { Ref } from 'vue'
 
 const END_POINT = '/adm/v1/user-admin-config'
 const ENTITY = 'userAdminConfig'
@@ -19,7 +20,7 @@ export function useUserAdminConfigApi(
   entity: string = ENTITY,
   endPoint: string = END_POINT
 ) {
-  const fetchUserAdminConfigList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
+  const fetchUserAdminConfigList = (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) =>
     apiFetchList2<UserAdminConfig[]>(client, endPoint, {}, pagination, filterData, filterConfig, system, entity)
 
   const fetchUserAdminConfig = (id: IntegerId) =>

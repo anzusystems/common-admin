@@ -94,12 +94,12 @@ export function createDatatableColumnsConfig(
   })
 
   const updateSortBy = (sortBy: { key: string; order: 'asc' | 'desc' } | undefined | null) => {
-    if (sortBy) {
-      pagination.sortBy = sortBy.key
-      pagination.descending = sortBy.order === 'desc' ? true : false
+    if (!sortBy) {
+      pagination.sortBy = null
       return
     }
-    pagination.sortBy = null
+    pagination.sortBy = sortBy.key
+    pagination.descending = sortBy.order === 'desc' ? true : false
   }
 
   const loadStoredColumns = () => {
