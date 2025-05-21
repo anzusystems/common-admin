@@ -4,7 +4,7 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
-import { apiFetchByIds } from '@/services/api/apiFetchByIds'
+import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
 import {
   createFilter,
   type FilterConfig,
@@ -34,7 +34,7 @@ const END_POINT = '/adm/desks'
 const fetchDeskList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<Desk[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'desk')
 
-const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
+const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds2<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
 
 export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const desks = await fetchDeskList(pagination, filterData, filterConfig)

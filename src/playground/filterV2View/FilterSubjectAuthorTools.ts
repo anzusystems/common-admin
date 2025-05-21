@@ -3,7 +3,7 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { Pagination } from '@/types/Pagination'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { apiFetchByIds } from '@/services/api/apiFetchByIds'
+import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
 import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
 import {
   createFilter,
@@ -88,7 +88,7 @@ const mapToValueObject = (author: AuthorKind) => {
 const END_POINT = '/adm/v1/author-kind'
 
 const fetchAuthorListByIds = (ids: IntegerId[]) =>
-  apiFetchByIds<AuthorKind[]>(cmsClient, ids, END_POINT + '/search', {}, 'cmw', 'authorKind', undefined, true)
+  apiFetchByIds2<AuthorKind[]>(cmsClient, ids, END_POINT + '/search', {}, 'cms', 'authorKind', undefined, true)
 
 const fetchAuthorList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<AuthorKind[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'authorKind')
