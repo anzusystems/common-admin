@@ -542,7 +542,7 @@ import AFilterValueObjectOptionsSelect2 from '@/components/filter2/variant/AFilt
 import AFilterWrapper2 from '@/components/filter2/AFilterWrapper2.vue'
 import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
 import { apiFetchList2, apiGenerateListQuery2 } from '@/services/api/v2/apiFetchList2'
-import { FilterConfigKey, FilterDataKey, FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
+import { FilterConfigKey, FilterDataKey, FilterInnerConfigKey, FilterInnerDataKey, DatatablePaginationKey } from '@/components/filter2/filterInjectionKeys'
 import {
   createFilter,
   useFilterHelpers2,
@@ -1148,6 +1148,7 @@ export {
   FilterDataKey,
   FilterInnerConfigKey,
   FilterInnerDataKey,
+  DatatablePaginationKey,
   createFilter,
   useFilterHelpers2,
   type FilterConfig,
