@@ -63,6 +63,14 @@ const sortByChange = () => {
 
 const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers2(filterData, filterConfig)
 
+const submitFilterAction = () => {
+  submitFilter(pagination, getList)
+}
+
+const resetFilterAction = () => {
+  resetFilter(pagination, getList)
+}
+
 defineExpose({
   refresh: getList,
 })
@@ -76,8 +84,8 @@ onMounted(() => {
 <template>
   <div>
     <SubjectFilter
-      @submit="submitFilter(pagination, getList)"
-      @reset="resetFilter(pagination, getList)"
+      @submit="submitFilterAction"
+      @reset="resetFilterAction"
     />
     <div>
       <div class="d-flex align-center">

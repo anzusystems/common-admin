@@ -1,4 +1,4 @@
-import { type Reactive, reactive } from 'vue'
+import { reactive, type Ref } from 'vue'
 import {
   cloneDeep,
   isArray,
@@ -205,8 +205,8 @@ export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] 
     return deserializeFilters(stored)
   }
 
-  const resetFilter = (pagination: Reactive<Pagination>, callback?: AnyFn) => {
-    pagination.page = 1
+  const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
+    pagination.value.page = 1
     if (storeId && localStorage) {
       localStorage.removeItem(storeId)
     }
@@ -214,12 +214,12 @@ export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] 
     if (callback) callback()
   }
 
-  const submitFilter = (pagination: Reactive<Pagination>, callback?: AnyFn) => {
+  const submitFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     const data = getFilterDataForStoring()
     const serialized = serializeFilters(data)
     updateLocationHash(serialized)
     storeFilterLocalStorage(serialized)
-    pagination.page = 1
+    pagination.value.page = 1
     if (callback) callback()
   }
 
