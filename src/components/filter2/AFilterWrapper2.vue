@@ -18,7 +18,7 @@ import { datatableSlotName } from '@/components/datatable/datatable'
 import FilterDetailItem from '@/components/filter2/FilterDetailItem.vue'
 import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
 import FilterBookmarks from '@/components/filter2/FilterBookmarks.vue'
-import type { IntegerId } from '@/types/common'
+import type { IntegerIdNullable } from '@/types/common'
 import type { AxiosInstance } from 'axios'
 
 withDefaults(
@@ -28,7 +28,7 @@ withDefaults(
     formName?: string
     disableFilterUrlSync?: boolean
     system?: string | undefined
-    user?: IntegerId | undefined
+    userId?: IntegerIdNullable | undefined
     client?: (() => AxiosInstance) | undefined
     bookmarkSystemResource?: string | undefined
   }>(),
@@ -38,7 +38,7 @@ withDefaults(
     formName: 'search',
     disableFilterUrlSync: false,
     system: undefined,
-    user: undefined,
+    userId: undefined,
     client: undefined,
     bookmarkSystemResource: undefined,
   }
@@ -110,14 +110,14 @@ defineExpose({
       </VCol>
     </VRow>
     <VRow dense>
-      <VCol v-if="bookmarkSystemResource && user && system && isDefined(client)">
+      <VCol v-if="bookmarkSystemResource && userId && system && isDefined(client)">
         <slot name="bookmarks">
           <div class="d-flex flex-wrap align-center">
             <FilterBookmarks
               v-model:datatable-hidden-columns="datatableHiddenColumns"
               :client="client"
               :system="system"
-              :user="user"
+              :user="userId"
               :system-resource="bookmarkSystemResource"
             />
           </div>
@@ -148,10 +148,10 @@ defineExpose({
           <AFilterSubmitButton :touched="touched" />
           <AFilterResetButton @reset="resetFilter" />
           <AFilterBookmarkButton
-            v-if="bookmarkSystemResource && user && system && isDefined(client)"
+            v-if="bookmarkSystemResource && userId && system && isDefined(client)"
             :client="client"
             :system="system"
-            :user="user"
+            :user="userId"
             :system-resource="bookmarkSystemResource"
             :datatable-hidden-columns="datatableHiddenColumns"
           />
