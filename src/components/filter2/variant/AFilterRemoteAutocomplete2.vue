@@ -255,7 +255,6 @@ watch(
   () => filterData[props.name],
   async (newValue, oldValue) => {
     watchCallCountData.value++
-    console.log('watch filterData', watchCallCountData.value, newValue)
     if (newValue === oldValue || isBoolean(newValue)) return
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []

@@ -119,6 +119,7 @@ defineExpose({
               :system="system"
               :user="userId"
               :system-resource="bookmarkSystemResource"
+              @submit="emit('submit')"
             />
           </div>
         </slot>

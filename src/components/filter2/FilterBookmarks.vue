@@ -25,6 +25,10 @@ const props = withDefaults(
   {}
 )
 
+const emit = defineEmits<{
+  (e: 'submit'): void
+}>()
+
 const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
   default: undefined,
   required: true,
@@ -77,6 +81,7 @@ const onItemClick = (item: UserAdminConfig) => {
     if (isUndefined(value)) continue
     filterData[key] = value
   }
+  emit('submit')
 }
 
 const THREE_DOTS_WIDTH = 32
