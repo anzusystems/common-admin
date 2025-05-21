@@ -14,6 +14,7 @@ import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
 import { type FilterData, useFilterHelpers2 } from '@/composables/filter/filterFactory'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -33,7 +34,10 @@ const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHidde
   default: undefined,
   required: true,
 })
-
+const datatableSortBy = defineModel<DatatableSortBy>('datatableSortBy', {
+  default: undefined,
+  required: false,
+})
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 
@@ -67,7 +71,7 @@ const loadBookmarks = async (force = false) => {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { deserializeFilters } = useFilterHelpers2(filterData, filterConfig, props.systemResource)
+const { deserializeFilters } = useFilterHelpers2(filterData, filterConfig, undefined, props.systemResource)
 
 const onItemClick = (item: UserAdminConfig) => {
   const config = item.data as UserAdminConfigDataFilterBookmark

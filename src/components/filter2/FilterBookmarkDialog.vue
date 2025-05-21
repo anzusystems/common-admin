@@ -20,6 +20,7 @@ import { useValidate } from '@/validators/vuelidate/useValidate'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
 import { useFilterHelpers2 } from '@/composables/filter/filterFactory'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -28,9 +29,11 @@ const props = withDefaults(
     user: IntegerId
     systemResource: string
     datatableHiddenColumns?: string[] | undefined
+    datatableSortBy?: DatatableSortBy
   }>(),
   {
     datatableHiddenColumns: undefined,
+    datatableSortBy: undefined,
   }
 )
 
@@ -48,6 +51,7 @@ if (isUndefined(filterConfig) || isUndefined(filterData)) {
 const activeTab = ref<'add' | 'manage'>('add')
 const customName = ref('')
 const storeDatatableHiddenColumns = ref(false)
+const storeDatatableOrder = ref(false)
 const saveButtonLoading = ref(false)
 const listLoading = ref(false)
 const errorCount = ref(false)
@@ -102,7 +106,7 @@ const sortItems = async () => {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { serializeFilters } = useFilterHelpers2(filterData, filterConfig, props.systemResource)
+const { serializeFilters } = useFilterHelpers2(filterData, filterConfig, undefined, props.systemResource)
 
 const addBookmark = async () => {
   saveButtonLoading.value = true
@@ -117,6 +121,8 @@ const addBookmark = async () => {
     filter: serializeFilters(filterData),
     datatableHiddenColumns:
       storeDatatableHiddenColumns.value && props.datatableHiddenColumns ? props.datatableHiddenColumns : undefined,
+    sortBy:
+      storeDatatableOrder.value && props.datatableSortBy ? props.datatableSortBy : undefined,
   }
   try {
     const count = await filterBookmarkStore.fetchBookmarksCount(
@@ -275,6 +281,12 @@ watch(activeTab, () => {
             <AFormSwitch
               v-model="storeDatatableHiddenColumns"
               label="Save datatable columns also"
+            />
+          </ARow>
+          <ARow>
+            <AFormSwitch
+              v-model="storeDatatableOrder"
+              label="Save order"
             />
           </ARow>
         </div>

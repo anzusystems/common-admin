@@ -1,4 +1,4 @@
-import { type Reactive, reactive } from 'vue'
+import { computed, type Reactive, reactive } from 'vue'
 import {
   cloneDeep,
   isArray,
@@ -7,10 +7,11 @@ import {
   isNull,
   isObject,
   isString,
-  isUndefined
+  isUndefined,
 } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
 import type { AnyFn } from '@vueuse/core'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,
@@ -106,9 +107,27 @@ export function useFilterClearHelpers<
 export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
   filterData: FilterData<F>,
   filterConfig: FilterConfig<F>,
+  pagination: Reactive<Pagination> | undefined = undefined,
   storeId: string | undefined = undefined
 ) {
   const END_FILTER_MARKER = '~'
+
+  const datatableSortBy = computed<DatatableSortBy>({
+    get() {
+      return pagination?.sortBy ? { key: pagination.sortBy, order: pagination.descending ? 'desc' : 'asc' } : null
+    },
+    set(newValue) {
+      if (!pagination) {
+        return
+      }
+      if (!newValue) {
+        pagination.sortBy = null
+        return
+      }
+      pagination.sortBy = newValue.key
+      pagination.descending = newValue.order === 'desc'
+    },
+  })
 
   const getFilterDataForStoring = (): Record<string, AllowedFilterValues> => {
     const data: Record<string, AllowedFilterValues> = {}
@@ -245,6 +264,7 @@ export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] 
     submitFilter,
     serializeFilters,
     deserializeFilters,
+    datatableSortBy,
   }
 }
 

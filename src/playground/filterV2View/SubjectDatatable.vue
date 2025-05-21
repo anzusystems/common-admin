@@ -57,7 +57,11 @@ const sortByChange = (option: DatatableOrderingOption) => {
   getList()
 }
 
-const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers2(filterData, filterConfig)
+const { resetFilter, submitFilter, loadStoredFilters, datatableSortBy } = useFilterHelpers2(
+  filterData,
+  filterConfig,
+  pagination,
+)
 
 defineExpose({
   refresh: getList,
@@ -72,6 +76,7 @@ onMounted(() => {
 <template>
   <div>
     <SubjectFilter
+      v-model:datatable-sort-by="datatableSortBy"
       @submit="submitFilter(pagination, getList)"
       @reset="resetFilter(pagination, getList)"
     />
