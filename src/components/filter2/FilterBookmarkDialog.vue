@@ -104,7 +104,7 @@ const sortItems = async () => {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { serializeFilters } = useFilterHelpers2(filterData, filterConfig, undefined, props.systemResource)
+const { serializeFilters } = useFilterHelpers2(filterData, filterConfig, props.systemResource)
 
 const addBookmark = async () => {
   saveButtonLoading.value = true

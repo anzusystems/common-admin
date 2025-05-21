@@ -208,7 +208,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^3.4.2"
     "@stylistic/eslint-plugin": "npm:^4.2.0"
     "@tsconfig/node22": "npm:^22.0.2"
-    "@types/node": "npm:^22.15.20"
+    "@types/node": "npm:^22.15.21"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -250,7 +250,7 @@ __metadata:
     vue-i18n: "npm:11.1.3"
     vue-router: "npm:4.5.1"
     vue-tsc: "npm:2.2.10"
-    vuetify: "npm:3.8.5"
+    vuetify: "npm:3.8.6"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@sentry/vue": ^9.15.0
@@ -266,7 +266,7 @@ __metadata:
     vue: 3.5.14
     vue-i18n: 11.1.3
     vue-router: 4.5.1
-    vuetify: 3.8.5
+    vuetify: 3.8.6
   peerDependenciesMeta:
     "@sentry/vue":
       optional: true
@@ -1900,12 +1900,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.15.20":
-  version: 22.15.20
-  resolution: "@types/node@npm:22.15.20"
+"@types/node@npm:*, @types/node@npm:^22.15.21":
+  version: 22.15.21
+  resolution: "@types/node@npm:22.15.21"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10/75f4c0787b643db602c260e1e0d73c75fbb59337d384decec0d64e0e8e4398bc325a6507ccf16c7751cbb8a70ac605cbf850153149b0823a41f8a1c34b072991
+  checksum: 10/cb4189587cca445bfb8166c0ed39f9344d743f37f3da892f2999a99bbabda45dc773237e61ecb7d1dc83dd95718cb1b5715b0be5dd7953565b19019e36a7cf39
   languageName: node
   linkType: hard
 
@@ -8037,9 +8037,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.8.5":
-  version: 3.8.5
-  resolution: "vuetify@npm:3.8.5"
+"vuetify@npm:3.8.6":
+  version: 3.8.6
+  resolution: "vuetify@npm:3.8.6"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=2.1.0"
@@ -8052,7 +8052,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/e42d86e55611ac28cd8d5a99d3ca26c9c46384e8c71baa78b60872aa21093270412ddb15bb3b4bf38951382f0cb0d7b4f4c7e156c69d8896127499739f4ce099
+  checksum: 10/8a1f46ca2b9943af4a8c6831e47ffcfc77bdb5da6dff085de105ada3830ddb3c6ac654d092d627d56609deb1eb7ece8d958092d17acea536ed58dc1fd2e4bad9
   languageName: node
   linkType: hard
 

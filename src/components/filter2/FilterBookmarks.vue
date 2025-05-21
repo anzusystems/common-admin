@@ -68,7 +68,7 @@ const loadBookmarks = async (force = false) => {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { deserializeFilters } = useFilterHelpers2(filterData, filterConfig, undefined, props.systemResource)
+const { deserializeFilters } = useFilterHelpers2(filterData, filterConfig, props.systemResource)
 
 const onItemClick = (item: UserAdminConfig) => {
   const config = item.data as UserAdminConfigDataFilterBookmark

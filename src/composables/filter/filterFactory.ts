@@ -1,4 +1,4 @@
-import { type Reactive, reactive, type Ref } from 'vue'
+import { type Reactive, reactive } from 'vue'
 import {
   cloneDeep,
   isArray,
@@ -106,7 +106,6 @@ export function useFilterClearHelpers<
 export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
   filterData: FilterData<F>,
   filterConfig: FilterConfig<F>,
-  pagination: Ref<Pagination> | undefined = undefined,
   storeId: string | undefined = undefined
 ) {
   const END_FILTER_MARKER = '~'

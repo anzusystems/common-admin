@@ -61,7 +61,7 @@ const sortByChange = () => {
   getList()
 }
 
-const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers2(filterData, filterConfig, pagination)
+const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers2(filterData, filterConfig)
 
 defineExpose({
   refresh: getList,
