@@ -537,7 +537,7 @@ import AFilterTimeInterval2 from '@/components/filter2/variant/AFilterTimeInterv
 import AFilterValueObjectOptionsSelect2 from '@/components/filter2/variant/AFilterValueObjectOptionsSelect2.vue'
 import AFilterWrapper2 from '@/components/filter2/AFilterWrapper2.vue'
 import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
-import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
+import { apiFetchList2, apiGenerateListQuery2 } from '@/services/api/v2/apiFetchList2'
 import { FilterConfigKey, FilterDataKey, FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
 import {
   createFilter,
@@ -1154,4 +1154,5 @@ export {
   type TimeIntervalToolsValue,
   apiFetchByIds2,
   apiFetchList2,
+  apiGenerateListQuery2,
 }

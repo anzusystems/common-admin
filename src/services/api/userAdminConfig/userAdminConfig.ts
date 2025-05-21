@@ -1,14 +1,14 @@
 import type { AxiosInstance } from 'axios'
 import type { Pagination } from '@/types/Pagination'
 import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
-import { apiCreateOne } from '@/services/api/v2/apiCreateOne'
-import { apiUpdateOne } from '@/services/api/v2/apiUpdateOne'
+import { apiCreateOne2 } from '@/services/api/v2/apiCreateOne2.ts'
+import { apiUpdateOne2 } from '@/services/api/v2/apiUpdateOne2.ts'
 import type { IntegerId } from '@/types/common'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
-import { apiDeleteOne } from '@/services/api/v2/apiDeleteOne'
+import { apiDeleteOne2 } from '@/services/api/v2/apiDeleteOne2.ts'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { UserAdminConfig } from '@/types/UserAdminConfig'
-import { apiAnyRequest } from '@/services/api/v2/apiAnyRequest'
+import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2.ts'
 
 const END_POINT = '/adm/v1/user-admin-config'
 const ENTITY = 'userAdminConfig'
@@ -26,16 +26,16 @@ export function useUserAdminConfigApi(
     apiFetchOne<UserAdminConfig>(client, END_POINT + '/:id', { id }, system, ENTITY)
 
   const createUserAdminConfig = (data: UserAdminConfig) =>
-    apiCreateOne<UserAdminConfig>(client, data, endPoint, {}, system, entity)
+    apiCreateOne2<UserAdminConfig>(client, data, endPoint, {}, system, entity)
 
   const updateUserAdminConfig = (id: IntegerId, data: UserAdminConfig) =>
-    apiUpdateOne<UserAdminConfig>(client, data, endPoint + '/:id', { id }, system, entity)
+    apiUpdateOne2<UserAdminConfig>(client, data, endPoint + '/:id', { id }, system, entity)
 
   const deleteUserAdminConfig = (id: IntegerId) =>
-    apiDeleteOne<UserAdminConfig>(client, endPoint + '/:id', { id }, system, entity)
+    apiDeleteOne2<UserAdminConfig>(client, endPoint + '/:id', { id }, system, entity)
 
   const updateUserAdminConfigPositions = (ids: IntegerId[]) =>
-    apiAnyRequest<{ userAdminConfigs: IntegerId[] }, any>(
+    apiAnyRequest2<{ userAdminConfigs: IntegerId[] }, any>(
       client,
       'PATCH',
       endPoint + '/update-positions',

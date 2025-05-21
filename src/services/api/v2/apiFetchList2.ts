@@ -4,7 +4,7 @@ import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { Pagination } from '@/types/Pagination'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { useApiQueryBuilder } from '@/services/api/v2/queryBuilder'
+import { useApiQueryBuilder } from '@/services/api/v2/queryBuilder2.ts'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
@@ -20,7 +20,7 @@ import {
 } from '@/model/error/AnzuApiDependencyExistsError'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 
-export const apiGenerateListQuery = (
+export const apiGenerateListQuery2 = (
   pagination: Pagination,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>
@@ -53,7 +53,7 @@ export const apiFetchList2 = <R>(
       .get(
         replaceUrlParameters(urlTemplate, urlParams) +
         searchApi +
-        apiGenerateListQuery(pagination, filterData, filterConfig),
+        apiGenerateListQuery2(pagination, filterData, filterConfig),
         options
       )
       .then((res) => {

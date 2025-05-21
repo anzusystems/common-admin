@@ -1,9 +1,8 @@
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
-import { isNull } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
-import type { AxiosInstance, AxiosRequestConfig, Method } from 'axios'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import {
@@ -20,26 +19,18 @@ import {
  * @template T Type used for request payload, by default same as Response type
  * @template R Response type override, optional
  */
-export const apiAnyRequest = <T, R = T>(
+export const apiCreateOne2 = <T, R = T>(
   client: () => AxiosInstance,
-  method: Method,
-  urlTemplate = '',
+  object: T | Record<string, never> = {},
+  urlTemplate: string,
   urlParams: UrlParams = {},
-  object: T | null = null,
   system: string,
   entity: string,
   options: AxiosRequestConfig = {}
 ): Promise<R> => {
   return new Promise((resolve, reject) => {
-    const axiosConfig: AxiosRequestConfig = { method: method }
-    if (urlTemplate !== '') {
-      axiosConfig.url = replaceUrlParameters(urlTemplate, urlParams)
-    }
-    if (!isNull(object)) {
-      axiosConfig.data = JSON.stringify(object)
-    }
     client()
-      .request({ ...options, ...axiosConfig })
+      .post(replaceUrlParameters(urlTemplate, urlParams), JSON.stringify(object), options)
       .then((res) => {
         if (!isValidHTTPStatus(res.status)) {
           return reject(new AnzuApiResponseCodeError(res.status))

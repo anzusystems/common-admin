@@ -19,7 +19,7 @@ import {
  * @template T Type used for request payload, by default same as Response type
  * @template R Response type override, optional
  */
-export const apiDeleteOne = <T, R = T>(
+export const apiDeleteOne2 = <T, R = T>(
   client: () => AxiosInstance,
   urlTemplate: string,
   urlParams: UrlParams = {},

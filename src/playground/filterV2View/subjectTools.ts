@@ -1,9 +1,9 @@
 import { ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { i18n } from '@/plugins/i18n'
-import { apiAnyRequest } from '@/services/api/v2/apiAnyRequest'
+import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2.ts'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { apiGenerateListQuery } from '@/services/api/v2/apiFetchList2'
+import { apiGenerateListQuery2 } from '@/services/api/v2/apiFetchList2'
 import type { Pagination } from '@/types/Pagination'
 import type { IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
@@ -147,10 +147,10 @@ export const useSubjectListActions = () => {
     filterConfig: FilterConfig
   ) => {
     filterData.discriminator = 'standard'
-    const res = await apiAnyRequest<any>(
+    const res = await apiAnyRequest2<any>(
       cmsClient,
       'GET',
-      END_POINT + '/search' + apiGenerateListQuery(pagination, filterData, filterConfig),
+      END_POINT + '/search' + apiGenerateListQuery2(pagination, filterData, filterConfig),
       {},
       undefined,
       'cms',

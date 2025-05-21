@@ -55,7 +55,7 @@ const generateListApiQueryWithoutPagination = (
  *
  * @template R Response type override, optional
  */
-export const apiFetchListBatch = async <R>(
+export const apiFetchListBatch2 = async <R>(
   client: () => AxiosInstance,
   urlTemplate: string,
   urlParams: UrlParams = {},

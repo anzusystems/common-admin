@@ -3,8 +3,8 @@ import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/m
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -16,12 +16,10 @@ import {
 } from '@/model/error/AnzuApiDependencyExistsError'
 
 /**
- * @template T Type used for request payload, by default same as Response type
- * @template R Response type override, optional
+ * @template R Response type
  */
-export const apiUpdateOne = <T, R = T>(
+export const apiFetchOne2 = <R>(
   client: () => AxiosInstance,
-  object: T | Record<string, never> = {},
   urlTemplate: string,
   urlParams: UrlParams = {},
   system: string,
@@ -30,7 +28,7 @@ export const apiUpdateOne = <T, R = T>(
 ): Promise<R> => {
   return new Promise((resolve, reject) => {
     client()
-      .put(replaceUrlParameters(urlTemplate, urlParams), JSON.stringify(object), options)
+      .get(replaceUrlParameters(urlTemplate, urlParams), options)
       .then((res) => {
         if (!isValidHTTPStatus(res.status)) {
           return reject(new AnzuApiResponseCodeError(res.status))
