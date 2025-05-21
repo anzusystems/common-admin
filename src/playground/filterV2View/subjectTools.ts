@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { i18n } from '@/plugins/i18n'
-import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2.ts'
+import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiGenerateListQuery2 } from '@/services/api/v2/apiFetchList2'
 import type { Pagination } from '@/types/Pagination'

@@ -8,7 +8,7 @@ import {
 } from '@/components/filter2/filterInjectionKeys'
 import { isArray, isBoolean, isNumber, isString, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import type { AllowedFilterValues } from '@/composables/filter/filterFactory.ts'
+import type { AllowedFilterValues } from '@/composables/filter/filterFactory'
 
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
