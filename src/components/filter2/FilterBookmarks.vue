@@ -13,7 +13,7 @@ import type { IntegerId } from '@/types/common'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
-import { type FilterData, useFilterHelpers } from '@/composables/filter/filterFactory'
+import { type FilterData, useFilterHelpers2 } from '@/composables/filter/filterFactory'
 
 const props = withDefaults(
   defineProps<{
@@ -63,7 +63,7 @@ const loadBookmarks = async (force = false) => {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { deserializeFilters } = useFilterHelpers(filterData, filterConfig, props.systemResource)
+const { deserializeFilters } = useFilterHelpers2(filterData, filterConfig, props.systemResource)
 
 const onItemClick = (item: UserAdminConfig) => {
   const config = item.data as UserAdminConfigDataFilterBookmark

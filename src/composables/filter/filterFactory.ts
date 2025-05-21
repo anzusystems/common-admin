@@ -103,7 +103,7 @@ export function useFilterClearHelpers<
   }
 }
 
-export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
+export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
   filterData: FilterData<F>,
   filterConfig: FilterConfig<F>,
   storeId: string | undefined = undefined

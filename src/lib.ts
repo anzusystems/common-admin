@@ -541,6 +541,7 @@ import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
 import { FilterConfigKey, FilterDataKey, FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
 import {
   createFilter,
+  useFilterHelpers2,
   type FilterConfig,
   type FilterData,
   type FilterStore,
@@ -1144,6 +1145,7 @@ export {
   FilterInnerConfigKey,
   FilterInnerDataKey,
   createFilter,
+  useFilterHelpers2,
   type FilterConfig,
   type FilterData,
   type FilterStore,

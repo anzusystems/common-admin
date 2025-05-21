@@ -19,7 +19,7 @@ import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
-import { useFilterHelpers } from '@/composables/filter/filterFactory'
+import { useFilterHelpers2 } from '@/composables/filter/filterFactory'
 
 const props = withDefaults(
   defineProps<{
@@ -102,7 +102,7 @@ const sortItems = async () => {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { serializeFilters } = useFilterHelpers(filterData, filterConfig, props.systemResource)
+const { serializeFilters } = useFilterHelpers2(filterData, filterConfig, props.systemResource)
 
 const addBookmark = async () => {
   saveButtonLoading.value = true
