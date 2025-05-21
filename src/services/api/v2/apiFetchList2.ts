@@ -2,10 +2,13 @@ import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError
 import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
+import type { Pagination } from '@/types/Pagination'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { useApiQueryBuilder } from '@/services/api/queryBuilder'
+import { useApiQueryBuilder } from '@/services/api/v2/queryBuilder'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
+import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
+import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -15,45 +18,60 @@ import {
   AnzuApiDependencyExistsError,
   axiosErrorResponseHasDependencyExistsData,
 } from '@/model/error/AnzuApiDependencyExistsError'
+import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 
-/**
- * @template T Type used for request payload, by default same as Response type
- * @template R Response type override, optional
- */
-const generateByIdsApiQuery = (ids: number[] | string[], isSearchApi: boolean): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } = useApiQueryBuilder()
-  const limit = ids.length
-  querySetLimit(limit)
-  querySetOffset(1, limit)
-  querySetOrder('id', false)
-  if (isSearchApi) queryAdd('id', ids.join(','))
-  else queryAddFilter('in', 'id', ids.join(','))
-
+export const apiGenerateListQuery = (
+  pagination: Pagination,
+  filterData: FilterData<any>,
+  filterConfig: FilterConfig<any>
+): string => {
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
+  querySetLimit(pagination.rowsPerPage)
+  querySetOffset(pagination.page, pagination.rowsPerPage)
+  querySetOrder(pagination.sortBy, pagination.descending)
+  querySetFilters(filterData, filterConfig)
   return queryBuild()
 }
 
-export const apiFetchByIds = <T, R = T>(
+/**
+ * @template R Response type override, optional
+ */
+export const apiFetchList2 = <R>(
   client: () => AxiosInstance,
-  ids: string[] | number[],
   urlTemplate: string,
   urlParams: UrlParams = {},
+  pagination: Pagination,
+  filterData: FilterData<any>,
+  filterConfig: FilterConfig<any>,
   system: string,
   entity: string,
-  options: AxiosRequestConfig = {},
-  isSearchApi = false
+  options: AxiosRequestConfig = {}
 ): Promise<R> => {
   return new Promise((resolve, reject) => {
+    const searchApi = filterConfig.general.elastic ? '/search' : ''
     client()
-      .get(replaceUrlParameters(urlTemplate, urlParams) + generateByIdsApiQuery(ids, isSearchApi), options)
+      .get(
+        replaceUrlParameters(urlTemplate, urlParams) +
+        searchApi +
+        apiGenerateListQuery(pagination, filterData, filterConfig),
+        options
+      )
       .then((res) => {
         if (!isValidHTTPStatus(res.status)) {
           return reject(new AnzuApiResponseCodeError(res.status))
         }
-        if (res.data?.data) {
+        if (res.data) {
+          const resData = res.data as unknown as ApiResponseList<R> | ApiInfiniteResponseList<R>
+          if (isApiInfiniteResponseList(resData)) {
+            pagination.hasNextPage = res.data.hasNextPage
+          } else if (isApiResponseList(resData)) {
+            pagination.totalCount = resData.totalCount
+          }
+          pagination.currentViewCount = res.data.data.length
           return resolve(res.data.data)
         }
         if (res.status === HTTP_STATUS_NO_CONTENT) {
-          return resolve(null as R)
+          return resolve([] as R)
         }
         return reject(new AnzuFatalError())
       })

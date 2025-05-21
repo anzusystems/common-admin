@@ -3,7 +3,7 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { apiFetchList } from '@/services/api/v2/apiFetchList'
+import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import {
   createFilter,
@@ -32,7 +32,7 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
 const END_POINT = '/adm/desks'
 
 const fetchDeskList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
-  apiFetchList<Desk[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'desk')
+  apiFetchList2<Desk[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'desk')
 
 const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
 

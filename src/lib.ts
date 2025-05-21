@@ -536,14 +536,20 @@ import AFilterString2 from '@/components/filter2/variant/AFilterString2.vue'
 import AFilterTimeInterval2 from '@/components/filter2/variant/AFilterTimeInterval2.vue'
 import AFilterValueObjectOptionsSelect2 from '@/components/filter2/variant/AFilterValueObjectOptionsSelect2.vue'
 import AFilterWrapper2 from '@/components/filter2/AFilterWrapper2.vue'
-import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
+import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
+import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
+import { FilterConfigKey, FilterDataKey, FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
 import {
   createFilter,
   type FilterConfig,
   type FilterData,
   type FilterStore,
-  type MakeFilterOption
+  type MakeFilterOption,
 } from '@/composables/filter/filterFactory'
+import {
+  TimeIntervalSpecialOptions,
+  type TimeIntervalToolsValue,
+} from '@/components/filter2/variant/filterTimeIntervalTools'
 
 export {
   // COMPONENTS
@@ -1135,9 +1141,15 @@ export {
   AFilterValueObjectOptionsSelect2,
   FilterConfigKey,
   FilterDataKey,
+  FilterInnerConfigKey,
+  FilterInnerDataKey,
   createFilter,
   type FilterConfig,
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
+  TimeIntervalSpecialOptions,
+  type TimeIntervalToolsValue,
+  apiFetchByIds2,
+  apiFetchList2,
 }

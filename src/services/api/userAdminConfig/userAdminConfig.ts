@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios'
 import type { Pagination } from '@/types/Pagination'
-import { apiFetchList } from '@/services/api/v2/apiFetchList'
+import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
 import { apiCreateOne } from '@/services/api/v2/apiCreateOne'
 import { apiUpdateOne } from '@/services/api/v2/apiUpdateOne'
 import type { IntegerId } from '@/types/common'
@@ -20,7 +20,7 @@ export function useUserAdminConfigApi(
   endPoint: string = END_POINT
 ) {
   const fetchUserAdminConfigList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
-    apiFetchList<UserAdminConfig[]>(client, endPoint, {}, pagination, filterData, filterConfig, system, entity)
+    apiFetchList2<UserAdminConfig[]>(client, endPoint, {}, pagination, filterData, filterConfig, system, entity)
 
   const fetchUserAdminConfig = (id: IntegerId) =>
     apiFetchOne<UserAdminConfig>(client, END_POINT + '/:id', { id }, system, ENTITY)

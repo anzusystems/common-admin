@@ -2,7 +2,7 @@ import type { AnzuUser } from '@/types/AnzuUser'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
-import { apiFetchList } from '@/services/api/v2/apiFetchList'
+import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
 import type { Pagination } from '@/types/Pagination'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import {
@@ -42,7 +42,7 @@ const END_POINT = '/adm/users'
 const fetchUserListByIds = (ids: IntegerId[]) => apiFetchByIds<User[]>(cmsClient, ids, END_POINT, {}, 'cms', 'user')
 
 const fetchUserList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
-  apiFetchList<User[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'user')
+  apiFetchList2<User[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'user')
 
 export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const users = await fetchUserList(pagination, filterData, filterConfig)

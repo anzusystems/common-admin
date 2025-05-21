@@ -4,7 +4,7 @@ import type { Pagination } from '@/types/Pagination'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
-import { apiFetchList } from '@/services/api/v2/apiFetchList'
+import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
 import {
   createFilter,
   type FilterConfig,
@@ -91,7 +91,7 @@ const fetchAuthorListByIds = (ids: IntegerId[]) =>
   apiFetchByIds<AuthorKind[]>(cmsClient, ids, END_POINT + '/search', {}, 'cmw', 'authorKind', undefined, true)
 
 const fetchAuthorList = (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) =>
-  apiFetchList<AuthorKind[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'authorKind')
+  apiFetchList2<AuthorKind[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'authorKind')
 
 export const fetchItems = async (pagination: Pagination, filterData: FilterData, filterConfig: FilterConfig) => {
   const authors = await fetchAuthorList(pagination, filterData, filterConfig)
