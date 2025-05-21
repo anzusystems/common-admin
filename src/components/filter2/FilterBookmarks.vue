@@ -145,7 +145,9 @@ const itemsComputed = computed(() => {
 watch([loading, () => items.value.length], ([newLoading]) => {
   if (newLoading === true || isNull(toolbarRef.value)) return
   toolbarWidth.value = toolbarRef.value.clientWidth
-  calculateVisible(toolbarWidth.value)
+  nextTick(() => {
+    calculateVisible(toolbarWidth.value)
+  })
 })
 
 onMounted(() => {
