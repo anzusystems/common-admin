@@ -124,7 +124,6 @@ const addBookmark = async () => {
         ? { key: pagination.value.sortBy, order: pagination.value.descending ? 'desc' : 'asc' }
         : undefined,
   }
-  console.log('storing data', config.data)
   try {
     const count = await filterBookmarkStore.fetchBookmarksCount(
       {

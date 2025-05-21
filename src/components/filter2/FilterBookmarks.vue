@@ -43,7 +43,7 @@ if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterDa
 }
 
 const loading = ref(false)
-const toolbarRef = useTemplateRef('toolbarRef')
+const toolbarRef = useTemplateRef('toolbar')
 const toolbarWidth = ref(300)
 const visibleItemsCount = ref(1000)
 
@@ -160,7 +160,7 @@ onMounted(() => {
 
 <template>
   <div
-    ref="toolbarRef"
+    ref="toolbar"
     :key="items.length"
     class="w-100 d-flex overflow-hidden align-center"
   >

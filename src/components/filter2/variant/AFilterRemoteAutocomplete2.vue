@@ -36,13 +36,11 @@ const props = withDefaults(
     filterSortBy?: string | null
     placeholder?: string | undefined
     prefetch?: 'hover' | 'focus' | 'mounted'
-    debug?: boolean
   }>(),
   {
     filterSortBy: null,
     placeholder: undefined,
     prefetch: 'hover',
-    debug: false,
   }
 )
 const emit = defineEmits<{
@@ -56,19 +54,6 @@ const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 const filterInnerConfig = inject(FilterInnerConfigKey)
 const filterInnerData = inject(FilterInnerDataKey)
-
-if (props.debug) {
-  // console.log('submitResetCounter', submitResetCounter)
-  // console.log('touched', touched)
-  // console.log('filterSelected', filterSelected)
-  // console.log('filterConfig', filterConfig)
-  // console.log('filterConfig.fields[props.name]', filterConfig?.fields[props.name])
-  // console.log('filterData', filterData)
-  // console.log('filterInnerConfig', filterInnerConfig)
-  // console.log('filterInnerConfig.fields[props.filterByField]', filterInnerConfig?.fields[props.filterByField])
-  // console.log('filterInnerData', filterInnerData)
-  // console.log('filterInnerData.[props.filterByField]', filterInnerData?.[props.filterByField])
-}
 
 if (
   isUndefined(submitResetCounter) ||

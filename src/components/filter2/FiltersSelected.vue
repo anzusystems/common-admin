@@ -44,7 +44,6 @@ const selectedArray = computed(() => {
 })
 
 const clickClose = (name: string, optionValue: number | string) => {
-  console.log('close', name, optionValue)
   // update selected
   const selectedFound = filterSelected.value.get(name)
   if (selectedFound && selectedFound.length === 1) {
@@ -55,7 +54,6 @@ const clickClose = (name: string, optionValue: number | string) => {
   }
   // update data
   if (isArray(filterData[name]) && filterData[name].length > 0) {
-    console.log(toRaw(filterData[name]))
     const foundIndex = filterData[name].findIndex((item) => item === optionValue)
     const newArray = [...toRaw(filterData[name])]
     newArray.splice(foundIndex, 1)

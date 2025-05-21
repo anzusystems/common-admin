@@ -94,17 +94,13 @@ watch(
 watch(
   pagination,
   (newValue, oldValue) => {
-    console.log(newValue, oldValue)
     if (!isUndefined(oldValue) && newValue.sortBy === oldValue.sortBy && newValue.descending === oldValue.descending) {
       return
     }
     const found = options.value.find((option) => {
       const optionDescending = option.sortBy?.order === 'desc' || false
-      console.log('stored', newValue.sortBy, newValue.descending)
-      console.log('option', optionDescending, option.sortBy?.key)
       return newValue.sortBy === option.sortBy?.key && newValue.descending === optionDescending
     })
-    console.log(found)
     if (isUndefined(found)) {
       return
     }
