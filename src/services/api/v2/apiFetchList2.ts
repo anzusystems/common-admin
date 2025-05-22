@@ -2,7 +2,7 @@ import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError
 import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { useApiQueryBuilder } from '@/services/api/v2/queryBuilder2'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
@@ -22,14 +22,16 @@ import type { FilterConfig, FilterData } from '@/composables/filter/filterFactor
 import type { Ref } from 'vue'
 
 export const apiGenerateListQuery2 = (
-  pagination: Ref<Pagination>,
+  pagination: Ref<Pagination2>,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>
 ): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
   querySetLimit(pagination.value.rowsPerPage)
   querySetOffset(pagination.value.page, pagination.value.rowsPerPage)
-  querySetOrder(pagination.value.sortBy, pagination.value.descending)
+  if (pagination.value.sortBy) {
+    querySetOrder(pagination.value.sortBy.key, pagination.value.sortBy.order === 'desc')
+  }
   querySetFilters(filterData, filterConfig)
   return queryBuild()
 }
@@ -41,7 +43,7 @@ export const apiFetchList2 = <R>(
   client: () => AxiosInstance,
   urlTemplate: string,
   urlParams: UrlParams = {},
-  pagination: Ref<Pagination>,
+  pagination: Ref<Pagination2>,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>,
   system: string,
@@ -53,8 +55,8 @@ export const apiFetchList2 = <R>(
     client()
       .get(
         replaceUrlParameters(urlTemplate, urlParams) +
-        searchApi +
-        apiGenerateListQuery2(pagination, filterData, filterConfig),
+          searchApi +
+          apiGenerateListQuery2(pagination, filterData, filterConfig),
         options
       )
       .then((res) => {

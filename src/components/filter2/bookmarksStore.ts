@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { type Ref, ref } from 'vue'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 import { useUserAdminConfigInnerFilter } from '@/components/filter2/UserAdminConfigFilter'
 import { type UserAdminConfig, type UserAdminConfigLayoutTypeType, UserAdminConfigType } from '@/types/UserAdminConfig'
@@ -45,7 +45,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       systemResource: string
     },
     apiFetch: (
-      pagination: Ref<Pagination>,
+      pagination: Ref<Pagination2>,
       filterData: FilterData,
       filterConfig: FilterConfig
     ) => Promise<UserAdminConfig[]>,
@@ -63,8 +63,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       }
     }
 
-    const pagination = usePagination2('position')
-    pagination.value.descending = false
+    const pagination = usePagination2({ key: 'position', order: 'asc' })
     pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS
 
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
@@ -95,14 +94,13 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       systemResource: string
     },
     apiFetch: (
-      pagination: Ref<Pagination>,
+      pagination: Ref<Pagination2>,
       filterData: FilterData,
       filterConfig: FilterConfig
     ) => Promise<UserAdminConfig[]>
   ): Promise<number> {
     error.value = false
-    const pagination = usePagination2('position')
-    pagination.value.descending = false
+    const pagination = usePagination2({ key: 'position', order: 'asc' })
     pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS + 1
 
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)

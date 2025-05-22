@@ -4,13 +4,13 @@ import { useI18n } from 'vue-i18n'
 import type { DatatableOrderingOption, DatatableOrderingOptions } from '@/composables/system/datatableColumns'
 import { isUndefined } from '@/utils/common'
 import { DatatablePaginationKey } from '@/components/filter2/filterInjectionKeys'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 
 const props = withDefaults(
   defineProps<{
     variant?: 'default' | 'most-relevant'
     customOptions?: undefined | DatatableOrderingOptions
-    paginationUpdateCustomCb?: ((option: DatatableOrderingOption, pagination: Ref<Pagination>) => void) | undefined
+    paginationUpdateCustomCb?: ((option: DatatableOrderingOption, pagination: Ref<Pagination2>) => void) | undefined
   }>(),
   {
     variant: 'default',
@@ -64,18 +64,17 @@ const onItemClick = (item: DatatableOrderingOption) => {
 
 const paginationUpdateDefault = (found: DatatableOrderingOption) => {
   if (!found.sortBy) {
-    pagination.value.sortBy = null
+    pagination.value = { ...pagination.value, ...{ sortBy: null, descending: true } }
     emit('sortByChange', found)
   }
-  pagination.value.sortBy = found.sortBy?.key || null
-  pagination.value.descending = found.sortBy?.order === 'desc' || false
+  pagination.value.sortBy = found.sortBy
   emit('sortByChange', found)
 }
 
 watch(
   modelValue,
   (newValue, oldValue) => {
-    if (isUndefined(oldValue) || newValue === oldValue) return
+    if (newValue === oldValue) return
     const found = options.value.find((option) => {
       return option.id === newValue
     })
@@ -94,12 +93,11 @@ watch(
 watch(
   pagination,
   (newValue, oldValue) => {
-    if (!isUndefined(oldValue) && newValue.sortBy === oldValue.sortBy && newValue.descending === oldValue.descending) {
+    if (newValue.sortBy?.key === oldValue?.sortBy?.key && newValue.sortBy?.order === oldValue?.sortBy?.order) {
       return
     }
     const found = options.value.find((option) => {
-      const optionDescending = option.sortBy?.order === 'desc' || false
-      return newValue.sortBy === option.sortBy?.key && newValue.descending === optionDescending
+      return newValue.sortBy?.key === option.sortBy?.key && newValue.sortBy?.order === option.sortBy?.order
     })
     if (isUndefined(found)) {
       return

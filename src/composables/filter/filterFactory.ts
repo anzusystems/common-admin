@@ -9,7 +9,7 @@ import {
   isString,
   isUndefined,
 } from '@/utils/common'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 import type { AnyFn } from '@vueuse/core'
 
 const defaultRenderOptions: FilerRenderOptions = {
@@ -205,7 +205,7 @@ export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] 
     return deserializeFilters(stored)
   }
 
-  const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
+  const resetFilter = (pagination: Ref<Pagination2>, callback?: AnyFn) => {
     pagination.value.page = 1
     if (storeId && localStorage) {
       localStorage.removeItem(storeId)
@@ -214,7 +214,7 @@ export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] 
     if (callback) callback()
   }
 
-  const submitFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
+  const submitFilter = (pagination: Ref<Pagination2>, callback?: AnyFn) => {
     const data = getFilterDataForStoring()
     const serialized = serializeFilters(data)
     updateLocationHash(serialized)

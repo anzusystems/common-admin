@@ -10,7 +10,7 @@ import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { reactive, type Ref } from 'vue'
 
@@ -64,10 +64,10 @@ const END_POINT = '/adm/v1/rubric'
 const fetchRubricListByIds = (ids: IntegerId[]) =>
   apiFetchByIds2<Rubric[]>(cmsClient, ids, END_POINT, {}, 'cms', 'rubric')
 
-const fetchRubricList = (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchRubricList = (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<Rubric[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'rubric')
 
-export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
   const rubrics = await fetchRubricList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({

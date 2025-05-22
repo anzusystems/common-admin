@@ -3,7 +3,7 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
 import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import {
   createFilter,
@@ -41,10 +41,10 @@ const END_POINT = '/adm/users'
 
 const fetchUserListByIds = (ids: IntegerId[]) => apiFetchByIds2<User[]>(cmsClient, ids, END_POINT, {}, 'cms', 'user')
 
-const fetchUserList = (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchUserList = (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<User[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'user')
 
-export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
   const users = await fetchUserList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>users.map((user: User) => ({
@@ -73,7 +73,7 @@ const mapToMinimals = (users: User[]): UserMinimal[] => {
 }
 
 export const fetchItemsMinimal = async (
-  pagination: Ref<Pagination>,
+  pagination: Ref<Pagination2>,
   filterData: FilterData,
   filterConfig: FilterConfig
 ) => {

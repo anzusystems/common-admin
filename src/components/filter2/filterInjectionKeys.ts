@@ -1,7 +1,7 @@
 import type { InjectionKey, Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 
 export const FilterDataKey: InjectionKey<FilterData> = Symbol.for('anzu:FilterDataKey')
 export const FilterConfigKey: InjectionKey<FilterConfig> = Symbol.for('anzu:FilterConfigKey')
@@ -14,4 +14,4 @@ export const FilterSelectedKey: InjectionKey<Ref<Map<string, ValueObjectOption<s
   Symbol.for('anzu:FilterSelectedKey')
 export const FilterTouchedKey: InjectionKey<Ref<boolean>> = Symbol.for('anzu:FilterTouchedKey')
 
-export const DatatablePaginationKey: InjectionKey<Ref<Pagination>> = Symbol.for('anzu:DatatablePaginationKey')
+export const DatatablePaginationKey: InjectionKey<Ref<Pagination2>> = Symbol.for('anzu:DatatablePaginationKey')

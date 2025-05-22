@@ -76,10 +76,7 @@ const onItemClick = (item: UserAdminConfig) => {
     datatableHiddenColumns.value = config.datatableHiddenColumns
   }
   if (isDefined(config.sortBy)) {
-    pagination.value = {
-      ...pagination.value,
-      ...{ sortBy: config.sortBy?.key || null, descending: config.sortBy?.order === 'desc' || false },
-    }
+    pagination.value.sortBy = config.sortBy
   }
   const deserialized = deserializeFilters(config.filter)
   for (const filterName in filterData) {

@@ -4,7 +4,7 @@ import { i18n } from '@/plugins/i18n'
 import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiGenerateListQuery2 } from '@/services/api/v2/apiFetchList2'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2  } from '@/types/Pagination'
 import type { IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
@@ -142,7 +142,7 @@ export const useSubjectListActions = () => {
   }
 
   const fetchArticleListVersionData = async (
-    pagination: Ref<Pagination>,
+    pagination: Ref<Pagination2>,
     filterData: FilterData,
     filterConfig: FilterConfig
   ) => {
@@ -162,7 +162,7 @@ export const useSubjectListActions = () => {
     return mapVersionDataStandard(res.data, res.versionsData)
   }
 
-  const fetchList = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchList = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
     listLoading.value = true
     // try {
       const res = await fetchArticleListVersionData(pagination, filterData, filterConfig)

@@ -1,10 +1,10 @@
 import { ref } from 'vue'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
 
-export function usePagination2(sortBy: string | null = null) {
-  return ref<Pagination>({
-    sortBy: sortBy,
-    descending: true,
+export function usePagination2(sortBy: DatatableSortBy = null) {
+  return ref<Pagination2>({
+    sortBy,
     page: 1,
     rowsPerPage: 25,
     rowsNumber: 0,

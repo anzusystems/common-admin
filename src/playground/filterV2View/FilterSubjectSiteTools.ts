@@ -2,7 +2,7 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
 import {
@@ -77,10 +77,10 @@ const END_POINT = '/adm/v1/site'
 
 const fetchSiteListByIds = (ids: IntegerId[]) => apiFetchByIds2<Site[]>(cmsClient, ids, END_POINT, {}, 'cms', 'site')
 
-const fetchSiteList = (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchSiteList = (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<Site[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'site')
 
-export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
   const sites = await fetchSiteList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>sites.map((site: Site) => ({

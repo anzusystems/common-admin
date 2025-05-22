@@ -176,7 +176,7 @@ import type {
   IntegerIdNullable,
 } from '@/types/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination, Pagination2 } from '@/types/Pagination'
 import type { OwnerAware } from '@/types/OwnerAware'
 import { isOwnerAware } from '@/types/OwnerAware'
 import type { AnzuUser, BaseUser, AnzuUserMinimal } from '@/types/AnzuUser'
@@ -1159,6 +1159,7 @@ export {
   type MakeFilterOption,
   TimeIntervalSpecialOptions,
   type TimeIntervalToolsValue,
+  type Pagination2,
   apiFetchByIds2,
   apiFetchList2,
   apiGenerateListQuery2,

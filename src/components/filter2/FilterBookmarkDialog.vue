@@ -121,7 +121,7 @@ const addBookmark = async () => {
       storeDatatableHiddenColumns.value && props.datatableHiddenColumns ? props.datatableHiddenColumns : undefined,
     sortBy:
       storeDatatableOrder.value && pagination.value.sortBy
-        ? { key: pagination.value.sortBy, order: pagination.value.descending ? 'desc' : 'asc' }
+        ? pagination.value.sortBy
         : undefined,
   }
   try {

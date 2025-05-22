@@ -2,7 +2,7 @@
 import { watchDebounced } from '@vueuse/core'
 import { computed, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 import { usePagination2 } from '@/composables/system/pagination2'
 import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
@@ -18,11 +18,12 @@ import {
 } from '@/components/filter2/filterInjectionKeys'
 import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/composables/filter/filterFactory'
 import { isOneOf } from '@/utils/enum'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
 
 type FetchItemsMinimalByIdsType = ((ids: IntegerId[]) => Promise<any[]>) | ((ids: DocId[]) => Promise<any[]>)
 
 type FetchItemsMinimalType = (
-  pagination: Ref<Pagination>,
+  pagination: Ref<Pagination2>,
   filterData: FilterData,
   filterConfig: FilterConfig
 ) => Promise<any[]>
@@ -33,7 +34,7 @@ const props = withDefaults(
     fetchItemsMinimal: FetchItemsMinimalType
     fetchItemsMinimalByIds: FetchItemsMinimalByIdsType
     filterByField: string
-    filterSortBy?: string | null
+    filterSortBy?: DatatableSortBy
     prefetch?: 'hover' | 'focus' | 'mounted'
     placeholder?: string | undefined
     itemTitle?: string

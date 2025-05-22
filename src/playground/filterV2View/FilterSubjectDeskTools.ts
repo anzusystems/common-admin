@@ -1,4 +1,4 @@
-import type { Pagination } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
@@ -31,12 +31,12 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
 
 const END_POINT = '/adm/desks'
 
-const fetchDeskList = (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) =>
+const fetchDeskList = (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) =>
   apiFetchList2<Desk[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'desk')
 
 const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds2<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
 
-export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
   const desks = await fetchDeskList(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
