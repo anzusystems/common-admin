@@ -207,8 +207,8 @@ __metadata:
     "@mdi/font": "npm:^7.4.47"
     "@shikijs/vitepress-twoslash": "npm:^3.4.2"
     "@stylistic/eslint-plugin": "npm:^4.2.0"
-    "@tsconfig/node22": "npm:^22.0.1"
-    "@types/node": "npm:^22.15.18"
+    "@tsconfig/node22": "npm:^22.0.2"
+    "@types/node": "npm:^22.15.21"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -237,7 +237,7 @@ __metadata:
     sortablejs: "npm:^1.15.6"
     stylelint: "npm:16.19.1"
     stylelint-config-recommended-vue: "npm:^1.6.0"
-    stylelint-config-standard-scss: "npm:^15.0.0"
+    stylelint-config-standard-scss: "npm:^15.0.1"
     typescript: "npm:5.7.3"
     unplugin: "npm:2.3.4"
     uuid: "npm:^11.1.0"
@@ -250,7 +250,7 @@ __metadata:
     vue-i18n: "npm:11.1.3"
     vue-router: "npm:4.5.1"
     vue-tsc: "npm:2.2.10"
-    vuetify: "npm:3.8.5"
+    vuetify: "npm:3.8.6"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@sentry/vue": ^9.15.0
@@ -266,7 +266,7 @@ __metadata:
     vue: 3.5.14
     vue-i18n: 11.1.3
     vue-router: 4.5.1
-    vuetify: 3.8.5
+    vuetify: 3.8.6
   peerDependenciesMeta:
     "@sentry/vue":
       optional: true
@@ -1814,10 +1814,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node22@npm:^22.0.1":
-  version: 22.0.1
-  resolution: "@tsconfig/node22@npm:22.0.1"
-  checksum: 10/da42f21f1b1f8e88d584fae44bca19514ea5b8eca9a60e8b10ecbabc8db5f4067259979ceea3798c16ae443b9c564268c00215093a7230948f29f950f33dd585
+"@tsconfig/node22@npm:^22.0.2":
+  version: 22.0.2
+  resolution: "@tsconfig/node22@npm:22.0.2"
+  checksum: 10/b9fb6543856cbac8b9b79c234bbefa3415f083e0a46e6f0fbe418fe21c5d086440222e1383258d75ebac951cbe17564a6d146fafc59c889d6302decd1a7880dd
   languageName: node
   linkType: hard
 
@@ -1900,12 +1900,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.15.18":
-  version: 22.15.18
-  resolution: "@types/node@npm:22.15.18"
+"@types/node@npm:*, @types/node@npm:^22.15.21":
+  version: 22.15.21
+  resolution: "@types/node@npm:22.15.21"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10/89c8c638beade806753b6fb2f25ed45b0e06f9f7375422137da5752be5c29fa9c75932b942fd55ae7de2b4288e8496912af3e029df45cc93735ac5eb49ece01e
+  checksum: 10/cb4189587cca445bfb8166c0ed39f9344d743f37f3da892f2999a99bbabda45dc773237e61ecb7d1dc83dd95718cb1b5715b0be5dd7953565b19019e36a7cf39
   languageName: node
   linkType: hard
 
@@ -7180,9 +7180,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stylelint-config-recommended-scss@npm:^15.0.0":
-  version: 15.0.0
-  resolution: "stylelint-config-recommended-scss@npm:15.0.0"
+"stylelint-config-recommended-scss@npm:^15.0.1":
+  version: 15.0.1
+  resolution: "stylelint-config-recommended-scss@npm:15.0.1"
   dependencies:
     postcss-scss: "npm:^4.0.9"
     stylelint-config-recommended: "npm:^16.0.0"
@@ -7193,7 +7193,7 @@ __metadata:
   peerDependenciesMeta:
     postcss:
       optional: true
-  checksum: 10/7feaf8daa979d90dfd231111bd2e4469727350189111fbd398f71cd30d780a94de5eced8b3a299e2d3692fa31c6e050c5f7c63fe14d3ea193f48f901a81800a9
+  checksum: 10/e00758475fe89bf3ddd1033d783a86e0f5c5c5b7f53238f5673169fe4967f8641043cc2f6baa051fa0912987ccc8eef2ab953933bd5b9845a8f3446f6f854d70
   languageName: node
   linkType: hard
 
@@ -7220,11 +7220,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stylelint-config-standard-scss@npm:^15.0.0":
-  version: 15.0.0
-  resolution: "stylelint-config-standard-scss@npm:15.0.0"
+"stylelint-config-standard-scss@npm:^15.0.1":
+  version: 15.0.1
+  resolution: "stylelint-config-standard-scss@npm:15.0.1"
   dependencies:
-    stylelint-config-recommended-scss: "npm:^15.0.0"
+    stylelint-config-recommended-scss: "npm:^15.0.1"
     stylelint-config-standard: "npm:^38.0.0"
   peerDependencies:
     postcss: ^8.3.3
@@ -7232,7 +7232,7 @@ __metadata:
   peerDependenciesMeta:
     postcss:
       optional: true
-  checksum: 10/e0f1b23f75b6011ec133369d894695f13381a99b344c7b30b5cb0c45fdc9609b9f782d9e76735f8b8f6edac4a033a997ff9aef057c1bcde22ee2a8d673a939b3
+  checksum: 10/1980848fe2ca25f95d211e05619e8205f0e7621d28c767666ea5597d692a44cd98ff230f31adc8611d3ecf0a7cd19fbdad11232af9a91030f1230a0e0ed174e8
   languageName: node
   linkType: hard
 
@@ -8037,9 +8037,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.8.5":
-  version: 3.8.5
-  resolution: "vuetify@npm:3.8.5"
+"vuetify@npm:3.8.6":
+  version: 3.8.6
+  resolution: "vuetify@npm:3.8.6"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=2.1.0"
@@ -8052,7 +8052,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/e42d86e55611ac28cd8d5a99d3ca26c9c46384e8c71baa78b60872aa21093270412ddb15bb3b4bf38951382f0cb0d7b4f4c7e156c69d8896127499739f4ce099
+  checksum: 10/8a1f46ca2b9943af4a8c6831e47ffcfc77bdb5da6dff085de105ada3830ddb3c6ac654d092d627d56609deb1eb7ece8d958092d17acea536ed58dc1fd2e4bad9
   languageName: node
   linkType: hard
 

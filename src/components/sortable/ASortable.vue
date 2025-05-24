@@ -185,7 +185,7 @@ defineExpose({
         :class="GROUP_CLASS"
       >
         <template
-          v-for="item of items"
+          v-for="(item, index) of items"
           :key="item.key"
         >
           <VChip
@@ -231,7 +231,13 @@ defineExpose({
                 :item="item"
               />
             </div>
-            <div class="a-sortable-widget__item">
+            <div
+              class="a-sortable-widget__item"
+              :class="{
+                'a-sortable-widget__item--last': index + 1 === items.length,
+                'a-sortable-widget__item--first': index === 0,
+              }"
+            >
               <VIcon
                 :class="{
                   [HANDLE_CLASS]: true,
@@ -246,64 +252,69 @@ defineExpose({
                 />
               </div>
               <div class="a-sortable-widget__buttons">
-                <VBtn
-                  v-if="showEditButton"
-                  icon
-                  size="x-small"
-                  variant="text"
-                  class="mx-1"
-                  @click.stop="onEditClick(item)"
-                >
-                  <VIcon icon="mdi-pencil" />
-                  <VTooltip
-                    anchor="bottom"
-                    activator="parent"
-                    text="Edit"
-                  />
-                </VBtn>
-                <VBtn
-                  v-if="showDeleteButton"
-                  icon
-                  size="x-small"
-                  variant="text"
-                  class="mx-1"
-                  @click.stop="onDeleteClick(item)"
-                >
-                  <VIcon icon="mdi-trash-can-outline" />
-                  <VTooltip
-                    anchor="bottom"
-                    activator="parent"
-                    text="Remove"
-                  />
-                </VBtn>
                 <slot
-                  name="buttons"
+                  name="item-buttons"
                   :item="item"
-                />
-                <VBtn
-                  v-if="showAddAfterButton"
-                  icon
-                  size="x-small"
-                  variant="text"
-                  class="mx-1"
                 >
-                  <VIcon icon="mdi-dots-vertical" />
-                  <VTooltip
-                    anchor="bottom"
-                    activator="parent"
-                    text="More options"
+                  <VBtn
+                    v-if="showEditButton"
+                    icon
+                    size="x-small"
+                    variant="text"
+                    class="mx-1"
+                    @click.stop="onEditClick(item)"
+                  >
+                    <VIcon icon="mdi-pencil" />
+                    <VTooltip
+                      anchor="bottom"
+                      activator="parent"
+                      text="Edit"
+                    />
+                  </VBtn>
+                  <VBtn
+                    v-if="showDeleteButton"
+                    icon
+                    size="x-small"
+                    variant="text"
+                    class="mx-1"
+                    @click.stop="onDeleteClick(item)"
+                  >
+                    <VIcon icon="mdi-trash-can-outline" />
+                    <VTooltip
+                      anchor="bottom"
+                      activator="parent"
+                      text="Remove"
+                    />
+                  </VBtn>
+                  <slot
+                    name="buttons"
+                    :item="item"
                   />
-                  <VMenu activator="parent">
-                    <VList density="compact">
-                      <VListItem
-                        v-if="showAddAfterButton"
-                        @click.stop="onAddAfterClick(item)"
-                      >
-                        Add new item after
-                      </VListItem>
-                    </VList>
-                  </VMenu>
-                </VBtn>
+                  <VBtn
+                    v-if="showAddAfterButton"
+                    icon
+                    size="x-small"
+                    variant="text"
+                    class="mx-1"
+                  >
+                    <VIcon icon="mdi-dots-vertical" />
+                    <VTooltip
+                      anchor="bottom"
+                      activator="parent"
+                      text="More options"
+                    />
+                    <VMenu activator="parent">
+                      <VList density="compact">
+                        <VListItem
+                          v-if="showAddAfterButton"
+                          @click.stop="onAddAfterClick(item)"
+                        >
+                          Add new item after
+                        </VListItem>
+                      </VList>
+                    </VMenu>
+                  </VBtn>
+                </slot>
               </div>
             </div>
             <div class="a-sortable-widget__after">
@@ -373,12 +384,12 @@ $ghost-bg-color: color.scale(#3f6ad8, $lightness: 95%);
     border: 1px solid $border-color;
     border-bottom: none;
 
-    &:first-child {
+    &--first {
       border-top-left-radius: 5px;
       border-top-right-radius: 5px;
     }
 
-    &:last-child {
+    &--last {
       border-bottom-left-radius: 5px;
       border-bottom-right-radius: 5px;
       border-bottom: 1px solid $border-color;
