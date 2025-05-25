@@ -10,9 +10,12 @@ export default defineConfig({
   build: {
     sourcemap: true,
     lib: {
-      entry: path.resolve(__dirname, 'src/lib.ts'),
+      entry: {
+        'common-admin': path.resolve(__dirname, 'src/lib.ts'),
+        'labs': path.resolve(__dirname, 'src/labs.ts')
+      },
       name: 'CommonAdmin',
-      fileName: (format) => `common-admin.${format}.js`,
+      fileName: (format, entryName) => `${entryName}.${format}.js`,
       formats: ['es'],
     },
     rollupOptions: {

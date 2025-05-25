@@ -5,12 +5,17 @@
     "dist"
   ],
   "module": "./dist/common-admin.es.js",
-  "types": "./dist/common-admin.es.d.ts",
+  "types": "./dist/common-admin.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/common-admin.es.js"
+      "import": "./dist/common-admin.es.js",
+      "types": "./dist/common-admin.d.ts"
     },
     "./styles": "./dist/common-admin.css",
+    "./labs": {
+      "import": "./dist/labs.es.js",
+      "types": "./dist/labs.d.ts"
+    },
     "./*": "./*"
   },
   "version": "1.47.0-beta.186",

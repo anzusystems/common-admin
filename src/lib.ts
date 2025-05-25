@@ -176,7 +176,7 @@ import type {
   IntegerIdNullable,
 } from '@/types/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
-import type { Pagination, Pagination2 } from '@/types/Pagination'
+import type { Pagination } from '@/types/Pagination'
 import type { OwnerAware } from '@/types/OwnerAware'
 import { isOwnerAware } from '@/types/OwnerAware'
 import type { AnzuUser, BaseUser, AnzuUserMinimal } from '@/types/AnzuUser'
@@ -187,7 +187,6 @@ import type { PermissionGroup, PermissionGroupMinimal } from '@/types/Permission
 import { type CreatedByAware, isCreatedByAware } from '@/types/CreatedByAware'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import { usePagination, usePaginationAutoHide } from '@/composables/system/pagination'
-import { usePagination2 } from '@/composables/system/pagination2'
 import { makeFilterHelper, type MakeFilterOptions, useFilterHelpers } from '@/composables/filter/filterHelpers'
 import {
   AvailableLanguagesSymbol,
@@ -272,9 +271,6 @@ import {
   type DatatableOrderingOptions,
   type DatatableSortBy,
 } from '@/composables/system/datatableColumns'
-import {
-  createDatatableColumnsConfig2,
-} from '@/composables/system/datatableColumns2'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { type CachedItem, defineCached } from '@/composables/system/defineCached'
 import type { ObjectLeaves, ObjectPaths, Prettify, UniqueValues } from '@/types/utils'
@@ -531,32 +527,6 @@ import type { MediaAware } from '@/types/MediaAware'
 import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
 import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
-import AFilterBooleanSelect2 from '@/components/filter2/variant/AFilterBooleanSelect2.vue'
-import AFilterDatetimePicker2 from '@/components/filter2/variant/AFilterDatetimePicker2.vue'
-import AFilterInteger2 from '@/components/filter2/variant/AFilterInteger2.vue'
-import AFilterRemoteAutocomplete2 from '@/components/filter2/variant/AFilterRemoteAutocomplete2.vue'
-import AFilterRemoteAutocompleteWithMinimal2 from '@/components/filter2/variant/AFilterRemoteAutocompleteWithMinimal2.vue'
-import AFilterString2 from '@/components/filter2/variant/AFilterString2.vue'
-import AFilterTimeInterval2 from '@/components/filter2/variant/AFilterTimeInterval2.vue'
-import AFilterValueObjectOptionsSelect2 from '@/components/filter2/variant/AFilterValueObjectOptionsSelect2.vue'
-import AFilterWrapper2 from '@/components/filter2/AFilterWrapper2.vue'
-import ADatatableOrdering2 from '@/components/ADatatableOrdering2.vue'
-import ADatatablePagination2 from '@/components/ADatatablePagination2.vue'
-import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
-import { apiFetchList2, apiGenerateListQuery2 } from '@/services/api/v2/apiFetchList2'
-import { FilterConfigKey, FilterDataKey, FilterInnerConfigKey, FilterInnerDataKey, DatatablePaginationKey } from '@/components/filter2/filterInjectionKeys'
-import {
-  createFilter,
-  useFilterHelpers2,
-  type FilterConfig,
-  type FilterData,
-  type FilterStore,
-  type MakeFilterOption,
-} from '@/composables/filter/filterFactory'
-import {
-  TimeIntervalSpecialOptions,
-  type TimeIntervalToolsValue,
-} from '@/components/filter2/variant/filterTimeIntervalTools'
 
 export {
   // COMPONENTS
@@ -1135,36 +1105,4 @@ export {
   damFileTypeFix,
   fetchDamCurrentUser,
   localTimeShiftInSeconds,
-
-  // V2 FILTERS
-  AFilterWrapper2,
-  AFilterBooleanSelect2,
-  AFilterDatetimePicker2,
-  AFilterInteger2,
-  AFilterRemoteAutocomplete2,
-  AFilterRemoteAutocompleteWithMinimal2,
-  AFilterString2,
-  AFilterTimeInterval2,
-  AFilterValueObjectOptionsSelect2,
-  FilterConfigKey,
-  FilterDataKey,
-  FilterInnerConfigKey,
-  FilterInnerDataKey,
-  DatatablePaginationKey,
-  createFilter,
-  useFilterHelpers2,
-  type FilterConfig,
-  type FilterData,
-  type FilterStore,
-  type MakeFilterOption,
-  TimeIntervalSpecialOptions,
-  type TimeIntervalToolsValue,
-  type Pagination2,
-  apiFetchByIds2,
-  apiFetchList2,
-  apiGenerateListQuery2,
-  usePagination2,
-  createDatatableColumnsConfig2,
-  ADatatableOrdering2,
-  ADatatablePagination2,
 }
