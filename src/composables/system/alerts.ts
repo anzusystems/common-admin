@@ -99,6 +99,8 @@ export function useAlerts() {
         fieldText += errors[i].field
       } else if (te(errors[i].field)) {
         fieldText += t(errors[i].field)
+      } else if (errors[i].field.includes('[')) {
+        fieldText += resolveListErrors()
       }
       const errorsTexts = new Set<string>()
       for (let j = 0; j < errors[i].errors.length; j++) {
@@ -176,6 +178,16 @@ export function useAlerts() {
       return true
     }
     return false
+  }
+
+  const resolveListErrors = () => {
+    const parsedField = errors[i].field.split('[')
+    const firstField = parsedField[0].trim()
+    const parsedSecond = parsedField[1].split(']')
+    const indexNumber = parsedSecond[0]
+    const secondField = parsedSecond[1]
+
+    return t(firstField) + '[' + indexNumber + ']: ' + t(firstField.slice(0, -1) . secondField)
   }
 
   return {
