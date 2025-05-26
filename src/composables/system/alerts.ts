@@ -181,6 +181,7 @@ export function useAlerts() {
   }
 
   const resolveListErrors = (error: string) => {
+    const { t } = i18n.global
     const parsedField = error.split('[')
     const firstField = parsedField[0].trim()
     const parsedSecond = parsedField[1].split(']')
