@@ -96,11 +96,13 @@ export function useAlerts() {
 
     for (let i = 0; i < errors.length; i++) {
       let fieldText = ''
+      console.log(errors)
       if (fieldIsTranslated) {
         fieldText += errors[i].field
       } else if (te(errors[i].field)) {
         fieldText += t(errors[i].field)
       } else if (errors[i].field.includes('[')) {
+        console.log('tu sosms')
         fieldText += resolveListErrors(errors[i].field)
       }
       const errorsTexts = new Set<string>()
