@@ -186,7 +186,7 @@ export function useAlerts() {
     const firstField = parsedField[0].trim()
     const parsedSecond = parsedField[1].split(']')
     const indexNumber = parsedSecond[0]
-    const secondField: string = parsedSecond[1]
+    const secondField: string = parsedSecond[1] ?? ''
 
     return t(firstField) + '[' + indexNumber + ']: ' + t(firstField.slice(0, -1) . secondField)
   }
