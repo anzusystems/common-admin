@@ -100,7 +100,7 @@ export function useAlerts() {
       } else if (te(errors[i].field)) {
         fieldText += t(errors[i].field)
       } else if (errors[i].field.includes('[')) {
-        fieldText += resolveListErrors()
+        fieldText += resolveListErrors(errors[i].field)
       }
       const errorsTexts = new Set<string>()
       for (let j = 0; j < errors[i].errors.length; j++) {
@@ -180,8 +180,8 @@ export function useAlerts() {
     return false
   }
 
-  const resolveListErrors = () => {
-    const parsedField = errors[i].field.split('[')
+  const resolveListErrors = (error: string) => {
+    const parsedField = error.split('[')
     const firstField = parsedField[0].trim()
     const parsedSecond = parsedField[1].split(']')
     const indexNumber = parsedSecond[0]
