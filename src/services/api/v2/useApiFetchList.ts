@@ -78,12 +78,17 @@ export const useApiFetchList = <R>(
       if (res.data) {
         const resData = res.data as unknown as ApiResponseList<R> | ApiInfiniteResponseList<R>
         if (isApiInfiniteResponseList(resData)) {
-          pagination.value.hasNextPage = res.data.hasNextPage
+          pagination.value = {
+            ...pagination.value,
+            ...{ hasNextPage:resData.hasNextPage, currentViewCount: res.data.data.length },
+          }
         } else if (isApiResponseList(resData)) {
-          pagination.value.totalCount = resData.totalCount
+          pagination.value = {
+            ...pagination.value,
+            ...{ totalCount: resData.totalCount, currentViewCount: res.data.data.length },
+          }
         }
-        pagination.value.currentViewCount = res.data.data.length
-        return res.data.data
+        return resData.data
       }
 
       if (res.status === HTTP_STATUS_NO_CONTENT) {
