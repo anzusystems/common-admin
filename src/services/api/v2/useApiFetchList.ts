@@ -22,6 +22,7 @@ import {
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 import type { Ref } from 'vue'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError.ts'
 
 export const generateListQuery = (
   pagination: Ref<Pagination2>,
@@ -113,6 +114,10 @@ export const useApiFetchList = <R>(
 
       if (axiosErrorResponseHasForbiddenOperationData(err)) {
         throw new AnzuApiForbiddenOperationError(err, err)
+      }
+
+      if (axiosErrorIsTimeout(err)) {
+        throw new AnzuApiTimeoutError(err)
       }
 
       if (axios.isAxiosError(err)) {
