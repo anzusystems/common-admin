@@ -8,12 +8,12 @@
   "types": "./dist/common-admin.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/common-admin.es.js",
+      "import": "./dist/common-admin.js",
       "types": "./dist/common-admin.d.ts"
     },
     "./styles": "./dist/common-admin.css",
     "./labs": {
-      "import": "./dist/labs.es.js",
+      "import": "./dist/labs.js",
       "types": "./dist/labs.d.ts"
     },
     "./*": "./*"

@@ -15,7 +15,7 @@ export default defineConfig({
         'labs': path.resolve(__dirname, 'src/labs.ts')
       },
       name: 'CommonAdmin',
-      fileName: (format, entryName) => `${entryName}.${format}.js`,
+      fileName: (format, entryName) => `${entryName}.js`,
       formats: ['es'],
     },
     rollupOptions: {

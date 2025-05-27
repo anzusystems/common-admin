@@ -5,7 +5,7 @@ import { isValidHTTPStatus } from '@/utils/response'
 import type { Pagination2 } from '@/types/Pagination'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import axios from 'axios'
-import { useApiQueryBuilder } from '@/services/api/v2/useApiQueryBuilder.ts'
+import { useApiQueryBuilder } from '@/services/api/v2/useApiQueryBuilder'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
@@ -22,7 +22,7 @@ import {
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 import type { Ref } from 'vue'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
-import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError.ts'
+import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
 
 export const generateListQuery = (
   pagination: Ref<Pagination2>,
