@@ -76,7 +76,7 @@ const filterBookmarkStore = useFilterBookmarkStore()
 
 const {
   createUserAdminConfig,
-  fetchUserAdminConfigList,
+  useFetchUserAdminConfigList,
   updateUserAdminConfigPositions,
   deleteUserAdminConfig,
   updateUserAdminConfig,
@@ -132,7 +132,7 @@ const addBookmark = async () => {
         layoutType: mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
         systemResource: props.systemResource,
       },
-      fetchUserAdminConfigList
+      useFetchUserAdminConfigList
     )
     if (count >= MAX_BOOKMARK_ITEMS) {
       errorCount.value = true
@@ -220,7 +220,7 @@ const reloadItems = async () => {
         layoutType: mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
         systemResource: props.systemResource,
       },
-      fetchUserAdminConfigList,
+      useFetchUserAdminConfigList,
       true
     )
   } catch (e) {

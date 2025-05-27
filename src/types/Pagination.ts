@@ -1,4 +1,4 @@
-import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 
 export interface Pagination {
   sortBy: string | null

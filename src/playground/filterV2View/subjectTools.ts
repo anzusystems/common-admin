@@ -3,7 +3,7 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 import { i18n } from '@/plugins/i18n'
 import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { apiGenerateListQuery2 } from '@/services/api/v2/apiFetchList2'
+import { generateListQuery } from '@/services/api/v2/useApiFetchList'
 import type { Pagination2  } from '@/types/Pagination'
 import type { IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
@@ -150,7 +150,7 @@ export const useSubjectListActions = () => {
     const res = await apiAnyRequest2<any>(
       cmsClient,
       'GET',
-      END_POINT + '/search' + apiGenerateListQuery2(pagination, filterData, filterConfig),
+      END_POINT + '/search' + generateListQuery(pagination, filterData, filterConfig),
       {},
       undefined,
       'cms',

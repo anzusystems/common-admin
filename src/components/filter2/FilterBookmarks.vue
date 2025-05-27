@@ -49,7 +49,7 @@ const visibleItemsCount = ref(1000)
 
 const filterBookmarkStore = useFilterBookmarkStore()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { fetchUserAdminConfigList } = useUserAdminConfigApi(props.client, props.system)
+const { useFetchUserAdminConfigList } = useUserAdminConfigApi(props.client, props.system)
 const { mobile } = useDisplay()
 
 const loadBookmarks = async (force = false) => {
@@ -61,7 +61,7 @@ const loadBookmarks = async (force = false) => {
       layoutType: mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
       systemResource: props.systemResource,
     },
-    fetchUserAdminConfigList,
+    useFetchUserAdminConfigList,
     force
   )
   loading.value = false

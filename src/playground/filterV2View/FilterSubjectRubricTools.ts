@@ -5,7 +5,7 @@ import {
   type FilterStore,
   type MakeFilterOption,
 } from '@/composables/filter/filterFactory'
-import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
+import { useApiFetchList } from '@/services/api/v2/useApiFetchList'
 import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
@@ -64,11 +64,11 @@ const END_POINT = '/adm/v1/rubric'
 const fetchRubricListByIds = (ids: IntegerId[]) =>
   apiFetchByIds2<Rubric[]>(cmsClient, ids, END_POINT, {}, 'cms', 'rubric')
 
-const fetchRubricList = (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) =>
-  apiFetchList2<Rubric[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'rubric')
+const useFetchRubricList = () => useApiFetchList<Rubric[]>(cmsClient, END_POINT, {}, 'cms', 'rubric')
 
 export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
-  const rubrics = await fetchRubricList(pagination, filterData, filterConfig)
+  const { executeFetch } = useFetchRubricList()
+  const rubrics = await executeFetch(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({
     title: rubric.texts.title,

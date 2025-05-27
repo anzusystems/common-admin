@@ -18,7 +18,7 @@ import {
 } from '@/components/filter2/filterInjectionKeys'
 import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/composables/filter/filterFactory'
 import { isOneOf } from '@/utils/enum'
-import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 
 type FetchItemsMinimalByIdsType = ((ids: IntegerId[]) => Promise<any[]>) | ((ids: DocId[]) => Promise<any[]>)
 

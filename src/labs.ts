@@ -13,7 +13,7 @@ import AFilterWrapper from '@/components/filter2/AFilterWrapper2.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering2.vue'
 import ADatatablePagination from '@/components/ADatatablePagination2.vue'
 import { apiFetchByIds2 as apiFetchByIds } from '@/services/api/v2/apiFetchByIds2'
-import { apiFetchList2 as apiFetchList, apiGenerateListQuery2 as apiGenerateListQuery } from '@/services/api/v2/apiFetchList2'
+import { useApiFetchList, generateListQuery } from '@/services/api/v2/useApiFetchList'
 import {
   DatatablePaginationKey,
   FilterConfigKey,
@@ -60,8 +60,8 @@ export {
   type TimeIntervalToolsValue,
   type Pagination,
   apiFetchByIds,
-  apiFetchList,
-  apiGenerateListQuery,
+  useApiFetchList,
+  generateListQuery,
   usePagination,
   createDatatableColumnsConfig,
   ADatatableOrdering,

@@ -1,11 +1,10 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { type Ref, ref } from 'vue'
-import type { Pagination2 } from '@/types/Pagination'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
+import { ref } from 'vue'
 import { useUserAdminConfigInnerFilter } from '@/components/filter2/UserAdminConfigFilter'
 import { type UserAdminConfig, type UserAdminConfigLayoutTypeType, UserAdminConfigType } from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
 import { usePagination2 } from '@/composables/system/pagination2'
+import type { UseFetchListReturnType } from '@/services/api/v2/useApiFetchList'
 
 interface CacheItem<T = UserAdminConfig> {
   lastUsed: number
@@ -44,11 +43,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
     },
-    apiFetch: (
-      pagination: Ref<Pagination2>,
-      filterData: FilterData,
-      filterConfig: FilterConfig
-    ) => Promise<UserAdminConfig[]>,
+    useApiFetch: () => UseFetchListReturnType<UserAdminConfig[]>,
     forceFetch: boolean = false
   ): Promise<UserAdminConfig[]> {
     error.value = false
@@ -73,7 +68,8 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
 
     let items: UserAdminConfig[] = []
     try {
-      items = await apiFetch(pagination, filterData, filterConfig)
+      const { executeFetch } = useApiFetch()
+      items = await executeFetch(pagination, filterData, filterConfig)
       bookmarks.value.set(key, { lastUsed: now, items })
     } catch (e) {
       error.value = true
@@ -93,11 +89,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
     },
-    apiFetch: (
-      pagination: Ref<Pagination2>,
-      filterData: FilterData,
-      filterConfig: FilterConfig
-    ) => Promise<UserAdminConfig[]>
+    useApiFetch: () => UseFetchListReturnType<UserAdminConfig[]>
   ): Promise<number> {
     error.value = false
     const pagination = usePagination2({ key: 'position', order: 'asc' })
@@ -110,7 +102,8 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
 
     let length = Infinity
     try {
-      const res = await apiFetch(pagination, filterData, filterConfig)
+      const { executeFetch } = useApiFetch()
+      const res = await executeFetch(pagination, filterData, filterConfig)
       length = res.length
     } catch (e) {
       error.value = true

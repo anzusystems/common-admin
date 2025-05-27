@@ -4,7 +4,7 @@ import type { Pagination2 } from '@/types/Pagination'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
-import { apiFetchList2 } from '@/services/api/v2/apiFetchList2'
+import { useApiFetchList } from '@/services/api/v2/useApiFetchList'
 import {
   createFilter,
   type FilterConfig,
@@ -90,11 +90,11 @@ const END_POINT = '/adm/v1/author-kind'
 const fetchAuthorListByIds = (ids: IntegerId[]) =>
   apiFetchByIds2<AuthorKind[]>(cmsClient, ids, END_POINT + '/search', {}, 'cms', 'authorKind', undefined, true)
 
-const fetchAuthorList = (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) =>
-  apiFetchList2<AuthorKind[]>(cmsClient, END_POINT, {}, pagination, filterData, filterConfig, 'cms', 'authorKind')
+const useFetchAuthorList = () => useApiFetchList<AuthorKind[]>(cmsClient, END_POINT, {}, 'cms', 'authorKind')
 
 export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
-  const authors = await fetchAuthorList(pagination, filterData, filterConfig)
+  const { executeFetch } = useFetchAuthorList()
+  const authors = await executeFetch(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
 }
