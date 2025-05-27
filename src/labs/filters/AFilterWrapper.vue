@@ -194,7 +194,7 @@ defineExpose({
 </template>
 
 <style lang="scss">
-@use 'tools' as *;
+@use 'vuetify/tools' as *;
 
 .a-filter {
   &__container {
