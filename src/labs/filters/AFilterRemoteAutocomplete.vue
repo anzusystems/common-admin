@@ -2,8 +2,6 @@
 import { watchDebounced } from '@vueuse/core'
 import { computed, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import type { Pagination2 } from '@/types/Pagination'
-import { usePagination2 } from '@/composables/system/pagination2'
 import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
@@ -15,10 +13,12 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys'
-import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/composables/filter/filterFactory'
+} from '@/labs/filters/filterInjectionKeys'
+import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { isOneOf } from '@/utils/enum'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
+
+import { type Pagination, usePagination } from '@/labs/filters/pagination'
 
 type FetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
@@ -28,7 +28,7 @@ const props = withDefaults(
   defineProps<{
     name: string
     fetchItems: (
-      pagination: Ref<Pagination2>,
+      pagination: Ref<Pagination>,
       filterData: FilterData,
       filterConfig: FilterConfig
     ) => Promise<ValueObjectOption<string | number>[]>
@@ -96,7 +96,7 @@ const label = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const pagination = usePagination2(props.filterSortBy)
+const pagination = usePagination(props.filterSortBy)
 const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 

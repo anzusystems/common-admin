@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { eventClickBlur } from '@/utils/event'
 import { useI18n } from 'vue-i18n'
-import FilterBookmarkDialog from '@/components/filter2/FilterBookmarkDialog.vue'
+import FilterBookmarkDialog from '@/labs/filters/FilterBookmarkDialog.vue'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'

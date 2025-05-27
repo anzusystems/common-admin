@@ -5,22 +5,17 @@ import {
   FilterDataKey,
   FilterSelectedKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys'
+} from '@/labs/filters/filterInjectionKeys'
 import { isArray, isBoolean, isNumber, isString, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import type { AllowedFilterValues } from '@/composables/filter/filterFactory'
+import type { AllowedFilterValues } from '@/labs/filters/filterFactory'
 
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 const filterSelected = inject(FilterSelectedKey)
 const touched = inject(FilterTouchedKey)
 
-if (
-  isUndefined(filterConfig) ||
-  isUndefined(filterData) ||
-  isUndefined(filterSelected) ||
-  isUndefined(touched)
-) {
+if (isUndefined(filterConfig) || isUndefined(filterData) || isUndefined(filterSelected) || isUndefined(touched)) {
   throw new Error('Incorrect provide/inject config.')
 }
 

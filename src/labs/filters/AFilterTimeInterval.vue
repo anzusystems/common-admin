@@ -6,16 +6,16 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys'
+} from '@/labs/filters/filterInjectionKeys'
 import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import {
   TimeIntervalSpecialOptions,
   type TimeIntervalToolsValue,
   useFilterTimeIntervalValidators,
   useTimeIntervalOptions,
-} from '@/components/filter2/variant/filterTimeIntervalTools'
+} from '@/labs/filters/filterTimeIntervalTools'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import type { DatetimeUTCNullable } from '@/types/common'

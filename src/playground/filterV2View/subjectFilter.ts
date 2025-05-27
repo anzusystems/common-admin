@@ -5,7 +5,7 @@ import {
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-} from '@/composables/filter/filterFactory'
+} from '@/labs/filters/filterFactory'
 
 export const filterFields = [
   { name: 'text' as const, type: 'string', render: { skip: true } },

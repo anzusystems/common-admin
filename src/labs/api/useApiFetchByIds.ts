@@ -16,9 +16,9 @@ import {
   axiosErrorResponseHasDependencyExistsData,
 } from '@/model/error/AnzuApiDependencyExistsError'
 import type { DocId, IntegerId } from '@/types/common'
-import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError.ts'
-import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError.ts'
-import { isUndefined } from '@/utils/common.ts'
+import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
+import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import { isUndefined } from '@/utils/common'
 
 /**
  * @template T Type used for request payload, by default same as Response type

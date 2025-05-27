@@ -3,14 +3,15 @@ import { computed, inject, type Ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { DatatableOrderingOption, DatatableOrderingOptions } from '@/composables/system/datatableColumns'
 import { isUndefined } from '@/utils/common'
-import { DatatablePaginationKey } from '@/components/filter2/filterInjectionKeys'
-import type { Pagination2 } from '@/types/Pagination'
+import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
+
+import type { Pagination } from '@/labs/filters/pagination'
 
 const props = withDefaults(
   defineProps<{
     variant?: 'default' | 'most-relevant'
     customOptions?: undefined | DatatableOrderingOptions
-    paginationUpdateCustomCb?: ((option: DatatableOrderingOption, pagination: Ref<Pagination2>) => void) | undefined
+    paginationUpdateCustomCb?: ((option: DatatableOrderingOption, pagination: Ref<Pagination>) => void) | undefined
   }>(),
   {
     variant: 'default',

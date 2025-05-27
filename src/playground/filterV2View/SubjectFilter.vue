@@ -5,23 +5,23 @@ import {
   type SubjectFilterData,
   useSubjectListFilter,
 } from '@/playground/filterV2View/subjectFilter'
-import AFilterWrapper2 from '@/components/filter2/AFilterWrapper2.vue'
-import AFilterString2 from '@/components/filter2/variant/AFilterString2.vue'
-import { FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
+import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
+import AFilterString from '@/labs/filters/AFilterString.vue'
+import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 import FilterSubjectSiteRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectSiteRemoteAutocomplete.vue'
 import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectAuthorRemoteAutocomplete.vue'
 import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectRubricRemoteAutocomplete.vue'
 import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectDeskRemoteAutocomplete.vue'
 import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import AFilterValueObjectOptionsSelect2 from '@/components/filter2/variant/AFilterValueObjectOptionsSelect2.vue'
+import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOptionsSelect.vue'
 import {
   allowedTimeIntervalValuesSubject,
   useSubjectListActions,
   useSubjectLockType,
   useSubjectStatus,
 } from '@/playground/filterV2View/subjectTools'
-import AFilterTimeInterval2 from '@/components/filter2/variant/AFilterTimeInterval2.vue'
+import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
 import { cmsClient } from '@/playground/mock/cmsClient'
 
 const emit = defineEmits<{
@@ -43,7 +43,7 @@ const { datatableHiddenColumns } = useSubjectListActions()
 </script>
 
 <template>
-  <AFilterWrapper2
+  <AFilterWrapper
     v-model:datatable-hidden-columns="datatableHiddenColumns"
     :client="cmsClient"
     system="cms"
@@ -54,16 +54,16 @@ const { datatableHiddenColumns } = useSubjectListActions()
     @bookmark-load-after="emit('submit', { filterData, filterConfig })"
   >
     <template #search>
-      <AFilterString2 name="text" />
+      <AFilterString name="text" />
     </template>
     <template #item.status>
-      <AFilterValueObjectOptionsSelect2
+      <AFilterValueObjectOptionsSelect
         name="status"
         :items="subjectStatusOptions"
       />
     </template>
     <template #item.lockType>
-      <AFilterValueObjectOptionsSelect2
+      <AFilterValueObjectOptionsSelect
         name="lockType"
         :items="subjectLockTypeOptions"
       />
@@ -87,18 +87,18 @@ const { datatableHiddenColumns } = useSubjectListActions()
       <FilterSubjectUserRemoteAutocomplete name="owners" />
     </template>
     <template #item.publicPublishedAtFrom>
-      <AFilterTimeInterval2
+      <AFilterTimeInterval
         name-from="publicPublishedAtFrom"
         name-until="publicPublishedAtUntil"
         :allowed="allowedTimeIntervalValuesSubject"
       />
     </template>
     <template #item.modifiedAtFrom>
-      <AFilterTimeInterval2
+      <AFilterTimeInterval
         name-from="modifiedAtFrom"
         name-until="modifiedAtUntil"
         :allowed="allowedTimeIntervalValuesSubject"
       />
     </template>
-  </AFilterWrapper2>
+  </AFilterWrapper>
 </template>

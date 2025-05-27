@@ -1,23 +1,26 @@
 <script lang="ts" setup>
-import type { ValueObjectOption } from '@/types/ValueObject'
 import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { isString, isUndefined } from '@/utils/common'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys'
-import { isArray, isUndefined } from '@/utils/common'
-import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
+} from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
     name: string
-    items: ValueObjectOption<string | number>[]
+    placeholder?: string | undefined
+    dataCy?: string
   }>(),
-  {}
+  {
+    placeholder: undefined,
+    dataCy: 'filter-string',
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -49,7 +52,6 @@ const modelValue = computed({
   },
   set(newValue) {
     filterData[props.name] = newValue
-    updateSelected()
     touched.value = true
     emit('change')
   },
@@ -63,6 +65,15 @@ const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
+const placeholderComputed = computed(() => {
+  if (!isUndefined(props.placeholder)) return props.placeholder
+  if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
+  if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
+  if (filterConfigCurrent.value.variant === 'contains' || filterConfigCurrent.value.variant === 'search')
+    return t('common.model.filterPlaceholder.contains')
+  return ''
+})
+
 const { clearOne } = useFilterClearHelpers()
 
 const clearField = () => {
@@ -71,35 +82,20 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
-  if (isArray(modelValue.value) && modelValue.value.length === 0) return
-  if (isArray(modelValue.value)) {
-    filterSelected.value.set(
-      props.name,
-      modelValue.value.map((modelItemValue) => {
-        const found = props.items.find((item) => item.value === modelItemValue)
-        if (found) return { title: found.title, value: found.value }
-        return { title: modelItemValue as string, value: modelItemValue as string }
-      })
-    )
-    return
-  }
-  const found = props.items.find((item) => item.value === modelValue.value)
-  if (found) {
-    filterSelected.value.set(props.name, [{ title: found.title as string, value: found.value as string }])
-  }
+  if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
+  filterSelected.value.set(props.name, [{ title: modelValue.value, value: modelValue.value }])
 }
 </script>
 
 <template>
-  <VAutocomplete
+  <VTextField
     v-model="modelValue"
-    :items="items"
-    :chips="filterConfigCurrent.multiple"
     :label="label"
-    :multiple="filterConfigCurrent.multiple"
+    :placeholder="placeholderComputed"
     :clearable="!filterConfigCurrent.mandatory"
-    data-cy="filter-value"
+    :data-cy="dataCy"
     hide-details
+    @blur="updateSelected"
     @click:clear.stop="clearField"
   />
 </template>

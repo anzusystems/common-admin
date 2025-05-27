@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { provide } from 'vue'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 import {
   fetchItems,
   fetchItemsByIds,
   useSubjectAuthorInnerFilter,
 } from '@/playground/filterV2View/FilterSubjectAuthorTools'
-import AFilterRemoteAutocomplete2 from '@/components/filter2/variant/AFilterRemoteAutocomplete2.vue'
+import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
 
 withDefaults(
   defineProps<{
@@ -24,7 +24,7 @@ provide(FilterInnerDataKey, filterData)
 </script>
 
 <template>
-  <AFilterRemoteAutocomplete2
+  <AFilterRemoteAutocomplete
     :name="name"
     :fetch-items="fetchItems"
     :fetch-items-by-ids="fetchItemsByIds"

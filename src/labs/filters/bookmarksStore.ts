@@ -1,11 +1,15 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
-import { useUserAdminConfigInnerFilter } from '@/components/filter2/UserAdminConfigFilter'
-import { type UserAdminConfig, type UserAdminConfigLayoutTypeType, UserAdminConfigType } from '@/types/UserAdminConfig'
+import { useUserAdminConfigInnerFilter } from '@/labs/filters/UserAdminConfigFilter'
+import {
+  type UserAdminConfig,
+  type UserAdminConfigLayoutTypeType,
+  UserAdminConfigType,
+} from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
-import { usePagination2 } from '@/composables/system/pagination2'
-import type { UseApiFetchListReturnType } from '@/services/api/v2/useApiFetchList'
-import { END_POINT } from '@/services/api/userAdminConfig/userAdminConfig.ts'
+import type { UseApiFetchListReturnType } from '@/labs/api/useApiFetchList'
+import { END_POINT } from '@/services/api/userAdminConfig/userAdminConfig'
+import { usePagination } from '@/labs/filters/pagination'
 
 interface CacheItem<T = UserAdminConfig> {
   lastUsed: number
@@ -59,7 +63,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       }
     }
 
-    const pagination = usePagination2({ key: 'position', order: 'asc' })
+    const pagination = usePagination({ key: 'position', order: 'asc' })
     pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS
 
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
@@ -93,7 +97,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>
   ): Promise<number> {
     error.value = false
-    const pagination = usePagination2({ key: 'position', order: 'asc' })
+    const pagination = usePagination({ key: 'position', order: 'asc' })
     pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS + 1
 
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)

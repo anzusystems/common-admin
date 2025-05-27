@@ -2,7 +2,7 @@
 import { computed, inject, watch } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import { DatatablePaginationKey } from '@/components/filter2/filterInjectionKeys'
+import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
 
 withDefaults(
   defineProps<{

@@ -4,15 +4,16 @@ import {
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-} from '@/composables/filter/filterFactory'
-import { useApiFetchList } from '@/services/api/v2/useApiFetchList'
-import { useApiFetchByIds } from '@/services/api/v2/useApiFetchByIds'
+} from '@/labs/filters/filterFactory'
+import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import type { Pagination2 } from '@/types/Pagination'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { reactive, type Ref } from 'vue'
+
+import type { Pagination } from '@/labs/filters/pagination'
 
 interface Rubric extends AnzuUserAndTimeTrackingAware {
   id: IntegerId
@@ -68,7 +69,7 @@ const fetchRubricListByIds = (ids: IntegerId[]) => {
 
 const useFetchRubricList = () => useApiFetchList<Rubric[]>(cmsClient, 'cms', 'rubric')
 
-export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchRubricList()
   const rubrics = await executeFetch(pagination, filterData, filterConfig, END_POINT)
 

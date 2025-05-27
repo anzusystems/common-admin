@@ -9,8 +9,9 @@ import {
   isString,
   isUndefined,
 } from '@/utils/common'
-import type { Pagination2 } from '@/types/Pagination'
 import type { AnyFn } from '@vueuse/core'
+
+import type { Pagination } from '@/labs/filters/pagination'
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,
@@ -103,7 +104,7 @@ export function useFilterClearHelpers<
   }
 }
 
-export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
+export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
   filterData: FilterData<F>,
   filterConfig: FilterConfig<F>,
   storeId: string | undefined = undefined
@@ -205,7 +206,7 @@ export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] 
     return deserializeFilters(stored)
   }
 
-  const resetFilter = (pagination: Ref<Pagination2>, callback?: AnyFn) => {
+  const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     pagination.value.page = 1
     if (storeId && localStorage) {
       localStorage.removeItem(storeId)
@@ -214,7 +215,7 @@ export function useFilterHelpers2<F extends readonly MakeFilterOption<string>[] 
     if (callback) callback()
   }
 
-  const submitFilter = (pagination: Ref<Pagination2>, callback?: AnyFn) => {
+  const submitFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     const data = getFilterDataForStoring()
     const serialized = serializeFilters(data)
     updateLocationHash(serialized)

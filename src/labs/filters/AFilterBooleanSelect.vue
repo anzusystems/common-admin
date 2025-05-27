@@ -1,25 +1,34 @@
 <script lang="ts" setup>
-import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
-import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { isString, isUndefined } from '@/utils/common'
+import { computed, inject } from 'vue'
+import { isNull, isUndefined } from '@/utils/common'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys'
+} from '@/labs/filters/filterInjectionKeys'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
+
+interface BooleanSelectOption {
+  value: 0 | 1 | -1
+  title: string
+}
 
 const props = withDefaults(
   defineProps<{
     name: string
-    placeholder?: string | undefined
+    allT?: string
+    trueT?: string
+    falseT?: string
     dataCy?: string
   }>(),
   {
-    placeholder: undefined,
-    dataCy: 'filter-integer',
+    dataCy: 'filter-boolean',
+    allT: 'common.model.all',
+    trueT: 'common.model.boolean.true',
+    falseT: 'common.model.boolean.false',
   }
 )
 const emit = defineEmits<{
@@ -47,11 +56,20 @@ if (
 }
 
 const modelValue = computed({
-  get() {
-    return filterData[props.name]
+  get(): BooleanSelectOption {
+    if (isUndefined(filterData[props.name]) || isNull(filterData[props.name]))
+      return {
+        value: -1,
+        title: t(props.allT),
+      }
+    return filterData[props.name] ? { value: 1, title: t(props.trueT) } : { value: 0, title: t(props.falseT) }
   },
-  set(newValue) {
-    filterData[props.name] = newValue
+  set(newValue: BooleanSelectOption) {
+    let returnValue: null | boolean = null
+    if (newValue?.value === 1) returnValue = true
+    if (newValue?.value === 0) returnValue = false
+    filterData[props.name] = returnValue
+    updateSelected()
     touched.value = true
     emit('change')
   },
@@ -65,13 +83,12 @@ const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
-const placeholderComputed = computed(() => {
-  if (!isUndefined(props.placeholder)) return props.placeholder
-  if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
-  if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (filterConfigCurrent.value.variant === 'contains' || filterConfigCurrent.value.variant === 'search')
-    return t('common.model.filterPlaceholder.contains')
-  return ''
+const items = computed<BooleanSelectOption[]>(() => {
+  return [
+    { value: -1, title: t(props.allT) },
+    { value: 1, title: t(props.trueT) },
+    { value: 0, title: t(props.falseT) },
+  ]
 })
 
 const { clearOne } = useFilterClearHelpers()
@@ -82,20 +99,23 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
-  if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
-  filterSelected.value.set(props.name, [{ title: modelValue.value, value: modelValue.value }])
+  if (modelValue.value.value === -1) {
+    filterSelected.value.delete(props.name)
+    return
+  }
+  filterSelected.value.set(props.name, [{ title: modelValue.value.title, value: modelValue.value.value }])
 }
 </script>
 
 <template>
-  <VTextField
+  <VSelect
     v-model="modelValue"
-    :label="label"
-    :placeholder="placeholderComputed"
-    :clearable="!filterConfigCurrent.mandatory"
     :data-cy="dataCy"
+    :label="label"
+    :items="items"
+    :clearable="!filterConfigCurrent.mandatory && modelValue.value !== -1"
+    return-object
     hide-details
-    @blur="updateSelected"
     @click:clear.stop="clearField"
   />
 </template>

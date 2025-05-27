@@ -1,41 +1,37 @@
-import type { Pagination2 as Pagination } from '@/types/Pagination'
-import { usePagination2 as usePagination } from '@/composables/system/pagination2'
-import { createDatatableColumnsConfig2 as createDatatableColumnsConfig } from '@/composables/system/datatableColumns2'
-import AFilterBooleanSelect from '@/components/filter2/variant/AFilterBooleanSelect2.vue'
-import AFilterDatetimePicker from '@/components/filter2/variant/AFilterDatetimePicker2.vue'
-import AFilterInteger from '@/components/filter2/variant/AFilterInteger2.vue'
-import AFilterRemoteAutocomplete from '@/components/filter2/variant/AFilterRemoteAutocomplete2.vue'
-import AFilterRemoteAutocompleteWithMinimal from '@/components/filter2/variant/AFilterRemoteAutocompleteWithMinimal2.vue'
-import AFilterString from '@/components/filter2/variant/AFilterString2.vue'
-import AFilterTimeInterval from '@/components/filter2/variant/AFilterTimeInterval2.vue'
-import AFilterValueObjectOptionsSelect from '@/components/filter2/variant/AFilterValueObjectOptionsSelect2.vue'
-import AFilterWrapper from '@/components/filter2/AFilterWrapper2.vue'
-import ADatatableOrdering from '@/components/ADatatableOrdering2.vue'
-import ADatatablePagination from '@/components/ADatatablePagination2.vue'
-import { useApiFetchByIds } from '@/services/api/v2/useApiFetchByIds'
-import { useApiRequest } from '@/services/api/v2/useApiRequest'
-import { useApiFetchListBatch } from '@/services/api/v2/useApiFetchListBatch'
-import { useApiQueryBuilder } from '@/services/api/v2/useApiQueryBuilder'
-import { useApiFetchList, generateListQuery } from '@/services/api/v2/useApiFetchList'
+import AFilterBooleanSelect from '@/labs/filters/AFilterBooleanSelect.vue'
+import AFilterDatetimePicker from '@/labs/filters/AFilterDatetimePicker.vue'
+import AFilterInteger from '@/labs/filters/AFilterInteger.vue'
+import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
+import AFilterRemoteAutocompleteWithMinimal from '@/labs/filters/AFilterRemoteAutocompleteWithMinimal.vue'
+import AFilterString from '@/labs/filters/AFilterString.vue'
+import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
+import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOptionsSelect.vue'
+import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
+import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
+import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
+import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
+import { useApiRequest } from '@/labs/api/useApiRequest'
+import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
+import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
+import { generateListQuery, useApiFetchList } from '@/labs/api/useApiFetchList'
 import {
   DatatablePaginationKey,
   FilterConfigKey,
   FilterDataKey,
   FilterInnerConfigKey,
   FilterInnerDataKey,
-} from '@/components/filter2/filterInjectionKeys'
+} from '@/labs/filters/filterInjectionKeys'
 import {
   createFilter,
   type FilterConfig,
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-  useFilterHelpers2 as useFilterHelpers,
-} from '@/composables/filter/filterFactory'
-import {
-  TimeIntervalSpecialOptions,
-  type TimeIntervalToolsValue,
-} from '@/components/filter2/variant/filterTimeIntervalTools'
+  useFilterHelpers,
+} from '@/labs/filters/filterFactory'
+import { TimeIntervalSpecialOptions, type TimeIntervalToolsValue } from '@/labs/filters/filterTimeIntervalTools'
+import { type Pagination, usePagination } from '@/labs/filters/pagination'
+import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 
 export {
   // V2 FILTERS
@@ -52,6 +48,8 @@ export {
   FilterDataKey,
   FilterInnerConfigKey,
   FilterInnerDataKey,
+  ADatatableOrdering,
+  ADatatablePagination,
   DatatablePaginationKey,
   createFilter,
   useFilterHelpers,
@@ -70,6 +68,4 @@ export {
   generateListQuery,
   usePagination,
   createDatatableColumnsConfig,
-  ADatatableOrdering,
-  ADatatablePagination,
 }

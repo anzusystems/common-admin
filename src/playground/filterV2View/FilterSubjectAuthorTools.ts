@@ -1,18 +1,19 @@
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import type { Pagination2 } from '@/types/Pagination'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { useApiFetchByIds } from '@/services/api/v2/useApiFetchByIds'
-import { useApiFetchList } from '@/services/api/v2/useApiFetchList'
+import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
+import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import {
   createFilter,
   type FilterConfig,
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-} from '@/composables/filter/filterFactory'
+} from '@/labs/filters/filterFactory'
 import { reactive, type Ref } from 'vue'
+
+import type { Pagination } from '@/labs/filters/pagination'
 
 const AuthorDiscriminator = {
   Person: 'person',
@@ -94,7 +95,7 @@ const fetchAuthorListByIds = (ids: IntegerId[]) => {
 
 const useFetchAuthorList = () => useApiFetchList<AuthorKind[]>(cmsClient, 'cms', 'authorKind')
 
-export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchAuthorList()
   const authors = await executeFetch(pagination, filterData, filterConfig, END_POINT + '/search')
 

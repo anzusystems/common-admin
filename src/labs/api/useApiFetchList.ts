@@ -1,9 +1,10 @@
 import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
-import { isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
-import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
+import axios from 'axios'
+import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
@@ -17,47 +18,58 @@ import {
   AnzuApiDependencyExistsError,
   axiosErrorResponseHasDependencyExistsData,
 } from '@/model/error/AnzuApiDependencyExistsError'
-import { usePagination2 as usePagination } from '@/composables/system/pagination2'
-import { generateListQuery } from '@/services/api/v2/useApiFetchList'
-import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
+import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
+import type { Ref } from 'vue'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
-import { ref } from 'vue'
+import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
+import { isUndefined } from '@/utils/common'
+import type { Pagination } from '@/labs/filters/pagination'
+
+export const generateListQuery = (
+  pagination: Ref<Pagination>,
+  filterData: FilterData<any>,
+  filterConfig: FilterConfig<any>
+): string => {
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
+  querySetLimit(pagination.value.rowsPerPage)
+  querySetOffset(pagination.value.page, pagination.value.rowsPerPage)
+  if (pagination.value.sortBy) {
+    querySetOrder(pagination.value.sortBy.key, pagination.value.sortBy.order === 'desc')
+  }
+  querySetFilters(filterData, filterConfig)
+  return queryBuild()
+}
 
 /**
- * @template R Response type override
+ * @template R Response type override, optional
  */
-export const useApiFetchListBatch = <R>(
+export const useApiFetchList = <R>(
   client: () => AxiosInstance,
   system: string,
   entity: string,
   options: AxiosRequestConfig = {}
-): UseApiFetchListBatchReturnType<R> => {
+): UseApiFetchListReturnType<R> => {
   let abortController: AbortController | null = null
 
   const executeFetch = async (
+    pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
     urlTemplate: string,
-    urlParams: UrlParams | undefined = undefined,
-    sortBy = 'id',
-    sortDesc = true,
-    batchSize = 100,
-    forceElastic = false
+    urlParams: UrlParams | undefined = undefined
   ): Promise<R> => {
     abortController = new AbortController()
 
     try {
-      const searchApi = (filterConfig.general.elastic || forceElastic) ? '/search' : ''
-      const pagination = usePagination({ key: sortBy, order: sortDesc ? 'desc' : 'asc' })
-      pagination.value.rowsPerPage = batchSize
-      const url = (isUndefined(urlParams) ? urlTemplate : replaceUrlParameters(urlTemplate, urlParams)) + searchApi
-      const results = [] as unknown as R
+      const searchApi = filterConfig.general.elastic ? '/search' : ''
+      const url =
+        (isUndefined(urlParams) ? urlTemplate : replaceUrlParameters(urlTemplate, urlParams)) +
+        searchApi +
+        generateListQuery(pagination, filterData, filterConfig)
 
-      // First page request
-      const res = await client().get(url + generateListQuery(pagination, filterData, filterConfig), {
+      const res = await client().get(url, {
         ...options,
-        signal: abortController.signal
+        signal: abortController.signal,
       })
 
       if (!isValidHTTPStatus(res.status)) {
@@ -66,54 +78,18 @@ export const useApiFetchListBatch = <R>(
 
       if (res.data) {
         const resData = res.data as unknown as ApiResponseList<R> | ApiInfiniteResponseList<R>
-        // @ts-ignore
-        results.push(...resData.data)
-
         if (isApiInfiniteResponseList(resData)) {
-          pagination.value.hasNextPage = resData.hasNextPage
-
-          // Handle pagination for infinite lists
-          while (pagination.value.hasNextPage) {
-            pagination.value.page++
-            const nextPageResponse = await client().get(url + generateListQuery(pagination, filterData, filterConfig), {
-              ...options,
-              signal: abortController.signal
-            })
-            const nextPageData = nextPageResponse.data
-            // @ts-ignore
-            results.push(...nextPageData.data)
-            pagination.value.hasNextPage = nextPageData.hasNextPage
+          pagination.value = {
+            ...pagination.value,
+            ...{ hasNextPage: resData.hasNextPage, currentViewCount: res.data.data.length },
           }
         } else if (isApiResponseList(resData)) {
-          pagination.value.totalCount = resData.totalCount
-
-          if (pagination.value.totalCount <= pagination.value.rowsPerPage) {
-            return results as R
+          pagination.value = {
+            ...pagination.value,
+            ...{ totalCount: resData.totalCount, currentViewCount: res.data.data.length },
           }
-
-          // Handle pagination for regular lists - fetch all remaining pages in parallel
-          const promises: Promise<any>[] = []
-          const numPages = Math.ceil(pagination.value.totalCount / pagination.value.rowsPerPage)
-
-          for (let i = 1; i < numPages; i++) { // Start from 1 since we already fetched page 0
-            const pageCopy = { ...pagination.value, page: i + 1 }
-            const paginationRef = ref(pageCopy)
-            promises.push(
-              client().get(url + generateListQuery(paginationRef, filterData, filterConfig), {
-                ...options,
-                signal: abortController.signal
-              })
-            )
-          }
-
-          const allResponses = await Promise.all(promises)
-          allResponses.forEach((pageResponse) => {
-            // @ts-ignore
-            results.push(...pageResponse.data.data)
-          })
         }
-
-        return results as R
+        return resData.data
       }
 
       if (res.status === HTTP_STATUS_NO_CONTENT) {
@@ -174,16 +150,13 @@ export const useApiFetchListBatch = <R>(
   }
 }
 
-export type UseApiFetchListBatchReturnType<R> = {
+export type UseApiFetchListReturnType<R> = {
   executeFetch: (
+    pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
     urlTemplate: string,
-    urlParams?: UrlParams,
-    sortBy?: string,
-    sortDesc?: boolean,
-    batchSize?: number,
-    forceElastic?: boolean
+    urlParams?: UrlParams | undefined
   ) => Promise<R>
   abortFetch: () => void
 }

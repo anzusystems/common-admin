@@ -6,18 +6,18 @@ import { onMounted, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSubjectListActions } from '@/playground/filterV2View/subjectTools'
 import ADatetime from '@/components/datetime/ADatetime.vue'
-import { useFilterHelpers2 } from '@/composables/filter/filterFactory'
-import ADatatableOrdering2 from '@/components/ADatatableOrdering2.vue'
-import { DatatablePaginationKey } from '@/components/filter2/filterInjectionKeys'
-import { usePagination2 } from '@/composables/system/pagination2'
-import ADatatablePagination2 from '@/components/ADatatablePagination2.vue'
-import { createDatatableColumnsConfig2 } from '@/composables/system/datatableColumns2'
+import { useFilterHelpers } from '@/labs/filters/filterFactory'
+import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
+import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
+import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
+import { usePagination } from '@/labs/filters/pagination'
+import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 
 type DatatableItem = any
 
 const { t } = useI18n()
 
-const pagination = usePagination2()
+const pagination = usePagination()
 provide(DatatablePaginationKey, pagination)
 
 const { filterData, filterConfig } = useSubjectListFilter()
@@ -28,7 +28,7 @@ const onRowClick = (event: unknown, { item }: { item: DatatableItem }) => {
   console.log(item)
 }
 
-const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConfig2(
+const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConfig(
   [
     { key: 'docId' },
     { key: 'version' },
@@ -61,7 +61,7 @@ const sortByChange = () => {
   getList()
 }
 
-const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers2(filterData, filterConfig)
+const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filterData, filterConfig)
 
 const submitFilterAction = () => {
   submitFilter(pagination, getList)
@@ -90,7 +90,7 @@ onMounted(() => {
     <div>
       <div class="d-flex align-center">
         <VSpacer />
-        <ADatatableOrdering2 @sort-by-change="sortByChange" />
+        <ADatatableOrdering @sort-by-change="sortByChange" />
         <ADatatableConfigButton
           v-model:columns-hidden="columnsHidden"
           :columns-all="columnsAll"
@@ -117,7 +117,7 @@ onMounted(() => {
           {{ item.id }}
         </template>
         <template #bottom>
-          <ADatatablePagination2 @change="getList" />
+          <ADatatablePagination @change="getList" />
         </template>
       </VDataTableServer>
     </div>

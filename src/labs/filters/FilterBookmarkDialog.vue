@@ -9,7 +9,7 @@ import type { SortableItem } from '@/components/sortable/sortableActions'
 import ASortable from '@/components/sortable/ASortable.vue'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
-import { MAX_BOOKMARK_ITEMS, useFilterBookmarkStore } from '@/components/filter2/bookmarksStore'
+import { MAX_BOOKMARK_ITEMS, useFilterBookmarkStore } from '@/labs/filters/bookmarksStore'
 import { useUserAdminConfigApi } from '@/services/api/userAdminConfig/userAdminConfig'
 import { useAlerts } from '@/composables/system/alerts'
 import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactory'
@@ -18,8 +18,8 @@ import { useDisplay } from 'vuetify'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
-import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
-import { useFilterHelpers2 } from '@/composables/filter/filterFactory'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import { useFilterHelpers } from '@/labs/filters/filterFactory'
 
 const props = withDefaults(
   defineProps<{
@@ -104,7 +104,7 @@ const sortItems = async () => {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { serializeFilters } = useFilterHelpers2(filterData, filterConfig, props.systemResource)
+const { serializeFilters } = useFilterHelpers(filterData, filterConfig, props.systemResource)
 
 const addBookmark = async () => {
   saveButtonLoading.value = true
@@ -119,10 +119,7 @@ const addBookmark = async () => {
     filter: serializeFilters(filterData),
     datatableHiddenColumns:
       storeDatatableHiddenColumns.value && props.datatableHiddenColumns ? props.datatableHiddenColumns : undefined,
-    sortBy:
-      storeDatatableOrder.value && pagination.value.sortBy
-        ? pagination.value.sortBy
-        : undefined,
+    sortBy: storeDatatableOrder.value && pagination.value.sortBy ? pagination.value.sortBy : undefined,
   }
   try {
     const count = await filterBookmarkStore.fetchBookmarksCount(

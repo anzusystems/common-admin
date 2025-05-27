@@ -1,35 +1,23 @@
 <script lang="ts" setup>
-import { useI18n } from 'vue-i18n'
+import type { ValueObjectOption } from '@/types/ValueObject'
 import { computed, inject } from 'vue'
-import { isNull, isUndefined } from '@/utils/common'
+import { useI18n } from 'vue-i18n'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys'
-import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
-
-interface BooleanSelectOption {
-  value: 0 | 1 | -1
-  title: string
-}
+} from '@/labs/filters/filterInjectionKeys'
+import { isArray, isUndefined } from '@/utils/common'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
 const props = withDefaults(
   defineProps<{
     name: string
-    allT?: string
-    trueT?: string
-    falseT?: string
-    dataCy?: string
+    items: ValueObjectOption<string | number>[]
   }>(),
-  {
-    dataCy: 'filter-boolean',
-    allT: 'common.model.all',
-    trueT: 'common.model.boolean.true',
-    falseT: 'common.model.boolean.false',
-  }
+  {}
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -56,19 +44,11 @@ if (
 }
 
 const modelValue = computed({
-  get(): BooleanSelectOption {
-    if (isUndefined(filterData[props.name]) || isNull(filterData[props.name]))
-      return {
-        value: -1,
-        title: t(props.allT),
-      }
-    return filterData[props.name] ? { value: 1, title: t(props.trueT) } : { value: 0, title: t(props.falseT) }
+  get() {
+    return filterData[props.name]
   },
-  set(newValue: BooleanSelectOption) {
-    let returnValue: null | boolean = null
-    if (newValue?.value === 1) returnValue = true
-    if (newValue?.value === 0) returnValue = false
-    filterData[props.name] = returnValue
+  set(newValue) {
+    filterData[props.name] = newValue
     updateSelected()
     touched.value = true
     emit('change')
@@ -83,14 +63,6 @@ const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
-const items = computed<BooleanSelectOption[]>(() => {
-  return [
-    { value: -1, title: t(props.allT) },
-    { value: 1, title: t(props.trueT) },
-    { value: 0, title: t(props.falseT) },
-  ]
-})
-
 const { clearOne } = useFilterClearHelpers()
 
 const clearField = () => {
@@ -99,22 +71,34 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
-  if (modelValue.value.value === -1) {
-    filterSelected.value.delete(props.name)
+  if (isArray(modelValue.value) && modelValue.value.length === 0) return
+  if (isArray(modelValue.value)) {
+    filterSelected.value.set(
+      props.name,
+      modelValue.value.map((modelItemValue) => {
+        const found = props.items.find((item) => item.value === modelItemValue)
+        if (found) return { title: found.title, value: found.value }
+        return { title: modelItemValue as string, value: modelItemValue as string }
+      })
+    )
     return
   }
-  filterSelected.value.set(props.name, [{ title: modelValue.value.title, value: modelValue.value.value }])
+  const found = props.items.find((item) => item.value === modelValue.value)
+  if (found) {
+    filterSelected.value.set(props.name, [{ title: found.title as string, value: found.value as string }])
+  }
 }
 </script>
 
 <template>
-  <VSelect
+  <VAutocomplete
     v-model="modelValue"
-    :data-cy="dataCy"
-    :label="label"
     :items="items"
-    :clearable="!filterConfigCurrent.mandatory && modelValue.value !== -1"
-    return-object
+    :chips="filterConfigCurrent.multiple"
+    :label="label"
+    :multiple="filterConfigCurrent.multiple"
+    :clearable="!filterConfigCurrent.mandatory"
+    data-cy="filter-value"
     hide-details
     @click:clear.stop="clearField"
   />

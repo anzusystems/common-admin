@@ -1,25 +1,26 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { isString, isUndefined } from '@/utils/common'
-import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
+import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys'
+} from '@/labs/filters/filterInjectionKeys'
+import { isString, isUndefined } from '@/utils/common'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
+import type { DatetimeUTCNullable } from '@/types/common'
+import { dateTimePretty } from '@/utils/datetime'
 
 const props = withDefaults(
   defineProps<{
     name: string
-    placeholder?: string | undefined
     dataCy?: string
   }>(),
   {
-    placeholder: undefined,
-    dataCy: 'filter-string',
+    dataCy: 'filter-datepicker',
   }
 )
 const emit = defineEmits<{
@@ -48,30 +49,22 @@ if (
 
 const modelValue = computed({
   get() {
-    return filterData[props.name]
+    return filterData[props.name] as DatetimeUTCNullable
   },
-  set(newValue) {
+  set(newValue: DatetimeUTCNullable) {
     filterData[props.name] = newValue
+    updateSelected()
     touched.value = true
     emit('change')
   },
 })
 
-const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
-
 const { t } = useI18n()
+
+const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
 
 const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
-})
-
-const placeholderComputed = computed(() => {
-  if (!isUndefined(props.placeholder)) return props.placeholder
-  if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
-  if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (filterConfigCurrent.value.variant === 'contains' || filterConfigCurrent.value.variant === 'search')
-    return t('common.model.filterPlaceholder.contains')
-  return ''
 })
 
 const { clearOne } = useFilterClearHelpers()
@@ -83,19 +76,18 @@ const clearField = () => {
 
 const updateSelected = () => {
   if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
-  filterSelected.value.set(props.name, [{ title: modelValue.value, value: modelValue.value }])
+  filterSelected.value.set(props.name, [{ title: dateTimePretty(modelValue.value), value: modelValue.value }])
 }
 </script>
 
 <template>
-  <VTextField
+  <ADatetimePicker
     v-model="modelValue"
-    :label="label"
-    :placeholder="placeholderComputed"
-    :clearable="!filterConfigCurrent.mandatory"
     :data-cy="dataCy"
-    hide-details
-    @blur="updateSelected"
-    @click:clear.stop="clearField"
+    :clearable="!filterConfigCurrent.mandatory"
+    :default-value="filterConfigCurrent.default as DatetimeUTCNullable"
+    :label="label"
+    v-bind="$attrs"
+    @after-clear="clearField"
   />
 </template>

@@ -9,15 +9,15 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
-} from '@/components/filter2/filterInjectionKeys'
-import FiltersSelected from '@/components/filter2/FiltersSelected.vue'
+} from '@/labs/filters/filterInjectionKeys'
+import FiltersSelected from '@/labs/filters/FiltersSelected.vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { isDefined, isUndefined } from '@/utils/common'
-import { useFilterClearHelpers } from '@/composables/filter/filterFactory'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { datatableSlotName } from '@/components/datatable/datatable'
-import FilterDetailItem from '@/components/filter2/FilterDetailItem.vue'
+import FilterDetailItem from '@/labs/filters/FilterDetailItem.vue'
 import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
-import FilterBookmarks from '@/components/filter2/FilterBookmarks.vue'
+import FilterBookmarks from '@/labs/filters/FilterBookmarks.vue'
 import type { IntegerIdNullable } from '@/types/common'
 import type { AxiosInstance } from 'axios'
 
@@ -194,7 +194,7 @@ defineExpose({
 </template>
 
 <style lang="scss">
-@use 'vuetify/tools' as *;
+@use 'tools' as *;
 
 .a-filter {
   &__container {

@@ -1,18 +1,19 @@
-import type { Pagination2 } from '@/types/Pagination'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { useApiFetchList } from '@/services/api/v2/useApiFetchList'
-import { useApiFetchByIds } from '@/services/api/v2/useApiFetchByIds'
+import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import {
   createFilter,
   type FilterConfig,
   type FilterData,
   type FilterStore,
   type MakeFilterOption,
-} from '@/composables/filter/filterFactory'
+} from '@/labs/filters/filterFactory'
 import { reactive, type Ref } from 'vue'
+
+import type { Pagination } from '@/labs/filters/pagination'
 
 export interface Desk extends AnzuUserAndTimeTrackingAware {
   name: string
@@ -38,7 +39,7 @@ const fetchDeskListByIds = (ids: IntegerId[]) => {
   return executeFetch(ids, END_POINT)
 }
 
-export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchDeskList()
   const desks = await executeFetch(pagination, filterData, filterConfig, END_POINT)
 

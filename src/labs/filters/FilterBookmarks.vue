@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, inject, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
-import { useFilterBookmarkStore } from '@/components/filter2/bookmarksStore'
+import { useFilterBookmarkStore } from '@/labs/filters/bookmarksStore'
 import { useUserAdminConfigApi } from '@/services/api/userAdminConfig/userAdminConfig'
 import type { AxiosInstance } from 'axios'
 import {
@@ -12,8 +12,8 @@ import { useDisplay } from 'vuetify'
 import type { IntegerId } from '@/types/common'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
-import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/components/filter2/filterInjectionKeys'
-import { type FilterData, useFilterHelpers2 } from '@/composables/filter/filterFactory'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import { type FilterData, useFilterHelpers } from '@/labs/filters/filterFactory'
 
 const props = withDefaults(
   defineProps<{
@@ -68,7 +68,7 @@ const loadBookmarks = async (force = false) => {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { deserializeFilters } = useFilterHelpers2(filterData, filterConfig, props.systemResource)
+const { deserializeFilters } = useFilterHelpers(filterData, filterConfig, props.systemResource)
 
 const onItemClick = (item: UserAdminConfig) => {
   const config = item.data as UserAdminConfigDataFilterBookmark

@@ -5,8 +5,8 @@ import {
   useSubjectUserInnerFilter,
 } from '@/playground/filterV2View/FilterSubjectUserTools'
 import { provide } from 'vue'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
-import AFilterRemoteAutocompleteWithMinimal2 from '@/components/filter2/variant/AFilterRemoteAutocompleteWithMinimal2.vue'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
+import AFilterRemoteAutocompleteWithMinimal from '@/labs/filters/AFilterRemoteAutocompleteWithMinimal.vue'
 
 withDefaults(
   defineProps<{
@@ -24,7 +24,7 @@ provide(FilterInnerDataKey, filterData)
 </script>
 
 <template>
-  <AFilterRemoteAutocompleteWithMinimal2
+  <AFilterRemoteAutocompleteWithMinimal
     :name="name"
     :fetch-items-minimal="fetchItemsMinimal"
     :fetch-items-minimal-by-ids="fetchItemsMinimalByIds"
@@ -61,5 +61,5 @@ provide(FilterInnerDataKey, filterData)
         />
       </VChip>
     </template>
-  </AFilterRemoteAutocompleteWithMinimal2>
+  </AFilterRemoteAutocompleteWithMinimal>
 </template>

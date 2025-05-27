@@ -1,11 +1,12 @@
-import { computed, onMounted, type Ref, watch } from 'vue'
-import { i18n } from '@/plugins/i18n'
-import { isArray, isObject, isUndefined } from '@/utils/common'
 import {
-  type ColumnConfig, type ColumnInternalValues,
+  type ColumnConfig,
+  type ColumnInternalValues,
   DATETIME_AUTO_LABEL_TRACKING,
   type StoredData,
 } from '@/composables/system/datatableColumns'
+import { computed, onMounted, type Ref, watch } from 'vue'
+import { i18n } from '@/plugins/i18n'
+import { isArray, isObject, isUndefined } from '@/utils/common'
 
 const defaultColumn: ColumnInternalValues = {
   key: '',
@@ -14,7 +15,7 @@ const defaultColumn: ColumnInternalValues = {
   fixed: false,
 }
 
-export function createDatatableColumnsConfig2(
+export function createDatatableColumnsConfig(
   config: ColumnConfig[],
   columnsHidden: Ref<Array<string>>,
   system: string | undefined = undefined,
@@ -22,7 +23,7 @@ export function createDatatableColumnsConfig2(
   disableActions: boolean = false,
   customI18n: undefined | any = undefined,
   showExpand: undefined | boolean = undefined,
-  storeId: string | undefined = undefined
+  storeId: string | undefined = undefined,
 ) {
   const localI18n = customI18n ?? i18n
   const { t } = localI18n.global || localI18n

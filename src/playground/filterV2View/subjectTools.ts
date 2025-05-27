@@ -1,16 +1,17 @@
 import { type Ref, ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { i18n } from '@/plugins/i18n'
-import { useApiRequest } from '@/services/api/v2/useApiRequest'
+import { useApiRequest } from '@/labs/api/useApiRequest'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { generateListQuery } from '@/services/api/v2/useApiFetchList'
-import type { Pagination2 } from '@/types/Pagination'
+import { generateListQuery } from '@/labs/api/useApiFetchList'
 import type { IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
-import type { TimeIntervalToolsValue } from '@/components/filter2/variant/filterTimeIntervalTools'
-import { TimeIntervalSpecialOptions } from '@/components/filter2/variant/filterTimeIntervalTools'
+import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
+import type { TimeIntervalToolsValue } from '@/labs/filters/filterTimeIntervalTools'
+import { TimeIntervalSpecialOptions } from '@/labs/filters/filterTimeIntervalTools'
 import { useAlerts } from '@/composables/system/alerts'
+
+import type { Pagination } from '@/labs/filters/pagination'
 
 export const SubjectStatus = {
   Draft: 'draft',
@@ -143,7 +144,7 @@ export const useSubjectListActions = () => {
   }
 
   const fetchArticleListVersionData = async (
-    pagination: Ref<Pagination2>,
+    pagination: Ref<Pagination>,
     filterData: FilterData,
     filterConfig: FilterConfig
   ) => {
@@ -158,15 +159,15 @@ export const useSubjectListActions = () => {
 
   const { showErrorsDefault } = useAlerts()
 
-  const fetchList = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchList = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     listLoading.value = true
     try {
-    const res = await fetchArticleListVersionData(pagination, filterData, filterConfig)
-    listItems.value = res.items
+      const res = await fetchArticleListVersionData(pagination, filterData, filterConfig)
+      listItems.value = res.items
     } catch (error) {
       showErrorsDefault(error)
     } finally {
-    listLoading.value = false
+      listLoading.value = false
     }
   }
 

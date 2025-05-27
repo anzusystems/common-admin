@@ -1,12 +1,9 @@
 import { ref } from 'vue'
 import { isArray, isBoolean, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import type { FilterVariant } from '@/types/Filter'
-import type { AllowedFilterValues, FilterConfig, FilterData, FilterField } from '@/composables/filter/filterFactory'
+import type { AllowedFilterValues, FilterConfig, FilterData, FilterField } from '@/labs/filters/filterFactory'
 import type { DatetimeUTCNullable } from '@/types/common'
-import {
-  TimeIntervalSpecialOptions,
-  type TimeIntervalToolsValue,
-} from '@/components/filter2/variant/filterTimeIntervalTools'
+import { TimeIntervalSpecialOptions, type TimeIntervalToolsValue } from '@/labs/filters/filterTimeIntervalTools'
 import { dateModifyMinutes, dateTimeNow, dateTimeToDate, dateToUtc, getMonthInterval } from '@/utils/datetime'
 
 /**

@@ -2,13 +2,13 @@
 import { computed, provide, watch } from 'vue'
 import type { IntegerId } from '@/types/common'
 import { isArray, isNull } from '@/utils/common'
-import AFilterRemoteAutocomplete2 from '@/components/filter2/variant/AFilterRemoteAutocomplete2.vue'
+import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
 import {
   fetchItems,
   fetchItemsByIds,
   useSubjectRubricInnerFilter,
 } from '@/playground/filterV2View/FilterSubjectRubricTools'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/components/filter2/filterInjectionKeys'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -43,7 +43,7 @@ watch(
 </script>
 
 <template>
-  <AFilterRemoteAutocomplete2
+  <AFilterRemoteAutocomplete
     :key="siteModel.join('-')"
     :name="name"
     :fetch-items="fetchItems"
