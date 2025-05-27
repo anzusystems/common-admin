@@ -2,7 +2,7 @@
 import { watchDebounced } from '@vueuse/core'
 import { computed, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
+import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 import {
@@ -35,15 +35,15 @@ const props = withDefaults(
     fetchItemsMinimalByIds: FetchItemsMinimalByIdsType
     filterByField: string
     filterSortBy?: DatatableSortBy
-    prefetch?: 'hover' | 'focus' | 'mounted'
     placeholder?: string | undefined
+    prefetch?: 'hover' | 'focus' | 'mounted'
     itemTitle?: string
     itemValue?: string
   }>(),
   {
     filterSortBy: null,
-    prefetch: 'hover',
     placeholder: undefined,
+    prefetch: 'hover',
     itemTitle: 'name',
     itemValue: 'id',
   }
@@ -80,24 +80,7 @@ if (
   throw new Error('Incorrect provide/inject config.')
 }
 
-const modelValue = computed({
-  get() {
-    return filterData[props.name] as ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
-  },
-  set(newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null) {
-    updateFilterSelected(newValue)
-    let final: null | string | number | string[] | number[] = null
-    if (isArray(newValue)) {
-      final = newValue.map((item) => item.value) as string[] | number[]
-    } else if (!isNull(newValue)) {
-      final = newValue.value
-    }
-    filterData[props.name] = final
-    touched.value = true
-    emit('change')
-  },
-})
-
+const selected = ref<any>([])
 const search = ref('')
 const isFocused = ref(false)
 const autoFetchTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undefined)
@@ -118,32 +101,19 @@ const label = computed(() => {
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const pagination = usePagination(props.filterSortBy)
-const fetchedItems = ref<any[]>([])
-const selectedItemsCache = ref<any[]>([])
+const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
+const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   const final = new Map()
-  const finalRaw: Map<IntegerId | DocId, any> = new Map()
   selectedItemsCache.value.forEach((value) => {
-    if (value.raw) {
-      final.set(value.raw[props.itemValue], value.raw[props.itemTitle])
-      finalRaw.set(value.raw[props.itemValue], cloneDeep(value.raw))
-    } else {
-      final.set(value[props.itemValue], value[props.itemTitle])
-      finalRaw.set(value[props.itemValue], cloneDeep(value))
-    }
+    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
   })
   fetchedItems.value.forEach((value) => {
-    if (value.raw) {
-      final.set(value.raw[props.itemValue], value.raw[props.itemTitle])
-      finalRaw.set(value.raw[props.itemValue], cloneDeep(value.raw))
-    } else {
-      final.set(value[props.itemValue], value[props.itemTitle])
-      finalRaw.set(value[props.itemValue], cloneDeep(value))
-    }
+    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
   })
   return Array.from(final, ([key, value]) => {
-    return { value: key, title: value, raw: finalRaw.get(key) }
+    return { value: key, title: value.title, subtitle: value.subtitle }
   })
 })
 
@@ -162,16 +132,14 @@ const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
   return ([] as ValueObjectOption<string | number>[]).concat(found)
 }
 
-const tryToLoadFromLocalData = async (
-  value: ValueObjectOption<string | number> | ValueObjectOption<string | number>[]
-) => {
+const tryToLoadFromLocalData = async (newValue: string | number | Array<string | number>) => {
   let count = 1
-  let foundItems = []
-  if (isArray(value)) {
-    count = value.length
-    foundItems = findLocalDataByValues(value.map((item) => item.value))
+  let foundItems: ValueObjectOption<string | number>[] = []
+  if (isArray(newValue)) {
+    count = newValue.length
+    foundItems = findLocalDataByValues(newValue)
   } else {
-    foundItems = findLocalDataByValues([value.value])
+    foundItems = findLocalDataByValues([newValue])
   }
   selectedItemsCache.value = foundItems
   return foundItems.length === count
@@ -219,6 +187,19 @@ const onSearchUpdate = (query: string) => {
   search.value = query
 }
 
+const onSelectedUpdate = (newValue: any) => {
+  touched.value = true
+  let final: null | string | number | string[] | number[] = null
+  if (isArray(newValue)) {
+    final = newValue.map((item: any) => item.value) as string[] | number[]
+  } else if (!isNull(newValue)) {
+    final = newValue.value
+  }
+  filterData[props.name] = final
+  touched.value = true
+  emit('change')
+}
+
 const onClickClear = async () => {
   fetchedItems.value = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
   clearField()
@@ -258,12 +239,16 @@ const updateFilterSelected = (
   filterSelected.value.set(props.name, [{ title: newValue.title, value: newValue.value }])
 }
 
+const watchCallCountData = ref(0)
+
 watch(
-  modelValue,
+  () => filterData[props.name],
   async (newValue, oldValue) => {
-    if (newValue === oldValue) return
+    watchCallCountData.value++
+    if (newValue === oldValue || isBoolean(newValue)) return
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []
+      filterConfigCurrent.value.multiple ? (selected.value = []) : (selected.value = null)
       if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
       autoFetchTimer.value = setTimeout(() => {
         autoFetch()
@@ -271,15 +256,23 @@ watch(
       return
     }
     const found = await tryToLoadFromLocalData(newValue)
-    if (found) return
-    if (isArray<IntegerId | DocId>(newValue)) {
+    if (found) {
+      selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))
+      updateFilterSelected(selected.value)
+      return
+    }
+    if (isArray(newValue)) {
       loading.value = true
       selectedItemsCache.value = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
+      selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))
+      updateFilterSelected(selected.value)
       loading.value = false
       return
     }
     loading.value = true
     selectedItemsCache.value = await props.fetchItemsMinimalByIds([newValue as DocId & IntegerId])
+    selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))[0]
+    updateFilterSelected(selected.value)
     loading.value = false
   },
   { immediate: true }
@@ -300,7 +293,7 @@ watchDebounced(
 
 <template>
   <VAutocomplete
-    v-model="modelValue"
+    v-model="selected"
     :items="allItems"
     no-filter
     :placeholder="placeholderComputed"
@@ -312,6 +305,7 @@ watchDebounced(
     hide-details
     return-object
     @update:search="onSearchUpdate"
+    @update:model-value="onSelectedUpdate"
     @blur="onBlur"
     @focus="onFocus"
     @mouseenter="onMouseEnter"
