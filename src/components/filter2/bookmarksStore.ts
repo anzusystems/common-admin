@@ -4,7 +4,7 @@ import { useUserAdminConfigInnerFilter } from '@/components/filter2/UserAdminCon
 import { type UserAdminConfig, type UserAdminConfigLayoutTypeType, UserAdminConfigType } from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
 import { usePagination2 } from '@/composables/system/pagination2'
-import type { UseFetchListReturnType } from '@/services/api/v2/useApiFetchList'
+import type { UseApiFetchListReturnType } from '@/services/api/v2/useApiFetchList'
 
 interface CacheItem<T = UserAdminConfig> {
   lastUsed: number
@@ -43,7 +43,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
     },
-    useApiFetch: () => UseFetchListReturnType<UserAdminConfig[]>,
+    useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>,
     forceFetch: boolean = false
   ): Promise<UserAdminConfig[]> {
     error.value = false
@@ -89,7 +89,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
     },
-    useApiFetch: () => UseFetchListReturnType<UserAdminConfig[]>
+    useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>
   ): Promise<number> {
     error.value = false
     const pagination = usePagination2({ key: 'position', order: 'asc' })

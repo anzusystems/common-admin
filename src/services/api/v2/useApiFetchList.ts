@@ -49,7 +49,7 @@ export const useApiFetchList = <R>(
   system: string,
   entity: string,
   options: AxiosRequestConfig = {}
-): UseFetchListReturnType<R> => {
+): UseApiFetchListReturnType<R> => {
   let abortController: AbortController | null = null
 
   const executeFetch = async (
@@ -149,7 +149,7 @@ export const useApiFetchList = <R>(
   }
 }
 
-export type UseFetchListReturnType<R> = {
+export type UseApiFetchListReturnType<R> = {
   executeFetch: (
     pagination: Ref<Pagination2>,
     filterData: FilterData<any>,

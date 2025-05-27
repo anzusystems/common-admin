@@ -1,15 +1,16 @@
 import { type Ref, ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { i18n } from '@/plugins/i18n'
-import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2'
+import { useApiRequest } from '@/services/api/v2/useApiRequest'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { generateListQuery } from '@/services/api/v2/useApiFetchList'
-import type { Pagination2  } from '@/types/Pagination'
+import type { Pagination2 } from '@/types/Pagination'
 import type { IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
 import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
 import type { TimeIntervalToolsValue } from '@/components/filter2/variant/filterTimeIntervalTools'
 import { TimeIntervalSpecialOptions } from '@/components/filter2/variant/filterTimeIntervalTools'
+import { useAlerts } from '@/composables/system/alerts'
 
 export const SubjectStatus = {
   Draft: 'draft',
@@ -147,31 +148,26 @@ export const useSubjectListActions = () => {
     filterConfig: FilterConfig
   ) => {
     filterData.discriminator = 'standard'
-    const res = await apiAnyRequest2<any>(
-      cmsClient,
-      'GET',
-      END_POINT + '/search' + generateListQuery(pagination, filterData, filterConfig),
-      {},
-      undefined,
-      'cms',
-      'subject'
-    )
+    const { executeRequest } = useApiRequest<any>(cmsClient, 'GET', 'cms', 'subject')
+    const res = await executeRequest(END_POINT + '/search' + generateListQuery(pagination, filterData, filterConfig))
     pagination.value.hasNextPage = res.hasNextPage
     pagination.value.currentViewCount = res.data.length
 
     return mapVersionDataStandard(res.data, res.versionsData)
   }
 
+  const { showErrorsDefault } = useAlerts()
+
   const fetchList = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
     listLoading.value = true
-    // try {
-      const res = await fetchArticleListVersionData(pagination, filterData, filterConfig)
-      listItems.value = res.items
-    // } catch (error) {
-      // showErrorsDefault(error)
-    // } finally {
-      listLoading.value = false
-    // }
+    try {
+    const res = await fetchArticleListVersionData(pagination, filterData, filterConfig)
+    listItems.value = res.items
+    } catch (error) {
+      showErrorsDefault(error)
+    } finally {
+    listLoading.value = false
+    }
   }
 
   return {

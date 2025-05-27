@@ -6,7 +6,7 @@ import type { IntegerId } from '@/types/common'
 import { apiDeleteOne2 } from '@/services/api/v2/apiDeleteOne2'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { UserAdminConfig } from '@/types/UserAdminConfig'
-import { apiAnyRequest2 } from '@/services/api/v2/apiAnyRequest2'
+import { useApiRequest } from '@/services/api/v2/useApiRequest'
 
 const END_POINT = '/adm/v1/user-admin-config'
 const ENTITY = 'userAdminConfig'
@@ -31,16 +31,10 @@ export function useUserAdminConfigApi(
   const deleteUserAdminConfig = (id: IntegerId) =>
     apiDeleteOne2<UserAdminConfig>(client, endPoint + '/:id', { id }, system, entity)
 
-  const updateUserAdminConfigPositions = (ids: IntegerId[]) =>
-    apiAnyRequest2<{ userAdminConfigs: IntegerId[] }, any>(
-      client,
-      'PATCH',
-      endPoint + '/update-positions',
-      undefined,
-      { userAdminConfigs: ids },
-      system,
-      entity
-    )
+  const updateUserAdminConfigPositions = (ids: IntegerId[]) => {
+    const { executeRequest } = useApiRequest<{ userAdminConfigs: IntegerId[] }>(client, 'PATCH', system, entity)
+    return executeRequest(endPoint + '/update-positions', undefined, { userAdminConfigs: ids })
+  }
 
   return {
     useFetchUserAdminConfigList,
