@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import AFilterAdvancedButton2 from '@/components/buttons/filter/AFilterAdvancedButton2.vue'
+import AFilterAdvancedButton from '@/labs/filters/AFilterAdvancedButton.vue'
 import AFilterSubmitButton from '@/components/buttons/filter/AFilterSubmitButton.vue'
 import AFilterResetButton from '@/components/buttons/filter/AFilterResetButton.vue'
 import { inject, nextTick, provide, ref } from 'vue'
@@ -128,7 +128,7 @@ defineExpose({
     </VRow>
     <VRow dense>
       <VCol cols="auto">
-        <AFilterAdvancedButton2
+        <AFilterAdvancedButton
           :button-active="showDetail"
           @advanced-filter="toggleFilterDetail"
         />

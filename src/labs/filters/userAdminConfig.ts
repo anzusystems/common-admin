@@ -1,8 +1,8 @@
 import type { AxiosInstance } from 'axios'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
-import type { IntegerId } from '@/types/common'
-import type { UserAdminConfig } from '@/types/UserAdminConfig'
-import { useApiRequest } from '@/labs/api/useApiRequest'
+import { useApiFetchList } from '@/labs/api/useApiFetchList.ts'
+import type { IntegerId } from '@/types/common.ts'
+import type { UserAdminConfig } from '@/types/UserAdminConfig.ts'
+import { useApiRequest } from '@/labs/api/useApiRequest.ts'
 
 export const END_POINT = '/adm/v1/user-admin-config'
 const ENTITY = 'userAdminConfig'
