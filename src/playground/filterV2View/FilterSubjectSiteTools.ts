@@ -1,6 +1,6 @@
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { apiFetchByIds2 } from '@/services/api/v2/useApiFetchByIds.ts'
+import { useApiFetchByIds } from '@/services/api/v2/useApiFetchByIds'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { Pagination2 } from '@/types/Pagination'
 import { cmsClient } from '@/playground/mock/cmsClient'
@@ -75,13 +75,16 @@ interface Site extends SiteMinimal, AnzuUserAndTimeTrackingAware {
 
 const END_POINT = '/adm/v1/site'
 
-const fetchSiteListByIds = (ids: IntegerId[]) => apiFetchByIds2<Site[]>(cmsClient, ids, END_POINT, {}, 'cms', 'site')
+const fetchSiteListByIds = (ids: IntegerId[]) => {
+  const { executeFetch } = useApiFetchByIds<Site[]>(cmsClient, 'cms', 'site')
+  return executeFetch(ids, END_POINT)
+}
 
-const useFetchSiteList = () => useApiFetchList<Site[]>(cmsClient, END_POINT, {}, 'cms', 'site')
+const useFetchSiteList = () => useApiFetchList<Site[]>(cmsClient, 'cms', 'site')
 
 export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchSiteList()
-  const sites = await executeFetch(pagination, filterData, filterConfig)
+  const sites = await executeFetch(pagination, filterData, filterConfig, END_POINT)
 
   return <ValueObjectOption<IntegerId>[]>sites.map((site: Site) => ({
     title: site.name,

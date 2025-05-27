@@ -14,6 +14,7 @@ import ADatatableOrdering from '@/components/ADatatableOrdering2.vue'
 import ADatatablePagination from '@/components/ADatatablePagination2.vue'
 import { useApiFetchByIds } from '@/services/api/v2/useApiFetchByIds'
 import { useApiRequest } from '@/services/api/v2/useApiRequest'
+import { useApiFetchListBatch } from '@/services/api/v2/useApiFetchListBatch'
 import { useApiQueryBuilder } from '@/services/api/v2/useApiQueryBuilder'
 import { useApiFetchList, generateListQuery } from '@/services/api/v2/useApiFetchList'
 import {
@@ -64,6 +65,7 @@ export {
   useApiFetchByIds,
   useApiFetchList,
   useApiRequest,
+  useApiFetchListBatch,
   useApiQueryBuilder,
   generateListQuery,
   usePagination,

@@ -4,7 +4,7 @@ import type { IntegerId } from '@/types/common'
 import type { UserAdminConfig } from '@/types/UserAdminConfig'
 import { useApiRequest } from '@/services/api/v2/useApiRequest'
 
-const END_POINT = '/adm/v1/user-admin-config'
+export const END_POINT = '/adm/v1/user-admin-config'
 const ENTITY = 'userAdminConfig'
 
 export function useUserAdminConfigApi(
@@ -13,7 +13,7 @@ export function useUserAdminConfigApi(
   entity: string = ENTITY,
   endPoint: string = END_POINT
 ) {
-  const useFetchUserAdminConfigList = () => useApiFetchList<UserAdminConfig[]>(client, endPoint, {}, system, entity)
+  const useFetchUserAdminConfigList = () => useApiFetchList<UserAdminConfig[]>(client, system, entity)
 
   const fetchUserAdminConfig = (id: IntegerId) => {
     const { executeRequest } = useApiRequest<UserAdminConfig>(client, 'GET', system, entity)

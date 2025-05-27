@@ -5,6 +5,7 @@ import { type UserAdminConfig, type UserAdminConfigLayoutTypeType, UserAdminConf
 import type { IntegerId } from '@/types/common'
 import { usePagination2 } from '@/composables/system/pagination2'
 import type { UseApiFetchListReturnType } from '@/services/api/v2/useApiFetchList'
+import { END_POINT } from '@/services/api/userAdminConfig/userAdminConfig.ts'
 
 interface CacheItem<T = UserAdminConfig> {
   lastUsed: number
@@ -69,7 +70,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     let items: UserAdminConfig[] = []
     try {
       const { executeFetch } = useApiFetch()
-      items = await executeFetch(pagination, filterData, filterConfig)
+      items = await executeFetch(pagination, filterData, filterConfig, END_POINT)
       bookmarks.value.set(key, { lastUsed: now, items })
     } catch (e) {
       error.value = true
@@ -103,7 +104,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     let length = Infinity
     try {
       const { executeFetch } = useApiFetch()
-      const res = await executeFetch(pagination, filterData, filterConfig)
+      const res = await executeFetch(pagination, filterData, filterConfig, END_POINT)
       length = res.length
     } catch (e) {
       error.value = true

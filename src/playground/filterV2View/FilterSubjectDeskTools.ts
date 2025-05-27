@@ -4,7 +4,7 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { useApiFetchList } from '@/services/api/v2/useApiFetchList'
-import { apiFetchByIds2 } from '@/services/api/v2/useApiFetchByIds.ts'
+import { useApiFetchByIds } from '@/services/api/v2/useApiFetchByIds'
 import {
   createFilter,
   type FilterConfig,
@@ -31,14 +31,16 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
 
 const END_POINT = '/adm/desks'
 
-const useFetchDeskList = () =>
-  useApiFetchList<Desk[]>(cmsClient, END_POINT, {}, 'cms', 'desk')
+const useFetchDeskList = () => useApiFetchList<Desk[]>(cmsClient, 'cms', 'desk')
 
-const fetchDeskListByIds = (ids: IntegerId[]) => apiFetchByIds2<Desk[]>(cmsClient, ids, END_POINT, {}, 'cms', 'desk')
+const fetchDeskListByIds = (ids: IntegerId[]) => {
+  const { executeFetch } = useApiFetchByIds<Desk[]>(cmsClient, 'cms', 'desk')
+  return executeFetch(ids, END_POINT)
+}
 
 export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchDeskList()
-  const desks = await executeFetch(pagination, filterData, filterConfig)
+  const desks = await executeFetch(pagination, filterData, filterConfig, END_POINT)
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
     title: desk.name,

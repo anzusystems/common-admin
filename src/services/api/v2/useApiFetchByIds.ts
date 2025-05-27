@@ -130,6 +130,6 @@ export const useApiFetchByIds = <R>(
 }
 
 export type UseApiFetchByIdsReturnType<R> = {
-  executeFetch: (ids: DocId[] | IntegerId[], urlTemplate: string, urlParams: UrlParams | undefined) => Promise<R>
+  executeFetch: (ids: DocId[] | IntegerId[], urlTemplate: string, urlParams?: UrlParams | undefined) => Promise<R>
   abortFetch: () => void
 }

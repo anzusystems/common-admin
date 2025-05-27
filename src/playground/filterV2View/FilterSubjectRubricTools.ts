@@ -6,7 +6,7 @@ import {
   type MakeFilterOption,
 } from '@/composables/filter/filterFactory'
 import { useApiFetchList } from '@/services/api/v2/useApiFetchList'
-import { apiFetchByIds2 } from '@/services/api/v2/useApiFetchByIds.ts'
+import { useApiFetchByIds } from '@/services/api/v2/useApiFetchByIds'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { cmsClient } from '@/playground/mock/cmsClient'
@@ -61,14 +61,16 @@ interface Rubric extends AnzuUserAndTimeTrackingAware {
 
 const END_POINT = '/adm/v1/rubric'
 
-const fetchRubricListByIds = (ids: IntegerId[]) =>
-  apiFetchByIds2<Rubric[]>(cmsClient, ids, END_POINT, {}, 'cms', 'rubric')
+const fetchRubricListByIds = (ids: IntegerId[]) => {
+  const { executeFetch } = useApiFetchByIds<Rubric[]>(cmsClient, 'cms', 'rubric')
+  return executeFetch(ids, END_POINT)
+}
 
-const useFetchRubricList = () => useApiFetchList<Rubric[]>(cmsClient, END_POINT, {}, 'cms', 'rubric')
+const useFetchRubricList = () => useApiFetchList<Rubric[]>(cmsClient, 'cms', 'rubric')
 
 export const fetchItems = async (pagination: Ref<Pagination2>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchRubricList()
-  const rubrics = await executeFetch(pagination, filterData, filterConfig)
+  const rubrics = await executeFetch(pagination, filterData, filterConfig, END_POINT)
 
   return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({
     title: rubric.texts.title,
