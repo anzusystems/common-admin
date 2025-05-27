@@ -2,14 +2,10 @@ import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/er
 import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
-import type { Pagination2 } from '@/types/Pagination'
-import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-import axios from 'axios'
-import { useApiQueryBuilder } from '@/services/api/v2/useApiQueryBuilder'
+import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
+import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
-import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
-import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -19,53 +15,48 @@ import {
   AnzuApiDependencyExistsError,
   axiosErrorResponseHasDependencyExistsData,
 } from '@/model/error/AnzuApiDependencyExistsError'
-import type { FilterConfig, FilterData } from '@/composables/filter/filterFactory'
-import type { Ref } from 'vue'
-import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
-import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
+import type { DocId, IntegerId } from '@/types/common'
+import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError.ts'
+import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError.ts'
 import { isUndefined } from '@/utils/common.ts'
 
-export const generateListQuery = (
-  pagination: Ref<Pagination2>,
-  filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
-): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
-  querySetLimit(pagination.value.rowsPerPage)
-  querySetOffset(pagination.value.page, pagination.value.rowsPerPage)
-  if (pagination.value.sortBy) {
-    querySetOrder(pagination.value.sortBy.key, pagination.value.sortBy.order === 'desc')
-  }
-  querySetFilters(filterData, filterConfig)
+/**
+ * @template T Type used for request payload, by default same as Response type
+ * @template R Response type override, optional
+ */
+const generateByIdsApiQuery = (ids: IntegerId[] | DocId[], isSearchApi: boolean, field = 'id'): string => {
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } = useApiQueryBuilder()
+  const limit = ids.length // todo add batch fetch
+  querySetLimit(limit)
+  querySetOffset(1, limit)
+  querySetOrder(field, false)
+  if (isSearchApi) queryAdd(field, ids.join(','))
+  else queryAddFilter('in', field, ids.join(','))
+
   return queryBuild()
 }
 
-/**
- * @template R Response type override, optional
- */
-export const useApiFetchList = <R>(
+export const useApiFetchByIds = <R>(
   client: () => AxiosInstance,
   system: string,
   entity: string,
-  options: AxiosRequestConfig = {}
-): UseApiFetchListReturnType<R> => {
+  options: AxiosRequestConfig = {},
+  isSearchApi = false,
+  field = 'id'
+): UseApiFetchByIdsReturnType<R> => {
   let abortController: AbortController | null = null
 
   const executeFetch = async (
-    pagination: Ref<Pagination2>,
-    filterData: FilterData<any>,
-    filterConfig: FilterConfig<any>,
+    ids: DocId[] | IntegerId[],
     urlTemplate: string,
     urlParams: UrlParams | undefined = undefined
   ): Promise<R> => {
     abortController = new AbortController()
 
     try {
-      const searchApi = filterConfig.general.elastic ? '/search' : ''
       const url =
         (isUndefined(urlParams) ? urlTemplate : replaceUrlParameters(urlTemplate, urlParams)) +
-        searchApi +
-        generateListQuery(pagination, filterData, filterConfig)
+        generateByIdsApiQuery(ids, isSearchApi, field)
 
       const res = await client().get(url, {
         ...options,
@@ -76,20 +67,8 @@ export const useApiFetchList = <R>(
         throw new AnzuApiResponseCodeError(res.status)
       }
 
-      if (res.data) {
-        const resData = res.data as unknown as ApiResponseList<R> | ApiInfiniteResponseList<R>
-        if (isApiInfiniteResponseList(resData)) {
-          pagination.value = {
-            ...pagination.value,
-            ...{ hasNextPage: resData.hasNextPage, currentViewCount: res.data.data.length },
-          }
-        } else if (isApiResponseList(resData)) {
-          pagination.value = {
-            ...pagination.value,
-            ...{ totalCount: resData.totalCount, currentViewCount: res.data.data.length },
-          }
-        }
-        return resData.data
+      if (res.data?.data) {
+        return res.data.data as R
       }
 
       if (res.status === HTTP_STATUS_NO_CONTENT) {
@@ -150,13 +129,7 @@ export const useApiFetchList = <R>(
   }
 }
 
-export type UseApiFetchListReturnType<R> = {
-  executeFetch: (
-    pagination: Ref<Pagination2>,
-    filterData: FilterData<any>,
-    filterConfig: FilterConfig<any>,
-    urlTemplate: string,
-    urlParams: UrlParams | undefined
-  ) => Promise<R>
+export type UseApiFetchByIdsReturnType<R> = {
+  executeFetch: (ids: DocId[] | IntegerId[], urlTemplate: string, urlParams: UrlParams | undefined) => Promise<R>
   abortFetch: () => void
 }

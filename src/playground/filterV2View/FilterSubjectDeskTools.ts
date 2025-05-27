@@ -4,7 +4,7 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { useApiFetchList } from '@/services/api/v2/useApiFetchList'
-import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
+import { apiFetchByIds2 } from '@/services/api/v2/useApiFetchByIds.ts'
 import {
   createFilter,
   type FilterConfig,

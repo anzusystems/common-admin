@@ -6,7 +6,7 @@ import {
   type MakeFilterOption,
 } from '@/composables/filter/filterFactory'
 import { useApiFetchList } from '@/services/api/v2/useApiFetchList'
-import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
+import { apiFetchByIds2 } from '@/services/api/v2/useApiFetchByIds.ts'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { cmsClient } from '@/playground/mock/cmsClient'

@@ -49,7 +49,7 @@ const generateListApiQueryWithoutPagination = (
   if (isDefined(filterBag)) querySetFilters(filterBag)
   return queryBuild()
 }
-// todo: alpha version
+
 /**
  * Used to fetch all items from list api.
  *

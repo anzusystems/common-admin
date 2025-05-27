@@ -1,6 +1,6 @@
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { apiFetchByIds2 } from '@/services/api/v2/apiFetchByIds2'
+import { apiFetchByIds2 } from '@/services/api/v2/useApiFetchByIds.ts'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { Pagination2 } from '@/types/Pagination'
 import { cmsClient } from '@/playground/mock/cmsClient'
