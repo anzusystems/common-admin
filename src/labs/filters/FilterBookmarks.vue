@@ -8,7 +8,6 @@ import {
   type UserAdminConfigDataFilterBookmark,
   UserAdminConfigLayoutType,
 } from '@/types/UserAdminConfig'
-import { useDisplay } from 'vuetify'
 import type { IntegerId } from '@/types/common'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
@@ -50,7 +49,6 @@ const visibleItemsCount = ref(1000)
 const filterBookmarkStore = useFilterBookmarkStore()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { useFetchUserAdminConfigList } = useUserAdminConfigApi(props.client, props.system)
-const { mobile } = useDisplay()
 
 const loadBookmarks = async (force = false) => {
   loading.value = true
@@ -58,7 +56,7 @@ const loadBookmarks = async (force = false) => {
     {
       system: props.system,
       user: props.userId,
-      layoutType: mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
+      layoutType: UserAdminConfigLayoutType.Desktop,
       systemResource: props.systemResource,
     },
     useFetchUserAdminConfigList,
@@ -125,11 +123,7 @@ watchThrottled(
 )
 
 const items = computed(() => {
-  const key = filterBookmarkStore.generateKey(
-    props.system,
-    mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
-    props.systemResource
-  )
+  const key = filterBookmarkStore.generateKey(props.system, UserAdminConfigLayoutType.Desktop, props.systemResource)
   const result = filterBookmarkStore.bookmarks.get(key)
   return result?.items ?? []
 })

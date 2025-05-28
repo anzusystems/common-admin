@@ -14,7 +14,6 @@ import { useUserAdminConfigApi } from '@/labs/filters/userAdminConfig.ts'
 import { useAlerts } from '@/composables/system/alerts'
 import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactory'
 import { type UserAdminConfig, UserAdminConfigLayoutType, UserAdminConfigType } from '@/types/UserAdminConfig'
-import { useDisplay } from 'vuetify'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
@@ -86,7 +85,6 @@ const {
 const { t } = useI18n()
 const { showErrorsDefault, showValidationError } = useAlerts()
 const { createDefaultUserAdminConfig } = useUserAdminConfigFactory()
-const { mobile } = useDisplay()
 
 const sortItems = async () => {
   saveButtonLoading.value = true
@@ -112,7 +110,7 @@ const addBookmark = async () => {
   const config = createDefaultUserAdminConfig(props.system)
   config.user = props.user
   config.configType = UserAdminConfigType.FilterBookmark
-  config.layoutType = mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop
+  config.layoutType = UserAdminConfigLayoutType.Desktop
   config.systemResource = props.systemResource
   config.customName = customName.value
   config.data = {
@@ -126,7 +124,7 @@ const addBookmark = async () => {
       {
         system: props.system,
         user: props.user,
-        layoutType: mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
+        layoutType: UserAdminConfigLayoutType.Desktop,
         systemResource: props.systemResource,
       },
       useFetchUserAdminConfigList
@@ -140,7 +138,7 @@ const addBookmark = async () => {
     filterBookmarkStore.addOne(
       filterBookmarkStore.generateKey(
         props.system,
-        mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
+        UserAdminConfigLayoutType.Desktop,
         props.systemResource
       ),
       res
@@ -214,7 +212,7 @@ const reloadItems = async () => {
       {
         system: props.system,
         user: props.user,
-        layoutType: mobile.value ? UserAdminConfigLayoutType.Mobile : UserAdminConfigLayoutType.Desktop,
+        layoutType: UserAdminConfigLayoutType.Desktop,
         systemResource: props.systemResource,
       },
       useFetchUserAdminConfigList,
