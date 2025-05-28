@@ -53,7 +53,6 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
 )
 
 const getList = () => {
-  pagination.value.sortBy = filterData.text ? null : { key: 'createdAt', order: 'desc' }
   fetchList(pagination, filterData, filterConfig)
 }
 

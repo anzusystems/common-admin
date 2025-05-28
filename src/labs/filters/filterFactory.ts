@@ -153,7 +153,6 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       }
     }
     if (params.size === 0) return ''
-    console.log(pagination.value.sortBy)
     if (includeSort && pagination.value.sortBy) {
       params.set(SORT_URL_PARAM, `${pagination.value.sortBy.key},${pagination.value.sortBy.order}`)
     }
@@ -229,7 +228,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   }
 
   const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
-    pagination.value.page = 1
+    pagination.value = { ...pagination.value, page: 1 }
     if (storeId && localStorage) {
       localStorage.removeItem(storeId)
     }
@@ -242,7 +241,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     const serialized = serializeFilters(data, pagination, true)
     updateLocationHash(serialized)
     storeFilterLocalStorage(serialized)
-    pagination.value.page = 1
+    pagination.value = { ...pagination.value, page: 1 }
     if (callback) callback()
   }
 
