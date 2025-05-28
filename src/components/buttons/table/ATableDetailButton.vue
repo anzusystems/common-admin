@@ -37,6 +37,7 @@ const routerToComputed = computed(() => {
     :data-cy="dataCy"
     :to="routerToComputed"
     icon
+    :active="false"
     size="x-small"
     variant="text"
     @click.stop="() => {}"

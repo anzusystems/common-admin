@@ -1,41 +1,12 @@
+import {
+  type ColumnConfig,
+  type ColumnInternalValues,
+  DATETIME_AUTO_LABEL_TRACKING,
+  type StoredData,
+} from '@/composables/system/datatableColumns'
 import { computed, onMounted, type Ref, watch } from 'vue'
 import { i18n } from '@/plugins/i18n'
-import type { Pagination } from '@/types/Pagination'
-import { usePagination } from '@/composables/system/pagination'
 import { isArray, isObject, isUndefined } from '@/utils/common'
-
-export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']
-
-export type DatatableSortBy =
-  | {
-      key: string
-      order: 'asc' | 'desc'
-    }
-  | null
-  | undefined
-
-export type DatatableOrderingOption = { id: number; titleT: string; sortBy?: DatatableSortBy; customData?: any }
-
-export type DatatableOrderingOptions = Array<DatatableOrderingOption>
-
-export type ColumnConfig = {
-  key: string
-  title?: string
-  sortable?: boolean
-  fixed?: boolean
-  maxWidth?: number
-}
-
-export type ColumnInternalValues = {
-  key: string
-  title?: string
-  sortable: boolean
-  fixed: boolean
-}
-
-export type StoredData = {
-  hidden?: string[]
-}
 
 const defaultColumn: ColumnInternalValues = {
   key: '',
@@ -50,22 +21,12 @@ export function createDatatableColumnsConfig(
   system: string | undefined = undefined,
   subject: string | undefined = undefined,
   disableActions: boolean = false,
-  customInitialPagination: Pagination | undefined = undefined,
   customI18n: undefined | any = undefined,
   showExpand: undefined | boolean = undefined,
-  storeId: string | undefined = undefined
+  storeId: string | undefined = undefined,
 ) {
   const localI18n = customI18n ?? i18n
   const { t } = localI18n.global || localI18n
-  const pagination: Pagination = usePagination()
-  if (customInitialPagination) {
-    for (const prop of Object.keys(pagination)) {
-      if (prop in customInitialPagination) {
-        // @ts-ignore
-        pagination[prop] = customInitialPagination[prop]
-      }
-    }
-  }
 
   const columnsAll = config.map((item) => {
     const obj = { ...defaultColumn, ...item }
@@ -93,14 +54,14 @@ export function createDatatableColumnsConfig(
     return columns
   })
 
-  const updateSortBy = (sortBy: { key: string; order: 'asc' | 'desc' } | undefined | null) => {
-    if (!sortBy) {
-      pagination.sortBy = null
-      return
-    }
-    pagination.sortBy = sortBy.key
-    pagination.descending = sortBy.order === 'desc' ? true : false
-  }
+  // const updateSortBy = (sortBy: { key: string; order: 'asc' | 'desc' } | undefined | null) => {
+  //   if (!sortBy) {
+  //     pagination.sortBy = null
+  //     return
+  //   }
+  //   pagination.sortBy = sortBy.key
+  //   pagination.descending = sortBy.order === 'desc' ? true : false
+  // }
 
   const loadStoredColumns = () => {
     if (!storeId || !localStorage) return
@@ -129,7 +90,5 @@ export function createDatatableColumnsConfig(
     columnsAll,
     columnsVisible,
     columnsHidden,
-    updateSortBy,
-    pagination,
   }
 }

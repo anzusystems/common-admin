@@ -49,6 +49,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: DatetimeUTC | null | undefined): void
   (e: 'onOpen'): void
   (e: 'onClose'): void
+  (e: 'afterClear'): void
 }>()
 
 dayjs.extend(utc)
@@ -85,6 +86,11 @@ const v$ = useVuelidate(rules, { textFieldValue })
 const displayFormat = computed(() => {
   return props.type === 'datetime' ? 'DD.MM.YYYY HH:mm' : 'DD.MM.YYYY'
 })
+
+const tryEmitNewValue = (newValue: DatetimeUTC | null | undefined) => {
+  if (newValue === props.modelValue) return
+  emit('update:modelValue', newValue)
+}
 
 const updateDateAndTimePickerOnlyWhenChanged = (newValue: dayjs.Dayjs | null) => {
   if (isNull(newValue)) return
@@ -150,14 +156,13 @@ watch(
   (newValue) => {
     if (isNull(newValue)) {
       textFieldValue.value = ''
-      emit('update:modelValue', null)
+      tryEmitNewValue(null)
       return
     }
     const newUtcValue = newValue.utc().format('YYYY-MM-DDTHH:mm:ss') + SUFFIX
     textFieldValue.value = newValue.format(displayFormat.value)
     updateDateAndTimePickerOnlyWhenChanged(newValue)
-    if (newUtcValue === props.modelValue) return
-    emit('update:modelValue', newUtcValue)
+    tryEmitNewValue(newUtcValue)
   },
   { immediate: true }
 )
@@ -213,9 +218,11 @@ const onClear = () => {
     datetimeInternal.value = null
     datePickerValue.value = null
     timePickerValue.value = null
+    emit('afterClear')
     return
   }
   datetimeInternal.value = dayjs(props.defaultValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
+  emit('afterClear')
 }
 
 const onTextFieldFocus = () => {
@@ -239,6 +246,7 @@ const now = () => {
     :persistent-placeholder="true"
     :placeholder="placeholderComputed"
     class="a-datetime-picker"
+    hide-details="auto"
     :disabled="disabled"
     @blur="onTextFieldBlur"
     @focus="onTextFieldFocus"

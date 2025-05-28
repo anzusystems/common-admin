@@ -119,3 +119,50 @@ export const dateDiff = (date1: Date, date2: Date, unit: QUnitType | OpUnitType 
   const date2dayjs = dayjs(date2)
   return date1dayjs.diff(date2dayjs, unit)
 }
+
+export const isDatetimeUTC = (value: unknown): value is DatetimeUTC => {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3,6})?Z$/.test(value)
+}
+
+type MonthIntervalUTC = { from: DatetimeUTC; until: DatetimeUTC }
+type MonthIntervalDate = { from: Date; until: Date }
+type GetMonthIntervalFn = {
+  (
+    nowDate: Date,
+    returnType: 'utc',
+    monthOffset?: number,
+    expandToCurrentMonth?: boolean
+  ): MonthIntervalUTC;
+  (
+    nowDate: Date,
+    returnType: 'date',
+    monthOffset?: number,
+    expandToCurrentMonth?: boolean
+  ): MonthIntervalDate;
+}
+const _getMonthInterval = (
+  nowDate: Date,
+  returnType: 'date' | 'utc',
+  monthOffset: number = 0,
+  expandToCurrentMonth: boolean = false
+): MonthIntervalUTC | MonthIntervalDate => {
+  const from = new Date(nowDate)
+  from.setMonth(from.getMonth() + monthOffset)
+  from.setDate(1)
+  from.setHours(0, 0, 0, 0)
+  const until = new Date(nowDate)
+  if (expandToCurrentMonth) {
+    until.setMonth(until.getMonth() + 1, 0)
+  } else {
+    until.setMonth(until.getMonth() + monthOffset + 1, 0)
+  }
+  until.setHours(23, 59, 59, 999)
+  if (returnType === 'utc') {
+    return {
+      from: dateToUtc(from),
+      until: dateToUtc(until),
+    }
+  }
+  return { from, until }
+}
+export const getMonthInterval = _getMonthInterval as GetMonthIntervalFn

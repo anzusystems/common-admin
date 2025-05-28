@@ -39,6 +39,7 @@ const routerToComputed = computed(() => {
     icon
     size="x-small"
     variant="text"
+    :active="false"
     @click.stop="() => {}"
   >
     <VIcon icon="mdi-pencil" />
