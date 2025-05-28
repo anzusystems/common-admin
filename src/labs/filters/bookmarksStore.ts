@@ -8,7 +8,7 @@ import {
 } from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
 import type { UseApiFetchListReturnType } from '@/labs/api/useApiFetchList'
-import { END_POINT } from '@/labs/filters/userAdminConfig.ts'
+import { END_POINT } from '@/labs/filters/userAdminConfig'
 import { usePagination } from '@/labs/filters/pagination'
 
 interface CacheItem<T = UserAdminConfig> {

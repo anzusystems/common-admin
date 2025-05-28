@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, inject, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useFilterBookmarkStore } from '@/labs/filters/bookmarksStore'
-import { useUserAdminConfigApi } from '@/labs/filters/userAdminConfig.ts'
+import { useUserAdminConfigApi } from '@/labs/filters/userAdminConfig'
 import type { AxiosInstance } from 'axios'
 import {
   type UserAdminConfig,
