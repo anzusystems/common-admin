@@ -10,8 +10,10 @@ import {
   isUndefined,
 } from '@/utils/common'
 import type { AnyFn } from '@vueuse/core'
-
 import type { Pagination } from '@/labs/filters/pagination'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns'
+
+const SORT_URL_PARAM = '_sort'
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,
@@ -132,7 +134,11 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     return data
   }
 
-  const serializeFilters = (data: Record<string, AllowedFilterValues>): string => {
+  const serializeFilters = (
+    data: Record<string, AllowedFilterValues>,
+    pagination: Ref<Pagination>,
+    includeSort: boolean
+  ): string => {
     const params = new URLSearchParams()
     for (const key in data) {
       const value = data[key]
@@ -147,11 +153,17 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       }
     }
     if (params.size === 0) return ''
+    console.log(pagination.value.sortBy)
+    if (includeSort && pagination.value.sortBy) {
+      params.set(SORT_URL_PARAM, `${pagination.value.sortBy.key},${pagination.value.sortBy.order}`)
+    }
     return params.toString() + END_FILTER_MARKER
   }
 
-  const deserializeFilters = (hash: string): Record<string, AllowedFilterValues> => {
-    if (!hash) return {}
+  const deserializeFilters = (
+    hash: string
+  ): { filters: Record<string, AllowedFilterValues>; sortBy: DatatableSortBy } | null => {
+    if (!hash) return null
     if (hash.startsWith('#')) hash = hash.substring(1)
 
     if (!hash.endsWith(END_FILTER_MARKER)) {
@@ -159,7 +171,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       if (lastAmpersand !== -1) {
         hash = hash.substring(0, lastAmpersand)
       } else {
-        return {}
+        return null
       }
     } else {
       hash = hash.slice(0, -1)
@@ -167,6 +179,16 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 
     const params = new URLSearchParams(hash)
     const result: Record<string, AllowedFilterValues> = {}
+    let sortBy: DatatableSortBy = null
+
+    const sortParam = params.get(SORT_URL_PARAM)
+    if (sortParam) {
+      const [key, order] = sortParam.split(',')
+      if (key && (order === 'asc' || order === 'desc')) {
+        sortBy = { key, order }
+      }
+      params.delete(SORT_URL_PARAM)
+    }
 
     for (const [key, value] of params.entries()) {
       const fieldConfig = filterConfig.fields[key as keyof typeof filterConfig.fields]
@@ -183,14 +205,14 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       }
     }
 
-    return result
+    return { filters: result, sortBy }
   }
 
   const updateLocationHash = (serialized: string) => {
     window.location.hash = serialized
   }
 
-  const parseLocationHash = (): Record<string, AllowedFilterValues> => {
+  const parseLocationHash = () => {
     return deserializeFilters(window.location.hash)
   }
 
@@ -200,9 +222,9 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   }
 
   const loadFilterLocalStorage = () => {
-    if (!storeId || !localStorage) return {}
+    if (!storeId || !localStorage) return null
     const stored = localStorage.getItem(storeId)
-    if (!stored || !isString(stored)) return {}
+    if (!stored || !isString(stored)) return null
     return deserializeFilters(stored)
   }
 
@@ -217,7 +239,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 
   const submitFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     const data = getFilterDataForStoring()
-    const serialized = serializeFilters(data)
+    const serialized = serializeFilters(data, pagination, true)
     updateLocationHash(serialized)
     storeFilterLocalStorage(serialized)
     pagination.value.page = 1
@@ -225,15 +247,15 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   }
 
   const loadStoredFilters = () => {
-    let stored = parseLocationHash()
-    if (isEmptyObject(stored)) {
-      stored = loadFilterLocalStorage()
+    let storedFromHash = parseLocationHash()
+    if (isNull(storedFromHash)) {
+      storedFromHash = loadFilterLocalStorage()
     }
-    if (isEmptyObject(stored)) return false
+    if (isNull(storedFromHash) || isEmptyObject(storedFromHash.filters)) return false
 
     for (const filterName in filterData) {
       const key = filterName as keyof FilterData<F>
-      const value = stored[key]
+      const value = storedFromHash.filters[key]
       if (isUndefined(value)) continue
       filterData[key] = value
     }

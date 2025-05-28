@@ -77,9 +77,10 @@ const onItemClick = (item: UserAdminConfig) => {
     pagination.value = { ...pagination.value, sortBy: { key: config.sortBy!.key, order: config.sortBy!.order } }
   }
   const deserialized = deserializeFilters(config.filter)
+  if (isNull(deserialized)) return
   for (const filterName in filterData) {
     const key = filterName as keyof FilterData
-    const value = deserialized[key]
+    const value = deserialized.filters[key]
     if (isUndefined(value)) continue
     filterData[key] = value
   }

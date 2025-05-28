@@ -114,7 +114,7 @@ const addBookmark = async () => {
   config.systemResource = props.systemResource
   config.customName = customName.value
   config.data = {
-    filter: serializeFilters(filterData),
+    filter: serializeFilters(filterData, pagination, false),
     datatableHiddenColumns:
       storeDatatableHiddenColumns.value && props.datatableHiddenColumns ? props.datatableHiddenColumns : undefined,
     sortBy: storeDatatableOrder.value && pagination.value.sortBy ? pagination.value.sortBy : undefined,
@@ -133,7 +133,7 @@ const addBookmark = async () => {
       errorCount.value = true
       return
     }
-    config.position = count + 1 // todo check +1 or not
+    config.position = count + 1
     const res = await createUserAdminConfig(config)
     filterBookmarkStore.addOne(
       filterBookmarkStore.generateKey(
