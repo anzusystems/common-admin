@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { computed, inject } from 'vue'
+import { computed, inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   FilterConfigKey,
@@ -9,7 +9,7 @@ import {
   FilterSubmitResetCounterKey,
   FilterTouchedKey,
 } from '@/labs/filters/filterInjectionKeys'
-import { isArray, isUndefined } from '@/utils/common'
+import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
 const props = withDefaults(
@@ -88,6 +88,18 @@ const updateSelected = () => {
     filterSelected.value.set(props.name, [{ title: found.title as string, value: found.value as string }])
   }
 }
+
+watch(
+  () => filterData[props.name],
+  (newValue, oldValue) => {
+    if (newValue === oldValue || isBoolean(newValue)) return
+    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+      return
+    }
+    updateSelected()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

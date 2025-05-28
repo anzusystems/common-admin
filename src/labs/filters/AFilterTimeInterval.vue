@@ -191,6 +191,27 @@ watch(modelValue, (newValue) => {
     modelInternal.value = found.value
   }
 })
+
+watch(
+  [() => filterData[props.nameFrom], () => filterData[props.nameUntil]],
+  ([nameFromNewValue, nameUntilNewValue], [nameFromOldValue, nameUntilOldValue]) => {
+    if (nameFromNewValue === nameFromOldValue && nameUntilNewValue === nameUntilOldValue) return
+    if (
+      isBoolean(nameFromNewValue) ||
+      isBoolean(nameUntilNewValue) ||
+      isNull(nameFromNewValue) ||
+      isNull(nameUntilNewValue) ||
+      isUndefined(nameFromNewValue) ||
+      isUndefined(nameUntilNewValue) ||
+      (isArray(nameFromNewValue) && nameFromNewValue.length === 0) ||
+      (isArray(nameUntilNewValue) && nameUntilNewValue.length === 0)
+    ) {
+      return
+    }
+    updateSelected()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

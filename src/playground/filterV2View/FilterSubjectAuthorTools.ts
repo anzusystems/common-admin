@@ -97,7 +97,7 @@ const useFetchAuthorList = () => useApiFetchList<AuthorKind[]>(cmsClient, 'cms',
 
 export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchAuthorList()
-  const authors = await executeFetch(pagination, filterData, filterConfig, END_POINT + '/search')
+  const authors = await executeFetch(pagination, filterData, filterConfig, END_POINT)
 
   return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
 }

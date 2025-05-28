@@ -235,12 +235,9 @@ const updateFilterSelected = (
   filterSelected.value.set(props.name, [{ title: newValue.title, value: newValue.value }])
 }
 
-const watchCallCountData = ref(0)
-
 watch(
   () => filterData[props.name],
   async (newValue, oldValue) => {
-    watchCallCountData.value++
     if (newValue === oldValue || isBoolean(newValue)) return
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []

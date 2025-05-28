@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
-import { computed, inject } from 'vue'
+import { computed, inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { isString, isUndefined } from '@/utils/common'
+import { isArray, isBoolean, isNull, isString, isUndefined } from '@/utils/common'
 import {
   FilterConfigKey,
   FilterDataKey,
@@ -85,6 +85,18 @@ const updateSelected = () => {
   if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
   filterSelected.value.set(props.name, [{ title: modelValue.value, value: modelValue.value }])
 }
+
+watch(
+  () => filterData[props.name],
+  (newValue, oldValue) => {
+    if (newValue === oldValue || isBoolean(newValue)) return
+    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+      return
+    }
+    updateSelected()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
