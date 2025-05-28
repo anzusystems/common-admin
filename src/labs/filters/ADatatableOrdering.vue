@@ -95,13 +95,11 @@ watch(
   pagination,
   (newValue, oldValue) => {
     if (newValue.sortBy?.key === oldValue?.sortBy?.key && newValue.sortBy?.order === oldValue?.sortBy?.order) {
-      console.log('early exit')
       return
     }
     const found = options.value.find((option) => {
       return newValue.sortBy?.key === option.sortBy?.key && newValue.sortBy?.order === option.sortBy?.order
     })
-    console.log(found)
     if (isUndefined(found)) {
       return
     }

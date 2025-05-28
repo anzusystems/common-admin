@@ -40,6 +40,7 @@ export const useApiRequest = <R, T = R>(
 
     try {
       const axiosConfig: AxiosRequestConfig = { method: method }
+      axiosConfig.url = urlTemplate
       if (urlTemplate !== '' && !isUndefined(urlParams)) {
         axiosConfig.url = replaceUrlParameters(urlTemplate, urlParams)
       }
@@ -95,7 +96,7 @@ export const useApiRequest = <R, T = R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ', err.cause)
+        console.error('Axios error: ' + urlTemplate, err.cause)
         throw new AnzuApiAxiosError(err)
       }
 

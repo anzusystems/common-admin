@@ -106,7 +106,7 @@ export const useApiFetchByIds = <R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ', err.cause)
+        console.error('Axios error: ' + urlTemplate, err.cause)
         throw new AnzuApiAxiosError(err)
       }
 
