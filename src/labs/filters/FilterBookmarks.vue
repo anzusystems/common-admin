@@ -66,7 +66,7 @@ const loadBookmarks = async (force = false) => {
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { deserializeFilters } = useFilterHelpers(filterData, filterConfig, props.systemResource)
+const { deserializeFilters, resetFilter } = useFilterHelpers(filterData, filterConfig, props.systemResource)
 
 const onItemClick = (item: UserAdminConfig) => {
   const config = item.data as UserAdminConfigDataFilterBookmark
@@ -78,6 +78,7 @@ const onItemClick = (item: UserAdminConfig) => {
   }
   const deserialized = deserializeFilters(config.filter)
   if (isNull(deserialized)) return
+  resetFilter(pagination)
   for (const filterName in filterData) {
     const key = filterName as keyof FilterData
     const value = deserialized.filters[key]
@@ -154,7 +155,7 @@ onMounted(() => {
   <div
     ref="toolbar"
     :key="items.length"
-    class="w-100 d-flex overflow-hidden align-center"
+    class="w-100 d-flex overflow-hidden align-center mb-1"
   >
     <div v-if="loading" />
     <template v-else>
@@ -165,7 +166,9 @@ onMounted(() => {
       >
         <VBtn
           text
+          prepend-icon="mdi-bookmark-outline"
           size="small"
+          class="mr-1 mb-1 bg-grey-lighten-4 text-grey-darken-3"
           @click="onItemClick(item)"
         >
           {{ item.customName }}
@@ -182,7 +185,6 @@ onMounted(() => {
             size="x-small"
             :width="28"
             :height="28"
-            variant="text"
             v-bind="activatorProps"
           />
         </template>

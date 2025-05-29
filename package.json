@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.188",
+  "version": "1.47.0-beta.189",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
@@ -78,7 +78,7 @@
     "sass": "^1.89.0",
     "socket.io-client": "4.8.1",
     "sortablejs": "^1.15.6",
-    "stylelint": "16.19.1",
+    "stylelint": "16.20.0",
     "stylelint-config-recommended-vue": "^1.6.0",
     "stylelint-config-standard-scss": "^15.0.1",
     "typescript": "5.7.3",
