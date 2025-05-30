@@ -70,6 +70,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     filterData.configType = UserAdminConfigType.FilterBookmark
     filterData.layoutType = identifier.layoutType
     filterData.systemResource = identifier.systemResource
+    filterData.user = identifier.user
 
     let items: UserAdminConfig[] = []
     try {
@@ -104,6 +105,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     filterData.configType = UserAdminConfigType.FilterBookmark
     filterData.layoutType = identifier.layoutType
     filterData.systemResource = identifier.systemResource
+    filterData.user = identifier.user
 
     let length = Infinity
     try {
