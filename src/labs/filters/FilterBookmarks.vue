@@ -10,8 +10,13 @@ import {
 } from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
-import { isDefined, isNull, isUndefined } from '@/utils/common'
-import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import { cloneDeep, isDefined, isNull, isUndefined } from '@/utils/common'
+import {
+  DatatablePaginationKey,
+  FilterConfigKey,
+  FilterDataKey,
+  FilterSelectedKey,
+} from '@/labs/filters/filterInjectionKeys'
 import { type FilterData, useFilterHelpers } from '@/labs/filters/filterFactory'
 
 const props = withDefaults(
@@ -36,8 +41,9 @@ const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHidde
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 const pagination = inject(DatatablePaginationKey)
+const filterSelected = inject(FilterSelectedKey)
 
-if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterData)) {
+if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterData) || isUndefined(filterSelected)) {
   throw new Error('Incorrect provide/inject config.')
 }
 
@@ -81,7 +87,11 @@ const onItemClick = (item: UserAdminConfig) => {
   for (const filterName in filterData) {
     const key = filterName as keyof FilterData
     const value = deserialized.filters[key]
-    if (isUndefined(value)) continue
+    if (isUndefined(value) && filterConfig.fields[key]?.clearable) {
+      filterData[key] = cloneDeep(filterConfig.fields[key].default)
+      filterSelected.value.delete(key)
+      continue
+    }
     filterData[key] = value
   }
   emit('submit')

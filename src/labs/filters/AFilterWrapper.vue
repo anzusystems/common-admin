@@ -78,8 +78,6 @@ const submitFilter = () => {
 const { clearAll } = useFilterClearHelpers()
 
 const submitFilterBookmark = () => {
-  clearAll(filterData, filterConfig)
-  filterSelected.value.clear()
   nextTick(() => {
     submitResetCounter.value++
     emit('bookmarkLoadAfter')
