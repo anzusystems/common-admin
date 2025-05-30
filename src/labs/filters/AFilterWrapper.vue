@@ -77,6 +77,15 @@ const submitFilter = () => {
 
 const { clearAll } = useFilterClearHelpers()
 
+const submitFilterBookmark = () => {
+  clearAll(filterData, filterConfig)
+  filterSelected.value.clear()
+  nextTick(() => {
+    submitResetCounter.value++
+    emit('bookmarkLoadAfter')
+  })
+}
+
 const resetFilter = () => {
   touched.value = false
   clearAll(filterData, filterConfig)
@@ -120,7 +129,7 @@ defineExpose({
               :system="system"
               :user-id="userId"
               :system-resource="bookmarkSystemResource"
-              @submit="emit('bookmarkLoadAfter')"
+              @submit="submitFilterBookmark"
             />
           </div>
         </slot>
