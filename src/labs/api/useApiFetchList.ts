@@ -24,6 +24,7 @@ import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
 import { isUndefined } from '@/utils/common'
 import type { Pagination } from '@/labs/filters/pagination'
+import { SortOrder } from '@/composables/system/datatableColumns.ts'
 
 export const generateListQuery = (
   pagination: Ref<Pagination>,
@@ -34,7 +35,7 @@ export const generateListQuery = (
   querySetLimit(pagination.value.rowsPerPage)
   querySetOffset(pagination.value.page, pagination.value.rowsPerPage)
   if (pagination.value.sortBy) {
-    querySetOrder(pagination.value.sortBy.key, pagination.value.sortBy.order === 'desc')
+    querySetOrder(pagination.value.sortBy.key, pagination.value.sortBy.order === SortOrder.Desc)
   }
   querySetFilters(filterData, filterConfig)
   return queryBuild()

@@ -5,6 +5,7 @@ import type { AllowedFilterValues, FilterConfig, FilterData, FilterField } from 
 import type { DatetimeUTCNullable } from '@/types/common'
 import { TimeIntervalSpecialOptions, type TimeIntervalToolsValue } from '@/labs/filters/filterTimeIntervalTools'
 import { dateModifyMinutes, dateTimeNow, dateTimeToDate, dateToUtc, getMonthInterval } from '@/utils/datetime'
+import { SortOrder } from '@/composables/system/datatableColumns'
 
 /**
  * Docs: /doc/Admin-Cms-Doc/Filters.md
@@ -21,7 +22,7 @@ export function useApiQueryBuilder() {
   }
 
   const querySetOrder = (field: string | null, desc: boolean): void => {
-    if (!isNull(field) && field.length > 0) queryAdd('order[' + field + ']', desc ? 'desc' : 'asc')
+    if (!isNull(field) && field.length > 0) queryAdd('order[' + field + ']', desc ? SortOrder.Desc : SortOrder.Asc)
   }
 
   const formatValue = (value: string | number | boolean): string | number => {

@@ -23,6 +23,7 @@ import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import { ref } from 'vue'
 import { usePagination as usePagination } from '@/labs/filters/pagination'
+import { SortOrder } from '@/composables/system/datatableColumns'
 
 /**
  * @template R Response type override
@@ -49,7 +50,7 @@ export const useApiFetchListBatch = <R>(
 
     try {
       const searchApi = (filterConfig.general.elastic || forceElastic) ? '/search' : ''
-      const pagination = usePagination({ key: sortBy, order: sortDesc ? 'desc' : 'asc' })
+      const pagination = usePagination({ key: sortBy, order: sortDesc ? SortOrder.Desc : SortOrder.Asc })
       pagination.value.rowsPerPage = batchSize
       const url = (isUndefined(urlParams) ? urlTemplate : replaceUrlParameters(urlTemplate, urlParams)) + searchApi
       const results = [] as unknown as R

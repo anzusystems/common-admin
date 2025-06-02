@@ -54,15 +54,6 @@ export function createDatatableColumnsConfig(
     return columns
   })
 
-  // const updateSortBy = (sortBy: { key: string; order: 'asc' | 'desc' } | undefined | null) => {
-  //   if (!sortBy) {
-  //     pagination.sortBy = null
-  //     return
-  //   }
-  //   pagination.sortBy = sortBy.key
-  //   pagination.descending = sortBy.order === 'desc' ? true : false
-  // }
-
   const loadStoredColumns = () => {
     if (!storeId || !localStorage) return
     const stored = localStorage.getItem(storeId)

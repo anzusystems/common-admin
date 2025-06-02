@@ -6,10 +6,17 @@ import { isArray, isObject, isUndefined } from '@/utils/common'
 
 export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']
 
+export const SORT_BY_SCORE = '_score'
+export const SortOrder = {
+  Asc: 'asc',
+  Desc: 'desc',
+} as const
+export type SortOrderType = (typeof SortOrder)[keyof typeof SortOrder]
+
 export type DatatableSortBy =
   | {
       key: string
-      order: 'asc' | 'desc'
+      order: SortOrderType
     }
   | null
   | undefined
@@ -93,13 +100,13 @@ export function createDatatableColumnsConfig(
     return columns
   })
 
-  const updateSortBy = (sortBy: { key: string; order: 'asc' | 'desc' } | undefined | null) => {
+  const updateSortBy = (sortBy: { key: string; order: SortOrderType } | undefined | null) => {
     if (!sortBy) {
       pagination.sortBy = null
       return
     }
     pagination.sortBy = sortBy.key
-    pagination.descending = sortBy.order === 'desc' ? true : false
+    pagination.descending = sortBy.order === SortOrder.Desc ? true : false
   }
 
   const loadStoredColumns = () => {

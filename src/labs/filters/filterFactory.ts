@@ -11,7 +11,7 @@ import {
 } from '@/utils/common'
 import type { AnyFn } from '@vueuse/core'
 import type { Pagination } from '@/labs/filters/pagination'
-import type { DatatableSortBy } from '@/composables/system/datatableColumns'
+import { type DatatableSortBy, SortOrder } from '@/composables/system/datatableColumns'
 
 const SORT_URL_PARAM = '_sort'
 
@@ -183,7 +183,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     const sortParam = params.get(SORT_URL_PARAM)
     if (sortParam) {
       const [key, order] = sortParam.split(',')
-      if (key && (order === 'asc' || order === 'desc')) {
+      if (key && (order === SortOrder.Asc || order === SortOrder.Desc)) {
         sortBy = { key, order }
       }
       params.delete(SORT_URL_PARAM)

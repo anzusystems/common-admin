@@ -1,7 +1,11 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { DatatableOrderingOption, DatatableOrderingOptions } from '@/composables/system/datatableColumns'
+import {
+  type DatatableOrderingOption,
+  type DatatableOrderingOptions, SORT_BY_SCORE,
+  SortOrder,
+} from '@/composables/system/datatableColumns'
 import { isUndefined } from '@/utils/common'
 
 const props = withDefaults(
@@ -37,14 +41,18 @@ const modelValueComputed = computed({
 })
 
 const defaultItems: DatatableOrderingOptions = [
-  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: 'desc' } },
-  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: 'asc' } },
+  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: SortOrder.Desc } },
+  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: SortOrder.Asc } },
 ]
 
 const defaultItemsMostRelevant: DatatableOrderingOptions = [
-  { id: 3, titleT: 'common.system.datatable.ordering.mostRelevant' },
-  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: 'desc' } },
-  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: 'asc' } },
+  {
+    id: 3,
+    titleT: 'common.system.datatable.ordering.mostRelevant',
+    sortBy: { key: SORT_BY_SCORE, order: SortOrder.Desc },
+  },
+  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: SortOrder.Desc } },
+  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: SortOrder.Asc } },
 ]
 
 const activeTitle = computed(() => {

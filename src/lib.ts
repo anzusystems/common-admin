@@ -269,6 +269,9 @@ import {
   createDatatableColumnsConfig,
   type DatatableOrderingOption,
   type DatatableOrderingOptions,
+  SORT_BY_SCORE,
+  SortOrder,
+  type SortOrderType,
   type DatatableSortBy,
 } from '@/composables/system/datatableColumns'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
@@ -738,6 +741,7 @@ export {
   type DatatableOrderingOption,
   type DatatableOrderingOptions,
   type DatatableSortBy,
+  type SortOrderType,
   type ObjectPaths,
   type ObjectLeaves,
   type Prettify,
@@ -983,6 +987,8 @@ export {
   ROLE_SUPER_ADMIN,
   NEW_LINE_MARK,
   COMMON_CONFIG,
+  SORT_BY_SCORE,
+  SortOrder,
 
   // VALIDATIONS
   useValidate,

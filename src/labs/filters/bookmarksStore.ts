@@ -10,6 +10,7 @@ import type { IntegerId } from '@/types/common'
 import type { UseApiFetchListReturnType } from '@/labs/api/useApiFetchList'
 import { END_POINT } from '@/labs/filters/userAdminConfig'
 import { usePagination } from '@/labs/filters/pagination'
+import { SortOrder } from '@/composables/system/datatableColumns'
 
 interface CacheItem<T = UserAdminConfig> {
   lastUsed: number
@@ -63,7 +64,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       }
     }
 
-    const pagination = usePagination({ key: 'position', order: 'asc' })
+    const pagination = usePagination({ key: 'position', order: SortOrder.Asc })
     pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS
 
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
@@ -98,7 +99,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>
   ): Promise<number> {
     error.value = false
-    const pagination = usePagination({ key: 'position', order: 'asc' })
+    const pagination = usePagination({ key: 'position', order: SortOrder.Asc })
     pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS + 1
 
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)

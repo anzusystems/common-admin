@@ -25,10 +25,10 @@ import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMet
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
-import type {
-  DatatableOrderingOption,
-  DatatableOrderingOptions,
-  DatatableSortBy,
+import {
+  type DatatableOrderingOption,
+  type DatatableOrderingOptions,
+  type DatatableSortBy, SortOrder,
 } from '@/composables/system/datatableColumns'
 
 const props = withDefaults(
@@ -56,7 +56,7 @@ const props = withDefaults(
     sortVariant: 'most-relevant',
     disableSort: false,
     customSortOptions: undefined,
-    initialPaginationSort: () => ({ key: 'createdAt', order: 'desc' }),
+    initialPaginationSort: () => ({ key: 'createdAt', order: SortOrder.Desc }),
   }
 )
 
@@ -198,7 +198,7 @@ const sortByChange = (option: DatatableOrderingOption) => {
   pagination.sortBy = null
   if (option.sortBy) {
     pagination.sortBy = option.sortBy.key
-    pagination.descending = option.sortBy.order === 'desc'
+    pagination.descending = option.sortBy.order === SortOrder.Desc
   }
   fetchAssetList()
 }
@@ -226,7 +226,7 @@ watch(
 onMounted(async () => {
   if (props.initialPaginationSort) {
     pagination.sortBy = props.initialPaginationSort.key
-    pagination.descending = props.initialPaginationSort.order === 'desc'
+    pagination.descending = props.initialPaginationSort.order === SortOrder.Desc
   }
   loading.value = true
   selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
