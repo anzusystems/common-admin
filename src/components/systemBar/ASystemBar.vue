@@ -5,6 +5,7 @@ import ASystemBarNewVersion from '@/components/systemBar/ASystemBarNewVersion.vu
 import { isUndefined } from '@/utils/common'
 import { AnzuNewVersionFetchError, isAnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
 import { useUserActivity } from '@/composables/useUserActivity'
+import { useSystemBar } from '@/components/systemBar/systemBar.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -23,6 +24,8 @@ const props = withDefaults(
 const showSystemBar = ref<boolean>(false)
 const abortController = ref<AbortController | null>(null)
 const lastInactiveTime = ref<number>(0)
+
+const { newVersion } = useSystemBar()
 
 const checkNewVersion = async (): Promise<void> => {
   if (abortController.value) {
@@ -49,6 +52,7 @@ const checkNewVersion = async (): Promise<void> => {
         throw new AnzuNewVersionFetchError('Unable to load env config. Incorrect response body.')
       }
       showSystemBar.value = !isUndefined(json.appVersion) && json.appVersion !== props.currentVersion
+      newVersion.value = showSystemBar.value
 
       return
     }
