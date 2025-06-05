@@ -166,6 +166,7 @@ const autoFetch = async () => {
 
 const onFocus = () => {
   isFocused.value = true
+  if (props.prefetch === false) return
   clearAutoFetchTimer()
   autoFetch()
 }

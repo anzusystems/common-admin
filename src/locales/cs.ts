@@ -18,6 +18,7 @@ import time from '@/locales/cs/common/time.json'
 import sortable from '@/locales/cs/common/sortable.json'
 import damImage from '@/locales/cs/common/damImage.json'
 import collab from '@/locales/cs/common/collab.json'
+import filter from '@/locales/cs/common/filter.json'
 
 export default {
   common: {
@@ -36,6 +37,7 @@ export default {
     sortable,
     damImage,
     collab,
+    filter,
   },
   $vuetify: vuetify,
   error: {
