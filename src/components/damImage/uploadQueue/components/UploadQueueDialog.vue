@@ -216,6 +216,7 @@ const showDetail = async (id: DocId) => {
   <VDialog
     :model-value="true"
     fullscreen
+    scrollable
     class="overlay--sidebar"
   >
     <VCard>
