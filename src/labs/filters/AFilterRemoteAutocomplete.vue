@@ -36,12 +36,14 @@ const props = withDefaults(
     filterByField: string
     filterSortBy?: DatatableSortBy
     placeholder?: string | undefined
-    prefetch?: 'hover' | 'focus' | 'mounted'
+    prefetch?: 'hover' | 'focus' | 'mounted' | false
+    searchMinChars?: number
   }>(),
   {
     filterSortBy: null,
     placeholder: undefined,
-    prefetch: 'hover',
+    prefetch: false,
+    searchMinChars: 2,
   }
 )
 const emit = defineEmits<{
@@ -165,7 +167,7 @@ const onFocus = () => {
 }
 
 const onMouseEnter = () => {
-  if (props.prefetch === 'focus') return
+  if (props.prefetch === 'focus' || props.prefetch === false) return
   clearAutoFetchTimer()
   autoFetch()
 }
@@ -242,7 +244,7 @@ watch(
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []
       filterConfigCurrent.value.multiple ? (selected.value = []) : (selected.value = null)
-      if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
+      if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus', false])) return
       autoFetchTimer.value = setTimeout(() => {
         autoFetch()
       }, 3000)
@@ -274,7 +276,7 @@ watch(
 watchDebounced(
   search,
   (newValue, oldValue) => {
-    apiRequestCounter.value++
+    if (newValue.length < props.searchMinChars) return
     if (newValue !== oldValue) {
       apiRequestCounter.value++
       apiSearch(newValue, apiRequestCounter.value)

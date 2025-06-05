@@ -36,14 +36,16 @@ const props = withDefaults(
     filterByField: string
     filterSortBy?: DatatableSortBy
     placeholder?: string | undefined
-    prefetch?: 'hover' | 'focus' | 'mounted'
+    prefetch?: 'hover' | 'focus' | 'mounted' | false
+    searchMinChars?: number
     itemTitle?: string
     itemValue?: string
   }>(),
   {
     filterSortBy: null,
     placeholder: undefined,
-    prefetch: 'hover',
+    prefetch: false,
+    searchMinChars: 2,
     itemTitle: 'name',
     itemValue: 'id',
   }
@@ -169,7 +171,7 @@ const onFocus = () => {
 }
 
 const onMouseEnter = () => {
-  if (props.prefetch === 'focus') return
+  if (props.prefetch === 'focus' || props.prefetch === false) return
   clearAutoFetchTimer()
   autoFetch()
 }
@@ -278,7 +280,7 @@ watch(
 watchDebounced(
   search,
   (newValue, oldValue) => {
-    apiRequestCounter.value++
+    if (newValue.length < props.searchMinChars) return
     if (newValue !== oldValue) {
       apiRequestCounter.value++
       apiSearch(newValue, apiRequestCounter.value)
