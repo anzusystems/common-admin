@@ -22,6 +22,8 @@ export interface CustomDataFormElementAttributes {
   readonly: boolean
 }
 
+export type CustomDataValue = boolean | string | number | string[] | number[]
+
 export interface CustomDataAware {
-  customData: { [key: string]: any }
+  customData: { [key: string]: CustomDataValue }
 }

@@ -347,6 +347,7 @@ import {
 } from '@/types/coreDam/UploadQueue'
 import type {
   CustomDataAware,
+  CustomDataValue,
   CustomDataFormElement,
   CustomDataFormElementAttributes,
 } from '@/components/customDataForm/CustomDataForm'
@@ -797,6 +798,7 @@ export {
   UploadQueueItemType,
   type UploadQueueItemTypeType,
   type CustomDataAware,
+  type CustomDataValue,
   type CustomDataFormElement,
   type CustomDataFormElementAttributes,
   CustomDataFormElementType,
