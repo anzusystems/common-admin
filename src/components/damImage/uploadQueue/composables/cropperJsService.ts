@@ -4,7 +4,7 @@ import type { ComponentPublicInstance } from 'vue'
 
 const PRECISION = 3
 
-interface ACropperjsExposed {
+export interface ACropperjsExposed {
   enable: () => void
   disable: () => void
   destroy: () => void

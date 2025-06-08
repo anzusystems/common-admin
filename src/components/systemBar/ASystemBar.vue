@@ -5,7 +5,7 @@ import ASystemBarNewVersion from '@/components/systemBar/ASystemBarNewVersion.vu
 import { isUndefined } from '@/utils/common'
 import { AnzuNewVersionFetchError, isAnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
 import { useUserActivity } from '@/composables/useUserActivity'
-import { useSystemBar } from '@/components/systemBar/systemBar.ts'
+import { useSystemBar } from '@/components/systemBar/systemBar'
 
 const props = withDefaults(
   defineProps<{
