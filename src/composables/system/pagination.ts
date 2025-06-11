@@ -1,7 +1,7 @@
 import { computed, reactive } from 'vue'
 import type { Pagination } from '@/types/Pagination'
 
-export function usePagination(sortBy: string | null = null) {
+export function usePagination(sortBy: string | null = 'id') {
   return reactive<Pagination>({
     sortBy: sortBy,
     descending: true,

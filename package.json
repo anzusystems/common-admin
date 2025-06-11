@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.200",
+  "version": "1.47.0-beta.201",
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
