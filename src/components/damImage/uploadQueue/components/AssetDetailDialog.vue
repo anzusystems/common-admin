@@ -168,7 +168,7 @@ const assetMainFile = computed(() => {
               v-if="activeTab === AssetDetailTabImageWithRoi.ROI"
               class="w-100 h-100 pa-2 d-flex align-center justify-center"
             >
-              <DamAssetImageRoiSelect />
+              <DamAssetImageRoiSelect :ext-system="extSystem" />
             </div>
             <div
               v-else

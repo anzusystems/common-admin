@@ -6,15 +6,32 @@ import { updateRoi } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ACropperjs from '@/components/ACropperjs.vue'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState.ts'
+import type { IntegerId } from '@/types/common.ts'
+import { isUndefined } from '@/utils/common.ts'
+
+const props = withDefaults(
+  defineProps<{
+    extSystem: IntegerId
+  }>(),
+  {
+  }
+)
 
 const { showRecordWas, showErrorsDefault } = useAlerts()
 
-const DAM_IMAGE_ASPECT_RATIO = 16 / 9
 const cropperContainerStyle = { overflow: 'hidden', maxHeight: 'calc(100vh - 160px)' }
 
 const imageRoiStore = useImageRoiStore()
 
 const { damClient } = useCommonAdminCoreDamOptions()
+const { getDamConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configExtSystem = getDamConfigExtSystem(props.extSystem)
+
+if (isUndefined(configExtSystem)) {
+  throw new Error('DamAssetImageRoiSelect: Ext system must be initialised.')
+}
 
 const cropper = ref<any>(null) // fix any
 
@@ -103,7 +120,7 @@ onUnmounted(() => {
     v-if="showCropper"
     :key="imageRoiStore.timestampCropper"
     ref="cropper"
-    :aspect-ratio="DAM_IMAGE_ASPECT_RATIO"
+    :aspect-ratio="configExtSystem.image.roiWidth / configExtSystem.image.roiHeight"
     :background="false"
     :check-cross-origin="false"
     :container-style="cropperContainerStyle"

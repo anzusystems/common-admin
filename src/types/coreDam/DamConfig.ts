@@ -35,7 +35,7 @@ export interface DamExtSystemConfig extends Record<DamAssetTypeType, DamExtSyste
   assetExternalProviders: DamExternalProviderAssetConfig
   audio: DamExtSystemConfigItem
   video: DamExtSystemConfigItem
-  image: DamExtSystemConfigItem
+  image: DamExtSystemConfigItemImage
   document: DamExtSystemConfigItem
 }
 
@@ -61,6 +61,11 @@ export interface DamExtSystemConfigItem {
   keywords: DamExtSystemAssetTypeExifMetadata
   customMetadataPinnedAmount: number
   slots: string[]
+}
+
+export interface DamExtSystemConfigItemImage extends DamExtSystemConfigItem {
+  roiWidth: number,
+  roiHeight: number,
 }
 
 export type DamExternalProviderAssetConfig = Record<
