@@ -6,9 +6,9 @@ import { updateRoi } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ACropperjs from '@/components/ACropperjs.vue'
-import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState.ts'
-import type { IntegerId } from '@/types/common.ts'
-import { isUndefined } from '@/utils/common.ts'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import type { IntegerId } from '@/types/common'
+import { isUndefined } from '@/utils/common'
 
 const props = withDefaults(
   defineProps<{

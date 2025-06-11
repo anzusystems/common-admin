@@ -11,38 +11,54 @@ export const fetchAssetListByFileIdsMultipleLicences = async (
   groupedIds: IdsGroupedByLicences
 ) => {
   const batchedRequests = Array.from(groupedIds.entries()).flatMap(([licenceId, docIds]) => {
-    return chunkArray(docIds, MAX_LIMIT).map(chunk =>
+    return chunkArray(docIds, MAX_LIMIT).map((chunk) =>
       fetchAssetListByFileIdsMultipleLicencesWithLimit(client, new Map([[licenceId, chunk]]))
     )
   })
 
-  // Execute all requests in parallel, failing fast if any request fails
   const assetsResponses = await Promise.all(batchedRequests)
-
   return assetsResponses.flat()
+}
+
+export const fetchAssetAndCheckForSingleUseByFileIds = async (
+  client: () => AxiosInstance,
+  groupedIds: IdsGroupedByLicences
+) => {
+  const batchedRequests = Array.from(groupedIds.entries()).flatMap(([licenceId, docIds]) => {
+    return chunkArray(docIds, MAX_LIMIT).map((chunk) =>
+      fetchAssetListByFileIdsMultipleLicencesWithLimit(client, new Map([[licenceId, chunk]]), 1, true)
+    )
+  })
+
+  const assetsResponses = await Promise.all(batchedRequests)
+  return assetsResponses.some((batch) => batch.length > 0)
 }
 
 const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
   client: () => AxiosInstance,
-  groupedIds: IdsGroupedByLicences
+  groupedIds: IdsGroupedByLicences,
+  forceLimit?: number,
+  filterSingleUse?: boolean
 ) => {
   const searchResults = await Promise.all(
-    Array.from(groupedIds.entries()).map(([licenceId, docIds]) =>
-      apiAnyRequest<object, { data: AssetSearchListItemDto[] }>(
+    Array.from(groupedIds.entries()).map(([licenceId, docIds]) => {
+      const singleUseParam = filterSingleUse ? '&mainFileSingleUse=1' : ''
+      return apiAnyRequest<object, { data: AssetSearchListItemDto[] }>(
         client,
         'GET',
-        `/adm/v1/asset/licence/:licenceId/search?assetAndMainFileIds=${docIds.join(',')}&limit=${docIds.length}`,
+        '/adm/v1/asset/licence/:licenceId/search?assetAndMainFileIds=' +
+        `${docIds.join(',')}&limit=${forceLimit !== undefined ? forceLimit : docIds.length}${singleUseParam}`,
         { licenceId },
         {},
         SYSTEM_CORE_DAM,
         ENTITY
       )
-    )
+    })
   )
 
   const groupedSearchResults: IdsGroupedByLicences = new Map()
-  searchResults.forEach(res => {
-    res.data.forEach(item => {
+  searchResults.forEach((res) => {
+    res.data.forEach((item) => {
       if (!groupedSearchResults.has(item.licence)) {
         groupedSearchResults.set(item.licence, [])
       }

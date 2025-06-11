@@ -535,6 +535,7 @@ import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
 import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
+import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 
 export {
   // COMPONENTS
@@ -974,6 +975,7 @@ export {
   fetchDamUserList,
   updateDamUser,
   fetchDamUser,
+  fetchAssetAndCheckForSingleUseByFileIds,
 
   // TRANSLATIONS
   messagesCs,
