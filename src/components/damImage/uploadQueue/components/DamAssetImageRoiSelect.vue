@@ -14,7 +14,8 @@ const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
   }>(),
-  {}
+  {
+  }
 )
 
 const { showRecordWas, showErrorsDefault } = useAlerts()
@@ -119,7 +120,7 @@ onUnmounted(() => {
     v-if="showCropper"
     :key="imageRoiStore.timestampCropper"
     ref="cropper"
-    :aspect-ratio="16 / 9"
+    :aspect-ratio="configExtSystem.image.roiWidth / configExtSystem.image.roiHeight"
     :background="false"
     :check-cross-origin="false"
     :container-style="cropperContainerStyle"
