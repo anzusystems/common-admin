@@ -12,7 +12,7 @@ import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/component
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
 import AssetDetailDialogSidebar from '@/components/damImage/uploadQueue/components/AssetDetailDialogSidebar.vue'
 import { assetFileIsImageFile } from '@/types/coreDam/AssetFile'
-import AssetImageRoiSelect from '@/components/damImage/uploadQueue/components/AssetImageRoiSelect.vue'
+import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { IntegerId } from '@/types/common'
 
@@ -168,7 +168,7 @@ const assetMainFile = computed(() => {
               v-if="activeTab === AssetDetailTabImageWithRoi.ROI"
               class="w-100 h-100 pa-2 d-flex align-center justify-center"
             >
-              <AssetImageRoiSelect />
+              <DamAssetImageRoiSelect />
             </div>
             <div
               v-else

@@ -89,6 +89,7 @@ import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultip
 import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
+import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
 import type { ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ADatatable from '@/components/datatable/ADatatable.vue'
 import ABooleanSelect from '@/components/ABooleanSelect.vue'
@@ -621,6 +622,7 @@ export {
   AImagePublicInput,
   ACropperjs,
   type ACropperjsExposed,
+  DamAssetImageRoiSelect,
   ACollabLockedByUser,
   ACollabCountdown,
   ACollabManagement,
