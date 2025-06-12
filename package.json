@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.205",
+  "version": "1.47.0-beta.206",
   "license": "Apache-2.0",
   "scripts": {
     "docs:dev": "vitepress dev docs",
