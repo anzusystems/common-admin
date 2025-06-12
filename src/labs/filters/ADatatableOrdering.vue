@@ -14,7 +14,7 @@ import type { Pagination } from '@/labs/filters/pagination'
 
 const props = withDefaults(
   defineProps<{
-    variant?: 'default' | 'most-relevant'
+    variant?: 'default' | 'id' | 'most-relevant'
     customOptions?: undefined | DatatableOrderingOptions
     paginationUpdateCustomCb?: ((option: DatatableOrderingOption, pagination: Ref<Pagination>) => void) | undefined
   }>(),
@@ -46,6 +46,11 @@ const defaultItems: DatatableOrderingOptions = [
   { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: SortOrder.Asc } },
 ]
 
+const defaultItemsId: DatatableOrderingOptions = [
+  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: SortOrder.Desc } },
+  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: SortOrder.Asc } },
+]
+
 const defaultItemsMostRelevant: DatatableOrderingOptions = [
   {
     id: 3,
@@ -65,6 +70,7 @@ const activeTitle = computed(() => {
 const options = computed(() => {
   if (props.customOptions) return props.customOptions
   if (props.variant === 'most-relevant') return defaultItemsMostRelevant
+  if (props.variant === 'id') return defaultItemsId
   return defaultItems
 })
 

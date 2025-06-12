@@ -227,7 +227,7 @@ __metadata:
     eslint-plugin-vue: "npm:10.2.0"
     npm-run-all: "npm:^4.1.5"
     pinia: "npm:3.0.3"
-    postcss: "npm:^8.5.4"
+    postcss: "npm:^8.5.5"
     postcss-html: "npm:^1.8.0"
     postcss-prefix-selector: "npm:^2.1.1"
     prettier: "npm:^3.5.3"
@@ -6413,7 +6413,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.4.43, postcss@npm:^8.5.0, postcss@npm:^8.5.3, postcss@npm:^8.5.4":
+"postcss@npm:^8.4.43, postcss@npm:^8.5.0, postcss@npm:^8.5.3, postcss@npm:^8.5.5":
   version: 8.5.5
   resolution: "postcss@npm:8.5.5"
   dependencies:
