@@ -249,6 +249,7 @@ watch(
       } else {
         selected.value = null
       }
+      updateFilterSelected(selected.value)
       if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus', false])) return
       autoFetchTimer.value = setTimeout(() => {
         autoFetch()
