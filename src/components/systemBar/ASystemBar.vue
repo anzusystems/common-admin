@@ -70,7 +70,6 @@ const checkNewVersion = async (): Promise<void> => {
     if (error instanceof Error) {
       throw new AnzuNewVersionFetchError('Unable to load env config. ' + error.message, error)
     }
-    console.error('Unable to load env config. Unknown error.', error)
     throw new AnzuNewVersionFetchError('Unable to load env config. Unknown error.', error as any)
   }
 }
@@ -86,6 +85,26 @@ const { pause, resume } = useIntervalFn(() => {
 
 const { isWindowActive } = useUserActivity()
 
+const checkNewVersionWithRetry = (attempt = 1, maxAttempts = 3) => {
+  const delay = Math.min(1000 * attempt, 3000) // 1000ms, 2000ms, 3000ms
+
+  setTimeout(async () => {
+    try {
+      await checkNewVersion()
+    } catch (error) {
+      if (
+        error instanceof AnzuNewVersionFetchError &&
+        (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) &&
+        attempt < maxAttempts
+      ) {
+        checkNewVersionWithRetry(attempt + 1, maxAttempts)
+      } else {
+        console.error('Version check failed:', error)
+      }
+    }
+  }, delay)
+}
+
 watch(
   isWindowActive,
   (newValue: boolean) => {
@@ -95,7 +114,7 @@ watch(
       const inactiveDuration: number = now - lastInactiveTime.value
       resume()
       if (inactiveDuration > props.minInactiveTime) {
-        checkNewVersion()
+        checkNewVersionWithRetry()
       }
     } else {
       lastInactiveTime.value = now
