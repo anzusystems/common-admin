@@ -82,7 +82,11 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
-  if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
+  if (!isString(modelValue.value)) return
+  if ((isString(modelValue.value) && modelValue.value.length === 0)) {
+    filterSelected.value.delete(props.name)
+    return
+  }
   filterSelected.value.set(props.name, [{ title: modelValue.value, value: modelValue.value }])
 }
 

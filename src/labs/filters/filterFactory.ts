@@ -145,17 +145,17 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       if (isUndefined(value) || isNull(value)) continue
       if (isArray(value) && isEmptyArray(value)) continue
       if (isObject(value) && isEmptyObject(value)) continue
-
+      if (isString(value) && value.length === 0) continue
       if (isArray(value)) {
         params.set(key, value.join(','))
       } else {
         params.set(key, String(value))
       }
     }
-    if (params.size === 0) return ''
     if (includeSort && pagination.value.sortBy) {
       params.set(SORT_URL_PARAM, `${pagination.value.sortBy.key},${pagination.value.sortBy.order}`)
     }
+    if (params.size === 0) return ''
     return params.toString() + END_FILTER_MARKER
   }
 
