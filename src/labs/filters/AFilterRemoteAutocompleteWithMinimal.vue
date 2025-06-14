@@ -248,7 +248,11 @@ watch(
     if (newValue === oldValue || isBoolean(newValue)) return
     if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
       selectedItemsCache.value = []
-      filterConfigCurrent.value.multiple ? (selected.value = []) : (selected.value = null)
+      if (filterConfigCurrent.value.multiple) {
+        selected.value = []
+      } else {
+        selected.value = null
+      }
       if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
       autoFetchTimer.value = setTimeout(() => {
         autoFetch()
