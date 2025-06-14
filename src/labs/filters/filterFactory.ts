@@ -109,9 +109,11 @@ export function useFilterClearHelpers<
 export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
   filterData: FilterData<F>,
   filterConfig: FilterConfig<F>,
-  storeId: string | undefined = undefined
+  systemResource: string | undefined = undefined
 ) {
   const END_FILTER_MARKER = '~'
+
+  const storeKey = systemResource ? 'datatableFilter_' + systemResource : undefined
 
   const getFilterDataForStoring = (): Record<string, AllowedFilterValues> => {
     const data: Record<string, AllowedFilterValues> = {}
@@ -216,21 +218,21 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   }
 
   const storeFilterLocalStorage = (serialized: string) => {
-    if (!storeId || !localStorage) return
-    localStorage.setItem(storeId, serialized)
+    if (!storeKey || !localStorage) return
+    localStorage.setItem(storeKey, serialized)
   }
 
   const loadFilterLocalStorage = () => {
-    if (!storeId || !localStorage) return null
-    const stored = localStorage.getItem(storeId)
+    if (!storeKey || !localStorage) return null
+    const stored = localStorage.getItem(storeKey)
     if (!stored || !isString(stored)) return null
     return deserializeFilters(stored)
   }
 
   const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     pagination.value = { ...pagination.value, page: 1 }
-    if (storeId && localStorage) {
-      localStorage.removeItem(storeId)
+    if (storeKey && localStorage) {
+      localStorage.removeItem(storeKey)
     }
     window.location.hash = ''
     if (callback) callback()
@@ -246,8 +248,10 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   }
 
   const loadStoredFilters = () => {
+    let source: 'hash' | 'localStorage' = 'hash'
     let storedFromHash = parseLocationHash()
     if (isNull(storedFromHash)) {
+      source = 'localStorage'
       storedFromHash = loadFilterLocalStorage()
     }
     if (isNull(storedFromHash) || isEmptyObject(storedFromHash.filters)) return false
@@ -257,6 +261,12 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       const value = storedFromHash.filters[key]
       if (isUndefined(value)) continue
       filterData[key] = value
+    }
+    if (source === 'localStorage' && storeKey && localStorage) {
+      const stored = localStorage.getItem(storeKey)
+      if (stored) {
+        updateLocationHash(stored)
+      }
     }
     return true
   }

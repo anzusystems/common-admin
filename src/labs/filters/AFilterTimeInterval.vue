@@ -190,7 +190,7 @@ watch(modelValue, (newValue) => {
   if (found) {
     modelInternal.value = found.value
   }
-})
+}, { immediate: true })
 
 watch(
   [() => filterData[props.nameFrom], () => filterData[props.nameUntil]],
@@ -199,8 +199,6 @@ watch(
     if (
       isBoolean(nameFromNewValue) ||
       isBoolean(nameUntilNewValue) ||
-      isNull(nameFromNewValue) ||
-      isNull(nameUntilNewValue) ||
       isUndefined(nameFromNewValue) ||
       isUndefined(nameUntilNewValue) ||
       (isArray(nameFromNewValue) && nameFromNewValue.length === 0) ||
