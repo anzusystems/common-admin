@@ -1,58 +1,76 @@
+import type * as SentryType from '@sentry/vue'
+
 declare global {
   interface Window {
     Sentry?: {
-      captureException(error: Error, context?: Record<string, any>): void;
-      captureMessage(message: string, level?: string, context?: Record<string, any>): void;
-      setTag(key: string, value: string): void;
-      setUser(user: { id: string, email?: string, username?: string }): void;
-      [key: string]: any;
-    };
+      captureException(error: Error, context?: Record<string, any>): void
+      captureMessage(message: string, context?: Record<string, any>): void
+      setTag(key: string, value: string): void
+      setUser(user: { id: string, email?: string, username?: string }): void
+      [key: string]: any
+    }
   }
 }
 
 interface SentryContext {
-  extra?: Record<string, any>;
-  tags?: Record<string, string>;
-  level?: 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug';
-  [key: string]: any;
+  extra?: Record<string, any>
+  tags?: Record<string, string>
+  level?: 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug'
+  [key: string]: any
+}
+
+let sentryPromise: Promise<typeof SentryType | null> | null = null
+
+const getSentry = (): Promise<typeof SentryType | null> => {
+  if (!sentryPromise) {
+    sentryPromise = import('@sentry/vue')
+      .then((module) => module)
+      .catch(() => null)
+  }
+  return sentryPromise
 }
 
 export function useSentry() {
-  /**
-   * Logs an error to Sentry if available
-   *
-   * @param error The error to log
-   * @param context Additional context for the error
-   */
   const logError = (error: Error, context?: SentryContext): void => {
     console.error('[Common Admin]', error)
 
-    try {
-      window.Sentry?.captureException(error, {
-        ...context,
-        tags: {
-          ...context?.tags,
-          component: 'common-admin',
-        }
-      })
-    } catch (e) {
-      console.debug('Sentry logging failed', e)
+    if (window.Sentry) {
+      try {
+        window.Sentry.captureException(error, {
+          ...context,
+          tags: {
+            ...context?.tags,
+            component: 'common-admin',
+          }
+        })
+        return
+      } catch (e) {
+        console.debug('Window Sentry logging failed', e)
+      }
     }
+
+    getSentry().then((sentry) => {
+      if (sentry) {
+        try {
+          sentry.captureException(error, {
+            ...context,
+            tags: {
+              ...context?.tags,
+              component: 'common-admin',
+            }
+          })
+        } catch (e) {
+          console.debug('Imported Sentry logging failed', e)
+        }
+      }
+    })
   }
 
-  /**
-   * Logs a message to Sentry if available
-   *
-   * @param message The message to log
-   * @param level The severity level
-   * @param context Additional context for the message
-   */
   const logMessage = (
     message: string,
     level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info',
     context?: SentryContext
   ): void => {
-    // Always log to console based on level
     switch (level) {
       case 'fatal':
       case 'error':
@@ -71,44 +89,80 @@ export function useSentry() {
         console.log('[Common Admin]', message)
     }
 
-    try {
-      window.Sentry?.captureMessage(message, level, {
-        ...context,
-        tags: {
-          ...context?.tags,
-          component: 'common-admin',
+    if (window.Sentry) {
+      try {
+        window.Sentry.captureMessage(message, {
+          level,
+          ...context,
+          tags: {
+            ...context?.tags,
+            component: 'common-admin',
+          }
+        })
+        return
+      } catch (e) {
+        console.debug('Window Sentry logging failed', e)
+      }
+    }
+
+    getSentry().then((sentry) => {
+      if (sentry) {
+        try {
+          sentry.captureMessage(message, {
+            level,
+            ...context,
+            tags: {
+              ...context?.tags,
+              component: 'common-admin',
+            }
+          })
+        } catch (e) {
+          console.debug('Imported Sentry logging failed', e)
         }
-      })
-    } catch (e) {
-      console.debug('Sentry logging failed', e)
-    }
+      }
+    })
   }
 
-  /**
-   * Sets a custom tag for Sentry events if Sentry is available
-   *
-   * @param key The tag key
-   * @param value The tag value
-   */
   const setTag = (key: string, value: string): void => {
-    try {
-      window.Sentry?.setTag(key, value)
-    } catch (e) {
-      // Fail silently
+    if (window.Sentry) {
+      try {
+        window.Sentry.setTag(key, value)
+        return
+      } catch (e) {
+        // Fail silently
+      }
     }
+
+    getSentry().then((sentry) => {
+      if (sentry) {
+        try {
+          sentry.setTag(key, value)
+        } catch (e) {
+          // Fail silently
+        }
+      }
+    })
   }
 
-  /**
-   * Sets user information for Sentry events if Sentry is available
-   *
-   * @param user User information
-   */
   const setUser = (user: { id: string, email?: string, username?: string }): void => {
-    try {
-      window.Sentry?.setUser(user)
-    } catch (e) {
-      // Fail silently
+    if (window.Sentry) {
+      try {
+        window.Sentry.setUser(user)
+        return
+      } catch (e) {
+        // Fail silently
+      }
     }
+
+    getSentry().then((sentry) => {
+      if (sentry) {
+        try {
+          sentry.setUser(user)
+        } catch (e) {
+          // Fail silently
+        }
+      }
+    })
   }
 
   return {

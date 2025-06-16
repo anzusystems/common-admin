@@ -205,6 +205,7 @@ __metadata:
     "@intlify/unplugin-vue-i18n": "npm:^6.0.8"
     "@kyvg/vue3-notification": "npm:^3.4.1"
     "@mdi/font": "npm:^7.4.47"
+    "@sentry/vue": "npm:^9.29.0"
     "@shikijs/vitepress-twoslash": "npm:^3.6.0"
     "@stylistic/eslint-plugin": "npm:^4.4.1"
     "@tsconfig/node22": "npm:^22.0.2"
@@ -1552,6 +1553,80 @@ __metadata:
     argparse: "npm:~1.0.9"
     string-argv: "npm:~0.3.1"
   checksum: 10/ad33b9838256f75009a2e92594d7f0e537fa5881111cb5654635c500a608ea927503032509f7ea07033b8015f9da69cdae7770ba9f681278a74c39795db3069e
+  languageName: node
+  linkType: hard
+
+"@sentry-internal/browser-utils@npm:9.29.0":
+  version: 9.29.0
+  resolution: "@sentry-internal/browser-utils@npm:9.29.0"
+  dependencies:
+    "@sentry/core": "npm:9.29.0"
+  checksum: 10/c57290b921138a2fda5d4d26b2cbe9fce973a995bc55d8af242cc9a472dbc60a946f4ed13f55ae072bcd6bf4ccbbf12e0954f427ed1b1f2fd2746074530cca18
+  languageName: node
+  linkType: hard
+
+"@sentry-internal/feedback@npm:9.29.0":
+  version: 9.29.0
+  resolution: "@sentry-internal/feedback@npm:9.29.0"
+  dependencies:
+    "@sentry/core": "npm:9.29.0"
+  checksum: 10/ef6c1cff4a8e3434ff2e8232365d60743a4994e7f8d35b2038e75d6e586a86bbee44c73d21c9ac3e0dd1c04d6581ce98d3cb631e3c9f34b83cab8fc729e7871c
+  languageName: node
+  linkType: hard
+
+"@sentry-internal/replay-canvas@npm:9.29.0":
+  version: 9.29.0
+  resolution: "@sentry-internal/replay-canvas@npm:9.29.0"
+  dependencies:
+    "@sentry-internal/replay": "npm:9.29.0"
+    "@sentry/core": "npm:9.29.0"
+  checksum: 10/abea7a7b3a29df284a6dddc09f50a44100e5aa88514a21ef6710b05282fe4fbd48a1a5293c2c555f7983f2d4b1688b42a4b0889e064fafe2eff1d205e14a7f6c
+  languageName: node
+  linkType: hard
+
+"@sentry-internal/replay@npm:9.29.0":
+  version: 9.29.0
+  resolution: "@sentry-internal/replay@npm:9.29.0"
+  dependencies:
+    "@sentry-internal/browser-utils": "npm:9.29.0"
+    "@sentry/core": "npm:9.29.0"
+  checksum: 10/6a613b3da258238061f938a8cbb1496499493f797bdde6a42e882adee3852fe214ffdd743cc1d166f022aa72f746883606b0fb92cd5197fa4b06bddf6ce04043
+  languageName: node
+  linkType: hard
+
+"@sentry/browser@npm:9.29.0":
+  version: 9.29.0
+  resolution: "@sentry/browser@npm:9.29.0"
+  dependencies:
+    "@sentry-internal/browser-utils": "npm:9.29.0"
+    "@sentry-internal/feedback": "npm:9.29.0"
+    "@sentry-internal/replay": "npm:9.29.0"
+    "@sentry-internal/replay-canvas": "npm:9.29.0"
+    "@sentry/core": "npm:9.29.0"
+  checksum: 10/a003f0d722a97b600781adab27bd145b3f2ca7172a48e325a180062a0ea75022c3add5226768e408986de82afbf44fea653c8a063784ab5dbca98d73cea83301
+  languageName: node
+  linkType: hard
+
+"@sentry/core@npm:9.29.0":
+  version: 9.29.0
+  resolution: "@sentry/core@npm:9.29.0"
+  checksum: 10/87b52eedf8ba13e1d0f3d93f990e01c85432d873f854075b54198a14ff998ef63b46ff8e073deb98905b342daa6c252e13f9c68fa3e887ff2ee71c3fb404a60d
+  languageName: node
+  linkType: hard
+
+"@sentry/vue@npm:^9.29.0":
+  version: 9.29.0
+  resolution: "@sentry/vue@npm:9.29.0"
+  dependencies:
+    "@sentry/browser": "npm:9.29.0"
+    "@sentry/core": "npm:9.29.0"
+  peerDependencies:
+    pinia: 2.x || 3.x
+    vue: 2.x || 3.x
+  peerDependenciesMeta:
+    pinia:
+      optional: true
+  checksum: 10/d728b605b14a3e23fa1cb6d7ce7f1ade803040291efd88f224a9ee23707192605e5924d052605e71a8b0c0d80a3d02dedb3a89be759ed41e9135be4bb356e147
   languageName: node
   linkType: hard
 
