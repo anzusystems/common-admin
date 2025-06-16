@@ -1,12 +1,12 @@
 {
-  "addNewAtEnd": "Add new item at last position",
-  "edit": "Edit",
-  "remove": "Remove",
-  "addAfter": "Add new item after",
-  "addChild": "Add child",
-  "more": "More options",
+  "addNewAtEnd": "Pridať novú položku na poslednú pozíciu",
+  "edit": "Upraviť",
+  "remove": "Odstrániť",
+  "addAfter": "Pridať novú položku za",
+  "addChild": "Pridať podradenú položku",
+  "more": "Ďalšie možnosti",
   "error": {
-    "maxDeepExceed": "Unable to move. New deep will exceed max deep.",
-    "unableToAdd": "Unable to add item."
+    "maxDeepExceed": "Nie je možné presunúť. Nová hĺbka prekročí maximálnu hĺbku.",
+    "unableToAdd": "Nie je možné pridať položku."
   }
 }
