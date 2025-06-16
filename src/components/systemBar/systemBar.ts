@@ -1,8 +1,8 @@
 import { ref } from 'vue'
 
-export function useSystemBar() {
-  const newVersion = ref(false)
+const newVersion = ref(false)
 
+export function useSystemBar() {
   return {
     newVersion,
   }
