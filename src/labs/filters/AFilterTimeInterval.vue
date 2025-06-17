@@ -5,7 +5,6 @@ import {
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
-  FilterTouchedKey,
 } from '@/labs/filters/filterInjectionKeys'
 import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
@@ -42,14 +41,12 @@ const emit = defineEmits<{
 }>()
 
 const submitResetCounter = inject(FilterSubmitResetCounterKey)
-const touched = inject(FilterTouchedKey)
 const filterSelected = inject(FilterSelectedKey)
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 
 if (
   isUndefined(submitResetCounter) ||
-  isUndefined(touched) ||
   isUndefined(filterSelected) ||
   isUndefined(filterConfig) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -72,7 +69,7 @@ const modelValue = computed({
   set(newValue) {
     filterData[props.nameFrom] = newValue
     updateSelected()
-    touched.value = true
+    filterConfig.touched = true
     emit('change')
   },
 })
@@ -172,25 +169,29 @@ watch(modelInternal, (newValue) => {
   modelValue.value = newValue
 })
 
-watch(modelValue, (newValue) => {
-  if (isArray(newValue) || isBoolean(newValue)) return
-  displayFromTo.value = false
-  if (isUndefined(newValue) || isNull(newValue)) {
-    modelInternal.value = null
-    return
-  }
-  const found = getTimeIntervalOption(modelValue.value as TimeIntervalToolsValue)
-  const filterDataUntil = filterData[props.nameUntil]
-  if (!found && isDatetimeUTC(modelValue.value) && isDatetimeUTC(filterDataUntil)) {
-    modelInternal.value = TimeIntervalSpecialOptions.Custom
-    dialogData.value.from = modelValue.value
-    dialogData.value.until = filterDataUntil
-    displayFromTo.value = true
-  }
-  if (found) {
-    modelInternal.value = found.value
-  }
-}, { immediate: true })
+watch(
+  modelValue,
+  (newValue) => {
+    if (isArray(newValue) || isBoolean(newValue)) return
+    displayFromTo.value = false
+    if (isUndefined(newValue) || isNull(newValue)) {
+      modelInternal.value = null
+      return
+    }
+    const found = getTimeIntervalOption(modelValue.value as TimeIntervalToolsValue)
+    const filterDataUntil = filterData[props.nameUntil]
+    if (!found && isDatetimeUTC(modelValue.value) && isDatetimeUTC(filterDataUntil)) {
+      modelInternal.value = TimeIntervalSpecialOptions.Custom
+      dialogData.value.from = modelValue.value
+      dialogData.value.until = filterDataUntil
+      displayFromTo.value = true
+    }
+    if (found) {
+      modelInternal.value = found.value
+    }
+  },
+  { immediate: true }
+)
 
 watch(
   [() => filterData[props.nameFrom], () => filterData[props.nameUntil]],

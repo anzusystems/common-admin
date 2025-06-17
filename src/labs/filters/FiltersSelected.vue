@@ -4,7 +4,6 @@ import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
-  FilterTouchedKey,
 } from '@/labs/filters/filterInjectionKeys'
 import { isArray, isBoolean, isNumber, isString, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
@@ -13,9 +12,8 @@ import type { AllowedFilterValues } from '@/labs/filters/filterFactory'
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 const filterSelected = inject(FilterSelectedKey)
-const touched = inject(FilterTouchedKey)
 
-if (isUndefined(filterConfig) || isUndefined(filterData) || isUndefined(filterSelected) || isUndefined(touched)) {
+if (isUndefined(filterConfig) || isUndefined(filterData) || isUndefined(filterSelected)) {
   throw new Error('Incorrect provide/inject config.')
 }
 
@@ -58,7 +56,7 @@ const clickClose = (name: string, optionValue: number | string) => {
   } else if (isBoolean(filterData[name])) {
     filterData[name] = filterConfig.fields[name].default
   }
-  touched.value = true
+  filterConfig.touched = true
 }
 </script>
 

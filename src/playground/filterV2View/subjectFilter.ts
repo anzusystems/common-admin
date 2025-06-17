@@ -8,7 +8,7 @@ import {
 } from '@/labs/filters/filterFactory'
 
 export const filterFields = [
-  { name: 'text' as const, type: 'string', render: { skip: true } },
+  { name: 'text' as const, type: 'string', variant: 'search', render: { skip: true } },
   { name: 'site' as const, apiName: 'siteIds' },
   { name: 'rubric' as const, apiName: 'rubricIds' },
   { name: 'articleAuthors' as const, apiName: 'authorIds' },

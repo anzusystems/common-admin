@@ -12,7 +12,6 @@ import {
   FilterInnerDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
-  FilterTouchedKey,
 } from '@/labs/filters/filterInjectionKeys'
 import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { isOneOf } from '@/utils/enum'
@@ -51,7 +50,6 @@ const emit = defineEmits<{
 }>()
 
 const submitResetCounter = inject(FilterSubmitResetCounterKey)
-const touched = inject(FilterTouchedKey)
 const filterSelected = inject(FilterSelectedKey)
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
@@ -60,7 +58,6 @@ const filterInnerData = inject(FilterInnerDataKey)
 
 if (
   isUndefined(submitResetCounter) ||
-  isUndefined(touched) ||
   isUndefined(filterSelected) ||
   isUndefined(filterConfig) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -187,7 +184,7 @@ const onSearchUpdate = (query: string) => {
 }
 
 const onSelectedUpdate = (newValue: any) => {
-  touched.value = true
+  filterConfig.touched = true
   let final: null | string | number | string[] | number[] = null
   if (isArray(newValue)) {
     final = newValue.map((item: any) => item.value) as string[] | number[]
@@ -195,7 +192,6 @@ const onSelectedUpdate = (newValue: any) => {
     final = newValue.value
   }
   filterData[props.name] = final
-  touched.value = true
   emit('change')
 }
 

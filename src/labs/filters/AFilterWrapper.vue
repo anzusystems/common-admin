@@ -2,13 +2,12 @@
 import AFilterAdvancedButton from '@/labs/filters/AFilterAdvancedButton.vue'
 import AFilterSubmitButton from '@/components/buttons/filter/AFilterSubmitButton.vue'
 import AFilterResetButton from '@/components/buttons/filter/AFilterResetButton.vue'
-import { inject, nextTick, provide, ref } from 'vue'
+import { computed, inject, nextTick, provide, ref } from 'vue'
 import {
   FilterConfigKey,
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
-  FilterTouchedKey,
 } from '@/labs/filters/filterInjectionKeys'
 import FiltersSelected from '@/labs/filters/FiltersSelected.vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
@@ -54,9 +53,7 @@ const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHidde
   required: false,
 })
 const showDetail = defineModel<boolean>('showDetail', { default: false, required: false })
-const touched = defineModel<boolean>('touched', { default: false, required: false })
 
-provide(FilterTouchedKey, touched)
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 if (isUndefined(filterConfig) || isUndefined(filterData)) {
@@ -68,7 +65,6 @@ const filterSelected = ref<Map<string, ValueObjectOption<string | number>[]>>(ne
 provide(FilterSelectedKey, filterSelected)
 
 const submitFilter = () => {
-  touched.value = false
   submitResetCounter.value++
   nextTick(() => {
     emit('submit')
@@ -85,7 +81,6 @@ const submitFilterBookmark = () => {
 }
 
 const resetFilter = () => {
-  touched.value = false
   clearAll(filterData, filterConfig)
   filterSelected.value.clear()
   nextTick(() => {
@@ -97,6 +92,10 @@ const resetFilter = () => {
 const toggleFilterDetail = () => {
   showDetail.value = !showDetail.value
 }
+
+const touched = computed(() => {
+  return filterConfig.touched
+})
 
 defineExpose({
   submit: submitFilter,

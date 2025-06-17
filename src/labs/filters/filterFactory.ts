@@ -72,6 +72,7 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
 
   const filterConfig = reactive({
     general: defaultGlobalOptions,
+    touched: false,
     fields: config,
   }) as FilterConfig<F>
 
@@ -235,6 +236,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       localStorage.removeItem(storeKey)
     }
     window.location.hash = ''
+    filterConfig.touched = false
     if (callback) callback()
   }
 
@@ -244,6 +246,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     updateLocationHash(serialized)
     storeFilterLocalStorage(serialized)
     pagination.value = { ...pagination.value, page: 1 }
+    filterConfig.touched = false
     if (callback) callback()
   }
 
@@ -347,6 +350,7 @@ export interface FilterField {
 
 export type FilterConfig<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]> = {
   general: GeneralFilterOptions
+  touched: boolean
   fields: {
     [P in F[number]['name']]: FilterField
   }

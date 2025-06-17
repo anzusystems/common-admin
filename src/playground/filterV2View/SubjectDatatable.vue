@@ -8,7 +8,7 @@ import { useSubjectListActions } from '@/playground/filterV2View/subjectTools'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
-import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { usePagination } from '@/labs/filters/pagination'
 import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
@@ -21,6 +21,9 @@ const pagination = usePagination()
 provide(DatatablePaginationKey, pagination)
 
 const { filterData, filterConfig } = useSubjectListFilter()
+provide(FilterConfigKey, filterConfig)
+provide(FilterDataKey, filterData)
+
 const { fetchList, listItems, datatableHiddenColumns } = useSubjectListActions()
 
 const onRowClick = (event: unknown, { item }: { item: DatatableItem }) => {
@@ -56,7 +59,8 @@ const getList = () => {
 }
 
 const sortByChange = () => {
-  getList()
+  filterConfig.touched = false
+  submitFilter(pagination, getList)
 }
 
 const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filterData, filterConfig, 'subject')

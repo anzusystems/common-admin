@@ -7,7 +7,6 @@ import {
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
-  FilterTouchedKey,
 } from '@/labs/filters/filterInjectionKeys'
 import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
@@ -24,14 +23,12 @@ const emit = defineEmits<{
 }>()
 
 const submitResetCounter = inject(FilterSubmitResetCounterKey)
-const touched = inject(FilterTouchedKey)
 const filterSelected = inject(FilterSelectedKey)
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 
 if (
   isUndefined(submitResetCounter) ||
-  isUndefined(touched) ||
   isUndefined(filterSelected) ||
   isUndefined(filterConfig) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -50,7 +47,7 @@ const modelValue = computed({
   set(newValue) {
     filterData[props.name] = newValue
     updateSelected()
-    touched.value = true
+    filterConfig.touched = true
     emit('change')
   },
 })

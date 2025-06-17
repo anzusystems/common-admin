@@ -1,10 +1,5 @@
 <script lang="ts" setup>
-import { computed, provide } from 'vue'
-import {
-  type SubjectFilterConfig,
-  type SubjectFilterData,
-  useSubjectListFilter,
-} from '@/playground/filterV2View/subjectFilter'
+import { computed, inject } from 'vue'
 import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
 import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
@@ -23,15 +18,18 @@ import {
 } from '@/playground/filterV2View/subjectTools'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
 import { cmsClient } from '@/playground/mock/cmsClient'
+import { isUndefined } from '@/utils/common.ts'
 
 const emit = defineEmits<{
-  (e: 'submit', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
-  (e: 'reset', value: { filterData: SubjectFilterData; filterConfig: SubjectFilterConfig }): void
+  (e: 'submit'): void
+  (e: 'reset'): void
 }>()
 
-const { filterConfig, filterData } = useSubjectListFilter()
-provide(FilterConfigKey, filterConfig)
-provide(FilterDataKey, filterData)
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+if (isUndefined(filterConfig) || isUndefined(filterData)) {
+  throw new Error('Incorrect provide/inject config.')
+}
 
 const siteId = computed(() => {
   return filterData.site as IntegerIdNullable | IntegerId[]
@@ -49,9 +47,9 @@ const { datatableHiddenColumns } = useSubjectListActions()
     system="cms"
     :user-id="10001039"
     bookmark-system-resource="subject"
-    @submit="emit('submit', { filterData, filterConfig })"
-    @reset="emit('reset', { filterData, filterConfig })"
-    @bookmark-load-after="emit('submit', { filterData, filterConfig })"
+    @submit="emit('submit')"
+    @reset="emit('reset')"
+    @bookmark-load-after="emit('submit')"
   >
     <template #search>
       <AFilterString name="text" />
