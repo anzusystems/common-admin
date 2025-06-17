@@ -37,6 +37,7 @@ const props = withDefaults(
     chips?: boolean
     chipSize?: string
     disableDeleteDialog?: boolean
+    permanentButtons?: boolean
   }>(),
   {
     dirty: () => new Set<DocId | IntegerId>(),
@@ -56,6 +57,7 @@ const props = withDefaults(
     chips: false,
     chipSize: 'small',
     disableDeleteDialog: false,
+    permanentButtons: false,
   }
 )
 const emit = defineEmits<SortableEmit>()
@@ -251,7 +253,10 @@ defineExpose({
                   :item="item"
                 />
               </div>
-              <div class="a-sortable-widget__buttons">
+              <div
+                class="a-sortable-widget__buttons"
+                :class="{'a-sortable-widget__buttons--permanent': permanentButtons}"
+              >
                 <slot
                   name="item-buttons"
                   :item="item"
@@ -437,6 +442,10 @@ $ghost-bg-color: color.scale(#3f6ad8, $lightness: 95%);
   &__buttons {
     opacity: 0;
     display: flex;
+
+    &--permanent {
+      opacity: 1;
+    }
   }
 }
 </style>

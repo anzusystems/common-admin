@@ -26,7 +26,7 @@ export function useUserAdminConfigApi(
   }
 
   const updateUserAdminConfig = (id: IntegerId, data: UserAdminConfig) => {
-    const { executeRequest } = useApiRequest<UserAdminConfig>(client, 'POST', system, entity)
+    const { executeRequest } = useApiRequest<UserAdminConfig>(client, 'PUT', system, entity)
     return executeRequest(endPoint + '/:id', { id }, data)
   }
 

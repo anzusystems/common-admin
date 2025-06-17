@@ -131,6 +131,7 @@ const addBookmark = async () => {
     )
     if (count >= MAX_BOOKMARK_ITEMS) {
       errorCount.value = true
+      saveButtonLoading.value = false
       return
     }
     config.position = count + 1
@@ -191,9 +192,9 @@ const onItemConfirm = async (data: SortableItem<UserAdminConfig>) => {
   const modified = cloneDeep(data.raw)
   modified.customName = itemEdit.value.customName
   try {
+    onItemCancel()
     await updateUserAdminConfig(modified.id, modified)
     await reloadItems()
-    onItemCancel()
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -300,6 +301,7 @@ watch(activeTab, () => {
             v-model="itemsManage"
             show-edit-button
             show-delete-button
+            permanent-buttons
             @on-delete="onDelete"
             @on-edit="onEdit"
           >
@@ -362,12 +364,12 @@ watch(activeTab, () => {
           data-cy="button-cancel"
           @click.stop="emit('onClose')"
         >
-          {{ t('common.button.cancel') }}
+          {{ activeTab === 'add' ? t('common.button.cancel') : t('common.button.close') }}
         </ABtnTertiary>
         <ABtnPrimary
+          v-if="activeTab === 'add'"
           data-cy="button-confirm"
           :loading="saveButtonLoading"
-          :disabled="!isNull(itemEdit)"
           @click.stop="onConfirm"
         >
           {{ t('common.button.confirm') }}
