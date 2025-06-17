@@ -136,6 +136,7 @@ export function useApiQueryBuilder() {
       if (isUndefined(filterFieldConfig) || filterFieldConfig.exclude) {
         continue
       }
+      const name = filterFieldConfig.apiName || filterName
       if (filterFieldConfig.type === 'timeInterval' && !isUndefined(filterFieldConfig.related)) {
         const data = resolveTimeIntervalFilter(
           filterName,
@@ -148,12 +149,15 @@ export function useApiQueryBuilder() {
           continue
         }
         if (isSearchApi) {
-          queryAdd(filterName, data.from)
+          queryAdd(name, data.from)
           queryAdd(filterFieldConfig.related, data.until)
           continue
         }
-        if (data.from) queryAddFilter('gte', filterName, data.from)
-        if (data.until) queryAddFilter('lte', filterFieldConfig.related, data.until)
+        if (data.from) queryAddFilter('gte', name, data.from)
+        if (data.until) {
+          const untilName =  filterConfig.fields[filterFieldConfig.related].apiName || filterFieldConfig.related
+          queryAddFilter('lte', untilName, data.until)
+        }
         continue
       }
       const value = getValue(filterFieldValue, filterFieldConfig)
@@ -161,7 +165,7 @@ export function useApiQueryBuilder() {
         continue
       }
       if (isSearchApi) {
-        queryAdd(filterName, value)
+        queryAdd(name, value)
         continue
       }
       queryAddFilter(filterFieldConfig.variant, filterName, value)

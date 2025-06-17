@@ -91,6 +91,7 @@ watch(
   modelValue,
   (newValue, oldValue) => {
     if (newValue === oldValue) return
+    console.log(newValue, oldValue)
     const found = options.value.find((option) => {
       return option.id === newValue
     })
@@ -102,8 +103,7 @@ watch(
       return
     }
     props.paginationUpdateCustomCb(found, pagination)
-  },
-  { immediate: true }
+  }
 )
 
 watch(

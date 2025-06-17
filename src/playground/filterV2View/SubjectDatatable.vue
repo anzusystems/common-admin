@@ -25,7 +25,6 @@ const { fetchList, listItems, datatableHiddenColumns } = useSubjectListActions()
 
 const onRowClick = (event: unknown, { item }: { item: DatatableItem }) => {
   if (!item.id) return
-  console.log(item)
 }
 
 const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConfig(

@@ -48,7 +48,7 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
             (options?.system && options?.subject && filter.name
               ? `${options.system}.${options.subject}.filter.${filter.name}`
               : undefined),
-          apiName: resolveValue(filter.apiName, ''),
+          apiName: resolveValue(filter.apiName, filter.name),
           clearable: resolveValue(filter.clearable, true),
           mandatory: resolveValue(filter.mandatory, false),
           multiple: isArray(defaultValue),
