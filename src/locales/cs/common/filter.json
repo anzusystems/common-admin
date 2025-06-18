@@ -1,3 +1,13 @@
 {
-  "fulltext": "Vyhľadať v textoch"
+  "fulltext": "Hľadať v textoch",
+  "bookmark": {
+    "title": "Záložky",
+    "name": "Názov",
+    "add": "Pridať záložku",
+    "manage": "Spravovať záložky",
+    "infoSave": "Aktuálne vybrané filtre budú uložené s touto záložkou.",
+    "errorMax": "Dosiahnutý maximálny počet záložiek. Môžete vymazať niektoré záložky a pridať nové.",
+    "storeColumns": "Uložiť aj stĺpce tabuľky",
+    "storeOrder": "Uložiť poradie"
+  }
 }

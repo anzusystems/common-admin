@@ -241,7 +241,7 @@ watch(activeTab, () => {
   >
     <VCard>
       <ADialogToolbar @on-cancel="emit('onClose')">
-        Bookmarks
+        {{ t('common.filter.bookmark.title') }}
       </ADialogToolbar>
       <VCardText class="pt-0">
         <VTabs
@@ -249,26 +249,26 @@ watch(activeTab, () => {
           fixed-tabs
         >
           <VTab value="add">
-            Add bookmark
+            {{ t('common.filter.bookmark.add') }}
           </VTab>
           <VTab value="manage">
-            Manage bookmarks
+            {{ t('common.filter.bookmark.manage') }}
           </VTab>
         </VTabs>
         <div
           v-if="activeTab === 'add'"
           class="w-100 pt-4"
         >
-          <ARow title="Current selected filters will be stored with this bookmark." />
+          <ARow :title="t('common.filter.bookmark.infoSave')" />
           <ARow
             v-if="errorCount"
             class="text-error"
-            title="Max numbers of bookmarks reached. You can delete some bookmarks to add new one."
+            :title="t('common.filter.bookmark.errorMax')"
           />
           <ARow>
             <AFormTextField
               v-model="customName"
-              label="Name"
+              :label="t('common.filter.bookmark.name')"
               required
               :v="vCreate$.customName"
             />
@@ -276,13 +276,13 @@ watch(activeTab, () => {
           <ARow>
             <AFormSwitch
               v-model="storeDatatableHiddenColumns"
-              label="Save datatable columns also"
+              :label="t('common.filter.bookmark.storeColumns')"
             />
           </ARow>
           <ARow>
             <AFormSwitch
               v-model="storeDatatableOrder"
-              label="Save order"
+              :label="t('common.filter.bookmark.storeOrder')"
             />
           </ARow>
         </div>
