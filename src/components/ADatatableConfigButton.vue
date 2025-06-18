@@ -56,7 +56,10 @@ const toggleVisibility = (key: string) => {
     >
       {{ t(buttonT) }}
     </VTooltip>
-    <VMenu activator="parent">
+    <VMenu
+      :min-width="260"
+      activator="parent"
+    >
       <VCard>
         <VList density="compact">
           <VListItem>
