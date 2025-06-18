@@ -250,14 +250,17 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     if (callback) callback()
   }
 
-  const loadStoredFilters = () => {
+  const loadStoredFilters = (pagination: Ref<Pagination>, callback?: { loaded?: AnyFn; notLoaded?: AnyFn }) => {
     let source: 'hash' | 'localStorage' = 'hash'
     let storedFromHash = parseLocationHash()
     if (isNull(storedFromHash)) {
       source = 'localStorage'
       storedFromHash = loadFilterLocalStorage()
     }
-    if (isNull(storedFromHash) || isEmptyObject(storedFromHash.filters)) return false
+    if (isNull(storedFromHash) || (isEmptyObject(storedFromHash.filters) && isEmptyObject(storedFromHash.sortBy))) {
+      if (callback?.notLoaded) callback.notLoaded()
+      return false
+    }
 
     for (const filterName in filterData) {
       const key = filterName as keyof FilterData<F>
@@ -271,6 +274,8 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
         updateLocationHash(stored)
       }
     }
+    pagination.value = { ...pagination.value, sortBy: storedFromHash.sortBy }
+    if (callback?.loaded) callback.loaded()
     return true
   }
 

@@ -78,8 +78,7 @@ defineExpose({
 })
 
 onMounted(() => {
-  loadStoredFilters()
-  getList()
+  loadStoredFilters(pagination, { notLoaded: getList })
 })
 </script>
 
