@@ -31,6 +31,8 @@ export function useCollabInit() {
 
   const { logError } = useSentry()
 
+  let authorizationReconnectTriggered = false
+
   const initCollab = () => {
     const changeEventBus = useCollabRoomDataChangeEventBus()
     const reconnectEventBus = useCollabReconnectEventBus()
@@ -118,7 +120,13 @@ export function useCollabInit() {
           reconnectEventBus.emit('reconnect')
         }
       })
-      collabSocket.value.on('connect_error', (error) => {
+      collabSocket.value.on('connect_error', async (error) => {
+        if (!authorizationReconnectTriggered) {
+          authorizationReconnectTriggered = true
+          await collabOptions.value.beforeReconnect()
+          collabSocket.value?.connect()
+          return
+        }
         collabConnected.value = collabSocket.value?.connected ?? false
         logError(error, { level: 'error', message: 'Collab connect_error' })
       })
