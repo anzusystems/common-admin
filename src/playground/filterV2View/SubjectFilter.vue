@@ -18,7 +18,7 @@ import {
 } from '@/playground/filterV2View/subjectTools'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { isUndefined } from '@/utils/common.ts'
+import { isUndefined } from '@/utils/common'
 
 const emit = defineEmits<{
   (e: 'submit'): void
