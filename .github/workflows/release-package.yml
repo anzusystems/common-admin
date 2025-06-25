@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-publish-pkg:
-    name: Build and push package on node 24
+    name: Build and push package on node 22
     runs-on: 'ubuntu-latest'
     steps:
       - name: Checkout
@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'yarn'
           cache-dependency-path: 'yarn.lock'
 
