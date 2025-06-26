@@ -237,7 +237,7 @@ __metadata:
     socket.io-client: "npm:4.8.1"
     sortablejs: "npm:^1.15.6"
     stylelint: "npm:16.21.0"
-    stylelint-config-recommended-vue: "npm:^1.6.0"
+    stylelint-config-recommended-vue: "npm:^1.6.1"
     stylelint-config-standard-scss: "npm:^15.0.1"
     typescript: "npm:5.7.3"
     unplugin: "npm:2.3.5"
@@ -7332,9 +7332,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stylelint-config-recommended-vue@npm:^1.6.0":
-  version: 1.6.0
-  resolution: "stylelint-config-recommended-vue@npm:1.6.0"
+"stylelint-config-recommended-vue@npm:^1.6.1":
+  version: 1.6.1
+  resolution: "stylelint-config-recommended-vue@npm:1.6.1"
   dependencies:
     semver: "npm:^7.3.5"
     stylelint-config-html: "npm:>=1.0.0"
@@ -7342,7 +7342,7 @@ __metadata:
   peerDependencies:
     postcss-html: ^1.0.0
     stylelint: ">=14.0.0"
-  checksum: 10/a8e9c51f720c3c8b5374cd0c5613cd339841a159805adf87451dfc32f78191c84e8b12dddb04d808eb58cefcbf41491a1a4fb0277e37ad74e86692d274cff061
+  checksum: 10/7dfca7999f6dfe5bcb536222aaf3e8359f129abc5a79ef10d5214a1e7bc62c0946bee56dfa423ef5ddaf5dfa671dca9be49231261c0a2fb80b0f4e7940047cf6
   languageName: node
   linkType: hard
 
