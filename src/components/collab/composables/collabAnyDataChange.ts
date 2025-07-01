@@ -50,6 +50,8 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
 
   const changeCollabAnyData = (field: CollabFieldName, data: CollabFieldData, callback: Fn | undefined = undefined) => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    const roomInfo = collabRoomInfoState.get(room)
+    if (roomInfo && roomInfo.status === CollabStatus.Inactive) return
     collabSocket.value.emit('changeFieldData', room, field, data, () => {
       if (!isUndefined(callback)) callback()
     })
