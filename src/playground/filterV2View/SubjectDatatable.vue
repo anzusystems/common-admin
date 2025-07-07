@@ -12,6 +12,7 @@ import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/f
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { usePagination } from '@/labs/filters/pagination'
 import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
+import { useDebounceFn } from '@vueuse/core'
 
 type DatatableItem = any
 
@@ -54,9 +55,9 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
   'subject'
 )
 
-const getList = () => {
+const getList = useDebounceFn(() => {
   fetchList(pagination, filterData, filterConfig)
-}
+})
 
 const sortByChange = () => {
   filterConfig.touched = false
@@ -78,7 +79,7 @@ defineExpose({
 })
 
 onMounted(() => {
-  loadStoredFilters(pagination, { notLoaded: getList })
+  loadStoredFilters(pagination, { loaded: getList, notLoaded: getList })
 })
 </script>
 
