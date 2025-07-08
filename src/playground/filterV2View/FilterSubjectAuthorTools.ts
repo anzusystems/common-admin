@@ -6,12 +6,12 @@ import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import {
   createFilter,
+  createFilterStore,
   type FilterConfig,
   type FilterData,
-  type FilterStore,
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
-import { reactive, type Ref } from 'vue'
+import { type Ref } from 'vue'
 
 import type { Pagination } from '@/labs/filters/pagination'
 
@@ -110,26 +110,17 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 
 export function useSubjectAuthorInnerFilter() {
   const filterFields = [
-    { name: 'id' as const },
-    { name: 'discriminator' as const },
-    { name: 'siteGroup' as const, apiName: 'siteGroupId' },
-    { name: 'text' as const },
+    { name: 'id' as const, default: null },
+    { name: 'discriminator' as const, default: null },
+    { name: 'siteGroup' as const, apiName: 'siteGroupId', default: null },
+    { name: 'text' as const, default: null },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(
-    filterFields,
-    reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
-      id: null,
-      discriminator: null,
-      siteGroup: null,
-      text: null,
-    }),
-    {
-      elastic: true,
-      system: 'cms',
-      subject: 'authorKind',
-    }
-  )
+  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+    elastic: true,
+    system: 'cms',
+    subject: 'authorKind',
+  })
 
   return {
     filterConfig,

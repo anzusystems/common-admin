@@ -24,6 +24,19 @@ const defaultRenderOptions: FilerRenderOptions = {
   xl: 2,
 }
 
+export function createFilterStore<F extends readonly MakeFilterOption<string>[]>(
+  filterFields: F
+): FilterData<F> {
+  return reactive(
+    filterFields.reduce((acc, field) => {
+      return {
+        ...acc,
+        [field.name]: cloneDeep(field.default)
+      }
+    }, {} as FilterData<F>)
+  ) as FilterData<F>
+}
+
 export function createFilter<F extends readonly MakeFilterOption<string>[]>(
   filterFields: F,
   store: FilterData<F>,
@@ -35,7 +48,9 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
   const config = filterFields.reduce(
     (acc, filter) => {
       const key = filter.name as keyof FilterData<F>
-      const defaultValue = cloneDeep(store[key] as AllowedFilterValues)
+      const defaultValue = cloneDeep(filter.default)
+
+      console.log(key, defaultValue)
 
       return {
         ...acc,
@@ -91,6 +106,7 @@ export function useFilterClearHelpers<
 >() {
   const clearOne = (name: keyof FilterData<F>, filterData: FilterData<F>, filterConfig: FilterConfig<F>) => {
     if (!filterConfig.fields[name]?.clearable) return
+    console.log(name, filterConfig.fields[name].default)
     filterData[name] = cloneDeep(filterConfig.fields[name].default)
   }
 
@@ -250,7 +266,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     if (callback) callback()
   }
 
-  const loadStoredFilters = (pagination: Ref<Pagination>, callback?: { loaded?: AnyFn; notLoaded?: AnyFn }) => {
+  const loadStoredFilters = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     let source: 'hash' | 'localStorage' = 'hash'
     let storedFromHash = parseLocationHash()
     if (isNull(storedFromHash)) {
@@ -258,7 +274,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       storedFromHash = loadFilterLocalStorage()
     }
     if (isNull(storedFromHash) || (isEmptyObject(storedFromHash.filters) && isEmptyObject(storedFromHash.sortBy))) {
-      if (callback?.notLoaded) callback.notLoaded()
+      if (callback) callback()
       return false
     }
 
@@ -275,7 +291,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       }
     }
     pagination.value = { ...pagination.value, sortBy: storedFromHash.sortBy }
-    if (callback?.loaded) callback.loaded()
+    if (callback) callback()
     return true
   }
 
@@ -325,6 +341,7 @@ export type FilterType = 'boolean' | 'datetime' | 'integer' | 'string' | 'custom
 
 export interface MakeFilterOption<TName extends string = string> {
   name: TName
+  default: AllowedFilterValues
   type?: FilterType
   variant?: FilterVariant
   titleT?: string

@@ -1,8 +1,8 @@
 import {
   createFilter,
+  createFilterStore,
   type FilterConfig,
   type FilterData,
-  type FilterStore,
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
@@ -11,7 +11,7 @@ import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
-import { reactive, type Ref } from 'vue'
+import { type Ref } from 'vue'
 
 import type { Pagination } from '@/labs/filters/pagination'
 
@@ -90,30 +90,19 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 
 export function useSubjectRubricInnerFilter() {
   const filterFields = [
-    { name: 'id' as const, variant: 'in' },
-    { name: 'text' as const },
-    { name: 'site' as const, apiName: 'siteIds' },
-    { name: 'siteGroup' as const, apiName: 'siteGroupIds' },
-    { name: 'desk' as const, apiName: 'deskIds' },
-    { name: 'linkedList' as const, apiName: 'linkedListId' },
+    { name: 'id' as const, variant: 'in', default: null },
+    { name: 'text' as const, default: null },
+    { name: 'site' as const, apiName: 'siteIds', default: [] },
+    { name: 'siteGroup' as const, apiName: 'siteGroupIds', default: [] },
+    { name: 'desk' as const, apiName: 'deskIds', default: [] },
+    { name: 'linkedList' as const, apiName: 'linkedListId', default: null },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(
-    filterFields,
-    reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
-      id: null,
-      text: null,
-      site: [],
-      siteGroup: [],
-      desk: [],
-      linkedList: null,
-    }),
-    {
-      elastic: true,
-      system: 'cms',
-      subject: 'rubric',
-    }
-  )
+  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+    elastic: true,
+    system: 'cms',
+    subject: 'rubric',
+  })
 
   return {
     filterConfig,

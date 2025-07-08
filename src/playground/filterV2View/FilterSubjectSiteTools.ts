@@ -6,12 +6,12 @@ import { cmsClient } from '@/playground/mock/cmsClient'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import {
   createFilter,
+  createFilterStore,
   type FilterConfig,
   type FilterData,
-  type FilterStore,
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
-import { reactive, type Ref } from 'vue'
+import { type Ref } from 'vue'
 
 import type { Pagination } from '@/labs/filters/pagination'
 
@@ -104,25 +104,16 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 
 export function useSubjectSiteInnerFilter() {
   const filterFields = [
-    { name: 'id' as const, variant: 'in' },
-    { name: 'name' as const, variant: 'startsWith' },
-    { name: 'siteGroup' as const },
-    { name: 'linkedList' as const },
+    { name: 'id' as const, variant: 'in', default: null },
+    { name: 'name' as const, variant: 'startsWith', default: null },
+    { name: 'siteGroup' as const, default: null },
+    { name: 'linkedList' as const, default: null },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(
-    filterFields,
-    reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
-      id: null,
-      name: null,
-      siteGroup: null,
-      linkedList: null,
-    }),
-    {
-      system: 'cms',
-      subject: 'site',
-    }
-  )
+  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+    system: 'cms',
+    subject: 'site',
+  })
 
   return {
     filterConfig,

@@ -6,12 +6,12 @@ import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import {
   createFilter,
+  createFilterStore,
   type FilterConfig,
   type FilterData,
-  type FilterStore,
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
-import { reactive, type Ref } from 'vue'
+import { type Ref } from 'vue'
 
 import type { Pagination } from '@/labs/filters/pagination'
 
@@ -60,23 +60,15 @@ export const fetchItemsByIds = async (ids: IntegerId[]) => {
 
 export function useSubjectDeskInnerFilter() {
   const filterFields = [
-    { name: 'id' },
-    { name: 'ids', variant: 'in', apiName: 'id' },
-    { name: 'name', variant: 'startsWith' },
+    { name: 'id', default: null },
+    { name: 'ids', variant: 'in', apiName: 'id', default: [] },
+    { name: 'name', variant: 'startsWith', default: null },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(
-    filterFields,
-    reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
-      id: null,
-      ids: [] as IntegerId[],
-      name: null,
-    }),
-    {
-      system: 'cms',
-      subject: 'desk',
-    }
-  )
+  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+    system: 'cms',
+    subject: 'desk',
+  })
 
   return {
     filterConfig,

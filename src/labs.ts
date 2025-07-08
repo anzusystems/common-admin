@@ -23,6 +23,7 @@ import {
 } from '@/labs/filters/filterInjectionKeys'
 import {
   createFilter,
+  createFilterStore,
   type FilterConfig,
   type FilterData,
   type FilterStore,
@@ -52,6 +53,7 @@ export {
   ADatatablePagination,
   DatatablePaginationKey,
   createFilter,
+  createFilterStore,
   useFilterHelpers,
   type FilterConfig,
   type FilterData,

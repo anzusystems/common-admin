@@ -6,12 +6,12 @@ import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import {
   createFilter,
+  createFilterStore,
   type FilterConfig,
   type FilterData,
-  type FilterStore,
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
-import { reactive, type Ref } from 'vue'
+import { type Ref } from 'vue'
 
 import type { Pagination } from '@/labs/filters/pagination'
 
@@ -91,21 +91,14 @@ export const fetchItemsMinimalByIds = async (ids: IntegerId[]) => {
 
 export function useSubjectUserInnerFilter() {
   const filterFields = [
-    { name: 'id' as const, variant: 'in' },
-    { name: 'lastName' as const, variant: 'startsWith', apiName: 'person.lastName' },
+    { name: 'id' as const, variant: 'in', default: null },
+    { name: 'lastName' as const, variant: 'startsWith', apiName: 'person.lastName', default: null },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(
-    filterFields,
-    reactive<FilterStore<{ name: (typeof filterFields)[number]['name'] }[]>>({
-      id: null,
-      lastName: null,
-    }),
-    {
-      system: 'cms',
-      subject: 'user',
-    }
-  )
+  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+    system: 'cms',
+    subject: 'user',
+  })
 
   return {
     filterConfig,
