@@ -276,13 +276,13 @@ watch(activeTab, () => {
           <ARow>
             <AFormSwitch
               v-model="storeDatatableHiddenColumns"
-              :label="t('common.filter.bookmark.storeColumns')"
+              :label="t('common.filter.bookmark.storeTableColumns')"
             />
           </ARow>
           <ARow>
             <AFormSwitch
               v-model="storeDatatableOrder"
-              :label="t('common.filter.bookmark.storeOrder')"
+              :label="t('common.filter.bookmark.storeTableOrder')"
             />
           </ARow>
         </div>
@@ -364,15 +364,14 @@ watch(activeTab, () => {
           data-cy="button-cancel"
           @click.stop="emit('onClose')"
         >
-          {{ activeTab === 'add' ? t('common.button.cancel') : t('common.button.close') }}
+          {{ t('common.button.cancel') }}
         </ABtnTertiary>
         <ABtnPrimary
-          v-if="activeTab === 'add'"
           data-cy="button-confirm"
           :loading="saveButtonLoading"
           @click.stop="onConfirm"
         >
-          {{ t('common.button.confirm') }}
+          {{ activeTab === 'add' ? t('common.button.add') : t('common.filter.bookmark.saveBookmarkOrder') }}
         </ABtnPrimary>
       </VCardActions>
     </VCard>

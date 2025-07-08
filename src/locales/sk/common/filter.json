@@ -7,7 +7,8 @@
     "manage": "Spravovať záložky",
     "infoSave": "Aktuálne vybrané filtre budú uložené s touto záložkou.",
     "errorMax": "Dosiahnutý maximálny počet záložiek. Môžete vymazať niektoré záložky a pridať nové.",
-    "storeColumns": "Uložiť aj stĺpce tabuľky",
-    "storeOrder": "Uložiť poradie"
+    "storeTableColumns": "Uložiť aj stĺpce tabuľky",
+    "storeTableOrder": "Uložiť aj poradie tabuľky",
+    "saveBookmarkOrder": "Uložiť zoradenie"
   }
 }

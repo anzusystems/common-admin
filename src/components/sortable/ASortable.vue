@@ -273,7 +273,7 @@ defineExpose({
                     <VTooltip
                       anchor="bottom"
                       activator="parent"
-                      text="Edit"
+                      :text="t('common.button.edit')"
                     />
                   </VBtn>
                   <VBtn
@@ -288,7 +288,7 @@ defineExpose({
                     <VTooltip
                       anchor="bottom"
                       activator="parent"
-                      text="Remove"
+                      :text="t('common.button.delete')"
                     />
                   </VBtn>
                   <slot

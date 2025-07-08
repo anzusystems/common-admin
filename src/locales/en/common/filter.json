@@ -7,7 +7,8 @@
     "manage": "Manage bookmarks",
     "infoSave": "Current selected filters will be stored with this bookmark.",
     "errorMax": "Max numbers of bookmarks reached. You can delete some bookmarks to add new one.",
-    "storeColumns": "Save datatable columns also",
-    "storeOrder": "Save order"
+    "storeTableColumns": "Save datatable columns also",
+    "storeTableOrder": "Save datatable order also",
+    "saveBookmarkOrder": "Save ordering"
   }
 }
