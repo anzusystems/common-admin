@@ -305,6 +305,7 @@ watchDebounced(
     :loading="loading"
     hide-details
     return-object
+    autocomplete="off"
     @update:search="onSearchUpdate"
     @update:model-value="onSelectedUpdate"
     @blur="onBlur"

@@ -239,6 +239,7 @@ watch(
     :data-cy="dataCy"
     :items="timeIntervalOptions"
     hide-details
+    autocomplete="off"
     @click:clear.stop="onClear"
   />
   <VDialog

@@ -113,6 +113,7 @@ const updateSelected = () => {
     :clearable="!filterConfigCurrent.mandatory && modelValue.value !== -1"
     return-object
     hide-details
+    autocomplete="off"
     @click:clear.stop="clearField"
   />
 </template>

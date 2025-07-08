@@ -104,6 +104,7 @@ watch(
     :clearable="!filterConfigCurrent.mandatory"
     :data-cy="dataCy"
     hide-details
+    autocomplete="off"
     @blur="updateSelected"
     @click:clear.stop="clearField"
   />

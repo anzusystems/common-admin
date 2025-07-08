@@ -248,6 +248,7 @@ const now = () => {
     class="a-datetime-picker"
     hide-details="auto"
     :disabled="disabled"
+    autocomplete="off"
     @blur="onTextFieldBlur"
     @focus="onTextFieldFocus"
     @keyup.enter="onTextFieldBlur"

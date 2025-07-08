@@ -109,6 +109,7 @@ watch(
     :clearable="!filterConfigCurrent.mandatory"
     data-cy="filter-value"
     hide-details
+    autocomplete="off"
     @click:clear.stop="clearField"
   />
 </template>
