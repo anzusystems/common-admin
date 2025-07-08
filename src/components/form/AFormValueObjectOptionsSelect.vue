@@ -154,6 +154,7 @@ watch(
     :clearable="clearable"
     :error-messages="errorMessageComputed"
     :data-cy="dataCy"
+    autocomplete="off"
     @blur="onBlur"
     @focus="onFocus"
   >

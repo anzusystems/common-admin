@@ -366,6 +366,7 @@ const onAutocompleteModelUpdate = (newValue: any) => {
     :loading="loadingComputed"
     :disabled="disabledComputed"
     return-object
+    autocomplete="off"
     @update:search="onSearchUpdate"
     @update:model-value="onAutocompleteModelUpdate"
     @blur="onBlur"

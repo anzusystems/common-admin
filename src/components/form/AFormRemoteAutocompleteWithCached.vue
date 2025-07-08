@@ -263,6 +263,7 @@ watch(
     :error-messages="errorMessageComputed"
     :loading="loadingLocal"
     :no-data-text="noDataText"
+    autocomplete="off"
     @blur="onBlur"
     @focus="onFocus"
     @click:clear="onClickClear"

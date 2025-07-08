@@ -169,6 +169,7 @@ defineExpose({
     :placeholder="placeholder"
     :persistent-placeholder="persistentPlaceholder"
     trim
+    autocomplete="off"
     @click:append="(event: any) => emit('click:append', event)"
     @blur="onBlur"
     @focus="onFocus"
