@@ -102,6 +102,8 @@ export function useAlerts() {
         fieldText += t(errors[i].field)
       } else if (errors[i].field.includes('[')) {
         fieldText += resolveListErrors(errors[i].field)
+      } else {
+        fieldText += errors[i].field.split('.').at(-1)
       }
       const errorsTexts = new Set<string>()
       for (let j = 0; j < errors[i].errors.length; j++) {
