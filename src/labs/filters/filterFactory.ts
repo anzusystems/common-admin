@@ -50,8 +50,6 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
       const key = filter.name as keyof FilterData<F>
       const defaultValue = cloneDeep(filter.default)
 
-      console.log(key, defaultValue)
-
       return {
         ...acc,
         [key]: {
@@ -106,7 +104,6 @@ export function useFilterClearHelpers<
 >() {
   const clearOne = (name: keyof FilterData<F>, filterData: FilterData<F>, filterConfig: FilterConfig<F>) => {
     if (!filterConfig.fields[name]?.clearable) return
-    console.log(name, filterConfig.fields[name].default)
     filterData[name] = cloneDeep(filterConfig.fields[name].default)
   }
 

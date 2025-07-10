@@ -21,7 +21,6 @@ const isValid = ref<boolean | null>(null)
 const validate = async () => {
   v$.value.$touch()
   isValid.value = await v$.value.$validate()
-  console.log(v$.value.$errors)
 }
 
 const dialog = ref(false)
