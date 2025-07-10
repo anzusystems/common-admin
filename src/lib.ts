@@ -214,6 +214,7 @@ import {
   type AnzuApiValidationResponseData,
   axiosErrorResponseHasValidationData,
   isAnzuApiValidationError,
+  hasAnzuApiValidationErrorSpecific,
   type ValidationError,
 } from '@/model/error/AnzuApiValidationError'
 import {
@@ -1106,6 +1107,7 @@ export {
   axiosErrorResponseHasForbiddenOperationData,
   AnzuApiForbiddenOperationError,
   isAnzuApiValidationError,
+  hasAnzuApiValidationErrorSpecific,
   axiosErrorResponseHasValidationData,
   AnzuApiValidationError,
   isAnzuFatalError,

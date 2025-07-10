@@ -9,6 +9,7 @@
     "errorMax": "Max numbers of bookmarks reached. You can delete some bookmarks to add new one.",
     "storeTableColumns": "Save datatable columns also",
     "storeTableOrder": "Save datatable order also",
-    "saveBookmarkOrder": "Save ordering"
+    "saveBookmarkOrder": "Save ordering",
+    "nameUniqueError": "Name of filter must be unique"
   }
 }

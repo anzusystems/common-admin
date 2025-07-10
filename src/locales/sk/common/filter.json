@@ -9,6 +9,7 @@
     "errorMax": "Dosiahnutý maximálny počet záložiek. Môžete vymazať niektoré záložky a pridať nové.",
     "storeTableColumns": "Uložiť aj stĺpce tabuľky",
     "storeTableOrder": "Uložiť aj poradie tabuľky",
-    "saveBookmarkOrder": "Uložiť zoradenie"
+    "saveBookmarkOrder": "Uložiť zoradenie",
+    "nameUniqueError": "Názov filtra musí byť unikátny"
   }
 }

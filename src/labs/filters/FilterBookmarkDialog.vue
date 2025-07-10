@@ -19,6 +19,7 @@ import { useValidate } from '@/validators/vuelidate/useValidate'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
+import { hasAnzuApiValidationErrorSpecific, isAnzuApiValidationError } from '@/model/error/AnzuApiValidationError.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -83,7 +84,7 @@ const {
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   useUserAdminConfigApi(props.client, props.system)
 const { t } = useI18n()
-const { showErrorsDefault, showValidationError } = useAlerts()
+const { showErrorsDefault, showValidationError, showWarningT } = useAlerts()
 const { createDefaultUserAdminConfig } = useUserAdminConfigFactory()
 
 const sortItems = async () => {
@@ -137,17 +138,20 @@ const addBookmark = async () => {
     config.position = count + 1
     const res = await createUserAdminConfig(config)
     filterBookmarkStore.addOne(
-      filterBookmarkStore.generateKey(
-        props.system,
-        UserAdminConfigLayoutType.Desktop,
-        props.systemResource
-      ),
+      filterBookmarkStore.generateKey(props.system, UserAdminConfigLayoutType.Desktop, props.systemResource),
       res
     )
-    saveButtonLoading.value = false
     emit('onClose')
   } catch (e) {
+    if (
+      isAnzuApiValidationError(e) &&
+      hasAnzuApiValidationErrorSpecific(e, 'error_field_not_unique', 'cms.userAdminConfig.model.systemResource')
+    ) {
+      showWarningT('common.filter.bookmark.nameUniqueError')
+      return
+    }
     showErrorsDefault(e)
+  } finally {
     saveButtonLoading.value = false
   }
 }
