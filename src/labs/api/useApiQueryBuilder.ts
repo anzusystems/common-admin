@@ -55,6 +55,12 @@ export function useApiQueryBuilder() {
     if (isNull(untilValue) && mandatory) {
       untilValue = filterConfig.fields[fromName].default as DatetimeUTCNullable
     }
+    if (isString(fromValue) && isString(untilValue)) {
+      return {
+        from: fromValue,
+        until: untilValue,
+      }
+    }
     const now = dateTimeNow()
     const nowDate = dateTimeToDate(now)
     switch (fromValue) {
@@ -66,12 +72,6 @@ export function useApiQueryBuilder() {
       }
       case TimeIntervalSpecialOptions.Last3Months: {
         return getMonthInterval(nowDate, 'utc', -2, true)
-      }
-      case TimeIntervalSpecialOptions.Custom: {
-        return {
-          from: fromValue,
-          until: untilValue,
-        }
       }
       default: {
         if (isNumber(fromValue)) {
