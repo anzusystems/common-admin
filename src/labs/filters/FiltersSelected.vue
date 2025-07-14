@@ -46,7 +46,10 @@ const clickClose = (name: string, optionValue: number | string) => {
     selectedFound.splice(foundIndex, 1)
   }
   // update data
-  if (isArray(filterData[name]) && filterData[name].length > 0) {
+  if (filterConfig.fields[name].type === 'timeInterval' && filterConfig.fields[name].related) {
+    filterData[name] = filterConfig.fields[name].default
+    filterData[filterConfig.fields[name].related] = filterConfig.fields[filterConfig.fields[name].related].default
+  } else if (isArray(filterData[name]) && filterData[name].length > 0) {
     const foundIndex = filterData[name].findIndex((item) => item === optionValue)
     const newArray = [...toRaw(filterData[name])]
     newArray.splice(foundIndex, 1)

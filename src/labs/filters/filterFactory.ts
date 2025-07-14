@@ -12,6 +12,8 @@ import {
 import type { AnyFn } from '@vueuse/core'
 import type { Pagination } from '@/labs/filters/pagination'
 import { type DatatableSortBy, SortOrder } from '@/composables/system/datatableColumns'
+import { stringToBooleanExact, stringToNumber } from '@/utils/string.ts'
+import { parseBoolean } from '@/utils/boolean.ts'
 
 const SORT_URL_PARAM = '_sort'
 
@@ -277,8 +279,21 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 
     for (const filterName in filterData) {
       const key = filterName as keyof FilterData<F>
-      const value = storedFromHash.filters[key]
+      let value = storedFromHash.filters[key]
       if (isUndefined(value)) continue
+      if (isString(value)) {
+        const tryConvertNumber = stringToNumber(value)
+        if (!isNull(tryConvertNumber)) {
+          value = tryConvertNumber
+        } else {
+          // If not a number, try to convert to boolean
+          const tryConvertBoolean = stringToBooleanExact(value)
+          if (!isNull(tryConvertBoolean)) {
+            value = tryConvertBoolean
+          }
+        }
+
+      }
       filterData[key] = value
     }
     if (source === 'localStorage' && storeKey && localStorage) {

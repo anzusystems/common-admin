@@ -8,7 +8,7 @@ import {
 } from '@/labs/filters/filterInjectionKeys'
 import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
+import { type AllowedFilterValues, useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import {
   TimeIntervalSpecialOptions,
   type TimeIntervalToolsValue,
@@ -21,6 +21,7 @@ import type { DatetimeUTCNullable } from '@/types/common'
 import ARow from '@/components/ARow.vue'
 import { dateTimeNow, dateTimePretty, isDatetimeUTC } from '@/utils/datetime'
 import { useAlerts } from '@/composables/system/alerts'
+import type { ValueObjectOption } from '@/types/ValueObject.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -68,7 +69,7 @@ const modelValue = computed({
   },
   set(newValue) {
     filterData[props.nameFrom] = newValue
-    updateSelected()
+    updateSelected(newValue)
     filterConfig.touched = true
     emit('change')
   },
@@ -122,17 +123,18 @@ const onDialogClose = () => {
 
 const clearField = () => {
   clearOne(props.nameFrom, filterData, filterConfig)
+  clearOne(props.nameUntil, filterData, filterConfig)
   filterSelected.value.delete(props.nameFrom)
 }
 
-const updateSelected = () => {
-  if (isArray(modelValue.value) || isBoolean(modelValue.value)) return
-  if (isNull(modelValue.value) || isUndefined(modelValue.value)) {
+const updateSelected = (fromValue: AllowedFilterValues) => {
+  if (isArray(fromValue) || isBoolean(fromValue)) return
+  if (isNull(fromValue) || isUndefined(fromValue)) {
     filterSelected.value.delete(props.nameFrom)
     return
   }
-  const found = getTimeIntervalOption(modelValue.value as TimeIntervalToolsValue)
-  if (!found && isDatetimeUTC(modelValue.value)) {
+  const found = getTimeIntervalOption(fromValue as TimeIntervalToolsValue)
+  if (!found && isDatetimeUTC(fromValue)) {
     const customOption = getTimeIntervalOption(TimeIntervalSpecialOptions.Custom)!
     filterSelected.value.set(props.nameFrom, [
       {
@@ -142,13 +144,13 @@ const updateSelected = () => {
           dateTimePretty(dialogData.value.from) +
           ' - ' +
           dateTimePretty(dialogData.value.until),
-        value: modelValue.value,
+        value: fromValue,
       },
     ])
     return
   }
   if (!found) return
-  filterSelected.value.set(props.nameFrom, [{ title: found.title, value: modelValue.value }])
+  filterSelected.value.set(props.nameFrom, [{ title: found.title, value: fromValue }])
 }
 
 const onEditInterval = (clear = false) => {
@@ -159,15 +161,6 @@ const onEditInterval = (clear = false) => {
   }
   dialogCustom.value = true
 }
-
-watch(modelInternal, (newValue) => {
-  if (newValue === TimeIntervalSpecialOptions.Custom) {
-    onEditInterval(true)
-    return
-  }
-  filterData[props.nameUntil] = null
-  modelValue.value = newValue
-})
 
 watch(
   modelValue,
@@ -195,22 +188,21 @@ watch(
 
 watch(
   [() => filterData[props.nameFrom], () => filterData[props.nameUntil]],
-  ([nameFromNewValue, nameUntilNewValue], [nameFromOldValue, nameUntilOldValue]) => {
-    if (nameFromNewValue === nameFromOldValue && nameUntilNewValue === nameUntilOldValue) return
-    if (
-      isBoolean(nameFromNewValue) ||
-      isBoolean(nameUntilNewValue) ||
-      isUndefined(nameFromNewValue) ||
-      isUndefined(nameUntilNewValue) ||
-      (isArray(nameFromNewValue) && nameFromNewValue.length === 0) ||
-      (isArray(nameUntilNewValue) && nameUntilNewValue.length === 0)
-    ) {
-      return
-    }
-    updateSelected()
+  ([fromNewValue, untilNewValue], [fromOldValue, untilOldValue]) => {
+    if (fromNewValue === fromOldValue && untilNewValue === untilOldValue) return
+    updateSelected(fromNewValue)
   },
   { immediate: true }
 )
+
+const onInternalItemChamge = (item: ValueObjectOption<TimeIntervalToolsValue>) => {
+  if (item.value === TimeIntervalSpecialOptions.Custom) {
+    onEditInterval(true)
+    return
+  }
+  filterData[props.nameUntil] = null
+  modelValue.value = item.value
+}
 </script>
 
 <template>
@@ -241,7 +233,14 @@ watch(
     hide-details
     autocomplete="off"
     @click:clear.stop="onClear"
-  />
+  >
+    <template #item="{ props: itemProps, item }">
+      <VListItem
+        v-bind="itemProps"
+        @click="onInternalItemChamge(item)"
+      />
+    </template>
+  </VSelect>
   <VDialog
     v-if="dialogCustom"
     :model-value="true"

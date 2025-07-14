@@ -41,6 +41,7 @@ const { datatableHiddenColumns } = useSubjectListActions()
 </script>
 
 <template>
+  {{ filterData }}
   <AFilterWrapper
     v-model:datatable-hidden-columns="datatableHiddenColumns"
     :client="cmsClient"
