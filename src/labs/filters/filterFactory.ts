@@ -12,8 +12,7 @@ import {
 import type { AnyFn } from '@vueuse/core'
 import type { Pagination } from '@/labs/filters/pagination'
 import { type DatatableSortBy, SortOrder } from '@/composables/system/datatableColumns'
-import { stringToBooleanExact, stringToNumber } from '@/utils/string.ts'
-import { parseBoolean } from '@/utils/boolean.ts'
+import { stringToBooleanExact, stringToNumber } from '@/utils/string'
 
 const SORT_URL_PARAM = '_sort'
 
