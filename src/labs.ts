@@ -53,6 +53,7 @@ export {
   ADatatableOrdering,
   ADatatablePagination,
   DatatablePaginationKey,
+  AFormRemoteAutocomplete,
   createFilter,
   createFilterStore,
   useFilterHelpers,
