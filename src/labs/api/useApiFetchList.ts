@@ -22,7 +22,7 @@ import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import type { Ref } from 'vue'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
-import { isUndefined } from '@/utils/common'
+import { isDefined, isUndefined } from '@/utils/common'
 import type { Pagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
 
@@ -48,6 +48,8 @@ export const useApiFetchList = <R>(
   client: () => AxiosInstance,
   system: string,
   entity: string,
+  urlTemplate: string,
+  urlParams: UrlParams | undefined = undefined,
   options: AxiosRequestConfig = {}
 ): UseApiFetchListReturnType<R> => {
   let abortController: AbortController | null = null
@@ -56,15 +58,19 @@ export const useApiFetchList = <R>(
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    urlTemplate: string,
-    urlParams: UrlParams | undefined = undefined
+    urlTemplateOverride: string | undefined = undefined,
+    urlParamsOverride: UrlParams | undefined = undefined
   ): Promise<R> => {
     abortController = new AbortController()
 
     try {
       const searchApi = filterConfig.general.elastic ? '/search' : ''
+      const params = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
       const url =
-        (isUndefined(urlParams) ? urlTemplate : replaceUrlParameters(urlTemplate, urlParams)) +
+        (isUndefined(params)
+          ? template
+          : replaceUrlParameters(template, params)) +
         searchApi +
         generateListQuery(pagination, filterData, filterConfig)
 
@@ -128,7 +134,7 @@ export const useApiFetchList = <R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ' + urlTemplate, err.cause)
+        console.error('Axios error: ' + urlTemplateOverride, err.cause)
         throw new AnzuApiAxiosError(err)
       }
 
