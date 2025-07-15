@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
-import { computed, inject, type Ref, ref, toRefs, watch } from 'vue'
+import { computed, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import type { FilterBag } from '@/types/Filter'
 import { cloneDeep, isArray, isDefined, isNull, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { ErrorObject } from '@vuelidate/core'
@@ -14,10 +13,10 @@ import type { CollabComponentConfig, CollabFieldData } from '@/components/collab
 import { useCollabField } from '@/components/collab/composables/collabField'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory.ts'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys.ts'
-import type { DatatableSortBy } from '@/composables/system/datatableColumns.ts'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
+import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
-import { isOneOf } from '@/utils/enum.ts'
+import { isOneOf } from '@/utils/enum'
 
 type FetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
@@ -39,7 +38,6 @@ const props = withDefaults(
       filterConfig: FilterConfig
     ) => Promise<ValueObjectOption<string | number>[]>
     fetchItemsByIds: FetchItemsByIdsType
-    innerFilter: FilterBag
     filterByField: string
     filterSortBy?: DatatableSortBy
     loading?: boolean
@@ -142,8 +140,6 @@ const autoFetchTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref(undef
 
 const { t } = useI18n()
 
-const { innerFilter } = toRefs(props)
-
 const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
@@ -208,11 +204,7 @@ const loadingComputed = computed(() => {
 
 const apiSearch = async (query: string, requestCounter: number) => {
   loadingLocal.value = true
-  const filterField = innerFilter.value[props.filterByField]
-  if (isUndefined(filterField)) {
-    throw new Error('AFormRemoteAutocomplete incorrect innerFilter or filterByField setup.')
-  }
-  filterField.model = query
+  filterInnerData[props.filterByField] = query
   const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
   if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
   loadingLocal.value = false
