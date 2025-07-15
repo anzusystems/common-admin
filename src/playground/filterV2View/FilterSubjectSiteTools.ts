@@ -77,15 +77,15 @@ interface Site extends SiteMinimal, AnzuUserAndTimeTrackingAware {
 const END_POINT = '/adm/v1/site'
 
 const fetchSiteListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<Site[]>(cmsClient, 'cms', 'site')
-  return executeFetch(ids, END_POINT)
+  const { executeFetch } = useApiFetchByIds<Site[]>(cmsClient, 'cms', 'site', END_POINT)
+  return executeFetch(ids)
 }
 
-const useFetchSiteList = () => useApiFetchList<Site[]>(cmsClient, 'cms', 'site')
+const useFetchSiteList = () => useApiFetchList<Site[]>(cmsClient, 'cms', 'site', END_POINT)
 
 export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchSiteList()
-  const sites = await executeFetch(pagination, filterData, filterConfig, END_POINT)
+  const sites = await executeFetch(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>sites.map((site: Site) => ({
     title: site.name,

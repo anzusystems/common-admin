@@ -18,7 +18,7 @@ import {
 import type { DocId, IntegerId } from '@/types/common'
 import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
-import { isUndefined } from '@/utils/common'
+import { isDefined, isUndefined } from '@/utils/common'
 
 /**
  * @template T Type used for request payload, by default same as Response type
@@ -40,6 +40,8 @@ export const useApiFetchByIds = <R>(
   client: () => AxiosInstance,
   system: string,
   entity: string,
+  urlTemplate: string | undefined = undefined,
+  urlParams: UrlParams | undefined = undefined,
   options: AxiosRequestConfig = {},
   isSearchApi = false,
   field = 'id'
@@ -48,14 +50,17 @@ export const useApiFetchByIds = <R>(
 
   const executeFetch = async (
     ids: DocId[] | IntegerId[],
-    urlTemplate: string,
-    urlParams: UrlParams | undefined = undefined
+    urlTemplateOverride: string | undefined = undefined,
+    urlParamsOverride: UrlParams | undefined = undefined
   ): Promise<R> => {
     abortController = new AbortController()
 
     try {
+      const params = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
+      if (isUndefined(template)) throw new Error('Url template is undefined')
       const url =
-        (isUndefined(urlParams) ? urlTemplate : replaceUrlParameters(urlTemplate, urlParams)) +
+        (isUndefined(params) ? template : replaceUrlParameters(template, params)) +
         generateByIdsApiQuery(ids, isSearchApi, field)
 
       const res = await client().get(url, {
@@ -130,6 +135,10 @@ export const useApiFetchByIds = <R>(
 }
 
 export type UseApiFetchByIdsReturnType<R> = {
-  executeFetch: (ids: DocId[] | IntegerId[], urlTemplate: string, urlParams?: UrlParams | undefined) => Promise<R>
+  executeFetch: (
+    ids: DocId[] | IntegerId[],
+    urlTemplateOverride?: string,
+    urlParamsOverride?: UrlParams | undefined
+  ) => Promise<R>
   abortFetch: () => void
 }

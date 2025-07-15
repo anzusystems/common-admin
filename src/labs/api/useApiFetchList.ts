@@ -48,7 +48,7 @@ export const useApiFetchList = <R>(
   client: () => AxiosInstance,
   system: string,
   entity: string,
-  urlTemplate: string,
+  urlTemplate: string | undefined = undefined,
   urlParams: UrlParams | undefined = undefined,
   options: AxiosRequestConfig = {}
 ): UseApiFetchListReturnType<R> => {
@@ -59,18 +59,18 @@ export const useApiFetchList = <R>(
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
     urlTemplateOverride: string | undefined = undefined,
-    urlParamsOverride: UrlParams | undefined = undefined
+    urlParamsOverride: UrlParams | undefined = undefined,
+    forceElastic = false
   ): Promise<R> => {
     abortController = new AbortController()
 
     try {
-      const searchApi = filterConfig.general.elastic ? '/search' : ''
+      const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
       const params = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
       const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
+      if (isUndefined(template)) throw new Error('Url template is undefined')
       const url =
-        (isUndefined(params)
-          ? template
-          : replaceUrlParameters(template, params)) +
+        (isUndefined(params) ? template : replaceUrlParameters(template, params)) +
         searchApi +
         generateListQuery(pagination, filterData, filterConfig)
 
@@ -162,8 +162,9 @@ export type UseApiFetchListReturnType<R> = {
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    urlTemplate: string,
-    urlParams?: UrlParams | undefined
+    urlTemplateOverride?: string | undefined,
+    urlParamsOverride?: UrlParams | undefined,
+    forceElastic?: boolean
   ) => Promise<R>
   abortFetch: () => void
 }

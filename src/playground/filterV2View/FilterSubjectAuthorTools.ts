@@ -89,15 +89,23 @@ const mapToValueObject = (author: AuthorKind) => {
 const END_POINT = '/adm/v1/author-kind'
 
 const fetchAuthorListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<AuthorKind[]>(cmsClient, 'cms', 'authorKind', undefined, true)
-  return executeFetch(ids, END_POINT + '/search')
+  const { executeFetch } = useApiFetchByIds<AuthorKind[]>(
+    cmsClient,
+    'cms',
+    'authorKind',
+    END_POINT + '/search',
+    undefined,
+    undefined,
+    true
+  )
+  return executeFetch(ids)
 }
 
-const useFetchAuthorList = () => useApiFetchList<AuthorKind[]>(cmsClient, 'cms', 'authorKind')
+const useFetchAuthorList = () => useApiFetchList<AuthorKind[]>(cmsClient, 'cms', 'authorKind', END_POINT)
 
 export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchAuthorList()
-  const authors = await executeFetch(pagination, filterData, filterConfig, END_POINT)
+  const authors = await executeFetch(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
 }

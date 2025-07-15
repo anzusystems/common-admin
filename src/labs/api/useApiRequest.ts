@@ -1,7 +1,7 @@
 import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
-import { isNull, isUndefined } from '@/utils/common'
+import { isDefined, isNull, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosInstance, type AxiosRequestConfig, type Method } from 'axios'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
@@ -27,22 +27,27 @@ export const useApiRequest = <R, T = R>(
   method: Method,
   system: string,
   entity: string,
+  urlTemplate: string | undefined = undefined,
+  urlParams: UrlParams | undefined = undefined,
   options: AxiosRequestConfig = {}
 ): UseApiAnyRequestReturnType<R, T> => {
   let abortController: AbortController | null = null
 
   const executeRequest = async (
-    urlTemplate = '',
-    urlParams: UrlParams | undefined = undefined,
+    urlTemplateOverride: string | undefined = undefined,
+    urlParamsOverride: UrlParams | undefined = undefined,
     object: T | undefined = undefined
   ): Promise<R> => {
     abortController = new AbortController()
 
     try {
       const axiosConfig: AxiosRequestConfig = { method: method }
-      axiosConfig.url = urlTemplate
-      if (urlTemplate !== '' && !isUndefined(urlParams)) {
-        axiosConfig.url = replaceUrlParameters(urlTemplate, urlParams)
+      const params = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
+      if (isUndefined(template)) throw new Error('Url template is undefined')
+      axiosConfig.url = template
+      if (template !== '' && !isUndefined(params)) {
+        axiosConfig.url = replaceUrlParameters(template, params)
       }
       if (!isNull(object)) {
         axiosConfig.data = JSON.stringify(object)
@@ -120,6 +125,10 @@ export const useApiRequest = <R, T = R>(
 }
 
 export type UseApiAnyRequestReturnType<R, T = R> = {
-  executeRequest: (urlTemplate: string, urlParams?: UrlParams | undefined, object?: T | undefined) => Promise<R>
+  executeRequest: (
+    urlTemplateOverride?: string,
+    urlParamsOverride?: UrlParams | undefined,
+    object?: T | undefined
+  ) => Promise<R>
   abortRequest: () => void
 }

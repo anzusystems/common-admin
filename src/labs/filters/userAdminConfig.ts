@@ -13,7 +13,7 @@ export function useUserAdminConfigApi(
   entity: string = ENTITY,
   endPoint: string = END_POINT
 ) {
-  const useFetchUserAdminConfigList = () => useApiFetchList<UserAdminConfig[]>(client, system, entity)
+  const useFetchUserAdminConfigList = () => useApiFetchList<UserAdminConfig[]>(client, system, entity, END_POINT)
 
   const fetchUserAdminConfig = (id: IntegerId) => {
     const { executeRequest } = useApiRequest<UserAdminConfig>(client, 'GET', system, entity)

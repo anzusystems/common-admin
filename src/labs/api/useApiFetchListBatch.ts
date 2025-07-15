@@ -1,7 +1,7 @@
 import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
-import { isUndefined } from '@/utils/common'
+import { isDefined, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
@@ -32,6 +32,8 @@ export const useApiFetchListBatch = <R>(
   client: () => AxiosInstance,
   system: string,
   entity: string,
+  urlTemplate: string | undefined = undefined,
+  urlParams: UrlParams | undefined = undefined,
   options: AxiosRequestConfig = {}
 ): UseApiFetchListBatchReturnType<R> => {
   let abortController: AbortController | null = null
@@ -39,8 +41,8 @@ export const useApiFetchListBatch = <R>(
   const executeFetch = async (
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    urlTemplate: string,
-    urlParams: UrlParams | undefined = undefined,
+    urlTemplateOverride: string | undefined = undefined,
+    urlParamsOverride: UrlParams | undefined = undefined,
     sortBy = 'id',
     sortDesc = true,
     batchSize = 100,
@@ -50,9 +52,12 @@ export const useApiFetchListBatch = <R>(
 
     try {
       const searchApi = (filterConfig.general.elastic || forceElastic) ? '/search' : ''
+      const params = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
+      if (isUndefined(template)) throw new Error('Url template is undefined')
       const pagination = usePagination({ key: sortBy, order: sortDesc ? SortOrder.Desc : SortOrder.Asc })
       pagination.value.rowsPerPage = batchSize
-      const url = (isUndefined(urlParams) ? urlTemplate : replaceUrlParameters(urlTemplate, urlParams)) + searchApi
+      const url = (isUndefined(params) ? template : replaceUrlParameters(template, params)) + searchApi
       const results = [] as unknown as R
 
       // First page request
@@ -179,8 +184,8 @@ export type UseApiFetchListBatchReturnType<R> = {
   executeFetch: (
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    urlTemplate: string,
-    urlParams?: UrlParams,
+    urlTemplateOverride?: string,
+    urlParamsOverride?: UrlParams,
     sortBy?: string,
     sortDesc?: boolean,
     batchSize?: number,

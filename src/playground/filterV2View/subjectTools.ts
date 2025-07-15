@@ -149,8 +149,14 @@ export const useSubjectListActions = () => {
     filterConfig: FilterConfig
   ) => {
     filterData.discriminator = 'standard'
-    const { executeRequest } = useApiRequest<any>(cmsClient, 'GET', 'cms', 'subject')
-    const res = await executeRequest(END_POINT + '/search' + generateListQuery(pagination, filterData, filterConfig))
+    const { executeRequest } = useApiRequest<any>(
+      cmsClient,
+      'GET',
+      'cms',
+      'subject',
+      END_POINT + '/search' + generateListQuery(pagination, filterData, filterConfig)
+    )
+    const res = await executeRequest()
     pagination.value.hasNextPage = res.hasNextPage
     pagination.value.currentViewCount = res.data.length
 

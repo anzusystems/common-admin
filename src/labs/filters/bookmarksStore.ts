@@ -8,7 +8,6 @@ import {
 } from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
 import type { UseApiFetchListReturnType } from '@/labs/api/useApiFetchList'
-import { END_POINT } from '@/labs/filters/userAdminConfig'
 import { usePagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
 
@@ -76,7 +75,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     let items: UserAdminConfig[] = []
     try {
       const { executeFetch } = useApiFetch()
-      items = await executeFetch(pagination, filterData, filterConfig, END_POINT)
+      items = await executeFetch(pagination, filterData, filterConfig)
       bookmarks.value.set(key, { lastUsed: now, items })
     } catch (e) {
       error.value = true
@@ -111,7 +110,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     let length = Infinity
     try {
       const { executeFetch } = useApiFetch()
-      const res = await executeFetch(pagination, filterData, filterConfig, END_POINT)
+      const res = await executeFetch(pagination, filterData, filterConfig)
       length = res.length
     } catch (e) {
       error.value = true

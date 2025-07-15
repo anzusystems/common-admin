@@ -41,15 +41,15 @@ export interface UserMinimal {
 const END_POINT = '/adm/users'
 
 const fetchUserListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<User[]>(cmsClient, 'cms', 'user')
-  return executeFetch(ids, END_POINT)
+  const { executeFetch } = useApiFetchByIds<User[]>(cmsClient, 'cms', 'user', END_POINT)
+  return executeFetch(ids)
 }
 
-const useFetchUserList = () => useApiFetchList<User[]>(cmsClient, 'cms', 'user')
+const useFetchUserList = () => useApiFetchList<User[]>(cmsClient, 'cms', 'user', END_POINT)
 
 export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchUserList()
-  const users = await executeFetch(pagination, filterData, filterConfig, END_POINT)
+  const users = await executeFetch(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>users.map((user: User) => ({
     title: user.person.fullName,

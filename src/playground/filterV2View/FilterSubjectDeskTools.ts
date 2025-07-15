@@ -32,16 +32,16 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
 
 const END_POINT = '/adm/desks'
 
-const useFetchDeskList = () => useApiFetchList<Desk[]>(cmsClient, 'cms', 'desk')
+const useFetchDeskList = () => useApiFetchList<Desk[]>(cmsClient, 'cms', 'desk', END_POINT)
 
 const fetchDeskListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<Desk[]>(cmsClient, 'cms', 'desk')
-  return executeFetch(ids, END_POINT)
+  const { executeFetch } = useApiFetchByIds<Desk[]>(cmsClient, 'cms', 'desk', END_POINT)
+  return executeFetch(ids)
 }
 
 export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchDeskList()
-  const desks = await executeFetch(pagination, filterData, filterConfig, END_POINT)
+  const desks = await executeFetch(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
     title: desk.name,
