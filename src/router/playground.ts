@@ -22,6 +22,7 @@ import SortableView from '@/playground/sortableView/SortableView.vue'
 import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 import AlertView from '@/playground/alertView/AlertView.vue'
 import SubjectSelectView from '@/playground/subjectSelectView/SubjectSelectView.vue'
+import SubjectSelect2View from '@/playground/subjectSelect2View/SubjectSelect2View.vue'
 import ImageMultipleView from '@/playground/imageMultipleView/ImageMultipleView.vue'
 import CollabDetailView from '@/playground/collabView/CollabDetailView.vue'
 import CollabEditView from '@/playground/collabView/CollabEditView.vue'
@@ -108,6 +109,11 @@ const router = createRouter({
       path: '/view/subject-select',
       name: 'view-subject-select',
       component: SubjectSelectView,
+    },
+    {
+      path: '/view/subject-select2',
+      name: 'view-subject-select2',
+      component: SubjectSelect2View,
     },
     {
       path: '/view/asset-select',

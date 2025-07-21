@@ -21,7 +21,7 @@ import type { DatetimeUTCNullable } from '@/types/common'
 import ARow from '@/components/ARow.vue'
 import { dateTimeNow, dateTimePretty, isDatetimeUTC } from '@/utils/datetime'
 import { useAlerts } from '@/composables/system/alerts'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
+import type { ValueObjectOption } from '@/types/ValueObject'
 
 const props = withDefaults(
   defineProps<{

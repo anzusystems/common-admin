@@ -12,7 +12,7 @@ import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByU
 import type { CollabComponentConfig, CollabFieldData } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
-import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory.ts'
+import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
