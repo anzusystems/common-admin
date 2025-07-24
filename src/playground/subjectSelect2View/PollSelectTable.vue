@@ -1,13 +1,15 @@
 <script lang="ts" setup>
-import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
-import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
-import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ADatetime from '@/components/datetime/ADatetime.vue'
-import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
-import PollSelectFilter from '@/playground/subjectSelectView/PollSelectFilter.vue'
+import PollSelectFilter from '@/playground/subjectSelect2View/PollSelectFilter.vue'
 import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
-import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
-import { fetchPollListDemo, type PollDemo } from '@/playground/subjectSelectView/pollDemoApi'
+import { type PollDemo, useFetchPollListDemo } from '@/playground/subjectSelectView/pollDemoApi'
+import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
+import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
+import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
+import { usePollSelectStore } from '@/playground/subjectSelect2View/pollSelectStore'
+import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
+import { provide } from 'vue'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 
 withDefaults(
   defineProps<{
@@ -23,7 +25,10 @@ const emit = defineEmits<{
   (e: 'onConfirm', data: Array<PollDemo>): void
 }>()
 
-const { datatableHiddenColumns, filter } = usePollSelectStore()
+const { datatableHiddenColumns, filterConfig, filterData } = usePollSelectStore()
+provide(FilterConfigKey, filterConfig)
+provide(FilterDataKey, filterData)
+const { executeFetch } = useFetchPollListDemo()
 
 const {
   items,
@@ -55,9 +60,11 @@ const {
   datatableHiddenColumns,
   'cms',
   'poll',
-  fetchPollListDemo,
-  filter
+  executeFetch,
+  filterData,
+  filterConfig
 )
+provide(DatatablePaginationKey, pagination)
 
 const onConfirm = (items: Array<PollDemo>) => {
   emit('onConfirm', items)

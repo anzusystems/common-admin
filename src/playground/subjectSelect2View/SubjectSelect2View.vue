@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import PollSelectTable from '@/playground/subjectSelectView/PollSelectTable.vue'
+import PollSelectTable from '@/playground/subjectSelect2View/PollSelectTable.vue'
 import { ref } from 'vue'
 
 const maxCount = ref(1)

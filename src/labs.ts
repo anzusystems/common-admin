@@ -15,6 +15,7 @@ import { useApiRequest } from '@/labs/api/useApiRequest'
 import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 import { generateListQuery, useApiFetchList } from '@/labs/api/useApiFetchList'
+import { useJobApi } from '@/labs/job/jobApi'
 import {
   DatatablePaginationKey,
   FilterConfigKey,
@@ -76,4 +77,5 @@ export {
   createDatatableColumnsConfig,
   useSubjectSelect,
   ASubjectSelect,
+  useJobApi,
 }
