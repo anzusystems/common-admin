@@ -1,10 +1,10 @@
 import { computed, reactive } from 'vue'
 import type { Pagination } from '@/types/Pagination'
 
-export function usePagination(sortBy: string | null = 'id') {
+export function usePagination(sortBy: string | null = 'id', sortDescending: boolean = true) {
   return reactive<Pagination>({
     sortBy: sortBy,
-    descending: true,
+    descending: sortDescending,
     page: 1,
     rowsPerPage: 25,
     rowsNumber: 0,

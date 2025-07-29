@@ -35,6 +35,7 @@ const props = withDefaults(
     innerFilter: FilterBag
     filterByField?: string
     filterSortBy?: string | null
+    filterSortDescending?: boolean
     disableInitFetch?: boolean | undefined
     loading?: boolean
     collab?: CollabComponentConfig
@@ -53,6 +54,7 @@ const props = withDefaults(
     hideLabel: false,
     filterByField: 'name',
     filterSortBy: 'createdAt',
+    filterSortDescending: true,
     disableInitFetch: false,
     loading: false,
     collab: undefined,
@@ -160,7 +162,7 @@ const multipleComputedVuetifyTypeFix = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const pagination = usePagination(props.filterSortBy)
+const pagination = usePagination(props.filterSortBy, props.filterSortDescending)
 const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 
