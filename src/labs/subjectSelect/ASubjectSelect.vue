@@ -58,7 +58,6 @@ const paginationComputed = computed({
 })
 
 const sidebarLeft = ref(true)
-const filterTouched = ref(false)
 
 const { t } = useI18n()
 

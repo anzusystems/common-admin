@@ -55,8 +55,13 @@ export const useApiFetchListBatch = <R>(
       const params = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
       const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
-      const pagination = usePagination({ key: sortBy, order: sortDesc ? SortOrder.Desc : SortOrder.Asc })
-      pagination.value.rowsPerPage = batchSize
+      const { pagination } = usePagination({
+        sortBy: {
+          key: sortBy,
+          order: sortDesc ? SortOrder.Desc : SortOrder.Asc,
+        },
+        rowsPerPage: batchSize,
+      })
       const url = (isUndefined(params) ? template : replaceUrlParameters(template, params)) + searchApi
       const results = [] as unknown as R
 

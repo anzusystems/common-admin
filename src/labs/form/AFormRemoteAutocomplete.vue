@@ -179,7 +179,7 @@ const multipleComputedVuetifyTypeFix = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const pagination = usePagination(props.filterSortBy)
+const { pagination } = usePagination({ sortBy: props.filterSortBy })
 const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 

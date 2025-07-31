@@ -1,11 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useUserAdminConfigInnerFilter } from '@/labs/filters/UserAdminConfigFilter'
-import {
-  type UserAdminConfig,
-  type UserAdminConfigLayoutTypeType,
-  UserAdminConfigType,
-} from '@/types/UserAdminConfig'
+import { type UserAdminConfig, type UserAdminConfigLayoutTypeType, UserAdminConfigType } from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
 import type { UseApiFetchListReturnType } from '@/labs/api/useApiFetchList'
 import { usePagination } from '@/labs/filters/pagination'
@@ -63,9 +59,13 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       }
     }
 
-    const pagination = usePagination({ key: 'position', order: SortOrder.Asc })
-    pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS
-
+    const { pagination } = usePagination({
+      sortBy: {
+        key: 'position',
+        order: SortOrder.Asc,
+      },
+      rowsPerPage: MAX_BOOKMARK_ITEMS,
+    })
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
     filterData.configType = UserAdminConfigType.FilterBookmark
     filterData.layoutType = identifier.layoutType
@@ -98,9 +98,13 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>
   ): Promise<number> {
     error.value = false
-    const pagination = usePagination({ key: 'position', order: SortOrder.Asc })
-    pagination.value.rowsPerPage = MAX_BOOKMARK_ITEMS + 1
-
+    const { pagination } = usePagination({
+      sortBy: {
+        key: 'position',
+        order: SortOrder.Asc,
+      },
+      rowsPerPage: MAX_BOOKMARK_ITEMS + 1,
+    })
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
     filterData.configType = UserAdminConfigType.FilterBookmark
     filterData.layoutType = identifier.layoutType

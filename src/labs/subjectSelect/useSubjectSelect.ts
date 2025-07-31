@@ -28,7 +28,7 @@ export function useSubjectSelect<TItem>(
   const items: Ref<Array<TItem>> = ref([])
   const selected: Ref<Array<TItem>> = ref([])
   const loading = ref(false)
-  const pagination = usePagination()
+  const { pagination, setSortBy, incrementPage } = usePagination()
 
   const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, subject)
   const { showErrorsDefault } = useAlerts()
@@ -46,13 +46,13 @@ export function useSubjectSelect<TItem>(
   }
 
   const sortByChange = (option: DatatableOrderingOption) => {
-    pagination.value = { ...pagination.value, sortBy: option.sortBy }
+    setSortBy(option.sortBy)
     getListDebounced()
   }
 
   const onFetchNextPage = async () => {
     loading.value = true
-    pagination.value = { ...pagination.value, page: pagination.value.page + 1 }
+    incrementPage()
     try {
       const res = await executeFetch(pagination, filterData, filterConfig) as TItem[]
       items.value.push(...res)
