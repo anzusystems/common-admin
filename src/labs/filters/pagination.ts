@@ -1,6 +1,6 @@
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 import { type Ref, ref } from 'vue'
-import { isNull, isUndefined } from '@/utils/common.ts'
+import { isNull, isUndefined } from '@/utils/common'
 
 export interface Pagination {
   sortBy: DatatableSortBy
