@@ -6,7 +6,7 @@ import {
 } from '@/composables/system/datatableColumns'
 import { computed, onMounted, type Ref, watch } from 'vue'
 import { i18n } from '@/plugins/i18n'
-import { isArray, isObject, isUndefined } from '@/utils/common'
+import { isArray, isBoolean, isObject, isString, isUndefined } from '@/utils/common'
 
 const defaultColumn: ColumnInternalValues = {
   key: '',
@@ -15,18 +15,37 @@ const defaultColumn: ColumnInternalValues = {
   fixed: false,
 }
 
+interface DatatableColumnsConfigMoreOptions {
+  store: string | boolean // false to disable, string to override store key
+  disableActions: boolean
+  customI18n: any
+  showExpand: boolean
+}
+
+const DatatableColumnsConfigMoreOptionsDefault = {
+  store: true,
+  disableActions: false,
+  customI18n: undefined,
+  showExpand: false,
+}
+
 export function createDatatableColumnsConfig(
   config: ColumnConfig[],
   columnsHidden: Ref<Array<string>>,
-  system: string | undefined = undefined,
-  subject: string | undefined = undefined,
-  disableActions: boolean = false,
-  customI18n: undefined | any = undefined,
-  showExpand: undefined | boolean = undefined,
-  storeId: string | undefined = undefined,
+  system: string,
+  subject: string,
+  moreOptions: Partial<DatatableColumnsConfigMoreOptions> = {}
 ) {
-  const localI18n = customI18n ?? i18n
+  const options = { ...DatatableColumnsConfigMoreOptionsDefault, ...moreOptions }
+  const localI18n = options.customI18n ?? i18n
   const { t } = localI18n.global || localI18n
+
+  let storeId: undefined | string = undefined
+  if (isString(options.store)) {
+    storeId = options.store
+  } else if (isBoolean(options.store) && true === options.store) {
+    storeId = 'table_' + system + '_' + subject
+  }
 
   const columnsAll = config.map((item) => {
     const obj = { ...defaultColumn, ...item }
@@ -44,13 +63,13 @@ export function createDatatableColumnsConfig(
 
   const columnsVisible = computed(() => {
     const columns: any = []
-    if (showExpand) columns.push({ key: 'data-table-expand', sortable: false })
+    if (options.showExpand) columns.push({ key: 'data-table-expand', sortable: false })
     columnsAll.forEach((column) => {
       if (!columnsHidden.value.includes(column.key)) {
         columns.push(column)
       }
     })
-    if (!disableActions) columns.push({ key: 'actions', sortable: false, fixed: true })
+    if (!options.disableActions) columns.push({ key: 'actions', sortable: false, fixed: 'end' })
     return columns
   })
 
