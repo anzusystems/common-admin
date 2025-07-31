@@ -3,7 +3,7 @@ import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/m
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isDefined, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
-import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
@@ -24,12 +24,13 @@ import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import { ref } from 'vue'
 import { usePagination as usePagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
+import type { AxiosClientFn } from '@/labs/api/client.ts'
 
 /**
  * @template R Response type override
  */
 export const useApiFetchListBatch = <R>(
-  client: () => AxiosInstance,
+  client: AxiosClientFn,
   system: string,
   entity: string,
   urlTemplate: string | undefined = undefined,

@@ -2,7 +2,7 @@ import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/er
 import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
-import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
@@ -19,6 +19,7 @@ import type { DocId, IntegerId } from '@/types/common'
 import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { isDefined, isUndefined } from '@/utils/common'
+import type { AxiosClientFn } from '@/labs/api/client.ts'
 
 /**
  * @template T Type used for request payload, by default same as Response type
@@ -37,7 +38,7 @@ const generateByIdsApiQuery = (ids: IntegerId[] | DocId[], isSearchApi: boolean,
 }
 
 export const useApiFetchByIds = <R>(
-  client: () => AxiosInstance,
+  client: AxiosClientFn,
   system: string,
   entity: string,
   urlTemplate: string | undefined = undefined,

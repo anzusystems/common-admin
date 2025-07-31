@@ -36,6 +36,7 @@ import { TimeIntervalSpecialOptions, type TimeIntervalToolsValue } from '@/labs/
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
 import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
+import type { AxiosClientFn } from '@/labs/api/client'
 import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
 
 export {
@@ -78,4 +79,5 @@ export {
   useSubjectSelect,
   ASubjectSelect,
   useJobApi,
+  type AxiosClientFn,
 }

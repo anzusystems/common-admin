@@ -2,7 +2,7 @@ import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/er
 import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
-import type { AxiosInstance, AxiosRequestConfig } from 'axios'
+import type { AxiosRequestConfig } from 'axios'
 import axios from 'axios'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
@@ -25,6 +25,7 @@ import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiT
 import { isDefined, isUndefined } from '@/utils/common'
 import type { Pagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
+import type { AxiosClientFn } from '@/labs/api/client.ts'
 
 export const generateListQuery = (
   pagination: Ref<Pagination>,
@@ -45,7 +46,7 @@ export const generateListQuery = (
  * @template R Response type override, optional
  */
 export const useApiFetchList = <R>(
-  client: () => AxiosInstance,
+  client: AxiosClientFn,
   system: string,
   entity: string,
   urlTemplate: string | undefined = undefined,

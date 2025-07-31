@@ -3,7 +3,7 @@ import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/m
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
-import axios, { type AxiosInstance, type AxiosRequestConfig, type Method } from 'axios'
+import axios, { type AxiosRequestConfig, type Method } from 'axios'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import {
@@ -17,13 +17,14 @@ import {
 } from '@/model/error/AnzuApiDependencyExistsError'
 import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import type { AxiosClientFn } from '@/labs/api/client.ts'
 
 /**
- * @template T Type used for request payload, by default same as Response type
+ * @template T Type used for request payload, by default, same as Response type
  * @template R Response type override, optional
  */
 export const useApiRequest = <R, T = R>(
-  client: () => AxiosInstance,
+  client: AxiosClientFn,
   method: Method,
   system: string,
   entity: string,
