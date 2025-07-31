@@ -20,7 +20,7 @@ export function useSubjectSelect<TItem>(
     urlTemplateOverride?: string | undefined,
     urlParamsOverride?: UrlParams | undefined,
     forceElastic?: boolean
-  ) => Promise<TItem>,
+  ) => Promise<TItem[]>,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>
 ) {
