@@ -22,18 +22,23 @@ const PaginationOptionsDefault = {
   sortBy: null,
 }
 
-export function usePagination(options: Partial<PaginationOptions> = {}): UsePaginationReturnType {
+export function usePagination(
+  options: Partial<PaginationOptions> = {},
+  externalPaginationRef?: Ref<Pagination>
+): UsePaginationReturnType {
   const mergedOptions = { ...PaginationOptionsDefault, ...options }
 
-  const pagination = ref<Pagination>({
-    sortBy: mergedOptions.sortBy,
-    page: 1,
-    rowsPerPage: mergedOptions.rowsPerPage,
-    rowsNumber: 0,
-    hasNextPage: null,
-    currentViewCount: 0,
-    totalCount: 0,
-  })
+  const pagination =
+    externalPaginationRef ??
+    ref<Pagination>({
+      sortBy: mergedOptions.sortBy,
+      page: 1,
+      rowsPerPage: mergedOptions.rowsPerPage,
+      rowsNumber: 0,
+      hasNextPage: null,
+      currentViewCount: 0,
+      totalCount: 0,
+    })
 
   const setSortBy = (sortBy: DatatableSortBy) => {
     if (isNull(sortBy) || isUndefined(sortBy)) {
@@ -48,7 +53,7 @@ export function usePagination(options: Partial<PaginationOptions> = {}): UsePagi
   }
 
   const incrementPage = () => {
-    pagination.value = { ...pagination.value, page: pagination.value.page + 1  }
+    pagination.value = { ...pagination.value, page: pagination.value.page + 1 }
     return pagination.value.page
   }
 
