@@ -250,7 +250,7 @@ __metadata:
     vue-eslint-parser: "npm:^10.2.0"
     vue-i18n: "npm:11.1.11"
     vue-router: "npm:4.5.1"
-    vue-tsc: "npm:3.0.4"
+    vue-tsc: "npm:3.0.5"
     vuetify: "npm:3.9.3"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
@@ -2219,30 +2219,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volar/language-core@npm:2.4.20, @volar/language-core@npm:~2.4.11":
-  version: 2.4.20
-  resolution: "@volar/language-core@npm:2.4.20"
+"@volar/language-core@npm:2.4.22, @volar/language-core@npm:~2.4.11":
+  version: 2.4.22
+  resolution: "@volar/language-core@npm:2.4.22"
   dependencies:
-    "@volar/source-map": "npm:2.4.20"
-  checksum: 10/e785c5d8b2ce81c722d38632c5a89f6d95623387d8f7ae3717d18dd42b02595cc9261aced4a1e7ac204c947373ae36db1e80ae75b36ec563a12f558c55247019
+    "@volar/source-map": "npm:2.4.22"
+  checksum: 10/966e399a70f156c74c3fd08e4f1a299a69f596c310ade41c61566ddb4f9f52577a93bb192876d79b2ab6f3d8343572bb773ba416c9948b2f7a34c9508840d1cd
   languageName: node
   linkType: hard
 
-"@volar/source-map@npm:2.4.20":
-  version: 2.4.20
-  resolution: "@volar/source-map@npm:2.4.20"
-  checksum: 10/6bb7798efae79dd4ba7985cf7ec57ab193707e77999f6cf5cc09af8fa457c6408a009f43a905e54f0f136acec4dda209bbe0ce33dc76fb126b3a1958126c84d6
+"@volar/source-map@npm:2.4.22":
+  version: 2.4.22
+  resolution: "@volar/source-map@npm:2.4.22"
+  checksum: 10/911ad9782f52ec7de4c675846b866d662d5b0636da2629d7e53fbd6016b031dfe6d0e089903263c0ba8e896098ecccf6c30ee5eb20970ccc7ffd685e7be911a9
   languageName: node
   linkType: hard
 
-"@volar/typescript@npm:2.4.20, @volar/typescript@npm:^2.4.11":
-  version: 2.4.20
-  resolution: "@volar/typescript@npm:2.4.20"
+"@volar/typescript@npm:2.4.22, @volar/typescript@npm:^2.4.11":
+  version: 2.4.22
+  resolution: "@volar/typescript@npm:2.4.22"
   dependencies:
-    "@volar/language-core": "npm:2.4.20"
+    "@volar/language-core": "npm:2.4.22"
     path-browserify: "npm:^1.0.1"
     vscode-uri: "npm:^3.0.8"
-  checksum: 10/423e0bbd09d19a68b41946a4a9ac9f2b559e3b33b5abc090034fd8027930f9ef6146e79ba7a6666f0e20d34078da1459c637242105e7a9c5028eba80ebcbf7c7
+  checksum: 10/5018cf92f15a9debff44a61cd297a4e40307171ac3db97ab9591f31b8098495f2933e781761f4952c95cbee6fe18ac84fff18ad0a4742980daaffbd81676e4fb
   languageName: node
   linkType: hard
 
@@ -2399,11 +2399,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/language-core@npm:3.0.4, @vue/language-core@npm:^3.0.3":
-  version: 3.0.4
-  resolution: "@vue/language-core@npm:3.0.4"
+"@vue/language-core@npm:3.0.5, @vue/language-core@npm:^3.0.3":
+  version: 3.0.5
+  resolution: "@vue/language-core@npm:3.0.5"
   dependencies:
-    "@volar/language-core": "npm:2.4.20"
+    "@volar/language-core": "npm:2.4.22"
     "@vue/compiler-dom": "npm:^3.5.0"
     "@vue/compiler-vue2": "npm:^2.7.16"
     "@vue/shared": "npm:^3.5.0"
@@ -2416,7 +2416,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10/5f35a44f9eb3f2614fd2879533dce31ba0cf2ebb6bd5b5c5c164adcc9cccf51d333d6993a13cdd282155e3e0fa78c315a1a70dfff6484da194b36a2e62f881d7
+  checksum: 10/b783b1ef192b3ee10ed8151b3d01334292527474e78e37c20172927a3f042a0f333c60da13a7955f5809c2cdfce1dc92209d44dd4944df8bf314d30068a164d0
   languageName: node
   linkType: hard
 
@@ -8113,17 +8113,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-tsc@npm:3.0.4":
-  version: 3.0.4
-  resolution: "vue-tsc@npm:3.0.4"
+"vue-tsc@npm:3.0.5":
+  version: 3.0.5
+  resolution: "vue-tsc@npm:3.0.5"
   dependencies:
-    "@volar/typescript": "npm:2.4.20"
-    "@vue/language-core": "npm:3.0.4"
+    "@volar/typescript": "npm:2.4.22"
+    "@vue/language-core": "npm:3.0.5"
   peerDependencies:
     typescript: ">=5.0.0"
   bin:
     vue-tsc: ./bin/vue-tsc.js
-  checksum: 10/9f07005c758e9e85c55039c7f13fb0b00fcef2b02d041e7743f6577957f29c5bc923ac8592b809548845857cbc96fa270d64511d6bf43af7b1f126d58c8f722f
+  checksum: 10/0e7dcd8523f8ae87f3ea344802fa19ad21ecf82ce1ef3d7f82c503ffd1e51baadddac4b0daf9e37ae5af055f015707b65f3c7f82ea8b9075bb0a60a874a99a6f
   languageName: node
   linkType: hard
 
