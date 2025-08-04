@@ -11,35 +11,33 @@ import {
 } from '@/labs/filters/filterInjectionKeys'
 import FiltersSelected from '@/labs/filters/FiltersSelected.vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { isDefined, isUndefined } from '@/utils/common'
-import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
+import { isBoolean, isDefined, isUndefined } from '@/utils/common'
+import { type FilterStoreIdentifier, useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { datatableSlotName } from '@/components/datatable/datatable'
 import FilterDetailItem from '@/labs/filters/FilterDetailItem.vue'
 import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
 import FilterBookmarks from '@/labs/filters/FilterBookmarks.vue'
 import type { IntegerIdNullable } from '@/types/common'
-import type { AxiosInstance } from 'axios'
+import { type AxiosInstance } from 'axios'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     enableTop?: boolean
     hideButtons?: boolean
     formName?: string
     disableFilterUrlSync?: boolean
-    system?: string | undefined
     userId?: IntegerIdNullable | undefined
     client?: (() => AxiosInstance) | undefined
-    bookmarkSystemResource?: string | undefined
+    store?: FilterStoreIdentifier | boolean // false to disable, FilterStoreIdentifier to custom store key
   }>(),
   {
     enableTop: false,
     hideButtons: false,
     formName: 'search',
     disableFilterUrlSync: false,
-    system: undefined,
     userId: undefined,
     client: undefined,
-    bookmarkSystemResource: undefined,
+    store: true,
   }
 )
 const emit = defineEmits<{
@@ -58,6 +56,16 @@ const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 if (isUndefined(filterConfig) || isUndefined(filterData)) {
   throw new Error('Incorrect provide/inject config.')
+}
+let system = filterConfig.general.system
+let subject = filterConfig.general.subject
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+if (!isBoolean(props.store)) {
+  system = props.store.system
+  subject = props.store.subject
+} else if (false === props.store) {
+  system = undefined
+  subject = undefined
 }
 const submitResetCounter = ref(0)
 provide(FilterSubmitResetCounterKey, submitResetCounter)
@@ -117,15 +125,16 @@ defineExpose({
       </VCol>
     </VRow>
     <VRow dense>
-      <VCol v-if="bookmarkSystemResource && userId && system && isDefined(client)">
+      <VCol v-if="store && userId && isDefined(client)">
         <slot name="bookmarks">
           <div class="d-flex flex-wrap align-center">
             <FilterBookmarks
+              v-if="system && subject && userId && isDefined(client)"
               v-model:datatable-hidden-columns="datatableHiddenColumns"
               :client="client"
               :system="system"
+              :subject="system"
               :user-id="userId"
-              :system-resource="bookmarkSystemResource"
               @submit="submitFilterBookmark"
             />
           </div>
@@ -156,11 +165,11 @@ defineExpose({
           <AFilterSubmitButton :touched="touched" />
           <AFilterResetButton @reset="resetFilter" />
           <AFilterBookmarkButton
-            v-if="bookmarkSystemResource && userId && system && isDefined(client)"
+            v-if="system && subject && userId && isDefined(client)"
             :client="client"
-            :system="system"
             :user="userId"
-            :system-resource="bookmarkSystemResource"
+            :system="system"
+            :subject="subject"
             :datatable-hidden-columns="datatableHiddenColumns"
           />
         </slot>

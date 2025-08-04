@@ -25,8 +25,8 @@ const props = withDefaults(
   defineProps<{
     client: () => AxiosInstance
     system: string
+    subject: string
     user: IntegerId
-    systemResource: string
     datatableHiddenColumns?: string[] | undefined
   }>(),
   {
@@ -102,8 +102,9 @@ const sortItems = async () => {
   }
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { serializeFilters } = useFilterHelpers(filterData, filterConfig, props.systemResource)
+const { serializeFilters } = useFilterHelpers(filterData, filterConfig)
+
+const systemResource = props.system + '_' + props.subject
 
 const addBookmark = async () => {
   saveButtonLoading.value = true
@@ -112,7 +113,7 @@ const addBookmark = async () => {
   config.user = props.user
   config.configType = UserAdminConfigType.FilterBookmark
   config.layoutType = UserAdminConfigLayoutType.Desktop
-  config.systemResource = props.systemResource
+  config.systemResource = systemResource
   config.customName = customName.value
   config.data = {
     filter: serializeFilters(filterData, pagination, false),
@@ -126,7 +127,7 @@ const addBookmark = async () => {
         system: props.system,
         user: props.user,
         layoutType: UserAdminConfigLayoutType.Desktop,
-        systemResource: props.systemResource,
+        systemResource: systemResource,
       },
       useFetchUserAdminConfigList
     )
@@ -138,7 +139,7 @@ const addBookmark = async () => {
     config.position = count + 1
     const res = await createUserAdminConfig(config)
     filterBookmarkStore.addOne(
-      filterBookmarkStore.generateKey(props.system, UserAdminConfigLayoutType.Desktop, props.systemResource),
+      filterBookmarkStore.generateKey(props.system, UserAdminConfigLayoutType.Desktop, systemResource),
       res
     )
     emit('onClose')
@@ -218,7 +219,7 @@ const reloadItems = async () => {
         system: props.system,
         user: props.user,
         layoutType: UserAdminConfigLayoutType.Desktop,
-        systemResource: props.systemResource,
+        systemResource: systemResource,
       },
       useFetchUserAdminConfigList,
       true

@@ -10,8 +10,8 @@ withDefaults(
   defineProps<{
     client: () => AxiosInstance
     system: string
+    subject: string
     user: IntegerId
-    systemResource: string
     tooltipT?: string
     buttonClass?: string
     dataCy?: string
@@ -63,7 +63,7 @@ const { t } = useI18n()
     :client="client"
     :system="system"
     :user="user"
-    :system-resource="systemResource"
+    :subject="subject"
     :datatable-hidden-columns="datatableHiddenColumns"
     @on-close="dialog = false"
   />

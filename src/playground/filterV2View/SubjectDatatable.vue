@@ -64,7 +64,7 @@ const sortByChange = () => {
   submitFilter(pagination, getList)
 }
 
-const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filterData, filterConfig, 'subject')
+const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filterData, filterConfig)
 
 const submitFilterAction = () => {
   submitFilter(pagination, getList)

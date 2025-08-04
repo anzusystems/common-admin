@@ -2,6 +2,7 @@ import { reactive, type Ref } from 'vue'
 import {
   cloneDeep,
   isArray,
+  isBoolean,
   isEmptyArray,
   isEmptyObject,
   isNull,
@@ -14,6 +15,8 @@ import type { Pagination } from '@/labs/filters/pagination'
 import { type DatatableSortBy, SortOrder } from '@/composables/system/datatableColumns'
 import { stringToBooleanExact, stringToNumber } from '@/utils/string'
 
+export type FilterStoreIdentifier = { system: string; subject: string }
+
 const SORT_URL_PARAM = '_sort'
 
 const defaultRenderOptions: FilerRenderOptions = {
@@ -25,14 +28,12 @@ const defaultRenderOptions: FilerRenderOptions = {
   xl: 2,
 }
 
-export function createFilterStore<F extends readonly MakeFilterOption<string>[]>(
-  filterFields: F
-): FilterData<F> {
+export function createFilterStore<F extends readonly MakeFilterOption<string>[]>(filterFields: F): FilterData<F> {
   return reactive(
     filterFields.reduce((acc, field) => {
       return {
         ...acc,
-        [field.name]: cloneDeep(field.default)
+        [field.name]: cloneDeep(field.default),
       }
     }, {} as FilterData<F>)
   ) as FilterData<F>
@@ -121,14 +122,33 @@ export function useFilterClearHelpers<
   }
 }
 
+interface FilterHelpersMoreOptions {
+  store: string | boolean // false to disable, string to override store key
+}
+
+const FilterHelpersMoreOptionsDefault = {
+  store: true,
+}
+
 export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
   filterData: FilterData<F>,
   filterConfig: FilterConfig<F>,
-  systemResource: string | undefined = undefined
+  moreOptions: Partial<FilterHelpersMoreOptions> = {}
 ) {
+  const options = { ...FilterHelpersMoreOptionsDefault, ...moreOptions }
   const END_FILTER_MARKER = '~'
 
-  const storeKey = systemResource ? 'datatableFilter_' + systemResource : undefined
+  let storeKey: undefined | string = undefined
+  if (isString(options.store)) {
+    storeKey = options.store
+  } else if (
+    isBoolean(options.store) &&
+    true === options.store &&
+    isString(filterConfig.general.system) &&
+    isString(filterConfig.general.subject)
+  ) {
+    storeKey = 'datatableFilter_' + filterConfig.general.system + '_' + filterConfig.general.subject
+  }
 
   const getFilterDataForStoring = (): Record<string, AllowedFilterValues> => {
     const data: Record<string, AllowedFilterValues> = {}
@@ -291,7 +311,6 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
             value = tryConvertBoolean
           }
         }
-
       }
       filterData[key] = value
     }

@@ -22,9 +22,9 @@ import { type FilterData, useFilterHelpers } from '@/labs/filters/filterFactory'
 const props = withDefaults(
   defineProps<{
     client: () => AxiosInstance
-    system: string
     userId: IntegerId
-    systemResource: string
+    system: string
+    subject: string
   }>(),
   {}
 )
@@ -56,6 +56,8 @@ const filterBookmarkStore = useFilterBookmarkStore()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { useFetchUserAdminConfigList } = useUserAdminConfigApi(props.client, props.system)
 
+const systemResource = props.system + '_' + props.subject
+
 const loadBookmarks = async (force = false) => {
   loading.value = true
   await filterBookmarkStore.getBookmarks(
@@ -63,7 +65,7 @@ const loadBookmarks = async (force = false) => {
       system: props.system,
       user: props.userId,
       layoutType: UserAdminConfigLayoutType.Desktop,
-      systemResource: props.systemResource,
+      systemResource: systemResource,
     },
     useFetchUserAdminConfigList,
     force
@@ -71,8 +73,7 @@ const loadBookmarks = async (force = false) => {
   loading.value = false
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { deserializeFilters } = useFilterHelpers(filterData, filterConfig, props.systemResource)
+const { deserializeFilters } = useFilterHelpers(filterData, filterConfig)
 
 const onItemClick = (item: UserAdminConfig) => {
   const config = item.data as UserAdminConfigDataFilterBookmark
@@ -134,7 +135,7 @@ watchThrottled(
 )
 
 const items = computed(() => {
-  const key = filterBookmarkStore.generateKey(props.system, UserAdminConfigLayoutType.Desktop, props.systemResource)
+  const key = filterBookmarkStore.generateKey(props.system, UserAdminConfigLayoutType.Desktop, systemResource)
   const result = filterBookmarkStore.bookmarks.get(key)
   return result?.items ?? []
 })

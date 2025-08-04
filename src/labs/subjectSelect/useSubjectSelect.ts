@@ -30,7 +30,7 @@ export function useSubjectSelect<TItem>(
   const loading = ref(false)
   const { pagination, setSortBy, incrementPage } = usePagination()
 
-  const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, subject)
+  const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig)
   const { showErrorsDefault } = useAlerts()
 
   const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConfig(
@@ -54,7 +54,7 @@ export function useSubjectSelect<TItem>(
     loading.value = true
     incrementPage()
     try {
-      const res = await executeFetch(pagination, filterData, filterConfig) as TItem[]
+      const res = (await executeFetch(pagination, filterData, filterConfig)) as TItem[]
       items.value.push(...res)
     } catch (e) {
       showErrorsDefault(e)
@@ -71,7 +71,7 @@ export function useSubjectSelect<TItem>(
   const getList = async () => {
     loading.value = true
     try {
-      items.value = await executeFetch(pagination, filterData, filterConfig) as TItem[]
+      items.value = (await executeFetch(pagination, filterData, filterConfig)) as TItem[]
     } catch (e) {
       showErrorsDefault(e)
     } finally {

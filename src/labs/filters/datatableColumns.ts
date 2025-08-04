@@ -40,11 +40,11 @@ export function createDatatableColumnsConfig(
   const localI18n = options.customI18n ?? i18n
   const { t } = localI18n.global || localI18n
 
-  let storeId: undefined | string = undefined
+  let storeKey: undefined | string = undefined
   if (isString(options.store)) {
-    storeId = options.store
+    storeKey = options.store
   } else if (isBoolean(options.store) && true === options.store) {
-    storeId = 'table_' + system + '_' + subject
+    storeKey = 'table_' + system + '_' + subject
   }
 
   const columnsAll = config.map((item) => {
@@ -74,8 +74,8 @@ export function createDatatableColumnsConfig(
   })
 
   const loadStoredColumns = () => {
-    if (!storeId || !localStorage) return
-    const stored = localStorage.getItem(storeId)
+    if (!storeKey || !localStorage) return
+    const stored = localStorage.getItem(storeKey)
     if (!stored) return
     const storedData = JSON.parse(stored) as StoredData
     if (!isObject(storedData)) return
@@ -84,8 +84,8 @@ export function createDatatableColumnsConfig(
   }
 
   const storeColumns = (columns: string[]) => {
-    if (!storeId || !localStorage) return
-    localStorage.setItem(storeId, JSON.stringify({ hidden: columns }))
+    if (!storeKey || !localStorage) return
+    localStorage.setItem(storeKey, JSON.stringify({ hidden: columns }))
   }
 
   onMounted(() => {
