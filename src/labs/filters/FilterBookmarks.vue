@@ -77,7 +77,7 @@ const { deserializeFilters } = useFilterHelpers(filterData, filterConfig)
 
 const onItemClick = (item: UserAdminConfig) => {
   const config = item.data as UserAdminConfigDataFilterBookmark
-  if (isDefined(config.datatableHiddenColumns)) {
+  if (isDefined(config.datatableHiddenColumns) && isDefined(datatableHiddenColumns.value)) {
     datatableHiddenColumns.value = config.datatableHiddenColumns
   }
   if (isDefined(config.sortBy)) {
