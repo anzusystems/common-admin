@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.233",
+  "version": "1.47.0-beta.234",
   "license": "Apache-2.0",
   "scripts": {
     "docs:dev": "vitepress dev docs",
@@ -58,6 +58,7 @@
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
+    "@vue/language-server": "^3.0.5",
     "@vue/tsconfig": "0.7.0",
     "@vuelidate/core": "^2.0.3",
     "@vuelidate/validators": "^2.0.4",
@@ -87,13 +88,13 @@
     "vite": "7.0.6",
     "vite-plugin-dts": "4.5.4",
     "vite-plugin-vuetify": "^2.1.2",
-    "vitepress": "1.6.3",
+    "vitepress": "1.6.4",
     "vue": "3.5.18",
     "vue-eslint-parser": "^10.2.0",
     "vue-i18n": "11.1.11",
     "vue-router": "4.5.1",
     "vue-tsc": "3.0.5",
-    "vuetify": "3.9.3",
+    "vuetify": "3.9.4",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -110,7 +111,7 @@
     "vue": "3.5.18",
     "vue-i18n": "11.1.11",
     "vue-router": "4.5.1",
-    "vuetify": "3.9.3"
+    "vuetify": "3.9.4"
   },
   "peerDependenciesMeta": {
     "@sentry/vue": {

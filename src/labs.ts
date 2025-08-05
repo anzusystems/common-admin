@@ -1,4 +1,5 @@
 import AFilterBooleanSelect from '@/labs/filters/AFilterBooleanSelect.vue'
+import AFilterBooleanGroup from '@/labs/filters/AFilterBooleanGroup.vue'
 import AFilterDatetimePicker from '@/labs/filters/AFilterDatetimePicker.vue'
 import AFilterInteger from '@/labs/filters/AFilterInteger.vue'
 import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
@@ -43,6 +44,7 @@ export {
   // V2 FILTERS
   AFilterWrapper,
   AFilterBooleanSelect,
+  AFilterBooleanGroup,
   AFilterDatetimePicker,
   AFilterInteger,
   AFilterRemoteAutocomplete,
