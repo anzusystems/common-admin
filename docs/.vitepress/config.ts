@@ -228,8 +228,10 @@ function sidebarEditor() {
       collapsed: false,
       items: [
         { text: 'Scraper', link: '/editor/scraper/general/' },
+        { text: 'bluesky_post', link: '/editor/scraper/bluesky_post/' },
         { text: 'dailymotion_video', link: '/editor/scraper/dailymotion_video/' },
         { text: 'facebook_post', link: '/editor/scraper/facebook_post/' },
+        { text: 'facebook_reel', link: '/editor/scraper/facebook_reel/' },
         { text: 'facebook_video', link: '/editor/scraper/facebook_video/' },
         { text: 'flourish_story', link: '/editor/scraper/flourish_story/' },
         { text: 'flourish_visual', link: '/editor/scraper/flourish_visual/' },
