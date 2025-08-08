@@ -78,6 +78,5 @@ interface Data {
   text: string
   author: Author
   publishedAt: DatetimeUTC
-  images: Image[]
 }
 ```
