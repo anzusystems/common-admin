@@ -359,7 +359,6 @@ export type FilterVariant =
   | 'endsWith'
   | 'startsWith'
   | 'memberOf'
-  | 'contains'
   | 'neq'
   | 'gte'
   | 'gt'
