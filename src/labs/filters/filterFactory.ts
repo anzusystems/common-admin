@@ -21,11 +21,11 @@ const SORT_URL_PARAM = '_sort'
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,
-  xs: 12,
-  sm: 6,
-  md: 4,
-  lg: 3,
-  xl: 2,
+  xs: undefined,
+  sm: undefined,
+  md: undefined,
+  lg: undefined,
+  xl: undefined,
 }
 
 export function createFilterStore<F extends readonly MakeFilterOption<string>[]>(filterFields: F): FilterData<F> {
@@ -344,11 +344,11 @@ export interface GeneralFilterOptions {
 
 export interface FilerRenderOptions {
   skip: boolean
-  xs: number
-  sm: number
-  md: number
-  lg: number
-  xl: number
+  xs: number | undefined
+  sm: number | undefined
+  md: number | undefined
+  lg: number | undefined
+  xl: number | undefined
 }
 
 export type FilterVariant =

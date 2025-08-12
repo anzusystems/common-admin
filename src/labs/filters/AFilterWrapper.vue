@@ -186,11 +186,11 @@ defineExpose({
               <VCol
                 v-for="field in filterConfig.fields"
                 :key="field.name"
-                :cols="field.render.xs"
-                :sm="field.render.sm"
-                :md="field.render.md"
-                :lg="field.render.lg"
-                :xl="field.render.xl"
+                :cols="field.render.xs || 12"
+                :sm="field.render.sm || 6"
+                :md="field.render.md || 4"
+                :lg="field.render.lg || 3"
+                :xl="field.render.xl || 2"
                 :class="{ 'd-none': field.render.skip }"
               >
                 <slot

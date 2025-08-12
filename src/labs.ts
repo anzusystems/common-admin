@@ -8,7 +8,7 @@ import AFilterString from '@/labs/filters/AFilterString.vue'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
 import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOptionsSelect.vue'
 import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
-import AFilterWrapperVertical from '@/labs/filters/AFilterWrapperVertical.vue'
+import AFilterWrapperSubjectSelect from '@/labs/filters/AFilterWrapperSubjectSelect.vue'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
@@ -43,7 +43,7 @@ import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
 export {
   // V2 FILTERS
   AFilterWrapper,
-  AFilterWrapperVertical,
+  AFilterWrapperSubjectSelect,
   AFilterBooleanSelect,
   AFilterDatetimePicker,
   AFilterInteger,
