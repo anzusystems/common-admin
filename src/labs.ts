@@ -1,5 +1,4 @@
 import AFilterBooleanSelect from '@/labs/filters/AFilterBooleanSelect.vue'
-import AFilterBooleanGroup from '@/labs/filters/AFilterBooleanGroup.vue'
 import AFilterDatetimePicker from '@/labs/filters/AFilterDatetimePicker.vue'
 import AFilterInteger from '@/labs/filters/AFilterInteger.vue'
 import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
@@ -9,6 +8,7 @@ import AFilterString from '@/labs/filters/AFilterString.vue'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
 import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOptionsSelect.vue'
 import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
+import AFilterWrapperVertical from '@/labs/filters/AFilterWrapperVertical.vue'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
@@ -43,8 +43,8 @@ import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
 export {
   // V2 FILTERS
   AFilterWrapper,
+  AFilterWrapperVertical,
   AFilterBooleanSelect,
-  AFilterBooleanGroup,
   AFilterDatetimePicker,
   AFilterInteger,
   AFilterRemoteAutocomplete,
