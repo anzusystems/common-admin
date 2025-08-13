@@ -37,7 +37,8 @@ export function useSubjectSelect<TItem>(
     datatableConfig,
     datatableHiddenColumns,
     system,
-    subject
+    subject,
+    { store: false }
   )
 
   const onOpen = () => {
