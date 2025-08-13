@@ -123,11 +123,13 @@ export function useFilterClearHelpers<
 }
 
 interface FilterHelpersMoreOptions {
-  store: string | boolean // false to disable, string to override store key
+  storeFiltersLocalStorage: string | boolean // false to disable, string to override store key
+  populateUrlParams: boolean
 }
 
 const FilterHelpersMoreOptionsDefault = {
-  store: true,
+  storeFiltersLocalStorage: true,
+  populateUrlParams: true,
 }
 
 export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
@@ -139,11 +141,11 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   const END_FILTER_MARKER = '~'
 
   let storeKey: undefined | string = undefined
-  if (isString(options.store)) {
-    storeKey = options.store
+  if (isString(options.storeFiltersLocalStorage)) {
+    storeKey = options.storeFiltersLocalStorage
   } else if (
-    isBoolean(options.store) &&
-    true === options.store &&
+    isBoolean(options.storeFiltersLocalStorage) &&
+    true === options.storeFiltersLocalStorage &&
     isString(filterConfig.general.system) &&
     isString(filterConfig.general.subject)
   ) {
@@ -245,10 +247,17 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   }
 
   const updateLocationHash = (serialized: string) => {
+    if (options.populateUrlParams === false) return
     window.location.hash = serialized
   }
 
+  const resetLocationHash = () => {
+    if (options.populateUrlParams === false) return
+    window.location.hash = ''
+  }
+
   const parseLocationHash = () => {
+    if (options.populateUrlParams === false) return null
     return deserializeFilters(window.location.hash)
   }
 
@@ -269,7 +278,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     if (storeKey && localStorage) {
       localStorage.removeItem(storeKey)
     }
-    window.location.hash = ''
+    resetLocationHash()
     filterConfig.touched = false
     if (callback) callback()
   }

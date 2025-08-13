@@ -38,7 +38,7 @@ export function useSubjectSelect<TItem>(
     datatableHiddenColumns,
     system,
     subject,
-    { store: false, disableActions: true }
+    { storeColumnsLocalStorage: false, disableActions: true }
   )
 
   const onOpen = () => {

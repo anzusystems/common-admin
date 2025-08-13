@@ -16,14 +16,14 @@ const defaultColumn: ColumnInternalValues = {
 }
 
 interface DatatableColumnsConfigMoreOptions {
-  store: string | boolean // false to disable, string to override store key
+  storeColumnsLocalStorage: string | boolean // false to disable, string to override store key
   disableActions: boolean
   customI18n: any
   showExpand: boolean
 }
 
 const DatatableColumnsConfigMoreOptionsDefault = {
-  store: true,
+  storeColumnsLocalStorage: true,
   disableActions: false,
   customI18n: undefined,
   showExpand: false,
@@ -41,9 +41,9 @@ export function createDatatableColumnsConfig(
   const { t } = localI18n.global || localI18n
 
   let storeKey: undefined | string = undefined
-  if (isString(options.store)) {
-    storeKey = options.store
-  } else if (isBoolean(options.store) && true === options.store) {
+  if (isString(options.storeColumnsLocalStorage)) {
+    storeKey = options.storeColumnsLocalStorage
+  } else if (isBoolean(options.storeColumnsLocalStorage) && true === options.storeColumnsLocalStorage) {
     storeKey = 'table_' + system + '_' + subject
   }
 
