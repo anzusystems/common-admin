@@ -30,7 +30,10 @@ export function useSubjectSelect<TItem>(
   const loading = ref(false)
   const { pagination, setSortBy, incrementPage } = usePagination()
 
-  const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig)
+  const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, {
+    storeFiltersLocalStorage: false,
+    populateUrlParams: false,
+  })
   const { showErrorsDefault } = useAlerts()
 
   const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConfig(
