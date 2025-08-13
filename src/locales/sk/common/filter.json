@@ -11,5 +11,9 @@
     "storeTableOrder": "Uložiť aj poradie tabuľky",
     "saveBookmarkOrder": "Uložiť zoradenie",
     "nameUniqueError": "Názov filtra musí byť unikátny"
+  },
+  "timeInterval": {
+    "from": "Od",
+    "until": "Do"
   }
 }

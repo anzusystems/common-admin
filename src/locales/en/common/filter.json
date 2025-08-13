@@ -11,5 +11,9 @@
     "storeTableOrder": "Save datatable order also",
     "saveBookmarkOrder": "Save ordering",
     "nameUniqueError": "Name of filter must be unique"
+  },
+  "timeInterval": {
+    "from": "From",
+    "until": "Until"
   }
 }

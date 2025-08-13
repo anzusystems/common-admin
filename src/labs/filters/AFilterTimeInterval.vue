@@ -258,7 +258,7 @@ const onInternalItemChamge = (item: ValueObjectOption<TimeIntervalToolsValue>) =
           <AFormDatetimePicker
             v-model="dialogData.from"
             :v="v$.dialogData.from"
-            label="From"
+            :label="t('common.filter.timeInterval.from')"
             required
           />
         </ARow>
@@ -266,7 +266,7 @@ const onInternalItemChamge = (item: ValueObjectOption<TimeIntervalToolsValue>) =
           <AFormDatetimePicker
             v-model="dialogData.until"
             :v="v$.dialogData.until"
-            label="Until"
+            :label="t('common.filter.timeInterval.until')"
             required
           />
         </ARow>
