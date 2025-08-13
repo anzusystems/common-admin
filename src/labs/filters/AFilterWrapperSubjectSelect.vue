@@ -76,7 +76,7 @@ defineExpose({
     :name="formName"
     @submit.prevent="submitFilter"
   >
-    <div class="subject-select-filter__content mx-2 my-4">
+    <div class="subject-select-filter__content px-2 py-4">
       <slot name="detail">
         <VRow>
           <VCol
