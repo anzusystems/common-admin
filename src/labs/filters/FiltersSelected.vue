@@ -27,7 +27,7 @@ const getTitleFromConfig = (name: string) => {
 
 const isClosable = (name: string) => {
   const config =  filterConfig.fields[name]
-  return !config.mandatory || config.clearable
+  return !config.mandatory && config.clearable
 }
 
 const selectedArray = computed(() => {
