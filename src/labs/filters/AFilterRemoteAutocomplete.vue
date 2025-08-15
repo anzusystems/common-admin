@@ -17,6 +17,7 @@ import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/lab
 import { isOneOf } from '@/utils/enum'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
+import { useAlerts } from '@/composables/system/alerts'
 
 type FetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
@@ -113,12 +114,19 @@ const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
 
 const loading = ref(false)
 
+const { showErrorsDefault } = useAlerts()
+
 const apiSearch = async (query: string, requestCounter: number) => {
   loading.value = true
   filterInnerData[props.filterByField] = query
-  const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
-  if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
-  loading.value = false
+  try {
+    const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
+    if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
+    loading.value = false
+  } catch (e) {
+    loading.value = false
+    showErrorsDefault(e)
+  }
 }
 
 const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
@@ -203,8 +211,7 @@ const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
   if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
   if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (filterConfigCurrent.value.variant === 'search')
-    return t('common.model.filterPlaceholder.contains')
+  if (filterConfigCurrent.value.variant === 'search') return t('common.model.filterPlaceholder.contains')
   return ''
 })
 

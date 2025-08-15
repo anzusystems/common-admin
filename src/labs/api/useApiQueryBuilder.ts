@@ -148,15 +148,16 @@ export function useApiQueryBuilder() {
         if (isNull(data)) {
           continue
         }
+        const filterFieldConfigRelated = filterConfig.fields[filterFieldConfig.related]
+        const nameRelated = filterFieldConfigRelated.apiName || filterFieldConfig.related
         if (isSearchApi) {
           queryAdd(name, data.from)
-          queryAdd(filterFieldConfig.related, data.until)
+          queryAdd(nameRelated, data.until)
           continue
         }
         if (data.from) queryAddFilter('gte', name, data.from)
         if (data.until) {
-          const untilName =  filterConfig.fields[filterFieldConfig.related].apiName || filterFieldConfig.related
-          queryAddFilter('lte', untilName, data.until)
+          queryAddFilter('lte', nameRelated, data.until)
         }
         continue
       }
@@ -168,7 +169,7 @@ export function useApiQueryBuilder() {
         queryAdd(name, value)
         continue
       }
-      queryAddFilter(filterFieldConfig.variant, filterName, value)
+      queryAddFilter(filterFieldConfig.variant, name, value)
     }
   }
 
