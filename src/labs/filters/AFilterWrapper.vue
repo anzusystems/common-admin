@@ -25,19 +25,19 @@ const props = withDefaults(
     enableTop?: boolean
     hideButtons?: boolean
     formName?: string
-    disableFilterUrlSync?: boolean
     userId?: IntegerIdNullable | undefined
     client?: (() => AxiosInstance) | undefined
     store?: FilterStoreIdentifier | boolean // false to disable, FilterStoreIdentifier to custom store key
+    alwaysVisible?: boolean
   }>(),
   {
     enableTop: false,
     hideButtons: false,
     formName: 'search',
-    disableFilterUrlSync: false,
     userId: undefined,
     client: undefined,
     store: true,
+    alwaysVisible: false,
   }
 )
 const emit = defineEmits<{
@@ -105,6 +105,10 @@ const touched = computed(() => {
   return filterConfig.touched
 })
 
+if (props.alwaysVisible) {
+  showDetail.value = true
+}
+
 defineExpose({
   submit: submitFilter,
   reset: resetFilter,
@@ -141,7 +145,10 @@ defineExpose({
         </slot>
       </VCol>
     </VRow>
-    <VRow dense>
+    <VRow
+      v-if="!alwaysVisible"
+      dense
+    >
       <VCol cols="auto">
         <AFilterAdvancedButton
           :button-active="showDetail"
@@ -176,10 +183,10 @@ defineExpose({
       </VCol>
     </VRow>
     <div>
-      <VSlideYTransition>
+      <component :is="alwaysVisible ? 'div' : 'VSlideYTransition'">
         <div
           v-show="showDetail"
-          class="mt-6 pa-4 system-border-a"
+          :class="{ 'mt-6 pa-4 system-border-a': !alwaysVisible }"
         >
           <slot name="detail">
             <VRow>
@@ -203,7 +210,7 @@ defineExpose({
             </VRow>
           </slot>
         </div>
-      </VSlideYTransition>
+      </component>
     </div>
   </VForm>
 </template>
