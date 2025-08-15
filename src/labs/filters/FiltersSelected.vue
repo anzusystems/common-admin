@@ -25,6 +25,11 @@ const getTitleFromConfig = (name: string) => {
   return name
 }
 
+const isClosable = (name: string) => {
+  const config =  filterConfig.fields[name]
+  return !config.mandatory || config.clearable
+}
+
 const selectedArray = computed(() => {
   const fieldOrder = Object.keys(filterConfig.fields)
   return Array.from(filterSelected.value)
@@ -38,26 +43,29 @@ const selectedArray = computed(() => {
 
 const clickClose = (name: string, optionValue: number | string) => {
   // update selected
+  const config =  filterConfig.fields[name]
   const selectedFound = filterSelected.value.get(name)
-  if (selectedFound && selectedFound.length === 1) {
+  if (config.mandatory) {
+    return
+  } else if (selectedFound && selectedFound.length === 1) {
     filterSelected.value.delete(name)
   } else if (selectedFound) {
     const foundIndex = selectedFound.findIndex((item) => item.value === optionValue)
     selectedFound.splice(foundIndex, 1)
   }
   // update data
-  if (filterConfig.fields[name].type === 'timeInterval' && filterConfig.fields[name].related) {
-    filterData[name] = filterConfig.fields[name].default
-    filterData[filterConfig.fields[name].related] = filterConfig.fields[filterConfig.fields[name].related].default
+  if (config.type === 'timeInterval' && config.related) {
+    filterData[name] = config.default
+    filterData[config.related] = filterConfig.fields[config.related].default
   } else if (isArray(filterData[name]) && filterData[name].length > 0) {
     const foundIndex = filterData[name].findIndex((item) => item === optionValue)
     const newArray = [...toRaw(filterData[name])]
     newArray.splice(foundIndex, 1)
     filterData[name] = newArray as AllowedFilterValues
   } else if (isString(filterData[name]) || isNumber(filterData[name])) {
-    filterData[name] = filterConfig.fields[name].default
+    filterData[name] = config.default
   } else if (isBoolean(filterData[name])) {
-    filterData[name] = filterConfig.fields[name].default
+    filterData[name] = config.default
   }
   filterConfig.touched = true
 }
@@ -78,7 +86,7 @@ const clickClose = (name: string, optionValue: number | string) => {
       class="a-selected-filters__chips"
     >
       <VChip
-        closable
+        :closable="isClosable(item.name)"
         size="small"
         class="a-selected-filters__chip"
         @click:close.stop="clickClose(item.name, option.value)"

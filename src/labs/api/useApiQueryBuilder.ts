@@ -42,17 +42,18 @@ export function useApiQueryBuilder() {
     untilName: string,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    mandatory: boolean
+    mandatory: boolean,
+    exclude: boolean
   ): null | {
     from: DatetimeUTCNullable
     until: DatetimeUTCNullable
   } => {
     let fromValue = filterData[fromName] as TimeIntervalToolsValue
     let untilValue = filterData[untilName] as DatetimeUTCNullable
-    if (isNull(fromValue) && mandatory) {
+    if (isNull(fromValue) && mandatory && !exclude) {
       fromValue = filterConfig.fields[fromName].default as TimeIntervalToolsValue
     }
-    if (isNull(untilValue) && mandatory) {
+    if (isNull(untilValue) && mandatory && !exclude) {
       untilValue = filterConfig.fields[fromName].default as DatetimeUTCNullable
     }
     if (isString(fromValue) && isString(untilValue)) {
@@ -90,14 +91,14 @@ export function useApiQueryBuilder() {
     config: FilterField
   ): string | number | boolean | null => {
     if (isNull(value)) {
-      if (config.mandatory && !isUndefined(config.default)) {
+      if (config.mandatory && !config.exclude && !isUndefined(config.default)) {
         return isArray(config.default) ? config.default.join(',') : config.default
       }
       return null
     }
     if (isString(value)) {
       if (value.length === 0) {
-        if (config.mandatory && !isUndefined(config.default) && !isNull(config.default)) {
+        if (config.mandatory && !config.exclude && !isUndefined(config.default) && !isNull(config.default)) {
           return encodeURIComponent(isArray(config.default) ? config.default.join(',') : config.default)
         }
         return null
@@ -106,7 +107,7 @@ export function useApiQueryBuilder() {
     }
     if (isArray(value)) {
       if (value.length === 0) {
-        if (config.mandatory && isArray(config.default)) {
+        if (config.mandatory && !config.exclude && isArray(config.default)) {
           return config.default.map((item) => (isString(item) ? encodeURIComponent(item) : item)).join(',')
         }
         return null
@@ -143,7 +144,8 @@ export function useApiQueryBuilder() {
           filterFieldConfig.related,
           filterData,
           filterConfig,
-          filterFieldConfig.mandatory
+          filterFieldConfig.mandatory,
+          filterFieldConfig.exclude
         )
         if (isNull(data)) {
           continue
@@ -181,5 +183,6 @@ export function useApiQueryBuilder() {
     querySetFilters,
     queryAdd,
     queryBuild,
+    q,
   }
 }
