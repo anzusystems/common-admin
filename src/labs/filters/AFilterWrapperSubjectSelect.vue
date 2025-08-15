@@ -50,11 +50,11 @@ const submitFilter = () => {
   })
 }
 
-const { clearAll } = useFilterClearHelpers()
+const { clearAll, clearAllFilterSelected } = useFilterClearHelpers()
 
 const resetFilter = () => {
   clearAll(filterData, filterConfig)
-  filterSelected.value.clear()
+  clearAllFilterSelected(filterData, filterConfig, filterSelected)
   nextTick(() => {
     submitResetCounter.value++
     emit('reset')

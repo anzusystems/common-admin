@@ -1,4 +1,4 @@
-import { reactive, type Ref } from 'vue'
+import { reactive, type Ref, toRaw } from 'vue'
 import {
   cloneDeep,
   isArray,
@@ -6,6 +6,7 @@ import {
   isEmptyArray,
   isEmptyObject,
   isNull,
+  isNumber,
   isObject,
   isString,
   isUndefined,
@@ -14,6 +15,7 @@ import type { AnyFn } from '@vueuse/core'
 import type { Pagination } from '@/labs/filters/pagination'
 import { type DatatableSortBy, SortOrder } from '@/composables/system/datatableColumns'
 import { stringToBooleanExact, stringToNumber } from '@/utils/string'
+import type { ValueObjectOption } from '@/types/ValueObject.ts'
 
 export type FilterStoreIdentifier = { system: string; subject: string }
 
@@ -114,11 +116,66 @@ export function useFilterClearHelpers<
       clearOne(filterName as keyof FilterData<F>, filterData, filterConfig)
     }
   }
+  const clearOneFilterSelected = (
+    name: string,
+    optionValue: number | string,
+    filterData: FilterData<F>,
+    filterConfig: FilterConfig<F>,
+    filterSelected: Ref<Map<string, ValueObjectOption<string | number>[]>>
+  ) => {
+    if (!isClearable(name, filterConfig)) return
+    // update selected
+    const config = filterConfig.fields[name as keyof FilterConfig<F>['fields']]
+    const selectedFound = filterSelected.value.get(name)
+    if (selectedFound && selectedFound.length === 1) {
+      filterSelected.value.delete(name)
+    } else if (selectedFound) {
+      const foundIndex = selectedFound.findIndex((item) => item.value === optionValue)
+      selectedFound.splice(foundIndex, 1)
+    }
+    // update data
+    if (config.type === 'timeInterval' && config.related) {
+      filterData[name as keyof FilterData<F>] = config.default
+      filterData[config.related as keyof FilterData<F>] =
+        filterConfig.fields[config.related as keyof FilterConfig<F>['fields']].default
+    } else if (
+      isArray(filterData[name as keyof FilterData<F>]) &&
+      (filterData[name as keyof FilterData<F>] as any[]).length > 0
+    ) {
+      const foundIndex = (filterData[name as keyof FilterData<F>] as any[]).findIndex((item) => item === optionValue)
+      const newArray = [...toRaw(filterData[name as keyof FilterData<F>] as any[])]
+      newArray.splice(foundIndex, 1)
+      filterData[name as keyof FilterData<F>] = newArray as AllowedFilterValues
+    } else if (isString(filterData[name as keyof FilterData<F>]) || isNumber(filterData[name as keyof FilterData<F>])) {
+      filterData[name as keyof FilterData<F>] = config.default
+    } else if (isBoolean(filterData[name as keyof FilterData<F>])) {
+      filterData[name as keyof FilterData<F>] = config.default
+    }
+  }
+
+  const clearAllFilterSelected = (
+    filterData: FilterData<F>,
+    filterConfig: FilterConfig<F>,
+    filterSelected: Ref<Map<string, ValueObjectOption<string | number>[]>>
+  ) => {
+    for (const key of filterSelected.value.keys()) {
+      if (isClearable(key, filterConfig)) {
+        filterSelected.value.delete(key)
+      }
+    }
+  }
+
+  const isClearable = (name: string, filterConfig: FilterConfig<F>) => {
+    const config = filterConfig.fields[name as keyof FilterConfig<F>['fields']]
+    return !(config.mandatory || !config.clearable)
+  }
 
   return {
     clearOne,
     clearAll,
-    // resetFilter,
+    clearOneFilterSelected,
+    clearAllFilterSelected,
+    isClearable,
   }
 }
 

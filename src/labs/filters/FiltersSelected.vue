@@ -1,13 +1,9 @@
 <script lang="ts" setup>
-import { computed, inject, toRaw } from 'vue'
-import {
-  FilterConfigKey,
-  FilterDataKey,
-  FilterSelectedKey,
-} from '@/labs/filters/filterInjectionKeys'
-import { isArray, isBoolean, isNumber, isString, isUndefined } from '@/utils/common'
+import { computed, inject } from 'vue'
+import { FilterConfigKey, FilterDataKey, FilterSelectedKey } from '@/labs/filters/filterInjectionKeys'
+import { isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import type { AllowedFilterValues } from '@/labs/filters/filterFactory'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
@@ -25,11 +21,6 @@ const getTitleFromConfig = (name: string) => {
   return name
 }
 
-const isClosable = (name: string) => {
-  const config =  filterConfig.fields[name]
-  return !config.mandatory && config.clearable
-}
-
 const selectedArray = computed(() => {
   const fieldOrder = Object.keys(filterConfig.fields)
   return Array.from(filterSelected.value)
@@ -41,32 +32,10 @@ const selectedArray = computed(() => {
     .sort((a, b) => fieldOrder.indexOf(a.name) - fieldOrder.indexOf(b.name))
 })
 
+const { clearOneFilterSelected, isClearable } = useFilterClearHelpers()
+
 const clickClose = (name: string, optionValue: number | string) => {
-  // update selected
-  const config =  filterConfig.fields[name]
-  const selectedFound = filterSelected.value.get(name)
-  if (config.mandatory) {
-    return
-  } else if (selectedFound && selectedFound.length === 1) {
-    filterSelected.value.delete(name)
-  } else if (selectedFound) {
-    const foundIndex = selectedFound.findIndex((item) => item.value === optionValue)
-    selectedFound.splice(foundIndex, 1)
-  }
-  // update data
-  if (config.type === 'timeInterval' && config.related) {
-    filterData[name] = config.default
-    filterData[config.related] = filterConfig.fields[config.related].default
-  } else if (isArray(filterData[name]) && filterData[name].length > 0) {
-    const foundIndex = filterData[name].findIndex((item) => item === optionValue)
-    const newArray = [...toRaw(filterData[name])]
-    newArray.splice(foundIndex, 1)
-    filterData[name] = newArray as AllowedFilterValues
-  } else if (isString(filterData[name]) || isNumber(filterData[name])) {
-    filterData[name] = config.default
-  } else if (isBoolean(filterData[name])) {
-    filterData[name] = config.default
-  }
+  clearOneFilterSelected(name, optionValue, filterData, filterConfig, filterSelected)
   filterConfig.touched = true
 }
 </script>
@@ -86,7 +55,8 @@ const clickClose = (name: string, optionValue: number | string) => {
       class="a-selected-filters__chips"
     >
       <VChip
-        :closable="isClosable(item.name)"
+        v-if="isClearable(item.name, filterConfig)"
+        closable
         size="small"
         class="a-selected-filters__chip"
         @click:close.stop="clickClose(item.name, option.value)"
@@ -97,6 +67,13 @@ const clickClose = (name: string, optionValue: number | string) => {
             icon="mdi-close-circle"
           />
         </template>
+        {{ option.title }}
+      </VChip>
+      <VChip
+        v-else
+        size="small"
+        class="a-selected-filters__chip"
+      >
         {{ option.title }}
       </VChip>
     </div>
