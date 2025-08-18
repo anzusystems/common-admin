@@ -8,7 +8,7 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
 } from '@/labs/filters/filterInjectionKeys'
-import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
+import { isArray, isBoolean, isUndefined } from '@/utils/common'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
 const props = withDefaults(
@@ -45,6 +45,7 @@ const modelValue = computed({
     return filterData[props.name]
   },
   set(newValue) {
+    console.log('newValue', newValue)
     filterData[props.name] = newValue
     updateSelected()
     filterConfig.touched = true
@@ -90,9 +91,6 @@ watch(
   () => filterData[props.name],
   (newValue, oldValue) => {
     if (newValue === oldValue || isBoolean(newValue)) return
-    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
-      return
-    }
     updateSelected()
   },
   { immediate: true }
@@ -100,6 +98,7 @@ watch(
 </script>
 
 <template>
+  {{ filterConfigCurrent.multiple }}
   <VAutocomplete
     v-model="modelValue"
     :items="items"
