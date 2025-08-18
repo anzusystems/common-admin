@@ -45,7 +45,6 @@ const modelValue = computed({
     return filterData[props.name]
   },
   set(newValue) {
-    console.log('newValue', newValue)
     filterData[props.name] = newValue
     updateSelected()
     filterConfig.touched = true
@@ -98,7 +97,6 @@ watch(
 </script>
 
 <template>
-  {{ filterConfigCurrent.multiple }}
   <VAutocomplete
     v-model="modelValue"
     :items="items"
