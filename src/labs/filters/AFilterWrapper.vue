@@ -57,15 +57,17 @@ const filterData = inject(FilterDataKey)
 if (isUndefined(filterConfig) || isUndefined(filterData)) {
   throw new Error('Incorrect provide/inject config.')
 }
-let system = filterConfig.general.system
-let subject = filterConfig.general.subject
+const identifier = ref<Partial<FilterStoreIdentifier>>({
+  system: filterConfig.general.system,
+  subject: filterConfig.general.subject,
+})
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (!isBoolean(props.store)) {
-  system = props.store.system
-  subject = props.store.subject
+  identifier.value.system = props.store.system
+  identifier.value.subject = props.store.subject
 } else if (false === props.store) {
-  system = undefined
-  subject = undefined
+  identifier.value.system = undefined
+  identifier.value.subject = undefined
 }
 const submitResetCounter = ref(0)
 provide(FilterSubmitResetCounterKey, submitResetCounter)
@@ -133,11 +135,11 @@ defineExpose({
         <slot name="bookmarks">
           <div class="d-flex flex-wrap align-center">
             <FilterBookmarks
-              v-if="system && subject && userId && isDefined(client)"
+              v-if="identifier.system && identifier.subject && userId && isDefined(client)"
               v-model:datatable-hidden-columns="datatableHiddenColumns"
               :client="client"
-              :system="system"
-              :subject="system"
+              :system="identifier.system"
+              :subject="identifier.subject"
               :user-id="userId"
               @submit="submitFilterBookmark"
             />
@@ -172,11 +174,11 @@ defineExpose({
           <AFilterSubmitButton :touched="touched" />
           <AFilterResetButton @reset="resetFilter" />
           <AFilterBookmarkButton
-            v-if="system && subject && userId && isDefined(client)"
+            v-if="identifier.system && identifier.subject && userId && isDefined(client)"
             :client="client"
             :user="userId"
-            :system="system"
-            :subject="subject"
+            :system="identifier.system"
+            :subject="identifier.subject"
             :datatable-hidden-columns="datatableHiddenColumns"
           />
         </slot>

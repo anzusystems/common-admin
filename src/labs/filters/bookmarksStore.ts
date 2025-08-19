@@ -6,6 +6,7 @@ import type { IntegerId } from '@/types/common'
 import type { UseApiFetchListReturnType } from '@/labs/api/useApiFetchList'
 import { usePagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
+import { stringSplitOnFirstOccurrence } from '@/utils/string'
 
 interface CacheItem<T = UserAdminConfig> {
   lastUsed: number
@@ -19,8 +20,8 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
   const bookmarks = ref(new Map<string, CacheItem>())
   const error = ref(false)
 
-  function generateKey(system: string, layoutType: UserAdminConfigLayoutTypeType, systemResource: string) {
-    return `${system}/userAdminConfig/${layoutType}/${systemResource}`
+  function generateKey(layoutType: UserAdminConfigLayoutTypeType, systemResource: string) {
+    return `userAdminConfig/${systemResource}/${layoutType}/`
   }
 
   function removeOldestBookmark() {
@@ -39,7 +40,6 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
 
   async function getBookmarks(
     identifier: {
-      system: string
       user: IntegerId
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
@@ -48,7 +48,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     forceFetch: boolean = false
   ): Promise<UserAdminConfig[]> {
     error.value = false
-    const key = generateKey(identifier.system, identifier.layoutType, identifier.systemResource)
+    const key = generateKey(identifier.layoutType, identifier.systemResource)
     const now = Date.now()
 
     if (!forceFetch) {
@@ -66,7 +66,8 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       },
       rowsPerPage: MAX_BOOKMARK_ITEMS,
     })
-    const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
+    const { start: system, end: resource } = stringSplitOnFirstOccurrence(identifier.systemResource, '_')
+    const { filterConfig, filterData } = useUserAdminConfigInnerFilter(system, resource)
     filterData.configType = UserAdminConfigType.FilterBookmark
     filterData.layoutType = identifier.layoutType
     filterData.systemResource = identifier.systemResource
@@ -90,7 +91,6 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
 
   async function fetchBookmarksCount(
     identifier: {
-      system: string
       user: IntegerId
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
@@ -105,7 +105,8 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       },
       rowsPerPage: MAX_BOOKMARK_ITEMS + 1,
     })
-    const { filterConfig, filterData } = useUserAdminConfigInnerFilter(identifier.system)
+    const { start: system, end: resource } = stringSplitOnFirstOccurrence(identifier.systemResource, '_')
+    const { filterConfig, filterData } = useUserAdminConfigInnerFilter(system, resource)
     filterData.configType = UserAdminConfigType.FilterBookmark
     filterData.layoutType = identifier.layoutType
     filterData.systemResource = identifier.systemResource

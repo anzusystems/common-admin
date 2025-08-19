@@ -62,7 +62,6 @@ const loadBookmarks = async (force = false) => {
   loading.value = true
   await filterBookmarkStore.getBookmarks(
     {
-      system: props.system,
       user: props.userId,
       layoutType: UserAdminConfigLayoutType.Desktop,
       systemResource: systemResource,
@@ -135,7 +134,7 @@ watchThrottled(
 )
 
 const items = computed(() => {
-  const key = filterBookmarkStore.generateKey(props.system, UserAdminConfigLayoutType.Desktop, systemResource)
+  const key = filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource)
   const result = filterBookmarkStore.bookmarks.get(key)
   return result?.items ?? []
 })

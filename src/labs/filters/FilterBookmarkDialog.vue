@@ -124,7 +124,6 @@ const addBookmark = async () => {
   try {
     const count = await filterBookmarkStore.fetchBookmarksCount(
       {
-        system: props.system,
         user: props.user,
         layoutType: UserAdminConfigLayoutType.Desktop,
         systemResource: systemResource,
@@ -139,7 +138,7 @@ const addBookmark = async () => {
     config.position = count + 1
     const res = await createUserAdminConfig(config)
     filterBookmarkStore.addOne(
-      filterBookmarkStore.generateKey(props.system, UserAdminConfigLayoutType.Desktop, systemResource),
+      filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource),
       res
     )
     emit('onClose')
@@ -216,7 +215,6 @@ const reloadItems = async () => {
   try {
     itemsManage.value = await filterBookmarkStore.getBookmarks(
       {
-        system: props.system,
         user: props.user,
         layoutType: UserAdminConfigLayoutType.Desktop,
         systemResource: systemResource,

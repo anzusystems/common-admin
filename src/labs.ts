@@ -39,6 +39,7 @@ import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
 import type { AxiosClientFn } from '@/labs/api/client'
 import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
+import { useUserAdminConfigApi } from '@/labs/filters/userAdminConfig'
 
 export {
   // V2 FILTERS
@@ -82,4 +83,5 @@ export {
   ASubjectSelect,
   useJobApi,
   type AxiosClientFn,
+  useUserAdminConfigApi,
 }
