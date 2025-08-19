@@ -40,6 +40,7 @@ import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
 import type { AxiosClientFn } from '@/labs/api/client'
 import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
 import { useUserAdminConfigApi } from '@/labs/filters/userAdminConfig'
+import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactory'
 import {
   type UserAdminConfig,
   type UserAdminConfigDataFilterBookmark,
@@ -104,4 +105,5 @@ export {
   type UserAdminConfigLayoutTypeType,
   type UserAdminConfigDataFilterBookmark,
   type UserAdminConfigDataPinnedWidgets,
+  useUserAdminConfigFactory,
 }
