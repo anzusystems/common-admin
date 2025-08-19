@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
-import { computed, inject, type Ref, ref, watch } from 'vue'
+import { computed, getCurrentInstance, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { cloneDeep, isArray, isDefined, isNull, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
@@ -78,15 +78,22 @@ const emit = defineEmits<{
 const filterInnerConfig = inject(FilterInnerConfigKey)
 const filterInnerData = inject(FilterInnerDataKey)
 
+const componentName = getCurrentInstance()?.type.__name
+
+if (isUndefined(filterInnerConfig) || isUndefined(filterInnerData)) {
+  throw new Error(`[${componentName}] Incorrect provide/inject config.`)
+}
+
 if (
-  isUndefined(filterInnerConfig) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isUndefined(filterInnerConfig.fields[props.filterByField]) ||
-  isUndefined(filterInnerData) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isUndefined(filterInnerData[props.filterByField])
 ) {
-  throw new Error('Incorrect provide/inject config.')
+  throw new Error(
+    `[${componentName}] Incorrect filter inner config. ` +
+      `FilterByField is '${props.filterByField}' and available options are ${Object.keys(filterInnerData).join(', ')}.`
+  )
 }
 
 const modelValue = defineModel<DocId | IntegerId | DocId[] | IntegerId[] | null | any>({

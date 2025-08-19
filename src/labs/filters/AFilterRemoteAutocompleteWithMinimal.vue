@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
-import { computed, inject, type Ref, ref, watch } from 'vue'
+import { computed, getCurrentInstance, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
@@ -60,23 +60,41 @@ const filterData = inject(FilterDataKey)
 const filterInnerConfig = inject(FilterInnerConfigKey)
 const filterInnerData = inject(FilterInnerDataKey)
 
+const componentName = getCurrentInstance()?.type.__name
+
 if (
   isUndefined(submitResetCounter) ||
   isUndefined(filterSelected) ||
+  isUndefined(filterData) ||
   isUndefined(filterConfig) ||
+  isUndefined(filterInnerConfig) ||
+  isUndefined(filterInnerData)
+) {
+  throw new Error(`[${componentName}] Incorrect provide/inject config.`)
+}
+
+if (
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isUndefined(filterConfig.fields[props.name]) ||
-  isUndefined(filterData) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-  isUndefined(filterData[props.name]) ||
-  isUndefined(filterInnerConfig) ||
+  isUndefined(filterData[props.name])
+) {
+  throw new Error(
+    `[${componentName}] Incorrect filter config. ` +
+      `Name is '${props.name}' and available options are ${Object.keys(filterData).join(', ')}.`
+  )
+}
+
+if (
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isUndefined(filterInnerConfig.fields[props.filterByField]) ||
-  isUndefined(filterInnerData) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isUndefined(filterInnerData[props.filterByField])
 ) {
-  throw new Error('Incorrect provide/inject config.')
+  throw new Error(
+    `[${componentName}] Incorrect filter inner config. ` +
+      `FilterByField is '${props.filterByField}' and available options are ${Object.keys(filterInnerData).join(', ')}.`
+  )
 }
 
 const selected = ref<any>([])
@@ -208,8 +226,7 @@ const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
   if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
   if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (filterConfigCurrent.value.variant === 'search')
-    return t('common.model.filterPlaceholder.contains')
+  if (filterConfigCurrent.value.variant === 'search') return t('common.model.filterPlaceholder.contains')
   return ''
 })
 

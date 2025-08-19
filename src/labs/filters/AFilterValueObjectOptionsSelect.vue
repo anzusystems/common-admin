@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { computed, inject, watch } from 'vue'
+import { computed, inject, watch, getCurrentInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   FilterConfigKey,
@@ -27,17 +27,27 @@ const filterSelected = inject(FilterSelectedKey)
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 
+const componentName = getCurrentInstance()?.type.__name
+
 if (
   isUndefined(submitResetCounter) ||
   isUndefined(filterSelected) ||
-  isUndefined(filterConfig) ||
+  isUndefined(filterData) ||
+  isUndefined(filterConfig)
+) {
+  throw new Error(`[${componentName}] Incorrect provide/inject config.`)
+}
+
+if (
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isUndefined(filterConfig.fields[props.name]) ||
-  isUndefined(filterData) ||
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isUndefined(filterData[props.name])
 ) {
-  throw new Error('Incorrect provide/inject config.')
+  throw new Error(
+    `[${componentName}] Incorrect filter config. ` +
+    `Name is '${props.name}' and available options are ${Object.keys(filterData).join(', ')}.`
+  )
 }
 
 const modelValue = computed({
