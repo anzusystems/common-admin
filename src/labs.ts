@@ -40,6 +40,17 @@ import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
 import type { AxiosClientFn } from '@/labs/api/client'
 import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
 import { useUserAdminConfigApi } from '@/labs/filters/userAdminConfig'
+import {
+  type UserAdminConfig,
+  type UserAdminConfigDataFilterBookmark,
+  type UserAdminConfigDataPinnedWidgets,
+  UserAdminConfigLayoutType,
+  UserAdminConfigLayoutTypeDefault,
+  type UserAdminConfigLayoutTypeType,
+  UserAdminConfigType,
+  UserAdminConfigTypeDefault,
+  type UserAdminConfigTypeType,
+} from '@/types/UserAdminConfig'
 
 export {
   // V2 FILTERS
@@ -84,4 +95,13 @@ export {
   useJobApi,
   type AxiosClientFn,
   useUserAdminConfigApi,
+  type UserAdminConfig,
+  UserAdminConfigType,
+  UserAdminConfigTypeDefault,
+  UserAdminConfigTypeType,
+  UserAdminConfigLayoutType,
+  UserAdminConfigLayoutTypeDefault,
+  type UserAdminConfigLayoutTypeType,
+  type UserAdminConfigDataFilterBookmark,
+  type UserAdminConfigDataPinnedWidgets,
 }
