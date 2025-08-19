@@ -206,7 +206,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     isString(filterConfig.general.system) &&
     isString(filterConfig.general.subject)
   ) {
-    storeKey = 'datatableFilter_' + filterConfig.general.system + '_' + filterConfig.general.subject
+    storeKey = 'tableFilter_' + filterConfig.general.system + '_' + filterConfig.general.subject
   }
 
   const getFilterDataForStoring = (): Record<string, AllowedFilterValues> => {
