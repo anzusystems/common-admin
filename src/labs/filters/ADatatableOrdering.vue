@@ -14,12 +14,12 @@ import type { Pagination } from '@/labs/filters/pagination'
 
 const props = withDefaults(
   defineProps<{
-    variant?: 'default' | 'id' | 'most-relevant'
+    variant?: 'id' | 'createdAt' | 'most-relevant'
     customOptions?: undefined | DatatableOrderingOptions
     paginationUpdateCustomCb?: ((option: DatatableOrderingOption, pagination: Ref<Pagination>) => void) | undefined
   }>(),
   {
-    variant: 'default',
+    variant: 'id',
     customOptions: undefined,
     paginationUpdateCustomCb: undefined,
   }
@@ -41,7 +41,7 @@ if (isUndefined(pagination)) {
 
 const { t } = useI18n()
 
-const defaultItems: DatatableOrderingOptions = [
+const defaultItemsCreatedAt: DatatableOrderingOptions = [
   { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: SortOrder.Desc } },
   { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: SortOrder.Asc } },
 ]
@@ -71,7 +71,7 @@ const options = computed(() => {
   if (props.customOptions) return props.customOptions
   if (props.variant === 'most-relevant') return defaultItemsMostRelevant
   if (props.variant === 'id') return defaultItemsId
-  return defaultItems
+  return defaultItemsCreatedAt
 })
 
 const onItemClick = (item: DatatableOrderingOption) => {

@@ -273,6 +273,7 @@ import {
   type DatatableOrderingOption,
   type DatatableOrderingOptions,
   SORT_BY_SCORE,
+  SORT_BY_ID,
   SortOrder,
   type SortOrderType,
   type DatatableSortBy,
@@ -1000,6 +1001,7 @@ export {
   NEW_LINE_MARK,
   COMMON_CONFIG,
   SORT_BY_SCORE,
+  SORT_BY_ID,
   SortOrder,
 
   // VALIDATIONS

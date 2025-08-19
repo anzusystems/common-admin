@@ -99,7 +99,7 @@ export {
   type UserAdminConfig,
   UserAdminConfigType,
   UserAdminConfigTypeDefault,
-  UserAdminConfigTypeType,
+  type UserAdminConfigTypeType,
   UserAdminConfigLayoutType,
   UserAdminConfigLayoutTypeDefault,
   type UserAdminConfigLayoutTypeType,

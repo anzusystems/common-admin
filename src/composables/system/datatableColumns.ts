@@ -7,6 +7,7 @@ import { isArray, isObject, isUndefined } from '@/utils/common'
 export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']
 
 export const SORT_BY_SCORE = '_score'
+export const SORT_BY_ID = 'id'
 export const SortOrder = {
   Asc: 'asc',
   Desc: 'desc',

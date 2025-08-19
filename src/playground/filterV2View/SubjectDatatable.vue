@@ -18,7 +18,7 @@ type DatatableItem = any
 
 const { t } = useI18n()
 
-const { pagination } = usePagination()
+const { pagination } = usePagination('id')
 provide(DatatablePaginationKey, pagination)
 
 const { filterData, filterConfig } = useSubjectListFilter()

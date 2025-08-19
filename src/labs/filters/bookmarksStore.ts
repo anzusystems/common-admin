@@ -59,11 +59,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       }
     }
 
-    const { pagination } = usePagination({
-      sortBy: {
-        key: 'position',
-        order: SortOrder.Asc,
-      },
+    const { pagination } = usePagination('position', SortOrder.Asc, {
       rowsPerPage: MAX_BOOKMARK_ITEMS,
     })
     const { start: system, end: resource } = stringSplitOnFirstOccurrence(identifier.systemResource, '_')
@@ -98,11 +94,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>
   ): Promise<number> {
     error.value = false
-    const { pagination } = usePagination({
-      sortBy: {
-        key: 'position',
-        order: SortOrder.Asc,
-      },
+    const { pagination } = usePagination('position',  SortOrder.Asc, {
       rowsPerPage: MAX_BOOKMARK_ITEMS + 1,
     })
     const { start: system, end: resource } = stringSplitOnFirstOccurrence(identifier.systemResource, '_')

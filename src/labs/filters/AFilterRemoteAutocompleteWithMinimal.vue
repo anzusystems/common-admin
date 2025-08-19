@@ -117,7 +117,11 @@ const label = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { pagination } = usePagination({ sortBy: props.filterSortBy })
+const { pagination } = usePagination(
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isNull(props.filterSortBy) ? null : props.filterSortBy.key,
+  props.filterSortBy?.order
+)
 const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 

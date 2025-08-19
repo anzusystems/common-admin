@@ -1,4 +1,4 @@
-import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import { type DatatableOrderingOption, type DatatableSortBy } from '@/composables/system/datatableColumns'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 import { useAlerts } from '@/composables/system/alerts'
@@ -7,6 +7,7 @@ import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
 import type { UrlParams } from '@/services/api/apiHelper'
 import { useDebounceFn } from '@vueuse/core'
+import { isNull } from '@/utils/common.ts'
 
 export function useSubjectSelect<TItem>(
   datatableConfig: any,
@@ -22,13 +23,17 @@ export function useSubjectSelect<TItem>(
     forceElastic?: boolean
   ) => Promise<TItem[]>,
   filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
+  filterConfig: FilterConfig<any>,
+  filterSortBy: DatatableSortBy | null = null
 ) {
   const filterTouched: Ref<boolean> = ref(false)
   const items: Ref<Array<TItem>> = ref([])
   const selected: Ref<Array<TItem>> = ref([])
   const loading = ref(false)
-  const { pagination, setSortBy, incrementPage } = usePagination()
+  const { pagination, setSortBy, incrementPage } = usePagination(
+    isNull(filterSortBy) ? null : filterSortBy.key,
+    filterSortBy?.order
+  )
 
   const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, {
     storeFiltersLocalStorage: false,
