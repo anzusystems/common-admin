@@ -1,5 +1,6 @@
 {
   "fulltext": "Search in texts",
+  "filterMinChars": "Zadajte minimálne {min} znaky",
   "bookmark": {
     "title": "Bookmarks",
     "name": "Name",

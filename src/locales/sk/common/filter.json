@@ -1,5 +1,6 @@
 {
   "fulltext": "Hľadať v textoch",
+  "filterMinChars": "Zadajte minimálne {min} znaky",
   "bookmark": {
     "title": "Záložky",
     "name": "Názov",

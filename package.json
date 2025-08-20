@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.248",
+  "version": "1.47.0-beta.249",
   "license": "Apache-2.0",
   "scripts": {
     "docs:dev": "vitepress dev docs",
@@ -107,7 +107,7 @@
     "dayjs": "1.11.13",
     "pinia": "3.0.3",
     "socket.io-client": "4.8.1",
-    "unplugin": "2.3.6",
+    "unplugin": "2.3.7",
     "vue": "3.5.18",
     "vue-i18n": "11.1.11",
     "vue-router": "4.5.1",

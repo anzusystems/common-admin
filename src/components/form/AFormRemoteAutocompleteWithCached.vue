@@ -43,7 +43,7 @@ const props = withDefaults(
     itemTitle?: string
     itemValue?: string
     minSearchChars?: number
-    minSearchText?: string
+    minSearchText?: string | undefined
   }>(),
   {
     label: undefined,
@@ -58,8 +58,8 @@ const props = withDefaults(
     loading: false,
     itemTitle: 'name',
     itemValue: 'id',
-    minSearchChars: 1,
-    minSearchText: '',
+    minSearchChars: 2,
+    minSearchText: undefined,
   }
 )
 const emit = defineEmits<{
@@ -79,18 +79,14 @@ const fetchedItemsMinimal = defineModel<Map<IntegerId | DocId, any>>('fetchedIte
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetch, add, addManualMinimal } = props.useCached()
 
-const MIN_SEARCH_CHARS = 2
-
 const noDataText = computed(() => {
   if (loadingLocal.value) {
     return '$vuetify.loading'
   }
-  if (
-    fetchedItemsMinimal.value.size === 0 &&
-    search.value.length < MIN_SEARCH_CHARS &&
-    props.minSearchText.length > 0
-  ) {
-    return props.minSearchText
+  if (fetchedItemsMinimal.value.size === 0 && search.value.length < props.minSearchChars) {
+    return isUndefined(props.minSearchText)
+      ? t('common.filterMinChars', { min: props.minSearchChars })
+      : props.minSearchText
   }
   return undefined
 })
@@ -148,7 +144,7 @@ const requiredComputed = computed(() => {
 // }
 
 const apiSearch = async (query: string | null) => {
-  if (isNull(query) || query.length < MIN_SEARCH_CHARS) {
+  if (isNull(query) || query.length < props.minSearchChars) {
     fetchedItemsMinimal.value.clear()
     return
   }

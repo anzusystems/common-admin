@@ -46,7 +46,8 @@ const props = withDefaults(
     chips?: boolean
     autoSelectIfSingleAndEmptyOnInit?: boolean
     prefetch?: 'hover' | 'focus' | 'mounted' | false
-    searchMinChars?: number
+    minSearchChars?: number
+    minSearchText?: string | undefined
   }>(),
   {
     label: undefined,
@@ -65,7 +66,8 @@ const props = withDefaults(
     chips: false,
     autoSelectIfSingleAndEmptyOnInit: false,
     prefetch: false,
-    searchMinChars: 2,
+    minSearchChars: 2,
+    minSearchText: undefined,
   }
 )
 const emit = defineEmits<{
@@ -303,7 +305,7 @@ const onClickClear = async () => {
 watchDebounced(
   search,
   (newValue, oldValue) => {
-    if (newValue.length < props.searchMinChars) return
+    if (newValue.length < props.minSearchChars) return
     if (newValue !== oldValue) {
       apiRequestCounter.value++
       apiSearch(newValue, apiRequestCounter.value)
@@ -386,6 +388,18 @@ const onAutocompleteModelUpdate = (newValue: any) => {
   }
   modelValue.value = newValue.value
 }
+
+const noDataText = computed(() => {
+  if (loadingLocal.value) {
+    return '$vuetify.loading'
+  }
+  if (fetchedItems.value.length === 0 && search.value.length < props.minSearchChars) {
+    return isUndefined(props.minSearchText)
+      ? t('common.filterMinChars', { min: props.minSearchChars })
+      : props.minSearchText
+  }
+  return undefined
+})
 </script>
 
 <template>
@@ -400,6 +414,7 @@ const onAutocompleteModelUpdate = (newValue: any) => {
     :hide-details="hideDetails"
     :loading="loadingComputed"
     :disabled="disabledComputed"
+    :no-data-text="noDataText"
     return-object
     autocomplete="off"
     @update:search="onSearchUpdate"
