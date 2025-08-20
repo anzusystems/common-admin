@@ -7,7 +7,7 @@ import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
 import type { UrlParams } from '@/services/api/apiHelper'
 import { useDebounceFn } from '@vueuse/core'
-import { isNull } from '@/utils/common.ts'
+import { isNull } from '@/utils/common'
 
 export function useSubjectSelect<TItem>(
   datatableConfig: any,
