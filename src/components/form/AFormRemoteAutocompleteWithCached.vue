@@ -85,7 +85,7 @@ const noDataText = computed(() => {
   }
   if (fetchedItemsMinimal.value.size === 0 && search.value.length < props.minSearchChars) {
     return isUndefined(props.minSearchText)
-      ? t('common.filterMinChars', { min: props.minSearchChars })
+      ? t('common.filter.filterMinChars', { min: props.minSearchChars })
       : props.minSearchText
   }
   return undefined
