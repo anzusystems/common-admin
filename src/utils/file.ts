@@ -1,3 +1,8 @@
+import dayjs from 'dayjs'
+import Duration from 'dayjs/plugin/duration'
+
+dayjs.extend(Duration)
+
 export const prettyBytes = (bytes: number, decimals = 2) => {
   if (bytes === 0) {
     return '0 Bytes'
@@ -9,4 +14,10 @@ export const prettyBytes = (bytes: number, decimals = 2) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+}
+
+export const prettyDuration = (seconds: number): string => {
+  const duration = dayjs.duration(seconds * 1000)
+
+  return duration.format('HH:mm:ss')
 }
