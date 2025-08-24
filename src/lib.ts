@@ -196,7 +196,7 @@ import {
   SubjectScopeSymbol,
   SystemScopeSymbol,
 } from '@/components/injectionKeys'
-import { prettyBytes } from '@/utils/file'
+import { prettyBytes, prettyDuration } from '@/utils/file'
 import { isValidHTTPStatus } from '@/utils/response'
 import {
   HTTP_STATUS_BAD_REQUEST,
@@ -927,6 +927,7 @@ export {
   dateDiff,
   // file
   prettyBytes,
+  prettyDuration,
   // response
   isValidHTTPStatus,
   // number
