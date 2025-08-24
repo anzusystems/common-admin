@@ -29,6 +29,7 @@ const props = withDefaults(
     client?: (() => AxiosInstance) | undefined
     store?: FilterStoreIdentifier | boolean // false to disable, FilterStoreIdentifier to custom store key
     alwaysVisible?: boolean
+    hideMore?: boolean
   }>(),
   {
     enableTop: false,
@@ -38,6 +39,7 @@ const props = withDefaults(
     client: undefined,
     store: true,
     alwaysVisible: false,
+    hideMore: false,
   }
 )
 const emit = defineEmits<{
@@ -148,7 +150,7 @@ defineExpose({
       </VCol>
     </VRow>
     <VRow
-      v-if="!alwaysVisible"
+      v-if="!alwaysVisible || !hideMore"
       dense
     >
       <VCol cols="auto">
@@ -184,7 +186,7 @@ defineExpose({
         </slot>
       </VCol>
     </VRow>
-    <div>
+    <div v-if="!hideMore">
       <component :is="alwaysVisible ? 'div' : 'VSlideYTransition'">
         <div
           v-show="showDetail"
