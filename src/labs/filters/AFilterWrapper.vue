@@ -153,7 +153,10 @@ defineExpose({
       v-if="!alwaysVisible || !hideMore"
       dense
     >
-      <VCol cols="auto">
+      <VCol
+        v-if="!hideMore"
+        cols="auto"
+      >
         <AFilterAdvancedButton
           :button-active="showDetail"
           @advanced-filter="toggleFilterDetail"
