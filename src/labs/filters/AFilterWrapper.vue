@@ -150,7 +150,7 @@ defineExpose({
       </VCol>
     </VRow>
     <VRow
-      v-if="!alwaysVisible || !hideMore"
+      v-if="!alwaysVisible"
       dense
     >
       <VCol
