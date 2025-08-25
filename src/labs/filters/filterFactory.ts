@@ -333,7 +333,6 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   const resetFilter = (pagination: Ref<Pagination>, callback?: AnyFn) => {
     pagination.value = { ...pagination.value, page: 1 }
     if (storeKey && localStorage) {
-      console.log('removing from local storage') // todo remove
       localStorage.removeItem(storeKey)
     }
     resetLocationHash()
