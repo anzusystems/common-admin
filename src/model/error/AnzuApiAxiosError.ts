@@ -1,3 +1,7 @@
+export const isAnzuApiAxiosError = (error: any): error is AnzuApiAxiosError => {
+  return error instanceof AnzuApiAxiosError
+}
+
 /**
  * Custom error class for Axios-related errors
  */

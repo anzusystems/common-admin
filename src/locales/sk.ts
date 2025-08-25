@@ -19,6 +19,7 @@ import sortable from '@/locales/sk/common/sortable.json'
 import damImage from '@/locales/sk/common/damImage.json'
 import collab from '@/locales/sk/common/collab.json'
 import filter from '@/locales/sk/common/filter.json'
+import apiTimedOut from '@/locales/sk/error/apiTimedOut.json'
 
 export default {
   common: {
@@ -52,6 +53,9 @@ export default {
     },
     jsValidation: {
       ...jsValidation,
+    },
+    apiTimedOut: {
+      ...apiTimedOut,
     },
   },
 }

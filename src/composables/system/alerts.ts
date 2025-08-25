@@ -6,6 +6,8 @@ import { isAnzuApiValidationError, type ValidationError } from '@/model/error/An
 import { isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
 import { isAnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyExistsError'
+import { isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError.ts'
+import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError.ts'
 
 const DEFAULT_DURATION_SECONDS = 3
 
@@ -174,6 +176,14 @@ export function useAlerts() {
     }
     if (isAnzuApiForbiddenOperationError(error)) {
       showApiForbiddenOperationError(error.detail, duration)
+      return true
+    }
+    if (isAnzuApiTimeoutError(error)) {
+      showErrorT('error.apiTimedOut.message', duration)
+      return true
+    }
+    if (isAnzuApiAxiosError(error)) {
+      showUnknownError(duration)
       return true
     }
     if (isAnzuFatalError(error)) {
