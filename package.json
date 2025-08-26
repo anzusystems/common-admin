@@ -1,6 +1,6 @@
 {
   "name": "@anzusystems/common-admin",
-  "packageManager": "yarn@4.9.3",
+  "packageManager": "yarn@4.9.4",
   "files": [
     "dist"
   ],
@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.257",
+  "version": "1.47.0-beta.258",
   "license": "Apache-2.0",
   "scripts": {
     "docs:dev": "vitepress dev docs",
@@ -76,7 +76,7 @@
     "postcss-prefix-selector": "^2.1.1",
     "prettier": "^3.6.2",
     "rusha": "^0.8.14",
-    "sass": "^1.90.0",
+    "sass": "^1.91.0",
     "socket.io-client": "4.8.1",
     "sortablejs": "^1.15.6",
     "stylelint": "16.23.1",
@@ -94,7 +94,7 @@
     "vue-i18n": "11.1.11",
     "vue-router": "4.5.1",
     "vue-tsc": "3.0.6",
-    "vuetify": "3.9.5",
+    "vuetify": "3.9.6",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -111,7 +111,7 @@
     "vue": "3.5.20",
     "vue-i18n": "11.1.11",
     "vue-router": "4.5.1",
-    "vuetify": "3.9.5"
+    "vuetify": "3.9.6"
   },
   "peerDependenciesMeta": {
     "@sentry/vue": {
