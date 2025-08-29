@@ -25,7 +25,7 @@ import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiT
 import { isDefined, isUndefined } from '@/utils/common'
 import type { Pagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
-import type { AxiosClientFn } from '@/labs/api/client.ts'
+import type { AxiosClientFn } from '@/labs/api/client'
 
 export const generateListQuery = (
   pagination: Ref<Pagination>,

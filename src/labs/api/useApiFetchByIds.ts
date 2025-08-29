@@ -19,7 +19,7 @@ import type { DocId, IntegerId } from '@/types/common'
 import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { isDefined, isUndefined } from '@/utils/common'
-import type { AxiosClientFn } from '@/labs/api/client.ts'
+import type { AxiosClientFn } from '@/labs/api/client'
 
 /**
  * @template T Type used for request payload, by default same as Response type

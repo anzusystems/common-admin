@@ -15,7 +15,7 @@ import type { AnyFn } from '@vueuse/core'
 import type { Pagination } from '@/labs/filters/pagination'
 import { type DatatableSortBy, SortOrder } from '@/composables/system/datatableColumns'
 import { stringToBooleanExact, stringToNumber } from '@/utils/string'
-import type { ValueObjectOption } from '@/types/ValueObject.ts'
+import type { ValueObjectOption } from '@/types/ValueObject'
 
 export type FilterStoreIdentifier = { system: string; subject: string }
 

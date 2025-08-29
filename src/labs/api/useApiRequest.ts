@@ -17,7 +17,7 @@ import {
 } from '@/model/error/AnzuApiDependencyExistsError'
 import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
-import type { AxiosClientFn } from '@/labs/api/client.ts'
+import type { AxiosClientFn } from '@/labs/api/client'
 
 /**
  * @template T Type used for request payload, by default, same as Response type
