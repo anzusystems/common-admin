@@ -161,7 +161,12 @@ export default defineConfigWithVueTs(
       'deprecation/no-deprecated-imports': [
         'error',
         {
-          skipFiles: ['src/lib.ts'],
+          skipFiles: [
+            'src/lib.ts',
+            'src/services/api/apiFetchByIds.ts',
+            'src/components/form/AFormRemoteAutocompleteWithCached.vue',
+            'src/components/filter/AFilterMixed.vue',
+          ],
           rules: [
             // API Services
             {
@@ -198,11 +203,6 @@ export default defineConfigWithVueTs(
             {
               path: '@/services/api/queryBuilder',
               imports: ['useApiQueryBuilder'],
-              level: 'error',
-            },
-            {
-              path: '@/labs/job/jobApi',
-              imports: ['useJobApi'],
               level: 'error',
             },
             {

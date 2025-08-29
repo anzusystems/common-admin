@@ -3,7 +3,6 @@ import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/m
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosRequestConfig } from 'axios'
-import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import {
@@ -20,6 +19,7 @@ import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiT
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { isDefined, isUndefined } from '@/utils/common'
 import type { AxiosClientFn } from '@/labs/api/client'
+import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 
 /**
  * @template T Type used for request payload, by default same as Response type
