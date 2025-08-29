@@ -44,7 +44,7 @@ const props = withDefaults(
     collab?: CollabComponentConfig
     disabled?: boolean | undefined
     chips?: boolean
-    autoSelectIfSingleAndEmptyOnInit?: boolean
+    disableAutoSingleSelect?: boolean
     prefetch?: 'hover' | 'focus' | 'mounted' | false
     minSearchChars?: number
     minSearchText?: string | undefined
@@ -64,7 +64,7 @@ const props = withDefaults(
     collab: undefined,
     disabled: undefined,
     chips: false,
-    autoSelectIfSingleAndEmptyOnInit: false,
+    disableAutoSingleSelect: false,
     prefetch: false,
     minSearchChars: 2,
     minSearchText: undefined,
@@ -255,7 +255,7 @@ const autoFetch = async () => {
   if (apiRequestCounter.value === 0) {
     fetchedItems.value = res
     if (
-      props.autoSelectIfSingleAndEmptyOnInit &&
+      !props.disableAutoSingleSelect &&
       res.length === 1 &&
       isNull(modelValue.value || (isArray(modelValue.value) && modelValue.value.length === 0))
     ) {
