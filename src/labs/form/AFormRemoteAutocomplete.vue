@@ -22,6 +22,8 @@ type FetchItemsByIdsType =
   | ((ids: IntegerId[]) => Promise<ValueObjectOption<IntegerId>[]>)
   | ((ids: DocId[]) => Promise<ValueObjectOption<DocId>[]>)
 
+type ModelValueType = DocId | IntegerId | DocId[] | IntegerId[] | null | any
+
 const props = withDefaults(
   defineProps<{
     label?: string | undefined
@@ -44,10 +46,11 @@ const props = withDefaults(
     collab?: CollabComponentConfig
     disabled?: boolean | undefined
     chips?: boolean
-    disableAutoSingleSelect?: boolean
+    disableAutoSingleSelect?: boolean // auto select works only when modelValue is empty and prefetch is set to 'mounted'
     prefetch?: 'hover' | 'focus' | 'mounted' | false
     minSearchChars?: number
     minSearchText?: string | undefined
+    tryLoadModelValue?: ModelValueType // only works when prefetch is set to 'mounted'
   }>(),
   {
     label: undefined,
@@ -59,7 +62,6 @@ const props = withDefaults(
     hideDetails: false,
     hideLabel: false,
     filterSortBy: null,
-    disableInitFetch: false,
     loading: false,
     collab: undefined,
     disabled: undefined,
@@ -68,14 +70,18 @@ const props = withDefaults(
     prefetch: false,
     minSearchChars: 2,
     minSearchText: undefined,
+    tryLoadModelValue: undefined,
   }
 )
 const emit = defineEmits<{
   (e: 'searchChange', data: string): void
   (e: 'searchChangeDebounced', data: string): void
-  (e: 'blur', data: DocId | IntegerId | DocId[] | IntegerId[] | null): void
-  (e: 'focus', data: DocId | IntegerId | DocId[] | IntegerId[] | null): void
+  (e: 'blur', data: ModelValueType): void
+  (e: 'focus', data: ModelValueType): void
 }>()
+
+const SEARCH_DEBOUNCE_MS = 300
+const AUTO_FETCH_DELAY_MS = 3000
 
 const filterInnerConfig = inject(FilterInnerConfigKey)
 const filterInnerData = inject(FilterInnerDataKey)
@@ -98,14 +104,14 @@ if (
   )
 }
 
-const modelValue = defineModel<DocId | IntegerId | DocId[] | IntegerId[] | null | any>({
+const modelValue = defineModel<ModelValueType>({
   required: true,
   set(newValue) {
     return isArray(newValue) ? cloneDeep(newValue) : newValue
   },
 })
 
-const modelValueSelected = defineModel<DocId | IntegerId | DocId[] | IntegerId[] | null | any>('selected', {
+const modelValueSelected = defineModel<ModelValueType>('selected', {
   required: false,
   default: null,
   set(newValue) {
@@ -113,7 +119,7 @@ const modelValueSelected = defineModel<DocId | IntegerId | DocId[] | IntegerId[]
   },
 })
 
-const modelValueAutocomplete = ref<DocId | IntegerId | DocId[] | IntegerId[] | null | any>(null)
+const modelValueAutocomplete = ref<ModelValueType>(null)
 
 const apiRequestCounter = ref(0)
 
@@ -183,7 +189,7 @@ const disabledComputed = computed(() => {
 })
 
 const multipleComputedVuetifyTypeFix = computed(() => {
-  if (props.multiple === false) return false
+  if (!props.multiple) return false
   return true as unknown as undefined
 })
 
@@ -197,16 +203,21 @@ const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
 
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
-  const final = new Map()
-  selectedItemsCache.value.forEach((value) => {
-    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
-  })
-  fetchedItems.value.forEach((value) => {
-    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
-  })
-  return Array.from(final, ([key, value]) => {
-    return { value: key, title: value.title, subtitle: value.subtitle }
-  })
+  const itemsMap = new Map()
+  const addToMap = (items: ValueObjectOption<string | number>[]) => {
+    items.forEach(item => {
+      itemsMap.set(item.value, {
+        value: item.value,
+        title: item.title,
+        subtitle: item.subtitle
+      })
+    })
+  }
+
+  addToMap(selectedItemsCache.value)
+  addToMap(fetchedItems.value)
+
+  return Array.from(itemsMap.values())
 })
 
 const loadingLocal = ref(false)
@@ -214,6 +225,58 @@ const loadingComputed = computed(() => {
   if (loadingLocal.value) return true
   return props.loading
 })
+
+const isEmptyValue = (value: any) =>
+  isNull(value) || isUndefined(value) || (isArray(value) && value.length === 0)
+
+const resetToEmptyState = (value: any) => {
+  selectedItemsCache.value = []
+  modelValueSelected.value = isArray(value) ? [] : null
+  modelValueAutocomplete.value = isArray(value) ? [] : null
+}
+
+const updateSelected = (value: any) => {
+  const findItem = (id: any) =>
+    allItems.value.find(obj => obj.value === id) ?? { title: `${id}`, value: id }
+
+  return isArray(value) ? value.map(findItem) : findItem(value)
+}
+
+const fetchAndUpdateItems = async (ids: ModelValueType) => {
+  const idsArray = isArray(ids) ? ids : [ids]
+  loadingLocal.value = true
+
+  try {
+    selectedItemsCache.value = await props.fetchItemsByIds(idsArray as Array<IntegerId & DocId>)
+    const selectedNewValue = updateSelected(ids)
+    modelValueSelected.value = selectedNewValue
+    modelValueAutocomplete.value = selectedNewValue
+    return selectedItemsCache.value
+  } finally {
+    loadingLocal.value = false
+  }
+}
+
+const tryLoadInitialValue = async (tryLoadValue: ModelValueType) => {
+  const idsToFetch = isArray(tryLoadValue) ? tryLoadValue : [tryLoadValue]
+  loadingLocal.value = true
+
+  try {
+    const fetchedData = await props.fetchItemsByIds(idsToFetch as Array<IntegerId & DocId>)
+    if (isArray(fetchedData) && fetchedData.length > 0) {
+      selectedItemsCache.value = fetchedData
+      if (props.multiple) {
+        modelValue.value = fetchedData.map(item => item.value)
+      } else {
+        modelValue.value = fetchedData[0].value
+      }
+      return true
+    }
+    return false
+  } finally {
+    loadingLocal.value = false
+  }
+}
 
 const apiSearch = async (query: string, requestCounter: number) => {
   loadingLocal.value = true
@@ -242,6 +305,7 @@ const tryToLoadFromLocalData = async (value: string | number | string[] | number
 }
 
 const autoFetched = ref(false)
+const isFirstLoad = ref(true)
 const clearAutoFetchTimer = () => {
   clearTimeout(autoFetchTimer.value)
   autoFetchTimer.value = undefined
@@ -312,7 +376,7 @@ watchDebounced(
       emit('searchChangeDebounced', newValue)
     }
   },
-  { debounce: 300 }
+  { debounce: SEARCH_DEBOUNCE_MS }
 )
 
 watch(search, (newValue, oldValue) => {
@@ -321,18 +385,6 @@ watch(search, (newValue, oldValue) => {
   }
 })
 
-const updateSelected = (newValue: any) => {
-  if (isArray(newValue)) {
-    return newValue.map((id: any) => {
-      const foundObject = allItems.value.find((obj) => obj.value === id)
-      return foundObject ? foundObject : { title: `${id}`, value: id }
-    })
-  }
-  const found = allItems.value.find((item) => item.value === newValue)
-  if (found) return found
-  return { value: newValue, title: newValue }
-}
-
 watch(
   modelValue,
   async (newValue, oldValue) => {
@@ -340,14 +392,32 @@ watch(
     if (collabOptions.value.enabled && isFocused.value) {
       changeFieldData.value(newValue)
     }
-    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
-      selectedItemsCache.value = []
-      modelValueSelected.value = isArray(newValue) ? [] : null
-      modelValueAutocomplete.value = isArray(newValue) ? [] : null
+    if (isFirstLoad.value) {
+      isFirstLoad.value = false
+
+      if (
+        isEmptyValue(newValue) &&
+        props.prefetch === 'mounted' &&
+        isDefined(props.tryLoadModelValue)
+      ) {
+        try {
+          const success = await tryLoadInitialValue(props.tryLoadModelValue)
+          if (success) {
+            return
+          }
+        } catch (error) {
+          console.error('Error loading tryLoadModelValue:', error)
+        }
+      }
+    }
+
+    if (isEmptyValue(newValue)) {
+      resetToEmptyState(newValue)
+
       if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus', false])) return
       autoFetchTimer.value = setTimeout(() => {
         autoFetch()
-      }, 3000)
+      }, AUTO_FETCH_DELAY_MS)
       return
     }
     const found = await tryToLoadFromLocalData(newValue)
@@ -357,21 +427,7 @@ watch(
       modelValueAutocomplete.value = selectedNewValue
       return
     }
-    if (isArray<IntegerId | DocId>(newValue)) {
-      loadingLocal.value = true
-      selectedItemsCache.value = await props.fetchItemsByIds(newValue as Array<IntegerId & DocId>)
-      const selectedNewValue = updateSelected(newValue)
-      modelValueSelected.value = selectedNewValue
-      modelValueAutocomplete.value = selectedNewValue
-      loadingLocal.value = false
-      return
-    }
-    loadingLocal.value = true
-    selectedItemsCache.value = await props.fetchItemsByIds([newValue as DocId & IntegerId])
-    const selectedNewValue = updateSelected(newValue)
-    modelValueSelected.value = selectedNewValue
-    modelValueAutocomplete.value = selectedNewValue
-    loadingLocal.value = false
+    await fetchAndUpdateItems(newValue)
   },
   { immediate: true }
 )
