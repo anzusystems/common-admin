@@ -205,6 +205,11 @@ export default defineConfigWithVueTs(
               imports: ['useJobApi'],
               level: 'error',
             },
+            {
+              path: '@/services/api/job/jobApi',
+              imports: ['useJobApi'],
+              level: 'error',
+            },
             // Types
             {
               path: '@/types/Filter',
