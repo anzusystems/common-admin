@@ -11,7 +11,6 @@ import BooleanValueView from '@/playground/booleanValueView/BooleanValueView.vue
 import PermissionView from '@/playground/permissionView/PermissionView.vue'
 import DatetimeView from '@/playground/datetimeView/DatetimeView.vue'
 import FormsView from '@/playground/formsView/FormsView.vue'
-import FilterView from '@/playground/filterView/FilterView.vue'
 import TableView from '@/playground/tableView/TableView.vue'
 import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
@@ -22,7 +21,6 @@ import SortableView from '@/playground/sortableView/SortableView.vue'
 import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 import AlertView from '@/playground/alertView/AlertView.vue'
 import SubjectSelectView from '@/playground/subjectSelectView/SubjectSelectView.vue'
-import SubjectSelect2View from '@/playground/subjectSelect2View/SubjectSelect2View.vue'
 import ImageMultipleView from '@/playground/imageMultipleView/ImageMultipleView.vue'
 import CollabDetailView from '@/playground/collabView/CollabDetailView.vue'
 import CollabEditView from '@/playground/collabView/CollabEditView.vue'
@@ -38,7 +36,7 @@ import { updateCurrentUser, useCurrentUser } from '@/playground/collabView/curre
 import CopyTextView from '@/playground/copyTextView/CopyTextView.vue'
 import ImagePublicInputView from '@/playground/imagePublicInputView/ImagePublicInputView.vue'
 import RemoteAutocompleteView from '@/playground/remoteAutocompleteView/RemoteAutocompleteView.vue'
-import SubjectListView from '@/playground/filterV2View/SubjectListView.vue'
+import SubjectListView from '@/playground/filterView/SubjectListView.vue'
 
 const { createCollabRoom } = useCollabHelpers()
 
@@ -88,11 +86,6 @@ const router = createRouter({
     {
       path: '/view/filters',
       name: 'view-filters',
-      component: FilterView,
-    },
-    {
-      path: '/view/filters2',
-      name: 'view-filters2',
       component: SubjectListView,
     },
     {
@@ -109,11 +102,6 @@ const router = createRouter({
       path: '/view/subject-select',
       name: 'view-subject-select',
       component: SubjectSelectView,
-    },
-    {
-      path: '/view/subject-select2',
-      name: 'view-subject-select2',
-      component: SubjectSelect2View,
     },
     {
       path: '/view/asset-select',

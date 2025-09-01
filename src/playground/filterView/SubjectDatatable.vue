@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { useSubjectListFilter } from '@/playground/filterV2View/subjectFilter'
-import SubjectFilter from '@/playground/filterV2View/SubjectFilter.vue'
+import { useSubjectListFilter } from '@/playground/filterView/subjectFilter'
+import SubjectFilter from '@/playground/filterView/SubjectFilter.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import { onMounted, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useSubjectListActions } from '@/playground/filterV2View/subjectTools'
+import { useSubjectListActions } from '@/playground/filterView/subjectTools'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'

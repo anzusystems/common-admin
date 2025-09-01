@@ -1,25 +1,33 @@
 <script lang="ts" setup>
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import ARow from '@/components/ARow.vue'
-import { reactive, ref } from 'vue'
+import { provide, type Ref, ref } from 'vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import AFormRemoteAutocomplete from '@/components/form/AFormRemoteAutocomplete.vue'
 import type { IntegerId } from '@/types/common'
-import { makeFilterHelper } from '@/composables/filter/filterHelpers'
-import type { Pagination } from '@/types/Pagination'
-import type { FilterBag } from '@/types/Filter'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { fetchPollListByIds, fetchPollListDemo, type PollDemo } from '@/playground/subjectSelectView/pollDemoApi'
+import { fetchPollListByIds, type PollDemo, useFetchPollListDemo } from '@/playground/subjectSelectView/pollDemoApi'
 import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
 import { damClient } from '@/playground/mock/coreDamClient'
+import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
+import {
+  createFilter,
+  createFilterStore,
+  type FilterConfig,
+  type FilterData,
+  type MakeFilterOption,
+} from '@/labs/filters/filterFactory'
+import type { Pagination } from '@/labs/filters/pagination'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const value = ref<any>([])
 const selected = ref<any>([])
 
 const valueLicence = ref<IntegerId[]>([])
 
-const fetchItems = async (pagination: Pagination, filterBag: FilterBag) => {
-  const rubrics = await fetchPollListDemo(pagination, filterBag)
+const { executeFetch } = useFetchPollListDemo()
+
+const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const rubrics = await executeFetch(pagination, filterData, filterConfig)
 
   return rubrics.map((poll: PollDemo) => ({
     title: poll.texts.title,
@@ -38,16 +46,26 @@ const fetchItemsByIds = async (ids: IntegerId[]) => {
   })) as ValueObjectOption<IntegerId>[]
 }
 
-const makeFilter = makeFilterHelper('cms', 'poll')
+function useRubricInnerFilter() {
+  const filterFieldsInner = [
+    { name: 'id' as const, default: null },
+    { name: 'title' as const, default: null, type: 'string', variant: 'startsWith', apiName: 'texts.title' },
+  ] satisfies readonly MakeFilterOption[]
 
-const innerFilter = reactive({
-  id: {
-    ...makeFilter({ name: 'id' }),
-  },
-  title: {
-    ...makeFilter({ name: 'title', variant: 'startsWith', field: 'texts.title' }),
-  },
-})
+  const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
+    elastic: true,
+    system: 'cms',
+    subject: 'poll',
+  })
+
+  return {
+    filterConfig,
+    filterData,
+  }
+}
+const { filterData, filterConfig } = useRubricInnerFilter()
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
 </script>
 
 <template>
@@ -73,7 +91,6 @@ const innerFilter = reactive({
               v-model:selected="selected"
               :fetch-items="fetchItems"
               :fetch-items-by-ids="fetchItemsByIds"
-              :inner-filter="innerFilter"
               chips
               multiple
               filter-by-field="title"

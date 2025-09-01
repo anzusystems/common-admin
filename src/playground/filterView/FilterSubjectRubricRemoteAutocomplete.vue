@@ -7,7 +7,7 @@ import {
   fetchItems,
   fetchItemsByIds,
   useSubjectRubricInnerFilter,
-} from '@/playground/filterV2View/FilterSubjectRubricTools'
+} from '@/playground/filterView/FilterSubjectRubricTools'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(

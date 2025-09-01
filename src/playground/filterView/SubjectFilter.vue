@@ -3,11 +3,11 @@ import { computed, inject } from 'vue'
 import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
 import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
-import FilterSubjectSiteRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectSiteRemoteAutocomplete.vue'
-import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectAuthorRemoteAutocomplete.vue'
-import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectRubricRemoteAutocomplete.vue'
-import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectDeskRemoteAutocomplete.vue'
-import FilterSubjectUserRemoteAutocomplete from '@/playground/filterV2View/FilterSubjectUserRemoteAutocomplete.vue'
+import FilterSubjectSiteRemoteAutocomplete from '@/playground/filterView/FilterSubjectSiteRemoteAutocomplete.vue'
+import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterView/FilterSubjectAuthorRemoteAutocomplete.vue'
+import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterView/FilterSubjectRubricRemoteAutocomplete.vue'
+import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterView/FilterSubjectDeskRemoteAutocomplete.vue'
+import FilterSubjectUserRemoteAutocomplete from '@/playground/filterView/FilterSubjectUserRemoteAutocomplete.vue'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOptionsSelect.vue'
 import {
@@ -15,7 +15,7 @@ import {
   useSubjectListActions,
   useSubjectLockType,
   useSubjectStatus,
-} from '@/playground/filterV2View/subjectTools'
+} from '@/playground/filterView/subjectTools'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import { isUndefined } from '@/utils/common'
