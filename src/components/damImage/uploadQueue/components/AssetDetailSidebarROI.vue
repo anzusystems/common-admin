@@ -2,15 +2,18 @@
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useImageRoiStore } from '@/components/damImage/uploadQueue/composables/imageRoiStore'
 import { useI18n } from 'vue-i18n'
-import { usePagination } from '@/composables/system/pagination'
+import { usePagination } from '@/labs/filters/pagination'
 import { assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import { cloneDeep } from '@/utils/common'
 import { onMounted } from 'vue'
 import AssetDetailSidebarActionsWrapper from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsWrapper.vue'
 import AssetFileRotate from '@/components/damImage/uploadQueue/components/AssetFileRotate.vue'
-import { fetchImageRoiList, fetchRoi } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
+import { ENTITY, fetchRoi, useFetchImageRoiList } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import { SORT_BY_ID } from '@/composables/system/datatableColumns'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 withDefaults(
   defineProps<{
@@ -25,14 +28,20 @@ const { t } = useI18n()
 const imageRoiStore = useImageRoiStore()
 const assetDetailStore = useAssetDetailStore()
 
-const pagination = usePagination()
+const { pagination } = usePagination(SORT_BY_ID)
 
 const { damClient } = useCommonAdminCoreDamOptions()
+const filterFieldsInner = [] satisfies readonly MakeFilterOption[]
+const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
+  system: SYSTEM_CORE_DAM,
+  subject: ENTITY,
+})
 
 const loadRois = async () => {
   if (imageRoiStore.imageFile) {
+    const { executeFetch } = useFetchImageRoiList(damClient, imageRoiStore.imageFile.id)
     imageRoiStore.showLoader()
-    const res = await fetchImageRoiList(damClient, imageRoiStore.imageFile.id, pagination, {})
+    const res = await executeFetch(pagination, filterData, filterConfig)
     if (res.length > 0 && res[0].id) {
       const roi = await fetchRoi(damClient, res[0].id)
       imageRoiStore.setRoi(roi)
@@ -52,17 +61,6 @@ const afterRotate = async () => {
   imageRoiStore.forceReloadRoiPreviews()
   imageRoiStore.forceReloadCropper()
 }
-
-// const activeSlotChange = async (slot: null | AssetSlot) => {
-//   imageRoiStore.setRoi(null)
-//   if (!slot || !assetFileIsImageFile(slot.assetFile)) return
-//   imageRoiStore.showLoader()
-//   const imageFileDetail = await fetchImageFile(slot.assetFile.id)
-//   imageRoiStore.setImageFile(cloneDeep(imageFileDetail))
-//   await loadRois()
-//   imageRoiStore.forceReloadRoiPreviews()
-//   imageRoiStore.forceReloadCropper()
-// }
 
 onMounted(async () => {
   imageRoiStore.reset()
@@ -92,10 +90,6 @@ onMounted(async () => {
     </ABtnTertiary>
   </AssetDetailSidebarActionsWrapper>
   <div class="px-3">
-    <!--    <AssetDetailSlotSelect-->
-    <!--      class="mt-4"-->
-    <!--      @active-slot-change="activeSlotChange"-->
-    <!--    />-->
     <div class="v-expansion-panel-title px-0">
       {{ t('common.damImage.asset.detail.roi.title') }}
     </div>
