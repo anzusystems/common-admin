@@ -28,7 +28,8 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import {
   type DatatableOrderingOption,
   type DatatableOrderingOptions,
-  type DatatableSortBy, SortOrder,
+  type DatatableSortBy,
+  SortOrder,
 } from '@/composables/system/datatableColumns'
 
 const props = withDefaults(
@@ -145,7 +146,7 @@ const onConfirm = () => {
 }
 
 const autoloadOnIntersect = (isIntersecting: boolean) => {
-  if (isIntersecting && pagination.hasNextPage === true) {
+  if (isIntersecting && pagination.value.hasNextPage === true) {
     fetchNextPage()
   }
 }
@@ -199,10 +200,9 @@ const typeChange = () => {
 }
 
 const sortByChange = (option: DatatableOrderingOption) => {
-  pagination.sortBy = null
+  pagination.value.sortBy = null
   if (option.sortBy) {
-    pagination.sortBy = option.sortBy.key
-    pagination.descending = option.sortBy.order === SortOrder.Desc
+    pagination.value.sortBy = { key: option.sortBy.key, order: option.sortBy.order }
   }
   fetchAssetList()
 }
@@ -229,8 +229,7 @@ watch(
 
 onMounted(async () => {
   if (props.initialPaginationSort) {
-    pagination.sortBy = props.initialPaginationSort.key
-    pagination.descending = props.initialPaginationSort.order === SortOrder.Desc
+    pagination.value.sortBy = { key: props.initialPaginationSort.key, order: props.initialPaginationSort.order }
   }
   loading.value = true
   selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
