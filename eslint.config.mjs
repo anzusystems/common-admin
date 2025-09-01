@@ -166,6 +166,7 @@ export default defineConfigWithVueTs(
             'src/services/api/apiFetchByIds.ts',
             'src/components/form/AFormRemoteAutocompleteWithCached.vue',
             'src/components/filter/AFilterMixed.vue',
+            'src/components/dam/assetSelect/composables/assetSelectListActions.ts',
           ],
           rules: [
             // API Services
