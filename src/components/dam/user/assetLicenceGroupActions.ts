@@ -1,15 +1,18 @@
 import type { ValueObjectOption } from '@/types/ValueObject'
-import type { Pagination } from '@/types/Pagination'
-import type { FilterBag } from '@/types/Filter'
+import type { Pagination } from '@/labs/filters/pagination'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 import {
-  fetchDamAssetLicenceGroupList,
   fetchDamAssetLicenceGroupListByIds,
+  useFetchDamAssetLicenceGroupList,
 } from '@/components/dam/user/assetLicenceGroupApi'
+import type { Ref } from 'vue'
+import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 
 export const useAssetLicenceGroupSelectActions = (client: () => AxiosInstance) => {
+  const { executeFetch } = useFetchDamAssetLicenceGroupList(client)
+
   const mapToValueObjectOption = (assetLicenceGroups: DamAssetLicenceGroup[]): ValueObjectOption<IntegerId>[] => {
     return assetLicenceGroups.map((assetLicence: DamAssetLicenceGroup) => ({
       title: assetLicence.name,
@@ -17,8 +20,8 @@ export const useAssetLicenceGroupSelectActions = (client: () => AxiosInstance) =
     }))
   }
 
-  const fetchItems = async (pagination: Pagination, filterBag: FilterBag) => {
-    return mapToValueObjectOption(await fetchDamAssetLicenceGroupList(client, pagination, filterBag))
+  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToValueObjectOption(await executeFetch(pagination, filterData, filterConfig))
   }
 
   const fetchItemsByIds = async (ids: number[]) => {

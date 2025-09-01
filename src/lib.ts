@@ -512,10 +512,10 @@ import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRe
 import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
 import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
-import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
-import { fetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
+import { useDamAssetLicenceInnerFilter } from '@/components/dam/user/AssetLicenceFilter'
+import { useFetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
 import {
-  fetchDamAssetLicenceGroupList,
+  useFetchDamAssetLicenceGroupList,
   fetchDamAssetLicenceGroupListByIds,
 } from '@/components/dam/user/assetLicenceGroupApi'
 import { useFetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
@@ -679,7 +679,7 @@ export {
   useDamAuthorFactory,
   useDamAuthorType,
   useDamDistributionServiceType,
-  useDamAssetLicenceFilter,
+  useDamAssetLicenceInnerFilter,
   useImageActions,
   useCommonAdminImageOptions,
   defineAuth,
@@ -969,9 +969,9 @@ export {
   regionToCrop,
   cropToRegion,
   fetchDamAssetLicenceListByIds,
-  fetchDamAssetLicenceList,
+  useFetchDamAssetLicenceList,
   fetchDamAssetLicenceGroupListByIds,
-  fetchDamAssetLicenceGroupList,
+  useFetchDamAssetLicenceGroupList,
   fetchDamExtSystemListByIds,
   useFetchDamExtSystemList,
   fetchDamUserListByIds,
