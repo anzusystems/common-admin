@@ -1,7 +1,5 @@
 <script lang="ts" setup>
-import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
-
-const { filterData, fetchAssetList, filterTouch, filterUnTouch } = useAssetSelectActions()
+// const { filterData, fetchAssetList, filterTouch, filterUnTouch } = useAssetSelectActions()
 
 // const submitFilter = () => {
 //   filterUnTouch()

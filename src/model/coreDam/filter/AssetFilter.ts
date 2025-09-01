@@ -1,10 +1,5 @@
-import {
-  createFilter,
-  createFilterStore,
-  type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
-import { SYSTEM_CORE_DAM, ENTITY } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { reactive } from 'vue'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import { ENTITY, SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 export const filterFieldsList = [
   {
@@ -203,4 +198,3 @@ export function useAssetListFilter() {
 //     ...makeFilter({ name: 'mainFileSingleUse', default: false }),
 //   },
 // })
-
