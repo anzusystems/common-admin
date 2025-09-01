@@ -16,6 +16,7 @@ const filterFieldsList = [
 
 const listFiltersStore = createFilterStore(filterFieldsList)
 
+// todo filter !!!
 export function useKeywordListFilter() {
   const { filterConfig, filterData } = createFilter(filterFieldsList, listFiltersStore, {
     elastic: true,

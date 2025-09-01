@@ -1,36 +1,41 @@
 <script lang="ts" setup>
-import type { Filter } from '@/types/Filter'
 import { useAuthorSelectActions } from '@/components/damImage/uploadQueue/author/authorActions'
-import { useAuthorFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
+import { useAuthorInnerFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
 import type { IntegerId } from '@/types/common'
 import { useI18n } from 'vue-i18n'
-import AFilterRemoteAutocompleteWithMinimal from '@/components/filter/AFilterRemoteAutocompleteWithMinimal.vue'
+import AFilterRemoteAutocompleteWithMinimal from '@/labs/filters/AFilterRemoteAutocompleteWithMinimal.vue'
+import { provide } from 'vue'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
+    name: string
     extSystem: IntegerId
   }>(),
   {}
 )
-
-const modelValue = defineModel<Filter>({ required: true })
+const emit = defineEmits<{
+  (e: 'change'): void
+}>()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItemsMinimal, fetchItemsMinimalByIds } = useAuthorSelectActions(props.extSystem)
 
-const innerFilter = useAuthorFilter()
+const { filterData, filterConfig } = useAuthorInnerFilter()
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
 
 const { t } = useI18n()
 </script>
 
 <template>
   <AFilterRemoteAutocompleteWithMinimal
-    v-model="modelValue"
+    :name="name"
     :fetch-items-minimal="fetchItemsMinimal"
     :fetch-items-minimal-by-ids="fetchItemsMinimalByIds"
-    :inner-filter="innerFilter"
     filter-by-field="text"
     :filter-sort-by="null"
+    @change="emit('change')"
   >
     <template #item="{ props: itemProps, item: itemItem }">
       <VListItem

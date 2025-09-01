@@ -2,7 +2,6 @@
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterBooleanSelect from '@/components/filter/AFilterBooleanSelect.vue'
-import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
 import { computed, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
@@ -70,12 +69,12 @@ watch(extSystem, (newValue, oldValue) => {
   </VRow>
   <VRow v-if="extSystem">
     <VCol :cols="12">
-      <DamAuthorFilterRemoteAutocomplete
-        :key="extSystem"
-        v-model="filter.authorIds"
-        :ext-system="extSystem"
-        @update:model-value="onAnyFilterUpdate"
-      />
+      <!--      <DamAuthorFilterRemoteAutocomplete-->
+      <!--        :key="extSystem"-->
+      <!--        v-model="filter.authorIds"-->
+      <!--        :ext-system="extSystem"-->
+      <!--        @update:model-value="onAnyFilterUpdate"-->
+      <!--      />-->
     </VCol>
   </VRow>
   <VRow>

@@ -1,16 +1,20 @@
-import { reactive } from 'vue'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { makeFilterHelper } from '@/composables/filter/filterHelpers'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import { ENTITY } from '@/components/damImage/uploadQueue/api/keywordApi'
 
-const makeFilter = makeFilterHelper(SYSTEM_CORE_DAM, 'author')
+export function useAuthorInnerFilter() {
+  const filterFieldsInner = [
+    { name: 'text' as const, variant: 'search', default: null, type: 'string' },
+  ] satisfies readonly MakeFilterOption[]
 
-export function useAuthorFilter() {
-  return reactive({
-    _elastic: {
-      ...makeFilter({ exclude: true }),
-    },
-    text: {
-      ...makeFilter({ name: 'text' }),
-    },
+  const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
+    elastic: true,
+    system: SYSTEM_CORE_DAM,
+    subject: ENTITY,
   })
+
+  return {
+    filterConfig,
+    filterData,
+  }
 }

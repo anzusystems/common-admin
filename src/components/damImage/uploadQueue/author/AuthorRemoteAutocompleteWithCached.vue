@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
 import type { ValidationScope } from '@/types/Validation'
-import { computed, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import useVuelidate from '@vuelidate/core'
@@ -11,13 +11,14 @@ import {
 } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { isArray } from '@/utils/common'
-import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
+import AFormRemoteAutocompleteWithCached from '@/labs/form/AFormRemoteAutocompleteWithCached.vue'
 import AuthorRemoteAutocompleteCachedAuthorChip from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteCachedAuthorChip.vue'
 import AuthorRemoteAutocompleteCachedAuthorChipConflicts from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteCachedAuthorChipConflicts.vue'
 import { useAuthorSelectActions } from '@/components/damImage/uploadQueue/author/authorActions'
-import { useAuthorFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
 import AuthorCreateButton from '@/components/damImage/uploadQueue/author/AuthorCreateButton.vue'
 import ARow from '@/components/ARow.vue'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
+import { useAuthorInnerFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
 
 const props = withDefaults(
   defineProps<{
@@ -81,7 +82,9 @@ const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validatio
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItemsMinimal } = useAuthorSelectActions(props.extSystem)
 
-const innerFilter = useAuthorFilter()
+const { filterData, filterConfig } = useAuthorInnerFilter()
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
 
 const addAuthor = async (id: null | DocId | undefined) => {
   if (!id) return
@@ -182,7 +185,6 @@ const showAdd = computed(() => {
       :required="requiredComputed"
       :label="label"
       :fetch-items-minimal="fetchItemsMinimal"
-      :inner-filter="innerFilter"
       :multiple="multiple"
       :clearable="clearable"
       filter-by-field="text"
