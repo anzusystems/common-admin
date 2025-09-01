@@ -5,9 +5,6 @@ import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { isNull, isUndefined } from '@/utils/common'
-import type { Pagination } from '@/types/Pagination'
-import type { FilterBag } from '@/types/Filter'
-import { apiFetchList } from '@/services/api/apiFetchList'
 import {
   AnzuApiValidationError,
   type AnzuApiValidationResponseData,
@@ -46,22 +43,6 @@ export const useFetchAssetList = (client: () => AxiosInstance, licenceId: Intege
   useApiFetchList<AssetSearchListItemDto[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT + '/licence/:licenceId', {
     licenceId,
   })
-
-export const fetchAssetList = (
-  client: () => AxiosInstance,
-  licenceId: number,
-  pagination: Pagination,
-  filterBag: FilterBag
-) =>
-  apiFetchList<AssetSearchListItemDto[]>(
-    client,
-    END_POINT + '/licence/:licenceId',
-    { licenceId },
-    pagination,
-    filterBag,
-    SYSTEM_CORE_DAM,
-    ENTITY
-  )
 
 export const fetchAsset = (client: () => AxiosInstance, id: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)

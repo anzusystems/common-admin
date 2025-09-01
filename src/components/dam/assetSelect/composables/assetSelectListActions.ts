@@ -4,12 +4,11 @@ import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
-import { usePagination } from '@/composables/system/pagination'
-import { useFilterHelpers } from '@/composables/filter/filterHelpers'
+import { usePagination } from '@/labs/filters/pagination'
 import { useAlerts } from '@/composables/system/alerts'
 import type { DocId, IntegerId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { fetchAsset, fetchAssetList as apiFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAsset, useFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
@@ -18,21 +17,23 @@ import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/compo
 import { isUndefined } from '@/utils/common'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
+import { SORT_BY_SCORE } from '@/composables/system/datatableColumns'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
-const filter = useAssetListFilter()
-const pagination = usePagination()
-pagination.sortBy = null
+const { filterData, filterConfig } = useAssetListFilter()
+const { pagination } = usePagination(SORT_BY_SCORE)
+
 const filterIsTouched = ref(false)
 const detailLoading = ref(false)
 
 function resolveTypeFilter(assetType: DamAssetTypeType, inPodcast: boolean | null) {
   if (inPodcast === true) {
-    filter.type.model = [DamAssetType.Audio]
-    filter.inPodcast.model = true
+    filterData.type = [DamAssetType.Audio]
+    filterData.inPodcast = true
     return
   }
-  filter.type.model = [assetType]
-  filter.inPodcast.model = null
+  filterData.type = [assetType]
+  filterData.inPodcast = null
 }
 
 export function useAssetSelectActions(
@@ -46,17 +47,15 @@ export function useAssetSelectActions(
   const assetDetailStore = useAssetDetailStore()
   const { openSidebarRight } = useSidebar()
 
-  const { resetFilter } = useFilterHelpers()
   const { showErrorsDefault } = useAlerts()
 
   const fetchAssetList = async () => {
-    pagination.page = 1
+    pagination.value.page = 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
+    const { executeFetch } = useFetchAssetList(damClient, assetSelectStore.selectedLicenceId)
     try {
       assetSelectStore.showLoader()
-      assetSelectStore.setList(
-        await apiFetchAssetList(damClient, assetSelectStore.selectedLicenceId, pagination, filter)
-      )
+      assetSelectStore.setList(await executeFetch(pagination, filterData, filterConfig))
     } catch (error) {
       showErrorsDefault(error)
     } finally {
@@ -65,13 +64,12 @@ export function useAssetSelectActions(
   }
 
   const fetchNextPage = async () => {
-    pagination.page = pagination.page + 1
+    pagination.value.page = pagination.value.page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
+    const { executeFetch } = useFetchAssetList(damClient, assetSelectStore.selectedLicenceId)
     try {
       assetSelectStore.showLoader()
-      assetSelectStore.appendList(
-        await apiFetchAssetList(damClient, assetSelectStore.selectedLicenceId, pagination, filter)
-      )
+      assetSelectStore.appendList(await executeFetch(pagination, filterData, filterConfig))
     } catch (error) {
       showErrorsDefault(error)
     } finally {
@@ -107,11 +105,13 @@ export function useAssetSelectActions(
     }
   }
 
+  const { clearAll } = useFilterClearHelpers()
+
   const resetAssetList = async () => {
     assetSelectStore.reset()
-    filter.type.default = [assetSelectStore.assetType]
-    resetFilter(filter, pagination)
-    resolveTypeFilter(assetSelectStore.assetType,  assetSelectStore.inPodcast)
+    clearAll(filterData, filterConfig)
+    filterData.type = [assetSelectStore.assetType]
+    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     await fetchAssetList()
   }
 
@@ -140,7 +140,8 @@ export function useAssetSelectActions(
   return {
     damClient,
     filterIsTouched,
-    filter,
+    filterData,
+    filterConfig,
     selectedCount,
     selectedAssets,
     pagination,
