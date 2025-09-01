@@ -1,14 +1,20 @@
-import { reactive } from 'vue'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { ENTITY } from '@/components/dam/user/extSystemApi'
-import { makeFilterHelper } from '@/composables/filter/filterHelpers'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
 
-const makeFilter = makeFilterHelper(SYSTEM_CORE_DAM, ENTITY)
+export function useExtSystemInnerFilter() {
+  const filterFieldsInner = [
+    { name: 'name' as const, variant: 'startsWith', default: null, type: 'string' },
+  ] satisfies readonly MakeFilterOption[]
 
-export function useExtSystemFilter() {
-  return reactive({
-    name: {
-      ...makeFilter({ name: 'name', variant: 'startsWith' }),
-    },
+  const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
+    elastic: true,
+    system: SYSTEM_CORE_DAM,
+    subject: ENTITY,
   })
+
+  return {
+    filterConfig,
+    filterData,
+  }
 }

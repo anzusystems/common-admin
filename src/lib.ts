@@ -518,7 +518,7 @@ import {
   fetchDamAssetLicenceGroupList,
   fetchDamAssetLicenceGroupListByIds,
 } from '@/components/dam/user/assetLicenceGroupApi'
-import { fetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
+import { useFetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
 import { fetchDamUser, useFetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
@@ -973,7 +973,7 @@ export {
   fetchDamAssetLicenceGroupListByIds,
   fetchDamAssetLicenceGroupList,
   fetchDamExtSystemListByIds,
-  fetchDamExtSystemList,
+  useFetchDamExtSystemList,
   fetchDamUserListByIds,
   useFetchDamUserList,
   updateDamUser,
