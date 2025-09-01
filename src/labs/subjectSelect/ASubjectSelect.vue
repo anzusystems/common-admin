@@ -3,7 +3,6 @@ import { computed, ref, toRaw, withModifiers } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import type { Fn } from '@vueuse/core'
 import type { Pagination } from '@/labs/filters/pagination'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 
@@ -11,8 +10,6 @@ const props = withDefaults(
   defineProps<{
     selectedItems: Array<TItem>
     pagination: Pagination
-    submitFilter: Fn
-    resetFilter: Fn
     loading?: boolean
     minCount?: number
     maxCount?: number
@@ -217,14 +214,14 @@ defineExpose({
         </div>
       </div>
       <div class="subject-select__actions system-border-t">
-        <div v-if="props.minCount === props.maxCount">
-          {{ t('common.subjectSelect.texts.pickExactCount', { count: props.minCount, selected: selectedItemsCount }) }}
+        <div v-if="minCount === maxCount">
+          {{ t('common.subjectSelect.texts.pickExactCount', { count: minCount, selected: selectedItemsCount }) }}
         </div>
         <div v-else>
           {{
             t('common.subjectSelect.texts.pickRangeCount', {
-              minCount: props.minCount,
-              maxCount: props.maxCount,
+              minCount: minCount,
+              maxCount: maxCount,
               selected: selectedItemsCount,
             })
           }}

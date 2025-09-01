@@ -88,8 +88,8 @@ export function useSubjectSelect<TItem>(
     }
   }
 
-  const getListDebounced = useDebounceFn(() => {
-    getList()
+  const getListDebounced = useDebounceFn(async () => {
+    await getList()
   })
 
   const onRowClick = (event: Event) => {
