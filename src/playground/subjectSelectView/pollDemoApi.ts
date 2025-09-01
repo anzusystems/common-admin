@@ -1,4 +1,3 @@
-import type { Pagination } from '@/types/Pagination'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { DatetimeUTCNullable, IntegerId } from '@/types/common'

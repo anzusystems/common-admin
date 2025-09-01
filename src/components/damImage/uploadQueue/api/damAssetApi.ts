@@ -22,6 +22,7 @@ import {
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { useApiFetchList } from '@/labs/api/useApiFetchList'
 
 const END_POINT = '/adm/v1/asset'
 const BULK_METADATA_LIMIT = 10
@@ -40,6 +41,11 @@ export interface AssetMetadataBulkItem {
 }
 
 export declare type AssetCustomData = Record<string, any>
+
+export const useFetchAssetList = (client: () => AxiosInstance, licenceId: IntegerId) =>
+  useApiFetchList<AssetSearchListItemDto[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT + '/licence/:licenceId', {
+    licenceId,
+  })
 
 export const fetchAssetList = (
   client: () => AxiosInstance,

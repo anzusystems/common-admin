@@ -1,29 +1,24 @@
-import { reactive } from 'vue'
-import { makeFilterHelper } from '@/composables/filter/filterHelpers'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
 
-const makeFilter = makeFilterHelper('coreDam', 'author')
+export const filterFieldsList = [
+  { name: 'id' as const, default: null, type: 'string' },
+  { name: 'text' as const, default: null, type: 'string', variant: 'search' },
+  { name: 'identifier' as const, default: null },
+  { name: 'reviewed' as const, default: null },
+  { name: 'type' as const, default: null },
+] satisfies readonly MakeFilterOption[]
 
-const filter = reactive({
-  _elastic: {
-    ...makeFilter({ exclude: true }),
-  },
-  id: {
-    ...makeFilter({ name: 'id' }),
-  },
-  text: {
-    ...makeFilter({ name: 'text' }),
-  },
-  identifier: {
-    ...makeFilter({ name: 'identifier' }),
-  },
-  reviewed: {
-    ...makeFilter({ name: 'reviewed' }),
-  },
-  type: {
-    ...makeFilter({ name: 'type' }),
-  },
-})
+const listFiltersStore = createFilterStore(filterFieldsList)
 
 export function useAuthorListFilter() {
-  return filter
+  const { filterConfig, filterData } = createFilter(filterFieldsList, listFiltersStore, {
+    elastic: true,
+    system: 'coreDam',
+    subject: 'author',
+  })
+
+  return {
+    filterConfig,
+    filterData,
+  }
 }
