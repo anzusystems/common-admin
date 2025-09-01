@@ -3,10 +3,11 @@ import { useDamConfigState } from '@/components/damImage/uploadQueue/composables
 import { isUndefined } from '@/utils/common'
 import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import type { Pagination } from '@/types/Pagination'
-import type { FilterBag } from '@/types/Filter'
-import { fetchKeywordList, fetchKeywordListByIds } from '@/components/damImage/uploadQueue/api/keywordApi'
+import type { Pagination } from '@/labs/filters/pagination'
+import { fetchKeywordListByIds, useFetchKeywordList } from '@/components/damImage/uploadQueue/api/keywordApi'
 import type { IntegerId } from '@/types/common'
+import type { Ref } from 'vue'
+import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 
 export const useKeywordSelectActions = (extSystem: IntegerId) => {
   const { damClient } = useCommonAdminCoreDamOptions()
@@ -35,12 +36,14 @@ export const useKeywordSelectActions = (extSystem: IntegerId) => {
     return keywords.map((keyword: DamKeyword) => mapToMinimal(keyword))
   }
 
-  const fetchItems = async (pagination: Pagination, filterBag: FilterBag) => {
-    return mapToValueObjects(await fetchKeywordList(damClient, extSystem, pagination, filterBag))
+  const { executeFetch } = useFetchKeywordList(damClient, extSystem)
+
+  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
   }
 
-  const fetchItemsMinimal = async (pagination: Pagination, filterBag: FilterBag) => {
-    return mapToMinimals(await fetchKeywordList(damClient, extSystem, pagination, filterBag))
+  const fetchItemsMinimal = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToMinimals(await executeFetch(pagination, filterData, filterConfig))
   }
 
   const fetchItemsByIds = async (ids: string[]) => {

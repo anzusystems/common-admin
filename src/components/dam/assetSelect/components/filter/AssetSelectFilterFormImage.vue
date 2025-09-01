@@ -2,7 +2,6 @@
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterBooleanSelect from '@/components/filter/AFilterBooleanSelect.vue'
-import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
 import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
 import { computed, watch } from 'vue'
@@ -37,6 +36,7 @@ watch(extSystem, (newValue, oldValue) => {
     filter.authorIds.model = []
   }
 })
+// todo filters!!!
 </script>
 
 <template>
@@ -60,12 +60,12 @@ watch(extSystem, (newValue, oldValue) => {
   </VRow>
   <VRow v-if="extSystem">
     <VCol :cols="12">
-      <DamKeywordFilterRemoteAutocomplete
-        :key="extSystem"
-        v-model="filter.keywordIds"
-        :ext-system="extSystem"
-        @update:model-value="onAnyFilterUpdate"
-      />
+      <!--      <DamKeywordFilterRemoteAutocomplete-->
+      <!--        :key="extSystem"-->
+      <!--        v-model="filter.keywordIds"-->
+      <!--        :ext-system="extSystem"-->
+      <!--        @update:model-value="onAnyFilterUpdate"-->
+      <!--      />-->
     </VCol>
   </VRow>
   <VRow v-if="extSystem">
