@@ -24,7 +24,10 @@ export function useSubjectSelect<TItem>(
   ) => Promise<TItem[]>,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>,
-  filterSortBy: DatatableSortBy | null = null
+  filterSortBy: DatatableSortBy | null = null,
+  urlTemplateOverride: string | undefined = undefined,
+  urlParamsOverride: UrlParams | undefined = undefined,
+  forceElastic: boolean = false
 ) {
   const filterTouched: Ref<boolean> = ref(false)
   const items: Ref<Array<TItem>> = ref([])
@@ -63,7 +66,14 @@ export function useSubjectSelect<TItem>(
     loading.value = true
     incrementPage()
     try {
-      const res = (await executeFetch(pagination, filterData, filterConfig)) as TItem[]
+      const res = (await executeFetch(
+        pagination,
+        filterData,
+        filterConfig,
+        urlTemplateOverride,
+        urlParamsOverride,
+        forceElastic
+      )) as TItem[]
       items.value.push(...res)
     } catch (e) {
       showErrorsDefault(e)
@@ -80,7 +90,14 @@ export function useSubjectSelect<TItem>(
   const getList = async () => {
     loading.value = true
     try {
-      items.value = (await executeFetch(pagination, filterData, filterConfig)) as TItem[]
+      items.value = (await executeFetch(
+        pagination,
+        filterData,
+        filterConfig,
+        urlTemplateOverride,
+        urlParamsOverride,
+        forceElastic
+      )) as TItem[]
     } catch (e) {
       showErrorsDefault(e)
     } finally {
@@ -88,8 +105,8 @@ export function useSubjectSelect<TItem>(
     }
   }
 
-  const getListDebounced = useDebounceFn(() => {
-    getList()
+  const getListDebounced = useDebounceFn(async () => {
+    await getList()
   })
 
   const onRowClick = (event: Event) => {
