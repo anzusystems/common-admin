@@ -520,7 +520,7 @@ import {
 } from '@/components/dam/user/assetLicenceGroupApi'
 import { fetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
-import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
+import { fetchDamUser, useFetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
@@ -975,7 +975,7 @@ export {
   fetchDamExtSystemListByIds,
   fetchDamExtSystemList,
   fetchDamUserListByIds,
-  fetchDamUserList,
+  useFetchDamUserList,
   updateDamUser,
   fetchDamUser,
   fetchAssetAndCheckForSingleUseByFileIds,

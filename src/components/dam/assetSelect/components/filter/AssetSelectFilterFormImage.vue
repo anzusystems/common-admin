@@ -2,7 +2,6 @@
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AFilterString from '@/components/filter/AFilterString.vue'
 import AFilterBooleanSelect from '@/components/filter/AFilterBooleanSelect.vue'
-import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
 import { computed, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
@@ -79,10 +78,10 @@ watch(extSystem, (newValue, oldValue) => {
   </VRow>
   <VRow>
     <VCol :cols="12">
-      <DamUserFilterRemoteAutocomplete
-        v-model="filter.createdByIds"
-        @update:model-value="onAnyFilterUpdate"
-      />
+      <!--      <DamUserFilterRemoteAutocomplete-->
+      <!--        v-model="filter.createdByIds"-->
+      <!--        @update:model-value="onAnyFilterUpdate"-->
+      <!--      />-->
     </VCol>
   </VRow>
   <VRow>
