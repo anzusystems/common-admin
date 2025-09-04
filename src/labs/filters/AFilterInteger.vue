@@ -2,7 +2,7 @@
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { computed, inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { isArray, isBoolean, isNull, isNumber, isString, isUndefined } from '@/utils/common'
+import { isBoolean, isNumber, isString, isUndefined } from '@/utils/common'
 import {
   FilterConfigKey,
   FilterDataKey,

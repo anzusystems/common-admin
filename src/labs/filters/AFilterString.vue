@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { isArray, isBoolean, isNull, isNumber, isString, isUndefined } from '@/utils/common'
+import { isBoolean, isNumber, isString, isUndefined } from '@/utils/common'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import {
   FilterConfigKey,
@@ -66,8 +66,7 @@ const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
   if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
   if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (filterConfigCurrent.value.variant === 'search')
-    return t('common.model.filterPlaceholder.contains')
+  if (filterConfigCurrent.value.variant === 'search') return t('common.model.filterPlaceholder.contains')
   return ''
 })
 
