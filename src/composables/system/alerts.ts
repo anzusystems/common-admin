@@ -6,8 +6,8 @@ import { isAnzuApiValidationError, type ValidationError } from '@/model/error/An
 import { isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
 import { isAnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyExistsError'
-import { isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError.ts'
-import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError.ts'
+import { isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
+import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 
 const DEFAULT_DURATION_SECONDS = 3
 

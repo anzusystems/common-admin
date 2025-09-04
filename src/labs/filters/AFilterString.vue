@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { isArray, isBoolean, isNull, isString, isUndefined } from '@/utils/common'
+import { isArray, isBoolean, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import {
   FilterConfigKey,
@@ -79,6 +79,10 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
+  if (isNumber(modelValue.value)) {
+    filterSelected.value.set(props.name, [{ title: modelValue.value + '', value: modelValue.value }])
+    return
+  }
   if (!isString(modelValue.value)) return
   if (isString(modelValue.value) && modelValue.value.length === 0) {
     filterSelected.value.delete(props.name)
@@ -91,9 +95,6 @@ watch(
   () => filterData[props.name],
   (newValue, oldValue) => {
     if (newValue === oldValue || isBoolean(newValue)) return
-    if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
-      return
-    }
     updateSelected()
   },
   { immediate: true }
