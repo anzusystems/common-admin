@@ -413,7 +413,7 @@ watch(
 
 <template>
   <VAutocomplete
-    :model-value="modelValueAutocomplete"
+    :model-value="modelValueAutocomplete as any"
     :items="allItems"
     no-filter
     :multiple="multiple"
