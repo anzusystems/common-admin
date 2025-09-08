@@ -2,7 +2,7 @@
 import { watchDebounced } from '@vueuse/core'
 import { computed, getCurrentInstance, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { cloneDeep, isArray, isDefined, isNull, isUndefined } from '@/utils/common'
+import { cloneDeep, isArray, isDefined, isEmpty, isNull, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
@@ -86,16 +86,15 @@ const componentName = getCurrentInstance()?.type.__name
 if (isUndefined(filterInnerConfig) || isUndefined(filterInnerData)) {
   throw new Error(`[${componentName}] Incorrect provide/inject config.`)
 }
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const filterByFieldProp = props.filterByField
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const filterSortByProp = props.filterSortBy
 
-if (
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-  isUndefined(filterInnerConfig.fields[props.filterByField]) ||
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-  isUndefined(filterInnerData[props.filterByField])
-) {
+if (isUndefined(filterInnerConfig.fields[filterByFieldProp]) || isUndefined(filterInnerData[filterByFieldProp])) {
   throw new Error(
     `[${componentName}] Incorrect filter inner config. ` +
-      `FilterByField is '${props.filterByField}' and available options are ${Object.keys(filterInnerData).join(', ')}.`
+      `FilterByField is '${filterByFieldProp}' and available options are ${Object.keys(filterInnerData).join(', ')}.`
   )
 }
 
@@ -113,10 +112,6 @@ const modelValueSelected = defineModel<ValueObjectOption<T> | ValueObjectOption<
     return isArray(newValue) ? cloneDeep(newValue) : newValue
   },
 })
-
-const modelValueAutocomplete = ref<ModelValueType>(null)
-
-const apiRequestCounter = ref(0)
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
@@ -146,6 +141,8 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
 
 const search = ref('')
 const isFocused = ref(false)
+const modelValueAutocomplete = ref<any>(null)
+const apiRequestCounter = ref(0)
 
 const { t } = useI18n()
 
@@ -187,30 +184,25 @@ const multipleComputedVuetifyTypeFix = computed(() => {
   return true as unknown as undefined
 })
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { pagination } = usePagination(
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-  isNull(props.filterSortBy) ? null : props.filterSortBy.key,
-  props.filterSortBy?.order
-)
+const { pagination } = usePagination(isNull(filterSortByProp) ? null : filterSortByProp.key, filterSortByProp?.order)
 const fetchedItems = ref<ValueObjectOption<T>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<T>[]>([])
 const isFirstLoad = ref(true)
 
 const allItems = computed<ValueObjectOption<T>[]>(() => {
-  const itemsMap = new Map()
+  const itemsMap = new Map<T, ValueObjectOption<T>>()
   const addToMap = (items: ValueObjectOption<T>[]) => {
     items.forEach((item) => {
-      itemsMap.set(item.value as T, {
-        value: item.value as T,
+      itemsMap.set(item.value, {
+        value: item.value,
         title: item.title,
         subtitle: item.subtitle,
       } as ValueObjectOption<T>)
     })
   }
 
-  addToMap(selectedItemsCache.value)
-  addToMap(fetchedItems.value)
+  addToMap(selectedItemsCache.value as ValueObjectOption<T>[])
+  addToMap(fetchedItems.value as ValueObjectOption<T>[])
 
   return Array.from(itemsMap.values())
 })
@@ -221,8 +213,6 @@ const loadingComputed = computed(() => {
   return props.loading
 })
 
-const isEmptyValue = (value: any) => isNull(value) || isUndefined(value) || (isArray(value) && value.length === 0)
-
 const resetToEmptyState = (value: any) => {
   selectedItemsCache.value = []
   modelValueSelected.value = isArray(value) ? [] : null
@@ -230,7 +220,8 @@ const resetToEmptyState = (value: any) => {
 }
 
 const updateSelected = (value: T[] | T) => {
-  const findItem = (id: T) => allItems.value.find((obj) => obj.value === id) ?? { title: `${id}`, value: id }
+  const findItem = (id: T): ValueObjectOption<T> =>
+    allItems.value.find((obj) => obj.value === id) ?? ({ title: `${id}`, value: id } as ValueObjectOption<T>)
   return isArray(value) ? value.map(findItem) : findItem(value)
 }
 
@@ -276,7 +267,7 @@ const { showErrorsDefault } = useAlerts()
 
 const apiSearch = async (query: string, requestCounter: number) => {
   loadingLocal.value = true
-  filterInnerData[props.filterByField] = query
+  filterInnerData[filterByFieldProp] = query
   try {
     const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
     if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
@@ -362,7 +353,7 @@ watch(search, (newValue, oldValue) => {
 })
 
 const checkFirstLoad = async (newValue: ModelValueType) => {
-  if (isEmptyValue(newValue) && props.prefetch === 'mounted' && isDefined(props.tryLoadModelValue)) {
+  if (isEmpty(newValue) && props.prefetch === 'mounted' && isDefined(props.tryLoadModelValue)) {
     console.log('tryLoadModelValue')
     try {
       const success = await tryLoadInitialValue(props.tryLoadModelValue)
@@ -414,7 +405,7 @@ watch(
     if (collabOptions.value.enabled && isFocused.value) {
       changeFieldData.value(newValue)
     }
-    if (isEmptyValue(newValue)) {
+    if (isEmpty(newValue)) {
       resetToEmptyState(newValue)
       return
     }
