@@ -66,5 +66,21 @@ export default [
       '@typescript-eslint/no-unused-expressions': 'off',
     },
   },
+  {
+    name: 'app/test-files',
+    files: ['**/*.test.{ts,js}', '**/*.spec.{ts,js}', '**/test/**/*.{ts,js}', '**/tests/**/*.{ts,js}'],
+    rules: {
+      // Relax rules for test files
+      '@stylistic/max-len': ['error', { code: 150 }], // Longer lines for test descriptions
+      '@typescript-eslint/no-explicit-any': 'off', // Allow any in tests for mocking
+      '@typescript-eslint/no-non-null-assertion': 'off', // Allow ! in tests
+      'vue/one-component-per-file': 'off', // Allow multiple components in test files
+      '@stylistic/no-multiple-empty-lines': ['error', { max: 2 }], // More spacing in tests
+      // Keep important rules
+      '@stylistic/semi': ['error', 'never'],
+      '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
+      '@stylistic/object-curly-spacing': ['error', 'always'],
+    },
+  },
   // skipFormatting,
 ]
