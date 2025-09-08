@@ -16,7 +16,7 @@ import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
-import { useAlerts } from '@/composables/system/alerts.ts'
+import { useAlerts } from '@/composables/system/alerts'
 
 type ModelValueType = T | T[] | null
 
