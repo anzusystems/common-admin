@@ -240,9 +240,7 @@ const tryLoadInitialValue = async (tryLoadValue: ModelValueType) => {
   loadingLocal.value = true
 
   try {
-    console.log('idsToFetch', idsToFetch)
     const fetchedData = await props.fetchItemsByIds(idsToFetch as Array<IntegerId & DocId>)
-    console.log('fetchedData', fetchedData)
     if (isArray(fetchedData) && fetchedData.length > 0) {
       selectedItemsCache.value = fetchedData
       if (props.multiple) {
@@ -276,11 +274,7 @@ const apiSearch = async (query: string, requestCounter: number) => {
 const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted', newValue: ModelValueType) => {
   if (props.prefetch === false || props.prefetch !== mode) return
   loadingLocal.value = true
-  console.log('autoFetch', mode, props.prefetch)
   const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
-  console.log(props.disableAutoSingleSelect, res.length)
-  console.log(newValue)
-  console.log(isNull(newValue) || (isArray(newValue) && newValue.length === 0))
   if (apiRequestCounter.value === 0) {
     fetchedItems.value = res
     if (
@@ -288,7 +282,6 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted', newValue: Model
       res.length === 1 &&
       (isNull(newValue) || (isArray(newValue) && newValue.length === 0))
     ) {
-      console.log('autoSelect')
       modelValue.value = props.multiple ? [res[0].value] : res[0].value
     }
   }
@@ -349,10 +342,8 @@ watch(search, (newValue, oldValue) => {
 
 const checkFirstLoad = async (newValue: ModelValueType) => {
   if (isEmpty(newValue) && props.prefetch === 'mounted' && isDefined(props.tryLoadModelValue)) {
-    console.log('tryLoadModelValue')
     try {
       const success = await tryLoadInitialValue(props.tryLoadModelValue)
-      console.log('success', success)
       if (success) {
         return
       }

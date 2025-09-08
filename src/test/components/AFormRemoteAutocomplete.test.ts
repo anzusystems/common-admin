@@ -77,6 +77,16 @@ describe('AFormRemoteAutocomplete', () => {
     modelValue: null,
   }
 
+  // Test helper functions
+  const waitForAsync = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms))
+
+  const createMockFetchItems = (items = mockItems) => vi.fn().mockResolvedValue(items)
+
+  const createMockFetchItemsByIds = (items = mockItems) =>
+    vi.fn().mockImplementation((ids: string[]) => {
+      return Promise.resolve(items.filter(item => ids.includes(item.value)))
+    })
+
   const createWrapper = (props = {}, provide = {}) => {
     return mount(AFormRemoteAutocomplete, {
       props: {
@@ -227,14 +237,14 @@ describe('AFormRemoteAutocomplete', () => {
   })
 
   it('handles prefetch: false - no items loaded until search', async () => {
-    const mockFetchItemsForPrefetch = vi.fn().mockResolvedValue(mockItems)
+    const mockFetchItemsForPrefetch = createMockFetchItems()
 
     const wrapper = createWrapper({
       fetchItems: mockFetchItemsForPrefetch,
       prefetch: false,
     })
 
-    await new Promise(resolve => setTimeout(resolve, 200))
+    await waitForAsync(200)
 
     // Verify fetchItems was NOT called on mount
     expect(mockFetchItemsForPrefetch).not.toHaveBeenCalled()
@@ -242,14 +252,14 @@ describe('AFormRemoteAutocomplete', () => {
   })
 
   it('handles prefetch: mounted - items loaded on component mount', async () => {
-    const mockFetchItemsForPrefetch = vi.fn().mockResolvedValue(mockItems)
+    const mockFetchItemsForPrefetch = createMockFetchItems()
 
     const wrapper = createWrapper({
       fetchItems: mockFetchItemsForPrefetch,
       prefetch: 'mounted',
     })
 
-    await new Promise(resolve => setTimeout(resolve, 300))
+    await waitForAsync(300)
 
     // Verify fetchItems WAS called on mount
     expect(mockFetchItemsForPrefetch).toHaveBeenCalled()
@@ -257,14 +267,14 @@ describe('AFormRemoteAutocomplete', () => {
   })
 
   it('handles prefetch: focus - items loaded on focus event', async () => {
-    const mockFetchItemsForPrefetch = vi.fn().mockResolvedValue(mockItems)
+    const mockFetchItemsForPrefetch = createMockFetchItems()
 
     const wrapper = createWrapper({
       fetchItems: mockFetchItemsForPrefetch,
       prefetch: 'focus',
     })
 
-    await new Promise(resolve => setTimeout(resolve, 200))
+    await waitForAsync(200)
 
     // Verify fetchItems was NOT called on mount
     expect(mockFetchItemsForPrefetch).not.toHaveBeenCalled()
@@ -273,21 +283,21 @@ describe('AFormRemoteAutocomplete', () => {
     const autocomplete = wrapper.find('.v-autocomplete')
     await autocomplete.trigger('focus')
 
-    await new Promise(resolve => setTimeout(resolve, 300))
+    await waitForAsync(300)
 
     // Verify fetchItems WAS called after focus
     expect(mockFetchItemsForPrefetch).toHaveBeenCalled()
   })
 
   it('handles prefetch: hover - items loaded on hover event', async () => {
-    const mockFetchItemsForPrefetch = vi.fn().mockResolvedValue(mockItems)
+    const mockFetchItemsForPrefetch = createMockFetchItems()
 
     const wrapper = createWrapper({
       fetchItems: mockFetchItemsForPrefetch,
       prefetch: 'hover',
     })
 
-    await new Promise(resolve => setTimeout(resolve, 200))
+    await waitForAsync(200)
 
     // Verify fetchItems was NOT called on mount
     expect(mockFetchItemsForPrefetch).not.toHaveBeenCalled()
@@ -296,16 +306,14 @@ describe('AFormRemoteAutocomplete', () => {
     const autocomplete = wrapper.find('.v-autocomplete')
     await autocomplete.trigger('mouseenter')
 
-    await new Promise(resolve => setTimeout(resolve, 300))
+    await waitForAsync(300)
 
     // Verify fetchItems WAS called after hover
     expect(mockFetchItemsForPrefetch).toHaveBeenCalled()
   })
 
   it('handles tryLoadModelValue - sets modelValue when ID found in results', async () => {
-    const mockFetchItemsByIdsForTryLoad = vi.fn().mockImplementation((ids: string[]) => {
-      return Promise.resolve(mockItems.filter(item => ids.includes(item.value)))
-    })
+    const mockFetchItemsByIdsForTryLoad = createMockFetchItemsByIds()
 
     const wrapper = createWrapper({
       fetchItemsByIds: mockFetchItemsByIdsForTryLoad,
@@ -313,7 +321,7 @@ describe('AFormRemoteAutocomplete', () => {
       tryLoadModelValue: '2', // This ID exists in mockItems
     })
 
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await waitForAsync()
 
     // Verify fetchItemsByIds was called with the tryLoadModelValue
     expect(mockFetchItemsByIdsForTryLoad).toHaveBeenCalledWith(['2'])
@@ -325,9 +333,7 @@ describe('AFormRemoteAutocomplete', () => {
   })
 
   it('handles tryLoadModelValue - keeps modelValue null when ID not found in results', async () => {
-    const mockFetchItemsByIdsForTryLoad = vi.fn().mockImplementation((ids: string[]) => {
-      return Promise.resolve(mockItems.filter(item => ids.includes(item.value)))
-    })
+    const mockFetchItemsByIdsForTryLoad = createMockFetchItemsByIds()
 
     const wrapper = createWrapper({
       fetchItemsByIds: mockFetchItemsByIdsForTryLoad,
@@ -335,7 +341,7 @@ describe('AFormRemoteAutocomplete', () => {
       tryLoadModelValue: '999', // This ID does NOT exist in mockItems
     })
 
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await waitForAsync()
 
     // Verify fetchItemsByIds was called with the tryLoadModelValue
     expect(mockFetchItemsByIdsForTryLoad).toHaveBeenCalledWith(['999'])
@@ -347,16 +353,14 @@ describe('AFormRemoteAutocomplete', () => {
   })
 
   it('loads and displays pretty title when modelValue is pre-set on init', async () => {
-    const mockFetchItemsByIdsForInit = vi.fn().mockImplementation((ids: string[]) => {
-      return Promise.resolve(mockItems.filter(item => ids.includes(item.value)))
-    })
+    const mockFetchItemsByIdsForInit = createMockFetchItemsByIds()
 
     const wrapper = createWrapper({
       fetchItemsByIds: mockFetchItemsByIdsForInit,
       modelValue: '1', // Pre-set modelValue
     })
 
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await waitForAsync()
 
     // Verify fetchItemsByIds was called with the initial modelValue
     expect(mockFetchItemsByIdsForInit).toHaveBeenCalledWith(['1'])
@@ -370,7 +374,7 @@ describe('AFormRemoteAutocomplete', () => {
   it('auto-fetches and auto-selects single item on mount', async () => {
     // Mock fetchItems to return only one item
     const singleItem: ValueObjectOption<string> = { value: '1', title: 'Apple', subtitle: 'Fruit' }
-    const mockFetchItemsSingle = vi.fn().mockResolvedValue([singleItem])
+    const mockFetchItemsSingle = createMockFetchItems([singleItem])
 
     const wrapper = createWrapper({
       fetchItems: mockFetchItemsSingle,
@@ -379,7 +383,7 @@ describe('AFormRemoteAutocomplete', () => {
     })
 
     // Wait for auto-fetch and auto-select to complete
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await waitForAsync()
 
     // Verify fetchItems was called (auto-fetch on mount)
     expect(mockFetchItemsSingle).toHaveBeenCalled()
