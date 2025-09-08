@@ -141,7 +141,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
 
 const search = ref('')
 const isFocused = ref(false)
-const modelValueAutocomplete = ref<any>(null)
+const modelValueAutocomplete = ref<ValueObjectOption<T> | ValueObjectOption<T>[] | null>(null)
 const apiRequestCounter = ref(0)
 
 const { t } = useI18n()
@@ -208,7 +208,7 @@ const loadingComputed = computed(() => {
   return props.loading
 })
 
-const resetToEmptyState = (value: any) => {
+const resetToEmptyState = (value: ModelValueType) => {
   selectedItemsCache.value = []
   modelValueSelected.value = isArray(value) ? [] : null
   modelValueAutocomplete.value = isArray(value) ? [] : null
@@ -364,17 +364,18 @@ const checkFirstLoad = async (newValue: ModelValueType) => {
   }
 }
 
-const onAutocompleteModelUpdate = (newValue: any) => {
-  modelValueSelected.value = newValue
-  if (isNull(newValue)) {
+const onAutocompleteModelUpdate = (newValue: ValueObjectOption<T> | readonly ValueObjectOption<T>[] | null) => {
+  const cloned = cloneDeep(newValue) as ValueObjectOption<T> | ValueObjectOption<T>[] | null
+  modelValueSelected.value = cloned
+  if (isNull(cloned)) {
     modelValue.value = null
     return
   }
-  if (isArray(newValue)) {
-    modelValue.value = newValue.map((item: any) => item.value)
+  if (isArray(cloned)) {
+    modelValue.value = cloned.map((item) => item.value)
     return
   }
-  modelValue.value = newValue.value
+  modelValue.value = cloned.value
 }
 
 const noDataText = computed(() => {
