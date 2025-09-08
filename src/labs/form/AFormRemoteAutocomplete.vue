@@ -179,11 +179,6 @@ const disabledComputed = computed(() => {
   return !!lockedByUserLocal.value
 })
 
-const multipleComputedVuetifyTypeFix = computed(() => {
-  if (!props.multiple) return false
-  return true as unknown as undefined
-})
-
 const { pagination } = usePagination(isNull(filterSortByProp) ? null : filterSortByProp.key, filterSortByProp?.order)
 const fetchedItems = ref<ValueObjectOption<T>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<T>[]>([])
@@ -420,7 +415,7 @@ watch(
     :model-value="modelValueAutocomplete"
     :items="allItems"
     no-filter
-    :multiple="multipleComputedVuetifyTypeFix"
+    :multiple="multiple"
     :clearable="clearable"
     :error-messages="errorMessageComputed"
     :chips="chips || multiple"
