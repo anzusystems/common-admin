@@ -201,11 +201,11 @@ const allItems = computed<ValueObjectOption<T>[]>(() => {
   const itemsMap = new Map()
   const addToMap = (items: ValueObjectOption<T>[]) => {
     items.forEach((item) => {
-      itemsMap.set(item.value, {
-        value: item.value,
+      itemsMap.set(item.value as T, {
+        value: item.value as T,
         title: item.title,
         subtitle: item.subtitle,
-      })
+      } as ValueObjectOption<T>)
     })
   }
 
@@ -229,18 +229,18 @@ const resetToEmptyState = (value: any) => {
   modelValueAutocomplete.value = isArray(value) ? [] : null
 }
 
-const updateSelected = (value: T[]) => {
+const updateSelected = (value: T[] | T) => {
   const findItem = (id: T) => allItems.value.find((obj) => obj.value === id) ?? { title: `${id}`, value: id }
   return isArray(value) ? value.map(findItem) : findItem(value)
 }
 
 const loadListItems = async (ids: T[] | T) => {
-  const idsArray = isArray(ids) ? ids : [ids]
   loadingLocal.value = true
 
   try {
+    const selectedNewValue = updateSelected(ids)
+    const idsArray = isArray(ids) ? ids : [ids]
     selectedItemsCache.value = await props.fetchItemsByIds(idsArray)
-    const selectedNewValue = updateSelected(idsArray)
     modelValueSelected.value = selectedNewValue
     modelValueAutocomplete.value = selectedNewValue
     return selectedItemsCache.value
