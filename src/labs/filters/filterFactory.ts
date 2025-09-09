@@ -287,6 +287,10 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
 
     for (const [key, value] of params.entries()) {
       const fieldConfig = filterConfig.fields[key as keyof typeof filterConfig.fields]
+      if (isUndefined(fieldConfig)) {
+        console.error(`Filter config not found for ${key}`)
+        continue
+      }
       const isMultiple = fieldConfig.multiple ?? false
 
       if (isMultiple) {
