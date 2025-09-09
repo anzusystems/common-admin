@@ -1,7 +1,7 @@
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
 import { HTTP_STATUS_FORBIDDEN } from '@/composables/statusCodes'
 
-export const axiosErrorResponseIsForbidden = (error: Error) => {
+export const axiosErrorResponseIsForbidden = (error: Error): error is AxiosError => {
   return axios.isAxiosError(error) && error.response?.status === HTTP_STATUS_FORBIDDEN
 }
 

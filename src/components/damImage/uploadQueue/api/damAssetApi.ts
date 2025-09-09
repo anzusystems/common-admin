@@ -231,7 +231,7 @@ export const updateAssetMetadata = (
       })
       .catch((err) => {
         if (axiosErrorResponseIsForbidden(err)) {
-          return reject(new AnzuApiForbiddenError(err))
+          return reject(new AnzuApiForbiddenError(err, err.config?.url))
         }
         if (axiosErrorResponseHasValidationData(err)) {
           handleMetadataValidationError(err, asset.attributes.assetType, extSystem)
@@ -264,7 +264,7 @@ export const updateAssetAuthors = (client: () => AxiosInstance, asset: AssetDeta
       })
       .catch((err) => {
         if (axiosErrorResponseIsForbidden(err)) {
-          return reject(new AnzuApiForbiddenError(err))
+          return reject(new AnzuApiForbiddenError(err, err.config?.url))
         }
         if (axiosErrorResponseHasValidationData(err)) {
           handleMetadataValidationError(err, asset.attributes.assetType, extSystem)

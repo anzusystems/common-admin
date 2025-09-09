@@ -71,7 +71,7 @@ export const apiFetchList = <R>(
       })
       .catch((err) => {
         if (axiosErrorResponseIsForbidden(err)) {
-          return reject(new AnzuApiForbiddenError(err))
+          return reject(new AnzuApiForbiddenError(err, err.config?.url))
         }
         if (axiosErrorResponseHasValidationData(err)) {
           return reject(new AnzuApiValidationError(err, system, entity, err))

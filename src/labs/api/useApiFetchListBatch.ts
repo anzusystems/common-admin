@@ -139,7 +139,7 @@ export const useApiFetchListBatch = <R>(
       }
 
       if (axiosErrorResponseIsForbidden(err)) {
-        throw new AnzuApiForbiddenError(err)
+        throw new AnzuApiForbiddenError(err, err.config?.url)
       }
 
       if (axiosErrorResponseHasValidationData(err)) {

@@ -135,7 +135,7 @@ export const apiFetchListBatch = async <R>(
     return results
   } catch (err: any) {
     if (axiosErrorResponseIsForbidden(err)) {
-      return Promise.reject(new AnzuApiForbiddenError(err))
+      return Promise.reject(new AnzuApiForbiddenError(err, err.config?.url))
     }
     if (axiosErrorResponseHasValidationData(err)) {
       return Promise.reject(new AnzuApiValidationError(err, system, entity, err))
