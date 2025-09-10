@@ -224,9 +224,9 @@ const loadListItems = async (ids: T[] | T) => {
   loadingLocal.value = true
 
   try {
-    const selectedNewValue = updateSelected(ids)
     const idsArray = isArray(ids) ? ids : [ids]
     selectedItemsCache.value = await props.fetchItemsByIds(idsArray)
+    const selectedNewValue = updateSelected(ids)
     modelValueSelected.value = selectedNewValue
     modelValueAutocomplete.value = selectedNewValue
     return selectedItemsCache.value
