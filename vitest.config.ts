@@ -3,6 +3,13 @@ import { defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config'
 
 export default mergeConfig(viteConfig, defineConfig({
+  // Override server config for testing to use localhost instead of custom domain
+  server: {
+    host: 'localhost',
+    watch: {
+      usePolling: true,
+    },
+  },
   test: {
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
