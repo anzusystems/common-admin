@@ -39,7 +39,6 @@ const {
   columnsHidden,
   submitFilter,
   resetFilter,
-  filterTouched,
   onFetchNextPage,
   onOpen,
   sortByChange,
@@ -95,8 +94,8 @@ const onConfirm = (items: Array<PollDemo>) => {
     </template>
     <template #filter>
       <PollSelectFilter
-        v-model:touched="filterTouched"
-        @submit-filter="submitFilter"
+        @submit="submitFilter"
+        @reset="resetFilter"
       />
     </template>
     <template #second-bar-right>

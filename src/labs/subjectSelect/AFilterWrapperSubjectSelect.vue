@@ -28,7 +28,6 @@ withDefaults(
 )
 const emit = defineEmits<{
   (e: 'submit'): void
-  (e: 'bookmarkLoadAfter'): void
   (e: 'reset'): void
 }>()
 
@@ -65,6 +64,12 @@ const touched = computed(() => {
   return filterConfig.touched
 })
 
+const renderedFieldNames = computed(() => {
+  return Object.entries(filterConfig.fields)
+    .filter(([, field]) => !field.render.skip)
+    .map(([fieldName]) => fieldName)
+})
+
 defineExpose({
   submit: submitFilter,
   reset: resetFilter,
@@ -80,20 +85,19 @@ defineExpose({
       <slot name="detail">
         <VRow>
           <VCol
-            v-for="field in filterConfig.fields"
-            :key="field.name"
-            :cols="field.render.xs || 12"
-            :sm="field.render.sm || 12"
-            :md="field.render.md || 12"
-            :lg="field.render.lg || 12"
-            :xl="field.render.xl || 12"
-            :class="{ 'd-none': field.render.skip }"
+            v-for="fieldName in renderedFieldNames"
+            :key="fieldName"
+            :cols="filterConfig.fields[fieldName].render.xs || 12"
+            :sm="filterConfig.fields[fieldName].render.sm || 12"
+            :md="filterConfig.fields[fieldName].render.md || 12"
+            :lg="filterConfig.fields[fieldName].render.lg || 12"
+            :xl="filterConfig.fields[fieldName].render.xl || 12"
           >
             <slot
-              :name="datatableSlotName(field.name)"
-              :item-config="field"
+              :name="datatableSlotName(fieldName)"
+              :item-config="filterConfig.fields[fieldName]"
             >
-              <FilterDetailItem :name="field.name" />
+              <FilterDetailItem :name="fieldName" />
             </slot>
           </VCol>
         </VRow>
