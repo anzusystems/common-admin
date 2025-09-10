@@ -2,7 +2,7 @@
 import { watchDebounced } from '@vueuse/core'
 import { computed, getCurrentInstance, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
+import { cloneDeep, isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 import {
@@ -16,8 +16,8 @@ import {
 import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { isOneOf } from '@/utils/enum'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
-
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
+import { useAlerts } from '@/composables/system/alerts'
 
 type FetchItemsMinimalByIdsType = ((ids: IntegerId[]) => Promise<any[]>) | ((ids: DocId[]) => Promise<any[]>)
 
@@ -109,7 +109,7 @@ const { t } = useI18n()
 const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
 
 const onBlur = () => {
-  isFocused.value = true
+  isFocused.value = false
 }
 
 const label = computed(() => {
@@ -122,30 +122,50 @@ const { pagination } = usePagination(
   isNull(props.filterSortBy) ? null : props.filterSortBy.key,
   props.filterSortBy?.order
 )
-const fetchedItems = ref<ValueObjectOption<string | number>[]>([])
-const selectedItemsCache = ref<ValueObjectOption<string | number>[]>([])
+const fetchedItems = ref<any[]>([])
+const selectedItemsCache = ref<any[]>([])
 
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
   const final = new Map()
+  const finalRaw: Map<IntegerId | DocId, any> = new Map()
   selectedItemsCache.value.forEach((value) => {
-    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
+    if (value.raw) {
+      final.set(value.raw[props.itemValue], value.raw[props.itemTitle])
+      finalRaw.set(value.raw[props.itemValue], cloneDeep(value.raw))
+    } else {
+      final.set(value[props.itemValue], value[props.itemTitle])
+      finalRaw.set(value[props.itemValue], cloneDeep(value))
+    }
   })
   fetchedItems.value.forEach((value) => {
-    final.set(value.value, { value: value.value, title: value.title, subtitle: value.subtitle })
+    if (value.raw) {
+      final.set(value.raw[props.itemValue], value.raw[props.itemTitle])
+      finalRaw.set(value.raw[props.itemValue], cloneDeep(value.raw))
+    } else {
+      final.set(value[props.itemValue], value[props.itemTitle])
+      finalRaw.set(value[props.itemValue], cloneDeep(value))
+    }
   })
   return Array.from(final, ([key, value]) => {
-    return { value: key, title: value.title, subtitle: value.subtitle }
+    return { value: key, title: value, raw: finalRaw.get(key) }
   })
 })
 
 const loading = ref(false)
 
+const { showErrorsDefault } = useAlerts()
+
 const apiSearch = async (query: string, requestCounter: number) => {
   loading.value = true
   filterInnerData[props.filterByField] = query
-  const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
-  if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
-  loading.value = false
+  try {
+    const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
+    if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
+    loading.value = false
+  } catch (e) {
+    loading.value = false
+    showErrorsDefault(e)
+  }
 }
 
 const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
@@ -271,7 +291,7 @@ watch(
         selected.value = null
       }
       updateFilterSelected(selected.value)
-      if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus'])) return
+      if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus', false])) return
       autoFetchTimer.value = setTimeout(() => {
         autoFetch()
       }, 3000)
