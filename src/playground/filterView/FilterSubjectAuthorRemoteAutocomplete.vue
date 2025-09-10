@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
+import { provide } from 'vue'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 import {
   fetchItems,
   fetchItemsByIds,
-  useSubjectDeskInnerFilter,
-} from '@/playground/filterV2View/FilterSubjectDeskTools'
-import { provide } from 'vue'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
+  useSubjectAuthorInnerFilter,
+} from '@/playground/filterView/FilterSubjectAuthorTools'
+import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
 
 withDefaults(
   defineProps<{
@@ -18,7 +18,7 @@ const emit = defineEmits<{
   (e: 'change'): void
 }>()
 
-const { filterData, filterConfig } = useSubjectDeskInnerFilter()
+const { filterData, filterConfig } = useSubjectAuthorInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
 </script>
@@ -28,7 +28,7 @@ provide(FilterInnerDataKey, filterData)
     :name="name"
     :fetch-items="fetchItems"
     :fetch-items-by-ids="fetchItemsByIds"
-    filter-by-field="name"
+    filter-by-field="text"
     @change="emit('change')"
   />
 </template>

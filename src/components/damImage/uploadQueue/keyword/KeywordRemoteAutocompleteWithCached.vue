@@ -1,18 +1,17 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
 import type { ValidationScope } from '@/types/Validation'
-import { computed, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import useVuelidate from '@vuelidate/core'
 import { useKeywordSelectActions } from '@/components/damImage/uploadQueue/keyword/keywordActions'
-import { useKeywordFilter } from '@/components/damImage/uploadQueue/keyword/KeywordFilter'
 import {
   useCachedKeywordsForRemoteAutocomplete,
   useDamCachedKeywords,
 } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import { isArray, isUndefined } from '@/utils/common'
-import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
+import AFormRemoteAutocompleteWithCached from '@/labs/form/AFormRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteCachedKeywordChip from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteCachedKeywordChip.vue'
 import { createKeyword } from '@/components/damImage/uploadQueue/api/keywordApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
@@ -20,6 +19,8 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import ARow from '@/components/ARow.vue'
+import { useKeywordInnerFilter } from '@/components/damImage/uploadQueue/keyword/KeywordFilter'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -86,7 +87,9 @@ if (isUndefined(configExtSystem)) {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItemsMinimal } = useKeywordSelectActions(props.extSystem)
 
-const innerFilter = useKeywordFilter()
+const { filterData, filterConfig } = useKeywordInnerFilter()
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
 
 const addNewKeywordText = ref('')
 
@@ -193,7 +196,6 @@ const showAdd = computed(() => {
       :required="requiredComputed"
       :label="label"
       :fetch-items-minimal="fetchItemsMinimal"
-      :inner-filter="innerFilter"
       :multiple="multiple"
       :clearable="clearable"
       filter-by-field="text"

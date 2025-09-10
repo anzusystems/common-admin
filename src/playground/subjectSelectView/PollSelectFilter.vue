@@ -1,38 +1,33 @@
 <script lang="ts" setup>
 import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
-import AFilterString from '@/components/filter/AFilterString.vue'
+import AFilterString from '@/labs/filters/AFilterString.vue'
+import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
 
-withDefaults(
-  defineProps<{
-    touched: boolean
-  }>(),
-  {}
-)
 const emit = defineEmits<{
-  (e: 'submitFilter'): void
-  (e: 'update:touched', data: boolean): void
+  (e: 'submit'): void
+  (e: 'reset'): void
 }>()
 
-const { filter } = usePollSelectStore()
-
-const submitFilter = () => {
-  emit('update:touched', false)
-  emit('submitFilter')
-}
-
-const onAnyFilterUpdate = () => {
-  emit('update:touched', true)
-}
+const { datatableHiddenColumns } = usePollSelectStore()
 </script>
 
 <template>
-  <VRow>
-    <VCol :cols="12">
-      <AFilterString
-        v-model="filter.title"
-        @update:model-value="onAnyFilterUpdate"
-        @keydown.enter="submitFilter"
-      />
-    </VCol>
-  </VRow>
+  <AFilterWrapperSubjectSelect
+    v-model:datatable-hidden-columns="datatableHiddenColumns"
+    @submit="emit('submit')"
+    @reset="emit('reset')"
+  >
+    <template #search>
+      <AFilterString name="title" />
+    </template>
+  </AFilterWrapperSubjectSelect>
+  <!--  <VRow>-->
+  <!--    <VCol :cols="12">-->
+  <!--      <AFilterString-->
+  <!--        v-model="filter.title"-->
+  <!--        @update:model-value="onAnyFilterUpdate"-->
+  <!--        @keydown.enter="submitFilter"-->
+  <!--      />-->
+  <!--    </VCol>-->
+  <!--  </VRow>-->
 </template>

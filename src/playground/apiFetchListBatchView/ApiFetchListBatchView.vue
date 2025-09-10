@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { damClient } from '@/playground/mock/coreDamClient'
-import { apiFetchListBatch } from '@/services/api/apiFetchListBatch'
-import { onMounted, reactive, ref } from 'vue'
-import { usePagination } from '@/composables/system/pagination'
-import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
-import { apiFetchList } from '@/services/api/apiFetchList'
-import { ENTITY, fetchAssetList, SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { onMounted, ref } from 'vue'
+import { usePagination } from '@/labs/filters/pagination'
+import { ENTITY, SYSTEM_CORE_DAM, useFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import { useApiFetchList } from '@/labs/api/useApiFetchList'
 
 const showData = ref(false)
 
@@ -14,44 +14,44 @@ const showData = ref(false)
 const itemsBatch1 = ref<any[]>([])
 const itemsList1 = ref<any[]>([])
 
-const filter = useAssetListFilter()
-const fetchAssetListAll = (licenceId = 100000) =>
-  apiFetchListBatch<any[]>(
-    damClient,
-    '/adm/v1/asset' + '/licence/:licenceId',
-    { licenceId },
-    'id',
-    true,
-    filter,
-    1,
-    SYSTEM_CORE_DAM,
-    ENTITY
-  )
+const filterFieldsList = [] satisfies readonly MakeFilterOption[]
+const listFiltersStore = createFilterStore(filterFieldsList)
 
-const pagination = usePagination('id')
-pagination.rowsPerPage = 100
+const { filterConfig, filterData } = createFilter(filterFieldsList, listFiltersStore, {
+  system: SYSTEM_CORE_DAM,
+  subject: ENTITY,
+})
+
+const useFetchCustomFormListAll = () =>
+  useApiFetchListBatch<any[]>(damClient, SYSTEM_CORE_DAM, ENTITY, '/adm/v1/asset/licence/:licenceId', {
+    licenceId: 100000,
+  })
+const { executeFetch: fetchAssetListAll } = useFetchCustomFormListAll()
+
+const { pagination } = usePagination('id')
+pagination.value.rowsPerPage = 100
 
 // data 2 - standard api
 const itemsBatch2 = ref<any[]>([])
 const itemsList2 = ref<any[]>([])
 
-const pagination2 = usePagination('id')
-pagination.rowsPerPage = 100
+const { pagination: pagination2 } = usePagination('id')
+pagination.value.rowsPerPage = 100
 
-const filter2 = reactive({})
+const useFetchUserList = () => useApiFetchList<any[]>(damClient, SYSTEM_CORE_DAM, ENTITY, '/adm/v1/user')
+const { executeFetch: fetchUserList } = useFetchUserList()
 
-const fetchUserList = () =>
-  apiFetchList<any[]>(damClient, '/adm/v1/user', {}, pagination2, filter2, SYSTEM_CORE_DAM, ENTITY)
+const useFetchUserListAll = () => useApiFetchListBatch<any[]>(damClient, SYSTEM_CORE_DAM, ENTITY, '/adm/v1/user')
+const { executeFetch: fetchUserListAll } = useFetchUserListAll()
 
-const fetchUserListAll = () =>
-  apiFetchListBatch<any[]>(damClient, '/adm/v1/user', {}, 'id', true, filter2, 1, SYSTEM_CORE_DAM, ENTITY)
+const { executeFetch: fetchAssetList } = useFetchAssetList(damClient, 100000)
 
 onMounted(async () => {
-  itemsList1.value = await fetchAssetList(damClient, 100000, pagination, filter)
-  itemsBatch1.value = await fetchAssetListAll()
+  itemsList1.value = await fetchAssetList(pagination, filterData, filterConfig, undefined, undefined, true)
+  itemsBatch1.value = await fetchAssetListAll(filterData, filterConfig, undefined, undefined, 'id', true)
 
-  itemsList2.value = await fetchUserList()
-  itemsBatch2.value = await fetchUserListAll()
+  itemsList2.value = await fetchUserList(pagination2, filterData, filterConfig)
+  itemsBatch2.value = await fetchUserListAll(filterData, filterConfig, undefined, undefined, 'id')
 })
 </script>
 

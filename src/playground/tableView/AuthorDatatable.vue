@@ -1,30 +1,42 @@
 <script lang="ts" setup>
-import { onMounted } from 'vue'
-import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
+import { onMounted, provide } from 'vue'
+import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
-import ADatatablePagination from '@/components/ADatatablePagination.vue'
+import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import { createDatatableColumnsConfig, type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import { SORT_BY_ID } from '@/composables/system/datatableColumns'
 import { useAuthorListFilter } from '@/playground/tableView/authorFilter'
 import { useAuthorListActions } from '@/playground/tableView/authorActions'
+import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import { usePagination } from '@/labs/filters/pagination'
+import { useFilterHelpers } from '@/labs/filters/filterFactory'
+import { useDebounceFn } from '@vueuse/core'
 
 type DatatableItem = DamAuthor
 
-const filter = useAuthorListFilter()
+const { filterData, filterConfig } = useAuthorListFilter()
+provide(FilterConfigKey, filterConfig)
+provide(FilterDataKey, filterData)
+
+const { pagination } = usePagination(SORT_BY_ID)
+provide(DatatablePaginationKey, pagination)
 
 const { fetchList, listItems, datatableHiddenColumns } = useAuthorListActions()
-const getList = () => {
-  fetchList(pagination, filter)
-}
+const { submitFilter } = useFilterHelpers(filterData, filterConfig)
+
+const getList = useDebounceFn(() => {
+  fetchList(pagination, filterData, filterConfig)
+})
 
 const onRowClick = (event: unknown, { item }: { item: DatatableItem }) => {
   console.log(item)
 }
 
-const { columnsVisible, columnsAll, columnsHidden, updateSortBy, pagination } = createDatatableColumnsConfig(
+const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConfig(
   [
     { key: 'id' },
     { key: 'name' },
@@ -36,17 +48,12 @@ const { columnsVisible, columnsAll, columnsHidden, updateSortBy, pagination } = 
   ],
   datatableHiddenColumns,
   'coreDam',
-  'author',
-  false,
-  undefined,
-  undefined,
-  undefined,
-  'damAuthorTable'
+  'author'
 )
 
-const sortByChange = (option: DatatableOrderingOption) => {
-  updateSortBy(option.sortBy)
-  getList()
+const sortByChange = () => {
+  filterConfig.touched = false
+  submitFilter(pagination, getList)
 }
 
 onMounted(() => {

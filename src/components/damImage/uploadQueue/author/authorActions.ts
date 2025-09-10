@@ -2,11 +2,12 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isUndefined } from '@/utils/common'
 import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import type { Pagination } from '@/types/Pagination'
-import type { FilterBag } from '@/types/Filter'
-import { fetchAuthorList, fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import type { Pagination } from '@/labs/filters/pagination'
+import { fetchAuthorListByIds, useFetchAuthorList } from '@/components/damImage/uploadQueue/api/authorApi'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { IntegerId } from '@/types/common'
+import type { Ref } from 'vue'
+import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 
 export const useAuthorSelectActions = (extSystem: IntegerId) => {
   const { damClient } = useCommonAdminCoreDamOptions()
@@ -37,12 +38,14 @@ export const useAuthorSelectActions = (extSystem: IntegerId) => {
     return authors.map((author: DamAuthor) => mapToMinimal(author))
   }
 
-  const fetchItems = async (pagination: Pagination, filterBag: FilterBag) => {
-    return mapToValueObjects(await fetchAuthorList(damClient, extSystem, pagination, filterBag))
+  const { executeFetch } = useFetchAuthorList(damClient, extSystem)
+
+  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
   }
 
-  const fetchItemsMinimal = async (pagination: Pagination, filterBag: FilterBag) => {
-    return mapToMinimals(await fetchAuthorList(damClient, extSystem, pagination, filterBag))
+  const fetchItemsMinimal = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToMinimals(await executeFetch(pagination, filterData, filterConfig))
   }
 
   const fetchItemsByIds = async (ids: string[]) => {

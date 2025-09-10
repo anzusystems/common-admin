@@ -1,26 +1,23 @@
-import { reactive } from 'vue'
-import { makeFilterHelper } from '@/composables/filter/filterHelpers'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { ENTITY } from '@/components/damImage/uploadQueue/api/keywordApi'
 
-const makeFilter = makeFilterHelper('dam', 'user')
+export function useDamUserInnerFilter() {
+  const filterFieldsInner = [
+    { name: 'id' as const, default: null },
+    { name: 'email' as const, default: null, variant: 'startsWith' },
+    { name: 'enabled' as const, default: null },
+    { name: 'lastName' as const, default: null, variant: 'startsWith', apiName: 'person.lastName' },
+    { name: 'permissionGroups' as const, variant: 'custom', default: [], type: 'string' },
+  ] satisfies readonly MakeFilterOption[]
 
-const filter = reactive({
-  id: {
-    ...makeFilter({ name: 'id', default: null }),
-  },
-  email: {
-    ...makeFilter({ name: 'email', variant: 'startsWith' }),
-  },
-  enabled: {
-    ...makeFilter({ name: 'enabled' }),
-  },
-  lastName: {
-    ...makeFilter({ name: 'lastName', variant: 'startsWith', field: 'person.lastName' }),
-  },
-  permissionGroups: {
-    ...makeFilter({ name: 'permissionGroups', variant: 'custom', multiple: true, default: [] }),
-  },
-})
+  const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
+    system: SYSTEM_CORE_DAM,
+    subject: ENTITY,
+  })
 
-export function useDamUserFilter() {
-  return filter
+  return {
+    filterConfig,
+    filterData,
+  }
 }

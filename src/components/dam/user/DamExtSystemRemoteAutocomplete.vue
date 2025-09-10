@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, provide } from 'vue'
 import { cloneDeep } from '@/utils/common'
-import AFormRemoteAutocomplete from '@/components/form/AFormRemoteAutocomplete.vue'
+import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
 import { useExtSystemSelectActions } from '@/components/dam/user/extSystemActions'
-import { useExtSystemFilter } from '@/components/dam/user/ExtSystemFilter'
+import { useExtSystemInnerFilter } from '@/components/dam/user/ExtSystemFilter'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -17,7 +18,6 @@ const props = withDefaults(
     clearable?: boolean
     dataCy?: string
     hideDetails?: boolean
-    disableInitFetch?: boolean
   }>(),
   {
     label: undefined,
@@ -26,7 +26,6 @@ const props = withDefaults(
     clearable: false,
     dataCy: '',
     hideDetails: undefined,
-    disableInitFetch: false,
   }
 )
 const emit = defineEmits<{
@@ -45,7 +44,9 @@ const modelValueComputed = computed({
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItems, fetchItemsByIds } = useExtSystemSelectActions(props.client)
 
-const innerFilter = useExtSystemFilter()
+const { filterData, filterConfig } = useExtSystemInnerFilter()
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
 </script>
 
 <template>
@@ -55,12 +56,11 @@ const innerFilter = useExtSystemFilter()
     :label="label"
     :fetch-items="fetchItems"
     :fetch-items-by-ids="fetchItemsByIds"
-    :inner-filter="innerFilter"
     :multiple="multiple"
     :clearable="clearable"
     filter-by-field="name"
     :data-cy="dataCy"
     :hide-details="hideDetails"
-    :disable-init-fetch="disableInitFetch"
+    prefetch="hover"
   />
 </template>

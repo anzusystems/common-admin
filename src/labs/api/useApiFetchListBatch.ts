@@ -24,7 +24,7 @@ import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import { ref } from 'vue'
 import { usePagination as usePagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
-import type { AxiosClientFn } from '@/labs/api/client.ts'
+import type { AxiosClientFn } from '@/labs/api/client'
 
 /**
  * @template R Response type override

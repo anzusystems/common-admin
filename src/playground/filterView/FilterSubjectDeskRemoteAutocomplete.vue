@@ -3,8 +3,8 @@ import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.
 import {
   fetchItems,
   fetchItemsByIds,
-  useSubjectSiteInnerFilter,
-} from '@/playground/filterV2View/FilterSubjectSiteTools'
+  useSubjectDeskInnerFilter,
+} from '@/playground/filterView/FilterSubjectDeskTools'
 import { provide } from 'vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
@@ -18,7 +18,7 @@ const emit = defineEmits<{
   (e: 'change'): void
 }>()
 
-const { filterData, filterConfig } = useSubjectSiteInnerFilter()
+const { filterData, filterConfig } = useSubjectDeskInnerFilter()
 provide(FilterInnerConfigKey, filterConfig)
 provide(FilterInnerDataKey, filterData)
 </script>
@@ -29,7 +29,6 @@ provide(FilterInnerDataKey, filterData)
     :fetch-items="fetchItems"
     :fetch-items-by-ids="fetchItemsByIds"
     filter-by-field="name"
-    debug
     @change="emit('change')"
   />
 </template>

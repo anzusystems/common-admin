@@ -512,15 +512,15 @@ import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRe
 import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
 import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
-import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
-import { fetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
+import { useDamAssetLicenceInnerFilter } from '@/components/dam/user/AssetLicenceFilter'
+import { useFetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
 import {
-  fetchDamAssetLicenceGroupList,
+  useFetchDamAssetLicenceGroupList,
   fetchDamAssetLicenceGroupListByIds,
 } from '@/components/dam/user/assetLicenceGroupApi'
-import { fetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
+import { useFetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
-import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
+import { fetchDamUser, useFetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
@@ -679,7 +679,7 @@ export {
   useDamAuthorFactory,
   useDamAuthorType,
   useDamDistributionServiceType,
-  useDamAssetLicenceFilter,
+  useDamAssetLicenceInnerFilter,
   useImageActions,
   useCommonAdminImageOptions,
   defineAuth,
@@ -969,13 +969,13 @@ export {
   regionToCrop,
   cropToRegion,
   fetchDamAssetLicenceListByIds,
-  fetchDamAssetLicenceList,
+  useFetchDamAssetLicenceList,
   fetchDamAssetLicenceGroupListByIds,
-  fetchDamAssetLicenceGroupList,
+  useFetchDamAssetLicenceGroupList,
   fetchDamExtSystemListByIds,
-  fetchDamExtSystemList,
+  useFetchDamExtSystemList,
   fetchDamUserListByIds,
-  fetchDamUserList,
+  useFetchDamUserList,
   updateDamUser,
   fetchDamUser,
   fetchAssetAndCheckForSingleUseByFileIds,

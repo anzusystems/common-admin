@@ -2,9 +2,10 @@ import type { AxiosInstance } from 'axios'
 import type { DamUser } from '@/components/dam/user/DamUser'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { IntegerId } from '@/types/common'
-import type { Pagination } from '@/types/Pagination'
-import type { FilterBag } from '@/types/Filter'
-import { fetchDamUserList, fetchDamUserListByIds } from '@/components/dam/user/userApi'
+import type { Pagination } from '@/labs/filters/pagination'
+import { fetchDamUserListByIds, useFetchDamUserList } from '@/components/dam/user/userApi'
+import type { Ref } from 'vue'
+import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 
 export const useDamUserSelectAction = (client: () => AxiosInstance) => {
   const mapToValueObject = (user: DamUser): ValueObjectOption<IntegerId> => ({
@@ -16,8 +17,10 @@ export const useDamUserSelectAction = (client: () => AxiosInstance) => {
     return users.map((user: DamUser) => mapToValueObject(user))
   }
 
-  const fetchItems = async (pagination: Pagination, filterBag: FilterBag) => {
-    return mapToValueObjects(await fetchDamUserList(client, pagination, filterBag))
+  const { executeFetch } = useFetchDamUserList(client)
+
+  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
   }
 
   const fetchItemsByIds = async (ids: IntegerId[]) => {

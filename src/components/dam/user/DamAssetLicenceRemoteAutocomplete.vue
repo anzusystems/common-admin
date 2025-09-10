@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { computed, watch } from 'vue'
+import { computed, provide, watch } from 'vue'
 import type { IntegerId } from '@/types/common'
 import { cloneDeep } from '@/utils/common'
-import AFormRemoteAutocomplete from '@/components/form/AFormRemoteAutocomplete.vue'
-import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
+import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
+import { useDamAssetLicenceInnerFilter } from '@/components/dam/user/AssetLicenceFilter'
 import { useAssetLicenceSelectActions } from '@/components/dam/user/assetLicenceActions'
 import type { AxiosInstance } from 'axios'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -19,7 +20,6 @@ const props = withDefaults(
     dataCy?: string
     extSystemId?: IntegerId | null
     hideDetails?: boolean
-    disableInitFetch?: boolean
   }>(),
   {
     label: undefined,
@@ -29,7 +29,6 @@ const props = withDefaults(
     dataCy: '',
     extSystemId: null,
     hideDetails: undefined,
-    disableInitFetch: false,
   }
 )
 const emit = defineEmits<{
@@ -50,16 +49,18 @@ const selected = defineModel<ValueObjectOption<IntegerId>[]>('selected', { requi
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItems, fetchItemsByIds } = useAssetLicenceSelectActions(props.client)
 
-const innerFilter = useDamAssetLicenceFilter()
+const { filterData, filterConfig } = useDamAssetLicenceInnerFilter()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-innerFilter.extSystem.model = props.extSystemId
+filterData.extSystem = props.extSystemId
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
 
 watch(
   () => props.extSystemId,
   (newValue, oldValue) => {
     if (newValue === oldValue) return
     modelValueComputed.value = props.multiple ? [] : null
-    innerFilter.extSystem.model = newValue
+    filterData.extSystem = newValue
   }
 )
 </script>
@@ -73,12 +74,11 @@ watch(
     :label="label"
     :fetch-items="fetchItems"
     :fetch-items-by-ids="fetchItemsByIds"
-    :inner-filter="innerFilter"
     :multiple="multiple"
     :clearable="clearable"
     filter-by-field="name"
     :data-cy="dataCy"
     :hide-details="hideDetails"
-    :disable-init-fetch="disableInitFetch"
+    prefetch="hover"
   />
 </template>

@@ -3,7 +3,7 @@ import {
   fetchItemsMinimal,
   fetchItemsMinimalByIds,
   useSubjectUserInnerFilter,
-} from '@/playground/filterV2View/FilterSubjectUserTools'
+} from '@/playground/filterView/FilterSubjectUserTools'
 import { provide } from 'vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 import AFilterRemoteAutocompleteWithMinimal from '@/labs/filters/AFilterRemoteAutocompleteWithMinimal.vue'

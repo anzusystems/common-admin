@@ -1,36 +1,48 @@
-import { reactive } from 'vue'
-import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { ENTITY } from '@/components/damImage/uploadQueue/api/keywordApi'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
 
-const makeFilter = makeFilterHelper(SYSTEM_CORE_DAM, ENTITY)
+const filterFieldsList = [
+  {
+    name: 'text' as const,
+    default: null,
+    type: 'string',
+    render: { skip: true },
+    variant: 'search',
+  },
+  { name: 'id' as const, default: null, type: 'string' },
+  { name: 'reviewed' as const, default: null },
+] satisfies readonly MakeFilterOption[]
 
-const filter = reactive({
-  _elastic: {
-    ...makeFilter({ exclude: true }),
-  },
-  id: {
-    ...makeFilter({ name: 'id' }),
-  },
-  text: {
-    ...makeFilter({ name: 'text' }),
-  },
-  reviewed: {
-    ...makeFilter({ name: 'reviewed' }),
-  },
-})
+const listFiltersStore = createFilterStore(filterFieldsList)
 
+// todo filter !!!
 export function useKeywordListFilter() {
-  return filter
+  const { filterConfig, filterData } = createFilter(filterFieldsList, listFiltersStore, {
+    elastic: true,
+    system: SYSTEM_CORE_DAM,
+    subject: ENTITY,
+  })
+
+  return {
+    filterConfig,
+    filterData,
+  }
 }
 
-export function useKeywordFilter() {
-  return reactive({
-    _elastic: {
-      ...makeFilter({ exclude: true }),
-    },
-    text: {
-      ...makeFilter({ name: 'text' }),
-    },
+export function useKeywordInnerFilter() {
+  const filterFieldsInner = [
+    { name: 'text' as const, variant: 'search', default: null, type: 'string' },
+  ] satisfies readonly MakeFilterOption[]
+
+  const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
+    elastic: true,
+    system: SYSTEM_CORE_DAM,
+    subject: ENTITY,
   })
+
+  return {
+    filterConfig,
+    filterData,
+  }
 }
