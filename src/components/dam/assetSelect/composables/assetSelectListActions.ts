@@ -19,11 +19,11 @@ import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cach
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { SORT_BY_SCORE } from '@/composables/system/datatableColumns'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
+import { useDebounceFn } from '@vueuse/core'
 
 const { filterData, filterConfig } = useAssetListFilter()
 const { pagination } = usePagination(SORT_BY_SCORE)
 
-const filterIsTouched = ref(false)
 const detailLoading = ref(false)
 
 function resolveTypeFilter(assetType: DamAssetTypeType, inPodcast: boolean | null) {
@@ -49,8 +49,11 @@ export function useAssetSelectActions(
 
   const { showErrorsDefault } = useAlerts()
 
+  const fetchAssetListDebounced = useDebounceFn(async () => {
+    await fetchAssetList()
+  })
+
   const fetchAssetList = async () => {
-    pagination.value.page = 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     const { executeFetch } = useFetchAssetList(damClient, assetSelectStore.selectedLicenceId)
     try {
@@ -112,14 +115,8 @@ export function useAssetSelectActions(
     clearAll(filterData, filterConfig)
     filterData.type = [assetSelectStore.assetType]
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
+    pagination.value.page = 1
     await fetchAssetList()
-  }
-
-  const filterTouch = () => {
-    filterIsTouched.value = true
-  }
-  const filterUnTouch = () => {
-    filterIsTouched.value = false
   }
 
   const initStoreContext = (
@@ -139,7 +136,6 @@ export function useAssetSelectActions(
 
   return {
     damClient,
-    filterIsTouched,
     filterData,
     filterConfig,
     selectedCount,
@@ -150,11 +146,9 @@ export function useAssetSelectActions(
     assetListItems: assetListItems as Ref<Array<AssetSelectListItem>>,
     getSelectedData: assetSelectStore.getSelectedData,
     onItemClick,
-    fetchAssetList,
+    fetchAssetListDebounced,
     fetchNextPage,
     resetAssetList,
-    filterTouch,
-    filterUnTouch,
     initStoreContext,
   }
 }

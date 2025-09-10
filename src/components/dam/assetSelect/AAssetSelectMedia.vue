@@ -77,8 +77,7 @@ const {
   loader,
   pagination,
   fetchNextPage,
-  fetchAssetList,
-  resetAssetList,
+  fetchAssetListDebounced,
   getSelectedData,
   initStoreContext,
   detailLoading,
@@ -114,7 +113,6 @@ const onOpen = () => {
     props.minCount,
     props.maxCount
   )
-  resetAssetList()
   openSidebarLeft()
   modelValue.value = true
 }
@@ -196,7 +194,7 @@ const customFormConfigLoading = ref(true)
 const typeChange = () => {
   assetSelectStore.reset()
   assetDetailStore.reset()
-  fetchAssetList()
+  fetchAssetListDebounced()
 }
 
 const sortByChange = (option: DatatableOrderingOption) => {
@@ -204,7 +202,7 @@ const sortByChange = (option: DatatableOrderingOption) => {
   if (option.sortBy) {
     pagination.value.sortBy = { key: option.sortBy.key, order: option.sortBy.order }
   }
-  fetchAssetList()
+  fetchAssetListDebounced()
 }
 
 watch(

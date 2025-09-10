@@ -78,11 +78,10 @@ const {
   loader,
   pagination,
   fetchNextPage,
-  resetAssetList,
   getSelectedData,
   initStoreContext,
   detailLoading,
-  fetchAssetList,
+  fetchAssetListDebounced,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
 
@@ -116,7 +115,6 @@ const onOpen = () => {
     props.minCount,
     props.maxCount
   )
-  resetAssetList()
   openSidebarLeft()
   modelValue.value = true
 }
@@ -200,7 +198,7 @@ const sortByChange = (option: DatatableOrderingOption) => {
   if (option.sortBy) {
     pagination.value.sortBy = { key: option.sortBy.key, order: option.sortBy.order }
   }
-  fetchAssetList()
+  fetchAssetListDebounced()
 }
 
 watch(
