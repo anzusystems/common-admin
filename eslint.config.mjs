@@ -357,6 +357,5 @@ export default defineConfigWithVueTs(
       '@stylistic/object-curly-spacing': ['error', 'always'],
     },
   },
-  }
   // skipFormatting,
 )

@@ -3,20 +3,15 @@ import { createVuetify } from 'vuetify'
 import { createI18n } from 'vue-i18n'
 import { createPinia } from 'pinia'
 import { vi } from 'vitest'
-
 // Import Vuetify styles for browser testing
 import 'vuetify/styles'
 // Import Material Design Icons
 import '@mdi/font/css/materialdesignicons.css'
-
 // Import locale messages directly
 import en from '@/locales/en'
-
 // Import Vuetify components and directives
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-
-
 
 // Create Vuetify instance for testing
 const vuetify = createVuetify({

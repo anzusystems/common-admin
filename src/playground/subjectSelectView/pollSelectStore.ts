@@ -4,11 +4,29 @@ import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/f
 const datatableHiddenColumns = ref([])
 
 export const filterFields = [
-  { name: 'id' as const, default: null },
-  { name: 'displayType' as const, default: null, variant: 'in', apiName: 'attributes.displayType' },
-  { name: 'title' as const, apiName: 'texts.title', default: [], variant: 'startsWith' },
-  { name: 'startOfVotingFrom' as const, apiName: 'dates.startOfVoting', default: null, variant: 'gte' },
-  { name: 'startOfVotingTo' as const, apiName: 'dates.startOfVoting', default: null, variant: 'lte' },
+  { name: 'title' as const, apiName: 'texts.title', default: [], variant: 'startsWith', type: 'string' },
+  { name: 'id' as const, default: null, render: { skip: true } },
+  {
+    name: 'displayType' as const,
+    default: null,
+    variant: 'in',
+    apiName: 'attributes.displayType',
+    render: { skip: true },
+  },
+  {
+    name: 'startOfVotingFrom' as const,
+    apiName: 'dates.startOfVoting',
+    default: null,
+    variant: 'gte',
+    render: { skip: true },
+  },
+  {
+    name: 'startOfVotingTo' as const,
+    apiName: 'dates.startOfVoting',
+    default: null,
+    variant: 'lte',
+    render: { skip: true },
+  },
 ] satisfies readonly MakeFilterOption[]
 
 const listFiltersStore = createFilterStore(filterFields)

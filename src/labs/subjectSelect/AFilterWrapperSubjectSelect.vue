@@ -18,14 +18,17 @@ withDefaults(
   defineProps<{
     hideButtons?: boolean
     formName?: string
+    disableFilterUrlSync?: boolean
   }>(),
   {
     hideButtons: false,
     formName: 'search',
+    disableFilterUrlSync: false,
   }
 )
 const emit = defineEmits<{
   (e: 'submit'): void
+  (e: 'bookmarkLoadAfter'): void
   (e: 'reset'): void
 }>()
 
@@ -34,6 +37,7 @@ const filterData = inject(FilterDataKey)
 if (isUndefined(filterConfig) || isUndefined(filterData)) {
   throw new Error('Incorrect provide/inject config.')
 }
+
 const submitResetCounter = ref(0)
 provide(FilterSubmitResetCounterKey, submitResetCounter)
 const filterSelected = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
@@ -46,11 +50,11 @@ const submitFilter = () => {
   })
 }
 
-const { clearAll } = useFilterClearHelpers()
+const { clearAll, clearAllFilterSelected } = useFilterClearHelpers()
 
 const resetFilter = () => {
   clearAll(filterData, filterConfig)
-  filterSelected.value.clear()
+  clearAllFilterSelected(filterData, filterConfig, filterSelected)
   nextTick(() => {
     submitResetCounter.value++
     emit('reset')
@@ -69,17 +73,22 @@ defineExpose({
 
 <template>
   <VForm
-    class="px-2 pt-4 d-flex flex-column h-100"
     :name="formName"
     @submit.prevent="submitFilter"
   >
-    <div class="subject-select-filter__content">
+    <div class="subject-select-filter__content px-2 py-4">
       <slot name="detail">
-        <VRow
-          v-for="field in filterConfig.fields"
-          :key="field.name"
-        >
-          <VCol :class="{ 'd-none': field.render.skip }">
+        <VRow>
+          <VCol
+            v-for="field in filterConfig.fields"
+            :key="field.name"
+            :cols="field.render.xs || 12"
+            :sm="field.render.sm || 12"
+            :md="field.render.md || 12"
+            :lg="field.render.lg || 12"
+            :xl="field.render.xl || 12"
+            :class="{ 'd-none': field.render.skip }"
+          >
             <slot
               :name="datatableSlotName(field.name)"
               :item-config="field"
@@ -90,19 +99,24 @@ defineExpose({
         </VRow>
       </slot>
     </div>
-    <div class="subject-select-filter__actions">
-      <VRow dense>
-        <VCol
-          v-if="!hideButtons"
-          class="text-center w-100"
-          cols="auto"
-        >
-          <slot name="buttons">
-            <AFilterSubmitButton :touched="touched" />
-            <AFilterResetButton @reset="resetFilter" />
-          </slot>
-        </VCol>
-      </VRow>
+    <div
+      v-if="!hideButtons"
+      class="subject-select-filter__actions"
+    >
+      <slot name="buttons">
+        <AFilterSubmitButton :touched="touched" />
+        <AFilterResetButton @reset="resetFilter" />
+      </slot>
     </div>
   </VForm>
 </template>
+
+<style lang="scss">
+@use 'vuetify/tools' as *;
+
+.a-filter {
+  &__container {
+    width: 100%;
+  }
+}
+</style>
