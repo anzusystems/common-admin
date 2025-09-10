@@ -3,6 +3,8 @@ import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/
 import { computed, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
+import AFilterBooleanSelect from '@/labs/filters/AFilterBooleanSelect.vue'
+import AFilterString from '@/labs/filters/AFilterString.vue'
 
 const { filterData } = useAssetSelectActions()
 
@@ -38,20 +40,12 @@ watch(extSystem, (newValue, oldValue) => {
 <template>
   <VRow>
     <VCol :cols="12">
-      <!--      <AFilterString-->
-      <!--        v-model="filter.text"-->
-      <!--        @update:model-value="onAnyFilterUpdate"-->
-      <!--        @keydown.enter="submitFilter"-->
-      <!--      />-->
+      <AFilterString name="text" />
     </VCol>
   </VRow>
   <VRow>
     <VCol :cols="12">
-      <!--      <AFilterString-->
-      <!--        v-model="filter.assetAndMainFileIds"-->
-      <!--        @update:model-value="onAnyFilterUpdate"-->
-      <!--        @keydown.enter="submitFilter"-->
-      <!--      />-->
+      <AFilterString name="assetAndMainFileIds" />
     </VCol>
   </VRow>
   <VRow v-if="extSystem">
@@ -84,26 +78,17 @@ watch(extSystem, (newValue, oldValue) => {
   </VRow>
   <VRow>
     <VCol :cols="12">
-      <!--      <AFilterBooleanSelect-->
-      <!--        v-model="filter.described"-->
-      <!--        @update:model-value="onAnyFilterUpdate"-->
-      <!--      />-->
+      <AFilterBooleanSelect name="described" />
     </VCol>
   </VRow>
   <VRow>
     <VCol :cols="12">
-      <!--      <AFilterBooleanSelect-->
-      <!--        v-model="filter.visible"-->
-      <!--        @update:model-value="onAnyFilterUpdate"-->
-      <!--      />-->
+      <AFilterBooleanSelect name="visible" />
     </VCol>
   </VRow>
   <VRow>
     <VCol>
-      <!--      <AFilterBooleanSelect-->
-      <!--        v-model="filter.generatedBySystem"-->
-      <!--        @update:model-value="onAnyFilterUpdate"-->
-      <!--      />-->
+      <AFilterBooleanSelect name="generatedBySystem" />
     </VCol>
   </VRow>
 </template>

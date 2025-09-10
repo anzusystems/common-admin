@@ -1,16 +1,22 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
-import { computed, watch } from 'vue'
+import { computed, provide, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import AssetSelectFilterFormImage from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormImage.vue'
+import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
+import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const { t } = useI18n()
 const { fetchAssetList, resetAssetList, filterUnTouch, filterIsTouched } = useAssetSelectActions()
 
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceId, selectConfig } = storeToRefs(assetSelectStore)
+
+const { filterData, filterConfig } = useAssetListFilter()
+provide(FilterConfigKey, filterConfig)
+provide(FilterDataKey, filterData)
 
 const submitFilter = () => {
   filterUnTouch()
@@ -24,8 +30,6 @@ const resetFilter = () => {
 
 const componentComputed = computed(() => {
   switch (assetSelectStore.assetType) {
-    // case DamAssetType.Image: // todo
-    //   return AssetSelectFilterFormImage
     default:
       return AssetSelectFilterFormImage
   }
