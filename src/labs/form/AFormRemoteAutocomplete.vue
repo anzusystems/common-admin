@@ -18,7 +18,7 @@ import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
 import { useAlerts } from '@/composables/system/alerts'
 
-type ModelValueType = T | T[] | null
+type ModelValueType = T | T[] | null | undefined
 
 const props = withDefaults(
   defineProps<{
@@ -280,7 +280,7 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted', newValue: Model
     if (
       !props.disableAutoSingleSelect &&
       res.length === 1 &&
-      (isNull(newValue) || (isArray(newValue) && newValue.length === 0))
+      (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0))
     ) {
       modelValue.value = props.multiple ? [res[0].value] : res[0].value
     }
@@ -358,7 +358,7 @@ const checkFirstLoad = async (newValue: ModelValueType) => {
 const onAutocompleteModelUpdate = (newValue: ValueObjectOption<T> | readonly ValueObjectOption<T>[] | null) => {
   const cloned = cloneDeep(newValue) as ValueObjectOption<T> | ValueObjectOption<T>[] | null
   modelValueSelected.value = cloned
-  if (isNull(cloned)) {
+  if (isNull(cloned) || isUndefined(cloned)) {
     modelValue.value = null
     return
   }
