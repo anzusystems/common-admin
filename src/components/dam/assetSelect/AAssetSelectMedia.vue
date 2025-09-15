@@ -81,6 +81,7 @@ const {
   getSelectedData,
   initStoreContext,
   detailLoading,
+  resetAssetList,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
 
@@ -113,6 +114,7 @@ const onOpen = () => {
     props.minCount,
     props.maxCount
   )
+  resetAssetList()
   openSidebarLeft()
   modelValue.value = true
 }

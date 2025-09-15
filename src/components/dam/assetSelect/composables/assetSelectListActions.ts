@@ -116,7 +116,7 @@ export function useAssetSelectActions(
     filterData.type = [assetSelectStore.assetType]
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     pagination.value.page = 1
-    await fetchAssetList()
+    await fetchAssetListDebounced()
   }
 
   const initStoreContext = (
