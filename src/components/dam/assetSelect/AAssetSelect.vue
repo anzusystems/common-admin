@@ -82,7 +82,6 @@ const {
   initStoreContext,
   detailLoading,
   fetchAssetListDebounced,
-  resetAssetList,
   reset
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
