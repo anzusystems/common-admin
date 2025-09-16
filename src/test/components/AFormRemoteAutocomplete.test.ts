@@ -393,4 +393,150 @@ describe('AFormRemoteAutocomplete', () => {
 
     expect(wrapper.find('.v-autocomplete').exists()).toBe(true)
   })
+
+  describe('prefetch hover behavior - bug reproduction', () => {
+    it('should only trigger fetchItems once on first hover, not on subsequent hovers while loading', async () => {
+      // Create a mock that simulates a slow API call
+      const mockFetchItemsWithDelay = vi.fn().mockImplementation(() => {
+        return new Promise(resolve => {
+          setTimeout(() => resolve(mockItems), 100) // 100ms delay
+        })
+      })
+
+      const wrapper = createWrapper({
+        fetchItems: mockFetchItemsWithDelay,
+        prefetch: 'hover',
+      })
+
+      await waitForAsync(50) // Wait a bit to ensure component is mounted
+
+      // Verify fetchItems was NOT called on mount
+      expect(mockFetchItemsWithDelay).not.toHaveBeenCalled()
+
+      const autocomplete = wrapper.find('.v-autocomplete')
+
+      // First hover - should trigger fetchItems
+      await autocomplete.trigger('mouseenter')
+
+      // Immediately hover again while the first request is still loading
+      await autocomplete.trigger('mouseenter')
+
+      // And hover once more while still loading
+      await autocomplete.trigger('mouseenter')
+
+      // Wait for the API calls to complete
+      await waitForAsync(200)
+
+      // BUG: Currently this will fail because fetchItems is called multiple times
+      // It should only be called once on the first hover
+      expect(mockFetchItemsWithDelay).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not trigger fetchItems on hover after items have already been fetched', async () => {
+      const mockFetchItemsForHover = createMockFetchItems()
+
+      const wrapper = createWrapper({
+        fetchItems: mockFetchItemsForHover,
+        prefetch: 'hover',
+      })
+
+      await waitForAsync(50)
+
+      const autocomplete = wrapper.find('.v-autocomplete')
+
+      // First hover - should trigger fetchItems
+      await autocomplete.trigger('mouseenter')
+      await waitForAsync(100) // Wait for fetch to complete
+
+      // Verify fetchItems was called once
+      expect(mockFetchItemsForHover).toHaveBeenCalledTimes(1)
+
+      // Reset the mock call count to test subsequent hovers
+      mockFetchItemsForHover.mockClear()
+
+      // Hover again after items are already fetched
+      await autocomplete.trigger('mouseenter')
+      await waitForAsync(100)
+
+      // Hover once more
+      await autocomplete.trigger('mouseenter')
+      await waitForAsync(100)
+
+      // BUG: Currently this will fail because fetchItems is called again
+      // It should not be called again since items are already fetched
+      expect(mockFetchItemsForHover).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('prefetch focus behavior - same bug as hover', () => {
+    it('should only trigger fetchItems once on first focus, not on subsequent focuses while loading', async () => {
+      // Create a mock that simulates a slow API call
+      const mockFetchItemsWithDelay = vi.fn().mockImplementation(() => {
+        return new Promise(resolve => {
+          setTimeout(() => resolve(mockItems), 100) // 100ms delay
+        })
+      })
+
+      const wrapper = createWrapper({
+        fetchItems: mockFetchItemsWithDelay,
+        prefetch: 'focus',
+      })
+
+      await waitForAsync(50) // Wait a bit to ensure component is mounted
+
+      // Verify fetchItems was NOT called on mount
+      expect(mockFetchItemsWithDelay).not.toHaveBeenCalled()
+
+      const autocomplete = wrapper.find('.v-autocomplete')
+
+      // First focus - should trigger fetchItems
+      await autocomplete.trigger('focus')
+
+      // Immediately focus again while the first request is still loading
+      await autocomplete.trigger('focus')
+
+      // And focus once more while still loading
+      await autocomplete.trigger('focus')
+
+      // Wait for the API calls to complete
+      await waitForAsync(200)
+
+      // Should only be called once on the first focus
+      expect(mockFetchItemsWithDelay).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not trigger fetchItems on focus after items have already been fetched', async () => {
+      const mockFetchItemsForFocus = createMockFetchItems()
+
+      const wrapper = createWrapper({
+        fetchItems: mockFetchItemsForFocus,
+        prefetch: 'focus',
+      })
+
+      await waitForAsync(50)
+
+      const autocomplete = wrapper.find('.v-autocomplete')
+
+      // First focus - should trigger fetchItems
+      await autocomplete.trigger('focus')
+      await waitForAsync(100) // Wait for fetch to complete
+
+      // Verify fetchItems was called once
+      expect(mockFetchItemsForFocus).toHaveBeenCalledTimes(1)
+
+      // Reset the mock call count to test subsequent focuses
+      mockFetchItemsForFocus.mockClear()
+
+      // Focus again after items are already fetched
+      await autocomplete.trigger('focus')
+      await waitForAsync(100)
+
+      // Focus once more
+      await autocomplete.trigger('focus')
+      await waitForAsync(100)
+
+      // Should not be called again since items are already fetched
+      expect(mockFetchItemsForFocus).not.toHaveBeenCalled()
+    })
+  })
 })

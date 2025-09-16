@@ -183,6 +183,7 @@ const { pagination } = usePagination(isNull(filterSortByProp) ? null : filterSor
 const fetchedItems = ref<ValueObjectOption<T>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<T>[]>([])
 const isFirstLoad = ref(true)
+const prefetchCompleted = ref(false)
 
 const allItems = computed<ValueObjectOption<T>[]>(() => {
   const itemsMap = new Map<T, ValueObjectOption<T>>()
@@ -273,19 +274,26 @@ const apiSearch = async (query: string, requestCounter: number) => {
 
 const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted', newValue: ModelValueType) => {
   if (props.prefetch === false || props.prefetch !== mode) return
+  if (loadingLocal.value) return
+  if (prefetchCompleted.value) return
+
   loadingLocal.value = true
-  const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
-  if (apiRequestCounter.value === 0) {
-    fetchedItems.value = res
-    if (
-      !props.disableAutoSingleSelect &&
-      res.length === 1 &&
-      (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0))
-    ) {
-      modelValue.value = props.multiple ? [res[0].value] : res[0].value
+  try {
+    const res = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
+    if (apiRequestCounter.value === 0) {
+      fetchedItems.value = res
+      if (
+        !props.disableAutoSingleSelect &&
+        res.length === 1 &&
+        (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0))
+      ) {
+        modelValue.value = props.multiple ? [res[0].value] : res[0].value
+      }
     }
+    prefetchCompleted.value = true
+  } finally {
+    loadingLocal.value = false
   }
-  loadingLocal.value = false
 }
 
 const onFocus = async () => {
