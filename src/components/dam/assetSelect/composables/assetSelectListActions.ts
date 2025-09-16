@@ -21,20 +21,8 @@ import { SORT_BY_SCORE } from '@/composables/system/datatableColumns'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { useDebounceFn } from '@vueuse/core'
 
-const { filterData, filterConfig } = useAssetListFilter()
 const { pagination } = usePagination(SORT_BY_SCORE)
-
 const detailLoading = ref(false)
-
-function resolveTypeFilter(assetType: DamAssetTypeType, inPodcast: boolean | null) {
-  if (inPodcast === true) {
-    filterData.type = [DamAssetType.Audio]
-    filterData.inPodcast = true
-    return
-  }
-  filterData.type = [assetType]
-  filterData.inPodcast = null
-}
 
 export function useAssetSelectActions(
   configName = 'default',
@@ -48,6 +36,17 @@ export function useAssetSelectActions(
   const { openSidebarRight } = useSidebar()
 
   const { showErrorsDefault } = useAlerts()
+  const { filterData, filterConfig } = useAssetListFilter()
+
+  const resolveTypeFilter = (assetType: DamAssetTypeType, inPodcast: boolean | null) => {
+    if (inPodcast === true) {
+      filterData.type = [DamAssetType.Audio]
+      filterData.inPodcast = true
+      return
+    }
+    filterData.type = [assetType]
+    filterData.inPodcast = null
+  }
 
   const fetchAssetListDebounced = useDebounceFn(async () => {
     await fetchAssetList()
@@ -111,12 +110,16 @@ export function useAssetSelectActions(
   const { clearAll } = useFilterClearHelpers()
 
   const resetAssetList = async () => {
-    assetSelectStore.reset()
     clearAll(filterData, filterConfig)
-    filterData.type = [assetSelectStore.assetType]
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     pagination.value.page = 1
     await fetchAssetListDebounced()
+  }
+
+  const reset = async () => {
+    resetAssetList()
+    assetSelectStore.reset(true)
+    assetDetailStore.reset()
   }
 
   const initStoreContext = (
@@ -149,6 +152,7 @@ export function useAssetSelectActions(
     fetchAssetListDebounced,
     fetchNextPage,
     resetAssetList,
+    reset,
     initStoreContext,
   }
 }

@@ -19,8 +19,10 @@ const { selectedLicenceId, selectConfig } = storeToRefs(assetSelectStore)
 const { filterData, filterConfig } = useAssetListFilter()
 provide(FilterConfigKey, filterConfig)
 provide(FilterDataKey, filterData)
-const { resetFilter, submitFilter, loadStoredFilters } = useFilterHelpers(filterData, filterConfig, {
+
+const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, {
   populateUrlParams: false,
+  storeFiltersLocalStorage: false,
 })
 
 const submitFilterAction = () => {
@@ -47,7 +49,7 @@ watch(
 )
 
 onMounted(() => {
-  loadStoredFilters(pagination, fetchAssetListDebounced)
+  fetchAssetListDebounced()
 })
 </script>
 

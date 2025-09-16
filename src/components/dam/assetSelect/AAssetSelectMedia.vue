@@ -81,7 +81,7 @@ const {
   getSelectedData,
   initStoreContext,
   detailLoading,
-  resetAssetList,
+  reset,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
 
@@ -107,6 +107,7 @@ const onOpen = () => {
     return
   }
 
+  reset()
   initStoreContext(
     selectConfigLocal,
     assetType.value,
@@ -114,7 +115,6 @@ const onOpen = () => {
     props.minCount,
     props.maxCount
   )
-  resetAssetList()
   openSidebarLeft()
   modelValue.value = true
 }
@@ -130,7 +130,7 @@ watch(
 
 const onClose = () => {
   modelValue.value = false
-  assetDetailStore.reset()
+  reset()
 }
 
 const getCopyToLicenceId = () => {
@@ -194,7 +194,7 @@ const { showErrorsDefault } = useAlerts()
 const customFormConfigLoading = ref(true)
 
 const typeChange = () => {
-  assetSelectStore.reset()
+  assetSelectStore.reset(false)
   assetDetailStore.reset()
   fetchAssetListDebounced()
 }
@@ -238,7 +238,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   selectConfigs.value = []
-  assetDetailStore.reset()
 })
 
 defineExpose({

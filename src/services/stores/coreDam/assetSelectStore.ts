@@ -201,10 +201,17 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return selectedAssets.value.size
   })
 
-  function reset() {
+  function reset(all: boolean) {
     assetListItems.value = []
     loader.value = false
     clearSelected()
+    if (!all) return
+    assetType.value = DamAssetTypeDefault
+    inPodcast.value = null
+    singleMode.value = false
+    minCount.value = 0
+    maxCount.value = 0
+    activeItemIndex.value = null
   }
 
   const selectedSelectConfig = computed(() => {
