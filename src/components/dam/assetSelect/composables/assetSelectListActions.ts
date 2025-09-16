@@ -66,6 +66,7 @@ export function useAssetSelectActions(
   }
 
   const fetchNextPage = async () => {
+    if (assetSelectStore.loader) return
     pagination.value.page = pagination.value.page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     const { executeFetch } = useFetchAssetList(damClient, assetSelectStore.selectedLicenceId)
@@ -117,7 +118,8 @@ export function useAssetSelectActions(
   }
 
   const reset = async () => {
-    resetAssetList()
+    clearAll(filterData, filterConfig)
+    pagination.value.page = 1
     assetSelectStore.reset(true)
     assetDetailStore.reset()
   }
