@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, nextTick, ref, watch } from 'vue'
 import {
   FilterConfigKey,
   FilterDataKey,
@@ -71,6 +71,9 @@ const modelValue = computed({
     filterData[props.nameFrom] = newValue
     updateSelected(newValue)
     filterConfig.touched = true
+    nextTick(() => {
+      emit('change')
+    })
   },
 })
 
@@ -194,7 +197,7 @@ watch(
   { immediate: true }
 )
 
-const onInternalItemChange = (item: ValueObjectOption<TimeIntervalToolsValue>) => {
+const onInternalItemChamge = (item: ValueObjectOption<TimeIntervalToolsValue>) => {
   if (item.value === TimeIntervalSpecialOptions.Custom) {
     onEditInterval(true)
     return
@@ -236,7 +239,7 @@ const onInternalItemChange = (item: ValueObjectOption<TimeIntervalToolsValue>) =
     <template #item="{ props: itemProps, item }">
       <VListItem
         v-bind="itemProps"
-        @click="onInternalItemChange(item)"
+        @click="onInternalItemChamge(item)"
       />
     </template>
   </VSelect>
