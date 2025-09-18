@@ -71,7 +71,6 @@ const modelValue = computed({
     filterData[props.nameFrom] = newValue
     updateSelected(newValue)
     filterConfig.touched = true
-    emit('change')
   },
 })
 
@@ -195,7 +194,7 @@ watch(
   { immediate: true }
 )
 
-const onInternalItemChamge = (item: ValueObjectOption<TimeIntervalToolsValue>) => {
+const onInternalItemChange = (item: ValueObjectOption<TimeIntervalToolsValue>) => {
   if (item.value === TimeIntervalSpecialOptions.Custom) {
     onEditInterval(true)
     return
@@ -237,7 +236,7 @@ const onInternalItemChamge = (item: ValueObjectOption<TimeIntervalToolsValue>) =
     <template #item="{ props: itemProps, item }">
       <VListItem
         v-bind="itemProps"
-        @click="onInternalItemChamge(item)"
+        @click="onInternalItemChange(item)"
       />
     </template>
   </VSelect>
