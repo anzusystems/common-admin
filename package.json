@@ -1,6 +1,6 @@
 {
   "name": "@anzusystems/common-admin",
-  "packageManager": "yarn@4.9.4",
+  "packageManager": "yarn@4.10.2",
   "files": [
     "dist"
   ],
@@ -54,7 +54,7 @@
     "@shikijs/vitepress-twoslash": "^3.12.2",
     "@stylistic/eslint-plugin": "^5.3.1",
     "@tsconfig/node22": "^22.0.2",
-    "@types/node": "^22.18.5",
+    "@types/node": "^22.18.6",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.8",
     "@types/webfontloader": "^1.6.38",
@@ -92,7 +92,7 @@
     "typescript": "5.7.3",
     "unplugin": "2.3.10",
     "uuid": "^13.0.0",
-    "vite": "7.1.5",
+    "vite": "7.1.6",
     "vite-plugin-dts": "4.5.4",
     "vite-plugin-vuetify": "^2.1.2",
     "vitepress": "1.6.4",
