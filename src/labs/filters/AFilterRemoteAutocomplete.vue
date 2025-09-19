@@ -130,6 +130,7 @@ const resetToEmptyState = (value: ModelValueType) => {
   selectedItemsCache.value = []
   selected.value = isArray(value) ? [] : null
   modelValueAutocomplete.value = isArray(value) ? [] : null
+  updateFilterSelected(selected.value)
 }
 
 const updateSelected = (value: T[] | T) => {
@@ -147,6 +148,7 @@ const loadListItems = async (ids: T[] | T) => {
     const selectedNewValue = updateSelected(ids)
     selected.value = selectedNewValue
     modelValueAutocomplete.value = selectedNewValue
+    updateFilterSelected(selected.value)
     return selectedItemsCache.value
   } finally {
     loading.value = false
@@ -265,6 +267,24 @@ const onSelectedUpdate = (newValue: any) => {
   }
   filterData[props.name] = final
   emit('change')
+}
+
+const updateFilterSelected = (
+  newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
+) => {
+  filterSelected.value.delete(props.name)
+  if ((isArray(newValue) && newValue.length === 0) || isNull(newValue)) {
+    filterSelected.value.delete(props.name)
+    return
+  }
+  if (isArray(newValue)) {
+    filterSelected.value.set(
+      props.name,
+      newValue.map((item) => ({ title: item.title, value: item.value }))
+    )
+    return
+  }
+  filterSelected.value.set(props.name, [{ title: newValue.title, value: newValue.value }])
 }
 
 watch(
