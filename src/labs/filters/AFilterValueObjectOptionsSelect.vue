@@ -9,7 +9,7 @@ import {
   FilterSubmitResetCounterKey,
 } from '@/labs/filters/filterInjectionKeys'
 import { isArray, isBoolean, isUndefined } from '@/utils/common'
-import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
+import { type AllowedFilterValues, useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
 const props = withDefaults(
   defineProps<{
@@ -46,7 +46,7 @@ if (
 ) {
   throw new Error(
     `[${componentName}] Incorrect filter config. ` +
-    `Name is '${props.name}' and available options are ${Object.keys(filterData).join(', ')}.`
+      `Name is '${props.name}' and available options are ${Object.keys(filterData).join(', ')}.`
   )
 }
 
@@ -56,7 +56,7 @@ const modelValue = computed({
   },
   set(newValue) {
     filterData[props.name] = newValue
-    updateSelected()
+    updateSelected(newValue)
     filterConfig.touched = true
     emit('change')
   },
@@ -77,12 +77,12 @@ const clearField = () => {
   filterSelected.value.delete(props.name)
 }
 
-const updateSelected = () => {
-  if (isArray(modelValue.value) && modelValue.value.length === 0) return
-  if (isArray(modelValue.value)) {
+const updateSelected = (newValue: AllowedFilterValues) => {
+  if (isArray(newValue) && newValue.length === 0) return
+  if (isArray(newValue)) {
     filterSelected.value.set(
       props.name,
-      modelValue.value.map((modelItemValue) => {
+      newValue.map((modelItemValue) => {
         const found = props.items.find((item) => item.value === modelItemValue)
         if (found) return { title: found.title, value: found.value }
         return { title: modelItemValue as string, value: modelItemValue as string }
@@ -90,7 +90,7 @@ const updateSelected = () => {
     )
     return
   }
-  const found = props.items.find((item) => item.value === modelValue.value)
+  const found = props.items.find((item) => item.value === newValue)
   if (found) {
     filterSelected.value.set(props.name, [{ title: found.title as string, value: found.value as string }])
   }
@@ -100,7 +100,7 @@ watch(
   () => filterData[props.name],
   (newValue, oldValue) => {
     if (newValue === oldValue || isBoolean(newValue)) return
-    updateSelected()
+    updateSelected(newValue)
   },
   { immediate: true }
 )
