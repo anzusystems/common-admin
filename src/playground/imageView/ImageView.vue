@@ -8,11 +8,12 @@ import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import useVuelidate from '@vuelidate/core'
 import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
 import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
+import type { MediaAware } from '@/types/MediaAware'
 
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)
 const imageId3 = ref<IntegerIdNullable>(null)
-const media = ref<IntegerIdNullable>(null)
+const media = ref<MediaAware | null>(null)
 const imageId4 = ref<IntegerIdNullable>(null)
 
 const v$ = useVuelidate({ $scope: 'aaa' })

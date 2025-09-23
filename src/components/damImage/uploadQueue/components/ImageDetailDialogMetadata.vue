@@ -59,7 +59,7 @@ const imageSourceRequired = computed(() => {
 })
 
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
-  if (!isMediaAware(detail.value) || isNull(detail.value.dam.imageFileId)) return undefined
+  if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
 
   return {
     texts: {
@@ -67,8 +67,8 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
       source: '',
     },
     dam: {
-      damId: detail.value.dam.imageFileId,
-      licenceId: detail.value.dam.licenceId,
+      damId: detail.value.damMedia.imageFileId,
+      licenceId: detail.value.damMedia.licenceId!,
       regionPosition: 0,
     },
     flags: {
@@ -172,7 +172,7 @@ defineExpose({
     </template>
     <template v-else-if="isMediaAware(detail)">
       <div>
-        {{ detail.dam }}
+        {{ detail.damMedia }}
       </div>
     </template>
   </div>
@@ -275,12 +275,12 @@ defineExpose({
           </div>
           <ARow :title="t('common.damImage.media.model.dam.assetId')">
             <div class="d-flex align-center justify-space-between">
-              <div>{{ detail.dam.assetId }}</div>
-              <DamAdminAssetLink :asset-id="detail.dam.assetId" />
+              <div>{{ detail.damMedia.assetId }}</div>
+              <DamAdminAssetLink :asset-id="detail.damMedia.assetId" />
             </div>
           </ARow>
           <ARow :title="t('common.damImage.media.model.dam.licenceId')">
-            {{ detail.dam.licenceId }}
+            {{ detail.damMedia.licenceId }}
           </ARow>
         </div>
       </VCardText>

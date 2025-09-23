@@ -21,7 +21,6 @@ const props = withDefaults(
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
-    initialMedia?: MediaAware | undefined // optional, if available, no need to fetch media data
     configName?: string
     collab?: CollabComponentConfig
     collabStatus?: CollabStatusType
@@ -67,7 +66,7 @@ const emit = defineEmits<{
   (e: 'afterMetadataSaveSuccess'): void
 }>()
 
-const mediaModel = defineModel<IntegerIdNullable>('media', { required: true })
+const mediaModel = defineModel<MediaAware | null>('media', { required: true })
 const imageModel = defineModel<IntegerIdNullable>('image', { required: true })
 const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading')
 

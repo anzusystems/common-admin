@@ -6,14 +6,14 @@ import { cloneDeep, isNull } from '@/utils/common'
 
 export const isMediaAware = (item: MediaAware | ImageCreateUpdateAware | null): item is MediaAware => {
   if (isNull(item)) return false
-  return 'extService' in item
+  return 'damMedia' in item
 }
 
 export const isImageCreateUpdateAware = (
   item: MediaAware | ImageCreateUpdateAware | null
 ): item is ImageCreateUpdateAware => {
   if (isNull(item)) return false
-  return !('extService' in item) && 'texts' in item
+  return !('damMedia' in item) && 'texts' in item
 }
 
 export const useImageMediaWidgetStore = defineStore('commonImageMediaWidgetStore', () => {
