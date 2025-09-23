@@ -1,8 +1,8 @@
 import type { DocIdNullable, IntegerId, IntegerIdNullable } from '@/types/common'
 
-export interface MediaAware {
+export interface MediaAware<T extends DamMedia = DamMedia> {
   id?: IntegerId
-  damMedia: DamMedia
+  damMedia: T
   siteGroup: IntegerIdNullable
 }
 
