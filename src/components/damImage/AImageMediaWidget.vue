@@ -20,6 +20,7 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    siteGroup: IntegerId
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
