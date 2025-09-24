@@ -320,9 +320,9 @@ const reloadImage = async (
   resImageMedia.value = null
 }
 
-const reloadMedia = async (newMedia: MediaAware | null, force = false) => {
+const reloadMedia = (newMedia: MediaAware | null) => {
   resolvedSrc.value = imagePlaceholderPath
-  if ((newMedia && isNull(resImageMedia.value)) || (newMedia && force)) {
+  if (newMedia) {
     resImageMedia.value = cloneDeep(newMedia)
     if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.damMedia.imageFileId)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
@@ -362,8 +362,9 @@ watch(
 
 watch(
   mediaModel,
-  async (newMedia) => {
-    await reloadMedia(newMedia)
+  async (newMedia, oldMedia) => {
+    if (JSON.stringify(newMedia) === JSON.stringify(oldMedia)) return
+    reloadMedia(newMedia)
   },
   { immediate: true }
 )
@@ -505,7 +506,7 @@ const tryMediaConfirm = async () => {
     mediaModel.value = detail.value
     imageModel.value = null
     imageMediaWidgetStore.setDetail(null)
-    await reloadMedia(mediaModel.value, true)
+    reloadMedia(mediaModel.value)
     emit('afterMetadataSaveSuccess')
     releaseFieldLock.value(mediaModel.value.id)
   } catch (e) {
@@ -568,7 +569,7 @@ const onImageMediaDelete = async () => {
 
 const forceReloadViewWithExpandMetadata = () => {
   if (isMediaAware(detail.value)) {
-    reloadMedia(detail.value, true)
+    reloadMedia(detail.value)
     return
   } else if (isImageCreateUpdateAware(detail.value)) {
     reloadImage(detail.value, null, true)
