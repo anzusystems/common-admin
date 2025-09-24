@@ -386,7 +386,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     // video
     metadataDialog.value = true
     const mediaData: MediaAware = {
-      siteGroup: null, // todo
+      siteGroup: props.siteGroup,
       damMedia: {
         imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
         assetId: selectedAsset.id,
@@ -394,9 +394,6 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         assetType: DamAssetType.Video,
       },
     }
-    // if (!isNull(mediaModel.value)) {
-    //   mediaData.id = mediaModel.value
-    // }
     imageMediaWidgetStore.setDetail(mediaData)
   } else if (
     selectedAsset.attributes.assetType === DamAssetType.Audio &&
@@ -406,7 +403,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     // podcast audio
     metadataDialog.value = true
     const mediaData: MediaAware = {
-      siteGroup: null, // todo
+      siteGroup: props.siteGroup,
       damMedia: {
         imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
         assetId: selectedAsset.id,
@@ -414,9 +411,6 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         assetType: DamAssetType.Audio,
       },
     }
-    // if (!isNull(mediaModel.value)) {
-    //   mediaData.id = mediaModel.value
-    // }
     imageMediaWidgetStore.setDetail(mediaData)
   } else if (selectedAsset.attributes.assetType === DamAssetType.Image) {
     // image
