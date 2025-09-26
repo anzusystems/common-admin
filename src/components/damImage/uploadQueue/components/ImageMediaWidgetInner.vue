@@ -19,7 +19,12 @@ import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
-import { fetchAsset, fetchAssetByFileId, updateAssetAuthors } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  fetchAsset,
+  fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
+  updateAssetAuthors,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
@@ -52,9 +57,10 @@ import {
   isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { DamMediaType, type MediaAware } from '@/types/MediaAware'
+import { type DamMediaFromDam, DamMediaType, type MediaAware, type MediaEntityKey } from '@/types/MediaAware'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
+import { createOrFetchMedia } from '@/components/damImage/uploadQueue/api/mediaApi'
 
 const props = withDefaults(
   defineProps<{
@@ -62,6 +68,10 @@ const props = withDefaults(
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
     siteGroup: IntegerId
+    mediaEntity: {
+      id: DocId | IntegerId
+      name: MediaEntityKey
+    }
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -383,16 +393,36 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   let source = ''
   const selectedAsset = data.value[0]
   if (!selectedAsset.mainFile) return
+  let mediaDataFromDam: DamMediaFromDam | null = null
+  try {
+    mediaDataFromDam = await fetchAssetAsCmsMedia(damClient, selectedAsset.id)
+  } catch (e) {
+    showErrorsDefault(e)
+  }
+  if (!mediaDataFromDam) return
   if (selectedAsset.attributes.assetType === DamAssetType.Video && assetFileIsVideoFile(selectedAsset.mainFile)) {
     // video
     metadataDialog.value = true
     const mediaData: MediaAware = {
       siteGroup: props.siteGroup,
+      extService: 'damVideo',
+      [props.mediaEntity.name]: props.mediaEntity.id,
       damMedia: {
         imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
         assetId: selectedAsset.id,
         licenceId: selectedAsset.licence,
         assetType: DamAssetType.Video,
+        title: mediaDataFromDam.title,
+        description: mediaDataFromDam.description,
+        seriesName: mediaDataFromDam.seriesName,
+        authorNames: mediaDataFromDam.authorNames,
+        publishedAt: mediaDataFromDam.publishedAt,
+        duration: mediaDataFromDam.duration,
+        mediaUrl: mediaDataFromDam.mediaUrl,
+        playable: mediaDataFromDam.playable,
+        syncedWithDam: true,
+        episodeName: mediaDataFromDam.episodeName,
+        episodeNumber: mediaDataFromDam.episodeNumber,
       },
     }
     imageMediaWidgetStore.setDetail(mediaData)
@@ -405,11 +435,24 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     metadataDialog.value = true
     const mediaData: MediaAware = {
       siteGroup: props.siteGroup,
+      extService: 'damAudio',
+      [props.mediaEntity.name]: props.mediaEntity.id,
       damMedia: {
         imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
         assetId: selectedAsset.id,
         licenceId: selectedAsset.licence,
         assetType: DamAssetType.Audio,
+        title: mediaDataFromDam.title,
+        description: mediaDataFromDam.description,
+        seriesName: mediaDataFromDam.seriesName,
+        authorNames: mediaDataFromDam.authorNames,
+        publishedAt: mediaDataFromDam.publishedAt,
+        duration: mediaDataFromDam.duration,
+        mediaUrl: mediaDataFromDam.mediaUrl,
+        playable: mediaDataFromDam.playable,
+        syncedWithDam: true,
+        episodeName: mediaDataFromDam.episodeName,
+        episodeNumber: mediaDataFromDam.episodeNumber,
       },
     }
     imageMediaWidgetStore.setDetail(mediaData)
@@ -502,8 +545,9 @@ const tryMediaConfirm = async () => {
   if (!isMediaAware(detail.value)) return
   metadataDialogSaving.value = true
   try {
+    const res = await createOrFetchMedia(imageClient, detail.value)
     metadataDialog.value = false
-    mediaModel.value = detail.value
+    mediaModel.value = res
     imageModel.value = null
     imageMediaWidgetStore.setDetail(null)
     reloadMedia(mediaModel.value)
