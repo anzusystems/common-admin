@@ -511,7 +511,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     imageMediaWidgetStore.setDetail(image)
   }
   metadataDialogLoading.value = false
-  // forceReloadViewWithExpandMetadata()
+  if (props.expandMetadata) {
+    forceReloadViewWithExpandMetadata()
+  }
 }
 
 const assetDetailStore = useAssetDetailStore()
