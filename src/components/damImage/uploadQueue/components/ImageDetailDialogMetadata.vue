@@ -271,12 +271,12 @@ defineExpose({
             <slot
               name="preview"
               :image-media="detail"
-            >
-              <AImageWidgetSimple
-                :model-value="null"
-                :image="imageMedia"
-              />
-            </slot>
+            />
+            <AImageWidgetSimple
+              v-if="!detail.damMedia.playable"
+              :model-value="null"
+              :image="imageMedia"
+            />
           </div>
           <VRow>
             <VCol>
