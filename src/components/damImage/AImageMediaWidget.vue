@@ -143,6 +143,12 @@ defineExpose({
         :image-media="appendImage"
       />
     </template>
+    <template #preview="{ imageMedia: appendImage }">
+      <slot
+        name="preview"
+        :image-media="appendImage"
+      />
+    </template>
   </ImageMediaWidgetInner>
   <div
     v-else-if="status === 'error'"

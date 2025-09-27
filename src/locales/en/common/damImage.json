@@ -29,6 +29,8 @@
   "media": {
     "model": {
       "damMedia": {
+        "assetId": "Asset ID",
+        "licenceId": "Licence ID",
         "title": "Title",
         "authorNames": "Authors",
         "episodeName": "Episode name",
@@ -38,6 +40,7 @@
     },
     "meta": {
       "edit": "Edit medium",
+      "preview": "Preview",
       "notPlayable": "Media content is not playable on the website yet. Check the distribution."
     },
     "button": {

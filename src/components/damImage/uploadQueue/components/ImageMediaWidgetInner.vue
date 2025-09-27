@@ -912,7 +912,14 @@ defineExpose({
       @edit-asset="onEditAsset"
       @on-confirm="onMetadataDialogConfirm"
       @on-close="onMetadataDialogClose"
-    />
+    >
+      <template #preview="{ imageMedia: appendImage }">
+        <slot
+          name="preview"
+          :image-media="appendImage"
+        />
+      </template>
+    </ImageDetailDialogMetadata>
   </div>
   <AAssetSelectMedia
     v-model="assetSelectDialog"

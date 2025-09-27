@@ -266,20 +266,54 @@ defineExpose({
         >
           <div class="my-4">
             <h4 class="font-weight-bold text-subtitle-2">
-              {{ t('common.damImage.media.model.dam.imageFileId') }}:
+              {{ t('common.damImage.media.meta.preview') }}:
             </h4>
-            <AImageWidgetSimple
-              :model-value="null"
-              :image="imageMedia"
-            />
+            <slot
+              name="preview"
+              :image-media="detail"
+            >
+              <AImageWidgetSimple
+                :model-value="null"
+                :image="imageMedia"
+              />
+            </slot>
           </div>
-          <ARow :title="t('common.damImage.media.model.dam.assetId')">
-            <div class="d-flex align-center justify-space-between">
-              <div>{{ detail.damMedia.assetId }}</div>
+          <VRow>
+            <VCol>
               <DamAdminAssetLink :asset-id="detail.damMedia.assetId" />
-            </div>
+            </VCol>
+          </VRow>
+          <div
+            v-if="!detail.damMedia.playable"
+            class="my-2 text-warning text-caption"
+          >
+            <VIcon
+              icon="mdi-movie-off-outline"
+              class="mr-1"
+              size="small"
+            />{{ t('common.damImage.media.meta.notPlayable') }}
+          </div>
+          <ARow :title="t('common.damImage.media.model.damMedia.title')">
+            {{ detail.damMedia.title }}
           </ARow>
-          <ARow :title="t('common.damImage.media.model.dam.licenceId')">
+          <ARow :title="t('common.damImage.media.model.damMedia.authorNames')">
+            {{ detail.damMedia.authorNames.join(', ') }}
+          </ARow>
+          <template v-if="detail.damMedia.assetType === 'audio'">
+            <ARow :title="t('common.damImage.media.model.damMedia.seriesName')">
+              {{ detail.damMedia.seriesName }}
+            </ARow>
+            <ARow :title="t('common.damImage.media.model.damMedia.episodeName')">
+              {{ detail.damMedia.episodeName }}
+            </ARow>
+            <ARow :title="t('common.damImage.media.model.damMedia.episodeNumber')">
+              {{ detail.damMedia.episodeNumber }}
+            </ARow>
+          </template>
+          <ARow :title="t('common.damImage.media.model.damMedia.assetId')">
+            {{ detail.damMedia.assetId }}
+          </ARow>
+          <ARow :title="t('common.damImage.media.model.damMedia.licenceId')">
             {{ detail.damMedia.licenceId }}
           </ARow>
         </div>
