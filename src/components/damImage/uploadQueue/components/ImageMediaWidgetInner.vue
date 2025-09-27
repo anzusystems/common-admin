@@ -19,7 +19,12 @@ import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
-import { fetchAsset, fetchAssetByFileId, updateAssetAuthors } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  fetchAsset,
+  fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
+  updateAssetAuthors,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingle from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingle.vue'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
@@ -52,9 +57,8 @@ import {
   isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { type MediaAware, MediaExtService } from '@/types/MediaAware'
+import { type DamMediaFromDam, DamMediaType, type MediaAware, type MediaEntityKey } from '@/types/MediaAware'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile'
-import { createMedia, deleteMedia, fetchMedia, updateMedia } from '@/components/damImage/uploadQueue/api/mediaApi'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 
 const props = withDefaults(
@@ -62,8 +66,12 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    siteGroup: IntegerId
+    mediaEntity: {
+      id: DocId | IntegerId
+      name: MediaEntityKey
+    }
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
-    initialMedia?: MediaAware | undefined // optional, if available, no need to fetch media data
     configName?: string
     collab?: CollabComponentConfig
     collabStatus?: CollabStatusType
@@ -110,7 +118,7 @@ const emit = defineEmits<{
 }>()
 
 const imageModel = defineModel<IntegerIdNullable>('image', { required: true })
-const mediaModel = defineModel<IntegerIdNullable>('media', { required: true })
+const mediaModel = defineModel<MediaAware | null>('media', { required: true })
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
@@ -321,41 +329,19 @@ const reloadImage = async (
   resImageMedia.value = null
 }
 
-const reloadMedia = async (newMedia: MediaAware | undefined, newMediaId: IntegerIdNullable, force = false) => {
+const reloadMedia = (newMedia: MediaAware | null) => {
   resolvedSrc.value = imagePlaceholderPath
-  if ((newMedia && isNull(resImageMedia.value)) || (newMedia && force)) {
+  if (newMedia) {
     resImageMedia.value = cloneDeep(newMedia)
-    if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.dam.imageFileId)) {
+    if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.damMedia.imageFileId)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
         resolvedSrc.value = damImageIdToDamImageUrl(
-          resImageMedia.value.dam.imageFileId,
+          resImageMedia.value.damMedia.imageFileId,
           props.damWidth,
           props.damHeight
         )
       } else {
-        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId)
-      }
-      if (props.expandMetadata) {
-        imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
-      }
-    }
-    return
-  }
-  if (newMediaId) {
-    try {
-      resImageMedia.value = await fetchMedia(imageClient, newMediaId)
-    } catch (error) {
-      showErrorsDefault(error)
-    }
-    if (isMediaAware(resImageMedia.value) && !isNull(resImageMedia.value.dam.imageFileId)) {
-      if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = damImageIdToDamImageUrl(
-          resImageMedia.value.dam.imageFileId,
-          props.damWidth,
-          props.damHeight
-        )
-      } else {
-        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.dam.imageFileId)
+        resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.damMedia.imageFileId)
       }
       if (props.expandMetadata) {
         imageMediaWidgetStore.setDetail(toRaw(resImageMedia.value))
@@ -384,9 +370,10 @@ watch(
 )
 
 watch(
-  [() => props.initialMedia, mediaModel],
-  async ([newMedia, newMediaId]) => {
-    await reloadMedia(newMedia, newMediaId)
+  mediaModel,
+  async (newMedia, oldMedia) => {
+    if (JSON.stringify(newMedia) === JSON.stringify(oldMedia)) return
+    reloadMedia(newMedia)
   },
   { immediate: true }
 )
@@ -405,19 +392,37 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   let source = ''
   const selectedAsset = data.value[0]
   if (!selectedAsset.mainFile) return
+  let mediaDataFromDam: DamMediaFromDam | null = null
+  try {
+    mediaDataFromDam = await fetchAssetAsCmsMedia(damClient, selectedAsset.id)
+  } catch (e) {
+    showErrorsDefault(e)
+  }
+  if (!mediaDataFromDam) return
   if (selectedAsset.attributes.assetType === DamAssetType.Video && assetFileIsVideoFile(selectedAsset.mainFile)) {
     // video
     metadataDialog.value = true
     const mediaData: MediaAware = {
-      extService: MediaExtService.DamVideo,
-      dam: {
+      siteGroup: props.siteGroup,
+      extService: 'damVideo',
+      [props.mediaEntity.name]: props.mediaEntity.id,
+      damMedia: {
         imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
         assetId: selectedAsset.id,
         licenceId: selectedAsset.licence,
+        assetType: DamAssetType.Video,
+        title: mediaDataFromDam.title,
+        description: mediaDataFromDam.description,
+        seriesName: mediaDataFromDam.seriesName,
+        authorNames: mediaDataFromDam.authorNames,
+        publishedAt: mediaDataFromDam.publishedAt,
+        duration: mediaDataFromDam.duration,
+        mediaUrl: mediaDataFromDam.mediaUrl,
+        playable: mediaDataFromDam.playable,
+        syncedWithDam: true,
+        episodeName: mediaDataFromDam.episodeName,
+        episodeNumber: mediaDataFromDam.episodeNumber,
       },
-    }
-    if (!isNull(mediaModel.value)) {
-      mediaData.id = mediaModel.value
     }
     imageMediaWidgetStore.setDetail(mediaData)
   } else if (
@@ -428,15 +433,26 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     // podcast audio
     metadataDialog.value = true
     const mediaData: MediaAware = {
-      extService: MediaExtService.DamPodcast,
-      dam: {
+      siteGroup: props.siteGroup,
+      extService: 'damAudio',
+      [props.mediaEntity.name]: props.mediaEntity.id,
+      damMedia: {
         imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
         assetId: selectedAsset.id,
         licenceId: selectedAsset.licence,
+        assetType: DamAssetType.Audio,
+        title: mediaDataFromDam.title,
+        description: mediaDataFromDam.description,
+        seriesName: mediaDataFromDam.seriesName,
+        authorNames: mediaDataFromDam.authorNames,
+        publishedAt: mediaDataFromDam.publishedAt,
+        duration: mediaDataFromDam.duration,
+        mediaUrl: mediaDataFromDam.mediaUrl,
+        playable: mediaDataFromDam.playable,
+        syncedWithDam: true,
+        episodeName: mediaDataFromDam.episodeName,
+        episodeNumber: mediaDataFromDam.episodeNumber,
       },
-    }
-    if (!isNull(mediaModel.value)) {
-      mediaData.id = mediaModel.value
     }
     imageMediaWidgetStore.setDetail(mediaData)
   } else if (selectedAsset.attributes.assetType === DamAssetType.Image) {
@@ -495,7 +511,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     imageMediaWidgetStore.setDetail(image)
   }
   metadataDialogLoading.value = false
-  // forceReloadViewWithExpandMetadata()
+  if (props.expandMetadata) {
+    forceReloadViewWithExpandMetadata()
+  }
 }
 
 const assetDetailStore = useAssetDetailStore()
@@ -528,16 +546,13 @@ const tryMediaConfirm = async () => {
   if (!isMediaAware(detail.value)) return
   metadataDialogSaving.value = true
   try {
-    const res = detail.value.id
-      ? await updateMedia(imageClient, detail.value.id, detail.value)
-      : await createMedia(imageClient, detail.value)
     metadataDialog.value = false
-    mediaModel.value = res.id!
+    mediaModel.value = detail.value
     imageModel.value = null
     imageMediaWidgetStore.setDetail(null)
-    await reloadMedia(res, res.id!, true)
+    reloadMedia(mediaModel.value)
     emit('afterMetadataSaveSuccess')
-    releaseFieldLock.value(res.id)
+    releaseFieldLock.value(mediaModel.value.id)
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -584,15 +599,7 @@ const onMetadataDialogConfirm = async () => {
 }
 
 const onImageMediaDelete = async () => {
-  if (props.callDeleteApiOnRemove && isMediaAware(detail.value) && detail.value.id) {
-    try {
-      await deleteMedia(imageClient, detail.value.id)
-      reset()
-    } catch (e) {
-      showErrorsDefault(e)
-    }
-    return
-  } else if (props.callDeleteApiOnRemove && isImageCreateUpdateAware(detail.value) && detail.value.id) {
+  if (props.callDeleteApiOnRemove && isImageCreateUpdateAware(detail.value) && detail.value.id) {
     try {
       await deleteImage(imageClient, detail.value.id)
       reset()
@@ -606,7 +613,7 @@ const onImageMediaDelete = async () => {
 
 const forceReloadViewWithExpandMetadata = () => {
   if (isMediaAware(detail.value)) {
-    reloadMedia(detail.value, null, true)
+    reloadMedia(detail.value)
     return
   } else if (isImageCreateUpdateAware(detail.value)) {
     reloadImage(detail.value, null, true)
@@ -663,7 +670,7 @@ const isLocked = computed(() => {
 
 const type = computed<DamAssetTypeType | null>(() => {
   if (isMediaAware(resImageMedia.value)) {
-    return resImageMedia.value.extService === MediaExtService.DamVideo ? DamAssetType.Video : DamAssetType.Audio
+    return resImageMedia.value.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
   } else if (isImageCreateUpdateAware(resImageMedia.value)) {
     return DamAssetType.Image
   }
@@ -907,7 +914,14 @@ defineExpose({
       @edit-asset="onEditAsset"
       @on-confirm="onMetadataDialogConfirm"
       @on-close="onMetadataDialogClose"
-    />
+    >
+      <template #preview="{ imageMedia: appendImage }">
+        <slot
+          name="preview"
+          :image-media="appendImage"
+        />
+      </template>
+    </ImageDetailDialogMetadata>
   </div>
   <AAssetSelectMedia
     v-model="assetSelectDialog"

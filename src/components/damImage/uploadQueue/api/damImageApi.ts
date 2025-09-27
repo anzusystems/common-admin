@@ -134,7 +134,7 @@ export const rotateImage = (client: () => AxiosInstance, imageId: DocId, angle: 
 }
 
 const COPY_TO_LICENCE_MAX_LIMIT = 50
-const COPY_TO_LICENCE_API_LIMIT = 1 // todo back to 20
+const COPY_TO_LICENCE_API_LIMIT = 20
 
 export const copyToLicence = async (
   client: () => AxiosInstance,

@@ -20,6 +20,7 @@ import {
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import type { DamMediaFromDam } from '@/types/MediaAware'
 
 const END_POINT = '/adm/v1/asset'
 const BULK_METADATA_LIMIT = 10
@@ -46,6 +47,9 @@ export const useFetchAssetList = (client: () => AxiosInstance, licenceId: Intege
 
 export const fetchAsset = (client: () => AxiosInstance, id: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
+
+export const fetchAssetAsCmsMedia = (client: () => AxiosInstance, id: DocId) =>
+  apiFetchOne<DamMediaFromDam>(client, '/adm/v1/cms/asset/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
 
 export const fetchAssetByFileId = (client: () => AxiosInstance, assetFileId: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/asset-file/:id', { id: assetFileId }, SYSTEM_CORE_DAM, ENTITY)

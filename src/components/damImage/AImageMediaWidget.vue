@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
@@ -13,15 +13,19 @@ import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from 
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import ImageMediaWidgetInner from '@/components/damImage/uploadQueue/components/ImageMediaWidgetInner.vue'
-import type { MediaAware } from '@/types/MediaAware'
+import type { MediaAware, MediaEntityKey } from '@/types/MediaAware'
 
 const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    siteGroup: IntegerId
+    mediaEntity: {
+      id: DocId | IntegerId
+      name: MediaEntityKey
+    }
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
-    initialMedia?: MediaAware | undefined // optional, if available, no need to fetch media data
     configName?: string
     collab?: CollabComponentConfig
     collabStatus?: CollabStatusType
@@ -67,7 +71,7 @@ const emit = defineEmits<{
   (e: 'afterMetadataSaveSuccess'): void
 }>()
 
-const mediaModel = defineModel<IntegerIdNullable>('media', { required: true })
+const mediaModel = defineModel<MediaAware | null>('media', { required: true })
 const imageModel = defineModel<IntegerIdNullable>('image', { required: true })
 const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading')
 
@@ -136,6 +140,12 @@ defineExpose({
     <template #append="{ imageMedia: appendImage }">
       <slot
         name="append"
+        :image-media="appendImage"
+      />
+    </template>
+    <template #preview="{ imageMedia: appendImage }">
+      <slot
+        name="preview"
         :image-media="appendImage"
       />
     </template>

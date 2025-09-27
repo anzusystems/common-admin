@@ -28,14 +28,20 @@
   },
   "media": {
     "model": {
-      "dam": {
-        "imageFileId": "Preview",
+      "damMedia": {
         "assetId": "Asset ID",
-        "licenceId": "Licence"
+        "licenceId": "Licence ID",
+        "title": "Title",
+        "authorNames": "Authors",
+        "episodeName": "Episode name",
+        "episodeNumber": "Episode number",
+        "seriesName": "Podcast"
       }
     },
     "meta": {
-      "edit": "Edit medium"
+      "edit": "Edit medium",
+      "preview": "Preview",
+      "notPlayable": "Media content is not playable on the website yet. Check the distribution."
     },
     "button": {
       "remove": "Edit medium",

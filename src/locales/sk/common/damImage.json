@@ -28,14 +28,20 @@
   },
   "media": {
     "model": {
-      "dam": {
-        "imageFileId": "Náhľad",
+      "damMedia": {
         "assetId": "ID assetu",
-        "licenceId": "Licencia"
+        "licenceId": "Licencia",
+        "title": "Titulok",
+        "authorNames": "Autori",
+        "episodeName": "Epizóda",
+        "episodeNumber": "Číslo epizódy",
+        "seriesName": "Podcast"
       }
     },
     "meta": {
-      "edit": "Upraviť médium"
+      "edit": "Upraviť médium",
+      "preview": "Náhľad",
+      "notPlayable": "Mediálny obsah sa zatiaľ neprehrá na webe. Skontrolujte distribúciu."
     },
     "button": {
       "remove": "Odstrániť médium",

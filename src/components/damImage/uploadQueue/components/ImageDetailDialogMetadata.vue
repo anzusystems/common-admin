@@ -59,7 +59,7 @@ const imageSourceRequired = computed(() => {
 })
 
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
-  if (!isMediaAware(detail.value) || isNull(detail.value.dam.imageFileId)) return undefined
+  if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
 
   return {
     texts: {
@@ -67,8 +67,8 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
       source: '',
     },
     dam: {
-      damId: detail.value.dam.imageFileId,
-      licenceId: detail.value.dam.licenceId,
+      damId: detail.value.damMedia.imageFileId,
+      licenceId: detail.value.damMedia.licenceId!,
       regionPosition: 0,
     },
     flags: {
@@ -172,7 +172,7 @@ defineExpose({
     </template>
     <template v-else-if="isMediaAware(detail)">
       <div>
-        {{ detail.dam }}
+        {{ detail.damMedia }}
       </div>
     </template>
   </div>
@@ -266,21 +266,55 @@ defineExpose({
         >
           <div class="my-4">
             <h4 class="font-weight-bold text-subtitle-2">
-              {{ t('common.damImage.media.model.dam.imageFileId') }}:
+              {{ t('common.damImage.media.meta.preview') }}:
             </h4>
+            <slot
+              name="preview"
+              :image-media="detail"
+            />
             <AImageWidgetSimple
+              v-if="!detail.damMedia.playable"
               :model-value="null"
               :image="imageMedia"
             />
           </div>
-          <ARow :title="t('common.damImage.media.model.dam.assetId')">
-            <div class="d-flex align-center justify-space-between">
-              <div>{{ detail.dam.assetId }}</div>
-              <DamAdminAssetLink :asset-id="detail.dam.assetId" />
-            </div>
+          <VRow>
+            <VCol>
+              <DamAdminAssetLink :asset-id="detail.damMedia.assetId" />
+            </VCol>
+          </VRow>
+          <div
+            v-if="!detail.damMedia.playable"
+            class="my-2 text-warning text-caption"
+          >
+            <VIcon
+              icon="mdi-movie-off-outline"
+              class="mr-1"
+              size="small"
+            />{{ t('common.damImage.media.meta.notPlayable') }}
+          </div>
+          <ARow :title="t('common.damImage.media.model.damMedia.title')">
+            {{ detail.damMedia.title }}
           </ARow>
-          <ARow :title="t('common.damImage.media.model.dam.licenceId')">
-            {{ detail.dam.licenceId }}
+          <ARow :title="t('common.damImage.media.model.damMedia.authorNames')">
+            {{ detail.damMedia.authorNames.join(', ') }}
+          </ARow>
+          <template v-if="detail.damMedia.assetType === 'audio'">
+            <ARow :title="t('common.damImage.media.model.damMedia.seriesName')">
+              {{ detail.damMedia.seriesName }}
+            </ARow>
+            <ARow :title="t('common.damImage.media.model.damMedia.episodeName')">
+              {{ detail.damMedia.episodeName }}
+            </ARow>
+            <ARow :title="t('common.damImage.media.model.damMedia.episodeNumber')">
+              {{ detail.damMedia.episodeNumber }}
+            </ARow>
+          </template>
+          <ARow :title="t('common.damImage.media.model.damMedia.assetId')">
+            {{ detail.damMedia.assetId }}
+          </ARow>
+          <ARow :title="t('common.damImage.media.model.damMedia.licenceId')">
+            {{ detail.damMedia.licenceId }}
           </ARow>
         </div>
       </VCardText>

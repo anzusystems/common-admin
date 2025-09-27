@@ -8,11 +8,12 @@ import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import useVuelidate from '@vuelidate/core'
 import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
 import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
+import type { MediaAware } from '@/types/MediaAware'
 
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)
 const imageId3 = ref<IntegerIdNullable>(null)
-const media = ref<IntegerIdNullable>(null)
+const media = ref<MediaAware | null>(null)
 const imageId4 = ref<IntegerIdNullable>(null)
 
 const v$ = useVuelidate({ $scope: 'aaa' })
@@ -129,6 +130,8 @@ const saveInsideDialog = () => {
           <AImageMediaWidget
             v-model:image="imageId4"
             v-model:media="media"
+            :site-group="1"
+            :media-entity="{ id: 1, name: 'articleKindStandard' }"
             :upload-licence="100001"
             :select-licences="[100000, 100001]"
             queue-key="media"
