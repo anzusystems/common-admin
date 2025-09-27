@@ -60,7 +60,6 @@ import {
 import { type DamMediaFromDam, DamMediaType, type MediaAware, type MediaEntityKey } from '@/types/MediaAware'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
-import { createOrFetchMedia } from '@/components/damImage/uploadQueue/api/mediaApi'
 
 const props = withDefaults(
   defineProps<{
@@ -545,9 +544,8 @@ const tryMediaConfirm = async () => {
   if (!isMediaAware(detail.value)) return
   metadataDialogSaving.value = true
   try {
-    const res = await createOrFetchMedia(imageClient, detail.value)
     metadataDialog.value = false
-    mediaModel.value = res
+    mediaModel.value = detail.value
     imageModel.value = null
     imageMediaWidgetStore.setDetail(null)
     reloadMedia(mediaModel.value)
