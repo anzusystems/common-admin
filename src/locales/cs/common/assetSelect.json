@@ -46,7 +46,8 @@
     "keywordIds": "Klúčové slová",
     "authorIds": "Autori",
     "createdByIds": "Založené používateľmi",
-    "inPodcast": "Podcast"
+    "inPodcast": "Podcast",
+    "distributedInServices": "Distribuované v službách"
   },
   "assetType": {
     "image": "Obrázok",

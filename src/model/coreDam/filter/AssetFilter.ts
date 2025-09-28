@@ -30,7 +30,7 @@ export const filterFieldsList = [
   { name: 'inPodcast' as const, default: null },
   { name: 'fromRss' as const, default: null },
   { name: 'slotNames' as const, default: [] },
-  { name: 'distributedInServices' as const, default: [] },
+  { name: 'distributedInServices' as const, default: [], titleT: 'common.assetSelect.filter.distributedInServices' },
   { name: 'licences' as const, default: [] },
   { name: 'shortestDimensionFrom' as const, default: null, type: 'integer' },
   { name: 'shortestDimensionUntil' as const, default: null, type: 'integer' },

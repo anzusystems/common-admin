@@ -4,7 +4,7 @@ import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/
 import { computed, onMounted, provide, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
-import AssetSelectFilterFormImage from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormImage.vue'
+import AssetSelectFilterForm from '@/components/dam/assetSelect/components/filter/AssetSelectFilterForm.vue'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
@@ -36,7 +36,7 @@ const resetFilterAction = () => {
 const componentComputed = computed(() => {
   switch (assetSelectStore.assetType) {
     default:
-      return AssetSelectFilterFormImage
+      return AssetSelectFilterForm
   }
 })
 
@@ -44,7 +44,7 @@ watch(
   selectedLicenceId,
   (newValue, oldValue) => {
     if (newValue === oldValue) return
-    submitFilterAction()
+    resetFilterAction()
   },
 )
 

@@ -5,15 +5,20 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import AFilterBooleanSelect from '@/labs/filters/AFilterBooleanSelect.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
-import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
+import DamKeywordFilterRemoteAutocomplete
+  from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
 import type { IntegerId } from '@/types/common'
-import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
+import DamAuthorFilterRemoteAutocomplete
+  from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
+import AssetDistributionServiceNameFilter
+  from '@/components/dam/assetSelect/components/filter/AssetDistributionServiceNameFilter.vue'
+import { DamAssetType } from '@/types/coreDam/Asset'
 
 const { filterData } = useAssetSelectActions()
 
 const assetSelectStore = useAssetSelectStore()
-const { selectConfig, selectedLicenceId } = storeToRefs(assetSelectStore)
+const { selectConfig, selectedLicenceId, assetType } = storeToRefs(assetSelectStore)
 
 const extSystem = computed<IntegerId | undefined>(() => {
   const found = selectConfig.value.find((config) => config.licence === selectedLicenceId.value)
@@ -23,22 +28,12 @@ const extSystem = computed<IntegerId | undefined>(() => {
   return undefined
 })
 
-// const onAnyFilterUpdate = () => {
-//   filterTouch()
-// }
-//
-// const submitFilter = () => {
-//   filterUnTouch()
-//   fetchAssetList()
-// }
-
 watch(extSystem, (newValue, oldValue) => {
   if (newValue !== oldValue) {
     filterData.keywordIds = []
     filterData.authorIds = []
   }
 })
-// todo filters!!!
 </script>
 
 <template>
@@ -90,6 +85,15 @@ watch(extSystem, (newValue, oldValue) => {
   <VRow>
     <VCol>
       <AFilterBooleanSelect name="generatedBySystem" />
+    </VCol>
+  </VRow>
+  <VRow v-if="assetType === DamAssetType.Audio || assetType === DamAssetType.Video">
+    <VCol>
+      <AssetDistributionServiceNameFilter
+        :key="selectedLicenceId"
+        :licence-id="selectedLicenceId"
+        name="distributedInServices"
+      />
     </VCol>
   </VRow>
 </template>
