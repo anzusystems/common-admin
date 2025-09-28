@@ -28,6 +28,7 @@ const { t } = useI18n()
       :key="item.asset.id"
       :index="index"
       :item="item"
+      show-meta-icons
       @item-click="onItemClick($event, extSystem)"
     />
   </div>

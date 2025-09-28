@@ -1,8 +1,15 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { DamAssetStatus, type DamAssetStatusType, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import {
+  type AssetFileProperties,
+  DamAssetStatus,
+  type DamAssetStatusType,
+  DamAssetType,
+  type DamAssetTypeType,
+} from '@/types/coreDam/Asset'
 import placeholder16x9 from '@/assets/image/placeholder16x9.jpg'
 import { isUndefined } from '@/lib'
+import AssetImageMetaIcons from '@/components/damImage/uploadQueue/components/AssetImageMetaIcons.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -15,6 +22,8 @@ const props = withDefaults(
     fallbackHeight?: number
     iconSize?: number
     iconColor?: string
+    showMetaIcons?: boolean
+    assetFileProperties?: AssetFileProperties | undefined
   }>(),
   {
     assetType: DamAssetType.Image,
@@ -26,6 +35,8 @@ const props = withDefaults(
     fallbackHeight: 200,
     iconSize: 80,
     iconColor: '#505050',
+    showMetaIcons: false,
+    assetFileProperties: undefined,
   }
 )
 const emit = defineEmits<{
@@ -94,6 +105,11 @@ const showIconComputed = computed(() => {
         />
       </div>
     </div>
+    <AssetImageMetaIcons
+      v-if="showMetaIcons && assetFileProperties"
+      :asset-file-properties="assetFileProperties"
+      :asset-type="assetType"
+    />
   </div>
   <div
     v-else
@@ -118,6 +134,11 @@ const showIconComputed = computed(() => {
         />
       </div>
     </div>
+    <AssetImageMetaIcons
+      v-if="showMetaIcons && assetFileProperties"
+      :asset-file-properties="assetFileProperties"
+      :asset-type="assetType"
+    />
   </div>
 </template>
 

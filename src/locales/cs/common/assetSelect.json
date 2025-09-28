@@ -13,7 +13,8 @@
   },
   "meta": {
     "table": {
-      "image": "Náhled"
+      "image": "Náhled",
+      "advanced": "Pokročilé"
     },
     "grid": {
       "masonry": "Mansonry",

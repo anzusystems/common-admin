@@ -7,6 +7,7 @@ import type { DocId } from '@/types/common'
 import { prettyBytes } from '@/utils/file'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import { toRef } from 'vue'
+import AssetImageMetaIcons from '@/components/damImage/uploadQueue/components/AssetImageMetaIcons.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -72,6 +73,13 @@ const onItemClick = () => {
     </td>
     <td>
       <ADatetime :date-time="asset.createdAt" />
+    </td>
+    <td>
+      <AssetImageMetaIcons
+        :asset-file-properties="item.asset.assetFileProperties"
+        :asset-type="assetType"
+        disable-absolute
+      />
     </td>
     <td>
       {{ asset.mainFile?.fileAttributes.mimeType }}

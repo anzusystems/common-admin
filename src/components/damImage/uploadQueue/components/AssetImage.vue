@@ -37,7 +37,7 @@ const props = withDefaults(
     remainingTime?: number | null
     hideIcon?: boolean
     showMetaIcons?: boolean
-    assetFileProperties?: AssetFileProperties
+    assetFileProperties?: AssetFileProperties | undefined
   }>(),
   {
     assetType: DamAssetType.Image,

@@ -13,7 +13,8 @@
   },
   "meta": {
     "table": {
-      "image": "Image"
+      "image": "Image",
+      "advanced": "Advanced"
     },
     "grid": {
       "masonry": "Mansonry",

@@ -529,6 +529,7 @@ import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables
 import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
+import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { isImageCreateUpdateAware, isMediaAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
@@ -641,6 +642,7 @@ export {
   DamAuthorFilterRemoteAutocomplete,
   DamKeywordFilterRemoteAutocomplete,
   DamUserFilterRemoteAutocomplete,
+  DamAdminAssetLink,
 
   // VIEWS
   ALoginView,
