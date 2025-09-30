@@ -111,6 +111,7 @@ const onOpen = () => {
   initStoreContext(
     selectConfigLocal,
     assetType.value,
+    assetType.value === DamAssetType.Audio ? true : null,
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
     props.maxCount

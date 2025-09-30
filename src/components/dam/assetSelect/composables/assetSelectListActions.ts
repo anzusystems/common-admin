@@ -127,6 +127,7 @@ export function useAssetSelectActions(
   const initStoreContext = (
     selectConfig: DamConfigLicenceExtSystemReturnType[],
     assetType: DamAssetTypeType,
+    inPodcast: boolean | null,
     singleMode: boolean,
     minCount: number,
     maxCount: number
@@ -137,6 +138,7 @@ export function useAssetSelectActions(
     assetSelectStore.setSingleMode(singleMode)
     assetSelectStore.setMinCount(minCount)
     assetSelectStore.setMaxCount(maxCount)
+    assetSelectStore.inPodcast = inPodcast
   }
 
   return {

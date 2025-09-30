@@ -35,6 +35,7 @@ import {
 const props = withDefaults(
   defineProps<{
     assetType: DamAssetTypeType
+    inPodcast?: boolean | null
     minCount: number
     maxCount: number
     selectLicences: IntegerId[]
@@ -49,6 +50,7 @@ const props = withDefaults(
     initialPaginationSort?: DatatableSortBy
   }>(),
   {
+    inPodcast: null,
     uploadLicence: undefined,
     returnType: AssetSelectReturnType.MainFileId,
     configName: 'default',
@@ -113,6 +115,7 @@ const onOpen = () => {
   initStoreContext(
     selectConfigLocal,
     props.assetType,
+    props.inPodcast,
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
     props.maxCount

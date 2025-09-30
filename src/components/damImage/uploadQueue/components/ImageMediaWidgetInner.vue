@@ -426,7 +426,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     // podcast audio
     metadataDialog.value = true
     const mediaData: MediaAware = {
-      extService: 'damAudio',
+      extService: 'damPodcast',
       damMedia: {
         imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
         assetId: selectedAsset.id,
