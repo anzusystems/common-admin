@@ -482,5 +482,11 @@ watch(
         />
       </slot>
     </template>
+    <template
+      v-if="$slots.append"
+      #append
+    >
+      <slot name="append" />
+    </template>
   </VAutocomplete>
 </template>
