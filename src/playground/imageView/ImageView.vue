@@ -126,7 +126,7 @@ const saveInsideDialog = () => {
           </VDialog>
         </VCol>
         <VCol cols="4">
-          Media
+          AImageMediaWidget
           <AImageMediaWidget
             v-model:image="imageId4"
             v-model:media="media"

@@ -84,6 +84,7 @@ import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormE
 import AImageWidget from '@/components/damImage/AImageWidget.vue'
 import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
+import AMediaWidgetSimple from '@/components/damImage/AMediaWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
 import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
@@ -622,6 +623,7 @@ export {
   AImageWidget,
   AImageMediaWidget,
   AImageWidgetSimple,
+  AMediaWidgetSimple,
   AImageWidgetMultiple,
   AImageWidgetMultipleSimple,
   ImageMassOperations,

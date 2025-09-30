@@ -913,10 +913,10 @@ defineExpose({
       @on-confirm="onMetadataDialogConfirm"
       @on-close="onMetadataDialogClose"
     >
-      <template #preview="{ imageMedia: appendImage }">
+      <template #preview="{ imageMedia: appendMedia }">
         <slot
           name="preview"
-          :image-media="appendImage"
+          :image-media="appendMedia"
         />
       </template>
     </ImageDetailDialogMetadata>
