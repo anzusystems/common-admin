@@ -3,7 +3,7 @@ import type { DatetimeUTCNullable, DocIdNullable, IntegerId, IntegerIdNullable }
 export interface MediaAware<T extends DamMedia = DamMedia> {
   id?: IntegerId
   damMedia: T
-  extService: 'damVideo' | 'damAudio'
+  extService: 'damVideo' | 'damPodcast'
 }
 
 export interface DamMedia {
