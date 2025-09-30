@@ -533,12 +533,13 @@ import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { isImageCreateUpdateAware, isMediaAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import type { MediaAware } from '@/types/MediaAware'
+import type { MediaAware, DamMedia, DamMediaFromDam } from '@/types/MediaAware'
 import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
 import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
+import { fetchAssetAsCmsMedia } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 export {
   // COMPONENTS
@@ -852,6 +853,8 @@ export {
   isImageCreateUpdateAware,
   type MediaAware,
   isMediaAware,
+  type DamMediaFromDam,
+  type DamMedia,
   type DamAuthor,
   type DamAuthorMinimal,
   type DamKeyword,
@@ -981,6 +984,7 @@ export {
   updateDamUser,
   fetchDamUser,
   fetchAssetAndCheckForSingleUseByFileIds,
+  fetchAssetAsCmsMedia,
 
   // TRANSLATIONS
   messagesCs,

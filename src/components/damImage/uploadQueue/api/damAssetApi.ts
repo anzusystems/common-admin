@@ -48,8 +48,8 @@ export const useFetchAssetList = (client: () => AxiosInstance, licenceId: Intege
 export const fetchAsset = (client: () => AxiosInstance, id: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
 
-export const fetchAssetAsCmsMedia = (client: () => AxiosInstance, id: DocId) =>
-  apiFetchOne<DamMediaFromDam>(client, '/adm/v1/cms/asset/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
+export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(client: () => AxiosInstance, id: DocId) =>
+  apiFetchOne<T>(client, '/adm/v1/cms/asset/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
 
 export const fetchAssetByFileId = (client: () => AxiosInstance, assetFileId: DocId) =>
   apiFetchOne<AssetDetailItemDto>(client, END_POINT + '/asset-file/:id', { id: assetFileId }, SYSTEM_CORE_DAM, ENTITY)
