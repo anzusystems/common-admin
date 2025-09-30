@@ -11,18 +11,18 @@ export interface DamMedia {
   imageFileId: DocIdNullable
   assetId: DocIdNullable
   licenceId: IntegerIdNullable
-  readonly assetType: DamMediaTypeType
-  readonly title: string
-  readonly description: string
-  readonly seriesName: string
-  readonly authorNames: string[]
-  readonly publishedAt: DatetimeUTCNullable
-  readonly duration: number
-  readonly mediaUrl: string | null
-  readonly playable: boolean
-  readonly syncedWithDam: boolean
-  readonly episodeName: string
-  readonly episodeNumber: number | null
+  assetType: DamMediaTypeType
+  title: string
+  description: string
+  seriesName: string
+  authorNames: string[]
+  publishedAt: DatetimeUTCNullable
+  duration: number
+  mediaUrl: string | null
+  playable: boolean
+  syncedWithDam: boolean
+  episodeName: string
+  episodeNumber: number | null
 }
 
 export const DamMediaType = {
