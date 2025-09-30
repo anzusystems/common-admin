@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import { type AssetDetailItemDto, DamAssetType } from '@/types/coreDam/Asset'
+import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -46,6 +46,8 @@ const props = withDefaults(
     disableSort?: boolean
     customSortOptions?: undefined | DatatableOrderingOptions
     initialPaginationSort?: DatatableSortBy
+    preselectAssetType?: DamAssetTypeType | undefined
+    preselectInPodcast?: boolean | null | undefined
   }>(),
   {
     uploadLicence: undefined,
@@ -57,6 +59,8 @@ const props = withDefaults(
     disableSort: false,
     customSortOptions: undefined,
     initialPaginationSort: () => ({ key: 'createdAt', order: SortOrder.Desc }),
+    preselectAssetType: undefined,
+    preselectInPodcast: undefined,
   }
 )
 
@@ -281,6 +285,8 @@ defineExpose({
           :disable-sort="disableSort"
           :custom-sort-options="customSortOptions"
           show-types
+          :preselect-asset-type="preselectAssetType"
+          :preselect-in-podcast="preselectInPodcast"
           @type-change="typeChange"
           @sort-by-change="sortByChange"
         />

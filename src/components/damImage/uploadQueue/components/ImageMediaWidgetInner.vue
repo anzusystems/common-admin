@@ -57,7 +57,7 @@ import {
   isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { type DamMediaFromDam, DamMediaType, type MediaAware } from '@/types/MediaAware'
+import { type DamMediaFromDam, DamMediaType, type DamMediaTypeType, type MediaAware } from '@/types/MediaAware'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 
@@ -659,6 +659,13 @@ const isLocked = computed(() => {
   return !isNull(lockedByUserLocal.value)
 })
 
+const preselectType = computed(() => {
+  if (mediaModel.value && mediaModel.value.damMedia.assetType) {
+    return mediaModel.value.damMedia.assetType
+  }
+  return DamAssetType.Image as DamMediaTypeType
+})
+
 const type = computed<DamAssetTypeType | null>(() => {
   if (isMediaAware(resImageMedia.value)) {
     return resImageMedia.value.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
@@ -921,6 +928,8 @@ defineExpose({
     :min-count="1"
     :max-count="1"
     return-type="asset"
+    :preselect-asset-type="preselectType"
+    :preselect-in-podcast="preselectType === DamAssetType.Audio || null"
     @on-confirm="onAssetSelectConfirm"
   />
   <AssetDetailDialog

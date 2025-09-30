@@ -2,29 +2,33 @@
 import { useI18n } from 'vue-i18n'
 import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import type { DatatableOrderingOption, DatatableOrderingOptions } from '@/composables/system/datatableColumns'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     showTypes?: boolean
     sortVariant?: 'default' | 'most-relevant'
     disableSort?: boolean
     customSortOptions?: undefined | DatatableOrderingOptions
+    preselectAssetType?: DamAssetTypeType | undefined
+    preselectInPodcast?: boolean | null | undefined
   }>(),
   {
     showTypes: false,
     sortVariant: 'most-relevant',
     disableSort: false,
     customSortOptions: undefined,
+    preselectAssetType: undefined,
+    preselectInPodcast: undefined,
   }
 )
 const emit = defineEmits<{
-  (e: 'typeChange', data: { type: DamAssetTypeType, inPodcast: boolean | null }): void
+  (e: 'typeChange', data: { type: DamAssetTypeType; inPodcast: boolean | null }): void
   (e: 'sortByChange', data: DatatableOrderingOption): void
 }>()
 
@@ -65,6 +69,16 @@ const setFilterPodcast = () => {
   inPodcast.value = true
   emit('typeChange', { type: DamAssetType.Audio, inPodcast: true })
 }
+
+onMounted(() => {
+  if (props.preselectAssetType === DamAssetType.Audio && props.preselectInPodcast) {
+    setFilterPodcast()
+    return
+  }
+  if (props.preselectAssetType === DamAssetType.Video) {
+    setFilterVideo()
+  }
+})
 </script>
 
 <template>
