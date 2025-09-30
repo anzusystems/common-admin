@@ -57,7 +57,7 @@ import {
   isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { type DamMediaFromDam, DamMediaType, type MediaAware, type MediaEntityKey } from '@/types/MediaAware'
+import { type DamMediaFromDam, DamMediaType, type MediaAware } from '@/types/MediaAware'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 
@@ -66,11 +66,6 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
-    siteGroup: IntegerId
-    mediaEntity: {
-      id: DocId | IntegerId
-      name: MediaEntityKey
-    }
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -403,9 +398,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     // video
     metadataDialog.value = true
     const mediaData: MediaAware = {
-      siteGroup: props.siteGroup,
       extService: 'damVideo',
-      [props.mediaEntity.name]: props.mediaEntity.id,
       damMedia: {
         imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
         assetId: selectedAsset.id,
@@ -433,9 +426,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     // podcast audio
     metadataDialog.value = true
     const mediaData: MediaAware = {
-      siteGroup: props.siteGroup,
       extService: 'damAudio',
-      [props.mediaEntity.name]: props.mediaEntity.id,
       damMedia: {
         imageFileId: selectedAsset.mainFile.imagePreview?.imageFile || null,
         assetId: selectedAsset.id,

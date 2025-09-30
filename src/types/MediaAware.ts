@@ -1,9 +1,8 @@
-import type { DatetimeUTCNullable, DocId, DocIdNullable, IntegerId, IntegerIdNullable } from '@/types/common'
+import type { DatetimeUTCNullable, DocIdNullable, IntegerId, IntegerIdNullable } from '@/types/common'
 
-export interface MediaAware<T extends DamMedia = DamMedia> extends MediaEntity {
+export interface MediaAware<T extends DamMedia = DamMedia> {
   id?: IntegerId
   damMedia: T
-  siteGroup: IntegerIdNullable
   extService: 'damVideo' | 'damAudio'
 }
 
@@ -27,20 +26,8 @@ export interface DamMedia {
 
 export const DamMediaType = {
   Audio: 'audio',
-  Video: 'video'
+  Video: 'video',
 } as const
 export type DamMediaTypeType = (typeof DamMediaType)[keyof typeof DamMediaType]
 
 export type DamMediaFromDam = Omit<DamMedia, 'syncedWithDam'>
-
-export const MediaEntity = {
-  Article: 'articleKindStandard',
-} as const
-
-export type MediaEntityType = (typeof MediaEntity)[keyof typeof MediaEntity]
-
-export type MediaEntityKey = MediaEntityType
-
-export type MediaEntity = {
-  [key in MediaEntityKey]: IntegerId | DocId | null
-}

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
@@ -13,18 +13,13 @@ import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from 
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import ImageMediaWidgetInner from '@/components/damImage/uploadQueue/components/ImageMediaWidgetInner.vue'
-import type { MediaAware, MediaEntityKey } from '@/types/MediaAware'
+import type { MediaAware } from '@/types/MediaAware'
 
 const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
-    siteGroup: IntegerId
-    mediaEntity: {
-      id: DocId | IntegerId
-      name: MediaEntityKey
-    }
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig

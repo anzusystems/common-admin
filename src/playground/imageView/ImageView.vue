@@ -130,8 +130,6 @@ const saveInsideDialog = () => {
           <AImageMediaWidget
             v-model:image="imageId4"
             v-model:media="media"
-            :site-group="1"
-            :media-entity="{ id: 1, name: 'articleKindStandard' }"
             :upload-licence="100001"
             :select-licences="[100000, 100001]"
             queue-key="media"
