@@ -47,6 +47,7 @@
     "authorIds": "Autori",
     "createdByIds": "Založené používateľmi",
     "inPodcast": "Podcast",
+    "podcastIds": "Podcasty",
     "distributedInServices": "Distribuované v službách"
   },
   "assetType": {

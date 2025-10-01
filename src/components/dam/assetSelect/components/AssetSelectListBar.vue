@@ -8,6 +8,7 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import type { DatatableOrderingOption, DatatableOrderingOptions } from '@/composables/system/datatableColumns'
+import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 
 const props = withDefaults(
   defineProps<{
@@ -38,6 +39,7 @@ const { t } = useI18n()
 const { setGridView } = useGridView()
 const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = useSidebar()
 const assetSelectStore = useAssetSelectStore()
+const { filterData } = useAssetListFilter()
 const { assetType, inPodcast } = storeToRefs(assetSelectStore)
 
 const isImageActive = computed(() => {
@@ -55,12 +57,14 @@ const isPodcastActive = computed(() => {
 const setFilterImage = () => {
   assetType.value = DamAssetType.Image
   inPodcast.value = null
+  filterData.podcastIds = []
   emit('typeChange', { type: DamAssetType.Image, inPodcast: null })
 }
 
 const setFilterVideo = () => {
   assetType.value = DamAssetType.Video
   inPodcast.value = null
+  filterData.podcastIds = []
   emit('typeChange', { type: DamAssetType.Video, inPodcast: null })
 }
 

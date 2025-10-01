@@ -14,6 +14,8 @@ import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilter
 import AssetDistributionServiceNameFilter
   from '@/components/dam/assetSelect/components/filter/AssetDistributionServiceNameFilter.vue'
 import { DamAssetType } from '@/types/coreDam/Asset'
+import FilterPodcastRemoteAutocomplete
+  from '@/components/dam/assetSelect/components/filter/FilterPodcastRemoteAutocomplete.vue'
 
 const { filterData } = useAssetSelectActions()
 
@@ -91,8 +93,16 @@ watch(extSystem, (newValue, oldValue) => {
     <VCol>
       <AssetDistributionServiceNameFilter
         :key="selectedLicenceId"
-        :licence-id="selectedLicenceId"
         name="distributedInServices"
+      />
+    </VCol>
+  </VRow>
+  <VRow v-if="assetType === DamAssetType.Audio">
+    <VCol>
+      <FilterPodcastRemoteAutocomplete
+        :key="selectedLicenceId"
+        :licence-id="selectedLicenceId"
+        name="podcastIds"
       />
     </VCol>
   </VRow>

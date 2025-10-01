@@ -28,6 +28,7 @@ export const filterFieldsList = [
   { name: 'visible' as const, default: true, titleT: 'common.assetSelect.filter.visible' },
   { name: 'generatedBySystem' as const, default: false, titleT: 'common.assetSelect.filter.generatedBySystem' },
   { name: 'inPodcast' as const, default: null },
+  { name: 'podcastIds' as const, default: [], titleT: 'common.assetSelect.filter.podcastIds' },
   { name: 'fromRss' as const, default: null },
   { name: 'slotNames' as const, default: [] },
   { name: 'distributedInServices' as const, default: [], titleT: 'common.assetSelect.filter.distributedInServices' },

@@ -2,14 +2,12 @@
 import { computed, onMounted, ref } from 'vue'
 import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOptionsSelect.vue'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
-import type { IntegerId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const props = withDefaults(
   defineProps<{
     name: string
-    licenceId: IntegerId
     configName?: string
   }>(),
   {
@@ -57,9 +55,7 @@ onMounted(async () => {
   >
     <VProgressCircular indeterminate />
   </div>
-  <div
-    v-else-if="status === 'error'"
-  >
+  <div v-else-if="status === 'error'">
     Error loading distribution services.
   </div>
   <AFilterValueObjectOptionsSelect
