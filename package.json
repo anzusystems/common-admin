@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.284",
+  "version": "1.47.0-beta.285",
   "license": "Apache-2.0",
   "scripts": {
     "docs:dev": "vitepress dev docs",
@@ -86,7 +86,7 @@
     "sass": "^1.93.2",
     "socket.io-client": "4.8.1",
     "sortablejs": "^1.15.6",
-    "stylelint": "16.24.0",
+    "stylelint": "16.25.0",
     "stylelint-config-recommended-vue": "^1.6.1",
     "stylelint-config-standard-scss": "^16.0.0",
     "typescript": "5.7.3",

@@ -41,7 +41,9 @@ const props = withDefaults(
     loading?: boolean
     collab?: CollabComponentConfig
     disabled?: boolean | undefined
+    readonly?: boolean
     chips?: boolean
+    closableChips?: boolean
     disableAutoSingleSelect?: boolean // auto select works only when modelValue is empty/null and prefetch is set to 'mounted'
     prefetch?: 'hover' | 'focus' | 'mounted' | false
     minSearchChars?: number
@@ -62,6 +64,7 @@ const props = withDefaults(
     collab: undefined,
     disabled: undefined,
     chips: false,
+    closableChips: false,
     disableAutoSingleSelect: false,
     prefetch: false,
     minSearchChars: 2,
@@ -74,6 +77,7 @@ const emit = defineEmits<{
   (e: 'searchChangeDebounced', data: string): void
   (e: 'blur', data: ModelValueType): void
   (e: 'focus', data: ModelValueType): void
+  (e: 'click:chipClose', data: ValueObjectOption<T>): void
 }>()
 
 const SEARCH_DEBOUNCE_MS = 300
@@ -329,6 +333,16 @@ const onClickClear = async () => {
   modelValue.value = null
 }
 
+const onChipCloseClick = (closedItem: ValueObjectOption<T>) => {
+  if (isArray(modelValue.value)) {
+    modelValue.value = modelValue.value.filter((item) => item !== closedItem.value)
+    return
+  }
+  if (closedItem.value === modelValue.value && props.clearable) {
+    modelValue.value = null
+  }
+}
+
 watchDebounced(
   search,
   (newValue, oldValue) => {
@@ -418,13 +432,16 @@ watch(
     :multiple="multiple"
     :clearable="clearable"
     :error-messages="errorMessageComputed"
-    :chips="chips || multiple"
+    :chips="chips || multiple || closableChips"
     :hide-details="hideDetails"
     :loading="loadingComputed"
     :disabled="disabledComputed"
+    :readonly="readonly"
     :no-data-text="noDataText"
     return-object
     autocomplete="off"
+    :hide-selected="closableChips"
+    :closable-chips="closableChips && !loadingComputed && !disabledComputed && !readonly"
     @update:search="onSearchUpdate"
     @update:model-value="onAutocompleteModelUpdate"
     @blur="onBlur"
@@ -445,6 +462,7 @@ watch(
         size="small"
         :text="`${item.title} (${item.raw.subtitle})`"
         :disabled="item.props.disabled"
+        @click:close="onChipCloseClick(item.raw)"
       >
         {{ item.raw.title }}
         <span
