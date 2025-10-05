@@ -75,6 +75,11 @@ export const useCommonVuetifyConfig = () => {
         density: 'compact',
         color: 'primary',
       },
+      VNumberInput: {
+        variant: 'underlined',
+        density: 'compact',
+        color: 'primary',
+      },
       VSwitch: {
         color: 'success',
         density: 'compact',
