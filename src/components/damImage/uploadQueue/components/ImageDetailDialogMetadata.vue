@@ -25,13 +25,13 @@ import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import ARow from '@/components/ARow.vue'
 import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { isNull } from '@/utils/common'
+import { DamMediaType } from '@/types/MediaAware'
 
 const props = withDefaults(
   defineProps<{
     modelValue: boolean
     saving: boolean
     loading: boolean
-    type: DamAssetTypeType | null
     expand?: boolean
     showDamAuthors?: boolean
   }>(),
@@ -53,6 +53,15 @@ const { detail } = storeToRefs(imageMediaWidgetStore)
 const assetDetailStore = useAssetDetailStore()
 const { asset, authorConflicts } = storeToRefs(assetDetailStore)
 const { cachedExtSystemId } = useExtSystemIdForCached()
+
+const type = computed<DamAssetTypeType | null>(() => {
+  if (isMediaAware(detail.value)) {
+    return detail.value.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
+  } else if (isImageCreateUpdateAware(detail.value)) {
+    return DamAssetType.Image
+  }
+  return null
+})
 
 const imageSourceRequired = computed(() => {
   return !props.showDamAuthors
