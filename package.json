@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.286",
+  "version": "1.47.0-beta.287",
   "license": "Apache-2.0",
   "scripts": {
     "docs:dev": "vitepress dev docs",
@@ -63,7 +63,7 @@
     "@vitest/ui": "^3.2.4",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
-    "@vue/language-server": "^3.1.0",
+    "@vue/language-server": "^3.1.1",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "0.7.0",
     "@vuelidate/core": "^2.0.3",
@@ -101,7 +101,7 @@
     "vue-eslint-parser": "^10.2.0",
     "vue-i18n": "11.1.12",
     "vue-router": "4.5.1",
-    "vue-tsc": "3.1.0",
+    "vue-tsc": "3.1.1",
     "vuetify": "3.10.4",
     "webfontloader": "^1.6.28"
   },
