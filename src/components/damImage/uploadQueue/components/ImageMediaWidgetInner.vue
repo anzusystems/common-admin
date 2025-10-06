@@ -357,18 +357,18 @@ const reset = () => {
 }
 
 watch(
-  [() => props.initialImage, imageModel],
-  async ([newImage, newImageId]) => {
-    await reloadImage(newImage, newImageId)
-  },
-  { immediate: true }
-)
+  [() => props.initialImage, imageModel, mediaModel],
+  async ([newImage, newImageId, newMedia], [oldImage, oldImageId, oldMedia]) => {
+    if (JSON.stringify(newMedia) !== JSON.stringify(oldMedia)) {
+      reloadMedia(newMedia)
 
-watch(
-  mediaModel,
-  async (newMedia, oldMedia) => {
-    if (JSON.stringify(newMedia) === JSON.stringify(oldMedia)) return
-    reloadMedia(newMedia)
+      return
+    }
+    if (newImage !== oldImage || newImageId !== oldImageId) {
+      await reloadImage(newImage, newImageId)
+
+      return
+    }
   },
   { immediate: true }
 )
@@ -908,7 +908,6 @@ defineExpose({
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"
-      :type="type"
       @edit-asset="onEditAsset"
       @on-confirm="onMetadataDialogConfirm"
       @on-close="onMetadataDialogClose"
