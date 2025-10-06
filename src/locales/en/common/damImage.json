@@ -44,7 +44,7 @@
       "notPlayable": "Media content is not playable on the website yet. Check the distribution."
     },
     "button": {
-      "remove": "Edit medium",
+      "remove": "Remove media",
       "editInDam": "Edit in DAM"
     }
   },
