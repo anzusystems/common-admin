@@ -359,15 +359,19 @@ const reset = () => {
 watch(
   [() => props.initialImage, imageModel, mediaModel],
   async ([newImage, newImageId, newMedia], [oldImage, oldImageId, oldMedia]) => {
-    if (JSON.stringify(newMedia) !== JSON.stringify(oldMedia)) {
-      reloadMedia(newMedia)
 
+    if (!isNull(newMedia) && JSON.stringify(newMedia) !== JSON.stringify(oldMedia)) {
+      reloadMedia(newMedia)
       return
     }
+
     if (newImage !== oldImage || newImageId !== oldImageId) {
       await reloadImage(newImage, newImageId)
-
       return
+    }
+
+    if (isNull(newMedia) && !isNull(oldMedia)) {
+      reloadMedia(null)
     }
   },
   { immediate: true }
