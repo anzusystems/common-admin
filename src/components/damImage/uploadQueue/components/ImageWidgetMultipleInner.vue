@@ -113,7 +113,9 @@ const { images, maxPosition } = storeToRefs(imageStore)
 const fetchImagesOnLoad = async () => {
   try {
     imagesLoading.value = true
-    const imagesRes = await fetchImageListByIds(imageClient, props.modelValue)
+    const imagesRes = (await fetchImageListByIds(imageClient, props.modelValue)).sort(
+      (a, b) => (a.position ?? 0) - (b.position ?? 0)
+    )
     const groupedIds: IdsGroupedByLicences = new Map()
     imagesRes.forEach((image) => {
       const group = groupedIds.get(image.dam.licenceId)

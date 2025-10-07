@@ -48,12 +48,14 @@ watch(
   async ([newImages, newImageIds]) => {
     resImages.value = []
     if (newImages && newImages.length > 0) {
-      resImages.value = cloneDeep(newImages)
+      resImages.value = cloneDeep(newImages).sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
       return
     }
     if (newImageIds && newImageIds.length > 0) {
       try {
-        resImages.value = await fetchImageListByIds(imageClient, newImageIds)
+        resImages.value = (await fetchImageListByIds(imageClient, newImageIds)).sort(
+          (a, b) => (a.position ?? 0) - (b.position ?? 0)
+        )
       } catch (error) {
         showErrorsDefault(error)
       }
