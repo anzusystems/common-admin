@@ -24,6 +24,8 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
+        env:
+          SKIP_PLAYWRIGHT_INSTALL: true
 
       - name: Run Yarn Build
         run: yarn lib:build

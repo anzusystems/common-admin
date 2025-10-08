@@ -33,6 +33,8 @@ jobs:
       - name: Install dependencies
         if: steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
         run: yarn install --immutable
+        env:
+          SKIP_PLAYWRIGHT_INSTALL: true
 
       - name: Run Yarn Build
         if: steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')

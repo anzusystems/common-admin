@@ -21,7 +21,7 @@
   "version": "1.47.0-beta.289",
   "license": "Apache-2.0",
   "scripts": {
-    "postinstall": "playwright install chromium",
+    "postinstall": "node -e \"if (process.env.SKIP_PLAYWRIGHT_INSTALL !== 'true') { require('child_process').execSync('playwright install chromium --with-deps', { stdio: 'inherit' }) }\"",
     "docs:dev": "vitepress dev docs",
     "docs:build-only": "vitepress build docs",
     "docs:build": "yarn build ; yarn docs:build-only",
