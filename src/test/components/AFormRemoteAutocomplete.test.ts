@@ -318,13 +318,18 @@ describe('AFormRemoteAutocomplete', () => {
     const wrapper = createWrapper({
       fetchItemsByIds: mockFetchItemsByIdsForTryLoad,
       prefetch: 'mounted',
-      tryLoadModelValue: '2', // This ID exists in mockItems
     })
 
     await waitForAsync()
 
+    // Call the exposed method instead of using prop
+    const result = await wrapper.vm.tryLoadModelValue('2')
+
     // Verify fetchItemsByIds was called with the tryLoadModelValue
     expect(mockFetchItemsByIdsForTryLoad).toHaveBeenCalledWith(['2'])
+
+    // Verify the method returned true (item found)
+    expect(result).toBe(true)
 
     // Verify the tryLoadModelValue was set as modelValue
     expect(wrapper.vm.modelValue).toBe('2')
@@ -338,13 +343,18 @@ describe('AFormRemoteAutocomplete', () => {
     const wrapper = createWrapper({
       fetchItemsByIds: mockFetchItemsByIdsForTryLoad,
       prefetch: 'mounted',
-      tryLoadModelValue: '999', // This ID does NOT exist in mockItems
     })
 
     await waitForAsync()
 
+    // Call the exposed method instead of using prop
+    const result = await wrapper.vm.tryLoadModelValue('999') // This ID does NOT exist in mockItems
+
     // Verify fetchItemsByIds was called with the tryLoadModelValue
     expect(mockFetchItemsByIdsForTryLoad).toHaveBeenCalledWith(['999'])
+
+    // Verify the method returned false (item not found)
+    expect(result).toBe(false)
 
     // Verify the modelValue remains null
     expect(wrapper.vm.modelValue).toBe(null)

@@ -48,7 +48,6 @@ const props = withDefaults(
     prefetch?: 'hover' | 'focus' | 'mounted' | false
     minSearchChars?: number
     minSearchText?: string | undefined
-    tryLoadModelValue?: ModelValueType // only works when prefetch is set to 'mounted'
   }>(),
   {
     label: undefined,
@@ -69,7 +68,6 @@ const props = withDefaults(
     prefetch: false,
     minSearchChars: 2,
     minSearchText: undefined,
-    tryLoadModelValue: undefined,
   }
 )
 const emit = defineEmits<{
@@ -240,7 +238,7 @@ const loadListItems = async (ids: T[] | T) => {
   }
 }
 
-const tryLoadInitialValue = async (tryLoadValue: ModelValueType) => {
+const tryLoadModelValue = async (tryLoadValue: ModelValueType, prefetch = false) => {
   const idsToFetch = isArray(tryLoadValue) ? tryLoadValue : [tryLoadValue]
   loadingLocal.value = true
 
@@ -249,15 +247,25 @@ const tryLoadInitialValue = async (tryLoadValue: ModelValueType) => {
     if (isArray(fetchedData) && fetchedData.length > 0) {
       selectedItemsCache.value = fetchedData
       if (props.multiple) {
-        modelValue.value = fetchedData.map((item) => item.value)
-      } else {
-        modelValue.value = fetchedData[0].value
+        const values = fetchedData.map((item) => item.value)
+        modelValue.value = values
+        if (prefetch) {
+          await tryAutoFetch('force', values)
+        }
+        loadingLocal.value = false
+        return true
       }
+      modelValue.value = fetchedData[0].value
+      if (prefetch) {
+        await tryAutoFetch('force', fetchedData[0].value)
+      }
+      loadingLocal.value = false
       return true
     }
-    return false
-  } finally {
     loadingLocal.value = false
+    return false
+  } catch (e) {
+    showErrorsDefault(e)
   }
 }
 
@@ -276,10 +284,11 @@ const apiSearch = async (query: string, requestCounter: number) => {
   }
 }
 
-const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted', newValue: ModelValueType) => {
-  if (props.prefetch === false || props.prefetch !== mode) return
+const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted' | 'force', newValue: ModelValueType) => {
   if (loadingLocal.value) return
-  if (prefetchCompleted.value) return
+  if (mode !== 'force') {
+    if (props.prefetch === false || props.prefetch !== mode || prefetchCompleted.value) return
+  }
 
   loadingLocal.value = true
   try {
@@ -362,21 +371,6 @@ watch(search, (newValue, oldValue) => {
   }
 })
 
-const checkFirstLoad = async (newValue: ModelValueType) => {
-  if (isEmpty(newValue) && props.prefetch === 'mounted' && isDefined(props.tryLoadModelValue)) {
-    try {
-      const success = await tryLoadInitialValue(props.tryLoadModelValue)
-      if (success) {
-        return
-      }
-    } catch (error) {
-      console.error('Error loading tryLoadModelValue:', error)
-    }
-  } else {
-    await tryAutoFetch('mounted', newValue)
-  }
-}
-
 const onAutocompleteModelUpdate = (newValue: ValueObjectOption<T> | readonly ValueObjectOption<T>[] | null) => {
   const cloned = cloneDeep(newValue) as ValueObjectOption<T> | ValueObjectOption<T>[] | null
   modelValueSelected.value = cloned
@@ -409,7 +403,7 @@ watch(
     if (newValue === oldValue) return
     if (isFirstLoad.value) {
       isFirstLoad.value = false
-      await checkFirstLoad(newValue)
+      await tryAutoFetch('mounted', newValue)
     }
     if (collabOptions.value.enabled && isFocused.value) {
       changeFieldData.value(newValue)
@@ -422,6 +416,10 @@ watch(
   },
   { immediate: true }
 )
+
+defineExpose({
+  tryLoadModelValue,
+})
 </script>
 
 <template>
