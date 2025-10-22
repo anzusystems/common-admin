@@ -205,11 +205,11 @@ __metadata:
     "@intlify/unplugin-vue-i18n": "npm:^11.0.1"
     "@kyvg/vue3-notification": "npm:^3.4.1"
     "@mdi/font": "npm:^7.4.47"
-    "@sentry/vue": "npm:^10.20.0"
+    "@sentry/vue": "npm:^10.21.0"
     "@shikijs/vitepress-twoslash": "npm:^3.13.0"
     "@stylistic/eslint-plugin": "npm:^5.5.0"
     "@tsconfig/node22": "npm:^22.0.2"
-    "@types/node": "npm:^22.18.11"
+    "@types/node": "npm:^22.18.12"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.8"
     "@types/webfontloader": "npm:^1.6.38"
@@ -247,7 +247,7 @@ __metadata:
     typescript: "npm:5.7.3"
     unplugin: "npm:2.3.10"
     uuid: "npm:^13.0.0"
-    vite: "npm:7.1.10"
+    vite: "npm:7.1.11"
     vite-plugin-dts: "npm:4.5.4"
     vite-plugin-vuetify: "npm:^2.1.2"
     vitepress: "npm:1.6.4"
@@ -257,7 +257,7 @@ __metadata:
     vue-i18n: "npm:11.1.12"
     vue-router: "npm:4.6.3"
     vue-tsc: "npm:3.1.1"
-    vuetify: "npm:3.10.5"
+    vuetify: "npm:3.10.6"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@sentry/vue": ^10.0.0
@@ -273,7 +273,7 @@ __metadata:
     vue: 3.5.22
     vue-i18n: 11.1.12
     vue-router: 4.6.3
-    vuetify: 3.10.5
+    vuetify: 3.10.6
   peerDependenciesMeta:
     "@sentry/vue":
       optional: true
@@ -1708,77 +1708,77 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry-internal/browser-utils@npm:10.20.0":
-  version: 10.20.0
-  resolution: "@sentry-internal/browser-utils@npm:10.20.0"
+"@sentry-internal/browser-utils@npm:10.21.0":
+  version: 10.21.0
+  resolution: "@sentry-internal/browser-utils@npm:10.21.0"
   dependencies:
-    "@sentry/core": "npm:10.20.0"
-  checksum: 10/28daf5ba680bc769432c834dc8c104fcd6c61285854ebbd993444f06fede5c72a139345145c0ac325cb6a125e9d4cc113e5f129e20696c9a55de0f0b684f7b71
+    "@sentry/core": "npm:10.21.0"
+  checksum: 10/2d744b7d3079012238252a0272d041360bdb3d8627b1778050bc601b202deb181164835294d0f0951d2f05f067c3cf276f3e88dc19ae5b6d269be49effd6ca21
   languageName: node
   linkType: hard
 
-"@sentry-internal/feedback@npm:10.20.0":
-  version: 10.20.0
-  resolution: "@sentry-internal/feedback@npm:10.20.0"
+"@sentry-internal/feedback@npm:10.21.0":
+  version: 10.21.0
+  resolution: "@sentry-internal/feedback@npm:10.21.0"
   dependencies:
-    "@sentry/core": "npm:10.20.0"
-  checksum: 10/7f8545b0c851128fd6547abef3b6409877b27f0e273f18746871b0a326ff543f06378ab6988376f1838ce04523bc71266faa81b30bc7937097a673956955bdd9
+    "@sentry/core": "npm:10.21.0"
+  checksum: 10/473ecec356059824d08b520504d7ae122c6e18f0c8c4d0d0df81ac9064b04f0d822e6310a12ea05c68eda7cdd38bb509e4b37903d7f09c45df8f730c9ce211a7
   languageName: node
   linkType: hard
 
-"@sentry-internal/replay-canvas@npm:10.20.0":
-  version: 10.20.0
-  resolution: "@sentry-internal/replay-canvas@npm:10.20.0"
+"@sentry-internal/replay-canvas@npm:10.21.0":
+  version: 10.21.0
+  resolution: "@sentry-internal/replay-canvas@npm:10.21.0"
   dependencies:
-    "@sentry-internal/replay": "npm:10.20.0"
-    "@sentry/core": "npm:10.20.0"
-  checksum: 10/f37a96a2c2d31f9507f704ec3933bf462da92787ed71ad596f77f338017eb99367c069018cd10f44133aad3359a2a976ef4242248401db0833d8341dbc67967b
+    "@sentry-internal/replay": "npm:10.21.0"
+    "@sentry/core": "npm:10.21.0"
+  checksum: 10/a298a3d71280667ebc6fef0e134171ea03a8dc7fbe6b6a282b7a46b76726325aebedcac5f7b78e223c0416c8f8b42be59abc231d3832394c38ee2119e9db0543
   languageName: node
   linkType: hard
 
-"@sentry-internal/replay@npm:10.20.0":
-  version: 10.20.0
-  resolution: "@sentry-internal/replay@npm:10.20.0"
+"@sentry-internal/replay@npm:10.21.0":
+  version: 10.21.0
+  resolution: "@sentry-internal/replay@npm:10.21.0"
   dependencies:
-    "@sentry-internal/browser-utils": "npm:10.20.0"
-    "@sentry/core": "npm:10.20.0"
-  checksum: 10/ae4340e013cc30932770af318637da4cf204ca861be22d7841f14ae0ad3039d3c70a34366eaf417fc08ec08afb4f23bdee5580b63429a8038503f981a995d0ca
+    "@sentry-internal/browser-utils": "npm:10.21.0"
+    "@sentry/core": "npm:10.21.0"
+  checksum: 10/5bcf12f26f071eaca024a9c498a4d8f19b49058f51bd8108c0b643ba2c6d8331af19e27c2b90e3f0d5ec14257e7a61e661818a2b33631b227db81f111d75fd2a
   languageName: node
   linkType: hard
 
-"@sentry/browser@npm:10.20.0":
-  version: 10.20.0
-  resolution: "@sentry/browser@npm:10.20.0"
+"@sentry/browser@npm:10.21.0":
+  version: 10.21.0
+  resolution: "@sentry/browser@npm:10.21.0"
   dependencies:
-    "@sentry-internal/browser-utils": "npm:10.20.0"
-    "@sentry-internal/feedback": "npm:10.20.0"
-    "@sentry-internal/replay": "npm:10.20.0"
-    "@sentry-internal/replay-canvas": "npm:10.20.0"
-    "@sentry/core": "npm:10.20.0"
-  checksum: 10/0b48d8d6529d22a24694d27fa7a78ad15197b50c0ef83e430c7e68aebb71fc531406d03266d8e7102d90d259db51b54d59cf3aca493b7482ff4cfd6d40bc3af2
+    "@sentry-internal/browser-utils": "npm:10.21.0"
+    "@sentry-internal/feedback": "npm:10.21.0"
+    "@sentry-internal/replay": "npm:10.21.0"
+    "@sentry-internal/replay-canvas": "npm:10.21.0"
+    "@sentry/core": "npm:10.21.0"
+  checksum: 10/3b33e7787e0e5a6c80465848cd3182cb991fe7ab91dd0666a02d4fa7b160d563b550695b795a990ae3008d03a57dcdcae9c2cd0317a3aa9564085ac33ffcdf9a
   languageName: node
   linkType: hard
 
-"@sentry/core@npm:10.20.0":
-  version: 10.20.0
-  resolution: "@sentry/core@npm:10.20.0"
-  checksum: 10/7c87a27bd8aedc25e4bf449a094b10d60c536485d099bb47efdbb2d5b7af5c87fbe55ede62cca9c4110a5a183c7d302e637af6344935699b992c8c56a3c83653
+"@sentry/core@npm:10.21.0":
+  version: 10.21.0
+  resolution: "@sentry/core@npm:10.21.0"
+  checksum: 10/5b7996841b0389f15b9245e40dd470b8d0c5727f99177d2facf8a47fa101f39c9368c610bea5a0886854f0d51d6f4d256292004d88709bcb1e524a4cf2b993eb
   languageName: node
   linkType: hard
 
-"@sentry/vue@npm:^10.20.0":
-  version: 10.20.0
-  resolution: "@sentry/vue@npm:10.20.0"
+"@sentry/vue@npm:^10.21.0":
+  version: 10.21.0
+  resolution: "@sentry/vue@npm:10.21.0"
   dependencies:
-    "@sentry/browser": "npm:10.20.0"
-    "@sentry/core": "npm:10.20.0"
+    "@sentry/browser": "npm:10.21.0"
+    "@sentry/core": "npm:10.21.0"
   peerDependencies:
     pinia: 2.x || 3.x
     vue: 2.x || 3.x
   peerDependenciesMeta:
     pinia:
       optional: true
-  checksum: 10/e8088d49f7cbf84bd4c258987da4209f74e7f97fa995cbed7c4fea7b16ff6d1b4e8c29c4f21f423e70d39b309dfb3770cc3574ae4a8304767a23445591415065
+  checksum: 10/b1969494641ce91c12d36f2bcb981fce3eefc78a04a586323715fd8793b6f42372a57a23c56f4af106d02de5e6f2ea0bfb50380fc0e0c5f539ef503bf5481bde
   languageName: node
   linkType: hard
 
@@ -2175,12 +2175,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^22.18.11":
-  version: 22.18.11
-  resolution: "@types/node@npm:22.18.11"
+"@types/node@npm:^22.18.12":
+  version: 22.18.12
+  resolution: "@types/node@npm:22.18.12"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10/787049231bf4655d57e6deb7e7be46da6b476f29f8184b470e49ce7db45acfd0ad106b67c4f4b09b77f205c83b6b0a0b3d6a69ba17c28a155d3ec4a608eb332d
+  checksum: 10/41b8853302deac6895aa978193fcab53bf8d1f6f5df5fad38e2a33c2c853c3689e905c9dde373e45bb87273b2690e5ac2d6f40809fe72f45264952ba3ae3b196
   languageName: node
   linkType: hard
 
@@ -8930,9 +8930,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:7.1.10, vite@npm:^5.0.0 || ^6.0.0 || ^7.0.0-0":
-  version: 7.1.10
-  resolution: "vite@npm:7.1.10"
+"vite@npm:7.1.11, vite@npm:^5.0.0 || ^6.0.0 || ^7.0.0-0":
+  version: 7.1.11
+  resolution: "vite@npm:7.1.11"
   dependencies:
     esbuild: "npm:^0.25.0"
     fdir: "npm:^6.5.0"
@@ -8981,7 +8981,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10/34482c3698a6e10986036caa91c0114fc59f5a4bdda571d19b863a44a8b231dda09b0e3c63eb459e3b27ce453e695bce476f504b160451706563ce97e841ac5a
+  checksum: 10/b75ce7a38beeba7800751938df4fe2638cfb77509647329ac824332af51831eaed52ab0a0bae1d9162ac41ef59fff1c754e0acf7e1470dfa7d3da51fc3bf0985
   languageName: node
   linkType: hard
 
@@ -9442,9 +9442,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.10.5":
-  version: 3.10.5
-  resolution: "vuetify@npm:3.10.5"
+"vuetify@npm:3.10.6":
+  version: 3.10.6
+  resolution: "vuetify@npm:3.10.6"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=2.1.0"
@@ -9457,7 +9457,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/ec2747f1e1b134ff6dd86e4d4055b718f01249e1aa56c65db03ad19d98dac7f4f980f165360f5a3bd7c886fa0e1997fbabb2795fe415c4c07d2aee029a83458a
+  checksum: 10/4e28a5a3f9bd719e8f1712fd8e542aed697fa0275e0bad784426ce195f3ac4bf8adb52f2a91cb59994f0f2ceb1164a8da296b619cb9bc455a8314cad60acd762
   languageName: node
   linkType: hard
 
