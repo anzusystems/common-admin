@@ -245,6 +245,7 @@ function sidebarEditor() {
         { text: 'instagram_reel', link: '/editor/scraper/instagram_reel/' },
         { text: 'jw_video', link: '/editor/scraper/jw_video/' },
         { text: 'knightlab_juxtapose', link: '/editor/scraper/knightlab_juxtapose/' },
+        { text: 'omny_clip', link: '/editor/scraper/omny_clip/' },
         { text: 'pinterest_pin', link: '/editor/scraper/pinterest_pin/' },
         { text: 'podbean_episode', link: '/editor/scraper/podbean_episode/' },
         { text: 'scribd_document', link: '/editor/scraper/scribd_document/' },

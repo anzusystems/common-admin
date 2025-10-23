@@ -32,6 +32,7 @@
 - [instagram_reel](/editor/scraper/instagram_reel/)
 - [jw_video](/editor/scraper/jw_video/)
 - [knightlab_juxtapose](/editor/scraper/knightlab_juxtapose/)
+- [omny_clip](/editor/scraper/omny_clip/)
 - [pinterest_pin](/editor/scraper/pinterest_pin/)
 - [podbean_episode](/editor/scraper/podbean_episode/)
 - [scribd_document](/editor/scraper/scribd_document/)
