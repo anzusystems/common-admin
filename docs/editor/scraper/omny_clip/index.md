@@ -19,8 +19,8 @@ https://omny.fm/shows/gertie-s-law/the-story-behind-gerties-law
 ```ts twoslash
 interface Params {
   id: string
-  slug string
-  programSlug string
+  slug: string
+  programSlug: string
   height?: number
 }
 ```
