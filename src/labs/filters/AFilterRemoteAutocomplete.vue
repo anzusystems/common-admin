@@ -224,11 +224,14 @@ const onClickClear = async () => {
 watchDebounced(
   search,
   (newValue, oldValue) => {
-    if (newValue.length < props.minSearchChars) return
-    if (newValue !== oldValue) {
-      apiRequestCounter.value++
-      apiSearch(newValue, apiRequestCounter.value)
+    if (newValue === oldValue) return
+    if (newValue.length > 0 && newValue.length < props.minSearchChars) return
+    if (newValue.length === 0 && props.prefetch === false) {
+      fetchedItems.value = []
+      return
     }
+    apiRequestCounter.value++
+    apiSearch(newValue, apiRequestCounter.value)
   },
   { debounce: SEARCH_DEBOUNCE_MS }
 )

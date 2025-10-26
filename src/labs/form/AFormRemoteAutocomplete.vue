@@ -355,12 +355,15 @@ const onChipCloseClick = (closedItem: ValueObjectOption<T>) => {
 watchDebounced(
   search,
   (newValue, oldValue) => {
-    if (newValue.length < props.minSearchChars) return
-    if (newValue !== oldValue) {
-      apiRequestCounter.value++
-      apiSearch(newValue, apiRequestCounter.value)
-      emit('searchChangeDebounced', newValue)
+    if (newValue === oldValue) return
+    if (newValue.length > 0 && newValue.length < props.minSearchChars) return
+    if (newValue.length === 0 && props.prefetch === false) {
+      fetchedItems.value = []
+      return
     }
+    apiRequestCounter.value++
+    apiSearch(newValue, apiRequestCounter.value)
+    emit('searchChangeDebounced', newValue)
   },
   { debounce: SEARCH_DEBOUNCE_MS }
 )
