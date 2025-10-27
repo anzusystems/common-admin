@@ -386,7 +386,6 @@ onMounted(() => {
                   :uploading-progress="uploadProgress"
                   :remaining-time="item.progress.remainingTime"
                   use-component
-                  cover
                   :aspect-ratio="IMAGE_ASPECT_RATIO"
                 />
                 <div
