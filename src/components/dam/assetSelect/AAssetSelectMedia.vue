@@ -15,7 +15,9 @@ import {
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
 } from '@/types/coreDam/AssetSelect'
-import { filterAllowedImageWidgetSelectConfigs } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
+import {
+  filterAllowedImageWidgetSelectConfigs
+} from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/composables/system/alerts'
 import type { IntegerId } from '@/types/common'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
@@ -57,6 +59,8 @@ const emit = defineEmits<{
 
 const modelValue = defineModel<boolean>({ default: false, required: false })
 const sortModel = defineModel<number>('sort', { default: 1, required: false })
+const ready = defineModel<boolean>('ready', { default: false, required: false })
+
 const loading = ref(false)
 const copyToLicence = ref(false)
 
@@ -220,32 +224,19 @@ watch(
 )
 
 onMounted(async () => {
+  ready.value = false
   loading.value = true
   selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
   loading.value = false
+  ready.value = true
 })
 
 onUnmounted(() => {
   selectConfigs.value = []
 })
 
-const open = async () => {
-  const maxWaitTime = 25000
-  const checkInterval = 200
-  const startTime = Date.now()
-
-  while (loading.value) {
-    if (Date.now() - startTime > maxWaitTime) {
-      console.warn('AAssetSelectMedia: Loading timeout exceeded')
-      break
-    }
-    await new Promise((resolve) => setTimeout(resolve, checkInterval))
-  }
-  onOpen()
-}
-
 defineExpose({
-  open,
+  open: onOpen,
 })
 </script>
 
