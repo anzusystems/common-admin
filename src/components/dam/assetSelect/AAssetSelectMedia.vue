@@ -229,8 +229,23 @@ onUnmounted(() => {
   selectConfigs.value = []
 })
 
+const open = async () => {
+  const maxWaitTime = 25000
+  const checkInterval = 200
+  const startTime = Date.now()
+
+  while (loading.value) {
+    if (Date.now() - startTime > maxWaitTime) {
+      console.warn('AAssetSelectMedia: Loading timeout exceeded')
+      break
+    }
+    await new Promise((resolve) => setTimeout(resolve, checkInterval))
+  }
+  onOpen()
+}
+
 defineExpose({
-  open: onOpen,
+  open,
 })
 </script>
 
