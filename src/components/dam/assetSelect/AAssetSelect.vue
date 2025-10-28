@@ -91,6 +91,7 @@ const { openSidebarLeft, sidebarLeft, sidebarRight } = useSidebar()
 const { showErrorT } = useAlerts()
 
 const onOpen = () => {
+  if (!ready.value) return
   let selectConfigLocal = cloneDeep(selectConfigs.value)
   if (!props.skipCurrentUserCheck) {
     selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
