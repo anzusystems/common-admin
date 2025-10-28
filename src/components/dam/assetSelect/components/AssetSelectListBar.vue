@@ -7,23 +7,24 @@ import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
-import type { DatatableOrderingOption, DatatableOrderingOptions } from '@/composables/system/datatableColumns'
+import {
+  type DatatableOrderingOption,
+  SORT_BY_SCORE_BEST,
+  SORT_BY_SCORE_DATE,
+  SortOrder,
+} from '@/composables/system/datatableColumns'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 
 const props = withDefaults(
   defineProps<{
     showTypes?: boolean
-    sortVariant?: 'default' | 'most-relevant'
     disableSort?: boolean
-    customSortOptions?: undefined | DatatableOrderingOptions
     preselectAssetType?: DamAssetTypeType | undefined
     preselectInPodcast?: boolean | null | undefined
   }>(),
   {
     showTypes: false,
-    sortVariant: 'most-relevant',
     disableSort: false,
-    customSortOptions: undefined,
     preselectAssetType: undefined,
     preselectInPodcast: undefined,
   }
@@ -73,6 +74,24 @@ const setFilterPodcast = () => {
   inPodcast.value = true
   emit('typeChange', { type: DamAssetType.Audio, inPodcast: true })
 }
+
+const customSortOptions = [
+  {
+    id: 3,
+    titleT: 'common.system.datatable.ordering.mostRelevant',
+    sortBy: { key: SORT_BY_SCORE_BEST, order: SortOrder.Desc },
+  },
+  {
+    id: 1,
+    titleT: 'common.system.datatable.ordering.mostRecent',
+    sortBy: { key: SORT_BY_SCORE_DATE, order: SortOrder.Desc },
+  },
+  {
+    id: 2,
+    titleT: 'common.system.datatable.ordering.oldest',
+    sortBy: { key: SORT_BY_SCORE_DATE, order: SortOrder.Asc },
+  },
+]
 
 onMounted(() => {
   if (props.preselectAssetType === DamAssetType.Audio && props.preselectInPodcast) {
@@ -193,7 +212,6 @@ onMounted(() => {
             <ADatatableOrdering
               v-if="!disableSort"
               v-model="sortModel"
-              :variant="sortVariant"
               :custom-options="customSortOptions"
               @sort-by-change="emit('sortByChange', $event)"
             />

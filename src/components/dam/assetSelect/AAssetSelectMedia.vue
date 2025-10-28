@@ -25,12 +25,7 @@ import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMet
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
-import {
-  type DatatableOrderingOption,
-  type DatatableOrderingOptions,
-  type DatatableSortBy,
-  SortOrder,
-} from '@/composables/system/datatableColumns'
+import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
 
 const props = withDefaults(
   defineProps<{
@@ -42,10 +37,6 @@ const props = withDefaults(
     configName?: string
     skipCurrentUserCheck?: boolean
     onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
-    sortVariant?: 'default' | 'most-relevant'
-    disableSort?: boolean
-    customSortOptions?: undefined | DatatableOrderingOptions
-    initialPaginationSort?: DatatableSortBy
     preselectAssetType?: DamAssetTypeType | undefined
     preselectInPodcast?: boolean | null | undefined
   }>(),
@@ -55,10 +46,6 @@ const props = withDefaults(
     configName: 'default',
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
-    sortVariant: 'most-relevant',
-    disableSort: false,
-    customSortOptions: undefined,
-    initialPaginationSort: () => ({ key: 'createdAt', order: SortOrder.Desc }),
     preselectAssetType: undefined,
     preselectInPodcast: undefined,
   }
@@ -233,9 +220,6 @@ watch(
 )
 
 onMounted(async () => {
-  if (props.initialPaginationSort) {
-    pagination.value.sortBy = { key: props.initialPaginationSort.key, order: props.initialPaginationSort.order }
-  }
   loading.value = true
   selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
   loading.value = false
@@ -281,9 +265,6 @@ defineExpose({
         </ADialogToolbar>
         <AssetSelectListBar
           v-model:sort="sortModel"
-          :sort-variant="sortVariant"
-          :disable-sort="disableSort"
-          :custom-sort-options="customSortOptions"
           show-types
           :preselect-asset-type="preselectAssetType"
           :preselect-in-podcast="preselectInPodcast"

@@ -17,11 +17,11 @@ import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/compo
 import { isUndefined } from '@/utils/common'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
-import { SORT_BY_SCORE } from '@/composables/system/datatableColumns'
+import { SORT_BY_SCORE_DATE } from '@/composables/system/datatableColumns'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { useDebounceFn } from '@vueuse/core'
 
-const { pagination } = usePagination(SORT_BY_SCORE)
+const { pagination } = usePagination(SORT_BY_SCORE_DATE)
 const detailLoading = ref(false)
 
 export function useAssetSelectActions(
