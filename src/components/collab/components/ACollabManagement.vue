@@ -26,11 +26,13 @@ const props = withDefaults(
     collabRoom: CollabRoom
     cachedUsers: CollabCachedUsersMap | Ref<CollabCachedUsersMap>
     isEdit?: boolean
+    isAllowedToPurgeRoom?: boolean
     addToCachedUsers?: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined
     fetchCachedUsers?: (() => Promisify<Promise<any>>) | undefined
   }>(),
   {
     isEdit: false,
+    isAllowedToPurgeRoom: false,
     addToCachedUsers: undefined,
     fetchCachedUsers: undefined,
   }
@@ -51,6 +53,7 @@ const {
   addApprovedRequestToTakeModerationListener,
   addRejectedRequestToTakeModerationListener,
   kickUserFromRoom,
+  purgeRoom,
   transferModeration,
   alertedOccupiedRooms,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -227,6 +230,10 @@ const transferModerationAction = (userId: CollabUserId) => {
 const kickUserAction = (userId: CollabUserId) => {
   kickUserFromRoom(userId)
   moderatorManagementDialog.value = false
+}
+
+const purgeRoomAction = () => {
+  purgeRoom()
 }
 
 const kickYourselfAction = () => {
@@ -421,6 +428,14 @@ const calculateWaitingSeconds = (timestamp: number) => {
     >
       {{ t('common.collab.button.kickYourself') }}
     </ABtnTertiary>
+    <ABtnIcon
+      v-if="isAllowedToPurgeRoom"
+      v-tooltip="t('common.collab.button.purgeCollabRoom')"
+      size="small"
+      variant="text"
+      icon="mdi-delete-sweep"
+      @click.stop="purgeRoomAction"
+    />
     <VDialog
       v-if="moderationRequest"
       v-model="approveRequestTakeModerationDialog"

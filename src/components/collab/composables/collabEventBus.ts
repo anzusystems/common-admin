@@ -48,6 +48,10 @@ export interface CollabKickedFromRoomEvent {
   room: CollabRoom
 }
 
+export interface CollabPurgeRoomEvent {
+  room: CollabRoom
+}
+
 export const collabRoomDataChangedEventBusKey: EventBusKey<CollabRoomDataChangedEvent> =
   Symbol('anzu:collabRoomDataChanged')
 
@@ -81,6 +85,9 @@ export const collabRequestToTakeModerationEventBusKey: EventBusKey<CollabRequest
 
 export const collabKickedFromRoomEventBusKey: EventBusKey<CollabKickedFromRoomEvent> =
   Symbol('anzu:collabKickedFromRoom')
+
+export const collabPurgeRoomEventBusKey: EventBusKey<CollabPurgeRoomEvent> =
+  Symbol('anzu:collabPurgeRoom')
 
 export function useCollabRoomDataChangeEventBus() {
   return useEventBus<CollabRoomDataChangedEvent, CollabFieldDataEnvelope>(collabRoomDataChangedEventBusKey)
@@ -126,6 +133,10 @@ export function useCollabRequestToTakeModerationEventBus() {
 
 export function useCollabKickedFromRoomEventBus() {
   return useEventBus<CollabKickedFromRoomEvent>(collabKickedFromRoomEventBusKey)
+}
+
+export function useCollabPurgeRoomEventBus() {
+  return useEventBus<CollabPurgeRoomEvent>(collabPurgeRoomEventBusKey)
 }
 
 export const CollabFieldLockType = {

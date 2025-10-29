@@ -25,6 +25,7 @@ export interface CollabRoomInfo {
   moderator: CollabUserIdNullable
   users: CollabUserId[]
   status: CollabStatusType
+  options: CollabRoomOptions
 }
 
 export interface CollabRoomsInfo extends Record<CollabRoom, CollabRoomInfo> {}
@@ -143,6 +144,7 @@ export type CollabRoomJoinStrategyType = (typeof CollabRoomJoinStrategy)[keyof t
 
 export interface CollabRoomOptions {
   joinStrategy?: CollabRoomJoinStrategyType
+  allowedSameUser?: boolean
   editors?: CollabFieldName[]
 }
 
@@ -213,6 +215,7 @@ export interface CollabClientToServerEvents {
   approveRequestToTakeModeration: (room: CollabRoom) => void
   rejectRequestToTakeModeration: (room: CollabRoom) => void
   kickUserFromRoom: (room: CollabRoom, userId: CollabUserId) => void
+  purgeRoom: (room: CollabRoom) => void
   transferModeration: (room: CollabRoom, userId: CollabUserId) => void
   fetchRoomsInfo: (rooms: CollabRoom[], callback: (data: CollabRoomsInfo) => void) => void
 }
@@ -232,7 +235,7 @@ export interface CollabServerToClientEvents {
   kickedFromRoom: (room: CollabRoom) => void
 }
 
-export interface CollabConfig {
+export interface CollabConfig extends CollabRoomOptions {
   room: CollabRoom
   joinStrategy: CollabRoomJoinStrategyType
   occupiedOrKickedRedirectToRoute: string

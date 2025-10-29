@@ -66,7 +66,7 @@ export function useCollabInit() {
       })
       collabSocket.value.on('collabRoomLocksChanged', (room: CollabRoom, locks: CollabRoomLocks) => {
         const locksEntries = Object.entries(locks)
-        if (!collabFieldLocksState.has(room)) {
+        if (!collabFieldLocksState.has(room) || Object.keys(locks).length === 0) {
           collabFieldLocksState.set(room, new Map(locksEntries))
         }
         for (const [field, lock] of locksEntries) {

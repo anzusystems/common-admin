@@ -343,13 +343,27 @@ export function useCollabRoom(
     collabSocket.value.emit('kickUserFromRoom', room, userId)
   }
 
+  const purgeRoom = () => {
+    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    collabSocket.value.emit('purgeRoom', room)
+  }
+
   const transferModeration = (userId: number) => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     collabSocket.value.emit('transferModeration', room, userId)
   }
 
+  const createDefaultCollabRoomInfo = (): CollabRoomInfo => ({
+    name: '',
+    status: CollabStatus.Inactive,
+    users: [],
+    moderator: null,
+    options: {},
+  })
+
   const fetchRoomInfo = async (room: CollabRoom): Promise<CollabRoomInfo> => {
-    const baseRoomInfo: CollabRoomInfo = { name: '', status: CollabStatus.Inactive, users: [], moderator: null }
+    const baseRoomInfo: CollabRoomInfo = createDefaultCollabRoomInfo()
+
     return new Promise((resolve) => {
       if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return resolve(baseRoomInfo)
       collabSocket.value?.timeout(500).emit('fetchRoomsInfo', [room], (error, response: CollabRoomsInfo) => {
@@ -365,7 +379,7 @@ export function useCollabRoom(
   }
 
   const collabRoomInfo = computed((): CollabRoomInfo => {
-    return collabRoomInfoState.get(room) ?? { name: room, moderator: null, users: [], status: CollabStatus.Inactive }
+    return collabRoomInfoState.get(room) ?? createDefaultCollabRoomInfo()
   })
 
   if (watchForNewUsers) {
@@ -405,6 +419,7 @@ export function useCollabRoom(
     addRejectedRequestToTakeModerationListener,
     enteredCollabRoom,
     kickUserFromRoom,
+    purgeRoom,
     transferModeration,
     addKickedFromRoomListener,
     addCollabStartingListener,
