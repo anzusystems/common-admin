@@ -29,7 +29,8 @@
     "reject": "Zamietnuť",
     "kickUser": "Vyhodiť z kolaborácie",
     "kickYourself": "Odísť z kolaborácie",
-    "transferModeration": "Presunúť moderovanie"
+    "transferModeration": "Presunúť moderovanie",
+    "purgeCollabRoom": "Premazať kolaboráciu a vyhodiť všetkých"
   },
   "moderator": "Moderátor",
   "users": "Používatelia"
