@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.299",
+  "version": "1.47.0-beta.300",
   "license": "Apache-2.0",
   "scripts": {
     "prepare": "node -e \"if (process.env.SKIP_PLAYWRIGHT_INSTALL !== 'true') { require('child_process').execSync('playwright install chromium --with-deps', { stdio: 'inherit' }) }\"",
@@ -49,19 +49,19 @@
   "devDependencies": {
     "@anzusystems/common-admin": "workspace:*",
     "@intlify/unplugin-vue-i18n": "^11.0.1",
-    "@kyvg/vue3-notification": "^3.4.1",
+    "@kyvg/vue3-notification": "^3.4.2",
     "@mdi/font": "^7.4.47",
     "@sentry/vue": "^10.22.0",
     "@shikijs/vitepress-twoslash": "^3.14.0",
     "@stylistic/eslint-plugin": "^5.5.0",
     "@tsconfig/node22": "^22.0.2",
-    "@types/node": "^22.18.12",
+    "@types/node": "^22.18.13",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.9",
     "@types/webfontloader": "^1.6.38",
     "@vitejs/plugin-vue": "^6.0.1",
-    "@vitest/browser": "^4.0.4",
-    "@vitest/ui": "^4.0.4",
+    "@vitest/browser": "^4.0.5",
+    "@vitest/ui": "^4.0.5",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/language-server": "^3.1.2",
@@ -71,7 +71,7 @@
     "@vuelidate/validators": "^2.0.4",
     "@vueuse/core": "^14.0.0",
     "@vueuse/integrations": "^14.0.0",
-    "axios": "1.13.0",
+    "axios": "1.13.1",
     "cropperjs": "^1.6.2",
     "dayjs": "1.11.18",
     "eslint": "9.38.0",
@@ -97,13 +97,13 @@
     "vite-plugin-dts": "4.5.4",
     "vite-plugin-vuetify": "^2.1.2",
     "vitepress": "1.6.4",
-    "vitest": "^4.0.4",
+    "vitest": "^4.0.5",
     "vue": "3.5.22",
     "vue-eslint-parser": "^10.2.0",
     "vue-i18n": "11.1.12",
     "vue-router": "4.6.3",
     "vue-tsc": "3.1.2",
-    "vuetify": "3.10.7",
+    "vuetify": "3.10.8",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -112,7 +112,7 @@
     "@vuelidate/validators": "2.0.4",
     "@vueuse/core": "14.0.0",
     "@vueuse/integrations": "14.0.0",
-    "axios": "1.13.0",
+    "axios": "1.13.1",
     "dayjs": "1.11.18",
     "pinia": "3.0.3",
     "socket.io-client": "4.8.1",
@@ -120,7 +120,7 @@
     "vue": "3.5.22",
     "vue-i18n": "11.1.12",
     "vue-router": "4.6.3",
-    "vuetify": "3.10.7"
+    "vuetify": "3.10.8"
   },
   "peerDependenciesMeta": {
     "@sentry/vue": {
