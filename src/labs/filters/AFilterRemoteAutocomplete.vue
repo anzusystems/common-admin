@@ -301,6 +301,10 @@ watch(
     }
     if (isEmpty(newValue)) {
       resetToEmptyState(newValue)
+      if (!isUndefined(oldValueFilterData)) {
+        apiRequestCounter.value++
+        await apiSearch('', apiRequestCounter.value)
+      }
       return
     }
     await loadListItems(newValue as T[] | T)
