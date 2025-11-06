@@ -25,6 +25,7 @@
   "moderatorManagement": "Manažment moderátora",
   "transferModeration": "Presunúť moderovanie",
   "button": {
+    "more": "Viac",
     "accept": "Prijať",
     "reject": "Zamietnuť",
     "kickUser": "Vyhodiť z kolaborácie",

@@ -428,14 +428,23 @@ const calculateWaitingSeconds = (timestamp: number) => {
     >
       {{ t('common.collab.button.kickYourself') }}
     </ABtnTertiary>
-    <ABtnIcon
-      v-if="isAllowedToPurgeRoom"
-      v-tooltip="t('common.collab.button.purgeCollabRoom')"
-      size="small"
-      variant="text"
-      icon="mdi-delete-sweep"
-      @click.stop="purgeRoomAction"
-    />
+    <VMenu v-if="isAllowedToPurgeRoom">
+      <template #activator="{ props: moreProps }">
+        <VBtn
+          v-tooltip="t('common.collab.button.more')"
+          variant="text"
+          size="small"
+          icon="mdi-dots-horizontal"
+          v-bind="moreProps"
+        />
+      </template>
+      <VList>
+        <VListItem
+          :title="t('common.collab.button.purgeCollabRoom')"
+          @click.stop="purgeRoomAction"
+        />
+      </VList>
+    </VMenu>
     <VDialog
       v-if="moderationRequest"
       v-model="approveRequestTakeModerationDialog"

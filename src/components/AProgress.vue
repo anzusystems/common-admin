@@ -1,4 +1,12 @@
 <script lang="ts" setup>
+withDefaults(
+  defineProps<{
+    size?: 'small' | 'x-small' | 'default'
+  }>(),
+  {
+    size: 'x-small',
+  }
+)
 </script>
 
 <template>
@@ -6,7 +14,7 @@
     class="w-100 d-flex align-center justify-center"
   >
     <VProgressCircular
-      size="x-small"
+      :size="size"
       indeterminate
     />
   </div>
