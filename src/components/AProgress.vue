@@ -5,6 +5,9 @@
   <div
     class="w-100 d-flex align-center justify-center"
   >
-    <VProgressCircular indeterminate />
+    <VProgressCircular
+      size="x-small"
+      indeterminate
+    />
   </div>
 </template>
