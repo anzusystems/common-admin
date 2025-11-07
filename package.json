@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.302",
+  "version": "1.47.0-beta.303",
   "license": "Apache-2.0",
   "scripts": {
     "prepare": "node -e \"if (process.env.SKIP_PLAYWRIGHT_INSTALL !== 'true') { require('child_process').execSync('playwright install chromium --with-deps', { stdio: 'inherit' }) }\"",
@@ -98,7 +98,7 @@
     "vite-plugin-vuetify": "^2.1.2",
     "vitepress": "1.6.4",
     "vitest": "^4.0.7",
-    "vue": "3.5.23",
+    "vue": "3.5.22",
     "vue-eslint-parser": "^10.2.0",
     "vue-i18n": "11.1.12",
     "vue-router": "4.6.3",
@@ -117,7 +117,7 @@
     "pinia": "3.0.4",
     "socket.io-client": "4.8.1",
     "unplugin": "2.3.10",
-    "vue": "3.5.23",
+    "vue": "3.5.22",
     "vue-i18n": "11.1.12",
     "vue-router": "4.6.3",
     "vuetify": "3.10.9"
