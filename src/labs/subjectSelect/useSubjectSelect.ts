@@ -112,7 +112,7 @@ export function useSubjectSelect<TItem>(
   const onRowClick = (event: Event) => {
     const eventTarget = event.target as HTMLElement | null
     if (!eventTarget) return
-    const parent = eventTarget.parentElement
+    const parent = eventTarget.closest('.v-data-table__tr')
     if (!parent || !parent.classList.contains('v-data-table__tr')) return
     const firstTd = parent.firstElementChild
     if (!firstTd || !firstTd.classList.contains('v-data-table__td')) return
