@@ -154,6 +154,10 @@ const showJoinCollaborationDialog = computed(() => {
   return !props.isEdit && alertedOccupiedRooms.value.has(props.collabRoom) && requestToJoinAccepted.value === null
 })
 
+const collabUsers = computed(() => {
+  return collabRoomInfo.value.users.filter((user) => user !== collabRoomInfo.value.moderator)
+})
+
 const requestToJoinCollabTimerDone = (userId: number) => {
   approveRequestsToCollab.value = approveRequestsToCollab.value.filter((request) => request.userId !== userId)
   selectedIdsToCollab.value = selectedIdsToCollab.value.filter((id) => id !== userId)
@@ -260,13 +264,14 @@ const calculateWaitingSeconds = (timestamp: number) => {
       vertical
     />
     <ACollabLockedByUser
-      v-for="userId in collabRoomInfo.users.filter((user) => user !== collabRoomInfo.moderator)"
+      v-for="userId in collabUsers"
       :id="userId"
       :key="userId"
       :users="cachedUsers"
       class="mx-1"
     />
     <VDivider
+      v-if="collabUsers.length > 0"
       class="ml-1 mr-2"
       style="height: 16px"
       vertical
