@@ -69,7 +69,9 @@ export function useSubjectSelect<TItem>(
 
   const onRowClick = (event: Event) => {
     const eventTarget = event.target as HTMLElement | null
-    if (!eventTarget) return
+    if (!eventTarget || (eventTarget.tagName === 'INPUT' && (eventTarget as HTMLInputElement).type === 'checkbox')) {
+      return
+    }
     const parent = eventTarget.closest('.v-data-table__tr')
     if (!parent || !parent.classList.contains('v-data-table__tr')) return
     const firstTd = parent.firstElementChild
