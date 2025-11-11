@@ -100,7 +100,7 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
           if (!collabFieldLocksState.has(room)) {
             collabFieldLocksState.set(room, new Map())
           }
-          const locks = new Map(Object.entries(response.locks))
+          const locks = new Map(response.locks ? Object.entries(response.locks) : [])
           for (const [field, lock] of locks.entries()) {
             collabFieldLocksState.get(room)?.set(field, lock)
           }
@@ -141,8 +141,10 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
           if (!collabFieldLocksState.has(room)) {
             collabFieldLocksState.set(room, new Map())
           }
-          for (const field of Object.keys(response.locks)) {
-            collabFieldLocksState.get(room)?.delete(field)
+          if (response.locks) {
+            for (const field of Object.keys(response.locks)) {
+              collabFieldLocksState.get(room)?.delete(field)
+            }
           }
 
           return void fieldLockStatusEventBus.emit(

@@ -99,7 +99,7 @@ export type CollabChangeRoomLockStatusType =
   (typeof CollabChangeRoomLockStatus)[keyof typeof CollabChangeRoomLockStatus]
 
 export interface CollabRoomLocksInfoCallback {
-  locks: CollabRoomLocks
+  locks: CollabRoomLocks | undefined | null
 }
 
 interface CollabChangeRoomLocksInfoCallback {
@@ -110,7 +110,7 @@ export interface CollabSuccessChangeRoomLockCallback
   extends CollabChangeRoomLocksInfoCallback,
     CollabRoomLocksInfoCallback {
   status: typeof CollabChangeRoomLockStatus.Ok
-  locks: CollabRoomLocks
+  locks: CollabRoomLocks | undefined | null
 }
 
 export interface CollabFailedChangeRoomLockCallback extends CollabChangeRoomLocksInfoCallback {
