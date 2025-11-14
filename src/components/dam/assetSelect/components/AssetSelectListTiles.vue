@@ -68,6 +68,7 @@ $bg-color-actions-dark: #1a1a1a;
     position: relative;
     overflow: hidden;
     min-width: 200px;
+    min-height: 260px;
 
     &-card {
       border-radius: 5px;
@@ -112,9 +113,13 @@ $bg-color-actions-dark: #1a1a1a;
 
   &--thumbnail {
     display: grid;
-    grid-template-columns: repeat(6, auto);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    width: 100%;
 
     .#{$class-name-root}__item {
+      min-width: unset;
+      max-width: unset;
+
       img:not(.img-svg) {
         object-fit: contain;
         padding-left: 6px;

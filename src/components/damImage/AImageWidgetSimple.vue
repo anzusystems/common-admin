@@ -115,6 +115,7 @@ watch(
     :width="width"
     :height="height"
     cover
+    loading="lazy"
     max-width="100%"
     class="disable-radius"
     :class="widgetClass"

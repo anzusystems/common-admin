@@ -85,6 +85,7 @@ const showIconComputed = computed(() => {
       :width="width"
       :height="height"
       alt=""
+      loading="lazy"
       :style="'background-color:' + backgroundColor"
       @onerror="onError"
     >
