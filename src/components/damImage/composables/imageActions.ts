@@ -7,6 +7,7 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
     image: ImageAware | ImageCreateUpdateAware,
     width = config.imageWidth,
     height = config.imageHeight,
+    random = true
   ) => {
     return (
       config.previewDomain +
@@ -17,20 +18,22 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
       (image.dam.regionPosition > 0 ? '-c' + image.dam.regionPosition : '') +
       '/' +
       image.dam.damId +
-      '.jpg'
+      '.jpg' +
+      (random ? '?random=' + Date.now() : '')
     )
   }
 
-  const widgetImageToDamImageOriginalUrl = (image: ImageAware | ImageCreateUpdateAware) => {
+  const widgetImageToDamImageOriginalUrl = (image: ImageAware | ImageCreateUpdateAware, random = true) => {
     return (
-      config.previewDomain + '/image/original/' + image.dam.damId + '.jpg'
+      config.previewDomain + '/image/original/' + image.dam.damId + '.jpg' + (random ? '?random=' + Date.now() : '')
     )
   }
 
   const damImageIdToDamImageUrl = (
     imageId: DocId,
     width = config.imageWidth,
-    height = config.imageHeight
+    height = config.imageHeight,
+    random = true
   ) => {
     return (
       config.previewDomain +
@@ -40,12 +43,13 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
       height +
       '/' +
       imageId +
-      '.jpg'
+      '.jpg' +
+      (random ? '?random=' + Date.now() : '')
     )
   }
 
-  const damImageIdToDamImageOriginalUrl = (imageId: DocId) => {
-    return config.previewDomain + '/image/original/' + imageId + '.jpg'
+  const damImageIdToDamImageOriginalUrl = (imageId: DocId, random = true) => {
+    return config.previewDomain + '/image/original/' + imageId + '.jpg' + (random ? '?random=' + Date.now() : '')
   }
 
   return {
