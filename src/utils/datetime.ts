@@ -55,8 +55,8 @@ export const dateModifyMinutes = (minutes = 0, date: null | Date = null): Date =
   return date
 }
 
-export const dateToUtc = (date: dayjs.ConfigType) => {
-  return dayjs(date).utc().format('YYYY-MM-DDTHH:mm:ss') + SUFFIX
+export const dateToUtc = (date: dayjs.ConfigType, suffix = SUFFIX) => {
+  return dayjs(date).utc().format('YYYY-MM-DDTHH:mm:ss') + suffix
 }
 
 export const yearNow = () => {
