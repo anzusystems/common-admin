@@ -23,6 +23,7 @@ import { useCollabState } from '@/components/collab/composables/collabState'
 import { useAlerts } from '@/composables/system/alerts'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useSentry } from '@/services/sentry'
+import { isNull } from '@/utils/common'
 
 export function useCollabInit() {
   const { collabOptions } = useCommonAdminCollabOptions()
@@ -64,17 +65,19 @@ export function useCollabInit() {
           console.error('error', error)
         }
       })
-      collabSocket.value.on('collabRoomLocksChanged', (room: CollabRoom, locks: CollabRoomLocks) => {
-        const locksEntries = Object.entries(locks)
-        if (!collabFieldLocksState.has(room) || Object.keys(locks).length === 0) {
-          collabFieldLocksState.set(room, new Map(locksEntries))
-        }
-        for (const [field, lock] of locksEntries) {
-          if (!lock) {
-            collabFieldLocksState.get(room)?.delete(field)
-            continue
+      collabSocket.value.on('collabRoomLocksChanged', (room: CollabRoom, locks: CollabRoomLocks | null) => {
+        if (!isNull(locks)) {
+          const locksEntries = Object.entries(locks)
+          if (!collabFieldLocksState.has(room) || Object.keys(locks).length === 0) {
+            collabFieldLocksState.set(room, new Map(locksEntries))
           }
-          collabFieldLocksState.get(room)?.set(field, lock)
+          for (const [field, lock] of locksEntries) {
+            if (!lock) {
+              collabFieldLocksState.get(room)?.delete(field)
+              continue
+            }
+            collabFieldLocksState.get(room)?.set(field, lock)
+          }
         }
       })
       collabSocket.value.on('collabRoomDataChanged', (room: CollabRoom, data: CollabRoomData) => {
