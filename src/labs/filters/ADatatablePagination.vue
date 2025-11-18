@@ -3,6 +3,7 @@ import { computed, inject, watch } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
+import { useThrottleFn } from '@vueuse/core'
 
 withDefaults(
   defineProps<{
@@ -83,21 +84,21 @@ watch(
   }
 )
 
-const onClickFirst = () => {
+const onClickFirst = useThrottleFn(() => {
   pagination.value.page = 1
-}
+}, 300)
 
-const onClickLast = () => {
+const onClickLast = useThrottleFn(() => {
   pagination.value.page = lastPage.value
-}
+}, 300)
 
-const onClickPrev = () => {
+const onClickPrev = useThrottleFn(() => {
   pagination.value.page = pagination.value.page - 1
-}
+}, 300)
 
-const onClickNext = () => {
+const onClickNext = useThrottleFn(() => {
   pagination.value.page = pagination.value.page + 1
-}
+}, 300)
 </script>
 
 <template>
