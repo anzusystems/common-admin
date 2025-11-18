@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.315",
+  "version": "1.47.0-beta.316",
   "license": "Apache-2.0",
   "scripts": {
     "prepare": "node -e \"if (process.env.SKIP_PLAYWRIGHT_INSTALL !== 'true') { require('child_process').execSync('playwright install chromium --with-deps', { stdio: 'inherit' }) }\"",
@@ -53,18 +53,18 @@
     "@mdi/font": "^7.4.47",
     "@sentry/vue": "^10.25.0",
     "@shikijs/vitepress-twoslash": "^3.15.0",
-    "@stylistic/eslint-plugin": "^5.5.0",
-    "@tsconfig/node22": "^22.0.2",
+    "@stylistic/eslint-plugin": "^5.6.0",
+    "@tsconfig/node22": "^22.0.5",
     "@types/node": "^22.19.1",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.9",
     "@types/webfontloader": "^1.6.38",
     "@vitejs/plugin-vue": "^6.0.1",
-    "@vitest/browser": "^4.0.9",
-    "@vitest/ui": "^4.0.9",
+    "@vitest/browser": "^4.0.10",
+    "@vitest/ui": "^4.0.10",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
-    "@vue/language-server": "^3.1.3",
+    "@vue/language-server": "^3.1.4",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "0.7.0",
     "@vuelidate/core": "^2.0.3",
@@ -84,7 +84,7 @@
     "postcss-prefix-selector": "^2.1.1",
     "prettier": "^3.6.2",
     "rusha": "^0.8.14",
-    "sass": "^1.94.0",
+    "sass": "^1.94.1",
     "socket.io-client": "4.8.1",
     "sortablejs": "^1.15.6",
     "stylelint": "16.25.0",
@@ -97,13 +97,13 @@
     "vite-plugin-dts": "4.5.4",
     "vite-plugin-vuetify": "^2.1.2",
     "vitepress": "1.6.4",
-    "vitest": "^4.0.9",
+    "vitest": "^4.0.10",
     "vue": "3.5.24",
     "vue-eslint-parser": "^10.2.0",
     "vue-i18n": "11.1.12",
     "vue-router": "4.6.3",
-    "vue-tsc": "3.1.3",
-    "vuetify": "3.10.9",
+    "vue-tsc": "3.1.4",
+    "vuetify": "3.10.11",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -120,7 +120,7 @@
     "vue": "3.5.24",
     "vue-i18n": "11.1.12",
     "vue-router": "4.6.3",
-    "vuetify": "3.10.9"
+    "vuetify": "3.10.11"
   },
   "peerDependenciesMeta": {
     "@sentry/vue": {

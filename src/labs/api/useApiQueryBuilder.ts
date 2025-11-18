@@ -18,7 +18,7 @@ export function useApiQueryBuilder() {
   }
 
   const querySetOffset = (page: number, limit: number): void => {
-    queryAdd('offset', page * limit - limit)
+    queryAdd('offset', Math.max(0, (page - 1) * limit))
   }
 
   const querySetOrder = (field: string | null, desc: boolean): void => {
