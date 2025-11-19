@@ -68,6 +68,7 @@ const removeItem = () => {
         <AImageWidgetSimple
           :model-value="image.id"
           :image="image"
+          disable-random
         />
         <VRow dense>
           <VCol class="d-flex justify-space-between mt-1">
