@@ -130,7 +130,7 @@ export function useApiQueryBuilder() {
   }
 
   const querySetFilters = (filterData: FilterData<any>, filterConfig: FilterConfig<any>): void => {
-    const isSearchApi = filterConfig.general.elastic
+    const isSimpleFilters = filterConfig.general.simpleFilters
     for (const filterName in filterData) {
       const filterFieldValue = filterData[filterName] as AllowedFilterValues
       const filterFieldConfig = filterConfig.fields[filterName]
@@ -152,7 +152,7 @@ export function useApiQueryBuilder() {
         }
         const filterFieldConfigRelated = filterConfig.fields[filterFieldConfig.related]
         const nameRelated = filterFieldConfigRelated.apiName || filterFieldConfig.related
-        if (isSearchApi) {
+        if (isSimpleFilters) {
           queryAdd(name, data.from)
           queryAdd(nameRelated, data.until)
           continue
@@ -167,7 +167,7 @@ export function useApiQueryBuilder() {
       if (isNull(value)) {
         continue
       }
-      if (isSearchApi) {
+      if (isSimpleFilters) {
         queryAdd(name, value)
         continue
       }

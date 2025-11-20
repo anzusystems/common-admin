@@ -84,7 +84,12 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
     elastic: false,
     system: undefined,
     subject: undefined,
+    simpleFilters: false,
     ...options,
+  }
+
+  if (defaultGlobalOptions.elastic) {
+    defaultGlobalOptions.simpleFilters = true
   }
 
   const filterConfig = reactive({
@@ -410,6 +415,7 @@ export interface GeneralFilterOptions {
   system?: string
   subject?: string
   elastic?: boolean
+  simpleFilters?: boolean
 }
 
 export interface FilerRenderOptions {
