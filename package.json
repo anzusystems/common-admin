@@ -61,6 +61,7 @@
     "@types/webfontloader": "^1.6.38",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vitest/browser": "^4.0.13",
+    "@vitest/browser-playwright": "^4.0.13",
     "@vitest/ui": "^4.0.13",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",

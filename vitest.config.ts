@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import path, { dirname } from 'path'
+import { playwright } from '@vitest/browser-playwright'
 
 const _dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -93,16 +94,16 @@ export default defineConfig({
     testTimeout: 30000,
     hookTimeout: 30000,
     retry: process.env.CI ? 2 : 1,
+    isolate: true,
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         {
           browser: 'chromium',
           headless: process.env.CI ? true : false, // Headless in CI, visible locally
         },
       ],
-      isolate: true,
     },
   },
 })

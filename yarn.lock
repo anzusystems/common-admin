@@ -215,6 +215,7 @@ __metadata:
     "@types/webfontloader": "npm:^1.6.38"
     "@vitejs/plugin-vue": "npm:^6.0.2"
     "@vitest/browser": "npm:^4.0.13"
+    "@vitest/browser-playwright": "npm:^4.0.13"
     "@vitest/ui": "npm:^4.0.13"
     "@vue/eslint-config-prettier": "npm:^10.2.0"
     "@vue/eslint-config-typescript": "npm:^14.6.0"
@@ -2406,7 +2407,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/browser@npm:^4.0.13":
+"@vitest/browser-playwright@npm:^4.0.13":
+  version: 4.0.13
+  resolution: "@vitest/browser-playwright@npm:4.0.13"
+  dependencies:
+    "@vitest/browser": "npm:4.0.13"
+    "@vitest/mocker": "npm:4.0.13"
+    tinyrainbow: "npm:^3.0.3"
+  peerDependencies:
+    playwright: "*"
+    vitest: 4.0.13
+  peerDependenciesMeta:
+    playwright:
+      optional: false
+  checksum: 10/13bb7659c4033a984d301ce49c4b9689f656eec1c211980ddda669d3144e1066ccdfd3b021ec47b40a7711968c387d499a2a32fb1bce6da317f4944a64a3014b
+  languageName: node
+  linkType: hard
+
+"@vitest/browser@npm:4.0.13, @vitest/browser@npm:^4.0.13":
   version: 4.0.13
   resolution: "@vitest/browser@npm:4.0.13"
   dependencies:
