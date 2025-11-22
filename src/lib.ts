@@ -143,6 +143,7 @@ import {
   stringTrimLength,
   stringUrlTemplateReplace,
   stringUrlTemplateReplaceVueRouter,
+  stringToBooleanExact,
 } from '@/utils/string'
 import { booleanToInteger } from '@/utils/boolean'
 import { isOneOf } from '@/utils/enum'
@@ -920,6 +921,7 @@ export {
   stringIsValidEmail,
   stringUrlTemplateReplace,
   stringUrlTemplateReplaceVueRouter,
+  stringToBooleanExact,
   // datetime
   DATETIME_MIN,
   DATETIME_MAX,
