@@ -178,14 +178,18 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   }
 
   async function queueItemUploadStart(item: UploadQueueItem, queueKey: UploadQueueKey) {
-    const { upload, uploadInit } = useUpload(item, (progress: number, speed: number, estimate: number) => {
-      setUploadSpeed(item, progress, speed, estimate)
-    })
+    const { upload, uploadInit, stopSpeedCheck } = useUpload(
+      item,
+      (progress: number, speed: number, estimate: number) => {
+        setUploadSpeed(item, progress, speed, estimate)
+      }
+    )
     try {
       await uploadInit()
       await upload()
       processUpload(queueKey)
     } catch (e) {
+      stopSpeedCheck()
       item.error.hasError = true
       item.status = UploadQueueItemStatus.Failed
       recalculateQueueCounts(queueKey)

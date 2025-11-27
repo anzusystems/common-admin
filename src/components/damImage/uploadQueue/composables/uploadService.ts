@@ -60,13 +60,18 @@ const handleValidationErrorMessage = (error: Error | any) => {
   return errorMessages.length > 0 ? errorMessages.join(NEW_LINE_MARK) : t('common.damImage.uploadErrors.unknownError')
 }
 
-const readFile = async (offset: number, size: number, file: File): Promise<{ data: string; offset: number }> => {
+const readFile = async (offset: number, size: number, file: File): Promise<{ data: ArrayBuffer; offset: number }> => {
   return new Promise((resolve, reject) => {
     const partial = file.slice(offset, offset + size)
     const reader = new FileReader()
     reader.onload = function (e) {
       if (e.target?.readyState === FileReader.DONE) {
-        resolve({ data: e.target.result as string, offset: offset })
+        const result = e.target.result
+        if (result instanceof ArrayBuffer) {
+          resolve({ data: result, offset: offset })
+        } else {
+          reject(new Error('FileReader result is not an ArrayBuffer'))
+        }
       }
     }
     reader.onerror = function (e) {
@@ -90,6 +95,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   let lastTimestamp = 0
   let endTimestamp = 0
   let lastLoaded = 0
+  let speedCheckTimerId: ReturnType<typeof setTimeout> | null = null
   const sha = rusha.createHash()
   const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize()
 
@@ -119,15 +125,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
         reject()
         return
       }
-      damUploadChunk(
-        damClient,
-        queueItem,
-        queueItem.fileId,
-        chunkFile as unknown as string, // todo check
-        chunkFile.size,
-        offset,
-        progressCallback
-      )
+      damUploadChunk(damClient, queueItem, queueItem.fileId, chunkFile, chunkFile.size, offset, progressCallback)
         .then((result) => {
           resolve(result)
         })
@@ -139,8 +137,12 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
   const processAndUploadChunk = async (offset: number): Promise<File> => {
     updateChunkSize(queueItem.progress.speed)
-    let arrayBuffer: { data: string; offset: number } = await readFile(offset, lastChunkSize.value, queueItem.file!)
-    let chunkFile = new File([arrayBuffer.data], queueItem.file!.name)
+    let arrayBuffer: { data: ArrayBuffer; offset: number } = await readFile(
+      offset,
+      lastChunkSize.value,
+      queueItem.file!
+    )
+    let chunkFile = new File([arrayBuffer.data], queueItem.file!.name, { type: queueItem.file!.type })
 
     queueItem.currentChunkIndex = offset
     const cancelToken = axios.CancelToken
@@ -156,6 +158,12 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
         return chunkFile
       } catch (error) {
+        // Check for 400 Bad Request error on last attempt
+        if (axios.isAxiosError(error) && error.response?.status === 400 && attempt >= CHUNK_MAX_RETRY) {
+          queueItem.error.message = 'Upload chunk validation failed. Please contact administrator.'
+          return Promise.reject(error)
+        }
+
         // in error recompute
         if (axiosErrorResponseHasValidationData(error as Error)) {
           attempt = CHUNK_MAX_RETRY
@@ -165,7 +173,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
         if (updateChunkSize(queueItem.progress.speed)) {
           arrayBuffer = await readFile(offset, lastChunkSize.value, queueItem.file!)
-          chunkFile = new File([arrayBuffer.data], queueItem.file!.name)
+          chunkFile = new File([arrayBuffer.data], queueItem.file!.name, { type: queueItem.file!.type })
         }
 
         await sleep(sleepTime)
@@ -186,13 +194,21 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       }
 
       if (endTimestamp === 0) {
-        setTimeout(function () {
+        speedCheckTimerId = setTimeout(function () {
           speedCheckRun()
         }, SPEED_CHECK_INTERVAL)
       }
     }
 
     speedCheckRun()
+  }
+
+  const stopSpeedCheck = () => {
+    if (speedCheckTimerId !== null) {
+      clearTimeout(speedCheckTimerId)
+      speedCheckTimerId = null
+    }
+    endTimestamp = Date.now() / 1000
   }
 
   const uploadInit = async () => {
@@ -237,10 +253,10 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   return {
     uploadInit,
     upload,
+    stopSpeedCheck,
   }
 }
 
 export const uploadStop = (cancelTokenSource: CancelTokenSource) => {
-  // todo stop speed check
   cancelTokenSource.cancel('axios request cancelled')
 }

@@ -36,7 +36,7 @@ export const damUploadChunk = (
   client: () => AxiosInstance,
   item: UploadQueueItem,
   imageId: DocId,
-  buffer: string,
+  buffer: Blob | File,
   size: number,
   offset: number,
   onUploadProgressCallback: any
