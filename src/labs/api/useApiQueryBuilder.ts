@@ -176,6 +176,7 @@ export function useApiQueryBuilder() {
   }
 
   return {
+    resolveTimeIntervalFilter,
     querySetLimit,
     querySetOffset,
     querySetOrder,
