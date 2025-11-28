@@ -1,6 +1,7 @@
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { ENTITY } from '@/components/damImage/uploadQueue/api/keywordApi'
+// eslint-disable-next-line deprecation/no-deprecated-imports
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 import { reactive } from 'vue'
 
