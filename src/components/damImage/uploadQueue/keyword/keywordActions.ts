@@ -4,10 +4,17 @@ import { isUndefined } from '@/utils/common'
 import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/labs/filters/pagination'
-import { fetchKeywordListByIds, useFetchKeywordList } from '@/components/damImage/uploadQueue/api/keywordApi'
+import type { Pagination as PaginationLegacy } from '@/types/Pagination'
+import {
+  fetchKeywordList,
+  fetchKeywordListByIds,
+  useFetchKeywordList,
+} from '@/components/damImage/uploadQueue/api/keywordApi'
 import type { IntegerId } from '@/types/common'
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
+// eslint-disable-next-line deprecation/no-deprecated-imports
+import type { FilterBag } from '@/types/Filter'
 
 export const useKeywordSelectActions = (extSystem: IntegerId) => {
   const { damClient } = useCommonAdminCoreDamOptions()
@@ -50,10 +57,26 @@ export const useKeywordSelectActions = (extSystem: IntegerId) => {
     return mapToValueObjects(await fetchKeywordListByIds(damClient, extSystem, ids))
   }
 
+  /**
+   * @deprecated
+   */
+  const fetchItemsLegacy = async (pagination: PaginationLegacy, filterBag: FilterBag) => {
+    return mapToValueObjects(await fetchKeywordList(damClient, extSystem, pagination, filterBag))
+  }
+
+  /**
+   * @deprecated
+   */
+  const fetchItemsMinimalLegacy = async (pagination: PaginationLegacy, filterBag: FilterBag) => {
+    return mapToMinimals(await fetchKeywordList(damClient, extSystem, pagination, filterBag))
+  }
+
   return {
     mapToValueObject,
     fetchItems,
     fetchItemsByIds,
     fetchItemsMinimal,
+    fetchItemsLegacy,
+    fetchItemsMinimalLegacy,
   }
 }

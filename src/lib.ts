@@ -516,23 +516,27 @@ import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRe
 import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
 import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
-import { useDamAssetLicenceInnerFilter } from '@/components/dam/user/AssetLicenceFilter'
-import { fetchDamAssetLicenceListByIds, useFetchDamAssetLicenceList } from '@/components/dam/user/assetLicenceApi'
+import { useDamAssetLicenceInnerFilter, useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
+import { fetchDamAssetLicenceListByIds, useFetchDamAssetLicenceList, fetchDamAssetLicenceList } from '@/components/dam/user/assetLicenceApi'
 import {
   fetchDamAssetLicenceGroupListByIds,
   useFetchDamAssetLicenceGroupList,
+  fetchDamAssetLicenceGroupList,
 } from '@/components/dam/user/assetLicenceGroupApi'
-import { fetchDamExtSystemListByIds, useFetchDamExtSystemList } from '@/components/dam/user/extSystemApi'
+import { fetchDamExtSystemListByIds, useFetchDamExtSystemList, fetchDamExtSystemList } from '@/components/dam/user/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
-import { fetchDamUser, fetchDamUserListByIds, updateDamUser, useFetchDamUserList } from '@/components/dam/user/userApi'
+import { fetchDamUser, fetchDamUserListByIds, updateDamUser, useFetchDamUserList, fetchDamUserList } from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
 import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/composables/system/breadcrumbs'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
+import DamAuthorFilterRemoteAutocompleteLegacy from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocompleteLegacy.vue'
 import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
+import DamKeywordFilterRemoteAutocompleteLegacy from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocompleteLegacy.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
+import DamUserFilterRemoteAutocompleteLegacy from '@/components/dam/user/DamUserFilterRemoteAutocompleteLegacy.vue'
 import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
@@ -649,8 +653,11 @@ export {
   DamAssetLicenceRemoteAutocomplete,
   DamAssetLicenceGroupRemoteAutocomplete,
   DamAuthorFilterRemoteAutocomplete,
+  DamAuthorFilterRemoteAutocompleteLegacy,
   DamKeywordFilterRemoteAutocomplete,
+  DamKeywordFilterRemoteAutocompleteLegacy,
   DamUserFilterRemoteAutocomplete,
+  DamUserFilterRemoteAutocompleteLegacy,
   DamAdminAssetLink,
 
   // VIEWS
@@ -691,6 +698,7 @@ export {
   useDamAuthorType,
   useDamDistributionServiceType,
   useDamAssetLicenceInnerFilter,
+  useDamAssetLicenceFilter,
   useImageActions,
   useCommonAdminImageOptions,
   defineAuth,
@@ -984,12 +992,16 @@ export {
   cropToRegion,
   fetchDamAssetLicenceListByIds,
   useFetchDamAssetLicenceList,
+  fetchDamAssetLicenceList,
   fetchDamAssetLicenceGroupListByIds,
   useFetchDamAssetLicenceGroupList,
+  fetchDamAssetLicenceGroupList,
   fetchDamExtSystemListByIds,
   useFetchDamExtSystemList,
+  fetchDamExtSystemList,
   fetchDamUserListByIds,
   useFetchDamUserList,
+  fetchDamUserList,
   updateDamUser,
   fetchDamUser,
   fetchAssetAndCheckForSingleUseByFileIds,

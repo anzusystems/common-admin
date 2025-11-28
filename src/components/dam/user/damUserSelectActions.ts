@@ -3,9 +3,12 @@ import type { DamUser } from '@/components/dam/user/DamUser'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { IntegerId } from '@/types/common'
 import type { Pagination } from '@/labs/filters/pagination'
-import { fetchDamUserListByIds, useFetchDamUserList } from '@/components/dam/user/userApi'
+import { fetchDamUserList, fetchDamUserListByIds, useFetchDamUserList } from '@/components/dam/user/userApi'
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
+// eslint-disable-next-line deprecation/no-deprecated-imports
+import type { FilterBag } from '@/types/Filter'
+import type { Pagination as PaginationLegacy } from '@/types/Pagination'
 
 export const useDamUserSelectAction = (client: () => AxiosInstance) => {
   const mapToValueObject = (user: DamUser): ValueObjectOption<IntegerId> => ({
@@ -27,9 +30,17 @@ export const useDamUserSelectAction = (client: () => AxiosInstance) => {
     return mapToValueObjects(await fetchDamUserListByIds(client, ids))
   }
 
+  /**
+   * @deprecated
+   */
+  const fetchItemsLegacy = async (pagination: PaginationLegacy, filterBag: FilterBag) => {
+    return mapToValueObjects(await fetchDamUserList(client, pagination, filterBag))
+  }
+
   return {
     mapToValueObject,
     fetchItems,
     fetchItemsByIds,
+    fetchItemsLegacy,
   }
 }
