@@ -11,7 +11,7 @@ import {
 } from '@/components/damImage/uploadQueue/composables/damConfigApi'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import type { IntegerId } from '@/types/common'
-import { DamAssetType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
+import { DamAssetType, type DamAssetTypeType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type {
   DamConfigLicenceExtSystemReturnType,
   DamExtSystemConfig,
@@ -129,31 +129,23 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     }
   }
 
-  function loadDamConfigAssetCustomFormElements(extSystemId: IntegerId) {
+  function loadDamConfigAssetCustomFormElements(
+    extSystemId: IntegerId,
+    types: DamAssetTypeType[] = [DamAssetType.Image, DamAssetType.Audio, DamAssetType.Video, DamAssetType.Document]
+  ) {
     return new Promise((resolve, reject) => {
       if (isUndefined(client)) {
         reject(false)
         return
       }
-      const promises = [
-        fetchAssetCustomFormElements(client, extSystemId, DamAssetType.Image),
-        fetchAssetCustomFormElements(client, extSystemId, DamAssetType.Audio),
-        fetchAssetCustomFormElements(client, extSystemId, DamAssetType.Video),
-        fetchAssetCustomFormElements(client, extSystemId, DamAssetType.Document),
-      ]
+      const promises = types.map((type) => fetchAssetCustomFormElements(client, extSystemId, type))
 
       Promise.all(promises)
         .then((responses) => {
-          if (
-            responses.length !== 4 ||
-            Object.keys(responses[0]).length < 1 ||
-            Object.keys(responses[1]).length < 1 ||
-            Object.keys(responses[2]).length < 1 ||
-            Object.keys(responses[3]).length < 1
-          ) {
+          if (responses.length !== types.length || responses.some((response) => Object.keys(response).length < 1)) {
             throw new Error('Unable to load asset custom form config. Incorrect response body.')
           }
-          setDamConfigAssetCustomFormElements(responses, extSystemId)
+          setDamConfigAssetCustomFormElements(responses, extSystemId, types)
           resolve(true)
         })
         .catch((err) => {
@@ -167,15 +159,23 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     responses: Awaited<{
       data: CustomDataFormElement[]
     }>[],
-    extSystemId: IntegerId
+    extSystemId: IntegerId,
+    types: DamAssetTypeType[]
   ) {
     try {
-      const config = {
-        image: responses[0].data,
-        audio: responses[1].data,
-        video: responses[2].data,
-        document: responses[3].data,
+      const existingConfig = damConfigStore.damConfigAssetCustomFormElements.get(extSystemId) || {
+        image: [],
+        audio: [],
+        video: [],
+        document: [],
       }
+
+      const config = { ...existingConfig }
+
+      types.forEach((type, index) => {
+        config[type] = responses[index].data
+      })
+
       damConfigStore.damConfigAssetCustomFormElements.set(extSystemId, config)
     } catch (err) {
       throw new Error('Unable to load asset custom form config. Incorrect fields in json.')
