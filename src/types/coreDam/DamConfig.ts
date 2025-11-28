@@ -52,6 +52,7 @@ export interface DamConfigLicenceExtSystemReturnType {
 }
 
 export interface DamExtSystemConfigItem {
+  enabled: boolean
   sizeLimit: number
   defaultFileVersion: string
   versions: Array<string>
