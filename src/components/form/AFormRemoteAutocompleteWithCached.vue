@@ -206,7 +206,9 @@ const onClickClear = () => {
 
 watchDebounced(
   search,
-  (newValue, oldValue) => {
+  (newValueBug, oldValueBug) => { // todo rollback fix when fixed on vuetify/vue use side
+    const newValue = newValueBug as unknown as string
+    const oldValue = oldValueBug as unknown as string | undefined
     if (newValue !== oldValue) {
       apiSearch(newValue)
       emit('searchChangeDebounced', newValue)
