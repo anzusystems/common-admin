@@ -27,16 +27,22 @@ const props = withDefaults(
     cachedUsers: CollabCachedUsersMap | Ref<CollabCachedUsersMap>
     isEdit?: boolean
     isAllowedToPurgeRoom?: boolean
+    approveRequestBlocked?: boolean
     addToCachedUsers?: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined
     fetchCachedUsers?: (() => Promisify<Promise<any>>) | undefined
   }>(),
   {
     isEdit: false,
     isAllowedToPurgeRoom: false,
+    approveRequestBlocked: false,
     addToCachedUsers: undefined,
     fetchCachedUsers: undefined,
   }
 )
+
+const emit = defineEmits<{
+  (e: 'approvedRequestToJoinCollabRoom'): void
+}>()
 
 const {
   collabRoomInfo,
@@ -199,6 +205,7 @@ const approveRequestToCollaborate = () => {
     (request) => !selectedIdsToCollab.value.includes(request.userId)
   )
   selectedIdsToCollab.value = []
+  emit('approvedRequestToJoinCollabRoom')
 }
 
 const rejectRequestToCollaborate = () => {
@@ -362,7 +369,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
             {{ t('common.collab.button.reject') }}
           </ABtnTertiary>
           <ABtnPrimary
-            :disabled="!selectedIdsToCollab.length"
+            :disabled="!selectedIdsToCollab.length || approveRequestBlocked"
             @click.stop="approveRequestToCollaborate"
           >
             {{ t('common.collab.button.accept') }}
@@ -483,7 +490,10 @@ const calculateWaitingSeconds = (timestamp: number) => {
           <ABtnTertiary @click="rejectRequestToTakeModerationAction">
             {{ t('common.collab.button.reject') }}
           </ABtnTertiary>
-          <ABtnPrimary @click.stop="approveRequestToTakeModerationAction">
+          <ABtnPrimary
+            :disabled="approveRequestBlocked"
+            @click.stop="approveRequestToTakeModerationAction"
+          >
             {{ t('common.collab.button.accept') }}
             <ACollabCountdown
               parentheses
