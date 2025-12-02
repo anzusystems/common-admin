@@ -13,6 +13,7 @@
       "ESNext",
       "DOM",
       "DOM.Iterable"
-    ]
+    ],
+    "noUncheckedIndexedAccess": false
   }
 }

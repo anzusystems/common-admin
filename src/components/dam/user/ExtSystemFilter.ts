@@ -8,7 +8,6 @@ export function useExtSystemInnerFilter() {
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
-    elastic: true,
     system: SYSTEM_CORE_DAM,
     subject: ENTITY,
   })
