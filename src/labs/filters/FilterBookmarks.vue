@@ -10,7 +10,7 @@ import {
 } from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
-import { cloneDeep, isDefined, isNull, isUndefined } from '@/utils/common'
+import { cloneDeep, isDefined, isNull, isString, isUndefined } from '@/utils/common'
 import {
   DatatablePaginationKey,
   FilterConfigKey,
@@ -18,6 +18,7 @@ import {
   FilterSelectedKey,
 } from '@/labs/filters/filterInjectionKeys'
 import { type FilterData, useFilterHelpers } from '@/labs/filters/filterFactory'
+import { stringToBooleanExact, stringToNumber } from '@/utils/string'
 
 const props = withDefaults(
   defineProps<{
@@ -86,11 +87,23 @@ const onItemClick = (item: UserAdminConfig) => {
   if (isNull(deserialized)) return
   for (const filterName in filterData) {
     const key = filterName as keyof FilterData
-    const value = deserialized.filters[key]
+    let value = deserialized.filters[key]
     if (isUndefined(value) && filterConfig.fields[key]?.clearable) {
       filterData[key] = cloneDeep(filterConfig.fields[key].default)
       filterSelected.value.delete(key)
       continue
+    }
+    if (isString(value)) {
+      const tryConvertNumber = stringToNumber(value)
+      if (!isNull(tryConvertNumber)) {
+        value = tryConvertNumber
+      } else {
+        // If not a number, try to convert to boolean
+        const tryConvertBoolean = stringToBooleanExact(value)
+        if (!isNull(tryConvertBoolean)) {
+          value = tryConvertBoolean
+        }
+      }
     }
     filterData[key] = value
   }

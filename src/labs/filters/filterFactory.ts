@@ -380,7 +380,6 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
         if (!isNull(tryConvertNumber)) {
           value = tryConvertNumber
         } else {
-          // If not a number, try to convert to boolean
           const tryConvertBoolean = stringToBooleanExact(value)
           if (!isNull(tryConvertBoolean)) {
             value = tryConvertBoolean
