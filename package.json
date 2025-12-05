@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.330",
+  "version": "1.47.0-beta.331",
   "license": "Apache-2.0",
   "scripts": {
     "prepare": "node -e \"if (process.env.SKIP_PLAYWRIGHT_INSTALL !== 'true') { require('child_process').execSync('playwright install chromium --with-deps', { stdio: 'inherit' }) }\"",
@@ -51,8 +51,8 @@
     "@intlify/unplugin-vue-i18n": "^11.0.3",
     "@kyvg/vue3-notification": "^3.4.2",
     "@mdi/font": "^7.4.47",
-    "@sentry/vue": "^10.27.0",
-    "@shikijs/vitepress-twoslash": "^3.18.0",
+    "@sentry/vue": "^10.29.0",
+    "@shikijs/vitepress-twoslash": "^3.19.0",
     "@stylistic/eslint-plugin": "^5.6.1",
     "@tsconfig/node22": "^22.0.5",
     "@types/node": "^24.10.1",
@@ -60,9 +60,9 @@
     "@types/sortablejs": "^1.15.9",
     "@types/webfontloader": "^1.6.38",
     "@vitejs/plugin-vue": "^6.0.2",
-    "@vitest/browser": "^4.0.14",
-    "@vitest/browser-playwright": "^4.0.14",
-    "@vitest/ui": "^4.0.14",
+    "@vitest/browser": "^4.0.15",
+    "@vitest/browser-playwright": "^4.0.15",
+    "@vitest/ui": "^4.0.15",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/language-server": "^3.1.5",
@@ -83,7 +83,7 @@
     "postcss": "^8.5.6",
     "postcss-html": "^1.8.0",
     "postcss-prefix-selector": "^2.1.1",
-    "prettier": "^3.7.3",
+    "prettier": "^3.7.4",
     "rusha": "^0.8.14",
     "sass": "^1.94.2",
     "socket.io-client": "4.8.1",
@@ -98,13 +98,13 @@
     "vite-plugin-dts": "4.5.4",
     "vite-plugin-vuetify": "^2.1.2",
     "vitepress": "1.6.4",
-    "vitest": "^4.0.14",
+    "vitest": "^4.0.15",
     "vue": "3.5.25",
     "vue-eslint-parser": "^10.2.0",
     "vue-i18n": "11.2.2",
     "vue-router": "4.6.3",
     "vue-tsc": "3.1.5",
-    "vuetify": "3.11.0",
+    "vuetify": "3.11.2",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
@@ -121,7 +121,7 @@
     "vue": "3.5.25",
     "vue-i18n": "11.2.2",
     "vue-router": "4.6.3",
-    "vuetify": "3.11.0"
+    "vuetify": "3.11.2"
   },
   "peerDependenciesMeta": {
     "@sentry/vue": {
