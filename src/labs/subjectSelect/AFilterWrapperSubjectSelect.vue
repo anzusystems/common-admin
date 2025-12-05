@@ -9,32 +9,61 @@ import {
   FilterSubmitResetCounterKey,
 } from '@/labs/filters/filterInjectionKeys'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { isUndefined } from '@/utils/common'
-import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
+import { isBoolean, isDefined, isUndefined } from '@/utils/common'
+import { type FilterStoreIdentifier, useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { datatableSlotName } from '@/components/datatable/datatable'
 import FilterDetailItem from '@/labs/filters/FilterDetailItem.vue'
+import FilterBookmarks from '@/labs/filters/FilterBookmarks.vue'
+import type { IntegerIdNullable } from '@/types/common'
+import type { AxiosInstance } from 'axios'
+import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     hideButtons?: boolean
     formName?: string
     disableFilterUrlSync?: boolean
+    userId?: IntegerIdNullable | undefined
+    client?: (() => AxiosInstance) | undefined
+    store?: FilterStoreIdentifier | boolean // false to disable, FilterStoreIdentifier to custom store key
   }>(),
   {
     hideButtons: false,
     formName: 'search',
     disableFilterUrlSync: false,
+    userId: undefined,
+    client: undefined,
+    store: true,
   }
 )
 const emit = defineEmits<{
   (e: 'submit'): void
   (e: 'reset'): void
+  (e: 'bookmarkLoadAfter'): void
 }>()
+
+const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
+  default: undefined,
+  required: false,
+})
 
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 if (isUndefined(filterConfig) || isUndefined(filterData)) {
   throw new Error('Incorrect provide/inject config.')
+}
+
+const identifier = ref<Partial<FilterStoreIdentifier>>({
+  system: filterConfig.general.system,
+  subject: filterConfig.general.subject,
+})
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+if (!isBoolean(props.store)) {
+  identifier.value.system = props.store.system
+  identifier.value.subject = props.store.subject
+} else if (false === props.store) {
+  identifier.value.system = undefined
+  identifier.value.subject = undefined
 }
 
 const submitResetCounter = ref(0)
@@ -50,6 +79,13 @@ const submitFilter = () => {
 }
 
 const { clearAll, clearAllFilterSelected } = useFilterClearHelpers()
+
+const submitFilterBookmark = () => {
+  nextTick(() => {
+    submitResetCounter.value++
+    emit('bookmarkLoadAfter')
+  })
+}
 
 const resetFilter = () => {
   clearAll(filterData, filterConfig)
@@ -82,6 +118,23 @@ defineExpose({
     @submit.prevent="submitFilter"
   >
     <div class="subject-select-filter__content px-2 py-4">
+      <slot name="bookmarks">
+        <VRow dense>
+          <VCol v-if="store && userId && isDefined(client)">
+            <div class="d-flex flex-wrap align-center">
+              <FilterBookmarks
+                v-if="identifier.system && identifier.subject && userId && isDefined(client)"
+                v-model:datatable-hidden-columns="datatableHiddenColumns"
+                :client="client"
+                :system="identifier.system"
+                :subject="identifier.subject"
+                :user-id="userId"
+                @submit="submitFilterBookmark"
+              />
+            </div>
+          </VCol>
+        </VRow>
+      </slot>
       <slot name="detail">
         <VRow>
           <VCol
@@ -110,6 +163,14 @@ defineExpose({
       <slot name="buttons">
         <AFilterSubmitButton :touched="touched" />
         <AFilterResetButton @reset="resetFilter" />
+        <AFilterBookmarkButton
+          v-if="identifier.system && identifier.subject && userId && isDefined(client)"
+          :client="client"
+          :user="userId"
+          :system="identifier.system"
+          :subject="identifier.subject"
+          :datatable-hidden-columns="datatableHiddenColumns"
+        />
       </slot>
     </div>
   </VForm>
