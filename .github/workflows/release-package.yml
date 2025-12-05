@@ -3,19 +3,36 @@ name: Node.js Package Release
 on:
   release:
     types: [created]
+  push:
+    branches:
+      - beta
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   build-publish-pkg:
     name: Build and push package on node 24
     runs-on: 'ubuntu-latest'
+    environment: npmjs-publish
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check version change (beta only)
+        id: check
+        if: github.event_name == 'push'
+        uses: EndBug/version-check@v2
+        with:
+          diff-search: true
+
       - name: Enable corepack
+        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
         run: corepack enable
 
       - name: Setup Node
+        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
         uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -23,16 +40,21 @@ jobs:
           cache-dependency-path: 'yarn.lock'
 
       - name: Install dependencies
+        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
         run: yarn install --immutable
         env:
           SKIP_PLAYWRIGHT_INSTALL: true
 
       - name: Run Yarn Build
+        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
         run: yarn lib:build
 
       - name: Publish package to npmjs
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        if: github.event_name == 'release'
         run: |
-          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm publish --access public
+
+      - name: Publish beta package to npmjs
+        if: github.event_name == 'push' && steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
+        run: |
+          npm publish --tag beta
