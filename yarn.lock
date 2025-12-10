@@ -209,7 +209,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^3.19.0"
     "@stylistic/eslint-plugin": "npm:^5.6.1"
     "@tsconfig/node22": "npm:^22.0.5"
-    "@types/node": "npm:^24.10.1"
+    "@types/node": "npm:^24.10.2"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.9"
     "@types/webfontloader": "npm:^1.6.38"
@@ -219,7 +219,7 @@ __metadata:
     "@vitest/ui": "npm:^4.0.15"
     "@vue/eslint-config-prettier": "npm:^10.2.0"
     "@vue/eslint-config-typescript": "npm:^14.6.0"
-    "@vue/language-server": "npm:^3.1.5"
+    "@vue/language-server": "npm:3.1.5"
     "@vue/test-utils": "npm:^2.4.6"
     "@vue/tsconfig": "npm:0.8.1"
     "@vuelidate/core": "npm:^2.0.3"
@@ -239,7 +239,7 @@ __metadata:
     postcss-prefix-selector: "npm:^2.1.1"
     prettier: "npm:^3.7.4"
     rusha: "npm:^0.8.14"
-    sass: "npm:^1.94.2"
+    sass: "npm:^1.95.1"
     socket.io-client: "npm:4.8.1"
     sortablejs: "npm:^1.15.6"
     stylelint: "npm:16.26.1"
@@ -248,7 +248,7 @@ __metadata:
     typescript: "npm:5.9.3"
     unplugin: "npm:2.3.11"
     uuid: "npm:^13.0.0"
-    vite: "npm:7.2.6"
+    vite: "npm:7.2.7"
     vite-plugin-dts: "npm:4.5.4"
     vite-plugin-vuetify: "npm:^2.1.2"
     vitepress: "npm:1.6.4"
@@ -258,7 +258,7 @@ __metadata:
     vue-i18n: "npm:11.2.2"
     vue-router: "npm:4.6.3"
     vue-tsc: "npm:3.1.5"
-    vuetify: "npm:3.11.2"
+    vuetify: "npm:3.11.3"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@sentry/vue": ^10.0.0
@@ -274,7 +274,7 @@ __metadata:
     vue: 3.5.25
     vue-i18n: 11.2.2
     vue-router: 4.6.3
-    vuetify: 3.11.2
+    vuetify: 3.11.3
   peerDependenciesMeta:
     "@sentry/vue":
       optional: true
@@ -2176,12 +2176,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^24.10.1":
-  version: 24.10.1
-  resolution: "@types/node@npm:24.10.1"
+"@types/node@npm:*, @types/node@npm:^24.10.2":
+  version: 24.10.2
+  resolution: "@types/node@npm:24.10.2"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10/ddac8c97be5f7401e31ea0e9316c6e864993c6cd06689b7f9874ecfb576ef8349f2d14298248a08b94a6dd029570a46a285cddc4d50e524817f1a3730b29a86e
+  checksum: 10/75b34e33087dc707aa76723f7269cd66acd2fae4272d127544ad20f295e7537dbd1e4a4405717b3093aeae2ff8ae35283fdec826a4f593273e326bb3deae588d
   languageName: node
   linkType: hard
 
@@ -2537,12 +2537,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volar/language-core@npm:2.4.23, @volar/language-core@npm:~2.4.11":
+"@volar/language-core@npm:2.4.23":
   version: 2.4.23
   resolution: "@volar/language-core@npm:2.4.23"
   dependencies:
     "@volar/source-map": "npm:2.4.23"
   checksum: 10/5c7a330be253580fff0ae4308fdd385680de3888b676fdc032bfc4a69f1014db5167e48347b2f85232503b09373deb495206322d665b995dcd99bd1da5eff2f1
+  languageName: node
+  linkType: hard
+
+"@volar/language-core@npm:2.4.26, @volar/language-core@npm:~2.4.11":
+  version: 2.4.26
+  resolution: "@volar/language-core@npm:2.4.26"
+  dependencies:
+    "@volar/source-map": "npm:2.4.26"
+  checksum: 10/56cb761f7ae2ad25d0fa6794f3258171812d92bbec8f2b36b2df06931edb5842777d93ee61602995ca221e9bb8aba273ac4f5ed5d9e0766b65c46d0f21f31d3a
   languageName: node
   linkType: hard
 
@@ -2563,7 +2572,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volar/language-service@npm:2.4.23, @volar/language-service@npm:~2.4.0":
+"@volar/language-service@npm:2.4.23":
   version: 2.4.23
   resolution: "@volar/language-service@npm:2.4.23"
   dependencies:
@@ -2575,6 +2584,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@volar/language-service@npm:~2.4.0":
+  version: 2.4.26
+  resolution: "@volar/language-service@npm:2.4.26"
+  dependencies:
+    "@volar/language-core": "npm:2.4.26"
+    vscode-languageserver-protocol: "npm:^3.17.5"
+    vscode-languageserver-textdocument: "npm:^1.0.11"
+    vscode-uri: "npm:^3.0.8"
+  checksum: 10/9427b9eb9b2b37a82a9b31379312659347cb196e08dda7682dd518094dbcf22bf3b5fe2c2149e3f541b05286498eaf436b05d25fc26fb0376f8ecd448d79c667
+  languageName: node
+  linkType: hard
+
 "@volar/source-map@npm:2.4.23":
   version: 2.4.23
   resolution: "@volar/source-map@npm:2.4.23"
@@ -2582,7 +2603,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@volar/typescript@npm:2.4.23, @volar/typescript@npm:^2.4.11":
+"@volar/source-map@npm:2.4.26":
+  version: 2.4.26
+  resolution: "@volar/source-map@npm:2.4.26"
+  checksum: 10/72a7acf40755d295a1838d0e509932542cf4e91050ee6a1f6464547d48d9504c608d7d841b6e3f050959b45e24776ddb63574bcedd8d5965ff94386183b672e4
+  languageName: node
+  linkType: hard
+
+"@volar/typescript@npm:2.4.23":
   version: 2.4.23
   resolution: "@volar/typescript@npm:2.4.23"
   dependencies:
@@ -2590,6 +2618,17 @@ __metadata:
     path-browserify: "npm:^1.0.1"
     vscode-uri: "npm:^3.0.8"
   checksum: 10/8dcf522ea5e479a90b37389b852e38372080a2077d6e2ef8f6468bc640e89523dae99e5be85f579fe61ef2951a8d5bfeb656bb2e48ca1695dbd43e1e6749fb39
+  languageName: node
+  linkType: hard
+
+"@volar/typescript@npm:^2.4.11":
+  version: 2.4.26
+  resolution: "@volar/typescript@npm:2.4.26"
+  dependencies:
+    "@volar/language-core": "npm:2.4.26"
+    path-browserify: "npm:^1.0.1"
+    vscode-uri: "npm:^3.0.8"
+  checksum: 10/b72c5f7a46c165f3b2312961bf6fc3fb2c8751bb4e14bb3971d68fa753181fdf66f792cbea17a0c78fb5d2c7d89dec0a05218ff637626d8ea3bc8401b24b78bd
   languageName: node
   linkType: hard
 
@@ -2766,7 +2805,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/language-core@npm:3.1.5, @vue/language-core@npm:^3.0.5":
+"@vue/language-core@npm:3.1.5":
   version: 3.1.5
   resolution: "@vue/language-core@npm:3.1.5"
   dependencies:
@@ -2786,7 +2825,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/language-server@npm:^3.1.5":
+"@vue/language-core@npm:^3.0.5":
+  version: 3.1.8
+  resolution: "@vue/language-core@npm:3.1.8"
+  dependencies:
+    "@volar/language-core": "npm:2.4.26"
+    "@vue/compiler-dom": "npm:^3.5.0"
+    "@vue/shared": "npm:^3.5.0"
+    alien-signals: "npm:^3.0.0"
+    muggle-string: "npm:^0.4.1"
+    path-browserify: "npm:^1.0.1"
+    picomatch: "npm:^4.0.2"
+  peerDependencies:
+    typescript: "*"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10/4ab08429f4e373d35312a3ba45db7154fd62bbf8e70a25cad7a5f9076b841777ebfdffc20976fed0d28e6e445a793d69e0146dc845e99f4897bcce94c0f87abe
+  languageName: node
+  linkType: hard
+
+"@vue/language-server@npm:3.1.5":
   version: 3.1.5
   resolution: "@vue/language-server@npm:3.1.5"
   dependencies:
@@ -7705,9 +7764,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.94.2":
-  version: 1.94.2
-  resolution: "sass@npm:1.94.2"
+"sass@npm:^1.95.1":
+  version: 1.95.1
+  resolution: "sass@npm:1.95.1"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^4.0.0"
@@ -7718,7 +7777,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10/e60c214ea93677740c9ddfad55c77fd433255bbfdd9faba137acf1215bed5ba6ad9d83efea81feb87a89283931d01f0435227e3fff37c65c263e0ee05f885328
+  checksum: 10/548520f8e341d45cde8bcdce5bbe442a874ec4daef658f8caf6fb3ca62f6aacba61411e76b8a26efb25b6d48cfa23af10684bde11010780f68adff43594851f8
   languageName: node
   linkType: hard
 
@@ -8859,9 +8918,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:7.2.6, vite@npm:^6.0.0 || ^7.0.0":
-  version: 7.2.6
-  resolution: "vite@npm:7.2.6"
+"vite@npm:7.2.7, vite@npm:^6.0.0 || ^7.0.0":
+  version: 7.2.7
+  resolution: "vite@npm:7.2.7"
   dependencies:
     esbuild: "npm:^0.25.0"
     fdir: "npm:^6.5.0"
@@ -8910,7 +8969,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10/c640ed9c91957749287af2f483f5b5024a56718ba7cf32b0e2c398772fdf7fdb9fd5f97665c41712d4e9422c14009e283d0b69ac1b64b4f91474625bebe324de
+  checksum: 10/ec7c588db66c8a3e50a24fc26422c6ef27c2e08a0ceccd200162e45be90d7d12c0a06d8ccc8c88139a657d51be5e10ddc83df9807daf6a1362c2e5ecdaf2a07e
   languageName: node
   linkType: hard
 
@@ -9374,9 +9433,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vuetify@npm:3.11.2":
-  version: 3.11.2
-  resolution: "vuetify@npm:3.11.2"
+"vuetify@npm:3.11.3":
+  version: 3.11.3
+  resolution: "vuetify@npm:3.11.3"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=2.1.0"
@@ -9389,7 +9448,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10/6e46096d445a4d270bd918a42df807120fcb6a4f50aa37edc0e9646f08375411a2bc30a7e6e35e01e6d7a162a4fe02a607f05696f583132c9ac87ec64d85503f
+  checksum: 10/a87595158c5b2dd13fc806f966b5d3a997851152202b91a71c8380513552d62082636cc128fcac064aaeba38d1ecb31920b47c18d7da0455d1a86e8243d95da3
   languageName: node
   linkType: hard
 
