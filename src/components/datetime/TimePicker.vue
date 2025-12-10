@@ -19,6 +19,7 @@ const minutes = ref<string | undefined>(
 )
 
 const hoursRefInput = useTemplateRef<HTMLInputElement>('hoursRefInput')
+const minutesRefInput = useTemplateRef<HTMLInputElement>('minutesRefInput')
 
 const hoursComputed = computed({
   get: () => hours.value,
@@ -27,6 +28,7 @@ const hoursComputed = computed({
 
     if (cleanValue && parseInt(cleanValue) > 23) {
       hours.value = '23'
+      nextTick(() => minutesRefInput.value?.focus())
       return
     }
 
@@ -35,6 +37,10 @@ const hoursComputed = computed({
     }
 
     hours.value = cleanValue
+
+    if (cleanValue.length === 2) {
+      nextTick(() => minutesRefInput.value?.focus())
+    }
   }
 })
 
@@ -188,6 +194,7 @@ defineExpose({
     <span class="a-datetime-picker-time__separator">:</span>
     <div class="a-datetime-picker-time__item">
       <input
+        ref="minutesRefInput"
         v-model="minutesComputed"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--minutes"
         type="text"
