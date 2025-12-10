@@ -61,6 +61,8 @@ const pickerOpened = ref(false)
 const pickerKey = ref(0)
 const timeKey = ref(0)
 const timePickerInstance = useTemplateRef<InstanceType<typeof TimePicker>>('timePickerInstance')
+const inputInstance = useTemplateRef<InstanceType<typeof VTextField>>('inputInstance')
+const confirmRefButton = useTemplateRef<HTMLButtonElement>('confirmRefButton')
 const textFieldValue = ref('')
 
 const datePickerValue = ref<null | Date>(null)
@@ -240,12 +242,24 @@ const onClear = () => {
   emit('afterClear')
 }
 
+const close = () => {
+  pickerOpened.value = false
+  inputInstance.value?.focus()
+  inputInstance.value?.blur()
+  emit('onClose')
+  emit('blur')
+}
+
 const onTextFieldFocus = () => {
   emit('focus')
 }
 
 const onTimePickerEnterKeyup = () => {
   pickerOpened.value = false
+}
+
+const onFocusConfirm = () => {
+  confirmRefButton.value?.focus()
 }
 
 const onDatePickerUpdate = () => {
@@ -267,6 +281,7 @@ const now = () => {
 
 <template>
   <VTextField
+    ref="inputInstance"
     v-model="textFieldValue"
     :error-messages="errorMessageComputed"
     :persistent-placeholder="true"
@@ -311,7 +326,7 @@ const now = () => {
             :width="36"
             :height="36"
             class="position-absolute top-0 right-0"
-            @click.stop="pickerOpened = false"
+            @click.stop="close"
           >
             <VIcon
               icon="mdi-close"
@@ -332,15 +347,27 @@ const now = () => {
             :key="timeKey"
             v-model="timePickerValue"
             @on-enter-keyup="onTimePickerEnterKeyup"
+            @focus-confirm="onFocusConfirm"
           />
-          <button
-            type="button"
-            class="a-datetime-picker__now-button"
-            tabindex="7"
-            @click="now"
-          >
-            {{ t('common.time.now') }}
-          </button>
+          <div class="d-flex">
+            <button
+              type="button"
+              class="a-datetime-picker__bottom-button"
+              tabindex="8"
+              @click="now"
+            >
+              {{ t('common.time.now') }}
+            </button>
+            <button
+              ref="confirmRefButton"
+              type="button"
+              class="a-datetime-picker__bottom-button"
+              tabindex="7"
+              @click.stop="close"
+            >
+              {{ t('common.button.confirm') }}
+            </button>
+          </div>
         </VCard>
       </VMenu>
 
@@ -382,7 +409,7 @@ const now = () => {
     }
   }
 
-  &__now-button {
+  &__bottom-button {
     width: 100%;
     text-align: center;
     font-size: 0.86rem;

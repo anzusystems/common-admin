@@ -3,6 +3,7 @@ import { nextTick, ref, useTemplateRef, watch, computed } from 'vue'
 
 const emit = defineEmits<{
   (e: 'onEnterKeyup'): void
+  (e: 'focusConfirm'): void
 }>()
 
 const modelValue = defineModel<null | { hours: number; minutes: number }>('modelValue', {
@@ -51,6 +52,7 @@ const minutesComputed = computed({
 
     if (cleanValue && parseInt(cleanValue) > 59) {
       minutes.value = '59'
+      emit('focusConfirm')
       return
     }
 
@@ -59,6 +61,10 @@ const minutesComputed = computed({
     }
 
     minutes.value = cleanValue
+
+    if (cleanValue.length === 2) {
+      emit('focusConfirm')
+    }
   }
 })
 
