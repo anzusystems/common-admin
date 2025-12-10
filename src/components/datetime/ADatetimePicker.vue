@@ -26,6 +26,7 @@ const props = withDefaults(
     dataCy?: string
     defaultValue?: DatetimeUTC | null | undefined
     errorMessages?: string[]
+    lastMinuteMoment?: boolean
   }>(),
   {
     type: 'datetime',
@@ -40,6 +41,7 @@ const props = withDefaults(
     dataCy: '',
     defaultValue: null,
     errorMessages: undefined,
+    lastMinuteMoment: false,
   }
 )
 
@@ -119,7 +121,11 @@ watch(
       datetimeInternal.value = null
       return
     }
-    datetimeInternal.value = dayjs(newValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ').millisecond(0)
+    if (props.lastMinuteMoment) {
+      datetimeInternal.value = dayjs(newValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ').millisecond(999)
+    } else {
+      datetimeInternal.value = dayjs(newValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ').millisecond(0)
+    }
   },
   { immediate: true }
 )
@@ -142,7 +148,11 @@ watch([timePickerValue, datePickerValue], ([newTimePickerValue, newDatePickerVal
   } else if (!isNull(props.modelValue)) {
     newDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
   } else {
-    newDate = dayjs().hour(0).minute(0).second(0).millisecond(0)
+    if (props.lastMinuteMoment) {
+      newDate = dayjs().hour(0).minute(0).second(59).millisecond(999)
+    } else {
+      newDate = dayjs().hour(0).minute(0).second(0).millisecond(0)
+    }
   }
 
   newDate = watchTimePicker(newTimePickerValue, newDate!)
@@ -230,10 +240,15 @@ const onTextFieldFocus = () => {
 }
 
 const now = () => {
-  datetimeInternal.value = dayjs().second(0).millisecond(0)
+  if (props.lastMinuteMoment) {
+    datetimeInternal.value = dayjs().second(59).millisecond(999)
+  } else {
+    datetimeInternal.value = dayjs().second(0).millisecond(0)
+  }
   nextTick(() => {
     pickerKey.value++
     timeKey.value++
+    pickerOpened.value = false
   })
 }
 </script>

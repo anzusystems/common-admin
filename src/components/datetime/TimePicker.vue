@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue'
 
+const emit = defineEmits<{
+  (e: 'onEnterKeyup'): void
+}>()
+
 const modelValue = defineModel<null | { hours: number; minutes: number }>('modelValue', {
   required: true,
 })
@@ -30,6 +34,16 @@ const onBlurHours = () => {
 const onBlurMinutes = () => {
   const parsedMinutes = parseInt(minutes.value || '0')
   minutes.value = parsedMinutes >= 0 && parsedMinutes <= 59 ? String(parsedMinutes).padStart(2, '0') : '00'
+}
+
+const onEnterHoursKeyup = () => {
+  onBlurHours()
+  emit('onEnterKeyup')
+}
+
+const onEnterMinutesKeyup = () => {
+  onBlurMinutes()
+  emit('onEnterKeyup')
 }
 
 const increaseHours = () => {
@@ -90,6 +104,7 @@ defineExpose({
         maxlength="2"
         @focus="selectContent"
         @blur="onBlurHours"
+        @keyup.enter="onEnterHoursKeyup"
       >
       <div class="a-datetime-picker-time__arrows">
         <VIcon
@@ -118,6 +133,7 @@ defineExpose({
         maxlength="2"
         @focus="selectContent"
         @blur="onBlurMinutes"
+        @keyup.enter="onEnterMinutesKeyup"
       >
       <div class="a-datetime-picker-time__arrows">
         <VIcon
