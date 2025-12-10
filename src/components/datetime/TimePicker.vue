@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, ref, useTemplateRef, watch } from 'vue'
 
 const emit = defineEmits<{
   (e: 'onEnterKeyup'): void
@@ -18,7 +18,7 @@ const minutes = ref<string | undefined>(
   modelValue.value ? String(modelValue.value.minutes).padStart(2, '0') : '00'
 )
 
-const hoursRef = ref<HTMLInputElement | null>(null)
+const hoursRefInput = useTemplateRef<HTMLInputElement>('hoursRefInput')
 
 const selectContent = async (event: FocusEvent) => {
   const target = event.target as HTMLInputElement | null
@@ -96,8 +96,8 @@ const decreaseMinutes = () => {
   }
 }
 
-const focus = () => {
-  hoursRef.value?.focus()
+const focusHour = () => {
+  hoursRefInput.value?.focus()
 }
 
 watch([hours, minutes], ([newHours, newMinutes], [oldHours, oldMinutes]) => {
@@ -110,7 +110,7 @@ watch([hours, minutes], ([newHours, newMinutes], [oldHours, oldMinutes]) => {
 })
 
 defineExpose({
-  focus,
+  focusHour,
 })
 </script>
 
@@ -118,7 +118,7 @@ defineExpose({
   <div class="a-datetime-picker-time">
     <div class="a-datetime-picker-time__item a-datetime-picker-time__item">
       <input
-        ref="hoursRef"
+        ref="hoursRefInput"
         v-model="hours"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--hours"
         type="number"
@@ -133,20 +133,22 @@ defineExpose({
         @keyup.enter="onEnterHoursKeyup"
       >
       <div class="a-datetime-picker-time__arrows">
-        <VIcon
-          tabindex="2"
-          role="button"
-          icon="mdi-chevron-up"
+        <VBtn
+          tabindex="-1"
+          variant="text"
           class="a-datetime-picker-time__arrow-up"
           @click="increaseHours"
-        />
-        <VIcon
-          tabindex="3"
-          role="button"
-          icon="mdi-chevron-down"
+        >
+          <VIcon icon="mdi-chevron-up" />
+        </VBtn>
+        <VBtn
+          tabindex="-1"
+          variant="text"
           class="a-datetime-picker-time__arrow-down"
           @click="decreaseHours"
-        />
+        >
+          <VIcon icon="mdi-chevron-down" />
+        </VBtn>
       </div>
     </div>
     <span class="a-datetime-picker-time__separator">:</span>
@@ -156,7 +158,7 @@ defineExpose({
         class="a-datetime-picker-time__input a-datetime-picker-time__input--minutes"
         type="number"
         aria-label="Minute"
-        tabindex="4"
+        tabindex="2"
         step="1"
         min="0"
         max="59"
@@ -166,20 +168,22 @@ defineExpose({
         @keyup.enter="onEnterMinutesKeyup"
       >
       <div class="a-datetime-picker-time__arrows">
-        <VIcon
-          tabindex="5"
-          role="button"
-          icon="mdi-chevron-up"
+        <VBtn
+          tabindex="-1"
+          variant="text"
           class="a-datetime-picker-time__arrow-up"
           @click="increaseMinutes"
-        />
-        <VIcon
-          tabindex="6"
-          role="button"
-          icon="mdi-chevron-down"
+        >
+          <VIcon icon="mdi-chevron-up" />
+        </VBtn>
+        <VBtn
+          tabindex="-1"
+          variant="text"
           class="a-datetime-picker-time__arrow-down"
           @click="decreaseMinutes"
-        />
+        >
+          <VIcon icon="mdi-chevron-down" />
+        </VBtn>
       </div>
     </div>
   </div>
@@ -219,18 +223,17 @@ $hover-bg-color: rgb(0 0 0 / 5%);
     flex-direction: column;
     opacity: 0;
 
+    .v-btn {
+      padding: 0 !important;
+      min-width: 28px !important;
+      width: 28px !important;
+      height: 28px !important;
+    }
+
     .a-datetime-picker-time__item:hover &,
     .a-datetime-picker-time__input:focus + &,
     &:focus-within {
       opacity: 1;
-    }
-
-    .v-icon {
-      cursor: pointer;
-
-      &:hover {
-        background-color: $hover-bg-color;
-      }
     }
   }
 

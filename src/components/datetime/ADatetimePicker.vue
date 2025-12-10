@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DatetimeUTC } from '@/types/common'
-import { computed, nextTick, ref, toRaw, watch } from 'vue'
+import { computed, nextTick, ref, toRaw, useTemplateRef, watch } from 'vue'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import useVuelidate, { type ErrorObject } from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
@@ -57,12 +57,10 @@ const emit = defineEmits<{
 dayjs.extend(utc)
 dayjs.extend(customParseFormat)
 
-type TextFieldRef = null | { $el: HTMLElement }
-
 const pickerOpened = ref(false)
 const pickerKey = ref(0)
 const timeKey = ref(0)
-const textFieldRef = ref<TextFieldRef>(null)
+const timePickerInstance = useTemplateRef<InstanceType<typeof TimePicker>>('timePickerInstance')
 const textFieldValue = ref('')
 
 const datePickerValue = ref<null | Date>(null)
@@ -250,6 +248,10 @@ const onTimePickerEnterKeyup = () => {
   pickerOpened.value = false
 }
 
+const onDatePickerUpdate = () => {
+  timePickerInstance.value?.focusHour()
+}
+
 const now = () => {
   if (props.lastMinuteMoment) {
     datetimeInternal.value = dayjs().second(59).millisecond(999)
@@ -259,14 +261,12 @@ const now = () => {
   nextTick(() => {
     pickerKey.value++
     timeKey.value++
-    pickerOpened.value = false
   })
 }
 </script>
 
 <template>
   <VTextField
-    ref="textFieldRef"
     v-model="textFieldValue"
     :error-messages="errorMessageComputed"
     :persistent-placeholder="true"
@@ -325,8 +325,10 @@ const now = () => {
             color="primary"
             show-adjacent-months
             v-bind="$attrs"
+            @update:model-value="onDatePickerUpdate"
           />
           <TimePicker
+            ref="timePickerInstance"
             :key="timeKey"
             v-model="timePickerValue"
             @on-enter-keyup="onTimePickerEnterKeyup"
