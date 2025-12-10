@@ -180,6 +180,13 @@ watch(
 watch(pickerOpened, (newValue) => {
   if (newValue) {
     onTextFieldBlur()
+    if (isNull(datetimeInternal.value) && (isNull(props.defaultValue) || isUndefined(props.defaultValue))) {
+      if (props.lastMinuteMoment) {
+        datetimeInternal.value = dayjs().second(59).millisecond(999)
+      } else {
+        datetimeInternal.value = dayjs().second(0).millisecond(0)
+      }
+    }
     nextTick(() => {
       pickerKey.value++
     })
@@ -239,6 +246,10 @@ const onTextFieldFocus = () => {
   emit('focus')
 }
 
+const onTimePickerEnterKeyup = () => {
+  pickerOpened.value = false
+}
+
 const now = () => {
   if (props.lastMinuteMoment) {
     datetimeInternal.value = dayjs().second(59).millisecond(999)
@@ -280,6 +291,7 @@ const now = () => {
         location="bottom end"
         origin="top end"
         :close-on-content-click="false"
+        :model-value="pickerOpened"
         @update:model-value="(value: boolean) => (pickerOpened = value)"
       >
         <template #activator="{ props: menuProps }">
@@ -292,6 +304,20 @@ const now = () => {
         </template>
 
         <VCard v-if="pickerOpened">
+          <VBtn
+            v-tooltip="t('common.button.close')"
+            icon
+            variant="text"
+            :width="36"
+            :height="36"
+            class="position-absolute top-0 right-0"
+            @click.stop="pickerOpened = false"
+          >
+            <VIcon
+              icon="mdi-close"
+              color="white"
+            />
+          </VBtn>
           <VDatePicker
             :key="pickerKey"
             v-model="datePickerValue"
@@ -303,11 +329,12 @@ const now = () => {
           <TimePicker
             :key="timeKey"
             v-model="timePickerValue"
+            @on-enter-keyup="onTimePickerEnterKeyup"
           />
           <button
             type="button"
             class="a-datetime-picker__now-button"
-            tabindex="-1"
+            tabindex="7"
             @click="now"
           >
             {{ t('common.time.now') }}

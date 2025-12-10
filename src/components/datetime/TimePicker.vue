@@ -60,14 +60,40 @@ const decreaseHours = () => {
 
 const increaseMinutes = () => {
   const parsedMinutes = parseInt(minutes.value || '0')
-  const newMinutes = isNaN(parsedMinutes) ? 1 : (parsedMinutes + 1) % 60
-  minutes.value = String(newMinutes).padStart(2, '0')
+  const parsedHours = parseInt(hours.value || '0')
+
+  if (isNaN(parsedMinutes)) {
+    minutes.value = '01'
+    return
+  }
+
+  if (parsedMinutes === 59) {
+    minutes.value = '00'
+    const newHours = isNaN(parsedHours) ? 1 : (parsedHours + 1) % 24
+    hours.value = String(newHours).padStart(2, '0')
+  } else {
+    const newMinutes = parsedMinutes + 1
+    minutes.value = String(newMinutes).padStart(2, '0')
+  }
 }
 
 const decreaseMinutes = () => {
   const parsedMinutes = parseInt(minutes.value || '0')
-  const newMinutes = isNaN(parsedMinutes) ? 59 : (parsedMinutes - 1 + 60) % 60
-  minutes.value = String(newMinutes).padStart(2, '0')
+  const parsedHours = parseInt(hours.value || '0')
+
+  if (isNaN(parsedMinutes)) {
+    minutes.value = '59'
+    return
+  }
+
+  if (parsedMinutes === 0) {
+    minutes.value = '59'
+    const newHours = isNaN(parsedHours) ? 23 : (parsedHours - 1 + 24) % 24
+    hours.value = String(newHours).padStart(2, '0')
+  } else {
+    const newMinutes = parsedMinutes - 1
+    minutes.value = String(newMinutes).padStart(2, '0')
+  }
 }
 
 const focus = () => {
@@ -97,7 +123,7 @@ defineExpose({
         class="a-datetime-picker-time__input a-datetime-picker-time__input--hours"
         type="number"
         aria-label="Hour"
-        tabindex="-1"
+        tabindex="1"
         step="1"
         min="0"
         max="23"
@@ -108,11 +134,15 @@ defineExpose({
       >
       <div class="a-datetime-picker-time__arrows">
         <VIcon
+          tabindex="2"
+          role="button"
           icon="mdi-chevron-up"
           class="a-datetime-picker-time__arrow-up"
           @click="increaseHours"
         />
         <VIcon
+          tabindex="3"
+          role="button"
           icon="mdi-chevron-down"
           class="a-datetime-picker-time__arrow-down"
           @click="decreaseHours"
@@ -126,7 +156,7 @@ defineExpose({
         class="a-datetime-picker-time__input a-datetime-picker-time__input--minutes"
         type="number"
         aria-label="Minute"
-        tabindex="-1"
+        tabindex="4"
         step="1"
         min="0"
         max="59"
@@ -137,11 +167,15 @@ defineExpose({
       >
       <div class="a-datetime-picker-time__arrows">
         <VIcon
+          tabindex="5"
+          role="button"
           icon="mdi-chevron-up"
           class="a-datetime-picker-time__arrow-up"
           @click="increaseMinutes"
         />
         <VIcon
+          tabindex="6"
+          role="button"
           icon="mdi-chevron-down"
           class="a-datetime-picker-time__arrow-down"
           @click="decreaseMinutes"
@@ -183,10 +217,12 @@ $hover-bg-color: rgb(0 0 0 / 5%);
   &__arrows {
     display: flex;
     flex-direction: column;
-    visibility: hidden;
+    opacity: 0;
 
-    .a-datetime-picker-time__item:hover & {
-      visibility: visible;
+    .a-datetime-picker-time__item:hover &,
+    .a-datetime-picker-time__input:focus + &,
+    &:focus-within {
+      opacity: 1;
     }
 
     .v-icon {
