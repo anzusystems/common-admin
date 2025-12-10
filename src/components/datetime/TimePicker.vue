@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, useTemplateRef, watch } from 'vue'
+import { nextTick, ref, useTemplateRef, watch, computed } from 'vue'
 
 const emit = defineEmits<{
   (e: 'onEnterKeyup'): void
@@ -19,6 +19,42 @@ const minutes = ref<string | undefined>(
 )
 
 const hoursRefInput = useTemplateRef<HTMLInputElement>('hoursRefInput')
+
+const hoursComputed = computed({
+  get: () => hours.value,
+  set: (value: string | number) => {
+    let cleanValue = String(value).replace(/[^0-9]/g, '')
+
+    if (cleanValue && parseInt(cleanValue) > 23) {
+      hours.value = '23'
+      return
+    }
+
+    if (cleanValue.length > 2) {
+      cleanValue = cleanValue.slice(0, 2)
+    }
+
+    hours.value = cleanValue
+  }
+})
+
+const minutesComputed = computed({
+  get: () => minutes.value,
+  set: (value: string | number) => {
+    let cleanValue = String(value).replace(/[^0-9]/g, '')
+
+    if (cleanValue && parseInt(cleanValue) > 59) {
+      minutes.value = '59'
+      return
+    }
+
+    if (cleanValue.length > 2) {
+      cleanValue = cleanValue.slice(0, 2)
+    }
+
+    minutes.value = cleanValue
+  }
+})
 
 const selectContent = async (event: FocusEvent) => {
   const target = event.target as HTMLInputElement | null
@@ -119,15 +155,13 @@ defineExpose({
     <div class="a-datetime-picker-time__item a-datetime-picker-time__item">
       <input
         ref="hoursRefInput"
-        v-model="hours"
+        v-model="hoursComputed"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--hours"
-        type="number"
+        type="text"
         aria-label="Hour"
         tabindex="1"
-        step="1"
         min="0"
         max="23"
-        maxlength="2"
         @focus="selectContent"
         @blur="onBlurHours"
         @keyup.enter="onEnterHoursKeyup"
@@ -154,15 +188,13 @@ defineExpose({
     <span class="a-datetime-picker-time__separator">:</span>
     <div class="a-datetime-picker-time__item">
       <input
-        v-model="minutes"
+        v-model="minutesComputed"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--minutes"
-        type="number"
+        type="text"
         aria-label="Minute"
         tabindex="2"
-        step="1"
         min="0"
         max="59"
-        maxlength="2"
         @focus="selectContent"
         @blur="onBlurMinutes"
         @keyup.enter="onEnterMinutesKeyup"
@@ -239,6 +271,7 @@ $hover-bg-color: rgb(0 0 0 / 5%);
 
   &__input {
     width: 100%;
+    max-width: 128px;
     height: 100%;
     display: inline-block;
     background: transparent;
