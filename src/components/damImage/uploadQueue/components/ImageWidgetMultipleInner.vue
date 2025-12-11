@@ -340,7 +340,7 @@ const saveImages = async () => {
       if (image.showDamAuthors && image.assetId) {
         assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
       }
-      if (image.damAuthors.length > 0) {
+      if (image.damAuthors.length > 0 && image.showDamAuthors) {
         const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, image.damAuthors)
         image.texts.source = authorsRes.map((author) => author.name).join(', ')
       }
@@ -348,7 +348,7 @@ const saveImages = async () => {
     if (assetUpdateItems.length) {
       await bulkUpdateAssetsAuthors(damClient, assetUpdateItems)
     }
-    const resItems = await bulkUpdateImages(imageClient, toRaw(images.value))
+    const resItems = await bulkUpdateImages(imageClient, imagesRaw)
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
       ids.push(resItem.id)

@@ -10,6 +10,7 @@ import utc from 'dayjs/plugin/utc'
 import { SUFFIX } from '@/utils/datetime'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { useI18n } from 'vue-i18n'
+import type { VTextField } from 'vuetify/components/VTextField'
 
 const props = withDefaults(
   defineProps<{
