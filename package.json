@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.337",
+  "version": "1.47.0-beta.338",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -55,7 +55,7 @@
     "@intlify/unplugin-vue-i18n": "^11.0.3",
     "@kyvg/vue3-notification": "^3.4.2",
     "@mdi/font": "^7.4.47",
-    "@sentry/vue": "^10.29.0",
+    "@sentry/vue": "^10.30.0",
     "@shikijs/vitepress-twoslash": "^3.19.0",
     "@stylistic/eslint-plugin": "^5.6.1",
     "@tsconfig/node22": "^22.0.5",
@@ -106,7 +106,7 @@
     "vue": "3.5.25",
     "vue-eslint-parser": "^10.2.0",
     "vue-i18n": "11.2.2",
-    "vue-router": "4.6.3",
+    "vue-router": "4.6.4",
     "vue-tsc": "3.1.5",
     "vuetify": "3.11.3",
     "webfontloader": "^1.6.28"
@@ -124,7 +124,7 @@
     "unplugin": "2.3.11",
     "vue": "3.5.25",
     "vue-i18n": "11.2.2",
-    "vue-router": "4.6.3",
+    "vue-router": "4.6.4",
     "vuetify": "3.11.3"
   },
   "peerDependenciesMeta": {

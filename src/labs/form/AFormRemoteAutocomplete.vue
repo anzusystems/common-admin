@@ -334,7 +334,11 @@ const onSearchUpdate = (query: string) => {
 }
 
 const onClickClear = async () => {
-  fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
+  try {
+    fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
+  } catch (e) {
+    showErrorsDefault(e)
+  }
   if (props.multiple) {
     modelValue.value = []
     return

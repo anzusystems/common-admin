@@ -161,10 +161,10 @@ const apiSearch = async (query: string, requestCounter: number) => {
   try {
     const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
     if (requestCounter === apiRequestCounter.value) fetchedItems.value = res
-    loading.value = false
   } catch (e) {
-    loading.value = false
     showErrorsDefault(e)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -198,9 +198,14 @@ const autoFetch = async () => {
   if (autoFetched.value === true) return
   autoFetched.value = true
   loading.value = true
-  const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
-  if (apiRequestCounter.value === 0) fetchedItems.value = res
-  loading.value = false
+  try {
+    const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
+    if (apiRequestCounter.value === 0) fetchedItems.value = res
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    loading.value = false
+  }
 }
 
 const onFocus = () => {
@@ -242,7 +247,11 @@ const onSelectedUpdate = (newValue: any) => {
 }
 
 const onClickClear = async () => {
-  fetchedItems.value = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
+  try {
+    fetchedItems.value = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
+  } catch (e) {
+    showErrorsDefault(e)
+  }
   clearField()
 }
 
@@ -305,17 +314,27 @@ watch(
     }
     if (isArray(newValue)) {
       loading.value = true
-      selectedItemsCache.value = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
-      selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))
-      updateFilterSelected(selected.value)
-      loading.value = false
+      try {
+        selectedItemsCache.value = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
+        selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))
+        updateFilterSelected(selected.value)
+      } catch (e) {
+        showErrorsDefault(e)
+      } finally {
+        loading.value = false
+      }
       return
     }
     loading.value = true
-    selectedItemsCache.value = await props.fetchItemsMinimalByIds([newValue as DocId & IntegerId])
-    selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))[0]
-    updateFilterSelected(selected.value)
-    loading.value = false
+    try {
+      selectedItemsCache.value = await props.fetchItemsMinimalByIds([newValue as DocId & IntegerId])
+      selected.value = selectedItemsCache.value.map((item) => ({ title: item.title, value: item.value }))[0]
+      updateFilterSelected(selected.value)
+    } catch (e) {
+      showErrorsDefault(e)
+    } finally {
+      loading.value = false
+    }
   },
   { immediate: true }
 )

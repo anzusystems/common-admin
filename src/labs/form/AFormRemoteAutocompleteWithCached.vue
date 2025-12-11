@@ -13,6 +13,7 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
+import { useAlerts } from '@/composables/system/alerts'
 
 type FetchItemsMinimalType = (
   pagination: Ref<Pagination>,
@@ -163,6 +164,8 @@ const requiredComputed = computed(() => {
   return props.v?.required && props.v?.required.$params.type === 'required'
 })
 
+const { showErrorsDefault } = useAlerts()
+
 const apiSearch = async (query: string | null) => {
   if (isNull(query) || query.length < props.minSearchChars) {
     fetchedItemsMinimal.value.clear()
@@ -171,11 +174,16 @@ const apiSearch = async (query: string | null) => {
   loadingLocal.value = true
   filterInnerData[props.filterByField] = query
   fetchedItemsMinimal.value.clear()
-  const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
-  res.forEach((item: any) => {
-    fetchedItemsMinimal.value.set(item[props.itemValue], item)
-  })
-  loadingLocal.value = false
+  try {
+    const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
+    res.forEach((item: any) => {
+      fetchedItemsMinimal.value.set(item[props.itemValue], item)
+    })
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    loadingLocal.value = false
+  }
 }
 
 const allItems = computed<ValueObjectOption<DocId | IntegerId>[]>(() => {
@@ -220,7 +228,8 @@ const onClickClear = () => {
 
 watchDebounced(
   search,
-  (newValueBug, oldValueBug) => { // todo rollback fix when fixed on vuetify/vue use side
+  (newValueBug, oldValueBug) => {
+    // todo rollback fix when fixed on vuetify/vue use side
     const newValue = newValueBug as unknown as string
     const oldValue = oldValueBug as unknown as string | undefined
     if (newValue !== oldValue) {

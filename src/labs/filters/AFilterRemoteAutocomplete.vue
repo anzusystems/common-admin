@@ -144,11 +144,15 @@ const loadListItems = async (ids: T[] | T) => {
 
   try {
     const idsArray = isArray(ids) ? ids : [ids]
-    selectedItemsCache.value = await props.fetchItemsByIds(idsArray)
-    const selectedNewValue = updateSelected(ids)
-    selected.value = selectedNewValue
-    modelValueAutocomplete.value = selectedNewValue
-    updateFilterSelected(selected.value)
+    try {
+      selectedItemsCache.value = await props.fetchItemsByIds(idsArray)
+      const selectedNewValue = updateSelected(ids)
+      selected.value = selectedNewValue
+      modelValueAutocomplete.value = selectedNewValue
+      updateFilterSelected(selected.value)
+    } catch (e) {
+      showErrorsDefault(e)
+    }
     return selectedItemsCache.value
   } finally {
     loading.value = false
@@ -217,7 +221,11 @@ const clearField = () => {
 }
 
 const onClickClear = async () => {
-  fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
+  try {
+    fetchedItems.value = await props.fetchItems(pagination, filterInnerData, filterInnerConfig)
+  } catch (e) {
+    showErrorsDefault(e)
+  }
   clearField()
 }
 
