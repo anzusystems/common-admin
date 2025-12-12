@@ -21,6 +21,7 @@ export type CurrentUserType = DeepReadonly<Ref<UnwrapRef<AnzuUser | undefined>>>
 export interface CommonAdminImageConfig {
   imageClient: () => AxiosInstance
   previewDomain: string
+  previewDomainOriginal: string
   width: number
   height: number
 }

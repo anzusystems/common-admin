@@ -20,6 +20,7 @@ export function useCommonAdminImageOptions(configName: string = 'default') {
   return {
     imageClient: imageOptions.value.configs[configName].imageClient,
     previewDomain: imageOptions.value.configs[configName].previewDomain,
+    previewDomainOriginal: imageOptions.value.configs[configName].previewDomainOriginal,
     imageWidth: imageOptions.value.configs[configName].width,
     imageHeight: imageOptions.value.configs[configName].height,
   }

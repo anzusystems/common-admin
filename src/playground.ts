@@ -45,6 +45,7 @@ createApp(App)
         default: {
           imageClient: cmsClient,
           previewDomain: 'http://admin-image.smedata.localhost',
+          previewDomainOriginal: 'http://image.smedata.localhost',
           width: 500,
           height: 281,
         },

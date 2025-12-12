@@ -19,7 +19,6 @@ const props = withDefaults(
     width?: number | undefined
     height?: undefined | number
     disableAspectRatio?: boolean
-    disableRandom?: boolean
     aspectRatio?: number | string
     showDescription?: boolean
     showSource?: boolean
@@ -35,7 +34,6 @@ const props = withDefaults(
     width: undefined,
     height: undefined,
     disableAspectRatio: false,
-    disableRandom: false,
     aspectRatio: 1.777, // 16/9
     showDescription: false,
     showSource: false,
@@ -63,9 +61,9 @@ const { t } = useI18n()
 
 const getImageUrl = (image: ImageAware | ImageCreateUpdateAware) => {
   if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-    return widgetImageToDamImageUrl(image, props.damWidth, props.damHeight, !props.disableRandom)
+    return widgetImageToDamImageUrl(image, props.damWidth, props.damHeight)
   }
-  return widgetImageToDamImageUrl(image, imageOptions.imageWidth, imageOptions.imageHeight, !props.disableRandom)
+  return widgetImageToDamImageUrl(image, imageOptions.imageWidth, imageOptions.imageHeight)
 }
 
 watch(

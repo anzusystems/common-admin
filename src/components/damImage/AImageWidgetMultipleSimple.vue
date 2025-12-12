@@ -80,7 +80,6 @@ watch(
             :config-name="configName"
             :width="width"
             :disable-aspect-ratio="disableAspectRatio"
-            disable-random
             :aspect-ratio="aspectRatio"
             :show-description="showDescription"
             :show-source="showSource"
