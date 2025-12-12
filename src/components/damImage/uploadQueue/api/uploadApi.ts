@@ -12,7 +12,7 @@ import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 
 const NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS = 10
-const NOTIFICATION_FALLBACK_MAX_TRIES = 3
+const NOTIFICATION_FALLBACK_MAX_TRIES = 4
 
 export const damUploadStart: (client: () => AxiosInstance, item: UploadQueueItem) => Promise<DamUploadStartResponse> = (
   client: () => AxiosInstance,
