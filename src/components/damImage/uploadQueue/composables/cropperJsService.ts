@@ -1,6 +1,5 @@
 import type { RegionOfInterest } from '@/types/coreDam/Roi'
 import { stringToFloat, stringToInt } from '@/utils/string'
-import type { ComponentPublicInstance } from 'vue'
 
 const PRECISION = 3
 
@@ -14,22 +13,22 @@ export interface ACropperjsExposed {
 }
 
 export const regionToCrop = function (
-  cropper: ComponentPublicInstance<{}, ACropperjsExposed>,
-
+  cropper: ACropperjsExposed,
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
   originalImageHeight: number
 ) {
   const imageData = cropper.getImageData()
-  if (!imageData) return {
-    x: 0,
-    y: 0,
-    width: 100,
-    height: 100,
-    rotate: 0,
-    scaleX: 1,
-    scaleY: 1,
-  }
+  if (!imageData)
+    return {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      rotate: 0,
+      scaleX: 1,
+      scaleY: 1,
+    }
   const ratio = imageData.naturalHeight / originalImageHeight
 
   return {
@@ -44,7 +43,7 @@ export const regionToCrop = function (
 }
 
 export const cropToRegion = function (
-  cropper: ComponentPublicInstance<{}, ACropperjsExposed>,
+  cropper: ACropperjsExposed,
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
   originalImageHeight: number

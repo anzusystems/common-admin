@@ -152,7 +152,7 @@ onMounted(() => {
       cropperInstance.value = new Cropper(imgEl.value as any, options)
       setTimeout(() => {
         loading.value = false
-      }, 1000)
+      }, 500)
     }
   })
 })
@@ -168,7 +168,10 @@ onUnmounted(() => {
       v-if="loading"
       class="d-flex w-100 align-center justify-center"
     >
-      <VProgressCircular indeterminate />
+      <VProgressCircular
+        class="position-absolute"
+        indeterminate
+      />
     </div>
 
     <div :style="containerStyle">

@@ -14,6 +14,8 @@ import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { SORT_BY_ID } from '@/composables/system/datatableColumns'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageApi'
+import type { DocId } from '@/types/common'
 
 withDefaults(
   defineProps<{
@@ -37,13 +39,21 @@ const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilte
   subject: ENTITY,
 })
 
-const loadRois = async () => {
+const loadImageFile = async (id: DocId) => {
+  const res = await fetchImageFile(damClient, id)
+  imageRoiStore.setImageFile(res)
+}
+
+const loadRois = async (forceReloadFile = false) => {
+  imageRoiStore.showLoader()
   if (imageRoiStore.imageFile) {
     const { executeFetch } = useFetchImageRoiList(damClient, imageRoiStore.imageFile.id)
-    imageRoiStore.showLoader()
     const res = await executeFetch(pagination, filterData, filterConfig)
     if (res.length > 0 && res[0].id) {
       const roi = await fetchRoi(damClient, res[0].id)
+      if (forceReloadFile) {
+        await loadImageFile(imageRoiStore.imageFile.id)
+      }
       imageRoiStore.setRoi(roi)
       imageRoiStore.hideLoader()
       return
@@ -57,9 +67,7 @@ const loadRois = async () => {
 }
 
 const afterRotate = async () => {
-  await loadRois()
-  imageRoiStore.forceReloadRoiPreviews()
-  imageRoiStore.forceReloadCropper()
+  await loadRois(true)
 }
 
 onMounted(async () => {
@@ -84,7 +92,7 @@ onMounted(async () => {
   >
     <ABtnTertiary
       v-if="!imageRoiStore.loader"
-      @click.stop="imageRoiStore.forceReloadRoiPreviews()"
+      @click.stop="loadRois(true)"
     >
       {{ t('common.damImage.asset.detail.roi.refresh') }}
     </ABtnTertiary>
@@ -119,7 +127,8 @@ onMounted(async () => {
         {{ item.title }}
       </div>
       <img
-        :src="item.url + '?timestamp=' + imageRoiStore.timestampRoiPreviews"
+        v-if="imageRoiStore.imageFile"
+        :src="item.url + '?manipulated=' + imageRoiStore.imageFile.manipulatedAt"
         :width="item.width"
         :height="item.height"
         alt=""

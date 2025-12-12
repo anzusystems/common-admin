@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, useTemplateRef } from 'vue'
 import { useAlerts } from '@/composables/system/alerts'
 import { useImageRoiStore } from '@/components/damImage/uploadQueue/composables/imageRoiStore'
 import { updateRoi } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import { cropToRegion, regionToCrop, type ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ACropperjs from '@/components/ACropperjs.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import type { IntegerId } from '@/types/common'
+import type { DocId, IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
+import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageApi'
 
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
   }>(),
-  {
-  }
+  {}
 )
 
 const { showRecordWas, showErrorsDefault } = useAlerts()
@@ -33,45 +33,51 @@ if (isUndefined(configExtSystem)) {
   throw new Error('DamAssetImageRoiSelect: Ext system must be initialised.')
 }
 
-const cropper = ref<any>(null) // fix any
+const cropperInstance = useTemplateRef<ACropperjsExposed>('cropperInstance')
 
 const imageUrl = computed(() => {
   if (imageRoiStore.imageFile && imageRoiStore.imageFile.links?.image_detail) {
-    return imageRoiStore.imageFile.links.image_detail.url
+    return imageRoiStore.imageFile.links.image_detail.url + '?manipulated=' + imageRoiStore.imageFile.manipulatedAt
   }
   return ''
 })
 
 const enableCropper = () => {
-  if (cropper.value) {
-    cropper.value.enable()
+  if (cropperInstance.value) {
+    cropperInstance.value.enable()
   }
 }
 
 const disableCropper = () => {
-  if (cropper.value) {
-    cropper.value.disable()
+  if (cropperInstance.value) {
+    cropperInstance.value.disable()
   }
 }
 
 const applyRegionOfInterest = () => {
-  if (cropper.value && imageRoiStore.roi && imageRoiStore.imageFile) {
+  if (cropperInstance.value && imageRoiStore.roi && imageRoiStore.imageFile) {
     enableCropper()
     const data = regionToCrop(
-      cropper.value,
+      cropperInstance.value,
       imageRoiStore.roi,
       imageRoiStore.imageFile.imageAttributes.width,
       imageRoiStore.imageFile.imageAttributes.height
     )
-    cropper.value.setData(data)
+    cropperInstance.value.setData(data)
     disableCropper()
   }
 }
 
+const loadImageFile = async (id: DocId) => {
+  const res = await fetchImageFile(damClient, id)
+  imageRoiStore.setImageFile(res)
+  imageRoiStore.hideLoader()
+}
+
 const saveRoi = async () => {
-  if (cropper.value && imageRoiStore.roi && imageRoiStore.imageFile) {
+  if (cropperInstance.value && imageRoiStore.roi && imageRoiStore.imageFile) {
     const roi = cropToRegion(
-      cropper.value,
+      cropperInstance.value,
       imageRoiStore.roi,
       imageRoiStore.imageFile.imageAttributes.width,
       imageRoiStore.imageFile.imageAttributes.height
@@ -81,12 +87,12 @@ const saveRoi = async () => {
       await updateRoi(damClient, roi.id, roi)
       showRecordWas('updated')
       setTimeout(() => {
-        imageRoiStore.forceReloadRoiPreviews()
+        if (imageRoiStore.imageFile) {
+          loadImageFile(imageRoiStore.imageFile.id)
+        }
       }, 2000)
     } catch (error) {
       showErrorsDefault(error)
-    } finally {
-      imageRoiStore.hideLoader()
     }
   }
 }
@@ -108,18 +114,23 @@ const showCropper = computed(() => {
 })
 
 onUnmounted(() => {
-  if (cropper.value) {
-    cropper.value.destroy()
-    cropper.value = null
+  if (cropperInstance.value) {
+    cropperInstance.value.destroy()
   }
 })
 </script>
 
 <template>
+  <div
+    v-if="imageRoiStore.loader"
+    class="d-flex w-100 align-center justify-center"
+  >
+    <VProgressCircular indeterminate />
+  </div>
   <ACropperjs
     v-if="showCropper"
-    :key="imageRoiStore.timestampCropper"
-    ref="cropper"
+    :key="imageRoiStore.imageFile?.manipulatedAt || 0"
+    ref="cropperInstance"
     :aspect-ratio="configExtSystem.image.roiWidth / configExtSystem.image.roiHeight"
     :background="false"
     :check-cross-origin="false"

@@ -1,4 +1,4 @@
-import type { DocId, DocIdNullable } from '@/types/common'
+import type { DatetimeUTC, DocId, DocIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 
 export const AssetFileProcessStatus = {
@@ -85,6 +85,7 @@ export interface AssetFileImage extends AssetFileAware, AnzuUserAndTimeTrackingA
   originAssetFile: DocIdNullable
   links?: AssetFileLinks
   metadata: Metadata
+  manipulatedAt: DatetimeUTC
   _resourceName: 'imageFile'
 }
 
