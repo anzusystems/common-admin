@@ -88,7 +88,11 @@ function calculateFallbackTime(item: UploadQueueItem) {
 async function notificationFallbackCallback(client: () => AxiosInstance, item: UploadQueueItem) {
   clearTimeout(item.notificationFallbackTimer)
   if (item.status === UploadQueueItemStatus.Uploaded) return
-  if (item.notificationFallbackTry > NOTIFICATION_FALLBACK_MAX_TRIES) return
+  if (item.notificationFallbackTry > NOTIFICATION_FALLBACK_MAX_TRIES) {
+    item.error.hasError = true
+    item.error.message = 'Processing is taking too long. Use item refresh button or remove item and retry later.'
+    return
+  }
   if (!item.assetId) return
   const asset = await fetchAsset(client, item.assetId)
   if (asset && asset.mainFile && asset.mainFile.fileAttributes) {
