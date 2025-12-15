@@ -154,7 +154,7 @@ const isTypeDocument = computed(() => {
 const imageProperties = computed(() => {
   if (item.value?.imagePreview) {
     return {
-      url: item.value.imagePreview.url + '?random=' + Date.now(),
+      url: item.value.imagePreview.url,
       width: item.value.imagePreview.requestedWidth || undefined,
       height: item.value.imagePreview.requestedHeight || undefined,
       bgColor:
