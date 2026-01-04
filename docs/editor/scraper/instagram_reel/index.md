@@ -61,7 +61,7 @@ type Author = {
 type Image = {
   variants: Array<{
     url: string
-    damId: DocId
+    damId?: DocId
     width: number
     height: number
     contentType: string

@@ -43,6 +43,7 @@
 - [sofascore_standing](/editor/scraper/sofascore_standing/)
 - [sofascore_totw](/editor/scraper/sofascore_totw/)
 - [soundcloud_track](/editor/scraper/soundcloud_track/)
+- [sportnet_video](/editor/scraper/sportnet_video/)
 - [spotify_episode](/editor/scraper/spotify_episode/)
 - [ta3_video](/editor/scraper/ta3_video/)
 - [tableau_visual](/editor/scraper/tableau_visual/)

@@ -256,6 +256,7 @@ function sidebarEditor() {
         { text: 'sofascore_standing', link: '/editor/scraper/sofascore_standing/' },
         { text: 'sofascore_totw', link: '/editor/scraper/sofascore_totw/' },
         { text: 'soundcloud_track', link: '/editor/scraper/soundcloud_track/' },
+        { text: 'sportnet_video', link: '/editor/scraper/sportnet_video/' },
         { text: 'spotify_episode', link: '/editor/scraper/spotify_episode/' },
         { text: 'ta3_video', link: '/editor/scraper/ta3_video/' },
         { text: 'tableau_visual', link: '/editor/scraper/tableau_visual/' },
