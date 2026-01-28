@@ -246,7 +246,7 @@ __metadata:
     stylelint-config-recommended-vue: "npm:^1.6.1"
     stylelint-config-standard-scss: "npm:^17.0.0"
     typescript: "npm:5.9.3"
-    unplugin: "npm:2.3.11"
+    unplugin: "npm:3.0.0"
     uuid: "npm:^13.0.0"
     vite: "npm:7.3.1"
     vite-plugin-dts: "npm:4.5.4"
@@ -270,7 +270,7 @@ __metadata:
     dayjs: 1.11.19
     pinia: 3.0.4
     socket.io-client: 4.8.3
-    unplugin: 2.3.11
+    unplugin: 3.0.0
     vue: 3.5.27
     vue-i18n: 11.2.8
     vue-router: 4.6.4
@@ -9046,7 +9046,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin@npm:2.3.11, unplugin@npm:^2.3.4":
+"unplugin@npm:3.0.0":
+  version: 3.0.0
+  resolution: "unplugin@npm:3.0.0"
+  dependencies:
+    "@jridgewell/remapping": "npm:^2.3.5"
+    picomatch: "npm:^4.0.3"
+    webpack-virtual-modules: "npm:^0.6.2"
+  checksum: 10/d59f5350b1666e38ac6881ee2da4fd00485ee26995131b3ca0d90d0bdeebdc0c4f8a13d3b3709e2114809ca59708f1faa122de6117079bdd394c7e6e5e211faa
+  languageName: node
+  linkType: hard
+
+"unplugin@npm:^2.3.4":
   version: 2.3.11
   resolution: "unplugin@npm:2.3.11"
   dependencies:
