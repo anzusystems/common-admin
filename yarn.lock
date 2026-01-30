@@ -256,25 +256,25 @@ __metadata:
     vue: "npm:3.5.27"
     vue-eslint-parser: "npm:^10.2.0"
     vue-i18n: "npm:11.2.8"
-    vue-router: "npm:5.0.0"
+    vue-router: "npm:5.0.1"
     vue-tsc: "npm:3.2.4"
     vuetify: "npm:3.11.8"
     webfontloader: "npm:^1.6.28"
   peerDependencies:
     "@sentry/vue": ^10.0.0
-    "@vuelidate/core": 2.0.3
-    "@vuelidate/validators": 2.0.4
-    "@vueuse/core": 14.1.0
-    "@vueuse/integrations": 14.1.0
-    axios: 1.13.4
-    dayjs: 1.11.19
-    pinia: 3.0.4
-    socket.io-client: 4.8.3
-    unplugin: 3.0.0
-    vue: 3.5.27
-    vue-i18n: 11.2.8
-    vue-router: 5.0.0
-    vuetify: 3.11.8
+    "@vuelidate/core": ^2.0.3
+    "@vuelidate/validators": ^2.0.4
+    "@vueuse/core": ^14.1.0
+    "@vueuse/integrations": ^14.1.0
+    axios: ^1.13.4
+    dayjs: ^1.11.19
+    pinia: ^3.0.4
+    socket.io-client: ^4.8.3
+    unplugin: ^3.0.0
+    vue: ^3.5.27
+    vue-i18n: ^11.2.8
+    vue-router: ^5.0.1
+    vuetify: ^3.11.8
   peerDependenciesMeta:
     "@sentry/vue":
       optional: true
@@ -9834,9 +9834,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-router@npm:5.0.0":
-  version: 5.0.0
-  resolution: "vue-router@npm:5.0.0"
+"vue-router@npm:5.0.1":
+  version: 5.0.1
+  resolution: "vue-router@npm:5.0.1"
   dependencies:
     "@babel/generator": "npm:^7.28.6"
     "@vue-macros/common": "npm:^3.1.1"
@@ -9867,7 +9867,7 @@ __metadata:
       optional: true
     pinia:
       optional: true
-  checksum: 10/e03d29466341ee5877c435da37ec7322e4369629c89162d7e5eaf065cafbbfc86135c91650dafdf54c854289f97e162249f4dc30ca7c66baf1573be59795544a
+  checksum: 10/ee55540efffaeb838bcbd0c3f4b127b6bcc908e11f1ec87032cbe384a28bcff4fda57546dc818b195bba52b16caea29db2613c87405690ab1c8dac6a9db3f5b7
   languageName: node
   linkType: hard
 

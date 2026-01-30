@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.348",
+  "version": "1.47.0-beta.349",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -106,26 +106,26 @@
     "vue": "3.5.27",
     "vue-eslint-parser": "^10.2.0",
     "vue-i18n": "11.2.8",
-    "vue-router": "5.0.0",
+    "vue-router": "5.0.1",
     "vue-tsc": "3.2.4",
     "vuetify": "3.11.8",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
     "@sentry/vue": "^10.0.0",
-    "@vuelidate/core": "2.0.3",
-    "@vuelidate/validators": "2.0.4",
-    "@vueuse/core": "14.1.0",
-    "@vueuse/integrations": "14.1.0",
-    "axios": "1.13.4",
-    "dayjs": "1.11.19",
-    "pinia": "3.0.4",
-    "socket.io-client": "4.8.3",
-    "unplugin": "3.0.0",
-    "vue": "3.5.27",
-    "vue-i18n": "11.2.8",
-    "vue-router": "5.0.0",
-    "vuetify": "3.11.8"
+    "@vuelidate/core": "^2.0.3",
+    "@vuelidate/validators": "^2.0.4",
+    "@vueuse/core": "^14.1.0",
+    "@vueuse/integrations": "^14.1.0",
+    "axios": "^1.13.4",
+    "dayjs": "^1.11.19",
+    "pinia": "^3.0.4",
+    "socket.io-client": "^4.8.3",
+    "unplugin": "^3.0.0",
+    "vue": "^3.5.27",
+    "vue-i18n": "^11.2.8",
+    "vue-router": "^5.0.1",
+    "vuetify": "^3.11.8"
   },
   "peerDependenciesMeta": {
     "@sentry/vue": {
