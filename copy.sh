@@ -42,3 +42,5 @@ mkdir -p "${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist"
 
 # Use paths from sourced file
 cp -r "${COMMON_ADMIN_PROJECT}/dist/"* "${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist/"
+
+echo "Successfully copied release from ${COMMON_ADMIN_PROJECT}/dist to ${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist"

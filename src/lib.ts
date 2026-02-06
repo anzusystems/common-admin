@@ -105,7 +105,7 @@ import {
   useCustomDataFormElementType,
 } from '@/components/customDataForm/CustomDataFormElementTypes'
 import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
-import { i18n } from '@/plugins/i18n'
+import { i18n, slovakPluralizationRule } from '@/plugins/i18n'
 import {
   type Immutable,
   objectDeepFreeze,
@@ -1129,6 +1129,7 @@ export {
 
   // OTHER
   i18n,
+  slovakPluralizationRule,
   useI18n,
   isAnzuApiForbiddenError,
   axiosErrorResponseIsForbidden,

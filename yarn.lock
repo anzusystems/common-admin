@@ -209,7 +209,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^3.22.0"
     "@stylistic/eslint-plugin": "npm:^5.7.1"
     "@tsconfig/node22": "npm:^22.0.5"
-    "@types/node": "npm:^24.10.10"
+    "@types/node": "npm:^24.10.11"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.9"
     "@types/webfontloader": "npm:^1.6.38"
@@ -242,7 +242,7 @@ __metadata:
     sass: "npm:1.97.3"
     socket.io-client: "npm:4.8.3"
     sortablejs: "npm:^1.15.6"
-    stylelint: "npm:17.1.0"
+    stylelint: "npm:17.1.1"
     stylelint-config-recommended-vue: "npm:^1.6.1"
     stylelint-config-standard-scss: "npm:^17.0.0"
     typescript: "npm:5.9.3"
@@ -2383,12 +2383,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^24.10.10":
-  version: 24.10.10
-  resolution: "@types/node@npm:24.10.10"
+"@types/node@npm:*, @types/node@npm:^24.10.11":
+  version: 24.10.11
+  resolution: "@types/node@npm:24.10.11"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10/0b5beb828c0d91c446f55ab6e4ca15527de0437c6cdd2faf55aa6da8666782523d4e1bf5cc9e366ded0b939563032c5db4f7d34131b0446b984325e82d1d908e
+  checksum: 10/ff7124058917a0f658637ac0137a3906c83c1dc78928228d8045a06ae8b6a02c1f15bf1fbe86c8d6f1839ccdd6033f3d79d615493f196f54b9130c50a65a64fa
   languageName: node
   linkType: hard
 
@@ -8748,9 +8748,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stylelint@npm:17.1.0":
-  version: 17.1.0
-  resolution: "stylelint@npm:17.1.0"
+"stylelint@npm:17.1.1":
+  version: 17.1.1
+  resolution: "stylelint@npm:17.1.1"
   dependencies:
     "@csstools/css-parser-algorithms": "npm:^4.0.0"
     "@csstools/css-syntax-patches-for-csstree": "npm:^1.0.25"
@@ -8792,7 +8792,7 @@ __metadata:
     write-file-atomic: "npm:^7.0.0"
   bin:
     stylelint: bin/stylelint.mjs
-  checksum: 10/004f04546ec4a0defd05f977d74ff346b34d1af18f0507ae7015c72926f4f10e3a83a4246b5369e579f2557a1cd6e8708ea647210f02730f36d4b8e982a9d359
+  checksum: 10/f253a5af2c294b30043b7c17903cecdd596227d28d684bfc0b7f54634ffdee246b5743c7e61c9048c17e9ce0ae3bb7368876109f932073a343428fc86b0cba9a
   languageName: node
   linkType: hard
 
