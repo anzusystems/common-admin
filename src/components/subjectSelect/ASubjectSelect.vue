@@ -1,5 +1,5 @@
 <script lang="ts" setup generic="TItem">
-import { computed, ref, toRaw, withModifiers } from 'vue'
+import { computed, onMounted, ref, toRaw, withModifiers } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
@@ -19,6 +19,7 @@ const props = withDefaults(
     modelValue?: boolean | undefined // dialog
     dialogTitleT?: string
     paginationMode?: 'standard' | 'more'
+    autoOpen?: boolean
   }>(),
   {
     loading: false,
@@ -27,6 +28,7 @@ const props = withDefaults(
     modelValue: undefined,
     dialogTitleT: 'common.subjectSelect.texts.title',
     paginationMode: 'standard',
+    autoOpen: false,
   }
 )
 const emit = defineEmits<{
@@ -116,6 +118,12 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
     fetchNextPage()
   }
 }
+
+onMounted(() => {
+  if (props.autoOpen) {
+    onOpen()
+  }
+})
 
 defineExpose({
   open: onOpen,

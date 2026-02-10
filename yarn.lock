@@ -209,7 +209,7 @@ __metadata:
     "@shikijs/vitepress-twoslash": "npm:^3.22.0"
     "@stylistic/eslint-plugin": "npm:^5.8.0"
     "@tsconfig/node22": "npm:^22.0.5"
-    "@types/node": "npm:^24.10.12"
+    "@types/node": "npm:^24.10.13"
     "@types/rusha": "npm:^0.8.3"
     "@types/sortablejs": "npm:^1.15.9"
     "@types/webfontloader": "npm:^1.6.38"
@@ -224,8 +224,8 @@ __metadata:
     "@vue/tsconfig": "npm:0.8.1"
     "@vuelidate/core": "npm:^2.0.3"
     "@vuelidate/validators": "npm:^2.0.4"
-    "@vueuse/core": "npm:^14.2.0"
-    "@vueuse/integrations": "npm:^14.2.0"
+    "@vueuse/core": "npm:^14.2.1"
+    "@vueuse/integrations": "npm:^14.2.1"
     axios: "npm:1.13.5"
     cropperjs: "npm:^1.6.2"
     dayjs: "npm:1.11.19"
@@ -242,7 +242,7 @@ __metadata:
     sass: "npm:1.97.3"
     socket.io-client: "npm:4.8.3"
     sortablejs: "npm:^1.15.6"
-    stylelint: "npm:17.1.1"
+    stylelint: "npm:17.2.0"
     stylelint-config-recommended-vue: "npm:^1.6.1"
     stylelint-config-standard-scss: "npm:^17.0.0"
     typescript: "npm:5.9.3"
@@ -374,6 +374,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@csstools/css-calc@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "@csstools/css-calc@npm:3.0.1"
+  peerDependencies:
+    "@csstools/css-parser-algorithms": ^4.0.0
+    "@csstools/css-tokenizer": ^4.0.0
+  checksum: 10/1234fd2387eb455cfac95922849cb0b0f694b4e4d41ace6d7713814e2a3ff510d7f312f84fc4acf9a3adaab944204ebb7eb8f010742eea97b5b45f852a3b8eca
+  languageName: node
+  linkType: hard
+
 "@csstools/css-parser-algorithms@npm:^4.0.0":
   version: 4.0.0
   resolution: "@csstools/css-parser-algorithms@npm:4.0.0"
@@ -383,10 +393,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@csstools/css-syntax-patches-for-csstree@npm:^1.0.25":
-  version: 1.0.25
-  resolution: "@csstools/css-syntax-patches-for-csstree@npm:1.0.25"
-  checksum: 10/42dfcd164ed6a66eee8dd3fcdbdaa58d032ab8c3bb5ead2453915429367766879b25332e09379a67357fd33742b856160e7c0182c7d90be00f57571b916c18e7
+"@csstools/css-syntax-patches-for-csstree@npm:^1.0.26":
+  version: 1.0.27
+  resolution: "@csstools/css-syntax-patches-for-csstree@npm:1.0.27"
+  checksum: 10/d3f27a39c667267a1fc46925e0a0aea4cc93f7c152c400cabd03832a75f521aa39b0e15e95b10d348f496e021bb5fcb32af5dda7b69c5aa4570f048ecaf57dbd
   languageName: node
   linkType: hard
 
@@ -2383,12 +2393,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^24.10.12":
-  version: 24.10.12
-  resolution: "@types/node@npm:24.10.12"
+"@types/node@npm:*, @types/node@npm:^24.10.13":
+  version: 24.10.13
+  resolution: "@types/node@npm:24.10.13"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10/94231e8ff4151a97719d9f996a67e8eee01041f337d710762cafbbab2d15290da91c4a0d27b9577fa95d85ce678524d53e1b193f2270850b0746a6e9a43932d4
+  checksum: 10/c779d14cf17758a9d603e0c0978c8045bd070e259617ec16f4ddac419ec11aac0e0cf2bb013dab008fdbd2f46c39f82397884662bbdfabeb19bef0079679ea48
   languageName: node
   linkType: hard
 
@@ -3219,16 +3229,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/core@npm:14.2.0, @vueuse/core@npm:^14.2.0":
-  version: 14.2.0
-  resolution: "@vueuse/core@npm:14.2.0"
+"@vueuse/core@npm:14.2.1, @vueuse/core@npm:^14.2.1":
+  version: 14.2.1
+  resolution: "@vueuse/core@npm:14.2.1"
   dependencies:
     "@types/web-bluetooth": "npm:^0.0.21"
-    "@vueuse/metadata": "npm:14.2.0"
-    "@vueuse/shared": "npm:14.2.0"
+    "@vueuse/metadata": "npm:14.2.1"
+    "@vueuse/shared": "npm:14.2.1"
   peerDependencies:
     vue: ^3.5.0
-  checksum: 10/b7161e1a8f6ad6069b7f5eb2e00ee505ac09d72a9b39b5d48a5fefa029995e09c04222a768f57bd6a13e39b279c4945b0da7c35d00ec3145d24ba6c86d8b4ebd
+  checksum: 10/9ef2a2e293620bf4862eb5424d289d3e2e0eab1f94158bae445a9b2641f27c6adb49aed71f717e436a5669d0038d6b126d9dafaa4843486d5cb5184729ae381d
   languageName: node
   linkType: hard
 
@@ -3281,12 +3291,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/integrations@npm:^14.2.0":
-  version: 14.2.0
-  resolution: "@vueuse/integrations@npm:14.2.0"
+"@vueuse/integrations@npm:^14.2.1":
+  version: 14.2.1
+  resolution: "@vueuse/integrations@npm:14.2.1"
   dependencies:
-    "@vueuse/core": "npm:14.2.0"
-    "@vueuse/shared": "npm:14.2.0"
+    "@vueuse/core": "npm:14.2.1"
+    "@vueuse/shared": "npm:14.2.1"
   peerDependencies:
     async-validator: ^4
     axios: ^1
@@ -3326,7 +3336,7 @@ __metadata:
       optional: true
     universal-cookie:
       optional: true
-  checksum: 10/f219152392aa04747f94d977ec2e76a9737fbc45977aa89781d8bdd8c5b0e6cedcd6b613264154211caa2eeeffed38f2ec8747806e0f01a9edb92bf78f134f69
+  checksum: 10/2a8df4fb5c5feb84cedbe677709cb02b8bdaabcab235a7ea3c5206e63f55053c6d8dacd3fd1c2aedf50625cb3f1c05102cc413cf10c6f1b34d45409321071de2
   languageName: node
   linkType: hard
 
@@ -3337,10 +3347,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/metadata@npm:14.2.0":
-  version: 14.2.0
-  resolution: "@vueuse/metadata@npm:14.2.0"
-  checksum: 10/9799ee604bc52441d3ea67b1e68580e62c711505a8f65062e950e90e1eafcd9b05eba6b23e8c31e3044bef0d16c42df9495afc5c88216f40ea2025c7a0d44c67
+"@vueuse/metadata@npm:14.2.1":
+  version: 14.2.1
+  resolution: "@vueuse/metadata@npm:14.2.1"
+  checksum: 10/0df90e1eb15b94e559ca7c398950ade6a255ee01cd10fb4711372c9e74f2f93448ecca672ba6ea8bd7eec80b472cb09bf4ddfe479a95919024a9c7adb14331f1
   languageName: node
   linkType: hard
 
@@ -3353,12 +3363,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vueuse/shared@npm:14.2.0":
-  version: 14.2.0
-  resolution: "@vueuse/shared@npm:14.2.0"
+"@vueuse/shared@npm:14.2.1":
+  version: 14.2.1
+  resolution: "@vueuse/shared@npm:14.2.1"
   peerDependencies:
     vue: ^3.5.0
-  checksum: 10/94fded2155c8a482aa5d75f7200ba09ef3d538de66103d0972d73a9d00a67521543b4d5a495ef4b15b43401313a541b9421e99062a380c9586c42b1117c75ac9
+  checksum: 10/813955ddf6c943a4939fcaf9d24582c7e36c9bb5ca148513d486eb3b737822be8b56e70a37c4a593c973b5eb563868f45cb34a45e8d5f27af9ac7a18ec115d02
   languageName: node
   linkType: hard
 
@@ -8748,12 +8758,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stylelint@npm:17.1.1":
-  version: 17.1.1
-  resolution: "stylelint@npm:17.1.1"
+"stylelint@npm:17.2.0":
+  version: 17.2.0
+  resolution: "stylelint@npm:17.2.0"
   dependencies:
+    "@csstools/css-calc": "npm:^3.0.0"
     "@csstools/css-parser-algorithms": "npm:^4.0.0"
-    "@csstools/css-syntax-patches-for-csstree": "npm:^1.0.25"
+    "@csstools/css-syntax-patches-for-csstree": "npm:^1.0.26"
     "@csstools/css-tokenizer": "npm:^4.0.0"
     "@csstools/media-query-list-parser": "npm:^5.0.0"
     "@csstools/selector-resolve-nested": "npm:^4.0.0"
@@ -8792,7 +8803,7 @@ __metadata:
     write-file-atomic: "npm:^7.0.0"
   bin:
     stylelint: bin/stylelint.mjs
-  checksum: 10/f253a5af2c294b30043b7c17903cecdd596227d28d684bfc0b7f54634ffdee246b5743c7e61c9048c17e9ce0ae3bb7368876109f932073a343428fc86b0cba9a
+  checksum: 10/9a7e5ddc004b74bc14f3def96876057d9edb0f7b53a5d24770e7f42f29df982a61efd34b7750377a26b566c2095658d461f8f080b1441c7b9b24913061fb0430
   languageName: node
   linkType: hard
 

@@ -36,18 +36,18 @@ withDefaults(
 .a-progress-fullscreen {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: all;
 
   .v-theme--light & {
-    background: rgba(255, 255, 255, 0.6);
+    background: rgb(255 255 255 / 60%);
   }
 
   .v-theme--dark & {
-    background: rgba(0, 0, 0, 0.6);
+    background: rgb(0 0 0 / 60%);
   }
 }
 </style>
