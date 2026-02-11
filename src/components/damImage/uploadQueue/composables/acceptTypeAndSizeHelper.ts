@@ -7,9 +7,11 @@ export function useDamAcceptTypeAndSizeHelper(
   damConfigExtSystem: DamExtSystemConfig
 ) {
   const createSizesByAssetType = (assetType: DamAssetTypeType) => {
+    const config = damConfigExtSystem[assetType]
+    if (!config) return {}
     const sizes: Record<string, number> = {}
-    for (let i = 0; i < damConfigExtSystem[assetType].mimeTypes.length; i++) {
-      sizes[damConfigExtSystem[assetType].mimeTypes[i]] = damConfigExtSystem[assetType].sizeLimit
+    for (let i = 0; i < config.mimeTypes.length; i++) {
+      sizes[config.mimeTypes[i]] = config.sizeLimit
     }
     return sizes
   }

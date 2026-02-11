@@ -128,7 +128,7 @@ onUnmounted(() => {
     <VProgressCircular indeterminate />
   </div>
   <ACropperjs
-    v-if="showCropper"
+    v-if="showCropper && configExtSystem.image"
     :key="imageRoiStore.imageFile?.manipulatedAt || 0"
     ref="cropperInstance"
     :aspect-ratio="configExtSystem.image.roiWidth / configExtSystem.image.roiHeight"

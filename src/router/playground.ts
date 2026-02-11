@@ -16,6 +16,7 @@ import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
 import ApiFetchListBatchView from '@/playground/apiFetchListBatchView/ApiFetchListBatchView.vue'
 import ImageView from '@/playground/imageView/ImageView.vue'
+import ImageView2 from '@/playground/imageView/ImageView2.vue'
 import FileView from '@/playground/fileView/FileView.vue'
 import SortableView from '@/playground/sortableView/SortableView.vue'
 import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
@@ -112,6 +113,11 @@ const router = createRouter({
       path: '/view/image',
       name: 'view-image',
       component: ImageView,
+    },
+    {
+      path: '/view/image2',
+      name: 'view-image-2',
+      component: ImageView2,
     },
     {
       path: '/view/image-multiple',

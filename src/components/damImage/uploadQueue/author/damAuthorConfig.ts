@@ -13,11 +13,11 @@ export const useDamAuthorAssetTypeConfig = (assetType: DamAssetTypeType, extSyst
   }
 
   const authorEnabled = computed(() => {
-    return configExtSystem[assetType].authors.enabled
+    return !!configExtSystem[assetType]?.authors?.enabled
   })
 
   const authorRequired = computed(() => {
-    return configExtSystem[assetType].authors.required
+    return !!configExtSystem[assetType]?.authors?.required
   })
 
   return {

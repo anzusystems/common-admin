@@ -1,9 +1,7 @@
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
-import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
 import type { DocId } from '@/types/common'
 import type { CustomDataFormElementTypeType } from '@/components/customDataForm/CustomDataFormElementTypes'
 
-export interface CustomDataFormElement extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
+export interface CustomDataFormElement {
   id: DocId
   property: string
   name: string

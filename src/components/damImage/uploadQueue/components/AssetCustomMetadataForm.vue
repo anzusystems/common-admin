@@ -44,7 +44,7 @@ if (isUndefined(configExtSystem)) {
 }
 
 const pinnedCount = computed(() => {
-  return configExtSystem[props.assetType].customMetadataPinnedAmount
+  return configExtSystem[props.assetType]?.customMetadataPinnedAmount || 2
 })
 </script>
 

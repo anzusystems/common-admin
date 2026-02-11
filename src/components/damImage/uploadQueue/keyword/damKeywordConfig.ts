@@ -14,11 +14,11 @@ export const useDamKeywordAssetTypeConfig = (assetType: DamAssetTypeType, extSys
   }
 
   const keywordEnabled = computed(() => {
-    return configExtSystem[assetType].keywords.enabled
+    return !!configExtSystem[assetType]?.keywords?.enabled
   })
 
   const keywordRequired = computed(() => {
-    return configExtSystem[assetType].keywords.required
+    return !!configExtSystem[assetType]?.keywords?.required
   })
 
   return {
