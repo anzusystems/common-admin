@@ -44,6 +44,7 @@ export type CommonAdminImageOptions =
 
 export interface CommonAdminCoreDamConfig {
   damClient: () => AxiosInstance
+  endPoint?: string
 }
 
 export type CommonAdminCoreDamOptions =

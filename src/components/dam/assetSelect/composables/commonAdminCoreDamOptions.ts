@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import type { CommonAdminCoreDamOptions } from '@/AnzuSystemsCommonAdmin'
-
 import { isUndefined } from '@/utils/common'
 
 const commonAdminCoreDamOptions = ref<CommonAdminCoreDamOptions | undefined>(undefined)
@@ -20,6 +19,7 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
 
   return {
     damClient: commonAdminCoreDamOptions.value.configs[configName].damClient,
+    endPoint: commonAdminCoreDamOptions.value.configs[configName].endPoint || '/adm/v1/image',
   }
 }
 

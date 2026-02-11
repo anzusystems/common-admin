@@ -32,7 +32,7 @@ const assetDetailStore = useAssetDetailStore()
 
 const { pagination } = usePagination(SORT_BY_ID)
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPoint } = useCommonAdminCoreDamOptions()
 const filterFieldsInner = [] satisfies readonly MakeFilterOption[]
 const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
   system: SYSTEM_CORE_DAM,
@@ -40,7 +40,7 @@ const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilte
 })
 
 const loadImageFile = async (id: DocId) => {
-  const res = await fetchImageFile(damClient, id)
+  const res = await fetchImageFile(damClient, endPoint, id)
   imageRoiStore.setImageFile(res)
 }
 

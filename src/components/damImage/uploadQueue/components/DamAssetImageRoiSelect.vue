@@ -24,7 +24,7 @@ const cropperContainerStyle = { overflow: 'hidden', maxHeight: 'calc(100vh - 160
 
 const imageRoiStore = useImageRoiStore()
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPoint } = useCommonAdminCoreDamOptions()
 const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
@@ -69,7 +69,7 @@ const applyRegionOfInterest = () => {
 }
 
 const loadImageFile = async (id: DocId) => {
-  const res = await fetchImageFile(damClient, id)
+  const res = await fetchImageFile(damClient, endPoint, id)
   imageRoiStore.setImageFile(res)
   imageRoiStore.hideLoader()
 }

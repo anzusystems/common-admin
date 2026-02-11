@@ -333,7 +333,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     if (!data.value[0] || !data.value[0].mainFile) return
     if (!isUndefined(data.copyToLicence)) {
       try {
-        const copyRes = await copyToLicence(damClient, [
+        const copyRes = await copyToLicence(damClient, endPoint, [
           { asset: data.value[0].id, targetAssetLicence: data.copyToLicence },
         ])
         onCopyToLicence(copyRes)
@@ -392,7 +392,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPoint } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true

@@ -14,8 +14,13 @@ import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composab
 const NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS = 10
 const NOTIFICATION_FALLBACK_MAX_TRIES = 4
 
-export const damUploadStart: (client: () => AxiosInstance, item: UploadQueueItem) => Promise<DamUploadStartResponse> = (
+export const damUploadStart: (
   client: () => AxiosInstance,
+  endPoint: string,
+  item: UploadQueueItem
+) => Promise<DamUploadStartResponse> = (
+  client: () => AxiosInstance,
+  endPoint: string,
   item: UploadQueueItem
 ) => {
   return new Promise((resolve, reject) => {
@@ -23,7 +28,7 @@ export const damUploadStart: (client: () => AxiosInstance, item: UploadQueueItem
       reject()
       return
     }
-    imageUploadStart(client, item)
+    imageUploadStart(client, endPoint, item)
       .then((res) => {
         resolve(res as DamUploadStartResponse)
         return
@@ -34,6 +39,7 @@ export const damUploadStart: (client: () => AxiosInstance, item: UploadQueueItem
 
 export const damUploadChunk = (
   client: () => AxiosInstance,
+  endPoint: string,
   item: UploadQueueItem,
   imageId: DocId,
   buffer: Blob | File,
@@ -46,7 +52,7 @@ export const damUploadChunk = (
       reject()
       return
     }
-    imageUploadChunk(client, item, imageId, buffer, size, offset, onUploadProgressCallback)
+    imageUploadChunk(client, endPoint, item, imageId, buffer, size, offset, onUploadProgressCallback)
       .then((res) => {
         resolve(res)
       })
@@ -58,6 +64,7 @@ export const damUploadChunk = (
 
 export const damUploadFinish = (
   client: () => AxiosInstance,
+  endPoint: string,
   item: UploadQueueItem,
   sha: string,
   uploadStatusFallback: boolean
@@ -67,7 +74,7 @@ export const damUploadFinish = (
       reject()
       return
     }
-    imageUploadFinish(client, item, sha)
+    imageUploadFinish(client, endPoint, item, sha)
       .then((res) => {
         item.status = UploadQueueItemStatus.Processing
         if (uploadStatusFallback) {
