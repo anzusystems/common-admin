@@ -31,6 +31,9 @@ createApp(App)
         default: {
           damClient: damClient,
         },
+        blog: {
+          damClient: damClient,
+        },
       },
       apiTimeout: 30,
       uploadStatusFallback: true,
@@ -43,6 +46,13 @@ createApp(App)
     image: {
       configs: {
         default: {
+          imageClient: cmsClient,
+          previewDomain: 'http://admin-image.smedata.localhost',
+          previewDomainOriginal: 'http://image.smedata.localhost',
+          width: 500,
+          height: 281,
+        },
+        blog: {
           imageClient: cmsClient,
           previewDomain: 'http://admin-image.smedata.localhost',
           previewDomainOriginal: 'http://image.smedata.localhost',

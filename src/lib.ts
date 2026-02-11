@@ -82,6 +82,7 @@ import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
 import AImageWidget from '@/components/damImage/AImageWidget.vue'
+import AImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
 import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AMediaWidgetSimple from '@/components/damImage/AMediaWidgetSimple.vue'
@@ -551,6 +552,9 @@ import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { fetchAssetAsCmsMedia } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 
 export {
   // COMPONENTS
@@ -631,6 +635,7 @@ export {
   ACustomDataForm,
   ACustomDataFormElement,
   AImageWidget,
+  AImageWidgetInner,
   AImageMediaWidget,
   AImageWidgetSimple,
   AMediaWidgetSimple,
@@ -888,6 +893,8 @@ export {
   type DamUser,
   type BreadcrumbItem,
   type Breadcrumbs,
+  type UploadQueueKey,
+  type DamConfigLicenceExtSystemReturnType,
 
   // FACTORIES
   useAnzuUserFactory,
@@ -1031,6 +1038,7 @@ export {
   SORT_BY_SCORE,
   SORT_BY_ID,
   SortOrder,
+  ImageWidgetUploadConfig,
 
   // VALIDATIONS
   useValidate,
