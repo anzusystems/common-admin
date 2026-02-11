@@ -690,6 +690,11 @@ defineExpose({
         max-width="100%"
         class="disable-radius"
       >
+        <template #error>
+          <div class="d-flex align-center justify-center h-100">
+            <VIcon icon="mdi-alert-circle-outline" />
+          </div>
+        </template>
         <template #placeholder>
           <div class="d-flex align-center justify-center h-100">
             <VProgressCircular
