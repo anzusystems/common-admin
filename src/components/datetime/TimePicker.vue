@@ -42,7 +42,7 @@ const hoursComputed = computed({
     if (cleanValue.length === 2) {
       nextTick(() => minutesRefInput.value?.focus())
     }
-  }
+  },
 })
 
 const minutesComputed = computed({
@@ -65,7 +65,7 @@ const minutesComputed = computed({
     if (cleanValue.length === 2) {
       emit('focusConfirm')
     }
-  }
+  },
 })
 
 const selectContent = async (event: FocusEvent) => {

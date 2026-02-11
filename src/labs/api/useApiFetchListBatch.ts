@@ -52,7 +52,7 @@ export const useApiFetchListBatch = <R>(
     abortController = new AbortController()
 
     try {
-      const searchApi = (filterConfig.general.elastic || forceElastic) ? '/search' : ''
+      const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
       const params = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
       const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
@@ -65,7 +65,7 @@ export const useApiFetchListBatch = <R>(
       // First page request
       const res = await client().get(url + generateListQuery(pagination, filterData, filterConfig), {
         ...options,
-        signal: abortController.signal
+        signal: abortController.signal,
       })
 
       if (!isValidHTTPStatus(res.status)) {
@@ -85,7 +85,7 @@ export const useApiFetchListBatch = <R>(
             pagination.value.page++
             const nextPageResponse = await client().get(url + generateListQuery(pagination, filterData, filterConfig), {
               ...options,
-              signal: abortController.signal
+              signal: abortController.signal,
             })
             const nextPageData = nextPageResponse.data
             // @ts-ignore
@@ -103,13 +103,14 @@ export const useApiFetchListBatch = <R>(
           const promises: Promise<any>[] = []
           const numPages = Math.ceil(pagination.value.totalCount / pagination.value.rowsPerPage)
 
-          for (let i = 1; i < numPages; i++) { // Start from 1 since we already fetched page 0
+          for (let i = 1; i < numPages; i++) {
+            // Start from 1 since we already fetched page 0
             const pageCopy = { ...pagination.value, page: i + 1 }
             const paginationRef = ref(pageCopy)
             promises.push(
               client().get(url + generateListQuery(paginationRef, filterData, filterConfig), {
                 ...options,
-                signal: abortController.signal
+                signal: abortController.signal,
               })
             )
           }

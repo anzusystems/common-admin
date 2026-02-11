@@ -4,7 +4,11 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useImageRoiStore } from '@/components/damImage/uploadQueue/composables/imageRoiStore'
 import { updateRoi } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { cropToRegion, regionToCrop, type ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import {
+  cropToRegion,
+  regionToCrop,
+  type ACropperjsExposed,
+} from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ACropperjs from '@/components/ACropperjs.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { DocId, IntegerId } from '@/types/common'
@@ -24,7 +28,7 @@ const cropperContainerStyle = { overflow: 'hidden', maxHeight: 'calc(100vh - 160
 
 const imageRoiStore = useImageRoiStore()
 
-const { damClient, endPoint } = useCommonAdminCoreDamOptions()
+const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
 const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
@@ -69,7 +73,7 @@ const applyRegionOfInterest = () => {
 }
 
 const loadImageFile = async (id: DocId) => {
-  const res = await fetchImageFile(damClient, endPoint, id)
+  const res = await fetchImageFile(damClient, endPointImage, id)
   imageRoiStore.setImageFile(res)
   imageRoiStore.hideLoader()
 }

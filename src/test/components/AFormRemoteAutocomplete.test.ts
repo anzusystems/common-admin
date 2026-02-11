@@ -78,13 +78,13 @@ describe('AFormRemoteAutocomplete', () => {
   }
 
   // Test helper functions
-  const waitForAsync = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms))
+  const waitForAsync = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms))
 
   const createMockFetchItems = (items = mockItems) => vi.fn().mockResolvedValue(items)
 
   const createMockFetchItemsByIds = (items = mockItems) =>
     vi.fn().mockImplementation((ids: string[]) => {
-      return Promise.resolve(items.filter(item => ids.includes(item.value)))
+      return Promise.resolve(items.filter((item) => ids.includes(item.value)))
     })
 
   const createWrapper = (props = {}, provide = {}) => {
@@ -138,7 +138,7 @@ describe('AFormRemoteAutocomplete', () => {
   it('handles multiple selection', async () => {
     const wrapper = createWrapper({
       modelValue: [],
-      multiple: true
+      multiple: true,
     })
 
     expect(wrapper.vm.modelValue).toEqual([])
@@ -198,7 +198,7 @@ describe('AFormRemoteAutocomplete', () => {
       modelValue: '1',
       loading: true,
       disabled: true,
-      clearable: true
+      clearable: true,
     })
 
     // Test that props are passed correctly
@@ -408,7 +408,7 @@ describe('AFormRemoteAutocomplete', () => {
     it('should only trigger fetchItems once on first hover, not on subsequent hovers while loading', async () => {
       // Create a mock that simulates a slow API call
       const mockFetchItemsWithDelay = vi.fn().mockImplementation(() => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           setTimeout(() => resolve(mockItems), 100) // 100ms delay
         })
       })
@@ -482,7 +482,7 @@ describe('AFormRemoteAutocomplete', () => {
     it('should only trigger fetchItems once on first focus, not on subsequent focuses while loading', async () => {
       // Create a mock that simulates a slow API call
       const mockFetchItemsWithDelay = vi.fn().mockImplementation(() => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           setTimeout(() => resolve(mockItems), 100) // 100ms delay
         })
       })

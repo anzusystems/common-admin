@@ -28,7 +28,7 @@ export function useSubjectSelect<TItem>(
   urlTemplateOverride: string | undefined = undefined,
   urlParamsOverride: UrlParams | undefined = undefined,
   forceElastic: boolean = false,
-  enableActions: boolean = false,
+  enableActions: boolean = false
 ) {
   const filterTouched: Ref<boolean> = ref(false)
   const items: Ref<Array<TItem>> = ref([])

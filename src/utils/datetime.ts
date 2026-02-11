@@ -127,18 +127,8 @@ export const isDatetimeUTC = (value: unknown): value is DatetimeUTC => {
 type MonthIntervalUTC = { from: DatetimeUTC; until: DatetimeUTC }
 type MonthIntervalDate = { from: Date; until: Date }
 type GetMonthIntervalFn = {
-  (
-    nowDate: Date,
-    returnType: 'utc',
-    monthOffset?: number,
-    expandToCurrentMonth?: boolean
-  ): MonthIntervalUTC;
-  (
-    nowDate: Date,
-    returnType: 'date',
-    monthOffset?: number,
-    expandToCurrentMonth?: boolean
-  ): MonthIntervalDate;
+  (nowDate: Date, returnType: 'utc', monthOffset?: number, expandToCurrentMonth?: boolean): MonthIntervalUTC
+  (nowDate: Date, returnType: 'date', monthOffset?: number, expandToCurrentMonth?: boolean): MonthIntervalDate
 }
 const _getMonthInterval = (
   nowDate: Date,

@@ -28,9 +28,9 @@ const failUpload = async (queueItem: UploadQueueItem, error: unknown = null) => 
 }
 
 const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
-  const { damClient, endPoint } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
   const { uploadStatusFallback } = useCommonAdminCoreDamOptionsGlobal()
-  return await damUploadFinish(damClient, endPoint, queueItem, sha, uploadStatusFallback)
+  return await damUploadFinish(damClient, endPointImage, queueItem, sha, uploadStatusFallback)
 }
 
 const handleValidationErrorMessage = (error: Error | any) => {
@@ -86,7 +86,7 @@ const sleep = (ms: number) => {
 }
 
 export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = undefined) {
-  const { damClient, endPoint } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
   const fileSize = ref(0)
 
   const progress = ref(0)
@@ -127,7 +127,8 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       }
       damUploadChunk(
         damClient,
-        endPoint, queueItem,
+        endPointImage,
+        queueItem,
         queueItem.fileId,
         chunkFile,
         chunkFile.size,
@@ -227,7 +228,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       }
       fileSize.value = queueItem.file.size
       queueItem.status = UploadQueueItemStatus.Uploading
-      damUploadStart(damClient, endPoint, queueItem)
+      damUploadStart(damClient, endPointImage, queueItem)
         .then((res) => {
           queueItem.assetId = res.asset
           queueItem.fileId = res.id

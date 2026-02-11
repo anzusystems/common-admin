@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
       <div
         ref="scrollableContainer"
         class="overflow-y-auto overflow-x-hidden h-100 mr-4"
-        style="outline: none;"
+        style="outline: none"
       >
         <VRow class="dam-upload-queue dam-upload-queue--editable pa-2 mb-5">
           <UploadQueueItemEditable

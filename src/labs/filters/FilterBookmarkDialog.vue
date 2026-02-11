@@ -137,10 +137,7 @@ const addBookmark = async () => {
     }
     config.position = count + 1
     const res = await createUserAdminConfig(config)
-    filterBookmarkStore.addOne(
-      filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource),
-      res
-    )
+    filterBookmarkStore.addOne(filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource), res)
     emit('onClose')
   } catch (e) {
     if (

@@ -206,7 +206,8 @@ const onClickClear = () => {
 
 watchDebounced(
   search,
-  (newValueBug, oldValueBug) => { // todo rollback fix when fixed on vuetify/vue use side
+  (newValueBug, oldValueBug) => {
+    // todo rollback fix when fixed on vuetify/vue use side
     const newValue = newValueBug as unknown as string
     const oldValue = oldValueBug as unknown as string | undefined
     if (newValue !== oldValue) {

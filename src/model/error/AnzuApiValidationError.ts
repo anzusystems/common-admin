@@ -42,7 +42,7 @@ export const isAnzuApiValidationError = (error: any): error is AnzuApiValidation
 export const hasAnzuApiValidationErrorSpecific = (
   error: AnzuApiValidationError,
   errorName: string,
-  fieldName: string,
+  fieldName: string
 ) => {
   return error.fields.some((field) => field.field === fieldName && field.errors.includes(errorName))
 }

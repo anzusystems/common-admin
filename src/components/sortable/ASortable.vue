@@ -255,7 +255,7 @@ defineExpose({
               </div>
               <div
                 class="a-sortable-widget__buttons"
-                :class="{'a-sortable-widget__buttons--permanent': permanentButtons}"
+                :class="{ 'a-sortable-widget__buttons--permanent': permanentButtons }"
               >
                 <slot
                   name="item-buttons"

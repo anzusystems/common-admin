@@ -41,12 +41,9 @@ import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploa
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import ImageWidgetMultipleLimitDialog
-  from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
+import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import {
-  fetchAssetListByFileIdsMultipleLicences,
-} from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
+import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 
 const props = withDefaults(
@@ -274,9 +271,13 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || data.value.length === 0) return
   if (!isUndefined(data.copyToLicence)) {
     try {
-      const copyRes = await copyToLicence(damClient, endPoint, data.value
-        .filter((asset) => !isNull(asset.mainFile))
-        .map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! })))
+      const copyRes = await copyToLicence(
+        damClient,
+        endPointAsset,
+        data.value
+          .filter((asset) => !isNull(asset.mainFile))
+          .map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! }))
+      )
       onCopyToLicence(copyRes)
     } catch (e) {
       showErrorsDefault(e)
@@ -289,7 +290,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
-const { damClient, endPoint } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true

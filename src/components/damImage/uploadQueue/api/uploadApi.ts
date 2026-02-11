@@ -18,11 +18,7 @@ export const damUploadStart: (
   client: () => AxiosInstance,
   endPoint: string,
   item: UploadQueueItem
-) => Promise<DamUploadStartResponse> = (
-  client: () => AxiosInstance,
-  endPoint: string,
-  item: UploadQueueItem
-) => {
+) => Promise<DamUploadStartResponse> = (client: () => AxiosInstance, endPoint: string, item: UploadQueueItem) => {
   return new Promise((resolve, reject) => {
     if (item.assetType !== DamAssetType.Image) {
       reject()

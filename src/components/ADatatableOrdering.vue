@@ -3,7 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   type DatatableOrderingOption,
-  type DatatableOrderingOptions, SORT_BY_SCORE,
+  type DatatableOrderingOptions,
+  SORT_BY_SCORE,
   SortOrder,
 } from '@/composables/system/datatableColumns'
 import { isUndefined } from '@/utils/common'

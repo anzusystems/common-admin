@@ -6,7 +6,7 @@ declare global {
       captureException(error: Error, context?: Record<string, any>): void
       captureMessage(message: string, context?: Record<string, any>): void
       setTag(key: string, value: string): void
-      setUser(user: { id: string, email?: string, username?: string }): void
+      setUser(user: { id: string; email?: string; username?: string }): void
       [key: string]: any
     }
   }
@@ -23,9 +23,7 @@ let sentryPromise: Promise<typeof SentryType | null> | null = null
 
 const getSentry = (): Promise<typeof SentryType | null> => {
   if (!sentryPromise) {
-    sentryPromise = import('@sentry/vue')
-      .then((module) => module)
-      .catch(() => null)
+    sentryPromise = import('@sentry/vue').then((module) => module).catch(() => null)
   }
   return sentryPromise
 }
@@ -41,7 +39,7 @@ export function useSentry() {
           tags: {
             ...context?.tags,
             component: 'common-admin',
-          }
+          },
         })
         return
       } catch (e) {
@@ -57,7 +55,7 @@ export function useSentry() {
             tags: {
               ...context?.tags,
               component: 'common-admin',
-            }
+            },
           })
         } catch (e) {
           console.debug('Imported Sentry logging failed', e)
@@ -97,7 +95,7 @@ export function useSentry() {
           tags: {
             ...context?.tags,
             component: 'common-admin',
-          }
+          },
         })
         return
       } catch (e) {
@@ -114,7 +112,7 @@ export function useSentry() {
             tags: {
               ...context?.tags,
               component: 'common-admin',
-            }
+            },
           })
         } catch (e) {
           console.debug('Imported Sentry logging failed', e)
@@ -144,7 +142,7 @@ export function useSentry() {
     })
   }
 
-  const setUser = (user: { id: string, email?: string, username?: string }): void => {
+  const setUser = (user: { id: string; email?: string; username?: string }): void => {
     if (window.Sentry) {
       try {
         window.Sentry.setUser(user)
@@ -169,6 +167,6 @@ export function useSentry() {
     logError,
     logMessage,
     setTag,
-    setUser
+    setUser,
   }
 }

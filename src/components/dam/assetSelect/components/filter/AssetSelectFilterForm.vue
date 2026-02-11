@@ -5,17 +5,13 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import AFilterBooleanSelect from '@/labs/filters/AFilterBooleanSelect.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
-import DamKeywordFilterRemoteAutocomplete
-  from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
+import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
 import type { IntegerId } from '@/types/common'
-import DamAuthorFilterRemoteAutocomplete
-  from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
+import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
-import AssetDistributionServiceNameFilter
-  from '@/components/dam/assetSelect/components/filter/AssetDistributionServiceNameFilter.vue'
+import AssetDistributionServiceNameFilter from '@/components/dam/assetSelect/components/filter/AssetDistributionServiceNameFilter.vue'
 import { DamAssetType } from '@/types/coreDam/Asset'
-import FilterPodcastRemoteAutocomplete
-  from '@/components/dam/assetSelect/components/filter/FilterPodcastRemoteAutocomplete.vue'
+import FilterPodcastRemoteAutocomplete from '@/components/dam/assetSelect/components/filter/FilterPodcastRemoteAutocomplete.vue'
 
 const { filterData } = useAssetSelectActions()
 

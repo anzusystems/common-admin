@@ -87,23 +87,20 @@ const paginationUpdateDefault = (found: DatatableOrderingOption) => {
   emit('sortByChange', found)
 }
 
-watch(
-  modelValue,
-  (newValue, oldValue) => {
-    if (newValue === oldValue) return
-    const found = options.value.find((option) => {
-      return option.id === newValue
-    })
-    if (isUndefined(found)) {
-      return
-    }
-    if (isUndefined(props.paginationUpdateCustomCb)) {
-      paginationUpdateDefault(found)
-      return
-    }
-    props.paginationUpdateCustomCb(found, pagination)
+watch(modelValue, (newValue, oldValue) => {
+  if (newValue === oldValue) return
+  const found = options.value.find((option) => {
+    return option.id === newValue
+  })
+  if (isUndefined(found)) {
+    return
   }
-)
+  if (isUndefined(props.paginationUpdateCustomCb)) {
+    paginationUpdateDefault(found)
+    return
+  }
+  props.paginationUpdateCustomCb(found, pagination)
+})
 
 watch(
   pagination,

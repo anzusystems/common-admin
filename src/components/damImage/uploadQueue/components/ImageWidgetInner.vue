@@ -73,6 +73,7 @@ const props = withDefaults(
     callDeleteApiOnRemove?: boolean
     damWidth?: undefined | number
     damHeight?: undefined | number
+    skipCurrentUserCheck?: boolean
   }>(),
   {
     configName: 'default',
@@ -94,6 +95,7 @@ const props = withDefaults(
     callDeleteApiOnRemove: false,
     damWidth: undefined,
     damHeight: undefined,
+    skipCurrentUserCheck: false,
   }
 )
 
@@ -333,7 +335,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     if (!data.value[0] || !data.value[0].mainFile) return
     if (!isUndefined(data.copyToLicence)) {
       try {
-        const copyRes = await copyToLicence(damClient, endPoint, [
+        const copyRes = await copyToLicence(damClient, endPointAsset, [
           { asset: data.value[0].id, targetAssetLicence: data.copyToLicence },
         ])
         onCopyToLicence(copyRes)
@@ -392,7 +394,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
-const { damClient, endPoint } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
@@ -738,6 +740,7 @@ defineExpose({
     :min-count="1"
     :max-count="1"
     :asset-type="DamAssetType.Image"
+    :skip-current-user-check="skipCurrentUserCheck"
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
   />

@@ -40,13 +40,10 @@ const componentComputed = computed(() => {
   }
 })
 
-watch(
-  selectedLicenceId,
-  (newValue, oldValue) => {
-    if (newValue === oldValue) return
-    resetFilterAction()
-  },
-)
+watch(selectedLicenceId, (newValue, oldValue) => {
+  if (newValue === oldValue) return
+  resetFilterAction()
+})
 
 onMounted(() => {
   fetchAssetListDebounced()

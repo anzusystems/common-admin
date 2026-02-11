@@ -24,8 +24,8 @@ const i18n = createI18n({
   locale: 'en',
   fallbackLocale: 'en',
   messages: {
-    en
-  }
+    en,
+  },
 })
 
 // Create Pinia instance for testing
@@ -50,7 +50,7 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 // Mock ResizeObserver (handle both browser and node environments)
-const globalThis_ = typeof globalThis !== 'undefined' ? globalThis : (typeof global !== 'undefined' ? global : window)
+const globalThis_ = typeof globalThis !== 'undefined' ? globalThis : typeof global !== 'undefined' ? global : window
 
 if (!globalThis_.ResizeObserver) {
   globalThis_.ResizeObserver = vi.fn().mockImplementation(() => ({

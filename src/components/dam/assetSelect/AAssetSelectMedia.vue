@@ -15,9 +15,7 @@ import {
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
 } from '@/types/coreDam/AssetSelect'
-import {
-  filterAllowedImageWidgetSelectConfigs
-} from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
+import { filterAllowedImageWidgetSelectConfigs } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/composables/system/alerts'
 import type { IntegerId } from '@/types/common'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'

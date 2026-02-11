@@ -518,15 +518,29 @@ import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalPro
 import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
 import { useDamAssetLicenceInnerFilter, useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
-import { fetchDamAssetLicenceListByIds, useFetchDamAssetLicenceList, fetchDamAssetLicenceList } from '@/components/dam/user/assetLicenceApi'
+import {
+  fetchDamAssetLicenceListByIds,
+  useFetchDamAssetLicenceList,
+  fetchDamAssetLicenceList,
+} from '@/components/dam/user/assetLicenceApi'
 import {
   fetchDamAssetLicenceGroupListByIds,
   useFetchDamAssetLicenceGroupList,
   fetchDamAssetLicenceGroupList,
 } from '@/components/dam/user/assetLicenceGroupApi'
-import { fetchDamExtSystemListByIds, useFetchDamExtSystemList, fetchDamExtSystemList } from '@/components/dam/user/extSystemApi'
+import {
+  fetchDamExtSystemListByIds,
+  useFetchDamExtSystemList,
+  fetchDamExtSystemList,
+} from '@/components/dam/user/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
-import { fetchDamUser, fetchDamUserListByIds, updateDamUser, useFetchDamUserList, fetchDamUserList } from '@/components/dam/user/userApi'
+import {
+  fetchDamUser,
+  fetchDamUserListByIds,
+  updateDamUser,
+  useFetchDamUserList,
+  fetchDamUserList,
+} from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'

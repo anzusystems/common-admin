@@ -105,7 +105,7 @@ export interface DamImageCopyToLicenceResponseItem {
   targetAsset: DocId
   targetMainFile: DocId
   targetAssetLicence: IntegerId
-  result:  'exists' | 'copy' | 'notAllowed' | 'unassigned'
+  result: 'exists' | 'copy' | 'notAllowed' | 'unassigned'
   assetConflicts: DocId[]
 }
 

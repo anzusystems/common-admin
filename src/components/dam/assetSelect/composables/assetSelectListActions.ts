@@ -28,7 +28,7 @@ export function useAssetSelectActions(
   configName = 'default',
   onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void
 ) {
-  const { damClient } = useCommonAdminCoreDamOptions(configName)
+  const { damClient, endPointAsset } = useCommonAdminCoreDamOptions(configName)
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
@@ -53,8 +53,9 @@ export function useAssetSelectActions(
   })
 
   const fetchAssetList = async () => {
+    if (assetSelectStore.selectedLicenceId <= 0) return
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(damClient, assetSelectStore.selectedLicenceId)
+    const { executeFetch } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.setList(await executeFetch(pagination, filterData, filterConfig))
@@ -69,7 +70,7 @@ export function useAssetSelectActions(
     if (assetSelectStore.loader) return
     pagination.value.page = pagination.value.page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(damClient, assetSelectStore.selectedLicenceId)
+    const { executeFetch } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
     try {
       assetSelectStore.showLoader()
       assetSelectStore.appendList(await executeFetch(pagination, filterData, filterConfig))

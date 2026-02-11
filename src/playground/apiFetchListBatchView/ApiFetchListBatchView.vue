@@ -44,7 +44,7 @@ const { executeFetch: fetchUserList } = useFetchUserList()
 const useFetchUserListAll = () => useApiFetchListBatch<any[]>(damClient, SYSTEM_CORE_DAM, ENTITY, '/adm/v1/user')
 const { executeFetch: fetchUserListAll } = useFetchUserListAll()
 
-const { executeFetch: fetchAssetList } = useFetchAssetList(damClient, 100000)
+const { executeFetch: fetchAssetList } = useFetchAssetList(damClient, '/adm/v1/asset', 100000)
 
 onMounted(async () => {
   itemsList1.value = await fetchAssetList(pagination, filterData, filterConfig, undefined, undefined, true)

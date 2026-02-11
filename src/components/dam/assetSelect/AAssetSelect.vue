@@ -240,7 +240,7 @@ defineExpose({
   >
     <VProgressCircular indeterminate />
   </div>
-  <template v-else-if="selectConfigs.length > 0">
+  <template v-else-if="ready && selectConfigs.length > 0">
     <slot
       name="activator"
       :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"

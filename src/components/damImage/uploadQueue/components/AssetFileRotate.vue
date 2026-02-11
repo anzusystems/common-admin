@@ -23,12 +23,12 @@ const { showRecordWas, showErrorsDefault } = useAlerts()
 
 const loading = ref(false)
 
-const { damClient, endPoint } = useCommonAdminCoreDamOptions()
+const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
 
 const rotate = async (angle: 90 | 270) => {
   try {
     loading.value = true
-    await rotateImage(damClient, endPoint, props.imageId, angle)
+    await rotateImage(damClient, endPointImage, props.imageId, angle)
     showRecordWas('updated')
     emit('afterRotate')
   } catch (e) {

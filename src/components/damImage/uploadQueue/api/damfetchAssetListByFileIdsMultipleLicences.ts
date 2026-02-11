@@ -47,7 +47,7 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
         client,
         'GET',
         '/adm/v1/asset/licence/:licenceId/search?assetAndMainFileIds=' +
-        `${docIds.join(',')}&limit=${forceLimit !== undefined ? forceLimit : docIds.length}${singleUseParam}`,
+          `${docIds.join(',')}&limit=${forceLimit !== undefined ? forceLimit : docIds.length}${singleUseParam}`,
         { licenceId },
         {},
         SYSTEM_CORE_DAM,

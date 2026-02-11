@@ -86,10 +86,7 @@ export function useApiQueryBuilder() {
     return null
   }
 
-  const getValue = (
-    value: AllowedFilterValues,
-    config: FilterField
-  ): string | number | boolean | null => {
+  const getValue = (value: AllowedFilterValues, config: FilterField): string | number | boolean | null => {
     if (isNull(value)) {
       if (config.mandatory && !config.exclude && !isUndefined(config.default)) {
         return isArray(config.default) ? config.default.join(',') : config.default

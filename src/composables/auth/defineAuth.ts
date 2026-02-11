@@ -223,7 +223,7 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
   }
 }
 
-function getSystemFromAcl (acl: any) {
+function getSystemFromAcl(acl: any) {
   const parts = acl.split('_')
 
   return parts[0]

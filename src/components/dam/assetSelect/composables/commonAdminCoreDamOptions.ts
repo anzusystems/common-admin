@@ -19,7 +19,8 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
 
   return {
     damClient: commonAdminCoreDamOptions.value.configs[configName].damClient,
-    endPoint: commonAdminCoreDamOptions.value.configs[configName].endPoint || '/adm/v1/image',
+    endPointImage: commonAdminCoreDamOptions.value.configs[configName].endPointImage || '/adm/v1/image',
+    endPointAsset: commonAdminCoreDamOptions.value.configs[configName].endPointAsset || '/adm/v1/asset',
   }
 }
 

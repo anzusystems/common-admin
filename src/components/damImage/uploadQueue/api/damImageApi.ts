@@ -201,7 +201,7 @@ export const imageUploadFinish = (
   client: () => AxiosInstance,
   endPoint: string,
   item: UploadQueueItem,
-  sha: string,
+  sha: string
 ) => {
   return new Promise((resolve, reject) => {
     const url = endPoint + '/' + item.fileId + '/uploaded'

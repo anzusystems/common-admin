@@ -107,8 +107,7 @@ interface CollabChangeRoomLocksInfoCallback {
 }
 
 export interface CollabSuccessChangeRoomLockCallback
-  extends CollabChangeRoomLocksInfoCallback,
-    CollabRoomLocksInfoCallback {
+  extends CollabChangeRoomLocksInfoCallback, CollabRoomLocksInfoCallback {
   status: typeof CollabChangeRoomLockStatus.Ok
   locks: CollabRoomLocks | undefined | null
 }

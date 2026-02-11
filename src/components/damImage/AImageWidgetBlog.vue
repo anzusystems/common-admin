@@ -53,7 +53,7 @@ const props = withDefaults(
     callDeleteApiOnRemove: false,
     damWidth: undefined,
     damHeight: undefined,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -118,7 +118,7 @@ onMounted(async () => {
           maxCount: null,
           required: false,
           searchable: true,
-          readonly: false
+          readonly: false,
         },
       },
       {
@@ -134,15 +134,16 @@ onMounted(async () => {
           maxCount: null,
           required: false,
           searchable: true,
-          readonly: false
+          readonly: false,
         },
-      }
+      },
     ],
     audio: [],
     video: [],
     document: [],
   })
 
+  // damConfigStore.damConfigExtSystem.set(EXT_SYSTEM_ID, damConfig.extSystemConfig)
   status.value = 'ready'
 })
 

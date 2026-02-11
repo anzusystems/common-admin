@@ -4,8 +4,7 @@ import type { IntegerId } from '@/types/common'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 
 export interface UserAdminConfig<TData = UserAdminConfigDataFilterBookmark | UserAdminConfigDataPinnedWidgets>
-  extends AnzuUserAndTimeTrackingAware,
-    SortableItemDataAware {
+  extends AnzuUserAndTimeTrackingAware, SortableItemDataAware {
   id: IntegerId
   user: IntegerId
   configType: UserAdminConfigTypeType

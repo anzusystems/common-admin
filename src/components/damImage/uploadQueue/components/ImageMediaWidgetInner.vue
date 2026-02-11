@@ -358,7 +358,6 @@ const reset = () => {
 watch(
   [() => props.initialImage, imageModel, mediaModel],
   async ([newImage, newImageId, newMedia], [oldImage, oldImageId, oldMedia]) => {
-
     if (!isNull(newMedia) && JSON.stringify(newMedia) !== JSON.stringify(oldMedia)) {
       reloadMedia(newMedia)
       return
@@ -453,7 +452,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     // image
     if (!isUndefined(data.copyToLicence)) {
       try {
-        const copyRes = await copyToLicence(damClient, endPoint, [
+        const copyRes = await copyToLicence(damClient, endPointAsset, [
           { asset: data.value[0].id, targetAssetLicence: data.copyToLicence },
         ])
         onCopyToLicence(copyRes)
@@ -512,7 +511,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
-const { damClient, endPoint } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
