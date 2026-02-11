@@ -8,6 +8,8 @@ import type { AxiosInstance } from 'axios'
 import { initCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { initCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
+import type { IntegerId } from '@/types/common'
+import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 
 export type PluginOptions = {
   languages: { available: LanguageCode[]; default: LanguageCode }
@@ -24,6 +26,14 @@ export interface CommonAdminImageConfig {
   previewDomainOriginal: string
   width: number
   height: number
+  imageApi?: {
+    fetchImage: (client: () => AxiosInstance, id: IntegerId) => Promise<ImageAware>
+    createImage: (client: () => AxiosInstance, data: ImageCreateUpdateAware) => Promise<ImageAware>
+    updateImage: (client: () => AxiosInstance, id: IntegerId, data: ImageCreateUpdateAware) => Promise<ImageAware>
+    deleteImage: (client: () => AxiosInstance, id: IntegerId) => Promise<void>
+    fetchImageListByIds: (client: () => AxiosInstance, ids: IntegerId[]) => Promise<ImageAware[]>
+    bulkUpdateImages: (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => Promise<ImageAware[]>
+  }
 }
 
 export type CommonAdminImageOptions =

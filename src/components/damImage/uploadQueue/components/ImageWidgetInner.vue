@@ -14,7 +14,6 @@ import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
-import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
 import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
@@ -168,7 +167,7 @@ const { showErrorsDefault, showError, showErrorT } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
-const { imageClient } = imageOptions
+const { imageClient, imageApi } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
 const imageMediaWidgetStore = useImageMediaWidgetStore()
@@ -296,7 +295,7 @@ const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: 
   }
   if (newImageId) {
     try {
-      resImage.value = await fetchImage(imageClient, newImageId)
+      resImage.value = await imageApi.fetchImage(imageClient, newImageId)
     } catch (error) {
       showErrorsDefault(error)
     }
@@ -321,14 +320,6 @@ const reset = () => {
   modelValue.value = null
   releaseFieldLock.value(null)
 }
-
-watch(
-  [() => props.image, modelValue],
-  async ([newImage, newImageId]) => {
-    await reload(newImage, newImageId)
-  },
-  { immediate: true }
-)
 
 const assetSelectStore = useAssetSelectStore()
 
@@ -442,8 +433,8 @@ const onMetadataDialogConfirm = async () => {
       }
     }
     const res = detail.value.id
-      ? await updateImage(imageClient, detail.value.id, detail.value)
-      : await createImage(imageClient, detail.value)
+      ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
+      : await imageApi.createImage(imageClient, detail.value)
     metadataDialog.value = false
     modelValue.value = res.id
     imageMediaWidgetStore.setDetail(null)
@@ -461,7 +452,7 @@ const onImageDelete = async () => {
   if (isNull(modelValue.value)) return
   if (props.callDeleteApiOnRemove) {
     try {
-      await deleteImage(imageClient, modelValue.value)
+      await imageApi.deleteImage(imageClient, modelValue.value)
       reset()
     } catch (e) {
       showErrorsDefault(e)
@@ -540,6 +531,14 @@ watch(
     releaseFieldLockLocal(modelValue.value)
   },
   { immediate: false }
+)
+
+watch(
+  [() => props.image, modelValue],
+  async ([newImage, newImageId]) => {
+    await reload(newImage, newImageId)
+  },
+  { immediate: true }
 )
 
 onMounted(() => {

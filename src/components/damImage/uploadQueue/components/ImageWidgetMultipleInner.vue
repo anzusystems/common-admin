@@ -7,7 +7,6 @@ import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamCon
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleItem.vue'
 import { storeToRefs } from 'pinia'
-import { bulkUpdateImages, deleteImage, fetchImageListByIds } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
 import { type AssetSearchListItemDto, DamAssetType, type DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
@@ -42,9 +41,12 @@ import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploa
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
+import ImageWidgetMultipleLimitDialog
+  from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
-import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
+import {
+  fetchAssetListByFileIdsMultipleLicences,
+} from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 
 const props = withDefaults(
@@ -94,7 +96,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
-const { imageClient } = imageOptions
+const { imageClient, imageApi } = imageOptions
 const { showErrorsDefault, showValidationError, showErrorT } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
@@ -113,7 +115,7 @@ const { images, maxPosition } = storeToRefs(imageStore)
 const fetchImagesOnLoad = async () => {
   try {
     imagesLoading.value = true
-    const imagesRes = (await fetchImageListByIds(imageClient, props.modelValue)).sort(
+    const imagesRes = (await imageApi.fetchImageListByIds(imageClient, props.modelValue)).sort(
       (a, b) => (a.position ?? 0) - (b.position ?? 0)
     )
     const groupedIds: IdsGroupedByLicences = new Map()
@@ -348,7 +350,7 @@ const saveImages = async () => {
     if (assetUpdateItems.length) {
       await bulkUpdateAssetsAuthors(damClient, assetUpdateItems)
     }
-    const resItems = await bulkUpdateImages(imageClient, imagesRaw)
+    const resItems = await imageApi.bulkUpdateImages(imageClient, imagesRaw)
     const ids: IntegerId[] = []
     const items = resItems.map((resItem) => {
       ids.push(resItem.id)
@@ -392,7 +394,7 @@ const removeItem = async (index: number) => {
   }
   if (props.callDeleteApiOnRemove) {
     try {
-      await deleteImage(imageClient, image.id)
+      await imageApi.deleteImage(imageClient, image.id)
       imageStore.removeImageByIndex(index)
     } catch (e) {
       showErrorsDefault(e)

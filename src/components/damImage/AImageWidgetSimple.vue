@@ -7,7 +7,6 @@ import { useCommonAdminImageOptions } from '@/components/damImage/composables/co
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import type { IntegerIdNullable } from '@/types/common'
 import { useAlerts } from '@/composables/system/alerts'
-import { fetchImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
@@ -48,7 +47,7 @@ const { showErrorsDefault } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
-const { imageClient } = imageOptions
+const { imageClient, imageApi } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 
 const resImage = ref<null | ImageAware | ImageCreateUpdateAware>(null)
@@ -80,7 +79,7 @@ watch(
     }
     if (newImageId) {
       try {
-        resImage.value = await fetchImage(imageClient, newImageId)
+        resImage.value = await imageApi.fetchImage(imageClient, newImageId)
       } catch (error) {
         showErrorsDefault(error)
       }

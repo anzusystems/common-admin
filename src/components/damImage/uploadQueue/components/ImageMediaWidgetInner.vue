@@ -13,7 +13,6 @@ import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composab
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
-import { createImage, deleteImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
 import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
@@ -174,7 +173,7 @@ const { showErrorsDefault, showError, showErrorT } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
-const { imageClient } = imageOptions
+const { imageClient, imageApi } = imageOptions
 const { widgetImageToDamImageUrl, damImageIdToDamImageUrl } = useImageActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
 const { uploadQueueDialog } = useUploadQueueDialog()
@@ -305,7 +304,7 @@ const reloadImage = async (
   }
   if (newImageId) {
     try {
-      resImageMedia.value = await fetchImage(imageClient, newImageId)
+      resImageMedia.value = await imageApi.fetchImage(imageClient, newImageId)
     } catch (error) {
       showErrorsDefault(error)
     }
@@ -572,8 +571,8 @@ const tryImageConfirm = async () => {
       }
     }
     const res = detail.value.id
-      ? await updateImage(imageClient, detail.value.id, detail.value)
-      : await createImage(imageClient, detail.value)
+      ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
+      : await imageApi.createImage(imageClient, detail.value)
     metadataDialog.value = false
     imageModel.value = res.id
     mediaModel.value = null
@@ -596,7 +595,7 @@ const onMetadataDialogConfirm = async () => {
 const onImageMediaDelete = async () => {
   if (props.callDeleteApiOnRemove && isImageCreateUpdateAware(detail.value) && detail.value.id) {
     try {
-      await deleteImage(imageClient, detail.value.id)
+      await imageApi.deleteImage(imageClient, detail.value.id)
       reset()
     } catch (e) {
       showErrorsDefault(e)

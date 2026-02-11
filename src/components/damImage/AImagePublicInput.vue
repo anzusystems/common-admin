@@ -6,7 +6,6 @@ import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
 import { computed, ref, toRaw, watch } from 'vue'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import { createImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
@@ -44,7 +43,7 @@ const isDirty = ref(false)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
-const { imageClient } = imageOptions
+const { imageClient, imageApi } = imageOptions
 const { damClient } = useCommonAdminCoreDamOptions()
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
@@ -134,8 +133,8 @@ const submit = async () => {
       data.id = resImage.value.id
     }
     const imageRes = resImage.value?.id
-      ? await updateImage(imageClient, resImage.value.id, data)
-      : await createImage(imageClient, data)
+      ? await imageApi.updateImage(imageClient, resImage.value.id, data)
+      : await imageApi.createImage(imageClient, data)
     resImage.value = imageRes
     modelValue.value = imageRes.id
     return Promise.resolve({ asset: asset, image: imageRes })
@@ -185,7 +184,7 @@ const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: 
   }
   if (newImageId) {
     try {
-      resImage.value = await fetchImage(imageClient, newImageId)
+      resImage.value = await imageApi.fetchImage(imageClient, newImageId)
     } catch (error) {
       showErrorsDefault(error)
     }
