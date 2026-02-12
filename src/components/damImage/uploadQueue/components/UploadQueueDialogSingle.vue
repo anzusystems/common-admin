@@ -32,8 +32,8 @@ import { bulkUpdateAssetsMetadata, fetchAsset } from '@/components/damImage/uplo
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingleSidebar from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebar.vue'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
-import { isNull, isString } from '@/utils/common'
-import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
+import { isNull } from '@/utils/common'
+import { mapMetadataToImages } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 import type { IntegerId } from '@/types/common'
 
 const props = withDefaults(
@@ -202,7 +202,7 @@ const uploadProgress = computed(() => {
   return item.value?.progress.progressPercent
 })
 
-const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, customMetadataToImageMap } = useCommonAdminCoreDamOptions()
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -234,8 +234,6 @@ const onSave = async () => {
 
 const onSaveAndApply = async () => {
   if (items.value.length === 0) return
-  let description = ''
-  let source = ''
   try {
     const assetsMetadataRes = await bulkUpdateAssetsMetadata(
       damClient,
@@ -247,34 +245,16 @@ const onSaveAndApply = async () => {
       throw new Error('Fatal error updating asset metadata')
     }
     showRecordWas('updated')
-    if (isString(assetsMetadataRes[0].customData?.description)) {
-      description = assetsMetadataRes[0].customData.description.trim()
-    }
-    if (assetsMetadataRes[0].authors.length > 0) {
-      const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, assetsMetadataRes[0].authors)
-      source = authorsRes.map((author) => author.name).join(', ')
-    }
+    const mappedItems = customMetadataToImageMap
+      ? await customMetadataToImageMap(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
+      : await mapMetadataToImages(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
     emit(
       'onApply',
-      items.value.map((item) => {
-        return {
-          texts: {
-            description: description,
-            source: source,
-          },
-          flags: {
-            showSource: true,
-          },
-          dam: {
-            damId: item.fileId ?? '',
-            regionPosition: 0,
-            licenceId: props.licenceId,
-          },
-          position: 1,
-        }
-      })
+      mappedItems.map((item) => ({
+        ...item,
+        position: 1,
+      }))
     )
-
     await onStopConfirm()
   } catch (error) {
     showErrorsDefault(error)

@@ -569,6 +569,11 @@ import { fetchAssetAsCmsMedia } from '@/components/damImage/uploadQueue/api/damA
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import {
+  mapMetadataToImages,
+  type MetadataToImageMapFn,
+  type MetadataToImageMapItem,
+} from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 
 export {
   // COMPONENTS
@@ -885,6 +890,9 @@ export {
   type ImageAware,
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,
+  type MetadataToImageMapFn,
+  type MetadataToImageMapItem,
+  mapMetadataToImages,
   isImageCreateUpdateAware,
   type MediaAware,
   isMediaAware,
