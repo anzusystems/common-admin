@@ -28,11 +28,13 @@ withDefaults(
     assetType: DamAssetTypeType
     assetMainFileStatus?: AssetFileProcessStatusType | undefined
     assetMainFileFailReason?: AssetFileFailReasonType | undefined
+    configName?: string
   }>(),
   {
     assetMainFileStatus: undefined,
     assetMainFileFailReason: undefined,
     dataCy: undefined,
+    configName: 'default',
   }
 )
 
@@ -78,6 +80,7 @@ const { activeTab } = storeToRefs(assetDetailStore)
           <AssetDetailSidebarMetadata
             :queue-key="queueKey"
             :ext-system="extSystem"
+            :config-name="configName"
             :is-active="activeTab === AssetDetailTabImageWithRoi.Info"
             :asset-type="assetType"
           />

@@ -21,14 +21,17 @@ import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
 import ACachedUserChip from '@/components/ACachedUserChip.vue'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
     readonly?: boolean
+    configName?: string
   }>(),
   {
     readonly: false,
+    configName: 'default',
   }
 )
 
@@ -61,6 +64,9 @@ const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetTy
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
 
 const { cachedUsers } = useDamCachedUsers()
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configName)
 </script>
 
 <template>
@@ -137,6 +143,7 @@ const { cachedUsers } = useDamCachedUsers()
               </VCol>
             </VRow>
             <VRow
+              v-if="mainFileSingleUseEnabled"
               dense
               class="my-2"
             >

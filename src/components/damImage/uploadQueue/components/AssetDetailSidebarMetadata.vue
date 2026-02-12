@@ -23,9 +23,11 @@ const props = withDefaults(
     dataCy?: string
     assetType: DamAssetTypeType
     extSystem: IntegerId
+    configName?: string
   }>(),
   {
     dataCy: undefined,
+    configName: 'default',
   }
 )
 
@@ -81,5 +83,8 @@ const onSave = async () => {
       {{ t('common.button.save') }}
     </ABtnPrimary>
   </AssetDetailSidebarActionsWrapper>
-  <AssetMetadata :ext-system="extSystem" />
+  <AssetMetadata
+    :ext-system="extSystem"
+    :config-name="configName"
+  />
 </template>

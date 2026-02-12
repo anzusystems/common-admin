@@ -17,9 +17,11 @@ const props = withDefaults(
     isActive: boolean
     dataCy?: string
     assetType: DamAssetTypeType
+    configName?: string
   }>(),
   {
     dataCy: undefined,
+    configName: 'default',
   }
 )
 const emit = defineEmits<{
@@ -86,5 +88,6 @@ const onSaveAndApply = async () => {
   <UploadQueueDialogSingleSidebarMetadataContent
     :queue-key="queueKey"
     :ext-system="extSystem"
+    :config-name="configName"
   />
 </template>

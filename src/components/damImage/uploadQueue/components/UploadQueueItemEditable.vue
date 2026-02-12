@@ -35,9 +35,11 @@ const props = withDefaults(
     item: UploadQueueItem
     refreshDisabled: boolean
     mainFileSingleUse: boolean | null
+    mainFileSingleUseEnabled?: boolean
     disableDoneAnimation?: boolean
   }>(),
   {
+    mainFileSingleUseEnabled: true,
     disableDoneAnimation: false,
   }
 )
@@ -382,6 +384,7 @@ onUnmounted(() => {
                 </VCol>
               </VRow>
               <VRow
+                v-if="mainFileSingleUseEnabled"
                 dense
                 class="my-2"
               >

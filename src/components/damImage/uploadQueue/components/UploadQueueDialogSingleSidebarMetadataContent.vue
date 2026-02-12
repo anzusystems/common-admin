@@ -19,13 +19,17 @@ import { dateTimePretty } from '@/utils/datetime'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
 import type { IntegerId } from '@/types/common'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
     extSystem: IntegerId
+    configName?: string
   }>(),
-  {}
+  {
+    configName: 'default',
+  }
 )
 
 const { t } = useI18n()
@@ -65,6 +69,8 @@ const onAnyMetadataChange = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configName)
 </script>
 
 <template>
@@ -141,6 +147,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                 </VCol>
               </VRow>
               <VRow
+                v-if="mainFileSingleUseEnabled"
                 dense
                 class="my-2"
               >

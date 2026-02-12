@@ -34,8 +34,11 @@ const props = withDefaults(
     extSystem: IntegerId
     accept: string | undefined
     maxSizes: Record<string, number> | undefined
+    configName?: string
   }>(),
-  {}
+  {
+    configName: 'default',
+  }
 )
 
 const emit = defineEmits<{
@@ -352,6 +355,7 @@ const showDetail = async (id: DocId) => {
           <UploadQueueEditable
             :queue-key="queueKey"
             :ext-system="extSystem"
+            :config-name="configName"
             :mass-operations="uploadQueueSidebar"
             @show-detail="showDetail"
           />

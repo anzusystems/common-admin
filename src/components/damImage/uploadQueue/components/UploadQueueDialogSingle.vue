@@ -44,9 +44,11 @@ const props = withDefaults(
     fileInputKey: number
     accept: string | undefined
     maxSizes: Record<string, number> | undefined
+    configName?: string
     disableDoneAnimation?: boolean
   }>(),
   {
+    configName: 'default',
     disableDoneAnimation: false,
   }
 )
@@ -433,6 +435,7 @@ onMounted(() => {
               :key="asset.id"
               :queue-key="queueKey"
               :ext-system="extSystem"
+              :config-name="configName"
               :enable-roi-tab="enableRoiTab"
               :show-file-info="enableRoiTab"
               :asset-id="asset.id"

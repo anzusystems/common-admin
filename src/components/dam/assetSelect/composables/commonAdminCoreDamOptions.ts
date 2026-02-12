@@ -21,6 +21,7 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     damClient: commonAdminCoreDamOptions.value.configs[configName].damClient,
     endPointImage: commonAdminCoreDamOptions.value.configs[configName].endPointImage || '/adm/v1/image',
     endPointAsset: commonAdminCoreDamOptions.value.configs[configName].endPointAsset || '/adm/v1/asset',
+    mainFileSingleUseEnabled: commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
   }
 }
 

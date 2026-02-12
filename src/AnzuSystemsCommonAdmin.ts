@@ -39,27 +39,28 @@ export interface CommonAdminImageConfig {
 export type CommonAdminImageOptions =
   | undefined
   | {
-      configs: { [key: string]: CommonAdminImageConfig }
-    }
+    configs: { [key: string]: CommonAdminImageConfig }
+  }
 
 export interface CommonAdminCoreDamConfig {
   damClient: () => AxiosInstance
   endPointAsset?: string
   endPointImage?: string
+  mainFileSingleUseEnabled?: boolean
 }
 
 export type CommonAdminCoreDamOptions =
   | undefined
   | {
-      configs: { [key: string]: CommonAdminCoreDamConfig }
-      apiTimeout: number
-      uploadStatusFallback: boolean
-      adminDomain: string
-      notification: {
-        enabled: boolean
-        webSocketUrl: string
-      }
+    configs: { [key: string]: CommonAdminCoreDamConfig }
+    apiTimeout: number
+    uploadStatusFallback: boolean
+    adminDomain: string
+    notification: {
+      enabled: boolean
+      webSocketUrl: string
     }
+  }
 
 export type CommonAdminCollabOptions = {
   enabled: boolean

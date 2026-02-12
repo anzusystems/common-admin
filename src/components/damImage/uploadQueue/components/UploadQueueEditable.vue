@@ -19,9 +19,11 @@ const props = withDefaults(
     queueKey: string
     extSystem: IntegerId
     massOperations: boolean
+    configName?: string
     disableDoneAnimation?: boolean
   }>(),
   {
+    configName: 'default',
     disableDoneAnimation: false,
   }
 )
@@ -30,7 +32,8 @@ const emit = defineEmits<{
   (e: 'showDetail', data: DocId): void
 }>()
 
-const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { damClient, endPointAsset, mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configName)
 
 const refreshDisabled = ref(false)
 
@@ -149,6 +152,7 @@ onBeforeUnmount(() => {
             v-model:keywords="item.keywords"
             v-model:authors="item.authors"
             v-model:main-file-single-use="item.mainFileSingleUse"
+            :main-file-single-use-enabled="mainFileSingleUseEnabled"
             :ext-system="extSystem"
             :item="item"
             :index="index"

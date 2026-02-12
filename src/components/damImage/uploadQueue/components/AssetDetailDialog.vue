@@ -20,8 +20,11 @@ withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     extSystem: IntegerId
+    configName?: string
   }>(),
-  {}
+  {
+    configName: 'default',
+  }
 )
 
 const { t } = useI18n()
@@ -193,6 +196,7 @@ const assetMainFile = computed(() => {
               :key="asset.id"
               :queue-key="queueKey"
               :ext-system="extSystem"
+              :config-name="configName"
               :asset-id="asset.id"
               :is-video="isTypeVideo"
               :is-audio="isTypeAudio"
