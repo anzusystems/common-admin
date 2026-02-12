@@ -8,11 +8,12 @@ const MAX_LIMIT = 20
 
 export const fetchAssetListByFileIdsMultipleLicences = async (
   client: () => AxiosInstance,
+  endPoint: string,
   groupedIds: IdsGroupedByLicences
 ) => {
   const batchedRequests = Array.from(groupedIds.entries()).flatMap(([licenceId, docIds]) => {
     return chunkArray(docIds, MAX_LIMIT).map((chunk) =>
-      fetchAssetListByFileIdsMultipleLicencesWithLimit(client, new Map([[licenceId, chunk]]))
+      fetchAssetListByFileIdsMultipleLicencesWithLimit(client, endPoint, new Map([[licenceId, chunk]]))
     )
   })
 
@@ -22,11 +23,12 @@ export const fetchAssetListByFileIdsMultipleLicences = async (
 
 export const fetchAssetAndCheckForSingleUseByFileIds = async (
   client: () => AxiosInstance,
+  endPoint: string,
   groupedIds: IdsGroupedByLicences
 ) => {
   const batchedRequests = Array.from(groupedIds.entries()).flatMap(([licenceId, docIds]) => {
     return chunkArray(docIds, MAX_LIMIT).map((chunk) =>
-      fetchAssetListByFileIdsMultipleLicencesWithLimit(client, new Map([[licenceId, chunk]]), 1, true)
+      fetchAssetListByFileIdsMultipleLicencesWithLimit(client, endPoint, new Map([[licenceId, chunk]]), 1, true)
     )
   })
 
@@ -36,6 +38,7 @@ export const fetchAssetAndCheckForSingleUseByFileIds = async (
 
 const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
   client: () => AxiosInstance,
+  endPoint: string,
   groupedIds: IdsGroupedByLicences,
   forceLimit?: number,
   filterSingleUse?: boolean
@@ -47,7 +50,7 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
         client,
         'GET',
         '/adm/v1/asset/licence/:licenceId/search?assetAndMainFileIds=' +
-          `${docIds.join(',')}&limit=${forceLimit !== undefined ? forceLimit : docIds.length}${singleUseParam}`,
+        `${docIds.join(',')}&limit=${forceLimit !== undefined ? forceLimit : docIds.length}${singleUseParam}`,
         { licenceId },
         {},
         SYSTEM_CORE_DAM,
@@ -68,7 +71,7 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
 
   const finalResults = await Promise.all(
     Array.from(groupedSearchResults.entries()).map(([licenceId, docIds]) =>
-      fetchAssetListByIds(client, docIds, licenceId)
+      fetchAssetListByIds(client, endPoint, docIds, licenceId)
     )
   )
 

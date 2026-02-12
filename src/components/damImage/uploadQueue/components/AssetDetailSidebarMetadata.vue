@@ -41,7 +41,7 @@ const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
 
 const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol, $stopPropagation: true })
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 
 const onSave = async () => {
   if (isNull(asset.value)) return
@@ -53,7 +53,7 @@ const onSave = async () => {
     return
   }
   try {
-    await updateAssetMetadata(damClient, asset.value, props.extSystem, mainFileSingleUse.value)
+    await updateAssetMetadata(damClient, endPointAsset, asset.value, props.extSystem, mainFileSingleUse.value)
     if (updateUploadStore.value && !isNull(asset.value)) {
       await uploadQueueStore.updateFromDetail(asset.value)
     }

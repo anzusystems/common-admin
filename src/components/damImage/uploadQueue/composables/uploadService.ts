@@ -28,9 +28,9 @@ const failUpload = async (queueItem: UploadQueueItem, error: unknown = null) => 
 }
 
 const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
-  const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointImage, endPointAsset } = useCommonAdminCoreDamOptions()
   const { uploadStatusFallback } = useCommonAdminCoreDamOptionsGlobal()
-  return await damUploadFinish(damClient, endPointImage, queueItem, sha, uploadStatusFallback)
+  return await damUploadFinish(damClient, endPointAsset, endPointImage, queueItem, sha, uploadStatusFallback)
 }
 
 const handleValidationErrorMessage = (error: Error | any) => {

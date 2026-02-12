@@ -44,7 +44,7 @@ const isDirty = ref(false)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient, imageApi } = imageOptions
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
 const { showErrorsDefault, showValidationError } = useAlerts()
@@ -89,7 +89,7 @@ const validateField = async () => {
     return Promise.reject('Incorrect URL/ID provided')
   }
   try {
-    const assetRes = await fetchAssetByFileId(damClient, inputField.value)
+    const assetRes = await fetchAssetByFileId(damClient, endPointAsset, inputField.value)
     if (isNull(assetRes.mainFile)) {
       isValid.value = false
       return Promise.reject('Incorrect asset mainFile')

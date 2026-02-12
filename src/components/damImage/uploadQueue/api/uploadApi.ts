@@ -60,7 +60,8 @@ export const damUploadChunk = (
 
 export const damUploadFinish = (
   client: () => AxiosInstance,
-  endPoint: string,
+  endPointAsset: string,
+  endPointImage: string,
   item: UploadQueueItem,
   sha: string,
   uploadStatusFallback: boolean
@@ -70,12 +71,12 @@ export const damUploadFinish = (
       reject()
       return
     }
-    imageUploadFinish(client, endPoint, item, sha)
+    imageUploadFinish(client, endPointImage, item, sha)
       .then((res) => {
         item.status = UploadQueueItemStatus.Processing
         if (uploadStatusFallback) {
           item.notificationFallbackTimer = setTimeout(function () {
-            notificationFallbackCallback(client, item)
+            notificationFallbackCallback(client, endPointAsset, item)
           }, calculateFallbackTime(item))
         }
         resolve(res)
@@ -88,7 +89,7 @@ function calculateFallbackTime(item: UploadQueueItem) {
   return NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS * 1000 * item.notificationFallbackTry * item.notificationFallbackTry
 }
 
-async function notificationFallbackCallback(client: () => AxiosInstance, item: UploadQueueItem) {
+async function notificationFallbackCallback(client: () => AxiosInstance, endPoint: string, item: UploadQueueItem) {
   clearTimeout(item.notificationFallbackTimer)
   if (item.status === UploadQueueItemStatus.Uploaded) return
   if (item.notificationFallbackTry > NOTIFICATION_FALLBACK_MAX_TRIES) {
@@ -97,11 +98,11 @@ async function notificationFallbackCallback(client: () => AxiosInstance, item: U
     return
   }
   if (!item.assetId) return
-  const asset = await fetchAsset(client, item.assetId)
+  const asset = await fetchAsset(client, endPoint, item.assetId)
   if (asset && asset.mainFile && asset.mainFile.fileAttributes) {
     const uploadQueuesStore = useUploadQueuesStore()
     if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Processed) {
-      uploadQueuesStore.queueItemProcessed(asset.id)
+      uploadQueuesStore.queueItemFullyProcessed(asset.id)
       return
     } else if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
       uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, asset.attributes.assetType)
@@ -113,6 +114,6 @@ async function notificationFallbackCallback(client: () => AxiosInstance, item: U
   }
   item.notificationFallbackTry++
   item.notificationFallbackTimer = setTimeout(function () {
-    notificationFallbackCallback(client, item)
+    notificationFallbackCallback(client, endPoint, item)
   }, calculateFallbackTime(item))
 }

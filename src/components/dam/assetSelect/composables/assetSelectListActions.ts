@@ -92,7 +92,7 @@ export function useAssetSelectActions(
     assetSelectStore.setActiveByIndex(data.index)
     detailLoading.value = true
     try {
-      const asset = await fetchAsset(damClient, data.assetId)
+      const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
       cachedExtSystemId.value = extSystem
       addToCachedAuthors(asset.authors)
       addToCachedKeywords(asset.keywords)

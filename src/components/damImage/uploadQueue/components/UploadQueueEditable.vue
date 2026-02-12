@@ -9,7 +9,7 @@ import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/ca
 import type { DocId, IntegerId } from '@/types/common'
 import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetType } from '@/types/coreDam/Asset'
 import { useAlerts } from '@/composables/system/alerts'
 import { AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 import { useEventListener } from '@vueuse/core'
@@ -30,7 +30,7 @@ const emit = defineEmits<{
   (e: 'showDetail', data: DocId): void
 }>()
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 
 const refreshDisabled = ref(false)
 
@@ -53,9 +53,9 @@ const { showWarningT } = useAlerts()
 const refreshItem = async (data: { index: number; assetId: DocId }) => {
   refreshDisabled.value = true
   try {
-    const asset = await fetchAsset(damClient, data.assetId)
-    if (asset.attributes.assetStatus === DamAssetStatus.WithFile) {
-      await uploadQueuesStore.queueItemProcessed(asset.id)
+    const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
+    if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Processed) {
+      await uploadQueuesStore.queueItemFullyProcessed(asset.id)
     } else if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
       await uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, DamAssetType.Image)
     } else if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Failed) {

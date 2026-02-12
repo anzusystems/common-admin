@@ -465,7 +465,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     }
     metadataDialog.value = true
     try {
-      const assetRes = await fetchAsset(damClient, selectedAsset.id)
+      const assetRes = await fetchAsset(damClient, endPointAsset, selectedAsset.id)
       if (isString(assetRes.metadata.customData?.description)) {
         description = assetRes.metadata.customData.description.trim()
       }
@@ -517,7 +517,7 @@ const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey
   try {
-    const assetRes = await fetchAssetByFileId(damClient, assetFileId)
+    const assetRes = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
     const licence = await fetchDamAssetLicence(damClient, assetRes.licence)
     if (licence.extSystem) {
       cachedExtSystemId.value = licence.extSystem
@@ -565,7 +565,7 @@ const tryImageConfirm = async () => {
           asset.value.authors
         )
         detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
-        await updateAssetAuthors(damClient, asset.value, assetSelectStore.selectedSelectConfig.extSystem)
+        await updateAssetAuthors(damClient, endPointAsset, asset.value, assetSelectStore.selectedSelectConfig.extSystem)
         showDamAuthorsInCmsImage.value = false
       }
     }

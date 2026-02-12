@@ -125,7 +125,7 @@ const fetchImagesOnLoad = async () => {
       }
     })
 
-    const assetsRes = await fetchAssetListByFileIdsMultipleLicences(damClient, groupedIds)
+    const assetsRes = await fetchAssetListByFileIdsMultipleLicences(damClient, endPointAsset, groupedIds)
 
     imageStore.setImages(
       imagesRes.map((imageRes) => {
@@ -207,7 +207,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
   const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
   try {
-    const assetDetails = await fetchAssetListByIds(damClient, ids, assetSelectStore.selectedLicenceId)
+    const assetDetails = await fetchAssetListByIds(damClient, endPointAsset, ids, assetSelectStore.selectedLicenceId)
     assetDetails.forEach((assetDetail) => {
       assetMetadataMap.set(assetDetail.id, {
         description: isString(assetDetail.metadata.customData?.description)
@@ -296,7 +296,7 @@ const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey
   try {
-    const asset = await fetchAssetByFileId(damClient, assetFileId)
+    const asset = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
     const licence = await fetchDamAssetLicence(damClient, asset.licence)
     if (licence.extSystem) {
       cachedExtSystemId.value = licence.extSystem
@@ -349,7 +349,7 @@ const saveImages = async () => {
       }
     }
     if (assetUpdateItems.length) {
-      await bulkUpdateAssetsAuthors(damClient, assetUpdateItems)
+      await bulkUpdateAssetsAuthors(damClient, endPointAsset, assetUpdateItems)
     }
     const resItems = await imageApi.bulkUpdateImages(imageClient, imagesRaw)
     const ids: IntegerId[] = []

@@ -200,7 +200,7 @@ const uploadProgress = computed(() => {
   return item.value?.progress.progressPercent
 })
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -223,7 +223,7 @@ const isUploading = computed(() => {
 const onSave = async () => {
   if (items.value.length === 0) return
   try {
-    await bulkUpdateAssetsMetadata(damClient, items.value)
+    await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, assetDetailStore.mainFileSingleUse)
     showRecordWas('updated')
   } catch (error) {
     showErrorsDefault(error)
@@ -235,7 +235,12 @@ const onSaveAndApply = async () => {
   let description = ''
   let source = ''
   try {
-    const assetsMetadataRes = await bulkUpdateAssetsMetadata(damClient, items.value, assetDetailStore.mainFileSingleUse)
+    const assetsMetadataRes = await bulkUpdateAssetsMetadata(
+      damClient,
+      endPointAsset,
+      items.value,
+      assetDetailStore.mainFileSingleUse,
+    )
     if (!assetsMetadataRes[0]) {
       throw new Error('Fatal error updating asset metadata')
     }
@@ -279,7 +284,7 @@ watch(
   async (newValue) => {
     if (!newValue || !item.value?.assetId) return
     try {
-      const res = await fetchAsset(damClient, item.value.assetId)
+      const res = await fetchAsset(damClient, endPointAsset, item.value.assetId)
       assetDetailStore.setAsset(res)
       enableRoiTab.value = true
     } catch (e) {

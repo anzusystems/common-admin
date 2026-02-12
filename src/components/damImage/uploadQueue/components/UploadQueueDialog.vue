@@ -73,7 +73,7 @@ const { t } = useI18n()
 const { toolbarColor } = useTheme()
 const v$ = useVuelidate({ $stopPropagation: true })
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 
 const saveButtonLoading = ref(false)
 const saveAndCloseButtonLoading = ref(false)
@@ -94,7 +94,7 @@ const onSave = async () => {
     return
   }
   try {
-    await bulkUpdateAssetsMetadata(damClient, itemsRaw)
+    await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
     showRecordWas('updated')
   } catch (error) {
     console.error(error)
@@ -184,7 +184,7 @@ const onSaveAndApply = async () => {
     return
   }
   try {
-    const res = await bulkUpdateAssetsMetadata(damClient, itemsRaw)
+    const res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
     const mapped = await metadataMap(itemsRaw, res)
     emit('onApply', mapped)
   } catch (error) {
@@ -203,7 +203,7 @@ const showDetail = async (id: DocId) => {
     loading.value = true
     dialog.value = props.queueKey
     updateUploadStore.value = true
-    assetDetailStore.setAsset(await fetchAsset(damClient, id))
+    assetDetailStore.setAsset(await fetchAsset(damClient, endPointAsset, id))
   } catch (e) {
     showErrorsDefault(e)
   } finally {
