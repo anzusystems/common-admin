@@ -86,12 +86,14 @@ watch(
 </script>
 
 <template>
-  <h4
+  <div
     v-if="label"
-    class="font-weight-bold text-subtitle-2"
+    class="label-container"
   >
-    {{ label }}
-  </h4>
+    <h4 class="font-weight-bold text-subtitle-2">
+      {{ label }}
+    </h4>
+  </div>
   <div
     class="position-relative"
     :class="{ 'cursor-pointer': resMedia?.damMedia.playable }"
@@ -168,3 +170,15 @@ watch(
     </template>
   </MediaWidgetSimpleDialog>
 </template>
+
+<style lang="scss" scoped>
+:deep(.v-img.disable-radius .v-img__img) {
+  border-radius: 0;
+}
+
+.label-container {
+  display: flex;
+  height: 40px;
+  align-items: center;
+}
+</style>
