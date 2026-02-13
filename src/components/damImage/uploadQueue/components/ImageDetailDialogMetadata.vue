@@ -259,7 +259,6 @@ defineExpose({
                 v-model="detail.texts.source"
                 :label="sourceLabel || t('common.damImage.image.model.texts.source')"
                 :v="v$.image?.texts.source"
-                required
               />
             </VCol>
           </VRow>
