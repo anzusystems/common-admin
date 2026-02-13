@@ -33,7 +33,7 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import UploadQueueDialogSingleSidebar from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebar.vue'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
 import { isNull } from '@/utils/common'
-import { mapMetadataToImages } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
+import { mapUploadMetadataToImages } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 import type { IntegerId } from '@/types/common'
 
 const props = withDefaults(
@@ -202,7 +202,7 @@ const uploadProgress = computed(() => {
   return item.value?.progress.progressPercent
 })
 
-const { damClient, endPointAsset, customMetadataToImageMap } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, customUploadMetadataToImageMap } = useCommonAdminCoreDamOptions()
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -245,9 +245,9 @@ const onSaveAndApply = async () => {
       throw new Error('Fatal error updating asset metadata')
     }
     showRecordWas('updated')
-    const mappedItems = customMetadataToImageMap
-      ? await customMetadataToImageMap(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
-      : await mapMetadataToImages(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
+    const mappedItems = customUploadMetadataToImageMap
+      ? await customUploadMetadataToImageMap(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
+      : await mapUploadMetadataToImages(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
     emit(
       'onApply',
       mappedItems.map((item) => ({

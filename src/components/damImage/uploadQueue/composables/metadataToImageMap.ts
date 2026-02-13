@@ -5,27 +5,32 @@ import type { DocId, IntegerId } from '@/types/common'
 import { isNull, isString, isUndefined } from '@/utils/common'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import type { AxiosInstance } from 'axios'
+import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
 
-export interface MetadataToImageMapItem extends ImageCreateUpdateAware {
+export interface UploadMetadataToImageMapItem extends ImageCreateUpdateAware {
   authorIds: DocId[]
   assetId: DocId | undefined
 }
 
-export type MetadataToImageMapFn = (
+export type UploadMetadataToImageMapFn = (
   queueItems: UploadQueueItem[],
   bulkItems: AssetMetadataBulkItem[],
   damClient: () => AxiosInstance,
   extSystem: IntegerId,
   licenceId: IntegerId,
-) => Promise<MetadataToImageMapItem[]>
+) => Promise<UploadMetadataToImageMapItem[]>
 
-export async function mapMetadataToImages(
+export type AssetSelectMetadataToImageMapFn = (
+  assetRes: AssetDetailItemDto,
+) => { description: string; source: string }
+
+export async function mapUploadMetadataToImages(
   queueItems: UploadQueueItem[],
   bulkItems: AssetMetadataBulkItem[],
   damClient: () => AxiosInstance,
   extSystem: IntegerId,
   licenceId: IntegerId,
-): Promise<MetadataToImageMapItem[]> {
+): Promise<UploadMetadataToImageMapItem[]> {
   // Build assetId -> { description, authorIds } map
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
 

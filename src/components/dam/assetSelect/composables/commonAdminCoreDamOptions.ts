@@ -24,7 +24,8 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     mainFileSingleUseEnabled: commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
     showSourceEnabled: commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
     sourceLabel: commonAdminCoreDamOptions.value.configs[configName].sourceLabel,
-    customMetadataToImageMap: commonAdminCoreDamOptions.value.configs[configName].customMetadataToImageMap,
+    customUploadMetadataToImageMap: commonAdminCoreDamOptions.value.configs[configName].customUploadMetadataToImageMap,
+    customAssetSelectMetadataToImageMap: commonAdminCoreDamOptions.value.configs[configName].customAssetSelectMetadataToImageMap,
   }
 }
 

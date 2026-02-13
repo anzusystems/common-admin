@@ -10,7 +10,7 @@ import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/comp
 import { initCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import type { IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
-import type { MetadataToImageMapFn } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
+import type { UploadMetadataToImageMapFn, AssetSelectMetadataToImageMapFn } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 
 export type PluginOptions = {
   languages: { available: LanguageCode[]; default: LanguageCode }
@@ -50,7 +50,8 @@ export interface CommonAdminCoreDamConfig {
   mainFileSingleUseEnabled?: boolean
   showSourceEnabled?: boolean
   sourceLabel?: string
-  customMetadataToImageMap?: MetadataToImageMapFn
+  customUploadMetadataToImageMap?: UploadMetadataToImageMapFn
+  customAssetSelectMetadataToImageMap?: AssetSelectMetadataToImageMapFn
 }
 
 export type CommonAdminCoreDamOptions =

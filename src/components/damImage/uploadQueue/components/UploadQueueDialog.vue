@@ -18,7 +18,7 @@ import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { ImageStoreItem } from '@/types/ImageAware'
 import type { DocId, IntegerId } from '@/types/common'
 import { generateUUIDv1 } from '@/utils/generator'
-import { mapMetadataToImages } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
+import { mapUploadMetadataToImages } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -73,7 +73,7 @@ const { t } = useI18n()
 const { toolbarColor } = useTheme()
 const v$ = useVuelidate({ $stopPropagation: true })
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
-const { damClient, endPointAsset, customMetadataToImageMap } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, customUploadMetadataToImageMap } = useCommonAdminCoreDamOptions()
 
 const saveButtonLoading = ref(false)
 const saveAndCloseButtonLoading = ref(false)
@@ -116,9 +116,9 @@ const onSaveAndApply = async () => {
   }
   try {
     const res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
-    const mappedItems = customMetadataToImageMap
-      ? await customMetadataToImageMap(itemsRaw, res, damClient, props.extSystem, props.licenceId)
-      : await mapMetadataToImages(itemsRaw, res, damClient, props.extSystem, props.licenceId)
+    const mappedItems = customUploadMetadataToImageMap
+      ? await customUploadMetadataToImageMap(itemsRaw, res, damClient, props.extSystem, props.licenceId)
+      : await mapUploadMetadataToImages(itemsRaw, res, damClient, props.extSystem, props.licenceId)
     const storeItems: ImageStoreItem[] = mappedItems.map((item) => {
       maxPosition.value++
       return {

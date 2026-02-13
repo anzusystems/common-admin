@@ -348,21 +348,27 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     metadataDialog.value = true
     try {
       const assetRes = await fetchAsset(damClient, endPointAsset, data.value[0].id)
-      if (isString(assetRes.metadata.customData?.description)) {
-        description = assetRes.metadata.customData.description.trim()
-      }
-      if (assetRes.authors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(
-          damClient,
-          assetSelectStore.selectedSelectConfig.extSystem,
-          assetRes.authors
-        )
-        source = authorsRes.map((author) => author.name).join(', ')
-      } else if (assetRes.authors.length === 0) {
-        const configExtSystem = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)
-        if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled) {
-          showDamAuthorsInCmsImage.value = true
-          asset.value = assetRes
+      if (customAssetSelectMetadataToImageMap) {
+        const mapped = customAssetSelectMetadataToImageMap(assetRes)
+        description = mapped.description
+        source = mapped.source
+      } else {
+        if (isString(assetRes.metadata.customData?.description)) {
+          description = assetRes.metadata.customData.description.trim()
+        }
+        if (assetRes.authors.length > 0) {
+          const authorsRes = await fetchAuthorListByIds(
+            damClient,
+            assetSelectStore.selectedSelectConfig.extSystem,
+            assetRes.authors
+          )
+          source = authorsRes.map((author) => author.name).join(', ')
+        } else if (assetRes.authors.length === 0) {
+          const configExtSystem = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)
+          if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled) {
+            showDamAuthorsInCmsImage.value = true
+            asset.value = assetRes
+          }
         }
       }
     } catch (e) {
@@ -396,7 +402,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
-const { damClient, endPointAsset, showSourceEnabled, sourceLabel } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, showSourceEnabled, sourceLabel, customAssetSelectMetadataToImageMap } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true

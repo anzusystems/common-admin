@@ -570,9 +570,10 @@ import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import {
-  mapMetadataToImages,
-  type MetadataToImageMapFn,
-  type MetadataToImageMapItem,
+  mapUploadMetadataToImages,
+  type UploadMetadataToImageMapFn,
+  type UploadMetadataToImageMapItem,
+  type AssetSelectMetadataToImageMapFn,
 } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 
 export {
@@ -890,9 +891,10 @@ export {
   type ImageAware,
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,
-  type MetadataToImageMapFn,
-  type MetadataToImageMapItem,
-  mapMetadataToImages,
+  type UploadMetadataToImageMapFn,
+  type UploadMetadataToImageMapItem,
+  mapUploadMetadataToImages,
+  type AssetSelectMetadataToImageMapFn,
   isImageCreateUpdateAware,
   type MediaAware,
   isMediaAware,
