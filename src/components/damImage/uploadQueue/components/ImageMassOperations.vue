@@ -11,6 +11,15 @@ import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueu
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { storeToRefs } from 'pinia'
 
+withDefaults(
+  defineProps<{
+    sourceLabel?: string
+  }>(),
+  {
+    sourceLabel: undefined,
+  }
+)
+
 const texts = ref({ description: '', source: '', authors: [] })
 
 const imageStore = useImageStore()
@@ -160,7 +169,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
         <div class="d-flex">
           <AFormTextarea
             v-model="texts.source"
-            :label="t('common.damImage.image.model.texts.source')"
+            :label="sourceLabel || t('common.damImage.image.model.texts.source')"
           />
           <VBtn
             icon

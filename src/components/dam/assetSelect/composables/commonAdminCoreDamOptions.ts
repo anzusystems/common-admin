@@ -23,6 +23,7 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     endPointAsset: commonAdminCoreDamOptions.value.configs[configName].endPointAsset || '/adm/v1/asset',
     mainFileSingleUseEnabled: commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
     showSourceEnabled: commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
+    sourceLabel: commonAdminCoreDamOptions.value.configs[configName].sourceLabel,
     customMetadataToImageMap: commonAdminCoreDamOptions.value.configs[configName].customMetadataToImageMap,
   }
 }

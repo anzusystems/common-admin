@@ -44,7 +44,7 @@ const isDirty = ref(false)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient, imageApi } = imageOptions
-const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, sourceLabel } = useCommonAdminCoreDamOptions()
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
 const { showErrorsDefault, showValidationError } = useAlerts()
@@ -240,7 +240,7 @@ defineExpose({
   <ARow>
     <AFormTextarea
       v-model="meta.source"
-      :label="t('common.damImage.image.model.texts.source')"
+      :label="sourceLabel || t('common.damImage.image.model.texts.source')"
       :v="v$.meta.source"
       :disabled="disabled"
     />

@@ -21,9 +21,11 @@ const props = withDefaults(
     index: number
     disableDraggable: boolean
     showSourceEnabled?: boolean
+    sourceLabel?: string
   }>(),
   {
     showSourceEnabled: true,
+    sourceLabel: undefined,
   }
 )
 
@@ -129,7 +131,7 @@ const removeItem = () => {
           <VCol>
             <AFormTextarea
               v-model="image.texts.source"
-              :label="t('common.damImage.image.model.texts.source')"
+              :label="sourceLabel || t('common.damImage.image.model.texts.source')"
               :v="v$.image?.texts.source"
             />
           </VCol>

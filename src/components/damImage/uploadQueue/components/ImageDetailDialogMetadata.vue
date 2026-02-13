@@ -35,11 +35,13 @@ const props = withDefaults(
     expand?: boolean
     showDamAuthors?: boolean
     showSourceEnabled?: boolean
+    sourceLabel?: string
   }>(),
   {
     expand: false,
     showDamAuthors: false,
     showSourceEnabled: true,
+    sourceLabel: undefined,
   }
 )
 
@@ -165,7 +167,7 @@ defineExpose({
         <VCol>
           <AFormTextarea
             v-model="detail.texts.source"
-            :label="t('common.damImage.image.model.texts.source')"
+            :label="sourceLabel || t('common.damImage.image.model.texts.source')"
             :v="v$.image?.texts.source"
           />
         </VCol>
@@ -254,7 +256,7 @@ defineExpose({
             <VCol>
               <AFormTextarea
                 v-model="detail.texts.source"
-                :label="t('common.damImage.image.model.texts.source')"
+                :label="sourceLabel || t('common.damImage.image.model.texts.source')"
                 :v="v$.image?.texts.source"
                 required
               />

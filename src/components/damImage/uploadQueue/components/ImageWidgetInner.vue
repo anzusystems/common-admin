@@ -396,7 +396,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
-const { damClient, endPointAsset, showSourceEnabled } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, showSourceEnabled, sourceLabel } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
@@ -727,6 +727,7 @@ defineExpose({
       v-model="metadataDialog"
       :show-dam-authors="showDamAuthorsInCmsImage"
       :show-source-enabled="showSourceEnabled"
+      :source-label="sourceLabel"
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"

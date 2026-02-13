@@ -25,6 +25,7 @@ const props = withDefaults(
     damHeight?: undefined | number
     useHtmlImg?: boolean
     widgetClass?: string | undefined
+    sourceLabel?: string | undefined
   }>(),
   {
     configName: 'default',
@@ -40,6 +41,7 @@ const props = withDefaults(
     damHeight: undefined,
     useHtmlImg: false,
     widgetClass: undefined,
+    sourceLabel: undefined,
   }
 )
 
@@ -154,7 +156,7 @@ watch(
       dense
     >
       <VCol>
-        <span class="text-caption text-medium-emphasis"> {{ t('common.damImage.image.model.texts.source') }}:</span>
+        <span class="text-caption text-medium-emphasis"> {{ sourceLabel || t('common.damImage.image.model.texts.source') }}:</span>
         <br>{{ resImage.texts.source }}
       </VCol>
     </VRow>
