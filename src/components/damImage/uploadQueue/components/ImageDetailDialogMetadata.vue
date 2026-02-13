@@ -141,6 +141,7 @@ defineExpose({
             v-model="detail.texts.description"
             :label="t('common.damImage.image.model.texts.description')"
             :help="t('common.damImage.image.help.texts.description')"
+            :v="v$.image?.texts.description"
           />
         </VCol>
       </VRow>

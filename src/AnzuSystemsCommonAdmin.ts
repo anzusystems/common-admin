@@ -43,6 +43,12 @@ export type CommonAdminImageOptions =
     configs: { [key: string]: CommonAdminImageConfig }
   }
 
+export interface ImageFieldValidationConfig {
+  required?: boolean
+  min?: number
+  max?: number
+}
+
 export interface CommonAdminCoreDamConfig {
   damClient: () => AxiosInstance
   endPointAsset?: string
@@ -51,6 +57,8 @@ export interface CommonAdminCoreDamConfig {
   showSourceEnabled?: boolean
   showFileInfoEnabled?: boolean
   sourceLabel?: string
+  descriptionValidation?: ImageFieldValidationConfig
+  sourceValidation?: ImageFieldValidationConfig
   customUploadMetadataToImageMap?: UploadMetadataToImageMapFn
   customAssetSelectMetadataToImageMap?: AssetSelectMetadataToImageMapFn
 }

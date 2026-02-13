@@ -1,6 +1,9 @@
 import { ref } from 'vue'
-import type { CommonAdminCoreDamOptions } from '@/AnzuSystemsCommonAdmin'
+import type { CommonAdminCoreDamOptions, ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
 import { isUndefined } from '@/utils/common'
+
+const defaultDescriptionValidation: ImageFieldValidationConfig = { required: false, min: 0, max: 2000 }
+const defaultSourceValidation: ImageFieldValidationConfig = { required: true, min: 0, max: 255 }
 
 const commonAdminCoreDamOptions = ref<CommonAdminCoreDamOptions | undefined>(undefined)
 
@@ -25,6 +28,14 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     showSourceEnabled: commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
     showFileInfoEnabled: commonAdminCoreDamOptions.value.configs[configName].showFileInfoEnabled ?? true,
     sourceLabel: commonAdminCoreDamOptions.value.configs[configName].sourceLabel,
+    descriptionValidation: {
+      ...defaultDescriptionValidation,
+      ...commonAdminCoreDamOptions.value.configs[configName].descriptionValidation,
+    },
+    sourceValidation: {
+      ...defaultSourceValidation,
+      ...commonAdminCoreDamOptions.value.configs[configName].sourceValidation,
+    },
     customUploadMetadataToImageMap: commonAdminCoreDamOptions.value.configs[configName].customUploadMetadataToImageMap,
     customAssetSelectMetadataToImageMap:
       commonAdminCoreDamOptions.value.configs[configName].customAssetSelectMetadataToImageMap,

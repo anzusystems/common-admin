@@ -10,6 +10,8 @@ import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { storeToRefs } from 'pinia'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 
 withDefaults(
   defineProps<{
@@ -41,16 +43,13 @@ const clearForm = () => {
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
 
-const { maxLength } = useValidate()
+const { descriptionValidation, sourceValidation } = useCommonAdminCoreDamOptions()
+const validators = useValidate()
 
 const rules = computed(() => ({
   texts: {
-    description: {
-      maxLength: maxLength(2000),
-    },
-    source: {
-      maxLength: maxLength(255),
-    },
+    description: buildFieldRules(descriptionValidation, validators),
+    source: buildFieldRules(sourceValidation, validators),
   },
 }))
 const v$ = useVuelidate(rules, { texts }, { $scope: false })

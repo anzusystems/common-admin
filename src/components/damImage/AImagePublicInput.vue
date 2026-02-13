@@ -15,6 +15,7 @@ import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import ARow from '@/components/ARow.vue'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
+import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 
 const props = withDefaults(
   defineProps<{
@@ -44,7 +45,13 @@ const isDirty = ref(false)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient, imageApi } = imageOptions
-const { damClient, endPointAsset, sourceLabel } = useCommonAdminCoreDamOptions()
+const {
+  damClient,
+  endPointAsset,
+  sourceLabel,
+  descriptionValidation,
+  sourceValidation,
+} = useCommonAdminCoreDamOptions()
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
 const { showErrorsDefault, showValidationError } = useAlerts()
@@ -61,17 +68,12 @@ const validateAssetData = (asset: AssetDetailItemDto, licences: IntegerId[]) => 
   return licences.some((licence) => licence === asset.licence)
 }
 
-const { required, maxLength } = useValidate()
+const validators = useValidate()
 
 const rules = {
   meta: {
-    description: {
-      maxLength: maxLength(255),
-    },
-    source: {
-      required,
-      maxLength: maxLength(255),
-    },
+    description: buildFieldRules(descriptionValidation, validators),
+    source: buildFieldRules(sourceValidation, validators),
   },
 }
 const v$ = useVuelidate(rules, { meta }, { $stopPropagation: true })
