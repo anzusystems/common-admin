@@ -290,7 +290,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
-const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, showSourceEnabled } = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
@@ -535,6 +535,7 @@ onMounted(() => {
           :key="image.key"
           :index="index"
           :disable-draggable="disableDraggable"
+          :show-source-enabled="showSourceEnabled"
           @edit-asset="onEditAsset"
           @remove-item="removeItem"
         />

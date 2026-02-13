@@ -48,6 +48,7 @@ export interface CommonAdminCoreDamConfig {
   endPointAsset?: string
   endPointImage?: string
   mainFileSingleUseEnabled?: boolean
+  showSourceEnabled?: boolean
   customMetadataToImageMap?: MetadataToImageMapFn
 }
 

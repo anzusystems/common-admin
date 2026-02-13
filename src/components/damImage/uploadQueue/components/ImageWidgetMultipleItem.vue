@@ -20,8 +20,11 @@ const props = withDefaults(
   defineProps<{
     index: number
     disableDraggable: boolean
+    showSourceEnabled?: boolean
   }>(),
-  {}
+  {
+    showSourceEnabled: true,
+  }
 )
 
 const emit = defineEmits<{
@@ -131,7 +134,7 @@ const removeItem = () => {
             />
           </VCol>
         </VRow>
-        <VRow>
+        <VRow v-if="showSourceEnabled">
           <VCol>
             <VSwitch
               v-model="image.flags.showSource"

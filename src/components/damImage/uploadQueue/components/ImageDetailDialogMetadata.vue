@@ -34,10 +34,12 @@ const props = withDefaults(
     loading: boolean
     expand?: boolean
     showDamAuthors?: boolean
+    showSourceEnabled?: boolean
   }>(),
   {
     expand: false,
     showDamAuthors: false,
+    showSourceEnabled: true,
   }
 )
 
@@ -168,7 +170,7 @@ defineExpose({
           />
         </VCol>
       </VRow>
-      <VRow>
+      <VRow v-if="showSourceEnabled">
         <VCol>
           <VSwitch
             v-model="detail.flags.showSource"
@@ -258,7 +260,7 @@ defineExpose({
               />
             </VCol>
           </VRow>
-          <VRow>
+          <VRow v-if="showSourceEnabled">
             <VCol>
               <VSwitch
                 v-model="detail.flags.showSource"
