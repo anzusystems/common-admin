@@ -172,7 +172,7 @@ watch(
 
 .label-container {
   display: flex;
-  height: 40px;
+  height: 32px;
   align-items: center;
 }
 </style>
