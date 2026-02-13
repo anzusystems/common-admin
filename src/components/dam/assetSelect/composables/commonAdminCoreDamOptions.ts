@@ -23,9 +23,11 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     endPointAsset: commonAdminCoreDamOptions.value.configs[configName].endPointAsset || '/adm/v1/asset',
     mainFileSingleUseEnabled: commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
     showSourceEnabled: commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
+    showFileInfoEnabled: commonAdminCoreDamOptions.value.configs[configName].showFileInfoEnabled ?? true,
     sourceLabel: commonAdminCoreDamOptions.value.configs[configName].sourceLabel,
     customUploadMetadataToImageMap: commonAdminCoreDamOptions.value.configs[configName].customUploadMetadataToImageMap,
-    customAssetSelectMetadataToImageMap: commonAdminCoreDamOptions.value.configs[configName].customAssetSelectMetadataToImageMap,
+    customAssetSelectMetadataToImageMap:
+      commonAdminCoreDamOptions.value.configs[configName].customAssetSelectMetadataToImageMap,
   }
 }
 

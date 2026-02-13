@@ -70,7 +70,7 @@ const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetTy
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(props.configName)
 </script>
 
 <template>
@@ -164,7 +164,7 @@ const { mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configNa
       </VExpansionPanelText>
     </VExpansionPanel>
     <VExpansionPanel
-      v-if="asset"
+      v-if="asset && showFileInfoEnabled"
       elevation="0"
       :title="t('common.damImage.asset.detail.info.file')"
       value="file"

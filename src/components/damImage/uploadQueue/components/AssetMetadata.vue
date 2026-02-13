@@ -66,7 +66,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
 const { cachedUsers } = useDamCachedUsers()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(props.configName)
 </script>
 
 <template>
@@ -166,6 +166,7 @@ const { mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configNa
       </VExpansionPanelText>
     </VExpansionPanel>
     <VExpansionPanel
+      v-if="showFileInfoEnabled"
       elevation="0"
       :title="t('common.damImage.asset.detail.info.file')"
       value="file"
