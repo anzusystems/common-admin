@@ -6,6 +6,7 @@ import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/utils/common'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useAlerts } from '@/composables/system/alerts'
 import { DamAssetType, type DamAssetTypeType, type DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
@@ -240,8 +241,7 @@ const waitForFieldLockIsReallyAcquired = async () => {
 
 const onDrop = async (files: File[]) => {
   acquireFieldLockLocal()
-  const config = imageWidgetUploadConfig.value
-  if (isUndefined(config)) return
+  const config = imageWidgetUploadConfig.value!
   try {
     await waitForFieldLockIsReallyAcquired()
     cachedExtSystemId.value = config.extSystem
@@ -254,8 +254,7 @@ const onDrop = async (files: File[]) => {
 
 const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   if (!data[0]) return
-  const config = imageWidgetUploadConfig.value
-  if (isUndefined(config)) return
+  const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
   if (data[0].result === 'copy') {
     uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
@@ -270,8 +269,7 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
 }
 
 const onFileInput = (files: File[]) => {
-  const config = imageWidgetUploadConfig.value
-  if (isUndefined(config)) return
+  const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
   uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
   uploadQueueDialog.value = props.queueKey
@@ -378,6 +376,7 @@ watch(
 const assetSelectStore = useAssetSelectStore()
 const imageMediaWidgetStore = useImageMediaWidgetStore()
 const { detail } = storeToRefs(imageMediaWidgetStore)
+const { getDamConfigExtSystem } = useDamConfigState()
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || !data.value[0]) return
@@ -477,8 +476,11 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         )
         source = authorsRes.map((author) => author.name).join(', ')
       } else if (assetRes.authors.length === 0) {
-        showDamAuthorsInCmsImage.value = true
-        asset.value = assetRes
+        const configExtSystem = getDamConfigExtSystem(imageWidgetUploadConfig.value!.extSystem)
+        if (configExtSystem?.[DamAssetType.Image]?.authors?.enabled) {
+          showDamAuthorsInCmsImage.value = true
+          asset.value = assetRes
+        }
       }
     } catch (e) {
       showErrorsDefault(e)
