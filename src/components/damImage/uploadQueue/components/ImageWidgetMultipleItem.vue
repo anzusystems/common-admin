@@ -15,6 +15,8 @@ import {
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { DamAssetType } from '@/types/coreDam/Asset'
 
 const props = withDefaults(
   defineProps<{
@@ -38,11 +40,17 @@ const imageStore = useImageStore()
 const { t } = useI18n()
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
+const { getDamConfigExtSystem } = useDamConfigState()
 const authorConflicts = ref<DocId[]>([])
 const image = computed(() => imageStore.images[props.index])
+
+const authorEnabled = computed(() => {
+  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
+})
+
 const imageSourceRequired = computed(() => {
   if (isNull(image.value) || isUndefined(image.value)) return true
-  return image.value.showDamAuthors === false
+  return !(image.value.showDamAuthors && authorEnabled.value)
 })
 
 const { v$ } = useImageValidation(image, imageSourceRequired)
@@ -103,7 +111,7 @@ const removeItem = () => {
           </VCol>
         </VRow>
         <VRow
-          v-if="image.showDamAuthors"
+          v-if="image.showDamAuthors && authorEnabled"
           dense
         >
           <VCol>

@@ -213,26 +213,37 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
   const authorsMap = new Map<DocId, string>()
   try {
     const assetDetails = await fetchAssetListByIds(damClient, endPointAsset, ids, assetSelectStore.selectedLicenceId)
-    assetDetails.forEach((assetDetail) => {
-      assetMetadataMap.set(assetDetail.id, {
-        description: isString(assetDetail.metadata.customData?.description)
-          ? assetDetail.metadata.customData.description.trim()
-          : '',
-        authorIds: assetDetail.authors,
+    if (customAssetSelectMetadataToImageMap) {
+      assetDetails.forEach((assetDetail) => {
+        const mapped = customAssetSelectMetadataToImageMap(assetDetail)
+        assetMetadataMap.set(assetDetail.id, {
+          description: mapped.description,
+          authorIds: [],
+        })
+        authorsMap.set(assetDetail.id, mapped.source)
       })
-    })
-    assetMetadataMap.forEach((assetMeta) => {
-      assetMeta.authorIds.forEach((authorId) => {
-        authorIdsToFetch.add(authorId)
+    } else {
+      assetDetails.forEach((assetDetail) => {
+        assetMetadataMap.set(assetDetail.id, {
+          description: isString(assetDetail.metadata.customData?.description)
+            ? assetDetail.metadata.customData.description.trim()
+            : '',
+          authorIds: assetDetail.authors,
+        })
       })
-    })
-    if (authorIdsToFetch.size > 0) {
-      const authorsRes = await fetchAuthorListByIds(damClient, assetSelectStore.selectedSelectConfig.extSystem, [
-        ...authorIdsToFetch,
-      ])
-      authorsRes.forEach((author) => {
-        authorsMap.set(author.id, author.name)
+      assetMetadataMap.forEach((assetMeta) => {
+        assetMeta.authorIds.forEach((authorId) => {
+          authorIdsToFetch.add(authorId)
+        })
       })
+      if (authorIdsToFetch.size > 0) {
+        const authorsRes = await fetchAuthorListByIds(damClient, assetSelectStore.selectedSelectConfig.extSystem, [
+          ...authorIdsToFetch,
+        ])
+        authorsRes.forEach((author) => {
+          authorsMap.set(author.id, author.name)
+        })
+      }
     }
   } catch (e) {
     showErrorsDefault(e)
@@ -242,6 +253,29 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
     maxPosition.value++
     const authorIds = assetMetadataMap.get(asset.id)?.authorIds || []
     const description = assetMetadataMap.get(asset.id)?.description ?? ''
+
+    if (customAssetSelectMetadataToImageMap) {
+      return {
+        key: generateUUIDv1(),
+        texts: {
+          description: description,
+          source: authorsMap.get(asset.id) ?? '',
+        },
+        flags: {
+          showSource: true,
+        },
+        dam: {
+          damId: asset.mainFile!.id,
+          regionPosition: 0,
+          licenceId: asset.licence,
+        },
+        position: maxPosition.value,
+        damAuthors: [],
+        showDamAuthors: false,
+        assetId: asset.id,
+      }
+    }
+
     const authorNames: string[] = []
     assetMetadataMap.get(asset.id)?.authorIds.forEach((authorId) => {
       const name = authorsMap.get(authorId)
@@ -295,8 +329,8 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
-const { damClient, endPointAsset, showSourceEnabled, sourceLabel } = useCommonAdminCoreDamOptions()
-
+const { damClient, endPointAsset, showSourceEnabled, sourceLabel, customAssetSelectMetadataToImageMap } =
+  useCommonAdminCoreDamOptions()
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey
