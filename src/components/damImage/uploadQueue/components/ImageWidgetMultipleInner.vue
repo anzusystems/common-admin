@@ -45,6 +45,7 @@ import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/co
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const props = withDefaults(
   defineProps<{
@@ -369,6 +370,12 @@ const actionLibrary = () => {
 
 const v$ = useVuelidate({ $scope: AImageMetadataValidationScopeSymbol })
 
+const { getDamConfigExtSystem } = useDamConfigState()
+
+const authorEnabled = computed(() => {
+  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
+})
+
 const saveImages = async () => {
   v$.value.$touch()
   if (v$.value.$invalid) {
@@ -379,10 +386,10 @@ const saveImages = async () => {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
     for (const image of imagesRaw) {
-      if (image.showDamAuthors && image.assetId) {
+      if (authorEnabled.value && image.showDamAuthors && image.assetId) {
         assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
       }
-      if (image.damAuthors.length > 0 && image.showDamAuthors) {
+      if (authorEnabled.value && image.showDamAuthors && image.damAuthors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, image.damAuthors)
         image.texts.source = authorsRes.map((author) => author.name).join(', ')
       }
@@ -403,7 +410,7 @@ const saveImages = async () => {
         assetId: undefined,
       }
     })
-    if (imageStore.images.length === 0) return
+    if (imageStore.images.length === 0) return true
 
     const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
       const matchedImage = imageStore.images.find((storeItem) => storeItem.dam.damId === item.dam.damId)
@@ -577,6 +584,7 @@ onMounted(() => {
           :disable-draggable="disableDraggable"
           :show-source-enabled="showSourceEnabled"
           :source-label="sourceLabel"
+          :author-enabled="authorEnabled"
           @edit-asset="onEditAsset"
           @remove-item="removeItem"
         />

@@ -9,6 +9,7 @@ import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueu
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import { useUploadQueueMassOperations } from '@/components/damImage/uploadQueue/composables/uploadQueueMassOperations'
 import type { IntegerId } from '@/types/common'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const props = withDefaults(
   defineProps<{
@@ -92,22 +93,35 @@ const fillAll = (forceReplace = false) => {
       forceReplace
     )
   }
-  if (forceReplace) {
-    replaceAuthors()
-    replaceKeywords()
-    return
+  if (authorEnabled.value) {
+    forceReplace ? replaceAuthors() : fillEmptyAuthors()
   }
-  fillEmptyAuthors()
-  fillEmptyKeywords()
+  if (keywordEnabled.value) {
+    forceReplace ? replaceKeywords() : fillEmptyKeywords()
+  }
 }
 const clearForm = () => {
   massOperationsData.value = { image: {}, video: {}, audio: {}, document: {} }
-  massOperationsAuthors.value = []
-  massOperationsKeywords.value = []
+  if (authorEnabled.value) massOperationsAuthors.value = []
+  if (keywordEnabled.value) massOperationsKeywords.value = []
 }
 
 const assetTypes = computed(() => {
   return uploadQueuesStore.getQueueItemsTypes(props.queueKey)
+})
+
+const { getDamConfigExtSystem } = useDamConfigState()
+
+const keywordEnabled = computed(() => {
+  const config = getDamConfigExtSystem(props.extSystem)
+  if (!config) return false
+  return assetTypes.value.some((type) => !!config[type]?.keywords?.enabled)
+})
+
+const authorEnabled = computed(() => {
+  const config = getDamConfigExtSystem(props.extSystem)
+  if (!config) return false
+  return assetTypes.value.some((type) => !!config[type]?.authors?.enabled)
 })
 
 onMounted(() => {
@@ -133,12 +147,14 @@ onMounted(() => {
           class="v-expansion-panels--compact"
         >
           <VExpansionPanel
+            v-if="keywordEnabled || authorEnabled"
             elevation="0"
             :title="t('common.damImage.asset.massOperations.general')"
             value="general"
           >
             <VExpansionPanelText>
               <VRow
+                v-if="keywordEnabled"
                 dense
                 class="my-2"
               >
@@ -192,6 +208,7 @@ onMounted(() => {
                 </VCol>
               </VRow>
               <VRow
+                v-if="authorEnabled"
                 dense
                 class="my-2"
               >

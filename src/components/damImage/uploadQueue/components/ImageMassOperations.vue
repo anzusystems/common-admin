@@ -12,15 +12,8 @@ import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/compo
 import { storeToRefs } from 'pinia'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
-
-withDefaults(
-  defineProps<{
-    sourceLabel?: string
-  }>(),
-  {
-    sourceLabel: undefined,
-  }
-)
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { DamAssetType } from '@/types/coreDam/Asset'
 
 const texts = ref({ description: '', source: '', authors: [] })
 
@@ -31,19 +24,31 @@ const { t } = useI18n()
 
 const fillAll = (forceReplace: boolean) => {
   replaceEmptyDescription(texts.value.description, forceReplace)
-  replaceEmptySource(texts.value.source, forceReplace)
-  replaceEmptyAuthors(texts.value.authors, forceReplace)
+  if (authorEnabled.value && showDamAuthorsAtLeastOne.value) {
+    replaceEmptyAuthors(texts.value.authors, forceReplace)
+  } else {
+    replaceEmptySource(texts.value.source, forceReplace)
+  }
 }
 
 const clearForm = () => {
   texts.value.description = ''
-  texts.value.source = ''
-  texts.value.authors = []
+  if (authorEnabled.value && showDamAuthorsAtLeastOne.value) {
+    texts.value.authors = []
+  } else {
+    texts.value.source = ''
+  }
 }
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
 
-const { descriptionValidation, sourceValidation } = useCommonAdminCoreDamOptions()
+const { getDamConfigExtSystem } = useDamConfigState()
+
+const authorEnabled = computed(() => {
+  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
+})
+
+const { descriptionValidation, sourceValidation, sourceLabel } = useCommonAdminCoreDamOptions()
 const validators = useValidate()
 
 const rules = computed(() => ({
@@ -106,7 +111,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
       </VCol>
     </VRow>
     <VRow
-      v-if="showDamAuthorsAtLeastOne"
+      v-if="authorEnabled && showDamAuthorsAtLeastOne"
       dense
       class="mt-1"
     >
