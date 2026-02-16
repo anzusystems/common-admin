@@ -75,6 +75,8 @@ export const useDamConfigStore = defineStore('commonAdminDamConfigStore', () => 
   }
 })
 
+// @ts-ignore vue-tsc v3 --build mode bug: import.meta.hot type not resolved for this file
 if (import.meta.hot) {
+  // @ts-ignore see above
   import.meta.hot.accept(acceptHMRUpdate(useDamConfigStore, import.meta.hot))
 }
