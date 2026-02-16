@@ -48,7 +48,8 @@
     "createdByIds": "Založené používateľmi",
     "inPodcast": "Podcast",
     "podcastIds": "Podcasty",
-    "distributedInServices": "Distribuované v službách"
+    "distributedInServices": "Distribuované v službách",
+    "createdAtFrom": "Vytvorené od - do"
   },
   "assetType": {
     "image": "Obrázok",

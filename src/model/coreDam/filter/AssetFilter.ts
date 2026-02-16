@@ -53,7 +53,13 @@ export const filterFieldsList = [
   { name: 'bitrateUntil' as const, default: null, type: 'integer' },
   { name: 'slotsCountFrom' as const, default: null, type: 'integer' },
   { name: 'slotsCountUntil' as const, default: null, type: 'integer' },
-  { name: 'createdAtFrom' as const, default: null, type: 'timeInterval', related: 'createdAtUntil' },
+  {
+    name: 'createdAtFrom' as const,
+    default: null,
+    type: 'timeInterval',
+    related: 'createdAtUntil',
+    titleT: 'common.assetSelect.filter.createdAtFrom'
+  },
   { name: 'createdAtUntil' as const, default: null, type: 'timeInterval', exclude: true, render: { skip: true } },
   { name: 'mainFileSingleUse' as const, default: false },
 ] satisfies readonly MakeFilterOption[]

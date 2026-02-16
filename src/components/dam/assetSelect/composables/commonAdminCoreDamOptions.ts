@@ -39,6 +39,7 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     customUploadMetadataToImageMap: commonAdminCoreDamOptions.value.configs[configName].customUploadMetadataToImageMap,
     customAssetSelectMetadataToImageMap:
       commonAdminCoreDamOptions.value.configs[configName].customAssetSelectMetadataToImageMap,
+    assetListEnabledFilters: commonAdminCoreDamOptions.value.configs[configName].assetListEnabledFilters,
   }
 }
 

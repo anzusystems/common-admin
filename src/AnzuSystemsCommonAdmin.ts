@@ -61,6 +61,7 @@ export interface CommonAdminCoreDamConfig {
   sourceValidation?: ImageFieldValidationConfig
   customUploadMetadataToImageMap?: UploadMetadataToImageMapFn
   customAssetSelectMetadataToImageMap?: AssetSelectMetadataToImageMapFn
+  assetListEnabledFilters?: string[]
 }
 
 export type CommonAdminCoreDamOptions =

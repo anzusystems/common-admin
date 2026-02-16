@@ -76,6 +76,7 @@ import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
 import AJobPriorityChip from '@/components/job/AJobPriorityChip.vue'
 import AJobBaseCreateForm from '@/components/job/AJobBaseCreateForm.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
+import AAssetList from '@/components/dam/assetSelect/AAssetList.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
@@ -672,6 +673,7 @@ export {
   ACollabCountdown,
   ACollabManagement,
   AAssetSelect,
+  AAssetList,
   ADatatable,
   ABooleanSelect,
   DamExtSystemRemoteAutocomplete,
