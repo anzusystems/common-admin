@@ -297,6 +297,7 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted' | 'force', newVa
       fetchedItems.value = res
       if (
         !props.disableAutoSingleSelect &&
+        mode === 'mounted' &&
         res.length === 1 &&
         (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0))
       ) {
