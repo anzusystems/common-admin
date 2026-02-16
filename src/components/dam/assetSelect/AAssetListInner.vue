@@ -264,7 +264,7 @@ onUnmounted(() => {
         <VBtn
           v-bind="fileInputProps"
         >
-          {{ t('common.damImage.image.button.upload') }}
+          {{ t('common.button.upload') }}
         </VBtn>
       </template>
     </AFileInput>

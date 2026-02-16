@@ -75,8 +75,10 @@ import ANotFoundView from '@/components/view/ANotFoundView.vue'
 import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
 import AJobPriorityChip from '@/components/job/AJobPriorityChip.vue'
 import AJobBaseCreateForm from '@/components/job/AJobBaseCreateForm.vue'
+import AFileInput from '@/components/file/AFileInput.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import AAssetList from '@/components/dam/assetSelect/AAssetList.vue'
+import AAssetListInner from '@/components/dam/assetSelect/AAssetListInner.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
@@ -672,8 +674,10 @@ export {
   ACollabLockedByUser,
   ACollabCountdown,
   ACollabManagement,
+  AFileInput,
   AAssetSelect,
   AAssetList,
+  AAssetListInner,
   ADatatable,
   ABooleanSelect,
   DamExtSystemRemoteAutocomplete,
