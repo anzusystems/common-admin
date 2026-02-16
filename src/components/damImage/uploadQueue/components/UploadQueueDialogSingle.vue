@@ -246,8 +246,20 @@ const onSaveAndApply = async () => {
     }
     showRecordWas('updated')
     const mappedItems = customUploadMetadataToImageMap
-      ? await customUploadMetadataToImageMap(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
-      : await mapUploadMetadataToImages(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
+      ? await customUploadMetadataToImageMap(
+        items.value,
+        assetsMetadataRes,
+        damClient,
+        props.extSystem,
+        props.licenceId,
+      )
+      : await mapUploadMetadataToImages(
+        items.value,
+        assetsMetadataRes,
+        damClient,
+        props.extSystem,
+        props.licenceId,
+      )
     emit(
       'onApply',
       mappedItems.map((item) => ({
