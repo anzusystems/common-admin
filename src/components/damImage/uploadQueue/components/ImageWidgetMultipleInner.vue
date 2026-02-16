@@ -60,6 +60,7 @@ const props = withDefaults(
     disableDraggable?: boolean
     widgetIdentifierId?: string | undefined
     callDeleteApiOnRemove?: boolean
+    skipCurrentUserCheck?: boolean
   }>(),
   {
     configName: 'default',
@@ -73,6 +74,7 @@ const props = withDefaults(
     disableDraggable: false,
     widgetIdentifierId: undefined,
     callDeleteApiOnRemove: false,
+    skipCurrentUserCheck: false,
   }
 )
 
@@ -110,6 +112,9 @@ const imageStore = useImageStore()
 const { images, maxPosition } = storeToRefs(imageStore)
 
 const fetchImagesOnLoad = async () => {
+  if (props.modelValue.length === 0) {
+    return
+  }
   try {
     imagesLoading.value = true
     const imagesRes = (await imageApi.fetchImageListByIds(imageClient, props.modelValue)).sort(
@@ -509,6 +514,7 @@ onMounted(() => {
       :min-count="1"
       :max-count="50"
       :asset-type="DamAssetType.Image"
+      :skip-current-user-check="skipCurrentUserCheck"
       return-type="asset"
       @on-confirm="onAssetSelectConfirm"
     />

@@ -87,6 +87,7 @@ import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AMediaWidgetSimple from '@/components/damImage/AMediaWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
+import AImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
 import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
@@ -660,6 +661,7 @@ export {
   AImageWidgetSimple,
   AMediaWidgetSimple,
   AImageWidgetMultiple,
+  AImageWidgetMultipleInner,
   AImageWidgetMultipleSimple,
   ImageMassOperations,
   AImagePublicInput,
