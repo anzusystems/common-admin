@@ -28,12 +28,18 @@ const props = withDefaults(
     extSystem: IntegerId
     readonly?: boolean
     configName?: string
+    showEditButton?: boolean
   }>(),
   {
     readonly: false,
     configName: 'default',
+    showEditButton: false,
   }
 )
+
+const emit = defineEmits<{
+  (e: 'editInDam'): void
+}>()
 
 const { t } = useI18n()
 
@@ -70,6 +76,14 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
 </script>
 
 <template>
+  <VBtn
+    v-if="showEditButton && asset"
+    size="small"
+    class="ma-2"
+    @click="emit('editInDam')"
+  >
+    {{ t('common.damImage.media.button.editInDam') }}
+  </VBtn>
   <VExpansionPanels
     v-if="asset"
     v-model="panels"

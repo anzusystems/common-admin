@@ -26,10 +26,14 @@ import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 const props = withDefaults(
   defineProps<{
     assetType: DamAssetTypeType
+    queueKey: UploadQueueKey
     inPodcast?: boolean | null
     selectLicences: IntegerId[]
     configName?: string
@@ -65,13 +69,13 @@ const {
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configName)
+const { assetListEnabledFilters, endPointAsset } = useCommonAdminCoreDamOptions(props.configName)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 
 const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
-const { asset } = storeToRefs(assetDetailStore)
+const { asset, dialog } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceId } = storeToRefs(assetSelectStore)
 
@@ -161,6 +165,25 @@ const sortByChange = (option: DatatableOrderingOption) => {
     pagination.value.sortBy = { key: option.sortBy.key, order: option.sortBy.order }
   }
   fetchAssetListDebounced()
+}
+
+const onOpenEditDialog = () => {
+  if (!asset.value) return
+  dialog.value = props.queueKey
+}
+
+const onCloseEditDialog = async () => {
+  const activeItem = assetSelectStore.assetListItems.find((item) => item.active)
+  if (!activeItem) return
+  detailLoading.value = true
+  try {
+    const assetData = await fetchAsset(damClient, endPointAsset, activeItem.asset.id)
+    assetDetailStore.setAsset(assetData)
+  } catch (e) {
+    showErrorsDefault(e)
+  } finally {
+    detailLoading.value = false
+  }
 }
 
 watch(
@@ -293,6 +316,8 @@ onUnmounted(() => {
               v-if="extId && !customFormConfigLoading"
               :ext-system="extId"
               readonly
+              show-edit-button
+              @edit-in-dam="onOpenEditDialog"
             />
           </div>
         </div>
@@ -302,4 +327,10 @@ onUnmounted(() => {
   <div v-else>
     Error, no select licence.
   </div>
+  <AssetDetailDialog
+    v-if="dialog === queueKey && extId"
+    :queue-key="queueKey"
+    :ext-system="extId"
+    @close="onCloseEditDialog"
+  />
 </template>

@@ -27,6 +27,10 @@ withDefaults(
   }
 )
 
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
+
 const { t } = useI18n()
 
 const { toolbarColor } = useTheme()
@@ -37,6 +41,7 @@ const { asset, dialog, activeTab, loading } = storeToRefs(assetDetailStore)
 const closeDialog = () => {
   assetDetailStore.setAsset(null)
   dialog.value = null
+  emit('close')
 }
 
 const sidebar = ref(true)
