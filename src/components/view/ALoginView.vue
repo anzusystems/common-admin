@@ -22,17 +22,19 @@ const { t } = useI18n()
 <template>
   <div class="d-flex justify-center align-center fill-height">
     <div class="d-flex justify-center align-center flex-column">
-      <img
-        :src="logoUrl"
-        class="logo pb-2"
-        alt=""
-      >
-      <h1
-        v-if="title"
-        class="display-1 my-3"
-      >
-        {{ title }}
-      </h1>
+      <slot name="title">
+        <img
+          :src="logoUrl"
+          class="logo pb-2"
+          alt=""
+        >
+        <h1
+          v-if="title"
+          class="display-1 my-3"
+        >
+          {{ title }}
+        </h1>
+      </slot>
       <h4 class="mb-3 body-1">
         <span>{{ t('common.system.login.text') }}</span>
       </h4>

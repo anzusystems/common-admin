@@ -284,7 +284,7 @@ defineExpose({
           }"
         >
           <div class="subject-select__sidebar system-border-r">
-            <AssetSelectFilter />
+            <AssetSelectFilter :config-name="configName" />
           </div>
           <div class="subject-select__content">
             <component

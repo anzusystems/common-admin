@@ -28,7 +28,7 @@ export function useAssetSelectActions(
   configName = 'default',
   onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void
 ) {
-  const { damClient, endPointAsset } = useCommonAdminCoreDamOptions(configName)
+  const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
@@ -96,10 +96,14 @@ export function useAssetSelectActions(
       cachedExtSystemId.value = extSystem
       addToCachedAuthors(asset.authors)
       addToCachedKeywords(asset.keywords)
-      addToCachedUsers(asset.modifiedBy, asset.createdBy)
+      if (showFileInfoEnabled) {
+        addToCachedUsers(asset.modifiedBy, asset.createdBy)
+      }
       fetchCachedAuthors()
       fetchCachedKeywords()
-      fetchCachedUsers()
+      if (showFileInfoEnabled) {
+        fetchCachedUsers()
+      }
       if (!isUndefined(onDetailLoadedCallback)) onDetailLoadedCallback(asset)
       assetDetailStore.setAsset(asset)
     } catch (e) {

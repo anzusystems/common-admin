@@ -13,6 +13,7 @@ import AssetDistributionServiceNameFilter from '@/components/dam/assetSelect/com
 import { DamAssetType } from '@/types/coreDam/Asset'
 import FilterPodcastRemoteAutocomplete from '@/components/dam/assetSelect/components/filter/FilterPodcastRemoteAutocomplete.vue'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
   defineProps<{
@@ -20,20 +21,26 @@ const props = withDefaults(
     useConfigLayout?: boolean
     hideTextSearch?: boolean
     enabledFilters?: string[] | undefined
+    configName?: string
   }>(),
   {
     cols: 12,
     useConfigLayout: false,
     hideTextSearch: false,
     enabledFilters: undefined,
+    configName: 'default',
   }
 )
 
 const { filterData, filterConfig } = useAssetSelectActions()
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configName)
+
 const isFilterEnabled = (name: string) => {
-  if (!props.enabledFilters) return true
-  return props.enabledFilters.includes(name)
+  const filters = props.enabledFilters ?? assetListEnabledFilters
+  if (!filters) return true
+  return filters.includes(name)
 }
 
 const colProps = (name: keyof typeof filterConfig.fields) => {

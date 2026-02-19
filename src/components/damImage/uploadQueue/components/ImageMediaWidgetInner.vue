@@ -932,6 +932,7 @@ defineExpose({
     :upload-licence="uploadLicence"
     :min-count="1"
     :max-count="1"
+    :config-name="configName"
     return-type="asset"
     :preselect-asset-type="preselectType"
     :preselect-in-podcast="preselectType === DamAssetType.Audio || null"

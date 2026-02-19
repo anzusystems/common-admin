@@ -757,6 +757,7 @@ defineExpose({
     :max-count="1"
     :asset-type="DamAssetType.Image"
     :skip-current-user-check="skipCurrentUserCheck"
+    :config-name="configName"
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
   />

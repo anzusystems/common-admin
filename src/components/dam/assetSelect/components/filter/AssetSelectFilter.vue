@@ -9,6 +9,19 @@ import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+
+const props = withDefaults(
+  defineProps<{
+    configName?: string
+  }>(),
+  {
+    configName: 'default',
+  }
+)
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configName)
 
 const { t } = useI18n()
 const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()
@@ -70,7 +83,11 @@ onMounted(() => {
               />
             </VCol>
           </VRow>
-          <component :is="componentComputed" />
+          <component
+            :is="componentComputed"
+            :enabled-filters="assetListEnabledFilters"
+            :config-name="configName"
+          />
         </template>
         <VRow v-if="selectConfig.length > 1">
           <VCol :cols="12">
@@ -83,7 +100,11 @@ onMounted(() => {
             />
           </VCol>
         </VRow>
-        <component :is="componentComputed" />
+        <component
+          :is="componentComputed"
+          :enabled-filters="assetListEnabledFilters"
+          :config-name="configName"
+        />
       </AFilterWrapperSubjectSelect>
     </div>
   </div>

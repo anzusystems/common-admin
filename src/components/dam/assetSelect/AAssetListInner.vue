@@ -296,6 +296,7 @@ onUnmounted(() => {
               use-config-layout
               hide-text-search
               :enabled-filters="assetListEnabledFilters"
+              :config-name="configName"
             />
           </template>
         </AFilterWrapper>
