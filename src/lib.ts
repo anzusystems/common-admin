@@ -72,6 +72,7 @@ import ALoginView from '@/components/view/ALoginView.vue'
 import ALogoutView from '@/components/view/ALogoutView.vue'
 import AUnauthorizedView from '@/components/view/AUnauthorizedView.vue'
 import ANotFoundView from '@/components/view/ANotFoundView.vue'
+import AGenericView from '@/components/view/AGenericView.vue'
 import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
 import AJobPriorityChip from '@/components/job/AJobPriorityChip.vue'
 import AJobBaseCreateForm from '@/components/job/AJobBaseCreateForm.vue'
@@ -698,6 +699,7 @@ export {
   ALogoutView,
   AUnauthorizedView,
   ANotFoundView,
+  AGenericView,
 
   // COMPOSABLES
   usePagination,
