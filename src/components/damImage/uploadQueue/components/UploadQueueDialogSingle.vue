@@ -202,7 +202,8 @@ const uploadProgress = computed(() => {
   return item.value?.progress.progressPercent
 })
 
-const { damClient, endPointAsset, customUploadMetadataToImageMap } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, customUploadMetadataToImageMap, simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const simpleMode = computed(() => simpleAssetSidebarEnabled && isTypeImage.value && enableRoiTab.value)
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -360,7 +361,7 @@ onMounted(() => {
         <div class="d-flex w-100 h-100 position-relative">
           <div class="d-flex w-100 align-center dam-image-detail__left">
             <div
-              v-if="activeTab === AssetDetailTabImageWithRoi.ROI && enableRoiTab"
+              v-if="(activeTab === AssetDetailTabImageWithRoi.ROI && enableRoiTab) || simpleMode"
               class="w-100 h-100 pa-2 d-flex align-center justify-center"
             >
               <DamAssetImageRoiSelect :ext-system="extSystem" />

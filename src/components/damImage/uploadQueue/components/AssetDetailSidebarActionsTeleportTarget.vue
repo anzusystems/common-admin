@@ -24,5 +24,5 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div :class="divClassName" />
+  <div :class="[divClassName, 'd-flex', 'flex-row-reverse', 'justify-start', 'align-center', 'w-100']" />
 </template>

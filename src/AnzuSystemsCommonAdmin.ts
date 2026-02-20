@@ -62,6 +62,7 @@ export interface CommonAdminCoreDamConfig {
   customUploadMetadataToImageMap?: UploadMetadataToImageMapFn
   customAssetSelectMetadataToImageMap?: AssetSelectMetadataToImageMapFn
   assetListEnabledFilters?: string[]
+  simpleAssetSidebar?: boolean
 }
 
 export type CommonAdminCoreDamOptions =

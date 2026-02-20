@@ -18,7 +18,7 @@ const { canTeleport, divClassName } = useAssetDetailSidebarActionbar(props.queue
     v-if="canTeleport"
     :to="'.' + divClassName"
   >
-    <div class="w-100 text-right">
+    <div>
       <slot />
     </div>
   </Teleport>

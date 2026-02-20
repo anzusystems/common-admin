@@ -15,8 +15,9 @@ import { assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { IntegerId } from '@/types/common'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     extSystem: IntegerId
@@ -37,6 +38,9 @@ const { toolbarColor } = useTheme()
 
 const assetDetailStore = useAssetDetailStore()
 const { asset, dialog, activeTab, loading } = storeToRefs(assetDetailStore)
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(props.configName)
 
 const closeDialog = () => {
   assetDetailStore.setAsset(null)
@@ -66,6 +70,7 @@ const assetStatus = computed(() => {
 const isTypeImage = computed(() => {
   return assetType.value === DamAssetType.Image
 })
+const simpleMode = computed(() => simpleAssetSidebarEnabled && isTypeImage.value)
 const isTypeVideo = computed(() => {
   return assetType.value === DamAssetType.Video
 })
@@ -173,7 +178,7 @@ const assetMainFile = computed(() => {
         <div class="d-flex w-100 h-100 position-relative">
           <div class="d-flex w-100 align-center dam-image-detail__left">
             <div
-              v-if="activeTab === AssetDetailTabImageWithRoi.ROI"
+              v-if="activeTab === AssetDetailTabImageWithRoi.ROI || simpleMode"
               class="w-100 h-100 pa-2 d-flex align-center justify-center"
             >
               <DamAssetImageRoiSelect :ext-system="extSystem" />
