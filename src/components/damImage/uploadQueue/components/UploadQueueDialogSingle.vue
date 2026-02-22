@@ -202,7 +202,10 @@ const uploadProgress = computed(() => {
   return item.value?.progress.progressPercent
 })
 
-const { damClient, endPointAsset, customUploadMetadataToImageMap, simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const {
+   damClient, endPointAsset, customUploadMetadataToImageMap, simpleAssetSidebarEnabled
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+} = useCommonAdminCoreDamOptions(props.configName)
 const simpleMode = computed(() => simpleAssetSidebarEnabled && isTypeImage.value && enableRoiTab.value)
 
 const onStopConfirm = async () => {
