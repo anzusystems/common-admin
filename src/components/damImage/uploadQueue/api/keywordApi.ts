@@ -27,7 +27,13 @@ export const fetchKeywordListByIds = (client: () => AxiosInstance, extSystemId: 
   )
 
 export const useFetchKeywordList = (client: () => AxiosInstance, extSystemId: number) =>
-  useApiFetchList<DamKeyword[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT_LIST, { extSystemId })
+  useApiFetchList<DamKeyword[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT_LIST,
+    urlParams: { extSystemId },
+  })
 
 /**
  * @deprecated

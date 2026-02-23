@@ -89,19 +89,18 @@ const mapToValueObject = (author: AuthorKind) => {
 const END_POINT = '/adm/v1/author-kind'
 
 const fetchAuthorListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<AuthorKind[]>(
-    cmsClient,
-    'cms',
-    'authorKind',
-    END_POINT + '/search',
-    undefined,
-    undefined,
-    true
-  )
+  const { executeFetch } = useApiFetchByIds<AuthorKind[]>({
+    client: cmsClient,
+    system: 'cms',
+    entity: 'authorKind',
+    urlTemplate: END_POINT + '/search',
+    isSearchApi: true,
+  })
   return executeFetch(ids)
 }
 
-const useFetchAuthorList = () => useApiFetchList<AuthorKind[]>(cmsClient, 'cms', 'authorKind', END_POINT)
+const useFetchAuthorList = () =>
+  useApiFetchList<AuthorKind[]>({ client: cmsClient, system: 'cms', entity: 'authorKind', urlTemplate: END_POINT })
 
 export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchAuthorList()

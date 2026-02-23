@@ -41,8 +41,12 @@ export interface AssetMetadataBulkItem {
 export declare type AssetCustomData = Record<string, any>
 
 export const useFetchAssetList = (client: () => AxiosInstance, endPoint: string, licenceId: IntegerId) =>
-  useApiFetchList<AssetSearchListItemDto[]>(client, SYSTEM_CORE_DAM, ENTITY, endPoint + '/licence/:licenceId', {
-    licenceId,
+  useApiFetchList<AssetSearchListItemDto[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: endPoint + '/licence/:licenceId',
+    urlParams: { licenceId },
   })
 
 export const fetchAsset = (client: () => AxiosInstance, endPoint: string, id: DocId) =>

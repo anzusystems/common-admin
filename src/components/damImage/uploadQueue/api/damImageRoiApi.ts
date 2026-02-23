@@ -17,4 +17,10 @@ export const updateRoi = (client: () => AxiosInstance, id: DocId, data: RegionOf
   apiUpdateOne<RegionOfInterest>(client, data, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
 
 export const useFetchImageRoiList = (client: () => AxiosInstance, imageId: DocId) =>
-  useApiFetchList<any[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT_IMAGE_ROI, { id: imageId })
+  useApiFetchList<any[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT_IMAGE_ROI,
+    urlParams: { id: imageId },
+  })

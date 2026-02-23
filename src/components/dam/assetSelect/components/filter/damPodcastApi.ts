@@ -12,4 +12,10 @@ export const fetchDamPodcastListByIds = (client: () => AxiosInstance, licenceId:
   apiFetchByIds<DamPodcastAware[]>(client, ids, END_POINT, { licenceId }, SYSTEM_CORE_DAM, ENTITY, {}, false)
 
 export const useFetchDamPodcastList = (client: () => AxiosInstance, licenceId: IntegerId) =>
-  useApiFetchList<DamPodcastAware[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT, { licenceId })
+  useApiFetchList<DamPodcastAware[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT,
+    urlParams: { licenceId },
+  })

@@ -24,7 +24,7 @@ export const fetchDamUserList = (client: () => AxiosInstance, pagination: Pagina
   apiFetchList<DamUser[]>(client, END_POINT, {}, pagination, filterBag, SYSTEM_CORE_DAM, ENTITY)
 
 export const useFetchDamUserList = (client: () => AxiosInstance) =>
-  useApiFetchList<DamUser[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT)
+  useApiFetchList<DamUser[]>({ client, system: SYSTEM_CORE_DAM, entity: ENTITY, urlTemplate: END_POINT })
 
 export const updateDamUser = (client: () => AxiosInstance, id: number, data: DamUserUpdateDto) =>
   apiUpdateOne<DamUserUpdateDto, DamUser>(client, data, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)

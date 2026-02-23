@@ -30,7 +30,13 @@ export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: n
   )
 
 export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: IntegerId) =>
-  useApiFetchList<DamAuthor[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT_LIST, { extSystemId })
+  useApiFetchList<DamAuthor[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT_LIST,
+    urlParams: { extSystemId },
+  })
 
 export const fetchAuthorList = (
   client: () => AxiosInstance,

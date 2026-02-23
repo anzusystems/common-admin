@@ -19,7 +19,8 @@ export type PollDemo = AnzuUserAndTimeTrackingAware & {
   votes: number
 }
 
-export const useFetchPollListDemo = () => useApiFetchList<PollDemo[]>(cmsClient, 'cms', 'poll', '/adm/v1/poll')
+export const useFetchPollListDemo = () =>
+  useApiFetchList<PollDemo[]>({ client: cmsClient, system: 'cms', entity: 'poll', urlTemplate: '/adm/v1/poll' })
 
 export const fetchPollListByIds = (ids: IntegerId[]) =>
   apiFetchByIds<PollDemo[]>(cmsClient, ids, '/adm/v1/poll', {}, 'cms', 'poll')

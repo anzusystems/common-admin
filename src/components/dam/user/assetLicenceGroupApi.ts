@@ -17,7 +17,7 @@ export const fetchDamAssetLicenceGroupListByIds = (client: () => AxiosInstance, 
   apiFetchByIds<DamAssetLicenceGroup[]>(client, ids, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY, {}, false)
 
 export const useFetchDamAssetLicenceGroupList = (client: () => AxiosInstance) =>
-  useApiFetchList<DamAssetLicenceGroup[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT)
+  useApiFetchList<DamAssetLicenceGroup[]>({ client, system: SYSTEM_CORE_DAM, entity: ENTITY, urlTemplate: END_POINT })
 
 /**
  * @deprecated

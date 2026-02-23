@@ -17,7 +17,7 @@ export const fetchDamExtSystemListByIds = (client: () => AxiosInstance, ids: Int
   apiFetchByIds<DamExtSystem[]>(client, ids, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
 
 export const useFetchDamExtSystemList = (client: () => AxiosInstance) =>
-  useApiFetchList<DamExtSystem[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT)
+  useApiFetchList<DamExtSystem[]>({ client, system: SYSTEM_CORE_DAM, entity: ENTITY, urlTemplate: END_POINT })
 
 /**
  * @deprecated
