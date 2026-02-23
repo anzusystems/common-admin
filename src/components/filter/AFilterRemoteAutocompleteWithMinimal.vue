@@ -239,7 +239,7 @@ watchDebounced(
     @click:clear="onClickClear"
   >
     <!-- @vue-skip -->
-    <template #item="{ props: itemProps, item: itemItem }">
+    <template #item="{ props: itemProps, internalItem: itemItem }">
       <slot
         name="item"
         :item="itemItem"

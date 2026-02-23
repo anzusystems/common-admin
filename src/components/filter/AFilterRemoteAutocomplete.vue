@@ -221,11 +221,11 @@ watchDebounced(
     @focus="onFocus"
     @click:clear="onClickClear"
   >
-    <template #item="{ props: itemProps, item }">
+    <template #item="{ props: itemProps, internalItem }">
       <VListItem
         v-bind="itemProps"
-        :title="item.raw.title"
-        :subtitle="item.raw.subtitle"
+        :title="internalItem.raw.title"
+        :subtitle="internalItem.raw.subtitle"
       />
     </template>
   </VAutocomplete>

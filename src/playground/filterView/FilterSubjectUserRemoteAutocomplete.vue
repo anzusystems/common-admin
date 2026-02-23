@@ -32,7 +32,7 @@ provide(FilterInnerDataKey, filterData)
     item-title="title"
     @change="emit('change')"
   >
-    <template #item="{ props: itemProps, item: itemItem }">
+    <template #item="{ props: itemProps, internalItem: itemItem }">
       <VListItem
         v-bind="itemProps"
         title=""

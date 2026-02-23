@@ -198,7 +198,7 @@ const showAdd = computed(() => {
       @keyup.enter="onEnterKeyup"
       @keyup.,="onCommaKeyup"
     >
-      <template #item="{ props: itemSlotProps, item: itemSlotItem }">
+      <template #item="{ props: itemSlotProps, internalItem: itemSlotItem }">
         <VListItem
           v-bind="itemSlotProps"
           @click.prevent=""

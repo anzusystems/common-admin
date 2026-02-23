@@ -236,10 +236,10 @@ const onInternalItemChange = (item: ValueObjectOption<TimeIntervalToolsValue>) =
     autocomplete="off"
     @click:clear.stop="onClear"
   >
-    <template #item="{ props: itemProps, item }">
+    <template #item="{ props: itemProps, internalItem }">
       <VListItem
         v-bind="itemProps"
-        @click="onInternalItemChange(item)"
+        @click="onInternalItemChange(internalItem)"
       />
     </template>
   </VSelect>

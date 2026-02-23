@@ -375,26 +375,26 @@ const onAutocompleteModelUpdate = (newValue: any) => {
     @focus="onFocus"
     @click:clear="onClickClear"
   >
-    <template #item="{ props: itemProps, item }">
+    <template #item="{ props: itemProps, internalItem }">
       <VListItem
         v-bind="itemProps"
-        :title="item.raw.title"
-        :subtitle="item.raw.subtitle"
+        :title="internalItem.raw.title"
+        :subtitle="internalItem.raw.subtitle"
       />
     </template>
-    <template #chip="{ props: chipProps, item }">
+    <template #chip="{ props: chipProps, internalItem }">
       <VChip
         :closable="chipProps.closable as boolean"
         size="small"
-        :text="`${item.title} (${item.raw.subtitle})`"
-        :disabled="item.props.disabled"
+        :text="`${internalItem.title} (${internalItem.raw.subtitle})`"
+        :disabled="internalItem.props.disabled"
       >
-        {{ item.raw.title }}
+        {{ internalItem.raw.title }}
         <span
-          v-if="item.raw.subtitle"
+          v-if="internalItem.raw.subtitle"
           class="font-italic pl-1"
         >
-          ({{ item.raw.subtitle }})
+          ({{ internalItem.raw.subtitle }})
         </span>
       </VChip>
     </template>

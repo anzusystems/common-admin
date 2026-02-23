@@ -315,7 +315,7 @@ watch(
       </slot>
     </template>
     <!-- @vue-skip -->
-    <template #item="{ props: itemProps, item: itemItem }">
+    <template #item="{ props: itemProps, internalItem: itemItem }">
       <slot
         name="item"
         :props="itemProps"
