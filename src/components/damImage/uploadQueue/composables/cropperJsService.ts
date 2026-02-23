@@ -1,15 +1,24 @@
+import type { CropperSelection } from 'cropperjs'
 import type { RegionOfInterest } from '@/types/coreDam/Roi'
 import { stringToFloat, stringToInt } from '@/utils/string'
 
 const PRECISION = 3
 
+type CropperImageData = Pick<HTMLImageElement, 'naturalWidth' | 'naturalHeight'>
+type CropperData = Pick<CropperSelection, 'x' | 'y' | 'width' | 'height'> & {
+  rotate: number
+  scaleX: number
+  scaleY: number
+}
+type CropperSetDataOptions = Pick<CropperSelection, 'x' | 'y' | 'width' | 'height'>
+
 export interface ACropperjsExposed {
   enable: () => void
   disable: () => void
   destroy: () => void
-  getImageData: () => Cropper.ImageData
-  getData: () => Cropper.Data
-  setData: (data: Cropper.SetDataOptions) => void
+  getImageData: () => CropperImageData | undefined
+  getData: () => CropperData | undefined
+  setData: (data: CropperSetDataOptions) => void
 }
 
 export const regionToCrop = function (
