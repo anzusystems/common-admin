@@ -51,7 +51,8 @@ export const CollabAccessRoomStatus = {
   Occupied: 'occupied',
   Failed: 'failed',
 } as const
-export type CollabAccessRoomStatusType = (typeof CollabAccessRoomStatus)[keyof typeof CollabAccessRoomStatus]
+export type CollabAccessRoomStatusType =
+  (typeof CollabAccessRoomStatus)[keyof typeof CollabAccessRoomStatus]
 
 export interface CollabRoomInfoCallback {
   room: CollabRoomInfo
@@ -61,11 +62,13 @@ interface CollabAccessRoomCallback {
   status: CollabAccessRoomStatusType
 }
 
-export interface CollabSuccessAccessRoomCallback extends CollabAccessRoomCallback, CollabRoomInfoCallback {
+export interface CollabSuccessAccessRoomCallback
+  extends CollabAccessRoomCallback, CollabRoomInfoCallback {
   status: typeof CollabAccessRoomStatus.Ok
 }
 
-export interface CollabOccupiedAccessRoomCallback extends CollabAccessRoomCallback, CollabRoomInfoCallback {
+export interface CollabOccupiedAccessRoomCallback
+  extends CollabAccessRoomCallback, CollabRoomInfoCallback {
   status: typeof CollabAccessRoomStatus.Occupied
 }
 
@@ -80,13 +83,13 @@ export type CollabAccessRoomCallbackTypes =
   | CollabFailedAccessRoomCallback
 
 export function isCollabSuccessAccessRoomCallback(
-  callback: CollabAccessRoomCallbackTypes
+  callback: CollabAccessRoomCallbackTypes,
 ): callback is CollabSuccessAccessRoomCallback {
   return callback.status === CollabAccessRoomStatus.Ok
 }
 
 export function isCollabOccupiedAccessRoomCallback(
-  callback: CollabAccessRoomCallbackTypes
+  callback: CollabAccessRoomCallbackTypes,
 ): callback is CollabSuccessAccessRoomCallback {
   return callback.status === CollabAccessRoomStatus.Occupied
 }
@@ -117,16 +120,18 @@ export interface CollabFailedChangeRoomLockCallback extends CollabChangeRoomLock
   reason: string
 }
 
-export type CollabChangeRoomLockCallbackTypes = CollabSuccessChangeRoomLockCallback | CollabFailedChangeRoomLockCallback
+export type CollabChangeRoomLockCallbackTypes =
+  | CollabSuccessChangeRoomLockCallback
+  | CollabFailedChangeRoomLockCallback
 
 export function isCollabSuccessChangeRoomLockCallback(
-  callback: CollabChangeRoomLockCallbackTypes
+  callback: CollabChangeRoomLockCallbackTypes,
 ): callback is CollabSuccessChangeRoomLockCallback {
   return callback.status === CollabChangeRoomLockStatus.Ok
 }
 
 export function isCollabFailedChangeRoomLockCallback(
-  callback: CollabChangeRoomLockCallbackTypes
+  callback: CollabChangeRoomLockCallbackTypes,
 ): callback is CollabFailedChangeRoomLockCallback {
   return callback.status === CollabChangeRoomLockStatus.Failed
 }
@@ -139,7 +144,8 @@ export const CollabRoomJoinStrategy = {
   Free: 'free',
   Moderated: 'moderated',
 } as const
-export type CollabRoomJoinStrategyType = (typeof CollabRoomJoinStrategy)[keyof typeof CollabRoomJoinStrategy]
+export type CollabRoomJoinStrategyType =
+  (typeof CollabRoomJoinStrategy)[keyof typeof CollabRoomJoinStrategy]
 
 export interface CollabRoomOptions {
   joinStrategy?: CollabRoomJoinStrategyType
@@ -164,44 +170,54 @@ export const CollabRequestToJoinStatus = {
   AlreadyRequested: 'alreadyRequested',
   Failed: 'failed',
 } as const
-export type CollabRequestToJoinStatusType = (typeof CollabRequestToJoinStatus)[keyof typeof CollabRequestToJoinStatus]
+export type CollabRequestToJoinStatusType =
+  (typeof CollabRequestToJoinStatus)[keyof typeof CollabRequestToJoinStatus]
 
 export interface CollabRequestToJoinStatusCallback {
   status: CollabRequestToJoinStatusType
 }
 
 export interface CollabClientToServerEvents {
-  subscribeCollabRoomInfo: (room: CollabRoom, callback: (data: CollabRoomInfoCallback) => void) => void
-  unsubscribeCollabRoomInfo: (room: CollabRoom, callback: (data: CollabRoomInfoCallback) => void) => void
+  subscribeCollabRoomInfo: (
+    room: CollabRoom,
+    callback: (data: CollabRoomInfoCallback) => void,
+  ) => void
+  unsubscribeCollabRoomInfo: (
+    room: CollabRoom,
+    callback: (data: CollabRoomInfoCallback) => void,
+  ) => void
   joinCollabRoom: (
     room: CollabRoom,
     options: CollabRoomOptions,
-    callback: (data: CollabAccessRoomCallbackTypes) => void
+    callback: (data: CollabAccessRoomCallbackTypes) => void,
   ) => void
-  leaveCollabRoom: (room: CollabRoom, callback: (data: CollabAccessRoomCallbackTypes) => void) => void
+  leaveCollabRoom: (
+    room: CollabRoom,
+    callback: (data: CollabAccessRoomCallbackTypes) => void,
+  ) => void
   acquireFieldLock: (
     room: CollabRoom,
     field: CollabFieldName,
     options: CollabFieldLockOptions,
-    callback: (data: CollabChangeRoomLockCallbackTypes) => void
+    callback: (data: CollabChangeRoomLockCallbackTypes) => void,
   ) => void
   releaseFieldLock: (
     room: CollabRoom,
     field: CollabFieldName,
     changedData: unknown,
     options: CollabFieldLockOptions,
-    callback: (data: CollabChangeRoomLockCallbackTypes) => void
+    callback: (data: CollabChangeRoomLockCallbackTypes) => void,
   ) => void
   changeFieldData: (
     room: CollabRoom,
     field: CollabFieldName,
     changedData: unknown,
-    callback: (data: CollabChangeRoomLockCallbackTypes) => void
+    callback: (data: CollabChangeRoomLockCallbackTypes) => void,
   ) => void
   requestToJoin: (
     room: CollabRoom,
     timestamp: number,
-    callback: (data: CollabRequestToJoinStatusCallback) => void
+    callback: (data: CollabRequestToJoinStatusCallback) => void,
   ) => void
   approveRequestToJoin: (room: CollabRoom, userId: CollabUserId) => void
   rejectRequestToJoin: (room: CollabRoom, userId: CollabUserId) => void
@@ -209,7 +225,7 @@ export interface CollabClientToServerEvents {
   requestToTakeModeration: (
     room: CollabRoom,
     timestamp: number,
-    callback: (data: CollabRequestToTakeModerationStatusCallback) => void
+    callback: (data: CollabRequestToTakeModerationStatusCallback) => void,
   ) => void
   approveRequestToTakeModeration: (room: CollabRoom) => void
   rejectRequestToTakeModeration: (room: CollabRoom) => void

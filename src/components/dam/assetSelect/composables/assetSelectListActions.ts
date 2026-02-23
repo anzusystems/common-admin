@@ -1,5 +1,8 @@
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
-import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import {
+  type AssetSelectListItem,
+  useAssetSelectStore,
+} from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
@@ -26,7 +29,7 @@ const detailLoading = ref(false)
 
 export function useAssetSelectActions(
   configName = 'default',
-  onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void
+  onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void,
 ) {
   const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
 
@@ -55,7 +58,11 @@ export function useAssetSelectActions(
   const fetchAssetList = async () => {
     if (assetSelectStore.selectedLicenceId <= 0) return
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
+    const { executeFetch } = useFetchAssetList(
+      damClient,
+      endPointAsset,
+      assetSelectStore.selectedLicenceId,
+    )
     try {
       assetSelectStore.showLoader()
       assetSelectStore.setList(await executeFetch(pagination, filterData, filterConfig))
@@ -70,7 +77,11 @@ export function useAssetSelectActions(
     if (assetSelectStore.loader) return
     pagination.value.page = pagination.value.page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
+    const { executeFetch } = useFetchAssetList(
+      damClient,
+      endPointAsset,
+      assetSelectStore.selectedLicenceId,
+    )
     try {
       assetSelectStore.showLoader()
       assetSelectStore.appendList(await executeFetch(pagination, filterData, filterConfig))
@@ -135,7 +146,7 @@ export function useAssetSelectActions(
     inPodcast: boolean | null,
     singleMode: boolean,
     minCount: number,
-    maxCount: number
+    maxCount: number,
   ): void => {
     assetSelectStore.clearSelected()
     assetSelectStore.setAssetType(assetType)

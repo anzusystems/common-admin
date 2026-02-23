@@ -9,7 +9,8 @@ export function useValidateStringArrayItemLength() {
 
   const stringArrayItemLengthValidator = (min: number, max: number) => {
     return (value: string[]) =>
-      !helpers.req(value) || value.every((item) => item.length >= unref(min) && item.length <= unref(max))
+      !helpers.req(value) ||
+      value.every((item) => item.length >= unref(min) && item.length <= unref(max))
   }
   const stringArrayItemLengthHelper = (min: number, max: number) => {
     return {

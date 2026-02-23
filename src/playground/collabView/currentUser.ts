@@ -4,7 +4,8 @@ import { isDefined } from '@/utils/common'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { cmsClient } from '@/playground/mock/cmsClient'
 
-export const fetchCurrentUser = () => apiFetchOne<AnzuUser>(cmsClient, '/adm/v1/user/current', {}, 'cms', 'user')
+export const fetchCurrentUser = () =>
+  apiFetchOne<AnzuUser>(cmsClient, '/adm/v1/user/current', {}, 'cms', 'user')
 
 const currentUser = ref<AnzuUser | undefined>(undefined)
 

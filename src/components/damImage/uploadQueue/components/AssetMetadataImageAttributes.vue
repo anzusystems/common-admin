@@ -8,7 +8,7 @@ withDefaults(
   defineProps<{
     file: AssetFileImage
   }>(),
-  {}
+  {},
 )
 
 const { t } = useI18n()

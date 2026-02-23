@@ -40,7 +40,7 @@ const props = withDefaults(
     store: true,
     alwaysVisible: false,
     hideMore: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'submit'): void

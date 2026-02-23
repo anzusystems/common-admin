@@ -20,7 +20,7 @@ const props = withDefaults(
     routeName: undefined,
     externalUrlTemplate: undefined,
     cachedUsers: undefined,
-  }
+  },
 )
 
 const router = useRouter()
@@ -36,7 +36,9 @@ const item = computed(() => {
 
 const text = computed(() => {
   if (cached.value) {
-    return cached.value.person.fullName.length ? cached.value.person.fullName : cached.value.email.split('@')[0]
+    return cached.value.person.fullName.length
+      ? cached.value.person.fullName
+      : cached.value.email.split('@')[0]
   }
   return ''
 })
@@ -69,7 +71,7 @@ watch(
     cached.value = newValue
     loaded.value = true
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

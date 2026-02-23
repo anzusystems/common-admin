@@ -18,7 +18,7 @@ const props = withDefaults(
     dataCy: 'button-create',
     size: 36,
     variant: 'primary',
-  }
+  },
 )
 
 const { t } = useI18n()

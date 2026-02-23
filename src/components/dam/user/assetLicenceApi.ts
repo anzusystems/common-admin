@@ -17,10 +17,27 @@ export const fetchDamAssetLicenceListByIds = (client: () => AxiosInstance, ids: 
   apiFetchByIds<DamAssetLicence[]>(client, ids, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
 
 export const useFetchDamAssetLicenceList = (client: () => AxiosInstance) =>
-  useApiFetchList<DamAssetLicence[]>({ client, system: SYSTEM_CORE_DAM, entity: ENTITY, urlTemplate: END_POINT })
+  useApiFetchList<DamAssetLicence[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT,
+  })
 
 /**
  * @deprecated
  */
-export const fetchDamAssetLicenceList = (client: () => AxiosInstance, pagination: Pagination, filterBag: FilterBag) =>
-  apiFetchList<DamAssetLicence[]>(client, END_POINT, {}, pagination, filterBag, SYSTEM_CORE_DAM, ENTITY)
+export const fetchDamAssetLicenceList = (
+  client: () => AxiosInstance,
+  pagination: Pagination,
+  filterBag: FilterBag,
+) =>
+  apiFetchList<DamAssetLicence[]>(
+    client,
+    END_POINT,
+    {},
+    pagination,
+    filterBag,
+    SYSTEM_CORE_DAM,
+    ENTITY,
+  )

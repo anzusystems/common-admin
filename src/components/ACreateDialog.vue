@@ -25,7 +25,7 @@ const props = withDefaults(
     disableRedirect: false,
     redirectRouteName: undefined,
     redirectParamName: 'id',
-  }
+  },
 )
 
 const emit = defineEmits<{

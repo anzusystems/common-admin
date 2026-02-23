@@ -71,7 +71,8 @@ const isAuthorKindSource = (author: AuthorKind): author is AuthorKindSource => {
 
 const getAuthorDisplayName = (author: AuthorKind) => {
   return isAuthorKindPerson(author)
-    ? author.person.fullName + (author.jobDescription.length > 0 ? ` (${author.jobDescription})` : '')
+    ? author.person.fullName +
+        (author.jobDescription.length > 0 ? ` (${author.jobDescription})` : '')
     : isAuthorKindSource(author)
       ? author.title
       : ''
@@ -100,19 +101,32 @@ const fetchAuthorListByIds = (ids: IntegerId[]) => {
 }
 
 const useFetchAuthorList = () =>
-  useApiFetchList<AuthorKind[]>({ client: cmsClient, system: 'cms', entity: 'authorKind', urlTemplate: END_POINT })
+  useApiFetchList<AuthorKind[]>({
+    client: cmsClient,
+    system: 'cms',
+    entity: 'authorKind',
+    urlTemplate: END_POINT,
+  })
 
-export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (
+  pagination: Ref<Pagination>,
+  filterData: FilterData,
+  filterConfig: FilterConfig,
+) => {
   const { executeFetch } = useFetchAuthorList()
   const authors = await executeFetch(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
+  return <ValueObjectOption<IntegerId>[]>(
+    authors.map((author: AuthorKind) => mapToValueObject(author))
+  )
 }
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
   const authors = await fetchAuthorListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
+  return <ValueObjectOption<IntegerId>[]>(
+    authors.map((author: AuthorKind) => mapToValueObject(author))
+  )
 }
 
 export function useSubjectAuthorInnerFilter() {

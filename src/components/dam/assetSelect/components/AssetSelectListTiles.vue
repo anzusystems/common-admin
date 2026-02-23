@@ -9,7 +9,7 @@ withDefaults(
   defineProps<{
     extSystem: IntegerId
   }>(),
-  {}
+  {},
 )
 
 const { gridView } = useGridView()

@@ -8,7 +8,7 @@ withDefaults(
     from: RouteLocationRaw
     to: RouteLocationRaw
   }>(),
-  {}
+  {},
 )
 
 // const router = useRouter()
@@ -57,7 +57,7 @@ watch(
   (newValue) => {
     numRepeats.value = newValue
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

@@ -24,7 +24,7 @@ const props = withDefaults(
     textOnly: false,
     size: 'small',
     containerClass: 'd-inline-flex',
-  }
+  },
 )
 
 const { getCachedKeyword } = useDamCachedKeywords()
@@ -61,7 +61,7 @@ watch(
     cached.value = newValue
     loaded.value = true
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

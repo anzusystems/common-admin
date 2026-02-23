@@ -12,7 +12,7 @@ const props = withDefaults(
     name: string
     extSystem: IntegerId
   }>(),
-  {}
+  {},
 )
 const emit = defineEmits<{
   (e: 'change'): void

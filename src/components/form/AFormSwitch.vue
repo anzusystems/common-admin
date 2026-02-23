@@ -22,7 +22,7 @@ const props = withDefaults(
     hideLabel: false,
     collab: undefined,
     disabled: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
@@ -40,7 +40,7 @@ const lockedByUserLocal = ref<IntegerIdNullable>(null)
 if (collabOptions.value.enabled && isDefined(props.collab)) {
   const { releaseCollabFieldLock, acquireCollabFieldLock, lockedByUser } = useCollabField(
     props.collab.room,
-    props.collab.field
+    props.collab.field,
   )
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock
@@ -49,7 +49,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true }
+    { immediate: true },
   )
 }
 

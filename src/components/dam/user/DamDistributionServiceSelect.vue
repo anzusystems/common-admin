@@ -16,7 +16,7 @@ const props = withDefaults(
     multiple: false,
     label: undefined,
     dataCy: '',
-  }
+  },
 )
 
 const emit = defineEmits<{

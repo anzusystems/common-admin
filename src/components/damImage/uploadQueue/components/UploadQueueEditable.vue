@@ -25,7 +25,7 @@ const props = withDefaults(
   {
     configName: 'default',
     disableDoneAnimation: false,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -33,7 +33,9 @@ const emit = defineEmits<{
 }>()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient, endPointAsset, mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient, endPointAsset, mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(
+  props.configName,
+)
 
 const refreshDisabled = ref(false)
 
@@ -60,9 +62,16 @@ const refreshItem = async (data: { index: number; assetId: DocId }) => {
     if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Processed) {
       await uploadQueuesStore.queueItemFullyProcessed(asset.id)
     } else if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
-      await uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, DamAssetType.Image)
+      await uploadQueuesStore.queueItemDuplicate(
+        asset.id,
+        asset.mainFile.originAssetFile,
+        DamAssetType.Image,
+      )
     } else if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Failed) {
-      await uploadQueuesStore.queueItemFailed(data.assetId, asset.mainFile.fileAttributes.failReason)
+      await uploadQueuesStore.queueItemFailed(
+        data.assetId,
+        asset.mainFile.fileAttributes.failReason,
+      )
     } else {
       showWarningT('common.damImage.queueItem.stillUploadingOrProcessing')
     }

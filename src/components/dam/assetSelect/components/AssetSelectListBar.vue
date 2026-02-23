@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import {
+  AssetSelectGridView,
+  useGridView,
+} from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import { computed, onMounted } from 'vue'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
@@ -29,7 +32,7 @@ const props = withDefaults(
     hideFilterToggle: false,
     preselectAssetType: undefined,
     preselectInPodcast: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'typeChange', data: { type: DamAssetTypeType; inPodcast: boolean | null }): void
@@ -112,7 +115,7 @@ onMounted(() => {
     color="transparent"
     :height="46"
     elevation="0"
-    :class="hideFilterToggle ? '': 'system-border-b' "
+    :class="hideFilterToggle ? '' : 'system-border-b'"
     class="subject-select__second-bar"
   >
     <slot name="second-bar">

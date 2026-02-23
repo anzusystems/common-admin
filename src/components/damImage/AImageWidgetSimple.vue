@@ -42,7 +42,7 @@ const props = withDefaults(
     useHtmlImg: false,
     widgetClass: undefined,
     sourceLabel: undefined,
-  }
+  },
 )
 
 const { showErrorsDefault } = useAlerts()
@@ -90,7 +90,7 @@ watch(
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
@@ -182,4 +182,3 @@ watch(
   align-items: center;
 }
 </style>
-

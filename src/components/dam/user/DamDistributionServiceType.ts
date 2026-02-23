@@ -10,7 +10,7 @@ export function useDamDistributionServiceType() {
         value: serviceName,
         title: value.title,
       }
-    }
+    },
   )
 
   const allDistributionServiceTypeOptions = ref<ValueObjectOption<string>[]>(all)

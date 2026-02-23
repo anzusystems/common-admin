@@ -73,9 +73,18 @@ const fetchRubricListByIds = (ids: IntegerId[]) => {
 }
 
 const useFetchRubricList = () =>
-  useApiFetchList<Rubric[]>({ client: cmsClient, system: 'cms', entity: 'rubric', urlTemplate: END_POINT })
+  useApiFetchList<Rubric[]>({
+    client: cmsClient,
+    system: 'cms',
+    entity: 'rubric',
+    urlTemplate: END_POINT,
+  })
 
-export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (
+  pagination: Ref<Pagination>,
+  filterData: FilterData,
+  filterConfig: FilterConfig,
+) => {
   const { executeFetch } = useFetchRubricList()
   const rubrics = await executeFetch(pagination, filterData, filterConfig)
 

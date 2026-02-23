@@ -6,7 +6,9 @@ const chunkSize = ref<number | undefined>(undefined)
 
 export function useDamUploadChunkSize(apiTimeout: number = 30) {
   const damConfigStore = useDamConfigStore()
-  const lastChunkSize = ref(chunkSize.value || damConfigStore.damPrvConfig.settings.imageChunkConfig.minSize)
+  const lastChunkSize = ref(
+    chunkSize.value || damConfigStore.damPrvConfig.settings.imageChunkConfig.minSize,
+  )
 
   const minUploadTimeThreshold = apiTimeout / 5
   const idealUploadTimeThreshold = apiTimeout / 4

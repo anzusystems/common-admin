@@ -21,7 +21,7 @@ const QUERY = '(prefers-color-scheme: dark)'
 const settings = ref<ThemeSettingsType>(
   Object.values(ThemeSettings).some((val) => val === storedSettings.value)
     ? <ThemeSettingsType>storedSettings.value
-    : ThemeSettings.Light
+    : ThemeSettings.Light,
 )
 const theme = ref<ThemeType>(Theme.Light)
 const systemHasDarkPreference = ref(window.matchMedia && window.matchMedia(QUERY).matches)

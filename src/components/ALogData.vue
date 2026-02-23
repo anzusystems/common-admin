@@ -5,7 +5,7 @@ const props = withDefaults(
   defineProps<{
     data: any
   }>(),
-  {}
+  {},
 )
 
 const computedData = computed(() => {
@@ -17,7 +17,7 @@ watch(
   (newValue) => {
     console.log(newValue)
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

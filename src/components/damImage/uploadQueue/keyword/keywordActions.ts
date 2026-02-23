@@ -1,7 +1,10 @@
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isUndefined } from '@/utils/common'
-import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
+import type {
+  DamKeyword,
+  DamKeywordMinimal,
+} from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/labs/filters/pagination'
 import type { Pagination as PaginationLegacy } from '@/types/Pagination'
@@ -45,11 +48,19 @@ export const useKeywordSelectActions = (extSystem: IntegerId) => {
 
   const { executeFetch } = useFetchKeywordList(damClient, extSystem)
 
-  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchItems = async (
+    pagination: Ref<Pagination>,
+    filterData: FilterData,
+    filterConfig: FilterConfig,
+  ) => {
     return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
   }
 
-  const fetchItemsMinimal = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchItemsMinimal = async (
+    pagination: Ref<Pagination>,
+    filterData: FilterData,
+    filterConfig: FilterConfig,
+  ) => {
     return mapToMinimals(await executeFetch(pagination, filterData, filterConfig))
   }
 

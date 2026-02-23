@@ -51,9 +51,18 @@ const fetchUserListByIds = (ids: IntegerId[]) => {
 }
 
 const useFetchUserList = () =>
-  useApiFetchList<User[]>({ client: cmsClient, system: 'cms', entity: 'user', urlTemplate: END_POINT })
+  useApiFetchList<User[]>({
+    client: cmsClient,
+    system: 'cms',
+    entity: 'user',
+    urlTemplate: END_POINT,
+  })
 
-export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (
+  pagination: Ref<Pagination>,
+  filterData: FilterData,
+  filterConfig: FilterConfig,
+) => {
   const { executeFetch } = useFetchUserList()
   const users = await executeFetch(pagination, filterData, filterConfig)
 
@@ -85,7 +94,7 @@ const mapToMinimals = (users: User[]): UserMinimal[] => {
 export const fetchItemsMinimal = async (
   pagination: Ref<Pagination>,
   filterData: FilterData,
-  filterConfig: FilterConfig
+  filterConfig: FilterConfig,
 ) => {
   const { executeFetch } = useFetchUserList()
   return mapToMinimals(await executeFetch(pagination, filterData, filterConfig, END_POINT))

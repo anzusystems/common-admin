@@ -19,7 +19,11 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
   })
 
   const imageProperties = computed(() => {
-    if (asset.value.mainFile && asset.value.mainFile.links && asset.value.mainFile.links.image_list) {
+    if (
+      asset.value.mainFile &&
+      asset.value.mainFile.links &&
+      asset.value.mainFile.links.image_list
+    ) {
       return {
         url: asset.value.mainFile.links.image_list.url,
         width: asset.value.mainFile.links.image_list.width,
@@ -36,7 +40,11 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
   })
 
   const tableImageProperties = computed(() => {
-    if (asset.value.mainFile && asset.value.mainFile.links && asset.value.mainFile.links.image_table) {
+    if (
+      asset.value.mainFile &&
+      asset.value.mainFile.links &&
+      asset.value.mainFile.links.image_table
+    ) {
       return {
         url: asset.value.mainFile.links.image_table.url,
         width: asset.value.mainFile.links.image_table.width,

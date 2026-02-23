@@ -8,7 +8,11 @@ import { useSubjectListActions } from '@/playground/filterView/subjectTools'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
-import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import {
+  DatatablePaginationKey,
+  FilterConfigKey,
+  FilterDataKey,
+} from '@/labs/filters/filterInjectionKeys'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { usePagination } from '@/labs/filters/pagination'
 import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
@@ -52,7 +56,7 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
   ],
   datatableHiddenColumns,
   'system',
-  'subject'
+  'subject',
 )
 
 const getList = useDebounceFn(() => {

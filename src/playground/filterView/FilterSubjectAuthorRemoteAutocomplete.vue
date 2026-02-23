@@ -12,7 +12,7 @@ withDefaults(
   defineProps<{
     name: string
   }>(),
-  {}
+  {},
 )
 const emit = defineEmits<{
   (e: 'change'): void

@@ -19,7 +19,7 @@ const props = withDefaults(
     buttonClass: 'ml-2',
     dataCy: 'button-close',
     size: 36,
-  }
+  },
 )
 
 const { t } = useI18n()

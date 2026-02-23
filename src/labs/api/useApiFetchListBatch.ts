@@ -1,10 +1,19 @@
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiResponseCodeError,
+  isAnzuApiResponseCodeError,
+} from '@/model/error/AnzuApiResponseCodeError'
+import {
+  AnzuApiValidationError,
+  axiosErrorResponseHasValidationData,
+} from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isDefined, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosRequestConfig } from 'axios'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import {
+  AnzuApiForbiddenError,
+  axiosErrorResponseIsForbidden,
+} from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
 import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
@@ -22,7 +31,7 @@ import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiT
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import { ref } from 'vue'
-import { usePagination as usePagination } from '@/labs/filters/pagination'
+import { usePagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
 import type { AxiosClientFn } from '@/labs/api/client'
 
@@ -55,13 +64,15 @@ export function useApiFetchListBatch<R>(
   entity: string,
   urlTemplate?: string,
   urlParams?: UrlParams,
-  options?: AxiosRequestConfig
+  options?: AxiosRequestConfig,
 ): UseApiFetchListBatchReturnType<R>
 
 /**
  * @template R Response type override
  */
-export function useApiFetchListBatch<R>(params: UseApiFetchListBatchParams): UseApiFetchListBatchReturnType<R>
+export function useApiFetchListBatch<R>(
+  params: UseApiFetchListBatchParams,
+): UseApiFetchListBatchReturnType<R>
 
 export function useApiFetchListBatch<R>(
   clientOrParams: AxiosClientFn | UseApiFetchListBatchParams,
@@ -69,7 +80,7 @@ export function useApiFetchListBatch<R>(
   entity?: string,
   urlTemplate?: string,
   urlParams?: UrlParams,
-  options?: AxiosRequestConfig
+  options?: AxiosRequestConfig,
 ): UseApiFetchListBatchReturnType<R> {
   let resolvedClient: AxiosClientFn
   let resolvedSystem: string
@@ -104,7 +115,7 @@ export function useApiFetchListBatch<R>(
     sortBy = 'id',
     sortDesc = true,
     batchSize = 100,
-    forceElastic = false
+    forceElastic = false,
   ): Promise<R> => {
     abortController = new AbortController()
 
@@ -133,20 +144,32 @@ export function useApiFetchListBatch<R>(
 
     try {
       const searchApi = filterConfig.general.elastic || resolvedForceElastic ? '/search' : ''
-      const params = isDefined(resolvedUrlParamsOverride) ? resolvedUrlParamsOverride : resolvedUrlParams
-      const template = isDefined(resolvedUrlTemplateOverride) ? resolvedUrlTemplateOverride : resolvedUrlTemplate
+      const params = isDefined(resolvedUrlParamsOverride)
+        ? resolvedUrlParamsOverride
+        : resolvedUrlParams
+      const template = isDefined(resolvedUrlTemplateOverride)
+        ? resolvedUrlTemplateOverride
+        : resolvedUrlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
-      const { pagination } = usePagination(resolvedSortBy, resolvedSortDesc ? SortOrder.Desc : SortOrder.Asc, {
-        rowsPerPage: resolvedBatchSize,
-      })
-      const url = (isUndefined(params) ? template : replaceUrlParameters(template, params)) + searchApi
+      const { pagination } = usePagination(
+        resolvedSortBy,
+        resolvedSortDesc ? SortOrder.Desc : SortOrder.Asc,
+        {
+          rowsPerPage: resolvedBatchSize,
+        },
+      )
+      const url =
+        (isUndefined(params) ? template : replaceUrlParameters(template, params)) + searchApi
       const results = [] as unknown as R
 
       // First page request
-      const res = await resolvedClient().get(url + generateListQuery(pagination, filterData, filterConfig), {
-        ...resolvedOptions,
-        signal: abortController.signal,
-      })
+      const res = await resolvedClient().get(
+        url + generateListQuery(pagination, filterData, filterConfig),
+        {
+          ...resolvedOptions,
+          signal: abortController.signal,
+        },
+      )
 
       if (!isValidHTTPStatus(res.status)) {
         throw new AnzuApiResponseCodeError(res.status)
@@ -168,7 +191,7 @@ export function useApiFetchListBatch<R>(
               {
                 ...resolvedOptions,
                 signal: abortController.signal,
-              }
+              },
             )
             const nextPageData = nextPageResponse.data
             // @ts-ignore
@@ -191,10 +214,13 @@ export function useApiFetchListBatch<R>(
             const pageCopy = { ...pagination.value, page: i + 1 }
             const paginationRef = ref(pageCopy)
             promises.push(
-              resolvedClient().get(url + generateListQuery(paginationRef, filterData, filterConfig), {
-                ...resolvedOptions,
-                signal: abortController.signal,
-              })
+              resolvedClient().get(
+                url + generateListQuery(paginationRef, filterData, filterConfig),
+                {
+                  ...resolvedOptions,
+                  signal: abortController.signal,
+                },
+              ),
             )
           }
 
@@ -280,9 +306,13 @@ interface ExecuteFetchListBatchFn<R> {
     sortBy?: string,
     sortDesc?: boolean,
     batchSize?: number,
-    forceElastic?: boolean
+    forceElastic?: boolean,
   ): Promise<R>
-  (filterData: FilterData<any>, filterConfig: FilterConfig<any>, params?: FetchListBatchParams): Promise<R>
+  (
+    filterData: FilterData<any>,
+    filterConfig: FilterConfig<any>,
+    params?: FetchListBatchParams,
+  ): Promise<R>
 }
 
 export type UseApiFetchListBatchReturnType<R> = {

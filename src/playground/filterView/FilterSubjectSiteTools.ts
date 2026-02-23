@@ -87,9 +87,18 @@ const fetchSiteListByIds = (ids: IntegerId[]) => {
 }
 
 const useFetchSiteList = () =>
-  useApiFetchList<Site[]>({ client: cmsClient, system: 'cms', entity: 'site', urlTemplate: END_POINT })
+  useApiFetchList<Site[]>({
+    client: cmsClient,
+    system: 'cms',
+    entity: 'site',
+    urlTemplate: END_POINT,
+  })
 
-export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+export const fetchItems = async (
+  pagination: Ref<Pagination>,
+  filterData: FilterData,
+  filterConfig: FilterConfig,
+) => {
   const { executeFetch } = useFetchSiteList()
   const sites = await executeFetch(pagination, filterData, filterConfig)
 

@@ -1,9 +1,18 @@
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiResponseCodeError,
+  isAnzuApiResponseCodeError,
+} from '@/model/error/AnzuApiResponseCodeError'
+import {
+  AnzuApiValidationError,
+  axiosErrorResponseHasValidationData,
+} from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosRequestConfig } from 'axios'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import {
+  AnzuApiForbiddenError,
+  axiosErrorResponseIsForbidden,
+} from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import {
   AnzuApiForbiddenOperationError,
@@ -41,8 +50,13 @@ export type FetchByIdsParams = {
  * @template T Type used for request payload, by default same as Response type
  * @template R Response type override, optional
  */
-const generateByIdsApiQuery = (ids: IntegerId[] | DocId[], isSearchApi: boolean, field = 'id'): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } = useApiQueryBuilder()
+const generateByIdsApiQuery = (
+  ids: IntegerId[] | DocId[],
+  isSearchApi: boolean,
+  field = 'id',
+): string => {
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } =
+    useApiQueryBuilder()
   const limit = ids.length // todo add batch fetch
   querySetLimit(limit)
   querySetOffset(1, limit)
@@ -65,7 +79,7 @@ export function useApiFetchByIds<R>(
   urlParams?: UrlParams,
   options?: AxiosRequestConfig,
   isSearchApi?: boolean,
-  field?: string
+  field?: string,
 ): UseApiFetchByIdsReturnType<R>
 
 export function useApiFetchByIds<R>(params: UseApiFetchByIdsParams): UseApiFetchByIdsReturnType<R>
@@ -78,7 +92,7 @@ export function useApiFetchByIds<R>(
   urlParams?: UrlParams,
   options?: AxiosRequestConfig,
   isSearchApi?: boolean,
-  field?: string
+  field?: string,
 ): UseApiFetchByIdsReturnType<R> {
   let resolvedClient: AxiosClientFn
   let resolvedSystem: string
@@ -114,7 +128,7 @@ export function useApiFetchByIds<R>(
   const executeFetch = async (
     ids: DocId[] | IntegerId[],
     urlTemplateOverrideOrParams: string | FetchByIdsParams | undefined = undefined,
-    urlParamsOverride: UrlParams | undefined = undefined
+    urlParamsOverride: UrlParams | undefined = undefined,
   ): Promise<R> => {
     abortController = new AbortController()
 
@@ -130,8 +144,12 @@ export function useApiFetchByIds<R>(
     }
 
     try {
-      const params = isDefined(resolvedUrlParamsOverride) ? resolvedUrlParamsOverride : resolvedUrlParams
-      const template = isDefined(resolvedUrlTemplateOverride) ? resolvedUrlTemplateOverride : resolvedUrlTemplate
+      const params = isDefined(resolvedUrlParamsOverride)
+        ? resolvedUrlParamsOverride
+        : resolvedUrlParams
+      const template = isDefined(resolvedUrlTemplateOverride)
+        ? resolvedUrlTemplateOverride
+        : resolvedUrlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
       const url =
         (isUndefined(params) ? template : replaceUrlParameters(template, params)) +
@@ -210,7 +228,11 @@ export function useApiFetchByIds<R>(
 
 interface ExecuteFetchByIdsFn<R> {
   /** @deprecated Use object params form: executeFetch(ids, { urlTemplate, urlParams }) */
-  (ids: DocId[] | IntegerId[], urlTemplateOverride?: string, urlParamsOverride?: UrlParams): Promise<R>
+  (
+    ids: DocId[] | IntegerId[],
+    urlTemplateOverride?: string,
+    urlParamsOverride?: UrlParams,
+  ): Promise<R>
   (ids: DocId[] | IntegerId[], params?: FetchByIdsParams): Promise<R>
 }
 

@@ -3,9 +3,17 @@ import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { damClient } from '@/playground/mock/coreDamClient'
 import { onMounted, ref } from 'vue'
 import { usePagination } from '@/labs/filters/pagination'
-import { ENTITY, SYSTEM_CORE_DAM, useFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  ENTITY,
+  SYSTEM_CORE_DAM,
+  useFetchAssetList,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
-import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import {
+  createFilter,
+  createFilterStore,
+  type MakeFilterOption,
+} from '@/labs/filters/filterFactory'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 
 const showData = ref(false)
@@ -43,7 +51,12 @@ const { pagination: pagination2 } = usePagination('id')
 pagination.value.rowsPerPage = 100
 
 const useFetchUserList = () =>
-  useApiFetchList<any[]>({ client: damClient, system: SYSTEM_CORE_DAM, entity: ENTITY, urlTemplate: '/adm/v1/user' })
+  useApiFetchList<any[]>({
+    client: damClient,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: '/adm/v1/user',
+  })
 const { executeFetch: fetchUserList } = useFetchUserList()
 
 const useFetchUserListAll = () =>
@@ -58,8 +71,22 @@ const { executeFetch: fetchUserListAll } = useFetchUserListAll()
 const { executeFetch: fetchAssetList } = useFetchAssetList(damClient, '/adm/v1/asset', 100000)
 
 onMounted(async () => {
-  itemsList1.value = await fetchAssetList(pagination, filterData, filterConfig, undefined, undefined, true)
-  itemsBatch1.value = await fetchAssetListAll(filterData, filterConfig, undefined, undefined, 'id', true)
+  itemsList1.value = await fetchAssetList(
+    pagination,
+    filterData,
+    filterConfig,
+    undefined,
+    undefined,
+    true,
+  )
+  itemsBatch1.value = await fetchAssetListAll(
+    filterData,
+    filterConfig,
+    undefined,
+    undefined,
+    'id',
+    true,
+  )
 
   itemsList2.value = await fetchUserList(pagination2, filterData, filterConfig)
   itemsBatch2.value = await fetchUserListAll(filterData, filterConfig, undefined, undefined, 'id')

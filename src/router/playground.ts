@@ -18,7 +18,10 @@ import ApiFetchListBatchView from '@/playground/apiFetchListBatchView/ApiFetchLi
 import ImageView from '@/playground/imageView/ImageView.vue'
 import FileView from '@/playground/fileView/FileView.vue'
 import SortableView from '@/playground/sortableView/SortableView.vue'
-import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
+import {
+  initLanguageMessagesLoaded,
+  initLoadLanguageMessages,
+} from '@/playground/system/loadLanguageMessages'
 import AlertView from '@/playground/alertView/AlertView.vue'
 import SubjectSelectView from '@/playground/subjectSelectView/SubjectSelectView.vue'
 import ImageMultipleView from '@/playground/imageMultipleView/ImageMultipleView.vue'
@@ -167,7 +170,11 @@ const router = createRouter({
 const initialized = ref(false)
 const { collabOptions } = useCommonAdminCollabOptions()
 
-const checkCollab = async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+const checkCollab = async (
+  to: RouteLocationNormalized,
+  from: RouteLocationNormalized,
+  next: NavigationGuardNext,
+) => {
   const { showWarningT, showErrorT } = useAlerts()
 
   if (!collabOptions.value.enabled) return next()

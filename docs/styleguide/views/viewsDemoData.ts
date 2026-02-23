@@ -122,7 +122,7 @@ export function useLogSystem() {
   }
 }
 
-export const fetchSiteList = (pagination: Pagination, filterBag: FilterBag) => {
+export const fetchSiteList = (_pagination: Pagination, _filterBag: FilterBag) => {
   return Promise.resolve([])
 }
 

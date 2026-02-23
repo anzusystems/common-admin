@@ -13,13 +13,24 @@ import { MAX_BOOKMARK_ITEMS, useFilterBookmarkStore } from '@/labs/filters/bookm
 import { useUserAdminConfigApi } from '@/labs/filters/userAdminConfig'
 import { useAlerts } from '@/composables/system/alerts'
 import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactory'
-import { type UserAdminConfig, UserAdminConfigLayoutType, UserAdminConfigType } from '@/types/UserAdminConfig'
+import {
+  type UserAdminConfig,
+  UserAdminConfigLayoutType,
+  UserAdminConfigType,
+} from '@/types/UserAdminConfig'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
-import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import {
+  DatatablePaginationKey,
+  FilterConfigKey,
+  FilterDataKey,
+} from '@/labs/filters/filterInjectionKeys'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
-import { hasAnzuApiValidationErrorSpecific, isAnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
+import {
+  hasAnzuApiValidationErrorSpecific,
+  isAnzuApiValidationError,
+} from '@/model/error/AnzuApiValidationError'
 
 const props = withDefaults(
   defineProps<{
@@ -31,7 +42,7 @@ const props = withDefaults(
   }>(),
   {
     datatableHiddenColumns: undefined,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -118,8 +129,11 @@ const addBookmark = async () => {
   config.data = {
     filter: serializeFilters(filterData, pagination, false),
     datatableHiddenColumns:
-      storeDatatableHiddenColumns.value && props.datatableHiddenColumns ? props.datatableHiddenColumns : undefined,
-    sortBy: storeDatatableOrder.value && pagination.value.sortBy ? pagination.value.sortBy : undefined,
+      storeDatatableHiddenColumns.value && props.datatableHiddenColumns
+        ? props.datatableHiddenColumns
+        : undefined,
+    sortBy:
+      storeDatatableOrder.value && pagination.value.sortBy ? pagination.value.sortBy : undefined,
   }
   try {
     const count = await filterBookmarkStore.fetchBookmarksCount(
@@ -128,7 +142,7 @@ const addBookmark = async () => {
         layoutType: UserAdminConfigLayoutType.Desktop,
         systemResource: systemResource,
       },
-      useFetchUserAdminConfigList
+      useFetchUserAdminConfigList,
     )
     if (count >= MAX_BOOKMARK_ITEMS) {
       errorCount.value = true
@@ -137,12 +151,19 @@ const addBookmark = async () => {
     }
     config.position = count + 1
     const res = await createUserAdminConfig(config)
-    filterBookmarkStore.addOne(filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource), res)
+    filterBookmarkStore.addOne(
+      filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource),
+      res,
+    )
     emit('onClose')
   } catch (e) {
     if (
       isAnzuApiValidationError(e) &&
-      hasAnzuApiValidationErrorSpecific(e, 'error_field_not_unique', 'cms.userAdminConfig.model.systemResource')
+      hasAnzuApiValidationErrorSpecific(
+        e,
+        'error_field_not_unique',
+        'cms.userAdminConfig.model.systemResource',
+      )
     ) {
       showWarningT('common.filter.bookmark.nameUniqueError')
       return
@@ -217,7 +238,7 @@ const reloadItems = async () => {
         systemResource: systemResource,
       },
       useFetchUserAdminConfigList,
-      true
+      true,
     )
   } catch (e) {
     showErrorsDefault(e)
@@ -371,7 +392,11 @@ watch(activeTab, () => {
           :loading="saveButtonLoading"
           @click.stop="onConfirm"
         >
-          {{ activeTab === 'add' ? t('common.button.add') : t('common.filter.bookmark.saveBookmarkOrder') }}
+          {{
+            activeTab === 'add'
+              ? t('common.button.add')
+              : t('common.filter.bookmark.saveBookmarkOrder')
+          }}
         </ABtnPrimary>
       </VCardActions>
     </VCard>

@@ -12,7 +12,12 @@ export const mapFullToMinimal = (source: AnzuUser): AnzuUserMinimal => {
 }
 
 const mapIdToMinimal = (id: IntegerId): AnzuUserMinimal => {
-  return { id: id, email: '', person: { firstName: '', lastName: '', fullName: '' }, avatar: { color: '', text: '' } }
+  return {
+    id: id,
+    email: '',
+    person: { firstName: '', lastName: '', fullName: '' },
+    avatar: { color: '', text: '' },
+  }
 }
 
 const { cache, fetch, add, addManual, has, get, isLoaded, addManualMinimal } = defineCached<

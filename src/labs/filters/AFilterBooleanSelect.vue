@@ -28,7 +28,7 @@ const props = withDefaults(
     allT: 'common.model.all',
     trueT: 'common.model.boolean.true',
     falseT: 'common.model.boolean.false',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -59,7 +59,9 @@ const modelValue = computed({
         value: -1,
         title: t(props.allT),
       }
-    return filterData[props.name] ? { value: 1, title: t(props.trueT) } : { value: 0, title: t(props.falseT) }
+    return filterData[props.name]
+      ? { value: 1, title: t(props.trueT) }
+      : { value: 0, title: t(props.falseT) }
   },
   set(newValue: BooleanSelectOption) {
     let returnValue: null | boolean = null
@@ -100,7 +102,9 @@ const updateSelected = () => {
     filterSelected.value.delete(props.name)
     return
   }
-  filterSelected.value.set(props.name, [{ title: modelValue.value.title, value: modelValue.value.value }])
+  filterSelected.value.set(props.name, [
+    { title: modelValue.value.title, value: modelValue.value.value },
+  ])
 }
 </script>
 

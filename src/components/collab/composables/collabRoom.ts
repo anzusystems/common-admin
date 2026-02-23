@@ -54,9 +54,10 @@ export function useCollabRoom(
   watchForNewUsers: boolean = false,
   addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined = undefined,
   fetchCachedUsers: (() => Promisify<Promise<any>>) | undefined = undefined,
-  disableAutoUnsubscribe = false
+  disableAutoUnsubscribe = false,
 ) {
-  const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState } = useCollabState()
+  const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState } =
+    useCollabState()
 
   const reconnectEventBus = useCollabReconnectEventBus()
   const unsubscribeCollabReconnectListener = ref<undefined | Fn>()
@@ -76,7 +77,9 @@ export function useCollabRoom(
 
   const requestToTakeModerationEventBus = useCollabRequestToTakeModerationEventBus()
   const unsubscribeRequestToTakeModerationListener = ref<undefined | Fn>()
-  const requestToTakeModerationCallback = ref<undefined | ((userId: number, timestamp: number) => void)>()
+  const requestToTakeModerationCallback = ref<
+    undefined | ((userId: number, timestamp: number) => void)
+  >()
 
   const approvedRequestToTakeModerationEventBus = useCollabApprovedRequestToTakeModerationEventBus()
   const unsubscribeApprovedRequestToTakeModerationListener = ref<undefined | Fn>()
@@ -92,7 +95,9 @@ export function useCollabRoom(
 
   const collabStartingEventBus = useCollabStartingEventBus()
   const unsubscribeCollabStartingListener = ref<undefined | Fn>()
-  const collabStartingCallback = ref<undefined | ((startedCallback: (data: CollabRoomPlainData) => void) => void)>()
+  const collabStartingCallback = ref<
+    undefined | ((startedCallback: (data: CollabRoomPlainData) => void) => void)
+  >()
 
   const reconnectEventBusListener = () => {
     if (isDefined(reconnectCallback.value)) {
@@ -124,13 +129,17 @@ export function useCollabRoom(
     }
   }
 
-  const approvedRequestToTakeModerationEventBusListener = (event: CollabApprovedRequestToTakeModerationEvent) => {
+  const approvedRequestToTakeModerationEventBusListener = (
+    event: CollabApprovedRequestToTakeModerationEvent,
+  ) => {
     if (event.room === room && isDefined(approvedRequestToTakeModerationCallback.value)) {
       approvedRequestToTakeModerationCallback.value()
     }
   }
 
-  const rejectedRequestToTakeModerationEventBusListener = (event: CollabRejectedRequestToTakeModerationEvent) => {
+  const rejectedRequestToTakeModerationEventBusListener = (
+    event: CollabRejectedRequestToTakeModerationEvent,
+  ) => {
     if (event.room === room && isDefined(rejectedRequestToTakeModerationCallback.value)) {
       rejectedRequestToTakeModerationCallback.value()
     }
@@ -155,33 +164,37 @@ export function useCollabRoom(
 
   const addApprovedJoinRequestListener = (callback: () => void) => {
     approvedJoinRequestCallback.value = callback
-    unsubscribeApprovedJoinRequestListener.value = approvedJoinRequestEventBus.on(approvedJoinRequestEventBusListener)
+    unsubscribeApprovedJoinRequestListener.value = approvedJoinRequestEventBus.on(
+      approvedJoinRequestEventBusListener,
+    )
   }
 
   const addRejectedJoinRequestListener = (callback: () => void) => {
     rejectedJoinRequestCallback.value = callback
-    unsubscribeRejectedJoinRequestListener.value = rejectedJoinRequestEventBus.on(rejectedJoinRequestEventBusListener)
+    unsubscribeRejectedJoinRequestListener.value = rejectedJoinRequestEventBus.on(
+      rejectedJoinRequestEventBusListener,
+    )
   }
 
-  const addRequestToTakeModerationListener = (callback: (userId: number, timestamp: number) => void) => {
+  const addRequestToTakeModerationListener = (
+    callback: (userId: number, timestamp: number) => void,
+  ) => {
     requestToTakeModerationCallback.value = callback
     unsubscribeRequestToTakeModerationListener.value = requestToTakeModerationEventBus.on(
-      requestToTakeModerationEventBusListener
+      requestToTakeModerationEventBusListener,
     )
   }
 
   const addApprovedRequestToTakeModerationListener = (callback: () => void) => {
     approvedRequestToTakeModerationCallback.value = callback
-    unsubscribeApprovedRequestToTakeModerationListener.value = approvedRequestToTakeModerationEventBus.on(
-      approvedRequestToTakeModerationEventBusListener
-    )
+    unsubscribeApprovedRequestToTakeModerationListener.value =
+      approvedRequestToTakeModerationEventBus.on(approvedRequestToTakeModerationEventBusListener)
   }
 
   const addRejectedRequestToTakeModerationListener = (callback: () => void) => {
     rejectedRequestToTakeModerationCallback.value = callback
-    unsubscribeRejectedRequestToTakeModerationListener.value = rejectedRequestToTakeModerationEventBus.on(
-      rejectedRequestToTakeModerationEventBusListener
-    )
+    unsubscribeRejectedRequestToTakeModerationListener.value =
+      rejectedRequestToTakeModerationEventBus.on(rejectedRequestToTakeModerationEventBusListener)
   }
 
   const addCollabReconnectListener = (callback: () => void) => {
@@ -191,12 +204,18 @@ export function useCollabRoom(
 
   const addKickedFromRoomListener = (callback: () => void) => {
     kickedFromRoomCallback.value = callback
-    unsubscribeKickedFromRoomListener.value = kickedFromRoomEventBus.on(kickedFromCollabRookEventBusListener)
+    unsubscribeKickedFromRoomListener.value = kickedFromRoomEventBus.on(
+      kickedFromCollabRookEventBusListener,
+    )
   }
 
-  const addCollabStartingListener = (callback: (startedCallback: (data: CollabRoomPlainData) => void) => void) => {
+  const addCollabStartingListener = (
+    callback: (startedCallback: (data: CollabRoomPlainData) => void) => void,
+  ) => {
     collabStartingCallback.value = callback
-    unsubscribeCollabStartingListener.value = collabStartingEventBus.on(collabStartingEventBusListener)
+    unsubscribeCollabStartingListener.value = collabStartingEventBus.on(
+      collabStartingEventBusListener,
+    )
   }
 
   tryOnBeforeUnmount(() => {
@@ -238,14 +257,21 @@ export function useCollabRoom(
 
   const unsubscribeCollabRoomInfo = () => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
-    collabSocket.value.emit('unsubscribeCollabRoomInfo', room, (response: CollabRoomInfoCallback) => {
-      collabRoomInfoState.set(room, response.room)
-    })
+    collabSocket.value.emit(
+      'unsubscribeCollabRoomInfo',
+      room,
+      (response: CollabRoomInfoCallback) => {
+        collabRoomInfoState.set(room, response.room)
+      },
+    )
   }
 
-  const joinCollabRoom = async (options: Partial<CollabRoomOptions> = {}): Promise<CollabAccessRoomStatusType> => {
+  const joinCollabRoom = async (
+    options: Partial<CollabRoomOptions> = {},
+  ): Promise<CollabAccessRoomStatusType> => {
     return new Promise((resolve, reject) => {
-      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabAccessRoomStatus.Failed)
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value))
+        return reject(CollabAccessRoomStatus.Failed)
       collabSocket.value
         ?.timeout(5000)
         .emit('joinCollabRoom', room, options, (error, response: CollabAccessRoomCallbackTypes) => {
@@ -282,15 +308,20 @@ export function useCollabRoom(
       }
       collabSocket.value
         ?.timeout(2000)
-        .emit('requestToJoin', room, new Date().getTime(), (error, response: CollabRequestToJoinStatusCallback) => {
-          if (error) {
-            return void reject(CollabRequestToJoinStatus.Failed)
-          }
-          if (response.status === CollabRequestToJoinStatus.Ok) {
-            return void resolve(response.status)
-          }
-          return void reject(response.status)
-        })
+        .emit(
+          'requestToJoin',
+          room,
+          new Date().getTime(),
+          (error, response: CollabRequestToJoinStatusCallback) => {
+            if (error) {
+              return void reject(CollabRequestToJoinStatus.Failed)
+            }
+            if (response.status === CollabRequestToJoinStatus.Ok) {
+              return void resolve(response.status)
+            }
+            return void reject(response.status)
+          },
+        )
     })
   }
 
@@ -323,7 +354,7 @@ export function useCollabRoom(
               return void resolve(response.status)
             }
             return void reject(response.status)
-          }
+          },
         )
     })
   }
@@ -365,16 +396,19 @@ export function useCollabRoom(
     const baseRoomInfo: CollabRoomInfo = createDefaultCollabRoomInfo()
 
     return new Promise((resolve) => {
-      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return resolve(baseRoomInfo)
-      collabSocket.value?.timeout(500).emit('fetchRoomsInfo', [room], (error, response: CollabRoomsInfo) => {
-        if (error) return void resolve(baseRoomInfo)
-        const roomInfo = response[room]
-        if (isUndefined(roomInfo)) resolve(baseRoomInfo)
-        if (!isUndefined(addToCachedUsers)) addToCachedUsers(roomInfo.users)
-        if (!isUndefined(fetchCachedUsers)) fetchCachedUsers()
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value))
+        return resolve(baseRoomInfo)
+      collabSocket.value
+        ?.timeout(500)
+        .emit('fetchRoomsInfo', [room], (error, response: CollabRoomsInfo) => {
+          if (error) return void resolve(baseRoomInfo)
+          const roomInfo = response[room]
+          if (isUndefined(roomInfo)) resolve(baseRoomInfo)
+          if (!isUndefined(addToCachedUsers)) addToCachedUsers(roomInfo.users)
+          if (!isUndefined(fetchCachedUsers)) fetchCachedUsers()
 
-        return resolve(roomInfo)
-      })
+          return resolve(roomInfo)
+        })
     })
   }
 
@@ -391,7 +425,7 @@ export function useCollabRoom(
           if (!isUndefined(fetchCachedUsers)) fetchCachedUsers()
         }
       },
-      { immediate: true }
+      { immediate: true },
     )
   }
 

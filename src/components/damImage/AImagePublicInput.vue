@@ -30,7 +30,7 @@ const props = withDefaults(
     configName: 'default',
     labelT: 'common.damImage.public.idOrUrl',
     dataCy: undefined,
-  }
+  },
 )
 const modelValue = defineModel<IntegerIdNullable>({ default: null, required: true })
 const inputField = ref('')
@@ -45,13 +45,8 @@ const isDirty = ref(false)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient, imageApi } = imageOptions
-const {
-  damClient,
-  endPointAsset,
-  sourceLabel,
-  descriptionValidation,
-  sourceValidation,
-} = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, sourceLabel, descriptionValidation, sourceValidation } =
+  useCommonAdminCoreDamOptions()
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
 const { showErrorsDefault, showValidationError } = useAlerts()
@@ -171,7 +166,11 @@ const onBlur = async () => {
   }
 }
 
-const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
+const reload = async (
+  newImage: ImageCreateUpdateAware | undefined,
+  newImageId: IntegerIdNullable,
+  force = false,
+) => {
   resolvedSrc.value = ''
   if ((newImage && isNull(resImage.value)) || (newImage && force)) {
     resImage.value = cloneDeep(newImage)
@@ -211,7 +210,7 @@ watch(
   async ([newImage, newImageId]) => {
     await reload(newImage, newImageId)
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 defineExpose({

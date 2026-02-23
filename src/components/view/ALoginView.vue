@@ -13,7 +13,7 @@ withDefaults(
     logoUrl: undefined,
     loginUrl: undefined,
     dataCy: 'button-login',
-  }
+  },
 )
 
 const { t } = useI18n()

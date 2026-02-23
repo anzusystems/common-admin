@@ -17,7 +17,7 @@ withDefaults(
   {
     assetMainFileStatus: undefined,
     assetMainFileFailReason: undefined,
-  }
+  },
 )
 
 const { t } = useI18n()

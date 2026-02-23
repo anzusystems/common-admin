@@ -8,13 +8,19 @@ import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/comp
 import type { ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
-export const ADamAssetMetadataValidationScopeSymbol = Symbol.for('anzu:common:asset-metadata-validation-scope')
+export const ADamAssetMetadataValidationScopeSymbol = Symbol.for(
+  'anzu:common:asset-metadata-validation-scope',
+)
 
 export const AImageMetadataValidationScopeSymbol = Symbol.for('anzu:common:image-validation-scope')
 
-export const ADamKeywordCreateValidationScopeSymbol = Symbol.for('anzu:common:keyword-create-validation-scope')
+export const ADamKeywordCreateValidationScopeSymbol = Symbol.for(
+  'anzu:common:keyword-create-validation-scope',
+)
 
-export const ADamAuthorCreateValidationScopeSymbol = Symbol.for('anzu:common:author-create-validation-scope')
+export const ADamAuthorCreateValidationScopeSymbol = Symbol.for(
+  'anzu:common:author-create-validation-scope',
+)
 
 export function buildFieldRules(
   config: ImageFieldValidationConfig,
@@ -59,11 +65,7 @@ export function useImageValidation(
     }
     return {}
   })
-  const v$ = useVuelidate(
-    rules,
-    { image },
-    { $scope: AImageMetadataValidationScopeSymbol },
-  )
+  const v$ = useVuelidate(rules, { image }, { $scope: AImageMetadataValidationScopeSymbol })
 
   return {
     v$,

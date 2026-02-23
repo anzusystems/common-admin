@@ -13,25 +13,25 @@ const ENTITY = 'assetCustomForm'
 export const fetchAssetCustomFormElements = (
   damClient: () => AxiosInstance,
   extSystem: IntegerId,
-  assetType: DamAssetTypeType
+  assetType: DamAssetTypeType,
 ) =>
   apiFetchOne<{ data: CustomDataFormElement[] }>(
     damClient,
     END_POINT + '/ext-system/:extSystem/type/:assetType/element?order[position]=asc&limit=100',
     { extSystem, assetType },
     SYSTEM_CORE_DAM,
-    ENTITY
+    ENTITY,
   )
 
 // todo limit set to 100 for now, add load for pagination?
 export const fetchDistributionCustomFormElements = (
   damClient: () => AxiosInstance,
-  distributionService: DamDistributionServiceName
+  distributionService: DamDistributionServiceName,
 ) =>
   apiFetchOne<{ data: CustomDataFormElement[] }>(
     damClient,
     END_POINT + '/distribution-service/:distributionService/element?order[position]=asc&limit=100',
     { distributionService },
     SYSTEM_CORE_DAM,
-    ENTITY
+    ENTITY,
   )

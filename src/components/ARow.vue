@@ -12,7 +12,7 @@ withDefaults(
     value: '',
     dataCy: undefined,
     titleClass: 'font-weight-bold text-label-large',
-  }
+  },
 )
 // #endregion docs-props
 </script>

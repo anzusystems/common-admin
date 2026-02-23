@@ -5,7 +5,9 @@ import type { AclValue } from '@/types/Permission'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
-export function filterAllowedImageWidgetSelectConfigs(values: DamConfigLicenceExtSystemReturnType[]) {
+export function filterAllowedImageWidgetSelectConfigs(
+  values: DamConfigLicenceExtSystemReturnType[],
+) {
   const { useCurrentUser } = defineAuth<AclValue>(SYSTEM_DAM)
   const { currentUser: damCurrentUser, isSuperAdmin: damCurrentUserIsSuperAdmin } =
     useCurrentUser<DamCurrentUserDto>(SYSTEM_DAM)
@@ -15,7 +17,9 @@ export function filterAllowedImageWidgetSelectConfigs(values: DamConfigLicenceEx
   if (isUndefined(currentUser)) return []
 
   const adminToExtSystems = currentUser.adminToExtSystems
-  const assetLicences = currentUser.resolvedAssetLicences.map((assetLicenceValue) => assetLicenceValue.id)
+  const assetLicences = currentUser.resolvedAssetLicences.map(
+    (assetLicenceValue) => assetLicenceValue.id,
+  )
   const allowed: DamConfigLicenceExtSystemReturnType[] = []
   values.forEach((value) => {
     if (adminToExtSystems.includes(value.extSystem)) {
@@ -44,7 +48,9 @@ export function isImageWidgetUploadConfigAllowed(value: DamConfigLicenceExtSyste
     return true
   }
 
-  const assetLicences = currentUser.resolvedAssetLicences.map((assetLicenceValue) => assetLicenceValue.id)
+  const assetLicences = currentUser.resolvedAssetLicences.map(
+    (assetLicenceValue) => assetLicenceValue.id,
+  )
   if (assetLicences.includes(value.licence)) {
     return true
   }

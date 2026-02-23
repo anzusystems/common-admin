@@ -19,7 +19,8 @@ const texts = ref({ description: '', source: '', authors: [] })
 
 const imageStore = useImageStore()
 const { images } = storeToRefs(imageStore)
-const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } = useImageMassOperations()
+const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } =
+  useImageMassOperations()
 const { t } = useI18n()
 
 const fillAll = (forceReplace: boolean) => {

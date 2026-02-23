@@ -12,7 +12,7 @@ const props = withDefaults(
   }>(),
   {
     subject: undefined,
-  }
+  },
 )
 
 const allowed = ref<boolean>(false)
@@ -46,7 +46,7 @@ const watchHandle = watch(
   },
   {
     immediate: true,
-  }
+  },
 )
 
 function stopWatch() {

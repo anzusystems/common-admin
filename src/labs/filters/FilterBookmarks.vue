@@ -27,7 +27,7 @@ const props = withDefaults(
     system: string
     subject: string
   }>(),
-  {}
+  {},
 )
 
 const emit = defineEmits<{
@@ -44,7 +44,12 @@ const filterData = inject(FilterDataKey)
 const pagination = inject(DatatablePaginationKey)
 const filterSelected = inject(FilterSelectedKey)
 
-if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterData) || isUndefined(filterSelected)) {
+if (
+  isUndefined(pagination) ||
+  isUndefined(filterConfig) ||
+  isUndefined(filterData) ||
+  isUndefined(filterSelected)
+) {
   throw new Error('Incorrect provide/inject config.')
 }
 
@@ -68,7 +73,7 @@ const loadBookmarks = async (force = false) => {
       systemResource: systemResource,
     },
     useFetchUserAdminConfigList,
-    force
+    force,
   )
   loading.value = false
 }
@@ -81,7 +86,10 @@ const onItemClick = (item: UserAdminConfig) => {
     datatableHiddenColumns.value = config.datatableHiddenColumns
   }
   if (isDefined(config.sortBy)) {
-    pagination.value = { ...pagination.value, sortBy: { key: config.sortBy!.key, order: config.sortBy!.order } }
+    pagination.value = {
+      ...pagination.value,
+      sortBy: { key: config.sortBy!.key, order: config.sortBy!.order },
+    }
   }
   const deserialized = deserializeFilters(config.filter)
   if (isNull(deserialized)) return
@@ -143,7 +151,7 @@ watchThrottled(
     if (newValue === oldValue) return
     calculateVisible(newValue)
   },
-  { throttle: 1000 }
+  { throttle: 1000 },
 )
 
 const items = computed(() => {

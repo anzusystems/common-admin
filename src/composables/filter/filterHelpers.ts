@@ -1,4 +1,12 @@
-import { cloneDeep, isArray, isEmptyArray, isEmptyObject, isNull, isObject, isUndefined } from '@/utils/common'
+import {
+  cloneDeep,
+  isArray,
+  isEmptyArray,
+  isEmptyObject,
+  isNull,
+  isObject,
+  isUndefined,
+} from '@/utils/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 import type { Ref } from 'vue'

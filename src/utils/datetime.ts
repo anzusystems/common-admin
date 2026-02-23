@@ -27,9 +27,12 @@ export const timestampCurrent = (): number => {
 }
 
 export const dateTimeNow = (ignoreFractionalSeconds = true, ignoreSeconds = false): string => {
-  if (ignoreFractionalSeconds && !ignoreSeconds) return dayjs().utc().format('YYYY-MM-DDTHH:mm:ss') + SUFFIX
-  if (ignoreFractionalSeconds && ignoreSeconds) return dayjs().utc().format('YYYY-MM-DDTHH:mm:00') + SUFFIX
-  if (!ignoreFractionalSeconds && ignoreSeconds) return dayjs().utc().format('YYYY-MM-DDTHH:mm:00.SSSSSS') + 'Z'
+  if (ignoreFractionalSeconds && !ignoreSeconds)
+    return dayjs().utc().format('YYYY-MM-DDTHH:mm:ss') + SUFFIX
+  if (ignoreFractionalSeconds && ignoreSeconds)
+    return dayjs().utc().format('YYYY-MM-DDTHH:mm:00') + SUFFIX
+  if (!ignoreFractionalSeconds && ignoreSeconds)
+    return dayjs().utc().format('YYYY-MM-DDTHH:mm:00.SSSSSS') + 'Z'
   return dayjs().utc().format('YYYY-MM-DDTHH:mm:ss.SSSSSS') + 'Z'
 }
 
@@ -66,9 +69,15 @@ export const yearNow = () => {
 export const dateTimePretty = (
   isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
   edgeDateValue = '',
-  showSeconds = false
+  showSeconds = false,
 ): string => {
-  if (isoDate === DATETIME_MAX || isoDate === DATETIME_MIN || isoDate === '' || isNull(isoDate) || isUndefined(isoDate))
+  if (
+    isoDate === DATETIME_MAX ||
+    isoDate === DATETIME_MIN ||
+    isoDate === '' ||
+    isNull(isoDate) ||
+    isUndefined(isoDate)
+  )
     return edgeDateValue
   return dayjs(isoDate).format(showSeconds ? 'DD.MM.YYYY HH:mm:ss' : 'DD.MM.YYYY HH:mm')
 }
@@ -76,7 +85,7 @@ export const dateTimePretty = (
 export const dateTimeFriendly = (
   isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
   edgeDateValue = '',
-  showSeconds = false
+  showSeconds = false,
 ) => {
   if (
     isoDate === DATETIME_MAX ||
@@ -102,14 +111,32 @@ export const dateTimeFriendly = (
   return dayjs(date).format(showSeconds ? 'D.M.YYYY H:mm:ss' : 'D.M.YYYY H:mm')
 }
 
-export const datePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string | null, edgeDateValue = ''): string => {
-  if (isoDate === DATETIME_MAX || isoDate === DATETIME_MIN || isoDate === '' || isNull(isoDate) || isUndefined(isoDate))
+export const datePretty = (
+  isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
+  edgeDateValue = '',
+): string => {
+  if (
+    isoDate === DATETIME_MAX ||
+    isoDate === DATETIME_MIN ||
+    isoDate === '' ||
+    isNull(isoDate) ||
+    isUndefined(isoDate)
+  )
     return edgeDateValue
   return dayjs(isoDate).format('DD.MM.YYYY')
 }
 
-export const timePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string | null, edgeDateValue = ''): string => {
-  if (isoDate === DATETIME_MAX || isoDate === DATETIME_MIN || isoDate === '' || isNull(isoDate) || isUndefined(isoDate))
+export const timePretty = (
+  isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
+  edgeDateValue = '',
+): string => {
+  if (
+    isoDate === DATETIME_MAX ||
+    isoDate === DATETIME_MIN ||
+    isoDate === '' ||
+    isNull(isoDate) ||
+    isUndefined(isoDate)
+  )
     return edgeDateValue
   return dayjs(isoDate).format('HH:mm')
 }
@@ -121,20 +148,32 @@ export const dateDiff = (date1: Date, date2: Date, unit: QUnitType | OpUnitType 
 }
 
 export const isDatetimeUTC = (value: unknown): value is DatetimeUTC => {
-  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3,6})?Z$/.test(value)
+  return (
+    typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3,6})?Z$/.test(value)
+  )
 }
 
 type MonthIntervalUTC = { from: DatetimeUTC; until: DatetimeUTC }
 type MonthIntervalDate = { from: Date; until: Date }
 type GetMonthIntervalFn = {
-  (nowDate: Date, returnType: 'utc', monthOffset?: number, expandToCurrentMonth?: boolean): MonthIntervalUTC
-  (nowDate: Date, returnType: 'date', monthOffset?: number, expandToCurrentMonth?: boolean): MonthIntervalDate
+  (
+    nowDate: Date,
+    returnType: 'utc',
+    monthOffset?: number,
+    expandToCurrentMonth?: boolean,
+  ): MonthIntervalUTC
+  (
+    nowDate: Date,
+    returnType: 'date',
+    monthOffset?: number,
+    expandToCurrentMonth?: boolean,
+  ): MonthIntervalDate
 }
 const _getMonthInterval = (
   nowDate: Date,
   returnType: 'date' | 'utc',
   monthOffset: number = 0,
-  expandToCurrentMonth: boolean = false
+  expandToCurrentMonth: boolean = false,
 ): MonthIntervalUTC | MonthIntervalDate => {
   const from = new Date(nowDate)
   from.setMonth(from.getMonth() + monthOffset)

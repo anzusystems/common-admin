@@ -2,7 +2,10 @@
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { computed, ref } from 'vue'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
-import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
+import type {
+  SortableNested,
+  SortableNestedItem,
+} from '@/components/sortable/sortableNestedActions'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import { isNull } from '@/utils/common'
@@ -201,14 +204,18 @@ const onAddAfterClickNested = (item: SortableNestedItem) => {
         text: 'Lorem',
         position: 0,
       },
-      true
+      true,
     )
     console.log(needsRefresh)
   }
 }
 const onAddChildClickNested = (item: SortableNestedItem) => {
   if (nestedComponent.value) {
-    nestedComponent.value.addChildToId(item.data.id, { id: Date.now(), text: 'Lorem', position: 0 }, true)
+    nestedComponent.value.addChildToId(
+      item.data.id,
+      { id: Date.now(), text: 'Lorem', position: 0 },
+      true,
+    )
   }
 }
 const onAddLastClickNested = (item: SortableNestedItem | null) => {
@@ -216,7 +223,7 @@ const onAddLastClickNested = (item: SortableNestedItem | null) => {
     const needsRefresh = nestedComponent.value.addAfterId(
       isNull(item) ? null : item.data.id,
       { id: Date.now(), text: 'Lorem', position: 0 },
-      true
+      true,
     )
     console.log(needsRefresh)
   }
@@ -227,7 +234,11 @@ const onSortableNestedEnd = (data: SortableItemNewPositions) => {
 
 const onAddAfterClickBasic = (item: SortableItem<BasicItemDemo>) => {
   if (basicComponent.value) {
-    const needsRefresh = basicComponent.value.addAfterId(item.raw.id, { id: Date.now(), text: 'Lorem 2', position: 0 })
+    const needsRefresh = basicComponent.value.addAfterId(item.raw.id, {
+      id: Date.now(),
+      text: 'Lorem 2',
+      position: 0,
+    })
     console.log(item.index)
     console.log(needsRefresh)
   }

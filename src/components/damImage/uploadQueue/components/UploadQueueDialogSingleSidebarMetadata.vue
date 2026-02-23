@@ -22,7 +22,7 @@ const props = withDefaults(
   {
     dataCy: undefined,
     configName: 'default',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'onSave'): void

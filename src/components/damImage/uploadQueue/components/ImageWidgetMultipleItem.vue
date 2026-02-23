@@ -12,8 +12,7 @@ import {
   AImageMetadataValidationScopeSymbol,
   useImageValidation,
 } from '@/components/damImage/uploadQueue/composables/uploadValidations'
-import AuthorRemoteAutocompleteWithCached
-  from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 
@@ -28,7 +27,7 @@ const props = withDefaults(
   {
     showSourceEnabled: true,
     sourceLabel: undefined,
-  }
+  },
 )
 
 const emit = defineEmits<{

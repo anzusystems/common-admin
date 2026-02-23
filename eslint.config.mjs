@@ -1,7 +1,7 @@
 import stylistic from '@stylistic/eslint-plugin'
-// import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
 import pluginVue from 'eslint-plugin-vue'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import oxlint from 'eslint-plugin-oxlint'
 
 const tsExtensionPlugin = {
   rules: {
@@ -334,6 +334,8 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
           caughtErrors: 'none',
         },
       ],
@@ -357,5 +359,5 @@ export default defineConfigWithVueTs(
       '@stylistic/object-curly-spacing': ['error', 'always'],
     },
   },
-  // skipFormatting,
+  oxlint.configs['flat/recommended'],
 )

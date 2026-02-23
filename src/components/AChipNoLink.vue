@@ -12,7 +12,7 @@ const props = withDefaults(
     color: undefined,
     size: 'small',
     dataCy: undefined,
-  }
+  },
 )
 
 const customColorClass = computed(() => {

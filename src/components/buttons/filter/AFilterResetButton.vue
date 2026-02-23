@@ -12,7 +12,7 @@ withDefaults(
     tooltipT: 'common.button.resetFilter',
     buttonClass: 'ml-2',
     dataCy: 'filter-reset',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'reset'): void

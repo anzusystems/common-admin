@@ -8,7 +8,7 @@ const props = withDefaults(
   defineProps<{
     reason: AssetFileFailReasonType
   }>(),
-  {}
+  {},
 )
 
 const { getAssetFileFailReasonOption } = useAssetFileFailReason()

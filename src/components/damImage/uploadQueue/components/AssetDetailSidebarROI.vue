@@ -8,11 +8,19 @@ import { cloneDeep } from '@/utils/common'
 import { onMounted } from 'vue'
 import AssetDetailSidebarActionsWrapper from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsWrapper.vue'
 import AssetFileRotate from '@/components/damImage/uploadQueue/components/AssetFileRotate.vue'
-import { ENTITY, fetchRoi, useFetchImageRoiList } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
+import {
+  ENTITY,
+  fetchRoi,
+  useFetchImageRoiList,
+} from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { SORT_BY_ID } from '@/composables/system/datatableColumns'
-import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import {
+  createFilter,
+  createFilterStore,
+  type MakeFilterOption,
+} from '@/labs/filters/filterFactory'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageApi'
 import type { DocId } from '@/types/common'
@@ -22,7 +30,7 @@ withDefaults(
     isActive: boolean
     queueKey: UploadQueueKey
   }>(),
-  {}
+  {},
 )
 
 const { t } = useI18n()
@@ -34,10 +42,14 @@ const { pagination } = usePagination(SORT_BY_ID)
 
 const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
 const filterFieldsInner = [] satisfies readonly MakeFilterOption[]
-const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
-  system: SYSTEM_CORE_DAM,
-  subject: ENTITY,
-})
+const { filterConfig, filterData } = createFilter(
+  filterFieldsInner,
+  createFilterStore(filterFieldsInner),
+  {
+    system: SYSTEM_CORE_DAM,
+    subject: ENTITY,
+  },
+)
 
 const loadImageFile = async (id: DocId) => {
   const res = await fetchImageFile(damClient, endPointImage, id)

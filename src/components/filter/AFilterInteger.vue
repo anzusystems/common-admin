@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     dataCy: 'filter-integer',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: Filter): void
@@ -26,7 +26,7 @@ const value = computed({
   set(newValue) {
     emit('update:modelValue', {
       ...props.modelValue,
-      ...{ model: isNull(newValue) ? null : stringToInt(newValue + '') },
+      model: isNull(newValue) ? null : stringToInt(newValue + ''),
     })
   },
 })

@@ -7,7 +7,7 @@ const props = withDefaults(
     system: string
     subject: string
   }>(),
-  {}
+  {},
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 provide<string>(SystemScopeSymbol, props.system)

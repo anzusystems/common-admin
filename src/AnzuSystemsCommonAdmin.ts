@@ -10,7 +10,10 @@ import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/comp
 import { initCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import type { IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
-import type { UploadMetadataToImageMapFn, AssetSelectMetadataToImageMapFn } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
+import type {
+  UploadMetadataToImageMapFn,
+  AssetSelectMetadataToImageMapFn,
+} from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 
 export type PluginOptions = {
   languages: { available: LanguageCode[]; default: LanguageCode }
@@ -30,18 +33,25 @@ export interface CommonAdminImageConfig {
   imageApi?: {
     fetchImage: (client: () => AxiosInstance, id: IntegerId) => Promise<ImageAware>
     createImage: (client: () => AxiosInstance, data: ImageCreateUpdateAware) => Promise<ImageAware>
-    updateImage: (client: () => AxiosInstance, id: IntegerId, data: ImageCreateUpdateAware) => Promise<ImageAware>
+    updateImage: (
+      client: () => AxiosInstance,
+      id: IntegerId,
+      data: ImageCreateUpdateAware,
+    ) => Promise<ImageAware>
     deleteImage: (client: () => AxiosInstance, id: IntegerId) => Promise<void>
     fetchImageListByIds: (client: () => AxiosInstance, ids: IntegerId[]) => Promise<ImageAware[]>
-    bulkUpdateImages: (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => Promise<ImageAware[]>
+    bulkUpdateImages: (
+      client: () => AxiosInstance,
+      items: ImageCreateUpdateAware[],
+    ) => Promise<ImageAware[]>
   }
 }
 
 export type CommonAdminImageOptions =
   | undefined
   | {
-    configs: { [key: string]: CommonAdminImageConfig }
-  }
+      configs: { [key: string]: CommonAdminImageConfig }
+    }
 
 export interface ImageFieldValidationConfig {
   required?: boolean
@@ -68,15 +78,15 @@ export interface CommonAdminCoreDamConfig {
 export type CommonAdminCoreDamOptions =
   | undefined
   | {
-    configs: { [key: string]: CommonAdminCoreDamConfig }
-    apiTimeout: number
-    uploadStatusFallback: boolean
-    adminDomain: string
-    notification: {
-      enabled: boolean
-      webSocketUrl: string
+      configs: { [key: string]: CommonAdminCoreDamConfig }
+      apiTimeout: number
+      uploadStatusFallback: boolean
+      adminDomain: string
+      notification: {
+        enabled: boolean
+        webSocketUrl: string
+      }
     }
-  }
 
 export type CommonAdminCollabOptions = {
   enabled: boolean

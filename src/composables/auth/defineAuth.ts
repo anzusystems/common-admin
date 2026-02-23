@@ -27,7 +27,7 @@ const defaultConfig: DefineAuthConfig = {
  */
 export function defineAuth<TAclValue extends AclValue>(
   mainCurrentUserSystem: string,
-  config: Partial<DefineAuthConfig> = {}
+  config: Partial<DefineAuthConfig> = {},
 ) {
   const mergedConfig = { ...defaultConfig, ...config }
   const authStore = useAuthStore()
@@ -115,7 +115,7 @@ export function defineAuth<TAclValue extends AclValue>(
       client: () => AxiosInstance,
       endPoint = '/adm/v1/users/current',
       urlParams: UrlParams | undefined = undefined,
-      entity = 'user'
+      entity = 'user',
     ) => {
       try {
         const res = await apiFetchOne<TCurrentUser>(client, endPoint, urlParams, system, entity)
@@ -158,7 +158,9 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
     const user = authStore.getCurrentUserBySystem(system)
     const userIsLoaded = authStore.isCurrentUserLoadedBySystem(system)
     if (isUndefined(userIsLoaded)) {
-      throw new Error('Composable defineAuth must try to load currentUser first to use can function.')
+      throw new Error(
+        'Composable defineAuth must try to load currentUser first to use can function.',
+      )
     }
     if (isUndefined(user) || isUndefined(user.id) || isNull(user.id) || user.id === 0) {
       return false
@@ -173,7 +175,9 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
         return false
       case Grant.AllowOwner:
         if (isUndefined(subject))
-          throw new Error(`Required subject for acl "${acl}" to determine an ability to access the resource.`)
+          throw new Error(
+            `Required subject for acl "${acl}" to determine an ability to access the resource.`,
+          )
         return canOwnerHelper(subject, system)
       default:
         return false
@@ -201,7 +205,9 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
     const user = authStore.getCurrentUserBySystem(system)
     const userIsLoaded = authStore.isCurrentUserLoadedBySystem(system)
     if (isUndefined(userIsLoaded)) {
-      throw new Error('Composable defineAuth must try to load currentUser first to use canOwner function.')
+      throw new Error(
+        'Composable defineAuth must try to load currentUser first to use canOwner function.',
+      )
     }
     if (isUndefined(user) || isUndefined(user.id) || isNull(user.id) || user.id === 0) {
       return false

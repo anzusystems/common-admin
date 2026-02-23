@@ -29,7 +29,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
-  }
+  },
 )
 
 const { t } = useI18n()
@@ -37,7 +37,8 @@ const { t } = useI18n()
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
+const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } =
+  storeToRefs(assetDetailStore)
 
 const uploadQueuesStore = useUploadQueuesStore()
 
@@ -65,12 +66,22 @@ const onAnyMetadataChange = () => {
   metadataAreTouched.value = true
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(props.configName)
+const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(
+  props.configName,
+)
 </script>
 
 <template>

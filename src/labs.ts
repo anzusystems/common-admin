@@ -33,7 +33,10 @@ import {
   type MakeFilterOption,
   useFilterHelpers,
 } from '@/labs/filters/filterFactory'
-import { TimeIntervalSpecialOptions, type TimeIntervalToolsValue } from '@/labs/filters/filterTimeIntervalTools'
+import {
+  TimeIntervalSpecialOptions,
+  type TimeIntervalToolsValue,
+} from '@/labs/filters/filterTimeIntervalTools'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
 import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'

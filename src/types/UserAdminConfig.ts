@@ -3,7 +3,9 @@ import type { SortableItemDataAware } from '@/components/sortable/sortableUtils'
 import type { IntegerId } from '@/types/common'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 
-export interface UserAdminConfig<TData = UserAdminConfigDataFilterBookmark | UserAdminConfigDataPinnedWidgets>
+export interface UserAdminConfig<
+  TData = UserAdminConfigDataFilterBookmark | UserAdminConfigDataPinnedWidgets,
+>
   extends AnzuUserAndTimeTrackingAware, SortableItemDataAware {
   id: IntegerId
   user: IntegerId
@@ -30,7 +32,8 @@ export const UserAdminConfigLayoutType = {
   Mobile: 'mobile',
 } as const
 export const UserAdminConfigLayoutTypeDefault = UserAdminConfigLayoutType.Desktop
-export type UserAdminConfigLayoutTypeType = (typeof UserAdminConfigLayoutType)[keyof typeof UserAdminConfigLayoutType]
+export type UserAdminConfigLayoutTypeType =
+  (typeof UserAdminConfigLayoutType)[keyof typeof UserAdminConfigLayoutType]
 
 export interface UserAdminConfigDataFilterBookmark {
   filter: string

@@ -16,7 +16,7 @@ const props = withDefaults(
     name: string
     items: ValueObjectOption<string | number>[]
   }>(),
-  {}
+  {},
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -46,7 +46,7 @@ if (
 ) {
   throw new Error(
     `[${componentName}] Incorrect filter config. ` +
-      `Name is '${props.name}' and available options are ${Object.keys(filterData).join(', ')}.`
+      `Name is '${props.name}' and available options are ${Object.keys(filterData).join(', ')}.`,
   )
 }
 
@@ -86,13 +86,15 @@ const updateSelected = (newValue: AllowedFilterValues) => {
         const found = props.items.find((item) => item.value === modelItemValue)
         if (found) return { title: found.title, value: found.value }
         return { title: modelItemValue as string, value: modelItemValue as string }
-      })
+      }),
     )
     return
   }
   const found = props.items.find((item) => item.value === newValue)
   if (found) {
-    filterSelected.value.set(props.name, [{ title: found.title as string, value: found.value as string }])
+    filterSelected.value.set(props.name, [
+      { title: found.title as string, value: found.value as string },
+    ])
   }
 }
 
@@ -102,7 +104,7 @@ watch(
     if (newValue === oldValue || isBoolean(newValue)) return
     updateSelected(newValue)
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

@@ -5,7 +5,11 @@ import { provide, type Ref, ref } from 'vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import type { IntegerId } from '@/types/common'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { fetchPollListByIds, type PollDemo, useFetchPollListDemo } from '@/playground/subjectSelectView/pollDemoApi'
+import {
+  fetchPollListByIds,
+  type PollDemo,
+  useFetchPollListDemo,
+} from '@/playground/subjectSelectView/pollDemoApi'
 import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
 import { damClient } from '@/playground/mock/coreDamClient'
 import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
@@ -26,7 +30,11 @@ const valueLicence = ref<IntegerId[]>([])
 
 const { executeFetch } = useFetchPollListDemo()
 
-const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+const fetchItems = async (
+  pagination: Ref<Pagination>,
+  filterData: FilterData,
+  filterConfig: FilterConfig,
+) => {
   const rubrics = await executeFetch(pagination, filterData, filterConfig)
 
   return rubrics.map((poll: PollDemo) => ({
@@ -49,14 +57,24 @@ const fetchItemsByIds = async (ids: IntegerId[]) => {
 function useRubricInnerFilter() {
   const filterFieldsInner = [
     { name: 'id' as const, default: null },
-    { name: 'title' as const, default: null, type: 'string', variant: 'startsWith', apiName: 'texts.title' },
+    {
+      name: 'title' as const,
+      default: null,
+      type: 'string',
+      variant: 'startsWith',
+      apiName: 'texts.title',
+    },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
-    elastic: true,
-    system: 'cms',
-    subject: 'poll',
-  })
+  const { filterConfig, filterData } = createFilter(
+    filterFieldsInner,
+    createFilterStore(filterFieldsInner),
+    {
+      elastic: true,
+      system: 'cms',
+      subject: 'poll',
+    },
+  )
 
   return {
     filterConfig,

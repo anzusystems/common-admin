@@ -19,7 +19,7 @@ const props = withDefaults(
   {
     placeholder: undefined,
     dataCy: 'filter-string',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -64,9 +64,11 @@ const label = computed(() => {
 
 const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
-  if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
+  if (filterConfigCurrent.value.variant === 'startsWith')
+    return t('common.model.filterPlaceholder.startsWith')
   if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (filterConfigCurrent.value.variant === 'search') return t('common.model.filterPlaceholder.contains')
+  if (filterConfigCurrent.value.variant === 'search')
+    return t('common.model.filterPlaceholder.contains')
   return ''
 })
 
@@ -79,7 +81,9 @@ const clearField = () => {
 
 const updateSelected = () => {
   if (isNumber(modelValue.value)) {
-    filterSelected.value.set(props.name, [{ title: modelValue.value + '', value: modelValue.value }])
+    filterSelected.value.set(props.name, [
+      { title: modelValue.value + '', value: modelValue.value },
+    ])
     return
   }
   if (!isString(modelValue.value)) return
@@ -96,7 +100,7 @@ watch(
     if (newValue === oldValue || isBoolean(newValue)) return
     updateSelected()
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

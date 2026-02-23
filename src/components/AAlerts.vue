@@ -14,7 +14,7 @@ withDefaults(
     position: 'top center',
     width: '50%',
     customClass: undefined,
-  }
+  },
 )
 </script>
 

@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
-import { fetchItems, fetchItemsByIds, useSubjectSiteInnerFilter } from '@/playground/filterView/FilterSubjectSiteTools'
+import {
+  fetchItems,
+  fetchItemsByIds,
+  useSubjectSiteInnerFilter,
+} from '@/playground/filterView/FilterSubjectSiteTools'
 import { provide } from 'vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
@@ -8,7 +12,7 @@ withDefaults(
   defineProps<{
     name: string
   }>(),
-  {}
+  {},
 )
 const emit = defineEmits<{
   (e: 'change'): void

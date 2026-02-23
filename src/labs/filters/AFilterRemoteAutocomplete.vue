@@ -4,7 +4,11 @@ import { computed, getCurrentInstance, inject, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { isArray, isBoolean, isEmpty, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/labs/filters/filterFactory'
+import {
+  type FilterConfig,
+  type FilterData,
+  useFilterClearHelpers,
+} from '@/labs/filters/filterFactory'
 import {
   FilterConfigKey,
   FilterDataKey,
@@ -25,7 +29,7 @@ const props = withDefaults(
     fetchItems: (
       pagination: Ref<Pagination>,
       filterData: FilterData,
-      filterConfig: FilterConfig
+      filterConfig: FilterConfig,
     ) => Promise<ValueObjectOption<T>[]>
     fetchItemsByIds: (ids: T[]) => Promise<ValueObjectOption<T>[]>
     filterByField: string
@@ -41,7 +45,7 @@ const props = withDefaults(
     minSearchChars: 2,
     minSearchText: undefined,
     placeholder: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -72,10 +76,13 @@ const filterByFieldProp = props.filterByField
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const filterSortByProp = props.filterSortBy
 
-if (isUndefined(filterInnerConfig.fields[filterByFieldProp]) || isUndefined(filterInnerData[filterByFieldProp])) {
+if (
+  isUndefined(filterInnerConfig.fields[filterByFieldProp]) ||
+  isUndefined(filterInnerData[filterByFieldProp])
+) {
   throw new Error(
     `[${componentName}] Incorrect filter inner config. ` +
-      `FilterByField is '${filterByFieldProp}' and available options are ${Object.keys(filterInnerData).join(', ')}.`
+      `FilterByField is '${filterByFieldProp}' and available options are ${Object.keys(filterInnerData).join(', ')}.`,
   )
 }
 
@@ -99,7 +106,10 @@ const label = computed(() => {
   return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
 })
 
-const { pagination } = usePagination(isNull(filterSortByProp) ? null : filterSortByProp.key, filterSortByProp?.order)
+const { pagination } = usePagination(
+  isNull(filterSortByProp) ? null : filterSortByProp.key,
+  filterSortByProp?.order,
+)
 
 const fetchedItems = ref<ValueObjectOption<T>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<T>[]>([])
@@ -135,7 +145,8 @@ const resetToEmptyState = (value: ModelValueType) => {
 
 const updateSelected = (value: T[] | T) => {
   const findItem = (id: T): ValueObjectOption<T> =>
-    allItems.value.find((obj) => obj.value === id) ?? ({ title: `${id}`, value: id } as ValueObjectOption<T>)
+    allItems.value.find((obj) => obj.value === id) ??
+    ({ title: `${id}`, value: id } as ValueObjectOption<T>)
   return isArray(value) ? value.map(findItem) : findItem(value)
 }
 
@@ -241,7 +252,7 @@ watchDebounced(
     apiRequestCounter.value++
     apiSearch(newValue, apiRequestCounter.value)
   },
-  { debounce: SEARCH_DEBOUNCE_MS }
+  { debounce: SEARCH_DEBOUNCE_MS },
 )
 
 const checkFirstLoad = async () => {
@@ -250,9 +261,11 @@ const checkFirstLoad = async () => {
 
 const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
-  if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
+  if (filterConfigCurrent.value.variant === 'startsWith')
+    return t('common.model.filterPlaceholder.startsWith')
   if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (filterConfigCurrent.value.variant === 'search') return t('common.model.filterPlaceholder.contains')
+  if (filterConfigCurrent.value.variant === 'search')
+    return t('common.model.filterPlaceholder.contains')
   return ''
 })
 
@@ -281,7 +294,7 @@ const onSelectedUpdate = (newValue: any) => {
 }
 
 const updateFilterSelected = (
-  newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
+  newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null,
 ) => {
   filterSelected.value.delete(props.name)
   if ((isArray(newValue) && newValue.length === 0) || isNull(newValue)) {
@@ -291,7 +304,7 @@ const updateFilterSelected = (
   if (isArray(newValue)) {
     filterSelected.value.set(
       props.name,
-      newValue.map((item) => ({ title: item.title, value: item.value }))
+      newValue.map((item) => ({ title: item.title, value: item.value })),
     )
     return
   }
@@ -317,7 +330,7 @@ watch(
     }
     await loadListItems(newValue as T[] | T)
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

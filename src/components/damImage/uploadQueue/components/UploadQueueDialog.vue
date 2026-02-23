@@ -35,7 +35,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -117,7 +117,13 @@ const onSaveAndApply = async () => {
   try {
     const res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
     const mappedItems = customUploadMetadataToImageMap
-      ? await customUploadMetadataToImageMap(itemsRaw, res, damClient, props.extSystem, props.licenceId)
+      ? await customUploadMetadataToImageMap(
+          itemsRaw,
+          res,
+          damClient,
+          props.extSystem,
+          props.licenceId,
+        )
       : await mapUploadMetadataToImages(itemsRaw, res, damClient, props.extSystem, props.licenceId)
     const storeItems: ImageStoreItem[] = mappedItems.map((item) => {
       maxPosition.value++
@@ -200,7 +206,11 @@ const showDetail = async (id: DocId) => {
                 width="2"
                 class="mr-1"
               />
-              <div>{{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{ queueTotalCount }}</div>
+              <div>
+                {{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{
+                  queueTotalCount
+                }}
+              </div>
             </div>
             <div class="d-flex align-center pr-3">
               <VDivider

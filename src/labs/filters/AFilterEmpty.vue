@@ -3,7 +3,7 @@ const props = withDefaults(
   defineProps<{
     name: string
   }>(),
-  {}
+  {},
 )
 </script>
 

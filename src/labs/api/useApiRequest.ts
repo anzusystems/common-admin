@@ -1,11 +1,20 @@
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiResponseCodeError,
+  isAnzuApiResponseCodeError,
+} from '@/model/error/AnzuApiResponseCodeError'
+import {
+  AnzuApiValidationError,
+  axiosErrorResponseHasValidationData,
+} from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosRequestConfig, type Method } from 'axios'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import {
+  AnzuApiForbiddenError,
+  axiosErrorResponseIsForbidden,
+} from '@/model/error/AnzuApiForbiddenError'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -48,14 +57,16 @@ export function useApiRequest<R, T = R>(
   entity: string,
   urlTemplate?: string,
   urlParams?: UrlParams,
-  options?: AxiosRequestConfig
+  options?: AxiosRequestConfig,
 ): UseApiAnyRequestReturnType<R, T>
 
 /**
  * @template R Response type
  * @template T Type used for request payload, by default, same as Response type
  */
-export function useApiRequest<R, T = R>(params: UseApiRequestParams): UseApiAnyRequestReturnType<R, T>
+export function useApiRequest<R, T = R>(
+  params: UseApiRequestParams,
+): UseApiAnyRequestReturnType<R, T>
 
 export function useApiRequest<R, T = R>(
   clientOrParams: AxiosClientFn | UseApiRequestParams,
@@ -64,7 +75,7 @@ export function useApiRequest<R, T = R>(
   entity?: string,
   urlTemplate?: string,
   urlParams?: UrlParams,
-  options?: AxiosRequestConfig
+  options?: AxiosRequestConfig,
 ): UseApiAnyRequestReturnType<R, T> {
   let resolvedClient: AxiosClientFn
   let resolvedMethod: Method
@@ -97,7 +108,7 @@ export function useApiRequest<R, T = R>(
   const executeRequest = async (
     urlTemplateOverrideOrParams: string | ExecuteRequestParams<T> | undefined = undefined,
     urlParamsOverride: UrlParams | undefined = undefined,
-    object: T | undefined = undefined
+    object: T | undefined = undefined,
   ): Promise<R> => {
     abortController = new AbortController()
 
@@ -117,8 +128,12 @@ export function useApiRequest<R, T = R>(
 
     try {
       const axiosConfig: AxiosRequestConfig = { method: resolvedMethod }
-      const params = isDefined(resolvedUrlParamsOverride) ? resolvedUrlParamsOverride : resolvedUrlParams
-      const template = isDefined(resolvedUrlTemplateOverride) ? resolvedUrlTemplateOverride : resolvedUrlTemplate
+      const params = isDefined(resolvedUrlParamsOverride)
+        ? resolvedUrlParamsOverride
+        : resolvedUrlParams
+      const template = isDefined(resolvedUrlTemplateOverride)
+        ? resolvedUrlTemplateOverride
+        : resolvedUrlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
       axiosConfig.url = template
       if (template !== '' && !isUndefined(params)) {
@@ -201,7 +216,11 @@ export function useApiRequest<R, T = R>(
 
 interface ExecuteRequestFn<R, T> {
   /** @deprecated Use object params form: executeRequest({ urlTemplate, urlParams, object }) */
-  (urlTemplateOverride?: string, urlParamsOverride?: UrlParams | undefined, object?: T | undefined): Promise<R>
+  (
+    urlTemplateOverride?: string,
+    urlParamsOverride?: UrlParams | undefined,
+    object?: T | undefined,
+  ): Promise<R>
   (params: ExecuteRequestParams<T>): Promise<R>
 }
 

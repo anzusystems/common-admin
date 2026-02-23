@@ -15,7 +15,7 @@ withDefaults(
     enableTop: false,
     hideButtons: false,
     touched: true,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'resetFilter'): void

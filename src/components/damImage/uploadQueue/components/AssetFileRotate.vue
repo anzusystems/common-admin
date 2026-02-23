@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     dataCy: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'afterRotate'): void

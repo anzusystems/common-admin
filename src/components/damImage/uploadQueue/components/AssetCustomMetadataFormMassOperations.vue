@@ -13,13 +13,19 @@ const props = withDefaults(
     extSystem: IntegerId
     modelValue: { [key: string]: any }
   }>(),
-  {}
+  {},
 )
 
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
-  (e: 'fillEmptyField', data: { assetType: DamAssetTypeType; elementProperty: string; value: any }): void
-  (e: 'replaceField', data: { assetType: DamAssetTypeType; elementProperty: string; value: any }): void
+  (
+    e: 'fillEmptyField',
+    data: { assetType: DamAssetTypeType; elementProperty: string; value: any },
+  ): void
+  (
+    e: 'replaceField',
+    data: { assetType: DamAssetTypeType; elementProperty: string; value: any },
+  ): void
 }>()
 
 const { t } = useI18n()

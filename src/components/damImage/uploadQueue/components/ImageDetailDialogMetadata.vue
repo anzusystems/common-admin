@@ -42,7 +42,7 @@ const props = withDefaults(
     showDamAuthors: false,
     showSourceEnabled: true,
     sourceLabel: undefined,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -60,7 +60,9 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 
 const type = computed<DamAssetTypeType | null>(() => {
   if (isMediaAware(detail.value)) {
-    return detail.value.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
+    return detail.value.damMedia.assetType === DamMediaType.Video
+      ? DamAssetType.Video
+      : DamAssetType.Audio
   } else if (isImageCreateUpdateAware(detail.value)) {
     return DamAssetType.Image
   }
@@ -199,7 +201,11 @@ defineExpose({
   >
     <VCard v-if="modelValue">
       <ADialogToolbar @on-cancel="onDialogModelUpdate(false)">
-        {{ type === DamAssetType.Image ? t('common.damImage.image.meta.edit') : t('common.damImage.media.meta.edit') }}
+        {{
+          type === DamAssetType.Image
+            ? t('common.damImage.image.meta.edit')
+            : t('common.damImage.media.meta.edit')
+        }}
       </ADialogToolbar>
       <VCardText>
         <div
@@ -304,7 +310,9 @@ defineExpose({
               icon="mdi-movie-off-outline"
               class="mr-1"
               size="small"
-            />{{ t('common.damImage.media.meta.notPlayable') }}
+            />{{
+              t('common.damImage.media.meta.notPlayable')
+            }}
           </div>
           <ARow :title="t('common.damImage.media.model.damMedia.title')">
             {{ detail.damMedia.title }}

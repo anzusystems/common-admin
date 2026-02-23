@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import { type GrantType, useGrant } from '@/model/valueObject/Grant'
-import { GrantOriginDefault, type GrantOriginType, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
+import {
+  GrantOriginDefault,
+  type GrantOriginType,
+  useGrantOrigin,
+} from '@/model/valueObject/GrantOrigin'
 import { computed } from 'vue'
 
 const props = defineProps<{

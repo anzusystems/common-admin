@@ -7,7 +7,11 @@ import type { VuetifyIconValue } from '@/types/Vuetify'
 import type { ErrorObject } from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
 import type { VTextField } from 'vuetify/components/VTextField'
-import type { CollabComponentConfig, CollabFieldData, CollabFieldLockOptions } from '@/components/collab/types/Collab'
+import type {
+  CollabComponentConfig,
+  CollabFieldData,
+  CollabFieldLockOptions,
+} from '@/components/collab/types/Collab'
 import type { IntegerIdNullable } from '@/types/common'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import {
@@ -49,7 +53,7 @@ const props = withDefaults(
     disabled: undefined,
     help: undefined,
     suggestedLength: undefined,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -84,10 +88,13 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true }
+    { immediate: true },
   )
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
-    if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
+    if (
+      data.status === CollabFieldLockStatus.Failure &&
+      data.type === CollabFieldLockType.Acquire
+    ) {
       textareaRef.value?.blur()
     }
   })
@@ -117,7 +124,8 @@ const onFocus = () => {
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length) return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
+  if (props.v?.$errors?.length)
+    return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []
 })
 
@@ -177,8 +185,7 @@ defineExpose({
       v-if="!hideLabel"
       #label
     >
-      {{ labelComputed
-      }}<span
+      {{ labelComputed }}<span
         v-if="requiredComputed"
         class="required"
       />

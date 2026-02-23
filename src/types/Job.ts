@@ -3,7 +3,9 @@ import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTracki
 import type { JobBaseResource } from '@/model/valueObject/JobBaseResource'
 import type { JobStatusType } from '@/model/valueObject/JobStatus'
 
-export interface JobBase<T extends JobBaseResource = JobBaseResource> extends AnzuUserAndTimeTrackingAware {
+export interface JobBase<
+  T extends JobBaseResource = JobBaseResource,
+> extends AnzuUserAndTimeTrackingAware {
   readonly id: IntegerId
   scheduledAt: DatetimeUTC
   priority: number

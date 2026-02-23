@@ -37,7 +37,7 @@ const props = withDefaults(
     assetMainFileFailReason: undefined,
     dataCy: undefined,
     configName: 'default',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'onSave'): void

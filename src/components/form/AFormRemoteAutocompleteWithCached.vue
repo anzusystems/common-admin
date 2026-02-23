@@ -60,7 +60,7 @@ const props = withDefaults(
     itemValue: 'id',
     minSearchChars: 2,
     minSearchText: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | IntegerId | DocId[] | IntegerId[] | null | undefined): void
@@ -96,7 +96,10 @@ const modelValue = computed({
     return props.modelValue
   },
   set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null | undefined) {
-    emit('update:modelValue', cloneDeep<DocId | IntegerId | DocId[] | IntegerId[] | null | undefined>(newValue))
+    emit(
+      'update:modelValue',
+      cloneDeep<DocId | IntegerId | DocId[] | IntegerId[] | null | undefined>(newValue),
+    )
   },
 })
 
@@ -215,7 +218,7 @@ watchDebounced(
       emit('searchChangeDebounced', newValue)
     }
   },
-  { debounce: 300 }
+  { debounce: 300 },
 )
 
 watch(search, (newValue, oldValue) => {
@@ -246,7 +249,7 @@ watch(
       fetch()
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

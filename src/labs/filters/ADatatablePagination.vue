@@ -13,7 +13,7 @@ withDefaults(
   {
     itemsPerPageOptions: () => [10, 25, 50],
     hideRecordsPerPage: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -72,7 +72,7 @@ watch(
       pagination.value.page = 1
       emit('change')
     }
-  }
+  },
 )
 
 watch(
@@ -81,7 +81,7 @@ watch(
     if (newValue !== oldValue) {
       emit('change')
     }
-  }
+  },
 )
 
 const onClickFirst = useThrottleFn(() => {
@@ -129,7 +129,8 @@ const onClickNext = useThrottleFn(() => {
       </VBtnToggle>
     </div>
     <div class="anzu-data-footer__pagination">
-      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.system.datatable.from') }} {{ computedTotalCountText }}
+      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.system.datatable.from') }}
+      {{ computedTotalCountText }}
     </div>
     <div class="anzu-data-footer__icons-before">
       <VBtn

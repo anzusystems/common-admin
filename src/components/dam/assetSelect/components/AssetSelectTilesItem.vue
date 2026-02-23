@@ -14,7 +14,7 @@ const props = withDefaults(
   }>(),
   {
     showMetaIcons: false,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -37,7 +37,10 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(i
 <template>
   <div
     class="asset-list-tiles__item asset-list-tiles__item--pointer"
-    :class="{ 'asset-list-tiles__item--selected': item.selected, 'asset-list-tiles__item--active': item.active }"
+    :class="{
+      'asset-list-tiles__item--selected': item.selected,
+      'asset-list-tiles__item--active': item.active,
+    }"
     @click.stop.exact="onItemClick"
   >
     <div class="asset-list-tiles__item-card">

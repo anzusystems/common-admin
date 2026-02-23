@@ -37,7 +37,7 @@ const storedSettings = useStorage<LanguageCode | 'default'>('language', 'default
 export function modifyLanguageSettings(
   configAvailableLanguages: LanguageCode[],
   configDefaultLanguage: LanguageCode,
-  i18nInstance?: any
+  i18nInstance?: any,
 ) {
   const i18n = i18nInstance || defaultI18n
   if (storedSettings.value === 'default') storedSettings.value = configDefaultLanguage

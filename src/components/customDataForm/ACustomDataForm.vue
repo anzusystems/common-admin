@@ -20,7 +20,7 @@ const props = withDefaults(
     validationScope: undefined,
     pinnedCount: 1000,
     readonly: false,
-  }
+  },
 )
 
 const emit = defineEmits<{

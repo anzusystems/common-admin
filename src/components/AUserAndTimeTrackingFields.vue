@@ -19,7 +19,7 @@ withDefaults(
     hideModifiedAt: false,
     hideCreatedBy: false,
     hideModifiedBy: false,
-  }
+  },
 )
 
 const { t } = useI18n()

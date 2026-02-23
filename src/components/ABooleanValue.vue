@@ -11,7 +11,7 @@ const props = withDefaults(
   {
     chip: false,
     invertColor: false,
-  }
+  },
 )
 
 const { t } = useI18n()

@@ -146,7 +146,7 @@ export const useSubjectListActions = () => {
   const fetchArticleListVersionData = async (
     pagination: Ref<Pagination>,
     filterData: FilterData,
-    filterConfig: FilterConfig
+    filterConfig: FilterConfig,
   ) => {
     filterData.discriminator = 'standard'
     const { executeRequest } = useApiRequest<any>({
@@ -165,7 +165,11 @@ export const useSubjectListActions = () => {
 
   const { showErrorsDefault } = useAlerts()
 
-  const fetchList = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchList = async (
+    pagination: Ref<Pagination>,
+    filterData: FilterData,
+    filterConfig: FilterConfig,
+  ) => {
     listLoading.value = true
     try {
       const res = await fetchArticleListVersionData(pagination, filterData, filterConfig)

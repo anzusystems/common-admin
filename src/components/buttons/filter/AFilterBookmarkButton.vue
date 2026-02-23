@@ -24,7 +24,7 @@ withDefaults(
     dataCy: 'filter-bookmark',
     datatableHiddenColumns: undefined,
     datatableSortBy: undefined,
-  }
+  },
 )
 
 const dialog = defineModel<boolean>('dialog', { default: false, required: false })

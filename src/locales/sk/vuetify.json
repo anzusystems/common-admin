@@ -1,180 +1,180 @@
 {
-    "badge": "Štítok",
-    "open": "Otvoriť",
-    "close": "Zatvoriť",
-    "dismiss": "Zrušiť",
-    "confirmEdit": {
-        "ok": "OK",
-        "cancel": "Cancel"
+  "badge": "Štítok",
+  "open": "Otvoriť",
+  "close": "Zatvoriť",
+  "dismiss": "Zrušiť",
+  "confirmEdit": {
+    "ok": "OK",
+    "cancel": "Cancel"
+  },
+  "dataIterator": {
+    "noResultsText": "Nenašli sa žiadne zodpovedajúce záznamy",
+    "loadingText": "Načítavanie záznamov ..."
+  },
+  "dataTable": {
+    "itemsPerPageText": "Riadkov na stránku:",
+    "ariaLabel": {
+      "sortDescending": "Zoradiť zostupne.",
+      "sortAscending": "Zoradiť vzostupne.",
+      "sortNone": "Bez zoradenia.",
+      "activateNone": "Prestať radiť.",
+      "activateDescending": "Aktivovať zostupné radenie.",
+      "activateAscending": "Aktivovať vzostupné radenie"
     },
-    "dataIterator": {
-        "noResultsText": "Nenašli sa žiadne zodpovedajúce záznamy",
-        "loadingText": "Načítavanie záznamov ..."
+    "sortBy": "Radiť"
+  },
+  "dataFooter": {
+    "itemsPerPageText": "Záznamov na stránku:",
+    "itemsPerPageAll": "Všetky",
+    "nextPage": "Ďalšia strana",
+    "prevPage": "Predchádzajúca strana",
+    "firstPage": "Prvá strana",
+    "lastPage": "Posledná strana",
+    "pageText": "{0}-{1} z {2}"
+  },
+  "dateRangeInput": {
+    "divider": "do"
+  },
+  "datePicker": {
+    "itemsSelected": "{0} vybraných",
+    "range": {
+      "title": "Vybrať dátumy",
+      "header": "Vyberte"
     },
-    "dataTable": {
-        "itemsPerPageText": "Riadkov na stránku:",
-        "ariaLabel": {
-            "sortDescending": "Zoradiť zostupne.",
-            "sortAscending": "Zoradiť vzostupne.",
-            "sortNone": "Bez zoradenia.",
-            "activateNone": "Prestať radiť.",
-            "activateDescending": "Aktivovať zostupné radenie.",
-            "activateAscending": "Aktivovať vzostupné radenie"
-        },
-        "sortBy": "Radiť"
-    },
-    "dataFooter": {
-        "itemsPerPageText": "Záznamov na stránku:",
-        "itemsPerPageAll": "Všetky",
-        "nextPage": "Ďalšia strana",
-        "prevPage": "Predchádzajúca strana",
-        "firstPage": "Prvá strana",
-        "lastPage": "Posledná strana",
-        "pageText": "{0}-{1} z {2}"
-    },
-    "dateRangeInput": {
-        "divider": "do"
-    },
-    "datePicker": {
-        "itemsSelected": "{0} vybraných",
-        "range": {
-            "title": "Vybrať dátumy",
-            "header": "Vyberte"
-        },
-        "title": "Vybrať dátum",
-        "header": "Vyberte",
-        "input": {
-            "placeholder": "Vybrať dátum"
-        },
-        "ariaLabel": {
-            "previousMonth": "Predchádzajúci mesiac",
-            "nextMonth": "Ďalší mesiac",
-            "selectYear": "Vyberte rok",
-            "previousYear": "Predchádzajúci rok",
-            "nextYear": "Nasledujúci rok",
-            "selectMonth": "Vyberte mesiac",
-            "selectDate": "{0}",
-            "currentDate": "Dnes, {0}"
-        }
-    },
-    "noDataText": "Žiadne dostupné dáta",
-    "carousel": {
-        "prev": "Predchádzajúci krok",
-        "next": "Nasledujúci krok",
-        "ariaLabel": {
-            "delimiter": "Krok {0} z {1}"
-        }
-    },
-    "calendar": {
-        "moreEvents": "{0} ďalších",
-        "today": "Dnes"
-    },
+    "title": "Vybrať dátum",
+    "header": "Vyberte",
     "input": {
-        "clear": "Vymazať {0}",
-        "prependAction": "{0} akcií pred",
-        "appendAction": "{0} nasledovných akcií",
-        "otp": "Please enter OTP character {0}"
+      "placeholder": "Vybrať dátum"
     },
-    "fileInput": {
-        "counter": "{0} súborov",
-        "counterSize": "{0} súborov ({1} spolu)"
-    },
-    "fileUpload": {
-        "title": "Sem presuňte súbory",
-        "divider": "alebo",
-        "browse": "Prehliadať súbory"
-    },
-    "timePicker": {
-        "am": "AM",
-        "pm": "PM",
-        "title": "Vyberte čas",
-        "hour": "Hodina",
-        "minute": "Minúty",
-        "second": "Sekundy"
-    },
-    "pagination": {
-        "ariaLabel": {
-            "root": "Navigácia stránkovania",
-            "next": "Ďalšia stránka",
-            "previous": "Predchádzajúca stránka",
-            "page": "Ísť na stránku {0}",
-            "currentPage": "Stránka {0}, Aktuálna stránka",
-            "first": "Prvá stránka",
-            "last": "Posledná stránka"
-        }
-    },
-    "stepper": {
-        "next": "Next",
-        "prev": "Previous"
-    },
-    "rating": {
-        "ariaLabel": {
-            "item": "Hodnotenie {0} z {1}"
-        }
-    },
-    "loading": "Načítám...",
-    "infiniteScroll": {
-        "loadMore": "Load more",
-        "empty": "No more"
-    },
-    "rules": {
-        "required": "Toto pole je povinné",
-        "email": "Zadajte platnú e-mailovú adresu",
-        "number": "Toto pole môže obsahovať iba čísla",
-        "integer": "Toto pole môže obsahovať iba celé čísla",
-        "capital": "Toto pole môže obsahovať iba veľké písmená",
-        "maxLength": "Musíte zadať maximálne {0} znakov",
-        "minLength": "Musíte zadať minimálne {0} znakov",
-        "strictLength": "Dĺžka zadaného poľa je neplatná",
-        "exclude": "Znak {0} nie je povolený",
-        "notEmpty": "Vyberte aspoň jednu hodnotu",
-        "pattern": "Neplatný formát"
-    },
-    "hotkey": {
-        "then": "potom",
-        "ctrl": "Ctrl",
-        "command": "Command",
-        "shift": "Shift",
-        "alt": "Alt",
-        "option": "Option",
-        "enter": "Enter",
-        "escape": "Escape",
-        "upArrow": "Šípka hore",
-        "downArrow": "Šípka dole",
-        "leftArrow": "Šípka vľavo",
-        "rightArrow": "Šípka vpravo",
-        "backspace": "Backspace",
-        "space": "Medzera",
-        "plus": "plus",
-        "shortcut": "Klávesová skratka: {0}",
-        "or": "alebo"
-    },
-    "video": {
-        "play": "Prehrať",
-        "pause": "Pozastaviť",
-        "seek": "Vyhľadať",
-        "volume": "Hlasitosť",
-        "showVolume": "Zobraziť ovládanie hlasitosti",
-        "mute": "Stlmiť",
-        "unmute": "Zrušiť stlmenie",
-        "enterFullscreen": "Celá obrazovka",
-        "exitFullscreen": "Opustiť celú obrazovku"
-    },
-    "colorPicker": {
-        "ariaLabel": {
-            "eyedropper": "Vybrať farbu z obrazovky",
-            "hueSlider": "Odtieň",
-            "alphaSlider": "Alfa",
-            "redInput": "Červená",
-            "greenInput": "Zelená",
-            "blueInput": "Modrá",
-            "alphaInput": "Alfa",
-            "hueInput": "Odtieň",
-            "saturationInput": "Sýtosť",
-            "lightnessInput": "Svetlosť",
-            "hexInput": "HEX hodnota",
-            "hexaInput": "HEX s alfa hodnotou",
-            "changeFormat": "Zmeniť formát farby"
-        }
+    "ariaLabel": {
+      "previousMonth": "Predchádzajúci mesiac",
+      "nextMonth": "Ďalší mesiac",
+      "selectYear": "Vyberte rok",
+      "previousYear": "Predchádzajúci rok",
+      "nextYear": "Nasledujúci rok",
+      "selectMonth": "Vyberte mesiac",
+      "selectDate": "{0}",
+      "currentDate": "Dnes, {0}"
     }
+  },
+  "noDataText": "Žiadne dostupné dáta",
+  "carousel": {
+    "prev": "Predchádzajúci krok",
+    "next": "Nasledujúci krok",
+    "ariaLabel": {
+      "delimiter": "Krok {0} z {1}"
+    }
+  },
+  "calendar": {
+    "moreEvents": "{0} ďalších",
+    "today": "Dnes"
+  },
+  "input": {
+    "clear": "Vymazať {0}",
+    "prependAction": "{0} akcií pred",
+    "appendAction": "{0} nasledovných akcií",
+    "otp": "Please enter OTP character {0}"
+  },
+  "fileInput": {
+    "counter": "{0} súborov",
+    "counterSize": "{0} súborov ({1} spolu)"
+  },
+  "fileUpload": {
+    "title": "Sem presuňte súbory",
+    "divider": "alebo",
+    "browse": "Prehliadať súbory"
+  },
+  "timePicker": {
+    "am": "AM",
+    "pm": "PM",
+    "title": "Vyberte čas",
+    "hour": "Hodina",
+    "minute": "Minúty",
+    "second": "Sekundy"
+  },
+  "pagination": {
+    "ariaLabel": {
+      "root": "Navigácia stránkovania",
+      "next": "Ďalšia stránka",
+      "previous": "Predchádzajúca stránka",
+      "page": "Ísť na stránku {0}",
+      "currentPage": "Stránka {0}, Aktuálna stránka",
+      "first": "Prvá stránka",
+      "last": "Posledná stránka"
+    }
+  },
+  "stepper": {
+    "next": "Next",
+    "prev": "Previous"
+  },
+  "rating": {
+    "ariaLabel": {
+      "item": "Hodnotenie {0} z {1}"
+    }
+  },
+  "loading": "Načítám...",
+  "infiniteScroll": {
+    "loadMore": "Load more",
+    "empty": "No more"
+  },
+  "rules": {
+    "required": "Toto pole je povinné",
+    "email": "Zadajte platnú e-mailovú adresu",
+    "number": "Toto pole môže obsahovať iba čísla",
+    "integer": "Toto pole môže obsahovať iba celé čísla",
+    "capital": "Toto pole môže obsahovať iba veľké písmená",
+    "maxLength": "Musíte zadať maximálne {0} znakov",
+    "minLength": "Musíte zadať minimálne {0} znakov",
+    "strictLength": "Dĺžka zadaného poľa je neplatná",
+    "exclude": "Znak {0} nie je povolený",
+    "notEmpty": "Vyberte aspoň jednu hodnotu",
+    "pattern": "Neplatný formát"
+  },
+  "hotkey": {
+    "then": "potom",
+    "ctrl": "Ctrl",
+    "command": "Command",
+    "shift": "Shift",
+    "alt": "Alt",
+    "option": "Option",
+    "enter": "Enter",
+    "escape": "Escape",
+    "upArrow": "Šípka hore",
+    "downArrow": "Šípka dole",
+    "leftArrow": "Šípka vľavo",
+    "rightArrow": "Šípka vpravo",
+    "backspace": "Backspace",
+    "space": "Medzera",
+    "plus": "plus",
+    "shortcut": "Klávesová skratka: {0}",
+    "or": "alebo"
+  },
+  "video": {
+    "play": "Prehrať",
+    "pause": "Pozastaviť",
+    "seek": "Vyhľadať",
+    "volume": "Hlasitosť",
+    "showVolume": "Zobraziť ovládanie hlasitosti",
+    "mute": "Stlmiť",
+    "unmute": "Zrušiť stlmenie",
+    "enterFullscreen": "Celá obrazovka",
+    "exitFullscreen": "Opustiť celú obrazovku"
+  },
+  "colorPicker": {
+    "ariaLabel": {
+      "eyedropper": "Vybrať farbu z obrazovky",
+      "hueSlider": "Odtieň",
+      "alphaSlider": "Alfa",
+      "redInput": "Červená",
+      "greenInput": "Zelená",
+      "blueInput": "Modrá",
+      "alphaInput": "Alfa",
+      "hueInput": "Odtieň",
+      "saturationInput": "Sýtosť",
+      "lightnessInput": "Svetlosť",
+      "hexInput": "HEX hodnota",
+      "hexaInput": "HEX s alfa hodnotou",
+      "changeFormat": "Zmeniť formát farby"
+    }
+  }
 }

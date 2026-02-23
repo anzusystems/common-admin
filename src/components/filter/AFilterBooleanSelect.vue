@@ -17,7 +17,7 @@ const props = withDefaults(
     allT: 'common.model.all',
     trueT: 'common.model.boolean.true',
     falseT: 'common.model.boolean.false',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
@@ -32,7 +32,10 @@ const value = computed({
     let returnValue: null | boolean = null
     if (newValue === 1) returnValue = true
     if (newValue === 0) returnValue = false
-    emit('update:modelValue', { ...props.modelValue, ...{ model: returnValue } })
+    emit('update:modelValue', {
+      ...props.modelValue,
+      model: returnValue,
+    })
   },
 })
 

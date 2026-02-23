@@ -34,7 +34,8 @@ export function useLoginStatus(to: RouteLocationNormalized) {
 
   const isStatusNotDefined = () => isNull(status.value)
   const isStatusLoginSuccess = () => status.value === LoginState.Success
-  const isStatusSsoCommunicationFailure = () => status.value === LoginState.FailureSsoCommunicationFailed
+  const isStatusSsoCommunicationFailure = () =>
+    status.value === LoginState.FailureSsoCommunicationFailed
   const isStatusInternalErrorFailure = () => status.value === LoginState.FailureInternalError
   const isStatusUnauthorized = () => status.value === LoginState.FailureUnauthorized
 

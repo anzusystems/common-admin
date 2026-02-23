@@ -97,7 +97,7 @@ const props = withDefaults(
     cropmove: null,
     cropstart: null,
     zoom: null,
-  }
+  },
 )
 
 const cropperInstance = ref<InstanceType<typeof Cropper> | null>(null)
@@ -143,7 +143,10 @@ onMounted(() => {
   const propsOptions = data as Record<string, any>
   const options: Record<string, any> = {}
   for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(propsOptions, key) && propsOptions[key] !== undefined) {
+    if (
+      Object.prototype.hasOwnProperty.call(propsOptions, key) &&
+      propsOptions[key] !== undefined
+    ) {
       options[key] = propsOptions[key]
     }
   }

@@ -12,7 +12,7 @@ withDefaults(
     secondaryIcon: null,
     secondaryText: null,
     size: 'default',
-  }
+  },
 )
 </script>
 

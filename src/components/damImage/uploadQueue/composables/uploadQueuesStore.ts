@@ -76,7 +76,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     queueKey: UploadQueueKey,
     extSystem: IntegerId,
     assetLicence: IntegerId,
-    assets: DocId[]
+    assets: DocId[],
   ) {
     const { getDamConfigExtSystem } = useDamConfigState()
 
@@ -91,7 +91,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         UploadQueueItemStatus.Processing,
         DamAssetType.Image, // only image now
         QUEUE_CHUNK_SIZE,
-        assetLicence
+        assetLicence,
       )
       queueItem.assetId = assetId
       createQueue(queueKey)
@@ -101,7 +101,12 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
-  async function addByFiles(queueKey: UploadQueueKey, extSystem: IntegerId, assetLicence: IntegerId, files: File[]) {
+  async function addByFiles(
+    queueKey: UploadQueueKey,
+    extSystem: IntegerId,
+    assetLicence: IntegerId,
+    files: File[],
+  ) {
     const { getDamConfigExtSystem } = useDamConfigState()
 
     const configExtSystem = getDamConfigExtSystem(extSystem)
@@ -117,7 +122,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         UploadQueueItemStatus.Waiting,
         type,
         QUEUE_CHUNK_SIZE,
-        assetLicence
+        assetLicence,
       )
       queueItem.file = file
       queueItem.displayTitle = file.name
@@ -182,7 +187,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       item,
       (progress: number, speed: number, estimate: number) => {
         setUploadSpeed(item, progress, speed, estimate)
-      }
+      },
     )
     try {
       await uploadInit()
@@ -197,7 +202,12 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
-  function setUploadSpeed(item: UploadQueueItem, progress: number, speed: number, estimate: number) {
+  function setUploadSpeed(
+    item: UploadQueueItem,
+    progress: number,
+    speed: number,
+    estimate: number,
+  ) {
     item.progress.progressPercent = progress
     item.progress.remainingTime = estimate
     item.progress.speed = speed
@@ -269,7 +279,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   async function queueItemDuplicate(
     assetId: DocId,
     originAssetFile: DocIdNullable = null,
-    assetType: DamAssetTypeType | null = null
+    assetType: DamAssetTypeType | null = null,
   ) {
     const { updateNewNames, getAuthorConflicts } = useAssetSuggestions()
     if (!originAssetFile || !assetType || assetType !== DamAssetType.Image) return
@@ -408,7 +418,11 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     recalculateQueueCounts(queueKey)
   }
 
-  async function stopItemUpload(queueKey: UploadQueueKey, queueItem: UploadQueueItem, index: number) {
+  async function stopItemUpload(
+    queueKey: UploadQueueKey,
+    queueItem: UploadQueueItem,
+    index: number,
+  ) {
     const queue = queues.value.get(queueKey)
     if (!queue || queue.items.length === 0) return
     queueItem.status = UploadQueueItemStatus.Stop

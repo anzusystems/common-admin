@@ -16,7 +16,11 @@ export const useAuthorListActions = () => {
   const { executeFetch } = useFetchAuthorList(damClient, currentExtSystemId.value)
   const listItems = ref<DamAuthor[]>([])
 
-  const fetchList = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchList = async (
+    pagination: Ref<Pagination>,
+    filterData: FilterData,
+    filterConfig: FilterConfig,
+  ) => {
     listLoading.value = true
     pagination.value.sortBy = filterData.text ? null : { key: SORT_BY_ID, order: SortOrder.Desc }
     try {

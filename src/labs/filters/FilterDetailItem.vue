@@ -12,7 +12,7 @@ const props = withDefaults(
   defineProps<{
     name: string
   }>(),
-  {}
+  {},
 )
 
 const filterConfig = inject(FilterConfigKey)

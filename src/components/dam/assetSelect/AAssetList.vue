@@ -27,7 +27,7 @@ const props = withDefaults(
     configName: 'default',
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
-  }
+  },
 )
 
 const sortModel = defineModel<number>('sort', { default: 1, required: false })

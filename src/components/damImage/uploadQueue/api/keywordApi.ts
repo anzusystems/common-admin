@@ -14,7 +14,11 @@ const END_POINT = '/adm/v1/keyword'
 const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
 export const ENTITY = 'keyword'
 
-export const fetchKeywordListByIds = (client: () => AxiosInstance, extSystemId: number, ids: string[]) =>
+export const fetchKeywordListByIds = (
+  client: () => AxiosInstance,
+  extSystemId: number,
+  ids: string[],
+) =>
   apiFetchByIds<DamKeyword[]>(
     client,
     ids,
@@ -23,7 +27,7 @@ export const fetchKeywordListByIds = (client: () => AxiosInstance, extSystemId: 
     SYSTEM_CORE_DAM,
     ENTITY,
     {},
-    true
+    true,
   )
 
 export const useFetchKeywordList = (client: () => AxiosInstance, extSystemId: number) =>
@@ -42,8 +46,17 @@ export const fetchKeywordList = (
   client: () => AxiosInstance,
   extSystemId: number,
   pagination: Pagination,
-  filterBag: FilterBag
-) => apiFetchList<DamKeyword[]>(client, END_POINT_LIST, { extSystemId }, pagination, filterBag, SYSTEM_CORE_DAM, ENTITY)
+  filterBag: FilterBag,
+) =>
+  apiFetchList<DamKeyword[]>(
+    client,
+    END_POINT_LIST,
+    { extSystemId },
+    pagination,
+    filterBag,
+    SYSTEM_CORE_DAM,
+    ENTITY,
+  )
 
 export const createKeyword = (client: () => AxiosInstance, data: DamKeyword) =>
   apiCreateOne<DamKeyword>(client, data, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)

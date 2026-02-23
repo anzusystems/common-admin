@@ -20,9 +20,10 @@ export type UploadMetadataToImageMapFn = (
   licenceId: IntegerId,
 ) => Promise<UploadMetadataToImageMapItem[]>
 
-export type AssetSelectMetadataToImageMapFn = (
-  assetRes: AssetDetailItemDto,
-) => { description: string; source: string }
+export type AssetSelectMetadataToImageMapFn = (assetRes: AssetDetailItemDto) => {
+  description: string
+  source: string
+}
 
 export async function mapUploadMetadataToImages(
   queueItems: UploadQueueItem[],
@@ -36,7 +37,9 @@ export async function mapUploadMetadataToImages(
 
   bulkItems.forEach((bulkItem) => {
     assetMetadataMap.set(bulkItem.id, {
-      description: isString(bulkItem.customData?.description) ? bulkItem.customData.description.trim() : '',
+      description: isString(bulkItem.customData?.description)
+        ? bulkItem.customData.description.trim()
+        : '',
       authorIds: bulkItem.authors,
     })
   })
@@ -59,7 +62,7 @@ export async function mapUploadMetadataToImages(
 
   // Filter valid queue items and map to results
   const validItems = queueItems.filter(
-    (queueItem) => !isNull(queueItem.assetId) && !isNull(queueItem.fileId)
+    (queueItem) => !isNull(queueItem.assetId) && !isNull(queueItem.fileId),
   )
 
   return validItems.map((queueItem) => {

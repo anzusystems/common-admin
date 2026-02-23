@@ -20,7 +20,7 @@ const props = withDefaults(
   }>(),
   {
     dataCy: 'filter-datepicker',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -72,8 +72,11 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
-  if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0)) return
-  filterSelected.value.set(props.name, [{ title: dateTimePretty(modelValue.value), value: modelValue.value }])
+  if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0))
+    return
+  filterSelected.value.set(props.name, [
+    { title: dateTimePretty(modelValue.value), value: modelValue.value },
+  ])
 }
 </script>
 

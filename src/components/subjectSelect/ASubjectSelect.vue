@@ -29,7 +29,7 @@ const props = withDefaults(
     dialogTitleT: 'common.subjectSelect.texts.title',
     paginationMode: 'standard',
     autoOpen: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
@@ -89,7 +89,7 @@ const onClose = () => {
 const onConfirm = () => {
   emit(
     'onConfirm',
-    props.selectedItems.map((item) => toRaw(item))
+    props.selectedItems.map((item) => toRaw(item)),
   )
   onClose()
 }
@@ -108,7 +108,8 @@ const lastPage = computed(() => {
 
 const hasNextPage = computed(() => {
   return !(
-    (isNull(paginationComputed.value.hasNextPage) && paginationComputed.value.page === lastPage.value) ||
+    (isNull(paginationComputed.value.hasNextPage) &&
+      paginationComputed.value.page === lastPage.value) ||
     paginationComputed.value.hasNextPage === false
   )
 })
@@ -262,7 +263,12 @@ defineExpose({
       </div>
       <div class="subject-select__actions system-border-t">
         <div v-if="props.minCount === props.maxCount">
-          {{ t('common.subjectSelect.texts.pickExactCount', { count: props.minCount, selected: selectedItemsCount }) }}
+          {{
+            t('common.subjectSelect.texts.pickExactCount', {
+              count: props.minCount,
+              selected: selectedItemsCount,
+            })
+          }}
         </div>
         <div v-else>
           {{

@@ -67,7 +67,7 @@ export function useSentry() {
   const logMessage = (
     message: string,
     level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info',
-    context?: SentryContext
+    context?: SentryContext,
   ): void => {
     switch (level) {
       case 'fatal':

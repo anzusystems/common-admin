@@ -26,7 +26,7 @@ const props = withDefaults(
       cachedItem: any,
       defaultTitle: string,
       displayTextPath: string,
-      fallbackIdText: boolean
+      fallbackIdText: boolean,
     ) => string | undefined
   }>(),
   {
@@ -42,7 +42,7 @@ const props = withDefaults(
     wrapText: false,
     closable: false,
     customTitleFn: undefined,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -63,7 +63,12 @@ const containerClassComputed = computed(() => {
 
 const displayTitle = computed(() => {
   if (props.customTitleFn && cached.value) {
-    const customTitle = props.customTitleFn(cached.value, props.title, props.displayTextPath, props.fallbackIdText)
+    const customTitle = props.customTitleFn(
+      cached.value,
+      props.title,
+      props.displayTextPath,
+      props.fallbackIdText,
+    )
     if (customTitle !== undefined) {
       return customTitle
     }
@@ -87,7 +92,7 @@ watch(
     cached.value = newValue
     loaded.value = true
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
@@ -127,7 +132,9 @@ watch(
     <VChip
       v-else
       :size="size"
-      :append-icon="openInNew ? COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL : COMMON_CONFIG.CHIP.ICON.LINK"
+      :append-icon="
+        openInNew ? COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL : COMMON_CONFIG.CHIP.ICON.LINK
+      "
       :label="forceRounded ? undefined : true"
       :closable="closable"
       @click.stop="onClick"

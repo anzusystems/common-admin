@@ -63,7 +63,7 @@ const props = withDefaults(
     hideIcon: false,
     showMetaIcons: false,
     assetFileProperties: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'load'): void
@@ -102,7 +102,10 @@ const uploadingPercentage = computed(() => {
 })
 
 const backgroundColorComputed = computed(() => {
-  const grayBackgroundStatuses: readonly DamAssetStatusType[] = [DamAssetStatus.Deleting, DamAssetStatus.Draft]
+  const grayBackgroundStatuses: readonly DamAssetStatusType[] = [
+    DamAssetStatus.Deleting,
+    DamAssetStatus.Draft,
+  ]
   return grayBackgroundStatuses.includes(props.assetStatus) ? '#ccc' : props.backgroundColor
 })
 
@@ -279,7 +282,11 @@ const { remainingTimeShort } = useRemainingTime()
   </div>
   <div
     v-else
-    :style="{ height: fallbackHeight + 'px', backgroundColor: backgroundColorComputed, width: width + 'px' }"
+    :style="{
+      height: fallbackHeight + 'px',
+      backgroundColor: backgroundColorComputed,
+      width: width + 'px',
+    }"
     class="asset-image asset-image--placeholder d-flex align-center justify-center"
   >
     <div

@@ -11,7 +11,11 @@ import {
 } from '@/components/damImage/uploadQueue/composables/damConfigApi'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import type { IntegerId } from '@/types/common'
-import { DamAssetType, type DamAssetTypeType, type DamDistributionServiceName } from '@/types/coreDam/Asset'
+import {
+  DamAssetType,
+  type DamAssetTypeType,
+  type DamDistributionServiceName,
+} from '@/types/coreDam/Asset'
 import type {
   DamConfigLicenceExtSystemReturnType,
   DamExtSystemConfig,
@@ -132,7 +136,12 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
 
   function loadDamConfigAssetCustomFormElements(
     extSystemId: IntegerId,
-    types: DamAssetTypeType[] = [DamAssetType.Image, DamAssetType.Audio, DamAssetType.Video, DamAssetType.Document]
+    types: DamAssetTypeType[] = [
+      DamAssetType.Image,
+      DamAssetType.Audio,
+      DamAssetType.Video,
+      DamAssetType.Document,
+    ],
   ) {
     return new Promise((resolve, reject) => {
       if (isUndefined(client)) {
@@ -143,7 +152,10 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
 
       Promise.all(promises)
         .then((responses) => {
-          if (responses.length !== types.length || responses.some((response) => Object.keys(response).length < 1)) {
+          if (
+            responses.length !== types.length ||
+            responses.some((response) => Object.keys(response).length < 1)
+          ) {
             throw new Error('Unable to load asset custom form config. Incorrect response body.')
           }
           setDamConfigAssetCustomFormElements(responses, extSystemId, types)
@@ -161,7 +173,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
       data: CustomDataFormElement[]
     }>[],
     extSystemId: IntegerId,
-    types: DamAssetTypeType[]
+    types: DamAssetTypeType[],
   ) {
     try {
       const existingConfig = damConfigStore.damConfigAssetCustomFormElements.get(extSystemId) || {
@@ -183,7 +195,9 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     }
   }
 
-  function loadDamConfigDistributionCustomFormElements(distributionServiceName: DamDistributionServiceName) {
+  function loadDamConfigDistributionCustomFormElements(
+    distributionServiceName: DamDistributionServiceName,
+  ) {
     return new Promise((resolve, reject) => {
       if (isUndefined(client)) {
         reject(false)
@@ -195,7 +209,10 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
       }
       fetchDistributionCustomFormElements(client, distributionServiceName)
         .then((res) => {
-          damConfigStore.damConfigDistributionCustomFormElements.set(distributionServiceName, res.data)
+          damConfigStore.damConfigDistributionCustomFormElements.set(
+            distributionServiceName,
+            res.data,
+          )
           resolve(true)
           return
         })
@@ -223,13 +240,13 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
   }
 
   async function getOrLoadDamConfigExtSystemByLicences(
-    licences: IntegerId[]
+    licences: IntegerId[],
   ): Promise<DamConfigLicenceExtSystemReturnType[]> {
     const promises = licences.map((licence) =>
       getOrLoadDamConfigExtSystemByLicence(licence).catch((error) => {
         console.error(`Error fetching licence ${licence}:`, error)
         return undefined
-      })
+      }),
     )
 
     const responses = await Promise.allSettled(promises)
@@ -237,13 +254,13 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     return responses
       .filter(
         (result): result is PromiseFulfilledResult<DamConfigLicenceExtSystemReturnType> =>
-          result.status === 'fulfilled' && !isUndefined(result.value)
+          result.status === 'fulfilled' && !isUndefined(result.value),
       )
       .map((result) => result.value)
   }
 
   async function getOrLoadDamConfigExtSystemByLicence(
-    licence: IntegerId
+    licence: IntegerId,
   ): Promise<DamConfigLicenceExtSystemReturnType | undefined> {
     if (isUndefined(client)) {
       console.warn('Client is undefined')

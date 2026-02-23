@@ -4,7 +4,9 @@ import type { AssetFileFailReasonType, AssetFileProcessStatusType } from '@/type
 import type { DamAssetTypeType, DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { DamDistributionStatusType } from '@/types/coreDam/DamConfig'
 
-export const damNotificationsEventBusKey: EventBusKey<DamNotification> = Symbol('anzu:damNotificationsEventBusKey')
+export const damNotificationsEventBusKey: EventBusKey<DamNotification> = Symbol(
+  'anzu:damNotificationsEventBusKey',
+)
 
 export function useDamNotificationsEventBus() {
   return useEventBus<DamNotification>(damNotificationsEventBusKey)
@@ -122,7 +124,10 @@ type DamNotificationDistributionAuthorized = DamNotificationEvent<
   }
 >
 
-type DamNotificationUserUpdated = DamNotificationEvent<typeof DamNotificationName.UserUpdated, undefined>
+type DamNotificationUserUpdated = DamNotificationEvent<
+  typeof DamNotificationName.UserUpdated,
+  undefined
+>
 
 type DamNotificationAssetFileCopied = DamNotificationEvent<
   typeof DamNotificationName.AssetFileCopied,

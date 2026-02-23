@@ -4,13 +4,15 @@ import type { MediaAware } from '@/types/MediaAware'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { cloneDeep, isNull } from '@/utils/common'
 
-export const isMediaAware = (item: MediaAware | ImageCreateUpdateAware | null): item is MediaAware => {
+export const isMediaAware = (
+  item: MediaAware | ImageCreateUpdateAware | null,
+): item is MediaAware => {
   if (isNull(item)) return false
   return 'damMedia' in item
 }
 
 export const isImageCreateUpdateAware = (
-  item: MediaAware | ImageCreateUpdateAware | null
+  item: MediaAware | ImageCreateUpdateAware | null,
 ): item is ImageCreateUpdateAware => {
   if (isNull(item)) return false
   return !('damMedia' in item) && 'texts' in item

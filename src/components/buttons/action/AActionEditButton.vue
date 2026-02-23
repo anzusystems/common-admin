@@ -27,7 +27,7 @@ const props = withDefaults(
     loading: false,
     size: 36,
     variant: 'primary',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'editRecord'): void

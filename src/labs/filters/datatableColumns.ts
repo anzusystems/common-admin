@@ -34,7 +34,7 @@ export function createDatatableColumnsConfig(
   columnsHidden: Ref<Array<string>>,
   system: string,
   subject: string,
-  moreOptions: Partial<DatatableColumnsConfigMoreOptions> = {}
+  moreOptions: Partial<DatatableColumnsConfigMoreOptions> = {},
 ) {
   const options = { ...DatatableColumnsConfigMoreOptionsDefault, ...moreOptions }
   const localI18n = options.customI18n ?? i18n
@@ -43,7 +43,10 @@ export function createDatatableColumnsConfig(
   let storeKey: undefined | string = undefined
   if (isString(options.storeColumnsLocalStorage)) {
     storeKey = options.storeColumnsLocalStorage
-  } else if (isBoolean(options.storeColumnsLocalStorage) && true === options.storeColumnsLocalStorage) {
+  } else if (
+    isBoolean(options.storeColumnsLocalStorage) &&
+    true === options.storeColumnsLocalStorage
+  ) {
     storeKey = 'table_' + system + '_' + subject
   }
 

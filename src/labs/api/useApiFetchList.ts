@@ -1,11 +1,20 @@
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiResponseCodeError,
+  isAnzuApiResponseCodeError,
+} from '@/model/error/AnzuApiResponseCodeError'
+import {
+  AnzuApiValidationError,
+  axiosErrorResponseHasValidationData,
+} from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { AxiosRequestConfig } from 'axios'
 import axios from 'axios'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import {
+  AnzuApiForbiddenError,
+  axiosErrorResponseIsForbidden,
+} from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
 import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
@@ -45,9 +54,10 @@ export type FetchListParams = {
 export const generateListQuery = (
   pagination: Ref<Pagination>,
   filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
+  filterConfig: FilterConfig<any>,
 ): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } =
+    useApiQueryBuilder()
   querySetLimit(pagination.value.rowsPerPage)
   querySetOffset(pagination.value.page, pagination.value.rowsPerPage)
   if (pagination.value.sortBy) {
@@ -68,7 +78,7 @@ export function useApiFetchList<R>(
   entity: string,
   urlTemplate?: string,
   urlParams?: UrlParams,
-  options?: AxiosRequestConfig
+  options?: AxiosRequestConfig,
 ): UseApiFetchListReturnType<R>
 
 /**
@@ -82,7 +92,7 @@ export function useApiFetchList<R>(
   entity?: string,
   urlTemplate?: string,
   urlParams?: UrlParams,
-  options?: AxiosRequestConfig
+  options?: AxiosRequestConfig,
 ): UseApiFetchListReturnType<R> {
   let resolvedClient: AxiosClientFn
   let resolvedSystem: string
@@ -115,7 +125,7 @@ export function useApiFetchList<R>(
     filterConfig: FilterConfig<any>,
     urlTemplateOverrideOrParams: string | FetchListParams | undefined = undefined,
     urlParamsOverride: UrlParams | undefined = undefined,
-    forceElastic = false
+    forceElastic = false,
   ): Promise<R> => {
     abortController = new AbortController()
 
@@ -135,8 +145,12 @@ export function useApiFetchList<R>(
 
     try {
       const searchApi = filterConfig.general.elastic || resolvedForceElastic ? '/search' : ''
-      const params = isDefined(resolvedUrlParamsOverride) ? resolvedUrlParamsOverride : resolvedUrlParams
-      const template = isDefined(resolvedUrlTemplateOverride) ? resolvedUrlTemplateOverride : resolvedUrlTemplate
+      const params = isDefined(resolvedUrlParamsOverride)
+        ? resolvedUrlParamsOverride
+        : resolvedUrlParams
+      const template = isDefined(resolvedUrlTemplateOverride)
+        ? resolvedUrlTemplateOverride
+        : resolvedUrlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
       const url =
         (isUndefined(params) ? template : replaceUrlParameters(template, params)) +
@@ -157,12 +171,14 @@ export function useApiFetchList<R>(
         if (isApiInfiniteResponseList(resData)) {
           pagination.value = {
             ...pagination.value,
-            ...{ hasNextPage: resData.hasNextPage, currentViewCount: res.data.data.length },
+            hasNextPage: resData.hasNextPage,
+            currentViewCount: res.data.data.length,
           }
         } else if (isApiResponseList(resData)) {
           pagination.value = {
             ...pagination.value,
-            ...{ totalCount: resData.totalCount, currentViewCount: res.data.data.length },
+            totalCount: resData.totalCount,
+            currentViewCount: res.data.data.length,
           }
         }
         return resData.data
@@ -237,13 +253,13 @@ interface ExecuteFetchListFn<R> {
     filterConfig: FilterConfig<any>,
     urlTemplateOverride?: string | undefined,
     urlParamsOverride?: UrlParams | undefined,
-    forceElastic?: boolean
+    forceElastic?: boolean,
   ): Promise<R>
   (
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    params?: FetchListParams
+    params?: FetchListParams,
   ): Promise<R>
 }
 

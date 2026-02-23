@@ -13,7 +13,7 @@ withDefaults(
   }>(),
   {
     dataCy: 'navbar-user',
-  }
+  },
 )
 
 const { t } = useI18n()

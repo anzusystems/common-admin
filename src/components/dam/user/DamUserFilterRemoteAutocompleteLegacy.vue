@@ -12,7 +12,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
-  }
+  },
 )
 
 const modelValue = defineModel<Filter>({ required: true })

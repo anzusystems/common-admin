@@ -9,7 +9,11 @@ import ImageWidgetMultipleItem from '@/components/damImage/uploadQueue/component
 import { storeToRefs } from 'pinia'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
-import { type AssetSearchListItemDto, DamAssetType, type DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
+import {
+  type AssetSearchListItemDto,
+  DamAssetType,
+  type DamImageCopyToLicenceResponse,
+} from '@/types/coreDam/Asset'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
@@ -30,7 +34,13 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageStoreItem } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
-import { CHOSEN_CLASS, DRAG_CLASS, GHOST_CLASS, GROUP_CLASS, HANDLE_CLASS } from '@/components/sortable/sortableActions'
+import {
+  CHOSEN_CLASS,
+  DRAG_CLASS,
+  GHOST_CLASS,
+  GROUP_CLASS,
+  HANDLE_CLASS,
+} from '@/components/sortable/sortableActions'
 import { useSortable, type UseSortableReturn } from '@vueuse/integrations/useSortable'
 import type { SortableEvent } from 'sortablejs'
 import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
@@ -76,7 +86,7 @@ const props = withDefaults(
     widgetIdentifierId: undefined,
     callDeleteApiOnRemove: false,
     skipCurrentUserCheck: false,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -85,13 +95,14 @@ const emit = defineEmits<{
 
 const assetSelectDialog = ref(false)
 
-const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
-  ImageWidgetUploadConfig,
-  undefined
-)
+const imageWidgetUploadConfig = inject<
+  ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined
+>(ImageWidgetUploadConfig, undefined)
 
 if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.value)) {
-  throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
+  throw new Error(
+    "Fatal error, parent component doesn't provide necessary config ext system config.",
+  )
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -102,7 +113,7 @@ const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   DamAssetType.Image,
-  imageWidgetUploadConfig.value.extSystemConfig
+  imageWidgetUploadConfig.value.extSystemConfig,
 )
 
 const { t } = useI18n()
@@ -119,7 +130,7 @@ const fetchImagesOnLoad = async () => {
   try {
     imagesLoading.value = true
     const imagesRes = (await imageApi.fetchImageListByIds(imageClient, props.modelValue)).sort(
-      (a, b) => (a.position ?? 0) - (b.position ?? 0)
+      (a, b) => (a.position ?? 0) - (b.position ?? 0),
     )
     const groupedIds: IdsGroupedByLicences = new Map()
     imagesRes.forEach((image) => {
@@ -131,7 +142,11 @@ const fetchImagesOnLoad = async () => {
       }
     })
 
-    const assetsRes = await fetchAssetListByFileIdsMultipleLicences(damClient, endPointAsset, groupedIds)
+    const assetsRes = await fetchAssetListByFileIdsMultipleLicences(
+      damClient,
+      endPointAsset,
+      groupedIds,
+    )
 
     imageStore.setImages(
       imagesRes.map((imageRes) => {
@@ -141,15 +156,16 @@ const fetchImagesOnLoad = async () => {
         return {
           key: generateUUIDv1(),
           ...imageRes,
-          ...{
-            damAuthors: found ? found.authors : [],
-            showDamAuthors: found ? found.authors.length === 0 : false,
-            assetId: found ? found.id : undefined,
-          },
+          damAuthors: found ? found.authors : [],
+          showDamAuthors: found ? found.authors.length === 0 : false,
+          assetId: found ? found.id : undefined,
         }
-      })
+      }),
     )
-    emit('update:modelValue', images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[])
+    emit(
+      'update:modelValue',
+      images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[],
+    )
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -190,10 +206,18 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   cachedExtSystemId.value = config.extSystem
   data.forEach((item) => {
     if (item.result === 'copy') {
-      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
+      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [
+        item.targetAsset,
+      ])
     } else if (item.result === 'exists') {
-      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
-      uploadQueuesStore.queueItemDuplicate(item.targetAsset, item.targetMainFile, DamAssetType.Image)
+      uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [
+        item.targetAsset,
+      ])
+      uploadQueuesStore.queueItemDuplicate(
+        item.targetAsset,
+        item.targetMainFile,
+        DamAssetType.Image,
+      )
     } else {
       showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
       return
@@ -206,14 +230,21 @@ const afterLimitDialogAdd = () => {
   uploadQueueDialog.value = props.queueKey
 }
 
-const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<ImageStoreItem[]> => {
+const assetSelectConfirmMap = async (
+  items: AssetSearchListItemDto[],
+): Promise<ImageStoreItem[]> => {
   const assetSelectStore = useAssetSelectStore()
   const ids = items.map((item) => item.id)
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
   const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
   try {
-    const assetDetails = await fetchAssetListByIds(damClient, endPointAsset, ids, assetSelectStore.selectedLicenceId)
+    const assetDetails = await fetchAssetListByIds(
+      damClient,
+      endPointAsset,
+      ids,
+      assetSelectStore.selectedLicenceId,
+    )
     if (customAssetSelectMetadataToImageMap) {
       assetDetails.forEach((assetDetail) => {
         const mapped = customAssetSelectMetadataToImageMap(assetDetail)
@@ -238,9 +269,11 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
         })
       })
       if (authorIdsToFetch.size > 0) {
-        const authorsRes = await fetchAuthorListByIds(damClient, assetSelectStore.selectedSelectConfig.extSystem, [
-          ...authorIdsToFetch,
-        ])
+        const authorsRes = await fetchAuthorListByIds(
+          damClient,
+          assetSelectStore.selectedSelectConfig.extSystem,
+          [...authorIdsToFetch],
+        )
         authorsRes.forEach((author) => {
           authorsMap.set(author.id, author.name)
         })
@@ -316,7 +349,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         endPointAsset,
         data.value
           .filter((asset) => !isNull(asset.mainFile))
-          .map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! }))
+          .map((asset) => ({ asset: asset.id, targetAssetLicence: data.copyToLicence! })),
       )
       onCopyToLicence(copyRes)
     } catch (e) {
@@ -330,8 +363,13 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
-const { damClient, endPointAsset, showSourceEnabled, sourceLabel, customAssetSelectMetadataToImageMap } =
-  useCommonAdminCoreDamOptions()
+const {
+  damClient,
+  endPointAsset,
+  showSourceEnabled,
+  sourceLabel,
+  customAssetSelectMetadataToImageMap,
+} = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
@@ -359,7 +397,7 @@ const onAssetUploadConfirm = (items: ImageStoreItem[]) => {
         ...item,
         position: maxPosition.value,
       }
-    })
+    }),
   )
   uploadQueueDialog.value = null
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -391,7 +429,11 @@ const saveImages = async () => {
         assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
       }
       if (authorEnabled.value && image.showDamAuthors && image.damAuthors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, image.damAuthors)
+        const authorsRes = await fetchAuthorListByIds(
+          damClient,
+          cachedExtSystemId.value,
+          image.damAuthors,
+        )
         image.texts.source = authorsRes.map((author) => author.name).join(', ')
       }
     }
@@ -414,12 +456,16 @@ const saveImages = async () => {
     if (imageStore.images.length === 0) return true
 
     const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
-      const matchedImage = imageStore.images.find((storeItem) => storeItem.dam.damId === item.dam.damId)
+      const matchedImage = imageStore.images.find(
+        (storeItem) => storeItem.dam.damId === item.dam.damId,
+      )
 
       return {
         ...item,
         damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
-        showDamAuthors: matchedImage ? matchedImage.damAuthors.length === 0 : item.damAuthors.length === 0,
+        showDamAuthors: matchedImage
+          ? matchedImage.damAuthors.length === 0
+          : item.damAuthors.length === 0,
         assetId: item.assetId,
       }
     }
@@ -459,7 +505,9 @@ const forceRerender = ref(0)
 const limitDialogComponent = ref<InstanceType<typeof ImageWidgetMultipleLimitDialog> | null>(null)
 
 const widgetHtmlId = computed(() => {
-  return isUndefined(props.widgetIdentifierId) ? WIDGET_HTML_ID_PREFIX + randomUuid.value : props.widgetIdentifierId
+  return isUndefined(props.widgetIdentifierId)
+    ? WIDGET_HTML_ID_PREFIX + randomUuid.value
+    : props.widgetIdentifierId
 })
 
 const forceRerenderWidgetHtml = () => {

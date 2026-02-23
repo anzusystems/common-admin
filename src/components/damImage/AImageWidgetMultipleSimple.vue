@@ -29,7 +29,7 @@ const props = withDefaults(
     aspectRatio: 1.777, // 16/9
     showDescription: false,
     showSource: false,
-  }
+  },
 )
 
 const { images, modelValue } = toRefs(props)
@@ -53,14 +53,14 @@ watch(
     if (newImageIds && newImageIds.length > 0) {
       try {
         resImages.value = (await imageApi.fetchImageListByIds(imageClient, newImageIds)).sort(
-          (a, b) => (a.position ?? 0) - (b.position ?? 0)
+          (a, b) => (a.position ?? 0) - (b.position ?? 0),
         )
       } catch (error) {
         showErrorsDefault(error)
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

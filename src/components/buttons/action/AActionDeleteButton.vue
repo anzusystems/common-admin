@@ -38,7 +38,7 @@ const props = withDefaults(
     disableCloseAfterConfirm: false,
     color: undefined,
     size: 36,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'deleteRecord'): void

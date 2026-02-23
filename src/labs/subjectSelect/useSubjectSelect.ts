@@ -1,4 +1,7 @@
-import { type DatatableOrderingOption, type DatatableSortBy } from '@/composables/system/datatableColumns'
+import {
+  type DatatableOrderingOption,
+  type DatatableSortBy,
+} from '@/composables/system/datatableColumns'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 import { useAlerts } from '@/composables/system/alerts'
@@ -20,7 +23,7 @@ export function useSubjectSelect<TItem>(
     filterConfig: FilterConfig<any>,
     urlTemplateOverride?: string | undefined,
     urlParamsOverride?: UrlParams | undefined,
-    forceElastic?: boolean
+    forceElastic?: boolean,
   ) => Promise<TItem[]>,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>,
@@ -28,7 +31,7 @@ export function useSubjectSelect<TItem>(
   urlTemplateOverride: string | undefined = undefined,
   urlParamsOverride: UrlParams | undefined = undefined,
   forceElastic: boolean = false,
-  enableActions: boolean = false
+  enableActions: boolean = false,
 ) {
   const filterTouched: Ref<boolean> = ref(false)
   const items: Ref<Array<TItem>> = ref([])
@@ -36,7 +39,7 @@ export function useSubjectSelect<TItem>(
   const loading = ref(false)
   const { pagination, setSortBy, incrementPage } = usePagination(
     isNull(filterSortBy) ? null : filterSortBy.key,
-    filterSortBy?.order
+    filterSortBy?.order,
   )
 
   const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, {
@@ -50,7 +53,7 @@ export function useSubjectSelect<TItem>(
     datatableHiddenColumns,
     system,
     subject,
-    { storeColumnsLocalStorage: false, disableActions: !enableActions }
+    { storeColumnsLocalStorage: false, disableActions: !enableActions },
   )
 
   const onOpen = () => {
@@ -73,7 +76,7 @@ export function useSubjectSelect<TItem>(
         filterConfig,
         urlTemplateOverride,
         urlParamsOverride,
-        forceElastic
+        forceElastic,
       )) as TItem[]
       items.value.push(...res)
     } catch (e) {
@@ -97,7 +100,7 @@ export function useSubjectSelect<TItem>(
         filterConfig,
         urlTemplateOverride,
         urlParamsOverride,
-        forceElastic
+        forceElastic,
       )) as TItem[]
     } catch (e) {
       showErrorsDefault(e)
@@ -112,7 +115,10 @@ export function useSubjectSelect<TItem>(
 
   const onRowClick = (event: Event) => {
     const eventTarget = event.target as HTMLElement | null
-    if (!eventTarget || (eventTarget.tagName === 'INPUT' && (eventTarget as HTMLInputElement).type === 'checkbox')) {
+    if (
+      !eventTarget ||
+      (eventTarget.tagName === 'INPUT' && (eventTarget as HTMLInputElement).type === 'checkbox')
+    ) {
       return
     }
     const parent = eventTarget.closest('.v-data-table__tr')

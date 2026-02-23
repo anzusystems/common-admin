@@ -29,7 +29,7 @@ const props = withDefaults(
     hideTextSearch: false,
     enabledFilters: undefined,
     configName: 'default',
-  }
+  },
 )
 
 const { filterData, filterConfig } = useAssetSelectActions()

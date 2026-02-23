@@ -1,5 +1,9 @@
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import {
+  createFilter,
+  createFilterStore,
+  type MakeFilterOption,
+} from '@/labs/filters/filterFactory'
 import { ENTITY } from '@/components/damImage/uploadQueue/api/keywordApi'
 import { reactive } from 'vue'
 // eslint-disable-next-line deprecation/no-deprecated-imports
@@ -10,11 +14,15 @@ export function useAuthorInnerFilter() {
     { name: 'text' as const, variant: 'search', default: null, type: 'string' },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
-    elastic: true,
-    system: SYSTEM_CORE_DAM,
-    subject: ENTITY,
-  })
+  const { filterConfig, filterData } = createFilter(
+    filterFieldsInner,
+    createFilterStore(filterFieldsInner),
+    {
+      elastic: true,
+      system: SYSTEM_CORE_DAM,
+      subject: ENTITY,
+    },
+  )
 
   return {
     filterConfig,

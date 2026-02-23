@@ -98,7 +98,10 @@ import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
 import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
 import type { ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
-import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import {
+  cropToRegion,
+  regionToCrop,
+} from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ADatatable from '@/components/datatable/ADatatable.vue'
 import ABooleanSelect from '@/components/ABooleanSelect.vue'
 import ACachedUserChip from '@/components/ACachedUserChip.vue'
@@ -172,7 +175,12 @@ import {
   yearNow,
 } from '@/utils/datetime'
 import { Grant, GrantDefault, type GrantType, useGrant } from '@/model/valueObject/Grant'
-import { GrantOrigin, GrantOriginDefault, type GrantOriginType, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
+import {
+  GrantOrigin,
+  GrantOriginDefault,
+  type GrantOriginType,
+  useGrantOrigin,
+} from '@/model/valueObject/GrantOrigin'
 import { useAnzuUserFactory } from '@/model/factory/AnzuUserFactory'
 import { useBaseUserFactory } from '@/model/factory/BaseUserFactory'
 import { usePermissionConfigFactory } from '@/model/factory/PermissionConfigFactory'
@@ -198,7 +206,11 @@ import type { PermissionGroup, PermissionGroupMinimal } from '@/types/Permission
 import { type CreatedByAware, isCreatedByAware } from '@/types/CreatedByAware'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import { usePagination, usePaginationAutoHide } from '@/composables/system/pagination'
-import { makeFilterHelper, type MakeFilterOptions, useFilterHelpers } from '@/composables/filter/filterHelpers'
+import {
+  makeFilterHelper,
+  type MakeFilterOptions,
+  useFilterHelpers,
+} from '@/composables/filter/filterHelpers'
 import {
   AvailableLanguagesSymbol,
   DefaultLanguageSymbol,
@@ -217,7 +229,10 @@ import {
   HTTP_STATUS_UNAUTHORIZED,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
 } from '@/composables/statusCodes'
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import {
+  AnzuApiResponseCodeError,
+  isAnzuApiResponseCodeError,
+} from '@/model/error/AnzuApiResponseCodeError'
 import {
   AnzuApiValidationError,
   type AnzuApiValidationResponseData,
@@ -243,7 +258,12 @@ import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { NEW_LINE_MARK, type RecordWasType, useAlerts } from '@/composables/system/alerts'
 import { useErrors } from '@/composables/system/error'
-import { JobStatus, JobStatusDefault, type JobStatusType, useJobStatus } from '@/model/valueObject/JobStatus'
+import {
+  JobStatus,
+  JobStatusDefault,
+  type JobStatusType,
+  useJobStatus,
+} from '@/model/valueObject/JobStatus'
 import type { JobBase, JobUserDataDelete } from '@/types/Job'
 import { useJobApi } from '@/services/api/job/jobApi'
 import {
@@ -251,10 +271,17 @@ import {
   type JobBaseResource,
   useJobBaseResource,
 } from '@/model/valueObject/JobBaseResource'
-import AnzuSystemsCommonAdmin, { type CurrentUserType, type PluginOptions } from '@/AnzuSystemsCommonAdmin'
+import AnzuSystemsCommonAdmin, {
+  type CurrentUserType,
+  type PluginOptions,
+} from '@/AnzuSystemsCommonAdmin'
 import type { AclValue, Permissions } from '@/types/Permission'
 import { Theme, useTheme } from '@/composables/themeSettings'
-import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
+import {
+  type LanguageCode,
+  modifyLanguageSettings,
+  useLanguageSettings,
+} from '@/composables/languageSettings'
 import {
   arrayFlatten,
   arrayFromArgs,
@@ -272,7 +299,12 @@ import messagesCs from '@/locales/cs'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
 import type { Log } from '@/types/Log'
-import { LogLevel, LogLevelDefault, type LogLevelType, useLogLevel } from '@/model/valueObject/LogLevel'
+import {
+  LogLevel,
+  LogLevelDefault,
+  type LogLevelType,
+  useLogLevel,
+} from '@/model/valueObject/LogLevel'
 import '@/styles/main.scss'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { useValidate } from '@/validators/vuelidate/useValidate'
@@ -366,8 +398,14 @@ import type {
 } from '@/components/customDataForm/CustomDataForm'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
-import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
-import type { SortableItemDataAware, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
+import type {
+  SortableNested,
+  SortableNestedItem,
+} from '@/components/sortable/sortableNestedActions'
+import type {
+  SortableItemDataAware,
+  SortableItemWithParentDataAware,
+} from '@/components/sortable/sortableUtils'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import {
   type DamDistributionConfig,
@@ -408,10 +446,23 @@ import {
   DamNotificationName,
   type DamNotificationNameType,
 } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
-import type { ImageAware, ImageCreateUpdateAware, ImageCreateUpdateAwareKeyed } from '@/types/ImageAware'
-import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
-import type { DamExtSystem, DamExtSystemMinimal } from '@/components/damImage/uploadQueue/composables/DamExtSystem'
+import type {
+  ImageAware,
+  ImageCreateUpdateAware,
+  ImageCreateUpdateAwareKeyed,
+} from '@/types/ImageAware'
+import type {
+  DamAuthor,
+  DamAuthorMinimal,
+} from '@/components/damImage/uploadQueue/author/DamAuthor'
+import type {
+  DamKeyword,
+  DamKeywordMinimal,
+} from '@/components/damImage/uploadQueue/keyword/DamKeyword'
+import type {
+  DamExtSystem,
+  DamExtSystemMinimal,
+} from '@/components/damImage/uploadQueue/composables/DamExtSystem'
 import {
   DamAuthorType,
   DamAuthorTypeDefault,
@@ -522,7 +573,10 @@ import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRe
 import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
 import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
-import { useDamAssetLicenceInnerFilter, useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
+import {
+  useDamAssetLicenceInnerFilter,
+  useDamAssetLicenceFilter,
+} from '@/components/dam/user/AssetLicenceFilter'
 import {
   fetchDamAssetLicenceListByIds,
   useFetchDamAssetLicenceList,
@@ -549,7 +603,11 @@ import {
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
-import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/composables/system/breadcrumbs'
+import {
+  type BreadcrumbItem,
+  type Breadcrumbs,
+  defineBreadcrumbs,
+} from '@/composables/system/breadcrumbs'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamAuthorFilterRemoteAutocompleteLegacy from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocompleteLegacy.vue'

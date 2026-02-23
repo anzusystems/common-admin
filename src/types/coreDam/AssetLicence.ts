@@ -7,7 +7,8 @@ export interface DamAssetLicenceMinimal {
   name: string
 }
 
-export interface DamAssetLicence extends DamAssetLicenceMinimal, AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
+export interface DamAssetLicence
+  extends DamAssetLicenceMinimal, AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   extSystem: IntegerIdNullable
   extId: string
 }

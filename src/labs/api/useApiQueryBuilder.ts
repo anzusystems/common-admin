@@ -1,10 +1,24 @@
 import { ref } from 'vue'
 import { isArray, isBoolean, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import type { FilterVariant } from '@/types/Filter'
-import type { AllowedFilterValues, FilterConfig, FilterData, FilterField } from '@/labs/filters/filterFactory'
+import type {
+  AllowedFilterValues,
+  FilterConfig,
+  FilterData,
+  FilterField,
+} from '@/labs/filters/filterFactory'
 import type { DatetimeUTCNullable } from '@/types/common'
-import { TimeIntervalSpecialOptions, type TimeIntervalToolsValue } from '@/labs/filters/filterTimeIntervalTools'
-import { dateModifyMinutes, dateTimeNow, dateTimeToDate, dateToUtc, getMonthInterval } from '@/utils/datetime'
+import {
+  TimeIntervalSpecialOptions,
+  type TimeIntervalToolsValue,
+} from '@/labs/filters/filterTimeIntervalTools'
+import {
+  dateModifyMinutes,
+  dateTimeNow,
+  dateTimeToDate,
+  dateToUtc,
+  getMonthInterval,
+} from '@/utils/datetime'
 import { SortOrder } from '@/composables/system/datatableColumns'
 
 /**
@@ -22,7 +36,8 @@ export function useApiQueryBuilder() {
   }
 
   const querySetOrder = (field: string | null, desc: boolean): void => {
-    if (!isNull(field) && field.length > 0) queryAdd('order[' + field + ']', desc ? SortOrder.Desc : SortOrder.Asc)
+    if (!isNull(field) && field.length > 0)
+      queryAdd('order[' + field + ']', desc ? SortOrder.Desc : SortOrder.Asc)
   }
 
   const formatValue = (value: string | number | boolean): string | number => {
@@ -32,7 +47,11 @@ export function useApiQueryBuilder() {
     return value
   }
 
-  const queryAddFilter = (filterVariant: FilterVariant, field: string, value: string | number | boolean): void => {
+  const queryAddFilter = (
+    filterVariant: FilterVariant,
+    field: string,
+    value: string | number | boolean,
+  ): void => {
     if (isString(value) && value.length === 0) return
     q.value.push('filter_' + filterVariant + '[' + field + ']=' + formatValue(value))
   }
@@ -43,7 +62,7 @@ export function useApiQueryBuilder() {
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
     mandatory: boolean,
-    exclude: boolean
+    exclude: boolean,
   ): null | {
     from: DatetimeUTCNullable
     until: DatetimeUTCNullable
@@ -86,7 +105,10 @@ export function useApiQueryBuilder() {
     return null
   }
 
-  const getValue = (value: AllowedFilterValues, config: FilterField): string | number | boolean | null => {
+  const getValue = (
+    value: AllowedFilterValues,
+    config: FilterField,
+  ): string | number | boolean | null => {
     if (isNull(value)) {
       if (config.mandatory && !config.exclude && !isUndefined(config.default)) {
         return isArray(config.default) ? config.default.join(',') : config.default
@@ -95,8 +117,15 @@ export function useApiQueryBuilder() {
     }
     if (isString(value)) {
       if (value.length === 0) {
-        if (config.mandatory && !config.exclude && !isUndefined(config.default) && !isNull(config.default)) {
-          return encodeURIComponent(isArray(config.default) ? config.default.join(',') : config.default)
+        if (
+          config.mandatory &&
+          !config.exclude &&
+          !isUndefined(config.default) &&
+          !isNull(config.default)
+        ) {
+          return encodeURIComponent(
+            isArray(config.default) ? config.default.join(',') : config.default,
+          )
         }
         return null
       }
@@ -105,7 +134,9 @@ export function useApiQueryBuilder() {
     if (isArray(value)) {
       if (value.length === 0) {
         if (config.mandatory && !config.exclude && isArray(config.default)) {
-          return config.default.map((item) => (isString(item) ? encodeURIComponent(item) : item)).join(',')
+          return config.default
+            .map((item) => (isString(item) ? encodeURIComponent(item) : item))
+            .join(',')
         }
         return null
       }
@@ -142,7 +173,7 @@ export function useApiQueryBuilder() {
           filterData,
           filterConfig,
           filterFieldConfig.mandatory,
-          filterFieldConfig.exclude
+          filterFieldConfig.exclude,
         )
         if (isNull(data)) {
           continue

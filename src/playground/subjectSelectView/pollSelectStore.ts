@@ -1,10 +1,20 @@
 import { ref } from 'vue'
-import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import {
+  createFilter,
+  createFilterStore,
+  type MakeFilterOption,
+} from '@/labs/filters/filterFactory'
 
 const datatableHiddenColumns = ref([])
 
 export const filterFields = [
-  { name: 'title' as const, apiName: 'texts.title', default: [], variant: 'startsWith', type: 'string' },
+  {
+    name: 'title' as const,
+    apiName: 'texts.title',
+    default: [],
+    variant: 'startsWith',
+    type: 'string',
+  },
   { name: 'id' as const, default: null, render: { skip: true } },
   {
     name: 'displayType' as const,

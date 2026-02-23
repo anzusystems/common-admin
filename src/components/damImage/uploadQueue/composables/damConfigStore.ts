@@ -46,10 +46,10 @@ export const useDamConfigStore = defineStore('commonAdminDamConfigStore', () => 
   const damConfigExtSystem = shallowRef(new Map<IntegerId, DamExtSystemConfig>())
   const damConfigLicenceExtSystem = shallowRef(new Map<IntegerId, DamConfigLicenceExtSystem>())
   const damConfigAssetCustomFormElements = shallowRef(
-    new Map<IntegerId, { [key in DamAssetTypeType]: CustomDataFormElement[] }>()
+    new Map<IntegerId, { [key in DamAssetTypeType]: CustomDataFormElement[] }>(),
   )
   const damConfigDistributionCustomFormElements = shallowRef(
-    new Map<DamDistributionServiceName, CustomDataFormElement[]>()
+    new Map<DamDistributionServiceName, CustomDataFormElement[]>(),
   )
 
   function reset() {

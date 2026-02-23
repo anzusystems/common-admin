@@ -39,7 +39,7 @@ export default {
     })
   },
   // @ts-ignore
-  enhanceApp({ app, router, siteData }) {
+  enhanceApp({ app, _router, _siteData }) {
     // ...
     app.use(i18n)
     app.use(vuetify)

@@ -10,7 +10,7 @@ export function useDamExternalProviderAssetType() {
         value: providerName,
         title: value.title,
       }
-    }
+    },
   )
 
   const allExternalProviderAssetTypeOptions = ref<ValueObjectOption<string>[]>(all)

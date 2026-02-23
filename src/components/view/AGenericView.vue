@@ -15,7 +15,7 @@ withDefaults(
     icon: undefined,
     iconSize: undefined,
     returnRouteName: undefined,
-  }
+  },
 )
 </script>
 

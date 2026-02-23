@@ -17,7 +17,7 @@ withDefaults(
     dataCy: 'button-save-close',
     loading: undefined,
     disabled: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'saveRecordAndClose'): void

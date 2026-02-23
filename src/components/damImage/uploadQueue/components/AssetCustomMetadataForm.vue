@@ -18,7 +18,7 @@ const props = withDefaults(
   {
     dataCy: undefined,
     readonly: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void

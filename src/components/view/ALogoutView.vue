@@ -7,7 +7,7 @@ const props = withDefaults(
   }>(),
   {
     logoutUrl: undefined,
-  }
+  },
 )
 
 onMounted(() => {

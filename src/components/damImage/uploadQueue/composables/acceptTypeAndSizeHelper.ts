@@ -4,7 +4,7 @@ import type { DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 
 export function useDamAcceptTypeAndSizeHelper(
   assetType: undefined | DamAssetTypeType = undefined,
-  damConfigExtSystem: DamExtSystemConfig
+  damConfigExtSystem: DamExtSystemConfig,
 ) {
   const createSizesByAssetType = (assetType: DamAssetTypeType) => {
     const config = damConfigExtSystem[assetType]
