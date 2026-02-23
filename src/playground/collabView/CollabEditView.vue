@@ -103,7 +103,7 @@ onBeforeUnmount(() => {
         :cached-users="cachedUsers"
         is-edit
       />
-      <h2 class="text-h6 mt-5 mb-3">
+      <h2 class="text-headline-small mt-5 mb-3">
         Playground
       </h2>
       <div>
@@ -161,15 +161,15 @@ onBeforeUnmount(() => {
             />
           </VCol>
         </VRow>
-        <h2 class="text-h6 mb-2">
+        <h2 class="text-headline-small mb-2">
           Room Info
         </h2>
         <pre>{{ collabRoomInfo }}</pre>
-        <h2 class="text-h6 mt-5 mb-2">
+        <h2 class="text-headline-small mt-5 mb-2">
           Room Locks
         </h2>
         <pre>{{ collabRoomLocks }}</pre>
-        <h2 class="text-h6 mt-5 mb-2">
+        <h2 class="text-headline-small mt-5 mb-2">
           Room Data buffer
         </h2>
         <pre>{{ collabFieldDataBufferState }}</pre>

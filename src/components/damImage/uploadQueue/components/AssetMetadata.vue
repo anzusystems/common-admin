@@ -186,7 +186,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
       value="file"
     >
       <VExpansionPanelText
-        class="text-caption"
+        class="text-body-small"
         style="overflow-wrap: normal"
       >
         <!-- all types -->

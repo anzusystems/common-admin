@@ -246,8 +246,8 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
 
   <VCard>
     <VCardText>
-      <h2 class="text-h5 mt-5 mb-2">
-        ASortableNested <span class="text-caption">dirty: {{ itemsNested.meta.dirty }}</span>
+      <h2 class="text-headline-medium mt-5 mb-2">
+        ASortableNested <span class="text-body-small">dirty: {{ itemsNested.meta.dirty }}</span>
       </h2>
       <ASortableNested
         ref="nestedComponent"
@@ -264,7 +264,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         @on-end="onSortableNestedEnd"
       >
         <template #item="{ item }: { item: SortableNestedItem<NestedDemoData> }">
-          <div class="text-caption text-medium-emphasis">
+          <div class="text-body-small text-medium-emphasis">
             id: {{ item.data.id }} / pos: {{ item.data.position }} / dirty: {{ item.meta.dirty }}
           </div>
           <VTextField
@@ -296,7 +296,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         </VBtn>
       </div>
       <pre class="my-5">{{ itemsNested }}</pre>
-      <h2 class="text-h5 mt-5 mb-2">
+      <h2 class="text-headline-medium mt-5 mb-2">
         ASortable simple example without updating position
       </h2>
       <ASortable
@@ -309,7 +309,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
           {{ item.raw.id }} {{ item.raw.text }}
         </template>
       </ASortable>
-      <h2 class="text-h5 mt-5 mb-2">
+      <h2 class="text-headline-medium mt-5 mb-2">
         ASortable as chips
       </h2>
       <ASortable
@@ -326,7 +326,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         </template>
       </ASortable>
 
-      <h2 class="text-h5 mt-5 mb-2">
+      <h2 class="text-headline-medium mt-5 mb-2">
         ASortable disabled dragging
       </h2>
       <ASortable
@@ -338,7 +338,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         </template>
       </ASortable>
 
-      <h2 class="text-h5 mt-5 mb-2">
+      <h2 class="text-headline-medium mt-5 mb-2">
         ASortable items without id
       </h2>
       <ASortable v-model="itemsWithoutId">
@@ -348,7 +348,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
       </ASortable>
       <pre>{{ itemsWithoutId }}</pre>
 
-      <h2 class="text-h5 mt-5 mb-2">
+      <h2 class="text-headline-medium mt-5 mb-2">
         ASortable with changing of position field and dirty and all buttons
       </h2>
       <ASortable

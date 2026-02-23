@@ -101,7 +101,7 @@ onMounted(async () => {
     <div class="v-expansion-panel-title px-0">
       {{ t('common.damImage.asset.detail.roi.title') }}
     </div>
-    <div class="text-caption">
+    <div class="text-body-small">
       {{ t('common.damImage.asset.detail.roi.description') }}
     </div>
   </div>
@@ -123,7 +123,7 @@ onMounted(async () => {
       :key="item.url"
       class="pb-2"
     >
-      <div class="text-subtitle-2">
+      <div class="text-label-large">
         {{ item.title }}
       </div>
       <img

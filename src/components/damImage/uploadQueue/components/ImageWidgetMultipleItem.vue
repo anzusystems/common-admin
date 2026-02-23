@@ -77,7 +77,7 @@ const removeItem = () => {
           :model-value="image.id"
           :image="image"
         />
-        <VRow dense>
+        <VRow density="compact">
           <VCol class="d-flex justify-space-between mt-1">
             <VBtn
               variant="text"
@@ -95,7 +95,7 @@ const removeItem = () => {
             />
           </VCol>
         </VRow>
-        <VRow dense>
+        <VRow density="compact">
           <VCol>
             <AFormTextarea
               v-model="image.texts.description"

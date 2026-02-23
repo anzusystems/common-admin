@@ -134,7 +134,7 @@ const assetMainFile = computed(() => {
           :height="64"
           class="system-border-b pr-1"
         >
-          <div class="text-subtitle-2 d-flex px-2">
+          <div class="text-label-large d-flex px-2">
             <div>DAM: {{ toolbarTitle }}</div>
           </div>
           <VSpacer />

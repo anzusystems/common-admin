@@ -26,7 +26,7 @@ const { t } = useI18n()
 <template>
   <div
     v-if="assetMainFileStatus && assetMainFileStatus === AssetFileProcessStatus.Duplicate"
-    class="w-100 pa-2 text-caption"
+    class="w-100 pa-2 text-body-small"
   >
     <VAlert
       dark
@@ -37,7 +37,7 @@ const { t } = useI18n()
   </div>
   <div
     v-if="assetMainFileStatus && assetMainFileStatus === AssetFileProcessStatus.Failed"
-    class="w-100 pa-2 text-caption"
+    class="w-100 pa-2 text-body-small"
   >
     <VAlert
       dark
@@ -52,7 +52,7 @@ const { t } = useI18n()
   </div>
   <div
     v-else-if="assetStatus === DamAssetStatus.Deleting"
-    class="w-100 pa-2 text-caption"
+    class="w-100 pa-2 text-body-small"
   >
     <VAlert
       dark
@@ -63,7 +63,7 @@ const { t } = useI18n()
   </div>
   <div
     v-else-if="assetStatus === DamAssetStatus.Draft"
-    class="w-100 pa-2 text-caption"
+    class="w-100 pa-2 text-body-small"
   >
     <VAlert
       dark

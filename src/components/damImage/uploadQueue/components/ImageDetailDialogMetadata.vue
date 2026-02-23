@@ -278,7 +278,7 @@ defineExpose({
           class="position-relative"
         >
           <div class="my-4">
-            <h4 class="font-weight-bold text-subtitle-2">
+            <h4 class="font-weight-bold text-label-large">
               {{ t('common.damImage.media.meta.preview') }}:
             </h4>
             <slot
@@ -298,7 +298,7 @@ defineExpose({
           </VRow>
           <div
             v-if="!detail.damMedia.playable"
-            class="my-2 text-warning text-caption"
+            class="my-2 text-warning text-body-small"
           >
             <VIcon
               icon="mdi-movie-off-outline"

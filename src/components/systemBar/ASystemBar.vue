@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
     elevation="0"
     :order="-1"
   >
-    <div class="text-center w-100 text-caption pb-1">
+    <div class="text-center w-100 text-body-small pb-1">
       <component :is="systemBarComponent" />
     </div>
   </VAppBar>

@@ -99,7 +99,7 @@ watch(
     v-if="label"
     class="label-container"
   >
-    <h4 class="font-weight-bold text-subtitle-2">
+    <h4 class="font-weight-bold text-label-large">
       {{ label }}
     </h4>
   </div>
@@ -147,7 +147,7 @@ watch(
       dense
     >
       <VCol>
-        <span class="text-caption text-medium-emphasis">
+        <span class="text-body-small text-medium-emphasis">
           {{ t('common.damImage.image.model.texts.description') }}:
         </span>
         <br>{{ resImage.texts.description }}
@@ -158,7 +158,7 @@ watch(
       dense
     >
       <VCol>
-        <span class="text-caption text-medium-emphasis">
+        <span class="text-body-small text-medium-emphasis">
           {{ sourceLabel || t('common.damImage.image.model.texts.source') }}:
         </span>
         <br>{{ resImage.texts.source }}

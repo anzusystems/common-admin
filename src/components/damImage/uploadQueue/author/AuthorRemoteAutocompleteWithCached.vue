@@ -265,7 +265,7 @@ const showAdd = computed(() => {
     class="d-flex flex-column"
   >
     <div>
-      <span class="text-caption">{{ t('common.damImage.author.conflicts') }}</span>
+      <span class="text-body-small">{{ t('common.damImage.author.conflicts') }}</span>
     </div>
     <div>
       <AuthorRemoteAutocompleteCachedAuthorChipConflicts

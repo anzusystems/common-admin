@@ -138,7 +138,7 @@ defineExpose({
         <slot name="top" />
       </VCol>
     </VRow>
-    <VRow dense>
+    <VRow density="compact">
       <VCol v-if="store && userId && isDefined(client)">
         <slot name="bookmarks">
           <div class="d-flex flex-wrap align-center">

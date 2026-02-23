@@ -575,7 +575,7 @@ defineExpose({
     <div class="a-image-widget__options">
       <h4
         v-if="label"
-        class="font-weight-bold text-subtitle-2"
+        class="font-weight-bold text-label-large"
       >
         {{ label
         }}<span

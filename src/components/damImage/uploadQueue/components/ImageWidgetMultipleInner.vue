@@ -521,7 +521,7 @@ onMounted(() => {
   <div :id="widgetHtmlId">
     <h4
       v-if="label"
-      class="font-weight-bold text-subtitle-2"
+      class="font-weight-bold text-label-large"
     >
       {{ label }}
     </h4>

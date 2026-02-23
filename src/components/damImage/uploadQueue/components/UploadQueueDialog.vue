@@ -176,13 +176,13 @@ const showDetail = async (id: DocId) => {
               <div>
                 <div
                   v-if="isUploading"
-                  class="text-subtitle-2 d-flex align-center"
+                  class="text-label-large d-flex align-center"
                 >
                   {{ t('common.damImage.upload.title') }}
                 </div>
                 <div
                   v-else
-                  class="text-subtitle-2 d-flex align-center text-green-darken-3 font-weight-bold"
+                  class="text-label-large d-flex align-center text-green-darken-3 font-weight-bold"
                 >
                   {{ t('common.damImage.upload.titleDone') }}
                 </div>
@@ -191,7 +191,7 @@ const showDetail = async (id: DocId) => {
             <VSpacer />
             <div
               v-if="isUploading"
-              class="text-caption d-flex align-center"
+              class="text-body-small d-flex align-center"
             >
               <VProgressCircular
                 indeterminate

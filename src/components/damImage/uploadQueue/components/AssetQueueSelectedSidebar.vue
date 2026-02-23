@@ -138,7 +138,7 @@ onMounted(() => {
         <VTab>{{ t('common.damImage.asset.massOperations.title') }}</VTab>
       </VTabs>
       <div class="sidebar-info__content">
-        <div class="text-caption pa-3">
+        <div class="text-body-small pa-3">
           {{ t('common.damImage.asset.massOperations.description') }}
         </div>
         <VExpansionPanels

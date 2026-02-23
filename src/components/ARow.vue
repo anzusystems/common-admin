@@ -11,7 +11,7 @@ withDefaults(
     title: '',
     value: '',
     dataCy: undefined,
-    titleClass: 'font-weight-bold text-subtitle-2',
+    titleClass: 'font-weight-bold text-label-large',
   }
 )
 // #endregion docs-props

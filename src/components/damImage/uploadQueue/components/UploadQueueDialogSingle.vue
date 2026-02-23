@@ -319,16 +319,16 @@ onMounted(() => {
           :height="64"
           class="system-border-b pr-1"
         >
-          <div class="text-subtitle-2 d-flex px-2">
+          <div class="text-label-large d-flex px-2">
             <div
               v-if="isUploading"
-              class="text-subtitle-2"
+              class="text-label-large"
             >
               {{ t('common.damImage.upload.title') }}
             </div>
             <div
               v-else
-              class="text-subtitle-2 text-green-darken-3 font-weight-bold"
+              class="text-label-large text-green-darken-3 font-weight-bold"
             >
               {{ t('common.damImage.upload.titleDone') }}
             </div>
@@ -409,7 +409,7 @@ onMounted(() => {
                   </div>
                   <div
                     v-if="item && item.error.message.length"
-                    class="text-caption"
+                    class="text-body-small"
                     v-text="item.error.message"
                   />
                   <div v-else-if="item.error.assetFileFailReason !== AssetFileFailReason.None">
@@ -417,7 +417,7 @@ onMounted(() => {
                   </div>
                   <div
                     v-else
-                    class="text-caption"
+                    class="text-body-small"
                   >
                     {{ t('common.damImage.uploadErrors.unknownError') }}
                   </div>
@@ -449,13 +449,13 @@ onMounted(() => {
               <template #prepend-sidebar>
                 <div
                   v-if="item?.isDuplicate"
-                  class="text-caption text-warning px-3 py-2"
+                  class="text-body-small text-warning px-3 py-2"
                 >
                   {{ t('common.damImage.asset.detail.info.status.duplicate') }}
                 </div>
                 <div
                   v-if="item?.isDuplicate && item?.mainFileSingleUse"
-                  class="text-caption text-error px-3 py-2"
+                  class="text-body-small text-error px-3 py-2"
                 >
                   {{ t('common.damImage.asset.model.mainFileSingleUse') }}
                 </div>

@@ -119,7 +119,7 @@ defineExpose({
   >
     <div class="subject-select-filter__content px-2 py-4">
       <slot name="bookmarks">
-        <VRow dense>
+        <VRow density="compact">
           <VCol v-if="store && userId && isDefined(client)">
             <div class="d-flex flex-wrap align-center">
               <FilterBookmarks

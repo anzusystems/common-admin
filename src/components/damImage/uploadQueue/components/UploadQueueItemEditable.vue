@@ -228,7 +228,7 @@ onUnmounted(() => {
             </div>
             <div
               v-if="item.error.message.length"
-              class="text-caption"
+              class="text-body-small"
               v-text="item.error.message"
             />
             <div v-else-if="item.error.assetFileFailReason !== AssetFileFailReason.None">
@@ -236,7 +236,7 @@ onUnmounted(() => {
             </div>
             <div
               v-else
-              class="text-caption"
+              class="text-body-small"
             >
               {{ t('common.damImage.uploadErrors.unknownError') }}
             </div>
@@ -311,7 +311,7 @@ onUnmounted(() => {
         <VRow
           v-if="item.displayTitle"
           dense
-          class="my-2 mb-3 mt-0 text-caption"
+          class="my-2 mb-3 mt-0 text-body-small"
         >
           <VCol class="pt-0">
             {{ t('common.damImage.queueItem.displayTitle') }}: {{ item.displayTitle }}
@@ -320,7 +320,7 @@ onUnmounted(() => {
         </VRow>
         <VRow
           v-if="item.isDuplicate"
-          class="text-caption text-warning"
+          class="text-body-small text-warning"
         >
           <VCol class="pt-0">
             {{ t('common.damImage.asset.detail.info.status.duplicate') }}

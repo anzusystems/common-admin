@@ -90,7 +90,7 @@ watch(
     v-if="label"
     class="label-container"
   >
-    <h4 class="font-weight-bold text-subtitle-2">
+    <h4 class="font-weight-bold text-label-large">
       {{ label }}
     </h4>
   </div>
