@@ -18,22 +18,22 @@ export function useUserAdminConfigApi(
 
   const fetchUserAdminConfig = (id: IntegerId) => {
     const { executeRequest } = useApiRequest<UserAdminConfig>({ client, method: 'GET', system, entity })
-    return executeRequest({ urlTemplateOverride: endPoint + '/:id', urlParamsOverride: { id } })
+    return executeRequest({ urlTemplate: endPoint + '/:id', urlParams: { id } })
   }
 
   const createUserAdminConfig = (data: UserAdminConfig) => {
     const { executeRequest } = useApiRequest<UserAdminConfig>({ client, method: 'POST', system, entity })
-    return executeRequest({ urlTemplateOverride: endPoint, object: data })
+    return executeRequest({ urlTemplate: endPoint, object: data })
   }
 
   const updateUserAdminConfig = (id: IntegerId, data: UserAdminConfig) => {
     const { executeRequest } = useApiRequest<UserAdminConfig>({ client, method: 'PUT', system, entity })
-    return executeRequest({ urlTemplateOverride: endPoint + '/:id', urlParamsOverride: { id }, object: data })
+    return executeRequest({ urlTemplate: endPoint + '/:id', urlParams: { id }, object: data })
   }
 
   const deleteUserAdminConfig = (id: IntegerId) => {
     const { executeRequest } = useApiRequest({ client, method: 'DELETE', system, entity })
-    return executeRequest({ urlTemplateOverride: endPoint + '/:id', urlParamsOverride: { id } })
+    return executeRequest({ urlTemplate: endPoint + '/:id', urlParams: { id } })
   }
 
   const updateUserAdminConfigPositions = (ids: IntegerId[]) => {
@@ -43,7 +43,7 @@ export function useUserAdminConfigApi(
       system,
       entity,
     })
-    return executeRequest({ urlTemplateOverride: endPoint + '/update-positions', object: { userAdminConfigs: ids } })
+    return executeRequest({ urlTemplate: endPoint + '/update-positions', object: { userAdminConfigs: ids } })
   }
 
   return {

@@ -20,8 +20,8 @@ import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import type { AxiosClientFn } from '@/labs/api/client'
 
 export type ExecuteRequestParams<T> = {
-  urlTemplateOverride?: string
-  urlParamsOverride?: UrlParams
+  urlTemplate?: string
+  urlParams?: UrlParams
   object?: T
 }
 
@@ -106,8 +106,8 @@ export function useApiRequest<R, T = R>(
     let resolvedObject: T | undefined
 
     if (typeof urlTemplateOverrideOrParams === 'object' && urlTemplateOverrideOrParams !== null) {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplateOverride
-      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParamsOverride
+      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplate
+      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParams
       resolvedObject = urlTemplateOverrideOrParams.object
     } else {
       resolvedUrlTemplateOverride = urlTemplateOverrideOrParams
@@ -200,7 +200,7 @@ export function useApiRequest<R, T = R>(
 }
 
 interface ExecuteRequestFn<R, T> {
-  /** @deprecated Use object params form: executeRequest({ urlTemplateOverride, urlParamsOverride, object }) */
+  /** @deprecated Use object params form: executeRequest({ urlTemplate, urlParams, object }) */
   (urlTemplateOverride?: string, urlParamsOverride?: UrlParams | undefined, object?: T | undefined): Promise<R>
   (params: ExecuteRequestParams<T>): Promise<R>
 }

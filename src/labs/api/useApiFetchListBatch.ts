@@ -36,8 +36,8 @@ export type UseApiFetchListBatchParams = {
 }
 
 export type FetchListBatchParams = {
-  urlTemplateOverride?: string
-  urlParamsOverride?: UrlParams
+  urlTemplate?: string
+  urlParams?: UrlParams
   sortBy?: string
   sortDesc?: boolean
   batchSize?: number
@@ -116,8 +116,8 @@ export function useApiFetchListBatch<R>(
     let resolvedForceElastic: boolean
 
     if (typeof urlTemplateOverrideOrParams === 'object' && urlTemplateOverrideOrParams !== null) {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplateOverride
-      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParamsOverride
+      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplate
+      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParams
       resolvedSortBy = urlTemplateOverrideOrParams.sortBy ?? 'id'
       resolvedSortDesc = urlTemplateOverrideOrParams.sortDesc ?? true
       resolvedBatchSize = urlTemplateOverrideOrParams.batchSize ?? 100
@@ -270,7 +270,7 @@ interface ExecuteFetchListBatchFn<R> {
   /**
    * @deprecated Use object params form:
    *   executeFetch(filterData, filterConfig,
-   *     { urlTemplateOverride, urlParamsOverride, sortBy, sortDesc, batchSize, forceElastic })
+   *     { urlTemplate, urlParams, sortBy, sortDesc, batchSize, forceElastic })
    */
   (
     filterData: FilterData<any>,

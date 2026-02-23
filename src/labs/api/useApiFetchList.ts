@@ -37,8 +37,8 @@ export type UseApiFetchListParams = {
 }
 
 export type FetchListParams = {
-  urlTemplateOverride?: string
-  urlParamsOverride?: UrlParams
+  urlTemplate?: string
+  urlParams?: UrlParams
   forceElastic?: boolean
 }
 
@@ -124,8 +124,8 @@ export function useApiFetchList<R>(
     let resolvedForceElastic: boolean
 
     if (typeof urlTemplateOverrideOrParams === 'object' && urlTemplateOverrideOrParams !== null) {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplateOverride
-      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParamsOverride
+      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplate
+      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParams
       resolvedForceElastic = urlTemplateOverrideOrParams.forceElastic ?? false
     } else {
       resolvedUrlTemplateOverride = urlTemplateOverrideOrParams
@@ -229,7 +229,7 @@ export function useApiFetchList<R>(
 interface ExecuteFetchListFn<R> {
   /**
    * @deprecated Use object params form:
-   *   executeFetch(pagination, filterData, filterConfig, { urlTemplateOverride, urlParamsOverride, forceElastic })
+   *   executeFetch(pagination, filterData, filterConfig, { urlTemplate, urlParams, forceElastic })
    */
   (
     pagination: Ref<Pagination>,

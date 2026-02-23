@@ -332,6 +332,7 @@ const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog } = storeToRefs(assetDetailStore)
 const { damClient, endPointAsset, showSourceEnabled, sourceLabel, customAssetSelectMetadataToImageMap } =
   useCommonAdminCoreDamOptions()
+
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey

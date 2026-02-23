@@ -33,8 +33,8 @@ export type UseApiFetchByIdsParams = {
 }
 
 export type FetchByIdsParams = {
-  urlTemplateOverride?: string
-  urlParamsOverride?: UrlParams
+  urlTemplate?: string
+  urlParams?: UrlParams
 }
 
 /**
@@ -122,8 +122,8 @@ export function useApiFetchByIds<R>(
     let resolvedUrlParamsOverride: UrlParams | undefined
 
     if (typeof urlTemplateOverrideOrParams === 'object' && urlTemplateOverrideOrParams !== null) {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplateOverride
-      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParamsOverride
+      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplate
+      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParams
     } else {
       resolvedUrlTemplateOverride = urlTemplateOverrideOrParams
       resolvedUrlParamsOverride = urlParamsOverride
@@ -209,7 +209,7 @@ export function useApiFetchByIds<R>(
 }
 
 interface ExecuteFetchByIdsFn<R> {
-  /** @deprecated Use object params form: executeFetch(ids, { urlTemplateOverride, urlParamsOverride }) */
+  /** @deprecated Use object params form: executeFetch(ids, { urlTemplate, urlParams }) */
   (ids: DocId[] | IntegerId[], urlTemplateOverride?: string, urlParamsOverride?: UrlParams): Promise<R>
   (ids: DocId[] | IntegerId[], params?: FetchByIdsParams): Promise<R>
 }
