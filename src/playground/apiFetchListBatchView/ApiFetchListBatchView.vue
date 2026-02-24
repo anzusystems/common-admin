@@ -71,25 +71,16 @@ const { executeFetch: fetchUserListAll } = useFetchUserListAll()
 const { executeFetch: fetchAssetList } = useFetchAssetList(damClient, '/adm/v1/asset', 100000)
 
 onMounted(async () => {
-  itemsList1.value = await fetchAssetList(
-    pagination,
-    filterData,
-    filterConfig,
-    undefined,
-    undefined,
-    true,
-  )
-  itemsBatch1.value = await fetchAssetListAll(
-    filterData,
-    filterConfig,
-    undefined,
-    undefined,
-    'id',
-    true,
-  )
+  itemsList1.value = await fetchAssetList(pagination, filterData, filterConfig, {
+    forceElastic: true,
+  })
+  itemsBatch1.value = await fetchAssetListAll(filterData, filterConfig, {
+    sortBy: 'id',
+    sortDesc: true,
+  })
 
   itemsList2.value = await fetchUserList(pagination2, filterData, filterConfig)
-  itemsBatch2.value = await fetchUserListAll(filterData, filterConfig, undefined, undefined, 'id')
+  itemsBatch2.value = await fetchUserListAll(filterData, filterConfig, { sortBy: 'id' })
 })
 </script>
 

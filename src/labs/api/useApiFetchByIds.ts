@@ -67,96 +67,40 @@ const generateByIdsApiQuery = (
   return queryBuild()
 }
 
-/**
- * @deprecated Use object params form:
- *   useApiFetchByIds({ client, system, entity, urlTemplate, urlParams, options, isSearchApi, field })
- */
-export function useApiFetchByIds<R>(
-  client: AxiosClientFn,
-  system: string,
-  entity: string,
-  urlTemplate?: string,
-  urlParams?: UrlParams,
-  options?: AxiosRequestConfig,
-  isSearchApi?: boolean,
-  field?: string,
-): UseApiFetchByIdsReturnType<R>
-
-export function useApiFetchByIds<R>(params: UseApiFetchByIdsParams): UseApiFetchByIdsReturnType<R>
-
-export function useApiFetchByIds<R>(
-  clientOrParams: AxiosClientFn | UseApiFetchByIdsParams,
-  system?: string,
-  entity?: string,
-  urlTemplate?: string,
-  urlParams?: UrlParams,
-  options?: AxiosRequestConfig,
-  isSearchApi?: boolean,
-  field?: string,
-): UseApiFetchByIdsReturnType<R> {
-  let resolvedClient: AxiosClientFn
-  let resolvedSystem: string
-  let resolvedEntity: string
-  let resolvedUrlTemplate: string | undefined
-  let resolvedUrlParams: UrlParams | undefined
-  let resolvedOptions: AxiosRequestConfig
-  let resolvedIsSearchApi: boolean
-  let resolvedField: string
-
-  if (typeof clientOrParams === 'function') {
-    resolvedClient = clientOrParams
-    resolvedSystem = system!
-    resolvedEntity = entity!
-    resolvedUrlTemplate = urlTemplate
-    resolvedUrlParams = urlParams
-    resolvedOptions = options ?? {}
-    resolvedIsSearchApi = isSearchApi ?? false
-    resolvedField = field ?? 'id'
-  } else {
-    resolvedClient = clientOrParams.client
-    resolvedSystem = clientOrParams.system
-    resolvedEntity = clientOrParams.entity
-    resolvedUrlTemplate = clientOrParams.urlTemplate
-    resolvedUrlParams = clientOrParams.urlParams
-    resolvedOptions = clientOrParams.options ?? {}
-    resolvedIsSearchApi = clientOrParams.isSearchApi ?? false
-    resolvedField = clientOrParams.field ?? 'id'
-  }
+export const useApiFetchByIds = <R>(
+  params: UseApiFetchByIdsParams,
+): UseApiFetchByIdsReturnType<R> => {
+  const {
+    client,
+    system,
+    entity,
+    urlTemplate,
+    urlParams,
+    options = {},
+    isSearchApi = false,
+    field = 'id',
+  } = params
 
   let abortController: AbortController | null = null
 
   const executeFetch = async (
     ids: DocId[] | IntegerId[],
-    urlTemplateOverrideOrParams: string | FetchByIdsParams | undefined = undefined,
-    urlParamsOverride: UrlParams | undefined = undefined,
+    fetchParams: FetchByIdsParams = {},
   ): Promise<R> => {
     abortController = new AbortController()
 
-    let resolvedUrlTemplateOverride: string | undefined
-    let resolvedUrlParamsOverride: UrlParams | undefined
-
-    if (typeof urlTemplateOverrideOrParams === 'object' && urlTemplateOverrideOrParams !== null) {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplate
-      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParams
-    } else {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams
-      resolvedUrlParamsOverride = urlParamsOverride
-    }
+    const { urlTemplate: urlTemplateOverride, urlParams: urlParamsOverride } = fetchParams
 
     try {
-      const params = isDefined(resolvedUrlParamsOverride)
-        ? resolvedUrlParamsOverride
-        : resolvedUrlParams
-      const template = isDefined(resolvedUrlTemplateOverride)
-        ? resolvedUrlTemplateOverride
-        : resolvedUrlTemplate
+      const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
       const url =
-        (isUndefined(params) ? template : replaceUrlParameters(template, params)) +
-        generateByIdsApiQuery(ids, resolvedIsSearchApi, resolvedField)
+        (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) +
+        generateByIdsApiQuery(ids, isSearchApi, field)
 
-      const res = await resolvedClient().get(url, {
-        ...resolvedOptions,
+      const res = await client().get(url, {
+        ...options,
         signal: abortController.signal,
       })
 
@@ -187,11 +131,11 @@ export function useApiFetchByIds<R>(
       }
 
       if (axiosErrorResponseHasValidationData(err)) {
-        throw new AnzuApiValidationError(err, resolvedSystem, resolvedEntity, err)
+        throw new AnzuApiValidationError(err, system, entity, err)
       }
 
       if (axiosErrorResponseHasDependencyExistsData(err)) {
-        throw new AnzuApiDependencyExistsError(err, resolvedSystem, resolvedEntity, err)
+        throw new AnzuApiDependencyExistsError(err, system, entity, err)
       }
 
       if (axiosErrorResponseHasForbiddenOperationData(err)) {
@@ -203,7 +147,7 @@ export function useApiFetchByIds<R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ' + resolvedUrlTemplate, err.cause)
+        console.error('Axios error: ' + urlTemplate, err.cause)
         throw new AnzuApiAxiosError(err)
       }
 
@@ -226,17 +170,7 @@ export function useApiFetchByIds<R>(
   }
 }
 
-interface ExecuteFetchByIdsFn<R> {
-  /** @deprecated Use object params form: executeFetch(ids, { urlTemplate, urlParams }) */
-  (
-    ids: DocId[] | IntegerId[],
-    urlTemplateOverride?: string,
-    urlParamsOverride?: UrlParams,
-  ): Promise<R>
-  (ids: DocId[] | IntegerId[], params?: FetchByIdsParams): Promise<R>
-}
-
 export type UseApiFetchByIdsReturnType<R> = {
-  executeFetch: ExecuteFetchByIdsFn<R>
+  executeFetch: (ids: DocId[] | IntegerId[], params?: FetchByIdsParams) => Promise<R>
   abortFetch: () => void
 }

@@ -53,120 +53,47 @@ export type FetchListBatchParams = {
   forceElastic?: boolean
 }
 
-/**
- * @template R Response type override
- * @deprecated Use object params form:
- *   useApiFetchListBatch({ client, system, entity, urlTemplate, urlParams, options })
- */
-export function useApiFetchListBatch<R>(
-  client: AxiosClientFn,
-  system: string,
-  entity: string,
-  urlTemplate?: string,
-  urlParams?: UrlParams,
-  options?: AxiosRequestConfig,
-): UseApiFetchListBatchReturnType<R>
-
-/**
- * @template R Response type override
- */
-export function useApiFetchListBatch<R>(
+export const useApiFetchListBatch = <R>(
   params: UseApiFetchListBatchParams,
-): UseApiFetchListBatchReturnType<R>
-
-export function useApiFetchListBatch<R>(
-  clientOrParams: AxiosClientFn | UseApiFetchListBatchParams,
-  system?: string,
-  entity?: string,
-  urlTemplate?: string,
-  urlParams?: UrlParams,
-  options?: AxiosRequestConfig,
-): UseApiFetchListBatchReturnType<R> {
-  let resolvedClient: AxiosClientFn
-  let resolvedSystem: string
-  let resolvedEntity: string
-  let resolvedUrlTemplate: string | undefined
-  let resolvedUrlParams: UrlParams | undefined
-  let resolvedOptions: AxiosRequestConfig
-
-  if (typeof clientOrParams === 'function') {
-    resolvedClient = clientOrParams
-    resolvedSystem = system!
-    resolvedEntity = entity!
-    resolvedUrlTemplate = urlTemplate
-    resolvedUrlParams = urlParams
-    resolvedOptions = options ?? {}
-  } else {
-    resolvedClient = clientOrParams.client
-    resolvedSystem = clientOrParams.system
-    resolvedEntity = clientOrParams.entity
-    resolvedUrlTemplate = clientOrParams.urlTemplate
-    resolvedUrlParams = clientOrParams.urlParams
-    resolvedOptions = clientOrParams.options ?? {}
-  }
+): UseApiFetchListBatchReturnType<R> => {
+  const { client, system, entity, urlTemplate, urlParams, options = {} } = params
 
   let abortController: AbortController | null = null
 
   const executeFetch = async (
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    urlTemplateOverrideOrParams: string | FetchListBatchParams | undefined = undefined,
-    urlParamsOverride: UrlParams | undefined = undefined,
-    sortBy = 'id',
-    sortDesc = true,
-    batchSize = 100,
-    forceElastic = false,
+    fetchParams: FetchListBatchParams = {},
   ): Promise<R> => {
     abortController = new AbortController()
 
-    let resolvedUrlTemplateOverride: string | undefined
-    let resolvedUrlParamsOverride: UrlParams | undefined
-    let resolvedSortBy: string
-    let resolvedSortDesc: boolean
-    let resolvedBatchSize: number
-    let resolvedForceElastic: boolean
-
-    if (typeof urlTemplateOverrideOrParams === 'object' && urlTemplateOverrideOrParams !== null) {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplate
-      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParams
-      resolvedSortBy = urlTemplateOverrideOrParams.sortBy ?? 'id'
-      resolvedSortDesc = urlTemplateOverrideOrParams.sortDesc ?? true
-      resolvedBatchSize = urlTemplateOverrideOrParams.batchSize ?? 100
-      resolvedForceElastic = urlTemplateOverrideOrParams.forceElastic ?? false
-    } else {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams
-      resolvedUrlParamsOverride = urlParamsOverride
-      resolvedSortBy = sortBy
-      resolvedSortDesc = sortDesc
-      resolvedBatchSize = batchSize
-      resolvedForceElastic = forceElastic
-    }
+    const {
+      urlTemplate: urlTemplateOverride,
+      urlParams: urlParamsOverride,
+      sortBy = 'id',
+      sortDesc = true,
+      batchSize = 100,
+      forceElastic = false,
+    } = fetchParams
 
     try {
-      const searchApi = filterConfig.general.elastic || resolvedForceElastic ? '/search' : ''
-      const params = isDefined(resolvedUrlParamsOverride)
-        ? resolvedUrlParamsOverride
-        : resolvedUrlParams
-      const template = isDefined(resolvedUrlTemplateOverride)
-        ? resolvedUrlTemplateOverride
-        : resolvedUrlTemplate
+      const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
+      const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
-      const { pagination } = usePagination(
-        resolvedSortBy,
-        resolvedSortDesc ? SortOrder.Desc : SortOrder.Asc,
-        {
-          rowsPerPage: resolvedBatchSize,
-        },
-      )
+      const { pagination } = usePagination(sortBy, sortDesc ? SortOrder.Desc : SortOrder.Asc, {
+        rowsPerPage: batchSize,
+      })
       const url =
-        (isUndefined(params) ? template : replaceUrlParameters(template, params)) + searchApi
+        (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) +
+        searchApi
       const results = [] as unknown as R
 
       // First page request
-      const res = await resolvedClient().get(
+      const res = await client().get(
         url + generateListQuery(pagination, filterData, filterConfig),
         {
-          ...resolvedOptions,
+          ...options,
           signal: abortController.signal,
         },
       )
@@ -186,10 +113,10 @@ export function useApiFetchListBatch<R>(
           // Handle pagination for infinite lists
           while (pagination.value.hasNextPage) {
             pagination.value.page++
-            const nextPageResponse = await resolvedClient().get(
+            const nextPageResponse = await client().get(
               url + generateListQuery(pagination, filterData, filterConfig),
               {
-                ...resolvedOptions,
+                ...options,
                 signal: abortController.signal,
               },
             )
@@ -214,13 +141,10 @@ export function useApiFetchListBatch<R>(
             const pageCopy = { ...pagination.value, page: i + 1 }
             const paginationRef = ref(pageCopy)
             promises.push(
-              resolvedClient().get(
-                url + generateListQuery(paginationRef, filterData, filterConfig),
-                {
-                  ...resolvedOptions,
-                  signal: abortController.signal,
-                },
-              ),
+              client().get(url + generateListQuery(paginationRef, filterData, filterConfig), {
+                ...options,
+                signal: abortController.signal,
+              }),
             )
           }
 
@@ -253,11 +177,11 @@ export function useApiFetchListBatch<R>(
       }
 
       if (axiosErrorResponseHasValidationData(err)) {
-        throw new AnzuApiValidationError(err, resolvedSystem, resolvedEntity, err)
+        throw new AnzuApiValidationError(err, system, entity, err)
       }
 
       if (axiosErrorResponseHasDependencyExistsData(err)) {
-        throw new AnzuApiDependencyExistsError(err, resolvedSystem, resolvedEntity, err)
+        throw new AnzuApiDependencyExistsError(err, system, entity, err)
       }
 
       if (axiosErrorResponseHasForbiddenOperationData(err)) {
@@ -269,7 +193,7 @@ export function useApiFetchListBatch<R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ' + resolvedUrlTemplate, err.cause)
+        console.error('Axios error: ' + urlTemplate, err.cause)
         throw new AnzuApiAxiosError(err)
       }
 
@@ -292,30 +216,11 @@ export function useApiFetchListBatch<R>(
   }
 }
 
-interface ExecuteFetchListBatchFn<R> {
-  /**
-   * @deprecated Use object params form:
-   *   executeFetch(filterData, filterConfig,
-   *     { urlTemplate, urlParams, sortBy, sortDesc, batchSize, forceElastic })
-   */
-  (
-    filterData: FilterData<any>,
-    filterConfig: FilterConfig<any>,
-    urlTemplateOverride?: string,
-    urlParamsOverride?: UrlParams,
-    sortBy?: string,
-    sortDesc?: boolean,
-    batchSize?: number,
-    forceElastic?: boolean,
-  ): Promise<R>
-  (
+export type UseApiFetchListBatchReturnType<R> = {
+  executeFetch: (
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
     params?: FetchListBatchParams,
-  ): Promise<R>
-}
-
-export type UseApiFetchListBatchReturnType<R> = {
-  executeFetch: ExecuteFetchListBatchFn<R>
+  ) => Promise<R>
   abortFetch: () => void
 }

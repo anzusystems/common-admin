@@ -67,55 +67,8 @@ export const generateListQuery = (
   return queryBuild()
 }
 
-/**
- * @template R Response type override, optional
- * @deprecated Use object params form:
- *   useApiFetchList({ client, system, entity, urlTemplate, urlParams, options })
- */
-export function useApiFetchList<R>(
-  client: AxiosClientFn,
-  system: string,
-  entity: string,
-  urlTemplate?: string,
-  urlParams?: UrlParams,
-  options?: AxiosRequestConfig,
-): UseApiFetchListReturnType<R>
-
-/**
- * @template R Response type override, optional
- */
-export function useApiFetchList<R>(params: UseApiFetchListParams): UseApiFetchListReturnType<R>
-
-export function useApiFetchList<R>(
-  clientOrParams: AxiosClientFn | UseApiFetchListParams,
-  system?: string,
-  entity?: string,
-  urlTemplate?: string,
-  urlParams?: UrlParams,
-  options?: AxiosRequestConfig,
-): UseApiFetchListReturnType<R> {
-  let resolvedClient: AxiosClientFn
-  let resolvedSystem: string
-  let resolvedEntity: string
-  let resolvedUrlTemplate: string | undefined
-  let resolvedUrlParams: UrlParams | undefined
-  let resolvedOptions: AxiosRequestConfig
-
-  if (typeof clientOrParams === 'function') {
-    resolvedClient = clientOrParams
-    resolvedSystem = system!
-    resolvedEntity = entity!
-    resolvedUrlTemplate = urlTemplate
-    resolvedUrlParams = urlParams
-    resolvedOptions = options ?? {}
-  } else {
-    resolvedClient = clientOrParams.client
-    resolvedSystem = clientOrParams.system
-    resolvedEntity = clientOrParams.entity
-    resolvedUrlTemplate = clientOrParams.urlTemplate
-    resolvedUrlParams = clientOrParams.urlParams
-    resolvedOptions = clientOrParams.options ?? {}
-  }
+export const useApiFetchList = <R>(params: UseApiFetchListParams): UseApiFetchListReturnType<R> => {
+  const { client, system, entity, urlTemplate, urlParams, options = {} } = params
 
   let abortController: AbortController | null = null
 
@@ -123,42 +76,28 @@ export function useApiFetchList<R>(
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    urlTemplateOverrideOrParams: string | FetchListParams | undefined = undefined,
-    urlParamsOverride: UrlParams | undefined = undefined,
-    forceElastic = false,
+    fetchParams: FetchListParams = {},
   ): Promise<R> => {
     abortController = new AbortController()
 
-    let resolvedUrlTemplateOverride: string | undefined
-    let resolvedUrlParamsOverride: UrlParams | undefined
-    let resolvedForceElastic: boolean
-
-    if (typeof urlTemplateOverrideOrParams === 'object' && urlTemplateOverrideOrParams !== null) {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplate
-      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParams
-      resolvedForceElastic = urlTemplateOverrideOrParams.forceElastic ?? false
-    } else {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams
-      resolvedUrlParamsOverride = urlParamsOverride
-      resolvedForceElastic = forceElastic
-    }
+    const {
+      urlTemplate: urlTemplateOverride,
+      urlParams: urlParamsOverride,
+      forceElastic = false,
+    } = fetchParams
 
     try {
-      const searchApi = filterConfig.general.elastic || resolvedForceElastic ? '/search' : ''
-      const params = isDefined(resolvedUrlParamsOverride)
-        ? resolvedUrlParamsOverride
-        : resolvedUrlParams
-      const template = isDefined(resolvedUrlTemplateOverride)
-        ? resolvedUrlTemplateOverride
-        : resolvedUrlTemplate
+      const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
+      const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
       const url =
-        (isUndefined(params) ? template : replaceUrlParameters(template, params)) +
+        (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) +
         searchApi +
         generateListQuery(pagination, filterData, filterConfig)
 
-      const res = await resolvedClient().get(url, {
-        ...resolvedOptions,
+      const res = await client().get(url, {
+        ...options,
         signal: abortController.signal,
       })
 
@@ -203,11 +142,11 @@ export function useApiFetchList<R>(
       }
 
       if (axiosErrorResponseHasValidationData(err)) {
-        throw new AnzuApiValidationError(err, resolvedSystem, resolvedEntity, err)
+        throw new AnzuApiValidationError(err, system, entity, err)
       }
 
       if (axiosErrorResponseHasDependencyExistsData(err)) {
-        throw new AnzuApiDependencyExistsError(err, resolvedSystem, resolvedEntity, err)
+        throw new AnzuApiDependencyExistsError(err, system, entity, err)
       }
 
       if (axiosErrorResponseHasForbiddenOperationData(err)) {
@@ -219,7 +158,7 @@ export function useApiFetchList<R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ' + resolvedUrlTemplate, err.cause)
+        console.error('Axios error: ' + urlTemplate, err.cause)
         throw new AnzuApiAxiosError(err)
       }
 
@@ -242,28 +181,12 @@ export function useApiFetchList<R>(
   }
 }
 
-interface ExecuteFetchListFn<R> {
-  /**
-   * @deprecated Use object params form:
-   *   executeFetch(pagination, filterData, filterConfig, { urlTemplate, urlParams, forceElastic })
-   */
-  (
-    pagination: Ref<Pagination>,
-    filterData: FilterData<any>,
-    filterConfig: FilterConfig<any>,
-    urlTemplateOverride?: string | undefined,
-    urlParamsOverride?: UrlParams | undefined,
-    forceElastic?: boolean,
-  ): Promise<R>
-  (
+export type UseApiFetchListReturnType<R> = {
+  executeFetch: (
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
     params?: FetchListParams,
-  ): Promise<R>
-}
-
-export type UseApiFetchListReturnType<R> = {
-  executeFetch: ExecuteFetchListFn<R>
+  ) => Promise<R>
   abortFetch: () => void
 }

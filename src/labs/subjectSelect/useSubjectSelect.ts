@@ -8,7 +8,7 @@ import { useAlerts } from '@/composables/system/alerts'
 import { type FilterConfig, type FilterData, useFilterHelpers } from '@/labs/filters/filterFactory'
 import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
-import type { UrlParams } from '@/services/api/apiHelper'
+import type { FetchListParams } from '@/labs/api/useApiFetchList'
 import { useDebounceFn } from '@vueuse/core'
 import { isNull } from '@/utils/common'
 
@@ -21,16 +21,12 @@ export function useSubjectSelect<TItem>(
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    urlTemplateOverride?: string | undefined,
-    urlParamsOverride?: UrlParams | undefined,
-    forceElastic?: boolean,
+    params?: FetchListParams,
   ) => Promise<TItem[]>,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>,
   filterSortBy: DatatableSortBy | null = null,
-  urlTemplateOverride: string | undefined = undefined,
-  urlParamsOverride: UrlParams | undefined = undefined,
-  forceElastic: boolean = false,
+  fetchParams: FetchListParams | undefined = undefined,
   enableActions: boolean = false,
 ) {
   const filterTouched: Ref<boolean> = ref(false)
@@ -70,14 +66,7 @@ export function useSubjectSelect<TItem>(
     loading.value = true
     incrementPage()
     try {
-      const res = (await executeFetch(
-        pagination,
-        filterData,
-        filterConfig,
-        urlTemplateOverride,
-        urlParamsOverride,
-        forceElastic,
-      )) as TItem[]
+      const res = (await executeFetch(pagination, filterData, filterConfig, fetchParams)) as TItem[]
       items.value.push(...res)
     } catch (e) {
       showErrorsDefault(e)
@@ -98,9 +87,7 @@ export function useSubjectSelect<TItem>(
         pagination,
         filterData,
         filterConfig,
-        urlTemplateOverride,
-        urlParamsOverride,
-        forceElastic,
+        fetchParams,
       )) as TItem[]
     } catch (e) {
       showErrorsDefault(e)

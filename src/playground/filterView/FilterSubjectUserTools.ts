@@ -97,7 +97,9 @@ export const fetchItemsMinimal = async (
   filterConfig: FilterConfig,
 ) => {
   const { executeFetch } = useFetchUserList()
-  return mapToMinimals(await executeFetch(pagination, filterData, filterConfig, END_POINT))
+  return mapToMinimals(
+    await executeFetch(pagination, filterData, filterConfig, { urlTemplate: END_POINT }),
+  )
 }
 
 export const fetchItemsMinimalByIds = async (ids: IntegerId[]) => {

@@ -44,106 +44,34 @@ export type UseApiRequestParams = {
   options?: AxiosRequestConfig
 }
 
-/**
- * @template R Response type
- * @template T Type used for request payload, by default, same as Response type
- * @deprecated Use object params form:
- *   useApiRequest({ client, method, system, entity, urlTemplate, urlParams, options })
- */
-export function useApiRequest<R, T = R>(
-  client: AxiosClientFn,
-  method: Method,
-  system: string,
-  entity: string,
-  urlTemplate?: string,
-  urlParams?: UrlParams,
-  options?: AxiosRequestConfig,
-): UseApiAnyRequestReturnType<R, T>
-
-/**
- * @template R Response type
- * @template T Type used for request payload, by default, same as Response type
- */
-export function useApiRequest<R, T = R>(
+export const useApiRequest = <R, T = R>(
   params: UseApiRequestParams,
-): UseApiAnyRequestReturnType<R, T>
-
-export function useApiRequest<R, T = R>(
-  clientOrParams: AxiosClientFn | UseApiRequestParams,
-  method?: Method,
-  system?: string,
-  entity?: string,
-  urlTemplate?: string,
-  urlParams?: UrlParams,
-  options?: AxiosRequestConfig,
-): UseApiAnyRequestReturnType<R, T> {
-  let resolvedClient: AxiosClientFn
-  let resolvedMethod: Method
-  let resolvedSystem: string
-  let resolvedEntity: string
-  let resolvedUrlTemplate: string | undefined
-  let resolvedUrlParams: UrlParams | undefined
-  let resolvedOptions: AxiosRequestConfig
-
-  if (typeof clientOrParams === 'function') {
-    resolvedClient = clientOrParams
-    resolvedMethod = method!
-    resolvedSystem = system!
-    resolvedEntity = entity!
-    resolvedUrlTemplate = urlTemplate
-    resolvedUrlParams = urlParams
-    resolvedOptions = options ?? {}
-  } else {
-    resolvedClient = clientOrParams.client
-    resolvedMethod = clientOrParams.method
-    resolvedSystem = clientOrParams.system
-    resolvedEntity = clientOrParams.entity
-    resolvedUrlTemplate = clientOrParams.urlTemplate
-    resolvedUrlParams = clientOrParams.urlParams
-    resolvedOptions = clientOrParams.options ?? {}
-  }
+): UseApiAnyRequestReturnType<R, T> => {
+  const { client, method, system, entity, urlTemplate, urlParams, options = {} } = params
 
   let abortController: AbortController | null = null
 
-  const executeRequest = async (
-    urlTemplateOverrideOrParams: string | ExecuteRequestParams<T> | undefined = undefined,
-    urlParamsOverride: UrlParams | undefined = undefined,
-    object: T | undefined = undefined,
-  ): Promise<R> => {
+  const executeRequest = async (executeParams: ExecuteRequestParams<T> = {}): Promise<R> => {
     abortController = new AbortController()
 
-    let resolvedUrlTemplateOverride: string | undefined
-    let resolvedUrlParamsOverride: UrlParams | undefined
-    let resolvedObject: T | undefined
-
-    if (typeof urlTemplateOverrideOrParams === 'object' && urlTemplateOverrideOrParams !== null) {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams.urlTemplate
-      resolvedUrlParamsOverride = urlTemplateOverrideOrParams.urlParams
-      resolvedObject = urlTemplateOverrideOrParams.object
-    } else {
-      resolvedUrlTemplateOverride = urlTemplateOverrideOrParams
-      resolvedUrlParamsOverride = urlParamsOverride
-      resolvedObject = object
-    }
+    const urlTemplateOverride = executeParams.urlTemplate
+    const urlParamsOverride = executeParams.urlParams
+    const object = executeParams.object
 
     try {
-      const axiosConfig: AxiosRequestConfig = { method: resolvedMethod }
-      const params = isDefined(resolvedUrlParamsOverride)
-        ? resolvedUrlParamsOverride
-        : resolvedUrlParams
-      const template = isDefined(resolvedUrlTemplateOverride)
-        ? resolvedUrlTemplateOverride
-        : resolvedUrlTemplate
+      const axiosConfig: AxiosRequestConfig = { method }
+      const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
       axiosConfig.url = template
-      if (template !== '' && !isUndefined(params)) {
-        axiosConfig.url = replaceUrlParameters(template, params)
+      if (template !== '' && !isUndefined(resolvedParams)) {
+        axiosConfig.url = replaceUrlParameters(template, resolvedParams)
       }
-      if (!isNull(resolvedObject)) {
-        axiosConfig.data = JSON.stringify(resolvedObject)
+      if (!isNull(object)) {
+        axiosConfig.data = JSON.stringify(object)
       }
-      const res = await resolvedClient().request({
-        ...resolvedOptions,
+      const res = await client().request({
+        ...options,
         ...axiosConfig,
         signal: abortController.signal,
       })
@@ -175,11 +103,11 @@ export function useApiRequest<R, T = R>(
       }
 
       if (axiosErrorResponseHasValidationData(err)) {
-        throw new AnzuApiValidationError(err, resolvedSystem, resolvedEntity, err)
+        throw new AnzuApiValidationError(err, system, entity, err)
       }
 
       if (axiosErrorResponseHasDependencyExistsData(err)) {
-        throw new AnzuApiDependencyExistsError(err, resolvedSystem, resolvedEntity, err)
+        throw new AnzuApiDependencyExistsError(err, system, entity, err)
       }
 
       if (axiosErrorResponseHasForbiddenOperationData(err)) {
@@ -191,7 +119,7 @@ export function useApiRequest<R, T = R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ' + resolvedUrlTemplate, err.cause)
+        console.error('Axios error: ' + urlTemplate, err.cause)
         throw new AnzuApiAxiosError(err)
       }
 
@@ -214,17 +142,7 @@ export function useApiRequest<R, T = R>(
   }
 }
 
-interface ExecuteRequestFn<R, T> {
-  /** @deprecated Use object params form: executeRequest({ urlTemplate, urlParams, object }) */
-  (
-    urlTemplateOverride?: string,
-    urlParamsOverride?: UrlParams | undefined,
-    object?: T | undefined,
-  ): Promise<R>
-  (params: ExecuteRequestParams<T>): Promise<R>
-}
-
 export type UseApiAnyRequestReturnType<R, T = R> = {
-  executeRequest: ExecuteRequestFn<R, T>
+  executeRequest: (params?: ExecuteRequestParams<T>) => Promise<R>
   abortRequest: () => void
 }
