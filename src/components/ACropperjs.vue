@@ -1,17 +1,8 @@
-<script setup lang="ts">
-import Cropper, { CropperCanvas, CropperHandle, CropperImage, CropperSelection } from 'cropperjs'
+<script setup lang="ts" generic="T extends EventTarget = EventTarget">
+import Cropper from 'cropperjs'
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { isNull } from '@/utils/common'
-
-type SetDataOptions = {
-  x: number
-  y: number
-  width: number
-  height: number
-  rotate?: number
-  scaleX?: number
-  scaleY?: number
-}
+import 'cropperjs/dist/cropper.css'
 
 const props = withDefaults(
   defineProps<{
@@ -26,51 +17,42 @@ const props = withDefaults(
     autoCropArea?: number
     background?: boolean
     center?: boolean
-    /** @deprecated */
     checkCrossOrigin?: boolean
-    /** @deprecated */
     checkOrientation?: boolean
     cropBoxMovable?: boolean
     cropBoxResizable?: boolean
-    data?: Partial<SetDataOptions> | null
-    dragMode?: 'crop' | 'move' | 'none'
+    data?: Cropper.SetDataOptions | null
+    dragMode?: Cropper.DragMode
     guides?: boolean
     highlight?: boolean
     initialAspectRatio?: number
     modal?: boolean
     movable?: boolean
     preview?: HTMLElement | HTMLElement[] | NodeListOf<HTMLElement> | string
-    /** @deprecated */
     responsive?: boolean
-    /** @deprecated */
     restore?: boolean
     rotatable?: boolean
     scalable?: boolean
     toggleDragModeOnDblclick?: boolean
-    viewMode?: 0 | 1 | 2 | 3
+    viewMode?: Cropper.ViewMode
     wheelZoomRatio?: number
-    /** @deprecated */
     zoomOnTouch?: boolean
-    /** @deprecated */
     zoomOnWheel?: boolean
-    /** @deprecated */
     zoomable?: boolean
     // Size limitation
     minCanvasWidth?: number
     minCanvasHeight?: number
-    /** @deprecated */
     minContainerWidth?: number
-    /** @deprecated */
     minContainerHeight?: number
     minCropBoxWidth?: number
     minCropBoxHeight?: number
-    // Callbacks
-    ready?: null | (() => void)
-    crop?: null | ((event: Event) => void)
-    cropend?: null | ((event: Event) => void)
-    cropmove?: null | ((event: Event) => void)
-    cropstart?: null | ((event: Event) => void)
-    zoom?: null | ((event: Event) => void)
+    // callbacks
+    ready?: null | ((event: Cropper.ReadyEvent<T>) => void)
+    crop?: null | ((event: Cropper.CropEvent<T>) => void)
+    cropend?: null | ((event: Cropper.CropEndEvent<T>) => void)
+    cropmove?: null | ((event: Cropper.CropMoveEvent<T>) => void)
+    cropstart?: null | ((event: Cropper.CropStartEvent<T>) => void)
+    zoom?: null | ((event: Cropper.ZoomEvent<T>) => void)
   }>(),
   {
     containerStyle: undefined,
@@ -102,7 +84,6 @@ const props = withDefaults(
     viewMode: 0,
     wheelZoomRatio: 0.1,
     zoomOnTouch: true,
-    zoomOnWheel: true,
     zoomable: true,
     minCanvasWidth: 0,
     minCanvasHeight: 0,
@@ -120,19 +101,15 @@ const props = withDefaults(
 )
 
 const cropperInstance = ref<InstanceType<typeof Cropper> | null>(null)
-const imgEl = ref<HTMLImageElement | null>(null)
+const imgEl = ref<HTMLImageElement | HTMLCanvasElement | null>(null)
 const loading = ref(true)
 
-let canvas: CropperCanvas | null = null
-let selection: CropperSelection | null = null
-let cropperImage: CropperImage | null = null
-
 const enable = () => {
-  if (canvas) canvas.disabled = false
+  cropperInstance.value?.enable()
 }
 
 const disable = () => {
-  if (canvas) canvas.disabled = true
+  cropperInstance.value?.disable()
 }
 
 const destroy = () => {
@@ -140,41 +117,15 @@ const destroy = () => {
 }
 
 const getImageData = () => {
-  if (!cropperImage) return undefined
-  return {
-    naturalWidth: cropperImage.$image.naturalWidth,
-    naturalHeight: cropperImage.$image.naturalHeight,
-  }
+  return cropperInstance.value?.getImageData()
 }
 
 const getData = () => {
-  if (!selection || !cropperImage) return undefined
-  const [a, b, c, d] = cropperImage.$getTransform()
-  const rotate = Math.atan2(b, a) * (180 / Math.PI)
-  const scaleX = Math.sqrt(a * a + b * b)
-  const scaleY = Math.sqrt(c * c + d * d)
-  return {
-    x: selection.x,
-    y: selection.y,
-    width: selection.width,
-    height: selection.height,
-    rotate,
-    scaleX,
-    scaleY,
-  }
+  return cropperInstance.value?.getData()
 }
 
-const setData = (data: SetDataOptions) => {
-  if (selection) selection.$change(data.x, data.y, data.width, data.height)
-  if (cropperImage) {
-    if (data.rotate !== undefined) {
-      cropperImage.$resetTransform()
-      cropperImage.$rotate(data.rotate * (Math.PI / 180))
-    }
-    if (data.scaleX !== undefined || data.scaleY !== undefined) {
-      cropperImage.$scale(data.scaleX ?? 1, data.scaleY ?? 1)
-    }
-  }
+const setData = (data: Cropper.SetDataOptions) => {
+  return cropperInstance.value?.setData(data)
 }
 
 defineExpose({
@@ -187,103 +138,24 @@ defineExpose({
 })
 
 onMounted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { containerStyle, src, alt, imgStyle, ...data } = props
+  const propsOptions = data as Record<string, any>
+  const options: Record<string, any> = {}
+  for (const key in data) {
+    if (
+      Object.prototype.hasOwnProperty.call(propsOptions, key) &&
+      propsOptions[key] !== undefined
+    ) {
+      options[key] = propsOptions[key]
+    }
+  }
   nextTick(() => {
     if (!isNull(imgEl.value)) {
-      const cropper = new Cropper(imgEl.value!)
-      cropperInstance.value = cropper
-
-      canvas = cropper.getCropperCanvas()
-      selection = cropper.getCropperSelection()
-      cropperImage = cropper.getCropperImage()
-
-      if (canvas) {
-        // Background
-        canvas.background = props.background
-
-        // Zoom control (zoomOnWheel and zoomable are deprecated in v2 but still controllable via scaleStep)
-        if (!props.zoomOnWheel || !props.zoomable) {
-          canvas.scaleStep = 0
-        } else {
-          canvas.scaleStep = props.wheelZoomRatio
-        }
-
-        // Min canvas size
-        if (props.minCanvasWidth) canvas.style.minWidth = `${props.minCanvasWidth}px`
-        if (props.minCanvasHeight) canvas.style.minHeight = `${props.minCanvasHeight}px`
-
-        // Drag mode — set action on the top-level canvas handle
-        const dragHandle = canvas.querySelector(':scope > cropper-handle') as CropperHandle | null
-        if (dragHandle && props.dragMode) {
-          const actionMap: Record<string, string> = { crop: 'select', move: 'move', none: 'none' }
-          dragHandle.action = actionMap[props.dragMode] ?? 'select'
-        }
-
-        // Toggle drag mode on double click
-        if (props.toggleDragModeOnDblclick && dragHandle) {
-          dragHandle.addEventListener('dblclick', () => {
-            dragHandle.action = dragHandle.action === 'select' ? 'move' : 'select'
-          })
-        }
-
-        // Modal (shade overlay outside crop box)
-        const shade = canvas.querySelector('cropper-shade') as HTMLElement | null
-        if (shade) shade.hidden = !props.modal
-
-        // Guides (grid lines inside crop box)
-        const grid = canvas.querySelector('cropper-grid') as HTMLElement | null
-        if (grid) grid.hidden = !props.guides
-
-        // Center crosshair
-        const crosshair = canvas.querySelector('cropper-crosshair') as HTMLElement | null
-        if (crosshair) crosshair.hidden = !props.center
-
-        // Highlight (action area on crop box)
-        const actionEl = canvas.querySelector('cropper-action') as HTMLElement | null
-        if (actionEl) actionEl.hidden = !props.highlight
-
-        // Event callbacks
-        if (props.cropend) canvas.addEventListener('actionend', props.cropend)
-        if (props.cropmove) canvas.addEventListener('actionmove', props.cropmove)
-        if (props.cropstart) canvas.addEventListener('actionstart', props.cropstart)
-        if (props.crop) canvas.addEventListener('action', props.crop)
-        if (props.zoom) canvas.addEventListener('action', props.zoom)
-      }
-
-      if (selection) {
-        if (!isNaN(props.aspectRatio)) selection.aspectRatio = props.aspectRatio
-        if (!isNaN(props.initialAspectRatio)) selection.initialAspectRatio = props.initialAspectRatio
-        selection.movable = props.cropBoxMovable
-        selection.resizable = props.cropBoxResizable
-        // autoCrop=false → initialCoverage=0 (no initial selection); autoCrop=true → use autoCropArea ratio
-        selection.initialCoverage = props.autoCrop ? props.autoCropArea : 0
-
-        // Min crop box size
-        if (props.minCropBoxWidth) selection.style.minWidth = `${props.minCropBoxWidth}px`
-        if (props.minCropBoxHeight) selection.style.minHeight = `${props.minCropBoxHeight}px`
-      }
-
-      if (cropperImage) {
-        cropperImage.translatable = props.movable
-        cropperImage.rotatable = props.rotatable
-        cropperImage.scalable = props.scalable
-      }
-
-      if (props.ready) {
-        cropperImage?.$ready().then(props.ready)
-      }
-
-      if (props.data) {
-        const initialData = props.data
-        cropperImage?.$ready().then(() => {
-          setData(initialData as SetDataOptions)
-        })
-      }
-
-      cropperImage?.$ready().then(() => {
-        setTimeout(() => {
-          loading.value = false
-        }, 500)
-      })
+      cropperInstance.value = new Cropper(imgEl.value as any, options)
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     }
   })
 })
