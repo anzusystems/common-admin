@@ -225,6 +225,7 @@ onMounted(() => {
             <VBtn
               size="x-small"
               icon
+              color="light"
               variant="text"
               @click.stop="setGridView(AssetSelectGridView.Masonry)"
             >
@@ -238,6 +239,7 @@ onMounted(() => {
             </VBtn>
             <VBtn
               icon
+              color="light"
               size="x-small"
               variant="text"
               @click.stop="setGridView(AssetSelectGridView.Thumbnail)"
@@ -253,6 +255,7 @@ onMounted(() => {
             <VBtn
               size="x-small"
               icon
+              color="light"
               variant="text"
               @click.stop="setGridView(AssetSelectGridView.Table)"
             >
@@ -270,6 +273,7 @@ onMounted(() => {
             />
             <VBtn
               icon
+              color="light"
               :width="30"
               :height="30"
               :active="sidebarRight"
