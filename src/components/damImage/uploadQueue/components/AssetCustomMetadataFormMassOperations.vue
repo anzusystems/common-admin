@@ -60,7 +60,7 @@ const elements = computed(() => {
     <VRow
       v-for="element in elements"
       :key="element.id"
-      dense
+      density="comfortable"
       class="mt-1"
     >
       <VCol>

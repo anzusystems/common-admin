@@ -257,7 +257,7 @@ onUnmounted(() => {
           </div>
         </div>
         <VRow
-          dense
+          density="comfortable"
           class="my-2"
         >
           <VCol>
@@ -324,7 +324,7 @@ onUnmounted(() => {
         </VRow>
         <VRow
           v-if="item.displayTitle"
-          dense
+          density="comfortable"
           class="my-2 mb-3 mt-0 text-body-small"
         >
           <VCol class="pt-0">
@@ -350,7 +350,7 @@ onUnmounted(() => {
             <template #after-pinned>
               <VRow
                 v-if="keywordEnabled"
-                dense
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>
@@ -374,7 +374,7 @@ onUnmounted(() => {
               </VRow>
               <VRow
                 v-if="authorEnabled"
-                dense
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>
@@ -399,7 +399,7 @@ onUnmounted(() => {
               </VRow>
               <VRow
                 v-if="mainFileSingleUseEnabled"
-                dense
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>

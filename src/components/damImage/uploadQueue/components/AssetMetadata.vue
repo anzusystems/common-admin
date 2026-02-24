@@ -118,7 +118,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
           <template #after-pinned>
             <VRow
               v-if="keywordEnabled"
-              dense
+              density="comfortable"
               class="my-2"
             >
               <VCol>
@@ -143,7 +143,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
             </VRow>
             <VRow
               v-if="authorEnabled"
-              dense
+              density="comfortable"
               class="my-2"
             >
               <VCol>
@@ -169,7 +169,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
             </VRow>
             <VRow
               v-if="mainFileSingleUseEnabled"
-              dense
+              density="comfortable"
               class="my-2"
             >
               <VCol>

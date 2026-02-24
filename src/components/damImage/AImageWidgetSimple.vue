@@ -144,7 +144,7 @@ watch(
   >
     <VRow
       v-if="showDescription"
-      dense
+      density="comfortable"
     >
       <VCol>
         <span class="text-body-small text-medium-emphasis">
@@ -155,7 +155,7 @@ watch(
     </VRow>
     <VRow
       v-if="showSource"
-      dense
+      density="comfortable"
     >
       <VCol>
         <span class="text-body-small text-medium-emphasis">

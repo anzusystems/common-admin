@@ -69,7 +69,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
 <template>
   <div class="w-100">
     <VRow
-      dense
+      density="comfortable"
       class="mt-1"
     >
       <VCol>
@@ -113,7 +113,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
     </VRow>
     <VRow
       v-if="authorEnabled && showDamAuthorsAtLeastOne"
-      dense
+      density="comfortable"
       class="mt-1"
     >
       <VCol>
@@ -167,7 +167,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
     </VRow>
     <VRow
       v-else
-      dense
+      density="comfortable"
       class="mt-1"
     >
       <VCol>

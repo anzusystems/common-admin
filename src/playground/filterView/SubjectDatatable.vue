@@ -46,7 +46,7 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
     { key: 'rubric' },
     { key: 'articleAuthors', maxWidth: 150 },
     { key: 'status' },
-    { key: 'stages', title: t('cms.articleStage.datatable.stage') },
+    { key: 'stages', title: t('system.subject.model.stages') },
     { key: 'dates.publicPublishedAt' },
     { key: 'dates.expireAt' },
     { key: 'dates.publishedAt' },

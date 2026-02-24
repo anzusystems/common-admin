@@ -1,7 +1,7 @@
 import {
   createRouter,
   createWebHistory,
-  type NavigationGuardNext,
+  type NavigationGuardReturn,
   type RouteLocationNormalized,
   type RouteParams,
 } from 'vue-router'
@@ -35,7 +35,9 @@ import { useCollabInit } from '@/components/collab/composables/collabInit'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useAlerts } from '@/composables/system/alerts'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
-import { updateCurrentUser, useCurrentUser } from '@/playground/collabView/currentUser'
+import { defineAuth } from '@/composables/auth/defineAuth'
+import type { AclValue } from '@/types/Permission'
+import { cmsClient } from '@/playground/mock/cmsClient'
 import CopyTextView from '@/playground/copyTextView/CopyTextView.vue'
 import ImagePublicInputView from '@/playground/imagePublicInputView/ImagePublicInputView.vue'
 import RemoteAutocompleteView from '@/playground/remoteAutocompleteView/RemoteAutocompleteView.vue'
@@ -173,11 +175,10 @@ const { collabOptions } = useCommonAdminCollabOptions()
 const checkCollab = async (
   to: RouteLocationNormalized,
   from: RouteLocationNormalized,
-  next: NavigationGuardNext,
-) => {
+): Promise<NavigationGuardReturn> => {
   const { showWarningT, showErrorT } = useAlerts()
 
-  if (!collabOptions.value.enabled) return next()
+  if (!collabOptions.value.enabled) return
 
   if (from.meta.collab) {
     // @ts-ignore
@@ -195,7 +196,7 @@ const checkCollab = async (
     } catch (error) {
       if (error instanceof Error && error.message === CollabAccessRoomStatus.Failed) {
         showErrorT('common.collab.alert.error')
-        return next(from)
+        return from
       }
       showWarningT('common.collab.alert.occupied')
       alertedOccupiedRooms.value.add(collab.room)
@@ -206,18 +207,17 @@ const checkCollab = async (
         params.id = to.params.id
       }
 
-      return next({ name: redirectToRoute, params })
+      return { name: redirectToRoute, params }
     }
   }
-
-  next()
 }
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from): Promise<NavigationGuardReturn> => {
   if (!initLanguageMessagesLoaded.value) await initLoadLanguageMessages()
   if (!initialized.value) {
-    const { currentUser } = useCurrentUser()
-    await updateCurrentUser()
+    const { useCurrentUser } = defineAuth<AclValue>('cms')
+    const { fetchCurrentUser, currentUser } = useCurrentUser('cms')
+    await fetchCurrentUser(cmsClient, '/adm/v1/user/current')
     // init what needed
     const { setCollabUserCurrentId } = useCollabCurrentUserId()
     setCollabUserCurrentId(currentUser.value?.id ?? null)
@@ -225,7 +225,7 @@ router.beforeEach(async (to, from, next) => {
     initCollab()
     initialized.value = true
   }
-  await checkCollab(to, from, next)
+  await checkCollab(to, from)
 })
 
 export default router

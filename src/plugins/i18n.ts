@@ -52,7 +52,7 @@ export const i18n = createI18n<[MessageSchema]>({
     sk: slovakPluralizationRule,
   },
   missing: (locale: Locale, key: Path) => {
-    if (REQUIRED_LOCALES.includes(locale)) {
+    if (REQUIRED_LOCALES.includes(locale) && !key.startsWith('system.subject.')) {
       console.warn(`Missing ${locale} translation: ${key}`)
     }
   },

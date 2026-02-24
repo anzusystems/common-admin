@@ -132,7 +132,7 @@ defineExpose({
   >
     <VRow
       v-if="enableTop"
-      dense
+      density="comfortable"
     >
       <VCol>
         <slot name="top" />
@@ -157,7 +157,7 @@ defineExpose({
     </VRow>
     <VRow
       v-if="!alwaysVisible"
-      dense
+      density="comfortable"
     >
       <VCol
         v-if="!hideMore"
