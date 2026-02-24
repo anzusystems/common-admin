@@ -44,7 +44,7 @@ const toggleVisibility = (key: string) => {
   <VBtn
     :class="buttonClass"
     :data-cy="dataCy"
-    color="light"
+    class="text-medium-emphasis"
     icon
     size="x-small"
     variant="text"

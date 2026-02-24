@@ -218,8 +218,7 @@ defineExpose({
                 {{ t('common.button.submitFilter') }}
               </VBtn>
               <VBtn
-                class="px-2"
-                color="light"
+                class="text-medium-emphasis px-2"
                 min-width="36px"
                 variant="flat"
                 size="small"

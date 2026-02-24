@@ -164,6 +164,7 @@ watch(
       variant="text"
       rounded="xl"
       size="small"
+      class="text-medium-emphasis"
       append-icon="mdi-chevron-down"
     >
       {{ activeTitle }}

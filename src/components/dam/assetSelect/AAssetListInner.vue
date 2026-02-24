@@ -340,7 +340,7 @@ onUnmounted(() => {
         </div>
         <div
           v-else-if="!asset"
-          class="d-flex w-100 align-center justify-center"
+          class="d-flex w-100 align-center justify-center text-body-large"
         >
           {{ t('common.assetSelect.meta.info.noAssetSelected') }}
         </div>
