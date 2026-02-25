@@ -42,13 +42,15 @@ withDefaults(
           {{ text }}
         </p>
 
-        <ABtnPrimary
-          v-if="buttonText && returnRouteName"
-          :to="{ name: returnRouteName }"
-          size="large"
-        >
-          {{ buttonText }}
-        </ABtnPrimary>
+        <slot name="actions">
+          <ABtnPrimary
+            v-if="buttonText && returnRouteName"
+            :to="{ name: returnRouteName }"
+            size="large"
+          >
+            {{ buttonText }}
+          </ABtnPrimary>
+        </slot>
       </slot>
     </div>
   </div>
