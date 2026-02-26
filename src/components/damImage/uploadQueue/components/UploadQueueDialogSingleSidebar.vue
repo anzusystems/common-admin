@@ -99,6 +99,7 @@ const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && 
             <AssetDetailSidebarROI
               :queue-key="queueKey"
               :is-active="true"
+              :config-name="configName"
             />
           </div>
         </template>
@@ -124,6 +125,7 @@ const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && 
             <AssetDetailSidebarROI
               :queue-key="queueKey"
               :is-active="activeTab === AssetDetailTabImageWithRoi.ROI"
+              :config-name="configName"
             />
           </div>
         </template>

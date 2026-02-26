@@ -26,7 +26,7 @@ const props = withDefaults(
     disableRedirect: false,
     redirectRouteName: undefined,
     redirectParamName: 'id',
-    disableShowErrorsDefault: false
+    disableShowErrorsDefault: false,
   },
 )
 

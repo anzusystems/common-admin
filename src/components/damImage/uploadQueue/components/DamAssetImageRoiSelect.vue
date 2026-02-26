@@ -18,8 +18,11 @@ import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageAp
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
+    configName?: string
   }>(),
-  {},
+  {
+    configName: 'default',
+  },
 )
 
 const { showRecordWas, showErrorsDefault } = useAlerts()
@@ -28,7 +31,8 @@ const cropperContainerStyle = { overflow: 'hidden', maxHeight: 'calc(100vh - 160
 
 const imageRoiStore = useImageRoiStore()
 
-const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { damClient, endPointImage } = useCommonAdminCoreDamOptions(props.configName)
 const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)

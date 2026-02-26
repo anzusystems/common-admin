@@ -380,7 +380,10 @@ onMounted(() => {
               v-if="(activeTab === AssetDetailTabImageWithRoi.ROI && enableRoiTab) || simpleMode"
               class="w-100 h-100 pa-2 d-flex align-center justify-center"
             >
-              <DamAssetImageRoiSelect :ext-system="extSystem" />
+              <DamAssetImageRoiSelect
+                :ext-system="extSystem"
+                :config-name="configName"
+              />
             </div>
             <div
               v-else

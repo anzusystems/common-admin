@@ -25,12 +25,15 @@ import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetA
 import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageApi'
 import type { DocId } from '@/types/common'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     isActive: boolean
     queueKey: UploadQueueKey
+    configName?: string
   }>(),
-  {},
+  {
+    configName: 'default',
+  },
 )
 
 const { t } = useI18n()
@@ -40,7 +43,8 @@ const assetDetailStore = useAssetDetailStore()
 
 const { pagination } = usePagination(SORT_BY_ID)
 
-const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { damClient, endPointImage } = useCommonAdminCoreDamOptions(props.configName)
 const filterFieldsInner = [] satisfies readonly MakeFilterOption[]
 const { filterConfig, filterData } = createFilter(
   filterFieldsInner,
@@ -59,7 +63,11 @@ const loadImageFile = async (id: DocId) => {
 const loadRois = async (forceReloadFile = false) => {
   imageRoiStore.showLoader()
   if (imageRoiStore.imageFile) {
-    const { executeFetch } = useFetchImageRoiList(damClient, imageRoiStore.imageFile.id)
+    const { executeFetch } = useFetchImageRoiList(
+      damClient,
+      endPointImage,
+      imageRoiStore.imageFile.id,
+    )
     const res = await executeFetch(pagination, filterData, filterConfig)
     if (res.length > 0 && res[0].id) {
       const roi = await fetchRoi(damClient, res[0].id)

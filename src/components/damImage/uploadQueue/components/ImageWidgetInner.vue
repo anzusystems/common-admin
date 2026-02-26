@@ -449,13 +449,16 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const coreDamOptions = useCommonAdminCoreDamOptions(props.configName)
 const {
   damClient,
   endPointAsset,
   showSourceEnabled,
   sourceLabel,
   customAssetSelectMetadataToImageMap,
-} = useCommonAdminCoreDamOptions()
+} = coreDamOptions
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true

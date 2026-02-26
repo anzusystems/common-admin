@@ -7,7 +7,6 @@ import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 const END_POINT = '/adm/v1/roi'
-const END_POINT_IMAGE_ROI = '/adm/v1/image/:id/roi'
 export const ENTITY = 'asset'
 
 export const fetchRoi = (client: () => AxiosInstance, id: DocId) =>
@@ -16,11 +15,15 @@ export const fetchRoi = (client: () => AxiosInstance, id: DocId) =>
 export const updateRoi = (client: () => AxiosInstance, id: DocId, data: RegionOfInterest) =>
   apiUpdateOne<RegionOfInterest>(client, data, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
 
-export const useFetchImageRoiList = (client: () => AxiosInstance, imageId: DocId) =>
+export const useFetchImageRoiList = (
+  client: () => AxiosInstance,
+  endPointImage: string,
+  imageId: DocId,
+) =>
   useApiFetchList<any[]>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: END_POINT_IMAGE_ROI,
+    urlTemplate: endPointImage + '/:id/roi',
     urlParams: { id: imageId },
   })
