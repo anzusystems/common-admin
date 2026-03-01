@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, shallowRef, watch } from 'vue'
+import { computed, nextTick, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import type { DocId, IntegerId } from '@/types/common'
 import { objectGetValueByPath } from '@/utils/object'
@@ -84,13 +84,13 @@ const onClick = () => {
   router.push({ name: props.route, params: { id: props.id } })
 }
 
-watch(
+const stopWatch = watch(
   item,
-  async (newValue) => {
-    if (loaded.value) return
+  (newValue) => {
     if (isUndefined(newValue) || newValue._loaded === false) return
     cached.value = newValue
     loaded.value = true
+    nextTick(() => stopWatch())
   },
   { immediate: true },
 )
