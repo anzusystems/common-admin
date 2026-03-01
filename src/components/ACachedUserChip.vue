@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import type { IntegerId } from '@/types/common'
-import type { AnzuUserMinimal } from '@/types/AnzuUser'
-import { computed, shallowRef, watch } from 'vue'
+import { computed } from 'vue'
 import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
 import { isNull, isUndefined } from '@/utils/common'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import AAnzuUserAvatar from '@/components/AAnzuUserAvatar.vue'
 import { useRouter } from 'vue-router'
 import { replaceUrlParameters } from '@/services/api/apiHelper'
+import { useCachedItem } from '@/composables/system/useCachedItem'
 
 const props = withDefaults(
   defineProps<{
@@ -24,10 +24,7 @@ const props = withDefaults(
 )
 
 const router = useRouter()
-const cached = shallowRef<undefined | AnzuUserMinimal>(undefined)
-const loaded = shallowRef<boolean>(false)
-
-const item = computed(() => {
+const { cached, loaded } = useCachedItem(() => {
   if (props.id) {
     return props.cachedUsers?.get(props.id)
   }
@@ -63,16 +60,6 @@ const onClick = () => {
   router.push({ name: props.routeName, params: { id: props.id } })
 }
 
-watch(
-  item,
-  async (newValue) => {
-    if (loaded.value) return
-    if (isUndefined(newValue) || newValue._loaded === false) return
-    cached.value = newValue
-    loaded.value = true
-  },
-  { immediate: true },
-)
 </script>
 
 <template>

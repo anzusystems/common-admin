@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import { computed, nextTick, shallowRef, watch } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { DocId, IntegerId } from '@/types/common'
 import { objectGetValueByPath } from '@/utils/object'
 import { isNull, isUndefined } from '@/utils/common'
 import { COMMON_CONFIG } from '@/model/commonConfig'
+import { useCachedItem } from '@/composables/system/useCachedItem'
 
 const props = withDefaults(
   defineProps<{
@@ -50,12 +51,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
-const cached = shallowRef<undefined | any>(undefined)
-const loaded = shallowRef<boolean>(false)
-
-const item = computed(() => {
-  return props.getCachedFn(props.id as any)
-})
+const { cached, loaded } = useCachedItem(() => props.getCachedFn(props.id as any))
 
 const containerClassComputed = computed(() => {
   return props.wrapText ? props.containerClass + ' a-chip--wrap' : props.containerClass
@@ -84,16 +80,6 @@ const onClick = () => {
   router.push({ name: props.route, params: { id: props.id } })
 }
 
-const stopWatch = watch(
-  item,
-  (newValue) => {
-    if (isUndefined(newValue) || newValue._loaded === false) return
-    cached.value = newValue
-    loaded.value = true
-    nextTick(() => stopWatch())
-  },
-  { immediate: true },
-)
 </script>
 
 <template>

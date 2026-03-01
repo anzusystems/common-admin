@@ -1,12 +1,11 @@
 <script lang="ts" setup>
-import { computed, shallowRef, watch } from 'vue'
+import { computed } from 'vue'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
-import type { CachedItem } from '@/composables/system/defineCached'
-import type { DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { isNull, isUndefined } from '@/utils/common'
 import type { DocId } from '@/types/common'
 import { useI18n } from 'vue-i18n'
+import { useCachedItem } from '@/composables/system/useCachedItem'
 
 const props = withDefaults(
   defineProps<{
@@ -33,12 +32,7 @@ const props = withDefaults(
 const { getCachedAuthor } = useDamCachedAuthors()
 const uploadQueuesStore = useUploadQueuesStore()
 
-const cached = shallowRef<undefined | CachedItem<DamAuthorMinimal>>(undefined)
-const loaded = shallowRef<boolean>(false)
-
-const item = computed(() => {
-  return getCachedAuthor(props.id)
-})
+const { cached, loaded } = useCachedItem(() => getCachedAuthor(props.id))
 
 const displayNewIcon = computed(() => {
   if (!props.queueId) return undefined
@@ -61,20 +55,9 @@ const displayTitle = computed(() => {
 
 const displayReviewed = computed(() => {
   if (props.forceReviewed) return true
-  if (item.value?.reviewed) return true
+  if (cached.value?.reviewed) return true
   return false
 })
-
-watch(
-  item,
-  async (newValue) => {
-    if (loaded.value) return
-    if (isUndefined(newValue) || newValue._loaded === false) return
-    cached.value = newValue
-    loaded.value = true
-  },
-  { immediate: true },
-)
 
 const { t } = useI18n()
 </script>

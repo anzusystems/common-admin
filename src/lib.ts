@@ -321,6 +321,7 @@ import {
 } from '@/composables/system/datatableColumns'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { type CachedItem, defineCached } from '@/composables/system/defineCached'
+import { useCachedItem } from '@/composables/system/useCachedItem'
 import type { ObjectLeaves, ObjectPaths, Prettify, UniqueValues } from '@/types/utils'
 import { ensureUniqueValues } from '@/types/utils'
 import { loadCommonFonts } from '@/plugins/webfontloader'
@@ -770,6 +771,7 @@ export {
   createDatatableColumnsConfig,
   useTheme,
   defineCached,
+  useCachedItem,
   Theme,
   useLanguageSettings,
   modifyLanguageSettings,
