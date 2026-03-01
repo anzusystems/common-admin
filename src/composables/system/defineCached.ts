@@ -25,8 +25,8 @@ export function defineCached<
   idProp = 'id',
   maxLimit = 1000,
 ) {
-  const cache: Ref<Map<I, CachedItem<M>>> = ref(new Map()) // todo check
-  const toFetch = ref(new Set()) as Ref<Set<I>> // todo check
+  const cache: Ref<Map<I, CachedItem<M>>> = ref(new Map())
+  const toFetch = ref(new Set()) as Ref<Set<I>>
 
   const add = (...args: AddToCachedArgs<I>) => {
     const toAdd = <Set<I>>new Set()
@@ -72,7 +72,11 @@ export function defineCached<
 
   const updateMap = (data: T[]) => {
     if (cache.value.size >= maxLimit) {
-      cache.value.clear()
+      for (const [key, value] of cache.value) {
+        if (value._loaded) {
+          cache.value.delete(key)
+        }
+      }
     }
     for (let i = 0; i < data.length; i += 1) {
       cache.value.set(data[i][idProp] as I, {
