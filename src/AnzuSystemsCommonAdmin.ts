@@ -67,6 +67,9 @@ export interface CommonAdminCoreDamConfig {
   showSourceEnabled?: boolean
   showFileInfoEnabled?: boolean
   sourceLabel?: string
+  editAssetLabel?: string
+  addFromDamLabel?: string
+  replaceFromDamLabel?: string
   descriptionValidation?: ImageFieldValidationConfig
   sourceValidation?: ImageFieldValidationConfig
   customUploadMetadataToImageMap?: UploadMetadataToImageMapFn

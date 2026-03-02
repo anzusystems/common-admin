@@ -59,7 +59,6 @@ const onClick = () => {
   if (!props.routeName) return
   router.push({ name: props.routeName, params: { id: props.id } })
 }
-
 </script>
 
 <template>

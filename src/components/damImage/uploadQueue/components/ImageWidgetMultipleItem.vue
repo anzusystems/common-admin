@@ -23,10 +23,12 @@ const props = withDefaults(
     authorEnabled: boolean
     showSourceEnabled?: boolean
     sourceLabel?: string
+    editAssetLabel?: string
   }>(),
   {
     showSourceEnabled: true,
     sourceLabel: undefined,
+    editAssetLabel: undefined,
   },
 )
 
@@ -84,7 +86,7 @@ const removeItem = () => {
               class="mb-2"
               @click.stop="onEditAsset"
             >
-              {{ t('common.damImage.queueItem.edit') }}
+              {{ editAssetLabel || t('common.damImage.image.button.editAsset') }}
             </VBtn>
             <AActionDeleteButton
               variant="icon"

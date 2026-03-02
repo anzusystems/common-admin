@@ -80,10 +80,8 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
 
 const { cachedUsers } = useDamCachedUsers()
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(
-  props.configName,
-)
+const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
+  useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
 </script>
 
 <template>
@@ -93,7 +91,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
     class="ma-2"
     @click="emit('editInDam')"
   >
-    {{ t('common.damImage.media.button.editInDam') }}
+    {{ editAssetLabel || t('common.damImage.image.button.editAsset') }}
   </VBtn>
   <VExpansionPanels
     v-if="asset"

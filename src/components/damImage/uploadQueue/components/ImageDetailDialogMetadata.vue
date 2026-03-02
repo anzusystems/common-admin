@@ -36,12 +36,14 @@ const props = withDefaults(
     showDamAuthors?: boolean
     showSourceEnabled?: boolean
     sourceLabel?: string
+    editAssetLabel?: string
   }>(),
   {
     expand: false,
     showDamAuthors: false,
     showSourceEnabled: true,
     sourceLabel: undefined,
+    editAssetLabel: undefined,
   },
 )
 
@@ -133,7 +135,7 @@ defineExpose({
       <VRow>
         <VCol>
           <VBtn @click.stop="onEditAsset">
-            {{ t('common.damImage.image.button.editAsset') }}
+            {{ editAssetLabel || t('common.damImage.image.button.editAsset') }}
           </VBtn>
         </VCol>
       </VRow>
@@ -227,7 +229,7 @@ defineExpose({
           <VRow>
             <VCol>
               <VBtn @click.stop="onEditAsset">
-                {{ t('common.damImage.image.button.editAsset') }}
+                {{ editAssetLabel || t('common.damImage.image.button.editAsset') }}
               </VBtn>
             </VCol>
           </VRow>

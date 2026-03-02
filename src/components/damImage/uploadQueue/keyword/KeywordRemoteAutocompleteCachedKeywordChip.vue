@@ -46,7 +46,6 @@ const displayTitle = computed(() => {
   }
   return ''
 })
-
 </script>
 
 <template>

@@ -269,7 +269,7 @@ onUnmounted(() => {
                   :disabled="!item.canEditMetadata"
                   @click.stop="showDetail"
                 >
-                  {{ t('common.damImage.queueItem.edit') }}
+                  {{ t('common.damImage.image.button.editAsset') }}
                 </VBtn>
               </div>
               <div>

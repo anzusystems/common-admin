@@ -79,7 +79,6 @@ const displayTitle = computed(() => {
 const onClick = () => {
   router.push({ name: props.route, params: { id: props.id } })
 }
-
 </script>
 
 <template>

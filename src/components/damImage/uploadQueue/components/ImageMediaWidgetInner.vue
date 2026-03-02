@@ -564,7 +564,15 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
 
 const assetDetailStore = useAssetDetailStore()
 const { loading: assetLoading, dialog: assetDialog, asset } = storeToRefs(assetDetailStore)
-const { damClient, endPointAsset, showSourceEnabled, sourceLabel } = useCommonAdminCoreDamOptions()
+const {
+  damClient,
+  endPointAsset,
+  showSourceEnabled,
+  sourceLabel,
+  editAssetLabel,
+  addFromDamLabel,
+  replaceFromDamLabel,
+} = useCommonAdminCoreDamOptions()
 
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
@@ -812,9 +820,11 @@ defineExpose({
               @click="actionLibrary"
             >
               <span v-if="imageMediaLoaded">{{
-                t('common.damImage.image.button.replaceFromDam')
+                replaceFromDamLabel || t('common.damImage.image.button.replaceFromDam')
               }}</span>
-              <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
+              <span v-else>{{
+                addFromDamLabel || t('common.damImage.image.button.addFromDam')
+              }}</span>
             </VBtn>
             <AFileInputDialog
               ref="expandedUploadDialog"
@@ -874,9 +884,11 @@ defineExpose({
                   <VListItem @click="actionLibrary">
                     <VListItemTitle>
                       <span v-if="imageMediaLoaded">{{
-                        t('common.damImage.image.button.replaceFromDam')
+                        replaceFromDamLabel || t('common.damImage.image.button.replaceFromDam')
                       }}</span>
-                      <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
+                      <span v-else>{{
+                        addFromDamLabel || t('common.damImage.image.button.addFromDam')
+                      }}</span>
                     </VListItemTitle>
                   </VListItem>
                   <AFileInputDialog
@@ -977,6 +989,7 @@ defineExpose({
       :show-dam-authors="showDamAuthorsInCmsImage"
       :show-source-enabled="showSourceEnabled"
       :source-label="sourceLabel"
+      :edit-asset-label="editAssetLabel"
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"

@@ -457,6 +457,9 @@ const {
   endPointAsset,
   showSourceEnabled,
   sourceLabel,
+  editAssetLabel,
+  addFromDamLabel,
+  replaceFromDamLabel,
   customAssetSelectMetadataToImageMap,
 } = coreDamOptions
 
@@ -665,8 +668,12 @@ defineExpose({
               class="mr-2 mb-2"
               @click="actionLibrary"
             >
-              <span v-if="imageLoaded">{{ t('common.damImage.image.button.replaceFromDam') }}</span>
-              <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
+              <span v-if="imageLoaded">{{
+                replaceFromDamLabel || t('common.damImage.image.button.replaceFromDam')
+              }}</span>
+              <span v-else>{{
+                addFromDamLabel || t('common.damImage.image.button.addFromDam')
+              }}</span>
             </VBtn>
             <AFileInputDialog
               ref="expandedUploadDialog"
@@ -719,9 +726,11 @@ defineExpose({
                   <VListItem @click="actionLibrary">
                     <VListItemTitle>
                       <span v-if="imageLoaded">{{
-                        t('common.damImage.image.button.replaceFromDam')
+                        replaceFromDamLabel || t('common.damImage.image.button.replaceFromDam')
                       }}</span>
-                      <span v-else>{{ t('common.damImage.image.button.addFromDam') }}</span>
+                      <span v-else>{{
+                        addFromDamLabel || t('common.damImage.image.button.addFromDam')
+                      }}</span>
                     </VListItemTitle>
                   </VListItem>
                   <AFileInputDialog
@@ -803,6 +812,7 @@ defineExpose({
       :show-dam-authors="showDamAuthorsInCmsImage"
       :show-source-enabled="showSourceEnabled"
       :source-label="sourceLabel"
+      :edit-asset-label="editAssetLabel"
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"

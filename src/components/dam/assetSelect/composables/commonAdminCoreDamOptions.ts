@@ -40,6 +40,9 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     showFileInfoEnabled:
       commonAdminCoreDamOptions.value.configs[configName].showFileInfoEnabled ?? true,
     sourceLabel: commonAdminCoreDamOptions.value.configs[configName].sourceLabel,
+    editAssetLabel: commonAdminCoreDamOptions.value.configs[configName].editAssetLabel,
+    addFromDamLabel: commonAdminCoreDamOptions.value.configs[configName].addFromDamLabel,
+    replaceFromDamLabel: commonAdminCoreDamOptions.value.configs[configName].replaceFromDamLabel,
     descriptionValidation: {
       ...defaultDescriptionValidation,
       ...commonAdminCoreDamOptions.value.configs[configName].descriptionValidation,

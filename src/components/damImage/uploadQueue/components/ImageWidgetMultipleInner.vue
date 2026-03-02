@@ -368,6 +368,8 @@ const {
   endPointAsset,
   showSourceEnabled,
   sourceLabel,
+  editAssetLabel,
+  addFromDamLabel,
   customAssetSelectMetadataToImageMap,
 } = useCommonAdminCoreDamOptions()
 
@@ -594,7 +596,7 @@ onMounted(() => {
         class="mr-2"
         @click="actionLibrary"
       >
-        {{ t('common.damImage.image.button.addFromDam') }}
+        {{ addFromDamLabel || t('common.damImage.image.button.addFromDam') }}
       </VBtn>
     </div>
     <AAssetSelect
@@ -634,6 +636,7 @@ onMounted(() => {
           :disable-draggable="disableDraggable"
           :show-source-enabled="showSourceEnabled"
           :source-label="sourceLabel"
+          :edit-asset-label="editAssetLabel"
           :author-enabled="authorEnabled"
           @edit-asset="onEditAsset"
           @remove-item="removeItem"
