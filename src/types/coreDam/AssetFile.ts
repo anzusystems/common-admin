@@ -74,6 +74,8 @@ export interface AssetFileAware {
   flags: {
     public: boolean
     singleUse: boolean
+    overrideInternal: boolean
+    internal: boolean
   }
 }
 
