@@ -492,6 +492,8 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       },
       flags: {
         showSource: true,
+        internal: false,
+        overrideInternal: false,
       },
       dam: {
         damId: selectedAsset.mainFile.id,

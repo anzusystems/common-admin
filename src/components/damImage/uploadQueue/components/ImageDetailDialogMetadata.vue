@@ -82,6 +82,8 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
     },
     flags: {
       showSource: false,
+      internal: false,
+      overrideInternal: false,
     },
   }
 })

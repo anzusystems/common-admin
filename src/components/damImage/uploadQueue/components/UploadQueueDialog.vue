@@ -159,6 +159,8 @@ const metadataMap = async (
       },
       flags: {
         showSource: true,
+        internal: false,
+        overrideInternal: false,
       },
       dam: {
         damId: queueItem.fileId as DocId,
