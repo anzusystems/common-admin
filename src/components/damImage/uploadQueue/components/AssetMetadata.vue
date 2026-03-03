@@ -91,7 +91,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
     class="ma-2"
     @click="emit('editInDam')"
   >
-    {{ editAssetLabel || t('common.damImage.image.button.editAsset') }}
+    {{ editAssetLabel }}
   </VBtn>
   <VExpansionPanels
     v-if="asset"

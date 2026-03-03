@@ -6,8 +6,6 @@ import {
   useCommonAdminCoreDamOptionsGlobal,
   useCommonAdminCoreDamOptions,
 } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { useI18n } from 'vue-i18n'
-
 const props = withDefaults(
   defineProps<{
     assetId?: DocIdNullable
@@ -19,7 +17,6 @@ const props = withDefaults(
   },
 )
 
-const { t } = useI18n()
 const { adminDomain } = useCommonAdminCoreDamOptionsGlobal()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { editAssetLabel } = useCommonAdminCoreDamOptions(props.configName)
@@ -38,6 +35,6 @@ const href = computed(() => {
     rel="noopener noreferrer"
     :href="href"
   >
-    {{ editAssetLabel || t('common.damImage.image.button.editAsset') }}
+    {{ editAssetLabel }}
   </VBtn>
 </template>

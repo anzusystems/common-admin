@@ -174,7 +174,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
         <div class="d-flex">
           <AFormTextarea
             v-model="texts.source"
-            :label="sourceLabel || t('common.damImage.image.model.texts.source')"
+            :label="sourceLabel"
           />
           <VBtn
             icon

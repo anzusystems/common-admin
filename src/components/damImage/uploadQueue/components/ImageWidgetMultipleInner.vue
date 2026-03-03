@@ -596,7 +596,7 @@ onMounted(() => {
         class="mr-2"
         @click="actionLibrary"
       >
-        {{ addFromDamLabel || t('common.damImage.image.button.addFromDam') }}
+        {{ addFromDamLabel }}
       </VBtn>
     </div>
     <AAssetSelect

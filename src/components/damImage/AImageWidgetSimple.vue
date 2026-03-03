@@ -158,9 +158,7 @@ watch(
       density="comfortable"
     >
       <VCol>
-        <span class="text-body-small text-medium-emphasis">
-          {{ sourceLabel || t('common.damImage.image.model.texts.source') }}:
-        </span>
+        <span class="text-body-small text-medium-emphasis"> {{ sourceLabel }}: </span>
         <br>{{ resImage.texts.source }}
       </VCol>
     </VRow>

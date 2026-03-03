@@ -668,12 +668,8 @@ defineExpose({
               class="mr-2 mb-2"
               @click="actionLibrary"
             >
-              <span v-if="imageLoaded">{{
-                replaceFromDamLabel || t('common.damImage.image.button.replaceFromDam')
-              }}</span>
-              <span v-else>{{
-                addFromDamLabel || t('common.damImage.image.button.addFromDam')
-              }}</span>
+              <span v-if="imageLoaded">{{ replaceFromDamLabel }}</span>
+              <span v-else>{{ addFromDamLabel }}</span>
             </VBtn>
             <AFileInputDialog
               ref="expandedUploadDialog"
@@ -725,12 +721,8 @@ defineExpose({
                   </VListItem>
                   <VListItem @click="actionLibrary">
                     <VListItemTitle>
-                      <span v-if="imageLoaded">{{
-                        replaceFromDamLabel || t('common.damImage.image.button.replaceFromDam')
-                      }}</span>
-                      <span v-else>{{
-                        addFromDamLabel || t('common.damImage.image.button.addFromDam')
-                      }}</span>
+                      <span v-if="imageLoaded">{{ replaceFromDamLabel }}</span>
+                      <span v-else>{{ addFromDamLabel }}</span>
                     </VListItemTitle>
                   </VListItem>
                   <AFileInputDialog

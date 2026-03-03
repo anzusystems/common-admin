@@ -86,7 +86,7 @@ const removeItem = () => {
               class="mb-2"
               @click.stop="onEditAsset"
             >
-              {{ editAssetLabel || t('common.damImage.image.button.editAsset') }}
+              {{ editAssetLabel }}
             </VBtn>
             <AActionDeleteButton
               variant="icon"
@@ -135,7 +135,7 @@ const removeItem = () => {
           <VCol>
             <AFormTextarea
               v-model="image.texts.source"
-              :label="sourceLabel || t('common.damImage.image.model.texts.source')"
+              :label="sourceLabel"
               :v="v$.image?.texts.source"
             />
           </VCol>

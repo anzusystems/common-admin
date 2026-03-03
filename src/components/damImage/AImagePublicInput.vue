@@ -241,7 +241,7 @@ defineExpose({
   <ARow>
     <AFormTextarea
       v-model="meta.source"
-      :label="sourceLabel || t('common.damImage.image.model.texts.source')"
+      :label="sourceLabel"
       :v="v$.meta.source"
       :disabled="disabled"
     />

@@ -45,7 +45,7 @@ const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
 }
 
 const handleValidationErrorMessage = (error: Error | any) => {
-  const { t } = i18n.global || i18n
+  const { t } = i18n.global
   if (!error || !error.response || !error.response.data) {
     // @ts-ignore
     return t('common.damImage.uploadErrors.unknownError')

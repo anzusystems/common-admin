@@ -135,7 +135,7 @@ defineExpose({
       <VRow>
         <VCol>
           <VBtn @click.stop="onEditAsset">
-            {{ editAssetLabel || t('common.damImage.image.button.editAsset') }}
+            {{ editAssetLabel }}
           </VBtn>
         </VCol>
       </VRow>
@@ -172,7 +172,7 @@ defineExpose({
         <VCol>
           <AFormTextarea
             v-model="detail.texts.source"
-            :label="sourceLabel || t('common.damImage.image.model.texts.source')"
+            :label="sourceLabel"
             :v="v$.image?.texts.source"
           />
         </VCol>
@@ -229,7 +229,7 @@ defineExpose({
           <VRow>
             <VCol>
               <VBtn @click.stop="onEditAsset">
-                {{ editAssetLabel || t('common.damImage.image.button.editAsset') }}
+                {{ editAssetLabel }}
               </VBtn>
             </VCol>
           </VRow>
@@ -265,7 +265,7 @@ defineExpose({
             <VCol>
               <AFormTextarea
                 v-model="detail.texts.source"
-                :label="sourceLabel || t('common.damImage.image.model.texts.source')"
+                :label="sourceLabel"
                 :v="v$.image?.texts.source"
               />
             </VCol>

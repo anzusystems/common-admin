@@ -4,6 +4,9 @@ import type {
   ImageFieldValidationConfig,
 } from '@/AnzuSystemsCommonAdmin'
 import { isUndefined } from '@/utils/common'
+import { i18n } from '@/plugins/i18n'
+
+const { t } = i18n.global
 
 const defaultDescriptionValidation: ImageFieldValidationConfig = {
   required: false,
@@ -39,10 +42,18 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
       commonAdminCoreDamOptions.value.configs[configName].showSourceEnabled ?? true,
     showFileInfoEnabled:
       commonAdminCoreDamOptions.value.configs[configName].showFileInfoEnabled ?? true,
-    sourceLabel: commonAdminCoreDamOptions.value.configs[configName].sourceLabel,
-    editAssetLabel: commonAdminCoreDamOptions.value.configs[configName].editAssetLabel,
-    addFromDamLabel: commonAdminCoreDamOptions.value.configs[configName].addFromDamLabel,
-    replaceFromDamLabel: commonAdminCoreDamOptions.value.configs[configName].replaceFromDamLabel,
+    sourceLabel:
+      commonAdminCoreDamOptions.value.configs[configName].sourceLabel ||
+      t('common.damImage.image.model.texts.source'),
+    editAssetLabel:
+      commonAdminCoreDamOptions.value.configs[configName].editAssetLabel ||
+      t('common.damImage.image.button.editAsset'),
+    addFromDamLabel:
+      commonAdminCoreDamOptions.value.configs[configName].addFromDamLabel ||
+      t('common.damImage.image.button.addFromDam'),
+    replaceFromDamLabel:
+      commonAdminCoreDamOptions.value.configs[configName].replaceFromDamLabel ||
+      t('common.damImage.image.button.replaceFromDam'),
     descriptionValidation: {
       ...defaultDescriptionValidation,
       ...commonAdminCoreDamOptions.value.configs[configName].descriptionValidation,
@@ -56,7 +67,7 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
     customAssetSelectMetadataToImageMap:
       commonAdminCoreDamOptions.value.configs[configName].customAssetSelectMetadataToImageMap,
     assetListEnabledFilters:
-      commonAdminCoreDamOptions.value.configs[configName].assetListEnabledFilters,
+      commonAdminCoreDamOptions.value.configs[configName].assetListEnabledFilters, // defaults to undefined = all filters
     simpleAssetSidebarEnabled:
       commonAdminCoreDamOptions.value.configs[configName].simpleAssetSidebar ?? false,
   }
