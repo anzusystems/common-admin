@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1771894807",
+  "version": "1.47.0-beta.dev-1771894808",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -89,7 +89,7 @@
     "oxlint": "~1.51.0",
     "pinia": "3.0.4",
     "playwright": "^1.58.2",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.8",
     "postcss-html": "^1.8.1",
     "postcss-prefix-selector": "^2.1.1",
     "rusha": "^0.8.14",
