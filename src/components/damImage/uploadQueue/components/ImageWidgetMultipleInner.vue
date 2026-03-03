@@ -297,6 +297,8 @@ const assetSelectConfirmMap = async (
         },
         flags: {
           showSource: true,
+          internal: false,
+          overrideInternal: false,
         },
         dam: {
           damId: asset.mainFile!.id,
