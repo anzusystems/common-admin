@@ -122,6 +122,8 @@ const submit = async () => {
       },
       flags: {
         showSource: true,
+        internal: false,
+        overrideInternal: false,
       },
       dam: {
         damId: asset.mainFile!.id,
@@ -152,6 +154,8 @@ const updatePreviewAndTexts = () => {
     },
     flags: {
       showSource: true,
+      internal: false,
+      overrideInternal: false,
     },
     dam: {
       damId: inputField.value,

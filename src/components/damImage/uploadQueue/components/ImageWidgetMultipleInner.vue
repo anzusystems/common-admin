@@ -254,6 +254,8 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
       },
       flags: {
         showSource: true,
+        internal: false,
+        overrideInternal: false,
       },
       dam: {
         damId: asset.mainFile!.id,
