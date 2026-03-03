@@ -85,6 +85,8 @@ export async function mapUploadMetadataToImages(
       },
       flags: {
         showSource: true,
+        internal: false,
+        overrideInternal: false,
       },
       dam: {
         damId: queueItem.fileId as DocId,

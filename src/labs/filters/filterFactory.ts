@@ -1,4 +1,5 @@
 import { reactive, type Ref, toRaw } from 'vue'
+import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 import {
   cloneDeep,
   isArray,
@@ -373,6 +374,7 @@ export function useFilterHelpers<
   }
 
   const loadStoredFilters = (pagination: Ref<Pagination>, callback?: AnyFn) => {
+    const { consumeStoredPage } = useDatatablePageStore()
     let source: 'hash' | 'localStorage' = 'hash'
     let storedFromHash = parseLocationHash()
     if (isNull(storedFromHash)) {
@@ -383,6 +385,10 @@ export function useFilterHelpers<
       isNull(storedFromHash) ||
       (isEmptyObject(storedFromHash.filters) && isEmptyObject(storedFromHash.sortBy))
     ) {
+      const restoredPage = consumeStoredPage()
+      if (restoredPage !== null) {
+        pagination.value = { ...pagination.value, page: restoredPage }
+      }
       if (callback) callback()
       return false
     }
@@ -410,7 +416,12 @@ export function useFilterHelpers<
         updateLocationHash(stored)
       }
     }
-    pagination.value = { ...pagination.value, sortBy: storedFromHash.sortBy }
+    const restoredPage = consumeStoredPage()
+    pagination.value = {
+      ...pagination.value,
+      sortBy: storedFromHash.sortBy,
+      ...(restoredPage !== null ? { page: restoredPage } : {}),
+    }
     if (callback) callback()
     return true
   }

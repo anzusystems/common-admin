@@ -49,6 +49,7 @@ import ACollabCountdown from '@/components/collab/components/ACollabCountdown.vu
 import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
 import AUserAndTimeTrackingFields from '@/components/AUserAndTimeTrackingFields.vue'
 import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
+import AActionCloseButtonHistory from '@/components/buttons/action/AActionCloseButtonHistory.vue'
 import AActionCreateButton from '@/components/buttons/action/AActionCreateButton.vue'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
 import AActionEditButton from '@/components/buttons/action/AActionEditButton.vue'
@@ -206,6 +207,8 @@ import type { PermissionGroup, PermissionGroupMinimal } from '@/types/Permission
 import { type CreatedByAware, isCreatedByAware } from '@/types/CreatedByAware'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import { usePagination, usePaginationAutoHide } from '@/composables/system/pagination'
+import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
+import { useRouteHistory } from '@/composables/system/routeHistory'
 import {
   makeFilterHelper,
   type MakeFilterOptions,
@@ -689,6 +692,7 @@ export {
   AIconGroup,
   AUserAndTimeTrackingFields,
   AActionCloseButton,
+  AActionCloseButtonHistory,
   AActionCreateButton,
   AActionDeleteButton,
   AActionEditButton,
@@ -763,6 +767,8 @@ export {
   // COMPOSABLES
   usePagination,
   usePaginationAutoHide,
+  useDatatablePageStore,
+  useRouteHistory,
   useFilterHelpers,
   makeFilterHelper,
   useRemainingTime,

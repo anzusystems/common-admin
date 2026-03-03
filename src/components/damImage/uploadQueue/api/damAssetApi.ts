@@ -43,6 +43,8 @@ export interface AssetMetadataBulkItem {
   described: boolean
   customData: AssetCustomData
   mainFileSingleUse: boolean | null
+  mainFileInternal: boolean | null
+  mainFileOverrideInternal: boolean | null
 }
 
 export declare type AssetCustomData = Record<string, any>
@@ -207,6 +209,8 @@ function listItemsToMetadataBulkItems(
         mainFileSingleUse: isUndefined(mainFileSingleUseOverride)
           ? item.mainFileSingleUse
           : mainFileSingleUseOverride,
+        mainFileInternal: false,
+        mainFileOverrideInternal: false,
       })
     }
   })
@@ -261,6 +265,8 @@ export const updateAssetMetadata = (
       described: true,
       customData: asset.metadata.customData,
       mainFileSingleUse: mainFileSingleUse,
+      mainFileInternal: false,
+      mainFileOverrideInternal: false,
     }
     client()
       .patch(endPoint + '/metadata-bulk-update', JSON.stringify([data]))

@@ -13,6 +13,8 @@ export interface ImageAware {
   }
   flags: {
     showSource: boolean
+    internal: boolean
+    overrideInternal: boolean
   }
   position?: number
 }

@@ -65,6 +65,8 @@ export interface AssetSearchListItemDto
   podcasts: DocId[]
   assetFileProperties: AssetFileProperties
   mainFileSingleUse: Readonly<boolean | null>
+  mainFileInternal: Readonly<boolean | null>
+  mainFileOverrideInternal: Readonly<boolean | null>
 }
 
 export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
@@ -82,6 +84,8 @@ export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, Resour
   distributionCategory: DocIdNullable
   assetFileProperties: AssetFileProperties
   mainFileSingleUse: Readonly<boolean | null>
+  mainFileInternal: Readonly<boolean | null>
+  mainFileOverrideInternal: Readonly<boolean | null>
 }
 
 export interface AssetMetadataDto
