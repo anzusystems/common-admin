@@ -1,6 +1,6 @@
 {
   "name": "@anzusystems/common-admin",
-  "packageManager": "yarn@4.12.0",
+  "packageManager": "yarn@4.13.0",
   "files": [
     "dist"
   ],
@@ -58,7 +58,7 @@
     "@intlify/unplugin-vue-i18n": "^11.1.0",
     "@kyvg/vue3-notification": "^3.4.2",
     "@mdi/font": "^7.4.47",
-    "@sentry/vue": "^10.41.0",
+    "@sentry/vue": "^10.42.0",
     "@shikijs/vitepress-twoslash": "^4.0.1",
     "@stylistic/eslint-plugin": "^5.9.0",
     "@tsconfig/node22": "^22.0.5",
@@ -112,7 +112,7 @@
     "vue-i18n": "11.2.8",
     "vue-router": "5.0.3",
     "vue-tsc": "3.2.5",
-    "vuetify": "4.0.0",
+    "vuetify": "4.0.1",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
