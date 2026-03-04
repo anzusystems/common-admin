@@ -216,7 +216,11 @@ const errorMessageComputed = computed(() => {
 const onTextFieldBlur = () => {
   const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '').trim()
   if (filtered.length === 0 && !props.required) {
-    datetimeInternal.value = null
+    if (!isNull(props.defaultValue) && !isUndefined(props.defaultValue)) {
+      datetimeInternal.value = dayjs(props.defaultValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
+    } else {
+      datetimeInternal.value = null
+    }
     emit('blur')
     return
   }
