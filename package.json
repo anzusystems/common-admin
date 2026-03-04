@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1771894809",
+  "version": "1.47.0-beta.dev-1771894810",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

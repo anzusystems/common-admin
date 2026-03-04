@@ -63,7 +63,7 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
       return apiAnyRequest<object, { data: AssetSearchListItemDto[] }>(
         client,
         'GET',
-        '/adm/v1/asset/licence/:licenceId/search?assetAndMainFileIds=' +
+        endPoint + '/licence/:licenceId/search?assetAndMainFileIds=' +
           `${docIds.join(',')}&limit=${forceLimit !== undefined ? forceLimit : docIds.length}${singleUseParam}`,
         { licenceId },
         {},
