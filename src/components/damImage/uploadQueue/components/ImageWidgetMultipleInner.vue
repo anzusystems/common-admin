@@ -49,7 +49,6 @@ import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
 import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
-import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -382,9 +381,9 @@ const onEditAsset = async (assetFileId: DocId) => {
   assetDialog.value = props.queueKey
   try {
     const asset = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-    const licence = await fetchDamAssetLicence(damClient, asset.licence)
-    if (licence.extSystem) {
-      cachedExtSystemId.value = licence.extSystem
+    const extSystem = await getExtSystemByLicence(asset.licence)
+    if (extSystem) {
+      cachedExtSystemId.value = extSystem
     }
     assetDetailStore.setAsset(asset)
   } catch (e) {
@@ -415,7 +414,7 @@ const actionLibrary = () => {
 
 const v$ = useVuelidate({ $scope: AImageMetadataValidationScopeSymbol })
 
-const { getDamConfigExtSystem } = useDamConfigState()
+const { getDamConfigExtSystem, getExtSystemByLicence } = useDamConfigState(damClient)
 
 const authorEnabled = computed(() => {
   return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled

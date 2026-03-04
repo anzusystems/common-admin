@@ -32,7 +32,6 @@ import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/auth
 import { useI18n } from 'vue-i18n'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import { fetchDamAssetLicence } from '@/components/damImage/uploadQueue/api/damAssetLicenceApi'
 import {
   type CollabComponentConfig,
   type CollabFieldData,
@@ -465,14 +464,16 @@ const {
   customAssetSelectMetadataToImageMap,
 } = coreDamOptions
 
+const { getExtSystemByLicence } = useDamConfigState(damClient)
+
 const onEditAsset = async (assetFileId: DocId) => {
   assetLoading.value = true
   assetDialog.value = props.queueKey
   try {
     const assetRes = await fetchAssetByFileId(damClient, endPointAsset, assetFileId)
-    const licence = await fetchDamAssetLicence(damClient, assetRes.licence)
-    if (licence.extSystem) {
-      cachedExtSystemId.value = licence.extSystem
+    const extSystem = await getExtSystemByLicence(assetRes.licence)
+    if (extSystem) {
+      cachedExtSystemId.value = extSystem
     }
     assetDetailStore.setAsset(assetRes)
   } catch (e) {

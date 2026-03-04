@@ -307,9 +307,31 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
     }
   }
 
+  async function getExtSystemByLicence(licence: IntegerId): Promise<IntegerId | null> {
+    const cached = damConfigStore.damConfigLicenceExtSystem.get(licence)
+    if (cached) return cached.extSystem
+
+    if (isUndefined(client)) return null
+
+    try {
+      const licenceRes = await fetchDamAssetLicence(client, licence)
+      if (isNull(licenceRes.extSystem)) return null
+
+      damConfigStore.damConfigLicenceExtSystem.set(licence, {
+        extSystem: licenceRes.extSystem,
+        name: licenceRes.name,
+      })
+      return licenceRes.extSystem
+    } catch (error) {
+      console.error(`Error fetching asset licence for ${licence}:`, error)
+      return null
+    }
+  }
+
   return {
     getOrLoadDamConfigExtSystemByLicences,
     getOrLoadDamConfigExtSystemByLicence,
+    getExtSystemByLicence,
     loadDamPrvConfig,
     loadDamPubConfig,
     loadDamConfigExtSystem,
