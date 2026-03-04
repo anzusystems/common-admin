@@ -205,6 +205,7 @@ const uploadQueue = computed(() => {
 })
 
 const onFileInput = (files: File[]) => {
+  if (files.length === 0) return
   const config = imageWidgetUploadConfig?.value
   if (!config) return
   uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
