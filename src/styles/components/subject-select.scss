@@ -114,4 +114,39 @@ $sidebar-right-width: 300px;
     min-height: 52px;
     padding: 0.5rem;
   }
+
+  &__card--inline {
+    .#{$class-name-root}__main {
+      overflow: visible;
+    }
+
+    .#{$class-name-root}__content {
+      overflow: visible;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .#{$class-name-root}__sidebar-right {
+      position: sticky;
+      top: 0;
+      max-height: 100vh;
+      height: auto;
+      align-self: flex-start;
+      transform: none;
+      width: 0;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .#{$class-name-root}__main--sidebar-right-active {
+      .#{$class-name-root}__sidebar-right {
+        width: $sidebar-right-width;
+        overflow-y: auto;
+      }
+
+      .#{$class-name-root}__content {
+        margin-right: 0;
+      }
+    }
+  }
 }

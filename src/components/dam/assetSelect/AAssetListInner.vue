@@ -50,12 +50,14 @@ const props = withDefaults(
     configName?: string
     skipCurrentUserCheck?: boolean
     onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
+    variant?: 'default' | 'inline'
   }>(),
   {
     inPodcast: null,
     configName: 'default',
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
+    variant: 'default',
   },
 )
 
@@ -269,7 +271,10 @@ onUnmounted(() => {
       </template>
     </AFileInput>
   </slot>
-  <div class="subject-select__card">
+  <div
+    class="subject-select__card"
+    :class="{ 'subject-select__card--inline': variant === 'inline' }"
+  >
     <div class="px-2 pt-2">
       <slot name="filter">
         <AFilterWrapper

@@ -53,7 +53,9 @@ export function useRouteHistory(): {
     return index >= 0 ? history.value[index] : undefined
   }
 
-  const getFirstRouteNotMatching = (routeNamesToSkip: string[]): RouteLocationNormalized | undefined => {
+  const getFirstRouteNotMatching = (
+    routeNamesToSkip: string[],
+  ): RouteLocationNormalized | undefined => {
     for (let i = history.value.length - 1; i >= 0; i--) {
       const route = history.value[i]
       if (!routeNamesToSkip.includes(route.name as string)) {
