@@ -53,6 +53,7 @@ export function useUploadQueueItemFactory() {
       slotName: null,
       image: undefined,
       mainFileSingleUse: null,
+      mainFileInternal: null,
     }
   }
 

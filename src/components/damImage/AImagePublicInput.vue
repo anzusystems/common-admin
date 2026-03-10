@@ -129,6 +129,7 @@ const submit = async () => {
         damId: asset.mainFile!.id,
         licenceId: asset.licence,
         regionPosition: 0,
+        internal: asset.mainFileInternal ?? false,
       },
       position: 0,
     }
@@ -161,6 +162,7 @@ const updatePreviewAndTexts = () => {
       damId: inputField.value,
       licenceId: 0,
       regionPosition: 0,
+      internal: false,
     },
   })
 }

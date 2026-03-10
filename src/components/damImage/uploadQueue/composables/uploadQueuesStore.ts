@@ -217,6 +217,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
               item.imagePreview = asset.mainFile.links.image_detail
             }
             item.mainFileSingleUse = asset.mainFileSingleUse
+            item.mainFileInternal = asset.mainFileInternal
             processUpload(queueKey)
           }
         })
@@ -264,6 +265,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
           addToCachedAuthors(item.authorConflicts)
           item.assetId = assetRes.id
           item.mainFileSingleUse = assetRes.mainFileSingleUse
+          item.mainFileInternal = assetRes.mainFileInternal
           item.canEditMetadata = true
           processUpload(queueKey)
         }
@@ -307,6 +309,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             item.authors = asset.authors
             item.customData = asset.metadata.customData
             item.mainFileSingleUse = asset.mainFileSingleUse
+            item.mainFileInternal = asset.mainFileInternal
             updateNewNames(asset.metadata.authorSuggestions, queue.suggestions.newAuthorNames)
             updateNewNames(asset.metadata.keywordSuggestions, queue.suggestions.newKeywordNames)
             item.authorConflicts = getAuthorConflicts(asset.metadata.authorSuggestions)
@@ -340,6 +343,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
               item.imagePreview = asset.mainFile.links.image_detail
             }
             item.mainFileSingleUse = asset.mainFileSingleUse
+            item.mainFileInternal = asset.mainFileInternal
             item.keywords = asset.keywords
             item.authors = asset.authors
             item.customData = asset.metadata.customData

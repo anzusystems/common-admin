@@ -108,7 +108,7 @@ const metadataMap = async (
   queueItems: UploadQueueItem[],
   bulkItems: AssetMetadataBulkItem[]
 ): Promise<ImageStoreItem[]> => {
-  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
+  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[]; mainFileInternal: boolean }>()
   const authorIdsToFetch = new Set<DocId>()
   const authorsMap = new Map<DocId, string>()
   try {
@@ -116,6 +116,7 @@ const metadataMap = async (
       assetMetadataMap.set(bulkItem.id, {
         description: isString(bulkItem.customData?.description) ? bulkItem.customData.description.trim() : '',
         authorIds: bulkItem.authors,
+        mainFileInternal: bulkItem.mainFileInternal ?? false,
       })
     })
     assetMetadataMap.forEach((assetMeta) => {
@@ -166,6 +167,7 @@ const metadataMap = async (
         damId: queueItem.fileId as DocId,
         regionPosition: 0,
         licenceId: props.licenceId,
+        internal: assetMetadataMap.get(queueItem.assetId!)?.mainFileInternal ?? false,
       },
       position: maxPosition.value,
       damAuthors: authorIds || [],

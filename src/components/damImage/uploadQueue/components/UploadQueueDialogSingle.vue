@@ -91,7 +91,7 @@ const asset = computed<AssetDetailItemDto | null>(() => {
       assetStatus: item.value.assetStatus,
     },
     mainFileSingleUse: false,
-    mainFileInternal: null,
+    mainFileInternal: item.value.mainFileInternal ?? null,
     mainFileOverrideInternal: null,
     flags: {
       described: false,
@@ -266,6 +266,7 @@ const onSaveAndApply = async () => {
             damId: item.fileId ?? '',
             regionPosition: 0,
             licenceId: props.licenceId,
+            internal: assetsMetadataRes[0].mainFileInternal ?? false,
           },
           position: 1,
         }

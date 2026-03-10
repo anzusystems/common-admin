@@ -261,6 +261,7 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
         damId: asset.mainFile!.id,
         regionPosition: 0,
         licenceId: asset.licence,
+        internal: asset.mainFileInternal ?? false,
       },
       position: maxPosition.value,
       damAuthors: authorIds,

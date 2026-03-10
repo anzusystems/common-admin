@@ -83,6 +83,7 @@ export interface UploadQueueItem {
   slotName: string | null
   image: undefined | ImageAware // todo check
   mainFileSingleUse: boolean | null
+  mainFileInternal: boolean | null
 }
 
 export interface DamUploadStartResponse {
