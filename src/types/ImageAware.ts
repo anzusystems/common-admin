@@ -10,6 +10,7 @@ export interface ImageAware {
     damId: DocId
     licenceId: IntegerId
     regionPosition: number
+    internal: boolean
   }
   flags: {
     showSource: boolean

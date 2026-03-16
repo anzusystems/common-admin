@@ -87,6 +87,7 @@ const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
       damId: detail.value.damMedia.imageFileId,
       licenceId: detail.value.damMedia.licenceId!,
       regionPosition: 0,
+      internal: false,
     },
     flags: {
       showSource: false,

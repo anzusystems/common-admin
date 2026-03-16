@@ -549,6 +549,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         damId: selectedAsset.mainFile.id,
         regionPosition: 0,
         licenceId: selectedAsset.licence,
+        internal: selectedAsset.mainFileInternal ?? false,
       },
       position: 1,
     }

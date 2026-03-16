@@ -33,7 +33,7 @@ export async function mapUploadMetadataToImages(
   licenceId: IntegerId,
 ): Promise<UploadMetadataToImageMapItem[]> {
   // Build assetId -> { description, authorIds } map
-  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
+  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[]; mainFileInternal: boolean }>()
 
   bulkItems.forEach((bulkItem) => {
     assetMetadataMap.set(bulkItem.id, {
@@ -41,6 +41,7 @@ export async function mapUploadMetadataToImages(
         ? bulkItem.customData.description.trim()
         : '',
       authorIds: bulkItem.authors,
+      mainFileInternal: bulkItem.mainFileInternal ?? false,
     })
   })
 
@@ -92,6 +93,7 @@ export async function mapUploadMetadataToImages(
         damId: queueItem.fileId as DocId,
         regionPosition: 0,
         licenceId,
+        internal: assetMetadataMap.get(queueItem.assetId!)?.mainFileInternal ?? false,
       },
       authorIds: authorIds || [],
       assetId: queueItem.assetId || undefined,

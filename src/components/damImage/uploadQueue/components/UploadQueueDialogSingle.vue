@@ -96,7 +96,7 @@ const asset = computed<AssetDetailItemDto | null>(() => {
       assetStatus: item.value.assetStatus,
     },
     mainFileSingleUse: false,
-    mainFileInternal: null,
+    mainFileInternal: item.value.mainFileInternal ?? null,
     mainFileOverrideInternal: null,
     flags: {
       described: false,
