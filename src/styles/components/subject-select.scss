@@ -1,3 +1,6 @@
+@use 'sass:map';
+@use 'vuetify/lib/styles/settings/_variables.scss' as vars;
+
 $class-name-root: 'subject-select';
 $class-name-filter: 'subject-select-filter';
 $sidebar-width: 320px;
@@ -58,6 +61,7 @@ $sidebar-right-width: 300px;
     width: $sidebar-width;
     height: 100%;
     z-index: 0;
+    background-color: rgb(var(--v-theme-surface));
 
     .#{$class-name-filter} {
       display: flex;
@@ -99,6 +103,7 @@ $sidebar-right-width: 300px;
     height: 100%;
     z-index: 0;
     overflow-y: auto;
+    background-color: rgb(var(--v-theme-surface));
   }
 
   &__content {
@@ -146,6 +151,22 @@ $sidebar-right-width: 300px;
 
       .#{$class-name-root}__content {
         margin-right: 0;
+      }
+
+      @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+        flex-direction: column;
+
+        .#{$class-name-root}__sidebar-right {
+          position: static;
+          width: 100%;
+          max-height: none;
+          align-self: stretch;
+          flex-shrink: 1;
+        }
+
+        .#{$class-name-root}__content {
+          flex: none;
+        }
       }
     }
   }

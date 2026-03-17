@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, inject, onUnmounted, provide, ref, watch } from 'vue'
+import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
 import { type AssetDetailItemDto, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
@@ -31,6 +32,7 @@ import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
@@ -89,7 +91,8 @@ const { asset, dialog } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceId } = storeToRefs(assetSelectStore)
 
-const { sidebarRight } = useSidebar()
+const { sidebarRight, closeSidebarRight } = useSidebar()
+const { smAndDown } = useDisplay()
 const { showErrorT } = useAlerts()
 
 const { filterData, filterConfig } = useAssetListFilter()
@@ -316,7 +319,7 @@ onUnmounted(() => {
     <div
       class="subject-select__main"
       :class="{
-        'subject-select__main--sidebar-right-active': sidebarRight,
+        'subject-select__main--sidebar-right-active': sidebarRight && !smAndDown,
       }"
     >
       <div class="subject-select__content">
@@ -337,7 +340,10 @@ onUnmounted(() => {
           </ABtnSecondary>
         </div>
       </div>
-      <div class="subject-select__sidebar-right system-border-l">
+      <div
+        v-if="!smAndDown"
+        class="subject-select__sidebar-right system-border-l"
+      >
         <div
           v-if="loadingSidebarRight"
           class="d-flex w-100 align-center justify-center"
@@ -368,6 +374,48 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+    <VDialog
+      v-if="smAndDown"
+      v-model="sidebarRight"
+      scrollable
+      @update:model-value="(v) => { if (!v) closeSidebarRight() }"
+    >
+      <VCard>
+        <ADialogToolbar @on-cancel="closeSidebarRight">
+          {{ t('common.assetSelect.meta.info.toggle') }}
+        </ADialogToolbar>
+        <VCardText>
+          <div
+            v-if="loadingSidebarRight"
+            class="d-flex w-100 align-center justify-center"
+          >
+            <VProgressCircular indeterminate />
+          </div>
+          <div
+            v-else-if="asset"
+            class="w-100"
+          >
+            <slot
+              name="sidebar-prepend"
+              :asset="asset"
+            />
+            <AssetMetadata
+              v-if="extId && !customFormConfigLoading"
+              :ext-system="extId"
+              readonly
+              show-edit-button
+              @edit-in-dam="onOpenEditDialog"
+            />
+          </div>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn @click="closeSidebarRight">
+            {{ t('common.button.close') }}
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </div>
   <AssetDetailDialog
     v-if="dialog === queueKey && extId"
