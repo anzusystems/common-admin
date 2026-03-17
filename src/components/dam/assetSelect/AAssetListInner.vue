@@ -337,7 +337,7 @@ onUnmounted(() => {
           </ABtnSecondary>
         </div>
       </div>
-      <div class="subject-select__sidebar-right">
+      <div class="subject-select__sidebar-right system-border-l">
         <div
           v-if="loadingSidebarRight"
           class="d-flex w-100 align-center justify-center"
@@ -354,6 +354,10 @@ onUnmounted(() => {
           v-else
           class="w-100"
         >
+          <slot
+            name="sidebar-prepend"
+            :asset="asset"
+          />
           <AssetMetadata
             v-if="extId && !customFormConfigLoading"
             :ext-system="extId"
