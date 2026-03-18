@@ -44,7 +44,7 @@ const assetDetailStore = useAssetDetailStore()
 const { pagination } = usePagination(SORT_BY_ID)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { damClient, endPointImage } = useCommonAdminCoreDamOptions(props.configName)
+const { damClient, endPointImage, endPointRoi } = useCommonAdminCoreDamOptions(props.configName)
 const filterFieldsInner = [] satisfies readonly MakeFilterOption[]
 const { filterConfig, filterData } = createFilter(
   filterFieldsInner,
@@ -70,7 +70,7 @@ const loadRois = async (forceReloadFile = false) => {
     )
     const res = await executeFetch(pagination, filterData, filterConfig)
     if (res.length > 0 && res[0].id) {
-      const roi = await fetchRoi(damClient, res[0].id)
+      const roi = await fetchRoi(damClient, endPointRoi, res[0].id)
       if (forceReloadFile) {
         await loadImageFile(imageRoiStore.imageFile.id)
       }

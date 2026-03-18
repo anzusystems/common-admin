@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1771894814",
+  "version": "1.47.0-beta.dev-1771894815",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -58,7 +58,7 @@
     "@intlify/unplugin-vue-i18n": "^11.1.1",
     "@kyvg/vue3-notification": "^3.4.2",
     "@mdi/font": "^7.4.47",
-    "@sentry/vue": "^10.43.0",
+    "@sentry/vue": "^10.44.0",
     "@shikijs/vitepress-twoslash": "^4.0.2",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@tsconfig/node22": "^22.0.5",

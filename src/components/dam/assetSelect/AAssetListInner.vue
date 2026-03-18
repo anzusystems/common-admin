@@ -378,7 +378,11 @@ onUnmounted(() => {
       v-if="smAndDown"
       v-model="sidebarRight"
       scrollable
-      @update:model-value="(v) => { if (!v) closeSidebarRight() }"
+      @update:model-value="
+        (v) => {
+          if (!v) closeSidebarRight()
+        }
+      "
     >
       <VCard>
         <ADialogToolbar @on-cancel="closeSidebarRight">

@@ -33,7 +33,10 @@ export async function mapUploadMetadataToImages(
   licenceId: IntegerId,
 ): Promise<UploadMetadataToImageMapItem[]> {
   // Build assetId -> { description, authorIds } map
-  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[]; mainFileInternal: boolean }>()
+  const assetMetadataMap = new Map<
+    DocId,
+    { description: string; authorIds: DocId[]; mainFileInternal: boolean }
+  >()
 
   bulkItems.forEach((bulkItem) => {
     assetMetadataMap.set(bulkItem.id, {

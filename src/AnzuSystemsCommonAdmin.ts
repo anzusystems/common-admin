@@ -63,6 +63,7 @@ export interface CommonAdminCoreDamConfig {
   damClient: () => AxiosInstance
   endPointAsset?: string
   endPointImage?: string
+  endPointRoi?: string
   mainFileSingleUseEnabled?: boolean
   showSourceEnabled?: boolean
   showFileInfoEnabled?: boolean

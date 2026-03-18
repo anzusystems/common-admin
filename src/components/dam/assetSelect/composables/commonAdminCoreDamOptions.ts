@@ -36,6 +36,7 @@ export function useCommonAdminCoreDamOptions(configName: string = 'default') {
       commonAdminCoreDamOptions.value.configs[configName].endPointImage || '/adm/v1/image',
     endPointAsset:
       commonAdminCoreDamOptions.value.configs[configName].endPointAsset || '/adm/v1/asset',
+    endPointRoi: commonAdminCoreDamOptions.value.configs[configName].endPointRoi || '/adm/v1/roi',
     mainFileSingleUseEnabled:
       commonAdminCoreDamOptions.value.configs[configName].mainFileSingleUseEnabled ?? true,
     showSourceEnabled:
