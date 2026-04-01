@@ -24,19 +24,17 @@ withDefaults(
     :group="group"
     :position="position"
     :width="width"
-    :class="customClass"
+    :class="['a-alerts', customClass]"
   >
     <template #body="props">
       <VAlert
         :type="props.item.type"
+        :title="props.item.title"
+        :text="props.item.text"
         class="ma-1"
         density="compact"
+        data-cy="page-title"
       >
-        <div
-          class="white-space-pre"
-          data-cy="page-title"
-          v-text="props.item.text"
-        />
         <template #close>
           <VIcon
             icon="mdi-close"
@@ -47,3 +45,15 @@ withDefaults(
     </template>
   </Notifications>
 </template>
+
+<style lang="scss">
+@use 'sass:map';
+@use 'vuetify/lib/styles/settings/_variables.scss' as vars;
+
+.a-alerts {
+  @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
+    width: 96% !important;
+    left: 2% !important;
+  }
+}
+</style>

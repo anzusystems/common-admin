@@ -3,6 +3,7 @@ import { computed, onMounted, ref, toRaw, withModifiers } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import type { Pagination } from '@/types/Pagination'
 import ADatatablePagination from '@/components/ADatatablePagination.vue'
 import type { Fn } from '@vueuse/core'
@@ -59,7 +60,8 @@ const paginationComputed = computed({
   },
 })
 
-const sidebarLeft = ref(true)
+const { smAndDown } = useDisplay()
+const sidebarLeft = ref(!smAndDown.value)
 const filterTouched = ref(false)
 
 const { t } = useI18n()

@@ -43,4 +43,10 @@ mkdir -p "${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist"
 # Use paths from sourced file
 cp -r "${COMMON_ADMIN_PROJECT}/dist/"* "${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist/"
 
+# Clear Vite's dependency pre-bundle cache so it picks up the new files
+rm -rf "${ADMIN_PROJECT}/node_modules/.vite/deps/"
+
+# Touch trigger file so Vite plugin detects the update and does a full-reload
+touch "${ADMIN_PROJECT}/.common-admin-updated"
+
 echo "Successfully copied release from ${COMMON_ADMIN_PROJECT}/dist to ${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist"
