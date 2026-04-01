@@ -112,10 +112,22 @@ onMounted(async () => {
   >
     <ABtnTertiary
       v-if="!imageRoiStore.loader"
+      class="d-none d-md-flex"
       @click.stop="loadRois(true)"
     >
       {{ t('common.damImage.asset.detail.roi.refresh') }}
     </ABtnTertiary>
+    <VBtn
+      v-if="!imageRoiStore.loader"
+      icon
+      variant="text"
+      size="small"
+      class="d-flex d-md-none"
+      :title="t('common.damImage.asset.detail.roi.refresh')"
+      @click.stop="loadRois(true)"
+    >
+      <VIcon icon="mdi-refresh" />
+    </VBtn>
   </AssetDetailSidebarActionsWrapper>
   <div class="px-3">
     <div class="v-expansion-panel-title px-0">

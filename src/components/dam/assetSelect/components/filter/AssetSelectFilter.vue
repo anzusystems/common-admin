@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { computed, onMounted, provide, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
@@ -10,6 +11,7 @@ import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKe
 import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 
 const props = withDefaults(
   defineProps<{
@@ -24,6 +26,8 @@ const props = withDefaults(
 const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configName)
 
 const { t } = useI18n()
+const { smAndDown } = useDisplay()
+const { closeSidebarLeft } = useSidebar()
 const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()
 
 const assetSelectStore = useAssetSelectStore()
@@ -40,10 +44,12 @@ const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig,
 
 const submitFilterAction = () => {
   submitFilter(pagination, fetchAssetListDebounced)
+  if (smAndDown.value) closeSidebarLeft()
 }
 
 const resetFilterAction = () => {
   resetFilter(pagination, resetAssetList)
+  if (smAndDown.value) closeSidebarLeft()
 }
 
 const componentComputed = computed(() => {

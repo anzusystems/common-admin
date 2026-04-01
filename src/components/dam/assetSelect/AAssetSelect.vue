@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
+import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
 import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
@@ -91,7 +92,8 @@ const { selectedLicenceId } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
-const { openSidebarLeft, sidebarLeft, sidebarRight } = useSidebar()
+const { mdAndUp } = useDisplay()
+const { openSidebarLeft, closeSidebarRight, sidebarLeft, sidebarRight } = useSidebar()
 const { showErrorT } = useAlerts()
 
 const onOpen = () => {
@@ -114,7 +116,8 @@ const onOpen = () => {
     props.minCount,
     props.maxCount,
   )
-  openSidebarLeft()
+  if (mdAndUp.value) openSidebarLeft()
+  if (!mdAndUp.value) closeSidebarRight()
   modelValue.value = true
 }
 
@@ -313,7 +316,14 @@ defineExpose({
             >
               {{ t('common.assetSelect.meta.info.noAssetSelected') }}
             </div>
-            <div v-else>
+            <div
+              v-else
+              class="w-100"
+            >
+              <slot
+                name="sidebar-prepend"
+                :asset="asset"
+              />
               <AssetMetadata
                 v-if="extId && !customFormConfigLoading"
                 :ext-system="extId"

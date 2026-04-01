@@ -153,7 +153,14 @@ const assetMainFile = computed(() => {
               :height="36"
               @click.stop="toggleSidebar"
             >
-              <VIcon icon="mdi-information-outline" />
+              <VIcon
+                icon="mdi-information-outline"
+                class="d-none d-md-flex"
+              />
+              <VIcon
+                icon="mdi-image-outline"
+                class="d-flex d-md-none"
+              />
               <VTooltip
                 activator="parent"
                 location="bottom"
@@ -179,7 +186,7 @@ const assetMainFile = computed(() => {
             </VBtn>
           </div>
         </VToolbar>
-        <div class="d-flex w-100 h-100 position-relative">
+        <div class="d-flex w-100 h-100 position-relative dam-image-detail__content">
           <div class="d-flex w-100 align-center dam-image-detail__left">
             <div
               v-if="activeTab === AssetDetailTabImageWithRoi.ROI || simpleMode"

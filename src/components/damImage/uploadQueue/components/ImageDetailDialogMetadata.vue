@@ -15,6 +15,7 @@ import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { computed } from 'vue'
+import { useDisplay } from 'vuetify'
 import {
   isImageCreateUpdateAware,
   isMediaAware,
@@ -54,6 +55,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { smAndDown } = useDisplay()
 const imageMediaWidgetStore = useImageMediaWidgetStore()
 const { detail } = storeToRefs(imageMediaWidgetStore)
 const assetDetailStore = useAssetDetailStore()
@@ -201,6 +203,7 @@ defineExpose({
     v-else
     :model-value="modelValue"
     :max-width="500"
+    :fullscreen="smAndDown"
     eager
     @update:model-value="onDialogModelUpdate"
   >

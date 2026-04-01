@@ -659,7 +659,7 @@ defineExpose({
         <div>
           <div
             v-if="expandOptions"
-            class="d-flex flex-row"
+            class="d-flex flex-row flex-wrap"
           >
             <VBtn
               v-if="imageLoaded && !expandMetadata"
@@ -829,7 +829,17 @@ defineExpose({
     :config-name="configName"
     return-type="asset"
     @on-confirm="onAssetSelectConfirm"
-  />
+  >
+    <template
+      v-if="$slots['asset-select-sidebar-prepend']"
+      #sidebar-prepend="slotProps"
+    >
+      <slot
+        name="asset-select-sidebar-prepend"
+        v-bind="slotProps"
+      />
+    </template>
+  </AAssetSelect>
   <AssetDetailDialog
     v-if="assetDialog === queueKey"
     :queue-key="queueKey"

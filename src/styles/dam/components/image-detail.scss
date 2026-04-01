@@ -4,6 +4,8 @@
 $class-name-root: 'dam-image-detail';
 $sidebar-width: 600px;
 $toolbar-height: 50px;
+$toolbar-height-mobile: 48px;
+$image-height-mobile: 35dvh;
 $bg-color-light: #f1f4f6;
 $bg-color-dark: #000;
 $bg-sidebar-color-light: #fff;
@@ -25,18 +27,30 @@ $bg-sidebar-color-dark: #1a1a1a;
     }
   }
 
+  &__content {
+    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+      flex-direction: column;
+      height: calc(100vh - $toolbar-height-mobile) !important;
+      overflow: hidden;
+    }
+  }
+
   &__sidebar {
     transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: translateX(110%);
-    position: absolute;
-    top: 0;
-    right: 0;
 
     @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
       width: 100%;
+      position: relative;
+      display: flex;
+      height: calc(100vh - $toolbar-height-mobile) !important;
+      overflow: hidden;
     }
 
     @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
+      transform: translateX(110%);
+      position: absolute;
+      top: 0;
+      right: 0;
       width: $sidebar-width;
     }
   }
@@ -44,9 +58,18 @@ $bg-sidebar-color-dark: #1a1a1a;
   &__left {
     transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    height: calc(100vh - $toolbar-height);
-    max-height: calc(100vh - $toolbar-height);
     overflow: hidden;
+
+    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+      height: 0;
+      max-height: 0;
+      flex: 0 0 auto;
+    }
+
+    @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
+      height: calc(100vh - $toolbar-height);
+      max-height: calc(100vh - $toolbar-height);
+    }
   }
 
   &__image {
@@ -56,13 +79,20 @@ $bg-sidebar-color-dark: #1a1a1a;
 
   &--sidebar-active {
     .#{$class-name-root}__sidebar {
-      transform: translateX(0%);
-      display: flex;
+      @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+        height: calc(100vh - $toolbar-height-mobile - $image-height-mobile) !important;
+      }
+
+      @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
+        display: flex;
+        transform: translateX(0%);
+      }
     }
 
     .#{$class-name-root}__left {
       @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
-        width: 100%;
+        height: $image-height-mobile;
+        max-height: $image-height-mobile;
       }
 
       @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {

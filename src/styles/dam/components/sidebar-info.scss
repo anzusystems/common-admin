@@ -1,3 +1,6 @@
+@use 'sass:map';
+@use 'vuetify/lib/styles/settings/_variables.scss' as vars;
+
 $class-name-root: 'sidebar-info';
 $toolbar-height: 48px;
 $tabs-height: 48px;
@@ -7,22 +10,34 @@ $sum-height: $toolbar-height + $tabs-height + $actions-height;
 .#{$class-name-root} {
   &__tabs {
     height: 48px;
+    flex: 0 0 auto;
   }
 
   &__content {
     overflow-y: auto;
-    height: calc(100vh - $sum-height);
-    max-height: calc(100vh - $sum-height);
+
+    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
+      height: calc(100vh - $sum-height);
+      max-height: calc(100vh - $sum-height);
+    }
   }
 
   &__actions {
     height: 48px;
+    flex: 0 0 auto;
   }
 
   &--no-tabs {
     .#{$class-name-root}__content {
-      height: calc(100vh - $toolbar-height - $actions-height);
-      max-height: calc(100vh - $toolbar-height - $actions-height);
+      @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
+        height: calc(100vh - $toolbar-height - $actions-height);
+        max-height: calc(100vh - $toolbar-height - $actions-height);
+      }
     }
   }
 }

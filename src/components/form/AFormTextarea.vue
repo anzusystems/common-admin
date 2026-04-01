@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, inject, ref, watch } from 'vue'
+import { useDisplay } from 'vuetify'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import { isDefined, isNumber, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
@@ -63,6 +64,7 @@ const emit = defineEmits<{
   (e: 'focus', data: string | null | undefined): void
 }>()
 
+const { smAndDown } = useDisplay()
 const textareaRef = ref<InstanceType<typeof VTextField> | null>(null)
 
 // Collaboration
@@ -229,7 +231,7 @@ defineExpose({
       </span>
     </template>
     <template
-      v-if="help"
+      v-if="help && !smAndDown"
       #append
     >
       <VIcon

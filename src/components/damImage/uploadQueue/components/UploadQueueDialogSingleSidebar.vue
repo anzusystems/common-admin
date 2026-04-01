@@ -59,7 +59,7 @@ const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && 
     class="sidebar-info d-flex w-100 h-100 flex-column"
     :class="{ 'sidebar-info--no-tabs': simpleMode }"
   >
-    <div class="w-100 d-flex flex-column">
+    <div class="w-100 h-100 d-flex flex-column">
       <VTabs
         v-if="!simpleMode"
         v-model="activeTab"
