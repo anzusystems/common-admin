@@ -64,14 +64,18 @@ const { mdAndDown } = useDisplay()
 const sidebarLeft = ref(!mdAndDown.value)
 const filterTouched = ref(false)
 
+const closeSidebarOnMobile = () => {
+  if (mdAndDown.value) sidebarLeft.value = false
+}
+
 const submitFilterAndClose = () => {
   props.submitFilter()
-  if (mdAndDown.value) sidebarLeft.value = false
+  closeSidebarOnMobile()
 }
 
 const resetFilterAndClose = () => {
   props.resetFilter()
-  if (mdAndDown.value) sidebarLeft.value = false
+  closeSidebarOnMobile()
 }
 
 const { t } = useI18n()
@@ -140,6 +144,7 @@ onMounted(() => {
 
 defineExpose({
   open: onOpen,
+  closeSidebarOnMobile,
 })
 </script>
 

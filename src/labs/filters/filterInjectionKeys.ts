@@ -21,3 +21,7 @@ export const FilterSelectedKey: InjectionKey<
 export const DatatablePaginationKey: InjectionKey<Ref<Pagination>> = Symbol.for(
   'anzu:DatatablePaginationKey',
 )
+
+export const SubjectSelectCloseSidebarKey: InjectionKey<() => void> = Symbol.for(
+  'anzu:SubjectSelectCloseSidebarKey',
+)

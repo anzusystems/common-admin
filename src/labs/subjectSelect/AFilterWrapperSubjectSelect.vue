@@ -7,6 +7,7 @@ import {
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
+  SubjectSelectCloseSidebarKey,
 } from '@/labs/filters/filterInjectionKeys'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { isBoolean, isDefined, isUndefined } from '@/utils/common'
@@ -47,6 +48,9 @@ const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHidde
   required: false,
 })
 
+
+const closeSidebarOnMobile = inject(SubjectSelectCloseSidebarKey, () => {})
+
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
 if (isUndefined(filterConfig) || isUndefined(filterData)) {
@@ -75,6 +79,7 @@ const submitFilter = () => {
   submitResetCounter.value++
   nextTick(() => {
     emit('submit')
+    closeSidebarOnMobile()
   })
 }
 
@@ -84,6 +89,7 @@ const submitFilterBookmark = () => {
   nextTick(() => {
     submitResetCounter.value++
     emit('bookmarkLoadAfter')
+    closeSidebarOnMobile()
   })
 }
 
@@ -93,6 +99,7 @@ const resetFilter = () => {
   nextTick(() => {
     submitResetCounter.value++
     emit('reset')
+    closeSidebarOnMobile()
   })
 }
 
