@@ -230,7 +230,11 @@ const showDetail = async (id: DocId) => {
                 :disabled="saveButtonLoading"
                 @click.stop="onSaveAndApply"
               >
-                {{ mdAndDown ? t('common.damImage.upload.apply') : t('common.damImage.upload.saveAndApply') }}
+                {{
+                  mdAndDown
+                    ? t('common.damImage.upload.apply')
+                    : t('common.damImage.upload.saveAndApply')
+                }}
               </ABtnPrimary>
               <VBtn
                 variant="text"

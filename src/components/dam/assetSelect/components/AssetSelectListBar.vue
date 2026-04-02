@@ -47,11 +47,15 @@ const { t } = useI18n()
 const { gridView, setGridView } = useGridView()
 const { mdAndDown } = useDisplay()
 
-watch(mdAndDown, (isMobile) => {
-  if (isMobile && gridView.value === AssetSelectGridView.Table) {
-    setGridView(AssetSelectGridViewDefault)
-  }
-}, { immediate: true })
+watch(
+  mdAndDown,
+  (isMobile) => {
+    if (isMobile && gridView.value === AssetSelectGridView.Table) {
+      setGridView(AssetSelectGridViewDefault)
+    }
+  },
+  { immediate: true },
+)
 const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = useSidebar()
 const assetSelectStore = useAssetSelectStore()
 const { filterData } = useAssetListFilter()

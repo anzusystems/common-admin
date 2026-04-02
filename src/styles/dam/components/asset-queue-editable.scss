@@ -1,3 +1,6 @@
+@use 'sass:map';
+@use 'vuetify/lib/styles/settings/_variables.scss' as vars;
+
 $class-name-root: 'asset-queue-editable';
 $sidebar-width: 400px;
 $second-toolbar-height: 49px;
@@ -33,7 +36,7 @@ $bg-color-dark: #1a1a1a;
       margin-right: $sidebar-width;
     }
 
-    @media (max-width: 960px) {
+    @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
       .#{$class-name-root}__sidebar {
         width: 100%;
         z-index: 1;
