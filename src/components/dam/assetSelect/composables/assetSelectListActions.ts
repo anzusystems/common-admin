@@ -23,6 +23,7 @@ import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelect
 import { SORT_BY_SCORE_DATE } from '@/composables/system/datatableColumns'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { useDebounceFn } from '@vueuse/core'
+import { useDisplay } from 'vuetify'
 
 const { pagination } = usePagination(SORT_BY_SCORE_DATE)
 const detailLoading = ref(false)
@@ -37,6 +38,7 @@ export function useAssetSelectActions(
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
   const assetDetailStore = useAssetDetailStore()
   const { openSidebarRight } = useSidebar()
+  const { mdAndDown } = useDisplay()
 
   const { showErrorsDefault } = useAlerts()
   const { filterData, filterConfig } = useAssetListFilter()
@@ -98,7 +100,7 @@ export function useAssetSelectActions(
 
   const onItemClick = async (data: { assetId: DocId; index: number }, extSystem: IntegerId) => {
     const { cachedExtSystemId } = useExtSystemIdForCached()
-    openSidebarRight()
+    if (!mdAndDown.value) openSidebarRight()
     assetSelectStore.toggleSelectedByIndex(data.index)
     assetSelectStore.setActiveByIndex(data.index)
     detailLoading.value = true

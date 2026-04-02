@@ -648,6 +648,7 @@ onMounted(() => {
           v-for="(image, index) in images"
           :key="image.key"
           :index="index"
+          :total-count="images.length"
           :disable-draggable="disableDraggable"
           :show-source-enabled="showSourceEnabled"
           :source-label="sourceLabel"
@@ -655,6 +656,8 @@ onMounted(() => {
           :author-enabled="authorEnabled"
           @edit-asset="onEditAsset"
           @remove-item="removeItem"
+          @move-up="(i) => moveImagePositions(i, i - 1)"
+          @move-down="(i) => moveImagePositions(i, i + 1)"
         />
       </div>
       <AImageDropzone
