@@ -2,10 +2,12 @@
 import { useI18n } from 'vue-i18n'
 import {
   AssetSelectGridView,
+  AssetSelectGridViewDefault,
   useGridView,
 } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
+import { useDisplay } from 'vuetify'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
@@ -42,7 +44,14 @@ const emit = defineEmits<{
 const sortModel = defineModel<number>('sort', { default: 1, required: false })
 
 const { t } = useI18n()
-const { setGridView } = useGridView()
+const { gridView, setGridView } = useGridView()
+const { mdAndDown } = useDisplay()
+
+watch(mdAndDown, (isMobile) => {
+  if (isMobile && gridView.value === AssetSelectGridView.Table) {
+    setGridView(AssetSelectGridViewDefault)
+  }
+}, { immediate: true })
 const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = useSidebar()
 const assetSelectStore = useAssetSelectStore()
 const { filterData } = useAssetListFilter()
@@ -253,6 +262,7 @@ onMounted(() => {
               </VTooltip>
             </VBtn>
             <VBtn
+              v-if="!mdAndDown"
               size="x-small"
               icon
               class="text-medium-emphasis"

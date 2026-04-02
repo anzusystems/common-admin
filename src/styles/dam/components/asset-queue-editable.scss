@@ -32,17 +32,37 @@ $bg-color-dark: #1a1a1a;
     .#{$class-name-root}__left {
       margin-right: $sidebar-width;
     }
+
+    @media (max-width: 960px) {
+      .#{$class-name-root}__sidebar {
+        width: 100%;
+        z-index: 1;
+        overflow-y: auto;
+      }
+
+      .#{$class-name-root}__left {
+        margin-right: 0;
+      }
+    }
   }
 }
 
 .v-theme--light {
   .#{$class-name-root} {
     background-color: $bg-color-light;
+
+    &__sidebar {
+      background-color: $bg-color-light;
+    }
   }
 }
 
 .v-theme--dark {
   .#{$class-name-root} {
     background-color: $bg-color-dark;
+
+    &__sidebar {
+      background-color: $bg-color-dark;
+    }
   }
 }

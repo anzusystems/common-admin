@@ -91,7 +91,7 @@ const { asset, dialog } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceId } = storeToRefs(assetSelectStore)
 
-const { sidebarRight, closeSidebarRight } = useSidebar()
+const { sidebarRight, closeSidebarRight, closeSidebarLeft } = useSidebar()
 const { smAndDown } = useDisplay()
 const { showErrorT } = useAlerts()
 
@@ -106,10 +106,12 @@ const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig,
 
 const submitFilterAction = () => {
   submitFilter(pagination, fetchAssetListDebounced)
+  if (smAndDown.value) closeSidebarLeft()
 }
 
 const resetFilterAction = () => {
   resetFilter(pagination, resetAssetList)
+  if (smAndDown.value) closeSidebarLeft()
 }
 
 const onInit = () => {

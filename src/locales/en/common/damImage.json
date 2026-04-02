@@ -148,6 +148,7 @@
     "add": "Add to upload",
     "save": "Save and continue",
     "saveAndApply": "Save and apply",
+    "apply": "Apply",
     "title": "Uploading",
     "titleDone": "Uploading completed",
     "stopConfirmQuestion": "Do you want to stop the upload?",

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import UploadQueueEditable from '@/components/damImage/uploadQueue/components/UploadQueueEditable.vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import { computed, ref, toRaw } from 'vue'
+import { useDisplay } from 'vuetify'
 import { useTheme } from '@/composables/themeSettings'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
 import useVuelidate from '@vuelidate/core'
@@ -71,6 +72,7 @@ const isFinished = computed(() => {
 
 const { t } = useI18n()
 const { toolbarColor } = useTheme()
+const { mdAndDown } = useDisplay()
 const v$ = useVuelidate({ $stopPropagation: true })
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
 const { damClient, endPointAsset, customUploadMetadataToImageMap } = useCommonAdminCoreDamOptions()
@@ -177,6 +179,7 @@ const showDetail = async (id: DocId) => {
             :color="toolbarColor"
             density="compact"
             :height="64"
+            style="overflow-x: auto"
           >
             <div class="d-flex align-center px-2">
               <div>
@@ -227,13 +230,13 @@ const showDetail = async (id: DocId) => {
                 :disabled="saveButtonLoading"
                 @click.stop="onSaveAndApply"
               >
-                {{ t('common.damImage.upload.saveAndApply') }}
+                {{ mdAndDown ? t('common.damImage.upload.apply') : t('common.damImage.upload.saveAndApply') }}
               </ABtnPrimary>
               <VBtn
                 variant="text"
                 :height="36"
                 :width="36"
-                class="mr-2"
+                class="mr-2 text-medium-emphasis"
                 icon
                 :loading="saveButtonLoading"
                 :disabled="saveAndCloseButtonLoading"
@@ -261,6 +264,7 @@ const showDetail = async (id: DocId) => {
                     variant="text"
                     :height="34"
                     :width="34"
+                    class="text-medium-emphasis"
                     v-bind="fileInputProps"
                   >
                     <VIcon icon="mdi-plus" />
@@ -283,7 +287,7 @@ const showDetail = async (id: DocId) => {
                 :active="uploadQueueSidebar"
                 :variant="uploadQueueSidebar ? 'flat' : 'text'"
                 :color="uploadQueueSidebar ? 'secondary' : ''"
-                class="mr-2"
+                class="mr-2 text-medium-emphasis"
                 icon
                 @click.stop="toggleUploadQueueSidebar"
               >

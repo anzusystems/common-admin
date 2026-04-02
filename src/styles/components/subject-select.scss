@@ -35,7 +35,7 @@ $sidebar-right-width: 300px;
       }
 
       .#{$class-name-root}__content {
-        @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+        @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
           margin-left: 0;
         }
 
@@ -51,7 +51,7 @@ $sidebar-right-width: 300px;
       }
 
       .#{$class-name-root}__content {
-        @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+        @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
           margin-right: 0;
         }
 
@@ -73,7 +73,7 @@ $sidebar-right-width: 300px;
     height: 100%;
     background-color: rgb(var(--v-theme-surface));
 
-    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+    @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
       width: 100%;
       z-index: 2;
     }
@@ -123,7 +123,7 @@ $sidebar-right-width: 300px;
     overflow-y: auto;
     background-color: rgb(var(--v-theme-surface));
 
-    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+    @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
       width: 100%;
       z-index: 2;
     }
@@ -181,7 +181,7 @@ $sidebar-right-width: 300px;
         margin-right: 0;
       }
 
-      @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+      @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
         flex-direction: column;
 
         .#{$class-name-root}__sidebar-right {

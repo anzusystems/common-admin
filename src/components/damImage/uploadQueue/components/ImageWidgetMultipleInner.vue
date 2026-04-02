@@ -615,7 +615,17 @@ onMounted(() => {
       :config-name="configName"
       return-type="asset"
       @on-confirm="onAssetSelectConfirm"
-    />
+    >
+      <template
+        v-if="$slots['asset-select-sidebar-prepend']"
+        #sidebar-prepend="slotProps"
+      >
+        <slot
+          name="asset-select-sidebar-prepend"
+          v-bind="slotProps"
+        />
+      </template>
+    </AAssetSelect>
     <div
       v-if="imagesLoading"
       class="w-100 d-flex align-center justify-center"
