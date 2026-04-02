@@ -26,7 +26,7 @@ const props = withDefaults(
 const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configName)
 
 const { t } = useI18n()
-const { smAndDown } = useDisplay()
+const { mdAndDown } = useDisplay()
 const { closeSidebarLeft } = useSidebar()
 const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()
 
@@ -44,12 +44,12 @@ const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig,
 
 const submitFilterAction = () => {
   submitFilter(pagination, fetchAssetListDebounced)
-  if (smAndDown.value) closeSidebarLeft()
+  if (mdAndDown.value) closeSidebarLeft()
 }
 
 const resetFilterAction = () => {
   resetFilter(pagination, resetAssetList)
-  if (smAndDown.value) closeSidebarLeft()
+  if (mdAndDown.value) closeSidebarLeft()
 }
 
 const componentComputed = computed(() => {

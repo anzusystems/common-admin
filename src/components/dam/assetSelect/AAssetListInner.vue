@@ -92,7 +92,7 @@ const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceId } = storeToRefs(assetSelectStore)
 
 const { sidebarRight, closeSidebarRight, closeSidebarLeft } = useSidebar()
-const { smAndDown } = useDisplay()
+const { mdAndDown } = useDisplay()
 const { showErrorT } = useAlerts()
 
 const { filterData, filterConfig } = useAssetListFilter()
@@ -106,12 +106,12 @@ const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig,
 
 const submitFilterAction = () => {
   submitFilter(pagination, fetchAssetListDebounced)
-  if (smAndDown.value) closeSidebarLeft()
+  if (mdAndDown.value) closeSidebarLeft()
 }
 
 const resetFilterAction = () => {
   resetFilter(pagination, resetAssetList)
-  if (smAndDown.value) closeSidebarLeft()
+  if (mdAndDown.value) closeSidebarLeft()
 }
 
 const onInit = () => {
@@ -321,7 +321,7 @@ onUnmounted(() => {
     <div
       class="subject-select__main"
       :class="{
-        'subject-select__main--sidebar-right-active': sidebarRight && !smAndDown,
+        'subject-select__main--sidebar-right-active': sidebarRight && !mdAndDown,
       }"
     >
       <div class="subject-select__content">
@@ -343,7 +343,7 @@ onUnmounted(() => {
         </div>
       </div>
       <div
-        v-if="!smAndDown"
+        v-if="!mdAndDown"
         class="subject-select__sidebar-right system-border-l"
       >
         <div
@@ -377,7 +377,7 @@ onUnmounted(() => {
       </div>
     </div>
     <VDialog
-      v-if="smAndDown"
+      v-if="mdAndDown"
       v-model="sidebarRight"
       scrollable
       @update:model-value="

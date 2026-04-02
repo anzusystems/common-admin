@@ -55,7 +55,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { smAndDown } = useDisplay()
+const { mdAndDown } = useDisplay()
 const imageMediaWidgetStore = useImageMediaWidgetStore()
 const { detail } = storeToRefs(imageMediaWidgetStore)
 const assetDetailStore = useAssetDetailStore()
@@ -203,7 +203,7 @@ defineExpose({
     v-else
     :model-value="modelValue"
     :max-width="500"
-    :fullscreen="smAndDown"
+    :fullscreen="mdAndDown"
     eager
     @update:model-value="onDialogModelUpdate"
   >

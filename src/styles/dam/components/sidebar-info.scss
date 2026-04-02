@@ -16,7 +16,7 @@ $sum-height: $toolbar-height + $tabs-height + $actions-height;
   &__content {
     overflow-y: auto;
 
-    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+    @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
       flex: 1 1 auto;
       min-height: 0;
     }

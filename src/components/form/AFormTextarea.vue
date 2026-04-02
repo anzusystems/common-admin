@@ -64,7 +64,7 @@ const emit = defineEmits<{
   (e: 'focus', data: string | null | undefined): void
 }>()
 
-const { smAndDown } = useDisplay()
+const { mdAndDown } = useDisplay()
 const textareaRef = ref<InstanceType<typeof VTextField> | null>(null)
 
 // Collaboration
@@ -231,7 +231,7 @@ defineExpose({
       </span>
     </template>
     <template
-      v-if="help && !smAndDown"
+      v-if="help && !mdAndDown"
       #append
     >
       <VIcon

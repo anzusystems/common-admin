@@ -28,7 +28,7 @@ $bg-sidebar-color-dark: #1a1a1a;
   }
 
   &__content {
-    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+    @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
       flex-direction: column;
       height: calc(100vh - $toolbar-height-mobile) !important;
       overflow: hidden;
@@ -38,7 +38,7 @@ $bg-sidebar-color-dark: #1a1a1a;
   &__sidebar {
     transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+    @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
       width: 100%;
       position: relative;
       display: flex;
@@ -60,7 +60,7 @@ $bg-sidebar-color-dark: #1a1a1a;
     position: relative;
     overflow: hidden;
 
-    @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+    @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
       height: 0;
       max-height: 0;
       flex: 0 0 auto;
@@ -79,7 +79,7 @@ $bg-sidebar-color-dark: #1a1a1a;
 
   &--sidebar-active {
     .#{$class-name-root}__sidebar {
-      @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+      @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
         height: calc(100vh - $toolbar-height-mobile - $image-height-mobile) !important;
       }
 
@@ -90,7 +90,7 @@ $bg-sidebar-color-dark: #1a1a1a;
     }
 
     .#{$class-name-root}__left {
-      @media #{map.get(vars.$display-breakpoints, 'sm-and-down')} {
+      @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
         height: $image-height-mobile;
         max-height: $image-height-mobile;
       }

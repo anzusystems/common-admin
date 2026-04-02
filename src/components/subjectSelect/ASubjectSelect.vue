@@ -60,8 +60,8 @@ const paginationComputed = computed({
   },
 })
 
-const { smAndDown } = useDisplay()
-const sidebarLeft = ref(!smAndDown.value)
+const { mdAndDown } = useDisplay()
+const sidebarLeft = ref(!mdAndDown.value)
 const filterTouched = ref(false)
 
 const { t } = useI18n()
