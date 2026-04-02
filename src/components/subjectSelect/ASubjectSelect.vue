@@ -64,6 +64,16 @@ const { mdAndDown } = useDisplay()
 const sidebarLeft = ref(!mdAndDown.value)
 const filterTouched = ref(false)
 
+const submitFilterAndClose = () => {
+  props.submitFilter()
+  if (mdAndDown.value) sidebarLeft.value = false
+}
+
+const resetFilterAndClose = () => {
+  props.resetFilter()
+  if (mdAndDown.value) sidebarLeft.value = false
+}
+
 const { t } = useI18n()
 
 const selectedItemsCount = computed(() => {
@@ -76,7 +86,7 @@ const disabledSubmit = computed(() => {
 
 const onOpen = () => {
   emit('onOpen')
-  sidebarLeft.value = true
+  sidebarLeft.value = !mdAndDown.value
   dialog.value = true
 }
 
@@ -204,7 +214,7 @@ defineExpose({
               <VForm
                 name="search2"
                 class="px-2 pt-4"
-                @submit.prevent="submitFilter"
+                @submit.prevent="submitFilterAndClose"
               >
                 <slot name="filter" />
               </VForm>
@@ -215,7 +225,7 @@ defineExpose({
                 class="mx-2"
                 :variant="filterTouched ? 'flat' : 'text'"
                 size="small"
-                @click.stop="submitFilter"
+                @click.stop="submitFilterAndClose"
               >
                 {{ t('common.button.submitFilter') }}
               </VBtn>
@@ -224,7 +234,7 @@ defineExpose({
                 min-width="36px"
                 variant="flat"
                 size="small"
-                @click.stop="resetFilter"
+                @click.stop="resetFilterAndClose"
               >
                 <VIcon icon="mdi-filter-remove-outline" />
                 <VTooltip
