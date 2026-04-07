@@ -36,7 +36,7 @@ const { t } = useI18n()
     @click.stop="onClick"
   >
     <VIcon
-      color="grey darken-1"
+      color="grey-darken-1"
       icon="mdi-filter-remove-outline"
     />
     <VTooltip

@@ -195,7 +195,7 @@ onMounted(() => {
         class="white-space-nowrap"
       >
         <VBtn
-          text
+          variant="text"
           prepend-icon="mdi-bookmark-outline"
           size="small"
           class="mr-1 mb-1 bg-grey-lighten-4 text-grey-darken-3"
@@ -206,8 +206,7 @@ onMounted(() => {
       </div>
       <VMenu
         v-if="itemsComputed.hidden.length > 0"
-        bottom
-        offset-y
+        location="bottom"
       >
         <template #activator="{ props: activatorProps }">
           <VBtn

@@ -30,12 +30,12 @@ const { t } = useI18n()
         >
         <h1
           v-if="title"
-          class="display-1 my-3"
+          class="text-h4 my-3"
         >
           {{ title }}
         </h1>
       </slot>
-      <h4 class="mb-3 body-1">
+      <h4 class="mb-3 text-body-1">
         <span>{{ t('common.system.login.text') }}</span>
       </h4>
       <div class="py-5">

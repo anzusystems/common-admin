@@ -36,8 +36,7 @@ const afterLanguageChange = async (language: LanguageCode) => {
       <VRow>
         <VCol cols="6">
           <VRow
-            align="center"
-            class="pb-2"
+            class="align-center pb-2"
           >
             <VCol cols="3">
               {{ t('system.settings.locale') }}
@@ -50,8 +49,7 @@ const afterLanguageChange = async (language: LanguageCode) => {
             </VCol>
           </VRow>
           <VRow
-            align="center"
-            class="pb-2"
+            class="align-center pb-2"
           >
             <VCol cols="3">
               {{ t('system.settings.theme') }}

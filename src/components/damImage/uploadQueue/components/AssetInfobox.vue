@@ -29,7 +29,7 @@ const { t } = useI18n()
     class="w-100 pa-2 text-body-small"
   >
     <VAlert
-      dark
+
       type="warning"
     >
       {{ t('common.damImage.asset.detail.info.status.duplicate') }}
@@ -40,7 +40,7 @@ const { t } = useI18n()
     class="w-100 pa-2 text-body-small"
   >
     <VAlert
-      dark
+
       type="error"
     >
       {{ t('common.damImage.asset.detail.info.status.failed') }}
@@ -55,7 +55,7 @@ const { t } = useI18n()
     class="w-100 pa-2 text-body-small"
   >
     <VAlert
-      dark
+
       type="error"
     >
       {{ t('common.damImage.asset.detail.info.status.deleting') }}
@@ -66,7 +66,7 @@ const { t } = useI18n()
     class="w-100 pa-2 text-body-small"
   >
     <VAlert
-      dark
+
       type="warning"
     >
       {{ t('common.damImage.asset.detail.info.status.draft') }}

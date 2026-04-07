@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
   <VAppBar
     v-if="showSystemBar"
     height="48"
-    color="orange accent-3"
+    color="orange-accent-3"
     elevation="0"
     :order="-1"
   >
