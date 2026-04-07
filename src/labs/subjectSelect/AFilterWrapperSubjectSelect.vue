@@ -48,7 +48,6 @@ const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHidde
   required: false,
 })
 
-
 const closeSidebarOnMobile = inject(SubjectSelectCloseSidebarKey, () => {})
 
 const filterConfig = inject(FilterConfigKey)

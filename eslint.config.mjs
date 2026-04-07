@@ -92,7 +92,7 @@ const deprecationPlugin = {
 
         return {
           ImportDeclaration(node) {
-            const filename = context.getFilename()
+            const filename = context.filename
             const normalizedFilename = filename.replace(/\\/g, '/') // Handle Windows paths
 
             // Check if current file should be skipped (manual skip list)

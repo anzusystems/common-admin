@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1771894824",
+  "version": "1.47.0-beta.dev-1771894830",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -81,7 +81,7 @@
     "axios": "1.14.0",
     "cropperjs": "^1.6.2",
     "dayjs": "1.11.20",
-    "eslint": "9.39.4",
+    "eslint": "^10.2.0",
     "eslint-plugin-oxlint": "~1.58.0",
     "eslint-plugin-vue": "10.8.0",
     "npm-run-all2": "^8.0.4",
