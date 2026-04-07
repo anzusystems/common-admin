@@ -22,8 +22,8 @@ $sum-height: $toolbar-height + $tabs-height + $actions-height;
     }
 
     @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
-      height: calc(100vh - $sum-height);
-      max-height: calc(100vh - $sum-height);
+      height: calc(100dvh - $sum-height);
+      max-height: calc(100dvh - $sum-height);
     }
   }
 
@@ -35,8 +35,8 @@ $sum-height: $toolbar-height + $tabs-height + $actions-height;
   &--no-tabs {
     .#{$class-name-root}__content {
       @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
-        height: calc(100vh - $toolbar-height - $actions-height);
-        max-height: calc(100vh - $toolbar-height - $actions-height);
+        height: calc(100dvh - $toolbar-height - $actions-height);
+        max-height: calc(100dvh - $toolbar-height - $actions-height);
       }
     }
   }

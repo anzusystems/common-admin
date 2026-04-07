@@ -12,14 +12,14 @@ $bg-sidebar-color-light: #fff;
 $bg-sidebar-color-dark: #1a1a1a;
 
 .#{$class-name-root} {
-  min-height: 100vh !important;
+  min-height: 100dvh !important;
   background-color: #f1f4f6;
   position: relative;
   overflow: hidden !important;
 
   &__wrapper {
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
 
     .asset-image.asset-image--placeholder {
       width: 100% !important;
@@ -30,7 +30,7 @@ $bg-sidebar-color-dark: #1a1a1a;
   &__content {
     @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
       flex-direction: column;
-      height: calc(100vh - $toolbar-height-mobile) !important;
+      height: calc(100dvh - $toolbar-height-mobile) !important;
       overflow: hidden;
     }
   }
@@ -42,7 +42,7 @@ $bg-sidebar-color-dark: #1a1a1a;
       width: 100%;
       position: relative;
       display: flex;
-      height: calc(100vh - $toolbar-height-mobile) !important;
+      height: calc(100dvh - $toolbar-height-mobile) !important;
       overflow: hidden;
     }
 
@@ -67,20 +67,20 @@ $bg-sidebar-color-dark: #1a1a1a;
     }
 
     @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
-      height: calc(100vh - $toolbar-height);
-      max-height: calc(100vh - $toolbar-height);
+      height: calc(100dvh - $toolbar-height);
+      max-height: calc(100dvh - $toolbar-height);
     }
   }
 
   &__image {
-    max-height: calc(100vh - $toolbar-height);
+    max-height: calc(100dvh - $toolbar-height);
     width: auto;
   }
 
   &--sidebar-active {
     .#{$class-name-root}__sidebar {
       @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
-        height: calc(100vh - $toolbar-height-mobile - $image-height-mobile) !important;
+        height: calc(100dvh - $toolbar-height-mobile - $image-height-mobile) !important;
       }
 
       @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {

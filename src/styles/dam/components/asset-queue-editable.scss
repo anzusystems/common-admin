@@ -8,7 +8,7 @@ $bg-color-light: #fff;
 $bg-color-dark: #1a1a1a;
 
 .#{$class-name-root} {
-  min-height: 100vh !important;
+  min-height: 100dvh !important;
   position: relative;
 
   &__sidebar {
@@ -18,12 +18,12 @@ $bg-color-dark: #1a1a1a;
     top: 0;
     right: 0;
     width: $sidebar-width;
-    height: calc(100vh - $second-toolbar-height);
+    height: calc(100dvh - $second-toolbar-height);
   }
 
   &__left {
     transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    height: calc(100vh - $second-toolbar-height);
+    height: calc(100dvh - $second-toolbar-height);
   }
 
   &--sidebar-active {

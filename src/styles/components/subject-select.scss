@@ -162,7 +162,7 @@ $sidebar-right-width: 300px;
     .#{$class-name-root}__sidebar-right {
       position: sticky;
       top: 0;
-      max-height: 100vh;
+      max-height: 100dvh;
       height: auto;
       align-self: flex-start;
       transform: none;
