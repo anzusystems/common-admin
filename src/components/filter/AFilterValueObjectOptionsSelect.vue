@@ -53,6 +53,6 @@ const multipleComputedVuetifyTypeFix = computed(() => {
     :clearable="!modelValue.mandatory"
     data-cy="filter-value"
     @clear="clearOne(modelValue)"
-    @update:modelValue="emit('change')"
+    @update:model-value="emit('change')"
   />
 </template>
