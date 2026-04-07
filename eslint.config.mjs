@@ -1,6 +1,7 @@
 import stylistic from '@stylistic/eslint-plugin'
 import pluginVue from 'eslint-plugin-vue'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import vuetify from 'eslint-plugin-vuetify'
 import oxlint from 'eslint-plugin-oxlint'
 
 const tsExtensionPlugin = {
@@ -359,5 +360,6 @@ export default defineConfigWithVueTs(
       '@stylistic/object-curly-spacing': ['error', 'always'],
     },
   },
+  ...vuetify.configs['flat/recommended-v4'],
   oxlint.configs['flat/recommended'],
 )

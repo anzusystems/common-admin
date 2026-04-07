@@ -18,7 +18,7 @@
     },
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1771894831",
+  "version": "1.47.0-beta.dev-1771894832",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -82,11 +82,12 @@
     "cropperjs": "^1.6.2",
     "dayjs": "1.11.20",
     "eslint": "^10.2.0",
-    "eslint-plugin-oxlint": "~1.58.0",
+    "eslint-plugin-oxlint": "1.58.0",
     "eslint-plugin-vue": "10.8.0",
+    "eslint-plugin-vuetify": "^2.7.2",
     "npm-run-all2": "^8.0.4",
     "oxfmt": "^0.44.0",
-    "oxlint": "~1.59.0",
+    "oxlint": "1.58.0",
     "pinia": "3.0.4",
     "playwright": "^1.59.1",
     "postcss": "^8.5.8",
