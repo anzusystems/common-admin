@@ -40,7 +40,6 @@ export function modifyLanguageSettings(
   i18nInstance?: any
 ) {
   const i18n = i18nInstance || defaultI18n
-  if (storedSettings.value === 'default') storedSettings.value = configDefaultLanguage
   // const { current } = useLocale()
 
   function addMessages(language: LanguageCode, messages: any) {
@@ -63,7 +62,14 @@ export function modifyLanguageSettings(
   }
 
   const initializeLanguage = () => {
-    if (!i18n || !i18n.global || storedSettings.value === 'default') return
+    if (!i18n || !i18n.global) return
+    if (storedSettings.value === 'default') {
+      // No explicit user preference in localStorage — use app default
+      storedSettings.value = configDefaultLanguage
+      // @ts-ignore
+      i18n.global.locale.value = configDefaultLanguage
+      return
+    }
     if (configAvailableLanguages.includes(storedSettings.value) || storedSettings.value === 'xx') {
       // current.value = storedSettings.value
       // @ts-ignore
@@ -76,8 +82,16 @@ export function modifyLanguageSettings(
     i18n.global.locale.value = configDefaultLanguage
   }
 
+  const applyUserLocale = (locale: string | null) => {
+    if (!locale) return false
+    const code = locale as LanguageCode
+    if (storedSettings.value !== 'default' && code === storedSettings.value) return false
+    return setLanguage(code)
+  }
+
   return {
     addMessages,
+    applyUserLocale,
     initializeLanguage,
     currentLanguageCode: readonly(storedSettings),
     setLanguage,
