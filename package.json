@@ -2,7 +2,8 @@
   "name": "@anzusystems/common-admin",
   "packageManager": "yarn@4.13.0",
   "files": [
-    "dist"
+    "dist",
+    "src/eslint"
   ],
   "module": "./dist/common-admin.es.js",
   "types": "./dist/common-admin.d.ts",
@@ -19,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1771894837",
+  "version": "1.47.0-beta.dev-1771894838",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
