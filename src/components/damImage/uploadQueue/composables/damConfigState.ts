@@ -75,7 +75,6 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
           if (Object.keys(config).length < 1) {
             throw new Error('Unable to load dam prv config. Incorrect response body.')
           }
-          console.log(config)
           setDamPrvConfig(config)
           resolve(true)
         })
