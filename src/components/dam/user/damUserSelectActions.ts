@@ -10,7 +10,7 @@ import {
 } from '@/components/dam/user/userApi'
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 import type { Pagination as PaginationLegacy } from '@/types/Pagination'
 

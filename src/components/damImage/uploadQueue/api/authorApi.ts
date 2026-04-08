@@ -5,9 +5,9 @@ import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetA
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import type { IntegerId } from '@/types/common'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchList } from '@/services/api/apiFetchList'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 

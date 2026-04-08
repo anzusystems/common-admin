@@ -5,9 +5,9 @@ import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetA
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import type { Pagination } from '@/types/Pagination'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchList } from '@/services/api/apiFetchList'
 
 const END_POINT = '/adm/v1/keyword'

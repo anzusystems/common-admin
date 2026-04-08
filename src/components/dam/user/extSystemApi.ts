@@ -4,9 +4,9 @@ import type { AxiosInstance } from 'axios'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { IntegerId } from '@/types/common'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchList } from '@/services/api/apiFetchList'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 

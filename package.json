@@ -16,9 +16,10 @@
       "import": "./dist/labs.js",
       "types": "./dist/labs.d.ts"
     },
+    "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1771894836",
+  "version": "1.47.0-beta.dev-1771894837",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

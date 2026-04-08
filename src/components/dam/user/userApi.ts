@@ -5,10 +5,10 @@ import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchList } from '@/services/api/apiFetchList'
 import type { Pagination } from '@/types/Pagination'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 
 const END_POINT = '/adm/v1/user'

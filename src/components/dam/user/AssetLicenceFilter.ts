@@ -6,7 +6,7 @@ import {
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
 import { reactive } from 'vue'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 
 export function useDamAssetLicenceInnerFilter() {

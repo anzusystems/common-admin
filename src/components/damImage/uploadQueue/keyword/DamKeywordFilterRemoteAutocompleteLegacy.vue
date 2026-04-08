@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useKeywordSelectActions } from '@/components/damImage/uploadQueue/keyword/keywordActions'
 import { useKeywordListFilter } from '@/components/damImage/uploadQueue/keyword/KeywordFilter'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { Filter } from '@/types/Filter'
 import AFilterRemoteAutocomplete from '@/components/filter/AFilterRemoteAutocomplete.vue'
 import type { IntegerId } from '@/types/common'

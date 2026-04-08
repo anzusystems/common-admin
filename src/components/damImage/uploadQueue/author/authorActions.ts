@@ -16,7 +16,7 @@ import type { IntegerId } from '@/types/common'
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import type { Pagination as PaginationLegacy } from '@/types/Pagination'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 
 export const useAuthorSelectActions = (extSystem: IntegerId) => {

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { Filter } from '@/types/Filter'
 import { useAuthorSelectActions } from '@/components/damImage/uploadQueue/author/authorActions'
 import { useAuthorFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
