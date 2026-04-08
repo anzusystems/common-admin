@@ -272,6 +272,13 @@ const anzuPlugin = {
             const hasFatalCheck = parts.some(
               (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError'
             )
+            const hasInstanceofErrorCheck = parts.some(
+              (part) =>
+                part.type === 'BinaryExpression' &&
+                part.operator === 'instanceof' &&
+                part.right.type === 'Identifier' &&
+                part.right.name === 'Error'
+            )
             const hasAxiosCheck = parts.some(
               (part) =>
                 part.type === 'CallExpression' &&
@@ -280,11 +287,11 @@ const anzuPlugin = {
                 part.callee.property.name === 'isAxiosError'
             )
 
-            if (hasFatalCheck && hasAxiosCheck) {
+            if (hasAxiosCheck && (hasFatalCheck || hasInstanceofErrorCheck)) {
               context.report({
                 node,
                 message:
-                  'Replace isAnzuFatalError(error) && axios.isAxiosError(error.cause)' +
+                  'Replace error type check && axios.isAxiosError(error.cause)' +
                   ' with isAnzuApiAxiosError(error).' +
                   ' Labs API throws AnzuApiAxiosError with typed AxiosError cause.',
               })

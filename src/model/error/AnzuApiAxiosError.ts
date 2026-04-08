@@ -8,9 +8,9 @@ export const isAnzuApiAxiosError = (error: unknown): error is AnzuApiAxiosError 
  * Custom error class for Axios-related errors
  */
 export class AnzuApiAxiosError extends Error {
-  declare cause: AxiosError
+  declare cause: AxiosError<any, any>
 
-  constructor(cause: AxiosError) {
+  constructor(cause: AxiosError<any, any>) {
     super('API request failed')
     this.name = 'AnzuApiAxiosError'
     this.cause = cause
