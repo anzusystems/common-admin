@@ -250,6 +250,7 @@ import {
   isAnzuApiDependencyExistsError,
 } from '@/model/error/AnzuApiDependencyExistsError'
 import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
+import { AnzuApiAxiosError, isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
@@ -1253,6 +1254,8 @@ export {
   AnzuApiValidationError,
   isAnzuFatalError,
   AnzuFatalError,
+  isAnzuApiAxiosError,
+  AnzuApiAxiosError,
   type ValidationError,
   type AnzuApiValidationResponseData,
   isAnzuApiDependencyExistsError,
