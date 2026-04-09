@@ -7,6 +7,7 @@ const currentUserObject: AnzuUser = {
   id: 1,
   email: 'common@admin.com',
   enabled: false,
+  locale: null,
   roles: [ROLE_SUPER_ADMIN],
   person: {
     firstName: 'Common',
