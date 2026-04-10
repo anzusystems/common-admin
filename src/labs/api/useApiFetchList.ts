@@ -43,6 +43,7 @@ export type UseApiFetchListParams = {
   urlTemplate?: string
   urlParams?: UrlParams
   options?: AxiosRequestConfig
+  silentConsoleError?: boolean
 }
 
 export type FetchListParams = {
@@ -68,7 +69,7 @@ export const generateListQuery = (
 }
 
 export const useApiFetchList = <R>(params: UseApiFetchListParams): UseApiFetchListReturnType<R> => {
-  const { client, system, entity, urlTemplate, urlParams, options = {} } = params
+  const { client, system, entity, urlTemplate, urlParams, options = {}, silentConsoleError = false } = params
 
   let abortController: AbortController | null = null
 
@@ -158,11 +159,11 @@ export const useApiFetchList = <R>(params: UseApiFetchListParams): UseApiFetchLi
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ' + urlTemplate, err.cause)
+        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 
-      console.error('AnzuFatalError: ', err)
+      if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
       abortController = null

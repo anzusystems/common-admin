@@ -39,6 +39,7 @@ export type UseApiFetchByIdsParams = {
   options?: AxiosRequestConfig
   isSearchApi?: boolean
   field?: string
+  silentConsoleError?: boolean
 }
 
 export type FetchByIdsParams = {
@@ -79,6 +80,7 @@ export const useApiFetchByIds = <R>(
     options = {},
     isSearchApi = false,
     field = 'id',
+    silentConsoleError = false,
   } = params
 
   let abortController: AbortController | null = null
@@ -147,11 +149,11 @@ export const useApiFetchByIds = <R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ' + urlTemplate, err.cause)
+        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 
-      console.error('AnzuFatalError: ', err)
+      if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
       abortController = null

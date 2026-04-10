@@ -42,12 +42,13 @@ export type UseApiRequestParams = {
   urlTemplate?: string
   urlParams?: UrlParams
   options?: AxiosRequestConfig
+  silentConsoleError?: boolean
 }
 
 export const useApiRequest = <R, T = R>(
   params: UseApiRequestParams,
 ): UseApiAnyRequestReturnType<R, T> => {
-  const { client, method, system, entity, urlTemplate, urlParams, options = {} } = params
+  const { client, method, system, entity, urlTemplate, urlParams, options = {}, silentConsoleError = false } = params
 
   let abortController: AbortController | null = null
 
@@ -119,11 +120,11 @@ export const useApiRequest = <R, T = R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ' + urlTemplate, err.cause)
+        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 
-      console.error('AnzuFatalError: ', err)
+      if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
       abortController = null
