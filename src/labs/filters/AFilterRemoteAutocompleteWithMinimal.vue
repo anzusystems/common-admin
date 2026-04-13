@@ -413,7 +413,7 @@ watchDebounced(
       </slot>
     </template>
     <!-- @vue-skip -->
-    <template #chip="{ props: chipProps, item: chipItem }">
+    <template #chip="{ props: chipProps, internalItem: chipItem }">
       <slot
         name="chip"
         :props="chipProps"

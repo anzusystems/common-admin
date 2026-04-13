@@ -198,8 +198,9 @@ const showAdd = computed(() => {
       @keyup.enter="onEnterKeyup"
       @keyup.,="onCommaKeyup"
     >
-      <template #item="{ props: itemSlotProps, internalItem: itemSlotItem }">
+      <template #item="{ props: itemSlotProps, item: itemSlotItem }">
         <VListItem
+          v-if="itemSlotItem"
           v-bind="itemSlotProps"
           @click.prevent=""
         >
@@ -226,6 +227,7 @@ const showAdd = computed(() => {
       </template>
       <template #chip="{ item: chipSlotItem }">
         <AuthorRemoteAutocompleteCachedAuthorChip
+          v-if="chipSlotItem"
           :id="chipSlotItem.value"
           :key="chipSlotItem.value"
           :queue-id="queueId"
