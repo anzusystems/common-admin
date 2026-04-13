@@ -57,7 +57,15 @@ export type FetchListBatchParams = {
 export const useApiFetchListBatch = <R>(
   params: UseApiFetchListBatchParams,
 ): UseApiFetchListBatchReturnType<R> => {
-  const { client, system, entity, urlTemplate, urlParams, options = {}, silentConsoleError = false } = params
+  const {
+    client,
+    system,
+    entity,
+    urlTemplate,
+    urlParams,
+    options = {},
+    silentConsoleError = false,
+  } = params
 
   let abortController: AbortController | null = null
 
@@ -194,7 +202,8 @@ export const useApiFetchListBatch = <R>(
       }
 
       if (axios.isAxiosError(err)) {
-        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
+        if (!silentConsoleError)
+          console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 

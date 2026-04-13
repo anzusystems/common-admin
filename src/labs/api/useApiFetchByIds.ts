@@ -149,7 +149,8 @@ export const useApiFetchByIds = <R>(
       }
 
       if (axios.isAxiosError(err)) {
-        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
+        if (!silentConsoleError)
+          console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 

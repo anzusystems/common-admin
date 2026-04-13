@@ -218,9 +218,10 @@ const anzuPlugin = {
                   normalizedFilename.endsWith(rulePath + '.ts') ||
                   normalizedFilename.endsWith(rulePath + '.js') ||
                   normalizedFilename.endsWith(rulePath + '.vue') ||
-                  normalizedFilename.endsWith(rulePath)
+                  normalizedFilename.endsWith(rulePath),
               )
-            ) return
+            )
+              return
 
             const source = node.source.value
             if (typeof source !== 'string') return
@@ -270,21 +271,21 @@ const anzuPlugin = {
             parts.unshift(current)
 
             const hasFatalCheck = parts.some(
-              (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError'
+              (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError',
             )
             const hasInstanceofErrorCheck = parts.some(
               (part) =>
                 part.type === 'BinaryExpression' &&
                 part.operator === 'instanceof' &&
                 part.right.type === 'Identifier' &&
-                part.right.name === 'Error'
+                part.right.name === 'Error',
             )
             const hasAxiosCheck = parts.some(
               (part) =>
                 part.type === 'CallExpression' &&
                 part.callee.type === 'MemberExpression' &&
                 part.callee.object.name === 'axios' &&
-                part.callee.property.name === 'isAxiosError'
+                part.callee.property.name === 'isAxiosError',
             )
 
             if (hasAxiosCheck && (hasFatalCheck || hasInstanceofErrorCheck)) {

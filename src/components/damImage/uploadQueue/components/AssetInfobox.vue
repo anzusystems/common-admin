@@ -28,10 +28,7 @@ const { t } = useI18n()
     v-if="assetMainFileStatus && assetMainFileStatus === AssetFileProcessStatus.Duplicate"
     class="w-100 pa-2 text-body-small"
   >
-    <VAlert
-
-      type="warning"
-    >
+    <VAlert type="warning">
       {{ t('common.damImage.asset.detail.info.status.duplicate') }}
     </VAlert>
   </div>
@@ -39,10 +36,7 @@ const { t } = useI18n()
     v-if="assetMainFileStatus && assetMainFileStatus === AssetFileProcessStatus.Failed"
     class="w-100 pa-2 text-body-small"
   >
-    <VAlert
-
-      type="error"
-    >
+    <VAlert type="error">
       {{ t('common.damImage.asset.detail.info.status.failed') }}
       <div v-if="assetMainFileFailReason">
         <br>
@@ -54,10 +48,7 @@ const { t } = useI18n()
     v-else-if="assetStatus === DamAssetStatus.Deleting"
     class="w-100 pa-2 text-body-small"
   >
-    <VAlert
-
-      type="error"
-    >
+    <VAlert type="error">
       {{ t('common.damImage.asset.detail.info.status.deleting') }}
     </VAlert>
   </div>
@@ -65,10 +56,7 @@ const { t } = useI18n()
     v-else-if="assetStatus === DamAssetStatus.Draft"
     class="w-100 pa-2 text-body-small"
   >
-    <VAlert
-
-      type="warning"
-    >
+    <VAlert type="warning">
       {{ t('common.damImage.asset.detail.info.status.draft') }}
     </VAlert>
   </div>

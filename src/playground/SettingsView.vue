@@ -35,9 +35,7 @@ const afterLanguageChange = async (language: LanguageCode) => {
     <VCardText>
       <VRow>
         <VCol cols="6">
-          <VRow
-            class="align-center pb-2"
-          >
+          <VRow class="align-center pb-2">
             <VCol cols="3">
               {{ t('system.settings.locale') }}
             </VCol>
@@ -48,9 +46,7 @@ const afterLanguageChange = async (language: LanguageCode) => {
               />
             </VCol>
           </VRow>
-          <VRow
-            class="align-center pb-2"
-          >
+          <VRow class="align-center pb-2">
             <VCol cols="3">
               {{ t('system.settings.theme') }}
             </VCol>
