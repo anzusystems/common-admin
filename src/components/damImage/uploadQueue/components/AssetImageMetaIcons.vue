@@ -60,7 +60,7 @@ const checkDistributions = (icons: string[], titles: string[]) => {
       damConfigStore.damPrvConfig.distributionServices[
         props.assetFileProperties.distributesInServices[i]
       ]?.iconPath
-    if (iconPath.length > 0 && !icons.includes(iconPath)) {
+    if (iconPath && iconPath.length > 0 && !icons.includes(iconPath)) {
       icons.push(iconPath)
       titles.push(
         damConfigStore.damPrvConfig.distributionServices[

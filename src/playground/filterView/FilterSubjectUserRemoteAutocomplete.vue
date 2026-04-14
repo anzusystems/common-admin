@@ -34,6 +34,7 @@ provide(FilterInnerDataKey, filterData)
   >
     <template #item="{ props: itemProps, item: itemItem }">
       <VListItem
+        v-if="itemItem"
         v-bind="itemProps"
         title=""
       >
@@ -50,7 +51,10 @@ provide(FilterInnerDataKey, filterData)
       </VListItem>
     </template>
     <template #chip="{ props: chipProps, item: chipItem }">
-      <VChip v-bind="chipProps">
+      <VChip
+        v-if="chipItem"
+        v-bind="chipProps"
+      >
         {{ chipItem.title }}
         <VIcon
           v-if="chipItem.raw?.raw?.active || chipItem.raw?.active"

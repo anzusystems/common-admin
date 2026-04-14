@@ -28,6 +28,10 @@ const showSystemBar = ref<boolean>(false)
 const abortController = ref<AbortController | null>(null)
 const lastInactiveTime = ref<number>(0)
 
+const CONSECUTIVE_FAILURE_ALERT_THRESHOLD = 5
+let consecutiveFailures = 0
+let alertedForCurrentOutage = false
+
 const { newVersion } = useSystemBar()
 
 const checkNewVersion = async (): Promise<void> => {
@@ -57,6 +61,8 @@ const checkNewVersion = async (): Promise<void> => {
       showSystemBar.value =
         !isUndefined(json.appVersion) && json.appVersion !== props.currentVersion
       newVersion.value = showSystemBar.value
+      consecutiveFailures = 0
+      alertedForCurrentOutage = false
 
       return
     }
@@ -84,7 +90,21 @@ const systemBarComponent = computed(() => {
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { pause, resume } = useIntervalFn(() => {
-  checkNewVersion()
+  checkNewVersion().catch((error) => {
+    if (isAnzuNewVersionFetchError(error)) {
+      consecutiveFailures++
+      if (consecutiveFailures >= CONSECUTIVE_FAILURE_ALERT_THRESHOLD && !alertedForCurrentOutage) {
+        alertedForCurrentOutage = true
+        // One signal per outage — ops can alert on this; resets on the next successful poll.
+        console.error(
+          `[ASystemBar] Version check failed ${consecutiveFailures} consecutive times:`,
+          error,
+        )
+      }
+      return
+    }
+    console.warn(error)
+  })
 }, props.checkInterval)
 
 const { isWindowActive } = useUserActivity()
