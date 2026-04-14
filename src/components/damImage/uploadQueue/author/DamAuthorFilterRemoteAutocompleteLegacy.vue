@@ -33,7 +33,7 @@ const { t } = useI18n()
     filter-by-field="text"
     :filter-sort-by="null"
   >
-    <template #item="{ props: itemProps, internalItem: itemItem }">
+    <template #item="{ props: itemProps, item: itemItem }">
       <VListItem
         v-bind="itemProps"
         title=""

@@ -214,7 +214,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
             {{ dateTimePretty(asset.modifiedAt) }}
           </VCol>
         </VRow>
-        <div v-if="assetMainFile">
+        <template v-if="assetMainFile">
           <VRow>
             <VCol cols="3">
               {{ t('common.damImage.asset.detail.info.field.mainFileId') }}
@@ -243,7 +243,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamO
             v-if="isTypeImage && assetFileIsImageFile(assetMainFile)"
             :file="assetMainFile"
           />
-        </div>
+        </template>
       </VExpansionPanelText>
     </VExpansionPanel>
   </VExpansionPanels>
