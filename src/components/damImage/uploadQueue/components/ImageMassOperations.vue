@@ -114,7 +114,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
     <VRow
       v-if="authorEnabled && showDamAuthorsAtLeastOne"
       density="comfortable"
-      class="mt-1"
+      class="mt-4"
     >
       <VCol>
         <ASystemEntityScope
@@ -168,7 +168,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
     <VRow
       v-else
       density="comfortable"
-      class="mt-1"
+      class="mt-4"
     >
       <VCol>
         <div class="d-flex">
