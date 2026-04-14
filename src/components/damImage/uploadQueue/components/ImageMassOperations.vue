@@ -70,7 +70,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
   <div class="w-100">
     <VRow
       density="comfortable"
-      class="mt-1"
+      class="mt-4"
     >
       <VCol>
         <div class="d-flex">
