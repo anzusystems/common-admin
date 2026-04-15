@@ -55,8 +55,8 @@ const datesCompareValidate = () => {
     <VCardTitle> ADatetimePicker component basic</VCardTitle>
     <VCardText>
       <p class="mb-4">
-        (always prefer to use AFormDatetimePicker or AFilterDatetimePicker version, this is a helper component for them
-        with main functionality of datetime picking)
+        (always prefer to use AFormDatetimePicker or AFilterDatetimePicker version, this is a helper
+        component for them with main functionality of datetime picking)
       </p>
       <VRow>
         <VCol>

@@ -6,10 +6,11 @@ import { createPinia } from 'pinia'
 import router from '@/router/playground'
 import AnzuSystemsCommonAdmin, { type PluginOptions } from '@/AnzuSystemsCommonAdmin'
 import { damClient } from '@/playground/mock/coreDamClient'
-import '@/styles/main.scss'
 import type { LanguageCode } from '@/composables/languageSettings'
 import { loadCommonFonts } from '@/plugins/webfontloader'
 import { cmsClient } from '@/playground/mock/cmsClient'
+import 'vuetify/styles'
+import '@/styles/main.scss'
 
 export const DEFAULT_LANGUAGE: LanguageCode = 'sk'
 export const AVAILABLE_LANGUAGES: Array<LanguageCode> = ['sk', 'en']

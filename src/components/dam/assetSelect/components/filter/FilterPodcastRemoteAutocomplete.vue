@@ -13,7 +13,7 @@ const props = withDefaults(
     name: string
     licenceId: IntegerId
   }>(),
-  {}
+  {},
 )
 const emit = defineEmits<{
   (e: 'change'): void

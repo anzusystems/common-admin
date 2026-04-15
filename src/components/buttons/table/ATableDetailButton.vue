@@ -18,7 +18,7 @@ const props = withDefaults(
     buttonT: 'common.button.detail',
     buttonClass: 'ml-1',
     dataCy: 'table-detail',
-  }
+  },
 )
 
 const { t } = useI18n()

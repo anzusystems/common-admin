@@ -18,7 +18,7 @@ const props = withDefaults(
     notifyT: 'common.alert.textWasCopied',
     tooltipT: 'common.button.copy',
     dataCy: 'copy-text',
-  }
+  },
 )
 
 const { copy, isSupported } = useClipboard()

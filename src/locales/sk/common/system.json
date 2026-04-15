@@ -30,10 +30,10 @@
   },
   "currentUser": {
     "button": "Účet",
-    "logout" : "Odhlásenie",
-    "logoutText" : "Skutočne sa chcete odhlásiť?",
-    "logoutConfirm" : "Odhlásiť",
-    "settings" : "Nastavenia"
+    "logout": "Odhlásenie",
+    "logoutText": "Skutočne sa chcete odhlásiť?",
+    "logoutConfirm": "Odhlásiť",
+    "settings": "Nastavenia"
   },
   "breadcrumb": {
     "detail": "Detail",

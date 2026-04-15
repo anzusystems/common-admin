@@ -6,7 +6,6 @@ import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
 import { computed, ref, toRaw, watch } from 'vue'
 import type { AssetDetailItemDto } from '@/types/coreDam/Asset'
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import { createImage, fetchImage, updateImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useAlerts } from '@/composables/system/alerts'
@@ -16,6 +15,7 @@ import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import ARow from '@/components/ARow.vue'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
+import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 
 const props = withDefaults(
   defineProps<{
@@ -30,7 +30,7 @@ const props = withDefaults(
     configName: 'default',
     labelT: 'common.damImage.public.idOrUrl',
     dataCy: undefined,
-  }
+  },
 )
 const modelValue = defineModel<IntegerIdNullable>({ default: null, required: true })
 const inputField = ref('')
@@ -44,8 +44,9 @@ const isDirty = ref(false)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
-const { imageClient } = imageOptions
-const { damClient } = useCommonAdminCoreDamOptions()
+const { imageClient, imageApi } = imageOptions
+const { damClient, endPointAsset, sourceLabel, descriptionValidation, sourceValidation } =
+  useCommonAdminCoreDamOptions()
 const { widgetImageToDamImageOriginalUrl } = useImageActions(imageOptions)
 
 const { showErrorsDefault, showValidationError } = useAlerts()
@@ -62,17 +63,12 @@ const validateAssetData = (asset: AssetDetailItemDto, licences: IntegerId[]) => 
   return licences.some((licence) => licence === asset.licence)
 }
 
-const { required, maxLength } = useValidate()
+const validators = useValidate()
 
 const rules = {
   meta: {
-    description: {
-      maxLength: maxLength(255),
-    },
-    source: {
-      required,
-      maxLength: maxLength(255),
-    },
+    description: buildFieldRules(descriptionValidation, validators),
+    source: buildFieldRules(sourceValidation, validators),
   },
 }
 const v$ = useVuelidate(rules, { meta }, { $stopPropagation: true })
@@ -90,7 +86,7 @@ const validateField = async () => {
     return Promise.reject('Incorrect URL/ID provided')
   }
   try {
-    const assetRes = await fetchAssetByFileId(damClient, inputField.value)
+    const assetRes = await fetchAssetByFileId(damClient, endPointAsset, inputField.value)
     if (isNull(assetRes.mainFile)) {
       isValid.value = false
       return Promise.reject('Incorrect asset mainFile')
@@ -137,8 +133,8 @@ const submit = async () => {
       data.id = resImage.value.id
     }
     const imageRes = resImage.value?.id
-      ? await updateImage(imageClient, resImage.value.id, data)
-      : await createImage(imageClient, data)
+      ? await imageApi.updateImage(imageClient, resImage.value.id, data)
+      : await imageApi.createImage(imageClient, data)
     resImage.value = imageRes
     modelValue.value = imageRes.id
     return Promise.resolve({ asset: asset, image: imageRes })
@@ -176,7 +172,11 @@ const onBlur = async () => {
   }
 }
 
-const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
+const reload = async (
+  newImage: ImageCreateUpdateAware | undefined,
+  newImageId: IntegerIdNullable,
+  force = false,
+) => {
   resolvedSrc.value = ''
   if ((newImage && isNull(resImage.value)) || (newImage && force)) {
     resImage.value = cloneDeep(newImage)
@@ -191,7 +191,7 @@ const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: 
   }
   if (newImageId) {
     try {
-      resImage.value = await fetchImage(imageClient, newImageId)
+      resImage.value = await imageApi.fetchImage(imageClient, newImageId)
     } catch (error) {
       showErrorsDefault(error)
     }
@@ -216,7 +216,7 @@ watch(
   async ([newImage, newImageId]) => {
     await reload(newImage, newImageId)
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 defineExpose({
@@ -247,7 +247,7 @@ defineExpose({
   <ARow>
     <AFormTextarea
       v-model="meta.source"
-      :label="t('common.damImage.image.model.texts.source')"
+      :label="sourceLabel"
       :v="v$.meta.source"
       :disabled="disabled"
     />

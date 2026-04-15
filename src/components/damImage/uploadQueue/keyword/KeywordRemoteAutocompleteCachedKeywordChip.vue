@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import { computed, shallowRef, watch } from 'vue'
+import { computed } from 'vue'
 import type { DocId } from '@/types/common'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
-import type { CachedItem } from '@/composables/system/defineCached'
-import type { DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import { isNull, isUndefined } from '@/utils/common'
+import { useCachedItem } from '@/composables/system/useCachedItem'
 
 const props = withDefaults(
   defineProps<{
@@ -24,18 +23,13 @@ const props = withDefaults(
     textOnly: false,
     size: 'small',
     containerClass: 'd-inline-flex',
-  }
+  },
 )
 
 const { getCachedKeyword } = useDamCachedKeywords()
 const uploadQueuesStore = useUploadQueuesStore()
 
-const cached = shallowRef<undefined | CachedItem<DamKeywordMinimal>>(undefined)
-const loaded = shallowRef<boolean>(false)
-
-const item = computed(() => {
-  return getCachedKeyword(props.id)
-})
+const { cached, loaded } = useCachedItem(() => getCachedKeyword(props.id))
 
 const displayNewIcon = computed(() => {
   if (!props.queueId) return undefined
@@ -52,17 +46,6 @@ const displayTitle = computed(() => {
   }
   return ''
 })
-
-watch(
-  item,
-  async (newValue) => {
-    if (loaded.value) return
-    if (isUndefined(newValue) || newValue._loaded === false) return
-    cached.value = newValue
-    loaded.value = true
-  },
-  { immediate: true }
-)
 </script>
 
 <template>

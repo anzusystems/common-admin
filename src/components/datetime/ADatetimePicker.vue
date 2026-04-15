@@ -43,7 +43,7 @@ const props = withDefaults(
     defaultValue: null,
     errorMessages: undefined,
     lastMinuteMoment: false,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -128,15 +128,21 @@ watch(
       datetimeInternal.value = dayjs(newValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ').millisecond(0)
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const watchDatePicker = (newValue: null | Date, internal: dayjs.Dayjs) => {
   if (isNull(newValue)) return internal
-  return internal.set('date', newValue.getDate()).set('month', newValue.getMonth()).set('year', newValue.getFullYear())
+  return internal
+    .set('date', newValue.getDate())
+    .set('month', newValue.getMonth())
+    .set('year', newValue.getFullYear())
 }
 
-const watchTimePicker = (newValue: null | { hours: number; minutes: number }, internal: dayjs.Dayjs) => {
+const watchTimePicker = (
+  newValue: null | { hours: number; minutes: number },
+  internal: dayjs.Dayjs,
+) => {
   if (isNull(newValue)) return internal
   return internal.set('hour', newValue.hours).set('minute', newValue.minutes)
 }
@@ -175,13 +181,16 @@ watch(
     updateDateAndTimePickerOnlyWhenChanged(newValue)
     tryEmitNewValue(newUtcValue)
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 watch(pickerOpened, (newValue) => {
   if (newValue) {
     onTextFieldBlur()
-    if (isNull(datetimeInternal.value) && (isNull(props.defaultValue) || isUndefined(props.defaultValue))) {
+    if (
+      isNull(datetimeInternal.value) &&
+      (isNull(props.defaultValue) || isUndefined(props.defaultValue))
+    ) {
       if (props.lastMinuteMoment) {
         datetimeInternal.value = dayjs().second(59).millisecond(999)
       } else {
@@ -207,7 +216,11 @@ const errorMessageComputed = computed(() => {
 const onTextFieldBlur = () => {
   const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '').trim()
   if (filtered.length === 0 && !props.required) {
-    datetimeInternal.value = null
+    if (!isNull(props.defaultValue) && !isUndefined(props.defaultValue)) {
+      datetimeInternal.value = dayjs(props.defaultValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
+    } else {
+      datetimeInternal.value = null
+    }
     emit('blur')
     return
   }
@@ -380,8 +393,7 @@ const now = () => {
       v-if="!hideLabel"
       #label
     >
-      {{ label
-      }}<span
+      {{ label }}<span
         v-if="required"
         class="required"
       />

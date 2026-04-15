@@ -11,6 +11,9 @@ permissions:
   contents: read
   id-token: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-publish-pkg:
     name: Build and push package on node 24
@@ -19,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Check version change (beta only)
         id: check
@@ -52,7 +57,11 @@ jobs:
       - name: Publish package to npmjs
         if: github.event_name == 'release'
         run: |
-          npm publish --access public
+          if [ "${{ github.event.release.prerelease }}" = "true" ]; then
+            npm publish --access public --tag beta
+          else
+            npm publish --access public
+          fi
 
       - name: Publish beta package to npmjs
         if: github.event_name == 'push' && steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')

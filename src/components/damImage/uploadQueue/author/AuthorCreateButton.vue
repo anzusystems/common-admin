@@ -41,7 +41,7 @@ const props = withDefaults(
     dataCy: undefined,
     disabled: undefined,
     validationScope: ADamAuthorCreateValidationScopeSymbol,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'onSuccess', data: DamAuthor): void

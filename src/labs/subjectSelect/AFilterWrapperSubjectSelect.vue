@@ -7,6 +7,7 @@ import {
   FilterDataKey,
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
+  SubjectSelectCloseSidebarKey,
 } from '@/labs/filters/filterInjectionKeys'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { isBoolean, isDefined, isUndefined } from '@/utils/common'
@@ -34,7 +35,7 @@ const props = withDefaults(
     userId: undefined,
     client: undefined,
     store: true,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'submit'): void
@@ -46,6 +47,8 @@ const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHidde
   default: undefined,
   required: false,
 })
+
+const closeSidebarOnMobile = inject(SubjectSelectCloseSidebarKey, () => {})
 
 const filterConfig = inject(FilterConfigKey)
 const filterData = inject(FilterDataKey)
@@ -75,6 +78,7 @@ const submitFilter = () => {
   submitResetCounter.value++
   nextTick(() => {
     emit('submit')
+    closeSidebarOnMobile()
   })
 }
 
@@ -84,6 +88,7 @@ const submitFilterBookmark = () => {
   nextTick(() => {
     submitResetCounter.value++
     emit('bookmarkLoadAfter')
+    closeSidebarOnMobile()
   })
 }
 
@@ -93,6 +98,7 @@ const resetFilter = () => {
   nextTick(() => {
     submitResetCounter.value++
     emit('reset')
+    closeSidebarOnMobile()
   })
 }
 
@@ -119,7 +125,7 @@ defineExpose({
   >
     <div class="subject-select-filter__content px-2 py-4">
       <slot name="bookmarks">
-        <VRow dense>
+        <VRow density="compact">
           <VCol v-if="store && userId && isDefined(client)">
             <div class="d-flex flex-wrap align-center">
               <FilterBookmarks

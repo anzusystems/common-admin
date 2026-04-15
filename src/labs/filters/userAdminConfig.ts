@@ -11,33 +11,57 @@ export function useUserAdminConfigApi(
   client: () => AxiosInstance,
   system: string,
   entity: string = ENTITY,
-  endPoint: string = END_POINT
+  endPoint: string = END_POINT,
 ) {
-  const useFetchUserAdminConfigList = () => useApiFetchList<UserAdminConfig[]>(client, system, entity, END_POINT)
+  const useFetchUserAdminConfigList = () =>
+    useApiFetchList<UserAdminConfig[]>({ client, system, entity, urlTemplate: END_POINT })
 
   const fetchUserAdminConfig = (id: IntegerId) => {
-    const { executeRequest } = useApiRequest<UserAdminConfig>(client, 'GET', system, entity)
-    return executeRequest(endPoint + '/:id', { id })
+    const { executeRequest } = useApiRequest<UserAdminConfig>({
+      client,
+      method: 'GET',
+      system,
+      entity,
+    })
+    return executeRequest({ urlTemplate: endPoint + '/:id', urlParams: { id } })
   }
 
   const createUserAdminConfig = (data: UserAdminConfig) => {
-    const { executeRequest } = useApiRequest<UserAdminConfig>(client, 'POST', system, entity)
-    return executeRequest(endPoint, undefined, data)
+    const { executeRequest } = useApiRequest<UserAdminConfig>({
+      client,
+      method: 'POST',
+      system,
+      entity,
+    })
+    return executeRequest({ urlTemplate: endPoint, object: data })
   }
 
   const updateUserAdminConfig = (id: IntegerId, data: UserAdminConfig) => {
-    const { executeRequest } = useApiRequest<UserAdminConfig>(client, 'PUT', system, entity)
-    return executeRequest(endPoint + '/:id', { id }, data)
+    const { executeRequest } = useApiRequest<UserAdminConfig>({
+      client,
+      method: 'PUT',
+      system,
+      entity,
+    })
+    return executeRequest({ urlTemplate: endPoint + '/:id', urlParams: { id }, object: data })
   }
 
   const deleteUserAdminConfig = (id: IntegerId) => {
-    const { executeRequest } = useApiRequest(client, 'DELETE', system, entity)
-    return executeRequest(endPoint + '/:id', { id })
+    const { executeRequest } = useApiRequest({ client, method: 'DELETE', system, entity })
+    return executeRequest({ urlTemplate: endPoint + '/:id', urlParams: { id } })
   }
 
   const updateUserAdminConfigPositions = (ids: IntegerId[]) => {
-    const { executeRequest } = useApiRequest<{ userAdminConfigs: IntegerId[] }>(client, 'PATCH', system, entity)
-    return executeRequest(endPoint + '/update-positions', undefined, { userAdminConfigs: ids })
+    const { executeRequest } = useApiRequest<{ userAdminConfigs: IntegerId[] }>({
+      client,
+      method: 'PATCH',
+      system,
+      entity,
+    })
+    return executeRequest({
+      urlTemplate: endPoint + '/update-positions',
+      object: { userAdminConfigs: ids },
+    })
   }
 
   return {

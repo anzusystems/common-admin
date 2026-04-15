@@ -28,7 +28,8 @@ import { isNull } from '@/utils/common'
 export function useCollabInit() {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { showWarningT, showSuccessT } = useAlerts()
-  const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState } = useCollabState()
+  const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState } =
+    useCollabState()
 
   const { logError } = useSentry()
 
@@ -42,8 +43,10 @@ export function useCollabInit() {
     const approvedJoinRequestEventBus = useCollabApprovedJoinRequestEventBus()
     const rejectedJoinRequestEventBus = useCollabRejectedJoinRequestEventBus()
     const requestToTakeModerationEventBus = useCollabRequestToTakeModerationEventBus()
-    const approvedRequestToTakeModerationEventBus = useCollabApprovedRequestToTakeModerationEventBus()
-    const rejectedRequestToTakeModerationEventBus = useCollabRejectedRequestToTakeModerationEventBus()
+    const approvedRequestToTakeModerationEventBus =
+      useCollabApprovedRequestToTakeModerationEventBus()
+    const rejectedRequestToTakeModerationEventBus =
+      useCollabRejectedRequestToTakeModerationEventBus()
     const kickedFromRoomEventBus = useCollabKickedFromRoomEventBus()
 
     if (collabSocket.value || !collabOptions.value.enabled) {
@@ -65,39 +68,48 @@ export function useCollabInit() {
           console.error('error', error)
         }
       })
-      collabSocket.value.on('collabRoomLocksChanged', (room: CollabRoom, locks: CollabRoomLocks | null) => {
-        if (!isNull(locks)) {
-          const locksEntries = Object.entries(locks)
-          if (!collabFieldLocksState.has(room) || Object.keys(locks).length === 0) {
-            collabFieldLocksState.set(room, new Map(locksEntries))
-          }
-          for (const [field, lock] of locksEntries) {
-            if (!lock) {
-              collabFieldLocksState.get(room)?.delete(field)
-              continue
+      collabSocket.value.on(
+        'collabRoomLocksChanged',
+        (room: CollabRoom, locks: CollabRoomLocks | null) => {
+          if (!isNull(locks)) {
+            const locksEntries = Object.entries(locks)
+            if (!collabFieldLocksState.has(room) || Object.keys(locks).length === 0) {
+              collabFieldLocksState.set(room, new Map(locksEntries))
             }
-            collabFieldLocksState.get(room)?.set(field, lock)
+            for (const [field, lock] of locksEntries) {
+              if (!lock) {
+                collabFieldLocksState.get(room)?.delete(field)
+                continue
+              }
+              collabFieldLocksState.get(room)?.set(field, lock)
+            }
           }
-        }
-      })
+        },
+      )
       collabSocket.value.on('collabRoomDataChanged', (room: CollabRoom, data: CollabRoomData) => {
         const dataEntries = Object.entries(data)
         for (const [field, fieldData] of dataEntries) {
           changeEventBus.emit({ room, field }, fieldData)
         }
       })
-      collabSocket.value?.on('requestToJoin', (room: CollabRoom, userId: number, timestamp: number) => {
-        requestAccessEventBus.emit({ room, userId, timestamp })
-      })
+      collabSocket.value?.on(
+        'requestToJoin',
+        (room: CollabRoom, userId: number, timestamp: number) => {
+          requestAccessEventBus.emit({ room, userId, timestamp })
+        },
+      )
       collabSocket.value?.on('approvedRequestToJoin', (room: CollabRoom) => {
         approvedJoinRequestEventBus.emit({ room })
       })
       collabSocket.value?.on('rejectedRequestToJoin', (room: CollabRoom) => {
         rejectedJoinRequestEventBus.emit({ room })
       })
-      collabSocket.value?.on('requestToTakeModeration', (room: CollabRoom, userId: number, timestamp: number) => {
-        requestToTakeModerationEventBus.emit({ room, userId, timestamp })
-      })
+      collabSocket.value?.on(
+        'requestToTakeModeration',
+        (room: CollabRoom, userId: number, timestamp: number) => {
+          requestToTakeModerationEventBus.emit({ room, userId, timestamp })
+        },
+      )
       collabSocket.value?.on('approvedRequestToTakeModeration', (room: CollabRoom) => {
         approvedRequestToTakeModerationEventBus.emit({ room })
       })
@@ -111,9 +123,12 @@ export function useCollabInit() {
         showWarningT('common.collab.alert.kickedFromRoom')
         kickedFromRoomEventBus.emit({ room })
       })
-      collabSocket.value?.on('startCollab', async (room, callback: (data: CollabRoomPlainData) => void) => {
-        collabStartingEventBus.emit({ room, startedCallback: callback })
-      })
+      collabSocket.value?.on(
+        'startCollab',
+        async (room, callback: (data: CollabRoomPlainData) => void) => {
+          collabStartingEventBus.emit({ room, startedCallback: callback })
+        },
+      )
       collabSocket.value.on('connect', async () => {
         collabRoomInfoState.clear()
         const connectedBefore = collabConnected.value
@@ -134,7 +149,9 @@ export function useCollabInit() {
         logError(error, { level: 'error', message: 'Collab connect_error' })
       })
       collabSocket.value.on('disconnect', async (reason) => {
-        collabRoomInfoState.forEach((roomInfo: CollabRoomInfo) => (roomInfo.status = CollabStatus.Inactive))
+        collabRoomInfoState.forEach(
+          (roomInfo: CollabRoomInfo) => (roomInfo.status = CollabStatus.Inactive),
+        )
         collabConnected.value = collabSocket.value?.connected ?? false
         if (reason === 'io server disconnect') {
           await collabOptions.value.beforeReconnect()

@@ -10,7 +10,9 @@ export type ObjectPaths<T, D extends number = 10> = [D] extends [never]
   ? never
   : T extends object
     ? {
-        [K in keyof T]-?: K extends string | number ? `${K}` | Join<K, ObjectPaths<T[K], Prev[D]>> : never
+        [K in keyof T]-?: K extends string | number
+          ? `${K}` | Join<K, ObjectPaths<T[K], Prev[D]>>
+          : never
       }[keyof T]
     : ''
 
@@ -28,6 +30,8 @@ export type UniqueValues<T extends Record<string, any>> = {
   [K in keyof T]: Exclude<T[K], T[Exclude<keyof T, K>]>
 }
 
-export function ensureUniqueValues<T extends Record<string, any>>(obj: UniqueValues<T>): UniqueValues<T> {
+export function ensureUniqueValues<T extends Record<string, any>>(
+  obj: UniqueValues<T>,
+): UniqueValues<T> {
   return obj
 }

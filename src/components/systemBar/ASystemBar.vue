@@ -3,7 +3,10 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 import ASystemBarNewVersion from '@/components/systemBar/ASystemBarNewVersion.vue'
 import { isUndefined } from '@/utils/common'
-import { AnzuNewVersionFetchError, isAnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
+import {
+  AnzuNewVersionFetchError,
+  isAnzuNewVersionFetchError,
+} from '@/model/error/AnzuNewVersionFetchError'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 
@@ -18,12 +21,16 @@ const props = withDefaults(
     checkInterval: 60000,
     jsonRelativePath: 'config.json',
     minInactiveTime: 5000,
-  }
+  },
 )
 
 const showSystemBar = ref<boolean>(false)
 const abortController = ref<AbortController | null>(null)
 const lastInactiveTime = ref<number>(0)
+
+const CONSECUTIVE_FAILURE_ALERT_THRESHOLD = 5
+let consecutiveFailures = 0
+let alertedForCurrentOutage = false
 
 const { newVersion } = useSystemBar()
 
@@ -51,8 +58,11 @@ const checkNewVersion = async (): Promise<void> => {
       if (Object.keys(json).length < 1) {
         throw new AnzuNewVersionFetchError('Unable to load env config. Incorrect response body.')
       }
-      showSystemBar.value = !isUndefined(json.appVersion) && json.appVersion !== props.currentVersion
+      showSystemBar.value =
+        !isUndefined(json.appVersion) && json.appVersion !== props.currentVersion
       newVersion.value = showSystemBar.value
+      consecutiveFailures = 0
+      alertedForCurrentOutage = false
 
       return
     }
@@ -80,7 +90,21 @@ const systemBarComponent = computed(() => {
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { pause, resume } = useIntervalFn(() => {
-  checkNewVersion()
+  checkNewVersion().catch((error) => {
+    if (isAnzuNewVersionFetchError(error)) {
+      consecutiveFailures++
+      if (consecutiveFailures >= CONSECUTIVE_FAILURE_ALERT_THRESHOLD && !alertedForCurrentOutage) {
+        alertedForCurrentOutage = true
+        // One signal per outage — ops can alert on this; resets on the next successful poll.
+        console.error(
+          `[ASystemBar] Version check failed ${consecutiveFailures} consecutive times:`,
+          error,
+        )
+      }
+      return
+    }
+    console.warn(error)
+  })
 }, props.checkInterval)
 
 const { isWindowActive } = useUserActivity()
@@ -121,7 +145,7 @@ watch(
       pause()
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 onBeforeUnmount(() => {
@@ -135,11 +159,11 @@ onBeforeUnmount(() => {
   <VAppBar
     v-if="showSystemBar"
     height="48"
-    color="orange accent-3"
+    color="orange-accent-3"
     elevation="0"
     :order="-1"
   >
-    <div class="text-center w-100 text-caption pb-1">
+    <div class="text-center w-100 text-body-small pb-1">
       <component :is="systemBarComponent" />
     </div>
   </VAppBar>

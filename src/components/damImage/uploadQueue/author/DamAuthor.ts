@@ -16,7 +16,8 @@ export interface DamAuthorMinimal {
 }
 
 export interface DamAuthor
-  extends Pick<DamAuthorMinimal, 'id' | 'name' | 'identifier'>,
+  extends
+    Pick<DamAuthorMinimal, 'id' | 'name' | 'identifier'>,
     AnzuUserAndTimeTrackingAware,
     ResourceNameSystemAware {
   extSystem: IntegerId

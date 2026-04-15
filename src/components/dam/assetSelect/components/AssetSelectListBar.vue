@@ -1,8 +1,13 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import {
+  AssetSelectGridView,
+  AssetSelectGridViewDefault,
+  useGridView,
+} from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
+import { useDisplay } from 'vuetify'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
@@ -19,15 +24,17 @@ const props = withDefaults(
   defineProps<{
     showTypes?: boolean
     disableSort?: boolean
+    hideFilterToggle?: boolean
     preselectAssetType?: DamAssetTypeType | undefined
     preselectInPodcast?: boolean | null | undefined
   }>(),
   {
     showTypes: false,
     disableSort: false,
+    hideFilterToggle: false,
     preselectAssetType: undefined,
     preselectInPodcast: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'typeChange', data: { type: DamAssetTypeType; inPodcast: boolean | null }): void
@@ -37,7 +44,18 @@ const emit = defineEmits<{
 const sortModel = defineModel<number>('sort', { default: 1, required: false })
 
 const { t } = useI18n()
-const { setGridView } = useGridView()
+const { gridView, setGridView } = useGridView()
+const { mdAndDown } = useDisplay()
+
+watch(
+  mdAndDown,
+  (isMobile) => {
+    if (isMobile && gridView.value === AssetSelectGridView.Table) {
+      setGridView(AssetSelectGridViewDefault)
+    }
+  },
+  { immediate: true },
+)
 const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = useSidebar()
 const assetSelectStore = useAssetSelectStore()
 const { filterData } = useAssetListFilter()
@@ -110,13 +128,15 @@ onMounted(() => {
     color="transparent"
     :height="46"
     elevation="0"
-    class="system-border-b subject-select__second-bar"
+    :class="hideFilterToggle ? '' : 'system-border-b'"
+    class="subject-select__second-bar"
   >
     <slot name="second-bar">
       <div class="d-flex flex-column w-100 px-1 align-center">
         <div class="d-flex justify-space-between w-100 align-center">
           <div class="d-flex align-center">
             <VBtn
+              v-if="!hideFilterToggle"
               icon
               :width="30"
               :height="30"
@@ -218,6 +238,7 @@ onMounted(() => {
             <VBtn
               size="x-small"
               icon
+              class="text-medium-emphasis"
               variant="text"
               @click.stop="setGridView(AssetSelectGridView.Masonry)"
             >
@@ -231,6 +252,7 @@ onMounted(() => {
             </VBtn>
             <VBtn
               icon
+              class="text-medium-emphasis"
               size="x-small"
               variant="text"
               @click.stop="setGridView(AssetSelectGridView.Thumbnail)"
@@ -244,8 +266,10 @@ onMounted(() => {
               </VTooltip>
             </VBtn>
             <VBtn
+              v-if="!mdAndDown"
               size="x-small"
               icon
+              class="text-medium-emphasis"
               variant="text"
               @click.stop="setGridView(AssetSelectGridView.Table)"
             >
@@ -263,6 +287,7 @@ onMounted(() => {
             />
             <VBtn
               icon
+              class="text-medium-emphasis"
               :width="30"
               :height="30"
               :active="sidebarRight"

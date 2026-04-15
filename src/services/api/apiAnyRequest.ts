@@ -1,11 +1,17 @@
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiValidationError,
+  axiosErrorResponseHasValidationData,
+} from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isNull } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { AxiosInstance, AxiosRequestConfig, Method } from 'axios'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import {
+  AnzuApiForbiddenError,
+  axiosErrorResponseIsForbidden,
+} from '@/model/error/AnzuApiForbiddenError'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -28,7 +34,7 @@ export const apiAnyRequest = <T, R = T>(
   object: T | null = null,
   system: string,
   entity: string,
-  options: AxiosRequestConfig = {}
+  options: AxiosRequestConfig = {},
 ): Promise<R> => {
   return new Promise((resolve, reject) => {
     const axiosConfig: AxiosRequestConfig = { method: method }

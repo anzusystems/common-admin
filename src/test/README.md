@@ -13,6 +13,7 @@ This project uses Vitest for testing Vue components with Vuetify support.
 ## Running Tests
 
 ### Basic Testing (Happy-dom)
+
 ```bash
 # Run tests in watch mode
 yarn test
@@ -25,6 +26,7 @@ yarn test:ui
 ```
 
 ### Browser Testing (Chromium)
+
 ```bash
 # Run tests in browser (watch mode)
 yarn test:browser
@@ -34,6 +36,7 @@ yarn test:browser:run
 ```
 
 ### Coverage
+
 ```bash
 # Run tests with coverage
 yarn test:coverage
@@ -69,7 +72,7 @@ describe('YourComponent', () => {
         },
       },
     })
-    
+
     expect(wrapper.find('.some-element').exists()).toBe(true)
   })
 })
@@ -78,6 +81,7 @@ describe('YourComponent', () => {
 ### Mocking
 
 The setup automatically mocks:
+
 - CSS imports
 - Vuetify components (when needed)
 - Browser APIs (ResizeObserver, IntersectionObserver, matchMedia)
@@ -93,6 +97,7 @@ The setup automatically mocks:
 ## Configuration
 
 The test setup includes:
+
 - Global Vuetify instance with all components
 - i18n configuration with basic translations
 - Pinia store setup
@@ -102,6 +107,7 @@ The test setup includes:
 ## Browser Testing
 
 Browser testing is available for integration tests that need real browser behavior:
+
 - Uses Playwright with Chromium
 - Runs headless in CI, headed in development
 - Enable with `VITEST_BROWSER=true` environment variable

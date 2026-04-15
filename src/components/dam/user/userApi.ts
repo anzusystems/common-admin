@@ -5,10 +5,10 @@ import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchList } from '@/services/api/apiFetchList'
 import type { Pagination } from '@/types/Pagination'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 
 const END_POINT = '/adm/v1/user'
@@ -20,14 +20,29 @@ export const fetchDamUserListByIds = (client: () => AxiosInstance, ids: number[]
 /**
  * @deprecated
  */
-export const fetchDamUserList = (client: () => AxiosInstance, pagination: Pagination, filterBag: FilterBag) =>
-  apiFetchList<DamUser[]>(client, END_POINT, {}, pagination, filterBag, SYSTEM_CORE_DAM, ENTITY)
+export const fetchDamUserList = (
+  client: () => AxiosInstance,
+  pagination: Pagination,
+  filterBag: FilterBag,
+) => apiFetchList<DamUser[]>(client, END_POINT, {}, pagination, filterBag, SYSTEM_CORE_DAM, ENTITY)
 
 export const useFetchDamUserList = (client: () => AxiosInstance) =>
-  useApiFetchList<DamUser[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT)
+  useApiFetchList<DamUser[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT,
+  })
 
 export const updateDamUser = (client: () => AxiosInstance, id: number, data: DamUserUpdateDto) =>
-  apiUpdateOne<DamUserUpdateDto, DamUser>(client, data, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
+  apiUpdateOne<DamUserUpdateDto, DamUser>(
+    client,
+    data,
+    END_POINT + '/:id',
+    { id },
+    SYSTEM_CORE_DAM,
+    ENTITY,
+  )
 
 export const fetchDamUser = (client: () => AxiosInstance, id: number) =>
   apiFetchOne<DamUser>(client, END_POINT + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)

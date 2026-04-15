@@ -40,7 +40,8 @@ export const UploadQueueItemStatus = {
   Uploaded: 'uploaded', // uploaded/ready after loading
   Stop: 'stop', // after hitting stop upload
 } as const
-export type UploadQueueItemStatusType = (typeof UploadQueueItemStatus)[keyof typeof UploadQueueItemStatus]
+export type UploadQueueItemStatusType =
+  (typeof UploadQueueItemStatus)[keyof typeof UploadQueueItemStatus]
 
 export interface UploadQueueItem {
   key: string

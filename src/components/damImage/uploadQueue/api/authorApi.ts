@@ -5,9 +5,9 @@ import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetA
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import type { IntegerId } from '@/types/common'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchList } from '@/services/api/apiFetchList'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 
@@ -15,7 +15,11 @@ const END_POINT = '/adm/v1/author'
 const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
 export const ENTITY = 'author'
 
-export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: number, ids: string[]) =>
+export const fetchAuthorListByIds = (
+  client: () => AxiosInstance,
+  extSystemId: number,
+  ids: string[],
+) =>
   apiFetchByIds<DamAuthor[]>(
     client,
     ids,
@@ -26,17 +30,23 @@ export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: n
     SYSTEM_CORE_DAM,
     ENTITY,
     {},
-    true
+    true,
   )
 
 export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: IntegerId) =>
-  useApiFetchList<DamAuthor[]>(client, SYSTEM_CORE_DAM, ENTITY, END_POINT_LIST, { extSystemId })
+  useApiFetchList<DamAuthor[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT_LIST,
+    urlParams: { extSystemId },
+  })
 
 export const fetchAuthorList = (
   client: () => AxiosInstance,
   extSystemId: number,
   pagination: Pagination,
-  filterBag: FilterBag
+  filterBag: FilterBag,
 ) =>
   apiFetchList<DamAuthor[]>(
     client,
@@ -47,7 +57,7 @@ export const fetchAuthorList = (
     pagination,
     filterBag,
     SYSTEM_CORE_DAM,
-    ENTITY
+    ENTITY,
   )
 
 export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) =>

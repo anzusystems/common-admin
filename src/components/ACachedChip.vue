@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import { computed, shallowRef, watch } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { DocId, IntegerId } from '@/types/common'
 import { objectGetValueByPath } from '@/utils/object'
 import { isNull, isUndefined } from '@/utils/common'
 import { COMMON_CONFIG } from '@/model/commonConfig'
+import { useCachedItem } from '@/composables/system/useCachedItem'
 
 const props = withDefaults(
   defineProps<{
@@ -26,7 +27,7 @@ const props = withDefaults(
       cachedItem: any,
       defaultTitle: string,
       displayTextPath: string,
-      fallbackIdText: boolean
+      fallbackIdText: boolean,
     ) => string | undefined
   }>(),
   {
@@ -42,7 +43,7 @@ const props = withDefaults(
     wrapText: false,
     closable: false,
     customTitleFn: undefined,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -50,12 +51,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
-const cached = shallowRef<undefined | any>(undefined)
-const loaded = shallowRef<boolean>(false)
-
-const item = computed(() => {
-  return props.getCachedFn(props.id as any)
-})
+const { cached, loaded } = useCachedItem(() => props.getCachedFn(props.id as any))
 
 const containerClassComputed = computed(() => {
   return props.wrapText ? props.containerClass + ' a-chip--wrap' : props.containerClass
@@ -63,7 +59,12 @@ const containerClassComputed = computed(() => {
 
 const displayTitle = computed(() => {
   if (props.customTitleFn && cached.value) {
-    const customTitle = props.customTitleFn(cached.value, props.title, props.displayTextPath, props.fallbackIdText)
+    const customTitle = props.customTitleFn(
+      cached.value,
+      props.title,
+      props.displayTextPath,
+      props.fallbackIdText,
+    )
     if (customTitle !== undefined) {
       return customTitle
     }
@@ -78,17 +79,6 @@ const displayTitle = computed(() => {
 const onClick = () => {
   router.push({ name: props.route, params: { id: props.id } })
 }
-
-watch(
-  item,
-  async (newValue) => {
-    if (loaded.value) return
-    if (isUndefined(newValue) || newValue._loaded === false) return
-    cached.value = newValue
-    loaded.value = true
-  },
-  { immediate: true }
-)
 </script>
 
 <template>
@@ -127,7 +117,9 @@ watch(
     <VChip
       v-else
       :size="size"
-      :append-icon="openInNew ? COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL : COMMON_CONFIG.CHIP.ICON.LINK"
+      :append-icon="
+        openInNew ? COMMON_CONFIG.CHIP.ICON.LINK_EXTERNAL : COMMON_CONFIG.CHIP.ICON.LINK
+      "
       :label="forceRounded ? undefined : true"
       :closable="closable"
       @click.stop="onClick"

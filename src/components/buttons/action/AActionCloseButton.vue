@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 import { isUndefined } from '@/utils/common'
+import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
 const props = withDefaults(
   defineProps<{
@@ -19,10 +20,11 @@ const props = withDefaults(
     buttonClass: 'ml-2',
     dataCy: 'button-close',
     size: 36,
-  }
+  },
 )
 
 const { t } = useI18n()
+const { setPreservePage } = useDatatablePageStore()
 
 const routerToComputed = computed(() => {
   if (isUndefined(props.routeName)) {
@@ -46,6 +48,7 @@ const routerToComputed = computed(() => {
     :width="size"
     :height="size"
     :active="false"
+    @click="setPreservePage"
   >
     <VIcon icon="mdi-close" />
     <VTooltip

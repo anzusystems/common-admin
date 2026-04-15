@@ -1,4 +1,4 @@
-$class-name-root: "dam-upload-queue";
+$class-name-root: 'dam-upload-queue';
 $bg-color-light: #fff;
 $bg-color-dark: #1e1e1e;
 $border-color-light: #e8e9ea;
@@ -111,7 +111,6 @@ $duplicate-bg-color-dark: rgb(0 0 0 / 70%);
 
   &--editable {
     .#{$class-name-root}__item {
-
       .#{$class-name-root}__item-card {
         .asset-image {
           aspect-ratio: 16 / 9;

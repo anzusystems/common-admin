@@ -1,4 +1,8 @@
-import type { UploadQueueItem, UploadQueueItemStatusType, UploadQueueItemTypeType } from '@/types/coreDam/UploadQueue'
+import type {
+  UploadQueueItem,
+  UploadQueueItemStatusType,
+  UploadQueueItemTypeType,
+} from '@/types/coreDam/UploadQueue'
 import type { IntegerId } from '@/types/common'
 import { DamAssetStatusDefault, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { AssetFileFailReasonDefault } from '@/types/coreDam/AssetFile'
@@ -10,7 +14,7 @@ export function useUploadQueueItemFactory() {
     status: UploadQueueItemStatusType,
     assetType: DamAssetTypeType,
     chunkSize: number,
-    licenceId: IntegerId
+    licenceId: IntegerId,
   ): UploadQueueItem => {
     return {
       key: key,

@@ -15,7 +15,7 @@ const props = withDefaults(
     buttonT: 'common.system.datatable.config',
     buttonClass: 'ml-1',
     dataCy: 'table-settings',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:columnsHidden', data: Array<string>): void
@@ -44,7 +44,7 @@ const toggleVisibility = (key: string) => {
   <VBtn
     :class="buttonClass"
     :data-cy="dataCy"
-    color="light"
+    class="text-medium-emphasis"
     icon
     size="x-small"
     variant="text"

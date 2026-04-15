@@ -29,7 +29,7 @@ const props = withDefaults(
     size: 'default',
     hoverOnly: false,
     hideText: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'onDrop', files: File[]): void

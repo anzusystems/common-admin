@@ -6,9 +6,13 @@ export const AssetSelectReturnType = {
   AssetId: 'assetId',
   Asset: 'asset',
 } as const
-export type AssetSelectReturnTypeType = (typeof AssetSelectReturnType)[keyof typeof AssetSelectReturnType]
+export type AssetSelectReturnTypeType =
+  (typeof AssetSelectReturnType)[keyof typeof AssetSelectReturnType]
 
-export type AssetSelectReturnData = AssetSelectReturnMainFileId | AssetSelectReturnAssetId | AssetSelectReturnAsset
+export type AssetSelectReturnData =
+  | AssetSelectReturnMainFileId
+  | AssetSelectReturnAssetId
+  | AssetSelectReturnAsset
 
 interface AssetSelectReturnMainFileId {
   type: typeof AssetSelectReturnType.MainFileId

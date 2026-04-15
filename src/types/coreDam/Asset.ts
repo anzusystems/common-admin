@@ -54,7 +54,8 @@ interface Metadata {
   customData: any
 }
 
-export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
+export interface AssetSearchListItemDto
+  extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   id: DocId
   texts: Texts
   attributes: Attributes
@@ -87,7 +88,8 @@ export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, Resour
   mainFileOverrideInternal: Readonly<boolean | null>
 }
 
-export interface AssetMetadataDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware, Metadata {
+export interface AssetMetadataDto
+  extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware, Metadata {
   id: DocId
   customData: AssetCustomData
 }
@@ -95,7 +97,10 @@ export interface AssetMetadataDto extends AnzuUserAndTimeTrackingAware, Resource
 export type AssetExternalProviderId = string | number
 export type AssetExternalProviderIdNullable = AssetExternalProviderId | null
 
-export type AssetExternalProviderMetadata = Record<string, string | number | number[] | string[] | boolean>
+export type AssetExternalProviderMetadata = Record<
+  string,
+  string | number | number[] | string[] | boolean
+>
 
 export interface DamImageCopyToLicenceRequestItem {
   asset: DocId
@@ -109,7 +114,7 @@ export interface DamImageCopyToLicenceResponseItem {
   targetAsset: DocId
   targetMainFile: DocId
   targetAssetLicence: IntegerId
-  result:  'exists' | 'copy' | 'notAllowed' | 'unassigned'
+  result: 'exists' | 'copy' | 'notAllowed' | 'unassigned'
   assetConflicts: DocId[]
 }
 

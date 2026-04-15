@@ -1,4 +1,9 @@
-import type { DatetimeUTCNullable, DocIdNullable, IntegerId, IntegerIdNullable } from '@/types/common'
+import type {
+  DatetimeUTCNullable,
+  DocIdNullable,
+  IntegerId,
+  IntegerIdNullable,
+} from '@/types/common'
 
 export interface MediaAware<T extends DamMedia = DamMedia> {
   id?: IntegerId

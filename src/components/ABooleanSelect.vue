@@ -18,7 +18,7 @@ const props = withDefaults(
     allT: 'common.model.all',
     trueT: 'common.model.boolean.true',
     falseT: 'common.model.boolean.false',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean | null): void

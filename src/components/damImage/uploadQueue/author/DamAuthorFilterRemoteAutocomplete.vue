@@ -12,7 +12,7 @@ const props = withDefaults(
     name: string
     extSystem: IntegerId
   }>(),
-  {}
+  {},
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -39,6 +39,7 @@ const { t } = useI18n()
   >
     <template #item="{ props: itemProps, item: itemItem }">
       <VListItem
+        v-if="itemItem"
         v-bind="itemProps"
         title=""
       >
@@ -55,7 +56,10 @@ const { t } = useI18n()
       </VListItem>
     </template>
     <template #chip="{ props: chipProps, item: chipItem }">
-      <VChip v-bind="chipProps">
+      <VChip
+        v-if="chipItem"
+        v-bind="chipProps"
+      >
         {{ chipItem.title }}
         <VIcon
           v-if="chipItem.raw?.raw?.reviewed || chipItem.raw?.reviewed"

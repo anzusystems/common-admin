@@ -44,7 +44,7 @@ const props = withDefaults(
     authorConflicts: undefined,
     dataCy: undefined,
     validationScope: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | null | DocId[]): void
@@ -89,7 +89,7 @@ provide(FilterInnerDataKey, filterData)
 const addAuthor = async (id: null | DocId | undefined) => {
   if (!id) return
   if (!modelValueComputed.value.includes(id)) {
-    modelValueComputed.value = [...modelValueComputed.value, ...[id]]
+    modelValueComputed.value = [...modelValueComputed.value, id]
   }
 }
 
@@ -143,7 +143,7 @@ const showAdd = computed(() => {
   if (search.value.length < 2 || search.value.length > 255) return false
   if (fetchedItemsMinimal.value.size === 0) return true
   return ![...fetchedItemsMinimal.value.values()].some(
-    (item) => item.name?.toLowerCase() === search.value!.toLowerCase()
+    (item) => item.name?.toLowerCase() === search.value!.toLowerCase(),
   )
 })
 </script>
@@ -200,6 +200,7 @@ const showAdd = computed(() => {
     >
       <template #item="{ props: itemSlotProps, item: itemSlotItem }">
         <VListItem
+          v-if="itemSlotItem"
           v-bind="itemSlotProps"
           @click.prevent=""
         >
@@ -226,6 +227,7 @@ const showAdd = computed(() => {
       </template>
       <template #chip="{ item: chipSlotItem }">
         <AuthorRemoteAutocompleteCachedAuthorChip
+          v-if="chipSlotItem"
           :id="chipSlotItem.value"
           :key="chipSlotItem.value"
           :queue-id="queueId"
@@ -265,7 +267,7 @@ const showAdd = computed(() => {
     class="d-flex flex-column"
   >
     <div>
-      <span class="text-caption">{{ t('common.damImage.author.conflicts') }}</span>
+      <span class="text-body-small">{{ t('common.damImage.author.conflicts') }}</span>
     </div>
     <div>
       <AuthorRemoteAutocompleteCachedAuthorChipConflicts

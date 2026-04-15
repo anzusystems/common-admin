@@ -24,7 +24,7 @@ withDefaults(
     maxSizes: undefined,
     multiple: false,
     toolbarT: 'common.button.upload',
-  }
+  },
 )
 
 const emit = defineEmits<{

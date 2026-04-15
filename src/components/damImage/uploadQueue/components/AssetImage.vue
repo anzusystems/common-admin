@@ -63,7 +63,7 @@ const props = withDefaults(
     hideIcon: false,
     showMetaIcons: false,
     assetFileProperties: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'load'): void
@@ -102,7 +102,10 @@ const uploadingPercentage = computed(() => {
 })
 
 const backgroundColorComputed = computed(() => {
-  const grayBackgroundStatuses: readonly DamAssetStatusType[] = [DamAssetStatus.Deleting, DamAssetStatus.Draft]
+  const grayBackgroundStatuses: readonly DamAssetStatusType[] = [
+    DamAssetStatus.Deleting,
+    DamAssetStatus.Draft,
+  ]
   return grayBackgroundStatuses.includes(props.assetStatus) ? '#ccc' : props.backgroundColor
 })
 
@@ -146,7 +149,7 @@ const { remainingTimeShort } = useRemainingTime()
           :size="iconSize"
           :width="iconSize / 10"
         />
-        <div class="text-caption text-center">
+        <div class="text-body-small text-center">
           {{ t('common.damImage.upload.waiting') }}
         </div>
       </div>
@@ -163,7 +166,7 @@ const { remainingTimeShort } = useRemainingTime()
         />
         <div
           v-if="!disableProcessingText"
-          class="text-caption text-center"
+          class="text-body-small text-center"
         >
           {{ t('common.damImage.upload.processing') }}
         </div>
@@ -181,7 +184,7 @@ const { remainingTimeShort } = useRemainingTime()
         >
           {{ uploadingPercentage }}
         </VProgressCircular>
-        <div class="text-caption text-center">
+        <div class="text-body-small text-center">
           {{ t('common.damImage.upload.uploading') }}
           <span
             v-if="remainingTime"
@@ -231,7 +234,7 @@ const { remainingTimeShort } = useRemainingTime()
           color="success"
           :size="iconSize"
         />
-        <div class="text-caption text-center">
+        <div class="text-body-small text-center">
           {{ t('common.damImage.upload.done') }}
         </div>
       </div>
@@ -279,7 +282,11 @@ const { remainingTimeShort } = useRemainingTime()
   </div>
   <div
     v-else
-    :style="{ height: fallbackHeight + 'px', backgroundColor: backgroundColorComputed, width: width + 'px' }"
+    :style="{
+      height: fallbackHeight + 'px',
+      backgroundColor: backgroundColorComputed,
+      width: width + 'px',
+    }"
     class="asset-image asset-image--placeholder d-flex align-center justify-center"
   >
     <div
@@ -308,7 +315,7 @@ const { remainingTimeShort } = useRemainingTime()
         color="success"
         :size="iconSize"
       />
-      <div class="text-caption text-center">
+      <div class="text-body-small text-center">
         {{ t('common.damImage.upload.done') }}
       </div>
     </div>

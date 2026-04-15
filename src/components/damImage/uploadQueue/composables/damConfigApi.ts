@@ -16,4 +16,10 @@ export const fetchConfiguration = (damClient: () => AxiosInstance) =>
   apiFetchOne<DamPrvConfig>(damClient, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
 
 export const fetchExtSystemConfiguration = (extSystem: IntegerId, damClient: () => AxiosInstance) =>
-  apiFetchOne<DamExtSystemConfig>(damClient, END_POINT + '/ext-system/' + extSystem, {}, SYSTEM_CORE_DAM, ENTITY)
+  apiFetchOne<DamExtSystemConfig>(
+    damClient,
+    END_POINT + '/ext-system/' + extSystem,
+    {},
+    SYSTEM_CORE_DAM,
+    ENTITY,
+  )

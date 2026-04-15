@@ -60,7 +60,7 @@ const props = withDefaults(
     itemValue: 'id',
     minSearchChars: 2,
     minSearchText: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | IntegerId | DocId[] | IntegerId[] | null | undefined): void
@@ -96,7 +96,10 @@ const modelValue = computed({
     return props.modelValue
   },
   set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null | undefined) {
-    emit('update:modelValue', cloneDeep<DocId | IntegerId | DocId[] | IntegerId[] | null | undefined>(newValue))
+    emit(
+      'update:modelValue',
+      cloneDeep<DocId | IntegerId | DocId[] | IntegerId[] | null | undefined>(newValue),
+    )
   },
 })
 
@@ -206,7 +209,8 @@ const onClickClear = () => {
 
 watchDebounced(
   search,
-  (newValueBug, oldValueBug) => { // todo rollback fix when fixed on vuetify/vue use side
+  (newValueBug, oldValueBug) => {
+    // todo rollback fix when fixed on vuetify/vue use side
     const newValue = newValueBug as unknown as string
     const oldValue = oldValueBug as unknown as string | undefined
     if (newValue !== oldValue) {
@@ -214,7 +218,7 @@ watchDebounced(
       emit('searchChangeDebounced', newValue)
     }
   },
-  { debounce: 300 }
+  { debounce: 300 },
 )
 
 watch(search, (newValue, oldValue) => {
@@ -245,7 +249,7 @@ watch(
       fetch()
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
@@ -286,7 +290,7 @@ watch(
       #selection
     />
     <!-- @vue-skip -->
-    <template #chip="{ props: chipProps, item: chipItem }">
+    <template #chip="{ props: chipProps, internalItem: chipItem }">
       <slot
         name="chip"
         :props="chipProps"
@@ -299,7 +303,7 @@ watch(
       </slot>
     </template>
     <!-- @vue-skip -->
-    <template #item="{ props: itemProps, item: itemItem }">
+    <template #item="{ props: itemProps, internalItem: itemItem }">
       <slot
         name="item"
         :props="itemProps"

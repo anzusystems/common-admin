@@ -44,7 +44,9 @@ export function useJobStatus() {
   ])
 
   const getJobStatusOption = (value: JobStatusType): ValueObjectOption<JobStatusType> => {
-    return jobStatusOptions.value.find((item) => item.value === value) as ValueObjectOption<JobStatusType>
+    return jobStatusOptions.value.find(
+      (item) => item.value === value,
+    ) as ValueObjectOption<JobStatusType>
   }
 
   return {

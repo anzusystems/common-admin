@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { Filter } from '@/types/Filter'
 import { useAuthorSelectActions } from '@/components/damImage/uploadQueue/author/authorActions'
 import { useAuthorFilter } from '@/components/damImage/uploadQueue/author/AuthorFilter'
@@ -11,7 +11,7 @@ const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
   }>(),
-  {}
+  {},
 )
 
 const modelValue = defineModel<Filter>({ required: true })
@@ -35,6 +35,7 @@ const { t } = useI18n()
   >
     <template #item="{ props: itemProps, item: itemItem }">
       <VListItem
+        v-if="itemItem"
         v-bind="itemProps"
         title=""
       >
@@ -51,7 +52,10 @@ const { t } = useI18n()
       </VListItem>
     </template>
     <template #chip="{ props: chipProps, item: chipItem }">
-      <VChip v-bind="chipProps">
+      <VChip
+        v-if="chipItem"
+        v-bind="chipProps"
+      >
         {{ chipItem.title }}
         <VIcon
           v-if="chipItem.raw?.raw?.reviewed || chipItem.raw?.reviewed"

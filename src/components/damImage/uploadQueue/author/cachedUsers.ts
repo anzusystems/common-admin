@@ -10,17 +10,22 @@ const mapFullToMinimal = (source: DamUser): AnzuUserMinimal => {
 }
 
 const mapIdToMinimal = (id: IntegerId): AnzuUserMinimal => {
-  return { id: id, email: '', person: { firstName: '', lastName: '', fullName: '' }, avatar: { color: '', text: '' } }
+  return {
+    id: id,
+    email: '',
+    person: { firstName: '', lastName: '', fullName: '' },
+    avatar: { color: '', text: '' },
+  }
 }
 
-const { cache, fetch, add, addManual, has, get, isLoaded } = defineCached<IntegerId, DamUser, AnzuUserMinimal>(
-  mapFullToMinimal,
-  mapIdToMinimal,
-  (ids: IntegerId[]) => {
-    const { damClient } = useCommonAdminCoreDamOptions()
-    return fetchDamUserListByIds(damClient, ids)
-  }
-)
+const { cache, fetch, add, addManual, has, get, isLoaded } = defineCached<
+  IntegerId,
+  DamUser,
+  AnzuUserMinimal
+>(mapFullToMinimal, mapIdToMinimal, (ids: IntegerId[]) => {
+  const { damClient } = useCommonAdminCoreDamOptions()
+  return fetchDamUserListByIds(damClient, ids)
+})
 
 export const useDamCachedUsers = () => {
   return {

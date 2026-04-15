@@ -1,10 +1,16 @@
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiValidationError,
+  axiosErrorResponseHasValidationData,
+} from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import {
+  AnzuApiForbiddenError,
+  axiosErrorResponseIsForbidden,
+} from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import {
   AnzuApiForbiddenOperationError,
@@ -21,7 +27,8 @@ import {
  * @template R Response type override, optional
  */
 const generateByIdsApiQuery = (ids: number[] | string[], isSearchApi: boolean): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } = useApiQueryBuilder()
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } =
+    useApiQueryBuilder()
   const limit = ids.length
   querySetLimit(limit)
   querySetOffset(1, limit)
@@ -40,11 +47,14 @@ export const apiFetchByIds = <T, R = T>(
   system: string,
   entity: string,
   options: AxiosRequestConfig = {},
-  isSearchApi = false
+  isSearchApi = false,
 ): Promise<R> => {
   return new Promise((resolve, reject) => {
     client()
-      .get(replaceUrlParameters(urlTemplate, urlParams) + generateByIdsApiQuery(ids, isSearchApi), options)
+      .get(
+        replaceUrlParameters(urlTemplate, urlParams) + generateByIdsApiQuery(ids, isSearchApi),
+        options,
+      )
       .then((res) => {
         if (!isValidHTTPStatus(res.status)) {
           return reject(new AnzuApiResponseCodeError(res.status))

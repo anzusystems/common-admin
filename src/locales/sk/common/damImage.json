@@ -44,12 +44,10 @@
       "notPlayable": "Mediálny obsah sa zatiaľ neprehrá na webe. Skontrolujte distribúciu."
     },
     "button": {
-      "remove": "Odstrániť médium",
-      "editInDam": "Upraviť v DAM"
+      "remove": "Odstrániť médium"
     }
   },
   "queueItem": {
-    "edit": "Upraviť v DAM",
     "displayTitle": "Meno originálu",
     "error": "Chyba",
     "copyAssetId": "Kopírovať asset ID",
@@ -150,6 +148,7 @@
     "add": "Pridať do nahrávania",
     "save": "Uložiť a pokračovať",
     "saveAndApply": "Uložiť a použiť",
+    "apply": "Použiť",
     "title": "Nahrávanie",
     "titleDone": "Nahrávanie ukončené",
     "stopConfirmQuestion": "Chcete ukončiť nahrávanie?",

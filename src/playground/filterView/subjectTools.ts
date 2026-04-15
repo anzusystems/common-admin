@@ -146,16 +146,16 @@ export const useSubjectListActions = () => {
   const fetchArticleListVersionData = async (
     pagination: Ref<Pagination>,
     filterData: FilterData,
-    filterConfig: FilterConfig
+    filterConfig: FilterConfig,
   ) => {
     filterData.discriminator = 'standard'
-    const { executeRequest } = useApiRequest<any>(
-      cmsClient,
-      'GET',
-      'cms',
-      'subject',
-      END_POINT + '/search' + generateListQuery(pagination, filterData, filterConfig)
-    )
+    const { executeRequest } = useApiRequest<any>({
+      client: cmsClient,
+      method: 'GET',
+      system: 'cms',
+      entity: 'subject',
+      urlTemplate: END_POINT + '/search' + generateListQuery(pagination, filterData, filterConfig),
+    })
     const res = await executeRequest()
     pagination.value.hasNextPage = res.hasNextPage
     pagination.value.currentViewCount = res.data.length
@@ -165,7 +165,11 @@ export const useSubjectListActions = () => {
 
   const { showErrorsDefault } = useAlerts()
 
-  const fetchList = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchList = async (
+    pagination: Ref<Pagination>,
+    filterData: FilterData,
+    filterConfig: FilterConfig,
+  ) => {
     listLoading.value = true
     try {
       const res = await fetchArticleListVersionData(pagination, filterData, filterConfig)

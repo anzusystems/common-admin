@@ -6,7 +6,7 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
   const widgetImageToDamImageUrl = (
     image: ImageAware | ImageCreateUpdateAware,
     width = config.imageWidth,
-    height = config.imageHeight
+    height = config.imageHeight,
   ) => {
     return (
       config.previewDomain +
@@ -25,7 +25,11 @@ export function useImageActions(config: ReturnType<typeof useCommonAdminImageOpt
     return config.previewDomainOriginal + '/image/original/' + image.dam.damId + '.jpg'
   }
 
-  const damImageIdToDamImageUrl = (imageId: DocId, width = config.imageWidth, height = config.imageHeight) => {
+  const damImageIdToDamImageUrl = (
+    imageId: DocId,
+    width = config.imageWidth,
+    height = config.imageHeight,
+  ) => {
     return config.previewDomain + '/image/w' + width + '-h' + height + '/' + imageId + '.jpg'
   }
 

@@ -10,7 +10,7 @@ const props = withDefaults(
     modelValue: Filter
     items: ValueObjectOption<string | number>[]
   }>(),
-  {}
+  {},
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
@@ -23,7 +23,10 @@ const value = computed({
     return props.modelValue.model
   },
   set(newValue) {
-    emit('update:modelValue', { ...props.modelValue, ...{ model: newValue } })
+    emit('update:modelValue', {
+      ...props.modelValue,
+      model: newValue,
+    })
     emit('change')
   },
 })
@@ -50,6 +53,6 @@ const multipleComputedVuetifyTypeFix = computed(() => {
     :clearable="!modelValue.mandatory"
     data-cy="filter-value"
     @clear="clearOne(modelValue)"
-    @change="emit('change')"
+    @update:model-value="emit('change')"
   />
 </template>

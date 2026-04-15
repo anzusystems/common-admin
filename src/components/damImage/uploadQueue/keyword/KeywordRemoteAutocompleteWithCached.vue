@@ -44,7 +44,7 @@ const props = withDefaults(
     clearable: false,
     dataCy: undefined,
     validationScope: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | null | DocId[]): void
@@ -154,7 +154,7 @@ const showAdd = computed(() => {
   if (search.value.length < 2 || search.value.length > 255) return false
   if (fetchedItemsMinimal.value.size === 0) return true
   return ![...fetchedItemsMinimal.value.values()].some(
-    (item) => item.name?.toLowerCase() === search.value!.toLowerCase()
+    (item) => item.name?.toLowerCase() === search.value!.toLowerCase(),
   )
 })
 </script>
@@ -211,6 +211,7 @@ const showAdd = computed(() => {
     >
       <template #item="{ props: itemSlotProps, item: itemSlotItem }">
         <VListItem
+          v-if="itemSlotItem"
           v-bind="itemSlotProps"
           @click.prevent=""
         >
@@ -236,6 +237,7 @@ const showAdd = computed(() => {
       </template>
       <template #chip="{ item: chipSlotItem }">
         <KeywordRemoteAutocompleteCachedKeywordChip
+          v-if="chipSlotItem"
           :id="chipSlotItem.value"
           :key="chipSlotItem.value"
           :queue-id="queueId"

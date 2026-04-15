@@ -7,7 +7,7 @@ withDefaults(
   {
     size: 'x-small',
     fullscreen: false,
-  }
+  },
 )
 </script>
 

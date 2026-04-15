@@ -15,7 +15,7 @@ const props = withDefaults(
   }>(),
   {
     isModerator: false,
-  }
+  },
 )
 
 const cached = shallowRef<undefined | AnzuUserMinimal>(undefined)
@@ -53,7 +53,7 @@ watch(
     cached.value = newValue
     loaded.value = true
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

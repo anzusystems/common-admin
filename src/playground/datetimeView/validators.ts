@@ -31,21 +31,21 @@ export function useCompareValidators(article: Ref<DemoCompareDates>) {
           datesCompare: datesCompare(
             publicPublishedAtComputed,
             t('cms.articleKind.model.dates.publicPublishedAt'),
-            'onOrAfter'
+            'onOrAfter',
           ),
         },
         publicPublishedAt: {
           datesCompare: datesCompare(
             publicUpdatedAtComputed,
             t('cms.articleKind.model.dates.publicUpdatedAt'),
-            'earlierThan'
+            'earlierThan',
           ),
         },
         publicUpdatedAt: {
           datesCompare: datesCompare(
             publicPublishedAtComputed,
             t('cms.articleKind.model.dates.publicPublishedAt'),
-            'laterThan'
+            'laterThan',
           ),
         },
       },

@@ -2,20 +2,24 @@
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { computed } from 'vue'
 import type { DocIdNullable } from '@/types/common'
-import { useCommonAdminCoreDamOptionsGlobal } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { useI18n } from 'vue-i18n'
-
+import {
+  useCommonAdminCoreDamOptionsGlobal,
+  useCommonAdminCoreDamOptions,
+} from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 const props = withDefaults(
   defineProps<{
     assetId?: DocIdNullable
+    configName?: string
   }>(),
   {
     assetId: null,
-  }
+    configName: 'default',
+  },
 )
 
-const { t } = useI18n()
 const { adminDomain } = useCommonAdminCoreDamOptionsGlobal()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { editAssetLabel } = useCommonAdminCoreDamOptions(props.configName)
 
 const href = computed(() => {
   return adminDomain + '/asset/' + props.assetId
@@ -31,6 +35,6 @@ const href = computed(() => {
     rel="noopener noreferrer"
     :href="href"
   >
-    {{ t('common.damImage.media.button.editInDam') }}
+    {{ editAssetLabel }}
   </VBtn>
 </template>

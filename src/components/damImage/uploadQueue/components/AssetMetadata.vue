@@ -21,23 +21,33 @@ import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
 import ACachedUserChip from '@/components/ACachedUserChip.vue'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
     readonly?: boolean
+    configName?: string
+    showEditButton?: boolean
   }>(),
   {
     readonly: false,
-  }
+    configName: 'default',
+    showEditButton: false,
+  },
 )
+
+const emit = defineEmits<{
+  (e: 'editInDam'): void
+}>()
 
 const { t } = useI18n()
 
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
+const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } =
+  storeToRefs(assetDetailStore)
 
 const assetType = computed(() => {
   return asset.value?.attributes.assetType || DamAssetTypeDefault
@@ -55,15 +65,34 @@ const onAnyMetadataChange = () => {
   metadataAreTouched.value = true
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
 
 const { cachedUsers } = useDamCachedUsers()
+
+const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
+  useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
 </script>
 
 <template>
+  <VBtn
+    v-if="showEditButton && asset"
+    size="small"
+    class="ma-2"
+    @click="emit('editInDam')"
+  >
+    {{ editAssetLabel }}
+  </VBtn>
   <VExpansionPanels
     v-if="asset"
     v-model="panels"
@@ -87,7 +116,7 @@ const { cachedUsers } = useDamCachedUsers()
           <template #after-pinned>
             <VRow
               v-if="keywordEnabled"
-              dense
+              density="comfortable"
               class="my-2"
             >
               <VCol>
@@ -112,7 +141,7 @@ const { cachedUsers } = useDamCachedUsers()
             </VRow>
             <VRow
               v-if="authorEnabled"
-              dense
+              density="comfortable"
               class="my-2"
             >
               <VCol>
@@ -137,7 +166,8 @@ const { cachedUsers } = useDamCachedUsers()
               </VCol>
             </VRow>
             <VRow
-              dense
+              v-if="mainFileSingleUseEnabled"
+              density="comfortable"
               class="my-2"
             >
               <VCol>
@@ -159,12 +189,13 @@ const { cachedUsers } = useDamCachedUsers()
       </VExpansionPanelText>
     </VExpansionPanel>
     <VExpansionPanel
+      v-if="showFileInfoEnabled"
       elevation="0"
       :title="t('common.damImage.asset.detail.info.file')"
       value="file"
     >
       <VExpansionPanelText
-        class="text-caption"
+        class="text-body-small"
         style="overflow-wrap: normal"
       >
         <!-- all types -->
@@ -208,7 +239,7 @@ const { cachedUsers } = useDamCachedUsers()
             />
           </VCol>
         </VRow>
-        <div v-if="assetMainFile">
+        <template v-if="assetMainFile">
           <VRow>
             <VCol cols="3">
               {{ t('common.damImage.asset.detail.info.field.mainFileId') }}
@@ -237,7 +268,7 @@ const { cachedUsers } = useDamCachedUsers()
             v-if="isTypeImage && assetFileIsImageFile(assetMainFile)"
             :file="assetMainFile"
           />
-        </div>
+        </template>
       </VExpansionPanelText>
     </VExpansionPanel>
   </VExpansionPanels>

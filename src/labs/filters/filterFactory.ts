@@ -1,4 +1,5 @@
 import { reactive, type Ref, toRaw } from 'vue'
+import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 import {
   cloneDeep,
   isArray,
@@ -30,21 +31,23 @@ const defaultRenderOptions: FilerRenderOptions = {
   xl: undefined,
 }
 
-export function createFilterStore<F extends readonly MakeFilterOption<string>[]>(filterFields: F): FilterData<F> {
+export function createFilterStore<F extends readonly MakeFilterOption<string>[]>(
+  filterFields: F,
+): FilterData<F> {
   return reactive(
     filterFields.reduce((acc, field) => {
       return {
         ...acc,
         [field.name]: cloneDeep(field.default),
       }
-    }, {} as FilterData<F>)
+    }, {} as FilterData<F>),
   ) as FilterData<F>
 }
 
 export function createFilter<F extends readonly MakeFilterOption<string>[]>(
   filterFields: F,
   store: FilterData<F>,
-  options?: Partial<GeneralFilterOptions>
+  options?: Partial<GeneralFilterOptions>,
 ): {
   filterConfig: FilterConfig<F>
   filterData: FilterData<F>
@@ -77,7 +80,7 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
         },
       }
     },
-    {} as FilterConfig<F>['fields']
+    {} as FilterConfig<F>['fields'],
   )
 
   const defaultGlobalOptions: GeneralFilterOptions = {
@@ -111,7 +114,11 @@ function resolveValue<T>(value: T | undefined, fallback: T): T {
 export function useFilterClearHelpers<
   F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[],
 >() {
-  const clearOne = (name: keyof FilterData<F>, filterData: FilterData<F>, filterConfig: FilterConfig<F>) => {
+  const clearOne = (
+    name: keyof FilterData<F>,
+    filterData: FilterData<F>,
+    filterConfig: FilterConfig<F>,
+  ) => {
     if (!filterConfig.fields[name]?.clearable) return
     filterData[name] = cloneDeep(filterConfig.fields[name].default)
   }
@@ -126,7 +133,7 @@ export function useFilterClearHelpers<
     optionValue: number | string,
     filterData: FilterData<F>,
     filterConfig: FilterConfig<F>,
-    filterSelected: Ref<Map<string, ValueObjectOption<string | number>[]>>
+    filterSelected: Ref<Map<string, ValueObjectOption<string | number>[]>>,
   ) => {
     if (!isClearable(name, filterConfig)) return
     // update selected
@@ -147,11 +154,16 @@ export function useFilterClearHelpers<
       isArray(filterData[name as keyof FilterData<F>]) &&
       (filterData[name as keyof FilterData<F>] as any[]).length > 0
     ) {
-      const foundIndex = (filterData[name as keyof FilterData<F>] as any[]).findIndex((item) => item === optionValue)
+      const foundIndex = (filterData[name as keyof FilterData<F>] as any[]).findIndex(
+        (item) => item === optionValue,
+      )
       const newArray = [...toRaw(filterData[name as keyof FilterData<F>] as any[])]
       newArray.splice(foundIndex, 1)
       filterData[name as keyof FilterData<F>] = newArray as AllowedFilterValues
-    } else if (isString(filterData[name as keyof FilterData<F>]) || isNumber(filterData[name as keyof FilterData<F>])) {
+    } else if (
+      isString(filterData[name as keyof FilterData<F>]) ||
+      isNumber(filterData[name as keyof FilterData<F>])
+    ) {
       filterData[name as keyof FilterData<F>] = config.default
     } else if (isBoolean(filterData[name as keyof FilterData<F>])) {
       filterData[name as keyof FilterData<F>] = config.default
@@ -161,7 +173,7 @@ export function useFilterClearHelpers<
   const clearAllFilterSelected = (
     filterData: FilterData<F>,
     filterConfig: FilterConfig<F>,
-    filterSelected: Ref<Map<string, ValueObjectOption<string | number>[]>>
+    filterSelected: Ref<Map<string, ValueObjectOption<string | number>[]>>,
   ) => {
     for (const key of filterSelected.value.keys()) {
       if (isClearable(key, filterConfig)) {
@@ -194,10 +206,12 @@ const FilterHelpersMoreOptionsDefault = {
   populateUrlParams: true,
 }
 
-export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]>(
+export function useFilterHelpers<
+  F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[],
+>(
   filterData: FilterData<F>,
   filterConfig: FilterConfig<F>,
-  moreOptions: Partial<FilterHelpersMoreOptions> = {}
+  moreOptions: Partial<FilterHelpersMoreOptions> = {},
 ) {
   const options = { ...FilterHelpersMoreOptionsDefault, ...moreOptions }
   const END_FILTER_MARKER = '~'
@@ -238,7 +252,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   const serializeFilters = (
     data: Record<string, AllowedFilterValues>,
     pagination: Ref<Pagination>,
-    includeSort: boolean
+    includeSort: boolean,
   ): string => {
     const params = new URLSearchParams()
     for (const key in data) {
@@ -261,7 +275,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   }
 
   const deserializeFilters = (
-    hash: string
+    hash: string,
   ): { filters: Record<string, AllowedFilterValues>; sortBy: DatatableSortBy } | null => {
     if (!hash) return null
     if (hash.startsWith('#')) hash = hash.substring(1)
@@ -360,13 +374,21 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
   }
 
   const loadStoredFilters = (pagination: Ref<Pagination>, callback?: AnyFn) => {
+    const { consumeStoredPage } = useDatatablePageStore()
     let source: 'hash' | 'localStorage' = 'hash'
     let storedFromHash = parseLocationHash()
     if (isNull(storedFromHash)) {
       source = 'localStorage'
       storedFromHash = loadFilterLocalStorage()
     }
-    if (isNull(storedFromHash) || (isEmptyObject(storedFromHash.filters) && isEmptyObject(storedFromHash.sortBy))) {
+    if (
+      isNull(storedFromHash) ||
+      (isEmptyObject(storedFromHash.filters) && isEmptyObject(storedFromHash.sortBy))
+    ) {
+      const restoredPage = consumeStoredPage()
+      if (restoredPage !== null) {
+        pagination.value = { ...pagination.value, page: restoredPage }
+      }
       if (callback) callback()
       return false
     }
@@ -394,7 +416,12 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
         updateLocationHash(stored)
       }
     }
-    pagination.value = { ...pagination.value, sortBy: storedFromHash.sortBy }
+    const restoredPage = consumeStoredPage()
+    pagination.value = {
+      ...pagination.value,
+      sortBy: storedFromHash.sortBy,
+      ...(restoredPage !== null ? { page: restoredPage } : {}),
+    }
     if (callback) callback()
     return true
   }
@@ -474,7 +501,9 @@ export interface FilterField {
   render: FilerRenderOptions
 }
 
-export type FilterConfig<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]> = {
+export type FilterConfig<
+  F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[],
+> = {
   general: GeneralFilterOptions
   touched: boolean
   fields: {
@@ -482,7 +511,9 @@ export type FilterConfig<F extends readonly MakeFilterOption<string>[] = readonl
   }
 }
 
-export type FilterData<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]> = {
+export type FilterData<
+  F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[],
+> = {
   [P in F[number]['name']]: AllowedFilterValues
 }
 

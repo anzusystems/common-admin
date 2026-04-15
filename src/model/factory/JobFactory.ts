@@ -27,10 +27,8 @@ export function useCommonJobFactory() {
   const createUserDataDelete = (system: string): JobUserDataDelete => {
     return {
       ...createBase('jobUserDataDelete', system),
-      ...{
-        targetUserId: null,
-        anonymizeUser: false,
-      },
+      targetUserId: null,
+      anonymizeUser: false,
     }
   }
 

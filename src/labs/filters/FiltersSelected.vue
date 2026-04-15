@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import { computed, inject } from 'vue'
-import { FilterConfigKey, FilterDataKey, FilterSelectedKey } from '@/labs/filters/filterInjectionKeys'
+import {
+  FilterConfigKey,
+  FilterDataKey,
+  FilterSelectedKey,
+} from '@/labs/filters/filterInjectionKeys'
 import { isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
@@ -46,7 +50,7 @@ const clickClose = (name: string, optionValue: number | string) => {
     :key="item.name"
     class="a-selected-filters"
   >
-    <div class="a-selected-filters__label text-caption">
+    <div class="a-selected-filters__label text-body-small">
       {{ item.title }}:
     </div>
     <div

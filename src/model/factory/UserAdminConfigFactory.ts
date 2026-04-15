@@ -1,5 +1,8 @@
 import type { UserAdminConfig } from '@/types/UserAdminConfig'
-import { UserAdminConfigLayoutTypeDefault, UserAdminConfigTypeDefault } from '@/types/UserAdminConfig'
+import {
+  UserAdminConfigLayoutTypeDefault,
+  UserAdminConfigTypeDefault,
+} from '@/types/UserAdminConfig'
 import { dateTimeNow } from '@/utils/datetime'
 
 export function useUserAdminConfigFactory() {

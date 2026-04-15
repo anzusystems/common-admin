@@ -1,4 +1,8 @@
-import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import {
+  createFilter,
+  createFilterStore,
+  type MakeFilterOption,
+} from '@/labs/filters/filterFactory'
 import { ENTITY, SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 export const filterFieldsList = [
@@ -26,12 +30,20 @@ export const filterFieldsList = [
   { name: 'orientation' as const, default: [] },
   { name: 'described' as const, default: null, titleT: 'common.assetSelect.filter.described' },
   { name: 'visible' as const, default: true, titleT: 'common.assetSelect.filter.visible' },
-  { name: 'generatedBySystem' as const, default: false, titleT: 'common.assetSelect.filter.generatedBySystem' },
+  {
+    name: 'generatedBySystem' as const,
+    default: false,
+    titleT: 'common.assetSelect.filter.generatedBySystem',
+  },
   { name: 'inPodcast' as const, default: null },
   { name: 'podcastIds' as const, default: [], titleT: 'common.assetSelect.filter.podcastIds' },
   { name: 'fromRss' as const, default: null },
   { name: 'slotNames' as const, default: [] },
-  { name: 'distributedInServices' as const, default: [], titleT: 'common.assetSelect.filter.distributedInServices' },
+  {
+    name: 'distributedInServices' as const,
+    default: [],
+    titleT: 'common.assetSelect.filter.distributedInServices',
+  },
   { name: 'licences' as const, default: [] },
   { name: 'shortestDimensionFrom' as const, default: null, type: 'integer' },
   { name: 'shortestDimensionUntil' as const, default: null, type: 'integer' },
@@ -53,8 +65,20 @@ export const filterFieldsList = [
   { name: 'bitrateUntil' as const, default: null, type: 'integer' },
   { name: 'slotsCountFrom' as const, default: null, type: 'integer' },
   { name: 'slotsCountUntil' as const, default: null, type: 'integer' },
-  { name: 'createdAtFrom' as const, default: null, type: 'timeInterval', related: 'createdAtUntil' },
-  { name: 'createdAtUntil' as const, default: null, type: 'timeInterval', exclude: true, render: { skip: true } },
+  {
+    name: 'createdAtFrom' as const,
+    default: null,
+    type: 'timeInterval',
+    related: 'createdAtUntil',
+    titleT: 'common.assetSelect.filter.createdAtFrom',
+  },
+  {
+    name: 'createdAtUntil' as const,
+    default: null,
+    type: 'timeInterval',
+    exclude: true,
+    render: { skip: true },
+  },
   { name: 'mainFileSingleUse' as const, default: false },
 ] satisfies readonly MakeFilterOption[]
 

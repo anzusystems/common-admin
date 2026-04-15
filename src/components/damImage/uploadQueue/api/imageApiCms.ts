@@ -23,8 +23,19 @@ export const fetchImage = (client: () => AxiosInstance, id: IntegerId) =>
 export const createImage = (client: () => AxiosInstance, data: ImageCreateUpdateAware) =>
   apiCreateOne<ImageCreateUpdateAware, ImageAware>(client, data, END_POINT, {}, SYSTEM_CMS, ENTITY)
 
-export const updateImage = (client: () => AxiosInstance, id: IntegerId, data: ImageCreateUpdateAware) =>
-  apiUpdateOne<ImageCreateUpdateAware, ImageAware>(client, data, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
+export const updateImage = (
+  client: () => AxiosInstance,
+  id: IntegerId,
+  data: ImageCreateUpdateAware,
+) =>
+  apiUpdateOne<ImageCreateUpdateAware, ImageAware>(
+    client,
+    data,
+    END_POINT + '/:id',
+    { id },
+    SYSTEM_CMS,
+    ENTITY,
+  )
 
 export const deleteImage = (client: () => AxiosInstance, id: IntegerId) =>
   apiDeleteOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)

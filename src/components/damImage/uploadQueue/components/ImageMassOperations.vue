@@ -10,38 +10,52 @@ import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { storeToRefs } from 'pinia'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { DamAssetType } from '@/types/coreDam/Asset'
 
 const texts = ref({ description: '', source: '', authors: [] })
 
 const imageStore = useImageStore()
 const { images } = storeToRefs(imageStore)
-const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } = useImageMassOperations()
+const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } =
+  useImageMassOperations()
 const { t } = useI18n()
 
 const fillAll = (forceReplace: boolean) => {
   replaceEmptyDescription(texts.value.description, forceReplace)
-  replaceEmptySource(texts.value.source, forceReplace)
-  replaceEmptyAuthors(texts.value.authors, forceReplace)
+  if (authorEnabled.value && showDamAuthorsAtLeastOne.value) {
+    replaceEmptyAuthors(texts.value.authors, forceReplace)
+  } else {
+    replaceEmptySource(texts.value.source, forceReplace)
+  }
 }
 
 const clearForm = () => {
   texts.value.description = ''
-  texts.value.source = ''
-  texts.value.authors = []
+  if (authorEnabled.value && showDamAuthorsAtLeastOne.value) {
+    texts.value.authors = []
+  } else {
+    texts.value.source = ''
+  }
 }
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
 
-const { maxLength } = useValidate()
+const { getDamConfigExtSystem } = useDamConfigState()
+
+const authorEnabled = computed(() => {
+  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
+})
+
+const { descriptionValidation, sourceValidation, sourceLabel } = useCommonAdminCoreDamOptions()
+const validators = useValidate()
 
 const rules = computed(() => ({
   texts: {
-    description: {
-      maxLength: maxLength(2000),
-    },
-    source: {
-      maxLength: maxLength(255),
-    },
+    description: buildFieldRules(descriptionValidation, validators),
+    source: buildFieldRules(sourceValidation, validators),
   },
 }))
 const v$ = useVuelidate(rules, { texts }, { $scope: false })
@@ -55,8 +69,8 @@ const showDamAuthorsAtLeastOne = computed(() => {
 <template>
   <div class="w-100">
     <VRow
-      dense
-      class="mt-1"
+      density="comfortable"
+      class="mt-4"
     >
       <VCol>
         <div class="d-flex">
@@ -98,9 +112,9 @@ const showDamAuthorsAtLeastOne = computed(() => {
       </VCol>
     </VRow>
     <VRow
-      v-if="showDamAuthorsAtLeastOne"
-      dense
-      class="mt-1"
+      v-if="authorEnabled && showDamAuthorsAtLeastOne"
+      density="comfortable"
+      class="mt-4"
     >
       <VCol>
         <ASystemEntityScope
@@ -153,14 +167,14 @@ const showDamAuthorsAtLeastOne = computed(() => {
     </VRow>
     <VRow
       v-else
-      dense
-      class="mt-1"
+      density="comfortable"
+      class="mt-4"
     >
       <VCol>
         <div class="d-flex">
           <AFormTextarea
             v-model="texts.source"
-            :label="t('common.damImage.image.model.texts.source')"
+            :label="sourceLabel"
           />
           <VBtn
             icon

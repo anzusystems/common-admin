@@ -8,21 +8,32 @@ import { cloneDeep } from '@/utils/common'
 import { onMounted } from 'vue'
 import AssetDetailSidebarActionsWrapper from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsWrapper.vue'
 import AssetFileRotate from '@/components/damImage/uploadQueue/components/AssetFileRotate.vue'
-import { ENTITY, fetchRoi, useFetchImageRoiList } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
+import {
+  ENTITY,
+  fetchRoi,
+  useFetchImageRoiList,
+} from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { SORT_BY_ID } from '@/composables/system/datatableColumns'
-import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import {
+  createFilter,
+  createFilterStore,
+  type MakeFilterOption,
+} from '@/labs/filters/filterFactory'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageApi'
 import type { DocId } from '@/types/common'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     isActive: boolean
     queueKey: UploadQueueKey
+    configName?: string
   }>(),
-  {}
+  {
+    configName: 'default',
+  },
 )
 
 const { t } = useI18n()
@@ -32,25 +43,34 @@ const assetDetailStore = useAssetDetailStore()
 
 const { pagination } = usePagination(SORT_BY_ID)
 
-const { damClient } = useCommonAdminCoreDamOptions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { damClient, endPointImage, endPointRoi } = useCommonAdminCoreDamOptions(props.configName)
 const filterFieldsInner = [] satisfies readonly MakeFilterOption[]
-const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
-  system: SYSTEM_CORE_DAM,
-  subject: ENTITY,
-})
+const { filterConfig, filterData } = createFilter(
+  filterFieldsInner,
+  createFilterStore(filterFieldsInner),
+  {
+    system: SYSTEM_CORE_DAM,
+    subject: ENTITY,
+  },
+)
 
 const loadImageFile = async (id: DocId) => {
-  const res = await fetchImageFile(damClient, id)
+  const res = await fetchImageFile(damClient, endPointImage, id)
   imageRoiStore.setImageFile(res)
 }
 
 const loadRois = async (forceReloadFile = false) => {
   imageRoiStore.showLoader()
   if (imageRoiStore.imageFile) {
-    const { executeFetch } = useFetchImageRoiList(damClient, imageRoiStore.imageFile.id)
+    const { executeFetch } = useFetchImageRoiList(
+      damClient,
+      endPointImage,
+      imageRoiStore.imageFile.id,
+    )
     const res = await executeFetch(pagination, filterData, filterConfig)
     if (res.length > 0 && res[0].id) {
-      const roi = await fetchRoi(damClient, res[0].id)
+      const roi = await fetchRoi(damClient, endPointRoi, res[0].id)
       if (forceReloadFile) {
         await loadImageFile(imageRoiStore.imageFile.id)
       }
@@ -92,16 +112,28 @@ onMounted(async () => {
   >
     <ABtnTertiary
       v-if="!imageRoiStore.loader"
+      class="d-none d-md-flex"
       @click.stop="loadRois(true)"
     >
       {{ t('common.damImage.asset.detail.roi.refresh') }}
     </ABtnTertiary>
+    <VBtn
+      v-if="!imageRoiStore.loader"
+      icon
+      variant="text"
+      size="small"
+      class="d-flex d-md-none"
+      :title="t('common.damImage.asset.detail.roi.refresh')"
+      @click.stop="loadRois(true)"
+    >
+      <VIcon icon="mdi-refresh" />
+    </VBtn>
   </AssetDetailSidebarActionsWrapper>
   <div class="px-3">
     <div class="v-expansion-panel-title px-0">
       {{ t('common.damImage.asset.detail.roi.title') }}
     </div>
-    <div class="text-caption">
+    <div class="text-body-small">
       {{ t('common.damImage.asset.detail.roi.description') }}
     </div>
   </div>
@@ -123,7 +155,7 @@ onMounted(async () => {
       :key="item.url"
       class="pb-2"
     >
-      <div class="text-subtitle-2">
+      <div class="text-label-large">
         {{ item.title }}
       </div>
       <img

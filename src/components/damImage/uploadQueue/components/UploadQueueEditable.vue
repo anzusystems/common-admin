@@ -9,7 +9,7 @@ import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/ca
 import type { DocId, IntegerId } from '@/types/common'
 import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetType } from '@/types/coreDam/Asset'
 import { useAlerts } from '@/composables/system/alerts'
 import { AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 import { useEventListener } from '@vueuse/core'
@@ -19,18 +19,23 @@ const props = withDefaults(
     queueKey: string
     extSystem: IntegerId
     massOperations: boolean
+    configName?: string
     disableDoneAnimation?: boolean
   }>(),
   {
+    configName: 'default',
     disableDoneAnimation: false,
-  }
+  },
 )
 
 const emit = defineEmits<{
   (e: 'showDetail', data: DocId): void
 }>()
 
-const { damClient } = useCommonAdminCoreDamOptions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { damClient, endPointAsset, mainFileSingleUseEnabled } = useCommonAdminCoreDamOptions(
+  props.configName,
+)
 
 const refreshDisabled = ref(false)
 
@@ -53,13 +58,20 @@ const { showWarningT } = useAlerts()
 const refreshItem = async (data: { index: number; assetId: DocId }) => {
   refreshDisabled.value = true
   try {
-    const asset = await fetchAsset(damClient, data.assetId)
-    if (asset.attributes.assetStatus === DamAssetStatus.WithFile) {
-      await uploadQueuesStore.queueItemProcessed(asset.id)
+    const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
+    if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Processed) {
+      await uploadQueuesStore.queueItemFullyProcessed(asset.id)
     } else if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
-      await uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, DamAssetType.Image)
+      await uploadQueuesStore.queueItemDuplicate(
+        asset.id,
+        asset.mainFile.originAssetFile,
+        DamAssetType.Image,
+      )
     } else if (asset.mainFile?.fileAttributes.status === AssetFileProcessStatus.Failed) {
-      await uploadQueuesStore.queueItemFailed(data.assetId, asset.mainFile.fileAttributes.failReason)
+      await uploadQueuesStore.queueItemFailed(
+        data.assetId,
+        asset.mainFile.fileAttributes.failReason,
+      )
     } else {
       showWarningT('common.damImage.queueItem.stillUploadingOrProcessing')
     }
@@ -138,8 +150,8 @@ onBeforeUnmount(() => {
     <div class="asset-queue-editable__left">
       <div
         ref="scrollableContainer"
-        class="overflow-y-auto overflow-x-hidden h-100 mr-4"
-        style="outline: none;"
+        class="overflow-y-auto overflow-x-hidden h-100 mr-md-4"
+        style="outline: none"
       >
         <VRow class="dam-upload-queue dam-upload-queue--editable pa-2 mb-5">
           <UploadQueueItemEditable
@@ -149,6 +161,7 @@ onBeforeUnmount(() => {
             v-model:keywords="item.keywords"
             v-model:authors="item.authors"
             v-model:main-file-single-use="item.mainFileSingleUse"
+            :main-file-single-use-enabled="mainFileSingleUseEnabled"
             :ext-system="extSystem"
             :item="item"
             :index="index"

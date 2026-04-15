@@ -9,7 +9,7 @@ withDefaults(
   defineProps<{
     extSystem: IntegerId
   }>(),
-  {}
+  {},
 )
 
 const { gridView } = useGridView()
@@ -34,7 +34,7 @@ const { t } = useI18n()
   </div>
   <div
     v-if="!loader && assetListItems.length === 0"
-    class="text-h6 text-medium-emphasis d-flex w-100 h-100 align-center justify-center"
+    class="text-body-large d-flex w-100 h-100 align-center justify-center"
   >
     {{ t('common.assetSelect.meta.texts.noItemsFound') }}
   </div>

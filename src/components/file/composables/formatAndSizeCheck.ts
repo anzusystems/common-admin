@@ -9,7 +9,10 @@ import { i18n } from '@/plugins/i18n'
  * @param maxSizes example: { 'image/*': 20000 } or { 'image/png': 20000, 'image/jpg': 20000 } or
  *                          { '.jpg': 20000, '.png': 20000 } or { '*': 20000, }
  */
-export function useFormatAndSizeCheck(accept: string | undefined, maxSizes: Record<string, number> | undefined) {
+export function useFormatAndSizeCheck(
+  accept: string | undefined,
+  maxSizes: Record<string, number> | undefined,
+) {
   const acceptKeys = computed(() => {
     if (isUndefined(accept)) {
       return []
@@ -27,7 +30,8 @@ export function useFormatAndSizeCheck(accept: string | undefined, maxSizes: Reco
   const checkFormatsAndSizes = (files: File[], disableAlert = false) => {
     const incorrectFileNames: string[] = []
     const validFiles = files.filter((file) => {
-      const isFileValid = checkFormats(file, acceptKeys.value) && checkSizes(file, maxSizeKeys.value, maxSizes)
+      const isFileValid =
+        checkFormats(file, acceptKeys.value) && checkSizes(file, maxSizeKeys.value, maxSizes)
       if (!isFileValid) {
         incorrectFileNames.push(file.name)
       }
@@ -65,7 +69,11 @@ export function useFormatAndSizeCheck(accept: string | undefined, maxSizes: Reco
     return false
   }
 
-  const checkSizes = (file: File, keys: Array<string>, sizes: Record<string, number> | undefined) => {
+  const checkSizes = (
+    file: File,
+    keys: Array<string>,
+    sizes: Record<string, number> | undefined,
+  ) => {
     if (keys.length === 0 || isUndefined(sizes)) {
       return true
     }
@@ -79,7 +87,11 @@ export function useFormatAndSizeCheck(accept: string | undefined, maxSizes: Reco
       } else {
         // type
         const splitType = keys[j].split('/')
-        if (splitType[1] === '*' && damFileTypeFix(file).startsWith(splitType[0] + '/') && sizes[keys[j]] > file.size) {
+        if (
+          splitType[1] === '*' &&
+          damFileTypeFix(file).startsWith(splitType[0] + '/') &&
+          sizes[keys[j]] > file.size
+        ) {
           return true
         } else if (keys[j] === damFileTypeFix(file) && sizes[keys[j]] > file.size) {
           return true

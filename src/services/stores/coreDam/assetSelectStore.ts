@@ -168,7 +168,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
 
   function getSelectedData(
     type: AssetSelectReturnTypeType,
-    copyToLicence: undefined | IntegerId
+    copyToLicence: undefined | IntegerId,
   ): AssetSelectReturnData {
     switch (type) {
       case AssetSelectReturnType.AssetId:
@@ -215,7 +215,9 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
   }
 
   const selectedSelectConfig = computed(() => {
-    const found = selectConfig.value.find((configItem) => configItem.licence === selectedLicenceId.value)
+    const found = selectConfig.value.find(
+      (configItem) => configItem.licence === selectedLicenceId.value,
+    )
     if (found) return found
     return selectConfig.value[0]
   })

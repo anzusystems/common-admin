@@ -14,7 +14,7 @@ const props = withDefaults(
     size: 36,
     containerClass: '',
     tooltip: undefined,
-  }
+  },
 )
 
 const color = computed(() => {
@@ -31,7 +31,8 @@ const fontSize = computed(() => {
 const text = computed(() => {
   if (!props.user) return ''
   if (props.user.avatar.text.length > 0) return props.user.avatar.text
-  const firstNameLastName = props.user.person.firstName.charAt(0) + props.user.person.lastName.charAt(0)
+  const firstNameLastName =
+    props.user.person.firstName.charAt(0) + props.user.person.lastName.charAt(0)
   if (firstNameLastName.length > 0) return firstNameLastName
   return props.user.email.slice(0, 2)
 })

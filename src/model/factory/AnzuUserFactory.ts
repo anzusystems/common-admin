@@ -22,6 +22,7 @@ export function useAnzuUserFactory(system = '', resourceName = 'user') {
         lastName: '',
       },
       enabled: false,
+      locale: null,
       permissionGroups: [],
       permissions: {},
       resolvedPermissions: {},

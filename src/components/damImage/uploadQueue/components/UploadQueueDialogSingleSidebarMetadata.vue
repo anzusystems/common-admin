@@ -1,24 +1,28 @@
 <script lang="ts" setup>
 import AssetDetailSidebarActionsWrapper from '@/components/damImage/uploadQueue/components/AssetDetailSidebarActionsWrapper.vue'
 import { useI18n } from 'vue-i18n'
+import { computed } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import UploadQueueDialogSingleSidebarMetadataContent from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebarMetadataContent.vue'
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useAlerts } from '@/composables/system/alerts'
+import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { IntegerId } from '@/types/common'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     queueKey: string
     extSystem: IntegerId
     isActive: boolean
     dataCy?: string
     assetType: DamAssetTypeType
+    configName?: string
   }>(),
   {
     dataCy: undefined,
-  }
+    configName: 'default',
+  },
 )
 const emit = defineEmits<{
   (e: 'onSave'): void
@@ -26,6 +30,13 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+
+const uploadQueuesStore = useUploadQueuesStore()
+
+const canEditMetadata = computed(() => {
+  const items = uploadQueuesStore.getQueueItems(props.queueKey)
+  return items[0]?.canEditMetadata ?? false
+})
 
 const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol })
 
@@ -59,6 +70,7 @@ const onSaveAndApply = async () => {
       type="submit"
       class="ml-2"
       data-cy="button-save"
+      :disabled="!canEditMetadata"
       @click.stop="onSave"
     >
       {{ t('common.button.save') }}
@@ -67,6 +79,7 @@ const onSaveAndApply = async () => {
       type="submit"
       class="mx-2"
       data-cy="button-save-and-apply"
+      :disabled="!canEditMetadata"
       @click.stop="onSaveAndApply"
     >
       {{ t('common.damImage.upload.saveAndApply') }}
@@ -75,5 +88,6 @@ const onSaveAndApply = async () => {
   <UploadQueueDialogSingleSidebarMetadataContent
     :queue-key="queueKey"
     :ext-system="extSystem"
+    :config-name="configName"
   />
 </template>

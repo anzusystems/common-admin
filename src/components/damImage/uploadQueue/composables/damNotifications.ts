@@ -8,7 +8,7 @@ import {
 import { useCommonAdminCoreDamOptionsGlobal } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useAlerts } from '@/composables/system/alerts'
 
-const { t } = i18n.global || i18n
+const { t } = i18n.global
 
 const damNotificationsInitialized = ref(false)
 

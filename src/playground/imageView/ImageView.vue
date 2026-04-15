@@ -138,7 +138,7 @@ const saveInsideDialog = () => {
             <template #append="{ imageMedia }">
               <div
                 v-if="isImageCreateUpdateAware(imageMedia)"
-                class="text-caption"
+                class="text-body-small"
               >
                 <p>description: {{ imageMedia.texts.description }}</p>
                 <p>source: {{ imageMedia.texts.source }}</p>

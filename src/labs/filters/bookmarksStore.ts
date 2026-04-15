@@ -1,7 +1,11 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useUserAdminConfigInnerFilter } from '@/labs/filters/UserAdminConfigFilter'
-import { type UserAdminConfig, type UserAdminConfigLayoutTypeType, UserAdminConfigType } from '@/types/UserAdminConfig'
+import {
+  type UserAdminConfig,
+  type UserAdminConfigLayoutTypeType,
+  UserAdminConfigType,
+} from '@/types/UserAdminConfig'
 import type { IntegerId } from '@/types/common'
 import type { UseApiFetchListReturnType } from '@/labs/api/useApiFetchList'
 import { usePagination } from '@/labs/filters/pagination'
@@ -45,7 +49,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       systemResource: string
     },
     useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>,
-    forceFetch: boolean = false
+    forceFetch: boolean = false,
   ): Promise<UserAdminConfig[]> {
     error.value = false
     const key = generateKey(identifier.layoutType, identifier.systemResource)
@@ -62,7 +66,10 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     const { pagination } = usePagination('position', SortOrder.Asc, {
       rowsPerPage: MAX_BOOKMARK_ITEMS,
     })
-    const { start: system, end: resource } = stringSplitOnFirstOccurrence(identifier.systemResource, '_')
+    const { start: system, end: resource } = stringSplitOnFirstOccurrence(
+      identifier.systemResource,
+      '_',
+    )
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(system, resource)
     filterData.configType = UserAdminConfigType.FilterBookmark
     filterData.layoutType = identifier.layoutType
@@ -91,13 +98,16 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
     },
-    useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>
+    useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>,
   ): Promise<number> {
     error.value = false
-    const { pagination } = usePagination('position',  SortOrder.Asc, {
+    const { pagination } = usePagination('position', SortOrder.Asc, {
       rowsPerPage: MAX_BOOKMARK_ITEMS + 1,
     })
-    const { start: system, end: resource } = stringSplitOnFirstOccurrence(identifier.systemResource, '_')
+    const { start: system, end: resource } = stringSplitOnFirstOccurrence(
+      identifier.systemResource,
+      '_',
+    )
     const { filterConfig, filterData } = useUserAdminConfigInnerFilter(system, resource)
     filterData.configType = UserAdminConfigType.FilterBookmark
     filterData.layoutType = identifier.layoutType

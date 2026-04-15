@@ -8,7 +8,7 @@ export function useUploadQueueMassOperations(queueKey: UploadQueueKey) {
 
   const replaceEmptyCustomDataValue = (
     data: { assetType: DamAssetTypeType; elementProperty: string; value: any },
-    forceReplace = false
+    forceReplace = false,
   ) => {
     const items = uploadQueuesStore.getQueueItems(queueKey)
     for (let i = 0; i < items.length; i++) {

@@ -7,7 +7,10 @@ import { useValidate } from '@/validators/vuelidate/useValidate'
 
 const { required, minLength } = useValidate()
 
-export function useAuthorValidation(author: Ref<DamAuthor>, validationScope: ValidationScope = undefined) {
+export function useAuthorValidation(
+  author: Ref<DamAuthor>,
+  validationScope: ValidationScope = undefined,
+) {
   const rules = computed(() => ({
     author: {
       name: {

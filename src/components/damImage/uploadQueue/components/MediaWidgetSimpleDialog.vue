@@ -8,7 +8,7 @@ withDefaults(
     modelValue: boolean
     media: null | MediaAware
   }>(),
-  {}
+  {},
 )
 
 const emit = defineEmits<{

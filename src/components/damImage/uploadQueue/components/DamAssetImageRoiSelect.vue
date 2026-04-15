@@ -4,7 +4,11 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useImageRoiStore } from '@/components/damImage/uploadQueue/composables/imageRoiStore'
 import { updateRoi } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { cropToRegion, regionToCrop, type ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import {
+  cropToRegion,
+  regionToCrop,
+  type ACropperjsExposed,
+} from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ACropperjs from '@/components/ACropperjs.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { DocId, IntegerId } from '@/types/common'
@@ -14,8 +18,11 @@ import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageAp
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
+    configName?: string
   }>(),
-  {}
+  {
+    configName: 'default',
+  },
 )
 
 const { showRecordWas, showErrorsDefault } = useAlerts()
@@ -24,7 +31,8 @@ const cropperContainerStyle = { overflow: 'hidden', maxHeight: 'calc(100vh - 160
 
 const imageRoiStore = useImageRoiStore()
 
-const { damClient } = useCommonAdminCoreDamOptions()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { damClient, endPointImage, endPointRoi } = useCommonAdminCoreDamOptions(props.configName)
 const { getDamConfigExtSystem } = useDamConfigState()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const configExtSystem = getDamConfigExtSystem(props.extSystem)
@@ -37,7 +45,11 @@ const cropperInstance = useTemplateRef<ACropperjsExposed>('cropperInstance')
 
 const imageUrl = computed(() => {
   if (imageRoiStore.imageFile && imageRoiStore.imageFile.links?.image_detail) {
-    return imageRoiStore.imageFile.links.image_detail.url + '?manipulated=' + imageRoiStore.imageFile.manipulatedAt
+    return (
+      imageRoiStore.imageFile.links.image_detail.url +
+      '?manipulated=' +
+      imageRoiStore.imageFile.manipulatedAt
+    )
   }
   return ''
 })
@@ -61,7 +73,7 @@ const applyRegionOfInterest = () => {
       cropperInstance.value,
       imageRoiStore.roi,
       imageRoiStore.imageFile.imageAttributes.width,
-      imageRoiStore.imageFile.imageAttributes.height
+      imageRoiStore.imageFile.imageAttributes.height,
     )
     cropperInstance.value.setData(data)
     disableCropper()
@@ -69,7 +81,7 @@ const applyRegionOfInterest = () => {
 }
 
 const loadImageFile = async (id: DocId) => {
-  const res = await fetchImageFile(damClient, id)
+  const res = await fetchImageFile(damClient, endPointImage, id)
   imageRoiStore.setImageFile(res)
   imageRoiStore.hideLoader()
 }
@@ -80,11 +92,11 @@ const saveRoi = async () => {
       cropperInstance.value,
       imageRoiStore.roi,
       imageRoiStore.imageFile.imageAttributes.width,
-      imageRoiStore.imageFile.imageAttributes.height
+      imageRoiStore.imageFile.imageAttributes.height,
     )
     try {
       imageRoiStore.showLoader()
-      await updateRoi(damClient, roi.id, roi)
+      await updateRoi(damClient, endPointRoi, roi.id, roi)
       showRecordWas('updated')
       setTimeout(() => {
         if (imageRoiStore.imageFile) {
@@ -128,7 +140,7 @@ onUnmounted(() => {
     <VProgressCircular indeterminate />
   </div>
   <ACropperjs
-    v-if="showCropper"
+    v-if="showCropper && configExtSystem.image"
     :key="imageRoiStore.imageFile?.manipulatedAt || 0"
     ref="cropperInstance"
     :aspect-ratio="configExtSystem.image.roiWidth / configExtSystem.image.roiHeight"

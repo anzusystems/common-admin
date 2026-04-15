@@ -1,7 +1,10 @@
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isUndefined } from '@/utils/common'
-import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
+import type {
+  DamAuthor,
+  DamAuthorMinimal,
+} from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { Pagination } from '@/labs/filters/pagination'
 import {
   fetchAuthorList,
@@ -13,7 +16,7 @@ import type { IntegerId } from '@/types/common'
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import type { Pagination as PaginationLegacy } from '@/types/Pagination'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 
 export const useAuthorSelectActions = (extSystem: IntegerId) => {
@@ -47,11 +50,19 @@ export const useAuthorSelectActions = (extSystem: IntegerId) => {
 
   const { executeFetch } = useFetchAuthorList(damClient, extSystem)
 
-  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchItems = async (
+    pagination: Ref<Pagination>,
+    filterData: FilterData,
+    filterConfig: FilterConfig,
+  ) => {
     return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
   }
 
-  const fetchItemsMinimal = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchItemsMinimal = async (
+    pagination: Ref<Pagination>,
+    filterData: FilterData,
+    filterConfig: FilterConfig,
+  ) => {
     return mapToMinimals(await executeFetch(pagination, filterData, filterConfig))
   }
 

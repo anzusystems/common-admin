@@ -10,7 +10,11 @@ import { type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/Upl
 import { NEW_LINE_MARK } from '@/composables/system/alerts'
 import { isUndefined } from '@/utils/common'
 import { useDamUploadChunkSize } from '@/components/damImage/uploadQueue/composables/damUploadChunkSize'
-import { damUploadChunk, damUploadFinish, damUploadStart } from '@/components/damImage/uploadQueue/api/uploadApi'
+import {
+  damUploadChunk,
+  damUploadFinish,
+  damUploadStart,
+} from '@/components/damImage/uploadQueue/api/uploadApi'
 import {
   useCommonAdminCoreDamOptions,
   useCommonAdminCoreDamOptionsGlobal,
@@ -28,13 +32,20 @@ const failUpload = async (queueItem: UploadQueueItem, error: unknown = null) => 
 }
 
 const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
-  const { damClient } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointImage, endPointAsset } = useCommonAdminCoreDamOptions()
   const { uploadStatusFallback } = useCommonAdminCoreDamOptionsGlobal()
-  return await damUploadFinish(damClient, queueItem, sha, uploadStatusFallback)
+  return await damUploadFinish(
+    damClient,
+    endPointAsset,
+    endPointImage,
+    queueItem,
+    sha,
+    uploadStatusFallback,
+  )
 }
 
 const handleValidationErrorMessage = (error: Error | any) => {
-  const { t } = i18n.global || i18n
+  const { t } = i18n.global
   if (!error || !error.response || !error.response.data) {
     // @ts-ignore
     return t('common.damImage.uploadErrors.unknownError')
@@ -54,13 +65,21 @@ const handleValidationErrorMessage = (error: Error | any) => {
         break
       default:
         // @ts-ignore
-        errorMessages.push(t('common.damImage.uploadErrors.systemError') + ': ' + key + ' - ' + values.join(','))
+        errorMessages.push(
+          t('common.damImage.uploadErrors.systemError') + ': ' + key + ' - ' + values.join(','),
+        )
     }
   }
-  return errorMessages.length > 0 ? errorMessages.join(NEW_LINE_MARK) : t('common.damImage.uploadErrors.unknownError')
+  return errorMessages.length > 0
+    ? errorMessages.join(NEW_LINE_MARK)
+    : t('common.damImage.uploadErrors.unknownError')
 }
 
-const readFile = async (offset: number, size: number, file: File): Promise<{ data: ArrayBuffer; offset: number }> => {
+const readFile = async (
+  offset: number,
+  size: number,
+  file: File,
+): Promise<{ data: ArrayBuffer; offset: number }> => {
   return new Promise((resolve, reject) => {
     const partial = file.slice(offset, offset + size)
     const reader = new FileReader()
@@ -86,7 +105,7 @@ const sleep = (ms: number) => {
 }
 
 export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = undefined) {
-  const { damClient } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
   const fileSize = ref(0)
 
   const progress = ref(0)
@@ -125,7 +144,16 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
         reject()
         return
       }
-      damUploadChunk(damClient, queueItem, queueItem.fileId, chunkFile, chunkFile.size, offset, progressCallback)
+      damUploadChunk(
+        damClient,
+        endPointImage,
+        queueItem,
+        queueItem.fileId,
+        chunkFile,
+        chunkFile.size,
+        offset,
+        progressCallback,
+      )
         .then((result) => {
           resolve(result)
         })
@@ -140,9 +168,11 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     let arrayBuffer: { data: ArrayBuffer; offset: number } = await readFile(
       offset,
       lastChunkSize.value,
-      queueItem.file!
+      queueItem.file!,
     )
-    let chunkFile = new File([arrayBuffer.data], queueItem.file!.name, { type: queueItem.file!.type })
+    let chunkFile = new File([arrayBuffer.data], queueItem.file!.name, {
+      type: queueItem.file!.type,
+    })
 
     queueItem.currentChunkIndex = offset
     const cancelToken = axios.CancelToken
@@ -159,7 +189,11 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
         return chunkFile
       } catch (error) {
         // Check for 400 Bad Request error on last attempt
-        if (axios.isAxiosError(error) && error.response?.status === 400 && attempt >= CHUNK_MAX_RETRY) {
+        if (
+          axios.isAxiosError(error) &&
+          error.response?.status === 400 &&
+          attempt >= CHUNK_MAX_RETRY
+        ) {
           queueItem.error.message = 'Upload chunk validation failed. Please contact administrator.'
           return Promise.reject(error)
         }
@@ -173,7 +207,9 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
         if (updateChunkSize(queueItem.progress.speed)) {
           arrayBuffer = await readFile(offset, lastChunkSize.value, queueItem.file!)
-          chunkFile = new File([arrayBuffer.data], queueItem.file!.name, { type: queueItem.file!.type })
+          chunkFile = new File([arrayBuffer.data], queueItem.file!.name, {
+            type: queueItem.file!.type,
+          })
         }
 
         await sleep(sleepTime)
@@ -187,7 +223,9 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     function speedCheckRun() {
       speedStack = speedStack.slice(-15)
       if (speedStack.length > 0) {
-        const avgSpeed = Math.ceil(speedStack.reduce((sum, current) => sum + current) / speedStack.length)
+        const avgSpeed = Math.ceil(
+          speedStack.reduce((sum, current) => sum + current) / speedStack.length,
+        )
         const remainingBytes = Math.ceil(fileSize.value * ((100 - progress.value) / 100))
 
         uploadCallback(progress.value, avgSpeed, Math.ceil(remainingBytes / avgSpeed))
@@ -219,7 +257,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       }
       fileSize.value = queueItem.file.size
       queueItem.status = UploadQueueItemStatus.Uploading
-      damUploadStart(damClient, queueItem)
+      damUploadStart(damClient, endPointImage, queueItem)
         .then((res) => {
           queueItem.assetId = res.asset
           queueItem.fileId = res.id

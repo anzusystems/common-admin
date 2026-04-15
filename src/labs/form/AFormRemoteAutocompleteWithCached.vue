@@ -18,7 +18,7 @@ import { useAlerts } from '@/composables/system/alerts'
 type FetchItemsMinimalType = (
   pagination: Ref<Pagination>,
   filterData: FilterData,
-  filterConfig: FilterConfig
+  filterConfig: FilterConfig,
 ) => Promise<any[]>
 
 type UseCachedType = () => {
@@ -62,7 +62,7 @@ const props = withDefaults(
     itemValue: 'id',
     minSearchChars: 2,
     minSearchText: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | IntegerId | DocId[] | IntegerId[] | null | undefined): void
@@ -95,7 +95,7 @@ if (
 ) {
   throw new Error(
     `[${componentName}] Incorrect filter inner config. ` +
-      `FilterByField is '${props.filterByField}' and available options are ${Object.keys(filterInnerData).join(', ')}.`
+      `FilterByField is '${props.filterByField}' and available options are ${Object.keys(filterInnerData).join(', ')}.`,
   )
 }
 
@@ -119,7 +119,10 @@ const modelValue = computed({
     return props.modelValue
   },
   set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null | undefined) {
-    emit('update:modelValue', cloneDeep<DocId | IntegerId | DocId[] | IntegerId[] | null | undefined>(newValue))
+    emit(
+      'update:modelValue',
+      cloneDeep<DocId | IntegerId | DocId[] | IntegerId[] | null | undefined>(newValue),
+    )
   },
 })
 
@@ -132,7 +135,7 @@ const isFocused = ref(false)
 const { pagination } = usePagination(
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isNull(props.filterSortBy) ? null : props.filterSortBy.key,
-  props.filterSortBy?.order
+  props.filterSortBy?.order,
 )
 
 const onFocus = () => {
@@ -237,7 +240,7 @@ watchDebounced(
       emit('searchChangeDebounced', newValue)
     }
   },
-  { debounce: 300 }
+  { debounce: 300 },
 )
 
 watch(search, (newValue, oldValue) => {
@@ -261,7 +264,7 @@ watch(
       fetch()
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
@@ -302,7 +305,7 @@ watch(
       #selection
     />
     <!-- @vue-skip -->
-    <template #chip="{ props: chipProps, item: chipItem }">
+    <template #chip="{ props: chipProps, internalItem: chipItem }">
       <slot
         name="chip"
         :props="chipProps"
@@ -315,7 +318,7 @@ watch(
       </slot>
     </template>
     <!-- @vue-skip -->
-    <template #item="{ props: itemProps, item: itemItem }">
+    <template #item="{ props: itemProps, internalItem: itemItem }">
       <slot
         name="item"
         :props="itemProps"

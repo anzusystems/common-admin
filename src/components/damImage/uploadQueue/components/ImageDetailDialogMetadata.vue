@@ -15,6 +15,7 @@ import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { computed } from 'vue'
+import { useDisplay } from 'vuetify'
 import {
   isImageCreateUpdateAware,
   isMediaAware,
@@ -34,11 +35,17 @@ const props = withDefaults(
     loading: boolean
     expand?: boolean
     showDamAuthors?: boolean
+    showSourceEnabled?: boolean
+    sourceLabel?: string
+    editAssetLabel?: string
   }>(),
   {
     expand: false,
     showDamAuthors: false,
-  }
+    showSourceEnabled: true,
+    sourceLabel: undefined,
+    editAssetLabel: undefined,
+  },
 )
 
 const emit = defineEmits<{
@@ -48,6 +55,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { mdAndDown } = useDisplay()
 const imageMediaWidgetStore = useImageMediaWidgetStore()
 const { detail } = storeToRefs(imageMediaWidgetStore)
 const assetDetailStore = useAssetDetailStore()
@@ -56,7 +64,9 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 
 const type = computed<DamAssetTypeType | null>(() => {
   if (isMediaAware(detail.value)) {
-    return detail.value.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
+    return detail.value.damMedia.assetType === DamMediaType.Video
+      ? DamAssetType.Video
+      : DamAssetType.Audio
   } else if (isImageCreateUpdateAware(detail.value)) {
     return DamAssetType.Image
   }
@@ -130,7 +140,7 @@ defineExpose({
       <VRow>
         <VCol>
           <VBtn @click.stop="onEditAsset">
-            {{ t('common.damImage.image.button.editAsset') }}
+            {{ editAssetLabel }}
           </VBtn>
         </VCol>
       </VRow>
@@ -140,6 +150,7 @@ defineExpose({
             v-model="detail.texts.description"
             :label="t('common.damImage.image.model.texts.description')"
             :help="t('common.damImage.image.help.texts.description')"
+            :v="v$.image?.texts.description"
           />
         </VCol>
       </VRow>
@@ -166,12 +177,12 @@ defineExpose({
         <VCol>
           <AFormTextarea
             v-model="detail.texts.source"
-            :label="t('common.damImage.image.model.texts.source')"
+            :label="sourceLabel"
             :v="v$.image?.texts.source"
           />
         </VCol>
       </VRow>
-      <VRow>
+      <VRow v-if="showSourceEnabled">
         <VCol>
           <VSwitch
             v-model="detail.flags.showSource"
@@ -192,12 +203,17 @@ defineExpose({
     v-else
     :model-value="modelValue"
     :max-width="500"
+    :fullscreen="mdAndDown"
     eager
     @update:model-value="onDialogModelUpdate"
   >
     <VCard v-if="modelValue">
       <ADialogToolbar @on-cancel="onDialogModelUpdate(false)">
-        {{ type === DamAssetType.Image ? t('common.damImage.image.meta.edit') : t('common.damImage.media.meta.edit') }}
+        {{
+          type === DamAssetType.Image
+            ? t('common.damImage.image.meta.edit')
+            : t('common.damImage.media.meta.edit')
+        }}
       </ADialogToolbar>
       <VCardText>
         <div
@@ -219,7 +235,7 @@ defineExpose({
           <VRow>
             <VCol>
               <VBtn @click.stop="onEditAsset">
-                {{ t('common.damImage.image.button.editAsset') }}
+                {{ editAssetLabel }}
               </VBtn>
             </VCol>
           </VRow>
@@ -255,13 +271,12 @@ defineExpose({
             <VCol>
               <AFormTextarea
                 v-model="detail.texts.source"
-                :label="t('common.damImage.image.model.texts.source')"
+                :label="sourceLabel"
                 :v="v$.image?.texts.source"
-                required
               />
             </VCol>
           </VRow>
-          <VRow>
+          <VRow v-if="showSourceEnabled">
             <VCol>
               <VSwitch
                 v-model="detail.flags.showSource"
@@ -277,7 +292,7 @@ defineExpose({
           class="position-relative"
         >
           <div class="my-4">
-            <h4 class="font-weight-bold text-subtitle-2">
+            <h4 class="font-weight-bold text-label-large">
               {{ t('common.damImage.media.meta.preview') }}:
             </h4>
             <slot
@@ -297,13 +312,15 @@ defineExpose({
           </VRow>
           <div
             v-if="!detail.damMedia.playable"
-            class="my-2 text-warning text-caption"
+            class="my-2 text-warning text-body-small"
           >
             <VIcon
               icon="mdi-movie-off-outline"
               class="mr-1"
               size="small"
-            />{{ t('common.damImage.media.meta.notPlayable') }}
+            />{{
+              t('common.damImage.media.meta.notPlayable')
+            }}
           </div>
           <ARow :title="t('common.damImage.media.model.damMedia.title')">
             {{ detail.damMedia.title }}

@@ -40,7 +40,7 @@ const props = withDefaults(
     store: true,
     alwaysVisible: false,
     hideMore: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'submit'): void
@@ -132,13 +132,13 @@ defineExpose({
   >
     <VRow
       v-if="enableTop"
-      dense
+      density="comfortable"
     >
       <VCol>
         <slot name="top" />
       </VCol>
     </VRow>
-    <VRow dense>
+    <VRow density="compact">
       <VCol v-if="store && userId && isDefined(client)">
         <slot name="bookmarks">
           <div class="d-flex flex-wrap align-center">
@@ -157,7 +157,7 @@ defineExpose({
     </VRow>
     <VRow
       v-if="!alwaysVisible"
-      dense
+      density="comfortable"
     >
       <VCol
         v-if="!hideMore"

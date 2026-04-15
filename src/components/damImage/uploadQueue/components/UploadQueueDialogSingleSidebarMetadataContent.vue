@@ -19,13 +19,17 @@ import { dateTimePretty } from '@/utils/datetime'
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
 import type { IntegerId } from '@/types/common'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
     extSystem: IntegerId
+    configName?: string
   }>(),
-  {}
+  {
+    configName: 'default',
+  },
 )
 
 const { t } = useI18n()
@@ -33,7 +37,8 @@ const { t } = useI18n()
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
+const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } =
+  storeToRefs(assetDetailStore)
 
 const uploadQueuesStore = useUploadQueuesStore()
 
@@ -61,10 +66,22 @@ const onAnyMetadataChange = () => {
   metadataAreTouched.value = true
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { mainFileSingleUseEnabled, showFileInfoEnabled } = useCommonAdminCoreDamOptions(
+  props.configName,
+)
 </script>
 
 <template>
@@ -91,7 +108,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
             <template #after-pinned>
               <VRow
                 v-if="keywordEnabled"
-                dense
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>
@@ -116,7 +133,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
               </VRow>
               <VRow
                 v-if="authorEnabled"
-                dense
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>
@@ -141,7 +158,8 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                 </VCol>
               </VRow>
               <VRow
-                dense
+                v-if="mainFileSingleUseEnabled"
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>
@@ -157,12 +175,12 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
       </VExpansionPanelText>
     </VExpansionPanel>
     <VExpansionPanel
-      v-if="asset"
+      v-if="asset && showFileInfoEnabled"
       elevation="0"
       :title="t('common.damImage.asset.detail.info.file')"
       value="file"
     >
-      <VExpansionPanelText class="text-caption">
+      <VExpansionPanelText class="text-body-small">
         <!-- all types -->
         <VRow>
           <VCol cols="3">
@@ -196,7 +214,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
             {{ dateTimePretty(asset.modifiedAt) }}
           </VCol>
         </VRow>
-        <div v-if="assetMainFile">
+        <template v-if="assetMainFile">
           <VRow>
             <VCol cols="3">
               {{ t('common.damImage.asset.detail.info.field.mainFileId') }}
@@ -225,7 +243,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
             v-if="isTypeImage && assetFileIsImageFile(assetMainFile)"
             :file="assetMainFile"
           />
-        </div>
+        </template>
       </VExpansionPanelText>
     </VExpansionPanel>
   </VExpansionPanels>

@@ -1,18 +1,27 @@
 import type { AxiosInstance } from 'axios'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { IdsGroupedByLicences } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { ENTITY, fetchAssetListByIds, SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  ENTITY,
+  fetchAssetListByIds,
+  SYSTEM_CORE_DAM,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 
 const MAX_LIMIT = 20
 
 export const fetchAssetListByFileIdsMultipleLicences = async (
   client: () => AxiosInstance,
-  groupedIds: IdsGroupedByLicences
+  endPoint: string,
+  groupedIds: IdsGroupedByLicences,
 ) => {
   const batchedRequests = Array.from(groupedIds.entries()).flatMap(([licenceId, docIds]) => {
     return chunkArray(docIds, MAX_LIMIT).map((chunk) =>
-      fetchAssetListByFileIdsMultipleLicencesWithLimit(client, new Map([[licenceId, chunk]]))
+      fetchAssetListByFileIdsMultipleLicencesWithLimit(
+        client,
+        endPoint,
+        new Map([[licenceId, chunk]]),
+      ),
     )
   })
 
@@ -22,11 +31,18 @@ export const fetchAssetListByFileIdsMultipleLicences = async (
 
 export const fetchAssetAndCheckForSingleUseByFileIds = async (
   client: () => AxiosInstance,
-  groupedIds: IdsGroupedByLicences
+  endPoint: string,
+  groupedIds: IdsGroupedByLicences,
 ) => {
   const batchedRequests = Array.from(groupedIds.entries()).flatMap(([licenceId, docIds]) => {
     return chunkArray(docIds, MAX_LIMIT).map((chunk) =>
-      fetchAssetListByFileIdsMultipleLicencesWithLimit(client, new Map([[licenceId, chunk]]), 1, true)
+      fetchAssetListByFileIdsMultipleLicencesWithLimit(
+        client,
+        endPoint,
+        new Map([[licenceId, chunk]]),
+        1,
+        true,
+      ),
     )
   })
 
@@ -36,9 +52,10 @@ export const fetchAssetAndCheckForSingleUseByFileIds = async (
 
 const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
   client: () => AxiosInstance,
+  endPoint: string,
   groupedIds: IdsGroupedByLicences,
   forceLimit?: number,
-  filterSingleUse?: boolean
+  filterSingleUse?: boolean,
 ) => {
   const searchResults = await Promise.all(
     Array.from(groupedIds.entries()).map(([licenceId, docIds]) => {
@@ -46,14 +63,15 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
       return apiAnyRequest<object, { data: AssetSearchListItemDto[] }>(
         client,
         'GET',
-        '/adm/v1/asset/licence/:licenceId/search?assetAndMainFileIds=' +
-        `${docIds.join(',')}&limit=${forceLimit !== undefined ? forceLimit : docIds.length}${singleUseParam}`,
+        endPoint +
+          '/licence/:licenceId/search?assetAndMainFileIds=' +
+          `${docIds.join(',')}&limit=${forceLimit !== undefined ? forceLimit : docIds.length}${singleUseParam}`,
         { licenceId },
         {},
         SYSTEM_CORE_DAM,
-        ENTITY
+        ENTITY,
       )
-    })
+    }),
   )
 
   const groupedSearchResults: IdsGroupedByLicences = new Map()
@@ -68,8 +86,8 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
 
   const finalResults = await Promise.all(
     Array.from(groupedSearchResults.entries()).map(([licenceId, docIds]) =>
-      fetchAssetListByIds(client, docIds, licenceId)
-    )
+      fetchAssetListByIds(client, endPoint, docIds, licenceId),
+    ),
   )
 
   return finalResults.flat()
@@ -77,6 +95,6 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
 
 const chunkArray = <T>(arr: T[], size: number): T[][] => {
   return Array.from({ length: Math.ceil(arr.length / size) }, (_, index) =>
-    arr.slice(index * size, index * size + size)
+    arr.slice(index * size, index * size + size),
   )
 }

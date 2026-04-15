@@ -30,10 +30,10 @@
   },
   "currentUser": {
     "button": "Account",
-    "logout" : "Logout",
-    "logoutText" : "Are you sure you want to log out?",
-    "logoutConfirm" : "Logout",
-    "settings" : "Settings"
+    "logout": "Logout",
+    "logoutText": "Are you sure you want to log out?",
+    "logoutConfirm": "Logout",
+    "settings": "Settings"
   },
   "breadcrumb": {
     "detail": "Detail",

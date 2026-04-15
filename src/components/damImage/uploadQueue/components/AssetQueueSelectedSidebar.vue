@@ -9,13 +9,14 @@ import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueu
 import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteWithCached.vue'
 import { useUploadQueueMassOperations } from '@/components/damImage/uploadQueue/composables/uploadQueueMassOperations'
 import type { IntegerId } from '@/types/common'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 
 const props = withDefaults(
   defineProps<{
     queueKey: string
     extSystem: IntegerId
   }>(),
-  {}
+  {},
 )
 
 const massOperationsData = ref({ image: {}, video: {}, audio: {}, document: {} })
@@ -28,15 +29,22 @@ const panels = ref<Array<string>>(['general'])
 
 const uploadQueuesStore = useUploadQueuesStore()
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { replaceEmptyCustomDataValue, replaceEmptyAuthors, replaceEmptyKeywords } = useUploadQueueMassOperations(
-  props.queueKey
-)
+const { replaceEmptyCustomDataValue, replaceEmptyAuthors, replaceEmptyKeywords } =
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  useUploadQueueMassOperations(props.queueKey)
 
-const fillEmptyField = (data: { assetType: DamAssetTypeType; elementProperty: string; value: any }) => {
+const fillEmptyField = (data: {
+  assetType: DamAssetTypeType
+  elementProperty: string
+  value: any
+}) => {
   replaceEmptyCustomDataValue(data)
 }
-const replaceField = (data: { assetType: DamAssetTypeType; elementProperty: string; value: any }) => {
+const replaceField = (data: {
+  assetType: DamAssetTypeType
+  elementProperty: string
+  value: any
+}) => {
   replaceEmptyCustomDataValue(data, true)
 }
 const fillEmptyKeywords = () => {
@@ -59,7 +67,7 @@ const fillAll = (forceReplace = false) => {
         elementProperty,
         value,
       },
-      forceReplace
+      forceReplace,
     )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.video)) {
@@ -69,7 +77,7 @@ const fillAll = (forceReplace = false) => {
         elementProperty,
         value,
       },
-      forceReplace
+      forceReplace,
     )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.audio)) {
@@ -79,7 +87,7 @@ const fillAll = (forceReplace = false) => {
         elementProperty,
         value,
       },
-      forceReplace
+      forceReplace,
     )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.document)) {
@@ -89,25 +97,38 @@ const fillAll = (forceReplace = false) => {
         elementProperty,
         value,
       },
-      forceReplace
+      forceReplace,
     )
   }
-  if (forceReplace) {
-    replaceAuthors()
-    replaceKeywords()
-    return
+  if (authorEnabled.value) {
+    forceReplace ? replaceAuthors() : fillEmptyAuthors()
   }
-  fillEmptyAuthors()
-  fillEmptyKeywords()
+  if (keywordEnabled.value) {
+    forceReplace ? replaceKeywords() : fillEmptyKeywords()
+  }
 }
 const clearForm = () => {
   massOperationsData.value = { image: {}, video: {}, audio: {}, document: {} }
-  massOperationsAuthors.value = []
-  massOperationsKeywords.value = []
+  if (authorEnabled.value) massOperationsAuthors.value = []
+  if (keywordEnabled.value) massOperationsKeywords.value = []
 }
 
 const assetTypes = computed(() => {
   return uploadQueuesStore.getQueueItemsTypes(props.queueKey)
+})
+
+const { getDamConfigExtSystem } = useDamConfigState()
+
+const keywordEnabled = computed(() => {
+  const config = getDamConfigExtSystem(props.extSystem)
+  if (!config) return false
+  return assetTypes.value.some((type) => !!config[type]?.keywords?.enabled)
+})
+
+const authorEnabled = computed(() => {
+  const config = getDamConfigExtSystem(props.extSystem)
+  if (!config) return false
+  return assetTypes.value.some((type) => !!config[type]?.authors?.enabled)
 })
 
 onMounted(() => {
@@ -124,7 +145,7 @@ onMounted(() => {
         <VTab>{{ t('common.damImage.asset.massOperations.title') }}</VTab>
       </VTabs>
       <div class="sidebar-info__content">
-        <div class="text-caption pa-3">
+        <div class="text-body-small pa-3">
           {{ t('common.damImage.asset.massOperations.description') }}
         </div>
         <VExpansionPanels
@@ -133,13 +154,15 @@ onMounted(() => {
           class="v-expansion-panels--compact"
         >
           <VExpansionPanel
+            v-if="keywordEnabled || authorEnabled"
             elevation="0"
             :title="t('common.damImage.asset.massOperations.general')"
             value="general"
           >
             <VExpansionPanelText>
               <VRow
-                dense
+                v-if="keywordEnabled"
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>
@@ -192,7 +215,8 @@ onMounted(() => {
                 </VCol>
               </VRow>
               <VRow
-                dense
+                v-if="authorEnabled"
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>

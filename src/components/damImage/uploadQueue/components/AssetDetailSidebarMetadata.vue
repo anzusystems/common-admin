@@ -23,10 +23,12 @@ const props = withDefaults(
     dataCy?: string
     assetType: DamAssetTypeType
     extSystem: IntegerId
+    configName?: string
   }>(),
   {
     dataCy: undefined,
-  }
+    configName: 'default',
+  },
 )
 
 const { t } = useI18n()
@@ -41,7 +43,7 @@ const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
 
 const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol, $stopPropagation: true })
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 
 const onSave = async () => {
   if (isNull(asset.value)) return
@@ -53,7 +55,13 @@ const onSave = async () => {
     return
   }
   try {
-    await updateAssetMetadata(damClient, asset.value, props.extSystem, mainFileSingleUse.value)
+    await updateAssetMetadata(
+      damClient,
+      endPointAsset,
+      asset.value,
+      props.extSystem,
+      mainFileSingleUse.value,
+    )
     if (updateUploadStore.value && !isNull(asset.value)) {
       await uploadQueueStore.updateFromDetail(asset.value)
     }
@@ -81,5 +89,8 @@ const onSave = async () => {
       {{ t('common.button.save') }}
     </ABtnPrimary>
   </AssetDetailSidebarActionsWrapper>
-  <AssetMetadata :ext-system="extSystem" />
+  <AssetMetadata
+    :ext-system="extSystem"
+    :config-name="configName"
+  />
 </template>

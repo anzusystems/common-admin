@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { computed, onMounted, provide, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
@@ -9,8 +10,24 @@ import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
+
+const props = withDefaults(
+  defineProps<{
+    configName?: string
+  }>(),
+  {
+    configName: 'default',
+  },
+)
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configName)
 
 const { t } = useI18n()
+const { mdAndDown } = useDisplay()
+const { closeSidebarLeft } = useSidebar()
 const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()
 
 const assetSelectStore = useAssetSelectStore()
@@ -27,10 +44,12 @@ const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig,
 
 const submitFilterAction = () => {
   submitFilter(pagination, fetchAssetListDebounced)
+  if (mdAndDown.value) closeSidebarLeft()
 }
 
 const resetFilterAction = () => {
   resetFilter(pagination, resetAssetList)
+  if (mdAndDown.value) closeSidebarLeft()
 }
 
 const componentComputed = computed(() => {
@@ -40,13 +59,10 @@ const componentComputed = computed(() => {
   }
 })
 
-watch(
-  selectedLicenceId,
-  (newValue, oldValue) => {
-    if (newValue === oldValue) return
-    resetFilterAction()
-  },
-)
+watch(selectedLicenceId, (newValue, oldValue) => {
+  if (newValue === oldValue) return
+  resetFilterAction()
+})
 
 onMounted(() => {
   fetchAssetListDebounced()
@@ -73,7 +89,11 @@ onMounted(() => {
               />
             </VCol>
           </VRow>
-          <component :is="componentComputed" />
+          <component
+            :is="componentComputed"
+            :enabled-filters="assetListEnabledFilters"
+            :config-name="configName"
+          />
         </template>
         <VRow v-if="selectConfig.length > 1">
           <VCol :cols="12">
@@ -86,7 +106,11 @@ onMounted(() => {
             />
           </VCol>
         </VRow>
-        <component :is="componentComputed" />
+        <component
+          :is="componentComputed"
+          :enabled-filters="assetListEnabledFilters"
+          :config-name="configName"
+        />
       </AFilterWrapperSubjectSelect>
     </div>
   </div>

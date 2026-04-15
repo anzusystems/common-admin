@@ -80,7 +80,7 @@ export function useFilterTimeIntervalValidators(
   dialogData: Ref<{
     from: DatetimeUTCNullable
     until: DatetimeUTCNullable
-  }>
+  }>,
 ) {
   // const { t } = useI18n()
   const { datesCompare, required } = useValidate()
@@ -112,4 +112,3 @@ export function useFilterTimeIntervalValidators(
     v$,
   }
 }
-

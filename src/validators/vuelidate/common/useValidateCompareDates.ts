@@ -17,7 +17,7 @@ export function useValidateCompareDates() {
   const datesCompareValidator = (
     otherDate: OtherDateType,
     otherDateName: string,
-    variant: 'laterThan' | 'onOrAfter' | 'earlierThan' | 'onOrBefore'
+    variant: 'laterThan' | 'onOrAfter' | 'earlierThan' | 'onOrBefore',
   ) => {
     return (value: DatetimeUTCNullable) => {
       const unrefOtherDate = unref(otherDate)
@@ -51,7 +51,7 @@ export function useValidateCompareDates() {
   const datesCompareHelper = (
     otherDate: OtherDateType,
     otherDateName: string,
-    variant: 'laterThan' | 'onOrAfter' | 'earlierThan' | 'onOrBefore'
+    variant: 'laterThan' | 'onOrAfter' | 'earlierThan' | 'onOrBefore',
   ) => {
     return {
       $validator: datesCompareValidator(otherDate, otherDateName, variant),

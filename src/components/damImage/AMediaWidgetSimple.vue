@@ -38,7 +38,7 @@ const props = withDefaults(
     damHeight: undefined,
     useHtmlImg: false,
     widgetClass: undefined,
-  }
+  },
 )
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -68,7 +68,9 @@ const onDialogClose = () => {
 }
 
 const type = computed<DamAssetTypeType | null>(() => {
-  return resMedia.value?.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
+  return resMedia.value?.damMedia.assetType === DamMediaType.Video
+    ? DamAssetType.Video
+    : DamAssetType.Audio
 })
 
 watch(
@@ -81,17 +83,19 @@ watch(
       resolvedSrc.value = getImageUrl(newMedia)
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
 <template>
-  <h4
+  <div
     v-if="label"
-    class="font-weight-bold text-subtitle-2"
+    class="label-container"
   >
-    {{ label }}
-  </h4>
+    <h4 class="font-weight-bold text-label-large">
+      {{ label }}
+    </h4>
+  </div>
   <div
     class="position-relative"
     :class="{ 'cursor-pointer': resMedia?.damMedia.playable }"
@@ -117,6 +121,11 @@ watch(
       :class="widgetClass"
       :aspect-ratio="disableAspectRatio ? undefined : aspectRatio"
     >
+      <template #error>
+        <div class="d-flex align-center justify-center h-100">
+          <VIcon icon="mdi-alert-circle-outline" />
+        </div>
+      </template>
       <template #placeholder>
         <div class="d-flex align-center justify-center h-100">
           <VProgressCircular
@@ -163,3 +172,15 @@ watch(
     </template>
   </MediaWidgetSimpleDialog>
 </template>
+
+<style lang="scss" scoped>
+:deep(.v-img.disable-radius .v-img__img) {
+  border-radius: 0;
+}
+
+.label-container {
+  display: flex;
+  height: 32px;
+  align-items: center;
+}
+</style>

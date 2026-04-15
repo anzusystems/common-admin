@@ -17,7 +17,7 @@ const props = withDefaults(
   }>(),
   {
     siteId: () => [],
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -38,7 +38,7 @@ watch(
   (newSiteModel: IntegerId[]) => {
     filterData.site = newSiteModel
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

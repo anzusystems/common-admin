@@ -39,7 +39,7 @@ const props = withDefaults(
     dataCy: undefined,
     disabled: undefined,
     validationScope: ADamKeywordCreateValidationScopeSymbol,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'onSuccess', data: DamKeyword): void

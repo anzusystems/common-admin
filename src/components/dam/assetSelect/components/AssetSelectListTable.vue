@@ -8,7 +8,7 @@ withDefaults(
   defineProps<{
     extSystem: IntegerId
   }>(),
-  {}
+  {},
 )
 
 const { t } = useI18n()

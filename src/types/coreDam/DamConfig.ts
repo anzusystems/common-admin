@@ -1,4 +1,4 @@
-import type { DamAssetTypeType, DamDistributionServiceName } from '@/types/coreDam/Asset'
+import type { DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { IntegerId } from '@/types/common'
 
 export interface DamPrvConfig {
@@ -31,12 +31,12 @@ export interface DamPrvConfig {
   }
 }
 
-export interface DamExtSystemConfig extends Record<DamAssetTypeType, DamExtSystemConfigItem> {
-  assetExternalProviders: DamExternalProviderAssetConfig
-  audio: DamExtSystemConfigItem
-  video: DamExtSystemConfigItem
-  image: DamExtSystemConfigItemImage
-  document: DamExtSystemConfigItem
+export interface DamExtSystemConfig {
+  assetExternalProviders?: DamExternalProviderAssetConfig
+  audio?: DamExtSystemConfigItem
+  video?: DamExtSystemConfigItem
+  image?: DamExtSystemConfigItemImage
+  document?: DamExtSystemConfigItem
 }
 
 export interface DamConfigLicenceExtSystem {
@@ -54,19 +54,19 @@ export interface DamConfigLicenceExtSystemReturnType {
 export interface DamExtSystemConfigItem {
   enabled: boolean
   sizeLimit: number
-  defaultFileVersion: string
-  versions: Array<string>
+  defaultFileVersion?: string
+  versions?: Array<string>
   mimeTypes: Array<string>
-  distribution: DamDistributionConfig
-  authors: DamExtSystemAssetTypeExifMetadata
-  keywords: DamExtSystemAssetTypeExifMetadata
+  distribution?: DamDistributionConfig
+  authors?: DamExtSystemAssetTypeExifMetadata
+  keywords?: DamExtSystemAssetTypeExifMetadata
   customMetadataPinnedAmount: number
   slots: string[]
 }
 
 export interface DamExtSystemConfigItemImage extends DamExtSystemConfigItem {
-  roiWidth: number,
-  roiHeight: number,
+  roiWidth: number
+  roiHeight: number
 }
 
 export type DamExternalProviderAssetConfig = Record<
@@ -127,7 +127,8 @@ export const DamDistributionStatus = {
   Distributed: 'distributed',
   Failed: 'failed',
 } as const
-export type DamDistributionStatusType = (typeof DamDistributionStatus)[keyof typeof DamDistributionStatus]
+export type DamDistributionStatusType =
+  (typeof DamDistributionStatus)[keyof typeof DamDistributionStatus]
 export const DamDistributionStatusDefault = DamDistributionStatus.Waiting
 
 export interface DamPubConfig {

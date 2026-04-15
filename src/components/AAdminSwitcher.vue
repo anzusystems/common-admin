@@ -9,7 +9,7 @@ const props = withDefaults(
   }>(),
   {
     configUrl: null,
-  }
+  },
 )
 
 const { t } = useI18n()

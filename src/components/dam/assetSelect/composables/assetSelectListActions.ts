@@ -1,5 +1,8 @@
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
-import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import {
+  type AssetSelectListItem,
+  useAssetSelectStore,
+} from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
@@ -20,20 +23,22 @@ import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelect
 import { SORT_BY_SCORE_DATE } from '@/composables/system/datatableColumns'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { useDebounceFn } from '@vueuse/core'
+import { useDisplay } from 'vuetify'
 
 const { pagination } = usePagination(SORT_BY_SCORE_DATE)
 const detailLoading = ref(false)
 
 export function useAssetSelectActions(
   configName = 'default',
-  onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void
+  onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void,
 ) {
-  const { damClient } = useCommonAdminCoreDamOptions(configName)
+  const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
   const assetDetailStore = useAssetDetailStore()
   const { openSidebarRight } = useSidebar()
+  const { mdAndDown } = useDisplay()
 
   const { showErrorsDefault } = useAlerts()
   const { filterData, filterConfig } = useAssetListFilter()
@@ -53,8 +58,13 @@ export function useAssetSelectActions(
   })
 
   const fetchAssetList = async () => {
+    if (assetSelectStore.selectedLicenceId <= 0) return
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(damClient, assetSelectStore.selectedLicenceId)
+    const { executeFetch } = useFetchAssetList(
+      damClient,
+      endPointAsset,
+      assetSelectStore.selectedLicenceId,
+    )
     try {
       assetSelectStore.showLoader()
       assetSelectStore.setList(await executeFetch(pagination, filterData, filterConfig))
@@ -69,7 +79,11 @@ export function useAssetSelectActions(
     if (assetSelectStore.loader) return
     pagination.value.page = pagination.value.page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(damClient, assetSelectStore.selectedLicenceId)
+    const { executeFetch } = useFetchAssetList(
+      damClient,
+      endPointAsset,
+      assetSelectStore.selectedLicenceId,
+    )
     try {
       assetSelectStore.showLoader()
       assetSelectStore.appendList(await executeFetch(pagination, filterData, filterConfig))
@@ -86,19 +100,23 @@ export function useAssetSelectActions(
 
   const onItemClick = async (data: { assetId: DocId; index: number }, extSystem: IntegerId) => {
     const { cachedExtSystemId } = useExtSystemIdForCached()
-    openSidebarRight()
+    if (!mdAndDown.value) openSidebarRight()
     assetSelectStore.toggleSelectedByIndex(data.index)
     assetSelectStore.setActiveByIndex(data.index)
     detailLoading.value = true
     try {
-      const asset = await fetchAsset(damClient, data.assetId)
+      const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
       cachedExtSystemId.value = extSystem
       addToCachedAuthors(asset.authors)
       addToCachedKeywords(asset.keywords)
-      addToCachedUsers(asset.modifiedBy, asset.createdBy)
+      if (showFileInfoEnabled) {
+        addToCachedUsers(asset.modifiedBy, asset.createdBy)
+      }
       fetchCachedAuthors()
       fetchCachedKeywords()
-      fetchCachedUsers()
+      if (showFileInfoEnabled) {
+        fetchCachedUsers()
+      }
       if (!isUndefined(onDetailLoadedCallback)) onDetailLoadedCallback(asset)
       assetDetailStore.setAsset(asset)
     } catch (e) {
@@ -130,7 +148,7 @@ export function useAssetSelectActions(
     inPodcast: boolean | null,
     singleMode: boolean,
     minCount: number,
-    maxCount: number
+    maxCount: number,
   ): void => {
     assetSelectStore.clearSelected()
     assetSelectStore.setAssetType(assetType)

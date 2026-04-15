@@ -1,4 +1,8 @@
-import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
+import {
+  createFilter,
+  createFilterStore,
+  type MakeFilterOption,
+} from '@/labs/filters/filterFactory'
 
 export const filterFieldsList = [
   { name: 'id' as const, default: null, type: 'string' },

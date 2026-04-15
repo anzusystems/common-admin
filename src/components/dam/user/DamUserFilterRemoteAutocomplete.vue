@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void

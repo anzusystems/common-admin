@@ -1,5 +1,8 @@
-$class-name-root: "subject-select";
-$class-name-filter: "subject-select-filter";
+@use 'sass:map';
+@use 'vuetify/lib/styles/settings/_variables.scss' as vars;
+
+$class-name-root: 'subject-select';
+$class-name-filter: 'subject-select-filter';
 $sidebar-width: 320px;
 $sidebar-right-width: 300px;
 
@@ -32,7 +35,13 @@ $sidebar-right-width: 300px;
       }
 
       .#{$class-name-root}__content {
-        margin-left: $sidebar-width;
+        @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
+          margin-left: 0;
+        }
+
+        @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
+          margin-left: $sidebar-width;
+        }
       }
     }
 
@@ -42,7 +51,13 @@ $sidebar-right-width: 300px;
       }
 
       .#{$class-name-root}__content {
-        margin-right: $sidebar-right-width;
+        @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
+          margin-right: 0;
+        }
+
+        @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
+          margin-right: $sidebar-right-width;
+        }
       }
     }
   }
@@ -55,9 +70,18 @@ $sidebar-right-width: 300px;
     position: absolute;
     top: 0;
     left: 0;
-    width: $sidebar-width;
     height: 100%;
-    z-index: 0;
+    background-color: rgb(var(--v-theme-surface));
+
+    @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
+      width: 100%;
+      z-index: 2;
+    }
+
+    @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
+      width: $sidebar-width;
+      z-index: 0;
+    }
 
     .#{$class-name-filter} {
       display: flex;
@@ -95,10 +119,19 @@ $sidebar-right-width: 300px;
     position: absolute;
     top: 0;
     right: 0;
-    width: $sidebar-right-width;
     height: 100%;
-    z-index: 0;
     overflow-y: auto;
+    background-color: rgb(var(--v-theme-surface));
+
+    @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
+      width: 100%;
+      z-index: 2;
+    }
+
+    @media #{map.get(vars.$display-breakpoints, 'md-and-up')} {
+      width: $sidebar-right-width;
+      z-index: 0;
+    }
   }
 
   &__content {
@@ -113,5 +146,56 @@ $sidebar-right-width: 300px;
     flex: none;
     min-height: 52px;
     padding: 0.5rem;
+  }
+
+  &__card--inline {
+    .#{$class-name-root}__main {
+      overflow: visible;
+    }
+
+    .#{$class-name-root}__content {
+      overflow: visible;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .#{$class-name-root}__sidebar-right {
+      position: sticky;
+      top: 0;
+      max-height: 100dvh;
+      height: auto;
+      align-self: flex-start;
+      transform: none;
+      width: 0;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .#{$class-name-root}__main--sidebar-right-active {
+      .#{$class-name-root}__sidebar-right {
+        width: $sidebar-right-width;
+        overflow-y: auto;
+      }
+
+      .#{$class-name-root}__content {
+        margin-right: 0;
+      }
+
+      @media #{map.get(vars.$display-breakpoints, 'md-and-down')} {
+        flex-direction: column;
+
+        .#{$class-name-root}__sidebar-right {
+          position: static;
+          width: 100%;
+          max-height: none;
+          align-self: stretch;
+          flex-shrink: 1;
+        }
+
+        .#{$class-name-root}__content {
+          flex: none;
+        }
+      }
+    }
   }
 }

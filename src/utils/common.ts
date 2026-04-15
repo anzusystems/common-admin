@@ -38,7 +38,10 @@ export const isBoolean = (value: unknown): value is boolean => {
 }
 
 export const isDocId = (value: unknown): value is DocId => {
-  return isString(value) && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)
+  return (
+    isString(value) &&
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)
+  )
 }
 
 export const isInt = (value: any): value is number => {
@@ -64,7 +67,12 @@ export const isEmptyArray = (value: unknown): value is [] => {
 
 export const isEmpty = (value: unknown): boolean => {
   return (
-    isNull(value) || isUndefined(value) || value === '' || value === 0 || isEmptyArray(value) || isEmptyObject(value)
+    isNull(value) ||
+    isUndefined(value) ||
+    value === '' ||
+    value === 0 ||
+    isEmptyArray(value) ||
+    isEmptyObject(value)
   )
 }
 /**

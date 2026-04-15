@@ -14,7 +14,7 @@ const props = withDefaults(
   }>(),
   {
     showMetaIcons: false,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -37,7 +37,10 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(i
 <template>
   <div
     class="asset-list-tiles__item asset-list-tiles__item--pointer"
-    :class="{ 'asset-list-tiles__item--selected': item.selected, 'asset-list-tiles__item--active': item.active }"
+    :class="{
+      'asset-list-tiles__item--selected': item.selected,
+      'asset-list-tiles__item--active': item.active,
+    }"
     @click.stop.exact="onItemClick"
   >
     <div class="asset-list-tiles__item-card">
@@ -64,7 +67,7 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(i
         :asset-file-properties="item.asset.assetFileProperties"
         :show-meta-icons="showMetaIcons"
       />
-      <div class="asset-list-tiles__item-text text-caption px-2 py-1">
+      <div class="asset-list-tiles__item-text text-body-small px-2 py-1">
         <div class="d-flex align-center justify-space-between position-relative">
           <div class="line-clamp-1">
             {{ asset.texts.displayTitle || t('commonCoreDam.asset.list.noTitle') }}

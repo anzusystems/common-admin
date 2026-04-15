@@ -39,7 +39,7 @@ const props = withDefaults(
     dataCy: '',
     collab: undefined,
     disabled: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
@@ -66,10 +66,8 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } = useCollabField(
-    props.collab.room,
-    props.collab.field
-  )
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } =
+    useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -78,7 +76,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true }
+    { immediate: true },
   )
 }
 
@@ -139,7 +137,7 @@ watch(
       changeFieldData.value(newValue)
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
@@ -159,8 +157,7 @@ watch(
     @focus="onFocus"
   >
     <template #label>
-      <span v-if="!hideLabel">{{ labelComputed
-      }}<span
+      <span v-if="!hideLabel">{{ labelComputed }}<span
         v-if="requiredComputed"
         class="required"
       /></span>

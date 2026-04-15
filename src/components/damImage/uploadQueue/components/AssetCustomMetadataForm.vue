@@ -18,7 +18,7 @@ const props = withDefaults(
   {
     dataCy: undefined,
     readonly: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
@@ -44,7 +44,7 @@ if (isUndefined(configExtSystem)) {
 }
 
 const pinnedCount = computed(() => {
-  return configExtSystem[props.assetType].customMetadataPinnedAmount
+  return configExtSystem[props.assetType]?.customMetadataPinnedAmount || 2
 })
 </script>
 

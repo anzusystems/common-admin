@@ -46,10 +46,10 @@ export const useDamConfigStore = defineStore('commonAdminDamConfigStore', () => 
   const damConfigExtSystem = shallowRef(new Map<IntegerId, DamExtSystemConfig>())
   const damConfigLicenceExtSystem = shallowRef(new Map<IntegerId, DamConfigLicenceExtSystem>())
   const damConfigAssetCustomFormElements = shallowRef(
-    new Map<IntegerId, { [key in DamAssetTypeType]: CustomDataFormElement[] }>()
+    new Map<IntegerId, { [key in DamAssetTypeType]: CustomDataFormElement[] }>(),
   )
   const damConfigDistributionCustomFormElements = shallowRef(
-    new Map<DamDistributionServiceName, CustomDataFormElement[]>()
+    new Map<DamDistributionServiceName, CustomDataFormElement[]>(),
   )
 
   function reset() {
@@ -75,6 +75,8 @@ export const useDamConfigStore = defineStore('commonAdminDamConfigStore', () => 
   }
 })
 
+// @ts-ignore vue-tsc v3 --build mode bug: import.meta.hot type not resolved for this file
 if (import.meta.hot) {
+  // @ts-ignore see above
   import.meta.hot.accept(acceptHMRUpdate(useDamConfigStore, import.meta.hot))
 }

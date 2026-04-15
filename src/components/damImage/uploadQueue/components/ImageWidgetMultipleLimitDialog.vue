@@ -12,7 +12,7 @@ const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
   }>(),
-  {}
+  {},
 )
 
 const emit = defineEmits<{
@@ -26,13 +26,14 @@ const fileCache = ref<File[]>([])
 
 const { t } = useI18n()
 
-const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
-  ImageWidgetUploadConfig,
-  undefined
-)
+const imageWidgetUploadConfig = inject<
+  ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined
+>(ImageWidgetUploadConfig, undefined)
 
 if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.value)) {
-  throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
+  throw new Error(
+    "Fatal error, parent component doesn't provide necessary config ext system config.",
+  )
 }
 
 const uploadQueuesStore = useUploadQueuesStore()
@@ -59,7 +60,7 @@ const onDialogConfirm = async () => {
     props.queueKey,
     imageWidgetUploadConfig.value.extSystem,
     imageWidgetUploadConfig.value.licence,
-    files
+    files,
   )
   fileCache.value = []
   uploadDialogLoader.value = false
@@ -106,11 +107,16 @@ defineExpose({
         <p v-else>
           {{ t('common.damImage.upload.limits.addingOverLimit', { count: fileCache.length }) }}
           <span v-if="uploadQueueTotalCount > 0">{{
-            t('common.damImage.upload.limits.countAlreadyInProgress', { count: uploadQueueTotalCount })
+            t('common.damImage.upload.limits.countAlreadyInProgress', {
+              count: uploadQueueTotalCount,
+            })
           }}</span>
-          {{ t('common.damImage.upload.limits.onlyAllowedAtOnce', { count: MAX_UPLOAD_ITEMS }) }}<br><br>
+          {{ t('common.damImage.upload.limits.onlyAllowedAtOnce', { count: MAX_UPLOAD_ITEMS })
+          }}<br><br>
           {{
-            t('common.damImage.upload.limits.cancelOrUploadFirst', { count: MAX_UPLOAD_ITEMS - uploadQueueTotalCount })
+            t('common.damImage.upload.limits.cancelOrUploadFirst', {
+              count: MAX_UPLOAD_ITEMS - uploadQueueTotalCount,
+            })
           }}
         </p>
       </VCardText>
@@ -125,7 +131,9 @@ defineExpose({
           @click.stop="onDialogConfirm"
         >
           {{
-            t('common.damImage.upload.limits.actionAddFirstItems', { count: MAX_UPLOAD_ITEMS - uploadQueueTotalCount })
+            t('common.damImage.upload.limits.actionAddFirstItems', {
+              count: MAX_UPLOAD_ITEMS - uploadQueueTotalCount,
+            })
           }}
         </ABtnPrimary>
       </VCardActions>

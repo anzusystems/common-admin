@@ -16,13 +16,15 @@ const props = withDefaults(
   defineProps<{
     variant?: 'id' | 'createdAt' | 'most-relevant'
     customOptions?: undefined | DatatableOrderingOptions
-    paginationUpdateCustomCb?: ((option: DatatableOrderingOption, pagination: Ref<Pagination>) => void) | undefined
+    paginationUpdateCustomCb?:
+      | ((option: DatatableOrderingOption, pagination: Ref<Pagination>) => void)
+      | undefined
   }>(),
   {
     variant: 'id',
     customOptions: undefined,
     paginationUpdateCustomCb: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'sortByChange', data: DatatableOrderingOption): void
@@ -42,13 +44,29 @@ if (isUndefined(pagination)) {
 const { t } = useI18n()
 
 const defaultItemsCreatedAt: DatatableOrderingOptions = [
-  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: SortOrder.Desc } },
-  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: SortOrder.Asc } },
+  {
+    id: 1,
+    titleT: 'common.system.datatable.ordering.mostRecent',
+    sortBy: { key: 'createdAt', order: SortOrder.Desc },
+  },
+  {
+    id: 2,
+    titleT: 'common.system.datatable.ordering.oldest',
+    sortBy: { key: 'createdAt', order: SortOrder.Asc },
+  },
 ]
 
 const defaultItemsId: DatatableOrderingOptions = [
-  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'id', order: SortOrder.Desc } },
-  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'id', order: SortOrder.Asc } },
+  {
+    id: 1,
+    titleT: 'common.system.datatable.ordering.mostRecent',
+    sortBy: { key: 'id', order: SortOrder.Desc },
+  },
+  {
+    id: 2,
+    titleT: 'common.system.datatable.ordering.oldest',
+    sortBy: { key: 'id', order: SortOrder.Asc },
+  },
 ]
 
 const defaultItemsMostRelevant: DatatableOrderingOptions = [
@@ -57,8 +75,16 @@ const defaultItemsMostRelevant: DatatableOrderingOptions = [
     titleT: 'common.system.datatable.ordering.mostRelevant',
     sortBy: { key: SORT_BY_SCORE, order: SortOrder.Desc },
   },
-  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: SortOrder.Desc } },
-  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: SortOrder.Asc } },
+  {
+    id: 1,
+    titleT: 'common.system.datatable.ordering.mostRecent',
+    sortBy: { key: 'createdAt', order: SortOrder.Desc },
+  },
+  {
+    id: 2,
+    titleT: 'common.system.datatable.ordering.oldest',
+    sortBy: { key: 'createdAt', order: SortOrder.Asc },
+  },
 ]
 
 const activeTitle = computed(() => {
@@ -80,58 +106,65 @@ const onItemClick = (item: DatatableOrderingOption) => {
 
 const paginationUpdateDefault = (found: DatatableOrderingOption) => {
   if (!found.sortBy) {
-    pagination.value = { ...pagination.value, ...{ sortBy: null, descending: true } }
+    pagination.value = {
+      ...pagination.value,
+      sortBy: null,
+    }
     emit('sortByChange', found)
   }
   pagination.value.sortBy = found.sortBy
   emit('sortByChange', found)
 }
 
-watch(
-  modelValue,
-  (newValue, oldValue) => {
-    if (newValue === oldValue) return
-    const found = options.value.find((option) => {
-      return option.id === newValue
-    })
-    if (isUndefined(found)) {
-      return
-    }
-    if (isUndefined(props.paginationUpdateCustomCb)) {
-      paginationUpdateDefault(found)
-      return
-    }
-    props.paginationUpdateCustomCb(found, pagination)
+watch(modelValue, (newValue, oldValue) => {
+  if (newValue === oldValue) return
+  const found = options.value.find((option) => {
+    return option.id === newValue
+  })
+  if (isUndefined(found)) {
+    return
   }
-)
+  if (isUndefined(props.paginationUpdateCustomCb)) {
+    paginationUpdateDefault(found)
+    return
+  }
+  props.paginationUpdateCustomCb(found, pagination)
+})
 
 watch(
   pagination,
   (newValue, oldValue) => {
-    if (newValue.sortBy?.key === oldValue?.sortBy?.key && newValue.sortBy?.order === oldValue?.sortBy?.order) {
+    if (
+      newValue.sortBy?.key === oldValue?.sortBy?.key &&
+      newValue.sortBy?.order === oldValue?.sortBy?.order
+    ) {
       return
     }
     const found = options.value.find((option) => {
-      return newValue.sortBy?.key === option.sortBy?.key && newValue.sortBy?.order === option.sortBy?.order
+      return (
+        newValue.sortBy?.key === option.sortBy?.key &&
+        newValue.sortBy?.order === option.sortBy?.order
+      )
     })
     if (isUndefined(found)) {
       return
     }
     modelValue.value = found.id
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
 <template>
   <div class="d-flex align-center justify-center">
-    <div class="text-caption mr-1">
+    <div class="text-body-small mr-1">
       {{ t('common.system.datatable.ordering.title') }}:
     </div>
     <VBtn
       variant="text"
       rounded="xl"
       size="small"
+      class="text-medium-emphasis"
       append-icon="mdi-chevron-down"
     >
       {{ activeTitle }}

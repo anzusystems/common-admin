@@ -9,7 +9,11 @@ import ImageWidgetInner from '@/components/damImage/uploadQueue/components/Image
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { isUndefined } from '@/utils/common'
 import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
-import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from '@/components/collab/types/Collab'
+import {
+  type CollabComponentConfig,
+  CollabStatus,
+  type CollabStatusType,
+} from '@/components/collab/types/Collab'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import ImageMediaWidgetInner from '@/components/damImage/uploadQueue/components/ImageMediaWidgetInner.vue'
@@ -59,7 +63,7 @@ const props = withDefaults(
     callDeleteApiOnRemove: false,
     damWidth: undefined,
     damHeight: undefined,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -98,7 +102,9 @@ onMounted(async () => {
     promises.push(loadDamPrvConfig())
   }
   promises.push(getOrLoadDamConfigExtSystemByLicences(props.selectLicences))
-  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(uploadConfig.value.extSystem)
+  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(
+    uploadConfig.value.extSystem,
+  )
   if (isUndefined(configAssetCustomFormElements)) {
     promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }

@@ -31,7 +31,7 @@
     "texts": {
       "title": "Vyberte asset",
       "noItemsFound": "Žádné nalezené assety",
-      "pickExactCount": "Vyberte assety: {count}. Zvolených: {selected}." ,
+      "pickExactCount": "Vyberte assety: {count}. Zvolených: {selected}.",
       "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetů. Zvolených: {selected}.",
       "copyToLicence": "Kopírovat do licence"
     }
@@ -48,7 +48,8 @@
     "createdByIds": "Založené používateľmi",
     "inPodcast": "Podcast",
     "podcastIds": "Podcasts",
-    "distributedInServices": "Distribuované v službách"
+    "distributedInServices": "Distribuované v službách",
+    "createdAtFrom": "Vytvořeno od - do"
   },
   "assetType": {
     "image": "Obrázok",

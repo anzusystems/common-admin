@@ -16,7 +16,7 @@ export const regionToCrop = function (
   cropper: ACropperjsExposed,
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
-  originalImageHeight: number
+  originalImageHeight: number,
 ) {
   const imageData = cropper.getImageData()
   if (!imageData)
@@ -46,7 +46,7 @@ export const cropToRegion = function (
   cropper: ACropperjsExposed,
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
-  originalImageHeight: number
+  originalImageHeight: number,
 ) {
   const imageData = cropper.getImageData()
   const data = cropper.getData()
@@ -62,13 +62,15 @@ export const cropToRegion = function (
   let percentageWidth = stringToFloat((data.width / imageData.naturalWidth).toFixed(PRECISION))
   const validateWidth = percentageWidth * originalImageWidth + pointX
   if (validateWidth > originalImageWidth) {
-    percentageWidth = percentageWidth - ((validateWidth - originalImageWidth) * 100) / originalImageWidth
+    percentageWidth =
+      percentageWidth - ((validateWidth - originalImageWidth) * 100) / originalImageWidth
   }
 
   let percentageHeight = stringToFloat((data.height / imageData.naturalHeight).toFixed(PRECISION))
   const validateHeight = percentageHeight * originalImageHeight + pointY
   if (validateHeight > originalImageHeight) {
-    percentageHeight = percentageHeight - ((validateHeight - originalImageHeight) * 100) / originalImageHeight
+    percentageHeight =
+      percentageHeight - ((validateHeight - originalImageHeight) * 100) / originalImageHeight
   }
 
   regionOfInterest.pointX = pointX

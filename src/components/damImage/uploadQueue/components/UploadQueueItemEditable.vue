@@ -35,11 +35,13 @@ const props = withDefaults(
     item: UploadQueueItem
     refreshDisabled: boolean
     mainFileSingleUse: boolean | null
+    mainFileSingleUseEnabled?: boolean
     disableDoneAnimation?: boolean
   }>(),
   {
+    mainFileSingleUseEnabled: true,
     disableDoneAnimation: false,
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -152,18 +154,32 @@ const refresh = () => {
   }
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
 
 watch(
   () => props.item.status,
   async (newValue) => {
-    if (newValue === UploadQueueItemStatus.Uploading || newValue === UploadQueueItemStatus.Processing) {
+    if (
+      newValue === UploadQueueItemStatus.Uploading ||
+      newValue === UploadQueueItemStatus.Processing
+    ) {
       clearTimeout(refreshTimer.value)
       refreshTimer.value = setTimeout(() => {
-        if (newValue === UploadQueueItemStatus.Uploading || newValue === UploadQueueItemStatus.Processing) {
+        if (
+          newValue === UploadQueueItemStatus.Uploading ||
+          newValue === UploadQueueItemStatus.Processing
+        ) {
           showRefresh.value = true
         }
       }, SHOW_REFRESH_AFTER_SECONDS * 1000)
@@ -173,7 +189,7 @@ watch(
       showRefresh.value = false
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 onUnmounted(() => {
@@ -226,7 +242,7 @@ onUnmounted(() => {
             </div>
             <div
               v-if="item.error.message.length"
-              class="text-caption"
+              class="text-body-small"
               v-text="item.error.message"
             />
             <div v-else-if="item.error.assetFileFailReason !== AssetFileFailReason.None">
@@ -234,14 +250,14 @@ onUnmounted(() => {
             </div>
             <div
               v-else
-              class="text-caption"
+              class="text-body-small"
             >
               {{ t('common.damImage.uploadErrors.unknownError') }}
             </div>
           </div>
         </div>
         <VRow
-          dense
+          density="comfortable"
           class="my-2"
         >
           <VCol>
@@ -253,7 +269,7 @@ onUnmounted(() => {
                   :disabled="!item.canEditMetadata"
                   @click.stop="showDetail"
                 >
-                  {{ t('common.damImage.queueItem.edit') }}
+                  {{ t('common.damImage.image.button.editAsset') }}
                 </VBtn>
               </div>
               <div>
@@ -308,8 +324,8 @@ onUnmounted(() => {
         </VRow>
         <VRow
           v-if="item.displayTitle"
-          dense
-          class="my-2 mb-3 mt-0 text-caption"
+          density="comfortable"
+          class="my-2 mb-3 mt-0 text-body-small"
         >
           <VCol class="pt-0">
             {{ t('common.damImage.queueItem.displayTitle') }}: {{ item.displayTitle }}
@@ -318,7 +334,7 @@ onUnmounted(() => {
         </VRow>
         <VRow
           v-if="item.isDuplicate"
-          class="text-caption text-warning"
+          class="text-body-small text-warning"
         >
           <VCol class="pt-0">
             {{ t('common.damImage.asset.detail.info.status.duplicate') }}
@@ -334,7 +350,7 @@ onUnmounted(() => {
             <template #after-pinned>
               <VRow
                 v-if="keywordEnabled"
-                dense
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>
@@ -358,7 +374,7 @@ onUnmounted(() => {
               </VRow>
               <VRow
                 v-if="authorEnabled"
-                dense
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>
@@ -382,7 +398,8 @@ onUnmounted(() => {
                 </VCol>
               </VRow>
               <VRow
-                dense
+                v-if="mainFileSingleUseEnabled"
+                density="comfortable"
                 class="my-2"
               >
                 <VCol>

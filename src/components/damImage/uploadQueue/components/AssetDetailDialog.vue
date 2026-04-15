@@ -15,14 +15,22 @@ import { assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { IntegerId } from '@/types/common'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     extSystem: IntegerId
+    configName?: string
   }>(),
-  {}
+  {
+    configName: 'default',
+  },
 )
+
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
 
 const { t } = useI18n()
 
@@ -31,9 +39,13 @@ const { toolbarColor } = useTheme()
 const assetDetailStore = useAssetDetailStore()
 const { asset, dialog, activeTab, loading } = storeToRefs(assetDetailStore)
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { simpleAssetSidebarEnabled } = useCommonAdminCoreDamOptions(props.configName)
+
 const closeDialog = () => {
   assetDetailStore.setAsset(null)
   dialog.value = null
+  emit('close')
 }
 
 const sidebar = ref(true)
@@ -58,6 +70,7 @@ const assetStatus = computed(() => {
 const isTypeImage = computed(() => {
   return assetType.value === DamAssetType.Image
 })
+const simpleMode = computed(() => simpleAssetSidebarEnabled && isTypeImage.value)
 const isTypeVideo = computed(() => {
   return assetType.value === DamAssetType.Video
 })
@@ -69,7 +82,11 @@ const isTypeDocument = computed(() => {
 })
 
 const imageProperties = computed(() => {
-  if (asset.value?.mainFile && asset.value.mainFile.links && asset.value.mainFile.links.image_detail) {
+  if (
+    asset.value?.mainFile &&
+    asset.value.mainFile.links &&
+    asset.value.mainFile.links.image_detail
+  ) {
     return {
       url: asset.value.mainFile.links.image_detail.url,
       width: asset.value.mainFile.links.image_detail.width,
@@ -121,7 +138,7 @@ const assetMainFile = computed(() => {
           :height="64"
           class="system-border-b pr-1"
         >
-          <div class="text-subtitle-2 d-flex px-2">
+          <div class="text-label-large d-flex px-2">
             <div>DAM: {{ toolbarTitle }}</div>
           </div>
           <VSpacer />
@@ -136,7 +153,14 @@ const assetMainFile = computed(() => {
               :height="36"
               @click.stop="toggleSidebar"
             >
-              <VIcon icon="mdi-information-outline" />
+              <VIcon
+                icon="mdi-information-outline"
+                class="d-none d-md-flex"
+              />
+              <VIcon
+                icon="mdi-image-outline"
+                class="d-flex d-md-none"
+              />
               <VTooltip
                 activator="parent"
                 location="bottom"
@@ -162,13 +186,16 @@ const assetMainFile = computed(() => {
             </VBtn>
           </div>
         </VToolbar>
-        <div class="d-flex w-100 h-100 position-relative">
+        <div class="d-flex w-100 h-100 position-relative dam-image-detail__content">
           <div class="d-flex w-100 align-center dam-image-detail__left">
             <div
-              v-if="activeTab === AssetDetailTabImageWithRoi.ROI"
+              v-if="activeTab === AssetDetailTabImageWithRoi.ROI || simpleMode"
               class="w-100 h-100 pa-2 d-flex align-center justify-center"
             >
-              <DamAssetImageRoiSelect :ext-system="extSystem" />
+              <DamAssetImageRoiSelect
+                :ext-system="extSystem"
+                :config-name="configName"
+              />
             </div>
             <div
               v-else
@@ -193,6 +220,7 @@ const assetMainFile = computed(() => {
               :key="asset.id"
               :queue-key="queueKey"
               :ext-system="extSystem"
+              :config-name="configName"
               :asset-id="asset.id"
               :is-video="isTypeVideo"
               :is-audio="isTypeAudio"
@@ -200,8 +228,12 @@ const assetMainFile = computed(() => {
               :is-document="isTypeDocument"
               :asset-status="assetStatus"
               :asset-type="assetType"
-              :asset-main-file-status="assetMainFile ? assetMainFile.fileAttributes.status : undefined"
-              :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
+              :asset-main-file-status="
+                assetMainFile ? assetMainFile.fileAttributes.status : undefined
+              "
+              :asset-main-file-fail-reason="
+                assetMainFile ? assetMainFile.fileAttributes.failReason : undefined
+              "
             />
           </div>
         </div>

@@ -9,7 +9,9 @@ import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId } from '@/types/common'
 
-type FetchItemsMinimalByIdsType = ((ids: IntegerId[]) => Promise<any[]>) | ((ids: DocId[]) => Promise<any[]>)
+type FetchItemsMinimalByIdsType =
+  | ((ids: IntegerId[]) => Promise<any[]>)
+  | ((ids: DocId[]) => Promise<any[]>)
 
 type FetchItemsMinimalType = (pagination: Pagination, filterBag: FilterBag) => Promise<any[]>
 
@@ -33,7 +35,7 @@ const props = withDefaults(
     placeholder: undefined,
     itemTitle: 'name',
     itemValue: 'id',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: Filter): void
@@ -44,7 +46,10 @@ const modelValueComputed = computed({
     return props.modelValue.model
   },
   set(newValue: DocId | IntegerId | DocId[] | IntegerId[] | null) {
-    emit('update:modelValue', { ...props.modelValue, ...{ model: cloneDeep(newValue) } })
+    emit('update:modelValue', {
+      ...props.modelValue,
+      model: cloneDeep(newValue),
+    })
   },
 })
 
@@ -114,7 +119,9 @@ const apiSearch = async (query: string, requestCounter: number) => {
 }
 
 const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
-  const found = allItems.value.filter((item: ValueObjectOption<string | number>) => values.includes(item.value))
+  const found = allItems.value.filter((item: ValueObjectOption<string | number>) =>
+    values.includes(item.value),
+  )
   return ([] as ValueObjectOption<string | number>[]).concat(found)
 }
 
@@ -175,7 +182,8 @@ const onClickClear = async () => {
 
 const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
-  if (props.modelValue.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
+  if (props.modelValue.variant === 'startsWith')
+    return t('common.model.filterPlaceholder.startsWith')
   if (props.modelValue.variant === 'eq') return t('common.model.filterPlaceholder.eq')
   if (props.modelValue.variant === 'contains' || props.modelValue.variant === 'search')
     return t('common.model.filterPlaceholder.contains')
@@ -198,7 +206,9 @@ watch(
     if (found) return
     if (isArray<IntegerId | DocId>(newValue)) {
       loading.value = true
-      selectedItemsCache.value = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
+      selectedItemsCache.value = await props.fetchItemsMinimalByIds(
+        newValue as Array<IntegerId & DocId>,
+      )
       loading.value = false
       return
     }
@@ -206,7 +216,7 @@ watch(
     selectedItemsCache.value = await props.fetchItemsMinimalByIds([newValue as DocId & IntegerId])
     loading.value = false
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 watchDebounced(
@@ -218,7 +228,7 @@ watchDebounced(
       apiSearch(newValue, apiRequestCounter.value)
     }
   },
-  { debounce: 300 }
+  { debounce: 300 },
 )
 </script>
 
@@ -239,7 +249,7 @@ watchDebounced(
     @click:clear="onClickClear"
   >
     <!-- @vue-skip -->
-    <template #item="{ props: itemProps, item: itemItem }">
+    <template #item="{ props: itemProps, internalItem: itemItem }">
       <slot
         name="item"
         :item="itemItem"
@@ -253,7 +263,7 @@ watchDebounced(
       </slot>
     </template>
     <!-- @vue-skip -->
-    <template #chip="{ props: chipProps, item: chipItem }">
+    <template #chip="{ props: chipProps, internalItem: chipItem }">
       <slot
         name="chip"
         :props="chipProps"

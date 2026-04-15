@@ -3,7 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   type DatatableOrderingOption,
-  type DatatableOrderingOptions, SORT_BY_SCORE,
+  type DatatableOrderingOptions,
+  SORT_BY_SCORE,
   SortOrder,
 } from '@/composables/system/datatableColumns'
 import { isUndefined } from '@/utils/common'
@@ -18,7 +19,7 @@ const props = withDefaults(
     modelValue: 1,
     variant: 'default',
     customOptions: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: number): void
@@ -41,13 +42,29 @@ const modelValueComputed = computed({
 })
 
 const defaultItems: DatatableOrderingOptions = [
-  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: SortOrder.Desc } },
-  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: SortOrder.Asc } },
+  {
+    id: 1,
+    titleT: 'common.system.datatable.ordering.mostRecent',
+    sortBy: { key: 'createdAt', order: SortOrder.Desc },
+  },
+  {
+    id: 2,
+    titleT: 'common.system.datatable.ordering.oldest',
+    sortBy: { key: 'createdAt', order: SortOrder.Asc },
+  },
 ]
 
 const defaultItemsId: DatatableOrderingOptions = [
-  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'id', order: SortOrder.Desc } },
-  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'id', order: SortOrder.Asc } },
+  {
+    id: 1,
+    titleT: 'common.system.datatable.ordering.mostRecent',
+    sortBy: { key: 'id', order: SortOrder.Desc },
+  },
+  {
+    id: 2,
+    titleT: 'common.system.datatable.ordering.oldest',
+    sortBy: { key: 'id', order: SortOrder.Asc },
+  },
 ]
 
 const defaultItemsMostRelevant: DatatableOrderingOptions = [
@@ -56,8 +73,16 @@ const defaultItemsMostRelevant: DatatableOrderingOptions = [
     titleT: 'common.system.datatable.ordering.mostRelevant',
     sortBy: { key: SORT_BY_SCORE, order: SortOrder.Desc },
   },
-  { id: 1, titleT: 'common.system.datatable.ordering.mostRecent', sortBy: { key: 'createdAt', order: SortOrder.Desc } },
-  { id: 2, titleT: 'common.system.datatable.ordering.oldest', sortBy: { key: 'createdAt', order: SortOrder.Asc } },
+  {
+    id: 1,
+    titleT: 'common.system.datatable.ordering.mostRecent',
+    sortBy: { key: 'createdAt', order: SortOrder.Desc },
+  },
+  {
+    id: 2,
+    titleT: 'common.system.datatable.ordering.oldest',
+    sortBy: { key: 'createdAt', order: SortOrder.Asc },
+  },
 ]
 
 const activeTitle = computed(() => {
@@ -84,7 +109,7 @@ watch(
     const found = options.value.find((item: any) => item.id === newValue)
     if (found) emit('sortByChange', found)
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 watch(
@@ -93,19 +118,20 @@ watch(
     if (isUndefined(oldValue) || newValue === oldValue) return
     active.value = newValue
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
 <template>
   <div class="d-flex align-center justify-center">
-    <div class="text-caption mr-1">
+    <div class="text-body-small mr-1">
       {{ t('common.system.datatable.ordering.title') }}:
     </div>
     <VBtn
       variant="text"
       rounded="xl"
       size="small"
+      class="text-medium-emphasis"
       append-icon="mdi-chevron-down"
     >
       {{ activeTitle }}

@@ -1,11 +1,20 @@
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiResponseCodeError,
+  isAnzuApiResponseCodeError,
+} from '@/model/error/AnzuApiResponseCodeError'
+import {
+  AnzuApiValidationError,
+  axiosErrorResponseHasValidationData,
+} from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { AxiosRequestConfig } from 'axios'
 import axios from 'axios'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import {
+  AnzuApiForbiddenError,
+  axiosErrorResponseIsForbidden,
+} from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
 import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
@@ -27,12 +36,29 @@ import type { Pagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
 import type { AxiosClientFn } from '@/labs/api/client'
 
+export type UseApiFetchListParams = {
+  client: AxiosClientFn
+  system: string
+  entity: string
+  urlTemplate?: string
+  urlParams?: UrlParams
+  options?: AxiosRequestConfig
+  silentConsoleError?: boolean
+}
+
+export type FetchListParams = {
+  urlTemplate?: string
+  urlParams?: UrlParams
+  forceElastic?: boolean
+}
+
 export const generateListQuery = (
   pagination: Ref<Pagination>,
   filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>
+  filterConfig: FilterConfig<any>,
 ): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } =
+    useApiQueryBuilder()
   querySetLimit(pagination.value.rowsPerPage)
   querySetOffset(pagination.value.page, pagination.value.rowsPerPage)
   if (pagination.value.sortBy) {
@@ -42,36 +68,40 @@ export const generateListQuery = (
   return queryBuild()
 }
 
-/**
- * @template R Response type override, optional
- */
-export const useApiFetchList = <R>(
-  client: AxiosClientFn,
-  system: string,
-  entity: string,
-  urlTemplate: string | undefined = undefined,
-  urlParams: UrlParams | undefined = undefined,
-  options: AxiosRequestConfig = {}
-): UseApiFetchListReturnType<R> => {
+export const useApiFetchList = <R>(params: UseApiFetchListParams): UseApiFetchListReturnType<R> => {
+  const {
+    client,
+    system,
+    entity,
+    urlTemplate,
+    urlParams,
+    options = {},
+    silentConsoleError = false,
+  } = params
+
   let abortController: AbortController | null = null
 
   const executeFetch = async (
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    urlTemplateOverride: string | undefined = undefined,
-    urlParamsOverride: UrlParams | undefined = undefined,
-    forceElastic = false
+    fetchParams: FetchListParams = {},
   ): Promise<R> => {
     abortController = new AbortController()
 
+    const {
+      urlTemplate: urlTemplateOverride,
+      urlParams: urlParamsOverride,
+      forceElastic = false,
+    } = fetchParams
+
     try {
       const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
-      const params = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+      const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
       const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
       if (isUndefined(template)) throw new Error('Url template is undefined')
       const url =
-        (isUndefined(params) ? template : replaceUrlParameters(template, params)) +
+        (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) +
         searchApi +
         generateListQuery(pagination, filterData, filterConfig)
 
@@ -89,12 +119,14 @@ export const useApiFetchList = <R>(
         if (isApiInfiniteResponseList(resData)) {
           pagination.value = {
             ...pagination.value,
-            ...{ hasNextPage: resData.hasNextPage, currentViewCount: res.data.data.length },
+            hasNextPage: resData.hasNextPage,
+            currentViewCount: res.data.data.length,
           }
         } else if (isApiResponseList(resData)) {
           pagination.value = {
             ...pagination.value,
-            ...{ totalCount: resData.totalCount, currentViewCount: res.data.data.length },
+            totalCount: resData.totalCount,
+            currentViewCount: res.data.data.length,
           }
         }
         return resData.data
@@ -135,11 +167,12 @@ export const useApiFetchList = <R>(
       }
 
       if (axios.isAxiosError(err)) {
-        console.error('Axios error: ' + urlTemplateOverride, err.cause)
+        if (!silentConsoleError)
+          console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 
-      console.error('AnzuFatalError: ', err)
+      if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
       abortController = null
@@ -163,9 +196,7 @@ export type UseApiFetchListReturnType<R> = {
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    urlTemplateOverride?: string | undefined,
-    urlParamsOverride?: UrlParams | undefined,
-    forceElastic?: boolean
+    params?: FetchListParams,
   ) => Promise<R>
   abortFetch: () => void
 }

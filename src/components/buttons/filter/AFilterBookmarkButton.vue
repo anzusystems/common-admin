@@ -24,7 +24,7 @@ withDefaults(
     dataCy: 'filter-bookmark',
     datatableHiddenColumns: undefined,
     datatableSortBy: undefined,
-  }
+  },
 )
 
 const dialog = defineModel<boolean>('dialog', { default: false, required: false })
@@ -40,15 +40,14 @@ const { t } = useI18n()
 <template>
   <VBtn
     :class="buttonClass"
-    class="px-2"
     :data-cy="dataCy"
-    color="light"
+    class="text-medium-emphasis px-2"
     min-width="36px"
     variant="flat"
     @click.stop="onClick"
   >
     <VIcon
-      color="grey darken-1"
+      color="grey-darken-1"
       icon="mdi-bookmark-outline"
     />
     <VTooltip

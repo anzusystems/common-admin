@@ -27,7 +27,7 @@ const props = withDefaults(
     clearable: false,
     dataCy: '',
     hideDetails: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId | null | IntegerId[] | any): void
@@ -42,7 +42,10 @@ const modelValueComputed = computed({
   },
 })
 
-const selected = defineModel<ValueObjectOption<IntegerId>[]>('selected', { required: false, default: () => [] })
+const selected = defineModel<ValueObjectOption<IntegerId>[]>('selected', {
+  required: false,
+  default: () => [],
+})
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItems, fetchItemsByIds } = useAssetLicenceGroupSelectActions(props.client)

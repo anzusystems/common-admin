@@ -29,7 +29,7 @@ const props = withDefaults(
     dataCy: '',
     extSystemId: null,
     hideDetails: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId | null | IntegerId[] | any): void
@@ -44,7 +44,10 @@ const modelValueComputed = computed({
   },
 })
 
-const selected = defineModel<ValueObjectOption<IntegerId>[]>('selected', { required: false, default: () => [] })
+const selected = defineModel<ValueObjectOption<IntegerId>[]>('selected', {
+  required: false,
+  default: () => [],
+})
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItems, fetchItemsByIds } = useAssetLicenceSelectActions(props.client)
@@ -61,7 +64,7 @@ watch(
     if (newValue === oldValue) return
     modelValueComputed.value = props.multiple ? [] : null
     filterData.extSystem = newValue
-  }
+  },
 )
 </script>
 

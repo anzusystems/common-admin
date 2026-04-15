@@ -1,6 +1,9 @@
 import { computed, type ComputedRef, nextTick, type Ref, ref } from 'vue'
 import type { UseSortableReturn } from '@vueuse/integrations/useSortable'
-import type { SortableItemDataAware, SortableItemNewPositions } from '@/components/sortable/sortableUtils'
+import type {
+  SortableItemDataAware,
+  SortableItemNewPositions,
+} from '@/components/sortable/sortableUtils'
 import type { DocId, IntegerId } from '@/types/common'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
 import { generateUUIDv1 } from '@/utils/generator'
@@ -50,17 +53,30 @@ export function useSortableActions(
   model: Readonly<Ref<SortablePropItem[]>>,
   initSortableCallback: () => void,
   props: SortableActionsProps,
-  emit: SortableEmit
+  emit: SortableEmit,
 ): {
   removeByIndex: (index: number) => SortableItemNewPositions
-  updateDataAtIndex: (index: number, data: SortablePropItem, position: number | null, dirty?: boolean | null) => void
+  updateDataAtIndex: (
+    index: number,
+    data: SortablePropItem,
+    position: number | null,
+    dirty?: boolean | null,
+  ) => void
   onRemoveDialogConfirm: () => void
   removeById: (id: DocId | IntegerId) => SortableItemNewPositions
-  updateData: (id: DocId | IntegerId, data: SortablePropItem, position: number | null, dirty?: boolean | null) => void
+  updateData: (
+    id: DocId | IntegerId,
+    data: SortablePropItem,
+    position: number | null,
+    dirty?: boolean | null,
+  ) => void
   refresh: () => void
   destroy: () => void
   removeDialog: Ref<boolean>
-  addAfterId: (targetId: DocId | IntegerId | null, data: SortablePropItem) => SortableItemNewPositions
+  addAfterId: (
+    targetId: DocId | IntegerId | null,
+    data: SortablePropItem,
+  ) => SortableItemNewPositions
   forceRerender: Ref<number>
   dirtyLocal: Ref<Set<DocId | IntegerId>>
   widgetEl: Ref<HTMLElement | null>
@@ -113,7 +129,7 @@ export function useSortableActions(
     items: SortablePropItem[],
     oldIndex: number,
     newIndex: number,
-    updatedPositions: SortableItemNewPositions = []
+    updatedPositions: SortableItemNewPositions = [],
   ) => {
     const start = oldIndex > newIndex ? newIndex : oldIndex
     let position = props.positionMultiplier * start + props.positionMultiplier * 1
@@ -155,7 +171,7 @@ export function useSortableActions(
     item: SortablePropItem,
     data: SortablePropItem,
     position: number | null,
-    dirty: null | boolean = null
+    dirty: null | boolean = null,
   ) => {
     item.data = cloneDeep(data)
     if (!isNull(position)) item.data.position = position
@@ -172,7 +188,7 @@ export function useSortableActions(
     id: DocId | IntegerId,
     data: SortablePropItem,
     position: number | null = null,
-    dirty: null | boolean = null
+    dirty: null | boolean = null,
   ) => {
     const clonedData = cloneDeep(model.value)
     const foundIndex = findItemIndexById(id, clonedData)
@@ -186,7 +202,7 @@ export function useSortableActions(
     index: number,
     data: SortablePropItem,
     position: number | null,
-    dirty: null | boolean = null
+    dirty: null | boolean = null,
   ) => {
     const clonedData = cloneDeep(model.value)
     if (clonedData[index]) {
@@ -198,7 +214,10 @@ export function useSortableActions(
   /**
    * @template targetIndex null value is when push as last item
    */
-  const addAfterIndex = (targetIndex: number | null, data: SortablePropItem): SortableItemNewPositions => {
+  const addAfterIndex = (
+    targetIndex: number | null,
+    data: SortablePropItem,
+  ): SortableItemNewPositions => {
     const clonedData = cloneDeep(model.value)
 
     if (isNull(targetIndex) || targetIndex < 0) {
@@ -221,7 +240,10 @@ export function useSortableActions(
   /**
    * @template targetId null value is when push as last item
    */
-  const addAfterId = (targetId: DocId | IntegerId | null, data: SortablePropItem): SortableItemNewPositions => {
+  const addAfterId = (
+    targetId: DocId | IntegerId | null,
+    data: SortablePropItem,
+  ): SortableItemNewPositions => {
     const clonedData = cloneDeep(model.value)
 
     if (isNull(targetId)) {

@@ -3,10 +3,14 @@ import type { DamUser } from '@/components/dam/user/DamUser'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { IntegerId } from '@/types/common'
 import type { Pagination } from '@/labs/filters/pagination'
-import { fetchDamUserList, fetchDamUserListByIds, useFetchDamUserList } from '@/components/dam/user/userApi'
+import {
+  fetchDamUserList,
+  fetchDamUserListByIds,
+  useFetchDamUserList,
+} from '@/components/dam/user/userApi'
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
-// eslint-disable-next-line deprecation/no-deprecated-imports
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 import type { Pagination as PaginationLegacy } from '@/types/Pagination'
 
@@ -22,7 +26,11 @@ export const useDamUserSelectAction = (client: () => AxiosInstance) => {
 
   const { executeFetch } = useFetchDamUserList(client)
 
-  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const fetchItems = async (
+    pagination: Ref<Pagination>,
+    filterData: FilterData,
+    filterConfig: FilterConfig,
+  ) => {
     return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
   }
 

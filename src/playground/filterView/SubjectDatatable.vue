@@ -8,7 +8,11 @@ import { useSubjectListActions } from '@/playground/filterView/subjectTools'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
-import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import {
+  DatatablePaginationKey,
+  FilterConfigKey,
+  FilterDataKey,
+} from '@/labs/filters/filterInjectionKeys'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { usePagination } from '@/labs/filters/pagination'
 import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
@@ -42,7 +46,7 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
     { key: 'rubric' },
     { key: 'articleAuthors', maxWidth: 150 },
     { key: 'status' },
-    { key: 'stages', title: t('cms.articleStage.datatable.stage') },
+    { key: 'stages', title: t('system.subject.model.stages') },
     { key: 'dates.publicPublishedAt' },
     { key: 'dates.expireAt' },
     { key: 'dates.publishedAt' },
@@ -52,7 +56,7 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
   ],
   datatableHiddenColumns,
   'system',
-  'subject'
+  'subject',
 )
 
 const getList = useDebounceFn(() => {

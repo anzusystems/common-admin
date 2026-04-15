@@ -7,7 +7,6 @@ import { useCommonAdminImageOptions } from '@/components/damImage/composables/co
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import type { IntegerIdNullable } from '@/types/common'
 import { useAlerts } from '@/composables/system/alerts'
-import { fetchImage } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
@@ -26,6 +25,7 @@ const props = withDefaults(
     damHeight?: undefined | number
     useHtmlImg?: boolean
     widgetClass?: string | undefined
+    sourceLabel?: string | undefined
   }>(),
   {
     configName: 'default',
@@ -41,14 +41,15 @@ const props = withDefaults(
     damHeight: undefined,
     useHtmlImg: false,
     widgetClass: undefined,
-  }
+    sourceLabel: undefined,
+  },
 )
 
 const { showErrorsDefault } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
-const { imageClient } = imageOptions
+const { imageClient, imageApi } = imageOptions
 const { widgetImageToDamImageUrl } = useImageActions(imageOptions)
 
 const resImage = ref<null | ImageAware | ImageCreateUpdateAware>(null)
@@ -80,7 +81,7 @@ watch(
     }
     if (newImageId) {
       try {
-        resImage.value = await fetchImage(imageClient, newImageId)
+        resImage.value = await imageApi.fetchImage(imageClient, newImageId)
       } catch (error) {
         showErrorsDefault(error)
       }
@@ -89,17 +90,19 @@ watch(
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
 <template>
-  <h4
+  <div
     v-if="label"
-    class="font-weight-bold text-subtitle-2"
+    class="label-container"
   >
-    {{ label }}
-  </h4>
+    <h4 class="font-weight-bold text-label-large">
+      {{ label }}
+    </h4>
+  </div>
   <img
     v-if="useHtmlImg"
     alt=""
@@ -121,6 +124,11 @@ watch(
     :class="widgetClass"
     :aspect-ratio="disableAspectRatio ? undefined : aspectRatio"
   >
+    <template #error>
+      <div class="d-flex align-center justify-center h-100">
+        <VIcon icon="mdi-alert-circle-outline" />
+      </div>
+    </template>
     <template #placeholder>
       <div class="d-flex align-center justify-center h-100">
         <VProgressCircular
@@ -136,19 +144,21 @@ watch(
   >
     <VRow
       v-if="showDescription"
-      dense
+      density="comfortable"
     >
       <VCol>
-        <span class="text-caption text-medium-emphasis">{{ t('common.damImage.image.model.texts.description') }}:</span>
+        <span class="text-body-small text-medium-emphasis">
+          {{ t('common.damImage.image.model.texts.description') }}:
+        </span>
         <br>{{ resImage.texts.description }}
       </VCol>
     </VRow>
     <VRow
       v-if="showSource"
-      dense
+      density="comfortable"
     >
       <VCol>
-        <span class="text-caption text-medium-emphasis"> {{ t('common.damImage.image.model.texts.source') }}:</span>
+        <span class="text-body-small text-medium-emphasis"> {{ sourceLabel }}: </span>
         <br>{{ resImage.texts.source }}
       </VCol>
     </VRow>
@@ -159,8 +169,14 @@ watch(
   />
 </template>
 
-<style lang="scss">
-.v-img.disable-radius .v-img__img {
+<style lang="scss" scoped>
+:deep(.v-img.disable-radius .v-img__img) {
   border-radius: 0;
+}
+
+.label-container {
+  display: flex;
+  height: 32px;
+  align-items: center;
 }
 </style>

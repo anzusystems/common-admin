@@ -1,10 +1,12 @@
 <script lang="ts" setup generic="TItem">
-import { computed, onMounted, ref, toRaw, withModifiers } from 'vue'
+import { computed, onMounted, provide, ref, toRaw, withModifiers } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import type { Pagination } from '@/labs/filters/pagination'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
+import { SubjectSelectCloseSidebarKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -26,7 +28,7 @@ const props = withDefaults(
     dialogTitleT: 'common.subjectSelect.texts.title',
     paginationMode: 'standard',
     autoOpen: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
@@ -56,7 +58,14 @@ const paginationComputed = computed({
   },
 })
 
-const sidebarLeft = ref(true)
+const { mdAndDown } = useDisplay()
+const sidebarLeft = ref(!mdAndDown.value)
+
+const closeSidebarOnMobile = () => {
+  if (mdAndDown.value) sidebarLeft.value = false
+}
+
+provide(SubjectSelectCloseSidebarKey, closeSidebarOnMobile)
 
 const { t } = useI18n()
 
@@ -70,7 +79,7 @@ const disabledSubmit = computed(() => {
 
 const onOpen = () => {
   emit('onOpen')
-  sidebarLeft.value = true
+  sidebarLeft.value = !mdAndDown.value
   dialog.value = true
 }
 
@@ -85,7 +94,7 @@ const onClose = () => {
 const onConfirm = () => {
   emit(
     'onConfirm',
-    props.selectedItems.map((item) => toRaw(item))
+    props.selectedItems.map((item) => toRaw(item)),
   )
   onClose()
 }
@@ -104,7 +113,8 @@ const lastPage = computed(() => {
 
 const hasNextPage = computed(() => {
   return !(
-    (isNull(paginationComputed.value.hasNextPage) && paginationComputed.value.page === lastPage.value) ||
+    (isNull(paginationComputed.value.hasNextPage) &&
+      paginationComputed.value.page === lastPage.value) ||
     paginationComputed.value.hasNextPage === false
   )
 })
@@ -123,6 +133,7 @@ onMounted(() => {
 
 defineExpose({
   open: onOpen,
+  closeSidebarOnMobile,
 })
 </script>
 
@@ -223,7 +234,12 @@ defineExpose({
       </div>
       <div class="subject-select__actions system-border-t">
         <div v-if="minCount === maxCount">
-          {{ t('common.subjectSelect.texts.pickExactCount', { count: minCount, selected: selectedItemsCount }) }}
+          {{
+            t('common.subjectSelect.texts.pickExactCount', {
+              count: minCount,
+              selected: selectedItemsCount,
+            })
+          }}
         </div>
         <div v-else>
           {{

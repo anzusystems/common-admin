@@ -4,6 +4,7 @@ import { isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
 import { useThrottleFn } from '@vueuse/core'
+import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
 withDefaults(
   defineProps<{
@@ -13,7 +14,7 @@ withDefaults(
   {
     itemsPerPageOptions: () => [10, 25, 50],
     hideRecordsPerPage: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -26,6 +27,7 @@ if (isUndefined(pagination)) {
 }
 
 const { t } = useI18n()
+const { setStoredPage } = useDatatablePageStore()
 
 const lastPage = computed(() => {
   return Math.ceil(pagination.value.totalCount / pagination.value.rowsPerPage)
@@ -72,16 +74,17 @@ watch(
       pagination.value.page = 1
       emit('change')
     }
-  }
+  },
 )
 
 watch(
   () => pagination.value.page,
   (newValue, oldValue) => {
     if (newValue !== oldValue) {
+      setStoredPage(newValue)
       emit('change')
     }
-  }
+  },
 )
 
 const onClickFirst = useThrottleFn(() => {
@@ -129,7 +132,8 @@ const onClickNext = useThrottleFn(() => {
       </VBtnToggle>
     </div>
     <div class="anzu-data-footer__pagination">
-      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.system.datatable.from') }} {{ computedTotalCountText }}
+      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.system.datatable.from') }}
+      {{ computedTotalCountText }}
     </div>
     <div class="anzu-data-footer__icons-before">
       <VBtn
