@@ -246,6 +246,159 @@ const anzuPlugin = {
       },
     },
 
+    'url-params-match-template': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'Ensure urlParams keys match the :placeholders declared in urlTemplate ' +
+            'for useApiRequest / useApiFetchList / useApiFetchByIds / useApiFetchListBatch calls.',
+        },
+        schema: [],
+      },
+      create(context) {
+        const TARGET_CALLEES = new Set([
+          'useApiRequest',
+          'useApiFetchList',
+          'useApiFetchByIds',
+          'useApiFetchListBatch',
+        ])
+
+        const PLACEHOLDER_RE = /:([a-zA-Z_][\w]*)/g
+
+        const getCalleeName = (callee) => {
+          if (callee.type === 'Identifier') return callee.name
+          if (callee.type === 'MemberExpression' && callee.property.type === 'Identifier') {
+            return callee.property.name
+          }
+          return null
+        }
+
+        const findProperty = (objectExpr, name) => {
+          for (const prop of objectExpr.properties) {
+            if (prop.type !== 'Property' || prop.computed) continue
+            const key = prop.key
+            const keyName =
+              key.type === 'Identifier' ? key.name : key.type === 'Literal' ? key.value : null
+            if (keyName === name) return prop
+          }
+          return null
+        }
+
+        const resolveIdentifierToString = (identNode) => {
+          const scope = context.sourceCode.getScope(identNode)
+          let cur = scope
+          while (cur) {
+            const variable = cur.variables.find((v) => v.name === identNode.name)
+            if (variable && variable.defs.length === 1) {
+              const def = variable.defs[0]
+              if (
+                def.type === 'Variable' &&
+                def.node.type === 'VariableDeclarator' &&
+                def.parent &&
+                def.parent.kind === 'const' &&
+                def.node.init
+              ) {
+                return resolveToString(def.node.init)
+              }
+            }
+            cur = cur.upper
+          }
+          return null
+        }
+
+        const resolveToString = (node) => {
+          if (!node) return null
+          if (node.type === 'Literal' && typeof node.value === 'string') return node.value
+          if (node.type === 'TemplateLiteral') {
+            let out = ''
+            for (let i = 0; i < node.quasis.length; i++) {
+              out += node.quasis[i].value.cooked
+              if (i < node.expressions.length) {
+                const part = resolveToString(node.expressions[i])
+                if (part === null) return null
+                out += part
+              }
+            }
+            return out
+          }
+          if (node.type === 'BinaryExpression' && node.operator === '+') {
+            const left = resolveToString(node.left)
+            const right = resolveToString(node.right)
+            if (left === null || right === null) return null
+            return left + right
+          }
+          if (node.type === 'Identifier') return resolveIdentifierToString(node)
+          return null
+        }
+
+        const collectStaticKeys = (objectExpr) => {
+          const keys = []
+          for (const prop of objectExpr.properties) {
+            if (prop.type !== 'Property') return null
+            if (prop.computed) return null
+            const key = prop.key
+            if (key.type === 'Identifier') keys.push(key.name)
+            else if (key.type === 'Literal' && typeof key.value === 'string') keys.push(key.value)
+            else return null
+          }
+          return keys
+        }
+
+        return {
+          CallExpression(node) {
+            const name = getCalleeName(node.callee)
+            if (!name || !TARGET_CALLEES.has(name)) return
+
+            const arg = node.arguments[0]
+            if (!arg || arg.type !== 'ObjectExpression') return
+
+            const templateProp = findProperty(arg, 'urlTemplate')
+            const paramsProp = findProperty(arg, 'urlParams')
+            if (!templateProp || !paramsProp) return
+            if (paramsProp.value.type !== 'ObjectExpression') return
+
+            const resolved = resolveToString(templateProp.value)
+            if (resolved === null) return
+
+            const placeholders = new Set()
+            let match
+            PLACEHOLDER_RE.lastIndex = 0
+            while ((match = PLACEHOLDER_RE.exec(resolved)) !== null) {
+              placeholders.add(match[1])
+            }
+
+            const paramKeys = collectStaticKeys(paramsProp.value)
+            if (paramKeys === null) return
+
+            const paramKeySet = new Set(paramKeys)
+
+            for (const placeholder of placeholders) {
+              if (!paramKeySet.has(placeholder)) {
+                context.report({
+                  node: paramsProp,
+                  message:
+                    `urlParams is missing key '${placeholder}' required by urlTemplate ` +
+                    `'${resolved}'.`,
+                })
+              }
+            }
+
+            for (const key of paramKeys) {
+              if (!placeholders.has(key)) {
+                context.report({
+                  node: paramsProp,
+                  message:
+                    `urlParams key '${key}' has no matching ':${key}' placeholder in urlTemplate ` +
+                    `'${resolved}'.`,
+                })
+              }
+            }
+          },
+        }
+      },
+    },
+
     'no-fatal-error-axios-check': {
       meta: {
         type: 'problem',
@@ -326,6 +479,7 @@ export function recommended(options = {}) {
   const {
     noTsExtension = 'error',
     noFatalErrorAxiosCheck = 'error',
+    urlParamsMatchTemplate = 'error',
     deprecatedImports = 'error',
   } = options
 
@@ -341,6 +495,12 @@ export function recommended(options = {}) {
   const fatalSeverity = normalizeSeverity(noFatalErrorAxiosCheck)
   if (fatalSeverity) {
     rules['anzu/no-fatal-error-axios-check'] = fatalSeverity
+  }
+
+  // url-params-match-template
+  const urlParamsSeverity = normalizeSeverity(urlParamsMatchTemplate)
+  if (urlParamsSeverity) {
+    rules['anzu/url-params-match-template'] = urlParamsSeverity
   }
 
   // no-deprecated-imports
