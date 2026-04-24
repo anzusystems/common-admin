@@ -1,8 +1,8 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
 import { useI18n } from 'vue-i18n'
-import ANestedRowSelf from './ANestedRow.vue'
-import ALeDragHandle from '@/labs/listEditor/internal/ALeDragHandle.vue'
-import ALeUnsavedLabel from '@/labs/listEditor/internal/ALeUnsavedLabel.vue'
+import LeNestedRowSelf from './LeNestedRow.vue'
+import LeDragHandle from '@/labs/listEditor/internal/LeDragHandle.vue'
+import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
 import type {
   ListEditorKey,
   ListEditorValidationState,
@@ -29,7 +29,7 @@ const props = defineProps<Props>()
 // Vue's template compiler triggers when a `<script setup generic>` component
 // imports itself for recursion. The runtime behaviour is unaffected.
 
-const ANestedRow = ANestedRowSelf as any
+const LeNestedRow = LeNestedRowSelf as any
 
 const { t } = useI18n()
 
@@ -93,7 +93,7 @@ const directChildren = (): any[] =>
         class="a-le-row-header"
         @click="callbacks.onRowClick(vi)"
       >
-        <ALeDragHandle
+        <LeDragHandle
           v-if="context.dragEnabled"
           :class="HANDLE_CLASS"
         />
@@ -150,7 +150,7 @@ const directChildren = (): any[] =>
             />
             +{{ vi.childrenCount }}
           </span>
-          <ALeUnsavedLabel v-if="vi.unsaved" />
+          <LeUnsavedLabel v-if="vi.unsaved" />
         </div>
 
         <div
@@ -456,7 +456,7 @@ const directChildren = (): any[] =>
         :class="[GROUP_CLASS]"
         :data-parent-id="String(vi.key)"
       >
-        <ANestedRow
+        <LeNestedRow
           v-for="child in directChildren()"
           :key="String(child.key)"
           :vi="child"
@@ -513,7 +513,7 @@ const directChildren = (): any[] =>
               v-bind="slotScope"
             />
           </template>
-        </ANestedRow>
+        </LeNestedRow>
       </div>
     </div>
   </div>

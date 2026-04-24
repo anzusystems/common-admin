@@ -6,9 +6,9 @@ import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
-import ALeDeleteDialog from '@/labs/listEditor/internal/ALeDeleteDialog.vue'
-import ALeEmptyState from '@/labs/listEditor/internal/ALeEmptyState.vue'
-import ALeUnsavedLabel from '@/labs/listEditor/internal/ALeUnsavedLabel.vue'
+import LeDeleteDialog from '@/labs/listEditor/internal/LeDeleteDialog.vue'
+import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
+import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
 import type {
   ListEditorKey,
   ListEditorValidationState,
@@ -431,7 +431,7 @@ defineExpose({
           :disabled="disabled"
           :actions="{ add: onAddClick }"
         >
-          <ALeEmptyState
+          <LeEmptyState
             :title="emptyTitleResolved"
             :text="emptyTextResolved"
             :add-label="addLabelResolved"
@@ -475,7 +475,7 @@ defineExpose({
                   {{ resolveCompactText(vi.raw, vi.key) }}
                 </span>
               </slot>
-              <ALeUnsavedLabel v-if="vi.dirty" />
+              <LeUnsavedLabel v-if="vi.dirty" />
             </div>
 
             <div
@@ -670,7 +670,7 @@ defineExpose({
       </slot>
     </div>
 
-    <ALeDeleteDialog
+    <LeDeleteDialog
       v-model="deleteDialog"
       :title="deleteConfirmTitleResolved"
       :text="deleteConfirmTextResolved"

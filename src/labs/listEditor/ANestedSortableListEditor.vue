@@ -35,10 +35,10 @@ import type {
 } from '@/labs/listEditor/types/listEditorTypes'
 import { useAlerts } from '@/composables/system/alerts'
 import { stringToInt } from '@/utils/string'
-import ANestedRow from '@/labs/listEditor/ANestedRow.vue'
-import ALeDeleteDialog from '@/labs/listEditor/internal/ALeDeleteDialog.vue'
-import ALeEmptyState from '@/labs/listEditor/internal/ALeEmptyState.vue'
-import ALeStatus from '@/labs/listEditor/internal/ALeStatus.vue'
+import LeNestedRow from '@/labs/listEditor/internal/LeNestedRow.vue'
+import LeDeleteDialog from '@/labs/listEditor/internal/LeDeleteDialog.vue'
+import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
+import LeStatus from '@/labs/listEditor/internal/LeStatus.vue'
 
 export interface DecoratedNestedViewItem<T> extends NestedViewItem<T> {
   editing: boolean
@@ -164,7 +164,7 @@ const mode = defineModel<ReorderMode>('mode', { default: 'view' })
 
 // Declare the public slot surface so consumers get typed slot props and so
 // `useSlots()` can detect which slots were passed. Without this, forwarding
-// slots to <ANestedRow> strips the type info and template refs break.
+// slots to <LeNestedRow> strips the type info and template refs break.
 // Slots carry a variety of scopes (row-level with `raw`, header with `mode`,
 // reorder-toolbar with `applying`, empty with `actions`). Using `any` keeps the
 // template-compiler surface ergonomic without forcing a union type the consumer
@@ -999,7 +999,7 @@ const reorderToggleSlotProps = computed(() => ({
   },
 }))
 
-// Aggregated display flags + helpers passed into each <ANestedRow>. Recomputed
+// Aggregated display flags + helpers passed into each <LeNestedRow>. Recomputed
 // reactively when any underlying dependency changes.
 const rowContext = computed(() => ({
   reorderMode: reorderMode.value,
@@ -1160,7 +1160,7 @@ defineExpose({
                 name="reorder-toolbar"
                 v-bind="toolbarSlotProps"
               >
-                <ALeStatus
+                <LeStatus
                   :class="{ 'a-le-toolbar-status--pending': hasPendingChanges }"
                   :has-pending-changes="hasPendingChanges"
                   :pending-count="movedCount"
@@ -1304,7 +1304,7 @@ defineExpose({
           :disabled="disabled"
           :actions="{ add: onAddClick }"
         >
-          <ALeEmptyState
+          <LeEmptyState
             :title="emptyTitleResolved"
             :text="emptyTextResolved"
             :add-label="addLabelResolved"
@@ -1325,7 +1325,7 @@ defineExpose({
           :class="[GROUP_CLASS, 'a-nested-list-editor__group--root']"
           data-parent-id=""
         >
-          <ANestedRow
+          <LeNestedRow
             v-for="vi in rootViewItems"
             :key="String(vi.key)"
             :vi="vi"
@@ -1382,7 +1382,7 @@ defineExpose({
                 v-bind="slotScope"
               />
             </template>
-          </ANestedRow>
+          </LeNestedRow>
         </div>
 
         <!-- Drop indicator overlay — only rendered for valid drops. Horizontal
@@ -1435,7 +1435,7 @@ defineExpose({
       </slot>
     </div>
 
-    <ALeDeleteDialog
+    <LeDeleteDialog
       v-model="deleteDialog"
       :title="deleteConfirmTitleResolved"
       :text="deleteConfirmTextResolved"

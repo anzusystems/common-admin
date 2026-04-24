@@ -8,11 +8,11 @@ import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
 import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
-import ALeDeleteDialog from '@/labs/listEditor/internal/ALeDeleteDialog.vue'
-import ALeEmptyState from '@/labs/listEditor/internal/ALeEmptyState.vue'
-import ALeStatus from '@/labs/listEditor/internal/ALeStatus.vue'
-import ALeUnsavedLabel from '@/labs/listEditor/internal/ALeUnsavedLabel.vue'
-import ALeDragHandle from '@/labs/listEditor/internal/ALeDragHandle.vue'
+import LeDeleteDialog from '@/labs/listEditor/internal/LeDeleteDialog.vue'
+import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
+import LeStatus from '@/labs/listEditor/internal/LeStatus.vue'
+import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
+import LeDragHandle from '@/labs/listEditor/internal/LeDragHandle.vue'
 import { cloneDeep } from '@/utils/common'
 import { stringToInt } from '@/utils/string'
 import type {
@@ -644,7 +644,7 @@ defineExpose({
                 name="reorder-toolbar"
                 v-bind="toolbarSlotProps"
               >
-                <ALeStatus
+                <LeStatus
                   :class="{ 'a-le-toolbar-status--pending': hasPendingChanges }"
                   :has-pending-changes="hasPendingChanges"
                   :pending-count="movedCount"
@@ -746,7 +746,7 @@ defineExpose({
           :disabled="disabled"
           :actions="{ add: onAddClick }"
         >
-          <ALeEmptyState
+          <LeEmptyState
             :title="emptyTitleResolved"
             :text="emptyTextResolved"
             :add-label="addLabelResolved"
@@ -786,7 +786,7 @@ defineExpose({
             class="a-le-row-header"
             @click="onRowClick(vi)"
           >
-            <ALeDragHandle v-if="dragEnabled" />
+            <LeDragHandle v-if="dragEnabled" />
 
             <div class="a-le-row-main">
               <slot
@@ -797,7 +797,7 @@ defineExpose({
                   {{ resolveCompactText(vi.raw, vi.key) }}
                 </span>
               </slot>
-              <ALeUnsavedLabel v-if="vi.unsaved" />
+              <LeUnsavedLabel v-if="vi.unsaved" />
             </div>
 
             <div
@@ -1098,7 +1098,7 @@ defineExpose({
       </slot>
     </div>
 
-    <ALeDeleteDialog
+    <LeDeleteDialog
       v-model="deleteDialog"
       :title="deleteConfirmTitleResolved"
       :text="deleteConfirmTextResolved"
