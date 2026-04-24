@@ -110,8 +110,9 @@ export const computeInstruction = (
   } = args
 
   if (hoveredRow.key === sourceKey) return null
-
-  const wouldCycle = isDescendantOf(viewItems, sourceKey, hoveredRow.key)
+  // Cycle case — the caller disables dragged-subtree rows from hit-testing,
+  // but defend against browser quirks that might still route the pointer here.
+  if (isDescendantOf(viewItems, sourceKey, hoveredRow.key)) return null
 
   const y = pointer.y - hoveredRow.rect.top
   const h = hoveredRow.rect.height
@@ -172,10 +173,6 @@ export const computeInstruction = (
       index: 0,
       depth: hoveredRow.depth + 1,
     }
-  }
-
-  if (wouldCycle) {
-    return { type: 'blocked', desired, reason: 'cycle' }
   }
 
   if (desired.depth + sourceSubtreeDepth - 1 >= maxDepth) {

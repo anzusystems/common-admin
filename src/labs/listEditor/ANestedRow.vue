@@ -51,7 +51,13 @@ const directChildren = (): any[] =>
 
 <template>
   <div
-    class="a-nested-list-editor__row-wrapper"
+    :class="[
+      'a-nested-list-editor__row-wrapper',
+      {
+        'a-nested-list-editor__row-wrapper--drop-disabled':
+          dragState !== null && dragState.sourceKey === vi.key,
+      },
+    ]"
     :data-id="String(vi.key)"
   >
     <div

@@ -466,11 +466,14 @@ const HANDLE_CLASS = 'a-nested-list-editor__drag-handle'
 // depth picking and the final mutation are all ours.
 const dragState = ref<DragState | null>(null)
 
-// CSS-aligned constants. Row header padding-left in reorder mode is
-// `calc(12px + depth * var(--ansle-indent))` where --ansle-indent is 24px
-// (18px on mobile — but drag is disabled on touch so we don't care).
+// Drop indicator anchor geometry — kept in sync with CSS:
+//   row-header padding-left (reorder mode) = 12px + depth * --ansle-indent(24)
+//   drag handle icon size                  = 20px (VIcon size="20")
+// Anchor X at depth 0 = padding-left (12) + half handle width (10) = 22px, so
+// the dot sits on top of the drag handle's visual centre and the line walks
+// right/left in 24px steps, visually matching the actual row indent hierarchy.
 const INDENT_PX = 24
-const ROW_PAD_LEFT = 12
+const ANCHOR_X = 22
 
 const hitTestRow = (
   clientX: number,
@@ -521,7 +524,7 @@ const recomputeInstruction = (clientX: number, clientY: number) => {
     maxDepth: props.maxDepth,
     indentPx: INDENT_PX,
     containerLeft: containerRect.left,
-    containerPaddingLeft: ROW_PAD_LEFT,
+    containerPaddingLeft: ANCHOR_X,
   })
 }
 
@@ -684,7 +687,7 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
     kind: 'line',
     blocked,
     top,
-    left: ROW_PAD_LEFT + effective.depth * INDENT_PX,
+    left: ANCHOR_X + effective.depth * INDENT_PX,
     right: 16,
   }
 })
@@ -1924,15 +1927,18 @@ defineExpose({
   cursor: grabbing;
 }
 
-/* Source row during drag — stays in place, dimmed, so the user keeps context
-   on where the item came from while it's being moved. `!important` beats
-   SortableJS's inline `display: none` it applies to the dragged element
-   under `forceFallback: true` (it wants to avoid a duplicate of the floating
-   clone; we'd rather see the empty slot where the item came from). */
+/* Source row + every descendant inside the dragged subtree — dimmed and made
+   non-hittable during drag. The whole branch travels as one, so dropping it
+   inside itself is nonsensical; hiding hit-targets there keeps the overlay
+   silent instead of flashing a blocked indicator over rows you can't land on.
+   `!important` on display beats SortableJS's inline `display: none` under
+   `forceFallback: true` (it would otherwise hide the source entirely and
+   erase the "coming from" slot). */
 .a-nested-list-editor__row-wrapper.a-nested-list-editor__row--chosen,
-.a-nested-list-editor__row-wrapper.a-nested-list-editor__row--drop-source {
+.a-nested-list-editor__row-wrapper.a-nested-list-editor__row-wrapper--drop-disabled {
   display: flex !important;
   opacity: 0.4 !important;
+  pointer-events: none !important;
 }
 
 /* Hide SortableJS's own placeholder — our overlay (drop-line / drop-box) is
@@ -1989,6 +1995,10 @@ defineExpose({
   border-radius: 1px;
 }
 
+/* Dot bleeds 4px left of the line's start so its visual centre sits on the
+   same column as the anchor (which equals the drag handle's centre for the
+   target depth). Without the bleed the dot would visually extend 4px to the
+   right of the handle column. */
 .a-nested-list-editor__drop-line-dot {
   position: absolute;
   left: -4px;
