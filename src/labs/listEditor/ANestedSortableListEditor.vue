@@ -540,10 +540,10 @@ const applyInstruction = (inst: ExecutableInstruction, sourceKey: ListEditorKey)
     nextTick(() => initSortables())
     return
   }
-  // After a make-child drop, expand the target so the just-moved row is
-  // immediately visible — landing onto a leaf otherwise hides the result
-  // inside a collapsed branch and leaves the user wondering where it went.
-  if (inst.type === 'make-child') {
+  // The dragged row landed as a new first child — expand the target so the
+  // just-moved row stays visible instead of disappearing into a collapsed
+  // branch. Only needed when we created a new parent (makeChild === true).
+  if (inst.makeChild && inst.parentKey !== null) {
     childrenExpandedKeys.value.add(inst.parentKey)
   }
 }
@@ -656,9 +656,12 @@ onBeforeUnmount(() => {
 // Visual props derived from the current instruction. Re-reads DOM rects on
 // every instruction change, which is fine because the user can't scroll or
 // resize in the middle of a frame. `null` = overlay hidden.
-type OverlayVisual =
-  | { kind: 'line'; blocked: boolean; top: number; left: number; right: number }
-  | { kind: 'box'; blocked: boolean; top: number; left: number; width: number; height: number }
+type OverlayVisual = {
+  blocked: boolean
+  top: number
+  left: number
+  right: number
+}
 
 const overlayVisual = computed<OverlayVisual | null>(() => {
   const state = dragState.value
@@ -676,22 +679,11 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
   const containerRect = rowsContainer.value.getBoundingClientRect()
   const rowRect = (rowEl ?? refWrapper).getBoundingClientRect()
 
-  if (effective.type === 'make-child') {
-    return {
-      kind: 'box',
-      blocked,
-      top: rowRect.top - containerRect.top,
-      left: rowRect.left - containerRect.left,
-      width: rowRect.width,
-      height: rowRect.height,
-    }
-  }
   const top =
-    effective.type === 'sibling-above'
+    effective.refEdge === 'top'
       ? rowRect.top - containerRect.top
       : rowRect.bottom - containerRect.top
   return {
-    kind: 'line',
     blocked,
     top,
     left: ANCHOR_X + effective.depth * INDENT_PX,
@@ -1324,36 +1316,23 @@ defineExpose({
         class="a-nested-list-editor__rows"
         :class="{ 'a-nested-list-editor__rows--dragging': dragState !== null }"
       >
-        <!-- Drop indicator overlay — a horizontal line (for sibling-above /
-             sibling-below / reparent) whose `left` offset encodes the target
-             depth, or a box outlining the whole row (for make-child). Painted
-             in warning colour when the desired target would break maxDepth or
-             form a cycle — visible intent + unambiguous "not here". -->
-        <template v-if="overlayVisual !== null">
-          <div
-            v-if="overlayVisual.kind === 'line'"
-            class="a-nested-list-editor__drop-line"
-            :class="{ 'a-nested-list-editor__drop-line--blocked': overlayVisual.blocked }"
-            :style="{
-              top: `${overlayVisual.top}px`,
-              left: `${overlayVisual.left}px`,
-              right: `${overlayVisual.right}px`,
-            }"
-          >
-            <span class="a-nested-list-editor__drop-line-dot" />
-          </div>
-          <div
-            v-else-if="overlayVisual.kind === 'box'"
-            class="a-nested-list-editor__drop-box"
-            :class="{ 'a-nested-list-editor__drop-box--blocked': overlayVisual.blocked }"
-            :style="{
-              top: `${overlayVisual.top}px`,
-              left: `${overlayVisual.left}px`,
-              width: `${overlayVisual.width}px`,
-              height: `${overlayVisual.height}px`,
-            }"
-          />
-        </template>
+        <!-- Drop indicator overlay — a 2px horizontal line anchored to a row
+             edge whose `left` offset encodes the target depth (one indent
+             column per level). Painted in warning colour when the move
+             would breach maxDepth so the intent stays legible while the
+             mutation is refused. -->
+        <div
+          v-if="overlayVisual !== null"
+          class="a-nested-list-editor__drop-line"
+          :class="{ 'a-nested-list-editor__drop-line--blocked': overlayVisual.blocked }"
+          :style="{
+            top: `${overlayVisual.top}px`,
+            left: `${overlayVisual.left}px`,
+            right: `${overlayVisual.right}px`,
+          }"
+        >
+          <span class="a-nested-list-editor__drop-line-dot" />
+        </div>
         <div
           :class="[GROUP_CLASS, 'a-nested-list-editor__group--root']"
           data-parent-id=""
@@ -2023,25 +2002,6 @@ defineExpose({
 
 .a-nested-list-editor__drop-line--blocked .a-nested-list-editor__drop-line-dot {
   background: var(--ansle-warning);
-}
-
-/* Drop indicator box — 2px primary outline around the full target row. Used
-   for `make-child`, signalling "this row is about to adopt the dragged item
-   as a child". Complements the line indicator (which can't express "nest
-   inside this row" without becoming ambiguous with a sibling insert). */
-.a-nested-list-editor__drop-box {
-  position: absolute;
-  box-sizing: border-box;
-  border: 2px solid var(--ansle-primary);
-  border-radius: 4px;
-  pointer-events: none;
-  z-index: 4;
-  background: var(--ansle-primary-container);
-}
-
-.a-nested-list-editor__drop-box--blocked {
-  border-color: var(--ansle-warning);
-  background: var(--ansle-warning-container);
 }
 
 /* Inline edit body. Default layout (narrow container / mobile) — form fills the

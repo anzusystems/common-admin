@@ -2,44 +2,43 @@ import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 import type { NestedViewItem } from '@/labs/listEditor/composables/useNestedListEditor'
 
 /**
- * Drop instruction computed from pointer position during drag. Mirrors
- * Atlassian Pragmatic DnD's tree-item hitbox pattern: row is split into Y
- * bands (top 25% / mid 50% / bottom 25%) for sibling-above / make-child /
- * sibling-below. In the bottom band of a last-in-group row, pointer X left of
- * the row's own indent triggers `reparent` — insert as sibling of an ancestor
- * at the depth picked by pointer X. When the mutation would exceed maxDepth
- * or form a cycle, the instruction is wrapped in `blocked` so the UI can
- * still render the intended target in a warning colour.
+ * Drop instruction — where the dragged item will land + how to paint the line.
+ *
+ * Outliner model (dnd-kit / Workflowy style):
+ *   - Pointer Y picks which gap the drop lands in: the upper 50% of the
+ *     hovered row = the gap above it, the lower 50% = the gap below.
+ *   - Pointer X picks the depth within that gap. Depth is measured in indent
+ *     columns of `indentPx` each, rounded to the nearest column, and clamped
+ *     to `[0, anchor.depth + 1]` where `anchor` is the visible row immediately
+ *     above the target gap. You can never skip more than one level deeper
+ *     than what's already on the row above — same rule as dnd-kit's
+ *     SortableTree — which keeps the tree structure coherent.
+ *
+ * `makeChild: true` when the chosen depth is one level deeper than the
+ * anchor. The target becomes a new parent and the consumer should
+ * auto-expand `parentKey` so the inserted row stays visible.
+ *
+ * `blocked` wraps the would-be instruction when the move would breach
+ * `maxDepth` — the overlay keeps rendering the line in a warning colour
+ * so the intent stays legible but the mutation is refused.
  */
-export type ExecutableInstruction =
-  | {
-      type: 'sibling-above'
-      refKey: ListEditorKey
-      parentKey: ListEditorKey | null
-      index: number
-      depth: number
-    }
-  | {
-      type: 'sibling-below'
-      refKey: ListEditorKey
-      parentKey: ListEditorKey | null
-      index: number
-      depth: number
-    }
-  | {
-      type: 'make-child'
-      refKey: ListEditorKey
-      parentKey: ListEditorKey
-      index: number
-      depth: number
-    }
+
+export type ExecutableInstruction = {
+  type: 'insert'
+  refKey: ListEditorKey
+  refEdge: 'top' | 'bottom'
+  parentKey: ListEditorKey | null
+  index: number
+  depth: number
+  makeChild: boolean
+}
 
 export type Instruction =
   | ExecutableInstruction
   | {
       type: 'blocked'
       desired: ExecutableInstruction
-      reason: 'maxDepth' | 'cycle'
+      reason: 'maxDepth'
     }
 
 export interface HoveredRow {
@@ -110,68 +109,94 @@ export const computeInstruction = (
   } = args
 
   if (hoveredRow.key === sourceKey) return null
-  // Cycle case — the caller disables dragged-subtree rows from hit-testing,
-  // but defend against browser quirks that might still route the pointer here.
   if (isDescendantOf(viewItems, sourceKey, hoveredRow.key)) return null
 
   const y = pointer.y - hoveredRow.rect.top
   const h = hoveredRow.rect.height
-  const topBandEnd = h * 0.25
-  const bottomBandStart = h * 0.75
-  const isLastInGroup = hoveredRow.siblingIndex === hoveredRow.siblingCount - 1
+  const inTopHalf = y < h / 2
+  const refEdge: 'top' | 'bottom' = inTopHalf ? 'top' : 'bottom'
+
+  // Pointer X → projected depth. Rounded so each half-indent step crosses the
+  // threshold between two columns.
+  const pointerRelX = pointer.x - containerLeft - containerPaddingLeft
+  const rawDepth = Math.round(pointerRelX / indentPx)
+
+  // Anchor — the visible row that sits immediately above the target gap.
+  // Top-half: the previous visible row in the flat list (null if hoveredRow
+  // is the very first row). Bottom-half: hoveredRow itself.
+  const flatIdx = viewItems.findIndex((v) => v.key === hoveredRow.key)
+  const anchor: NestedViewItem<any> | null = inTopHalf
+    ? (flatIdx > 0 ? viewItems[flatIdx - 1] : null)
+    : findByKey(viewItems, hoveredRow.key)
 
   let desired: ExecutableInstruction
 
-  if (y <= topBandEnd) {
+  if (!anchor) {
+    // First row at the top of the tree — only landing is the very top of root.
     desired = {
-      type: 'sibling-above',
+      type: 'insert',
       refKey: hoveredRow.key,
-      parentKey: hoveredRow.parentKey,
-      index: hoveredRow.siblingIndex,
-      depth: hoveredRow.depth,
+      refEdge: 'top',
+      parentKey: null,
+      index: 0,
+      depth: 0,
+      makeChild: false,
     }
-  } else if (y >= bottomBandStart) {
-    const rowIndentPx = containerPaddingLeft + hoveredRow.depth * indentPx
-    const pointerRelX = pointer.x - containerLeft
-    if (isLastInGroup && pointerRelX < rowIndentPx) {
-      const rawDepth = Math.floor(
-        (pointerRelX - containerPaddingLeft) / indentPx,
-      )
-      const clampedDepth = Math.max(0, Math.min(rawDepth, hoveredRow.depth))
-      const ancestor = findAncestorAtDepth(viewItems, hoveredRow.key, clampedDepth)
+  } else {
+    // Anchor must not belong to the source subtree (pointer-events: none
+    // already filters at the DOM level, but guard defensively).
+    if (anchor.key === sourceKey || isDescendantOf(viewItems, sourceKey, anchor.key)) {
+      return null
+    }
+    const depthCeiling = anchor.depth + 1
+    const clampedDepth = Math.max(0, Math.min(rawDepth, depthCeiling))
+
+    if (clampedDepth === anchor.depth + 1) {
+      desired = {
+        type: 'insert',
+        refKey: hoveredRow.key,
+        refEdge,
+        parentKey: anchor.key,
+        index: 0,
+        depth: clampedDepth,
+        makeChild: true,
+      }
+    } else if (clampedDepth === anchor.depth) {
+      desired = {
+        type: 'insert',
+        refKey: hoveredRow.key,
+        refEdge,
+        parentKey: anchor.parentKey,
+        index: anchor.siblingIndex + 1,
+        depth: clampedDepth,
+        makeChild: false,
+      }
+    } else {
+      // clampedDepth < anchor.depth → reparent: insert as sibling of the
+      // ancestor at `clampedDepth`, immediately after that ancestor.
+      const ancestor = findAncestorAtDepth(viewItems, anchor.key, clampedDepth)
       if (ancestor) {
         desired = {
-          type: 'sibling-below',
+          type: 'insert',
           refKey: hoveredRow.key,
+          refEdge,
           parentKey: ancestor.parentKey,
           index: ancestor.siblingIndex + 1,
           depth: clampedDepth,
+          makeChild: false,
         }
       } else {
+        // Shouldn't hit with clampedDepth ≥ 0 but keep a safe fallback.
         desired = {
-          type: 'sibling-below',
+          type: 'insert',
           refKey: hoveredRow.key,
-          parentKey: hoveredRow.parentKey,
-          index: hoveredRow.siblingIndex + 1,
-          depth: hoveredRow.depth,
+          refEdge,
+          parentKey: anchor.parentKey,
+          index: anchor.siblingIndex + 1,
+          depth: anchor.depth,
+          makeChild: false,
         }
       }
-    } else {
-      desired = {
-        type: 'sibling-below',
-        refKey: hoveredRow.key,
-        parentKey: hoveredRow.parentKey,
-        index: hoveredRow.siblingIndex + 1,
-        depth: hoveredRow.depth,
-      }
-    }
-  } else {
-    desired = {
-      type: 'make-child',
-      refKey: hoveredRow.key,
-      parentKey: hoveredRow.key,
-      index: 0,
-      depth: hoveredRow.depth + 1,
     }
   }
 
