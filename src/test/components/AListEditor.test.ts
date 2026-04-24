@@ -41,7 +41,7 @@ describe('AListEditor', () => {
   describe('rendering', () => {
     it('renders one row per item using compact fallback text', () => {
       const { wrapper } = mountEditor()
-      const rows = wrapper.findAll('.a-list-editor__row')
+      const rows = wrapper.findAll('.a-le-row')
       expect(rows).toHaveLength(3)
       expect(rows[0].text()).toContain('First')
       expect(rows[1].text()).toContain('Second')
@@ -50,7 +50,7 @@ describe('AListEditor', () => {
 
     it('renders status badge when statusField is set', () => {
       const { wrapper } = mountEditor(items(), { statusField: 'status' })
-      const badges = wrapper.findAll('.a-list-editor__status-badge')
+      const badges = wrapper.findAll('.a-le-status-badge')
       expect(badges).toHaveLength(3)
       expect(badges[0].text()).toBe('Active')
     })
@@ -58,7 +58,7 @@ describe('AListEditor', () => {
     it('uses compactField when provided', () => {
       const data: FaqItem[] = [{ id: 1, position: 1, title: 'X' }]
       const { wrapper } = mountEditor(data, { compactField: 'id' })
-      expect(wrapper.find('.a-list-editor__title').text()).toBe('1')
+      expect(wrapper.find('.a-le-title').text()).toBe('1')
     })
 
     it('falls back to fallback label when nothing resolves', () => {
@@ -66,22 +66,22 @@ describe('AListEditor', () => {
       const { wrapper } = mountEditor(data, { compactField: 'nonexistent' })
       // with compactField set but nothing to pick from fallback chain, falls through
       // (id=1 is still picked via 'key' in fallback chain)
-      expect(wrapper.find('.a-list-editor__title').text()).toBe('1')
+      expect(wrapper.find('.a-le-title').text()).toBe('1')
     })
 
     it('renders the default add button row', () => {
       const { wrapper } = mountEditor()
-      expect(wrapper.find('.a-list-editor__row-add').exists()).toBe(true)
+      expect(wrapper.find('.a-le-row-add').exists()).toBe(true)
     })
 
     it('does not render the add button when showAddButton=false', () => {
       const { wrapper } = mountEditor(items(), { showAddButton: false })
-      expect(wrapper.find('.a-list-editor__row-add').exists()).toBe(false)
+      expect(wrapper.find('.a-le-row-add').exists()).toBe(false)
     })
 
     it('does not render reorder UI (no drag handle, no reorder toggle)', () => {
       const { wrapper } = mountEditor()
-      expect(wrapper.find('.a-list-editor__reorder-toggle').exists()).toBe(false)
+      expect(wrapper.find('.a-le-reorder-toggle').exists()).toBe(false)
       expect(wrapper.find('[class*="handle"]').exists()).toBe(false)
       expect(wrapper.html()).not.toContain('mdi-drag')
     })
@@ -108,7 +108,7 @@ describe('AListEditor', () => {
       })
       const wrapper = mount(ItemHost)
       // trigger edit on first row
-      const editBtn = wrapper.findAll('button').find((b) => b.attributes('class')?.includes('a-list-editor__action--edit'))
+      const editBtn = wrapper.findAll('button').find((b) => b.attributes('class')?.includes('a-le-action--edit'))
       expect(editBtn).toBeTruthy()
       await editBtn!.trigger('click')
       await nextTick()
@@ -120,21 +120,21 @@ describe('AListEditor', () => {
   describe('states', () => {
     it('renders loading state', () => {
       const { wrapper } = mountEditor([], { loading: true })
-      expect(wrapper.find('.a-list-editor__state--loading').exists()).toBe(true)
+      expect(wrapper.find('.a-le-state--loading').exists()).toBe(true)
     })
 
     it('renders error state', () => {
       const { wrapper } = mountEditor([], { error: 'Something went wrong' })
-      const err = wrapper.find('.a-list-editor__state--error')
+      const err = wrapper.find('.a-le-state--error')
       expect(err.exists()).toBe(true)
       expect(err.text()).toContain('Something went wrong')
     })
 
     it('renders empty state with default title/text', () => {
       const { wrapper } = mountEditor([])
-      expect(wrapper.find('.a-list-editor__state--empty').exists()).toBe(true)
-      expect(wrapper.find('.a-list-editor__empty-title').text()).toBeTruthy()
-      expect(wrapper.find('.a-list-editor__empty-text').text()).toBeTruthy()
+      expect(wrapper.find('.a-le-state--empty').exists()).toBe(true)
+      expect(wrapper.find('.a-le-empty-title').text()).toBeTruthy()
+      expect(wrapper.find('.a-le-empty-text').text()).toBeTruthy()
     })
 
     it('renders empty state with custom title/text', () => {
@@ -142,22 +142,22 @@ describe('AListEditor', () => {
         emptyTitle: 'Nothing here',
         emptyText: 'Add one',
       })
-      expect(wrapper.find('.a-list-editor__empty-title').text()).toBe('Nothing here')
-      expect(wrapper.find('.a-list-editor__empty-text').text()).toBe('Add one')
+      expect(wrapper.find('.a-le-empty-title').text()).toBe('Nothing here')
+      expect(wrapper.find('.a-le-empty-text').text()).toBe('Add one')
     })
   })
 
   describe('events and interactions', () => {
     it('emits add with no hint when the add button is clicked', async () => {
       const { wrapper, editor } = mountEditor()
-      await wrapper.find('.a-list-editor__row-add').trigger('click')
+      await wrapper.find('.a-le-row-add').trigger('click')
       expect(editor().emitted('add')).toBeTruthy()
       expect(editor().emitted('add')![0][0]).toBeUndefined()
     })
 
     it('emits edit when the edit button is clicked', async () => {
       const { wrapper, editor } = mountEditor()
-      const editBtns = wrapper.findAll('.a-list-editor__action--edit')
+      const editBtns = wrapper.findAll('.a-le-action--edit')
       await editBtns[1].trigger('click')
       expect(editor().emitted('edit')).toBeTruthy()
       const payload = editor().emitted('edit')![0][0] as { key: number; raw: FaqItem }
@@ -167,7 +167,7 @@ describe('AListEditor', () => {
 
     it('emits deleted and removes item from model when disableDeleteConfirm=true', async () => {
       const { wrapper, model, editor } = mountEditor(items(), { disableDeleteConfirm: true })
-      const deleteBtns = wrapper.findAll('.a-list-editor__action--delete')
+      const deleteBtns = wrapper.findAll('.a-le-action--delete')
       await deleteBtns[0].trigger('click')
       await flushPromises()
 
@@ -181,7 +181,7 @@ describe('AListEditor', () => {
         onDeleteConfirm: confirm,
         disableDeleteConfirm: true,
       })
-      const deleteBtns = wrapper.findAll('.a-list-editor__action--delete')
+      const deleteBtns = wrapper.findAll('.a-le-action--delete')
       await deleteBtns[0].trigger('click')
       await flushPromises()
 
@@ -197,7 +197,7 @@ describe('AListEditor', () => {
         onDeleteConfirm: confirm,
         disableDeleteConfirm: true,
       })
-      const deleteBtns = wrapper.findAll('.a-list-editor__action--delete')
+      const deleteBtns = wrapper.findAll('.a-le-action--delete')
       await deleteBtns[0].trigger('click')
       await flushPromises()
 
@@ -209,9 +209,9 @@ describe('AListEditor', () => {
     it('does not emit or mutate when readonly', async () => {
       const { wrapper, model } = mountEditor(items(), { readonly: true })
       // edit/delete buttons should not render when !canInteract
-      expect(wrapper.findAll('.a-list-editor__action--edit')).toHaveLength(0)
-      expect(wrapper.findAll('.a-list-editor__action--delete')).toHaveLength(0)
-      expect(wrapper.find('.a-list-editor__row-add').exists()).toBe(false)
+      expect(wrapper.findAll('.a-le-action--edit')).toHaveLength(0)
+      expect(wrapper.findAll('.a-le-action--delete')).toHaveLength(0)
+      expect(wrapper.find('.a-le-row-add').exists()).toBe(false)
       expect(model.value).toHaveLength(3)
     })
   })
@@ -254,12 +254,12 @@ describe('AListEditor', () => {
   describe('widget header / title', () => {
     it('does not render a header when no title and no header slot are provided', () => {
       const { wrapper } = mountEditor()
-      expect(wrapper.find('.a-list-editor__header').exists()).toBe(false)
+      expect(wrapper.find('.a-le-header').exists()).toBe(false)
     })
 
     it('renders the header with the given title prop', () => {
       const { wrapper } = mountEditor(items(), { title: 'Časté otázky (FAQ)' })
-      const header = wrapper.find('.a-list-editor__header')
+      const header = wrapper.find('.a-le-header')
       expect(header.exists()).toBe(true)
       expect(header.text()).toContain('Časté otázky (FAQ)')
     })
@@ -292,12 +292,12 @@ describe('AListEditor', () => {
 
     it('header stays visible over the empty / loading / error states', () => {
       const { wrapper: e } = mountEditor([], { title: 'FAQ' })
-      expect(e.find('.a-list-editor__header').exists()).toBe(true)
-      expect(e.find('.a-list-editor__state--empty').exists()).toBe(true)
+      expect(e.find('.a-le-header').exists()).toBe(true)
+      expect(e.find('.a-le-state--empty').exists()).toBe(true)
 
       const { wrapper: l } = mountEditor([], { title: 'FAQ', loading: true })
-      expect(l.find('.a-list-editor__header').exists()).toBe(true)
-      expect(l.find('.a-list-editor__state--loading').exists()).toBe(true)
+      expect(l.find('.a-le-header').exists()).toBe(true)
+      expect(l.find('.a-le-state--loading').exists()).toBe(true)
     })
   })
 
@@ -329,56 +329,56 @@ describe('AListEditor', () => {
 
     it('keeps the row title visible when the row is editing', async () => {
       const { wrapper } = mountWithItemSlot()
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
 
-      const row = wrapper.find('.a-list-editor__row--editing')
+      const row = wrapper.find('.a-le-row--editing')
       expect(row.exists()).toBe(true)
-      const title = row.find('.a-list-editor__title')
+      const title = row.find('.a-le-title')
       expect(title.exists()).toBe(true)
       expect(title.text()).toBe('First')
     })
 
     it('keeps the same edit / delete action set in the editing row header', async () => {
       const { wrapper } = mountWithItemSlot()
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
 
       // Editing now pins the normal view-mode actions (edit + delete) open —
       // there is no separate close button in the header anymore.
-      const editingRow = wrapper.find('.a-list-editor__row--editing')
-      expect(editingRow.find('.a-list-editor__action--edit').exists()).toBe(true)
-      expect(editingRow.find('.a-list-editor__action--delete').exists()).toBe(true)
-      expect(editingRow.find('.a-list-editor__action--close').exists()).toBe(false)
+      const editingRow = wrapper.find('.a-le-row--editing')
+      expect(editingRow.find('.a-le-action--edit').exists()).toBe(true)
+      expect(editingRow.find('.a-le-action--delete').exists()).toBe(true)
+      expect(editingRow.find('.a-le-action--close').exists()).toBe(false)
     })
 
     it('clicking the edit button again exits editing without saving', async () => {
       const save = vi.fn()
       const { wrapper } = mountWithItemSlot({ onItemSave: save })
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
 
       // Toggle close: second click on the pencil (now always visible in editing
       // state) should behave like the old close button.
-      const editBtn = wrapper.find('.a-list-editor__row--editing .a-list-editor__action--edit')
+      const editBtn = wrapper.find('.a-le-row--editing .a-le-action--edit')
       expect(editBtn.exists()).toBe(true)
       await editBtn.trigger('click')
       await nextTick()
 
       expect(save).not.toHaveBeenCalled()
-      expect(wrapper.find('.a-list-editor__row--editing').exists()).toBe(false)
+      expect(wrapper.find('.a-le-row--editing').exists()).toBe(false)
     })
 
     it('renders row body below the row header when editing (no footer by default)', async () => {
       const { wrapper } = mountWithItemSlot()
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
 
-      const row = wrapper.find('.a-list-editor__row--editing')
-      expect(row.find('.a-list-editor__row-header').exists()).toBe(true)
-      expect(row.find('.a-list-editor__row-body').exists()).toBe(true)
+      const row = wrapper.find('.a-le-row--editing')
+      expect(row.find('.a-le-row-header').exists()).toBe(true)
+      expect(row.find('.a-le-row-body').exists()).toBe(true)
       // Footer (Cancel/Save) only renders when the consumer supplies onItemSave.
-      expect(row.find('.a-list-editor__row-footer').exists()).toBe(false)
+      expect(row.find('.a-le-row-footer').exists()).toBe(false)
     })
   })
 
@@ -410,12 +410,12 @@ describe('AListEditor', () => {
 
     it('renders default Cancel/Save footer when onItemSave is provided and row enters editing', async () => {
       const { wrapper } = mountWithItemSlot(() => Promise.resolve())
-      expect(wrapper.find('.a-list-editor__row-footer').exists()).toBe(false)
+      expect(wrapper.find('.a-le-row-footer').exists()).toBe(false)
 
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
 
-      const footer = wrapper.find('.a-list-editor__row-footer')
+      const footer = wrapper.find('.a-le-row-footer')
       expect(footer.exists()).toBe(true)
       const buttons = footer.findAll('button')
       expect(buttons.map((b) => b.text().trim().toLowerCase())).toEqual(
@@ -427,11 +427,11 @@ describe('AListEditor', () => {
       const save = vi.fn().mockResolvedValue(undefined)
       const { wrapper, editor } = mountWithItemSlot(save)
 
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
 
       const saveBtn = wrapper
-        .find('.a-list-editor__row-footer')
+        .find('.a-le-row-footer')
         .findAll('button')
         .find((b) => b.text().toLowerCase().includes('save'))!
       await saveBtn.trigger('click')
@@ -441,33 +441,33 @@ describe('AListEditor', () => {
       expect(save.mock.calls[0][0]).toMatchObject({ id: 1 })
       expect(editor().emitted('item-saved')).toBeTruthy()
       // Footer should be gone — editing state cleared
-      expect(wrapper.find('.a-list-editor__row-footer').exists()).toBe(false)
+      expect(wrapper.find('.a-le-row-footer').exists()).toBe(false)
     })
 
     it('default Cancel button clears editing state without calling onItemSave', async () => {
       const save = vi.fn()
       const { wrapper } = mountWithItemSlot(save)
 
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
 
       const cancelBtn = wrapper
-        .find('.a-list-editor__row-footer')
+        .find('.a-le-row-footer')
         .findAll('button')
         .find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancelBtn.trigger('click')
       await nextTick()
 
       expect(save).not.toHaveBeenCalled()
-      expect(wrapper.find('.a-list-editor__row-footer').exists()).toBe(false)
+      expect(wrapper.find('.a-le-row-footer').exists()).toBe(false)
     })
 
     it('editing row has --editing class (tonal active styling)', async () => {
       const { wrapper } = mountWithItemSlot()
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
-      const editingRow = wrapper.find('.a-list-editor__row')
-      expect(editingRow.classes()).toContain('a-list-editor__row--editing')
+      const editingRow = wrapper.find('.a-le-row')
+      expect(editingRow.classes()).toContain('a-le-row--editing')
     })
 
     it('#item-footer slot overrides the default footer', async () => {
@@ -491,17 +491,17 @@ describe('AListEditor', () => {
         },
       })
       const wrapper = mount(Host)
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
       expect(wrapper.find('.custom-footer').exists()).toBe(true)
-      expect(wrapper.find('.a-list-editor__row-footer').exists()).toBe(false)
+      expect(wrapper.find('.a-le-row-footer').exists()).toBe(false)
     })
   })
 
   describe('row click', () => {
     it('clicking the row triggers edit by default', async () => {
       const { wrapper, editor } = mountEditor()
-      await wrapper.findAll('.a-list-editor__row-header')[1].trigger('click')
+      await wrapper.findAll('.a-le-row-header')[1].trigger('click')
       const edits = editor().emitted('edit') as Array<[{ key: number }]> | undefined
       expect(edits).toBeTruthy()
       expect(edits![0][0].key).toBe(2)
@@ -509,35 +509,35 @@ describe('AListEditor', () => {
 
     it('row has clickable class by default', () => {
       const { wrapper } = mountEditor()
-      const row = wrapper.findAll('.a-list-editor__row')[0]
-      expect(row.classes()).toContain('a-list-editor__row--clickable')
+      const row = wrapper.findAll('.a-le-row')[0]
+      expect(row.classes()).toContain('a-le-row--clickable')
     })
 
     it('does not trigger edit when disableRowClick=true', async () => {
       const { wrapper, editor } = mountEditor(items(), { disableRowClick: true })
-      const row = wrapper.findAll('.a-list-editor__row')[0]
-      expect(row.classes()).not.toContain('a-list-editor__row--clickable')
-      await wrapper.findAll('.a-list-editor__row-header')[0].trigger('click')
+      const row = wrapper.findAll('.a-le-row')[0]
+      expect(row.classes()).not.toContain('a-le-row--clickable')
+      await wrapper.findAll('.a-le-row-header')[0].trigger('click')
       expect(editor().emitted('edit')).toBeFalsy()
     })
 
     it('does not trigger edit when showEditButton=false', async () => {
       const { wrapper, editor } = mountEditor(items(), { showEditButton: false })
-      const row = wrapper.findAll('.a-list-editor__row')[0]
-      expect(row.classes()).not.toContain('a-list-editor__row--clickable')
-      await wrapper.findAll('.a-list-editor__row-header')[0].trigger('click')
+      const row = wrapper.findAll('.a-le-row')[0]
+      expect(row.classes()).not.toContain('a-le-row--clickable')
+      await wrapper.findAll('.a-le-row-header')[0].trigger('click')
       expect(editor().emitted('edit')).toBeFalsy()
     })
 
     it('does not trigger edit when readonly', async () => {
       const { wrapper, editor } = mountEditor(items(), { readonly: true })
-      await wrapper.findAll('.a-list-editor__row-header')[0].trigger('click')
+      await wrapper.findAll('.a-le-row-header')[0].trigger('click')
       expect(editor().emitted('edit')).toBeFalsy()
     })
 
     it('clicking action buttons does not re-trigger edit via row click', async () => {
       const { wrapper, editor } = mountEditor(items(), { disableDeleteConfirm: true })
-      const deleteBtn = wrapper.findAll('.a-list-editor__action--delete')[0]
+      const deleteBtn = wrapper.findAll('.a-le-action--delete')[0]
       await deleteBtn.trigger('click')
       await flushPromises()
       expect(editor().emitted('deleted')).toBeTruthy()
@@ -550,7 +550,7 @@ describe('AListEditor', () => {
       const { wrapper, model } = mountEditor()
       model.value = [...model.value, { id: 99, position: 4, title: 'Added' }]
       await nextTick()
-      const rows = wrapper.findAll('.a-list-editor__row')
+      const rows = wrapper.findAll('.a-le-row')
       expect(rows).toHaveLength(4)
       expect(rows[3].text()).toContain('Added')
     })
@@ -559,12 +559,12 @@ describe('AListEditor', () => {
   describe('showAddAfterAction (kebab "add after this")', () => {
     it('does not render a kebab menu button by default', () => {
       const { wrapper } = mountEditor()
-      expect(wrapper.find('.a-list-editor__action--menu').exists()).toBe(false)
+      expect(wrapper.find('.a-le-action--menu').exists()).toBe(false)
     })
 
     it('renders a kebab menu button when showAddAfterAction=true', () => {
       const { wrapper } = mountEditor(items(), { showAddAfterAction: true })
-      const menus = wrapper.findAll('.a-list-editor__action--menu')
+      const menus = wrapper.findAll('.a-le-action--menu')
       expect(menus.length).toBe(3)
     })
   })
@@ -592,10 +592,10 @@ describe('AListEditor', () => {
 
     it('shows a delete trash icon in the editing row header', async () => {
       const { wrapper } = mountWithSlot()
-      await wrapper.find('.a-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
-      const row = wrapper.find('.a-list-editor__row--editing')
-      expect(row.find('.a-list-editor__action--delete').exists()).toBe(true)
+      const row = wrapper.find('.a-le-row--editing')
+      expect(row.find('.a-le-action--delete').exists()).toBe(true)
     })
   })
 
@@ -625,9 +625,9 @@ describe('AListEditor', () => {
       })
       const wrapper = mount(Host)
       // Trigger add via the bottom "add" button
-      await wrapper.find('.a-list-editor__row-add').trigger('click')
+      await wrapper.find('.a-le-row-add').trigger('click')
       await flushPromises()
-      const editing = wrapper.findAll('.a-list-editor__row--editing')
+      const editing = wrapper.findAll('.a-le-row--editing')
       expect(editing.length).toBe(1)
       expect(editing[0].text()).toContain('New')
     })
@@ -652,12 +652,12 @@ describe('AListEditor', () => {
         },
       })
       const wrapper = mount(Host)
-      const headers = wrapper.findAll('.a-list-editor__row-header')
+      const headers = wrapper.findAll('.a-le-row-header')
       await headers[0].trigger('click')
       await nextTick()
       await headers[1].trigger('click')
       await nextTick()
-      expect(wrapper.findAll('.a-list-editor__row--editing').length).toBe(2)
+      expect(wrapper.findAll('.a-le-row--editing').length).toBe(2)
     })
   })
 
@@ -681,7 +681,7 @@ describe('AListEditor', () => {
       })
       const wrapper = mount(Host)
       expect(wrapper.find('.my-empty').exists()).toBe(true)
-      expect(wrapper.find('.a-list-editor__empty').exists()).toBe(false)
+      expect(wrapper.find('.a-le-empty').exists()).toBe(false)
     })
 
     it('#add-button slot replaces the default add button row', () => {
@@ -714,7 +714,7 @@ describe('AListEditor', () => {
       })
       const wrapper = mount(Host)
       expect(wrapper.find('.my-add').exists()).toBe(true)
-      expect(wrapper.find('.a-list-editor__row-add').exists()).toBe(false)
+      expect(wrapper.find('.a-le-row-add').exists()).toBe(false)
     })
 
     it('#item-actions slot replaces the default row buttons', () => {
@@ -740,8 +740,8 @@ describe('AListEditor', () => {
       const wrapper = mount(Host)
       expect(wrapper.findAll('.my-actions').length).toBe(3)
       // default action buttons should not appear
-      expect(wrapper.find('.a-list-editor__action--edit').exists()).toBe(false)
-      expect(wrapper.find('.a-list-editor__action--delete').exists()).toBe(false)
+      expect(wrapper.find('.a-le-action--edit').exists()).toBe(false)
+      expect(wrapper.find('.a-le-action--delete').exists()).toBe(false)
     })
   })
 

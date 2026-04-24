@@ -154,7 +154,7 @@ const {
   requestAutoOpen,
 } = useInlineEditing<TItem, ListViewItem<TItem>>({
   rowsContainer,
-  rowSelector: '.a-list-editor__row',
+  rowSelector: '.a-le-row',
   isInlineEdit,
   restoreSnapshot: (key, data) => editor.updateItem(key, data),
   watchKeys: () => modelValue.value.map((it) => it[props.keyField] as ListEditorKey),
@@ -377,11 +377,11 @@ defineExpose({
   >
     <div
       ref="rowsContainer"
-      class="a-list-editor__card"
+      class="a-le-card"
     >
       <div
         v-if="headerVisible"
-        class="a-list-editor__header"
+        class="a-le-header"
       >
         <slot
           name="header"
@@ -389,7 +389,7 @@ defineExpose({
         >
           <h3
             v-if="title"
-            class="a-list-editor__title-heading"
+            class="a-le-title-heading"
           >
             {{ title }}
           </h3>
@@ -398,7 +398,7 @@ defineExpose({
 
       <div
         v-if="loading"
-        class="a-list-editor__state a-list-editor__state--loading"
+        class="a-le-state a-le-state--loading"
       >
         <VProgressCircular
           indeterminate
@@ -409,7 +409,7 @@ defineExpose({
 
       <div
         v-else-if="error"
-        class="a-list-editor__state a-list-editor__state--error"
+        class="a-le-state a-le-state--error"
       >
         <VAlert
           type="error"
@@ -423,7 +423,7 @@ defineExpose({
 
       <div
         v-else-if="isEmpty"
-        class="a-list-editor__state a-list-editor__state--empty"
+        class="a-le-state a-le-state--empty"
       >
         <slot
           name="empty"
@@ -432,7 +432,6 @@ defineExpose({
           :actions="{ add: onAddClick }"
         >
           <ALeEmptyState
-            block-class="a-list-editor"
             :title="emptyTitleResolved"
             :text="emptyTextResolved"
             :add-label="addLabelResolved"
@@ -447,14 +446,14 @@ defineExpose({
           v-for="vi in viewItemsDecorated"
           :key="String(vi.key)"
           :data-id="String(vi.key)"
-          class="a-list-editor__row"
+          class="a-le-row"
           :class="{
-            'a-list-editor__row--two-rows': twoRows === 'always',
-            'a-list-editor__row--editing': vi.editing,
-            'a-list-editor__row--expanded': vi.expanded,
-            'a-list-editor__row--dirty': vi.dirty,
-            'a-list-editor__row--clickable': isRowClickable(vi),
-            [`a-list-editor__row--validation-${resolveValidation(vi.raw)}`]:
+            'a-le-row--two-rows': twoRows === 'always',
+            'a-le-row--editing': vi.editing,
+            'a-le-row--expanded': vi.expanded,
+            'a-le-row--unsaved': vi.dirty,
+            'a-le-row--clickable': isRowClickable(vi),
+            [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
               resolveValidation(vi.raw) !== null,
           }"
         >
@@ -464,27 +463,24 @@ defineExpose({
           />
 
           <div
-            class="a-list-editor__row-header"
+            class="a-le-row-header"
             @click="onRowClick(vi)"
           >
-            <div class="a-list-editor__row-main">
+            <div class="a-le-row-main">
               <slot
                 name="item-compact"
                 v-bind="buildSlotProps(vi)"
               >
-                <span class="a-list-editor__title">
+                <span class="a-le-title">
                   {{ resolveCompactText(vi.raw, vi.key) }}
                 </span>
               </slot>
-              <ALeUnsavedLabel
-                v-if="vi.dirty"
-                class="a-list-editor__unsaved-label"
-              />
+              <ALeUnsavedLabel v-if="vi.dirty" />
             </div>
 
             <div
               v-if="!chips"
-              class="a-list-editor__status"
+              class="a-le-status"
             >
               <slot
                 name="item-status"
@@ -492,14 +488,14 @@ defineExpose({
               >
                 <span
                   v-if="statusField && vi.raw[statusField] != null && vi.raw[statusField] !== ''"
-                  class="a-list-editor__status-badge"
+                  class="a-le-status-badge"
                 >
                   {{ vi.raw[statusField] }}
                 </span>
               </slot>
             </div>
 
-            <div class="a-list-editor__actions">
+            <div class="a-le-actions">
               <slot
                 name="item-actions"
                 v-bind="buildSlotProps(vi)"
@@ -511,7 +507,7 @@ defineExpose({
                   variant="text"
                   density="compact"
                   :active="false"
-                  class="a-list-editor__action a-list-editor__action--chip-close"
+                  class="a-le-action a-le-action--chip-close"
                   @click.stop="onDeleteClick(vi)"
                 >
                   <VIcon
@@ -527,11 +523,7 @@ defineExpose({
                     variant="tonal"
                     color="primary"
                     density="comfortable"
-                    :class="[
-                      'mx-1',
-                      'a-list-editor__action',
-                      'a-list-editor__action--edit',
-                    ]"
+                    class="mx-1 a-le-action a-le-action--edit"
                     @click.stop="onEditClick(vi)"
                   >
                     <VIcon
@@ -550,11 +542,7 @@ defineExpose({
                     size="small"
                     variant="text"
                     density="comfortable"
-                    :class="[
-                      'mx-1',
-                      'a-list-editor__action',
-                      'a-list-editor__action--delete',
-                    ]"
+                    class="mx-1 a-le-action a-le-action--delete"
                     @click.stop="onDeleteClick(vi)"
                   >
                     <VIcon
@@ -574,11 +562,7 @@ defineExpose({
                     variant="text"
                     density="comfortable"
                     :active="false"
-                    :class="[
-                      'mx-1',
-                      'a-list-editor__action',
-                      'a-list-editor__action--menu',
-                    ]"
+                    class="mx-1 a-le-action a-le-action--menu"
                   >
                     <VIcon
                       icon="mdi-dots-vertical"
@@ -608,8 +592,8 @@ defineExpose({
           </div>
 
           <template v-if="vi.editing && $slots.item">
-            <div class="a-list-editor__row-body">
-              <div class="a-list-editor__form">
+            <div class="a-le-row-body">
+              <div class="a-le-form">
                 <slot
                   name="item"
                   v-bind="buildSlotProps(vi)"
@@ -622,9 +606,9 @@ defineExpose({
             >
               <div
                 v-if="showInlineSaveFooter"
-                class="a-list-editor__row-footer"
+                class="a-le-row-footer"
               >
-                <div class="a-list-editor__row-footer-spacer" />
+                <div class="a-le-row-footer-spacer" />
                 <VBtn
                   variant="text"
                   :disabled="vi.loading"
@@ -647,9 +631,9 @@ defineExpose({
 
           <div
             v-else-if="vi.expanded && $slots['item-readonly']"
-            class="a-list-editor__row-body"
+            class="a-le-row-body"
           >
-            <div class="a-list-editor__form">
+            <div class="a-le-form">
               <slot
                 name="item-readonly"
                 v-bind="buildSlotProps(vi)"
@@ -674,7 +658,7 @@ defineExpose({
       >
         <button
           type="button"
-          class="a-list-editor__row-add"
+          class="a-le-row-add"
           @click="onAddClick"
         >
           <VIcon
@@ -700,36 +684,16 @@ defineExpose({
   </div>
 </template>
 
-<style lang="scss" scoped>
-@use './styles/tokens' as tokens;
-@use './styles/shared' as shared;
+<style lang="scss">
+@use './styles/tokens';
+@use './styles/shared';
 
-// Tokens + container setup live on the root block.
+// Variant-specific rules, scoped under the AListEditor root.
 .a-list-editor {
-  @include tokens.le-tokens;
-  @include tokens.le-shell-container;
-}
-
-// Shared rule pack — emitted at top level so the selectors stay bare
-// (`.a-list-editor__row`) rather than nested under the root block, matching
-// the pre-refactor CSS output.
-@include shared.le-card('.a-list-editor');
-@include shared.le-header-block('.a-list-editor');
-@include shared.le-state-and-empty('.a-list-editor');
-@include shared.le-row-primitives('.a-list-editor', $unsaved: '--dirty');
-@include shared.le-row-hover('.a-list-editor');
-@include shared.le-row-active('.a-list-editor');
-@include shared.le-row-add('.a-list-editor');
-@include shared.le-two-rows-layout('.a-list-editor');
-@include shared.le-action-visibility('.a-list-editor');
-@include shared.le-chips-shared('.a-list-editor');
-
-// Variant-specific rules, nested.
-.a-list-editor {
-  // Validation rail (AListEditor-specific — the sortable variant excludes
-  // `--unsaved` too, the nested variant doesn't surface validation visuals).
-  &__row--validation-invalid::after,
-  &__row--validation-warning::after {
+  // Validation rail. Sortable excludes `--unsaved` too (see its style block);
+  // the nested variant doesn't surface validation visuals.
+  .a-le-row--validation-invalid::after,
+  .a-le-row--validation-warning::after {
     content: '';
     position: absolute;
     left: 0;
@@ -738,54 +702,41 @@ defineExpose({
     width: 4px;
   }
 
-  &__row--validation-invalid:not(&__row--editing)::after {
+  .a-le-row--validation-invalid:not(.a-le-row--editing)::after {
     background: rgb(var(--v-theme-error, 217 37 80));
   }
 
-  &__row--validation-warning:not(&__row--editing)::after {
+  .a-le-row--validation-warning:not(.a-le-row--editing)::after {
     background: rgb(var(--v-theme-warning, 251 140 0));
   }
 
   // Chips — row-header padding (12 px left for the flat variant vs 8 px in
   // sortable, which reserves room for the drag handle).
-  &--chips &__row-header {
+  &--chips .a-le-row-header {
     padding: 2px 4px 2px 12px;
     gap: 4px;
     min-height: 28px;
   }
 }
 
-// Container-query driven desktop layout — adds the primary rail + soft gradient
-// to the form area. No padding-left override: the flat variant has no caret /
-// depth indent, so the body aligns with the row title (16 px). Rail + gradient
-// extend to the footer so Cancel/Save sits on the same continuous surface as
-// the form.
-@container le-shell (min-width: 769px) {
-  @include shared.le-editing-body-rail('.a-list-editor', $unsaved: '--dirty');
-}
-
-// Narrow-container / mobile layout — taller rows for comfortable touch
-// targets, always-visible actions, and the status badge drops out to make room.
+// Narrow-container / mobile layout — taller rows, always-visible actions,
+// status badge dropped to make room.
 /* stylelint-disable selector-max-compound-selectors */
 @container le-shell (max-width: 768px) {
   .a-list-editor {
     --le-row-min-height: 48px;
     --le-row-pad-y: 10px;
 
-    &__row:not(&__row--editing) &__status {
+    .a-le-row:not(.a-le-row--editing) .a-le-status {
       display: none;
     }
 
-    &__row &__action--edit,
-    &__row &__action--delete,
-    &__row &__action--menu {
+    .a-le-row .a-le-action--edit,
+    .a-le-row .a-le-action--delete,
+    .a-le-row .a-le-action--menu {
       opacity: 1;
     }
   }
 }
 /* stylelint-enable selector-max-compound-selectors */
-
-@media (width <= 600px) {
-  @include shared.le-two-rows-mobile-layout('.a-list-editor');
-}
 </style>

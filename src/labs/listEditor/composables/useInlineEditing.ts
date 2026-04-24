@@ -12,10 +12,10 @@ export interface UseInlineEditingOptions<TItem> {
   rowsContainer: Ref<HTMLElement | null>
   /**
    * CSS selector for the per-row element to scroll into view. Flat editors
-   * target the row directly (`.a-list-editor__row`, `.a-sortable-list-editor__row`);
-   * the nested variant wraps rows for drag/drop so the selector is the
-   * wrapper (`.a-nested-list-editor__row-wrapper`). Must contain a
-   * `[data-id="..."]` slot — filled at call time with the CSS-escaped key.
+   * target the row directly (`.a-le-row`); the nested variant wraps rows
+   * for drag/drop so the selector is the wrapper (`.a-le-row-wrapper`).
+   * Must contain a `[data-id="..."]` slot — filled at call time with the
+   * CSS-escaped key.
    */
   rowSelector: string
   /**

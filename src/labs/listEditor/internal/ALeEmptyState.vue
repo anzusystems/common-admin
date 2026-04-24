@@ -1,22 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-// Shared empty-state block used by all three list-editor variants. The outer
-// editor supplies the legacy BEM block name (`a-list-editor`,
-// `a-sortable-list-editor`, `a-nested-list-editor`) via `blockClass` so the
-// rendered `__empty`, `__empty-title`, `__empty-text` class suffixes match each
-// editor's existing CSS without any selector churn.
+// Shared empty-state block used by all three list-editor variants. Since the
+// refactor to a flat `.a-le-*` namespace, the block class no longer depends
+// on the parent variant — the same three classes render inside any editor.
 
 export interface Props {
   title: string
   text: string
-  blockClass: string
   addLabel?: string | null
   canAdd?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   addLabel: null,
   canAdd: false,
 })
@@ -26,18 +22,14 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
-
-const emptyClass = computed(() => `${props.blockClass}__empty`)
-const titleClass = computed(() => `${props.blockClass}__empty-title`)
-const textClass = computed(() => `${props.blockClass}__empty-text`)
 </script>
 
 <template>
-  <div :class="emptyClass">
-    <h3 :class="titleClass">
+  <div class="a-le-empty">
+    <h3 class="a-le-empty-title">
       {{ title }}
     </h3>
-    <p :class="textClass">
+    <p class="a-le-empty-text">
       {{ text }}
     </p>
     <VBtn

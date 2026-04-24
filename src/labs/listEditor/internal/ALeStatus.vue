@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
-// Reorder-mode header status pill. Legacy class (`.a-sortable-list-editor__toolbar-status`,
-// `.a-nested-list-editor__toolbar-status`) is supplied by the parent via attrs
-// fallthrough — inheritAttrs stays default so the class sticks to the root div.
+// Reorder-mode header status pill. Emits `.a-le-toolbar-status` on its root,
+// caller adds the `--pending` modifier via class binding. inheritAttrs stays
+// default so additional classes (e.g. the --pending modifier) stick to the
+// root div.
 
 export interface Props {
   hasPendingChanges: boolean
@@ -19,7 +20,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div>
+  <div class="a-le-toolbar-status">
     <VIcon
       v-if="hasPendingChanges"
       icon="mdi-circle-medium"

@@ -34,7 +34,7 @@ const ANestedRow = ANestedRowSelf as any
 const { t } = useI18n()
 
 const GROUP_CLASS = 'a-nested-list-editor__group'
-const HANDLE_CLASS = 'a-nested-list-editor__drag-handle'
+const HANDLE_CLASS = 'a-le-drag-handle'
 
 const anchorName = (key: ListEditorKey): string =>
   `--row-${String(key).replace(/\W/g, '_')}`
@@ -54,9 +54,9 @@ const directChildren = (): any[] =>
 <template>
   <div
     :class="[
-      'a-nested-list-editor__row-wrapper',
+      'a-le-row-wrapper',
       {
-        'a-nested-list-editor__row-wrapper--drop-disabled':
+        'a-le-row-wrapper--drop-disabled':
           dragState !== null && dragState.sourceKey === vi.key,
       },
     ]"
@@ -64,17 +64,17 @@ const directChildren = (): any[] =>
   >
     <div
       :class="[
-        'a-nested-list-editor__row',
-        vi.depth > 0 ? 'a-nested-list-editor__row--child' : null,
+        'a-le-row',
+        vi.depth > 0 ? 'a-le-row--child' : null,
         {
-          'a-nested-list-editor__row--editing': vi.editing,
-          'a-nested-list-editor__row--expanded': vi.expanded,
-          'a-nested-list-editor__row--unsaved': vi.unsaved,
-          'a-nested-list-editor__row--reorder': context.reorderMode,
-          'a-nested-list-editor__row--clickable': context.isRowClickable(vi),
-          'a-nested-list-editor__row--drop-source':
+          'a-le-row--editing': vi.editing,
+          'a-le-row--expanded': vi.expanded,
+          'a-le-row--unsaved': vi.unsaved,
+          'a-le-row--reorder': context.reorderMode,
+          'a-le-row--clickable': context.isRowClickable(vi),
+          'a-le-row--drop-source':
             dragState !== null && dragState.sourceKey === vi.key,
-          [`a-nested-list-editor__row--validation-${resolveValidation(vi.raw)}`]:
+          [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
             resolveValidation(vi.raw) !== null,
         },
       ]"
@@ -90,7 +90,7 @@ const directChildren = (): any[] =>
       />
 
       <div
-        class="a-nested-list-editor__row-header"
+        class="a-le-row-header"
         @click="callbacks.onRowClick(vi)"
       >
         <ALeDragHandle
@@ -126,12 +126,12 @@ const directChildren = (): any[] =>
           aria-hidden="true"
         />
 
-        <div class="a-nested-list-editor__row-main">
+        <div class="a-le-row-main">
           <slot
             name="item-compact"
             v-bind="buildSlotProps()"
           >
-            <span class="a-nested-list-editor__title">
+            <span class="a-le-title">
               {{ context.resolveCompactText(vi.raw, vi.key) }}
             </span>
           </slot>
@@ -150,15 +150,12 @@ const directChildren = (): any[] =>
             />
             +{{ vi.childrenCount }}
           </span>
-          <ALeUnsavedLabel
-            v-if="vi.unsaved"
-            class="a-nested-list-editor__unsaved-label"
-          />
+          <ALeUnsavedLabel v-if="vi.unsaved" />
         </div>
 
         <div
           v-if="!context.reorderMode"
-          class="a-nested-list-editor__status"
+          class="a-le-status"
         >
           <slot
             name="item-status"
@@ -170,14 +167,14 @@ const directChildren = (): any[] =>
                   && vi.raw[context.statusField] != null
                   && vi.raw[context.statusField] !== ''
               "
-              class="a-nested-list-editor__status-badge"
+              class="a-le-status-badge"
             >
               {{ vi.raw[context.statusField] }}
             </span>
           </slot>
         </div>
 
-        <div class="a-nested-list-editor__actions">
+        <div class="a-le-actions">
           <slot
             name="item-actions"
             v-bind="buildSlotProps()"
@@ -189,11 +186,7 @@ const directChildren = (): any[] =>
                 variant="text"
                 density="comfortable"
                 :disabled="vi.firstInParent"
-                :class="[
-                  'mx-1',
-                  'a-nested-list-editor__action',
-                  'a-nested-list-editor__action--up',
-                ]"
+                class="mx-1 a-le-action a-le-action--up"
                 @click.stop="callbacks.moveUp(vi.key)"
               >
                 <VIcon
@@ -212,11 +205,7 @@ const directChildren = (): any[] =>
                 variant="text"
                 density="comfortable"
                 :disabled="vi.lastInParent"
-                :class="[
-                  'mx-1',
-                  'a-nested-list-editor__action',
-                  'a-nested-list-editor__action--down',
-                ]"
+                class="mx-1 a-le-action a-le-action--down"
                 @click.stop="callbacks.moveDown(vi.key)"
               >
                 <VIcon
@@ -235,11 +224,7 @@ const directChildren = (): any[] =>
                 variant="text"
                 density="comfortable"
                 :active="false"
-                :class="[
-                  'mx-1',
-                  'a-nested-list-editor__action',
-                  'a-nested-list-editor__action--menu',
-                ]"
+                class="mx-1 a-le-action a-le-action--menu"
               >
                 <VIcon
                   icon="mdi-dots-vertical"
@@ -314,11 +299,7 @@ const directChildren = (): any[] =>
                 variant="tonal"
                 color="primary"
                 density="comfortable"
-                :class="[
-                  'mx-1',
-                  'a-nested-list-editor__action',
-                  'a-nested-list-editor__action--edit',
-                ]"
+                class="mx-1 a-le-action a-le-action--edit"
                 @click.stop="callbacks.onEditClick(vi)"
               >
                 <VIcon
@@ -337,11 +318,7 @@ const directChildren = (): any[] =>
                 size="small"
                 variant="text"
                 density="comfortable"
-                :class="[
-                  'mx-1',
-                  'a-nested-list-editor__action',
-                  'a-nested-list-editor__action--delete',
-                ]"
+                class="mx-1 a-le-action a-le-action--delete"
                 @click.stop="callbacks.onDeleteClick(vi)"
               >
                 <VIcon
@@ -365,11 +342,7 @@ const directChildren = (): any[] =>
                 variant="text"
                 density="comfortable"
                 :active="false"
-                :class="[
-                  'mx-1',
-                  'a-nested-list-editor__action',
-                  'a-nested-list-editor__action--menu',
-                ]"
+                class="mx-1 a-le-action a-le-action--menu"
               >
                 <VIcon
                   icon="mdi-dots-vertical"
@@ -416,8 +389,8 @@ const directChildren = (): any[] =>
            the compact header's status is enough; stacking it in the form body
            was visually noisy. -->
       <template v-if="vi.editing && !context.reorderMode && $slots.item">
-        <div class="a-nested-list-editor__row-body">
-          <div class="a-nested-list-editor__form">
+        <div class="a-le-row-body">
+          <div class="a-le-form">
             <slot
               name="item"
               v-bind="buildSlotProps()"
@@ -430,9 +403,9 @@ const directChildren = (): any[] =>
         >
           <div
             v-if="context.showInlineSaveFooter"
-            class="a-nested-list-editor__row-footer"
+            class="a-le-row-footer"
           >
-            <div class="a-nested-list-editor__row-footer-spacer" />
+            <div class="a-le-row-footer-spacer" />
             <VBtn
               variant="text"
               :disabled="vi.loading"
@@ -455,9 +428,9 @@ const directChildren = (): any[] =>
 
       <div
         v-else-if="vi.expanded && !context.reorderMode && $slots['item-readonly']"
-        class="a-nested-list-editor__row-body"
+        class="a-le-row-body"
       >
-        <div class="a-nested-list-editor__form">
+        <div class="a-le-form">
           <slot
             name="item-readonly"
             v-bind="buildSlotProps()"

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
-// Small "unsaved" pill (warning dot + translated label). Legacy class
-// (`.a-list-editor__unsaved-label`, `.a-sortable-list-editor__unsaved-label`,
-// `.a-nested-list-editor__unsaved-label`) reaches the root span via Vue's
-// default attrs fallthrough, so existing CSS rules keep matching unchanged.
+// Small "unsaved" pill (warning dot + translated label). Emits the shared
+// `.a-le-unsaved-label` class directly — the flat `.a-le-*` namespace means
+// every variant shares the same selector, no per-variant BEM prefix needed.
 
 export interface Props {
   label?: string | null
@@ -18,7 +17,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <span>
+  <span class="a-le-unsaved-label">
     <VIcon
       icon="mdi-circle-medium"
       size="12"

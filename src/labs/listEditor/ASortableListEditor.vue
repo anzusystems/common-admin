@@ -203,7 +203,7 @@ const {
   requestAutoOpen,
 } = useInlineEditing<TItem, ListViewItem<TItem>>({
   rowsContainer,
-  rowSelector: '.a-sortable-list-editor__row',
+  rowSelector: '.a-le-row',
   isInlineEdit,
   restoreSnapshot: (key, data) => editor.updateItem(key, data),
   watchKeys: () => modelValue.value.map((it) => it[props.keyField] as ListEditorKey),
@@ -363,7 +363,7 @@ const resolveValidation = (raw: TItem): ListEditorValidationState => {
 /* eslint-disable vue/no-ref-object-reactivity-loss */
 if (!isTouch.value) {
   const sortable = useSortable(rowsContainer, modelValue, {
-    handle: '.a-sortable-list-editor__drag-handle',
+    handle: '.a-le-drag-handle',
     animation: 150,
     // Force the fallback renderer so `dragClass` is applied to a CSS-controlled
     // clone that follows the cursor — gives us a custom, row-shaped ghost
@@ -371,9 +371,9 @@ if (!isTouch.value) {
     forceFallback: true,
     fallbackTolerance: 3,
     fallbackOnBody: true,
-    ghostClass: 'a-sortable-list-editor__row--ghost',
-    chosenClass: 'a-sortable-list-editor__row--chosen',
-    dragClass: 'a-sortable-list-editor__row--drag',
+    ghostClass: 'a-le-row--ghost',
+    chosenClass: 'a-le-row--chosen',
+    dragClass: 'a-le-row--drag',
     disabled: !dragEnabled.value,
     onEnd: (event) => {
       // Resolve which row was dragged by reading its data-id attribute
@@ -619,10 +619,10 @@ defineExpose({
       },
     ]"
   >
-    <div class="a-sortable-list-editor__card">
+    <div class="a-le-card">
       <div
         v-if="headerVisible"
-        class="a-sortable-list-editor__header"
+        class="a-le-header"
       >
         <slot
           name="header"
@@ -631,11 +631,11 @@ defineExpose({
         >
           <h3
             v-if="title"
-            class="a-sortable-list-editor__title-heading"
+            class="a-le-title-heading"
           >
             {{ title }}
           </h3>
-          <div class="a-sortable-list-editor__header-actions">
+          <div class="a-le-header-actions">
             <template v-if="reorderMode">
               <!-- Reorder-mode header: pending-changes count + Cancel/Apply.
                    Replaces the old sticky bottom toolbar — the actions sit
@@ -645,8 +645,7 @@ defineExpose({
                 v-bind="toolbarSlotProps"
               >
                 <ALeStatus
-                  class="a-sortable-list-editor__toolbar-status"
-                  :class="{ 'a-sortable-list-editor__toolbar-status--pending': hasPendingChanges }"
+                  :class="{ 'a-le-toolbar-status--pending': hasPendingChanges }"
                   :has-pending-changes="hasPendingChanges"
                   :pending-count="movedCount"
                   :error="applyError"
@@ -714,7 +713,7 @@ defineExpose({
 
       <div
         v-if="loading"
-        class="a-sortable-list-editor__state a-sortable-list-editor__state--loading"
+        class="a-le-state a-le-state--loading"
       >
         <VProgressCircular
           indeterminate
@@ -725,7 +724,7 @@ defineExpose({
 
       <div
         v-else-if="error"
-        class="a-sortable-list-editor__state a-sortable-list-editor__state--error"
+        class="a-le-state a-le-state--error"
       >
         <VAlert
           type="error"
@@ -739,7 +738,7 @@ defineExpose({
 
       <div
         v-else-if="isEmpty"
-        class="a-sortable-list-editor__state a-sortable-list-editor__state--empty"
+        class="a-le-state a-le-state--empty"
       >
         <slot
           name="empty"
@@ -748,7 +747,6 @@ defineExpose({
           :actions="{ add: onAddClick }"
         >
           <ALeEmptyState
-            block-class="a-sortable-list-editor"
             :title="emptyTitleResolved"
             :text="emptyTextResolved"
             :add-label="addLabelResolved"
@@ -767,15 +765,15 @@ defineExpose({
           v-for="vi in viewItemsDecorated"
           :key="String(vi.key)"
           :data-id="String(vi.key)"
-          class="a-sortable-list-editor__row"
+          class="a-le-row"
           :class="{
-            'a-sortable-list-editor__row--two-rows': twoRows === 'always',
-            'a-sortable-list-editor__row--editing': vi.editing,
-            'a-sortable-list-editor__row--expanded': vi.expanded,
-            'a-sortable-list-editor__row--unsaved': vi.unsaved,
-            'a-sortable-list-editor__row--reorder': reorderMode,
-            'a-sortable-list-editor__row--clickable': isRowClickable(vi),
-            [`a-sortable-list-editor__row--validation-${resolveValidation(vi.raw)}`]:
+            'a-le-row--two-rows': twoRows === 'always',
+            'a-le-row--editing': vi.editing,
+            'a-le-row--expanded': vi.expanded,
+            'a-le-row--unsaved': vi.unsaved,
+            'a-le-row--reorder': reorderMode,
+            'a-le-row--clickable': isRowClickable(vi),
+            [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
               resolveValidation(vi.raw) !== null,
           }"
         >
@@ -785,32 +783,26 @@ defineExpose({
           />
 
           <div
-            class="a-sortable-list-editor__row-header"
+            class="a-le-row-header"
             @click="onRowClick(vi)"
           >
-            <ALeDragHandle
-              v-if="dragEnabled"
-              class="a-sortable-list-editor__drag-handle"
-            />
+            <ALeDragHandle v-if="dragEnabled" />
 
-            <div class="a-sortable-list-editor__row-main">
+            <div class="a-le-row-main">
               <slot
                 name="item-compact"
                 v-bind="buildSlotProps(vi)"
               >
-                <span class="a-sortable-list-editor__title">
+                <span class="a-le-title">
                   {{ resolveCompactText(vi.raw, vi.key) }}
                 </span>
               </slot>
-              <ALeUnsavedLabel
-                v-if="vi.unsaved"
-                class="a-sortable-list-editor__unsaved-label"
-              />
+              <ALeUnsavedLabel v-if="vi.unsaved" />
             </div>
 
             <div
               v-if="!chips && !reorderMode"
-              class="a-sortable-list-editor__status"
+              class="a-le-status"
             >
               <slot
                 name="item-status"
@@ -818,14 +810,14 @@ defineExpose({
               >
                 <span
                   v-if="statusField && vi.raw[statusField] != null && vi.raw[statusField] !== ''"
-                  class="a-sortable-list-editor__status-badge"
+                  class="a-le-status-badge"
                 >
                   {{ vi.raw[statusField] }}
                 </span>
               </slot>
             </div>
 
-            <div class="a-sortable-list-editor__actions">
+            <div class="a-le-actions">
               <slot
                 name="item-actions"
                 v-bind="buildSlotProps(vi)"
@@ -837,7 +829,7 @@ defineExpose({
                   variant="text"
                   density="compact"
                   :active="false"
-                  class="a-sortable-list-editor__action a-sortable-list-editor__action--chip-close"
+                  class="a-le-action a-le-action--chip-close"
                   @click.stop="onDeleteClick(vi)"
                 >
                   <VIcon
@@ -852,7 +844,7 @@ defineExpose({
                     variant="text"
                     density="comfortable"
                     :disabled="!vi.canMoveUp"
-                    class="mx-1 a-sortable-list-editor__action a-sortable-list-editor__action--up"
+                    class="mx-1 a-le-action a-le-action--up"
                     @click.stop="moveUp(vi.index)"
                   >
                     <VIcon
@@ -871,7 +863,7 @@ defineExpose({
                     variant="text"
                     density="comfortable"
                     :disabled="!vi.canMoveDown"
-                    class="mx-1 a-sortable-list-editor__action a-sortable-list-editor__action--down"
+                    class="mx-1 a-le-action a-le-action--down"
                     @click.stop="moveDown(vi.index)"
                   >
                     <VIcon
@@ -890,7 +882,7 @@ defineExpose({
                     variant="text"
                     density="comfortable"
                     :active="false"
-                    class="mx-1 a-sortable-list-editor__action a-sortable-list-editor__action--menu"
+                    class="mx-1 a-le-action a-le-action--menu"
                   >
                     <VIcon
                       icon="mdi-dots-vertical"
@@ -959,11 +951,7 @@ defineExpose({
                     variant="tonal"
                     color="primary"
                     density="comfortable"
-                    :class="[
-                      'mx-1',
-                      'a-sortable-list-editor__action',
-                      'a-sortable-list-editor__action--edit',
-                    ]"
+                    class="mx-1 a-le-action a-le-action--edit"
                     @click.stop="onEditClick(vi)"
                   >
                     <VIcon
@@ -982,11 +970,7 @@ defineExpose({
                     size="small"
                     variant="text"
                     density="comfortable"
-                    :class="[
-                      'mx-1',
-                      'a-sortable-list-editor__action',
-                      'a-sortable-list-editor__action--delete',
-                    ]"
+                    class="mx-1 a-le-action a-le-action--delete"
                     @click.stop="onDeleteClick(vi)"
                   >
                     <VIcon
@@ -1006,11 +990,7 @@ defineExpose({
                     variant="text"
                     density="comfortable"
                     :active="false"
-                    :class="[
-                      'mx-1',
-                      'a-sortable-list-editor__action',
-                      'a-sortable-list-editor__action--menu',
-                    ]"
+                    class="mx-1 a-le-action a-le-action--menu"
                   >
                     <VIcon
                       icon="mdi-dots-vertical"
@@ -1040,8 +1020,8 @@ defineExpose({
           </div>
 
           <template v-if="vi.editing && !reorderMode && $slots.item">
-            <div class="a-sortable-list-editor__row-body">
-              <div class="a-sortable-list-editor__form">
+            <div class="a-le-row-body">
+              <div class="a-le-form">
                 <slot
                   name="item"
                   v-bind="buildSlotProps(vi)"
@@ -1054,9 +1034,9 @@ defineExpose({
             >
               <div
                 v-if="showInlineSaveFooter"
-                class="a-sortable-list-editor__row-footer"
+                class="a-le-row-footer"
               >
-                <div class="a-sortable-list-editor__row-footer-spacer" />
+                <div class="a-le-row-footer-spacer" />
                 <VBtn
                   variant="text"
                   :disabled="vi.loading"
@@ -1079,9 +1059,9 @@ defineExpose({
 
           <div
             v-else-if="vi.expanded && !reorderMode && $slots['item-readonly']"
-            class="a-sortable-list-editor__row-body"
+            class="a-le-row-body"
           >
-            <div class="a-sortable-list-editor__form">
+            <div class="a-le-form">
               <slot
                 name="item-readonly"
                 v-bind="buildSlotProps(vi)"
@@ -1106,7 +1086,7 @@ defineExpose({
       >
         <button
           type="button"
-          class="a-sortable-list-editor__row-add"
+          class="a-le-row-add"
           @click="onAddClick"
         >
           <VIcon
@@ -1133,42 +1113,12 @@ defineExpose({
   </div>
 </template>
 
-<style lang="scss" scoped>
-@use './styles/tokens' as tokens;
-@use './styles/shared' as shared;
+<style lang="scss">
+@use './styles/tokens';
+@use './styles/shared';
 
-// Tokens + container setup live on the root block.
-.a-sortable-list-editor {
-  @include tokens.le-tokens;
-  @include tokens.le-shell-container;
-}
-
-// Shared rule pack — emitted at top level so the selectors stay bare
-// (`.a-sortable-list-editor__row`) rather than nested under the root block.
-@include shared.le-card('.a-sortable-list-editor');
-@include shared.le-header-block('.a-sortable-list-editor');
-@include shared.le-header-actions('.a-sortable-list-editor');
-@include shared.le-state-and-empty('.a-sortable-list-editor');
-@include shared.le-row-primitives('.a-sortable-list-editor');
-@include shared.le-row-hover('.a-sortable-list-editor');
-@include shared.le-row-active('.a-sortable-list-editor');
-@include shared.le-row-add('.a-sortable-list-editor');
-@include shared.le-drag-handle('.a-sortable-list-editor');
-@include shared.le-toolbar-status('.a-sortable-list-editor');
-@include shared.le-two-rows-layout('.a-sortable-list-editor');
-
-// `--menu` stays out of the `hover: none` coarse-pointer override: in reorder
-// mode the dots-vertical menu button is always visible anyway, and the
-// non-reorder menu is driven by `--touch` / :hover detection above.
-@include shared.le-action-visibility(
-  '.a-sortable-list-editor',
-  $extra-actions: ('--up', '--down'),
-  $hover-none-actions: ('--edit', '--delete', '--up', '--down'),
-);
-@include shared.le-disabled-arrow-visibility('.a-sortable-list-editor');
-@include shared.le-chips-shared('.a-sortable-list-editor');
-
-// Variant-specific rules, nested.
+// Variant-specific rules for ASortableListEditor — reorder-mode trims, drag
+// clone styling, chips flex-wrap layout, and the validation rail.
 .a-sortable-list-editor {
   &__rows {
     display: flex;
@@ -1177,7 +1127,7 @@ defineExpose({
 
   // Reorder-mode trims the row-header padding since the drag handle already
   // eats some of the horizontal rhythm.
-  &__row--reorder &__row-header {
+  .a-le-row--reorder .a-le-row-header {
     padding-left: 12px;
     padding-right: 8px;
     gap: 8px;
@@ -1187,8 +1137,8 @@ defineExpose({
   // primary + warning rails (higher priority states) aren't overwritten by
   // a validation-error stripe.
   /* stylelint-disable selector-max-compound-selectors */
-  &__row--validation-invalid::after,
-  &__row--validation-warning::after {
+  .a-le-row--validation-invalid::after,
+  .a-le-row--validation-warning::after {
     content: '';
     position: absolute;
     left: 0;
@@ -1197,31 +1147,28 @@ defineExpose({
     width: 4px;
   }
 
-  &__row--validation-invalid:not(&__row--editing, &__row--unsaved)::after {
+  .a-le-row--validation-invalid:not(.a-le-row--editing, .a-le-row--unsaved)::after {
     background: var(--le-error-fg);
   }
 
-  &__row--validation-warning:not(&__row--editing, &__row--unsaved)::after {
+  .a-le-row--validation-warning:not(.a-le-row--editing, .a-le-row--unsaved)::after {
     background: var(--le-warning);
   }
   /* stylelint-enable selector-max-compound-selectors */
 
   // Drag rendering — SortableJS clone + ghost + chosen source.
-  // Placeholder row sitting at the drop target — faint outline so the
-  // landing position is obvious without stealing attention from the clone.
-  &__row--ghost {
+  .a-le-row--ghost {
     opacity: 0.35;
     background: var(--le-primary-state);
   }
 
-  // Source row while drag is in progress — stays in place, visibly picked.
-  &__row--chosen {
+  .a-le-row--chosen {
     opacity: 0.5;
   }
 
   // Floating clone that follows the cursor. Row-shaped card with elevation;
   // action column and status badge hidden so the preview stays clean.
-  &__row--drag {
+  .a-le-row--drag {
     background: var(--le-surface);
     border: 1px solid var(--le-border);
     border-radius: var(--le-radius);
@@ -1231,18 +1178,14 @@ defineExpose({
     pointer-events: none;
   }
 
-  // Hide the action column + status badge inside the drag clone (descendant
-  // selector, so SCSS can't use `&__actions` nested under `&__row--drag` —
-  // that would concatenate into a single `__row--drag__actions` class).
-  &__row--drag &__actions,
-  &__row--drag &__status {
+  .a-le-row--drag .a-le-actions,
+  .a-le-row--drag .a-le-status {
     display: none;
   }
 
   // Chips-layout variant-specific overrides — `__rows` flex-wraps into pills,
-  // `__row-header` gets the drag-handle-friendly 8 px left padding (vs 12 px
-  // in the AListEditor variant), `__drag-handle` shrinks to match the pill
-  // height.
+  // `row-header` gets the drag-handle-friendly 8 px left padding (vs 12 px
+  // in AListEditor), `drag-handle` shrinks to match the pill height.
   &--chips &__rows {
     display: flex;
     flex-wrap: wrap;
@@ -1250,23 +1193,16 @@ defineExpose({
     flex: 1 1 100%;
   }
 
-  &--chips &__row-header {
+  &--chips .a-le-row-header {
     padding: 2px 4px 2px 8px;
     gap: 4px;
     min-height: 28px;
   }
 
-  &--chips &__drag-handle {
+  &--chips .a-le-drag-handle {
     padding: 0;
     font-size: 16px;
   }
-}
-
-// Container-query driven desktop layout — adds the primary rail + soft
-// gradient to the editing form area. Same shape as AListEditor; no
-// padding-left override since the flat variant has no caret/depth indent.
-@container le-shell (min-width: 769px) {
-  @include shared.le-editing-body-rail('.a-sortable-list-editor');
 }
 
 // Narrow-container / mobile layout — taller rows, always-visible actions,
@@ -1277,20 +1213,16 @@ defineExpose({
     --le-row-min-height: 48px;
     --le-row-pad-y: 10px;
 
-    &__row:not(&__row--editing) &__status {
+    .a-le-row:not(.a-le-row--editing) .a-le-status {
       display: none;
     }
 
-    &__row &__action--edit,
-    &__row &__action--delete,
-    &__row &__action--menu {
+    .a-le-row .a-le-action--edit,
+    .a-le-row .a-le-action--delete,
+    .a-le-row .a-le-action--menu {
       opacity: 1;
     }
   }
 }
 /* stylelint-enable selector-max-compound-selectors */
-
-@media (width <= 600px) {
-  @include shared.le-two-rows-mobile-layout('.a-sortable-list-editor');
-}
 </style>

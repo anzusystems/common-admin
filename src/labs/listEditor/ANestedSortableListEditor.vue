@@ -335,7 +335,7 @@ const {
   requestAutoOpen,
 } = useInlineEditing<TItem, NestedViewItem<TItem>>({
   rowsContainer,
-  rowSelector: '.a-nested-list-editor__row-wrapper',
+  rowSelector: '.a-le-row-wrapper',
   isInlineEdit,
   restoreSnapshot: (key, data) => editor.updateItem(key, data),
   watchKeys: () => {
@@ -500,7 +500,7 @@ const destroySortables = () => {
 }
 
 const GROUP_CLASS = 'a-nested-list-editor__group'
-const HANDLE_CLASS = 'a-nested-list-editor__drag-handle'
+const HANDLE_CLASS = 'a-le-drag-handle'
 
 // Live drag state. `instruction` is recomputed on every pointermove while
 // drag is active — it encodes WHERE the dragged item will land (sibling-above/
@@ -527,7 +527,7 @@ const hitTestRow = (
 ): { el: HTMLElement; viewItem: DecoratedNestedViewItem<TItem> } | null => {
   const hit = document.elementFromPoint(clientX, clientY) as HTMLElement | null
   if (!hit) return null
-  const wrapper = hit.closest('.a-nested-list-editor__row-wrapper') as HTMLElement | null
+  const wrapper = hit.closest('.a-le-row-wrapper') as HTMLElement | null
   if (!wrapper) return null
   // Only consider wrappers inside our rowsContainer — elementFromPoint could
   // hit a different ANestedSortableListEditor instance on the same page.
@@ -549,9 +549,9 @@ const recomputeInstruction = (clientX: number, clientY: number) => {
   const containerRect = rowsContainer.value.getBoundingClientRect()
   // For hovered-row rect we read the row element (not the whole wrapper,
   // whose height balloons when children are rendered). The wrapper's first
-  // `.a-nested-list-editor__row` child is the header+body we want to hit-test.
+  // `.a-le-row` child is the header+body we want to hit-test.
   const rowEl = hit.el.querySelector(
-    ':scope > .a-nested-list-editor__row',
+    ':scope > .a-le-row',
   ) as HTMLElement | null
   const rowRect = (rowEl ?? hit.el).getBoundingClientRect()
   dragState.value.instruction = computeInstruction({
@@ -607,9 +607,9 @@ const initSortables = () => {
       group: { name: 'a-nested', pull: true, put: true },
       handle: '.' + HANDLE_CLASS,
       animation: 0,
-      ghostClass: 'a-nested-list-editor__row--ghost',
-      chosenClass: 'a-nested-list-editor__row--chosen',
-      dragClass: 'a-nested-list-editor__row--drag',
+      ghostClass: 'a-le-row--ghost',
+      chosenClass: 'a-le-row--chosen',
+      dragClass: 'a-le-row--drag',
       fallbackOnBody: true,
       forceFallback: true,
       fallbackTolerance: 3,
@@ -722,11 +722,11 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
   // "not here" signal. No warning-coloured ghost of the attempted target.
   if (inst.type === 'blocked') return null
   const refWrapper = rowsContainer.value.querySelector<HTMLElement>(
-    `.a-nested-list-editor__row-wrapper[data-id="${CSS.escape(String(inst.refKey))}"]`,
+    `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.refKey))}"]`,
   )
   if (!refWrapper) return null
   const rowEl = refWrapper.querySelector<HTMLElement>(
-    ':scope > .a-nested-list-editor__row',
+    ':scope > .a-le-row',
   )
   const containerRect = rowsContainer.value.getBoundingClientRect()
   const rowRect = (rowEl ?? refWrapper).getBoundingClientRect()
@@ -741,11 +741,11 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
   let connector: OverlayVisual['connector'] = null
   if (inst.levelRowKey !== null) {
     const levelWrapper = rowsContainer.value.querySelector<HTMLElement>(
-      `.a-nested-list-editor__row-wrapper[data-id="${CSS.escape(String(inst.levelRowKey))}"]`,
+      `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.levelRowKey))}"]`,
     )
     if (levelWrapper) {
       const levelRow = levelWrapper.querySelector<HTMLElement>(
-        ':scope > .a-nested-list-editor__row',
+        ':scope > .a-le-row',
       )
       const levelRect = (levelRow ?? levelWrapper).getBoundingClientRect()
       const levelCentreY = levelRect.top - containerRect.top + levelRect.height / 2
@@ -1134,10 +1134,10 @@ defineExpose({
       },
     ]"
   >
-    <div class="a-nested-list-editor__card">
+    <div class="a-le-card">
       <div
         v-if="headerVisible"
-        class="a-nested-list-editor__header"
+        class="a-le-header"
       >
         <slot
           name="header"
@@ -1146,11 +1146,11 @@ defineExpose({
         >
           <h3
             v-if="title"
-            class="a-nested-list-editor__title-heading"
+            class="a-le-title-heading"
           >
             {{ title }}
           </h3>
-          <div class="a-nested-list-editor__header-actions">
+          <div class="a-le-header-actions">
             <template v-if="reorderMode">
               <!-- Reorder-mode header: pending-changes count + Cancel/Apply.
                    Replaces the old sticky bottom toolbar — the actions sit
@@ -1161,8 +1161,7 @@ defineExpose({
                 v-bind="toolbarSlotProps"
               >
                 <ALeStatus
-                  class="a-nested-list-editor__toolbar-status"
-                  :class="{ 'a-nested-list-editor__toolbar-status--pending': hasPendingChanges }"
+                  :class="{ 'a-le-toolbar-status--pending': hasPendingChanges }"
                   :has-pending-changes="hasPendingChanges"
                   :pending-count="movedCount"
                   :error="applyError"
@@ -1272,7 +1271,7 @@ defineExpose({
 
       <div
         v-if="loading"
-        class="a-nested-list-editor__state a-nested-list-editor__state--loading"
+        class="a-le-state a-le-state--loading"
       >
         <VProgressCircular
           indeterminate
@@ -1283,7 +1282,7 @@ defineExpose({
 
       <div
         v-else-if="error"
-        class="a-nested-list-editor__state a-nested-list-editor__state--error"
+        class="a-le-state a-le-state--error"
       >
         <VAlert
           type="error"
@@ -1297,7 +1296,7 @@ defineExpose({
 
       <div
         v-else-if="isEmpty"
-        class="a-nested-list-editor__state a-nested-list-editor__state--empty"
+        class="a-le-state a-le-state--empty"
       >
         <slot
           name="empty"
@@ -1306,7 +1305,6 @@ defineExpose({
           :actions="{ add: onAddClick }"
         >
           <ALeEmptyState
-            block-class="a-nested-list-editor"
             :title="emptyTitleResolved"
             :text="emptyTextResolved"
             :add-label="addLabelResolved"
@@ -1425,7 +1423,7 @@ defineExpose({
       >
         <button
           type="button"
-          class="a-nested-list-editor__row-add"
+          class="a-le-row-add"
           @click="onAddClick"
         >
           <VIcon
@@ -1453,51 +1451,14 @@ defineExpose({
 </template>
 
 <style lang="scss">
-@use './styles/tokens' as tokens;
-@use './styles/shared' as shared;
+@use './styles/tokens';
+@use './styles/shared';
 
-// Tokens + container setup live on the root block.
-.a-nested-list-editor {
-  @include tokens.le-tokens;
-  @include tokens.le-shell-container;
-}
-
-// Shared rule pack — emitted at top level so the selectors stay bare.
-// `$deep: false` + `$sp: '.a-nested-list-editor '` tell the shared mixins to
-// emit bare `*` (unscoped styles can't use `:deep()`) and to prefix the
-// slot-content-targeting rules with an extra class for specificity — the
-// pre-refactor CSS did the same with a hand-written `.a-nested-list-editor`
-// double-prefix.
-@include shared.le-card('.a-nested-list-editor');
-@include shared.le-header-block('.a-nested-list-editor');
-@include shared.le-header-actions('.a-nested-list-editor');
-@include shared.le-state-and-empty(
-  '.a-nested-list-editor',
-  $deep: false,
-  $full-width-alert: false,
-);
-@include shared.le-row-primitives(
-  '.a-nested-list-editor',
-  $deep: false,
-  $sp: '.a-nested-list-editor ',
-);
-@include shared.le-row-hover('.a-nested-list-editor');
-
-// No `le-row-active` call — the nested variant intentionally omits `:active`
-// feedback on clickable rows (drag-handle press is the loud affordance here).
-@include shared.le-row-add('.a-nested-list-editor', $focus-outline: false);
-@include shared.le-drag-handle('.a-nested-list-editor');
-@include shared.le-toolbar-status('.a-nested-list-editor');
-@include shared.le-action-visibility(
-  '.a-nested-list-editor',
-  $extra-actions: ('--add-child', '--up', '--down'),
-);
-@include shared.le-disabled-arrow-visibility('.a-nested-list-editor');
-
-// Variant-specific rules, nested.
+// Variant-specific rules for ANestedSortableListEditor — depth-aware padding,
+// tree toggle caret, children groups, drop indicator overlay, drag clone.
 .a-nested-list-editor {
   // Depth-aware left padding — caret column + indent per depth level.
-  &__row-header {
+  .a-le-row-header {
     padding: var(--le-row-pad-y) 12px var(--le-row-pad-y)
       calc(16px + var(--nested-depth, 0) * var(--le-indent));
   }
@@ -1514,20 +1475,30 @@ defineExpose({
     flex-direction: column;
   }
 
-  &__row-wrapper {
-    display: flex;
-    flex-direction: column;
+  // Toolbar-status uses the shorthand `font: 500 13px/1 var(...)` — the
+  // shared class emits the equivalent longhand for the flat variants. Re-apply
+  // the shorthand here so the nested variant keeps its explicit line-height
+  // reset.
+  .a-le-toolbar-status {
+    font: 500 13px/1 var(--v-font-body, inherit);
   }
+}
 
+.a-le-row-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.a-nested-list-editor {
   // Root-level rows carry a bolder title weight to anchor the visual
   // hierarchy without separate header rows.
-  &__row:not(&__row--child) &__title {
+  .a-le-row:not(.a-le-row--child) .a-le-title {
     font-weight: 600;
   }
 
   // Reorder mode — depth-aware padding matches the flat variant's shape but
   // offset by the row's indent level.
-  &__row--reorder &__row-header {
+  .a-le-row--reorder .a-le-row-header {
     padding-left: calc(12px + var(--nested-depth, 0) * var(--le-indent));
     padding-right: 8px;
     gap: 8px;
@@ -1535,8 +1506,8 @@ defineExpose({
 
   // Active (editing / readonly-expanded) tree-toggle picks up the primary
   // tint so the whole header reads "active" together with the title color.
-  &__row--editing &__tree-toggle,
-  &__row--expanded &__tree-toggle {
+  .a-le-row--editing &__tree-toggle,
+  .a-le-row--expanded &__tree-toggle {
     color: var(--le-primary);
   }
 
@@ -1608,8 +1579,8 @@ defineExpose({
   // Source row + every descendant inside the dragged subtree — dimmed and
   // made non-hittable during drag. `!important` on display beats SortableJS's
   // inline `display: none` under `forceFallback: true`.
-  &__row-wrapper#{&}__row--chosen,
-  &__row-wrapper#{&}__row-wrapper--drop-disabled {
+  .a-le-row-wrapper.a-le-row--chosen,
+  .a-le-row-wrapper.a-le-row-wrapper--drop-disabled {
     display: flex !important;
     opacity: 0.4 !important;
     pointer-events: none !important;
@@ -1617,7 +1588,7 @@ defineExpose({
 
   // Hide SortableJS's own placeholder — our overlay (drop-line / drop-box)
   // is the sole landing indicator.
-  &__row--ghost {
+  .a-le-row--ghost {
     display: none !important;
   }
 
@@ -1625,7 +1596,7 @@ defineExpose({
   // carries all the "where will it land" information; a ghost card dragging
   // behind the pointer is pure noise. The selector matches the wrapper to
   // beat the `.row-wrapper--drop-disabled` rule that the clone inherits.
-  &__row-wrapper#{&}__row--drag {
+  .a-le-row-wrapper.a-le-row--drag {
     display: none !important;
   }
 
@@ -1666,13 +1637,13 @@ defineExpose({
   }
 
   // While dragging, dim the add-button so focus stays on the drag target.
-  &__rows--dragging &__row-add {
+  &__rows--dragging .a-le-row-add {
     opacity: 0.4;
   }
 
   // "+N" children indicator — rendered on every row with children, but
   // hidden in the normal DOM. Only becomes visible inside the SortableJS
-  // drag clone (which carries `.__row--drag`) so the user sees that the
+  // drag clone (carrying `.a-le-row--drag`) so the user sees that the
   // whole branch will follow the item being moved.
   &__drag-count {
     display: none;
@@ -1688,33 +1659,23 @@ defineExpose({
     flex-shrink: 0;
   }
 
-  &__row--drag &__drag-count {
+  .a-le-row--drag &__drag-count {
     display: inline-flex;
   }
 }
 
-// The nested editor's toolbar-status uses the shorthand
-// `font: 500 13px/1 var(...)` — the shared `le-toolbar-status` mixin emits
-// the equivalent longhand (`font-weight`, `font-size`, etc.) for the flat
-// variants. Re-apply the shorthand here so the nested variant keeps its
-// explicit line-height reset.
-.a-nested-list-editor__toolbar-status {
-  font: 500 13px/1 var(--v-font-body, inherit);
-}
-
 // Container-query driven desktop layout — depth-aware padding-left so the
 // inline form aligns with the row title column: 16 (pad) + depth*24 (indent)
-// + 24 (caret) + 10 (gap) = 50 + depth*indent. Rail + gradient match the
-// flat editors via the shared mixin.
+// + 24 (caret) + 10 (gap) = 50 + depth*indent.
 @container le-shell (min-width: 769px) {
-  @include shared.le-editing-body-rail('.a-nested-list-editor');
-
-  .a-nested-list-editor__row--editing .a-nested-list-editor__row-body,
-  .a-nested-list-editor__row--expanded .a-nested-list-editor__row-body,
-  .a-nested-list-editor__row--editing .a-nested-list-editor__row-footer,
-  .a-nested-list-editor__row--expanded .a-nested-list-editor__row-footer {
-    padding-left: calc(50px + var(--nested-depth, 0) * var(--le-indent));
-    padding-right: 16px;
+  .a-nested-list-editor {
+    .a-le-row--editing .a-le-row-body,
+    .a-le-row--expanded .a-le-row-body,
+    .a-le-row--editing .a-le-row-footer,
+    .a-le-row--expanded .a-le-row-footer {
+      padding-left: calc(50px + var(--nested-depth, 0) * var(--le-indent));
+      padding-right: 16px;
+    }
   }
 }
 
@@ -1728,13 +1689,13 @@ defineExpose({
     --le-row-min-height: 48px;
     --le-row-pad-y: 10px;
 
-    &__row:not(&__row--editing) &__status {
+    .a-le-row:not(.a-le-row--editing) .a-le-status {
       display: none;
     }
 
-    &__row &__action--edit,
-    &__row &__action--delete,
-    &__row &__action--menu {
+    .a-le-row .a-le-action--edit,
+    .a-le-row .a-le-action--delete,
+    .a-le-row .a-le-action--menu {
       opacity: 1;
     }
   }

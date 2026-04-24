@@ -94,7 +94,7 @@ describe('ANestedSortableListEditor', () => {
     it('renders root rows + expanded child rows', () => {
       const { wrapper } = mountEditor()
       // 3 root + 2 children of News (News is expanded by default, it had children)
-      const rows = wrapper.findAll('.a-nested-list-editor__row')
+      const rows = wrapper.findAll('.a-le-row')
       expect(rows.length).toBe(5)
     })
 
@@ -107,7 +107,7 @@ describe('ANestedSortableListEditor', () => {
       // Click the second root's chevron (News has children)
       await chevrons[1].trigger('click')
       await nextTick()
-      const rows = wrapper.findAll('.a-nested-list-editor__row')
+      const rows = wrapper.findAll('.a-le-row')
       expect(rows.length).toBe(3)
     })
 
@@ -123,7 +123,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper, model } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      const downs = wrapper.findAll('.a-nested-list-editor__action--down')
+      const downs = wrapper.findAll('.a-le-action--down')
       // First root down: Home <-> News
       await downs[0].trigger('click')
       expect(model.value.children.map((n) => n.data.id)).toEqual([2, 1, 3])
@@ -137,7 +137,7 @@ describe('ANestedSortableListEditor', () => {
       await clickReorder(wrapper)
       await flushPromises()
       // Move Weather (second child of News) up → should swap with Sport
-      const ups = wrapper.findAll('.a-nested-list-editor__action--up')
+      const ups = wrapper.findAll('.a-le-action--up')
       // Ups: root[0]=Home (disabled), root[1]=News, child[0]=Sport (disabled), child[1]=Weather, root[2]=About
       // Find the weather-level up — fourth in the DOM order if News is expanded
       const weatherUp = ups[3]
@@ -150,8 +150,8 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      const ups = wrapper.findAll('.a-nested-list-editor__action--up')
-      const downs = wrapper.findAll('.a-nested-list-editor__action--down')
+      const ups = wrapper.findAll('.a-le-action--up')
+      const downs = wrapper.findAll('.a-le-action--down')
       expect(ups[0].attributes('disabled')).toBeDefined() // Home (first root)
       expect(downs[downs.length - 1].attributes('disabled')).toBeDefined() // About (last root)
     })
@@ -160,9 +160,9 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
-      const unsaved = wrapper.findAll('.a-nested-list-editor__row--unsaved')
+      const unsaved = wrapper.findAll('.a-le-row--unsaved')
       expect(unsaved.length).toBeGreaterThan(0)
     })
   })
@@ -172,7 +172,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper, model, mode } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       expect(model.value.children.map((n) => n.data.id)).toEqual([2, 1, 3])
 
       const cancel = wrapper
@@ -191,7 +191,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper, model, mode, editor } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
 
       const apply = wrapper
         .findAll('button')
@@ -211,7 +211,7 @@ describe('ANestedSortableListEditor', () => {
       })
       const { wrapper, model, mode } = mountEditor(tree(), { onReorderApply: save })
       await clickReorder(wrapper)
-      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       const apply = wrapper
         .findAll('button')
         .find((b) => b.text().toLowerCase().includes('apply'))!
@@ -227,7 +227,7 @@ describe('ANestedSortableListEditor', () => {
       const save = vi.fn().mockRejectedValue(new Error('boom'))
       const { wrapper, mode, editor } = mountEditor(tree(), { onReorderApply: save })
       await clickReorder(wrapper)
-      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       const apply = wrapper
         .findAll('button')
         .find((b) => b.text().toLowerCase().includes('apply'))!
@@ -359,7 +359,7 @@ describe('ANestedSortableListEditor', () => {
       api.resetDirtyBaseline()
       await flushPromises()
       // No dirty rows in DOM
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
   })
 
@@ -374,8 +374,8 @@ describe('ANestedSortableListEditor', () => {
         expect(reorder.attributes('disabled')).toBeDefined()
       }
       // Edit + delete buttons should be 0 in readonly (canInteract === false)
-      expect(wrapper.findAll('.a-nested-list-editor__action--edit').length).toBe(0)
-      expect(wrapper.findAll('.a-nested-list-editor__action--delete').length).toBe(0)
+      expect(wrapper.findAll('.a-le-action--edit').length).toBe(0)
+      expect(wrapper.findAll('.a-le-action--delete').length).toBe(0)
     })
   })
 
@@ -411,7 +411,7 @@ describe('ANestedSortableListEditor', () => {
   describe('events', () => {
     it('emits edit when a row is clicked in view mode', async () => {
       const { wrapper, editor } = mountEditor()
-      await wrapper.findAll('.a-nested-list-editor__row-header')[0].trigger('click')
+      await wrapper.findAll('.a-le-row-header')[0].trigger('click')
       const events = editor().emitted('edit') as Array<[NestedViewItem<MenuItem>]> | undefined
       expect(events).toBeTruthy()
       expect(events![0][0].key).toBe(1)
@@ -419,7 +419,7 @@ describe('ANestedSortableListEditor', () => {
 
     it('emits add when the add button at the bottom is clicked', async () => {
       const { wrapper, editor } = mountEditor()
-      await wrapper.find('.a-nested-list-editor__row-add').trigger('click')
+      await wrapper.find('.a-le-row-add').trigger('click')
       expect(editor().emitted('add')).toBeTruthy()
     })
   })
@@ -449,7 +449,7 @@ describe('ANestedSortableListEditor', () => {
       // Add-child now lives inside the overflow (⋮) menu — so the menu button itself only
       // renders on rows where add-child or add-after is available. With add-after disabled
       // the menu button exists iff canAddChild is true, i.e. on the Parent row only.
-      const overflow = wrapper.findAll('.a-nested-list-editor__action--menu')
+      const overflow = wrapper.findAll('.a-le-action--menu')
       expect(overflow.length).toBe(1)
     })
 
@@ -496,19 +496,19 @@ describe('ANestedSortableListEditor', () => {
   describe('states', () => {
     it('renders loading state', () => {
       const { wrapper } = mountEditor(tree(), { loading: true })
-      expect(wrapper.find('.a-nested-list-editor__state--loading').exists()).toBe(true)
+      expect(wrapper.find('.a-le-state--loading').exists()).toBe(true)
     })
 
     it('renders error state with the message', () => {
       const { wrapper } = mountEditor(tree(), { error: 'Server offline' })
-      expect(wrapper.find('.a-nested-list-editor__state--error').exists()).toBe(true)
+      expect(wrapper.find('.a-le-state--error').exists()).toBe(true)
       expect(wrapper.text()).toContain('Server offline')
     })
 
     it('renders empty state when the tree has no children', () => {
       const empty: NestedTree<MenuItem> = { children: [], meta: { dirty: false } }
       const { wrapper } = mountEditor(empty)
-      expect(wrapper.find('.a-nested-list-editor__state--empty').exists()).toBe(true)
+      expect(wrapper.find('.a-le-state--empty').exists()).toBe(true)
     })
   })
 
@@ -544,7 +544,7 @@ describe('ANestedSortableListEditor', () => {
       })
       const wrapper = mount(Host)
       // Click first row header to expand
-      await wrapper.findAll('.a-nested-list-editor__row-header')[0].trigger('click')
+      await wrapper.findAll('.a-le-row-header')[0].trigger('click')
       await nextTick()
       expect(wrapper.find('.my-readonly').exists()).toBe(true)
     })
@@ -572,12 +572,12 @@ describe('ANestedSortableListEditor', () => {
         },
       })
       const wrapper = mount(Host)
-      const headers = wrapper.findAll('.a-nested-list-editor__row-header')
+      const headers = wrapper.findAll('.a-le-row-header')
       await headers[0].trigger('click')
       await nextTick()
       await headers[2].trigger('click') // skip the 2nd which is News (was opened?) — target 3rd
       await nextTick()
-      expect(wrapper.findAll('.a-nested-list-editor__row--editing').length).toBeGreaterThanOrEqual(2)
+      expect(wrapper.findAll('.a-le-row--editing').length).toBeGreaterThanOrEqual(2)
     })
   })
 
@@ -598,14 +598,14 @@ describe('ANestedSortableListEditor', () => {
       })
       const wrapper = mount(Host)
       await nextTick()
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
       // Simulate in-place mutation by replacing a node's data via fresh cloned tree
       // eslint-disable-next-line vue/no-ref-object-reactivity-loss
       const fresh = JSON.parse(JSON.stringify(model.value)) as NestedTree<MenuItem>
       fresh.children[0].data.title = 'Home RENAMED'
       model.value = fresh
       await nextTick()
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(1)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
       // Reset baseline via exposed API
       const editor = findEditor(wrapper)
       const exposed = (editor.vm as unknown as {
@@ -613,7 +613,7 @@ describe('ANestedSortableListEditor', () => {
       }).$.exposed
       exposed.resetDirtyBaseline()
       await nextTick()
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
   })
 
@@ -625,7 +625,7 @@ describe('ANestedSortableListEditor', () => {
       // the add-child option. Add-child now lives in the overflow (⋮) menu; with add-after
       // disabled, the menu button only renders when canAddChild is true, so we count those.
       const { wrapper } = mountEditor(tree(), { showAddChildButton: true, maxDepth: 2 })
-      const overflow = wrapper.findAll('.a-nested-list-editor__action--menu')
+      const overflow = wrapper.findAll('.a-le-action--menu')
       expect(overflow.length).toBe(3)
     })
   })
@@ -637,7 +637,7 @@ describe('ANestedSortableListEditor', () => {
       await flushPromises()
       // On a non-touch viewport the drag-enabled class is expected; on touch the arrows are used.
       const rootHasDragClass = wrapper.find('.a-nested-list-editor--drag-enabled').exists()
-      const arrowsCount = wrapper.findAll('.a-nested-list-editor__action--up').length
+      const arrowsCount = wrapper.findAll('.a-le-action--up').length
       expect(rootHasDragClass || arrowsCount > 0).toBe(true)
     })
 
@@ -645,7 +645,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor(tree(), { disableDrag: true })
       await clickReorder(wrapper)
       await flushPromises()
-      expect(wrapper.find('.a-nested-list-editor__drag-handle').exists()).toBe(false)
+      expect(wrapper.find('.a-le-drag-handle').exists()).toBe(false)
       expect(wrapper.find('.a-nested-list-editor--drag-enabled').exists()).toBe(false)
     })
   })
@@ -661,16 +661,16 @@ describe('ANestedSortableListEditor', () => {
       await clickReorder(wrapper)
       await flushPromises()
       // Make a move so Apply becomes enabled.
-      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
-      const header = wrapper.find('.a-nested-list-editor__header')
+      const header = wrapper.find('.a-le-header')
       expect(header.exists()).toBe(true)
       const headerButtons = header.findAll('button')
       const cancel = headerButtons.find((b) => b.text().toLowerCase().includes('cancel'))
       const apply = headerButtons.find((b) => b.text().toLowerCase().includes('apply'))
       expect(cancel).toBeTruthy()
       expect(apply).toBeTruthy()
-      expect(header.find('.a-nested-list-editor__toolbar-status').exists()).toBe(true)
+      expect(header.find('.a-le-toolbar-status').exists()).toBe(true)
       // No separate bottom `.__toolbar` element any more.
       expect(wrapper.find('.a-nested-list-editor__toolbar').exists()).toBe(false)
     })
@@ -689,7 +689,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
       const apply = wrapper
         .findAll('button')
@@ -703,27 +703,27 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBeGreaterThan(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
 
       const cancel = wrapper
         .findAll('button')
         .find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancel.trigger('click')
       await flushPromises()
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
 
       await clickReorder(wrapper)
       await flushPromises()
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
 
     it('applying reorder KEEPS movedKeys populated', async () => {
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
 
       const apply = wrapper
@@ -734,12 +734,12 @@ describe('ANestedSortableListEditor', () => {
 
       // Consumer still has to call resetDirtyBaseline — the markers stick
       // around until they confirm the server save.
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBeGreaterThan(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
 
       const api = editorExposed(wrapper)
       api.resetDirtyBaseline()
       await nextTick()
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
   })
 
@@ -757,14 +757,14 @@ describe('ANestedSortableListEditor', () => {
       // Up/Down arrow DOM order matches flat view order. News's down arrow is
       // the second one (index 1) in the up/down array — Home(0), News(1),
       // Sport(2), Weather(3), About(4).
-      const downs = wrapper.findAll('.a-nested-list-editor__action--down')
+      const downs = wrapper.findAll('.a-le-action--down')
       await downs[1].trigger('click')
       await flushPromises()
 
       // Now About comes above News, and News moved down. News + its two
       // children should all be flagged unsaved. The siblings that shifted
       // (Home, About) must NOT be flagged.
-      const unsavedRows = wrapper.findAll('.a-nested-list-editor__row--unsaved')
+      const unsavedRows = wrapper.findAll('.a-le-row--unsaved')
       expect(unsavedRows.length).toBe(3)
     })
   })
@@ -798,7 +798,7 @@ describe('ANestedSortableListEditor', () => {
       // clicked (observed flakily under certain test-order conditions).
       await flushPromises()
       try {
-        const menus = wrapper.findAll('.a-nested-list-editor__action--menu')
+        const menus = wrapper.findAll('.a-le-action--menu')
         expect(menus.length).toBeGreaterThan(0)
         await menus[0].trigger('click')
         await flushPromises()
@@ -853,7 +853,7 @@ describe('ANestedSortableListEditor', () => {
       try {
         await clickReorder(wrapper)
         await flushPromises()
-        const menus = wrapper.findAll('.a-nested-list-editor__action--menu')
+        const menus = wrapper.findAll('.a-le-action--menu')
         expect(menus.length).toBeGreaterThan(0)
         await menus[0].trigger('click')
         await flushPromises()
@@ -919,7 +919,7 @@ describe('ANestedSortableListEditor', () => {
       })
       const wrapper = mount(Host)
       await nextTick()
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
 
       // Flip only position + parent on a clone — content is unchanged in the
       // sense the dirty comparator cares about.
@@ -928,7 +928,7 @@ describe('ANestedSortableListEditor', () => {
       fresh.children[0].data.parent = 777
       model.value = fresh
       await nextTick()
-      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
   })
 })

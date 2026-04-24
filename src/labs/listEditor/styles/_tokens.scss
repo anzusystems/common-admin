@@ -1,6 +1,6 @@
-// Shared token set for all list-editor variants. Each variant previously
-// declared its own `--ale-*` / `--asle-*` / `--ansle-*` custom-property block
-// with identical values — this mixin emits the unified `--le-*` set.
+// Shared token set for all list-editor variants. Each variant root declares
+// the same `--le-*` custom-property block so descendant rules can share tokens
+// without per-variant duplication.
 // Vuetify v4 exports theme colours as comma-separated "R, G, B" lists, which
 // is why every primary/error/warning/surface var uses the explicit
 // `rgba(..., A)` form or `rgb(var(--v-theme-*, R, G, B))`. The slash-alpha
@@ -8,7 +8,13 @@
 // silently falls back to transparent.
 /* stylelint-disable color-function-alias-notation */
 
-@mixin le-tokens {
+.a-list-editor,
+.a-sortable-list-editor,
+.a-nested-list-editor {
+  position: relative;
+  container-type: inline-size;
+  container-name: le-shell;
+
   --le-border: rgb(0 0 0 / 12%);
   --le-surface: rgb(var(--v-theme-surface, 255, 255, 255));
   --le-surface-container: rgb(0 0 0 / 2.5%);
@@ -35,15 +41,4 @@
   --le-row-pad-y: 6px;
   --le-row-font: 13px;
   --le-indent: 24px;
-}
-
-// Container-query setup — each editor declares a local `le-shell` container so
-// rules inside `@container le-shell (...)` key off the component's own width,
-// not the viewport. Multiple editors with the same container name don't
-// collide: `@container` queries match the nearest ancestor by name, and each
-// editor is its own ancestor tree.
-@mixin le-shell-container {
-  position: relative;
-  container-type: inline-size;
-  container-name: le-shell;
 }

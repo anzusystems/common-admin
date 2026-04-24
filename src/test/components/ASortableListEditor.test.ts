@@ -64,11 +64,11 @@ describe('ASortableListEditor', () => {
   describe('view mode', () => {
     it('renders rows with edit/delete buttons and no reorder arrows', () => {
       const { wrapper } = mountEditor()
-      expect(wrapper.findAll('.a-sortable-list-editor__row')).toHaveLength(4)
-      expect(wrapper.findAll('.a-sortable-list-editor__action--edit').length).toBeGreaterThan(0)
-      expect(wrapper.findAll('.a-sortable-list-editor__action--delete').length).toBeGreaterThan(0)
-      expect(wrapper.find('.a-sortable-list-editor__action--up').exists()).toBe(false)
-      expect(wrapper.find('.a-sortable-list-editor__action--down').exists()).toBe(false)
+      expect(wrapper.findAll('.a-le-row')).toHaveLength(4)
+      expect(wrapper.findAll('.a-le-action--edit').length).toBeGreaterThan(0)
+      expect(wrapper.findAll('.a-le-action--delete').length).toBeGreaterThan(0)
+      expect(wrapper.find('.a-le-action--up').exists()).toBe(false)
+      expect(wrapper.find('.a-le-action--down').exists()).toBe(false)
     })
 
     it('renders the reorder toggle button by default when showReorderToggle=true', () => {
@@ -100,7 +100,7 @@ describe('ASortableListEditor', () => {
       await flushPromises()
       expect(mode.value).toBe('reorder')
       expect(editor().emitted('reorder-start')).toBeTruthy()
-      expect(wrapper.findAll('.a-sortable-list-editor__action--up').length).toBeGreaterThan(0)
+      expect(wrapper.findAll('.a-le-action--up').length).toBeGreaterThan(0)
     })
 
     it('exits reorder mode on cancel and restores snapshot', async () => {
@@ -109,7 +109,7 @@ describe('ASortableListEditor', () => {
       await flushPromises()
 
       // Move the first row down and confirm live update
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       expect(model.value.map((i) => i.id)).toEqual([2, 1, 3, 4])
 
       // Click Cancel
@@ -130,22 +130,22 @@ describe('ASortableListEditor', () => {
     it('moveUp swaps with the previous row', async () => {
       const { wrapper, model } = mountEditor()
       await clickToggle(wrapper)
-      await wrapper.findAll('.a-sortable-list-editor__action--up')[1].trigger('click')
+      await wrapper.findAll('.a-le-action--up')[1].trigger('click')
       expect(model.value.map((i) => i.id)).toEqual([2, 1, 3, 4])
     })
 
     it('moveDown swaps with the next row', async () => {
       const { wrapper, model } = mountEditor()
       await clickToggle(wrapper)
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       expect(model.value.map((i) => i.id)).toEqual([2, 1, 3, 4])
     })
 
     it('disables moveUp on the first row and moveDown on the last row', async () => {
       const { wrapper } = mountEditor()
       await clickToggle(wrapper)
-      const ups = wrapper.findAll('.a-sortable-list-editor__action--up')
-      const downs = wrapper.findAll('.a-sortable-list-editor__action--down')
+      const ups = wrapper.findAll('.a-le-action--up')
+      const downs = wrapper.findAll('.a-le-action--down')
       expect(ups[0].attributes('disabled')).toBeDefined()
       expect(downs[downs.length - 1].attributes('disabled')).toBeDefined()
     })
@@ -153,9 +153,9 @@ describe('ASortableListEditor', () => {
     it('marks moved rows as unsaved (single unified state)', async () => {
       const { wrapper } = mountEditor()
       await clickToggle(wrapper)
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
-      const unsaved = wrapper.findAll('.a-sortable-list-editor__row--unsaved')
+      const unsaved = wrapper.findAll('.a-le-row--unsaved')
       // Only the row the user actively moved is marked unsaved now —
       // `movedKeys` no longer flags sibling-index side-effects.
       expect(unsaved.length).toBe(1)
@@ -166,7 +166,7 @@ describe('ASortableListEditor', () => {
     it('apply without callback commits new order and exits reorder mode', async () => {
       const { wrapper, model, mode, editor } = mountEditor()
       await clickToggle(wrapper)
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
 
       const apply = wrapper
         .findAll('button')
@@ -186,7 +186,7 @@ describe('ASortableListEditor', () => {
       })
       const { wrapper, model, mode } = mountEditor(items(), { onReorderApply: save })
       await clickToggle(wrapper)
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
 
       const apply = wrapper
         .findAll('button')
@@ -204,7 +204,7 @@ describe('ASortableListEditor', () => {
       const save = vi.fn().mockRejectedValue(new Error('boom'))
       const { wrapper, mode, editor } = mountEditor(items(), { onReorderApply: save })
       await clickToggle(wrapper)
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
 
       const apply = wrapper
         .findAll('button')
@@ -223,7 +223,7 @@ describe('ASortableListEditor', () => {
   describe('widget header + reorder toggle placement', () => {
     it('renders the header with title and the reorder toggle alongside it', () => {
       const { wrapper } = mountEditor(items(), { title: 'Časté otázky (FAQ)' })
-      const header = wrapper.find('.a-sortable-list-editor__header')
+      const header = wrapper.find('.a-le-header')
       expect(header.exists()).toBe(true)
       expect(header.text()).toContain('Časté otázky (FAQ)')
       // On narrow test viewport + title, the reorder button collapses to an icon-only
@@ -240,19 +240,19 @@ describe('ASortableListEditor', () => {
 
     it('renders the header even without a title when the reorder toggle is available', () => {
       const { wrapper } = mountEditor()
-      expect(wrapper.find('.a-sortable-list-editor__header').exists()).toBe(true)
+      expect(wrapper.find('.a-le-header').exists()).toBe(true)
     })
 
     it('hides the header when no title and no reorder toggle would be shown', () => {
       const { wrapper } = mountEditor(items(), { showReorderToggle: false })
-      expect(wrapper.find('.a-sortable-list-editor__header').exists()).toBe(false)
+      expect(wrapper.find('.a-le-header').exists()).toBe(false)
     })
 
     it('keeps title visible in reorder mode but hides the reorder toggle', async () => {
       const { wrapper } = mountEditor(items(), { title: 'FAQ' })
       await clickToggle(wrapper)
       await flushPromises()
-      const header = wrapper.find('.a-sortable-list-editor__header')
+      const header = wrapper.find('.a-le-header')
       expect(header.exists()).toBe(true)
       expect(header.text()).toContain('FAQ')
       const toggle = header
@@ -292,35 +292,35 @@ describe('ASortableListEditor', () => {
 
     it('keeps the row title visible, pins edit + delete open in edit mode', async () => {
       const wrapper = mountWithItemSlot()
-      await wrapper.find('.a-sortable-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
-      const row = wrapper.find('.a-sortable-list-editor__row--editing')
+      const row = wrapper.find('.a-le-row--editing')
       expect(row.exists()).toBe(true)
-      expect(row.find('.a-sortable-list-editor__title').text()).toBe('First')
+      expect(row.find('.a-le-title').text()).toBe('First')
       // Editing no longer swaps the right-column affordances — the normal
       // view-mode set (edit + delete) stays visible; edit acts as a toggle to
       // close the inline form. No separate close button.
-      expect(row.find('.a-sortable-list-editor__action--edit').exists()).toBe(true)
-      expect(row.find('.a-sortable-list-editor__action--delete').exists()).toBe(true)
-      expect(row.find('.a-sortable-list-editor__action--close').exists()).toBe(false)
+      expect(row.find('.a-le-action--edit').exists()).toBe(true)
+      expect(row.find('.a-le-action--delete').exists()).toBe(true)
+      expect(row.find('.a-le-action--close').exists()).toBe(false)
     })
 
     it('renders row body without a footer by default (onItemSave not provided)', async () => {
       const wrapper = mountWithItemSlot()
-      await wrapper.find('.a-sortable-list-editor__row-header').trigger('click')
+      await wrapper.find('.a-le-row-header').trigger('click')
       await nextTick()
-      const row = wrapper.find('.a-sortable-list-editor__row--editing')
-      expect(row.find('.a-sortable-list-editor__row-header').exists()).toBe(true)
-      expect(row.find('.a-sortable-list-editor__row-body').exists()).toBe(true)
+      const row = wrapper.find('.a-le-row--editing')
+      expect(row.find('.a-le-row-header').exists()).toBe(true)
+      expect(row.find('.a-le-row-body').exists()).toBe(true)
       // Footer hidden by default — parent form owns the global save.
-      expect(row.find('.a-sortable-list-editor__row-footer').exists()).toBe(false)
+      expect(row.find('.a-le-row-footer').exists()).toBe(false)
     })
   })
 
   describe('row click', () => {
     it('clicking the row triggers edit in view mode by default', async () => {
       const { wrapper, editor } = mountEditor()
-      await wrapper.findAll('.a-sortable-list-editor__row-header')[1].trigger('click')
+      await wrapper.findAll('.a-le-row-header')[1].trigger('click')
       const edits = editor().emitted('edit') as Array<[{ key: number }]> | undefined
       expect(edits).toBeTruthy()
       expect(edits![0][0].key).toBe(2)
@@ -330,13 +330,13 @@ describe('ASortableListEditor', () => {
       const { wrapper, editor } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-sortable-list-editor__row-header')[1].trigger('click')
+      await wrapper.findAll('.a-le-row-header')[1].trigger('click')
       expect(editor().emitted('edit')).toBeFalsy()
     })
 
     it('does not trigger edit when disableRowClick=true', async () => {
       const { wrapper, editor } = mountEditor(items(), { disableRowClick: true })
-      await wrapper.findAll('.a-sortable-list-editor__row-header')[0].trigger('click')
+      await wrapper.findAll('.a-le-row-header')[0].trigger('click')
       expect(editor().emitted('edit')).toBeFalsy()
     })
   })
@@ -344,7 +344,7 @@ describe('ASortableListEditor', () => {
   describe('drag handle', () => {
     it('does not render drag handle outside reorder mode', () => {
       const { wrapper } = mountEditor()
-      expect(wrapper.find('.a-sortable-list-editor__drag-handle').exists()).toBe(false)
+      expect(wrapper.find('.a-le-drag-handle').exists()).toBe(false)
       expect(wrapper.find('.a-sortable-list-editor--drag-enabled').exists()).toBe(false)
     })
 
@@ -355,8 +355,8 @@ describe('ASortableListEditor', () => {
       // On desktop: drag-enabled class is set; on small viewports arrows are shown instead.
       // Both behaviors are correct, so test asserts either state is consistent with viewport.
       const rootHasClass = wrapper.find('.a-sortable-list-editor--drag-enabled').exists()
-      const handlesCount = wrapper.findAll('.a-sortable-list-editor__drag-handle').length
-      const arrowsCount = wrapper.findAll('.a-sortable-list-editor__action--up').length
+      const handlesCount = wrapper.findAll('.a-le-drag-handle').length
+      const arrowsCount = wrapper.findAll('.a-le-action--up').length
       expect(rootHasClass ? handlesCount : arrowsCount).toBeGreaterThan(0)
     })
 
@@ -364,7 +364,7 @@ describe('ASortableListEditor', () => {
       const { wrapper } = mountEditor(items(), { disableDrag: true })
       await clickToggle(wrapper)
       await flushPromises()
-      expect(wrapper.find('.a-sortable-list-editor__drag-handle').exists()).toBe(false)
+      expect(wrapper.find('.a-le-drag-handle').exists()).toBe(false)
       expect(wrapper.find('.a-sortable-list-editor--drag-enabled').exists()).toBe(false)
     })
   })
@@ -412,7 +412,7 @@ describe('ASortableListEditor', () => {
 
     it('renders a built-in close-X on each chip and removes item on click (no confirm)', async () => {
       const { wrapper, model } = mountChips()
-      const closers = wrapper.findAll('.a-sortable-list-editor__action--chip-close')
+      const closers = wrapper.findAll('.a-le-action--chip-close')
       expect(closers.length).toBe(2)
       await closers[0].trigger('click')
       await flushPromises()
@@ -435,7 +435,7 @@ describe('ASortableListEditor', () => {
       await flushPromises()
       // Menu buttons rendered in each reorder row — clicking menu opens popover which is
       // unstable to target in headless. Just verify the menu button exists in reorder mode.
-      const menus = wrapper.findAll('.a-sortable-list-editor__action--menu')
+      const menus = wrapper.findAll('.a-le-action--menu')
       expect(menus.length).toBeGreaterThan(0)
       void editor
     })
@@ -444,19 +444,19 @@ describe('ASortableListEditor', () => {
   describe('states', () => {
     it('renders loading state', () => {
       const { wrapper } = mountEditor(items(), { loading: true })
-      expect(wrapper.find('.a-sortable-list-editor__state--loading').exists()).toBe(true)
-      expect(wrapper.findAll('.a-sortable-list-editor__row').length).toBe(0)
+      expect(wrapper.find('.a-le-state--loading').exists()).toBe(true)
+      expect(wrapper.findAll('.a-le-row').length).toBe(0)
     })
 
     it('renders error state with the message', () => {
       const { wrapper } = mountEditor(items(), { error: 'Something broke' })
-      expect(wrapper.find('.a-sortable-list-editor__state--error').exists()).toBe(true)
+      expect(wrapper.find('.a-le-state--error').exists()).toBe(true)
       expect(wrapper.text()).toContain('Something broke')
     })
 
     it('renders empty state when model is empty', () => {
       const { wrapper } = mountEditor([])
-      expect(wrapper.find('.a-sortable-list-editor__state--empty').exists()).toBe(true)
+      expect(wrapper.find('.a-le-state--empty').exists()).toBe(true)
     })
   })
 
@@ -472,9 +472,9 @@ describe('ASortableListEditor', () => {
       await clickToggle(wrapper)
       await flushPromises()
       // Make a move so `hasPendingChanges` flips on — Apply is otherwise disabled.
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
-      const header = wrapper.find('.a-sortable-list-editor__header')
+      const header = wrapper.find('.a-le-header')
       expect(header.exists()).toBe(true)
       const headerButtons = header.findAll('button')
       const cancel = headerButtons.find((b) => b.text().toLowerCase().includes('cancel'))
@@ -483,10 +483,10 @@ describe('ASortableListEditor', () => {
       expect(apply).toBeTruthy()
       // The status chip lives in the header actions region.
       expect(
-        header.find('.a-sortable-list-editor__toolbar-status').exists(),
+        header.find('.a-le-toolbar-status').exists(),
       ).toBe(true)
       // There is no separate bottom toolbar any more.
-      expect(wrapper.find('.a-sortable-list-editor__toolbar').exists()).toBe(false)
+      expect(wrapper.find('.a-le-toolbar').exists()).toBe(false)
     })
 
     it('disables Apply when there are no pending changes', async () => {
@@ -503,7 +503,7 @@ describe('ASortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
       const apply = wrapper
         .findAll('button')
@@ -537,12 +537,12 @@ describe('ASortableListEditor', () => {
       })
       const wrapper = mount(Host)
       await nextTick()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
       // Mutate model content (simulate inline edit)
       // eslint-disable-next-line vue/no-ref-object-reactivity-loss
       model.value = [{ ...model.value[0], title: 'A-changed' }, model.value[1]]
       await nextTick()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
     })
 
     it('exposes resetDirtyBaseline which clears the unsaved indicator', async () => {
@@ -571,10 +571,10 @@ describe('ASortableListEditor', () => {
       // eslint-disable-next-line vue/no-ref-object-reactivity-loss
       model.value = [{ ...model.value[0], title: 'A-changed' }]
       await nextTick()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
       exposed.resetDirtyBaseline()
       await nextTick()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
   })
 
@@ -619,10 +619,10 @@ describe('ASortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
       // One row is unsaved now (the actively moved row).
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
 
       // Cancel — leaves reorder mode, clears movedKeys.
       const cancel = wrapper
@@ -630,29 +630,29 @@ describe('ASortableListEditor', () => {
         .find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancel.trigger('click')
       await flushPromises()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
 
       // Re-enter — no stale movedKeys.
       await clickToggle(wrapper)
       await flushPromises()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
 
     it('only the actively moved row gets marked (no side-effect index shifts)', async () => {
       const { wrapper } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
       // Exactly one moved key even though the swap shifts two flat indices.
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
     })
 
     it('applying reorder KEEPS movedKeys populated (cleared only via resetDirtyBaseline)', async () => {
       const { wrapper, editor } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
 
       const apply = wrapper
@@ -664,30 +664,30 @@ describe('ASortableListEditor', () => {
       // Mode back to view, but the moved row is still flagged — the consumer
       // is expected to flip it off by calling resetDirtyBaseline once their
       // server save confirms.
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
 
       const exposed = (editor().vm as unknown as {
         $: { exposed: { resetDirtyBaseline: () => void } }
       }).$.exposed
       exposed.resetDirtyBaseline()
       await nextTick()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
 
     it('resetDirtyBaseline clears movedKeys', async () => {
       const { wrapper, editor } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
-      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
 
       const exposed = (editor().vm as unknown as {
         $: { exposed: { resetDirtyBaseline: () => void } }
       }).$.exposed
       exposed.resetDirtyBaseline()
       await nextTick()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
   })
 
@@ -724,7 +724,7 @@ describe('ASortableListEditor', () => {
         model.value[1],
       ]
       await nextTick()
-      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
   })
 })
