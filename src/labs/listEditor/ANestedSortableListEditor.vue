@@ -21,6 +21,10 @@ import {
   type ExecutableInstruction,
   type Instruction,
 } from '@/labs/listEditor/composables/useDragInstruction'
+import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
+import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
+import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
+import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
 import { cloneDeep } from '@/utils/common'
 import type {
   ListEditorKey,
@@ -32,6 +36,9 @@ import type {
 import { useAlerts } from '@/composables/system/alerts'
 import { stringToInt } from '@/utils/string'
 import ANestedRow from '@/labs/listEditor/ANestedRow.vue'
+import ALeDeleteDialog from '@/labs/listEditor/internal/ALeDeleteDialog.vue'
+import ALeEmptyState from '@/labs/listEditor/internal/ALeEmptyState.vue'
+import ALeStatus from '@/labs/listEditor/internal/ALeStatus.vue'
 
 export interface DecoratedNestedViewItem<T> extends NestedViewItem<T> {
   editing: boolean
@@ -193,10 +200,6 @@ const effectiveCloseVariant = computed<'icon' | 'labeled'>(() => {
   return display.smAndDown.value ? 'icon' : 'labeled'
 })
 
-const editingKeys = ref<Set<ListEditorKey>>(new Set())
-const editingSnapshots = ref(new Map<ListEditorKey, TItem>()) as import('vue').Ref<
-  Map<ListEditorKey, TItem>
->
 // Tree-level expand/collapse — controls which descendants are visible in the flat
 // viewItems list. Auto-populated at mount for every node that has children.
 const childrenExpandedKeys = ref<Set<ListEditorKey>>(new Set())
@@ -236,12 +239,21 @@ const editor = useNestedListEditor<TItem>(modelValue, {
 // position sequence consistent), and flagging those unmoved rows as dirty
 // would produce ghost "unsaved" markers everywhere. The consumer saves the
 // whole tree on apply anyway — we only care about the per-row visual cue.
-const stringifyContent = (data: TItem): string => {
-  const copy = { ...data } as Record<string, unknown>
-  delete copy[props.positionField]
-  delete copy[props.parentField]
-  return JSON.stringify(copy)
-}
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { captureDirtyBaseline, isItemDirty } = useDirtyBaseline<TItem>(
+  () => {
+    const out: Array<{ key: ListEditorKey; data: TItem }> = []
+    const walk = (nodes: NestedTreeNode<TItem>[]) => {
+      for (const n of nodes) {
+        out.push({ key: n.data[props.keyField] as ListEditorKey, data: n.data })
+        if (n.children && n.children.length) walk(n.children)
+      }
+    }
+    walk(modelValue.value.children)
+    return out
+  },
+  { excludeFields: [props.positionField, props.parentField] },
+)
 
 // Reorder snapshot — captures the tree at reorder-start so we can restore it
 // on cancel. Dirty/moved detection does NOT derive from the snapshot: we
@@ -251,28 +263,15 @@ const stringifyContent = (data: TItem): string => {
 // in `movedKeys` below — only rows the user actively moved get marked.
 const snapshot = ref<NestedTree<TItem> | null>(null)
 // Keys the user has actively moved during this reorder session (drag, arrow
-// buttons, indent/outdent). Declared before `captureDirtyBaseline` so that
-// function can also reset it as part of the "mark as saved" cycle.
+// buttons, indent/outdent). Clearing this set is paired with
+// captureDirtyBaseline in the exposed resetDirtyBaseline cycle — consumers
+// expect the orange badges to go away once a server save confirms.
 const movedKeys = ref<Set<ListEditorKey>>(new Set())
 
-const dirtyBaseline = ref(new Map<ListEditorKey, string>()) as import('vue').Ref<
-  Map<ListEditorKey, string>
->
-const captureDirtyBaseline = () => {
-  const next = new Map<ListEditorKey, string>()
-  const walk = (nodes: NestedTreeNode<TItem>[]) => {
-    for (const n of nodes) {
-      next.set(n.data[props.keyField] as ListEditorKey, stringifyContent(n.data))
-      if (n.children && n.children.length) walk(n.children)
-    }
-  }
-  walk(modelValue.value.children)
-  dirtyBaseline.value = next
-  // Clearing moved state is part of "mark current data as saved" — consumers
-  // exposed via `resetDirtyBaseline` expect the orange badges to go away.
+const resetDirtyBaseline = () => {
+  captureDirtyBaseline()
   movedKeys.value = new Set()
 }
-captureDirtyBaseline()
 // Mark the row AND every descendant. Moving a parent visually carries its
 // whole subtree to the new location, so the children are "moved" too from
 // the user's perspective — even though they stayed in place relative to
@@ -292,16 +291,10 @@ const markMoved = (key: ListEditorKey) => {
   collect(node)
 }
 
-const isItemDirty = (vi: NestedViewItem<TItem>): boolean => {
-  const baseline = dirtyBaseline.value.get(vi.key)
-  if (baseline === undefined) return true
-  return baseline !== stringifyContent(vi.raw)
-}
-
 const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
   return editor.viewItems.value.map((vi) => {
     const moved = movedKeys.value.has(vi.key)
-    const dirty = isItemDirty(vi)
+    const dirty = isItemDirty(vi.key, vi.raw)
     return {
       ...vi,
       editing: editingKeys.value.has(vi.key),
@@ -318,19 +311,104 @@ const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
 const isEmpty = computed(() => modelValue.value.children.length === 0)
 const totalItemCount = computed(() => editor.viewItems.value.length)
 
-const movedCount = computed(() => viewItemsDecorated.value.filter((v) => v.moved).length)
-const hasPendingChanges = computed(() => movedCount.value > 0)
-
-const applying = ref(false)
-const applyError = ref<string | null>(null)
-
 const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 
-const reorderMode = computed(() => mode.value === 'reorder')
 const canInteract = computed(() => !props.readonly && !props.disabled && !props.loading)
 const canEnterReorder = computed(
   () => canInteract.value && !props.reorderDisabled && totalItemCount.value > 1,
 )
+
+const isInlineEdit = computed(() => !!(slots as Record<string, unknown>).item)
+const hasReadonlyDetail = computed(
+  () => !!(slots as Record<string, unknown>)['item-readonly'],
+)
+const showInlineSaveFooter = computed(() => !!props.onItemSave)
+
+const {
+  editingKeys,
+  editingSnapshots,
+  clearEditing,
+  beginEdit,
+  cancelEdit,
+  commitEdit,
+  closeEdit,
+  requestAutoOpen,
+} = useInlineEditing<TItem, NestedViewItem<TItem>>({
+  rowsContainer,
+  rowSelector: '.a-nested-list-editor__row-wrapper',
+  isInlineEdit,
+  restoreSnapshot: (key, data) => editor.updateItem(key, data),
+  watchKeys: () => {
+    const keys: ListEditorKey[] = []
+    const walk = (nodes: NestedTreeNode<TItem>[]) => {
+      for (const n of nodes) {
+        keys.push(n.data[props.keyField] as ListEditorKey)
+        if (n.children && n.children.length) walk(n.children)
+      }
+    }
+    walk(modelValue.value.children)
+    return keys
+  },
+  findEntry: (key) => {
+    const { node } = editor.findNode(key)
+    return node ? { data: node.data } : null
+  },
+  afterAutoOpen: (key) => {
+    const { parent } = editor.findNode(key)
+    if (parent) {
+      childrenExpandedKeys.value.add(parent.data[props.keyField] as ListEditorKey)
+    }
+  },
+})
+
+const {
+  applying,
+  applyError,
+  hasPendingChanges,
+  movedCount,
+  reorderMode,
+  enterReorderMode,
+  cancelReorderMode,
+  applyReorder,
+} = useReorderMode<NestedTree<TItem>>({
+  mode,
+  snapshot,
+  movedKeys,
+  modelValue,
+  cloneModel: (m) => cloneDeep(m) as NestedTree<TItem>,
+  applyModel: (m) => {
+    modelValue.value = m
+  },
+  canEnterReorder,
+  onEnter: () => {
+    clearEditing()
+    // Expand every branch so the user can see (and reach) every row before
+    // picking something to drag — otherwise collapsed subtrees would be invisible
+    // reorder targets.
+    for (const k of expandableKeys.value) childrenExpandedKeys.value.add(k)
+    nextTick(() => {
+      if (dragEnabled.value) initSortables()
+    })
+  },
+  onExternalEnter: () => {
+    clearEditing()
+  },
+  onCancel: () => {
+    destroySortables()
+  },
+  onApplyEnd: () => {
+    destroySortables()
+  },
+  onReorderApply: (tree) => props.onReorderApply?.(tree),
+  emit: {
+    reorderStart: () => emit('reorder-start'),
+    reorderCancel: () => emit('reorder-cancel'),
+    reorderApplied: (payload) => emit('reorder-applied', payload),
+    reorderApplyError: (err) => emit('reorder-apply-error', err),
+    reorderEnd: () => emit('reorder-end'),
+  },
+})
+
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
 const dragEnabled = computed(
   () => reorderMode.value && !isTouch.value && !props.disableDrag,
@@ -400,65 +478,6 @@ const headerVisible = computed<boolean>(
       || expandAllVisible.value
       || reorderMode.value
     ),
-)
-
-const isInlineEdit = computed(() => !!(slots as Record<string, unknown>).item)
-const hasReadonlyDetail = computed(
-  () => !!(slots as Record<string, unknown>)['item-readonly'],
-)
-const showInlineSaveFooter = computed(() => !!props.onItemSave)
-
-const deleteDialog = ref(false)
-const deleteTarget = ref<NestedViewItem<TItem> | null>(null)
-const deleteInFlight = ref(false)
-const deleteError = ref<string | null>(null)
-
-const pendingAutoOpen = ref(false)
-watch(
-  () => {
-    const keys: ListEditorKey[] = []
-    const walk = (nodes: NestedTreeNode<TItem>[]) => {
-      for (const n of nodes) {
-        keys.push(n.data[props.keyField] as ListEditorKey)
-        if (n.children && n.children.length) walk(n.children)
-      }
-    }
-    walk(modelValue.value.children)
-    return keys
-  },
-  (newKeys, oldKeys) => {
-    if (!pendingAutoOpen.value) return
-    pendingAutoOpen.value = false
-    const oldSet = new Set(oldKeys ?? [])
-    const addedKey = newKeys.find((k) => !oldSet.has(k))
-    if (addedKey === undefined) return
-    const { node: newNode } = editor.findNode(addedKey)
-    if (!newNode) return
-    if (!isInlineEdit.value) return
-    if (!editingSnapshots.value.has(addedKey)) {
-      editingSnapshots.value.set(addedKey, cloneDeep(newNode.data) as TItem)
-    }
-    editingKeys.value.add(addedKey)
-    // Make sure ancestors are expanded so the new row is visible.
-    const { parent } = editor.findNode(addedKey)
-    if (parent) childrenExpandedKeys.value.add(parent.data[props.keyField] as ListEditorKey)
-    // Scroll the newly added row into view once Vue has rendered it — for
-    // longer trees "Add inside" or "Add after" on a row far down the list
-    // can drop the new item below the current viewport, and a silent append
-    // is easy to miss. Double nextTick so the inline-edit body has also
-    // rendered (opening the form grows the row significantly, and scrolling
-    // before that leaves the form itself below the fold); `block: 'center'`
-    // because `'nearest'` treats partially visible as "good enough" and
-    // often does nothing even when the form extends past the viewport.
-    nextTick(() => {
-      nextTick(() => {
-        const el = rowsContainer.value?.querySelector<HTMLElement>(
-          `.a-nested-list-editor__row-wrapper[data-id="${CSS.escape(String(addedKey))}"]`,
-        )
-        el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-      })
-    })
-  },
 )
 
 // Initialize nested SortableJS groups. We create one Sortable instance per group
@@ -745,20 +764,20 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
 
 const onAddClick = () => {
   if (!canAdd.value) return
-  pendingAutoOpen.value = true
+  requestAutoOpen()
   emit('add', undefined)
 }
 
 const onRowAddAfterClick = (vi: NestedViewItem<TItem>) => {
   if (!canInteract.value) return
-  pendingAutoOpen.value = true
+  requestAutoOpen()
   emit('add', { afterId: vi.key, childrenAllowed: vi.childrenAllowed })
 }
 
 const onAddChildClick = (vi: NestedViewItem<TItem>) => {
   if (!canInteract.value) return
   if (!vi.canAddChild) return
-  pendingAutoOpen.value = true
+  requestAutoOpen()
   childrenExpandedKeys.value.add(vi.key)
   emit('add-child', vi)
   // Append to the end of existing children — matches the root-level "Add
@@ -777,10 +796,7 @@ const onEditClick = (vi: NestedViewItem<TItem>) => {
     return
   }
   if (isInlineEdit.value) {
-    if (!editingSnapshots.value.has(vi.key)) {
-      editingSnapshots.value.set(vi.key, cloneDeep(vi.raw) as TItem)
-    }
-    editingKeys.value.add(vi.key)
+    beginEdit(vi)
   }
   emit('edit', vi)
 }
@@ -825,76 +841,44 @@ const onRowClick = (vi: DecoratedNestedViewItem<TItem>) => {
   else onEditClick(vi)
 }
 
-const performDelete = async (vi: NestedViewItem<TItem>): Promise<boolean> => {
-  deleteError.value = null
-  if (props.onDeleteConfirm) {
-    const ok = await props.onDeleteConfirm(vi.raw)
-    if (!ok) return false
-  }
-  if (props.onDelete) {
-    deleteInFlight.value = true
-    try {
-      await props.onDelete(vi.raw)
-    } catch (err) {
-      deleteInFlight.value = false
-      deleteError.value = err instanceof Error ? err.message : String(err)
-      return false
-    }
-    deleteInFlight.value = false
-  }
-  editor.deleteItem(vi.key)
-  editingKeys.value.delete(vi.key)
-  editingSnapshots.value.delete(vi.key)
-  detailExpandedKeys.value.delete(vi.key)
-  childrenExpandedKeys.value.delete(vi.key)
-  emit('deleted', vi)
-  return true
-}
+const {
+  deleteDialog,
+  deleteInFlight,
+  deleteError,
+  onDeleteClick: triggerDeleteClick,
+  onDeleteDialogConfirm,
+  onDeleteDialogCancel,
+} = useDeleteDialog<TItem, NestedViewItem<TItem>>({
+  onDeleteConfirm: (raw) => (props.onDeleteConfirm ? props.onDeleteConfirm(raw) : true),
+  onDelete: (raw) => props.onDelete?.(raw),
+  onDeleted: (vi) => {
+    editor.deleteItem(vi.key)
+    editingKeys.value.delete(vi.key)
+    editingSnapshots.value.delete(vi.key)
+    detailExpandedKeys.value.delete(vi.key)
+    childrenExpandedKeys.value.delete(vi.key)
+    emit('deleted', vi)
+  },
+  disableDeleteConfirm: () => props.disableDeleteConfirm,
+})
 
 const onDeleteClick = async (vi: NestedViewItem<TItem>) => {
   if (!canInteract.value) return
-  if (props.disableDeleteConfirm) {
-    await performDelete(vi)
-    return
-  }
-  deleteTarget.value = vi
-  deleteError.value = null
-  deleteDialog.value = true
-}
-
-const onDeleteDialogConfirm = async () => {
-  if (!deleteTarget.value) return
-  const ok = await performDelete(deleteTarget.value as NestedViewItem<TItem>)
-  if (ok) {
-    deleteDialog.value = false
-    deleteTarget.value = null
-  }
-}
-
-const onDeleteDialogCancel = () => {
-  if (deleteInFlight.value) return
-  deleteDialog.value = false
-  deleteTarget.value = null
-  deleteError.value = null
+  await triggerDeleteClick(vi)
 }
 
 const onSaveClick = async (vi: NestedViewItem<TItem>) => {
   if (props.onItemSave) await props.onItemSave(vi.raw)
-  editingKeys.value.delete(vi.key)
-  editingSnapshots.value.delete(vi.key)
+  commitEdit(vi)
   emit('item-saved', vi)
 }
 
 const onCancelClick = (vi: NestedViewItem<TItem>) => {
-  const snap = editingSnapshots.value.get(vi.key)
-  if (snap) editor.updateItem(vi.key, snap as TItem)
-  editingKeys.value.delete(vi.key)
-  editingSnapshots.value.delete(vi.key)
+  cancelEdit(vi)
 }
 
 const onCloseClick = (vi: NestedViewItem<TItem>) => {
-  editingKeys.value.delete(vi.key)
-  editingSnapshots.value.delete(vi.key)
+  closeEdit(vi)
   emit('close', vi)
 }
 
@@ -925,80 +909,6 @@ const doOutdent = (vi: NestedViewItem<TItem>) => {
   markMoved(vi.key)
   emit('outdent', vi)
 }
-
-const enterReorderMode = () => {
-  if (!canEnterReorder.value || reorderMode.value) return
-  editingKeys.value.clear()
-  editingSnapshots.value.clear()
-  // Expand every branch so the user can see (and reach) every row before
-  // picking something to drag — otherwise collapsed subtrees would be invisible
-  // reorder targets.
-  for (const k of expandableKeys.value) childrenExpandedKeys.value.add(k)
-  snapshot.value = cloneDeep(modelValue.value) as NestedTree<TItem>
-  movedKeys.value = new Set()
-  applyError.value = null
-  mode.value = 'reorder'
-  emit('reorder-start')
-  nextTick(() => {
-    if (dragEnabled.value) initSortables()
-  })
-}
-
-const cancelReorderMode = () => {
-  if (!reorderMode.value) return
-  if (snapshot.value) modelValue.value = snapshot.value as NestedTree<TItem>
-  snapshot.value = null
-  movedKeys.value = new Set()
-  applyError.value = null
-  applying.value = false
-  mode.value = 'view'
-  destroySortables()
-  emit('reorder-cancel')
-  emit('reorder-end')
-}
-
-const applyReorder = async () => {
-  if (!reorderMode.value) return
-  const tree = cloneDeep(modelValue.value) as NestedTree<TItem>
-  applyError.value = null
-  if (props.onReorderApply) {
-    applying.value = true
-    try {
-      await props.onReorderApply(tree)
-    } catch (err) {
-      applying.value = false
-      applyError.value = err instanceof Error ? err.message : String(err)
-      emit('reorder-apply-error', err)
-      return
-    }
-    applying.value = false
-  }
-  // Deliberately keep `movedKeys` populated — the consumer still has to
-  // persist the new tree via their own API call before the rows are truly
-  // "saved", and we let them clear the state manually via
-  // `resetDirtyBaseline` once the API returns. Snapshot isn't needed any
-  // more (there's nothing to revert to after apply).
-  snapshot.value = null
-  mode.value = 'view'
-  destroySortables()
-  emit('reorder-applied', tree)
-  emit('reorder-end')
-}
-
-watch(mode, (newMode, oldMode) => {
-  if (newMode === 'reorder' && oldMode !== 'reorder') {
-    if (!snapshot.value) snapshot.value = cloneDeep(modelValue.value) as NestedTree<TItem>
-    movedKeys.value = new Set()
-    editingKeys.value.clear()
-    editingSnapshots.value.clear()
-  }
-  if (newMode === 'view' && oldMode === 'reorder' && snapshot.value) {
-    snapshot.value = null
-    movedKeys.value = new Set()
-    applyError.value = null
-    applying.value = false
-  }
-})
 
 const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
   const pick = (v: unknown): string | null => (v == null || v === '' ? null : String(v))
@@ -1193,7 +1103,7 @@ defineExpose({
   moveTo: editor.moveTo,
   recalculatePositions: editor.recalculatePositions,
   viewItems: editor.viewItems,
-  resetDirtyBaseline: captureDirtyBaseline,
+  resetDirtyBaseline,
   enterReorderMode,
   cancelReorderMode,
   applyReorder,
@@ -1250,35 +1160,13 @@ defineExpose({
                 name="reorder-toolbar"
                 v-bind="toolbarSlotProps"
               >
-                <div
+                <ALeStatus
                   class="a-nested-list-editor__toolbar-status"
                   :class="{ 'a-nested-list-editor__toolbar-status--pending': hasPendingChanges }"
-                >
-                  <VIcon
-                    v-if="hasPendingChanges"
-                    icon="mdi-circle-medium"
-                    color="warning"
-                    size="18"
-                  />
-                  <span
-                    v-if="applyError"
-                    class="text-body-small"
-                  >
-                    {{ applyError }}
-                  </span>
-                  <span
-                    v-else-if="hasPendingChanges"
-                    class="text-body-small"
-                  >
-                    {{ t('common.sortable.pendingChanges', { count: movedCount }) }}
-                  </span>
-                  <span
-                    v-else
-                    class="text-body-small text-medium-emphasis"
-                  >
-                    {{ t('common.sortable.noPendingChanges') }}
-                  </span>
-                </div>
+                  :has-pending-changes="hasPendingChanges"
+                  :pending-count="movedCount"
+                  :error="applyError"
+                />
                 <VBtn
                   variant="text"
                   size="small"
@@ -1417,23 +1305,14 @@ defineExpose({
           :disabled="disabled"
           :actions="{ add: onAddClick }"
         >
-          <div class="a-nested-list-editor__empty">
-            <h3 class="a-nested-list-editor__empty-title">
-              {{ emptyTitleResolved }}
-            </h3>
-            <p class="a-nested-list-editor__empty-text">
-              {{ emptyTextResolved }}
-            </p>
-            <VBtn
-              v-if="canAdd"
-              color="primary"
-              variant="flat"
-              prepend-icon="mdi-plus"
-              @click="onAddClick"
-            >
-              {{ t('common.sortable.addFirst') }}
-            </VBtn>
-          </div>
+          <ALeEmptyState
+            block-class="a-nested-list-editor"
+            :title="emptyTitleResolved"
+            :text="emptyTextResolved"
+            :add-label="addLabelResolved"
+            :can-add="canAdd"
+            @add="onAddClick"
+          />
         </slot>
       </div>
 
@@ -1558,757 +1437,307 @@ defineExpose({
       </slot>
     </div>
 
-    <VDialog
+    <ALeDeleteDialog
       v-model="deleteDialog"
-      max-width="420"
-      :persistent="deleteInFlight"
-    >
-      <VCard>
-        <VCardTitle class="text-headline-small">
-          {{ deleteConfirmTitleResolved }}
-        </VCardTitle>
-        <VCardText>
-          {{ deleteConfirmTextResolved }}
-          <VAlert
-            v-if="deleteError"
-            type="error"
-            variant="tonal"
-            density="compact"
-            class="mt-3"
-          >
-            {{ deleteError }}
-          </VAlert>
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            variant="text"
-            :disabled="deleteInFlight"
-            @click="onDeleteDialogCancel"
-          >
-            {{ t('common.button.cancel') }}
-          </VBtn>
-          <VBtn
-            color="error"
-            variant="flat"
-            :loading="deleteInFlight"
-            :disabled="deleteInFlight"
-            @click="onDeleteDialogConfirm"
-          >
-            {{ t('common.sortable.delete') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+      :title="deleteConfirmTitleResolved"
+      :text="deleteConfirmTextResolved"
+      :confirm-label="t('common.sortable.delete')"
+      :cancel-label="t('common.button.cancel')"
+      :error="deleteError"
+      :in-flight="deleteInFlight"
+      @confirm="onDeleteDialogConfirm"
+      @cancel="onDeleteDialogCancel"
+    />
 
   </div>
 </template>
 
 <style lang="scss">
-/* stylelint-disable color-function-alias-notation --
-   Vuetify 4 exports theme colours as comma-separated "R, G, B" lists; the
-   modern `rgb(R G B / A)` slash-alpha syntax produces invalid CSS (and a
-   silent transparent fallback) when that var expands. We have to use the
-   explicit `rgba(R, G, B, A)` form everywhere a theme var appears. */
+@use './styles/tokens' as tokens;
+@use './styles/shared' as shared;
 
+// Tokens + container setup live on the root block.
 .a-nested-list-editor {
-  // Vuetify v4 exports theme colors as "R, G, B" (comma-separated) — so we must
-  // use rgba(var(--v-theme-X), A) with a literal comma, not the modern
-  // `rgb(R G B / A)` slash-alpha syntax (which produces invalid CSS when the var
-  // expands to a comma-separated list and silently falls back to transparent).
-  --ansle-border: rgb(0 0 0 / 12%);
-  --ansle-surface: rgb(var(--v-theme-surface, 255, 255, 255));
-  --ansle-surface-container: rgb(0 0 0 / 2.5%);
-  --ansle-primary: rgb(var(--v-theme-primary, 63, 106, 216));
-  --ansle-primary-container: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
-  --ansle-primary-state: rgba(var(--v-theme-primary, 63, 106, 216), 0.04);
-  --ansle-primary-state-press: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
-  --ansle-success-container: rgb(76 175 80 / 18%);
-  --ansle-success-fg: #165634;
-  --ansle-warning-container: rgb(251 140 0 / 18%);
-  --ansle-warning-fg: #914000;
-  --ansle-warning: rgb(var(--v-theme-warning, 251, 140, 0));
-  --ansle-error-container: rgba(var(--v-theme-error, 217, 37, 80), 0.18);
-  --ansle-error-fg: rgb(var(--v-theme-error, 217, 37, 80));
-  --ansle-on-surface: rgb(var(--v-theme-on-surface, 51, 51, 51));
-  --ansle-on-surface-variant: rgb(var(--v-theme-on-surface-variant, 102, 102, 102));
-  --ansle-radius: 8px;
-  --ansle-radius-pill: 9999px;
-  --ansle-elev-1: 0 1px 2px rgb(0 0 0 / 12%), 0 1px 3px 1px rgb(0 0 0 / 6%);
-  --ansle-elev-3: 0 1px 3px rgb(0 0 0 / 16%), 0 4px 8px 3px rgb(0 0 0 / 10%);
-
-  // Compact density — baked in, aligned with the reference design.
-  --ansle-row-min-height: 48px;
-  --ansle-row-pad-y: 6px;
-  --ansle-row-font: 13px;
-  --ansle-indent: 24px;
-
-  position: relative;
-  container-type: inline-size;
-  container-name: ansle-shell;
+  @include tokens.le-tokens;
+  @include tokens.le-shell-container;
 }
 
-.a-nested-list-editor--disabled,
-.a-nested-list-editor--readonly {
-  opacity: 0.85;
+// Shared rule pack — emitted at top level so the selectors stay bare.
+// `$deep: false` + `$sp: '.a-nested-list-editor '` tell the shared mixins to
+// emit bare `*` (unscoped styles can't use `:deep()`) and to prefix the
+// slot-content-targeting rules with an extra class for specificity — the
+// pre-refactor CSS did the same with a hand-written `.a-nested-list-editor`
+// double-prefix.
+@include shared.le-card('.a-nested-list-editor');
+@include shared.le-header-block('.a-nested-list-editor');
+@include shared.le-header-actions('.a-nested-list-editor');
+@include shared.le-state-and-empty(
+  '.a-nested-list-editor',
+  $deep: false,
+  $full-width-alert: false,
+);
+@include shared.le-row-primitives(
+  '.a-nested-list-editor',
+  $deep: false,
+  $sp: '.a-nested-list-editor ',
+);
+@include shared.le-row-hover('.a-nested-list-editor');
+
+// No `le-row-active` call — the nested variant intentionally omits `:active`
+// feedback on clickable rows (drag-handle press is the loud affordance here).
+@include shared.le-row-add('.a-nested-list-editor', $focus-outline: false);
+@include shared.le-drag-handle('.a-nested-list-editor');
+@include shared.le-toolbar-status('.a-nested-list-editor');
+@include shared.le-action-visibility(
+  '.a-nested-list-editor',
+  $extra-actions: ('--add-child', '--up', '--down'),
+);
+@include shared.le-disabled-arrow-visibility('.a-nested-list-editor');
+
+// Variant-specific rules, nested.
+.a-nested-list-editor {
+  // Depth-aware left padding — caret column + indent per depth level.
+  &__row-header {
+    padding: var(--le-row-pad-y) 12px var(--le-row-pad-y)
+      calc(16px + var(--nested-depth, 0) * var(--le-indent));
+  }
+
+  // Row wrappers + inter-row group layout.
+  &__rows {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__row-wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Root-level rows carry a bolder title weight to anchor the visual
+  // hierarchy without separate header rows.
+  &__row:not(&__row--child) &__title {
+    font-weight: 600;
+  }
+
+  // Reorder mode — depth-aware padding matches the flat variant's shape but
+  // offset by the row's indent level.
+  &__row--reorder &__row-header {
+    padding-left: calc(12px + var(--nested-depth, 0) * var(--le-indent));
+    padding-right: 8px;
+    gap: 8px;
+  }
+
+  // Active (editing / readonly-expanded) tree-toggle picks up the primary
+  // tint so the whole header reads "active" together with the title color.
+  &__row--editing &__tree-toggle,
+  &__row--expanded &__tree-toggle {
+    color: var(--le-primary);
+  }
+
+  // Children wrapper — flat layout; depth is conveyed by the row's
+  // padding-left indent alone (no background tint or tree guide line).
+  &__children {
+    position: relative;
+  }
+
+  // Triangle-caret toggle — VBtn-text-style circular button: transparent by
+  // default, subtle tinted circle on hover so the affordance is obvious.
+  // Size matches the flat icon-btn rhythm (24×24) with the triangle
+  // optically centred.
+  &__tree-toggle {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: auto;
+    color: rgb(0 0 0 / 54%);
+    z-index: 2;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: rgb(0 0 0 / 5%);
+      color: var(--le-on-surface);
+    }
+
+    &:focus-visible {
+      outline: none;
+      background: rgb(0 0 0 / 8%);
+    }
+  }
+
+  // Spacer keeps caret column width reserved on leaf rows so titles align
+  // vertically across siblings regardless of whether they have children.
+  &__tree-toggle--spacer,
+  &__tree-toggle--empty {
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  // Pure CSS right-pointing triangle; rotates to down when the row is open.
+  &__tree-toggle-caret {
+    width: 0;
+    height: 0;
+    border-left: 5px solid currentcolor;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-right: 0;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(1px); // optical centering — triangle leans left
+  }
+
+  &__tree-toggle--open &__tree-toggle-caret {
+    transform: translate(0, 1px) rotate(90deg);
+  }
+
+  // Source row + every descendant inside the dragged subtree — dimmed and
+  // made non-hittable during drag. `!important` on display beats SortableJS's
+  // inline `display: none` under `forceFallback: true`.
+  &__row-wrapper#{&}__row--chosen,
+  &__row-wrapper#{&}__row-wrapper--drop-disabled {
+    display: flex !important;
+    opacity: 0.4 !important;
+    pointer-events: none !important;
+  }
+
+  // Hide SortableJS's own placeholder — our overlay (drop-line / drop-box)
+  // is the sole landing indicator.
+  &__row--ghost {
+    display: none !important;
+  }
+
+  // No floating clone at the cursor — for nested trees the line overlay
+  // carries all the "where will it land" information; a ghost card dragging
+  // behind the pointer is pure noise. The selector matches the wrapper to
+  // beat the `.row-wrapper--drop-disabled` rule that the clone inherits.
+  &__row-wrapper#{&}__row--drag {
+    display: none !important;
+  }
+
+  // Drop indicator line — 2 px primary stroke with an 8 px terminal dot on
+  // the left that bleeds 4 px outside the anchor column. Absolute-positioned
+  // inside `__rows` (position: relative).
+  &__drop-line {
+    position: absolute;
+    height: 2px;
+    margin-top: -1px;
+    background: var(--le-primary);
+    pointer-events: none;
+    z-index: 4;
+    border-radius: 1px;
+  }
+
+  &__drop-line-dot {
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    background: var(--le-primary);
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+
+  // Connector rail — thin vertical line linking the drop indicator line up
+  // to the row whose level is being matched.
+  &__drop-connector {
+    position: absolute;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--le-primary);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  // While dragging, dim the add-button so focus stays on the drag target.
+  &__rows--dragging &__row-add {
+    opacity: 0.4;
+  }
+
+  // "+N" children indicator — rendered on every row with children, but
+  // hidden in the normal DOM. Only becomes visible inside the SortableJS
+  // drag clone (which carries `.__row--drag`) so the user sees that the
+  // whole branch will follow the item being moved.
+  &__drag-count {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    padding: 2px 8px;
+    font: 500 11px/1 var(--v-font-body, inherit);
+    letter-spacing: 0.02em;
+    color: var(--le-primary);
+    background: var(--le-primary-container);
+    border-radius: var(--le-radius-pill);
+    flex-shrink: 0;
+  }
+
+  &__row--drag &__drag-count {
+    display: inline-flex;
+  }
 }
 
-.a-nested-list-editor--disabled {
-  pointer-events: none;
+// The nested editor's toolbar-status uses the shorthand
+// `font: 500 13px/1 var(...)` — the shared `le-toolbar-status` mixin emits
+// the equivalent longhand (`font-weight`, `font-size`, etc.) for the flat
+// variants. Re-apply the shorthand here so the nested variant keeps its
+// explicit line-height reset.
+.a-nested-list-editor__toolbar-status {
+  font: 500 13px/1 var(--v-font-body, inherit);
 }
 
-.a-nested-list-editor__card {
-  background: var(--ansle-surface);
-  border: 1px solid var(--ansle-border);
-  border-radius: var(--ansle-radius);
-  overflow: hidden;
-}
+// Container-query driven desktop layout — depth-aware padding-left so the
+// inline form aligns with the row title column: 16 (pad) + depth*24 (indent)
+// + 24 (caret) + 10 (gap) = 50 + depth*indent. Rail + gradient match the
+// flat editors via the shared mixin.
+@container le-shell (min-width: 769px) {
+  @include shared.le-editing-body-rail('.a-nested-list-editor');
 
-.a-nested-list-editor__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 20px;
-  height: 60px;
-  border-bottom: 1px solid var(--ansle-border);
-  background: var(--ansle-surface);
-  flex-shrink: 0;
-}
-
-.a-nested-list-editor__header-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.a-nested-list-editor__title-heading {
-  font-weight: 500;
-  font-size: 1rem;
-  line-height: 1.5;
-  letter-spacing: 0.009em;
-  color: var(--ansle-on-surface);
-  margin: 0;
-}
-
-.a-nested-list-editor__state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-}
-
-.a-nested-list-editor__state--error {
-  padding: 16px;
-}
-
-.a-nested-list-editor__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-  padding: 16px;
-}
-
-.a-nested-list-editor__empty-title {
-  font-size: 1rem;
-  font-weight: 500;
-  margin: 0;
-  color: var(--ansle-on-surface);
-}
-
-.a-nested-list-editor__empty-text {
-  font-size: 0.875rem;
-  color: var(--ansle-on-surface-variant);
-  margin: 0 0 12px;
-}
-
-.a-nested-list-editor__rows {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.a-nested-list-editor__group {
-  display: flex;
-  flex-direction: column;
-}
-
-.a-nested-list-editor__row-wrapper {
-  display: flex;
-  flex-direction: column;
-}
-
-.a-nested-list-editor__row {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid var(--ansle-border);
-  background: var(--ansle-surface);
-  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.a-nested-list-editor__row-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: var(--ansle-row-pad-y) 12px var(--ansle-row-pad-y)
-    calc(16px + var(--nested-depth, 0) * var(--ansle-indent));
-  min-height: var(--ansle-row-min-height);
-  flex-shrink: 0;
-  position: relative;
-  transition: background-color 0.15s;
-}
-
-.a-nested-list-editor__row--clickable .a-nested-list-editor__row-header {
-  cursor: pointer;
-}
-
-/* stylelint-disable selector-max-compound-selectors */
-.a-nested-list-editor__row--clickable:not(
-    .a-nested-list-editor__row--editing,
-    .a-nested-list-editor__row--expanded
-  ):hover
-  .a-nested-list-editor__row-header {
-  background: var(--ansle-primary-state);
-}
-/* stylelint-enable selector-max-compound-selectors */
-
-/* Editing / readonly-expanded rows keep the overall row transparent — the blue
-   tint sits on the header only, and the form body gets its own soft gradient
-   (see container-query desktop rule further down). */
-.a-nested-list-editor__row--editing .a-nested-list-editor__row-header,
-.a-nested-list-editor__row--expanded .a-nested-list-editor__row-header {
-  background: var(--ansle-primary-container);
-}
-
-.a-nested-list-editor__row--editing::before,
-.a-nested-list-editor__row--expanded::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--ansle-primary);
-  z-index: 1;
-}
-
-.a-nested-list-editor__row--unsaved {
-  background: var(--ansle-warning-container);
-}
-
-.a-nested-list-editor__row--unsaved::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--ansle-warning);
-  z-index: 2;
-}
-
-/* Unsaved takes visual precedence over editing — swap the header's blue tint
-   and title color for warning so the whole row reads as "dirty, not active". */
-.a-nested-list-editor__row--unsaved .a-nested-list-editor__row-header {
-  background: var(--ansle-warning-container);
-}
-
-.a-nested-list-editor .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--editing
-  .a-nested-list-editor__row-main,
-.a-nested-list-editor .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--expanded
-  .a-nested-list-editor__row-main,
-.a-nested-list-editor .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--editing
-  .a-nested-list-editor__row-main *,
-.a-nested-list-editor .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--expanded
-  .a-nested-list-editor__row-main * {
-  color: var(--ansle-warning);
-}
-
-.a-nested-list-editor__row--reorder .a-nested-list-editor__row-header {
-  padding-left: calc(12px + var(--nested-depth, 0) * var(--ansle-indent));
-  padding-right: 8px;
-  gap: 8px;
-}
-
-.a-nested-list-editor__row-main {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.a-nested-list-editor__title {
-  flex: 1 1 auto;
-  font-size: var(--ansle-row-font);
-  font-weight: 400;
-  line-height: 1.43;
-  letter-spacing: 0.018em;
-  color: var(--ansle-on-surface);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Root-level rows carry a bolder title weight to anchor the visual hierarchy
-   without resorting to separate header rows. */
-.a-nested-list-editor__row:not(.a-nested-list-editor__row--child)
-  .a-nested-list-editor__title {
-  font-weight: 600;
-}
-
-/* Active (editing / readonly-expanded) row — the full header reads "primary":
-   bold blue title, primary-tinted caret, blue background. `.row-main` is the
-   wrapper around both the default title span and any consumer #item-compact
-   slot content, so styling it covers custom title renderers too. */
-.a-nested-list-editor__row--editing .a-nested-list-editor__tree-toggle,
-.a-nested-list-editor__row--expanded .a-nested-list-editor__tree-toggle {
-  color: var(--ansle-primary);
-}
-
-.a-nested-list-editor .a-nested-list-editor__row--editing .a-nested-list-editor__row-main,
-.a-nested-list-editor .a-nested-list-editor__row--expanded .a-nested-list-editor__row-main,
-.a-nested-list-editor .a-nested-list-editor__row--editing .a-nested-list-editor__row-main *,
-.a-nested-list-editor .a-nested-list-editor__row--expanded .a-nested-list-editor__row-main * {
-  font-weight: 700;
-  color: var(--ansle-primary);
-}
-
-.a-nested-list-editor__unsaved-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 11px;
-  color: var(--ansle-warning);
-  font-weight: 500;
-  padding: 2px 4px;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-  flex-shrink: 0;
-}
-
-.a-nested-list-editor__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.a-nested-list-editor__status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-width: 56px;
-  padding: 4px 10px;
-  font: 500 11px/1 var(--v-font-body, inherit);
-  letter-spacing: 0.02em;
-  background: var(--ansle-success-container);
-  color: var(--ansle-success-fg);
-  border-radius: var(--ansle-radius-pill);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.a-nested-list-editor__status-badge--warning {
-  background: var(--ansle-warning-container);
-  color: var(--ansle-warning-fg);
-}
-
-.a-nested-list-editor__status-badge--error {
-  background: var(--ansle-error-container);
-  color: var(--ansle-error-fg);
-}
-
-.a-nested-list-editor__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-  margin-left: 4px;
-}
-
-.a-nested-list-editor__action--edit,
-.a-nested-list-editor__action--delete,
-.a-nested-list-editor__action--add-child,
-.a-nested-list-editor__action--up,
-.a-nested-list-editor__action--down,
-.a-nested-list-editor__action--menu {
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-/* stylelint-disable selector-max-compound-selectors */
-.a-nested-list-editor__row:hover .a-nested-list-editor__action--edit,
-.a-nested-list-editor__row:hover .a-nested-list-editor__action--delete,
-.a-nested-list-editor__row:hover .a-nested-list-editor__action--add-child,
-.a-nested-list-editor__row:hover .a-nested-list-editor__action--up,
-.a-nested-list-editor__row:hover .a-nested-list-editor__action--down,
-.a-nested-list-editor__row:hover .a-nested-list-editor__action--menu,
-.a-nested-list-editor__row:focus-within .a-nested-list-editor__action--edit,
-.a-nested-list-editor__row:focus-within .a-nested-list-editor__action--delete,
-.a-nested-list-editor__row:focus-within .a-nested-list-editor__action--add-child,
-.a-nested-list-editor__row:focus-within .a-nested-list-editor__action--up,
-.a-nested-list-editor__row:focus-within .a-nested-list-editor__action--down,
-.a-nested-list-editor__row:focus-within .a-nested-list-editor__action--menu {
-  opacity: 1;
-}
-
-.a-nested-list-editor--touch .a-nested-list-editor__action--edit,
-.a-nested-list-editor--touch .a-nested-list-editor__action--delete,
-.a-nested-list-editor--touch .a-nested-list-editor__action--add-child,
-.a-nested-list-editor--touch .a-nested-list-editor__action--up,
-.a-nested-list-editor--touch .a-nested-list-editor__action--down,
-.a-nested-list-editor--touch .a-nested-list-editor__action--menu {
-  opacity: 1;
-}
-
-/* Active rows keep all affordances (edit / delete / menu) pinned open — same
-   visual weight as a row on hover, so the right-side column looks identical to
-   an inactive row, just always-on. */
-.a-nested-list-editor__row--editing .a-nested-list-editor__action--edit,
-.a-nested-list-editor__row--editing .a-nested-list-editor__action--delete,
-.a-nested-list-editor__row--editing .a-nested-list-editor__action--menu,
-.a-nested-list-editor__row--expanded .a-nested-list-editor__action--edit,
-.a-nested-list-editor__row--expanded .a-nested-list-editor__action--delete,
-.a-nested-list-editor__row--expanded .a-nested-list-editor__action--menu {
-  opacity: 1;
-}
-
-.a-nested-list-editor__row:hover .a-nested-list-editor__action--up.v-btn--disabled,
-.a-nested-list-editor__row:hover .a-nested-list-editor__action--down.v-btn--disabled,
-.a-nested-list-editor__row:focus-within .a-nested-list-editor__action--up.v-btn--disabled,
-.a-nested-list-editor__row:focus-within .a-nested-list-editor__action--down.v-btn--disabled,
-.a-nested-list-editor--touch .a-nested-list-editor__action--up.v-btn--disabled,
-.a-nested-list-editor--touch .a-nested-list-editor__action--down.v-btn--disabled {
-  opacity: 0.3;
-}
-/* stylelint-enable selector-max-compound-selectors */
-
-.a-nested-list-editor__drag-handle {
-  cursor: grab;
-  flex-shrink: 0;
-  padding: 4px 0;
-}
-
-.a-nested-list-editor__drag-handle:active {
-  cursor: grabbing;
-}
-
-/* Source row + every descendant inside the dragged subtree — dimmed and made
-   non-hittable during drag. The whole branch travels as one, so dropping it
-   inside itself is nonsensical; hiding hit-targets there keeps the overlay
-   silent instead of flashing a blocked indicator over rows you can't land on.
-   `!important` on display beats SortableJS's inline `display: none` under
-   `forceFallback: true` (it would otherwise hide the source entirely and
-   erase the "coming from" slot). */
-.a-nested-list-editor__row-wrapper.a-nested-list-editor__row--chosen,
-.a-nested-list-editor__row-wrapper.a-nested-list-editor__row-wrapper--drop-disabled {
-  display: flex !important;
-  opacity: 0.4 !important;
-  pointer-events: none !important;
-}
-
-/* Hide SortableJS's own placeholder — our overlay (drop-line / drop-box) is
-   the sole landing indicator. SortableJS still needs the element for its
-   internal bookkeeping, we just don't show it. */
-.a-nested-list-editor__row--ghost {
-  display: none !important;
-}
-
-/* No floating clone at the cursor — for nested trees the line overlay
-   carries all the "where will it land" information; a ghost card dragging
-   behind the pointer is pure noise. Removed from layout entirely;
-   SortableJS's drag detection runs on document pointermove events, so
-   hiding the clone's rendered element doesn't break anything. The
-   selector matches the wrapper to beat the `.row-wrapper--drop-disabled`
-   rule that the clone inherits from the source. */
-.a-nested-list-editor__row-wrapper.a-nested-list-editor__row--drag {
-  display: none !important;
-}
-
-/* Drop indicator line — 2px primary stroke with an 8px terminal dot on the
-   left that bleeds 4px outside the anchor column. Absolute-positioned inside
-   .rows, which is position:relative. `left` is set by the overlay computed
-   from the instruction's target depth, so at depth 0 the line sits at the
-   root indent and at depth N it starts N*indent further right. This is the
-   primary channel for communicating "where will the row land" — the line's
-   horizontal START encodes the final depth. */
-.a-nested-list-editor__drop-line {
-  position: absolute;
-  height: 2px;
-  margin-top: -1px;
-  background: var(--ansle-primary);
-  pointer-events: none;
-  z-index: 4;
-  border-radius: 1px;
-}
-
-/* Dot bleeds 4px left of the line's start so its visual centre sits on the
-   same column as the anchor (which equals the drag handle's centre for the
-   target depth). Without the bleed the dot would visually extend 4px to the
-   right of the handle column. */
-.a-nested-list-editor__drop-line-dot {
-  position: absolute;
-  left: -4px;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  background: var(--ansle-primary);
-  border-radius: 50%;
-  transform: translateY(-50%);
-}
-
-/* Connector rail — thin vertical line linking the drop indicator line up to
-   the row whose level is being matched (previous sibling, or the ancestor
-   being joined as a peer on reparent). Positioned in JS from the overlay
-   computed; pinned to the rowsContainer's left/top coordinate space. */
-.a-nested-list-editor__drop-connector {
-  position: absolute;
-  width: 2px;
-  margin-left: -1px;
-  background: var(--ansle-primary);
-  opacity: 0.5;
-  pointer-events: none;
-  z-index: 3;
-}
-
-/* Inline edit body. Default layout (narrow container / mobile) — form fills the
-   full row width, no rail, no depth-aware indent beyond the parent padding.
-   Desktop layout is applied via container query below. */
-.a-nested-list-editor__row-body {
-  padding: 12px 16px;
-  transition: padding-left 0.2s ease;
-}
-
-/* Form card — wraps consumer-provided #item / #item-readonly content so the
-   inline editor reads as a distinct surface against the tinted row-body
-   background. White fill, whisper-faint border, gentle radius. */
-.a-nested-list-editor__form {
-  background: var(--ansle-surface);
-  border: 1px solid rgb(0 0 0 / 6%);
-  border-radius: var(--ansle-radius);
-  padding: 16px 16px 8px;
-}
-
-.a-nested-list-editor__row-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 16px 16px;
-}
-
-.a-nested-list-editor__row-footer-spacer {
-  flex: 1 1 auto;
-}
-
-/* Container-query driven desktop layout — keyed off the component's own width,
-   so the same rule works in a wide page layout and in a narrow sidebar panel
-   on the same screen. */
-@container ansle-shell (min-width: 769px) {
-  /* Row text column = 16 (pad) + depth*24 (indent) + 24 (caret) + 10 (gap) = 50 + depth*24.
-     Inline form aligns with that column so the first input sits under the title.
-     Body and footer both get the primary left rail + soft gradient so the whole
-     editing area reads as one continuous surface. */
   .a-nested-list-editor__row--editing .a-nested-list-editor__row-body,
   .a-nested-list-editor__row--expanded .a-nested-list-editor__row-body,
   .a-nested-list-editor__row--editing .a-nested-list-editor__row-footer,
   .a-nested-list-editor__row--expanded .a-nested-list-editor__row-footer {
-    padding-left: calc(50px + var(--nested-depth, 0) * var(--ansle-indent));
+    padding-left: calc(50px + var(--nested-depth, 0) * var(--le-indent));
     padding-right: 16px;
-    border-left: 2px solid rgba(var(--v-theme-primary, 63, 106, 216), 0.28);
-    background: linear-gradient(
-      to right,
-      rgba(var(--v-theme-primary, 63, 106, 216), 0.07),
-      rgba(var(--v-theme-primary, 63, 106, 216), 0.02) 50%,
-      transparent 85%
-    );
-  }
-
-  /* Unsaved + editing: swap the primary rail + gradient for warning. */
-  .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--editing .a-nested-list-editor__row-body,
-  .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--expanded .a-nested-list-editor__row-body,
-  .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--editing .a-nested-list-editor__row-footer,
-  .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--expanded .a-nested-list-editor__row-footer {
-    border-left-color: rgb(251 140 0 / 35%);
-    background: linear-gradient(
-      to right,
-      rgb(251 140 0 / 7%),
-      rgb(251 140 0 / 2%) 50%,
-      transparent 85%
-    );
   }
 }
 
-/* Narrow-container / mobile layout — tighter indent so deep branches still fit,
-   taller rows for comfortable touch targets, always-visible actions, and the
-   status badge drops out to make room for the title. */
-@container ansle-shell (max-width: 768px) {
+// Narrow-container / mobile layout — tighter indent so deep branches still
+// fit, taller rows for comfortable touch targets, always-visible actions,
+// status badge dropped to make room for the title.
+/* stylelint-disable selector-max-compound-selectors */
+@container le-shell (max-width: 768px) {
   .a-nested-list-editor {
-    --ansle-indent: 18px;
-    --ansle-row-min-height: 48px;
-    --ansle-row-pad-y: 10px;
-  }
+    --le-indent: 18px;
+    --le-row-min-height: 48px;
+    --le-row-pad-y: 10px;
 
-  .a-nested-list-editor__row:not(.a-nested-list-editor__row--editing)
-    .a-nested-list-editor__status {
-    display: none;
-  }
+    &__row:not(&__row--editing) &__status {
+      display: none;
+    }
 
-  /* stylelint-disable selector-max-compound-selectors */
-  .a-nested-list-editor__row .a-nested-list-editor__action--edit,
-  .a-nested-list-editor__row .a-nested-list-editor__action--delete,
-  .a-nested-list-editor__row .a-nested-list-editor__action--menu {
-    opacity: 1;
-  }
-  /* stylelint-enable selector-max-compound-selectors */
-}
-
-/* Children container — flat layout. No background tint or tree guide line:
-   depth is conveyed by the row's padding-left indent alone. */
-.a-nested-list-editor__children {
-  position: relative;
-}
-
-/* Triangle-caret toggle — VBtn-text-style circular button: transparent by
-   default, subtle tinted circle on hover so the affordance is obvious. Size
-   matches the flat icon-btn rhythm (28×28) with the triangle optically centred. */
-.a-nested-list-editor__tree-toggle {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  pointer-events: auto;
-  color: rgb(0 0 0 / 54%);
-  z-index: 2;
-  flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
-}
-
-.a-nested-list-editor__tree-toggle:hover {
-  background: rgb(0 0 0 / 5%);
-  color: var(--ansle-on-surface);
-}
-
-.a-nested-list-editor__tree-toggle:focus-visible {
-  outline: none;
-  background: rgb(0 0 0 / 8%);
-}
-
-/* Spacer keeps caret column width reserved on leaf rows so titles align
-   vertically across siblings regardless of whether they have children. */
-.a-nested-list-editor__tree-toggle--spacer,
-.a-nested-list-editor__tree-toggle--empty {
-  width: 24px;
-  height: 24px;
-  background: transparent;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-/* Pure CSS right-pointing triangle; rotates to down when the row is open. */
-.a-nested-list-editor__tree-toggle-caret {
-  width: 0;
-  height: 0;
-  border-left: 5px solid currentcolor;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  border-right: 0;
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateX(1px); /* optical centering — triangle's visual mass leans left */
-}
-
-.a-nested-list-editor__tree-toggle--open .a-nested-list-editor__tree-toggle-caret {
-  transform: translate(0, 1px) rotate(90deg);
-}
-
-/* While dragging, dim the add-button so focus stays on the drag target. */
-.a-nested-list-editor__rows--dragging .a-nested-list-editor__row-add {
-  opacity: 0.4;
-}
-
-/* "+N" children indicator — rendered on every row with children, but hidden
-   in the normal DOM. Only becomes visible inside the SortableJS drag clone
-   (which carries `.__row--drag`) so the user sees that the whole branch
-   will follow the item being moved. */
-.a-nested-list-editor__drag-count {
-  display: none;
-  align-items: center;
-  gap: 4px;
-  margin-left: 8px;
-  padding: 2px 8px;
-  font: 500 11px/1 var(--v-font-body, inherit);
-  letter-spacing: 0.02em;
-  color: var(--ansle-primary);
-  background: var(--ansle-primary-container);
-  border-radius: var(--ansle-radius-pill);
-  flex-shrink: 0;
-}
-
-.a-nested-list-editor__row--drag .a-nested-list-editor__drag-count {
-  display: inline-flex;
-}
-
-.a-nested-list-editor__row-add {
-  width: 100%;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ansle-primary);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1;
-  cursor: pointer;
-  border: none;
-  border-top: 1px solid var(--ansle-border);
-  background: var(--ansle-surface-container);
-  letter-spacing: 0.02em;
-  transition: background-color 0.15s;
-  text-align: left;
-  font-family: inherit;
-}
-
-.a-nested-list-editor__row-add:hover {
-  background: var(--ansle-primary-container);
-}
-
-/* Reorder-mode header status pill — shows "N pending changes" or "no
-   pending changes" inline with the Cancel/Apply actions in the header. */
-.a-nested-list-editor__toolbar-status {
-  font: 500 13px/1 var(--v-font-body, inherit);
-  color: var(--ansle-on-surface);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-right: 4px;
-}
-
-.a-nested-list-editor__toolbar-status--pending {
-  color: var(--ansle-warning);
-}
-
-@media (hover: none) {
-  .a-nested-list-editor__action--edit,
-  .a-nested-list-editor__action--delete,
-  .a-nested-list-editor__action--add-child,
-  .a-nested-list-editor__action--up,
-  .a-nested-list-editor__action--down,
-  .a-nested-list-editor__action--menu {
-    opacity: 1;
+    &__row &__action--edit,
+    &__row &__action--delete,
+    &__row &__action--menu {
+      opacity: 1;
+    }
   }
 }
+/* stylelint-enable selector-max-compound-selectors */
 </style>

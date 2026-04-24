@@ -1,0 +1,694 @@
+// Shared BEM rules for list-editor variants. Mixins take a `$block` selector
+// string (e.g. `.a-list-editor`) and emit the suite of common rules using
+// SCSS interpolation. Output matches the pre-refactor CSS byte-for-byte modulo
+// the `--le-*` token renames.
+// IMPORTANT: `&` inside a mixin keys off the mixin-call's parent selector,
+// which is why every rule here uses full interpolated selectors
+// (`#{$block}__row { ... }`) rather than ampersand descendants.
+// The `$unsaved` parameter handles the naming split between AListEditor
+// (`__row--dirty`) and the sortable / nested variants (`__row--unsaved`).
+// The `$deep` parameter toggles between `:deep(*)` (scoped components) and
+// bare `*` (unscoped nested variant).
+
+@use 'sass:list';
+
+/* stylelint-disable color-function-alias-notation */
+/* stylelint-disable selector-pseudo-class-no-unknown --
+   Vue SFC `:deep()` is valid inside consumer `.vue` files (Vue SFC stylelint
+   config extends `ignorePseudoClasses: ['deep']`), but a partial linted on
+   its own doesn't see that override. The rule generates warnings here that
+   resolve cleanly when the mixin output lands inside a `.vue` file. */
+
+// --- Header, card, state, empty ---------------------------------------------
+
+@mixin le-card($block) {
+  #{$block}__card {
+    background: var(--le-surface);
+    border: 1px solid var(--le-border);
+    border-radius: var(--le-radius);
+    overflow: hidden;
+  }
+}
+
+@mixin le-header-block($block) {
+  #{$block}__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 20px;
+    height: 60px;
+    border-bottom: 1px solid var(--le-border);
+    background: var(--le-surface);
+    flex-shrink: 0;
+  }
+
+  #{$block}__title-heading {
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.5;
+    letter-spacing: 0.009em;
+    color: var(--le-on-surface);
+    margin: 0;
+  }
+}
+
+@mixin le-header-actions($block) {
+  #{$block}__header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+}
+
+@mixin le-state-and-empty($block, $deep: true, $full-width-alert: true) {
+  #{$block}__state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  #{$block}__state--error {
+    padding: 16px;
+  }
+
+  // Full-width VAlert inside the error state. Only wrap `:deep()` when the
+  // component is scoped — otherwise `:deep()` leaks out as invalid CSS. The
+  // nested editor historically omits this; pass `$full-width-alert: false`
+  // there to preserve the pre-refactor output.
+  @if $full-width-alert {
+    @if $deep {
+      #{$block}__state--error :deep(.v-alert) {
+        width: 100%;
+      }
+    } @else {
+      #{$block}__state--error .v-alert {
+        width: 100%;
+      }
+    }
+  }
+
+  #{$block}__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    padding: 16px;
+  }
+
+  #{$block}__empty-title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    color: var(--le-on-surface);
+  }
+
+  #{$block}__empty-text {
+    font-size: 0.875rem;
+    color: var(--le-on-surface-variant);
+    margin: 0 0 12px;
+  }
+}
+
+// --- Row primitives ----------------------------------------------------------
+// `$sp` is an optional specificity-prefix injected before the two rules whose
+// purpose is to beat consumer slot-content styles. Scoped components rely on
+// the attribute-selector boost from `data-v-*`; unscoped variants (the nested
+// editor) need an explicit `.a-... ` prefix to match the specificity a scoped
+// build would get "for free".
+
+@mixin le-row-primitives($block, $unsaved: '--unsaved', $deep: true, $sp: '') {
+  #{$block}--disabled,
+  #{$block}--readonly {
+    opacity: 0.85;
+  }
+
+  #{$block}--disabled {
+    pointer-events: none;
+  }
+
+  #{$block}__row {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--le-surface);
+    border-bottom: 1px solid var(--le-border);
+    transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #{$block}__row-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: var(--le-row-pad-y) 12px var(--le-row-pad-y) 16px;
+    min-height: var(--le-row-min-height);
+    flex-shrink: 0;
+    position: relative;
+    transition: background-color 0.15s;
+  }
+
+  #{$block}__row--clickable #{$block}__row-header {
+    cursor: pointer;
+  }
+
+  /* Editing / readonly-expanded rows keep the overall row transparent — the
+     blue tint sits on the header only, and the form body gets its own soft
+     gradient (see `le-editing-body-rail` mixin and container-query rules). */
+  #{$block}__row--editing #{$block}__row-header,
+  #{$block}__row--expanded #{$block}__row-header {
+    background: var(--le-primary-container);
+  }
+
+  #{$block}__row--editing::before,
+  #{$block}__row--expanded::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--le-primary);
+    z-index: 1;
+  }
+
+  /* Unsaved takes visual precedence over editing — swap the primary rail +
+     header tint for warning so the whole row reads as "dirty, not active". */
+  #{$block}__row#{$unsaved} {
+    background: var(--le-warning-container);
+  }
+
+  #{$block}__row#{$unsaved}::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--le-warning);
+    z-index: 2;
+  }
+
+  #{$block}__row#{$unsaved} #{$block}__row-header {
+    background: var(--le-warning-container);
+  }
+
+  #{$sp}#{$block}__row#{$unsaved}#{$block}__row--editing #{$block}__row-main,
+  #{$sp}#{$block}__row#{$unsaved}#{$block}__row--expanded #{$block}__row-main {
+    @if $deep {
+      color: var(--le-warning);
+
+      :deep(*) {
+        color: var(--le-warning);
+      }
+    } @else {
+      &,
+      * {
+        color: var(--le-warning);
+      }
+    }
+  }
+
+  #{$block}__row-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #{$block}__title {
+    flex: 1 1 auto;
+    font-size: var(--le-row-font);
+    font-weight: 400;
+    line-height: 1.43;
+    letter-spacing: 0.018em;
+    color: var(--le-on-surface);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Active row — bold primary title. Reaches consumer-provided #item-compact
+     slot content via `:deep(*)` (scoped) or bare `*` (unscoped). */
+  #{$sp}#{$block}__row--editing #{$block}__row-main,
+  #{$sp}#{$block}__row--expanded #{$block}__row-main {
+    @if $deep {
+      font-weight: 700;
+      color: var(--le-primary);
+
+      :deep(*) {
+        font-weight: 700;
+        color: var(--le-primary);
+      }
+    } @else {
+      &,
+      * {
+        font-weight: 700;
+        color: var(--le-primary);
+      }
+    }
+  }
+
+  #{$block}__row-body {
+    padding: 12px 16px;
+    transition: padding-left 0.2s ease;
+  }
+
+  /* Form card — wraps consumer-provided #item / #item-readonly content so the
+     inline editor reads as a distinct surface against the tinted row-body
+     background. White fill, whisper-faint border, gentle radius. */
+  #{$block}__form {
+    background: var(--le-surface);
+    border: 1px solid rgb(0 0 0 / 6%);
+    border-radius: var(--le-radius);
+    padding: 16px 16px 8px;
+  }
+
+  #{$block}__row-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 16px 16px;
+  }
+
+  #{$block}__row-footer-spacer {
+    flex: 1 1 auto;
+  }
+
+  #{$block}__unsaved-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    color: var(--le-warning);
+    font-weight: 500;
+    padding: 2px 4px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+  }
+
+  #{$block}__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  #{$block}__status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 56px;
+    padding: 4px 10px;
+    font: 500 11px/1 var(--v-font-body, inherit);
+    letter-spacing: 0.02em;
+    background: var(--le-success-container);
+    color: var(--le-success-fg);
+    border-radius: var(--le-radius-pill);
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &--warning {
+      background: var(--le-warning-container);
+      color: var(--le-warning-fg);
+    }
+
+    &--error {
+      background: var(--le-error-container);
+      color: var(--le-error-fg);
+    }
+  }
+
+  #{$block}__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
+}
+
+// --- Clickable row hover/active states --------------------------------------
+// AListEditor and ASortableListEditor render both `:hover` and `:active`;
+// ANestedSortableListEditor intentionally omits `:active` (the drag handle's
+// press feedback is louder and the extra press state reads as noise there).
+
+@mixin le-row-hover($block) {
+  /* stylelint-disable selector-max-compound-selectors */
+  #{$block}__row--clickable:not(
+      #{$block}__row--editing,
+      #{$block}__row--expanded
+    ):hover
+    #{$block}__row-header {
+    background: var(--le-primary-state);
+  }
+  /* stylelint-enable selector-max-compound-selectors */
+}
+
+@mixin le-row-active($block) {
+  /* stylelint-disable selector-max-compound-selectors */
+  #{$block}__row--clickable:not(
+      #{$block}__row--editing,
+      #{$block}__row--expanded
+    ):active
+    #{$block}__row-header {
+    background: var(--le-primary-state-press);
+  }
+  /* stylelint-enable selector-max-compound-selectors */
+}
+
+// --- Container-query desktop form rail --------------------------------------
+// Adds the primary rail + soft gradient to the editing/readonly form area so
+// the whole inline-edit block reads as a single continuous surface. The
+// nested variant extends this with a depth-aware padding-left override
+// (applied in-component after calling this mixin).
+
+@mixin le-editing-body-rail($block, $unsaved: '--unsaved') {
+  #{$block}__row--editing #{$block}__row-body,
+  #{$block}__row--expanded #{$block}__row-body,
+  #{$block}__row--editing #{$block}__row-footer,
+  #{$block}__row--expanded #{$block}__row-footer {
+    border-left: 2px solid rgba(var(--v-theme-primary, 63, 106, 216), 0.28);
+    background: linear-gradient(
+      to right,
+      rgba(var(--v-theme-primary, 63, 106, 216), 0.07),
+      rgba(var(--v-theme-primary, 63, 106, 216), 0.02) 50%,
+      transparent 85%
+    );
+  }
+
+  /* Unsaved + editing: swap the primary rail + gradient for warning so the
+     whole form surface matches the orange row accent. */
+  #{$block}__row#{$unsaved}#{$block}__row--editing #{$block}__row-body,
+  #{$block}__row#{$unsaved}#{$block}__row--expanded #{$block}__row-body,
+  #{$block}__row#{$unsaved}#{$block}__row--editing #{$block}__row-footer,
+  #{$block}__row#{$unsaved}#{$block}__row--expanded #{$block}__row-footer {
+    border-left-color: rgb(251 140 0 / 35%);
+    background: linear-gradient(
+      to right,
+      rgb(251 140 0 / 7%),
+      rgb(251 140 0 / 2%) 50%,
+      transparent 85%
+    );
+  }
+}
+
+// --- Action column opacity (show on hover / focus / touch) ------------------
+
+// Default hover-none set matches $all; caller can override to omit specific
+// modifiers (ASortableListEditor excludes `--menu` there — its reorder
+// dots-vertical stays reachable via the menu button always being visible in
+// reorder mode anyway, so the coarse-pointer auto-reveal would be noise).
+@mixin le-action-visibility($block, $extra-actions: (), $hover-none-actions: null) {
+  $base: ('--edit', '--delete', '--menu');
+  $all: list.join($base, $extra-actions);
+  $hover-none: $all;
+
+  @if $hover-none-actions {
+    $hover-none: $hover-none-actions;
+  }
+
+  @each $mod in $all {
+    #{$block}__action#{$mod} {
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+  }
+
+  /* stylelint-disable selector-max-compound-selectors */
+  @each $mod in $all {
+    #{$block}__row:hover #{$block}__action#{$mod},
+    #{$block}__row:focus-within #{$block}__action#{$mod} {
+      opacity: 1;
+    }
+  }
+  /* stylelint-enable selector-max-compound-selectors */
+
+  @each $mod in $all {
+    #{$block}--touch #{$block}__action#{$mod} {
+      opacity: 1;
+    }
+  }
+
+  /* Active rows keep all affordances pinned open. */
+  @each $mod in ('--edit', '--delete', '--menu') {
+    #{$block}__row--editing #{$block}__action#{$mod},
+    #{$block}__row--expanded #{$block}__action#{$mod} {
+      opacity: 1;
+    }
+  }
+
+  @media (hover: none) {
+    @each $mod in $hover-none {
+      #{$block}__action#{$mod} {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+// Disabled reorder arrows — muted but visible when the row is hovered /
+// focused / on a touch device, matching the enabled arrow's reveal behaviour.
+@mixin le-disabled-arrow-visibility($block) {
+  /* stylelint-disable selector-max-compound-selectors */
+  #{$block}__row:hover #{$block}__action--up.v-btn--disabled,
+  #{$block}__row:hover #{$block}__action--down.v-btn--disabled,
+  #{$block}__row:focus-within #{$block}__action--up.v-btn--disabled,
+  #{$block}__row:focus-within #{$block}__action--down.v-btn--disabled,
+  #{$block}--touch #{$block}__action--up.v-btn--disabled,
+  #{$block}--touch #{$block}__action--down.v-btn--disabled {
+    opacity: 0.3;
+  }
+  /* stylelint-enable selector-max-compound-selectors */
+}
+
+// --- Row "+ Add" button at list end -----------------------------------------
+
+@mixin le-row-add($block, $focus-outline: true) {
+  #{$block}__row-add {
+    width: 100%;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--le-primary);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    border: none;
+    border-top: 1px solid var(--le-border);
+    background: var(--le-surface-container);
+    letter-spacing: 0.02em;
+    transition: background-color 0.15s;
+    text-align: left;
+    font-family: inherit;
+
+    &:hover {
+      background: var(--le-primary-container);
+    }
+
+    // AListEditor + ASortableListEditor emit an explicit focus ring. The nested
+    // editor (set `$focus-outline: false` at the call site) opts out.
+    @if $focus-outline {
+      &:focus-visible {
+        outline: 2px solid var(--le-primary);
+        outline-offset: -2px;
+      }
+    }
+  }
+}
+
+// --- Drag handle (sortable + nested) ----------------------------------------
+
+@mixin le-drag-handle($block) {
+  #{$block}__drag-handle {
+    cursor: grab;
+    flex-shrink: 0;
+    padding: 4px 0;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+}
+
+// --- Reorder-mode toolbar status pill ---------------------------------------
+
+@mixin le-toolbar-status($block) {
+  #{$block}__toolbar-status {
+    font-size: 0.85rem;
+    color: var(--le-on-surface);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 4px;
+
+    &--pending {
+      color: var(--le-warning);
+    }
+  }
+}
+
+// --- Two-rows layout (AListEditor + ASortableListEditor) --------------------
+
+@mixin le-two-rows-layout($block) {
+  #{$block}__row--two-rows:not(
+      #{$block}__row--editing,
+      #{$block}__row--expanded
+    )
+    #{$block}__row-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'title title' 'status actions';
+    align-items: center;
+    gap: 4px 8px;
+    padding: 10px 16px;
+    min-height: auto;
+  }
+
+  #{$block}__row--two-rows #{$block}__row-main {
+    grid-area: title;
+    min-width: 0;
+  }
+
+  #{$block}__row--two-rows #{$block}__row-main #{$block}__title {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.35;
+    font-weight: 500;
+  }
+
+  #{$block}__row--two-rows #{$block}__status {
+    grid-area: status;
+  }
+
+  #{$block}__row--two-rows #{$block}__actions {
+    grid-area: actions;
+    margin-left: 0;
+  }
+}
+
+// Mobile variant of the two-rows layout gated on `--two-rows-mobile` modifier.
+@mixin le-two-rows-mobile-layout($block) {
+  #{$block}--two-rows-mobile
+    #{$block}__row:not(
+      #{$block}__row--editing,
+      #{$block}__row--expanded
+    )
+    #{$block}__row-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'title title' 'status actions';
+    align-items: center;
+    gap: 4px 8px;
+    padding: 10px 16px;
+    min-height: auto;
+  }
+
+  #{$block}--two-rows-mobile #{$block}__row-main {
+    grid-area: title;
+    min-width: 0;
+  }
+
+  #{$block}--two-rows-mobile #{$block}__row-main #{$block}__title {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.35;
+    font-weight: 500;
+  }
+
+  #{$block}--two-rows-mobile #{$block}__status {
+    grid-area: status;
+  }
+
+  #{$block}--two-rows-mobile #{$block}__actions {
+    grid-area: actions;
+    margin-left: 0;
+  }
+}
+
+// --- Chips layout shared core (AListEditor + ASortableListEditor) -----------
+// Only emits the rules that are byte-identical between the two flat editors.
+// The `__row-header` padding (12 px for AListEditor vs 8 px for sortable to
+// leave room for the drag handle) and the sortable-only `__rows` /
+// `__drag-handle` overrides stay inlined in each component.
+
+@mixin le-chips-shared($block) {
+  #{$block}--chips {
+    #{$block}__card {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px;
+      border-radius: var(--le-radius);
+      box-shadow: none;
+    }
+
+    #{$block}__header {
+      flex: 1 1 100%;
+      padding: 4px 8px 8px;
+      border-bottom: none;
+      min-height: auto;
+    }
+
+    #{$block}__row {
+      border-bottom: none;
+      background: var(--le-primary-container);
+      border-radius: var(--le-radius-full);
+      flex: 0 0 auto;
+      max-width: 100%;
+    }
+
+    #{$block}__row-main {
+      gap: 6px;
+    }
+
+    #{$block}__title {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--le-primary);
+    }
+
+    #{$block}__action--chip-close {
+      opacity: 0.7;
+      transition: opacity 0.15s;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+
+    #{$block}__row-add {
+      flex: 0 0 auto;
+      width: auto;
+      border-top: none;
+      border: 1px dashed var(--le-border);
+      border-radius: var(--le-radius-full);
+      padding: 4px 12px;
+      font-size: 0.82rem;
+      background: transparent;
+
+      &:hover {
+        background: var(--le-primary-state);
+      }
+    }
+  }
+}

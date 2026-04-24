@@ -1,6 +1,8 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
 import { useI18n } from 'vue-i18n'
 import ANestedRowSelf from './ANestedRow.vue'
+import ALeDragHandle from '@/labs/listEditor/internal/ALeDragHandle.vue'
+import ALeUnsavedLabel from '@/labs/listEditor/internal/ALeUnsavedLabel.vue'
 import type {
   ListEditorKey,
   ListEditorValidationState,
@@ -91,10 +93,8 @@ const directChildren = (): any[] =>
         class="a-nested-list-editor__row-header"
         @click="callbacks.onRowClick(vi)"
       >
-        <VIcon
+        <ALeDragHandle
           v-if="context.dragEnabled"
-          icon="mdi-drag"
-          size="20"
           :class="HANDLE_CLASS"
         />
 
@@ -150,16 +150,10 @@ const directChildren = (): any[] =>
             />
             +{{ vi.childrenCount }}
           </span>
-          <span
+          <ALeUnsavedLabel
             v-if="vi.unsaved"
             class="a-nested-list-editor__unsaved-label"
-          >
-            <VIcon
-              icon="mdi-circle-medium"
-              size="12"
-            />
-            {{ t('common.sortable.unsaved') }}
-          </span>
+          />
         </div>
 
         <div

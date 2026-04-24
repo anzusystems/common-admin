@@ -1,9 +1,18 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, nextTick, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
+import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
+import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
+import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
+import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
+import ALeDeleteDialog from '@/labs/listEditor/internal/ALeDeleteDialog.vue'
+import ALeEmptyState from '@/labs/listEditor/internal/ALeEmptyState.vue'
+import ALeStatus from '@/labs/listEditor/internal/ALeStatus.vue'
+import ALeUnsavedLabel from '@/labs/listEditor/internal/ALeUnsavedLabel.vue'
+import ALeDragHandle from '@/labs/listEditor/internal/ALeDragHandle.vue'
 import { cloneDeep } from '@/utils/common'
 import { stringToInt } from '@/utils/string'
 import type {
@@ -147,11 +156,7 @@ const editor = useListEditor<TItem>(modelValue, {
   updatePosition: props.updatePosition,
 })
 
-const editingKeys = ref<Set<ListEditorKey>>(new Set())
 const expandedKeys = ref<Set<ListEditorKey>>(new Set())
-const editingSnapshots = ref(new Map<ListEditorKey, TItem>()) as import('vue').Ref<
-  Map<ListEditorKey, TItem>
->
 
 // Initial snapshot of each item, keyed by row key. Compared against current data to
 // detect "dirty" (unsaved) rows. Reset externally after a successful parent-form save.
@@ -159,83 +164,102 @@ const editingSnapshots = ref(new Map<ListEditorKey, TItem>()) as import('vue').R
 // whose flat index shifts as a side-effect, and flagging those unmoved rows
 // as dirty would paint ghost "unsaved" markers. The per-row visual cue is
 // what matters; position data still flows to the parent on apply.
-const stringifyContent = (data: TItem): string => {
-  const copy = { ...data } as Record<string, unknown>
-  delete copy[props.positionField]
-  return JSON.stringify(copy)
-}
-// Keys the user has actively moved during this reorder session. Declared
-// before `captureDirtyBaseline` so that function can reset it as part of
-// the "mark as saved" cycle.
-const movedKeys = ref<Set<ListEditorKey>>(new Set())
-
-const dirtyBaseline = ref(new Map<ListEditorKey, string>()) as import('vue').Ref<
-  Map<ListEditorKey, string>
->
-const captureDirtyBaseline = () => {
-  const next = new Map<ListEditorKey, string>()
-  modelValue.value.forEach((item) => {
-    next.set(item[props.keyField] as ListEditorKey, stringifyContent(item))
-  })
-  dirtyBaseline.value = next
-  // Clearing moved state is part of "mark current data as saved" — consumers
-  // exposed via `resetDirtyBaseline` expect the orange badges to go away.
-  movedKeys.value = new Set()
-}
-captureDirtyBaseline()
-
-// Auto-open the most-recently-added row after an @add emit is handled by the parent.
-const pendingAutoOpen = ref(false)
-watch(
-  () => modelValue.value.map((it) => it[props.keyField] as ListEditorKey),
-  (newKeys, oldKeys) => {
-    if (!pendingAutoOpen.value) return
-    pendingAutoOpen.value = false
-    const oldSet = new Set(oldKeys)
-    const addedKey = newKeys.find((k) => !oldSet.has(k))
-    if (addedKey === undefined) return
-    const newItem = modelValue.value.find(
-      (it) => (it[props.keyField] as ListEditorKey) === addedKey,
-    )
-    if (!newItem) return
-    if (!isInlineEdit.value) return
-    if (!editingSnapshots.value.has(addedKey)) {
-      editingSnapshots.value.set(addedKey, cloneDeep(newItem) as TItem)
-    }
-    editingKeys.value.add(addedKey)
-    expandedKeys.value.delete(addedKey)
-    // Scroll the newly added row into view so the user sees their new item
-    // even on long lists where the append lands below the viewport fold.
-    // Double nextTick so the inline-edit body has rendered; `block: 'center'`
-    // because `'nearest'` often decides a partially-visible row is good
-    // enough and does nothing.
-    nextTick(() => {
-      nextTick(() => {
-        const el = rowsContainer.value?.querySelector<HTMLElement>(
-          `.a-sortable-list-editor__row[data-id="${CSS.escape(String(addedKey))}"]`,
-        )
-        el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-      })
-    })
-  },
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { captureDirtyBaseline, isItemDirty } = useDirtyBaseline<TItem>(
+  () =>
+    modelValue.value.map((item) => ({
+      key: item[props.keyField] as ListEditorKey,
+      data: item,
+    })),
+  { excludeFields: [props.positionField] },
 )
 
-const deleteDialog = ref(false)
-const deleteTarget = ref<ListViewItem<TItem> | null>(null)
-const deleteInFlight = ref(false)
-const deleteError = ref<string | null>(null)
+// Keys the user has actively moved during this reorder session. Clearing
+// this set is part of "mark current data as saved" — paired with
+// captureDirtyBaseline in the exposed resetDirtyBaseline so the orange
+// badges go away when consumers confirm a server save.
+const movedKeys = ref<Set<ListEditorKey>>(new Set())
+
+const resetDirtyBaseline = () => {
+  captureDirtyBaseline()
+  movedKeys.value = new Set()
+}
 
 const snapshot = ref<TItem[] | null>(null)
-const applying = ref(false)
-const applyError = ref<string | null>(null)
 
 const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 
-const reorderMode = computed(() => mode.value === 'reorder')
+const isInlineEdit = computed(() => !props.chips && !!slots.item)
+const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'])
+
+const {
+  editingKeys,
+  editingSnapshots,
+  clearEditing,
+  beginEdit,
+  cancelEdit,
+  commitEdit,
+  closeEdit,
+  requestAutoOpen,
+} = useInlineEditing<TItem, ListViewItem<TItem>>({
+  rowsContainer,
+  rowSelector: '.a-sortable-list-editor__row',
+  isInlineEdit,
+  restoreSnapshot: (key, data) => editor.updateItem(key, data),
+  watchKeys: () => modelValue.value.map((it) => it[props.keyField] as ListEditorKey),
+  findEntry: (key) => {
+    const hit = modelValue.value.find(
+      (it) => (it[props.keyField] as ListEditorKey) === key,
+    )
+    return hit ? { data: hit } : null
+  },
+  afterAutoOpen: (key) => {
+    expandedKeys.value.delete(key)
+  },
+})
+
 const canInteract = computed(() => !props.readonly && !props.disabled && !props.loading)
 const canEnterReorder = computed(
   () => canInteract.value && !props.reorderDisabled && modelValue.value.length > 1,
 )
+
+const {
+  applying,
+  applyError,
+  hasPendingChanges,
+  movedCount,
+  reorderMode,
+  enterReorderMode,
+  cancelReorderMode,
+  applyReorder,
+} = useReorderMode<TItem[]>({
+  mode,
+  snapshot,
+  movedKeys,
+  modelValue,
+  cloneModel: (m) => cloneDeep(m) as TItem[],
+  applyModel: (m) => {
+    modelValue.value = m
+  },
+  canEnterReorder,
+  onEnter: () => {
+    clearEditing()
+    expandedKeys.value.clear()
+  },
+  onExternalEnter: () => {
+    clearEditing()
+    expandedKeys.value.clear()
+  },
+  onReorderApply: (items) => props.onReorderApply?.(items),
+  emit: {
+    reorderStart: () => emit('reorder-start'),
+    reorderCancel: () => emit('reorder-cancel'),
+    reorderApplied: (payload) => emit('reorder-applied', payload),
+    reorderApplyError: (err) => emit('reorder-apply-error', err),
+    reorderEnd: () => emit('reorder-end'),
+  },
+})
+
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
 // Chips mode keeps drag always-on (no mode toggle) on non-touch devices.
 const dragEnabled = computed(
@@ -277,16 +301,11 @@ const headerVisible = computed<boolean>(
     ),
 )
 
-const isInlineEdit = computed(() => !props.chips && !!slots.item)
-
-const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'])
-
 // Per-row edit footer (Save + Cancel) is only meaningful if the consumer wants a
 // per-item persist callback. Without it the expectation is that the parent form's
 // global save flushes everything, so we hide the per-row buttons by default.
 const showInlineSaveFooter = computed(() => !!props.onItemSave)
 
-// `movedKeys` is declared higher up so `captureDirtyBaseline` can reset it.
 // Tracks only rows the user actively moved (drag, arrow buttons) — snapshot
 // vs current-index diffing would also flag side-effect index shifts, which
 // isn't what the user means by "unsaved".
@@ -294,17 +313,11 @@ const markMoved = (key: ListEditorKey) => {
   movedKeys.value.add(key)
 }
 
-const isItemDirty = (vi: ListViewItem<TItem>): boolean => {
-  const baseline = dirtyBaseline.value.get(vi.key)
-  if (baseline === undefined) return true
-  return baseline !== stringifyContent(vi.raw)
-}
-
 const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
   const total = modelValue.value.length
   return editor.viewItems.value.map((vi) => {
     const moved = movedKeys.value.has(vi.key)
-    const dirty = isItemDirty(vi)
+    const dirty = isItemDirty(vi.key, vi.raw)
     return {
       ...vi,
       editing: editingKeys.value.has(vi.key),
@@ -320,9 +333,6 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
 })
 
 const isEmpty = computed(() => viewItemsDecorated.value.length === 0)
-
-const movedCount = computed(() => viewItemsDecorated.value.filter((v) => v.moved).length)
-const hasPendingChanges = computed(() => movedCount.value > 0)
 
 const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
   const pick = (v: unknown): string | null =>
@@ -392,13 +402,13 @@ if (!isTouch.value) {
 
 const onAddClick = () => {
   if (!canAdd.value) return
-  pendingAutoOpen.value = true
+  requestAutoOpen()
   emit('add', undefined)
 }
 
 const onRowAddAfterClick = (vi: ListViewItem<TItem>) => {
   if (!canInteract.value) return
-  pendingAutoOpen.value = true
+  requestAutoOpen()
   emit('add', { afterId: vi.key })
 }
 
@@ -411,10 +421,7 @@ const onEditClick = (vi: ListViewItem<TItem>) => {
     return
   }
   if (isInlineEdit.value) {
-    if (!editingSnapshots.value.has(vi.key)) {
-      editingSnapshots.value.set(vi.key, cloneDeep(vi.raw) as TItem)
-    }
-    editingKeys.value.add(vi.key)
+    beginEdit(vi)
     expandedKeys.value.delete(vi.key)
   }
   emit('edit', vi)
@@ -457,79 +464,45 @@ const onRowClick = (vi: DecoratedViewItem<TItem>) => {
   }
 }
 
-const performDelete = async (vi: ListViewItem<TItem>): Promise<boolean> => {
-  deleteError.value = null
-  if (props.onDeleteConfirm) {
-    const ok = await props.onDeleteConfirm(vi.raw)
-    if (!ok) return false
-  }
-  if (props.onDelete) {
-    deleteInFlight.value = true
-    try {
-      await props.onDelete(vi.raw)
-    } catch (err) {
-      deleteInFlight.value = false
-      deleteError.value = err instanceof Error ? err.message : String(err)
-      return false
-    }
-    deleteInFlight.value = false
-  }
-  editor.deleteItem(vi.key)
-  editingKeys.value.delete(vi.key)
-  editingSnapshots.value.delete(vi.key)
-  expandedKeys.value.delete(vi.key)
-  emit('deleted', vi)
-  return true
-}
+const {
+  deleteDialog,
+  deleteInFlight,
+  deleteError,
+  onDeleteClick: triggerDeleteClick,
+  onDeleteDialogConfirm,
+  onDeleteDialogCancel,
+} = useDeleteDialog<TItem, ListViewItem<TItem>>({
+  onDeleteConfirm: (raw) => (props.onDeleteConfirm ? props.onDeleteConfirm(raw) : true),
+  onDelete: (raw) => props.onDelete?.(raw),
+  onDeleted: (vi) => {
+    editor.deleteItem(vi.key)
+    editingKeys.value.delete(vi.key)
+    editingSnapshots.value.delete(vi.key)
+    expandedKeys.value.delete(vi.key)
+    emit('deleted', vi)
+  },
+  disableDeleteConfirm: () => props.disableDeleteConfirm || props.chips,
+})
 
 const onDeleteClick = async (vi: ListViewItem<TItem>) => {
   if (!canInteract.value) return
-  if (props.disableDeleteConfirm || props.chips) {
-    await performDelete(vi)
-    return
-  }
-  deleteTarget.value = vi
-  deleteError.value = null
-  deleteDialog.value = true
-}
-
-const onDeleteDialogConfirm = async () => {
-  if (!deleteTarget.value) return
-  const ok = await performDelete(deleteTarget.value as ListViewItem<TItem>)
-  if (ok) {
-    deleteDialog.value = false
-    deleteTarget.value = null
-  }
-}
-
-const onDeleteDialogCancel = () => {
-  if (deleteInFlight.value) return
-  deleteDialog.value = false
-  deleteTarget.value = null
-  deleteError.value = null
+  await triggerDeleteClick(vi)
 }
 
 const onSaveClick = async (vi: ListViewItem<TItem>) => {
   if (props.onItemSave) {
     await props.onItemSave(vi.raw)
   }
-  editingKeys.value.delete(vi.key)
-  editingSnapshots.value.delete(vi.key)
+  commitEdit(vi)
   emit('item-saved', vi)
 }
 
 const onCancelClick = (vi: ListViewItem<TItem>) => {
-  const snap = editingSnapshots.value.get(vi.key)
-  if (snap) {
-    editor.updateItem(vi.key, snap as TItem)
-  }
-  editingKeys.value.delete(vi.key)
-  editingSnapshots.value.delete(vi.key)
+  cancelEdit(vi)
 }
 
 const onCloseClick = (vi: ListViewItem<TItem>) => {
-  editingKeys.value.delete(vi.key)
-  editingSnapshots.value.delete(vi.key)
+  closeEdit(vi)
   expandedKeys.value.delete(vi.key)
   emit('close', vi)
 }
@@ -564,76 +537,6 @@ const moveBottom = (idx: number) => {
   editor.moveItem(idx, modelValue.value.length - 1)
   if (key !== null) markMoved(key)
 }
-
-const enterReorderMode = () => {
-  if (!canEnterReorder.value || reorderMode.value) return
-  editingKeys.value.clear()
-  editingSnapshots.value.clear()
-  expandedKeys.value.clear()
-  snapshot.value = cloneDeep(modelValue.value)
-  movedKeys.value = new Set()
-  applyError.value = null
-  mode.value = 'reorder'
-  emit('reorder-start')
-}
-
-const cancelReorderMode = () => {
-  if (!reorderMode.value) return
-  if (snapshot.value) {
-    modelValue.value = snapshot.value as TItem[]
-  }
-  snapshot.value = null
-  movedKeys.value = new Set()
-  applyError.value = null
-  applying.value = false
-  mode.value = 'view'
-  emit('reorder-cancel')
-  emit('reorder-end')
-}
-
-const applyReorder = async () => {
-  if (!reorderMode.value) return
-  const items = cloneDeep(modelValue.value)
-  applyError.value = null
-  if (props.onReorderApply) {
-    applying.value = true
-    try {
-      await props.onReorderApply(items)
-    } catch (err) {
-      applying.value = false
-      applyError.value = err instanceof Error ? err.message : String(err)
-      emit('reorder-apply-error', err)
-      return
-    }
-    applying.value = false
-  }
-  // Deliberately keep `movedKeys` populated — consumer still has to persist
-  // the new order via their own API call before rows are truly "saved"; we
-  // let them clear the state manually via `resetDirtyBaseline` on success.
-  snapshot.value = null
-  mode.value = 'view'
-  emit('reorder-applied', items)
-  emit('reorder-end')
-}
-
-// Ensure inline editors are closed when entering reorder mode externally (v-model:mode)
-watch(mode, (newMode, oldMode) => {
-  if (newMode === 'reorder' && oldMode !== 'reorder') {
-    if (!snapshot.value) {
-      snapshot.value = cloneDeep(modelValue.value)
-    }
-    movedKeys.value = new Set()
-    editingKeys.value.clear()
-    editingSnapshots.value.clear()
-    expandedKeys.value.clear()
-  }
-  if (newMode === 'view' && oldMode === 'reorder' && snapshot.value) {
-    snapshot.value = null
-    movedKeys.value = new Set()
-    applyError.value = null
-    applying.value = false
-  }
-})
 
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
   item: { ...vi, validationState: resolveValidation(vi.raw as TItem) },
@@ -694,7 +597,7 @@ defineExpose({
   moveItem: editor.moveItem,
   recalculatePositions: editor.recalculatePositions,
   viewItems: editor.viewItems,
-  resetDirtyBaseline: captureDirtyBaseline,
+  resetDirtyBaseline,
   enterReorderMode,
   cancelReorderMode,
   applyReorder,
@@ -741,35 +644,13 @@ defineExpose({
                 name="reorder-toolbar"
                 v-bind="toolbarSlotProps"
               >
-                <div
+                <ALeStatus
                   class="a-sortable-list-editor__toolbar-status"
                   :class="{ 'a-sortable-list-editor__toolbar-status--pending': hasPendingChanges }"
-                >
-                  <VIcon
-                    v-if="hasPendingChanges"
-                    icon="mdi-circle-medium"
-                    color="warning"
-                    size="18"
-                  />
-                  <span
-                    v-if="applyError"
-                    class="text-body-small"
-                  >
-                    {{ applyError }}
-                  </span>
-                  <span
-                    v-else-if="hasPendingChanges"
-                    class="text-body-small"
-                  >
-                    {{ t('common.sortable.pendingChanges', { count: movedCount }) }}
-                  </span>
-                  <span
-                    v-else
-                    class="text-body-small text-medium-emphasis"
-                  >
-                    {{ t('common.sortable.noPendingChanges') }}
-                  </span>
-                </div>
+                  :has-pending-changes="hasPendingChanges"
+                  :pending-count="movedCount"
+                  :error="applyError"
+                />
                 <VBtn
                   variant="text"
                   size="small"
@@ -866,23 +747,14 @@ defineExpose({
           :disabled="disabled"
           :actions="{ add: onAddClick }"
         >
-          <div class="a-sortable-list-editor__empty">
-            <h3 class="a-sortable-list-editor__empty-title">
-              {{ emptyTitleResolved }}
-            </h3>
-            <p class="a-sortable-list-editor__empty-text">
-              {{ emptyTextResolved }}
-            </p>
-            <VBtn
-              v-if="canAdd"
-              color="primary"
-              variant="flat"
-              prepend-icon="mdi-plus"
-              @click="onAddClick"
-            >
-              {{ t('common.sortable.addFirst') }}
-            </VBtn>
-          </div>
+          <ALeEmptyState
+            block-class="a-sortable-list-editor"
+            :title="emptyTitleResolved"
+            :text="emptyTextResolved"
+            :add-label="addLabelResolved"
+            :can-add="canAdd"
+            @add="onAddClick"
+          />
         </slot>
       </div>
 
@@ -916,10 +788,8 @@ defineExpose({
             class="a-sortable-list-editor__row-header"
             @click="onRowClick(vi)"
           >
-            <VIcon
+            <ALeDragHandle
               v-if="dragEnabled"
-              icon="mdi-drag"
-              size="20"
               class="a-sortable-list-editor__drag-handle"
             />
 
@@ -932,16 +802,10 @@ defineExpose({
                   {{ resolveCompactText(vi.raw, vi.key) }}
                 </span>
               </slot>
-              <span
+              <ALeUnsavedLabel
                 v-if="vi.unsaved"
                 class="a-sortable-list-editor__unsaved-label"
-              >
-                <VIcon
-                  icon="mdi-circle-medium"
-                  size="12"
-                />
-                {{ t('common.sortable.unsaved') }}
-              </span>
+              />
             </div>
 
             <div
@@ -1254,781 +1118,179 @@ defineExpose({
       </slot>
     </div>
 
-    <VDialog
+    <ALeDeleteDialog
       v-model="deleteDialog"
-      max-width="420"
-      :persistent="deleteInFlight"
-    >
-      <VCard>
-        <VCardTitle class="text-headline-small">
-          {{ deleteConfirmTitleResolved }}
-        </VCardTitle>
-        <VCardText>
-          {{ deleteConfirmTextResolved }}
-          <VAlert
-            v-if="deleteError"
-            type="error"
-            variant="tonal"
-            density="compact"
-            class="mt-3"
-          >
-            {{ deleteError }}
-          </VAlert>
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            variant="text"
-            :disabled="deleteInFlight"
-            @click="onDeleteDialogCancel"
-          >
-            {{ t('common.button.cancel') }}
-          </VBtn>
-          <VBtn
-            color="error"
-            variant="flat"
-            :loading="deleteInFlight"
-            :disabled="deleteInFlight"
-            @click="onDeleteDialogConfirm"
-          >
-            {{ t('common.sortable.delete') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+      :title="deleteConfirmTitleResolved"
+      :text="deleteConfirmTextResolved"
+      :confirm-label="t('common.sortable.delete')"
+      :cancel-label="t('common.button.cancel')"
+      :error="deleteError"
+      :in-flight="deleteInFlight"
+      @confirm="onDeleteDialogConfirm"
+      @cancel="onDeleteDialogCancel"
+    />
 
   </div>
 </template>
 
 <style lang="scss" scoped>
-/* stylelint-disable color-function-alias-notation --
-   Vuetify 4 exports theme colours as comma-separated "R, G, B" lists; the
-   modern `rgb(R G B / A)` slash-alpha syntax produces invalid CSS (and a
-   silent transparent fallback) when that var expands. Use explicit rgba()
-   everywhere a theme var appears. */
+@use './styles/tokens' as tokens;
+@use './styles/shared' as shared;
 
+// Tokens + container setup live on the root block.
 .a-sortable-list-editor {
-  --asle-border: rgb(0 0 0 / 12%);
-  --asle-surface: rgb(var(--v-theme-surface, 255, 255, 255));
-  --asle-surface-container: rgb(0 0 0 / 2.5%);
-  --asle-primary: rgb(var(--v-theme-primary, 63, 106, 216));
-  --asle-primary-container: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
-  --asle-primary-state: rgba(var(--v-theme-primary, 63, 106, 216), 0.04);
-  --asle-primary-state-press: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
-  --asle-success-container: rgb(76 175 80 / 18%);
-  --asle-success-fg: #165634;
-  --asle-warning-container: rgb(251 140 0 / 18%);
-  --asle-warning-fg: #914000;
-  --asle-warning: rgb(var(--v-theme-warning, 251, 140, 0));
-  --asle-error-container: rgba(var(--v-theme-error, 217, 37, 80), 0.18);
-  --asle-error-fg: rgb(var(--v-theme-error, 217, 37, 80));
-  --asle-on-surface: rgb(var(--v-theme-on-surface, 51, 51, 51));
-  --asle-on-surface-variant: rgb(var(--v-theme-on-surface-variant, 102, 102, 102));
-  --asle-radius: 8px;
-  --asle-radius-pill: 9999px;
-  --asle-elev-3: 0 1px 3px rgb(0 0 0 / 16%), 0 4px 8px 3px rgb(0 0 0 / 10%);
-
-  // Compact density — baked in, aligned with the other list-editor variants.
-  --asle-row-min-height: 48px;
-  --asle-row-pad-y: 6px;
-  --asle-row-font: 13px;
-
-  position: relative;
-  container-type: inline-size;
-  container-name: asle-shell;
+  @include tokens.le-tokens;
+  @include tokens.le-shell-container;
 }
 
-.a-sortable-list-editor--disabled,
-.a-sortable-list-editor--readonly {
-  opacity: 0.85;
-}
+// Shared rule pack — emitted at top level so the selectors stay bare
+// (`.a-sortable-list-editor__row`) rather than nested under the root block.
+@include shared.le-card('.a-sortable-list-editor');
+@include shared.le-header-block('.a-sortable-list-editor');
+@include shared.le-header-actions('.a-sortable-list-editor');
+@include shared.le-state-and-empty('.a-sortable-list-editor');
+@include shared.le-row-primitives('.a-sortable-list-editor');
+@include shared.le-row-hover('.a-sortable-list-editor');
+@include shared.le-row-active('.a-sortable-list-editor');
+@include shared.le-row-add('.a-sortable-list-editor');
+@include shared.le-drag-handle('.a-sortable-list-editor');
+@include shared.le-toolbar-status('.a-sortable-list-editor');
+@include shared.le-two-rows-layout('.a-sortable-list-editor');
 
-.a-sortable-list-editor--disabled {
-  pointer-events: none;
-}
+// `--menu` stays out of the `hover: none` coarse-pointer override: in reorder
+// mode the dots-vertical menu button is always visible anyway, and the
+// non-reorder menu is driven by `--touch` / :hover detection above.
+@include shared.le-action-visibility(
+  '.a-sortable-list-editor',
+  $extra-actions: ('--up', '--down'),
+  $hover-none-actions: ('--edit', '--delete', '--up', '--down'),
+);
+@include shared.le-disabled-arrow-visibility('.a-sortable-list-editor');
+@include shared.le-chips-shared('.a-sortable-list-editor');
 
-.a-sortable-list-editor__card {
-  background: var(--asle-surface);
-  border: 1px solid var(--asle-border);
-  border-radius: var(--asle-radius);
-  overflow: hidden;
-}
-
-.a-sortable-list-editor__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 20px;
-  height: 60px;
-  border-bottom: 1px solid var(--asle-border);
-  background: var(--asle-surface);
-  flex-shrink: 0;
-}
-
-.a-sortable-list-editor__header-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.a-sortable-list-editor__title-heading {
-  font-weight: 500;
-  font-size: 1rem;
-  line-height: 1.5;
-  letter-spacing: 0.009em;
-  color: var(--asle-on-surface);
-  margin: 0;
-}
-
-.a-sortable-list-editor__state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-}
-
-.a-sortable-list-editor__state--error {
-  padding: 16px;
-}
-
-.a-sortable-list-editor__state--error :deep(.v-alert) {
-  width: 100%;
-}
-
-.a-sortable-list-editor__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-  padding: 16px;
-}
-
-.a-sortable-list-editor__empty-title {
-  font-size: 1rem;
-  font-weight: 500;
-  margin: 0;
-  color: var(--asle-on-surface);
-}
-
-.a-sortable-list-editor__empty-text {
-  font-size: 0.875rem;
-  color: var(--asle-on-surface-variant);
-  margin: 0 0 12px;
-}
-
-.a-sortable-list-editor__rows {
-  display: flex;
-  flex-direction: column;
-}
-
-.a-sortable-list-editor__row {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: var(--asle-surface);
-  border-bottom: 1px solid var(--asle-border);
-  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.a-sortable-list-editor__row-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: var(--asle-row-pad-y) 12px var(--asle-row-pad-y) 16px;
-  min-height: var(--asle-row-min-height);
-  flex-shrink: 0;
-  position: relative;
-  transition: background-color 0.15s;
-}
-
-.a-sortable-list-editor__row--clickable .a-sortable-list-editor__row-header {
-  cursor: pointer;
-}
-
-/* stylelint-disable selector-max-compound-selectors */
-.a-sortable-list-editor__row--clickable:not(
-    .a-sortable-list-editor__row--editing,
-    .a-sortable-list-editor__row--expanded
-  ):hover
-  .a-sortable-list-editor__row-header {
-  background: var(--asle-primary-state);
-}
-
-.a-sortable-list-editor__row--clickable:not(
-    .a-sortable-list-editor__row--editing,
-    .a-sortable-list-editor__row--expanded
-  ):active
-  .a-sortable-list-editor__row-header {
-  background: var(--asle-primary-state-press);
-}
-/* stylelint-enable selector-max-compound-selectors */
-
-/* Editing / readonly-expanded rows keep the overall row transparent — the blue
-   tint sits on the header only, and the form body gets its own soft gradient. */
-.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-header,
-.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-header {
-  background: var(--asle-primary-container);
-}
-
-.a-sortable-list-editor__row--editing::before,
-.a-sortable-list-editor__row--expanded::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--asle-primary);
-  z-index: 1;
-}
-
-.a-sortable-list-editor__row--unsaved {
-  background: var(--asle-warning-container);
-}
-
-.a-sortable-list-editor__row--unsaved::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--asle-warning);
-  z-index: 2;
-}
-
-/* Unsaved takes visual precedence over editing — swap the header's blue tint
-   and title color for warning so the whole row reads as "dirty, not active". */
-.a-sortable-list-editor__row--unsaved .a-sortable-list-editor__row-header {
-  background: var(--asle-warning-container);
-}
-
-.a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-main,
-.a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-main,
-.a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-main :deep(*),
-.a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-main :deep(*) {
-  color: var(--asle-warning);
-}
-
-.a-sortable-list-editor__row--reorder .a-sortable-list-editor__row-header {
-  padding-left: 12px;
-  padding-right: 8px;
-  gap: 8px;
-}
-
-.a-sortable-list-editor__row--two-rows:not(
-    .a-sortable-list-editor__row--editing,
-    .a-sortable-list-editor__row--expanded
-  )
-  .a-sortable-list-editor__row-header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: 'title title' 'status actions';
-  align-items: center;
-  gap: 4px 8px;
-  padding: 10px 16px;
-  min-height: auto;
-}
-
-.a-sortable-list-editor__row--two-rows .a-sortable-list-editor__row-main {
-  grid-area: title;
-  min-width: 0;
-}
-
-.a-sortable-list-editor__row--two-rows .a-sortable-list-editor__row-main .a-sortable-list-editor__title {
-  white-space: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-height: 1.35;
-  font-weight: 500;
-}
-
-.a-sortable-list-editor__row--two-rows .a-sortable-list-editor__status {
-  grid-area: status;
-}
-
-.a-sortable-list-editor__row--two-rows .a-sortable-list-editor__actions {
-  grid-area: actions;
-  margin-left: 0;
-}
-
-/* stylelint-disable selector-max-compound-selectors */
-.a-sortable-list-editor__row--validation-invalid::after,
-.a-sortable-list-editor__row--validation-warning::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-}
-
-.a-sortable-list-editor__row--validation-invalid:not(
-    .a-sortable-list-editor__row--editing,
-    .a-sortable-list-editor__row--unsaved
-  )::after {
-  background: var(--asle-error-fg);
-}
-
-.a-sortable-list-editor__row--validation-warning:not(
-    .a-sortable-list-editor__row--editing,
-    .a-sortable-list-editor__row--unsaved
-  )::after {
-  background: var(--asle-warning);
-}
-/* stylelint-enable selector-max-compound-selectors */
-
-.a-sortable-list-editor__row-main {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.a-sortable-list-editor__row-body {
-  padding: 12px 16px;
-  transition: padding-left 0.2s ease;
-}
-
-/* Form card — wraps consumer-provided #item / #item-readonly content so the
-   inline editor reads as a distinct surface against the tinted row-body
-   background. White fill, whisper-faint border, gentle radius. */
-.a-sortable-list-editor__form {
-  background: var(--asle-surface);
-  border: 1px solid rgb(0 0 0 / 6%);
-  border-radius: var(--asle-radius);
-  padding: 16px 16px 8px;
-}
-
-.a-sortable-list-editor__body-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.a-sortable-list-editor__row-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 16px 16px;
-}
-
-.a-sortable-list-editor__row-footer-spacer {
-  flex: 1 1 auto;
-}
-
-.a-sortable-list-editor__title {
-  flex: 1 1 auto;
-  font-size: var(--asle-row-font);
-  font-weight: 400;
-  line-height: 1.43;
-  letter-spacing: 0.018em;
-  color: var(--asle-on-surface);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Active row — bold primary title. `.row-main` + deep wildcard reaches
-   consumer-provided #item-compact slot content too. */
-.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-main,
-.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-main,
-.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-main :deep(*),
-.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-main :deep(*) {
-  font-weight: 700;
-  color: var(--asle-primary);
-}
-
-.a-sortable-list-editor__unsaved-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 11px;
-  color: var(--asle-warning);
-  font-weight: 500;
-  padding: 2px 4px;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-  flex-shrink: 0;
-}
-
-.a-sortable-list-editor__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.a-sortable-list-editor__status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-width: 56px;
-  padding: 4px 10px;
-  font: 500 11px/1 var(--v-font-body, inherit);
-  letter-spacing: 0.02em;
-  background: var(--asle-success-container);
-  color: var(--asle-success-fg);
-  border-radius: var(--asle-radius-pill);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.a-sortable-list-editor__status-badge--warning {
-  background: var(--asle-warning-container);
-  color: var(--asle-warning-fg);
-}
-
-.a-sortable-list-editor__status-badge--error {
-  background: var(--asle-error-container);
-  color: var(--asle-error-fg);
-}
-
-.a-sortable-list-editor__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-  margin-left: 4px;
-}
-
-/* Container-query driven desktop layout — adds the primary rail + soft gradient
-   to the form area. No padding-left override: in the flat variant the body
-   aligns with the row title (16 px) since there is no caret/depth indent.
-   Rail + gradient extend to the footer so Cancel/Save row sits on the same
-   continuous surface as the form. */
-@container asle-shell (min-width: 769px) {
-  .a-sortable-list-editor__row--editing .a-sortable-list-editor__row-body,
-  .a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-body,
-  .a-sortable-list-editor__row--editing .a-sortable-list-editor__row-footer,
-  .a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-footer {
-    border-left: 2px solid rgba(var(--v-theme-primary, 63, 106, 216), 0.28);
-    background: linear-gradient(
-      to right,
-      rgba(var(--v-theme-primary, 63, 106, 216), 0.07),
-      rgba(var(--v-theme-primary, 63, 106, 216), 0.02) 50%,
-      transparent 85%
-    );
+// Variant-specific rules, nested.
+.a-sortable-list-editor {
+  &__rows {
+    display: flex;
+    flex-direction: column;
   }
 
-  /* Unsaved + editing: swap the primary rail + gradient for warning so the
-     whole form surface matches the orange row accent. */
-  .a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-body,
-  .a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-body,
-  .a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-footer,
-  .a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-footer {
-    border-left-color: rgb(251 140 0 / 35%);
-    background: linear-gradient(
-      to right,
-      rgb(251 140 0 / 7%),
-      rgb(251 140 0 / 2%) 50%,
-      transparent 85%
-    );
-  }
-}
-
-/* Narrow-container / mobile layout — taller rows, always-visible actions,
-   status badge dropped to make room. */
-@container asle-shell (max-width: 768px) {
-  .a-sortable-list-editor {
-    --asle-row-min-height: 48px;
-    --asle-row-pad-y: 10px;
+  // Reorder-mode trims the row-header padding since the drag handle already
+  // eats some of the horizontal rhythm.
+  &__row--reorder &__row-header {
+    padding-left: 12px;
+    padding-right: 8px;
+    gap: 8px;
   }
 
-  .a-sortable-list-editor__row:not(.a-sortable-list-editor__row--editing)
-    .a-sortable-list-editor__status {
+  // Validation rail — excludes both `--editing` and `--unsaved` so the
+  // primary + warning rails (higher priority states) aren't overwritten by
+  // a validation-error stripe.
+  /* stylelint-disable selector-max-compound-selectors */
+  &__row--validation-invalid::after,
+  &__row--validation-warning::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+  }
+
+  &__row--validation-invalid:not(&__row--editing, &__row--unsaved)::after {
+    background: var(--le-error-fg);
+  }
+
+  &__row--validation-warning:not(&__row--editing, &__row--unsaved)::after {
+    background: var(--le-warning);
+  }
+  /* stylelint-enable selector-max-compound-selectors */
+
+  // Drag rendering — SortableJS clone + ghost + chosen source.
+  // Placeholder row sitting at the drop target — faint outline so the
+  // landing position is obvious without stealing attention from the clone.
+  &__row--ghost {
+    opacity: 0.35;
+    background: var(--le-primary-state);
+  }
+
+  // Source row while drag is in progress — stays in place, visibly picked.
+  &__row--chosen {
+    opacity: 0.5;
+  }
+
+  // Floating clone that follows the cursor. Row-shaped card with elevation;
+  // action column and status badge hidden so the preview stays clean.
+  &__row--drag {
+    background: var(--le-surface);
+    border: 1px solid var(--le-border);
+    border-radius: var(--le-radius);
+    box-shadow: var(--le-elev-3);
+    max-width: 420px;
+    opacity: 0.96;
+    pointer-events: none;
+  }
+
+  // Hide the action column + status badge inside the drag clone (descendant
+  // selector, so SCSS can't use `&__actions` nested under `&__row--drag` —
+  // that would concatenate into a single `__row--drag__actions` class).
+  &__row--drag &__actions,
+  &__row--drag &__status {
     display: none;
   }
 
-  /* stylelint-disable selector-max-compound-selectors */
-  .a-sortable-list-editor__row .a-sortable-list-editor__action--edit,
-  .a-sortable-list-editor__row .a-sortable-list-editor__action--delete,
-  .a-sortable-list-editor__row .a-sortable-list-editor__action--menu {
-    opacity: 1;
+  // Chips-layout variant-specific overrides — `__rows` flex-wraps into pills,
+  // `__row-header` gets the drag-handle-friendly 8 px left padding (vs 12 px
+  // in the AListEditor variant), `__drag-handle` shrinks to match the pill
+  // height.
+  &--chips &__rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1 1 100%;
   }
-  /* stylelint-enable selector-max-compound-selectors */
+
+  &--chips &__row-header {
+    padding: 2px 4px 2px 8px;
+    gap: 4px;
+    min-height: 28px;
+  }
+
+  &--chips &__drag-handle {
+    padding: 0;
+    font-size: 16px;
+  }
 }
 
-.a-sortable-list-editor__action--edit,
-.a-sortable-list-editor__action--delete,
-.a-sortable-list-editor__action--menu,
-.a-sortable-list-editor__action--up,
-.a-sortable-list-editor__action--down {
-  opacity: 0;
-  transition: opacity 0.15s;
+// Container-query driven desktop layout — adds the primary rail + soft
+// gradient to the editing form area. Same shape as AListEditor; no
+// padding-left override since the flat variant has no caret/depth indent.
+@container le-shell (min-width: 769px) {
+  @include shared.le-editing-body-rail('.a-sortable-list-editor');
 }
 
+// Narrow-container / mobile layout — taller rows, always-visible actions,
+// status badge dropped to make room.
 /* stylelint-disable selector-max-compound-selectors */
-.a-sortable-list-editor__row:hover .a-sortable-list-editor__action--edit,
-.a-sortable-list-editor__row:hover .a-sortable-list-editor__action--delete,
-.a-sortable-list-editor__row:hover .a-sortable-list-editor__action--menu,
-.a-sortable-list-editor__row:hover .a-sortable-list-editor__action--up,
-.a-sortable-list-editor__row:hover .a-sortable-list-editor__action--down,
-.a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--edit,
-.a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--delete,
-.a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--menu,
-.a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--up,
-.a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--down {
-  opacity: 1;
+@container le-shell (max-width: 768px) {
+  .a-sortable-list-editor {
+    --le-row-min-height: 48px;
+    --le-row-pad-y: 10px;
+
+    &__row:not(&__row--editing) &__status {
+      display: none;
+    }
+
+    &__row &__action--edit,
+    &__row &__action--delete,
+    &__row &__action--menu {
+      opacity: 1;
+    }
+  }
 }
 /* stylelint-enable selector-max-compound-selectors */
-
-.a-sortable-list-editor--touch .a-sortable-list-editor__action--edit,
-.a-sortable-list-editor--touch .a-sortable-list-editor__action--delete,
-.a-sortable-list-editor--touch .a-sortable-list-editor__action--menu,
-.a-sortable-list-editor--touch .a-sortable-list-editor__action--up,
-.a-sortable-list-editor--touch .a-sortable-list-editor__action--down {
-  opacity: 1;
-}
-
-/* Active rows keep all affordances visible — matches the non-editing hovered
-   column, just pinned open. */
-.a-sortable-list-editor__row--editing .a-sortable-list-editor__action--edit,
-.a-sortable-list-editor__row--editing .a-sortable-list-editor__action--delete,
-.a-sortable-list-editor__row--editing .a-sortable-list-editor__action--menu,
-.a-sortable-list-editor__row--expanded .a-sortable-list-editor__action--edit,
-.a-sortable-list-editor__row--expanded .a-sortable-list-editor__action--delete,
-.a-sortable-list-editor__row--expanded .a-sortable-list-editor__action--menu {
-  opacity: 1;
-}
-
-/* Disabled reorder arrows: when visible (row hover / focus / touch), render
-   them clearly muted. Hidden when idle on non-touch devices — matching the
-   enabled arrow's hover-reveal. */
-/* stylelint-disable selector-max-compound-selectors */
-.a-sortable-list-editor__row:hover .a-sortable-list-editor__action--up.v-btn--disabled,
-.a-sortable-list-editor__row:hover .a-sortable-list-editor__action--down.v-btn--disabled,
-.a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--up.v-btn--disabled,
-.a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--down.v-btn--disabled,
-.a-sortable-list-editor--touch .a-sortable-list-editor__action--up.v-btn--disabled,
-.a-sortable-list-editor--touch .a-sortable-list-editor__action--down.v-btn--disabled {
-  opacity: 0.3;
-}
-/* stylelint-enable selector-max-compound-selectors */
-
-.a-sortable-list-editor__drag-handle {
-  cursor: grab;
-  flex-shrink: 0;
-  padding: 4px 0;
-}
-
-.a-sortable-list-editor__drag-handle:active {
-  cursor: grabbing;
-}
-
-/* Placeholder row sitting at the drop target — faint outline so the landing
-   position is obvious without stealing attention from the drag clone. */
-.a-sortable-list-editor__row--ghost {
-  opacity: 0.35;
-  background: var(--asle-primary-state);
-}
-
-/* Source row while drag is in progress — stays in place, visibly picked. */
-.a-sortable-list-editor__row--chosen {
-  opacity: 0.5;
-}
-
-/* Floating clone that follows the cursor. Row-shaped card with elevation;
-   action column and status badge hidden so the preview stays clean. */
-.a-sortable-list-editor__row--drag {
-  background: var(--asle-surface);
-  border: 1px solid var(--asle-border);
-  border-radius: var(--asle-radius);
-  box-shadow: var(--asle-elev-3);
-  max-width: 420px;
-  opacity: 0.96;
-  pointer-events: none;
-}
-
-.a-sortable-list-editor__row--drag .a-sortable-list-editor__actions,
-.a-sortable-list-editor__row--drag .a-sortable-list-editor__status {
-  display: none;
-}
-
-.a-sortable-list-editor__row-add {
-  width: 100%;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--asle-primary);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1;
-  cursor: pointer;
-  border: none;
-  border-top: 1px solid var(--asle-border);
-  background: var(--asle-surface-container);
-  letter-spacing: 0.02em;
-  transition: background-color 0.15s;
-  text-align: left;
-  font-family: inherit;
-}
-
-.a-sortable-list-editor__row-add:hover {
-  background: var(--asle-primary-container);
-}
-
-.a-sortable-list-editor__row-add:focus-visible {
-  outline: 2px solid var(--asle-primary);
-  outline-offset: -2px;
-}
-
-/* Reorder-mode header status pill — "N pending changes" inline with the
-   Cancel/Apply actions in the header. */
-.a-sortable-list-editor__toolbar-status {
-  font-size: 0.85rem;
-  color: var(--asle-on-surface);
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-right: 4px;
-}
-
-.a-sortable-list-editor__toolbar-status--pending {
-  color: var(--asle-warning);
-}
 
 @media (width <= 600px) {
-  .a-sortable-list-editor--two-rows-mobile
-    .a-sortable-list-editor__row:not(
-      .a-sortable-list-editor__row--editing,
-      .a-sortable-list-editor__row--expanded
-    )
-    .a-sortable-list-editor__row-header {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas: 'title title' 'status actions';
-    align-items: center;
-    gap: 4px 8px;
-    padding: 10px 16px;
-    min-height: auto;
-  }
-
-  .a-sortable-list-editor--two-rows-mobile .a-sortable-list-editor__row-main {
-    grid-area: title;
-    min-width: 0;
-  }
-
-  .a-sortable-list-editor--two-rows-mobile
-    .a-sortable-list-editor__row-main
-    .a-sortable-list-editor__title {
-    white-space: normal;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-height: 1.35;
-    font-weight: 500;
-  }
-
-  .a-sortable-list-editor--two-rows-mobile .a-sortable-list-editor__status {
-    grid-area: status;
-  }
-
-  .a-sortable-list-editor--two-rows-mobile .a-sortable-list-editor__actions {
-    grid-area: actions;
-    margin-left: 0;
-  }
-}
-
-@media (hover: none) {
-  .a-sortable-list-editor__action--edit,
-  .a-sortable-list-editor__action--delete,
-  .a-sortable-list-editor__action--up,
-  .a-sortable-list-editor__action--down {
-    opacity: 1;
-  }
-}
-
-/* Chips layout — flat inline-flex pills, drag always on (non-touch), close-X always visible. */
-.a-sortable-list-editor--chips .a-sortable-list-editor__card {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 8px;
-  border-radius: var(--asle-radius);
-  box-shadow: none;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__header {
-  flex: 1 1 100%;
-  padding: 4px 8px 8px;
-  border-bottom: none;
-  min-height: auto;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__rows {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  flex: 1 1 100%;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__row {
-  border-bottom: none;
-  background: var(--asle-primary-container);
-  border-radius: var(--asle-radius-full);
-  flex: 0 0 auto;
-  max-width: 100%;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__row-header {
-  padding: 2px 4px 2px 8px;
-  gap: 4px;
-  min-height: 28px;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__row-main {
-  gap: 6px;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__title {
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--asle-primary);
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__drag-handle {
-  padding: 0;
-  font-size: 16px;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__action--chip-close {
-  opacity: 0.7;
-  transition: opacity 0.15s;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__action--chip-close:hover {
-  opacity: 1;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__row-add {
-  flex: 0 0 auto;
-  width: auto;
-  border-top: none;
-  border: 1px dashed var(--asle-border);
-  border-radius: var(--asle-radius-full);
-  padding: 4px 12px;
-  font-size: 0.82rem;
-  background: transparent;
-}
-
-.a-sortable-list-editor--chips .a-sortable-list-editor__row-add:hover {
-  background: var(--asle-primary-state);
+  @include shared.le-two-rows-mobile-layout('.a-sortable-list-editor');
 }
 </style>
