@@ -16,6 +16,11 @@ import {
   useNestedListEditor,
   type NestedViewItem,
 } from '@/labs/listEditor/composables/useNestedListEditor'
+import {
+  computeInstruction,
+  type ExecutableInstruction,
+  type Instruction,
+} from '@/labs/listEditor/composables/useDragInstruction'
 import { cloneDeep } from '@/utils/common'
 import type {
   ListEditorKey,
@@ -40,13 +45,8 @@ export interface DecoratedNestedViewItem<T> extends NestedViewItem<T> {
 
 export interface DragState {
   sourceKey: ListEditorKey
-  targetParentKey: ListEditorKey | null
-  targetDepth: number
-  lineTop: number
-  lineLeft: number
-  lineRight: number
-  hookOriginX: number
-  isValid: boolean
+  sourceSubtreeDepth: number
+  instruction: Instruction | null
 }
 
 export type ReorderMode = 'view' | 'reorder'
@@ -460,27 +460,86 @@ const destroySortables = () => {
 const GROUP_CLASS = 'a-nested-list-editor__group'
 const HANDLE_CLASS = 'a-nested-list-editor__drag-handle'
 
-// Live drop indicator state — updated on every SortableJS `onMove` tick and
-// cleared on drag start/end. When non-null, the overlay template renders an
-// anchor-positioned insertion line and highlights the target parent row.
+// Live drag state. `instruction` is recomputed on every pointermove while
+// drag is active — it encodes WHERE the dragged item will land (sibling-above/
+// below/make-child/blocked) and at WHAT DEPTH. The overlay template reads it
+// to render the drop indicator; `onEnd` applies it via `editor.moveTo`.
+//
+// We don't rely on SortableJS to move the DOM — onMove always returns false.
+// SortableJS is reduced to "drag lifecycle + floating clone"; hit-testing,
+// depth picking and the final mutation are all ours.
 const dragState = ref<DragState | null>(null)
 
-// Compute depth of a node in the current model (parent chain length from root).
-const computeDepth = (id: ListEditorKey): number => {
-  let depth = 0
-  let current: NestedTreeNode<TItem> | null = editor.findNode(id).node
-  while (current !== null) {
-    const parentId = (current.data as Record<string, unknown>)[props.parentField] as
-      | ListEditorKey
-      | null
-      | undefined
-    if (parentId === null || parentId === undefined) break
-    const parentNode: NestedTreeNode<TItem> | null = editor.findNode(parentId).node
-    if (!parentNode) break
-    depth++
-    current = parentNode
+// CSS-aligned constants. Row header padding-left in reorder mode is
+// `calc(12px + depth * var(--ansle-indent))` where --ansle-indent is 24px
+// (18px on mobile — but drag is disabled on touch so we don't care).
+const INDENT_PX = 24
+const ROW_PAD_LEFT = 12
+
+const hitTestRow = (
+  clientX: number,
+  clientY: number,
+): { el: HTMLElement; viewItem: DecoratedNestedViewItem<TItem> } | null => {
+  const hit = document.elementFromPoint(clientX, clientY) as HTMLElement | null
+  if (!hit) return null
+  const wrapper = hit.closest('.a-nested-list-editor__row-wrapper') as HTMLElement | null
+  if (!wrapper) return null
+  // Only consider wrappers inside our rowsContainer — elementFromPoint could
+  // hit a different ANestedSortableListEditor instance on the same page.
+  if (!rowsContainer.value || !rowsContainer.value.contains(wrapper)) return null
+  const key = parseKey(wrapper.getAttribute('data-id'))
+  if (key === null) return null
+  const vi = viewItemsDecorated.value.find((v) => v.key === key)
+  if (!vi) return null
+  return { el: wrapper, viewItem: vi }
+}
+
+const recomputeInstruction = (clientX: number, clientY: number) => {
+  if (!dragState.value || !rowsContainer.value) return
+  const hit = hitTestRow(clientX, clientY)
+  if (!hit) {
+    dragState.value.instruction = null
+    return
   }
-  return depth
+  const containerRect = rowsContainer.value.getBoundingClientRect()
+  // For hovered-row rect we read the row element (not the whole wrapper,
+  // whose height balloons when children are rendered). The wrapper's first
+  // `.a-nested-list-editor__row` child is the header+body we want to hit-test.
+  const rowEl = hit.el.querySelector(
+    ':scope > .a-nested-list-editor__row',
+  ) as HTMLElement | null
+  const rowRect = (rowEl ?? hit.el).getBoundingClientRect()
+  dragState.value.instruction = computeInstruction({
+    pointer: { x: clientX, y: clientY },
+    hoveredRow: {
+      key: hit.viewItem.key,
+      rect: rowRect,
+      depth: hit.viewItem.depth,
+      parentKey: hit.viewItem.parentKey,
+      siblingIndex: hit.viewItem.siblingIndex,
+      siblingCount: hit.viewItem.siblingCount,
+    },
+    sourceKey: dragState.value.sourceKey,
+    sourceSubtreeDepth: dragState.value.sourceSubtreeDepth,
+    viewItems: viewItemsDecorated.value,
+    maxDepth: props.maxDepth,
+    indentPx: INDENT_PX,
+    containerLeft: containerRect.left,
+    containerPaddingLeft: ROW_PAD_LEFT,
+  })
+}
+
+const onPointerMove = (e: PointerEvent) => {
+  recomputeInstruction(e.clientX, e.clientY)
+}
+
+const applyInstruction = (inst: ExecutableInstruction, sourceKey: ListEditorKey) => {
+  const res = editor.moveTo(sourceKey, inst.parentKey, inst.index)
+  if (res === null) {
+    showWarningT('common.sortable.error.maxDeepExceed')
+    forceRerender.value++
+    nextTick(() => initSortables())
+  }
 }
 
 const initSortables = () => {
@@ -494,100 +553,54 @@ const initSortables = () => {
     const sortable = useSortable(group, [], {
       group: { name: 'a-nested', pull: true, put: true },
       handle: '.' + HANDLE_CLASS,
-      animation: 150,
+      animation: 0,
       ghostClass: 'a-nested-list-editor__row--ghost',
       chosenClass: 'a-nested-list-editor__row--chosen',
       dragClass: 'a-nested-list-editor__row--drag',
       fallbackOnBody: true,
-      swapThreshold: 0.65,
       forceFallback: true,
       fallbackTolerance: 3,
       onStart: (event) => {
         const draggedEl = event.item as HTMLElement
         const id = parseKey(draggedEl.getAttribute('data-id'))
-        // We only keep sourceKey + targetParentKey on dragState — those drive
-        // the drop-target-parent highlight. No overlay line position tracking.
-        if (id !== null) {
-          dragState.value = {
-            sourceKey: id,
-            targetParentKey: null,
-            targetDepth: 0,
-            lineTop: 0,
-            lineLeft: 0,
-            lineRight: 0,
-            hookOriginX: 0,
-            isValid: true,
-          }
+        if (id === null) return
+        const draggedNode = editor.findNode(id).node
+        const subtreeDepth = draggedNode ? editor.calculateSubtreeDepth(draggedNode) : 1
+        dragState.value = {
+          sourceKey: id,
+          sourceSubtreeDepth: subtreeDepth,
+          instruction: null,
         }
+        document.addEventListener('pointermove', onPointerMove, { passive: true })
       },
       onMove: (event) => {
-        if (!rowsContainer.value) return true
-        const targetGroup = event.to as HTMLElement | null
-        const draggedEl = event.dragged as HTMLElement
-        if (!targetGroup) return true
-
-        const draggedId = parseKey(draggedEl.getAttribute('data-id'))
-        if (draggedId === null) return true
-
-        const targetParentRaw = targetGroup.getAttribute('data-parent-id')
-        const targetParentKey =
-          targetParentRaw && targetParentRaw !== '' ? parseKey(targetParentRaw) : null
-
-        let targetDepth = 0
-        if (targetParentKey !== null) targetDepth = computeDepth(targetParentKey) + 1
-
-        // Validation: cycle prevention + maxDepth — allowing or denying the
-        // drop. SortableJS uses the return value to gate the insertion.
-        const draggedNode = editor.findNode(draggedId).node
-        const isDescendantOf = (node: NestedTreeNode<TItem>, ancestorId: ListEditorKey): boolean => {
-          if (!node.children) return false
-          for (const c of node.children) {
-            if ((c.data as Record<string, unknown>)[props.keyField] === ancestorId) return true
-            if (isDescendantOf(c, ancestorId)) return true
+        // Track pointer via SortableJS's event stream too (redundant with
+        // document pointermove but keeps `instruction` in sync when the
+        // browser coalesces pointermove events during fast drags).
+        const orig = (event as unknown as { originalEvent?: Event }).originalEvent
+        if (orig) {
+          if ('clientX' in orig && 'clientY' in orig) {
+            recomputeInstruction((orig as MouseEvent).clientX, (orig as MouseEvent).clientY)
+          } else if ('touches' in orig) {
+            const tev = orig as TouchEvent
+            if (tev.touches.length > 0) {
+              recomputeInstruction(tev.touches[0].clientX, tev.touches[0].clientY)
+            }
           }
-          return false
         }
-        const cycle =
-          targetParentKey !== null
-          && draggedNode !== null
-          && (targetParentKey === draggedId || isDescendantOf(draggedNode, targetParentKey))
-        const subtreeDepth = draggedNode ? editor.calculateSubtreeDepth(draggedNode) : 1
-        const withinMaxDepth = targetDepth + subtreeDepth <= props.maxDepth
-        const isValid = !cycle && withinMaxDepth
-
-        if (dragState.value) {
-          dragState.value.targetParentKey = targetParentKey
-          dragState.value.targetDepth = targetDepth
-          dragState.value.isValid = isValid
-        }
-
-        return isValid
+        // Always refuse SortableJS's own DOM insertion — our overlay and
+        // `editor.moveTo` in onEnd drive the actual move.
+        return false
       },
-      onUpdate: () => {
-        // Handled by onEnd to avoid duplicate reconciliation.
-      },
-      onEnd: (event) => {
+      onEnd: () => {
+        document.removeEventListener('pointermove', onPointerMove)
+        const state = dragState.value
         dragState.value = null
-        nextTick(() => {
-          const itemEl = event.item as HTMLElement
-          const parentEl = itemEl.parentElement as HTMLElement | null
-          const id = parseKey(itemEl.getAttribute('data-id'))
-          if (id === null) return
-          const parentId = parentEl ? parseKey(parentEl.getAttribute('data-parent-id')) : null
-          const newIndex = event.newIndex ?? 0
-          const oldIndex = event.oldIndex ?? 0
-          // Let sortablejs finish its DOM move, then reconcile via editor.moveTo
-          const res = editor.moveTo(id, parentId, newIndex)
-          if (res === null) {
-            showWarningT('common.sortable.error.maxDeepExceed')
-            // force rerender to restore DOM to model state
-            forceRerender.value++
-            nextTick(() => initSortables())
-            return
-          }
-          // Consumer-level reorder-end signal (useful if caller tracks dirty tree)
-          void oldIndex
-        })
+        if (!state) return
+        const inst = state.instruction
+        if (inst === null) return
+        if (inst.type === 'blocked') return
+        applyInstruction(inst, state.sourceKey)
       },
     })
     sortableInstances.value.push(sortable)
@@ -631,6 +644,53 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   destroySortables()
+  document.removeEventListener('pointermove', onPointerMove)
+})
+
+// Visual props derived from the current instruction. Re-reads DOM rects on
+// every instruction change, which is fine because the user can't scroll or
+// resize in the middle of a frame. `null` = overlay hidden.
+type OverlayVisual =
+  | { kind: 'line'; blocked: boolean; top: number; left: number; right: number }
+  | { kind: 'box'; blocked: boolean; top: number; left: number; width: number; height: number }
+
+const overlayVisual = computed<OverlayVisual | null>(() => {
+  const state = dragState.value
+  if (!state || state.instruction === null || !rowsContainer.value) return null
+  const inst = state.instruction
+  const blocked = inst.type === 'blocked'
+  const effective: ExecutableInstruction = blocked ? inst.desired : inst
+  const refWrapper = rowsContainer.value.querySelector<HTMLElement>(
+    `.a-nested-list-editor__row-wrapper[data-id="${CSS.escape(String(effective.refKey))}"]`,
+  )
+  if (!refWrapper) return null
+  const rowEl = refWrapper.querySelector<HTMLElement>(
+    ':scope > .a-nested-list-editor__row',
+  )
+  const containerRect = rowsContainer.value.getBoundingClientRect()
+  const rowRect = (rowEl ?? refWrapper).getBoundingClientRect()
+
+  if (effective.type === 'make-child') {
+    return {
+      kind: 'box',
+      blocked,
+      top: rowRect.top - containerRect.top,
+      left: rowRect.left - containerRect.left,
+      width: rowRect.width,
+      height: rowRect.height,
+    }
+  }
+  const top =
+    effective.type === 'sibling-above'
+      ? rowRect.top - containerRect.top
+      : rowRect.bottom - containerRect.top
+  return {
+    kind: 'line',
+    blocked,
+    top,
+    left: ROW_PAD_LEFT + effective.depth * INDENT_PX,
+    right: 16,
+  }
 })
 
 const onAddClick = () => {
@@ -1258,6 +1318,36 @@ defineExpose({
         class="a-nested-list-editor__rows"
         :class="{ 'a-nested-list-editor__rows--dragging': dragState !== null }"
       >
+        <!-- Drop indicator overlay — a horizontal line (for sibling-above /
+             sibling-below / reparent) whose `left` offset encodes the target
+             depth, or a box outlining the whole row (for make-child). Painted
+             in warning colour when the desired target would break maxDepth or
+             form a cycle — visible intent + unambiguous "not here". -->
+        <template v-if="overlayVisual !== null">
+          <div
+            v-if="overlayVisual.kind === 'line'"
+            class="a-nested-list-editor__drop-line"
+            :class="{ 'a-nested-list-editor__drop-line--blocked': overlayVisual.blocked }"
+            :style="{
+              top: `${overlayVisual.top}px`,
+              left: `${overlayVisual.left}px`,
+              right: `${overlayVisual.right}px`,
+            }"
+          >
+            <span class="a-nested-list-editor__drop-line-dot" />
+          </div>
+          <div
+            v-else-if="overlayVisual.kind === 'box'"
+            class="a-nested-list-editor__drop-box"
+            :class="{ 'a-nested-list-editor__drop-box--blocked': overlayVisual.blocked }"
+            :style="{
+              top: `${overlayVisual.top}px`,
+              left: `${overlayVisual.left}px`,
+              width: `${overlayVisual.width}px`,
+              height: `${overlayVisual.height}px`,
+            }"
+          />
+        </template>
         <div
           :class="[GROUP_CLASS, 'a-nested-list-editor__group--root']"
           data-parent-id=""
@@ -1562,6 +1652,7 @@ defineExpose({
 }
 
 .a-nested-list-editor__rows {
+  position: relative;
   display: flex;
   flex-direction: column;
 }
@@ -1837,25 +1928,18 @@ defineExpose({
   cursor: grabbing;
 }
 
-/* Source row during drag — stays in place, dimmed, so the user sees the
-   origin slot while moving the clone. */
+/* Source row during drag — stays in place, dimmed, so the user keeps context
+   on where the item came from while it's being moved. */
 .a-nested-list-editor__row--drop-source,
 .a-nested-list-editor__row--chosen {
   opacity: 0.4;
 }
 
-/* Drop-target placeholder that SortableJS injects at the landing position.
-   Render it as a primary-tinted strip so the user sees where the item will
-   land, without keeping any of the dragged row's own content. */
+/* Hide SortableJS's own placeholder — our overlay (drop-line / drop-box) is
+   the sole landing indicator. SortableJS still needs the element for its
+   internal bookkeeping, we just don't show it. */
 .a-nested-list-editor__row--ghost {
-  background: var(--ansle-primary-container);
-  outline: 1px dashed var(--ansle-primary);
-  outline-offset: -1px;
-}
-
-.a-nested-list-editor__row--ghost .a-nested-list-editor__row {
-  background: transparent;
-  border-bottom: 0;
+  display: none !important;
 }
 
 /* Floating clone that follows the cursor — slim row-shaped card, no rotation,
@@ -1888,22 +1972,59 @@ defineExpose({
   flex: 0 0 auto;
 }
 
-/* Target parent highlight during drag — primary border-left + tonal bg, so the
-   user can see exactly under which parent their item will land. */
-.a-nested-list-editor__row--drop-target-parent {
-  background: var(--ansle-primary-container) !important;
-  position: relative;
+/* Drop indicator line — 2px primary stroke with an 8px terminal dot on the
+   left that bleeds 4px outside the anchor column. Absolute-positioned inside
+   .rows, which is position:relative. `left` is set by the overlay computed
+   from the instruction's target depth, so at depth 0 the line sits at the
+   root indent and at depth N it starts N*indent further right. This is the
+   primary channel for communicating "where will the row land" — the line's
+   horizontal START encodes the final depth. */
+.a-nested-list-editor__drop-line {
+  position: absolute;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--ansle-primary);
+  pointer-events: none;
+  z-index: 4;
+  border-radius: 1px;
 }
 
-.a-nested-list-editor__row--drop-target-parent::after {
-  content: '';
+.a-nested-list-editor__drop-line-dot {
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
+  left: -4px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
   background: var(--ansle-primary);
-  z-index: 3;
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+
+.a-nested-list-editor__drop-line--blocked {
+  background: var(--ansle-warning);
+}
+
+.a-nested-list-editor__drop-line--blocked .a-nested-list-editor__drop-line-dot {
+  background: var(--ansle-warning);
+}
+
+/* Drop indicator box — 2px primary outline around the full target row. Used
+   for `make-child`, signalling "this row is about to adopt the dragged item
+   as a child". Complements the line indicator (which can't express "nest
+   inside this row" without becoming ambiguous with a sibling insert). */
+.a-nested-list-editor__drop-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--ansle-primary);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 4;
+  background: var(--ansle-primary-container);
+}
+
+.a-nested-list-editor__drop-box--blocked {
+  border-color: var(--ansle-warning);
+  background: var(--ansle-warning-container);
 }
 
 /* Inline edit body. Default layout (narrow container / mobile) — form fills the
@@ -1999,14 +2120,9 @@ defineExpose({
 }
 
 /* Children container — flat layout. No background tint or tree guide line:
-   depth is conveyed by the row's padding-left indent alone. Keep the wrapper
-   as an anchor for drop-target highlighting. */
+   depth is conveyed by the row's padding-left indent alone. */
 .a-nested-list-editor__children {
   position: relative;
-}
-
-.a-nested-list-editor__children--drop-target {
-  background: rgba(var(--v-theme-primary, 63, 106, 216), 0.025);
 }
 
 /* Triangle-caret toggle — VBtn-text-style circular button: transparent by

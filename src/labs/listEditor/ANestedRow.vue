@@ -64,8 +64,6 @@ const directChildren = (): any[] =>
           'a-nested-list-editor__row--unsaved': vi.unsaved,
           'a-nested-list-editor__row--reorder': context.reorderMode,
           'a-nested-list-editor__row--clickable': context.isRowClickable(vi),
-          'a-nested-list-editor__row--drop-target-parent':
-            dragState !== null && dragState.targetParentKey === vi.key,
           'a-nested-list-editor__row--drop-source':
             dragState !== null && dragState.sourceKey === vi.key,
           [`a-nested-list-editor__row--validation-${resolveValidation(vi.raw)}`]:
@@ -461,13 +459,7 @@ const directChildren = (): any[] =>
          chevron column (see CSS). One line per group = no per-row gaps. -->
     <div
       v-if="vi.hasChildren && vi.childrenExpanded"
-      :class="[
-        'a-nested-list-editor__children',
-        {
-          'a-nested-list-editor__children--drop-target':
-            dragState !== null && dragState.targetParentKey === vi.key,
-        },
-      ]"
+      class="a-nested-list-editor__children"
       :style="{ '--parent-depth': vi.depth }"
     >
       <div
