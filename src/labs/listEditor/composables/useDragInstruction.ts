@@ -31,6 +31,13 @@ export type ExecutableInstruction = {
   index: number
   depth: number
   makeChild: boolean
+  // Row whose level the inserted item will match — the sibling we're
+  // inserting after (sibling case) or the ancestor we're joining as sibling
+  // of (reparent case). `null` for make-child (creating a brand new deeper
+  // level, no existing peer to anchor against) and the root-top fallback.
+  // Consumers render a thin connector from the drop line up to this row so
+  // the user can see which row dictates the new level.
+  levelRowKey: ListEditorKey | null
 }
 
 export type Instruction =
@@ -93,6 +100,29 @@ const findAncestorAtDepth = (
   return current && current.depth === targetDepth ? current : null
 }
 
+const isInSourceSubtree = (
+  viewItems: NestedViewItem<any>[],
+  sourceKey: ListEditorKey,
+  candidateKey: ListEditorKey,
+): boolean =>
+  candidateKey === sourceKey || isDescendantOf(viewItems, sourceKey, candidateKey)
+
+// Walk the flat view-items list in `dir` (±1) starting at `startIdx`, skipping
+// any row that belongs to the dragged subtree — those rows aren't visible drop
+// targets so they shouldn't define the gap boundaries for depth clamping.
+const findSiblingNotInSource = (
+  viewItems: NestedViewItem<any>[],
+  startIdx: number,
+  dir: 1 | -1,
+  sourceKey: ListEditorKey,
+): NestedViewItem<any> | null => {
+  for (let i = startIdx; i >= 0 && i < viewItems.length; i += dir) {
+    const vi = viewItems[i]
+    if (!isInSourceSubtree(viewItems, sourceKey, vi.key)) return vi
+  }
+  return null
+}
+
 export const computeInstruction = (
   args: ComputeInstructionArgs,
 ): Instruction | null => {
@@ -116,23 +146,37 @@ export const computeInstruction = (
   const inTopHalf = y < h / 2
   const refEdge: 'top' | 'bottom' = inTopHalf ? 'top' : 'bottom'
 
-  // Pointer X → projected depth. Rounded so each half-indent step crosses the
-  // threshold between two columns.
+  // The gap between two flat-adjacent rows frames the drop. `prev` is the
+  // row immediately above the gap, `next` is the row immediately below it.
+  // Rows belonging to the dragged subtree don't exist for clamping purposes —
+  // they'll disappear from the flat list once the move completes, so they
+  // can't define the depth bounds of the drop.
+  const flatIdx = viewItems.findIndex((v) => v.key === hoveredRow.key)
+  const prev: NestedViewItem<any> | null = inTopHalf
+    ? findSiblingNotInSource(viewItems, flatIdx - 1, -1, sourceKey)
+    : findSiblingNotInSource(viewItems, flatIdx, -1, sourceKey)
+  const next: NestedViewItem<any> | null = inTopHalf
+    ? findSiblingNotInSource(viewItems, flatIdx, 1, sourceKey)
+    : findSiblingNotInSource(viewItems, flatIdx + 1, 1, sourceKey)
+
+  // Depth bounds for this gap:
+  //   maxDepth = prev.depth + 1 (you can nest one level deeper than prev).
+  //   minDepth = next.depth     (shallower would insert AFTER next's parent
+  //                              subtree, i.e., at a different Y than the
+  //                              user is pointing at — so that's not a valid
+  //                              option for THIS gap).
+  // If prev is missing (gap at top of tree) or next is missing (bottom of
+  // tree), the missing side defaults to 0.
   const pointerRelX = pointer.x - containerLeft - containerPaddingLeft
   const rawDepth = Math.round(pointerRelX / indentPx)
-
-  // Anchor — the visible row that sits immediately above the target gap.
-  // Top-half: the previous visible row in the flat list (null if hoveredRow
-  // is the very first row). Bottom-half: hoveredRow itself.
-  const flatIdx = viewItems.findIndex((v) => v.key === hoveredRow.key)
-  const anchor: NestedViewItem<any> | null = inTopHalf
-    ? (flatIdx > 0 ? viewItems[flatIdx - 1] : null)
-    : findByKey(viewItems, hoveredRow.key)
+  const depthCeiling = prev ? prev.depth + 1 : 0
+  const depthFloor = next ? next.depth : 0
+  const clampedDepth = Math.max(depthFloor, Math.min(rawDepth, depthCeiling))
 
   let desired: ExecutableInstruction
 
-  if (!anchor) {
-    // First row at the top of the tree — only landing is the very top of root.
+  if (!prev) {
+    // Gap at the very top of the tree — only landing is root index 0.
     desired = {
       type: 'insert',
       refKey: hoveredRow.key,
@@ -141,61 +185,55 @@ export const computeInstruction = (
       index: 0,
       depth: 0,
       makeChild: false,
+      levelRowKey: null,
+    }
+  } else if (clampedDepth === prev.depth + 1) {
+    desired = {
+      type: 'insert',
+      refKey: hoveredRow.key,
+      refEdge,
+      parentKey: prev.key,
+      index: 0,
+      depth: clampedDepth,
+      makeChild: true,
+      levelRowKey: null,
+    }
+  } else if (clampedDepth === prev.depth) {
+    desired = {
+      type: 'insert',
+      refKey: hoveredRow.key,
+      refEdge,
+      parentKey: prev.parentKey,
+      index: prev.siblingIndex + 1,
+      depth: clampedDepth,
+      makeChild: false,
+      levelRowKey: prev.key,
     }
   } else {
-    // Anchor must not belong to the source subtree (pointer-events: none
-    // already filters at the DOM level, but guard defensively).
-    if (anchor.key === sourceKey || isDescendantOf(viewItems, sourceKey, anchor.key)) {
-      return null
-    }
-    const depthCeiling = anchor.depth + 1
-    const clampedDepth = Math.max(0, Math.min(rawDepth, depthCeiling))
-
-    if (clampedDepth === anchor.depth + 1) {
+    // clampedDepth < prev.depth → reparent to ancestor at clampedDepth.
+    const ancestor = findAncestorAtDepth(viewItems, prev.key, clampedDepth)
+    if (ancestor) {
       desired = {
         type: 'insert',
         refKey: hoveredRow.key,
         refEdge,
-        parentKey: anchor.key,
-        index: 0,
-        depth: clampedDepth,
-        makeChild: true,
-      }
-    } else if (clampedDepth === anchor.depth) {
-      desired = {
-        type: 'insert',
-        refKey: hoveredRow.key,
-        refEdge,
-        parentKey: anchor.parentKey,
-        index: anchor.siblingIndex + 1,
+        parentKey: ancestor.parentKey,
+        index: ancestor.siblingIndex + 1,
         depth: clampedDepth,
         makeChild: false,
+        levelRowKey: ancestor.key,
       }
     } else {
-      // clampedDepth < anchor.depth → reparent: insert as sibling of the
-      // ancestor at `clampedDepth`, immediately after that ancestor.
-      const ancestor = findAncestorAtDepth(viewItems, anchor.key, clampedDepth)
-      if (ancestor) {
-        desired = {
-          type: 'insert',
-          refKey: hoveredRow.key,
-          refEdge,
-          parentKey: ancestor.parentKey,
-          index: ancestor.siblingIndex + 1,
-          depth: clampedDepth,
-          makeChild: false,
-        }
-      } else {
-        // Shouldn't hit with clampedDepth ≥ 0 but keep a safe fallback.
-        desired = {
-          type: 'insert',
-          refKey: hoveredRow.key,
-          refEdge,
-          parentKey: anchor.parentKey,
-          index: anchor.siblingIndex + 1,
-          depth: anchor.depth,
-          makeChild: false,
-        }
+      // Shouldn't hit with clampedDepth ≥ 0 but keep a safe fallback.
+      desired = {
+        type: 'insert',
+        refKey: hoveredRow.key,
+        refEdge,
+        parentKey: prev.parentKey,
+        index: prev.siblingIndex + 1,
+        depth: prev.depth,
+        makeChild: false,
+        levelRowKey: prev.key,
       }
     }
   }

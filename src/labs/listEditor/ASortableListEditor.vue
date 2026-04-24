@@ -5,6 +5,7 @@ import { useDisplay } from 'vuetify'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
 import { cloneDeep } from '@/utils/common'
+import { stringToInt } from '@/utils/string'
 import type {
   ListEditorKey,
   ListEditorValidationState,
@@ -158,13 +159,22 @@ const editingSnapshots = ref(new Map<ListEditorKey, TItem>()) as import('vue').R
 
 // Initial snapshot of each item, keyed by row key. Compared against current data to
 // detect "dirty" (unsaved) rows. Reset externally after a successful parent-form save.
+// `position` is deliberately stripped out: drag-drop rewrites it on every row
+// whose flat index shifts as a side-effect, and flagging those unmoved rows
+// as dirty would paint ghost "unsaved" markers. The per-row visual cue is
+// what matters; position data still flows to the parent on apply.
+const stringifyContent = (data: TItem): string => {
+  const copy = { ...data } as Record<string, unknown>
+  delete copy[props.positionField]
+  return JSON.stringify(copy)
+}
 const dirtyBaseline = ref(new Map<ListEditorKey, string>()) as import('vue').Ref<
   Map<ListEditorKey, string>
 >
 const captureDirtyBaseline = () => {
   const next = new Map<ListEditorKey, string>()
   modelValue.value.forEach((item) => {
-    next.set(item[props.keyField] as ListEditorKey, JSON.stringify(item))
+    next.set(item[props.keyField] as ListEditorKey, stringifyContent(item))
   })
   dirtyBaseline.value = next
 }
@@ -253,26 +263,26 @@ const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'
 // global save flushes everything, so we hide the per-row buttons by default.
 const showInlineSaveFooter = computed(() => !!props.onItemSave)
 
-const snapshotKeyIndex = computed<Map<ListEditorKey, number>>(() => {
-  const map = new Map<ListEditorKey, number>()
-  if (!snapshot.value) return map
-  snapshot.value.forEach((item, idx) => {
-    map.set(item[props.keyField] as ListEditorKey, idx)
-  })
-  return map
-})
+// Keys the user has actively moved during this reorder session (drag, arrow
+// buttons). Cleared on enter/cancel/apply. We intentionally don't derive
+// "moved" from snapshot-vs-current index comparison: that flags any row whose
+// flat index shifted as a side-effect of another row's move, even though the
+// user didn't touch it. Only truly-moved rows should read as unsaved.
+const movedKeys = ref<Set<ListEditorKey>>(new Set())
+const markMoved = (key: ListEditorKey) => {
+  movedKeys.value.add(key)
+}
 
 const isItemDirty = (vi: ListViewItem<TItem>): boolean => {
   const baseline = dirtyBaseline.value.get(vi.key)
   if (baseline === undefined) return true
-  return baseline !== JSON.stringify(vi.raw)
+  return baseline !== stringifyContent(vi.raw)
 }
 
 const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
   const total = modelValue.value.length
   return editor.viewItems.value.map((vi) => {
-    const initialIdx = snapshotKeyIndex.value.get(vi.key)
-    const moved = initialIdx !== undefined && initialIdx !== vi.index
+    const moved = movedKeys.value.has(vi.key)
     const dirty = isItemDirty(vi)
     return {
       ...vi,
@@ -334,7 +344,19 @@ if (!isTouch.value) {
     chosenClass: 'a-sortable-list-editor__row--chosen',
     dragClass: 'a-sortable-list-editor__row--drag',
     disabled: !dragEnabled.value,
-    onEnd: () => {
+    onEnd: (event) => {
+      // Resolve which row was dragged by reading its data-id attribute
+      // (set via template binding on .row). SortableJS's `event.item` is
+      // the moved DOM element; we only mark that one specific key as moved
+      // rather than diffing the whole list, so siblings that shifted index
+      // as a side-effect stay clean.
+      const el = event.item as HTMLElement
+      const raw = el.getAttribute('data-id')
+      if (raw !== null && raw !== '') {
+        const n = stringToInt(raw)
+        const key: ListEditorKey = n > 0 ? n : raw
+        markMoved(key)
+      }
       if (props.updatePosition) {
         modelValue.value = editor.recalculatePositions(modelValue.value) as TItem[]
       }
@@ -491,21 +513,35 @@ const onCloseClick = (vi: ListViewItem<TItem>) => {
   emit('close', vi)
 }
 
+const keyAtIndex = (idx: number): ListEditorKey | null => {
+  const item = modelValue.value[idx]
+  if (!item) return null
+  return item[props.keyField] as ListEditorKey
+}
+
 const moveUp = (idx: number) => {
   if (idx <= 0) return
+  const key = keyAtIndex(idx)
   editor.moveItem(idx, idx - 1)
+  if (key !== null) markMoved(key)
 }
 const moveDown = (idx: number) => {
   if (idx >= modelValue.value.length - 1) return
+  const key = keyAtIndex(idx)
   editor.moveItem(idx, idx + 1)
+  if (key !== null) markMoved(key)
 }
 const moveTop = (idx: number) => {
   if (idx <= 0) return
+  const key = keyAtIndex(idx)
   editor.moveItem(idx, 0)
+  if (key !== null) markMoved(key)
 }
 const moveBottom = (idx: number) => {
   if (idx >= modelValue.value.length - 1) return
+  const key = keyAtIndex(idx)
   editor.moveItem(idx, modelValue.value.length - 1)
+  if (key !== null) markMoved(key)
 }
 
 const enterReorderMode = () => {
@@ -514,6 +550,7 @@ const enterReorderMode = () => {
   editingSnapshots.value.clear()
   expandedKeys.value.clear()
   snapshot.value = cloneDeep(modelValue.value)
+  movedKeys.value = new Set()
   applyError.value = null
   mode.value = 'reorder'
   emit('reorder-start')
@@ -525,6 +562,7 @@ const cancelReorderMode = () => {
     modelValue.value = snapshot.value as TItem[]
   }
   snapshot.value = null
+  movedKeys.value = new Set()
   applyError.value = null
   applying.value = false
   mode.value = 'view'
@@ -549,6 +587,7 @@ const applyReorder = async () => {
     applying.value = false
   }
   snapshot.value = null
+  movedKeys.value = new Set()
   mode.value = 'view'
   emit('reorder-applied', items)
   emit('reorder-end')
@@ -560,12 +599,14 @@ watch(mode, (newMode, oldMode) => {
     if (!snapshot.value) {
       snapshot.value = cloneDeep(modelValue.value)
     }
+    movedKeys.value = new Set()
     editingKeys.value.clear()
     editingSnapshots.value.clear()
     expandedKeys.value.clear()
   }
   if (newMode === 'view' && oldMode === 'reorder' && snapshot.value) {
     snapshot.value = null
+    movedKeys.value = new Set()
     applyError.value = null
     applying.value = false
   }
@@ -772,6 +813,7 @@ defineExpose({
         <div
           v-for="vi in viewItemsDecorated"
           :key="String(vi.key)"
+          :data-id="String(vi.key)"
           class="a-sortable-list-editor__row"
           :class="{
             'a-sortable-list-editor__row--two-rows': twoRows === 'always',

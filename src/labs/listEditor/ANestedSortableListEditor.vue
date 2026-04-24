@@ -234,7 +234,18 @@ const editor = useNestedListEditor<TItem>(modelValue, {
   expandedKeys: childrenExpandedKeys,
 })
 
-// Dirty baseline — compare JSON of each node.data against initial snapshot keyed by id.
+// Dirty baseline — compares content (title, user-editable fields) against the
+// initial snapshot. `position` and `parent` are deliberately stripped out:
+// drag-drop rewrites those on side-effect rows (siblings shifted to keep the
+// position sequence consistent), and flagging those unmoved rows as dirty
+// would produce ghost "unsaved" markers everywhere. The consumer saves the
+// whole tree on apply anyway — we only care about the per-row visual cue.
+const stringifyContent = (data: TItem): string => {
+  const copy = { ...data } as Record<string, unknown>
+  delete copy[props.positionField]
+  delete copy[props.parentField]
+  return JSON.stringify(copy)
+}
 const dirtyBaseline = ref(new Map<ListEditorKey, string>()) as import('vue').Ref<
   Map<ListEditorKey, string>
 >
@@ -242,7 +253,7 @@ const captureDirtyBaseline = () => {
   const next = new Map<ListEditorKey, string>()
   const walk = (nodes: NestedTreeNode<TItem>[]) => {
     for (const n of nodes) {
-      next.set(n.data[props.keyField] as ListEditorKey, JSON.stringify(n.data))
+      next.set(n.data[props.keyField] as ListEditorKey, stringifyContent(n.data))
       if (n.children && n.children.length) walk(n.children)
     }
   }
@@ -251,46 +262,44 @@ const captureDirtyBaseline = () => {
 }
 captureDirtyBaseline()
 
-// Reorder snapshot — captures the tree at reorder-start so we can detect
-// "moved" items (parent changed, or sibling index within its parent changed)
-// and restore on cancel. We deliberately DO NOT compare flat index, because
-// that shifts whenever any earlier row moves — flagging unmoved rows as moved.
+// Reorder snapshot — captures the tree at reorder-start so we can restore it
+// on cancel. Dirty/moved detection does NOT derive from the snapshot: we
+// used to compare each row's current parent + sibling-index against snapshot
+// values, which flagged unmoved rows as "moved" whenever a neighbour shifted
+// sibling positions as a side-effect. Instead we track explicit user actions
+// in `movedKeys` below — only rows the user actively moved get marked.
 const snapshot = ref<NestedTree<TItem> | null>(null)
-const snapshotPosition = computed<
-  Map<ListEditorKey, { parentKey: ListEditorKey | null; siblingIndex: number }>
->(() => {
-  const map = new Map<
-    ListEditorKey,
-    { parentKey: ListEditorKey | null; siblingIndex: number }
-  >()
-  if (!snapshot.value) return map
-  const walk = (
-    nodes: NestedTreeNode<TItem>[],
-    parentKey: ListEditorKey | null,
-  ) => {
-    nodes.forEach((n, i) => {
-      const key = n.data[props.keyField] as ListEditorKey
-      map.set(key, { parentKey, siblingIndex: i })
-      if (n.children && n.children.length) walk(n.children, key)
-    })
+// Keys the user has actively moved during this reorder session (drag, arrow
+// buttons, indent/outdent). Cleared on enter/cancel/apply.
+const movedKeys = ref<Set<ListEditorKey>>(new Set())
+// Mark the row AND every descendant. Moving a parent visually carries its
+// whole subtree to the new location, so the children are "moved" too from
+// the user's perspective — even though they stayed in place relative to
+// their parent. Without this, only the grabbed parent would light up orange
+// and its descendants would silently travel along, which reads as missing
+// feedback when nested trees are moved around.
+const markMoved = (key: ListEditorKey) => {
+  const { node } = editor.findNode(key)
+  if (!node) {
+    movedKeys.value.add(key)
+    return
   }
-  walk(snapshot.value.children as NestedTreeNode<TItem>[], null)
-  return map
-})
+  const collect = (n: NestedTreeNode<TItem>) => {
+    movedKeys.value.add(n.data[props.keyField] as ListEditorKey)
+    if (n.children) n.children.forEach(collect)
+  }
+  collect(node)
+}
 
 const isItemDirty = (vi: NestedViewItem<TItem>): boolean => {
   const baseline = dirtyBaseline.value.get(vi.key)
   if (baseline === undefined) return true
-  return baseline !== JSON.stringify(vi.raw)
+  return baseline !== stringifyContent(vi.raw)
 }
 
 const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
   return editor.viewItems.value.map((vi) => {
-    const initial = snapshotPosition.value.get(vi.key)
-    const moved =
-      snapshot.value !== null
-      && initial !== undefined
-      && (initial.parentKey !== vi.parentKey || initial.siblingIndex !== vi.siblingIndex)
+    const moved = movedKeys.value.has(vi.key)
     const dirty = isItemDirty(vi)
     return {
       ...vi,
@@ -540,6 +549,7 @@ const applyInstruction = (inst: ExecutableInstruction, sourceKey: ListEditorKey)
     nextTick(() => initSortables())
     return
   }
+  markMoved(sourceKey)
   // The dragged row landed as a new first child — expand the target so the
   // just-moved row stays visible instead of disappearing into a collapsed
   // branch. Only needed when we created a new parent (makeChild === true).
@@ -653,24 +663,29 @@ onBeforeUnmount(() => {
   document.removeEventListener('pointermove', onPointerMove)
 })
 
-// Visual props derived from the current instruction. Re-reads DOM rects on
-// every instruction change, which is fine because the user can't scroll or
-// resize in the middle of a frame. `null` = overlay hidden.
+// Visual props derived from the current instruction. `null` = overlay hidden
+// — either because no instruction is active, or because the instruction is
+// `blocked`. The optional connector is a thin rail from the drop line up to
+// the row whose level dictates the insert (previous sibling or the ancestor
+// being joined as sibling of). Positions are computed from getBoundingClientRect
+// rather than CSS anchor positioning: nested row elements in a deep tree
+// aren't always reachable from an overlay-level anchor() call (Chrome's
+// anchor reachability rule excludes some deeply-nested descendants), so
+// JS measurement is both simpler and more reliable here.
 type OverlayVisual = {
-  blocked: boolean
-  top: number
-  left: number
-  right: number
+  line: { top: number; left: number; right: number }
+  connector: { top: number; height: number; left: number } | null
 }
 
 const overlayVisual = computed<OverlayVisual | null>(() => {
   const state = dragState.value
   if (!state || state.instruction === null || !rowsContainer.value) return null
   const inst = state.instruction
-  const blocked = inst.type === 'blocked'
-  const effective: ExecutableInstruction = blocked ? inst.desired : inst
+  // Blocked drops render nothing on purpose — the silent empty space IS the
+  // "not here" signal. No warning-coloured ghost of the attempted target.
+  if (inst.type === 'blocked') return null
   const refWrapper = rowsContainer.value.querySelector<HTMLElement>(
-    `.a-nested-list-editor__row-wrapper[data-id="${CSS.escape(String(effective.refKey))}"]`,
+    `.a-nested-list-editor__row-wrapper[data-id="${CSS.escape(String(inst.refKey))}"]`,
   )
   if (!refWrapper) return null
   const rowEl = refWrapper.querySelector<HTMLElement>(
@@ -679,16 +694,35 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
   const containerRect = rowsContainer.value.getBoundingClientRect()
   const rowRect = (rowEl ?? refWrapper).getBoundingClientRect()
 
-  const top =
-    effective.refEdge === 'top'
+  const lineLeft = ANCHOR_X + inst.depth * INDENT_PX
+  const lineTop =
+    inst.refEdge === 'top'
       ? rowRect.top - containerRect.top
       : rowRect.bottom - containerRect.top
-  return {
-    blocked,
-    top,
-    left: ANCHOR_X + effective.depth * INDENT_PX,
-    right: 16,
+  const line = { top: lineTop, left: lineLeft, right: 16 }
+
+  let connector: OverlayVisual['connector'] = null
+  if (inst.levelRowKey !== null) {
+    const levelWrapper = rowsContainer.value.querySelector<HTMLElement>(
+      `.a-nested-list-editor__row-wrapper[data-id="${CSS.escape(String(inst.levelRowKey))}"]`,
+    )
+    if (levelWrapper) {
+      const levelRow = levelWrapper.querySelector<HTMLElement>(
+        ':scope > .a-nested-list-editor__row',
+      )
+      const levelRect = (levelRow ?? levelWrapper).getBoundingClientRect()
+      const levelCentreY = levelRect.top - containerRect.top + levelRect.height / 2
+      if (levelCentreY < lineTop) {
+        connector = {
+          top: levelCentreY,
+          height: lineTop - levelCentreY,
+          left: lineLeft,
+        }
+      }
+    }
   }
+
+  return { line, connector }
 })
 
 const onAddClick = () => {
@@ -843,16 +877,16 @@ const onCloseClick = (vi: NestedViewItem<TItem>) => {
 }
 
 const moveUp = (id: ListEditorKey) => {
-  editor.moveUp(id)
+  if (editor.moveUp(id)) markMoved(id)
 }
 const moveDown = (id: ListEditorKey) => {
-  editor.moveDown(id)
+  if (editor.moveDown(id)) markMoved(id)
 }
 const moveTop = (id: ListEditorKey) => {
-  editor.moveTop(id)
+  if (editor.moveTop(id)) markMoved(id)
 }
 const moveBottom = (id: ListEditorKey) => {
-  editor.moveBottom(id)
+  if (editor.moveBottom(id)) markMoved(id)
 }
 const doIndent = (vi: NestedViewItem<TItem>) => {
   const res = editor.indent(vi.key)
@@ -860,11 +894,13 @@ const doIndent = (vi: NestedViewItem<TItem>) => {
     showWarningT('common.sortable.error.maxDeepExceed')
     return
   }
+  markMoved(vi.key)
   emit('indent', vi)
 }
 const doOutdent = (vi: NestedViewItem<TItem>) => {
   const res = editor.outdent(vi.key)
   if (res === null) return
+  markMoved(vi.key)
   emit('outdent', vi)
 }
 
@@ -877,6 +913,7 @@ const enterReorderMode = () => {
   // reorder targets.
   for (const k of expandableKeys.value) childrenExpandedKeys.value.add(k)
   snapshot.value = cloneDeep(modelValue.value) as NestedTree<TItem>
+  movedKeys.value = new Set()
   applyError.value = null
   mode.value = 'reorder'
   emit('reorder-start')
@@ -889,6 +926,7 @@ const cancelReorderMode = () => {
   if (!reorderMode.value) return
   if (snapshot.value) modelValue.value = snapshot.value as NestedTree<TItem>
   snapshot.value = null
+  movedKeys.value = new Set()
   applyError.value = null
   applying.value = false
   mode.value = 'view'
@@ -914,6 +952,7 @@ const applyReorder = async () => {
     applying.value = false
   }
   snapshot.value = null
+  movedKeys.value = new Set()
   mode.value = 'view'
   destroySortables()
   emit('reorder-applied', tree)
@@ -923,11 +962,13 @@ const applyReorder = async () => {
 watch(mode, (newMode, oldMode) => {
   if (newMode === 'reorder' && oldMode !== 'reorder') {
     if (!snapshot.value) snapshot.value = cloneDeep(modelValue.value) as NestedTree<TItem>
+    movedKeys.value = new Set()
     editingKeys.value.clear()
     editingSnapshots.value.clear()
   }
   if (newMode === 'view' && oldMode === 'reorder' && snapshot.value) {
     snapshot.value = null
+    movedKeys.value = new Set()
     applyError.value = null
     applying.value = false
   }
@@ -1316,23 +1357,6 @@ defineExpose({
         class="a-nested-list-editor__rows"
         :class="{ 'a-nested-list-editor__rows--dragging': dragState !== null }"
       >
-        <!-- Drop indicator overlay — a 2px horizontal line anchored to a row
-             edge whose `left` offset encodes the target depth (one indent
-             column per level). Painted in warning colour when the move
-             would breach maxDepth so the intent stays legible while the
-             mutation is refused. -->
-        <div
-          v-if="overlayVisual !== null"
-          class="a-nested-list-editor__drop-line"
-          :class="{ 'a-nested-list-editor__drop-line--blocked': overlayVisual.blocked }"
-          :style="{
-            top: `${overlayVisual.top}px`,
-            left: `${overlayVisual.left}px`,
-            right: `${overlayVisual.right}px`,
-          }"
-        >
-          <span class="a-nested-list-editor__drop-line-dot" />
-        </div>
         <div
           :class="[GROUP_CLASS, 'a-nested-list-editor__group--root']"
           data-parent-id=""
@@ -1396,6 +1420,33 @@ defineExpose({
             </template>
           </ANestedRow>
         </div>
+
+        <!-- Drop indicator overlay — only rendered for valid drops. Horizontal
+             line at a row edge (depth encoded in `left` offset) plus an
+             optional vertical connector rail linking the line up to the row
+             whose level the insert will match. Blocked drops render nothing
+             at all — the silent empty space IS the "not here". -->
+        <template v-if="overlayVisual !== null">
+          <div
+            v-if="overlayVisual.connector !== null"
+            class="a-nested-list-editor__drop-connector"
+            :style="{
+              left: `${overlayVisual.connector.left}px`,
+              top: `${overlayVisual.connector.top}px`,
+              height: `${overlayVisual.connector.height}px`,
+            }"
+          />
+          <div
+            class="a-nested-list-editor__drop-line"
+            :style="{
+              top: `${overlayVisual.line.top}px`,
+              left: `${overlayVisual.line.left}px`,
+              right: `${overlayVisual.line.right}px`,
+            }"
+          >
+            <span class="a-nested-list-editor__drop-line-dot" />
+          </div>
+        </template>
       </div>
 
       <slot
@@ -1934,34 +1985,15 @@ defineExpose({
   display: none !important;
 }
 
-/* Floating clone that follows the cursor — slim row-shaped card, no rotation,
-   no subtree, no action column. Just enough to say "this is what I'm moving". */
-.a-nested-list-editor__row--drag {
-  box-shadow: var(--ansle-elev-3);
-  background: var(--ansle-surface);
-  border: 1px solid var(--ansle-border);
-  border-radius: var(--ansle-radius);
-  opacity: 0.96;
-  pointer-events: none;
-  max-width: 420px;
-}
-
-/* Strip the dragged clone down to the bare header — hide rendered children
-   subtree, status badge and action column. */
-.a-nested-list-editor__row--drag .a-nested-list-editor__children,
-.a-nested-list-editor__row--drag .a-nested-list-editor__row-body,
-.a-nested-list-editor__row--drag .a-nested-list-editor__actions,
-.a-nested-list-editor__row--drag .a-nested-list-editor__status {
-  display: none;
-}
-
-/* In the drag clone, `.row-main` shouldn't stretch — otherwise the title grows
-   to fill leftover space and pushes the "+N" chip to the far edge. Collapse
-   it (and its nested title span / consumer slot content) to natural content
-   width so the chip sits right next to the title text. */
-.a-nested-list-editor__row--drag .a-nested-list-editor__row-main,
-.a-nested-list-editor__row--drag .a-nested-list-editor__row-main * {
-  flex: 0 0 auto;
+/* No floating clone at the cursor — for nested trees the line overlay
+   carries all the "where will it land" information; a ghost card dragging
+   behind the pointer is pure noise. Removed from layout entirely;
+   SortableJS's drag detection runs on document pointermove events, so
+   hiding the clone's rendered element doesn't break anything. The
+   selector matches the wrapper to beat the `.row-wrapper--drop-disabled`
+   rule that the clone inherits from the source. */
+.a-nested-list-editor__row-wrapper.a-nested-list-editor__row--drag {
+  display: none !important;
 }
 
 /* Drop indicator line — 2px primary stroke with an 8px terminal dot on the
@@ -1996,12 +2028,18 @@ defineExpose({
   transform: translateY(-50%);
 }
 
-.a-nested-list-editor__drop-line--blocked {
-  background: var(--ansle-warning);
-}
-
-.a-nested-list-editor__drop-line--blocked .a-nested-list-editor__drop-line-dot {
-  background: var(--ansle-warning);
+/* Connector rail — thin vertical line linking the drop indicator line up to
+   the row whose level is being matched (previous sibling, or the ancestor
+   being joined as a peer on reparent). Positioned in JS from the overlay
+   computed; pinned to the rowsContainer's left/top coordinate space. */
+.a-nested-list-editor__drop-connector {
+  position: absolute;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--ansle-primary);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 3;
 }
 
 /* Inline edit body. Default layout (narrow container / mobile) — form fills the
