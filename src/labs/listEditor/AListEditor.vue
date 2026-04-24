@@ -1002,10 +1002,7 @@ defineExpose({
   font-size: 11px;
   color: var(--ale-warning);
   font-weight: 500;
-  background: transparent;
-  border: 1px solid var(--ale-warning);
-  padding: 2px 8px;
-  border-radius: var(--ale-radius-pill);
+  padding: 2px 4px;
   white-space: nowrap;
   letter-spacing: 0.02em;
   flex-shrink: 0;

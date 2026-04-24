@@ -196,6 +196,7 @@ const directChildren = (): any[] =>
                 density="comfortable"
                 :disabled="vi.firstInParent"
                 :class="[
+                  'mx-1',
                   'a-nested-list-editor__action',
                   'a-nested-list-editor__action--up',
                 ]"
@@ -218,6 +219,7 @@ const directChildren = (): any[] =>
                 density="comfortable"
                 :disabled="vi.lastInParent"
                 :class="[
+                  'mx-1',
                   'a-nested-list-editor__action',
                   'a-nested-list-editor__action--down',
                 ]"
@@ -240,6 +242,7 @@ const directChildren = (): any[] =>
                 density="comfortable"
                 :active="false"
                 :class="[
+                  'mx-1',
                   'a-nested-list-editor__action',
                   'a-nested-list-editor__action--menu',
                 ]"
@@ -290,6 +293,20 @@ const directChildren = (): any[] =>
                         <VIcon icon="mdi-format-indent-decrease" />
                       </template>
                       <VListItemTitle>{{ t('common.sortable.outdent') }}</VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      v-if="context.showDeleteButton && context.canInteract"
+                      @click.stop="callbacks.onDeleteClick(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon
+                          icon="mdi-trash-can-outline"
+                          color="error"
+                        />
+                      </template>
+                      <VListItemTitle class="text-error">
+                        {{ t('common.sortable.delete') }}
+                      </VListItemTitle>
                     </VListItem>
                   </VList>
                 </VMenu>
@@ -372,25 +389,25 @@ const directChildren = (): any[] =>
                 <VMenu activator="parent">
                   <VList density="compact">
                     <VListItem
-                      v-if="context.showAddChildButton && vi.canAddChild"
-                      @click.stop="callbacks.onAddChildClick(vi)"
-                    >
-                      <template #prepend>
-                        <VIcon icon="mdi-plus-box-outline" />
-                      </template>
-                      <VListItemTitle>
-                        {{ t('common.sortable.addChild') }}
-                      </VListItemTitle>
-                    </VListItem>
-                    <VListItem
                       v-if="context.showAddAfterAction"
                       @click.stop="callbacks.onAddAfterClick(vi)"
                     >
                       <template #prepend>
-                        <VIcon icon="mdi-plus" />
+                        <VIcon icon="mdi-playlist-plus" />
                       </template>
                       <VListItemTitle>
                         {{ t('common.sortable.addAfter') }}
+                      </VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      v-if="context.showAddChildButton && vi.canAddChild"
+                      @click.stop="callbacks.onAddChildClick(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-subdirectory-arrow-right" />
+                      </template>
+                      <VListItemTitle>
+                        {{ t('common.sortable.addChild') }}
                       </VListItemTitle>
                     </VListItem>
                   </VList>

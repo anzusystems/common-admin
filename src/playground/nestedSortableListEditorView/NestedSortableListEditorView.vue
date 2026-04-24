@@ -182,20 +182,37 @@ const externalTree = ref<NestedTree<MenuItem>>(makeTree())
 const externalMode = ref<'view' | 'reorder'>('view')
 const refApiTree = ref<NestedTree<MenuItem>>(makeTree())
 
+// Imperative ref to the first demo editor — lets @add handlers actually
+// insert the row (using the emit's hint) instead of just logging.
+interface NestedEditorApiLocal {
+  addItem: (
+    data: MenuItem,
+    hint?: NestedPositionHint,
+  ) => unknown
+  addAfterId: (targetId: number | null, data: MenuItem, childrenAllowed: boolean) => void
+  addChildToId: (targetId: number, data: MenuItem, childrenAllowed: boolean) => void
+  removeById: (id: number) => void
+  updateData: (id: number, data: MenuItem) => void
+  resetDirtyBaseline: () => void
+}
+const basicRef = ref<NestedEditorApiLocal | null>(null)
+
 const lastLog = ref<string>('')
 const log = (msg: string) => {
   lastLog.value = `${new Date().toLocaleTimeString()}  ${msg}`
 }
 
 const onBasicAdd = (hint: NestedPositionHint | undefined) => {
+  const id = nextId++
   const fresh: MenuItem = {
-    id: nextId++,
+    id,
     position: 0,
     parent: typeof hint?.parentId === 'number' ? hint.parentId : null,
-    title: `New #${nextId}`,
+    title: '',
     status: 'Draft',
   }
-  log(`add hint=${JSON.stringify(hint)} -> ${fresh.id}`)
+  basicRef.value?.addItem(fresh, hint)
+  log(`add hint=${JSON.stringify(hint)} -> ${id}`)
 }
 
 const onBasicAddChild = (vi: NestedViewItem<MenuItem>) => log(`add-child under ${vi.key}`)
@@ -294,6 +311,7 @@ const totalCount = computed(() => {
         Single orange "unsaved" state covers both moved + edited rows.
       </p>
       <ANestedSortableListEditor
+        ref="basicRef"
         v-model="basicTree"
         title="Documentation tree (5 levels)"
         :max-depth="5"

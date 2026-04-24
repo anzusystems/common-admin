@@ -92,8 +92,6 @@ export interface Props<TItem extends Record<string, any>> {
   showReorderToggle?: boolean
   reorderDisabled?: boolean
   disableDrag?: boolean
-  toolbarMode?: 'internal' | 'external'
-  toolbarBottomOffset?: number
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
@@ -131,8 +129,6 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showReorderToggle: true,
   reorderDisabled: false,
   disableDrag: false,
-  toolbarMode: 'internal',
-  toolbarBottomOffset: 12,
   onDeleteConfirm: undefined,
   onDelete: undefined,
   onItemSave: undefined,
@@ -246,6 +242,19 @@ const stringifyContent = (data: TItem): string => {
   delete copy[props.parentField]
   return JSON.stringify(copy)
 }
+
+// Reorder snapshot — captures the tree at reorder-start so we can restore it
+// on cancel. Dirty/moved detection does NOT derive from the snapshot: we
+// used to compare each row's current parent + sibling-index against snapshot
+// values, which flagged unmoved rows as "moved" whenever a neighbour shifted
+// sibling positions as a side-effect. Instead we track explicit user actions
+// in `movedKeys` below — only rows the user actively moved get marked.
+const snapshot = ref<NestedTree<TItem> | null>(null)
+// Keys the user has actively moved during this reorder session (drag, arrow
+// buttons, indent/outdent). Declared before `captureDirtyBaseline` so that
+// function can also reset it as part of the "mark as saved" cycle.
+const movedKeys = ref<Set<ListEditorKey>>(new Set())
+
 const dirtyBaseline = ref(new Map<ListEditorKey, string>()) as import('vue').Ref<
   Map<ListEditorKey, string>
 >
@@ -259,19 +268,11 @@ const captureDirtyBaseline = () => {
   }
   walk(modelValue.value.children)
   dirtyBaseline.value = next
+  // Clearing moved state is part of "mark current data as saved" — consumers
+  // exposed via `resetDirtyBaseline` expect the orange badges to go away.
+  movedKeys.value = new Set()
 }
 captureDirtyBaseline()
-
-// Reorder snapshot — captures the tree at reorder-start so we can restore it
-// on cancel. Dirty/moved detection does NOT derive from the snapshot: we
-// used to compare each row's current parent + sibling-index against snapshot
-// values, which flagged unmoved rows as "moved" whenever a neighbour shifted
-// sibling positions as a side-effect. Instead we track explicit user actions
-// in `movedKeys` below — only rows the user actively moved get marked.
-const snapshot = ref<NestedTree<TItem> | null>(null)
-// Keys the user has actively moved during this reorder session (drag, arrow
-// buttons, indent/outdent). Cleared on enter/cancel/apply.
-const movedKeys = ref<Set<ListEditorKey>>(new Set())
 // Mark the row AND every descendant. Moving a parent visually carries its
 // whole subtree to the new location, so the children are "moved" too from
 // the user's perspective — even though they stayed in place relative to
@@ -440,6 +441,22 @@ watch(
     // Make sure ancestors are expanded so the new row is visible.
     const { parent } = editor.findNode(addedKey)
     if (parent) childrenExpandedKeys.value.add(parent.data[props.keyField] as ListEditorKey)
+    // Scroll the newly added row into view once Vue has rendered it — for
+    // longer trees "Add inside" or "Add after" on a row far down the list
+    // can drop the new item below the current viewport, and a silent append
+    // is easy to miss. Double nextTick so the inline-edit body has also
+    // rendered (opening the form grows the row significantly, and scrolling
+    // before that leaves the form itself below the fold); `block: 'center'`
+    // because `'nearest'` treats partially visible as "good enough" and
+    // often does nothing even when the form extends past the viewport.
+    nextTick(() => {
+      nextTick(() => {
+        const el = rowsContainer.value?.querySelector<HTMLElement>(
+          `.a-nested-list-editor__row-wrapper[data-id="${CSS.escape(String(addedKey))}"]`,
+        )
+        el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      })
+    })
   },
 )
 
@@ -743,7 +760,11 @@ const onAddChildClick = (vi: NestedViewItem<TItem>) => {
   pendingAutoOpen.value = true
   childrenExpandedKeys.value.add(vi.key)
   emit('add-child', vi)
-  emit('add', { parentId: vi.key, asFirstChild: true, childrenAllowed: true })
+  // Append to the end of existing children — matches the root-level "Add
+  // item" button's semantic (append to end of root). Drag-drop make-child
+  // still lands at index 0 because the drop line there is visually at the
+  // gap immediately below the parent.
+  emit('add', { parentId: vi.key, childrenAllowed: true })
 }
 
 const onEditClick = (vi: NestedViewItem<TItem>) => {
@@ -951,8 +972,12 @@ const applyReorder = async () => {
     }
     applying.value = false
   }
+  // Deliberately keep `movedKeys` populated — the consumer still has to
+  // persist the new tree via their own API call before the rows are truly
+  // "saved", and we let them clear the state manually via
+  // `resetDirtyBaseline` once the API returns. Snapshot isn't needed any
+  // more (there's nothing to revert to after apply).
   snapshot.value = null
-  movedKeys.value = new Set()
   mode.value = 'view'
   destroySortables()
   emit('reorder-applied', tree)
@@ -1215,82 +1240,143 @@ defineExpose({
             {{ title }}
           </h3>
           <div class="a-nested-list-editor__header-actions">
-            <VBtn
-              v-if="expandAllVisible && compactReorderButton"
-              variant="tonal"
-              color="primary"
-              icon
-              size="x-small"
-              @click="toggleExpandAll"
-            >
-              <VIcon
-                :icon="
-                  allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'
-                "
-                size="18"
-              />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-                :text="
-                  allExpanded
-                    ? t('common.sortable.collapseAll')
-                    : t('common.sortable.expandAll')
-                "
-              />
-            </VBtn>
-            <VBtn
-              v-else-if="expandAllVisible"
-              variant="tonal"
-              color="primary"
-              size="small"
-              :prepend-icon="
-                allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'
-              "
-              @click="toggleExpandAll"
-            >
-              {{
-                allExpanded
-                  ? t('common.sortable.collapseAll')
-                  : t('common.sortable.expandAll')
-              }}
-            </VBtn>
-            <slot
-              v-if="reorderToggleVisible"
-              name="reorder-toggle"
-              v-bind="reorderToggleSlotProps"
-            >
+            <template v-if="reorderMode">
+              <!-- Reorder-mode header: pending-changes count + Cancel/Apply.
+                   Replaces the old sticky bottom toolbar — the actions sit
+                   where the "Reorder" button lives in view mode, so the eye
+                   doesn't have to hunt down the bottom of the widget. -->
+              <slot
+                name="reorder-toolbar"
+                v-bind="toolbarSlotProps"
+              >
+                <div
+                  class="a-nested-list-editor__toolbar-status"
+                  :class="{ 'a-nested-list-editor__toolbar-status--pending': hasPendingChanges }"
+                >
+                  <VIcon
+                    v-if="hasPendingChanges"
+                    icon="mdi-circle-medium"
+                    color="warning"
+                    size="18"
+                  />
+                  <span
+                    v-if="applyError"
+                    class="text-body-small"
+                  >
+                    {{ applyError }}
+                  </span>
+                  <span
+                    v-else-if="hasPendingChanges"
+                    class="text-body-small"
+                  >
+                    {{ t('common.sortable.pendingChanges', { count: movedCount }) }}
+                  </span>
+                  <span
+                    v-else
+                    class="text-body-small text-medium-emphasis"
+                  >
+                    {{ t('common.sortable.noPendingChanges') }}
+                  </span>
+                </div>
+                <VBtn
+                  variant="text"
+                  size="small"
+                  :disabled="applying"
+                  @click="cancelReorderMode"
+                >
+                  {{ t('common.sortable.reorderCancel') }}
+                </VBtn>
+                <VBtn
+                  color="primary"
+                  variant="flat"
+                  size="small"
+                  prepend-icon="mdi-check"
+                  :loading="applying"
+                  :disabled="applying || !hasPendingChanges"
+                  @click="applyReorder"
+                >
+                  {{ t('common.sortable.reorderApply') }}
+                </VBtn>
+              </slot>
+            </template>
+            <template v-else>
               <VBtn
-                v-if="compactReorderButton"
+                v-if="expandAllVisible && compactReorderButton"
                 variant="tonal"
                 color="primary"
                 icon
                 size="x-small"
-                :disabled="!canEnterReorder"
-                @click="enterReorderMode"
+                @click="toggleExpandAll"
               >
                 <VIcon
-                  icon="mdi-sort"
+                  :icon="
+                    allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'
+                  "
                   size="18"
                 />
                 <VTooltip
                   activator="parent"
                   location="bottom"
-                  :text="t('common.sortable.reorder')"
+                  :text="
+                    allExpanded
+                      ? t('common.sortable.collapseAll')
+                      : t('common.sortable.expandAll')
+                  "
                 />
               </VBtn>
               <VBtn
-                v-else
+                v-else-if="expandAllVisible"
                 variant="tonal"
                 color="primary"
-                prepend-icon="mdi-sort"
                 size="small"
-                :disabled="!canEnterReorder"
-                @click="enterReorderMode"
+                :prepend-icon="
+                  allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'
+                "
+                @click="toggleExpandAll"
               >
-                {{ t('common.sortable.reorder') }}
+                {{
+                  allExpanded
+                    ? t('common.sortable.collapseAll')
+                    : t('common.sortable.expandAll')
+                }}
               </VBtn>
-            </slot>
+              <slot
+                v-if="reorderToggleVisible"
+                name="reorder-toggle"
+                v-bind="reorderToggleSlotProps"
+              >
+                <VBtn
+                  v-if="compactReorderButton"
+                  variant="tonal"
+                  color="primary"
+                  icon
+                  size="x-small"
+                  :disabled="!canEnterReorder"
+                  @click="enterReorderMode"
+                >
+                  <VIcon
+                    icon="mdi-sort"
+                    size="18"
+                  />
+                  <VTooltip
+                    activator="parent"
+                    location="bottom"
+                    :text="t('common.sortable.reorder')"
+                  />
+                </VBtn>
+                <VBtn
+                  v-else
+                  variant="tonal"
+                  color="primary"
+                  prepend-icon="mdi-sort"
+                  size="small"
+                  :disabled="!canEnterReorder"
+                  @click="enterReorderMode"
+                >
+                  {{ t('common.sortable.reorder') }}
+                </VBtn>
+              </slot>
+            </template>
           </div>
         </slot>
       </div>
@@ -1514,54 +1600,6 @@ defineExpose({
       </VCard>
     </VDialog>
 
-    <slot
-      v-if="reorderMode && toolbarMode === 'internal'"
-      name="reorder-toolbar"
-      v-bind="toolbarSlotProps"
-    >
-      <div
-        class="a-nested-list-editor__toolbar"
-        :style="{ bottom: `${toolbarBottomOffset}px` }"
-      >
-        <div
-          class="a-nested-list-editor__toolbar-status"
-          :class="{ 'a-nested-list-editor__toolbar-status--pending': hasPendingChanges }"
-        >
-          <VIcon
-            v-if="hasPendingChanges"
-            icon="mdi-circle-medium"
-            color="warning"
-            size="18"
-          />
-          <span v-if="applyError">{{ applyError }}</span>
-          <span v-else-if="hasPendingChanges">
-            {{ t('common.sortable.pendingChanges', { count: movedCount }) }}
-          </span>
-          <span v-else>
-            {{ t('common.sortable.noPendingChanges') }}
-          </span>
-        </div>
-        <div class="a-nested-list-editor__toolbar-actions">
-          <VBtn
-            variant="text"
-            :disabled="applying"
-            @click="cancelReorderMode"
-          >
-            {{ t('common.sortable.reorderCancel') }}
-          </VBtn>
-          <VBtn
-            color="primary"
-            variant="flat"
-            prepend-icon="mdi-check"
-            :loading="applying"
-            :disabled="applying"
-            @click="applyReorder"
-          >
-            {{ t('common.sortable.reorderApply') }}
-          </VBtn>
-        </div>
-      </div>
-    </slot>
   </div>
 </template>
 
@@ -1847,9 +1885,7 @@ defineExpose({
   font-size: 11px;
   color: var(--ansle-warning);
   font-weight: 500;
-  border: 1px solid var(--ansle-warning);
-  padding: 2px 8px;
-  border-radius: var(--ansle-radius-pill);
+  padding: 2px 4px;
   white-space: nowrap;
   letter-spacing: 0.02em;
   flex-shrink: 0;
@@ -2249,37 +2285,19 @@ defineExpose({
   background: var(--ansle-primary-container);
 }
 
-.a-nested-list-editor__toolbar {
-  position: sticky;
-  z-index: 5;
-  margin-top: 12px;
-  padding: 10px 16px;
-  background: var(--ansle-surface);
-  border: 1px solid var(--ansle-border);
-  border-radius: 16px;
-  box-shadow: var(--ansle-elev-3);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
+/* Reorder-mode header status pill — shows "N pending changes" or "no
+   pending changes" inline with the Cancel/Apply actions in the header. */
 .a-nested-list-editor__toolbar-status {
-  font: 500 14px/1 var(--v-font-body, inherit);
+  font: 500 13px/1 var(--v-font-body, inherit);
   color: var(--ansle-on-surface);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  margin-right: 4px;
 }
 
 .a-nested-list-editor__toolbar-status--pending {
   color: var(--ansle-warning);
-}
-
-.a-nested-list-editor__toolbar-actions {
-  display: inline-flex;
-  gap: 8px;
-  flex-shrink: 0;
 }
 
 @media (hover: none) {

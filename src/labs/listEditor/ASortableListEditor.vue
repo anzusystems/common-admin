@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useSlots, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useSortable } from '@vueuse/integrations/useSortable'
@@ -65,8 +65,6 @@ export interface Props<TItem extends Record<string, any>> {
   showReorderToggle?: boolean
   reorderDisabled?: boolean
   disableDrag?: boolean
-  toolbarMode?: 'internal' | 'external'
-  toolbarBottomOffset?: number
   showMoveToPosition?: boolean
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
@@ -105,8 +103,6 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showReorderToggle: true,
   reorderDisabled: false,
   disableDrag: false,
-  toolbarMode: 'internal',
-  toolbarBottomOffset: 12,
   showMoveToPosition: false,
   onDeleteConfirm: undefined,
   onDelete: undefined,
@@ -168,6 +164,11 @@ const stringifyContent = (data: TItem): string => {
   delete copy[props.positionField]
   return JSON.stringify(copy)
 }
+// Keys the user has actively moved during this reorder session. Declared
+// before `captureDirtyBaseline` so that function can reset it as part of
+// the "mark as saved" cycle.
+const movedKeys = ref<Set<ListEditorKey>>(new Set())
+
 const dirtyBaseline = ref(new Map<ListEditorKey, string>()) as import('vue').Ref<
   Map<ListEditorKey, string>
 >
@@ -177,6 +178,9 @@ const captureDirtyBaseline = () => {
     next.set(item[props.keyField] as ListEditorKey, stringifyContent(item))
   })
   dirtyBaseline.value = next
+  // Clearing moved state is part of "mark current data as saved" — consumers
+  // exposed via `resetDirtyBaseline` expect the orange badges to go away.
+  movedKeys.value = new Set()
 }
 captureDirtyBaseline()
 
@@ -200,6 +204,19 @@ watch(
     }
     editingKeys.value.add(addedKey)
     expandedKeys.value.delete(addedKey)
+    // Scroll the newly added row into view so the user sees their new item
+    // even on long lists where the append lands below the viewport fold.
+    // Double nextTick so the inline-edit body has rendered; `block: 'center'`
+    // because `'nearest'` often decides a partially-visible row is good
+    // enough and does nothing.
+    nextTick(() => {
+      nextTick(() => {
+        const el = rowsContainer.value?.querySelector<HTMLElement>(
+          `.a-sortable-list-editor__row[data-id="${CSS.escape(String(addedKey))}"]`,
+        )
+        el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      })
+    })
   },
 )
 
@@ -263,12 +280,10 @@ const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'
 // global save flushes everything, so we hide the per-row buttons by default.
 const showInlineSaveFooter = computed(() => !!props.onItemSave)
 
-// Keys the user has actively moved during this reorder session (drag, arrow
-// buttons). Cleared on enter/cancel/apply. We intentionally don't derive
-// "moved" from snapshot-vs-current index comparison: that flags any row whose
-// flat index shifted as a side-effect of another row's move, even though the
-// user didn't touch it. Only truly-moved rows should read as unsaved.
-const movedKeys = ref<Set<ListEditorKey>>(new Set())
+// `movedKeys` is declared higher up so `captureDirtyBaseline` can reset it.
+// Tracks only rows the user actively moved (drag, arrow buttons) — snapshot
+// vs current-index diffing would also flag side-effect index shifts, which
+// isn't what the user means by "unsaved".
 const markMoved = (key: ListEditorKey) => {
   movedKeys.value.add(key)
 }
@@ -586,8 +601,10 @@ const applyReorder = async () => {
     }
     applying.value = false
   }
+  // Deliberately keep `movedKeys` populated — consumer still has to persist
+  // the new order via their own API call before rows are truly "saved"; we
+  // let them clear the state manually via `resetDirtyBaseline` on success.
   snapshot.value = null
-  movedKeys.value = new Set()
   mode.value = 'view'
   emit('reorder-applied', items)
   emit('reorder-end')
@@ -710,8 +727,66 @@ defineExpose({
             {{ title }}
           </h3>
           <div class="a-sortable-list-editor__header-actions">
+            <template v-if="reorderMode">
+              <!-- Reorder-mode header: pending-changes count + Cancel/Apply.
+                   Replaces the old sticky bottom toolbar — the actions sit
+                   where the "Reorder" button lives in view mode. -->
+              <slot
+                name="reorder-toolbar"
+                v-bind="toolbarSlotProps"
+              >
+                <div
+                  class="a-sortable-list-editor__toolbar-status"
+                  :class="{ 'a-sortable-list-editor__toolbar-status--pending': hasPendingChanges }"
+                >
+                  <VIcon
+                    v-if="hasPendingChanges"
+                    icon="mdi-circle-medium"
+                    color="warning"
+                    size="18"
+                  />
+                  <span
+                    v-if="applyError"
+                    class="text-body-small"
+                  >
+                    {{ applyError }}
+                  </span>
+                  <span
+                    v-else-if="hasPendingChanges"
+                    class="text-body-small"
+                  >
+                    {{ t('common.sortable.pendingChanges', { count: movedCount }) }}
+                  </span>
+                  <span
+                    v-else
+                    class="text-body-small text-medium-emphasis"
+                  >
+                    {{ t('common.sortable.noPendingChanges') }}
+                  </span>
+                </div>
+                <VBtn
+                  variant="text"
+                  size="small"
+                  :disabled="applying"
+                  @click="cancelReorderMode"
+                >
+                  {{ t('common.sortable.reorderCancel') }}
+                </VBtn>
+                <VBtn
+                  color="primary"
+                  variant="flat"
+                  size="small"
+                  prepend-icon="mdi-check"
+                  :loading="applying"
+                  :disabled="applying || !hasPendingChanges"
+                  @click="applyReorder"
+                >
+                  {{ t('common.sortable.reorderApply') }}
+                </VBtn>
+              </slot>
+            </template>
             <slot
-              v-if="reorderToggleVisible"
+              v-else-if="reorderToggleVisible"
               name="reorder-toggle"
               v-bind="reorderToggleSlotProps"
             >
@@ -907,7 +982,7 @@ defineExpose({
                     variant="text"
                     density="comfortable"
                     :disabled="!vi.canMoveUp"
-                    class="a-sortable-list-editor__action a-sortable-list-editor__action--up"
+                    class="mx-1 a-sortable-list-editor__action a-sortable-list-editor__action--up"
                     @click.stop="moveUp(vi.index)"
                   >
                     <VIcon
@@ -926,7 +1001,7 @@ defineExpose({
                     variant="text"
                     density="comfortable"
                     :disabled="!vi.canMoveDown"
-                    class="a-sortable-list-editor__action a-sortable-list-editor__action--down"
+                    class="mx-1 a-sortable-list-editor__action a-sortable-list-editor__action--down"
                     @click.stop="moveDown(vi.index)"
                   >
                     <VIcon
@@ -945,7 +1020,7 @@ defineExpose({
                     variant="text"
                     density="comfortable"
                     :active="false"
-                    class="a-sortable-list-editor__action a-sortable-list-editor__action--menu"
+                    class="mx-1 a-sortable-list-editor__action a-sortable-list-editor__action--menu"
                   >
                     <VIcon
                       icon="mdi-dots-vertical"
@@ -1216,54 +1291,6 @@ defineExpose({
       </VCard>
     </VDialog>
 
-    <slot
-      v-if="reorderMode && toolbarMode === 'internal'"
-      name="reorder-toolbar"
-      v-bind="toolbarSlotProps"
-    >
-      <div
-        class="a-sortable-list-editor__toolbar"
-        :style="{ bottom: `${toolbarBottomOffset}px` }"
-      >
-        <div
-          class="a-sortable-list-editor__toolbar-status"
-          :class="{ 'a-sortable-list-editor__toolbar-status--pending': hasPendingChanges }"
-        >
-          <VIcon
-            v-if="hasPendingChanges"
-            icon="mdi-circle-medium"
-            color="warning"
-            size="18"
-          />
-          <span v-if="applyError">{{ applyError }}</span>
-          <span v-else-if="hasPendingChanges">
-            {{ t('common.sortable.pendingChanges', { count: movedCount }) }}
-          </span>
-          <span v-else>
-            {{ t('common.sortable.noPendingChanges') }}
-          </span>
-        </div>
-        <div class="a-sortable-list-editor__toolbar-actions">
-          <VBtn
-            variant="text"
-            :disabled="applying"
-            @click="cancelReorderMode"
-          >
-            {{ t('common.sortable.reorderCancel') }}
-          </VBtn>
-          <VBtn
-            color="primary"
-            variant="flat"
-            prepend-icon="mdi-check"
-            :loading="applying"
-            :disabled="applying"
-            @click="applyReorder"
-          >
-            {{ t('common.sortable.reorderApply') }}
-          </VBtn>
-        </div>
-      </div>
-    </slot>
   </div>
 </template>
 
@@ -1623,10 +1650,7 @@ defineExpose({
   font-size: 11px;
   color: var(--asle-warning);
   font-weight: 500;
-  background: transparent;
-  border: 1px solid var(--asle-warning);
-  padding: 2px 8px;
-  border-radius: var(--asle-radius-pill);
+  padding: 2px 4px;
   white-space: nowrap;
   letter-spacing: 0.02em;
   flex-shrink: 0;
@@ -1856,38 +1880,20 @@ defineExpose({
   outline-offset: -2px;
 }
 
-.a-sortable-list-editor__toolbar {
-  position: sticky;
-  z-index: 5;
-  margin-top: 12px;
-  padding: 12px 16px;
-  background: var(--asle-surface);
-  border: 1px solid var(--asle-border);
-  border-radius: 16px;
-  box-shadow: var(--asle-elev-3);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
+/* Reorder-mode header status pill — "N pending changes" inline with the
+   Cancel/Apply actions in the header. */
 .a-sortable-list-editor__toolbar-status {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--asle-on-surface);
   font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  margin-right: 4px;
 }
 
 .a-sortable-list-editor__toolbar-status--pending {
   color: var(--asle-warning);
-}
-
-.a-sortable-list-editor__toolbar-actions {
-  display: inline-flex;
-  gap: 8px;
-  flex-shrink: 0;
 }
 
 @media (width <= 600px) {
