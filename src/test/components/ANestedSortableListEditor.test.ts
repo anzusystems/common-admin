@@ -649,6 +649,288 @@ describe('ANestedSortableListEditor', () => {
       expect(wrapper.find('.a-nested-list-editor--drag-enabled').exists()).toBe(false)
     })
   })
+
+  // Pointer-driven drag-drop is too brittle to simulate in vitest (coordinate
+  // math, SortableJS fallback clone, pointermove coalescing). The drag-related
+  // assertions below exercise observable outcomes through the exposed
+  // imperative API instead. Actual pointer drops are covered by the
+  // Playwright CLI skill.
+  describe('reorder toolbar in header', () => {
+    it('renders pending-count + Cancel + Apply inside the header', async () => {
+      const { wrapper } = mountEditor()
+      await clickReorder(wrapper)
+      await flushPromises()
+      // Make a move so Apply becomes enabled.
+      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+      const header = wrapper.find('.a-nested-list-editor__header')
+      expect(header.exists()).toBe(true)
+      const headerButtons = header.findAll('button')
+      const cancel = headerButtons.find((b) => b.text().toLowerCase().includes('cancel'))
+      const apply = headerButtons.find((b) => b.text().toLowerCase().includes('apply'))
+      expect(cancel).toBeTruthy()
+      expect(apply).toBeTruthy()
+      expect(header.find('.a-nested-list-editor__toolbar-status').exists()).toBe(true)
+      // No separate bottom `.__toolbar` element any more.
+      expect(wrapper.find('.a-nested-list-editor__toolbar').exists()).toBe(false)
+    })
+
+    it('disables Apply when there are no pending changes', async () => {
+      const { wrapper } = mountEditor()
+      await clickReorder(wrapper)
+      await flushPromises()
+      const apply = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('apply'))!
+      expect(apply.attributes('disabled')).toBeDefined()
+    })
+
+    it('enables Apply once a move marks a row as pending', async () => {
+      const { wrapper } = mountEditor()
+      await clickReorder(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+      const apply = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('apply'))!
+      expect(apply.attributes('disabled')).toBeUndefined()
+    })
+  })
+
+  describe('movedKeys lifecycle', () => {
+    it('entering reorder mode clears any prior movedKeys', async () => {
+      const { wrapper } = mountEditor()
+      await clickReorder(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBeGreaterThan(0)
+
+      const cancel = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('cancel'))!
+      await cancel.trigger('click')
+      await flushPromises()
+      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+
+      await clickReorder(wrapper)
+      await flushPromises()
+      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+    })
+
+    it('applying reorder KEEPS movedKeys populated', async () => {
+      const { wrapper } = mountEditor()
+      await clickReorder(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-nested-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+
+      const apply = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('apply'))!
+      await apply.trigger('click')
+      await flushPromises()
+
+      // Consumer still has to call resetDirtyBaseline — the markers stick
+      // around until they confirm the server save.
+      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBeGreaterThan(0)
+
+      const api = editorExposed(wrapper)
+      api.resetDirtyBaseline()
+      await nextTick()
+      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+    })
+  })
+
+  describe('moving a parent marks the whole subtree as moved', () => {
+    it('moveDown on a root with children marks every descendant as moved too', async () => {
+      // News (id=2) has two children [21, 22]. Moving News down should flag
+      // News + both children as moved, even though the children's relative
+      // positions under News did not change — the user visually moved the
+      // whole branch.
+      const { wrapper } = mountEditor()
+      await clickReorder(wrapper)
+      await flushPromises()
+      // News is the second root (index 1). Use its moveDown arrow.
+      // DOM order with News expanded: Home, News, Sport(child), Weather(child), About.
+      // Up/Down arrow DOM order matches flat view order. News's down arrow is
+      // the second one (index 1) in the up/down array — Home(0), News(1),
+      // Sport(2), Weather(3), About(4).
+      const downs = wrapper.findAll('.a-nested-list-editor__action--down')
+      await downs[1].trigger('click')
+      await flushPromises()
+
+      // Now About comes above News, and News moved down. News + its two
+      // children should all be flagged unsaved. The siblings that shifted
+      // (Home, About) must NOT be flagged.
+      const unsavedRows = wrapper.findAll('.a-nested-list-editor__row--unsaved')
+      expect(unsavedRows.length).toBe(3)
+    })
+  })
+
+  describe('view-mode kebab menu items and i18n', () => {
+    it('renders "Add after" first and "Add inside" second with the right icons', async () => {
+      // Sweep any stale teleported menu overlays that earlier tests may have
+      // left behind — VMenu portal content isn't torn down with the invoking
+      // wrapper, so a fresh overlay query can include noise from prior mounts.
+      document.querySelectorAll('.v-overlay-container').forEach((n) => n.remove())
+      const model = ref<NestedTree<MenuItem>>(tree())
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(ANestedSortableListEditor<MenuItem>, {
+              modelValue: model.value,
+              'onUpdate:modelValue': (v: NestedTree<MenuItem>) => {
+                model.value = v
+              },
+              maxDepth: 2,
+              showAddAfterAction: true,
+              showAddChildButton: true,
+            })
+        },
+      })
+      // Attach to body so the VMenu's teleported content ends up in a tree
+      // reachable via document.querySelectorAll.
+      const wrapper = mount(Host, { attachTo: document.body })
+      // Initial flushPromises after mount is load-bearing — without it the
+      // VMenu overlay doesn't paint any list items when the activator is
+      // clicked (observed flakily under certain test-order conditions).
+      await flushPromises()
+      try {
+        const menus = wrapper.findAll('.a-nested-list-editor__action--menu')
+        expect(menus.length).toBeGreaterThan(0)
+        await menus[0].trigger('click')
+        await flushPromises()
+        // VMenu uses requestAnimationFrame + transition. Small timeout so the
+        // portal children are fully mounted before we query.
+        await new Promise((r) => setTimeout(r, 50))
+
+        const openItems = document.querySelectorAll(
+          '.v-overlay--active.v-menu .v-list-item',
+        )
+        expect(openItems.length).toBeGreaterThanOrEqual(2)
+        const titles = Array.from(openItems).map(
+          (el) => el.querySelector('.v-list-item-title')?.textContent?.trim() ?? '',
+        )
+        // "Add after this item" comes first, "Add inside" second.
+        expect(titles[0]).toBe('Add after this item')
+        expect(titles[1]).toBe('Add inside')
+        const icons = Array.from(openItems).map(
+          (el) => el.querySelector('.mdi')?.className ?? '',
+        )
+        expect(icons[0]).toContain('mdi-playlist-plus')
+        expect(icons[1]).toContain('mdi-subdirectory-arrow-right')
+      } finally {
+        wrapper.unmount()
+      }
+    })
+  })
+
+  describe('reorder-mode kebab menu items', () => {
+    it('includes a Delete item in the overflow menu (error-coloured)', async () => {
+      document.querySelectorAll('.v-overlay-container').forEach((n) => n.remove())
+      const model = ref<NestedTree<MenuItem>>(tree())
+      const mode = ref<'view' | 'reorder'>('view')
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(ANestedSortableListEditor<MenuItem>, {
+              modelValue: model.value,
+              'onUpdate:modelValue': (v: NestedTree<MenuItem>) => {
+                model.value = v
+              },
+              mode: mode.value,
+              'onUpdate:mode': (v: 'view' | 'reorder') => {
+                mode.value = v
+              },
+              maxDepth: 2,
+            })
+        },
+      })
+      const wrapper = mount(Host, { attachTo: document.body })
+      await flushPromises()
+      try {
+        await clickReorder(wrapper)
+        await flushPromises()
+        const menus = wrapper.findAll('.a-nested-list-editor__action--menu')
+        expect(menus.length).toBeGreaterThan(0)
+        await menus[0].trigger('click')
+        await flushPromises()
+        await new Promise((r) => setTimeout(r, 50))
+
+        const openMenuTitles = Array.from(
+          document.querySelectorAll('.v-overlay--active.v-menu .v-list-item-title'),
+        )
+        const titleTexts = openMenuTitles.map((el) => el.textContent?.trim() ?? '')
+        expect(titleTexts).toContain('Delete')
+        const deleteTitleEl = openMenuTitles.find(
+          (el) => el.textContent?.trim() === 'Delete',
+        ) as HTMLElement | undefined
+        expect(deleteTitleEl?.classList.contains('text-error')).toBe(true)
+      } finally {
+        wrapper.unmount()
+      }
+    })
+  })
+
+  describe('Add inside semantics (append-to-end via UI emit)', () => {
+    it('calling editor.addItem with parentId (no asFirstChild) appends at end of existing children', async () => {
+      // The kebab "Add inside" action emits `add` with `{ parentId }`, which
+      // the consumer then handles by calling `editor.addItem(data, hint)`.
+      // We simulate that consumer path directly through the exposed API and
+      // assert the new node lands at the end of the children array.
+      const { wrapper, model } = mountEditor()
+      const editor = findEditor(wrapper)
+      const exposed = (editor.vm as unknown as {
+        $: {
+          exposed: {
+            addItem: (data: MenuItem, hint?: { parentId?: number; childrenAllowed?: boolean }) => unknown
+          }
+        }
+      }).$.exposed
+      // News (id=2) already has children [21, 22]. Add inside should land as
+      // the third and last child, NOT at index 0 (which was the old
+      // `asFirstChild` semantic, still used by the imperative `addChildToId`).
+      exposed.addItem(
+        { id: 99, position: 0, parent: 2, title: 'New inside' },
+        { parentId: 2, childrenAllowed: true },
+      )
+      await flushPromises()
+      const news = model.value.children.find((n) => n.data.id === 2)!
+      expect(news.children!.map((c) => c.data.id)).toEqual([21, 22, 99])
+    })
+  })
+
+  describe('dirty comparison ignores position/parent fields', () => {
+    it('does not flag a row whose only change is position or parent', async () => {
+      const model = ref<NestedTree<MenuItem>>(tree())
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(ANestedSortableListEditor<MenuItem>, {
+              modelValue: model.value,
+              'onUpdate:modelValue': (v: NestedTree<MenuItem>) => {
+                model.value = v
+              },
+              maxDepth: 2,
+            })
+        },
+      })
+      const wrapper = mount(Host)
+      await nextTick()
+      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+
+      // Flip only position + parent on a clone — content is unchanged in the
+      // sense the dirty comparator cares about.
+      const fresh = JSON.parse(JSON.stringify(model.value)) as NestedTree<MenuItem>
+      fresh.children[0].data.position = 999
+      fresh.children[0].data.parent = 777
+      model.value = fresh
+      await nextTick()
+      expect(wrapper.findAll('.a-nested-list-editor__row--unsaved').length).toBe(0)
+    })
+  })
 })
 
 // Reach into the editor component's exposed imperative API for tests that
@@ -662,6 +944,10 @@ interface EditorApi {
   removeById: (id: number) => void
   updateData: (id: number, data: MenuItem) => void
   resetDirtyBaseline: () => void
+  addItem: (
+    data: MenuItem,
+    hint?: { parentId?: number; afterId?: number; asFirstChild?: boolean; childrenAllowed?: boolean },
+  ) => unknown
 }
 function editorExposed(wrapper: VueWrapper): EditorApi {
   const editor = findEditor(wrapper)

@@ -398,6 +398,7 @@ const headerVisible = computed<boolean>(
       || (slots as Record<string, unknown>)['reorder-toggle']
       || reorderToggleVisible.value
       || expandAllVisible.value
+      || reorderMode.value
     ),
 )
 

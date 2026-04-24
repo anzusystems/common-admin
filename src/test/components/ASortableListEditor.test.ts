@@ -156,7 +156,9 @@ describe('ASortableListEditor', () => {
       await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
       await flushPromises()
       const unsaved = wrapper.findAll('.a-sortable-list-editor__row--unsaved')
-      expect(unsaved.length).toBe(2)
+      // Only the row the user actively moved is marked unsaved now —
+      // `movedKeys` no longer flags sibling-index side-effects.
+      expect(unsaved.length).toBe(1)
     })
   })
 
@@ -458,12 +460,55 @@ describe('ASortableListEditor', () => {
     })
   })
 
-  describe('external toolbar mode', () => {
-    it('does not render the internal Apply/Cancel toolbar when toolbarMode=external', async () => {
-      const { wrapper } = mountEditor(items(), { toolbarMode: 'external' })
+  // Reorder toolbar has been moved from the old sticky bottom block into the
+  // card header. The `toolbarMode` / `toolbarBottomOffset` props were removed
+  // entirely, so the "external toolbar" test has no modern equivalent to cover
+  // — the toolbar is always in the header, and opting out requires replacing
+  // the `#reorder-toolbar` slot. The replacement tests below exercise the new
+  // behaviour.
+  describe('reorder toolbar in header', () => {
+    it('renders pending-count + Cancel + Apply inside the header (not a bottom toolbar)', async () => {
+      const { wrapper } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
+      // Make a move so `hasPendingChanges` flips on — Apply is otherwise disabled.
+      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+      const header = wrapper.find('.a-sortable-list-editor__header')
+      expect(header.exists()).toBe(true)
+      const headerButtons = header.findAll('button')
+      const cancel = headerButtons.find((b) => b.text().toLowerCase().includes('cancel'))
+      const apply = headerButtons.find((b) => b.text().toLowerCase().includes('apply'))
+      expect(cancel).toBeTruthy()
+      expect(apply).toBeTruthy()
+      // The status chip lives in the header actions region.
+      expect(
+        header.find('.a-sortable-list-editor__toolbar-status').exists(),
+      ).toBe(true)
+      // There is no separate bottom toolbar any more.
       expect(wrapper.find('.a-sortable-list-editor__toolbar').exists()).toBe(false)
+    })
+
+    it('disables Apply when there are no pending changes', async () => {
+      const { wrapper } = mountEditor()
+      await clickToggle(wrapper)
+      await flushPromises()
+      const apply = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('apply'))!
+      expect(apply.attributes('disabled')).toBeDefined()
+    })
+
+    it('enables Apply once a move marks a row as pending', async () => {
+      const { wrapper } = mountEditor()
+      await clickToggle(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+      const apply = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('apply'))!
+      expect(apply.attributes('disabled')).toBeUndefined()
     })
   })
 
@@ -563,6 +608,123 @@ describe('ASortableListEditor', () => {
       await flushPromises()
       // still rendered in reorder mode
       expect(wrapper.findAll('.my-compact')).toHaveLength(4)
+    })
+  })
+
+  // Drag-drop pointer interactions are fragile to simulate in vitest; we drive
+  // moves via the arrow-button actions + exposed API here and leave actual
+  // pointer-drag coverage to the Playwright CLI skill.
+  describe('movedKeys lifecycle', () => {
+    it('entering reorder mode clears any prior movedKeys', async () => {
+      const { wrapper } = mountEditor()
+      await clickToggle(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+      // One row is unsaved now (the actively moved row).
+      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+
+      // Cancel — leaves reorder mode, clears movedKeys.
+      const cancel = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('cancel'))!
+      await cancel.trigger('click')
+      await flushPromises()
+      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+
+      // Re-enter — no stale movedKeys.
+      await clickToggle(wrapper)
+      await flushPromises()
+      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+    })
+
+    it('only the actively moved row gets marked (no side-effect index shifts)', async () => {
+      const { wrapper } = mountEditor()
+      await clickToggle(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+      // Exactly one moved key even though the swap shifts two flat indices.
+      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+    })
+
+    it('applying reorder KEEPS movedKeys populated (cleared only via resetDirtyBaseline)', async () => {
+      const { wrapper, editor } = mountEditor()
+      await clickToggle(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+
+      const apply = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('apply'))!
+      await apply.trigger('click')
+      await flushPromises()
+
+      // Mode back to view, but the moved row is still flagged — the consumer
+      // is expected to flip it off by calling resetDirtyBaseline once their
+      // server save confirms.
+      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+
+      const exposed = (editor().vm as unknown as {
+        $: { exposed: { resetDirtyBaseline: () => void } }
+      }).$.exposed
+      exposed.resetDirtyBaseline()
+      await nextTick()
+      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+    })
+
+    it('resetDirtyBaseline clears movedKeys', async () => {
+      const { wrapper, editor } = mountEditor()
+      await clickToggle(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-sortable-list-editor__action--down')[0].trigger('click')
+      await flushPromises()
+      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(1)
+
+      const exposed = (editor().vm as unknown as {
+        $: { exposed: { resetDirtyBaseline: () => void } }
+      }).$.exposed
+      exposed.resetDirtyBaseline()
+      await nextTick()
+      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
+    })
+  })
+
+  describe('dirty comparison ignores position field', () => {
+    it('does not flag a row whose only change is position', async () => {
+      interface Item {
+        id: number
+        position: number
+        title: string
+      }
+      const initial: Item[] = [
+        { id: 1, position: 1, title: 'A' },
+        { id: 2, position: 2, title: 'B' },
+      ]
+      const model = ref<Item[]>(initial)
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(ASortableListEditor<Item>, {
+              modelValue: model.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                model.value = v
+              },
+            })
+        },
+      })
+      const wrapper = mount(Host)
+      await nextTick()
+      // Change only `position` on a row — the dirty compare strips it before
+      // stringifying, so no row should light up unsaved.
+      // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+      model.value = [
+        { ...model.value[0], position: 999 },
+        model.value[1],
+      ]
+      await nextTick()
+      expect(wrapper.findAll('.a-sortable-list-editor__row--unsaved').length).toBe(0)
     })
   })
 })

@@ -268,7 +268,13 @@ const compactReorderButton = computed<boolean>(
 
 const headerVisible = computed<boolean>(
   (): boolean =>
-    !!(props.title || slots.header || slots['reorder-toggle'] || reorderToggleVisible.value),
+    !!(
+      props.title
+      || slots.header
+      || slots['reorder-toggle']
+      || reorderToggleVisible.value
+      || reorderMode.value
+    ),
 )
 
 const isInlineEdit = computed(() => !props.chips && !!slots.item)
