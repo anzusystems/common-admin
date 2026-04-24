@@ -251,32 +251,28 @@ const captureDirtyBaseline = () => {
 }
 captureDirtyBaseline()
 
-// Reorder snapshot — captures the tree at reorder-start so we can detect "moved" items
-// (row is at a different index in the flat visible order) and restore on cancel.
+// Reorder snapshot — captures the tree at reorder-start so we can detect
+// "moved" items (parent changed, or sibling index within its parent changed)
+// and restore on cancel. We deliberately DO NOT compare flat index, because
+// that shifts whenever any earlier row moves — flagging unmoved rows as moved.
 const snapshot = ref<NestedTree<TItem> | null>(null)
-const snapshotKeyIndex = computed<Map<ListEditorKey, number>>(() => {
-  const map = new Map<ListEditorKey, number>()
-  if (!snapshot.value) return map
-  const walk = (nodes: NestedTreeNode<TItem>[]) => {
-    for (const n of nodes) {
-      map.set(n.data[props.keyField] as ListEditorKey, map.size)
-      if (n.children && n.children.length) walk(n.children)
-    }
-  }
-  walk(snapshot.value.children as NestedTreeNode<TItem>[])
-  return map
-})
-const snapshotParentIndex = computed<Map<ListEditorKey, ListEditorKey | null>>(() => {
-  const map = new Map<ListEditorKey, ListEditorKey | null>()
+const snapshotPosition = computed<
+  Map<ListEditorKey, { parentKey: ListEditorKey | null; siblingIndex: number }>
+>(() => {
+  const map = new Map<
+    ListEditorKey,
+    { parentKey: ListEditorKey | null; siblingIndex: number }
+  >()
   if (!snapshot.value) return map
   const walk = (
     nodes: NestedTreeNode<TItem>[],
     parentKey: ListEditorKey | null,
   ) => {
-    for (const n of nodes) {
-      map.set(n.data[props.keyField] as ListEditorKey, parentKey)
-      if (n.children && n.children.length) walk(n.children, n.data[props.keyField] as ListEditorKey)
-    }
+    nodes.forEach((n, i) => {
+      const key = n.data[props.keyField] as ListEditorKey
+      map.set(key, { parentKey, siblingIndex: i })
+      if (n.children && n.children.length) walk(n.children, key)
+    })
   }
   walk(snapshot.value.children as NestedTreeNode<TItem>[], null)
   return map
@@ -290,11 +286,11 @@ const isItemDirty = (vi: NestedViewItem<TItem>): boolean => {
 
 const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
   return editor.viewItems.value.map((vi) => {
-    const initialIdx = snapshotKeyIndex.value.get(vi.key)
-    const initialParent = snapshotParentIndex.value.get(vi.key)
+    const initial = snapshotPosition.value.get(vi.key)
     const moved =
       snapshot.value !== null
-      && ((initialIdx !== undefined && initialIdx !== vi.index) || initialParent !== vi.parentKey)
+      && initial !== undefined
+      && (initial.parentKey !== vi.parentKey || initial.siblingIndex !== vi.siblingIndex)
     const dirty = isItemDirty(vi)
     return {
       ...vi,
@@ -1929,10 +1925,14 @@ defineExpose({
 }
 
 /* Source row during drag — stays in place, dimmed, so the user keeps context
-   on where the item came from while it's being moved. */
-.a-nested-list-editor__row--drop-source,
-.a-nested-list-editor__row--chosen {
-  opacity: 0.4;
+   on where the item came from while it's being moved. `!important` beats
+   SortableJS's inline `display: none` it applies to the dragged element
+   under `forceFallback: true` (it wants to avoid a duplicate of the floating
+   clone; we'd rather see the empty slot where the item came from). */
+.a-nested-list-editor__row-wrapper.a-nested-list-editor__row--chosen,
+.a-nested-list-editor__row-wrapper.a-nested-list-editor__row--drop-source {
+  display: flex !important;
+  opacity: 0.4 !important;
 }
 
 /* Hide SortableJS's own placeholder — our overlay (drop-line / drop-box) is
