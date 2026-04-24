@@ -505,14 +505,16 @@ const initSortables = () => {
       onStart: (event) => {
         const draggedEl = event.item as HTMLElement
         const id = parseKey(draggedEl.getAttribute('data-id'))
+        // We only keep sourceKey + targetParentKey on dragState — those drive
+        // the drop-target-parent highlight. No overlay line position tracking.
         if (id !== null) {
           dragState.value = {
             sourceKey: id,
             targetParentKey: null,
             targetDepth: 0,
             lineTop: 0,
-            lineLeft: 16,
-            lineRight: 16,
+            lineLeft: 0,
+            lineRight: 0,
             hookOriginX: 0,
             isValid: true,
           }
@@ -520,7 +522,6 @@ const initSortables = () => {
       },
       onMove: (event) => {
         if (!rowsContainer.value) return true
-        const related = event.related as HTMLElement | null
         const targetGroup = event.to as HTMLElement | null
         const draggedEl = event.dragged as HTMLElement
         if (!targetGroup) return true
@@ -532,12 +533,11 @@ const initSortables = () => {
         const targetParentKey =
           targetParentRaw && targetParentRaw !== '' ? parseKey(targetParentRaw) : null
 
-        // Depth of target parent (or -1 if root). targetDepth = parent depth + 1, root = 0.
         let targetDepth = 0
         if (targetParentKey !== null) targetDepth = computeDepth(targetParentKey) + 1
 
-        // Validation layers: cycle prevention (cannot drop item into its own subtree or onto itself)
-        // + maxDepth (tree depth after the move cannot exceed props.maxDepth).
+        // Validation: cycle prevention + maxDepth — allowing or denying the
+        // drop. SortableJS uses the return value to gate the insertion.
         const draggedNode = editor.findNode(draggedId).node
         const isDescendantOf = (node: NestedTreeNode<TItem>, ancestorId: ListEditorKey): boolean => {
           if (!node.children) return false
@@ -555,35 +555,10 @@ const initSortables = () => {
         const withinMaxDepth = targetDepth + subtreeDepth <= props.maxDepth
         const isValid = !cycle && withinMaxDepth
 
-        // Line position calculation — relative to rowsContainer.
-        const containerRect = rowsContainer.value.getBoundingClientRect()
-        let lineTop: number
-        const lineRight = containerRect.width - 16
-
-        if (related) {
-          const relatedRect = related.getBoundingClientRect()
-          const willAfter = (event as any).willInsertAfter === true
-          lineTop = willAfter
-            ? relatedRect.bottom - containerRect.top
-            : relatedRect.top - containerRect.top
-        } else {
-          const groupRect = targetGroup.getBoundingClientRect()
-          lineTop = groupRect.top - containerRect.top
-        }
-
-        const lineLeft = 16 + targetDepth * 32
-        const hookOriginX =
-          targetDepth === 0 ? lineLeft : 16 + (targetDepth - 1) * 32 + 16
-
-        dragState.value = {
-          sourceKey: draggedId,
-          targetParentKey,
-          targetDepth,
-          lineTop,
-          lineLeft,
-          lineRight,
-          hookOriginX,
-          isValid,
+        if (dragState.value) {
+          dragState.value.targetParentKey = targetParentKey
+          dragState.value.targetDepth = targetDepth
+          dragState.value.isValid = isValid
         }
 
         return isValid
@@ -1283,35 +1258,6 @@ defineExpose({
         class="a-nested-list-editor__rows"
         :class="{ 'a-nested-list-editor__rows--dragging': dragState !== null }"
       >
-        <!-- Drop indicator — rendered while a drag is in progress. Position + depth
-             is tracked reactively via SortableJS onMove. The "L" hook appears when
-             the target depth is > 0 (item is dropping as a child). -->
-        <div
-          v-if="dragState !== null"
-          class="a-nested-list-editor__drop-indicator"
-          :class="{
-            'a-nested-list-editor__drop-indicator--invalid': !dragState.isValid,
-            'a-nested-list-editor__drop-indicator--child': dragState.targetDepth > 0,
-          }"
-          :style="{
-            top: `${dragState.lineTop}px`,
-            '--di-left': `${dragState.lineLeft}px`,
-            '--di-right': `${dragState.lineRight}px`,
-            '--di-hook-x': `${dragState.hookOriginX}px`,
-          }"
-        >
-          <div class="a-nested-list-editor__drop-indicator-line" />
-          <div
-            v-if="dragState.targetDepth > 0"
-            class="a-nested-list-editor__drop-indicator-hook"
-          />
-          <span
-            v-if="!dragState.isValid"
-            class="a-nested-list-editor__drop-indicator-label"
-          >
-            {{ t('common.sortable.error.maxDeepExceed') }}
-          </span>
-        </div>
         <div
           :class="[GROUP_CLASS, 'a-nested-list-editor__group--root']"
           data-parent-id=""
@@ -1891,37 +1837,55 @@ defineExpose({
   cursor: grabbing;
 }
 
-/* Source row during drag — stays in place but dimmed so the user sees where it
-   came from. The visible drop preview is the overlay "insertion line", not the
-   built-in SortableJS ghost (which we hide below). */
+/* Source row during drag — stays in place, dimmed, so the user sees the
+   origin slot while moving the clone. */
 .a-nested-list-editor__row--drop-source,
 .a-nested-list-editor__row--chosen {
-  opacity: 0.35;
-  filter: grayscale(0.2);
+  opacity: 0.4;
 }
 
-/* Hide the SortableJS ghost placeholder — we render our own overlay indicator
-   with richer depth / parent-highlight semantics. The placeholder still exists
-   in the DOM for SortableJS's internal calculations; we just make it invisible. */
+/* Drop-target placeholder that SortableJS injects at the landing position.
+   Render it as a primary-tinted strip so the user sees where the item will
+   land, without keeping any of the dragged row's own content. */
 .a-nested-list-editor__row--ghost {
-  visibility: hidden;
-  height: 0 !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  overflow: hidden;
+  background: var(--ansle-primary-container);
+  outline: 1px dashed var(--ansle-primary);
+  outline-offset: -1px;
 }
 
-/* The floating preview (clone that follows the cursor) — tonal M3 card. */
+.a-nested-list-editor__row--ghost .a-nested-list-editor__row {
+  background: transparent;
+  border-bottom: 0;
+}
+
+/* Floating clone that follows the cursor — slim row-shaped card, no rotation,
+   no subtree, no action column. Just enough to say "this is what I'm moving". */
 .a-nested-list-editor__row--drag {
   box-shadow: var(--ansle-elev-3);
   background: var(--ansle-surface);
-  border: 1px solid var(--ansle-primary);
+  border: 1px solid var(--ansle-border);
   border-radius: var(--ansle-radius);
-  transform: rotate(-1.5deg);
   opacity: 0.96;
   pointer-events: none;
-  max-width: 360px;
+  max-width: 420px;
+}
+
+/* Strip the dragged clone down to the bare header — hide rendered children
+   subtree, status badge and action column. */
+.a-nested-list-editor__row--drag .a-nested-list-editor__children,
+.a-nested-list-editor__row--drag .a-nested-list-editor__row-body,
+.a-nested-list-editor__row--drag .a-nested-list-editor__actions,
+.a-nested-list-editor__row--drag .a-nested-list-editor__status {
+  display: none;
+}
+
+/* In the drag clone, `.row-main` shouldn't stretch — otherwise the title grows
+   to fill leftover space and pushes the "+N" chip to the far edge. Collapse
+   it (and its nested title span / consumer slot content) to natural content
+   width so the chip sits right next to the title text. */
+.a-nested-list-editor__row--drag .a-nested-list-editor__row-main,
+.a-nested-list-editor__row--drag .a-nested-list-editor__row-main * {
+  flex: 0 0 auto;
 }
 
 /* Target parent highlight during drag — primary border-left + tonal bg, so the
@@ -2103,90 +2067,31 @@ defineExpose({
   transform: translate(0, 1px) rotate(90deg);
 }
 
-/* Drop indicator overlay — an absolutely positioned horizontal primary line with
-   round endpoints, plus an optional "L" hook when dropping into a nested parent.
-   Position + depth come from CSS vars bound in the template from `dragState`. */
-.a-nested-list-editor__drop-indicator {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 0;
-  pointer-events: none;
-  z-index: 5;
-}
-
-.a-nested-list-editor__drop-indicator-line {
-  position: absolute;
-  left: var(--di-left, 16px);
-  width: calc(var(--di-right, 100%) - var(--di-left, 16px));
-  top: -2px;
-  height: 4px;
-  background: var(--ansle-primary);
-  border-radius: 999px;
-  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary, 63, 106, 216), 0.18);
-}
-
-.a-nested-list-editor__drop-indicator-line::before,
-.a-nested-list-editor__drop-indicator-line::after {
-  content: '';
-  position: absolute;
-  top: -3px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--ansle-primary);
-  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary, 63, 106, 216), 0.18);
-}
-
-.a-nested-list-editor__drop-indicator-line::before { left: -5px; }
-.a-nested-list-editor__drop-indicator-line::after { right: -5px; }
-
-/* "L" corner hook — shown when dropping a row deeper than root. Origin is at the
-   parent's column (chevron X), curving right and down into the insertion line's
-   start point. Visual signal: "this item becomes a child, not a sibling". */
-.a-nested-list-editor__drop-indicator-hook {
-  position: absolute;
-  left: var(--di-hook-x, 16px);
-  width: calc(var(--di-left, 16px) - var(--di-hook-x, 16px) + 2px);
-  top: -32px;
-  height: 34px;
-  border-left: 2.5px solid var(--ansle-primary);
-  border-bottom: 2.5px solid var(--ansle-primary);
-  border-bottom-left-radius: 10px;
-  box-shadow: -2px 2px 0 rgba(var(--v-theme-primary, 63, 106, 216), 0.18);
-}
-
-.a-nested-list-editor__drop-indicator-label {
-  position: absolute;
-  left: var(--di-left, 16px);
-  top: 6px;
-  padding: 2px 10px;
-  background: var(--ansle-error-fg);
-  color: #fff;
-  border-radius: var(--ansle-radius-pill);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-/* Invalid drop — flip primary colour to error red across all overlay pieces. */
-.a-nested-list-editor__drop-indicator--invalid .a-nested-list-editor__drop-indicator-line,
-.a-nested-list-editor__drop-indicator--invalid .a-nested-list-editor__drop-indicator-line::before,
-.a-nested-list-editor__drop-indicator--invalid .a-nested-list-editor__drop-indicator-line::after {
-  background: var(--ansle-error-fg);
-  box-shadow: 0 0 0 3px rgba(var(--v-theme-error, 217, 37, 80), 0.18);
-}
-
-.a-nested-list-editor__drop-indicator--invalid .a-nested-list-editor__drop-indicator-hook {
-  border-color: var(--ansle-error-fg);
-  box-shadow: -2px 2px 0 rgba(var(--v-theme-error, 217, 37, 80), 0.18);
-}
-
-/* While dragging, dim everything that isn't the target/source path, keeping
-   focus on the drop scope the user is currently aiming for. */
+/* While dragging, dim the add-button so focus stays on the drag target. */
 .a-nested-list-editor__rows--dragging .a-nested-list-editor__row-add {
   opacity: 0.4;
+}
+
+/* "+N" children indicator — rendered on every row with children, but hidden
+   in the normal DOM. Only becomes visible inside the SortableJS drag clone
+   (which carries `.__row--drag`) so the user sees that the whole branch
+   will follow the item being moved. */
+.a-nested-list-editor__drag-count {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font: 500 11px/1 var(--v-font-body, inherit);
+  letter-spacing: 0.02em;
+  color: var(--ansle-primary);
+  background: var(--ansle-primary-container);
+  border-radius: var(--ansle-radius-pill);
+  flex-shrink: 0;
+}
+
+.a-nested-list-editor__row--drag .a-nested-list-editor__drag-count {
+  display: inline-flex;
 }
 
 .a-nested-list-editor__row-add {

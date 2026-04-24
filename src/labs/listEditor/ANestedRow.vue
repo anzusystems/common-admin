@@ -131,6 +131,21 @@ const directChildren = (): any[] =>
               {{ context.resolveCompactText(vi.raw, vi.key) }}
             </span>
           </slot>
+          <!-- Visible only inside the SortableJS drag clone — signals that the
+               item being moved carries a subtree so the user realises the whole
+               branch will follow. Sits right after the title. Hidden in the
+               normal DOM via CSS. -->
+          <span
+            v-if="vi.hasChildren"
+            class="a-nested-list-editor__drag-count"
+            aria-hidden="true"
+          >
+            <VIcon
+              icon="mdi-file-tree"
+              size="14"
+            />
+            +{{ vi.childrenCount }}
+          </span>
           <span
             v-if="vi.unsaved"
             class="a-nested-list-editor__unsaved-label"
