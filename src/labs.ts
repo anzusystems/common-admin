@@ -42,6 +42,30 @@ import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
 import type { AxiosClientFn } from '@/labs/api/client'
 import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
+import AListEditor from '@/labs/listEditor/AListEditor.vue'
+import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
+import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
+import {
+  useListEditor,
+  type ListEditorApi,
+} from '@/labs/listEditor/composables/useListEditor'
+import {
+  useNestedListEditor,
+  type NestedListEditorApi,
+  type NestedViewItem,
+} from '@/labs/listEditor/composables/useNestedListEditor'
+import type {
+  ListEditorKey,
+  ListEditorValidationState,
+  ListViewItem,
+  NestedPositionHint,
+  NestedTree,
+  NestedTreeNode,
+  PositionHint,
+  SortableNested,
+  SortableNestedItem,
+  UseListEditorOptions,
+} from '@/labs/listEditor/types/listEditorTypes'
 import { useUserAdminConfigApi } from '@/labs/filters/userAdminConfig'
 import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactory'
 import {
@@ -96,6 +120,24 @@ export {
   createDatatableColumnsConfig,
   useSubjectSelect,
   ASubjectSelect,
+  AListEditor,
+  ASortableListEditor,
+  ANestedSortableListEditor,
+  useListEditor,
+  type ListEditorApi,
+  useNestedListEditor,
+  type NestedListEditorApi,
+  type NestedViewItem,
+  type ListEditorKey,
+  type ListEditorValidationState,
+  type ListViewItem,
+  type NestedPositionHint,
+  type NestedTree,
+  type NestedTreeNode,
+  type PositionHint,
+  type SortableNested,
+  type SortableNestedItem,
+  type UseListEditorOptions,
   useJobApi,
   type AxiosClientFn,
   useUserAdminConfigApi,

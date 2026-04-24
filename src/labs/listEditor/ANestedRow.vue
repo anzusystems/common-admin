@@ -1,0 +1,523 @@
+<script setup lang="ts" generic="TItem extends Record<string, any>">
+import { useI18n } from 'vue-i18n'
+import ANestedRowSelf from './ANestedRow.vue'
+import type {
+  ListEditorKey,
+  ListEditorValidationState,
+} from '@/labs/listEditor/types/listEditorTypes'
+
+// Recursive nested row. Renders a single row plus — when expanded — a group of
+// child rows through self-reference, so trees of arbitrary depth share a single
+// template. All presentation flags + event callbacks are passed down as the
+// `context` and `callbacks` prop bundles (avoids 20+ individual prop-drills).
+//
+// Types intentionally use `any` on the interior: the strong typing lives on the
+// public `ANestedSortableListEditor` wrapper, where generics actually matter.
+
+export type Props = {
+  vi: any
+  viewItems: any[]
+  dragState: any
+  context: any
+  callbacks: any
+}
+const props = defineProps<Props>()
+
+// Self-reference cast to any breaks the TypeScript circular type inference that
+// Vue's template compiler triggers when a `<script setup generic>` component
+// imports itself for recursion. The runtime behaviour is unaffected.
+
+const ANestedRow = ANestedRowSelf as any
+
+const { t } = useI18n()
+
+const GROUP_CLASS = 'a-nested-list-editor__group'
+const HANDLE_CLASS = 'a-nested-list-editor__drag-handle'
+
+const anchorName = (key: ListEditorKey): string =>
+  `--row-${String(key).replace(/\W/g, '_')}`
+
+const resolveValidation = (raw: TItem): ListEditorValidationState => {
+  const v = raw.validationState
+  if (v === 'valid' || v === 'invalid' || v === 'warning') return v
+  return null
+}
+
+const buildSlotProps = () => props.context.buildSlotProps(props.vi)
+
+const directChildren = (): any[] =>
+  props.viewItems.filter((v) => v.parentKey === props.vi.key)
+</script>
+
+<template>
+  <div
+    class="a-nested-list-editor__row-wrapper"
+    :data-id="String(vi.key)"
+  >
+    <div
+      :class="[
+        'a-nested-list-editor__row',
+        vi.depth > 0 ? 'a-nested-list-editor__row--child' : null,
+        {
+          'a-nested-list-editor__row--editing': vi.editing,
+          'a-nested-list-editor__row--expanded': vi.expanded,
+          'a-nested-list-editor__row--unsaved': vi.unsaved,
+          'a-nested-list-editor__row--reorder': context.reorderMode,
+          'a-nested-list-editor__row--clickable': context.isRowClickable(vi),
+          'a-nested-list-editor__row--drop-target-parent':
+            dragState !== null && dragState.targetParentKey === vi.key,
+          'a-nested-list-editor__row--drop-source':
+            dragState !== null && dragState.sourceKey === vi.key,
+          [`a-nested-list-editor__row--validation-${resolveValidation(vi.raw)}`]:
+            resolveValidation(vi.raw) !== null,
+        },
+      ]"
+      :style="{
+        '--nested-depth': vi.depth,
+        'anchor-name': anchorName(vi.key),
+        '--parent-anchor': vi.parentKey !== null ? anchorName(vi.parentKey) : 'none',
+      }"
+    >
+      <slot
+        name="before-item"
+        v-bind="buildSlotProps()"
+      />
+
+      <div
+        class="a-nested-list-editor__row-header"
+        @click="callbacks.onRowClick(vi)"
+      >
+        <VIcon
+          v-if="context.dragEnabled"
+          icon="mdi-drag"
+          size="20"
+          :class="HANDLE_CLASS"
+        />
+
+        <!-- Expand toggle — a small triangular caret rendered uniformly for both
+             root and nested rows. For leaf rows (no children) the toggle is
+             hidden via `visibility: hidden` so the column stays aligned. -->
+        <button
+          v-if="context.showExpandToggle && vi.childrenAllowed"
+          type="button"
+          :class="[
+            'a-nested-list-editor__tree-toggle',
+            {
+              'a-nested-list-editor__tree-toggle--empty': !vi.hasChildren,
+              'a-nested-list-editor__tree-toggle--open': vi.childrenExpanded,
+            },
+          ]"
+          :aria-label="
+            vi.childrenExpanded ? t('common.sortable.close') : t('common.sortable.edit')
+          "
+          @click.stop="vi.hasChildren && callbacks.onChevronClick(vi)"
+        >
+          <span class="a-nested-list-editor__tree-toggle-caret" />
+        </button>
+        <!-- Spacer for leaf rows that have no caret, so titles align with
+             parents having one. -->
+        <span
+          v-else-if="context.showExpandToggle"
+          class="a-nested-list-editor__tree-toggle a-nested-list-editor__tree-toggle--spacer"
+          aria-hidden="true"
+        />
+
+        <div class="a-nested-list-editor__row-main">
+          <slot
+            name="item-compact"
+            v-bind="buildSlotProps()"
+          >
+            <span class="a-nested-list-editor__title">
+              {{ context.resolveCompactText(vi.raw, vi.key) }}
+            </span>
+          </slot>
+          <span
+            v-if="vi.unsaved"
+            class="a-nested-list-editor__unsaved-label"
+          >
+            <VIcon
+              icon="mdi-circle-medium"
+              size="12"
+            />
+            {{ t('common.sortable.unsaved') }}
+          </span>
+        </div>
+
+        <div
+          v-if="!context.reorderMode"
+          class="a-nested-list-editor__status"
+        >
+          <slot
+            name="item-status"
+            v-bind="buildSlotProps()"
+          >
+            <span
+              v-if="
+                context.statusField
+                  && vi.raw[context.statusField] != null
+                  && vi.raw[context.statusField] !== ''
+              "
+              class="a-nested-list-editor__status-badge"
+            >
+              {{ vi.raw[context.statusField] }}
+            </span>
+          </slot>
+        </div>
+
+        <div class="a-nested-list-editor__actions">
+          <slot
+            name="item-actions"
+            v-bind="buildSlotProps()"
+          >
+            <template v-if="context.reorderMode">
+              <VBtn
+                icon
+                size="small"
+                variant="text"
+                density="comfortable"
+                :disabled="vi.firstInParent"
+                :class="[
+                  'a-nested-list-editor__action',
+                  'a-nested-list-editor__action--up',
+                ]"
+                @click.stop="callbacks.moveUp(vi.key)"
+              >
+                <VIcon
+                  icon="mdi-arrow-up"
+                  size="18"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                  :text="t('common.sortable.moveUp')"
+                />
+              </VBtn>
+              <VBtn
+                icon
+                size="small"
+                variant="text"
+                density="comfortable"
+                :disabled="vi.lastInParent"
+                :class="[
+                  'a-nested-list-editor__action',
+                  'a-nested-list-editor__action--down',
+                ]"
+                @click.stop="callbacks.moveDown(vi.key)"
+              >
+                <VIcon
+                  icon="mdi-arrow-down"
+                  size="18"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                  :text="t('common.sortable.moveDown')"
+                />
+              </VBtn>
+              <VBtn
+                icon
+                size="small"
+                variant="text"
+                density="comfortable"
+                :active="false"
+                :class="[
+                  'a-nested-list-editor__action',
+                  'a-nested-list-editor__action--menu',
+                ]"
+              >
+                <VIcon
+                  icon="mdi-dots-vertical"
+                  size="18"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                  :text="t('common.sortable.more')"
+                />
+                <VMenu activator="parent">
+                  <VList density="compact">
+                    <VListItem
+                      :disabled="vi.firstInParent"
+                      @click.stop="callbacks.moveTop(vi.key)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-arrow-collapse-up" />
+                      </template>
+                      <VListItemTitle>{{ t('common.sortable.moveToTop') }}</VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      :disabled="vi.lastInParent"
+                      @click.stop="callbacks.moveBottom(vi.key)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-arrow-collapse-down" />
+                      </template>
+                      <VListItemTitle>{{ t('common.sortable.moveToBottom') }}</VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      :disabled="!vi.canIndent"
+                      @click.stop="callbacks.indent(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-format-indent-increase" />
+                      </template>
+                      <VListItemTitle>{{ t('common.sortable.indent') }}</VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      :disabled="!vi.canOutdent"
+                      @click.stop="callbacks.outdent(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-format-indent-decrease" />
+                      </template>
+                      <VListItemTitle>{{ t('common.sortable.outdent') }}</VListItemTitle>
+                    </VListItem>
+                  </VList>
+                </VMenu>
+              </VBtn>
+            </template>
+            <template v-else>
+              <VBtn
+                v-if="context.showEditButton && context.canInteract"
+                icon
+                size="small"
+                variant="tonal"
+                color="primary"
+                density="comfortable"
+                :class="[
+                  'mx-1',
+                  'a-nested-list-editor__action',
+                  'a-nested-list-editor__action--edit',
+                ]"
+                @click.stop="callbacks.onEditClick(vi)"
+              >
+                <VIcon
+                  icon="mdi-pencil-outline"
+                  size="18"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                  :text="t('common.sortable.edit')"
+                />
+              </VBtn>
+              <VBtn
+                v-if="context.showDeleteButton && context.canInteract"
+                icon
+                size="small"
+                variant="text"
+                density="comfortable"
+                :class="[
+                  'mx-1',
+                  'a-nested-list-editor__action',
+                  'a-nested-list-editor__action--delete',
+                ]"
+                @click.stop="callbacks.onDeleteClick(vi)"
+              >
+                <VIcon
+                  icon="mdi-trash-can-outline"
+                  size="18"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                  :text="t('common.sortable.delete')"
+                />
+              </VBtn>
+              <VBtn
+                v-if="
+                  context.canInteract
+                    && ((context.showAddChildButton && vi.canAddChild)
+                      || context.showAddAfterAction)
+                "
+                icon
+                size="small"
+                variant="text"
+                density="comfortable"
+                :active="false"
+                :class="[
+                  'mx-1',
+                  'a-nested-list-editor__action',
+                  'a-nested-list-editor__action--menu',
+                ]"
+              >
+                <VIcon
+                  icon="mdi-dots-vertical"
+                  size="18"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                  :text="t('common.sortable.more')"
+                />
+                <VMenu activator="parent">
+                  <VList density="compact">
+                    <VListItem
+                      v-if="context.showAddChildButton && vi.canAddChild"
+                      @click.stop="callbacks.onAddChildClick(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-plus-box-outline" />
+                      </template>
+                      <VListItemTitle>
+                        {{ t('common.sortable.addChild') }}
+                      </VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      v-if="context.showAddAfterAction"
+                      @click.stop="callbacks.onAddAfterClick(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-plus" />
+                      </template>
+                      <VListItemTitle>
+                        {{ t('common.sortable.addAfter') }}
+                      </VListItemTitle>
+                    </VListItem>
+                  </VList>
+                </VMenu>
+              </VBtn>
+            </template>
+          </slot>
+        </div>
+      </div>
+
+      <!-- Inline edit body — status badge intentionally NOT rendered here,
+           the compact header's status is enough; stacking it in the form body
+           was visually noisy. -->
+      <template v-if="vi.editing && !context.reorderMode && $slots.item">
+        <div class="a-nested-list-editor__row-body">
+          <div class="a-nested-list-editor__form">
+            <slot
+              name="item"
+              v-bind="buildSlotProps()"
+            />
+          </div>
+        </div>
+        <slot
+          name="item-footer"
+          v-bind="buildSlotProps()"
+        >
+          <div
+            v-if="context.showInlineSaveFooter"
+            class="a-nested-list-editor__row-footer"
+          >
+            <div class="a-nested-list-editor__row-footer-spacer" />
+            <VBtn
+              variant="text"
+              :disabled="vi.loading"
+              @click.stop="callbacks.onCancelClick(vi)"
+            >
+              {{ t('common.button.cancel') }}
+            </VBtn>
+            <VBtn
+              color="primary"
+              variant="flat"
+              prepend-icon="mdi-check"
+              :disabled="vi.loading"
+              @click.stop="callbacks.onSaveClick(vi)"
+            >
+              {{ t('common.button.save') }}
+            </VBtn>
+          </div>
+        </slot>
+      </template>
+
+      <div
+        v-else-if="vi.expanded && !context.reorderMode && $slots['item-readonly']"
+        class="a-nested-list-editor__row-body"
+      >
+        <div class="a-nested-list-editor__form">
+          <slot
+            name="item-readonly"
+            v-bind="buildSlotProps()"
+          />
+        </div>
+      </div>
+
+      <slot
+        name="after-item"
+        v-bind="buildSlotProps()"
+      />
+    </div>
+
+    <!-- Recursive children — any depth level. The `::before` on this wrapper
+         renders the single continuous vertical tree line at the parent's
+         chevron column (see CSS). One line per group = no per-row gaps. -->
+    <div
+      v-if="vi.hasChildren && vi.childrenExpanded"
+      :class="[
+        'a-nested-list-editor__children',
+        {
+          'a-nested-list-editor__children--drop-target':
+            dragState !== null && dragState.targetParentKey === vi.key,
+        },
+      ]"
+      :style="{ '--parent-depth': vi.depth }"
+    >
+      <div
+        :class="[GROUP_CLASS]"
+        :data-parent-id="String(vi.key)"
+      >
+        <ANestedRow
+          v-for="child in directChildren()"
+          :key="String(child.key)"
+          :vi="child"
+          :view-items="viewItems"
+          :drag-state="dragState"
+          :context="context"
+          :callbacks="callbacks"
+        >
+          <template #item="slotScope">
+            <slot
+              name="item"
+              v-bind="slotScope"
+            />
+          </template>
+          <template #item-compact="slotScope">
+            <slot
+              name="item-compact"
+              v-bind="slotScope"
+            />
+          </template>
+          <template #item-readonly="slotScope">
+            <slot
+              name="item-readonly"
+              v-bind="slotScope"
+            />
+          </template>
+          <template #item-status="slotScope">
+            <slot
+              name="item-status"
+              v-bind="slotScope"
+            />
+          </template>
+          <template #item-footer="slotScope">
+            <slot
+              name="item-footer"
+              v-bind="slotScope"
+            />
+          </template>
+          <template #item-actions="slotScope">
+            <slot
+              name="item-actions"
+              v-bind="slotScope"
+            />
+          </template>
+          <template #before-item="slotScope">
+            <slot
+              name="before-item"
+              v-bind="slotScope"
+            />
+          </template>
+          <template #after-item="slotScope">
+            <slot
+              name="after-item"
+              v-bind="slotScope"
+            />
+          </template>
+        </ANestedRow>
+      </div>
+    </div>
+  </div>
+</template>

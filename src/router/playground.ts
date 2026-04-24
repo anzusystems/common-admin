@@ -18,6 +18,9 @@ import ApiFetchListBatchView from '@/playground/apiFetchListBatchView/ApiFetchLi
 import ImageView from '@/playground/imageView/ImageView.vue'
 import FileView from '@/playground/fileView/FileView.vue'
 import SortableView from '@/playground/sortableView/SortableView.vue'
+import ListEditorView from '@/playground/listEditorView/ListEditorView.vue'
+import SortableListEditorView from '@/playground/sortableListEditorView/SortableListEditorView.vue'
+import NestedSortableListEditorView from '@/playground/nestedSortableListEditorView/NestedSortableListEditorView.vue'
 import {
   initLanguageMessagesLoaded,
   initLoadLanguageMessages,
@@ -137,6 +140,21 @@ const router = createRouter({
       path: '/view/sortable',
       name: 'view-sortable',
       component: SortableView,
+    },
+    {
+      path: '/view/list-editor',
+      name: 'view-list-editor',
+      component: ListEditorView,
+    },
+    {
+      path: '/view/sortable-list-editor',
+      name: 'view-sortable-list-editor',
+      component: SortableListEditorView,
+    },
+    {
+      path: '/view/nested-sortable-list-editor',
+      name: 'view-nested-sortable-list-editor',
+      component: NestedSortableListEditorView,
     },
     {
       path: '/view/alert',
