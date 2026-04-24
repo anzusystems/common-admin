@@ -173,7 +173,6 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         update-position
         :position-multiplier="10"
         :on-delete="onDeleteAsync"
-        :on-item-save="onItemSave"
         @add="onAdd"
         @edit="onEdit"
         @deleted="onDelete"

@@ -288,16 +288,19 @@ describe('ASortableListEditor', () => {
       return mount(Host)
     }
 
-    it('keeps the row title visible, shows close + delete, hides edit', async () => {
+    it('keeps the row title visible, pins edit + delete open in edit mode', async () => {
       const wrapper = mountWithItemSlot()
       await wrapper.find('.a-sortable-list-editor__row-header').trigger('click')
       await nextTick()
       const row = wrapper.find('.a-sortable-list-editor__row--editing')
       expect(row.exists()).toBe(true)
       expect(row.find('.a-sortable-list-editor__title').text()).toBe('First')
-      expect(row.find('.a-sortable-list-editor__action--close').exists()).toBe(true)
+      // Editing no longer swaps the right-column affordances — the normal
+      // view-mode set (edit + delete) stays visible; edit acts as a toggle to
+      // close the inline form. No separate close button.
+      expect(row.find('.a-sortable-list-editor__action--edit').exists()).toBe(true)
       expect(row.find('.a-sortable-list-editor__action--delete').exists()).toBe(true)
-      expect(row.find('.a-sortable-list-editor__action--edit').exists()).toBe(false)
+      expect(row.find('.a-sortable-list-editor__action--close').exists()).toBe(false)
     })
 
     it('renders row body without a footer by default (onItemSave not provided)', async () => {

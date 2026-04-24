@@ -339,26 +339,30 @@ describe('AListEditor', () => {
       expect(title.text()).toBe('First')
     })
 
-    it('shows a close (X) button + delete icon in the editing row header, no edit', async () => {
+    it('keeps the same edit / delete action set in the editing row header', async () => {
       const { wrapper } = mountWithItemSlot()
       await wrapper.find('.a-list-editor__row-header').trigger('click')
       await nextTick()
 
+      // Editing now pins the normal view-mode actions (edit + delete) open —
+      // there is no separate close button in the header anymore.
       const editingRow = wrapper.find('.a-list-editor__row--editing')
-      expect(editingRow.find('.a-list-editor__action--close').exists()).toBe(true)
+      expect(editingRow.find('.a-list-editor__action--edit').exists()).toBe(true)
       expect(editingRow.find('.a-list-editor__action--delete').exists()).toBe(true)
-      expect(editingRow.find('.a-list-editor__action--edit').exists()).toBe(false)
+      expect(editingRow.find('.a-list-editor__action--close').exists()).toBe(false)
     })
 
-    it('clicking the close button exits editing without saving', async () => {
+    it('clicking the edit button again exits editing without saving', async () => {
       const save = vi.fn()
       const { wrapper } = mountWithItemSlot({ onItemSave: save })
       await wrapper.find('.a-list-editor__row-header').trigger('click')
       await nextTick()
 
-      const closeBtn = wrapper.find('.a-list-editor__action--close')
-      expect(closeBtn.exists()).toBe(true)
-      await closeBtn.trigger('click')
+      // Toggle close: second click on the pencil (now always visible in editing
+      // state) should behave like the old close button.
+      const editBtn = wrapper.find('.a-list-editor__row--editing .a-list-editor__action--edit')
+      expect(editBtn.exists()).toBe(true)
+      await editBtn.trigger('click')
       await nextTick()
 
       expect(save).not.toHaveBeenCalled()

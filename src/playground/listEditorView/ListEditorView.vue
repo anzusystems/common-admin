@@ -190,7 +190,6 @@ const onDeleteAsync = async (item: FaqItem) => {
       <AListEditor
         v-model="inlineItems"
         title="Časté otázky (FAQ)"
-        :on-item-save="onInlineItemSave"
         :on-delete="onDeleteAsync"
         @add="onInlineAdd"
       >

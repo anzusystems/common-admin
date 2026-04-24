@@ -341,7 +341,11 @@ const deleteConfirmTextResolved = computed(
 )
 
 const reorderToggleVisible = computed<boolean>(
-  (): boolean => props.showReorderToggle && !reorderMode.value && totalItemCount.value > 0,
+  (): boolean =>
+    !props.readonly
+    && props.showReorderToggle
+    && !reorderMode.value
+    && totalItemCount.value > 0,
 )
 
 const compactReorderButton = computed<boolean>(
@@ -1523,7 +1527,7 @@ defineExpose({
   --ansle-elev-3: 0 1px 3px rgb(0 0 0 / 16%), 0 4px 8px 3px rgb(0 0 0 / 10%);
 
   // Compact density — baked in, aligned with the reference design.
-  --ansle-row-min-height: 32px;
+  --ansle-row-min-height: 48px;
   --ansle-row-pad-y: 6px;
   --ansle-row-font: 13px;
   --ansle-indent: 24px;
@@ -1696,6 +1700,23 @@ defineExpose({
   z-index: 2;
 }
 
+/* Unsaved takes visual precedence over editing — swap the header's blue tint
+   and title color for warning so the whole row reads as "dirty, not active". */
+.a-nested-list-editor__row--unsaved .a-nested-list-editor__row-header {
+  background: var(--ansle-warning-container);
+}
+
+.a-nested-list-editor .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--editing
+  .a-nested-list-editor__row-main,
+.a-nested-list-editor .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--expanded
+  .a-nested-list-editor__row-main,
+.a-nested-list-editor .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--editing
+  .a-nested-list-editor__row-main *,
+.a-nested-list-editor .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--expanded
+  .a-nested-list-editor__row-main * {
+  color: var(--ansle-warning);
+}
+
 .a-nested-list-editor__row--reorder .a-nested-list-editor__row-header {
   padding-left: calc(12px + var(--nested-depth, 0) * var(--ansle-indent));
   padding-right: 8px;
@@ -1838,14 +1859,6 @@ defineExpose({
   opacity: 1;
 }
 
-/* Reorder mode keeps up / down / overflow visible always — they're the primary
-   keyboard-equivalent controls in that mode. */
-.a-nested-list-editor__row--reorder .a-nested-list-editor__action--up,
-.a-nested-list-editor__row--reorder .a-nested-list-editor__action--down,
-.a-nested-list-editor__row--reorder .a-nested-list-editor__action--menu {
-  opacity: 1;
-}
-
 /* Active rows keep all affordances (edit / delete / menu) pinned open — same
    visual weight as a row on hover, so the right-side column looks identical to
    an inactive row, just always-on. */
@@ -1964,9 +1977,13 @@ defineExpose({
    on the same screen. */
 @container ansle-shell (min-width: 769px) {
   /* Row text column = 16 (pad) + depth*24 (indent) + 24 (caret) + 10 (gap) = 50 + depth*24.
-     Inline form aligns with that column so the first input sits under the title. */
+     Inline form aligns with that column so the first input sits under the title.
+     Body and footer both get the primary left rail + soft gradient so the whole
+     editing area reads as one continuous surface. */
   .a-nested-list-editor__row--editing .a-nested-list-editor__row-body,
-  .a-nested-list-editor__row--expanded .a-nested-list-editor__row-body {
+  .a-nested-list-editor__row--expanded .a-nested-list-editor__row-body,
+  .a-nested-list-editor__row--editing .a-nested-list-editor__row-footer,
+  .a-nested-list-editor__row--expanded .a-nested-list-editor__row-footer {
     padding-left: calc(50px + var(--nested-depth, 0) * var(--ansle-indent));
     padding-right: 16px;
     border-left: 2px solid rgba(var(--v-theme-primary, 63, 106, 216), 0.28);
@@ -1978,9 +1995,18 @@ defineExpose({
     );
   }
 
-  .a-nested-list-editor__row--editing .a-nested-list-editor__row-footer,
-  .a-nested-list-editor__row--expanded .a-nested-list-editor__row-footer {
-    padding-left: calc(50px + var(--nested-depth, 0) * var(--ansle-indent));
+  /* Unsaved + editing: swap the primary rail + gradient for warning. */
+  .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--editing .a-nested-list-editor__row-body,
+  .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--expanded .a-nested-list-editor__row-body,
+  .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--editing .a-nested-list-editor__row-footer,
+  .a-nested-list-editor__row--unsaved.a-nested-list-editor__row--expanded .a-nested-list-editor__row-footer {
+    border-left-color: rgb(251 140 0 / 35%);
+    background: linear-gradient(
+      to right,
+      rgb(251 140 0 / 7%),
+      rgb(251 140 0 / 2%) 50%,
+      transparent 85%
+    );
   }
 }
 
@@ -1990,7 +2016,7 @@ defineExpose({
 @container ansle-shell (max-width: 768px) {
   .a-nested-list-editor {
     --ansle-indent: 18px;
-    --ansle-row-min-height: 44px;
+    --ansle-row-min-height: 48px;
     --ansle-row-pad-y: 10px;
   }
 

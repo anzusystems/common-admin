@@ -249,6 +249,12 @@ const onRowAddAfterClick = (vi: ListViewItem<TItem>) => {
 
 const onEditClick = (vi: ListViewItem<TItem>) => {
   if (!canInteract.value) return
+  // Toggle: clicking edit while already editing closes the form, matching the
+  // row-header click behaviour.
+  if (editingKeys.value.has(vi.key)) {
+    onCloseClick(vi)
+    return
+  }
   if (isInlineEdit.value) {
     if (!editingSnapshots.value.has(vi.key)) {
       editingSnapshots.value.set(vi.key, cloneDeep(vi.raw) as TItem)
@@ -537,7 +543,7 @@ defineExpose({
             </div>
 
             <div
-              v-if="!vi.editing && !vi.expanded"
+              v-if="!chips"
               class="a-list-editor__status"
             >
               <slot
@@ -573,55 +579,6 @@ defineExpose({
                     size="14"
                   />
                 </VBtn>
-                <template v-else-if="vi.editing || vi.expanded">
-                  <VBtn
-                    v-if="vi.editing && showDeleteButton && canInteract"
-                    icon
-                    size="small"
-                    variant="text"
-                    density="comfortable"
-                    class="a-list-editor__action a-list-editor__action--delete"
-                    @click.stop="onDeleteClick(vi)"
-                  >
-                    <VIcon
-                      icon="mdi-trash-can-outline"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.delete')"
-                    />
-                  </VBtn>
-                  <VBtn
-                    v-if="effectiveCloseVariant === 'icon'"
-                    icon="mdi-close"
-                    size="small"
-                    variant="text"
-                    :active="false"
-                    class="a-list-editor__action a-list-editor__action--close"
-                    @click.stop="onCloseClick(vi)"
-                  >
-                    <VIcon icon="mdi-close" />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.close')"
-                    />
-                  </VBtn>
-                  <VBtn
-                    v-else
-                    variant="text"
-                    size="small"
-                    rounded="pill"
-                    prepend-icon="mdi-close"
-                    :active="false"
-                    class="a-list-editor__action a-list-editor__action--close"
-                    @click.stop="onCloseClick(vi)"
-                  >
-                    {{ t('common.sortable.close') }}
-                  </VBtn>
-                </template>
                 <template v-else>
                   <VBtn
                     v-if="showEditButton && canInteract"
@@ -630,7 +587,11 @@ defineExpose({
                     variant="tonal"
                     color="primary"
                     density="comfortable"
-                    class="a-list-editor__action a-list-editor__action--edit"
+                    :class="[
+                      'mx-1',
+                      'a-list-editor__action',
+                      'a-list-editor__action--edit',
+                    ]"
                     @click.stop="onEditClick(vi)"
                   >
                     <VIcon
@@ -649,7 +610,11 @@ defineExpose({
                     size="small"
                     variant="text"
                     density="comfortable"
-                    class="a-list-editor__action a-list-editor__action--delete"
+                    :class="[
+                      'mx-1',
+                      'a-list-editor__action',
+                      'a-list-editor__action--delete',
+                    ]"
                     @click.stop="onDeleteClick(vi)"
                   >
                     <VIcon
@@ -669,7 +634,11 @@ defineExpose({
                     variant="text"
                     density="comfortable"
                     :active="false"
-                    class="a-list-editor__action a-list-editor__action--menu"
+                    :class="[
+                      'mx-1',
+                      'a-list-editor__action',
+                      'a-list-editor__action--menu',
+                    ]"
                   >
                     <VIcon
                       icon="mdi-dots-vertical"
@@ -700,19 +669,12 @@ defineExpose({
 
           <template v-if="vi.editing && $slots.item">
             <div class="a-list-editor__row-body">
-              <div
-                v-if="$slots['item-status']"
-                class="a-list-editor__body-status"
-              >
+              <div class="a-list-editor__form">
                 <slot
-                  name="item-status"
+                  name="item"
                   v-bind="buildSlotProps(vi)"
                 />
               </div>
-              <slot
-                name="item"
-                v-bind="buildSlotProps(vi)"
-              />
             </div>
             <slot
               name="item-footer"
@@ -747,19 +709,12 @@ defineExpose({
             v-else-if="vi.expanded && $slots['item-readonly']"
             class="a-list-editor__row-body"
           >
-            <div
-              v-if="$slots['item-status']"
-              class="a-list-editor__body-status"
-            >
+            <div class="a-list-editor__form">
               <slot
-                name="item-status"
+                name="item-readonly"
                 v-bind="buildSlotProps(vi)"
               />
             </div>
-            <slot
-              name="item-readonly"
-              v-bind="buildSlotProps(vi)"
-            />
           </div>
 
           <slot
@@ -837,27 +792,41 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable color-function-alias-notation --
+   Vuetify 4 exports theme colours as comma-separated "R, G, B" lists; the
+   modern `rgb(R G B / A)` slash-alpha syntax produces invalid CSS (and a
+   silent transparent fallback) when that var expands. We have to use the
+   explicit `rgba(R, G, B, A)` form everywhere a theme var appears. */
+
 .a-list-editor {
   --ale-border: rgb(0 0 0 / 12%);
   --ale-border-strong: rgb(0 0 0 / 38%);
-  --ale-surface: rgb(var(--v-theme-surface, 255 255 255));
-  --ale-surface-container: rgb(var(--v-theme-surface-variant, 245 245 245) / 25%);
-  --ale-primary: rgb(var(--v-theme-primary, 63 106 216));
-  --ale-primary-container: rgb(var(--v-theme-primary, 63 106 216) / 12%);
-  --ale-primary-state: rgb(var(--v-theme-primary, 63 106 216) / 4%);
-  --ale-primary-state-press: rgb(var(--v-theme-primary, 63 106 216) / 12%);
-  --ale-success-container: rgb(var(--v-theme-success, 58 196 125) / 18%);
-  --ale-warning-container: rgb(var(--v-theme-warning, 251 140 0) / 18%);
-  --ale-error-container: rgb(var(--v-theme-error, 217 37 80) / 18%);
-  --ale-on-surface: rgb(var(--v-theme-on-surface, 51 51 51));
-  --ale-on-surface-variant: rgb(var(--v-theme-on-surface-variant, 102 102 102));
-  --ale-radius: 12px;
-  --ale-radius-sm: 8px;
-  --ale-radius-full: 9999px;
-  --ale-elev-1: 0 1px 2px rgb(0 0 0 / 12%), 0 1px 3px 1px rgb(0 0 0 / 6%);
+  --ale-surface: rgb(var(--v-theme-surface, 255, 255, 255));
+  --ale-surface-container: rgb(0 0 0 / 2.5%);
+  --ale-primary: rgb(var(--v-theme-primary, 63, 106, 216));
+  --ale-primary-container: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
+  --ale-primary-state: rgba(var(--v-theme-primary, 63, 106, 216), 0.04);
+  --ale-primary-state-press: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
+  --ale-success-container: rgb(76 175 80 / 18%);
+  --ale-success-fg: #165634;
+  --ale-warning-container: rgb(251 140 0 / 18%);
+  --ale-warning-fg: #914000;
+  --ale-warning: rgb(var(--v-theme-warning, 251, 140, 0));
+  --ale-error-container: rgba(var(--v-theme-error, 217, 37, 80), 0.18);
+  --ale-error-fg: rgb(var(--v-theme-error, 217, 37, 80));
+  --ale-on-surface: rgb(var(--v-theme-on-surface, 51, 51, 51));
+  --ale-on-surface-variant: rgb(var(--v-theme-on-surface-variant, 102, 102, 102));
+  --ale-radius: 8px;
+  --ale-radius-pill: 9999px;
+
+  // Compact density — baked in, aligned with the nested variant.
   --ale-row-min-height: 48px;
+  --ale-row-pad-y: 6px;
+  --ale-row-font: 13px;
 
   position: relative;
+  container-type: inline-size;
+  container-name: ale-shell;
 }
 
 .a-list-editor--disabled,
@@ -874,7 +843,6 @@ defineExpose({
   border: 1px solid var(--ale-border);
   border-radius: var(--ale-radius);
   overflow: hidden;
-  box-shadow: var(--ale-elev-1);
 }
 
 .a-list-editor__header {
@@ -883,16 +851,17 @@ defineExpose({
   align-items: center;
   gap: 12px;
   padding: 8px 20px;
+  height: 60px;
   border-bottom: 1px solid var(--ale-border);
   background: var(--ale-surface);
-  height: 60px;
   flex-shrink: 0;
 }
 
 .a-list-editor__title-heading {
   font-weight: 500;
   font-size: 1rem;
-  line-height: 1.4;
+  line-height: 1.5;
+  letter-spacing: 0.009em;
   color: var(--ale-on-surface);
   margin: 0;
 }
@@ -938,40 +907,49 @@ defineExpose({
   position: relative;
   display: flex;
   flex-direction: column;
+  background: var(--ale-surface);
   border-bottom: 1px solid var(--ale-border);
   transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.a-list-editor__row:last-of-type {
-  border-bottom: none;
 }
 
 .a-list-editor__row-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 16px;
+  gap: 10px;
+  padding: var(--ale-row-pad-y) 12px var(--ale-row-pad-y) 16px;
   min-height: var(--ale-row-min-height);
   flex-shrink: 0;
   position: relative;
+  transition: background-color 0.15s;
 }
 
 .a-list-editor__row--clickable .a-list-editor__row-header {
   cursor: pointer;
 }
 
-.a-list-editor__row--clickable:not(.a-list-editor__row--editing, .a-list-editor__row--expanded):hover
+/* stylelint-disable selector-max-compound-selectors */
+.a-list-editor__row--clickable:not(
+    .a-list-editor__row--editing,
+    .a-list-editor__row--expanded
+  ):hover
   .a-list-editor__row-header {
   background: var(--ale-primary-state);
 }
 
-.a-list-editor__row--clickable:not(.a-list-editor__row--editing, .a-list-editor__row--expanded):active
+.a-list-editor__row--clickable:not(
+    .a-list-editor__row--editing,
+    .a-list-editor__row--expanded
+  ):active
   .a-list-editor__row-header {
   background: var(--ale-primary-state-press);
 }
+/* stylelint-enable selector-max-compound-selectors */
 
-.a-list-editor__row--editing,
-.a-list-editor__row--expanded {
+/* Editing / readonly-expanded rows keep the overall row transparent — the blue
+   tint sits on the header only, and the form body gets its own soft gradient
+   (see container-query desktop rule further down). */
+.a-list-editor__row--editing .a-list-editor__row-header,
+.a-list-editor__row--expanded .a-list-editor__row-header {
   background: var(--ale-primary-container);
 }
 
@@ -987,7 +965,10 @@ defineExpose({
   z-index: 1;
 }
 
-/* Dirty (unsaved) takes precedence over editing/expanded: orange stripe + tinted bg. */
+/* Dirty (unsaved) takes visual precedence over editing — whole row goes warning:
+   orange rail + tinted row bg + warning-tinted header when also editing. The
+   blue primary-container on the header from the editing rule gets swapped so
+   the user can't miss that the row has unsaved changes. */
 .a-list-editor__row--dirty {
   background: var(--ale-warning-container);
 }
@@ -999,21 +980,32 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 4px;
-  background: rgb(var(--v-theme-warning, 251 140 0));
+  background: var(--ale-warning);
   z-index: 2;
+}
+
+.a-list-editor__row--dirty .a-list-editor__row-header {
+  background: var(--ale-warning-container);
+}
+
+.a-list-editor__row--dirty.a-list-editor__row--editing .a-list-editor__row-main,
+.a-list-editor__row--dirty.a-list-editor__row--expanded .a-list-editor__row-main,
+.a-list-editor__row--dirty.a-list-editor__row--editing .a-list-editor__row-main :deep(*),
+.a-list-editor__row--dirty.a-list-editor__row--expanded .a-list-editor__row-main :deep(*) {
+  color: var(--ale-warning);
 }
 
 .a-list-editor__unsaved-label {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.7rem;
-  color: rgb(var(--v-theme-warning, 251 140 0));
+  font-size: 11px;
+  color: var(--ale-warning);
   font-weight: 500;
   background: transparent;
-  border: 1px solid rgb(var(--v-theme-warning, 251 140 0));
+  border: 1px solid var(--ale-warning);
   padding: 2px 8px;
-  border-radius: var(--ale-radius-full);
+  border-radius: var(--ale-radius-pill);
   white-space: nowrap;
   letter-spacing: 0.02em;
   flex-shrink: 0;
@@ -1081,11 +1073,24 @@ defineExpose({
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
+/* Inline edit body. Default layout (narrow container / mobile) — form fills the
+   full row width. Desktop layout applied via container query below. */
 .a-list-editor__row-body {
-  padding: 12px 16px 8px;
+  padding: 12px 16px;
+  transition: padding-left 0.2s ease;
+}
+
+/* Form card — wraps consumer-provided #item / #item-readonly content so the
+   inline editor reads as a distinct surface against the tinted row-body
+   background. White fill, whisper-faint border, gentle radius. */
+.a-list-editor__form {
+  background: var(--ale-surface);
+  border: 1px solid rgb(0 0 0 / 6%);
+  border-radius: var(--ale-radius);
+  padding: 16px 16px 8px;
 }
 
 .a-list-editor__body-status {
@@ -1097,11 +1102,10 @@ defineExpose({
 
 .a-list-editor__row-footer {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
   padding: 4px 16px 16px;
-  background: transparent;
-  border-top: none;
 }
 
 .a-list-editor__row-footer-spacer {
@@ -1110,17 +1114,22 @@ defineExpose({
 
 .a-list-editor__title {
   flex: 1 1 auto;
-  font-size: 0.92rem;
+  font-size: var(--ale-row-font);
   font-weight: 400;
-  letter-spacing: 0.01em;
+  line-height: 1.43;
+  letter-spacing: 0.018em;
   color: var(--ale-on-surface);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Active row — bold primary title. `.row-main` + deep wildcard ensures the
+   style reaches consumer-provided #item-compact slot content too. */
 .a-list-editor__row--editing .a-list-editor__row-main,
-.a-list-editor__row--expanded .a-list-editor__row-main {
+.a-list-editor__row--expanded .a-list-editor__row-main,
+.a-list-editor__row--editing .a-list-editor__row-main :deep(*),
+.a-list-editor__row--expanded .a-list-editor__row-main :deep(*) {
   font-weight: 700;
   color: var(--ale-primary);
 }
@@ -1130,35 +1139,98 @@ defineExpose({
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .a-list-editor__status-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  font-size: 0.72rem;
-  padding: 3px 10px;
-  border-radius: var(--ale-radius-full);
-  background: var(--ale-success-container);
-  color: var(--ale-on-surface);
-  font-weight: 500;
+  min-width: 56px;
+  padding: 4px 10px;
+  font: 500 11px/1 var(--v-font-body, inherit);
   letter-spacing: 0.02em;
+  background: var(--ale-success-container);
+  color: var(--ale-success-fg);
+  border-radius: var(--ale-radius-pill);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.a-list-editor__status-badge--warning {
+  background: var(--ale-warning-container);
+  color: var(--ale-warning-fg);
+}
+
+.a-list-editor__status-badge--error {
+  background: var(--ale-error-container);
+  color: var(--ale-error-fg);
 }
 
 .a-list-editor__actions {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex-shrink: 0;
-  margin-left: 0;
+  margin-left: 4px;
 }
 
-@media (width >= 960px) {
-  .a-list-editor__actions {
-    margin-left: 24px;
+/* Container-query driven desktop layout — adds the primary rail + soft gradient
+   to the form area. No padding-left override: in the flat variant the body
+   aligns with the row title (16 px) since there is no caret/depth indent.
+   Rail + gradient extend to the footer so Cancel/Save row sits on the same
+   continuous surface as the form. */
+@container ale-shell (min-width: 769px) {
+  .a-list-editor__row--editing .a-list-editor__row-body,
+  .a-list-editor__row--expanded .a-list-editor__row-body,
+  .a-list-editor__row--editing .a-list-editor__row-footer,
+  .a-list-editor__row--expanded .a-list-editor__row-footer {
+    border-left: 2px solid rgba(var(--v-theme-primary, 63, 106, 216), 0.28);
+    background: linear-gradient(
+      to right,
+      rgba(var(--v-theme-primary, 63, 106, 216), 0.07),
+      rgba(var(--v-theme-primary, 63, 106, 216), 0.02) 50%,
+      transparent 85%
+    );
   }
+
+  /* Dirty + editing: swap the primary rail + gradient for warning so the whole
+     form surface matches the orange row accent. */
+  .a-list-editor__row--dirty.a-list-editor__row--editing .a-list-editor__row-body,
+  .a-list-editor__row--dirty.a-list-editor__row--expanded .a-list-editor__row-body,
+  .a-list-editor__row--dirty.a-list-editor__row--editing .a-list-editor__row-footer,
+  .a-list-editor__row--dirty.a-list-editor__row--expanded .a-list-editor__row-footer {
+    border-left-color: rgb(251 140 0 / 35%);
+    background: linear-gradient(
+      to right,
+      rgb(251 140 0 / 7%),
+      rgb(251 140 0 / 2%) 50%,
+      transparent 85%
+    );
+  }
+}
+
+/* Narrow-container / mobile layout — taller rows for comfortable touch targets,
+   always-visible actions, and the status badge drops out to make room. */
+@container ale-shell (max-width: 768px) {
+  .a-list-editor {
+    --ale-row-min-height: 48px;
+    --ale-row-pad-y: 10px;
+  }
+
+  .a-list-editor__row:not(.a-list-editor__row--editing)
+    .a-list-editor__status {
+    display: none;
+  }
+
+  /* stylelint-disable selector-max-compound-selectors */
+  .a-list-editor__row .a-list-editor__action--edit,
+  .a-list-editor__row .a-list-editor__action--delete,
+  .a-list-editor__row .a-list-editor__action--menu {
+    opacity: 1;
+  }
+  /* stylelint-enable selector-max-compound-selectors */
 }
 
 .a-list-editor__action--edit,
@@ -1168,6 +1240,7 @@ defineExpose({
   transition: opacity 0.15s;
 }
 
+/* stylelint-disable selector-max-compound-selectors */
 .a-list-editor__row:hover .a-list-editor__action--edit,
 .a-list-editor__row:hover .a-list-editor__action--delete,
 .a-list-editor__row:hover .a-list-editor__action--menu,
@@ -1176,10 +1249,22 @@ defineExpose({
 .a-list-editor__row:focus-within .a-list-editor__action--menu {
   opacity: 1;
 }
+/* stylelint-enable selector-max-compound-selectors */
 
 .a-list-editor--touch .a-list-editor__action--edit,
 .a-list-editor--touch .a-list-editor__action--delete,
 .a-list-editor--touch .a-list-editor__action--menu {
+  opacity: 1;
+}
+
+/* Active rows keep all affordances visible — same right-column look as hovered
+   non-editing rows, just pinned open. */
+.a-list-editor__row--editing .a-list-editor__action--edit,
+.a-list-editor__row--editing .a-list-editor__action--delete,
+.a-list-editor__row--editing .a-list-editor__action--menu,
+.a-list-editor__row--expanded .a-list-editor__action--edit,
+.a-list-editor__row--expanded .a-list-editor__action--delete,
+.a-list-editor__row--expanded .a-list-editor__action--menu {
   opacity: 1;
 }
 
@@ -1190,8 +1275,9 @@ defineExpose({
   align-items: center;
   gap: 8px;
   color: var(--ale-primary);
-  font-size: 0.88rem;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1;
   cursor: pointer;
   border: none;
   border-top: 1px solid var(--ale-border);

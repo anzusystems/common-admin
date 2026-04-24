@@ -324,6 +324,12 @@ if (!isTouch.value) {
   const sortable = useSortable(rowsContainer, modelValue, {
     handle: '.a-sortable-list-editor__drag-handle',
     animation: 150,
+    // Force the fallback renderer so `dragClass` is applied to a CSS-controlled
+    // clone that follows the cursor — gives us a custom, row-shaped ghost
+    // instead of the opaque browser-native drag bitmap.
+    forceFallback: true,
+    fallbackTolerance: 3,
+    fallbackOnBody: true,
     ghostClass: 'a-sortable-list-editor__row--ghost',
     chosenClass: 'a-sortable-list-editor__row--chosen',
     dragClass: 'a-sortable-list-editor__row--drag',
@@ -355,6 +361,12 @@ const onRowAddAfterClick = (vi: ListViewItem<TItem>) => {
 
 const onEditClick = (vi: ListViewItem<TItem>) => {
   if (!canInteract.value || reorderMode.value) return
+  // Toggle: clicking edit while already editing closes the form, matching the
+  // row-header click behaviour.
+  if (editingKeys.value.has(vi.key)) {
+    onCloseClick(vi)
+    return
+  }
   if (isInlineEdit.value) {
     if (!editingSnapshots.value.has(vi.key)) {
       editingSnapshots.value.set(vi.key, cloneDeep(vi.raw) as TItem)
@@ -810,7 +822,7 @@ defineExpose({
             </div>
 
             <div
-              v-if="!vi.editing && !vi.expanded && !reorderMode"
+              v-if="!chips && !reorderMode"
               class="a-sortable-list-editor__status"
             >
               <slot
@@ -952,55 +964,6 @@ defineExpose({
                     </VMenu>
                   </VBtn>
                 </template>
-                <template v-else-if="vi.editing || vi.expanded">
-                  <VBtn
-                    v-if="vi.editing && showDeleteButton && canInteract"
-                    icon
-                    size="small"
-                    variant="text"
-                    density="comfortable"
-                    class="a-sortable-list-editor__action a-sortable-list-editor__action--delete"
-                    @click.stop="onDeleteClick(vi)"
-                  >
-                    <VIcon
-                      icon="mdi-trash-can-outline"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.delete')"
-                    />
-                  </VBtn>
-                  <VBtn
-                    v-if="effectiveCloseVariant === 'icon'"
-                    icon="mdi-close"
-                    size="small"
-                    variant="text"
-                    :active="false"
-                    class="a-sortable-list-editor__action a-sortable-list-editor__action--close"
-                    @click.stop="onCloseClick(vi)"
-                  >
-                    <VIcon icon="mdi-close" />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.close')"
-                    />
-                  </VBtn>
-                  <VBtn
-                    v-else
-                    variant="text"
-                    size="small"
-                    rounded="pill"
-                    prepend-icon="mdi-close"
-                    :active="false"
-                    class="a-sortable-list-editor__action a-sortable-list-editor__action--close"
-                    @click.stop="onCloseClick(vi)"
-                  >
-                    {{ t('common.sortable.close') }}
-                  </VBtn>
-                </template>
                 <template v-else>
                   <VBtn
                     v-if="showEditButton && canInteract"
@@ -1009,7 +972,11 @@ defineExpose({
                     variant="tonal"
                     color="primary"
                     density="comfortable"
-                    class="a-sortable-list-editor__action a-sortable-list-editor__action--edit"
+                    :class="[
+                      'mx-1',
+                      'a-sortable-list-editor__action',
+                      'a-sortable-list-editor__action--edit',
+                    ]"
                     @click.stop="onEditClick(vi)"
                   >
                     <VIcon
@@ -1028,7 +995,11 @@ defineExpose({
                     size="small"
                     variant="text"
                     density="comfortable"
-                    class="a-sortable-list-editor__action a-sortable-list-editor__action--delete"
+                    :class="[
+                      'mx-1',
+                      'a-sortable-list-editor__action',
+                      'a-sortable-list-editor__action--delete',
+                    ]"
                     @click.stop="onDeleteClick(vi)"
                   >
                     <VIcon
@@ -1041,6 +1012,41 @@ defineExpose({
                       :text="t('common.sortable.delete')"
                     />
                   </VBtn>
+                  <VBtn
+                    v-if="showAddAfterAction && canInteract"
+                    icon
+                    size="small"
+                    variant="text"
+                    density="comfortable"
+                    :active="false"
+                    :class="[
+                      'mx-1',
+                      'a-sortable-list-editor__action',
+                      'a-sortable-list-editor__action--menu',
+                    ]"
+                  >
+                    <VIcon
+                      icon="mdi-dots-vertical"
+                      size="18"
+                    />
+                    <VTooltip
+                      activator="parent"
+                      location="bottom"
+                      :text="t('common.sortable.more')"
+                    />
+                    <VMenu activator="parent">
+                      <VList density="compact">
+                        <VListItem @click.stop="onRowAddAfterClick(vi)">
+                          <template #prepend>
+                            <VIcon icon="mdi-plus" />
+                          </template>
+                          <VListItemTitle>
+                            {{ t('common.sortable.addAfter') }}
+                          </VListItemTitle>
+                        </VListItem>
+                      </VList>
+                    </VMenu>
+                  </VBtn>
                 </template>
               </slot>
             </div>
@@ -1048,19 +1054,12 @@ defineExpose({
 
           <template v-if="vi.editing && !reorderMode && $slots.item">
             <div class="a-sortable-list-editor__row-body">
-              <div
-                v-if="$slots['item-status']"
-                class="a-sortable-list-editor__body-status"
-              >
+              <div class="a-sortable-list-editor__form">
                 <slot
-                  name="item-status"
+                  name="item"
                   v-bind="buildSlotProps(vi)"
                 />
               </div>
-              <slot
-                name="item"
-                v-bind="buildSlotProps(vi)"
-              />
             </div>
             <slot
               name="item-footer"
@@ -1095,19 +1094,12 @@ defineExpose({
             v-else-if="vi.expanded && !reorderMode && $slots['item-readonly']"
             class="a-sortable-list-editor__row-body"
           >
-            <div
-              v-if="$slots['item-status']"
-              class="a-sortable-list-editor__body-status"
-            >
+            <div class="a-sortable-list-editor__form">
               <slot
-                name="item-status"
+                name="item-readonly"
                 v-bind="buildSlotProps(vi)"
               />
             </div>
-            <slot
-              name="item-readonly"
-              v-bind="buildSlotProps(vi)"
-            />
           </div>
 
           <slot
@@ -1234,26 +1226,41 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
+/* stylelint-disable color-function-alias-notation --
+   Vuetify 4 exports theme colours as comma-separated "R, G, B" lists; the
+   modern `rgb(R G B / A)` slash-alpha syntax produces invalid CSS (and a
+   silent transparent fallback) when that var expands. Use explicit rgba()
+   everywhere a theme var appears. */
+
 .a-sortable-list-editor {
   --asle-border: rgb(0 0 0 / 12%);
-  --asle-surface: rgb(var(--v-theme-surface, 255 255 255));
-  --asle-surface-container: rgb(var(--v-theme-surface-variant, 245 245 245) / 25%);
-  --asle-primary: rgb(var(--v-theme-primary, 63 106 216));
-  --asle-primary-container: rgb(var(--v-theme-primary, 63 106 216) / 12%);
-  --asle-primary-state: rgb(var(--v-theme-primary, 63 106 216) / 4%);
-  --asle-primary-state-press: rgb(var(--v-theme-primary, 63 106 216) / 12%);
-  --asle-success-container: rgb(var(--v-theme-success, 58 196 125) / 18%);
-  --asle-warning-container: rgb(var(--v-theme-warning, 251 140 0) / 18%);
-  --asle-error-container: rgb(var(--v-theme-error, 217 37 80) / 18%);
-  --asle-on-surface: rgb(var(--v-theme-on-surface, 51 51 51));
-  --asle-on-surface-variant: rgb(var(--v-theme-on-surface-variant, 102 102 102));
-  --asle-radius: 12px;
-  --asle-radius-full: 9999px;
-  --asle-elev-1: 0 1px 2px rgb(0 0 0 / 12%), 0 1px 3px 1px rgb(0 0 0 / 6%);
+  --asle-surface: rgb(var(--v-theme-surface, 255, 255, 255));
+  --asle-surface-container: rgb(0 0 0 / 2.5%);
+  --asle-primary: rgb(var(--v-theme-primary, 63, 106, 216));
+  --asle-primary-container: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
+  --asle-primary-state: rgba(var(--v-theme-primary, 63, 106, 216), 0.04);
+  --asle-primary-state-press: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
+  --asle-success-container: rgb(76 175 80 / 18%);
+  --asle-success-fg: #165634;
+  --asle-warning-container: rgb(251 140 0 / 18%);
+  --asle-warning-fg: #914000;
+  --asle-warning: rgb(var(--v-theme-warning, 251, 140, 0));
+  --asle-error-container: rgba(var(--v-theme-error, 217, 37, 80), 0.18);
+  --asle-error-fg: rgb(var(--v-theme-error, 217, 37, 80));
+  --asle-on-surface: rgb(var(--v-theme-on-surface, 51, 51, 51));
+  --asle-on-surface-variant: rgb(var(--v-theme-on-surface-variant, 102, 102, 102));
+  --asle-radius: 8px;
+  --asle-radius-pill: 9999px;
   --asle-elev-3: 0 1px 3px rgb(0 0 0 / 16%), 0 4px 8px 3px rgb(0 0 0 / 10%);
+
+  // Compact density — baked in, aligned with the other list-editor variants.
   --asle-row-min-height: 48px;
+  --asle-row-pad-y: 6px;
+  --asle-row-font: 13px;
 
   position: relative;
+  container-type: inline-size;
+  container-name: asle-shell;
 }
 
 .a-sortable-list-editor--disabled,
@@ -1270,7 +1277,6 @@ defineExpose({
   border: 1px solid var(--asle-border);
   border-radius: var(--asle-radius);
   overflow: hidden;
-  box-shadow: var(--asle-elev-1);
 }
 
 .a-sortable-list-editor__header {
@@ -1279,9 +1285,9 @@ defineExpose({
   align-items: center;
   gap: 12px;
   padding: 8px 20px;
+  height: 60px;
   border-bottom: 1px solid var(--asle-border);
   background: var(--asle-surface);
-  height: 60px;
   flex-shrink: 0;
 }
 
@@ -1296,7 +1302,8 @@ defineExpose({
 .a-sortable-list-editor__title-heading {
   font-weight: 500;
   font-size: 1rem;
-  line-height: 1.4;
+  line-height: 1.5;
+  letter-spacing: 0.009em;
   color: var(--asle-on-surface);
   margin: 0;
 }
@@ -1347,29 +1354,27 @@ defineExpose({
   position: relative;
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--asle-border);
   background: var(--asle-surface);
+  border-bottom: 1px solid var(--asle-border);
   transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.a-sortable-list-editor__row:last-of-type {
-  border-bottom: none;
 }
 
 .a-sortable-list-editor__row-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 16px;
+  gap: 10px;
+  padding: var(--asle-row-pad-y) 12px var(--asle-row-pad-y) 16px;
   min-height: var(--asle-row-min-height);
   flex-shrink: 0;
   position: relative;
+  transition: background-color 0.15s;
 }
 
 .a-sortable-list-editor__row--clickable .a-sortable-list-editor__row-header {
   cursor: pointer;
 }
 
+/* stylelint-disable selector-max-compound-selectors */
 .a-sortable-list-editor__row--clickable:not(
     .a-sortable-list-editor__row--editing,
     .a-sortable-list-editor__row--expanded
@@ -1385,9 +1390,12 @@ defineExpose({
   .a-sortable-list-editor__row-header {
   background: var(--asle-primary-state-press);
 }
+/* stylelint-enable selector-max-compound-selectors */
 
-.a-sortable-list-editor__row--editing,
-.a-sortable-list-editor__row--expanded {
+/* Editing / readonly-expanded rows keep the overall row transparent — the blue
+   tint sits on the header only, and the form body gets its own soft gradient. */
+.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-header,
+.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-header {
   background: var(--asle-primary-container);
 }
 
@@ -1414,12 +1422,26 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 4px;
-  background: rgb(var(--v-theme-warning, 251 140 0));
+  background: var(--asle-warning);
   z-index: 2;
 }
 
+/* Unsaved takes visual precedence over editing — swap the header's blue tint
+   and title color for warning so the whole row reads as "dirty, not active". */
+.a-sortable-list-editor__row--unsaved .a-sortable-list-editor__row-header {
+  background: var(--asle-warning-container);
+}
+
+.a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-main,
+.a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-main,
+.a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-main :deep(*),
+.a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-main :deep(*) {
+  color: var(--asle-warning);
+}
+
 .a-sortable-list-editor__row--reorder .a-sortable-list-editor__row-header {
-  padding: 0 12px;
+  padding-left: 12px;
+  padding-right: 8px;
   gap: 8px;
 }
 
@@ -1477,14 +1499,14 @@ defineExpose({
     .a-sortable-list-editor__row--editing,
     .a-sortable-list-editor__row--unsaved
   )::after {
-  background: rgb(var(--v-theme-error, 217 37 80));
+  background: var(--asle-error-fg);
 }
 
 .a-sortable-list-editor__row--validation-warning:not(
     .a-sortable-list-editor__row--editing,
     .a-sortable-list-editor__row--unsaved
   )::after {
-  background: rgb(var(--v-theme-warning, 251 140 0));
+  background: var(--asle-warning);
 }
 /* stylelint-enable selector-max-compound-selectors */
 
@@ -1497,7 +1519,18 @@ defineExpose({
 }
 
 .a-sortable-list-editor__row-body {
-  padding: 12px 16px 8px;
+  padding: 12px 16px;
+  transition: padding-left 0.2s ease;
+}
+
+/* Form card — wraps consumer-provided #item / #item-readonly content so the
+   inline editor reads as a distinct surface against the tinted row-body
+   background. White fill, whisper-faint border, gentle radius. */
+.a-sortable-list-editor__form {
+  background: var(--asle-surface);
+  border: 1px solid rgb(0 0 0 / 6%);
+  border-radius: var(--asle-radius);
+  padding: 16px 16px 8px;
 }
 
 .a-sortable-list-editor__body-status {
@@ -1509,11 +1542,10 @@ defineExpose({
 
 .a-sortable-list-editor__row-footer {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
   padding: 4px 16px 16px;
-  background: transparent;
-  border-top: none;
 }
 
 .a-sortable-list-editor__row-footer-spacer {
@@ -1522,17 +1554,22 @@ defineExpose({
 
 .a-sortable-list-editor__title {
   flex: 1 1 auto;
-  font-size: 0.92rem;
+  font-size: var(--asle-row-font);
   font-weight: 400;
-  letter-spacing: 0.01em;
+  line-height: 1.43;
+  letter-spacing: 0.018em;
   color: var(--asle-on-surface);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Active row — bold primary title. `.row-main` + deep wildcard reaches
+   consumer-provided #item-compact slot content too. */
 .a-sortable-list-editor__row--editing .a-sortable-list-editor__row-main,
-.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-main {
+.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-main,
+.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-main :deep(*),
+.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-main :deep(*) {
   font-weight: 700;
   color: var(--asle-primary);
 }
@@ -1541,13 +1578,13 @@ defineExpose({
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.7rem;
-  color: rgb(var(--v-theme-warning, 251 140 0));
+  font-size: 11px;
+  color: var(--asle-warning);
   font-weight: 500;
   background: transparent;
-  border: 1px solid rgb(var(--v-theme-warning, 251 140 0));
+  border: 1px solid var(--asle-warning);
   padding: 2px 8px;
-  border-radius: var(--asle-radius-full);
+  border-radius: var(--asle-radius-pill);
   white-space: nowrap;
   letter-spacing: 0.02em;
   flex-shrink: 0;
@@ -1558,67 +1595,147 @@ defineExpose({
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .a-sortable-list-editor__status-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  font-size: 0.72rem;
-  padding: 3px 10px;
-  border-radius: var(--asle-radius-full);
-  background: var(--asle-success-container);
-  color: var(--asle-on-surface);
-  font-weight: 500;
+  min-width: 56px;
+  padding: 4px 10px;
+  font: 500 11px/1 var(--v-font-body, inherit);
   letter-spacing: 0.02em;
+  background: var(--asle-success-container);
+  color: var(--asle-success-fg);
+  border-radius: var(--asle-radius-pill);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.a-sortable-list-editor__status-badge--warning {
+  background: var(--asle-warning-container);
+  color: var(--asle-warning-fg);
+}
+
+.a-sortable-list-editor__status-badge--error {
+  background: var(--asle-error-container);
+  color: var(--asle-error-fg);
 }
 
 .a-sortable-list-editor__actions {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex-shrink: 0;
-  margin-left: 0;
+  margin-left: 4px;
 }
 
-@media (width >= 960px) {
-  .a-sortable-list-editor__row:not(.a-sortable-list-editor__row--reorder)
-    .a-sortable-list-editor__actions {
-    margin-left: 24px;
+/* Container-query driven desktop layout — adds the primary rail + soft gradient
+   to the form area. No padding-left override: in the flat variant the body
+   aligns with the row title (16 px) since there is no caret/depth indent.
+   Rail + gradient extend to the footer so Cancel/Save row sits on the same
+   continuous surface as the form. */
+@container asle-shell (min-width: 769px) {
+  .a-sortable-list-editor__row--editing .a-sortable-list-editor__row-body,
+  .a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-body,
+  .a-sortable-list-editor__row--editing .a-sortable-list-editor__row-footer,
+  .a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-footer {
+    border-left: 2px solid rgba(var(--v-theme-primary, 63, 106, 216), 0.28);
+    background: linear-gradient(
+      to right,
+      rgba(var(--v-theme-primary, 63, 106, 216), 0.07),
+      rgba(var(--v-theme-primary, 63, 106, 216), 0.02) 50%,
+      transparent 85%
+    );
   }
+
+  /* Unsaved + editing: swap the primary rail + gradient for warning so the
+     whole form surface matches the orange row accent. */
+  .a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-body,
+  .a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-body,
+  .a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--editing .a-sortable-list-editor__row-footer,
+  .a-sortable-list-editor__row--unsaved.a-sortable-list-editor__row--expanded .a-sortable-list-editor__row-footer {
+    border-left-color: rgb(251 140 0 / 35%);
+    background: linear-gradient(
+      to right,
+      rgb(251 140 0 / 7%),
+      rgb(251 140 0 / 2%) 50%,
+      transparent 85%
+    );
+  }
+}
+
+/* Narrow-container / mobile layout — taller rows, always-visible actions,
+   status badge dropped to make room. */
+@container asle-shell (max-width: 768px) {
+  .a-sortable-list-editor {
+    --asle-row-min-height: 48px;
+    --asle-row-pad-y: 10px;
+  }
+
+  .a-sortable-list-editor__row:not(.a-sortable-list-editor__row--editing)
+    .a-sortable-list-editor__status {
+    display: none;
+  }
+
+  /* stylelint-disable selector-max-compound-selectors */
+  .a-sortable-list-editor__row .a-sortable-list-editor__action--edit,
+  .a-sortable-list-editor__row .a-sortable-list-editor__action--delete,
+  .a-sortable-list-editor__row .a-sortable-list-editor__action--menu {
+    opacity: 1;
+  }
+  /* stylelint-enable selector-max-compound-selectors */
 }
 
 .a-sortable-list-editor__action--edit,
 .a-sortable-list-editor__action--delete,
+.a-sortable-list-editor__action--menu,
 .a-sortable-list-editor__action--up,
 .a-sortable-list-editor__action--down {
   opacity: 0;
   transition: opacity 0.15s;
 }
 
+/* stylelint-disable selector-max-compound-selectors */
 .a-sortable-list-editor__row:hover .a-sortable-list-editor__action--edit,
 .a-sortable-list-editor__row:hover .a-sortable-list-editor__action--delete,
+.a-sortable-list-editor__row:hover .a-sortable-list-editor__action--menu,
 .a-sortable-list-editor__row:hover .a-sortable-list-editor__action--up,
 .a-sortable-list-editor__row:hover .a-sortable-list-editor__action--down,
 .a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--edit,
 .a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--delete,
+.a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--menu,
 .a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--up,
 .a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--down {
   opacity: 1;
 }
+/* stylelint-enable selector-max-compound-selectors */
 
 .a-sortable-list-editor--touch .a-sortable-list-editor__action--edit,
 .a-sortable-list-editor--touch .a-sortable-list-editor__action--delete,
+.a-sortable-list-editor--touch .a-sortable-list-editor__action--menu,
 .a-sortable-list-editor--touch .a-sortable-list-editor__action--up,
 .a-sortable-list-editor--touch .a-sortable-list-editor__action--down {
   opacity: 1;
 }
 
-/* Disabled reorder arrows: when the row is hovered/focused (or on touch where
-   they are always visible), render them clearly muted — but still hidden when the
-   row is idle on non-touch devices, matching the enabled arrow's hover-reveal. */
+/* Active rows keep all affordances visible — matches the non-editing hovered
+   column, just pinned open. */
+.a-sortable-list-editor__row--editing .a-sortable-list-editor__action--edit,
+.a-sortable-list-editor__row--editing .a-sortable-list-editor__action--delete,
+.a-sortable-list-editor__row--editing .a-sortable-list-editor__action--menu,
+.a-sortable-list-editor__row--expanded .a-sortable-list-editor__action--edit,
+.a-sortable-list-editor__row--expanded .a-sortable-list-editor__action--delete,
+.a-sortable-list-editor__row--expanded .a-sortable-list-editor__action--menu {
+  opacity: 1;
+}
+
+/* Disabled reorder arrows: when visible (row hover / focus / touch), render
+   them clearly muted. Hidden when idle on non-touch devices — matching the
+   enabled arrow's hover-reveal. */
+/* stylelint-disable selector-max-compound-selectors */
 .a-sortable-list-editor__row:hover .a-sortable-list-editor__action--up.v-btn--disabled,
 .a-sortable-list-editor__row:hover .a-sortable-list-editor__action--down.v-btn--disabled,
 .a-sortable-list-editor__row:focus-within .a-sortable-list-editor__action--up.v-btn--disabled,
@@ -1627,6 +1744,7 @@ defineExpose({
 .a-sortable-list-editor--touch .a-sortable-list-editor__action--down.v-btn--disabled {
   opacity: 0.3;
 }
+/* stylelint-enable selector-max-compound-selectors */
 
 .a-sortable-list-editor__drag-handle {
   cursor: grab;
@@ -1638,17 +1756,33 @@ defineExpose({
   cursor: grabbing;
 }
 
+/* Placeholder row sitting at the drop target — faint outline so the landing
+   position is obvious without stealing attention from the drag clone. */
 .a-sortable-list-editor__row--ghost {
-  opacity: 0.4;
-}
-
-.a-sortable-list-editor__row--chosen {
+  opacity: 0.35;
   background: var(--asle-primary-state);
 }
 
+/* Source row while drag is in progress — stays in place, visibly picked. */
+.a-sortable-list-editor__row--chosen {
+  opacity: 0.5;
+}
+
+/* Floating clone that follows the cursor. Row-shaped card with elevation;
+   action column and status badge hidden so the preview stays clean. */
 .a-sortable-list-editor__row--drag {
-  box-shadow: var(--asle-elev-3);
   background: var(--asle-surface);
+  border: 1px solid var(--asle-border);
+  border-radius: var(--asle-radius);
+  box-shadow: var(--asle-elev-3);
+  max-width: 420px;
+  opacity: 0.96;
+  pointer-events: none;
+}
+
+.a-sortable-list-editor__row--drag .a-sortable-list-editor__actions,
+.a-sortable-list-editor__row--drag .a-sortable-list-editor__status {
+  display: none;
 }
 
 .a-sortable-list-editor__row-add {
@@ -1658,8 +1792,9 @@ defineExpose({
   align-items: center;
   gap: 8px;
   color: var(--asle-primary);
-  font-size: 0.88rem;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1;
   cursor: pointer;
   border: none;
   border-top: 1px solid var(--asle-border);
@@ -1704,7 +1839,7 @@ defineExpose({
 }
 
 .a-sortable-list-editor__toolbar-status--pending {
-  color: rgb(var(--v-theme-warning, 251 140 0));
+  color: var(--asle-warning);
 }
 
 .a-sortable-list-editor__toolbar-actions {
