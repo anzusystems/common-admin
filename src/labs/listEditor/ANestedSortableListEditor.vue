@@ -538,6 +538,13 @@ const applyInstruction = (inst: ExecutableInstruction, sourceKey: ListEditorKey)
     showWarningT('common.sortable.error.maxDeepExceed')
     forceRerender.value++
     nextTick(() => initSortables())
+    return
+  }
+  // After a make-child drop, expand the target so the just-moved row is
+  // immediately visible — landing onto a leaf otherwise hides the result
+  // inside a collapsed branch and leaves the user wondering where it went.
+  if (inst.type === 'make-child') {
+    childrenExpandedKeys.value.add(inst.parentKey)
   }
 }
 
