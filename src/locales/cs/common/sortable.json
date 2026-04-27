@@ -23,6 +23,32 @@
   "moveDown": "Posunout dolů",
   "moveToTop": "Přesunout na začátek",
   "moveToBottom": "Přesunout na konec",
+  "moveToPosition": {
+    "action": "Přesunout na pozici…",
+    "title": "Přesunout na pozici",
+    "itemDescription": "Vyberte novou pozici pro {label}.",
+    "positionLabel": "Pozice (1-{max})",
+    "positionHint": "Aktuálně {current} z {max}.",
+    "confirm": "Přesunout"
+  },
+  "changeParent": {
+    "action": "Změnit rodiče…",
+    "title": "Změnit rodiče",
+    "rootLabel": "(nejvyšší úroveň)",
+    "placementHeading": "Vložit do {label}",
+    "placeFirst": "Na začátek",
+    "placeLast": "Na konec",
+    "confirm": "Přesunout",
+    "noTargetsTitle": "Žádné dostupné cíle",
+    "noTargetsText": "Pro tuto položku neexistuje jiný rodič, do kterého ji lze přesunout.",
+    "errorMaxDepth": "Sem nelze přesunout — překročena maximální hloubka."
+  },
+  "unsavedChanges": {
+    "title": "Neuložené změny",
+    "body": "Máte neuložené změny. Opravdu chcete odejít?",
+    "stay": "Zůstat",
+    "discard": "Odejít přesto"
+  },
   "indent": "Zanořit (udělat podřízenou)",
   "outdent": "Vynořit (na úroveň rodiče)",
   "unsaved": "Neuloženo",

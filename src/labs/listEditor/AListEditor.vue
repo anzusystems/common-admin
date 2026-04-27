@@ -1,7 +1,9 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, ref, useSlots, useTemplateRef } from 'vue'
+import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
+import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
+import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
@@ -111,12 +113,15 @@ const { t } = useI18n()
 const slots = useSlots()
 const display = useDisplay()
 
+const rootEl = useTemplateRef<HTMLElement>('rootEl')
+const { isNarrow } = useContainerWidth(rootEl)
+
 const isTouch = computed<boolean>(() => display.platform.value.touch)
 
 const effectiveCloseVariant = computed<'icon' | 'labeled'>(() => {
   if (props.closeVariant === 'icon') return 'icon'
   if (props.closeVariant === 'labeled') return 'labeled'
-  return display.smAndDown.value ? 'icon' : 'labeled'
+  return isNarrow.value ? 'icon' : 'labeled'
 })
 
 // Options are captured once at setup; list-editor config is expected to be stable.
@@ -137,7 +142,7 @@ const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'
 
 // Initial snapshot of each item, keyed by row key. Compared against current data to
 // detect "dirty" (unsaved) rows. Reset externally after a successful parent-form save.
-const { captureDirtyBaseline, isItemDirty } = useDirtyBaseline<TItem>(() =>
+const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(() =>
   modelValue.value.map((item) => ({
     key: item[props.keyField] as ListEditorKey,
     data: item,
@@ -200,6 +205,25 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() =>
 )
 
 const isEmpty = computed(() => viewItemsDecorated.value.length === 0)
+
+const findVi = (key: ListEditorKey): DecoratedViewItem<TItem> | undefined =>
+  viewItemsDecorated.value.find((v) => v.key === key)
+
+const keyboardNav = useKeyboardNav({
+  viewItems: computed(() => viewItemsDecorated.value.map((vi) => ({ key: vi.key }))),
+  variant: 'flat',
+  isReorderMode: ref(false),
+  disabled: computed(() => !canInteract.value),
+  isEditing: (key) => editingKeys.value.has(key),
+  onToggleEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onEditClick(vi)
+  },
+  onCancelEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onCloseClick(vi)
+  },
+})
 
 const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
   const pick = (v: unknown): string | null =>
@@ -351,6 +375,61 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
   },
 })
 
+const unsavedKeysModel = defineModel<Set<ListEditorKey>>('unsavedKeys', {
+  default: () => new Set<ListEditorKey>(),
+})
+
+const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  for (const vi of viewItemsDecorated.value) {
+    if (vi.dirty) out.add(vi.key)
+  }
+  return out
+})
+
+const setsEqual = (a: Set<ListEditorKey>, b: Set<ListEditorKey>): boolean =>
+  a.size === b.size && [...a].every((k) => b.has(k))
+
+let suppressNextModelWatch = false
+watch(
+  internalUnsavedKeys,
+  (now) => {
+    if (setsEqual(unsavedKeysModel.value, now)) return
+    suppressNextModelWatch = true
+    unsavedKeysModel.value = new Set(now)
+  },
+  { immediate: true },
+)
+
+watch(
+  unsavedKeysModel,
+  (now) => {
+    if (suppressNextModelWatch) {
+      suppressNextModelWatch = false
+      return
+    }
+    if (now.size === 0 && internalUnsavedKeys.value.size > 0) {
+      captureDirtyBaseline()
+    } else {
+      // Selective per-key clear: rebaseline keys present in internal but absent in model.
+      for (const key of internalUnsavedKeys.value) {
+        if (!now.has(key)) rebaselineKey(key)
+      }
+    }
+  },
+)
+
+const hasUnsavedChanges = computed<boolean>(() => internalUnsavedKeys.value.size > 0)
+const unsavedCount = computed<number>(() => internalUnsavedKeys.value.size)
+
+const clearUnsavedState = (key?: ListEditorKey) => {
+  if (key === undefined) {
+    captureDirtyBaseline()
+  } else {
+    rebaselineKey(key)
+  }
+}
+
 defineExpose({
   addItem: editor.addItem,
   deleteItem: editor.deleteItem,
@@ -359,11 +438,15 @@ defineExpose({
   recalculatePositions: editor.recalculatePositions,
   viewItems: editor.viewItems,
   resetDirtyBaseline: captureDirtyBaseline,
+  hasUnsavedChanges,
+  unsavedCount,
+  clearUnsavedState,
 })
 </script>
 
 <template>
   <div
+    ref="rootEl"
     class="a-list-editor"
     :class="[
       `a-list-editor--two-rows-${twoRows}`,
@@ -446,6 +529,8 @@ defineExpose({
           v-for="vi in viewItemsDecorated"
           :key="String(vi.key)"
           :data-id="String(vi.key)"
+          role="listitem"
+          :tabindex="keyboardNav.rowTabindex(vi.key)"
           class="a-le-row"
           :class="{
             'a-le-row--two-rows': twoRows === 'always',
@@ -456,6 +541,7 @@ defineExpose({
             [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
               resolveValidation(vi.raw) !== null,
           }"
+          @keydown="keyboardNav.handleKeydown(vi.key, $event)"
         >
           <slot
             name="before-item"

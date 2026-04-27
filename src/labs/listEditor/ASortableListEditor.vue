@@ -1,7 +1,9 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, ref, shallowRef, useSlots, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
+import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
+import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
@@ -9,6 +11,7 @@ import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
 import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
 import LeDeleteDialog from '@/labs/listEditor/internal/LeDeleteDialog.vue'
+import LeMoveToPositionDialog from '@/labs/listEditor/internal/LeMoveToPositionDialog.vue'
 import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
 import LeStatus from '@/labs/listEditor/internal/LeStatus.vue'
 import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
@@ -140,12 +143,15 @@ const { t } = useI18n()
 const slots = useSlots()
 const display = useDisplay()
 
+const rootEl = useTemplateRef<HTMLElement>('rootEl')
+const { isNarrow } = useContainerWidth(rootEl)
+
 const isTouch = computed<boolean>(() => display.platform.value.touch)
 
 const effectiveCloseVariant = computed<'icon' | 'labeled'>(() => {
   if (props.closeVariant === 'icon') return 'icon'
   if (props.closeVariant === 'labeled') return 'labeled'
-  return display.smAndDown.value ? 'icon' : 'labeled'
+  return isNarrow.value ? 'icon' : 'labeled'
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -165,7 +171,7 @@ const expandedKeys = ref<Set<ListEditorKey>>(new Set())
 // as dirty would paint ghost "unsaved" markers. The per-row visual cue is
 // what matters; position data still flows to the parent on apply.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { captureDirtyBaseline, isItemDirty } = useDirtyBaseline<TItem>(
+const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(
   () =>
     modelValue.value.map((item) => ({
       key: item[props.keyField] as ListEditorKey,
@@ -185,7 +191,7 @@ const resetDirtyBaseline = () => {
   movedKeys.value = new Set()
 }
 
-const snapshot = ref<TItem[] | null>(null)
+const snapshot = shallowRef<TItem[] | null>(null)
 
 const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 
@@ -287,7 +293,7 @@ const reorderToggleVisible = computed<boolean>(
 // When there IS a title and viewport is narrow, the reorder button shrinks to an
 // icon-only round button to keep the single-line header from overflowing.
 const compactReorderButton = computed<boolean>(
-  (): boolean => !!props.title && display.smAndDown.value,
+  (): boolean => !!props.title && isNarrow.value,
 )
 
 const headerVisible = computed<boolean>(
@@ -333,6 +339,63 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
 })
 
 const isEmpty = computed(() => viewItemsDecorated.value.length === 0)
+
+const findVi = (key: ListEditorKey): DecoratedViewItem<TItem> | undefined =>
+  viewItemsDecorated.value.find((v) => v.key === key)
+
+const keyboardNav = useKeyboardNav({
+  viewItems: computed(() => viewItemsDecorated.value.map((vi) => ({ key: vi.key }))),
+  variant: 'sortable',
+  isReorderMode: reorderMode,
+  disabled: computed(() => !canInteract.value),
+  isEditing: (key) => editingKeys.value.has(key),
+  onToggleEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onEditClick(vi)
+  },
+  onCancelEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onCloseClick(vi)
+  },
+  onMoveUp: (key) => {
+    const vi = findVi(key)
+    if (vi) moveUp(vi.index)
+  },
+  onMoveDown: (key) => {
+    const vi = findVi(key)
+    if (vi) moveDown(vi.index)
+  },
+  onMoveTop: (key) => {
+    const vi = findVi(key)
+    if (vi) moveTop(vi.index)
+  },
+  onMoveBottom: (key) => {
+    const vi = findVi(key)
+    if (vi) moveBottom(vi.index)
+  },
+  onCancelReorder: () => cancelReorderMode(),
+})
+
+const moveToPositionDialogOpen = ref<boolean>(false)
+const moveToPositionTarget = shallowRef<DecoratedViewItem<TItem> | null>(null)
+const moveToPositionLabel = computed<string>(() =>
+  moveToPositionTarget.value
+    ? resolveCompactText(moveToPositionTarget.value.raw, moveToPositionTarget.value.key)
+    : '',
+)
+const openMoveToPosition = (vi: DecoratedViewItem<TItem>) => {
+  if (!props.showMoveToPosition) return
+  moveToPositionTarget.value = vi
+  moveToPositionDialogOpen.value = true
+}
+const onMoveToPositionConfirm = (newIndex: number) => {
+  const target = moveToPositionTarget.value
+  moveToPositionTarget.value = null
+  if (!target) return
+  if (newIndex === target.index) return
+  editor.moveItem(target.index, newIndex)
+  markMoved(target.key)
+}
 
 const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
   const pick = (v: unknown): string | null =>
@@ -590,6 +653,66 @@ const reorderToggleSlotProps = computed(() => ({
   },
 }))
 
+const unsavedKeysModel = defineModel<Set<ListEditorKey>>('unsavedKeys', {
+  default: () => new Set<ListEditorKey>(),
+})
+
+const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  for (const vi of viewItemsDecorated.value) {
+    if (vi.unsaved) out.add(vi.key)
+  }
+  return out
+})
+
+const setsEqual = (a: Set<ListEditorKey>, b: Set<ListEditorKey>): boolean =>
+  a.size === b.size && [...a].every((k) => b.has(k))
+
+let suppressNextUnsavedModelWatch = false
+watch(
+  internalUnsavedKeys,
+  (now) => {
+    if (setsEqual(unsavedKeysModel.value, now)) return
+    suppressNextUnsavedModelWatch = true
+    unsavedKeysModel.value = new Set(now)
+  },
+  { immediate: true },
+)
+
+watch(
+  unsavedKeysModel,
+  (now) => {
+    if (suppressNextUnsavedModelWatch) {
+      suppressNextUnsavedModelWatch = false
+      return
+    }
+    if (now.size === 0 && internalUnsavedKeys.value.size > 0) {
+      captureDirtyBaseline()
+      movedKeys.value = new Set()
+    } else {
+      for (const key of internalUnsavedKeys.value) {
+        if (!now.has(key)) {
+          rebaselineKey(key)
+          movedKeys.value.delete(key)
+        }
+      }
+    }
+  },
+)
+
+const hasUnsavedChanges = computed<boolean>(() => internalUnsavedKeys.value.size > 0)
+const unsavedCount = computed<number>(() => internalUnsavedKeys.value.size)
+
+const clearUnsavedState = (key?: ListEditorKey) => {
+  if (key === undefined) {
+    captureDirtyBaseline()
+    movedKeys.value = new Set()
+  } else {
+    rebaselineKey(key)
+    movedKeys.value.delete(key)
+  }
+}
+
 defineExpose({
   addItem: editor.addItem,
   deleteItem: editor.deleteItem,
@@ -598,6 +721,9 @@ defineExpose({
   recalculatePositions: editor.recalculatePositions,
   viewItems: editor.viewItems,
   resetDirtyBaseline,
+  hasUnsavedChanges,
+  unsavedCount,
+  clearUnsavedState,
   enterReorderMode,
   cancelReorderMode,
   applyReorder,
@@ -606,6 +732,7 @@ defineExpose({
 
 <template>
   <div
+    ref="rootEl"
     class="a-sortable-list-editor"
     :class="[
       `a-sortable-list-editor--two-rows-${twoRows}`,
@@ -765,6 +892,8 @@ defineExpose({
           v-for="vi in viewItemsDecorated"
           :key="String(vi.key)"
           :data-id="String(vi.key)"
+          role="listitem"
+          :tabindex="keyboardNav.rowTabindex(vi.key)"
           class="a-le-row"
           :class="{
             'a-le-row--two-rows': twoRows === 'always',
@@ -772,10 +901,12 @@ defineExpose({
             'a-le-row--expanded': vi.expanded,
             'a-le-row--unsaved': vi.unsaved,
             'a-le-row--reorder': reorderMode,
+            'a-le-row--grabbed': keyboardNav.isGrabbed(vi.key),
             'a-le-row--clickable': isRowClickable(vi),
             [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
               resolveValidation(vi.raw) !== null,
           }"
+          @keydown="keyboardNav.handleKeydown(vi.key, $event)"
         >
           <slot
             name="before-item"
@@ -915,6 +1046,17 @@ defineExpose({
                           </template>
                           <VListItemTitle>
                             {{ t('common.sortable.moveToBottom') }}
+                          </VListItemTitle>
+                        </VListItem>
+                        <VListItem
+                          v-if="showMoveToPosition && viewItemsDecorated.length > 1"
+                          @click.stop="openMoveToPosition(vi)"
+                        >
+                          <template #prepend>
+                            <VIcon icon="mdi-target" />
+                          </template>
+                          <VListItemTitle>
+                            {{ t('common.sortable.moveToPosition.action') }}
                           </VListItemTitle>
                         </VListItem>
                         <VListItem
@@ -1098,6 +1240,14 @@ defineExpose({
       </slot>
     </div>
 
+    <LeMoveToPositionDialog
+      v-model="moveToPositionDialogOpen"
+      :total="viewItemsDecorated.length"
+      :current-index="moveToPositionTarget?.index ?? 0"
+      :item-label="moveToPositionLabel"
+      @confirm="onMoveToPositionConfirm"
+    />
+
     <LeDeleteDialog
       v-model="deleteDialog"
       :title="deleteConfirmTitleResolved"
@@ -1219,7 +1369,9 @@ defineExpose({
 
     .a-le-row .a-le-action--edit,
     .a-le-row .a-le-action--delete,
-    .a-le-row .a-le-action--menu {
+    .a-le-row .a-le-action--menu,
+    .a-le-row .a-le-action--up,
+    .a-le-row .a-le-action--down {
       opacity: 1;
     }
   }

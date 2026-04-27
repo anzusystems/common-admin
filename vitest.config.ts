@@ -101,7 +101,7 @@ export default defineConfig({
       instances: [
         {
           browser: 'chromium',
-          headless: process.env.CI ? true : false, // Headless in CI, visible locally
+          headless: process.env.VITEST_HEADED ? false : true,
         },
       ],
     },

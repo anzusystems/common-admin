@@ -5,12 +5,15 @@ import {
   onBeforeUnmount,
   onMounted,
   ref,
+  shallowRef,
   useSlots,
   useTemplateRef,
   watch,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
+import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
+import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import {
   useNestedListEditor,
@@ -37,6 +40,8 @@ import { useAlerts } from '@/composables/system/alerts'
 import { stringToInt } from '@/utils/string'
 import LeNestedRow from '@/labs/listEditor/internal/LeNestedRow.vue'
 import LeDeleteDialog from '@/labs/listEditor/internal/LeDeleteDialog.vue'
+import LeMoveToPositionDialog from '@/labs/listEditor/internal/LeMoveToPositionDialog.vue'
+import LeChangeParentDialog from '@/labs/listEditor/internal/LeChangeParentDialog.vue'
 import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
 import LeStatus from '@/labs/listEditor/internal/LeStatus.vue'
 
@@ -81,6 +86,8 @@ export interface Props<TItem extends Record<string, any>> {
   showDeleteButton?: boolean
   showEditButton?: boolean
   showAddAfterAction?: boolean
+  showMoveToPosition?: boolean
+  showChangeParent?: boolean
   showExpandToggle?: boolean
 
   addLabel?: string | null
@@ -123,6 +130,8 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showDeleteButton: true,
   showEditButton: true,
   showAddAfterAction: false,
+  showMoveToPosition: false,
+  showChangeParent: false,
   showExpandToggle: true,
   addLabel: null,
   emptyTitle: null,
@@ -192,12 +201,15 @@ const slots = useSlots()
 const display = useDisplay()
 const { showWarningT } = useAlerts()
 
+const rootEl = useTemplateRef<HTMLElement>('rootEl')
+const { isNarrow } = useContainerWidth(rootEl)
+
 const isTouch = computed<boolean>(() => display.platform.value.touch)
 
 const effectiveCloseVariant = computed<'icon' | 'labeled'>(() => {
   if (props.closeVariant === 'icon') return 'icon'
   if (props.closeVariant === 'labeled') return 'labeled'
-  return display.smAndDown.value ? 'icon' : 'labeled'
+  return isNarrow.value ? 'icon' : 'labeled'
 })
 
 // Tree-level expand/collapse — controls which descendants are visible in the flat
@@ -240,7 +252,7 @@ const editor = useNestedListEditor<TItem>(modelValue, {
 // would produce ghost "unsaved" markers everywhere. The consumer saves the
 // whole tree on apply anyway — we only care about the per-row visual cue.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { captureDirtyBaseline, isItemDirty } = useDirtyBaseline<TItem>(
+const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(
   () => {
     const out: Array<{ key: ListEditorKey; data: TItem }> = []
     const walk = (nodes: NestedTreeNode<TItem>[]) => {
@@ -261,7 +273,7 @@ const { captureDirtyBaseline, isItemDirty } = useDirtyBaseline<TItem>(
 // values, which flagged unmoved rows as "moved" whenever a neighbour shifted
 // sibling positions as a side-effect. Instead we track explicit user actions
 // in `movedKeys` below — only rows the user actively moved get marked.
-const snapshot = ref<NestedTree<TItem> | null>(null)
+const snapshot = shallowRef<NestedTree<TItem> | null>(null)
 // Keys the user has actively moved during this reorder session (drag, arrow
 // buttons, indent/outdent). Clearing this set is paired with
 // captureDirtyBaseline in the exposed resetDirtyBaseline cycle — consumers
@@ -433,7 +445,7 @@ const reorderToggleVisible = computed<boolean>(
 )
 
 const compactReorderButton = computed<boolean>(
-  (): boolean => !!props.title && display.smAndDown.value,
+  (): boolean => !!props.title && isNarrow.value,
 )
 
 // Keys of every node that *has* children — the candidates for expand/collapse.
@@ -999,6 +1011,123 @@ const reorderToggleSlotProps = computed(() => ({
   },
 }))
 
+const expandableKeySet = computed(() => new Set(expandableKeys.value))
+
+const findVi = (key: ListEditorKey): DecoratedNestedViewItem<TItem> | undefined =>
+  viewItemsDecorated.value.find((v) => v.key === key)
+
+const keyboardNav = useKeyboardNav({
+  viewItems: computed(() =>
+    viewItemsDecorated.value.map((vi) => ({
+      key: vi.key,
+      expanded: vi.childrenExpanded,
+      canExpand: expandableKeySet.value.has(vi.key),
+      canIndent: true,
+      canOutdent: true,
+    })),
+  ),
+  variant: 'nested',
+  isReorderMode: reorderMode,
+  disabled: computed(() => !canInteract.value),
+  isEditing: (key) => editingKeys.value.has(key),
+  onToggleEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onEditClick(vi)
+  },
+  onCancelEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onCloseClick(vi)
+  },
+  onMoveUp: (key) => moveUp(key),
+  onMoveDown: (key) => moveDown(key),
+  onMoveTop: (key) => moveTop(key),
+  onMoveBottom: (key) => moveBottom(key),
+  onIndent: (key) => {
+    const vi = findVi(key)
+    if (vi) doIndent(vi)
+  },
+  onOutdent: (key) => {
+    const vi = findVi(key)
+    if (vi) doOutdent(vi)
+  },
+  onToggleChildren: (key) => {
+    const vi = findVi(key)
+    if (vi) onChevronClick(vi)
+  },
+  onCancelReorder: () => cancelReorderMode(),
+})
+
+const moveToPositionDialogOpen = ref<boolean>(false)
+const moveToPositionTarget = shallowRef<DecoratedNestedViewItem<TItem> | null>(null)
+const moveToPositionContext = computed<{
+  parentId: ListEditorKey | null
+  total: number
+  currentIndex: number
+} | null>(() => {
+  const target = moveToPositionTarget.value
+  if (!target) return null
+  const found = editor.findNode(target.key)
+  const siblings = found.parent?.children ?? modelValue.value.children
+  const idx = siblings.findIndex(
+    (s) => (s.data[props.keyField] as ListEditorKey) === target.key,
+  )
+  return {
+    parentId: found.parent ? (found.parent.data[props.keyField] as ListEditorKey) : null,
+    total: siblings.length,
+    currentIndex: idx,
+  }
+})
+const moveToPositionLabel = computed<string>(() =>
+  moveToPositionTarget.value
+    ? resolveCompactText(moveToPositionTarget.value.raw, moveToPositionTarget.value.key)
+    : '',
+)
+const openMoveToPosition = (vi: DecoratedNestedViewItem<TItem>) => {
+  if (!props.showMoveToPosition) return
+  moveToPositionTarget.value = vi
+  moveToPositionDialogOpen.value = true
+}
+const onMoveToPositionConfirm = (newIndex: number) => {
+  const ctx = moveToPositionContext.value
+  const target = moveToPositionTarget.value
+  moveToPositionTarget.value = null
+  if (!ctx || !target) return
+  if (newIndex === ctx.currentIndex) return
+  if (editor.moveTo(target.key, ctx.parentId, newIndex)) {
+    markMoved(target.key)
+  }
+}
+
+const changeParentDialogOpen = ref<boolean>(false)
+const changeParentTarget = shallowRef<DecoratedNestedViewItem<TItem> | null>(null)
+const openChangeParent = (vi: DecoratedNestedViewItem<TItem>) => {
+  if (!props.showChangeParent) return
+  changeParentTarget.value = vi
+  changeParentDialogOpen.value = true
+}
+const onChangeParentConfirm = (
+  parentId: ListEditorKey | null,
+  position: 'first' | 'last',
+) => {
+  const target = changeParentTarget.value
+  changeParentTarget.value = null
+  if (!target) return
+  // Determine sibling count under the new parent so 'last' becomes the right
+  // numeric index. For 'first' the index is 0.
+  let siblingCount = 0
+  if (parentId === null) {
+    siblingCount = modelValue.value.children.length
+  } else {
+    const found = editor.findNode(parentId)
+    siblingCount = found.node?.children?.length ?? 0
+  }
+  const targetIndex = position === 'first' ? 0 : siblingCount
+  if (editor.moveTo(target.key, parentId, targetIndex)) {
+    markMoved(target.key)
+    if (parentId !== null) childrenExpandedKeys.value.add(parentId)
+  }
+}
+
 // Aggregated display flags + helpers passed into each <LeNestedRow>. Recomputed
 // reactively when any underlying dependency changes.
 const rowContext = computed(() => ({
@@ -1010,9 +1139,12 @@ const rowContext = computed(() => ({
   showDeleteButton: props.showDeleteButton,
   showAddChildButton: props.showAddChildButton,
   showAddAfterAction: props.showAddAfterAction,
+  showMoveToPosition: props.showMoveToPosition,
+  showChangeParent: props.showChangeParent,
   showInlineSaveFooter: showInlineSaveFooter.value,
   statusField: props.statusField,
   effectiveCloseVariant: effectiveCloseVariant.value,
+  keyboardNav,
   isRowClickable,
   resolveCompactText,
   resolveValidation,
@@ -1037,6 +1169,8 @@ const rowCallbacks = {
   moveBottom: (id: ListEditorKey) => moveBottom(id),
   indent: doIndent,
   outdent: doOutdent,
+  openMoveToPosition,
+  openChangeParent,
 }
 
 const rootViewItems = computed(() =>
@@ -1086,6 +1220,66 @@ const updateData = (
   nextTick(() => captureDirtyBaseline())
 }
 
+const unsavedKeysModel = defineModel<Set<ListEditorKey>>('unsavedKeys', {
+  default: () => new Set<ListEditorKey>(),
+})
+
+const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  for (const vi of viewItemsDecorated.value) {
+    if (vi.unsaved) out.add(vi.key)
+  }
+  return out
+})
+
+const setsEqual = (a: Set<ListEditorKey>, b: Set<ListEditorKey>): boolean =>
+  a.size === b.size && [...a].every((k) => b.has(k))
+
+let suppressNextUnsavedModelWatch = false
+watch(
+  internalUnsavedKeys,
+  (now) => {
+    if (setsEqual(unsavedKeysModel.value, now)) return
+    suppressNextUnsavedModelWatch = true
+    unsavedKeysModel.value = new Set(now)
+  },
+  { immediate: true },
+)
+
+watch(
+  unsavedKeysModel,
+  (now) => {
+    if (suppressNextUnsavedModelWatch) {
+      suppressNextUnsavedModelWatch = false
+      return
+    }
+    if (now.size === 0 && internalUnsavedKeys.value.size > 0) {
+      captureDirtyBaseline()
+      movedKeys.value = new Set()
+    } else {
+      for (const key of internalUnsavedKeys.value) {
+        if (!now.has(key)) {
+          rebaselineKey(key)
+          movedKeys.value.delete(key)
+        }
+      }
+    }
+  },
+)
+
+const hasUnsavedChanges = computed<boolean>(() => internalUnsavedKeys.value.size > 0)
+const unsavedCount = computed<number>(() => internalUnsavedKeys.value.size)
+
+const clearUnsavedState = (key?: ListEditorKey) => {
+  if (key === undefined) {
+    captureDirtyBaseline()
+    movedKeys.value = new Set()
+  } else {
+    rebaselineKey(key)
+    movedKeys.value.delete(key)
+  }
+}
+
 defineExpose({
   addItem: editor.addItem,
   addAfterId,
@@ -1104,6 +1298,9 @@ defineExpose({
   recalculatePositions: editor.recalculatePositions,
   viewItems: editor.viewItems,
   resetDirtyBaseline,
+  hasUnsavedChanges,
+  unsavedCount,
+  clearUnsavedState,
   enterReorderMode,
   cancelReorderMode,
   applyReorder,
@@ -1123,6 +1320,7 @@ defineExpose({
 
 <template>
   <div
+    ref="rootEl"
     class="a-nested-list-editor"
     :class="[
       `a-nested-list-editor--mode-${mode}`,
@@ -1435,6 +1633,25 @@ defineExpose({
       </slot>
     </div>
 
+    <LeMoveToPositionDialog
+      v-model="moveToPositionDialogOpen"
+      :total="moveToPositionContext?.total ?? 0"
+      :current-index="moveToPositionContext?.currentIndex ?? 0"
+      :item-label="moveToPositionLabel"
+      @confirm="onMoveToPositionConfirm"
+    />
+
+    <LeChangeParentDialog
+      v-model="changeParentDialogOpen"
+      :tree="modelValue"
+      :source-key="changeParentTarget?.key ?? null"
+      :key-field="keyField"
+      :max-depth="maxDepth"
+      :resolve-label="resolveCompactText"
+      :calculate-subtree-depth="editor.calculateSubtreeDepth"
+      @confirm="onChangeParentConfirm"
+    />
+
     <LeDeleteDialog
       v-model="deleteDialog"
       :title="deleteConfirmTitleResolved"
@@ -1695,7 +1912,10 @@ defineExpose({
 
     .a-le-row .a-le-action--edit,
     .a-le-row .a-le-action--delete,
-    .a-le-row .a-le-action--menu {
+    .a-le-row .a-le-action--menu,
+    .a-le-row .a-le-action--up,
+    .a-le-row .a-le-action--down,
+    .a-le-row .a-le-action--add-child {
       opacity: 1;
     }
   }

@@ -179,6 +179,23 @@
     font-weight: 700;
     color: var(--le-primary);
   }
+
+  // Keyboard-grabbed row in reorder mode — strong outline so the user can see
+  // which row their arrow keys will move next.
+  &--grabbed {
+    outline: 2px solid var(--le-primary);
+    outline-offset: -2px;
+    box-shadow: 0 0 0 4px var(--le-primary-state);
+  }
+}
+
+// Focus-visible styling — applies when a row receives keyboard focus via the
+// roving tabindex (arrow keys). Distinct from the hover/focus-within rules
+// that reveal action buttons; this is purely a focus indicator.
+.a-le-row:focus-visible,
+.a-le-row-wrapper:focus-visible {
+  outline: 2px solid var(--le-primary);
+  outline-offset: -2px;
 }
 
 .a-le-row-header {
@@ -510,24 +527,6 @@
 .a-le-row--expanded .a-le-action--delete,
 .a-le-row--expanded .a-le-action--menu {
   opacity: 1;
-}
-
-@media (hover: none) {
-  .a-le-action--edit,
-  .a-le-action--delete,
-  .a-le-action--menu,
-  .a-le-action--up,
-  .a-le-action--down,
-  .a-le-action--add-child {
-    opacity: 1;
-  }
-
-  // Exception: the sortable editor's `--menu` stays hover-gated in coarse-pointer
-  // contexts — the dots-vertical menu is already always-visible in reorder mode,
-  // and the view-mode menu is reached via `--touch`/:hover instead.
-  .a-sortable-list-editor .a-le-action--menu {
-    opacity: 0;
-  }
 }
 
 // Disabled reorder arrows — muted but visible when the row is hovered /

@@ -61,6 +61,10 @@ const directChildren = (): any[] =>
       },
     ]"
     :data-id="String(vi.key)"
+    role="treeitem"
+    :aria-level="vi.depth + 1"
+    :tabindex="context.keyboardNav ? context.keyboardNav.rowTabindex(vi.key) : undefined"
+    @keydown="context.keyboardNav ? context.keyboardNav.handleKeydown(vi.key, $event) : undefined"
   >
     <div
       :class="[
@@ -71,6 +75,8 @@ const directChildren = (): any[] =>
           'a-le-row--expanded': vi.expanded,
           'a-le-row--unsaved': vi.unsaved,
           'a-le-row--reorder': context.reorderMode,
+          'a-le-row--grabbed':
+            context.keyboardNav && context.keyboardNav.isGrabbed(vi.key),
           'a-le-row--clickable': context.isRowClickable(vi),
           'a-le-row--drop-source':
             dragState !== null && dragState.sourceKey === vi.key,
@@ -254,6 +260,28 @@ const directChildren = (): any[] =>
                         <VIcon icon="mdi-arrow-collapse-down" />
                       </template>
                       <VListItemTitle>{{ t('common.sortable.moveToBottom') }}</VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      v-if="context.showMoveToPosition && (!vi.firstInParent || !vi.lastInParent)"
+                      @click.stop="callbacks.openMoveToPosition(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-target" />
+                      </template>
+                      <VListItemTitle>
+                        {{ t('common.sortable.moveToPosition.action') }}
+                      </VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      v-if="context.showChangeParent"
+                      @click.stop="callbacks.openChangeParent(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-folder-move-outline" />
+                      </template>
+                      <VListItemTitle>
+                        {{ t('common.sortable.changeParent.action') }}
+                      </VListItemTitle>
                     </VListItem>
                     <VListItem
                       :disabled="!vi.canIndent"

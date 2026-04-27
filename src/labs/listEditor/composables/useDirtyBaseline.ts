@@ -15,6 +15,7 @@ export interface UseDirtyBaselineOptions {
 export interface UseDirtyBaselineApi<TItem> {
   dirtyBaseline: Ref<Map<ListEditorKey, string>>
   captureDirtyBaseline: () => void
+  rebaselineKey: (key: ListEditorKey) => void
   isItemDirty: (key: ListEditorKey, data: TItem) => boolean
   stringifyContent: (data: TItem) => string
 }
@@ -61,6 +62,16 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
     dirtyBaseline.value = next
   }
 
+  const rebaselineKey = (key: ListEditorKey) => {
+    const entries = getEntries()
+    const entry = entries.find((e) => e.key === key)
+    if (entry) {
+      dirtyBaseline.value.set(key, stringifyContent(entry.data))
+    } else {
+      dirtyBaseline.value.delete(key)
+    }
+  }
+
   const isItemDirty = (key: ListEditorKey, data: TItem): boolean => {
     const baseline = dirtyBaseline.value.get(key)
     if (baseline === undefined) return true
@@ -72,6 +83,7 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
   return {
     dirtyBaseline,
     captureDirtyBaseline,
+    rebaselineKey,
     isItemDirty,
     stringifyContent,
   }

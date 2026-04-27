@@ -45,6 +45,8 @@ import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
+import AUnsavedConfirmDialog from '@/labs/unsavedGuard/AUnsavedConfirmDialog.vue'
+import { useUnsavedChangesGuard } from '@/labs/unsavedGuard/useUnsavedChangesGuard'
 import {
   useListEditor,
   type ListEditorApi,
@@ -123,6 +125,8 @@ export {
   AListEditor,
   ASortableListEditor,
   ANestedSortableListEditor,
+  AUnsavedConfirmDialog,
+  useUnsavedChangesGuard,
   useListEditor,
   type ListEditorApi,
   useNestedListEditor,
