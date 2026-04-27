@@ -1,9 +1,13 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, provide, reactive, ref, useSlots, useTemplateRef, watch, type ComputedRef, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
+import {
+  ListEditorValidationKey,
+  type ListEditorValidationRegistry,
+} from '@/labs/listEditor/composables/useListEditorItemValidation'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
@@ -61,6 +65,12 @@ export interface Props<TItem extends Record<string, any>> {
 
   loadingKeys?: Set<ListEditorKey> | null
 
+  getValidationState?: (
+    item: TItem,
+    key: ListEditorKey,
+    index: number,
+  ) => ListEditorValidationState
+
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
   onItemSave?: (item: TItem) => Promise<void> | void
@@ -93,6 +103,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   deleteConfirmText: null,
   closeVariant: 'auto',
   loadingKeys: null,
+  getValidationState: undefined,
   onDeleteConfirm: undefined,
   onDelete: undefined,
   onItemSave: undefined,
@@ -241,7 +252,36 @@ const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
   return hit ?? t('common.sortable.itemFallback')
 }
 
-const resolveValidation = (raw: TItem): ListEditorValidationState => {
+const itemValidationStates = reactive(
+  new Map<ListEditorKey, Ref<ListEditorValidationState> | ComputedRef<ListEditorValidationState>>(),
+)
+
+provide<ListEditorValidationRegistry>(ListEditorValidationKey, {
+  register(key, state) {
+    itemValidationStates.set(key, state)
+  },
+  unregister(key) {
+    itemValidationStates.delete(key)
+  },
+})
+
+const resolveValidation = (
+  raw: TItem,
+  key?: ListEditorKey,
+  index?: number,
+): ListEditorValidationState => {
+  if (key !== undefined) {
+    const fromRegistry = itemValidationStates.get(key)?.value
+    if (fromRegistry === 'valid' || fromRegistry === 'invalid' || fromRegistry === 'warning') {
+      return fromRegistry
+    }
+  }
+  if (props.getValidationState && key !== undefined && index !== undefined) {
+    const fromProp = props.getValidationState(raw, key, index)
+    if (fromProp === 'valid' || fromProp === 'invalid' || fromProp === 'warning') {
+      return fromProp
+    }
+  }
   const v = raw.validationState
   if (v === 'valid' || v === 'invalid' || v === 'warning') return v
   return null
@@ -354,7 +394,7 @@ const onCloseClick = (vi: ListViewItem<TItem>) => {
 }
 
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
-  item: { ...vi, validationState: resolveValidation(vi.raw as TItem) },
+  item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
   raw: vi.raw,
   index: vi.index,
   key: vi.key,
@@ -538,8 +578,8 @@ defineExpose({
             'a-le-row--expanded': vi.expanded,
             'a-le-row--unsaved': vi.dirty,
             'a-le-row--clickable': isRowClickable(vi),
-            [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
-              resolveValidation(vi.raw) !== null,
+            [`a-le-row--validation-${resolveValidation(vi.raw, vi.key, vi.index)}`]:
+              resolveValidation(vi.raw, vi.key, vi.index) !== null,
           }"
           @keydown="keyboardNav.handleKeydown(vi.key, $event)"
         >
@@ -776,26 +816,6 @@ defineExpose({
 
 // Variant-specific rules, scoped under the AListEditor root.
 .a-list-editor {
-  // Validation rail. Sortable excludes `--unsaved` too (see its style block);
-  // the nested variant doesn't surface validation visuals.
-  .a-le-row--validation-invalid::after,
-  .a-le-row--validation-warning::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-  }
-
-  .a-le-row--validation-invalid:not(.a-le-row--editing)::after {
-    background: rgb(var(--v-theme-error, 217 37 80));
-  }
-
-  .a-le-row--validation-warning:not(.a-le-row--editing)::after {
-    background: rgb(var(--v-theme-warning, 251 140 0));
-  }
-
   // Chips — row-header padding (12 px left for the flat variant vs 8 px in
   // sortable, which reserves room for the drag handle).
   &--chips .a-le-row-header {

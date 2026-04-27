@@ -187,6 +187,39 @@
     outline-offset: -2px;
     box-shadow: 0 0 0 4px var(--le-primary-state);
   }
+
+  // Validation rail — red for invalid, yellow for warning. Painted as ::after
+  // so it sits visually on top of the unsaved orange rail (::before, z-index 2)
+  // when both apply: invalid wins because the user can't save anyway.
+  /* stylelint-disable selector-max-compound-selectors */
+  &--validation-invalid:not(.a-le-row--editing)::after,
+  &--validation-warning:not(.a-le-row--editing)::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    z-index: 3;
+  }
+
+  &--validation-invalid:not(.a-le-row--editing)::after {
+    background: var(--le-error-fg);
+  }
+
+  &--validation-warning:not(.a-le-row--editing)::after {
+    background: var(--le-warning);
+  }
+
+  // When the row is invalid AND unsaved, swap the row tint from orange to red
+  // so the entire row reads as a problem to fix, not a pending change.
+  &--unsaved.a-le-row--validation-invalid {
+    background: var(--le-error-container);
+  }
+  &--unsaved.a-le-row--validation-invalid .a-le-row-header {
+    background: var(--le-error-container);
+  }
+  /* stylelint-enable selector-max-compound-selectors */
 }
 
 // Focus-visible styling — applies when a row receives keyboard focus via the

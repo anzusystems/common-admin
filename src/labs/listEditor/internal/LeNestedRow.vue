@@ -39,7 +39,13 @@ const HANDLE_CLASS = 'a-le-drag-handle'
 const anchorName = (key: ListEditorKey): string =>
   `--row-${String(key).replace(/\W/g, '_')}`
 
+// Delegate to the parent editor's resolver so the registry + getValidationState
+// prop apply consistently. Falls back to reading raw.validationState if context
+// doesn't supply one.
 const resolveValidation = (raw: TItem): ListEditorValidationState => {
+  if (typeof props.context.resolveValidation === 'function') {
+    return props.context.resolveValidation(raw, props.vi.key, props.vi.index)
+  }
   const v = raw.validationState
   if (v === 'valid' || v === 'invalid' || v === 'warning') return v
   return null

@@ -4,16 +4,24 @@ import {
   nextTick,
   onBeforeUnmount,
   onMounted,
+  provide,
+  reactive,
   ref,
   shallowRef,
   useSlots,
   useTemplateRef,
   watch,
+  type ComputedRef,
+  type Ref,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
+import {
+  ListEditorValidationKey,
+  type ListEditorValidationRegistry,
+} from '@/labs/listEditor/composables/useListEditorItemValidation'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import {
   useNestedListEditor,
@@ -90,6 +98,12 @@ export interface Props<TItem extends Record<string, any>> {
   showChangeParent?: boolean
   showExpandToggle?: boolean
 
+  getValidationState?: (
+    item: TItem,
+    key: ListEditorKey,
+    index: number,
+  ) => ListEditorValidationState
+
   addLabel?: string | null
   emptyTitle?: string | null
   emptyText?: string | null
@@ -133,6 +147,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showMoveToPosition: false,
   showChangeParent: false,
   showExpandToggle: true,
+  getValidationState: undefined,
   addLabel: null,
   emptyTitle: null,
   emptyText: null,
@@ -937,14 +952,43 @@ const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
   return hit ?? t('common.sortable.itemFallback')
 }
 
-const resolveValidation = (raw: TItem): ListEditorValidationState => {
+const itemValidationStates = reactive(
+  new Map<ListEditorKey, Ref<ListEditorValidationState> | ComputedRef<ListEditorValidationState>>(),
+)
+
+provide<ListEditorValidationRegistry>(ListEditorValidationKey, {
+  register(key, state) {
+    itemValidationStates.set(key, state)
+  },
+  unregister(key) {
+    itemValidationStates.delete(key)
+  },
+})
+
+const resolveValidation = (
+  raw: TItem,
+  key?: ListEditorKey,
+  index?: number,
+): ListEditorValidationState => {
+  if (key !== undefined) {
+    const fromRegistry = itemValidationStates.get(key)?.value
+    if (fromRegistry === 'valid' || fromRegistry === 'invalid' || fromRegistry === 'warning') {
+      return fromRegistry
+    }
+  }
+  if (props.getValidationState && key !== undefined && index !== undefined) {
+    const fromProp = props.getValidationState(raw, key, index)
+    if (fromProp === 'valid' || fromProp === 'invalid' || fromProp === 'warning') {
+      return fromProp
+    }
+  }
   const v = raw.validationState
   if (v === 'valid' || v === 'invalid' || v === 'warning') return v
   return null
 }
 
 const buildSlotProps = (vi: DecoratedNestedViewItem<TItem>) => ({
-  item: { ...vi, validationState: resolveValidation(vi.raw as TItem) },
+  item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
   raw: vi.raw,
   index: vi.index,
   key: vi.key,
@@ -1147,7 +1191,8 @@ const rowContext = computed(() => ({
   keyboardNav,
   isRowClickable,
   resolveCompactText,
-  resolveValidation,
+  resolveValidation: (raw: TItem, key?: ListEditorKey, index?: number) =>
+    resolveValidation(raw, key, index),
   buildSlotProps,
 }))
 

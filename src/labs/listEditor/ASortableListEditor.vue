@@ -1,9 +1,24 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, ref, shallowRef, useSlots, useTemplateRef, watch } from 'vue'
+import {
+  computed,
+  provide,
+  reactive,
+  ref,
+  shallowRef,
+  useSlots,
+  useTemplateRef,
+  watch,
+  type ComputedRef,
+  type Ref,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
+import {
+  ListEditorValidationKey,
+  type ListEditorValidationRegistry,
+} from '@/labs/listEditor/composables/useListEditorItemValidation'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
@@ -79,6 +94,12 @@ export interface Props<TItem extends Record<string, any>> {
   disableDrag?: boolean
   showMoveToPosition?: boolean
 
+  getValidationState?: (
+    item: TItem,
+    key: ListEditorKey,
+    index: number,
+  ) => ListEditorValidationState
+
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
   onItemSave?: (item: TItem) => Promise<void> | void
@@ -116,6 +137,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   reorderDisabled: false,
   disableDrag: false,
   showMoveToPosition: false,
+  getValidationState: undefined,
   onDeleteConfirm: undefined,
   onDelete: undefined,
   onItemSave: undefined,
@@ -413,7 +435,36 @@ const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
   return hit ?? t('common.sortable.itemFallback')
 }
 
-const resolveValidation = (raw: TItem): ListEditorValidationState => {
+const itemValidationStates = reactive(
+  new Map<ListEditorKey, Ref<ListEditorValidationState> | ComputedRef<ListEditorValidationState>>(),
+)
+
+provide<ListEditorValidationRegistry>(ListEditorValidationKey, {
+  register(key, state) {
+    itemValidationStates.set(key, state)
+  },
+  unregister(key) {
+    itemValidationStates.delete(key)
+  },
+})
+
+const resolveValidation = (
+  raw: TItem,
+  key?: ListEditorKey,
+  index?: number,
+): ListEditorValidationState => {
+  if (key !== undefined) {
+    const fromRegistry = itemValidationStates.get(key)?.value
+    if (fromRegistry === 'valid' || fromRegistry === 'invalid' || fromRegistry === 'warning') {
+      return fromRegistry
+    }
+  }
+  if (props.getValidationState && key !== undefined && index !== undefined) {
+    const fromProp = props.getValidationState(raw, key, index)
+    if (fromProp === 'valid' || fromProp === 'invalid' || fromProp === 'warning') {
+      return fromProp
+    }
+  }
   const v = raw.validationState
   if (v === 'valid' || v === 'invalid' || v === 'warning') return v
   return null
@@ -602,7 +653,7 @@ const moveBottom = (idx: number) => {
 }
 
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
-  item: { ...vi, validationState: resolveValidation(vi.raw as TItem) },
+  item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
   raw: vi.raw,
   index: vi.index,
   key: vi.key,
@@ -903,8 +954,8 @@ defineExpose({
             'a-le-row--reorder': reorderMode,
             'a-le-row--grabbed': keyboardNav.isGrabbed(vi.key),
             'a-le-row--clickable': isRowClickable(vi),
-            [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
-              resolveValidation(vi.raw) !== null,
+            [`a-le-row--validation-${resolveValidation(vi.raw, vi.key, vi.index)}`]:
+              resolveValidation(vi.raw, vi.key, vi.index) !== null,
           }"
           @keydown="keyboardNav.handleKeydown(vi.key, $event)"
         >
@@ -1282,29 +1333,6 @@ defineExpose({
     padding-right: 8px;
     gap: 8px;
   }
-
-  // Validation rail — excludes both `--editing` and `--unsaved` so the
-  // primary + warning rails (higher priority states) aren't overwritten by
-  // a validation-error stripe.
-  /* stylelint-disable selector-max-compound-selectors */
-  .a-le-row--validation-invalid::after,
-  .a-le-row--validation-warning::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-  }
-
-  .a-le-row--validation-invalid:not(.a-le-row--editing, .a-le-row--unsaved)::after {
-    background: var(--le-error-fg);
-  }
-
-  .a-le-row--validation-warning:not(.a-le-row--editing, .a-le-row--unsaved)::after {
-    background: var(--le-warning);
-  }
-  /* stylelint-enable selector-max-compound-selectors */
 
   // Drag rendering — SortableJS clone + ghost + chosen source.
   .a-le-row--ghost {

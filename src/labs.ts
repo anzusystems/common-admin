@@ -52,6 +52,11 @@ import {
   type ListEditorApi,
 } from '@/labs/listEditor/composables/useListEditor'
 import {
+  useListEditorItemValidation,
+  ListEditorValidationKey,
+  type ListEditorValidationRegistry,
+} from '@/labs/listEditor/composables/useListEditorItemValidation'
+import {
   useNestedListEditor,
   type NestedListEditorApi,
   type NestedViewItem,
@@ -128,6 +133,9 @@ export {
   AUnsavedConfirmDialog,
   useUnsavedChangesGuard,
   useListEditor,
+  useListEditorItemValidation,
+  ListEditorValidationKey,
+  type ListEditorValidationRegistry,
   type ListEditorApi,
   useNestedListEditor,
   type NestedListEditorApi,
