@@ -153,7 +153,7 @@ describe('useUnsavedChangesGuard', () => {
         }),
       )
       // Find the registered listener
-      const call = addSpy.mock.calls.find((c) => c[0] === 'beforeunload')
+      const call = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'beforeunload')
       const handler = call?.[1] as (e: BeforeUnloadEvent) => void
       const e = new Event('beforeunload') as BeforeUnloadEvent
       const preventSpy = vi.spyOn(e, 'preventDefault')
@@ -170,7 +170,7 @@ describe('useUnsavedChangesGuard', () => {
           guardWindowUnload: true,
         }),
       )
-      const call = addSpy.mock.calls.find((c) => c[0] === 'beforeunload')
+      const call = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'beforeunload')
       const handler = call?.[1] as (e: BeforeUnloadEvent) => void
       const e = new Event('beforeunload') as BeforeUnloadEvent
       const preventSpy = vi.spyOn(e, 'preventDefault')

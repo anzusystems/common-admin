@@ -1,6 +1,6 @@
 /* eslint-disable vue/no-ref-object-reactivity-loss */
 import { describe, expect, it, vi } from 'vitest'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import {
   useKeyboardNav,
   type KeyboardNavOptions,
@@ -345,6 +345,119 @@ describe('useKeyboardNav', () => {
       nav.handleKeydown(1, fireKey('Escape'))
       expect(nav.focusedKey.value).toBeNull()
       expect(mocks.onToggleEdit).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('focus management on row delete', () => {
+    const buildWithItems = (initial: KeyboardNavViewItem[]) => {
+      const items = ref<KeyboardNavViewItem[]>(initial)
+      const { options, mocks } = buildOptions({
+        viewItems: computed(() => items.value),
+      })
+      const nav = useKeyboardNav(options)
+      return { items, options, mocks, nav }
+    }
+
+    it('falls focus to next sibling when the focused row is removed', async () => {
+      const { items, nav } = buildWithItems([
+        { key: 1 },
+        { key: 2 },
+        { key: 3 },
+      ])
+      nav.setFocus(2)
+      await nextTick()
+      // Remove row 2
+      items.value = [{ key: 1 }, { key: 3 }]
+      await nextTick()
+      expect(nav.focusedKey.value).toBe(3)
+    })
+
+    it('falls focus to the new last row when the last row is removed', async () => {
+      const { items, nav } = buildWithItems([
+        { key: 1 },
+        { key: 2 },
+        { key: 3 },
+      ])
+      nav.setFocus(3)
+      await nextTick()
+      items.value = [{ key: 1 }, { key: 2 }]
+      await nextTick()
+      expect(nav.focusedKey.value).toBe(2)
+    })
+
+    it('clears focus when all rows are removed', async () => {
+      const { items, nav } = buildWithItems([{ key: 1 }, { key: 2 }])
+      nav.setFocus(2)
+      await nextTick()
+      items.value = []
+      await nextTick()
+      expect(nav.focusedKey.value).toBeNull()
+    })
+
+    it('does not change focus when a non-focused row is removed', async () => {
+      const { items, nav } = buildWithItems([
+        { key: 1 },
+        { key: 2 },
+        { key: 3 },
+      ])
+      nav.setFocus(2)
+      await nextTick()
+      items.value = [{ key: 2 }, { key: 3 }] // removed row 1
+      await nextTick()
+      expect(nav.focusedKey.value).toBe(2)
+    })
+
+    it('releases grab when the grabbed row is removed externally', async () => {
+      const isReorderMode = ref(true)
+      const items = ref<KeyboardNavViewItem[]>([
+        { key: 1 },
+        { key: 2 },
+        { key: 3 },
+      ])
+      const { options } = buildOptions({
+        isReorderMode,
+        viewItems: computed(() => items.value),
+      })
+      const nav = useKeyboardNav(options)
+      nav.handleKeydown(2, fireKey('Enter'))
+      expect(nav.grabbedKey.value).toBe(2)
+      items.value = [{ key: 1 }, { key: 3 }]
+      await nextTick()
+      expect(nav.grabbedKey.value).toBeNull()
+    })
+  })
+
+  describe('grabbedIndex + totalCount status', () => {
+    it('grabbedIndex returns -1 when nothing is grabbed', () => {
+      const { options } = buildOptions()
+      const nav = useKeyboardNav(options)
+      expect(nav.grabbedIndex.value).toBe(-1)
+    })
+
+    it('grabbedIndex tracks the grabbed row position', () => {
+      const isReorderMode = ref(true)
+      const { options } = buildOptions({ isReorderMode })
+      const nav = useKeyboardNav(options)
+      nav.handleKeydown(2, fireKey('Enter'))
+      expect(nav.grabbedIndex.value).toBe(1)
+    })
+
+    it('totalCount reflects the row count', () => {
+      const { options } = buildOptions()
+      const nav = useKeyboardNav(options)
+      expect(nav.totalCount.value).toBe(3)
+    })
+
+    it('totalCount reacts to row additions / removals', async () => {
+      const items = ref<KeyboardNavViewItem[]>([{ key: 1 }, { key: 2 }])
+      const { options } = buildOptions({
+        viewItems: computed(() => items.value),
+      })
+      const nav = useKeyboardNav(options)
+      expect(nav.totalCount.value).toBe(2)
+      items.value = [{ key: 1 }, { key: 2 }, { key: 3 }, { key: 4 }]
+      await nextTick()
+      expect(nav.totalCount.value).toBe(4)
     })
   })
 })

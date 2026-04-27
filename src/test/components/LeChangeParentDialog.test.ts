@@ -63,8 +63,9 @@ const mountDialog = (
           sourceKey,
           keyField: 'id',
           maxDepth,
-          resolveLabel: (raw: Item) => raw.title,
-          calculateSubtreeDepth,
+          resolveLabel: (raw) => (raw as Item).title,
+          calculateSubtreeDepth: (n) =>
+            calculateSubtreeDepth(n as NestedTreeNode<Item>),
           onConfirm,
         })
     },

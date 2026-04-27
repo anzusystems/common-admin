@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
-interface Props {
+export interface Props {
   title?: string
   body?: string
   stayLabel?: string

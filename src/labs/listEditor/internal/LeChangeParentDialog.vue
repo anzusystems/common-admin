@@ -7,7 +7,7 @@ import type {
   NestedTreeNode,
 } from '@/labs/listEditor/types/listEditorTypes'
 
-interface Props {
+export interface Props<TItem extends Record<string, any>> {
   tree: NestedTree<TItem>
   sourceKey: ListEditorKey | null
   keyField: string
@@ -25,7 +25,7 @@ interface Candidate {
   reason: 'self' | 'descendant' | 'maxDepth' | 'currentParent' | null
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props<TItem>>()
 const open = defineModel<boolean>({ required: true })
 
 const emit = defineEmits<{

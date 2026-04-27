@@ -4,6 +4,12 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
+interface AListEditorExposed {
+  hasUnsavedChanges: boolean
+  unsavedCount: number
+  clearUnsavedState: (key?: ListEditorKey) => void
+}
+
 interface Item {
   id: number
   position: number
@@ -26,13 +32,13 @@ afterEach(() => {
 const mountEditor = () => {
   const model = ref<Item[]>(items())
   const unsavedKeys = ref(new Set<ListEditorKey>())
-  const editorRef = ref<InstanceType<typeof AListEditor> | null>(null)
+  const editorRef = ref<AListEditorExposed | null>(null)
   const Host = defineComponent({
     setup() {
       return () =>
         h(AListEditor<Item>, {
           ref: (r: unknown) => {
-            editorRef.value = r as InstanceType<typeof AListEditor>
+            editorRef.value = r as AListEditorExposed | null
           },
           modelValue: model.value,
           'onUpdate:modelValue': (v: Item[]) => {

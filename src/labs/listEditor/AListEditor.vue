@@ -412,6 +412,7 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
     delete: () => onDeleteClick(vi),
     addAfter: () => onRowAddAfterClick(vi),
     toggleExpand: () => onExpandClick(vi),
+    update: (data: TItem) => editor.updateItem(vi.key, data),
   },
 })
 
@@ -807,6 +808,21 @@ defineExpose({
       @confirm="onDeleteDialogConfirm"
       @cancel="onDeleteDialogCancel"
     />
+
+    <div
+      class="a-le-sr-only"
+      aria-live="polite"
+      role="status"
+    >
+      {{
+        keyboardNav.grabbedKey.value !== null
+          ? t('common.sortable.keyboardGrab.status', {
+              n: keyboardNav.grabbedIndex.value + 1,
+              total: keyboardNav.totalCount.value,
+            })
+          : ''
+      }}
+    </div>
   </div>
 </template>
 

@@ -49,6 +49,9 @@
     "stay": "Zostať",
     "discard": "Odísť aj tak"
   },
+  "keyboardGrab": {
+    "status": "Uchopené, pozícia {n} z {total}. Šípkami presúvajte, Enter alebo medzerník vloží, Escape zruší."
+  },
   "indent": "Zanoriť (spraviť podradenou)",
   "outdent": "Vynoriť (na úroveň rodiča)",
   "unsaved": "Neuložené",

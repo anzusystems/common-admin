@@ -680,6 +680,7 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
     moveDown: () => moveDown(vi.index),
     moveTop: () => moveTop(vi.index),
     moveBottom: () => moveBottom(vi.index),
+    update: (data: TItem) => editor.updateItem(vi.key, data),
   },
 })
 
@@ -1310,6 +1311,21 @@ defineExpose({
       @confirm="onDeleteDialogConfirm"
       @cancel="onDeleteDialogCancel"
     />
+
+    <div
+      class="a-le-sr-only"
+      aria-live="polite"
+      role="status"
+    >
+      {{
+        keyboardNav.grabbedKey.value !== null
+          ? t('common.sortable.keyboardGrab.status', {
+              n: keyboardNav.grabbedIndex.value + 1,
+              total: keyboardNav.totalCount.value,
+            })
+          : ''
+      }}
+    </div>
 
   </div>
 </template>

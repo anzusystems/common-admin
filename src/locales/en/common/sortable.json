@@ -49,6 +49,9 @@
     "stay": "Stay",
     "discard": "Leave anyway"
   },
+  "keyboardGrab": {
+    "status": "Grabbed, position {n} of {total}. Use arrow keys to move, Enter or Space to drop, Escape to cancel."
+  },
   "indent": "Indent (make child)",
   "outdent": "Outdent (move to parent level)",
   "unsaved": "Unsaved",

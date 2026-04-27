@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
 export interface KeyboardNavViewItem {
@@ -37,6 +37,10 @@ export interface KeyboardNavOptions {
 export interface KeyboardNavApi {
   focusedKey: Ref<ListEditorKey | null>
   grabbedKey: Ref<ListEditorKey | null>
+  /** 0-based index of the grabbed row in the current ordering, or -1 if no grab. */
+  grabbedIndex: ComputedRef<number>
+  /** Total count of rows currently in the editor. */
+  totalCount: ComputedRef<number>
   isFocused: (key: ListEditorKey) => boolean
   isGrabbed: (key: ListEditorKey) => boolean
   rowTabindex: (key: ListEditorKey) => number
@@ -59,6 +63,13 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
   const isFocused = (key: ListEditorKey): boolean => focusedKey.value === key
   const isGrabbed = (key: ListEditorKey): boolean => grabbedKey.value === key
 
+  const grabbedIndex = computed<number>(() => {
+    if (grabbedKey.value === null) return -1
+    return orderedKeys.value.indexOf(grabbedKey.value)
+  })
+
+  const totalCount = computed<number>(() => orderedKeys.value.length)
+
   function rowTabindex(key: ListEditorKey): number {
     const ordered = orderedKeys.value
     if (ordered.length === 0) return -1
@@ -80,6 +91,43 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
     focusedKey.value = key
     focusRowElement(key)
   }
+
+  // When the focused row is removed (e.g. via delete), fall to the row that
+  // took its slot, or to the new last row if it was at the end. Without this,
+  // focus vanishes to <body> after a delete and the user has to Tab back in.
+  // We snapshot the previous ordering so we can look up where the focused key
+  // *was* — by the time the watcher fires, the key is already gone from `now`.
+  let prevOrderedKeys: ListEditorKey[] = [...orderedKeys.value]
+  watch(
+    orderedKeys,
+    (now) => {
+      if (focusedKey.value === null) {
+        prevOrderedKeys = [...now]
+        return
+      }
+      if (now.includes(focusedKey.value)) {
+        prevOrderedKeys = [...now]
+        return
+      }
+      if (now.length === 0) {
+        focusedKey.value = null
+        prevOrderedKeys = []
+        return
+      }
+      const oldIndex = prevOrderedKeys.indexOf(focusedKey.value)
+      const fallbackIndex = Math.min(Math.max(oldIndex, 0), now.length - 1)
+      setFocus(now[fallbackIndex])
+      prevOrderedKeys = [...now]
+    },
+  )
+
+  // Releasing a grab when the grabbed row is no longer in the list — keeps the
+  // grab state consistent if the row gets removed externally.
+  watch(orderedKeys, (now) => {
+    if (grabbedKey.value !== null && !now.includes(grabbedKey.value)) {
+      grabbedKey.value = null
+    }
+  })
 
   function releaseGrab() {
     grabbedKey.value = null
@@ -208,6 +256,8 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
   return {
     focusedKey,
     grabbedKey,
+    grabbedIndex,
+    totalCount,
     isFocused,
     isGrabbed,
     rowTabindex,
