@@ -15,6 +15,7 @@
   "emptyText": "Start by adding a new item.",
   "itemFallback": "Item",
   "reorder": "Reorder",
+  "reorderModeLabel": "Reorder mode",
   "expandAll": "Expand all",
   "collapseAll": "Collapse all",
   "reorderApply": "Apply",

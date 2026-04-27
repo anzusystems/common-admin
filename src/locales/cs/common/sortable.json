@@ -15,6 +15,7 @@
   "emptyText": "Začněte přidáním nové položky.",
   "itemFallback": "Položka",
   "reorder": "Přeskupit",
+  "reorderModeLabel": "Režim přeskupování",
   "expandAll": "Rozbalit vše",
   "collapseAll": "Sbalit vše",
   "reorderApply": "Použít",

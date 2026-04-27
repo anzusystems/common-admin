@@ -21,6 +21,7 @@ import SortableView from '@/playground/sortableView/SortableView.vue'
 import ListEditorView from '@/playground/listEditorView/ListEditorView.vue'
 import SortableListEditorView from '@/playground/sortableListEditorView/SortableListEditorView.vue'
 import NestedSortableListEditorView from '@/playground/nestedSortableListEditorView/NestedSortableListEditorView.vue'
+import QuizManageView from '@/playground/quizManageView/QuizManageView.vue'
 import {
   initLanguageMessagesLoaded,
   initLoadLanguageMessages,
@@ -155,6 +156,11 @@ const router = createRouter({
       path: '/view/nested-sortable-list-editor',
       name: 'view-nested-sortable-list-editor',
       component: NestedSortableListEditorView,
+    },
+    {
+      path: '/view/quiz-manage',
+      name: 'view-quiz-manage',
+      component: QuizManageView,
     },
     {
       path: '/view/alert',

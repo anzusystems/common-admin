@@ -94,6 +94,27 @@ export interface Props<TItem extends Record<string, any>> {
   disableDrag?: boolean
   showMoveToPosition?: boolean
 
+  /**
+   * Embedded mode — this editor is nested inside another editor's `#item`
+   * slot and follows a shared `v-model:mode` from the outer editor. When
+   * set, the editor:
+   *   - hides its own Reorder button + Cancel/Apply toolbar
+   *   - skips the snapshot/restore (the outer editor's deep snapshot covers
+   *     nested data, so cancel at the top reverts everything)
+   *   - paints lighter chrome so it visually reads as part of the parent row
+   * Pair with `v-model:mode` bound to the same ref the outer editor uses.
+   */
+  embedded?: boolean
+  /**
+   * Allow rows to remain inline-editable while the editor is in reorder
+   * mode. By default, entering reorder closes any open inline edit and the
+   * `#item` slot body is hidden — this keeps the visual focus on dragging.
+   * Set this when the open row's body needs to render in reorder mode (e.g.
+   * the parent editor of a shared-reorder pair, where the open question
+   * exposes its embedded answers list for dragging).
+   */
+  allowEditInReorder?: boolean
+
   getValidationState?: (
     item: TItem,
     key: ListEditorKey,
@@ -137,6 +158,8 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   reorderDisabled: false,
   disableDrag: false,
   showMoveToPosition: false,
+  embedded: false,
+  allowEditInReorder: false,
   getValidationState: undefined,
   onDeleteConfirm: undefined,
   onDelete: undefined,
@@ -251,6 +274,9 @@ const canEnterReorder = computed(
   () => canInteract.value && !props.reorderDisabled && modelValue.value.length > 1,
 )
 
+const embeddedRef = computed(() => props.embedded)
+const allowEditInReorderRef = computed(() => props.allowEditInReorder)
+
 const {
   applying,
   applyError,
@@ -270,13 +296,18 @@ const {
     modelValue.value = m
   },
   canEnterReorder,
+  embedded: embeddedRef,
   onEnter: () => {
-    clearEditing()
-    expandedKeys.value.clear()
+    if (!allowEditInReorderRef.value) {
+      clearEditing()
+      expandedKeys.value.clear()
+    }
   },
   onExternalEnter: () => {
-    clearEditing()
-    expandedKeys.value.clear()
+    if (!allowEditInReorderRef.value) {
+      clearEditing()
+      expandedKeys.value.clear()
+    }
   },
   onReorderApply: (items) => props.onReorderApply?.(items),
   emit: {
@@ -307,6 +338,7 @@ const deleteConfirmTextResolved = computed(
 const reorderToggleVisible = computed<boolean>(
   (): boolean =>
     !props.chips
+    && !props.embedded
     && props.showReorderToggle
     && !reorderMode.value
     && modelValue.value.length > 0,
@@ -325,7 +357,20 @@ const headerVisible = computed<boolean>(
       || slots.header
       || slots['reorder-toggle']
       || reorderToggleVisible.value
-      || reorderMode.value
+      || (reorderMode.value && !props.embedded)
+    ),
+)
+
+// Editor band-only header — true when the only thing in the header is the
+// reorder button (no title, no slot). Lets the template float the button
+// over the editor's top-right corner instead of reserving an empty band.
+const headerHasContent = computed<boolean>(
+  (): boolean =>
+    !!(
+      props.title
+      || slots.header
+      || slots['reorder-toggle']
+      || (reorderMode.value && !props.embedded)
     ),
 )
 
@@ -527,7 +572,8 @@ const onRowAddAfterClick = (vi: ListViewItem<TItem>) => {
 }
 
 const onEditClick = (vi: ListViewItem<TItem>) => {
-  if (!canInteract.value || reorderMode.value) return
+  if (!canInteract.value) return
+  if (reorderMode.value && !props.allowEditInReorder) return
   // Toggle: clicking edit while already editing closes the form, matching the
   // row-header click behaviour.
   if (editingKeys.value.has(vi.key)) {
@@ -542,7 +588,8 @@ const onEditClick = (vi: ListViewItem<TItem>) => {
 }
 
 const onExpandClick = (vi: ListViewItem<TItem>) => {
-  if (props.disabled || props.loading || reorderMode.value) return
+  if (props.disabled || props.loading) return
+  if (reorderMode.value && !props.allowEditInReorder) return
   const key = vi.key
   const currentlyExpanded = expandedKeys.value.has(key)
   if (currentlyExpanded) {
@@ -558,7 +605,7 @@ const isRowClickable = (vi: DecoratedViewItem<TItem>): boolean => {
   if (props.chips) return false
   if (props.disableRowClick) return false
   if (props.disabled || props.loading) return false
-  if (reorderMode.value) return false
+  if (reorderMode.value && !props.allowEditInReorder) return false
   if (vi.editing || vi.expanded) return true
   if (!props.readonly && props.showEditButton) return true
   if (props.readonly && hasReadonlyDetail.value) return true
@@ -795,6 +842,9 @@ defineExpose({
         'a-sortable-list-editor--touch': isTouch,
         'a-sortable-list-editor--drag-enabled': dragEnabled,
         'a-sortable-list-editor--chips': chips,
+        'a-sortable-list-editor--embedded': embedded,
+        'a-sortable-list-editor--header-floating':
+          !embedded && !chips && !headerHasContent && headerVisible,
       },
     ]"
   >
@@ -815,7 +865,7 @@ defineExpose({
             {{ title }}
           </h3>
           <div class="a-le-header-actions">
-            <template v-if="reorderMode">
+            <template v-if="reorderMode && !embedded">
               <!-- Reorder-mode header: pending-changes count + Cancel/Apply.
                    Replaces the old sticky bottom toolbar — the actions sit
                    where the "Reorder" button lives in view mode. -->
@@ -823,6 +873,12 @@ defineExpose({
                 name="reorder-toolbar"
                 v-bind="toolbarSlotProps"
               >
+                <span
+                  v-if="!title"
+                  class="a-le-reorder-mode-label"
+                >
+                  {{ t('common.sortable.reorderModeLabel') }}
+                </span>
                 <LeStatus
                   :class="{ 'a-le-toolbar-status--pending': hasPendingChanges }"
                   :has-pending-changes="hasPendingChanges"
@@ -1213,7 +1269,9 @@ defineExpose({
             </div>
           </div>
 
-          <template v-if="vi.editing && !reorderMode && $slots.item">
+          <template
+            v-if="vi.editing && (allowEditInReorder || !reorderMode) && $slots.item"
+          >
             <div class="a-le-row-body">
               <div class="a-le-form">
                 <slot
@@ -1227,7 +1285,7 @@ defineExpose({
               v-bind="buildSlotProps(vi)"
             >
               <div
-                v-if="showInlineSaveFooter"
+                v-if="showInlineSaveFooter && !reorderMode"
                 class="a-le-row-footer"
               >
                 <div class="a-le-row-footer-spacer" />
@@ -1252,7 +1310,11 @@ defineExpose({
           </template>
 
           <div
-            v-else-if="vi.expanded && !reorderMode && $slots['item-readonly']"
+            v-else-if="
+              vi.expanded
+                && (allowEditInReorder || !reorderMode)
+                && $slots['item-readonly']
+            "
             class="a-le-row-body"
           >
             <div class="a-le-form">
@@ -1375,6 +1437,89 @@ defineExpose({
   .a-le-row--drag .a-le-actions,
   .a-le-row--drag .a-le-status {
     display: none;
+  }
+
+  // Reorder-mode contextual label — shown when there's no title so the user
+  // sees a "Reorder mode" hint next to the pending-changes status. Hidden
+  // when the consumer passes a title (the title already provides context).
+  .a-le-reorder-mode-label {
+    font: 500 13px/1 var(--v-font-body, inherit);
+    color: var(--le-primary);
+    margin-right: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  // Floating-header variant — when the only thing in the header is the
+  // Reorder button, drop the band entirely and float the button absolutely
+  // over the editor's top-right corner so we don't waste ~50 px of vertical
+  // rhythm on an empty bar.
+  &--header-floating .a-le-card {
+    position: relative;
+  }
+
+  &--header-floating .a-le-header {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    z-index: 2;
+  }
+
+  &--header-floating .a-le-header-actions {
+    margin-left: 0;
+  }
+
+  // Embedded variant — this editor sits inside another editor's row. Drop
+  // the card chrome (border, shadow), tighten rows, lighten background so it
+  // visually reads as part of the parent's body, not a sibling list.
+  &--embedded .a-le-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  &--embedded .a-le-header {
+    padding: 4px 0 6px;
+    background: transparent;
+    border: none;
+  }
+
+  &--embedded .a-le-title-heading {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--le-on-surface-medium, rgb(0 0 0 / 70%));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &--embedded .a-le-row {
+    background: var(--le-surface);
+    border: 1px solid var(--le-border);
+    border-radius: 6px;
+    margin-bottom: 4px;
+  }
+
+  &--embedded .a-le-row:last-of-type {
+    margin-bottom: 0;
+  }
+
+  &--embedded .a-le-row-add {
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px dashed var(--le-border);
+    color: var(--le-primary);
+    font-size: 12px;
+    align-self: flex-start;
+    margin-top: 6px;
+  }
+
+  &--embedded .a-le-row-add:hover {
+    background: var(--le-primary-state);
+    border-style: solid;
   }
 
   // Chips-layout variant-specific overrides — `__rows` flex-wraps into pills,

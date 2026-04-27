@@ -80,6 +80,14 @@ export interface UseReorderModeOptions<T> {
    * if the need arises; both current callers use the default.
    */
   clonePayload?: (m: T) => T
+  /**
+   * Embedded mode — the editor follows external mode changes but does NOT
+   * own a snapshot or apply/cancel logic. The parent (a non-embedded outer
+   * editor) takes a deep snapshot covering this editor's data too, so cancel
+   * at the top restores everything. Used for the "shared reorder" pattern
+   * where a single Reorder button drives multiple stacked editors.
+   */
+  embedded?: ComputedRef<boolean> | Ref<boolean>
   emit: UseReorderModeEmit<T>
 }
 
@@ -119,9 +127,13 @@ export function useReorderMode<T>(
       ? options.clonePayload(options.modelValue.value)
       : options.cloneModel(options.modelValue.value)
 
+  const isEmbedded = (): boolean => options.embedded?.value === true
+
   const enterReorderMode = () => {
     if (!options.canEnterReorder.value || reorderMode.value) return
-    options.snapshot.value = options.cloneModel(options.modelValue.value)
+    if (!isEmbedded()) {
+      options.snapshot.value = options.cloneModel(options.modelValue.value)
+    }
     options.movedKeys.value = new Set()
     applyError.value = null
     options.mode.value = 'reorder'
@@ -131,7 +143,7 @@ export function useReorderMode<T>(
 
   const cancelReorderMode = () => {
     if (!reorderMode.value) return
-    if (options.snapshot.value) {
+    if (!isEmbedded() && options.snapshot.value) {
       options.applyModel(options.snapshot.value as T)
     }
     options.snapshot.value = null
@@ -148,7 +160,7 @@ export function useReorderMode<T>(
     if (!reorderMode.value) return
     const payload = clonePayload()
     applyError.value = null
-    if (options.onReorderApply) {
+    if (!isEmbedded() && options.onReorderApply) {
       applying.value = true
       try {
         await options.onReorderApply(payload)
@@ -173,20 +185,38 @@ export function useReorderMode<T>(
   // Handle external mode flips (v-model:mode from a parent) — mirror the
   // same bookkeeping enterReorderMode / cancelReorderMode do so the state
   // stays consistent whether the transition came from a button click or a
-  // parent binding.
+  // parent binding. Embedded editors do NOT take a snapshot; their parent
+  // (the outer non-embedded editor) owns one that covers nested data too.
+  //
+  // The view→reorder→view cleanup path differs between embedded and
+  // non-embedded:
+  //   - non-embedded cancel: snapshot is set → clear state here
+  //   - non-embedded apply: applyReorder nulls snapshot BEFORE flipping
+  //     mode, so the snapshot-guarded branch is skipped → movedKeys stays
+  //     populated until consumer calls resetDirtyBaseline (the contract)
+  //   - embedded: no snapshot ever, clear state on every view transition
+  //     so the inner editor's movedKeys doesn't outlive a parent
+  //     cancel/apply (otherwise rows would render as `unsaved` after the
+  //     parent restores the original data)
   watch(options.mode, (newMode, oldMode) => {
     if (newMode === 'reorder' && oldMode !== 'reorder') {
-      if (!options.snapshot.value) {
+      if (!isEmbedded() && !options.snapshot.value) {
         options.snapshot.value = options.cloneModel(options.modelValue.value)
       }
       options.movedKeys.value = new Set()
       options.onExternalEnter?.()
     }
-    if (newMode === 'view' && oldMode === 'reorder' && options.snapshot.value) {
-      options.snapshot.value = null
-      options.movedKeys.value = new Set()
-      applyError.value = null
-      applying.value = false
+    if (newMode === 'view' && oldMode === 'reorder') {
+      if (options.snapshot.value) {
+        options.snapshot.value = null
+        options.movedKeys.value = new Set()
+        applyError.value = null
+        applying.value = false
+      } else if (isEmbedded()) {
+        options.movedKeys.value = new Set()
+        applyError.value = null
+        applying.value = false
+      }
     }
   })
 

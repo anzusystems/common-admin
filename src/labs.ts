@@ -57,6 +57,10 @@ import {
   type ListEditorValidationRegistry,
 } from '@/labs/listEditor/composables/useListEditorItemValidation'
 import {
+  useNestedUnsavedKeys,
+  type UseNestedUnsavedKeysApi,
+} from '@/labs/listEditor/composables/useNestedUnsavedKeys'
+import {
   useNestedListEditor,
   type NestedListEditorApi,
   type NestedViewItem,
@@ -136,6 +140,8 @@ export {
   useListEditorItemValidation,
   ListEditorValidationKey,
   type ListEditorValidationRegistry,
+  useNestedUnsavedKeys,
+  type UseNestedUnsavedKeysApi,
   type ListEditorApi,
   useNestedListEditor,
   type NestedListEditorApi,
