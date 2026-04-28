@@ -29,7 +29,7 @@ export interface UseDeleteDialogOptions<TItem, ViewItem> {
   disableDeleteConfirm: () => boolean
 }
 
-export interface UseDeleteDialogApi<TItem, ViewItem> {
+export interface UseDeleteDialogApi<ViewItem> {
   deleteDialog: Ref<boolean>
   deleteTarget: Ref<ViewItem | null>
   deleteInFlight: Ref<boolean>
@@ -53,7 +53,7 @@ export function useDeleteDialog<
   ViewItem extends { key: string | number; raw: TItem },
 >(
   options: UseDeleteDialogOptions<TItem, ViewItem>,
-): UseDeleteDialogApi<TItem, ViewItem> {
+): UseDeleteDialogApi<ViewItem> {
   const deleteDialog = ref(false)
   const deleteTarget = ref<ViewItem | null>(null) as Ref<ViewItem | null>
   const deleteInFlight = ref(false)

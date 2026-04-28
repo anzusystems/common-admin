@@ -1,4 +1,3 @@
-/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { describe, expect, it, vi } from 'vitest'
 import { computed, nextTick, ref } from 'vue'
 import {

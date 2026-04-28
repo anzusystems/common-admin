@@ -4,24 +4,17 @@ import {
   nextTick,
   onBeforeUnmount,
   onMounted,
-  provide,
-  reactive,
   ref,
   shallowRef,
   useSlots,
   useTemplateRef,
   watch,
-  type ComputedRef,
-  type Ref,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
-import {
-  ListEditorValidationKey,
-  type ListEditorValidationRegistry,
-} from '@/labs/listEditor/composables/useListEditorItemValidation'
+import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import {
   useNestedListEditor,
@@ -33,6 +26,8 @@ import {
   type Instruction,
 } from '@/labs/listEditor/composables/useDragInstruction'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
+import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
+import { useUnsavedKeysSync } from '@/labs/listEditor/composables/useUnsavedKeysSync'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
 import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
@@ -52,6 +47,11 @@ import LeMoveToPositionDialog from '@/labs/listEditor/internal/LeMoveToPositionD
 import LeChangeParentDialog from '@/labs/listEditor/internal/LeChangeParentDialog.vue'
 import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
 import LeStatus from '@/labs/listEditor/internal/LeStatus.vue'
+import {
+  DRAG_GHOST_CLASS,
+  DRAG_CHOSEN_CLASS,
+  DRAG_CLASS,
+} from '@/labs/listEditor/internal/constants'
 
 export interface DecoratedNestedViewItem<T> extends NestedViewItem<T> {
   editing: boolean
@@ -70,6 +70,87 @@ export interface DragState {
 }
 
 export type ReorderMode = 'view' | 'reorder'
+
+// Public slot surface. Same general shape as the flat sortable variant but
+// row-level slots also carry depth/parent/childrenAllowed/firstInParent etc.
+// from the nested decorator, plus the actions bundle gains addChild,
+// toggleDetail, indent, outdent. Hoisted to top-level so vite-plugin-dts can
+// include them in the .d.ts.
+export interface RowActions<TItem> {
+  edit: () => void
+  save: () => Promise<void> | void
+  cancel: () => void
+  close: () => void
+  delete: () => Promise<void>
+  addAfter: () => void
+  addChild: () => void
+  toggleExpand: () => void
+  toggleDetail: () => void
+  moveUp: () => void
+  moveDown: () => void
+  moveTop: () => void
+  moveBottom: () => void
+  indent: () => void
+  outdent: () => void
+  update: (data: TItem) => NestedTree<TItem>
+}
+export interface RowSlotProps<TItem extends Record<string, any>> {
+  item: DecoratedNestedViewItem<TItem> & { validationState: ListEditorValidationState }
+  raw: TItem
+  index: number
+  key: ListEditorKey
+  depth: number
+  parent: TItem | null
+  parentKey: ListEditorKey | null
+  childrenCount: number
+  hasChildren: boolean
+  childrenAllowed: boolean
+  firstInParent: boolean
+  lastInParent: boolean
+  readonly: boolean
+  disabled: boolean
+  expanded: boolean
+  childrenExpanded: boolean
+  editing: boolean
+  dirty: boolean
+  unsaved: boolean
+  moved: boolean
+  reorderMode: boolean
+  canMoveUp: boolean
+  canMoveDown: boolean
+  canIndent: boolean
+  canOutdent: boolean
+  canAddChild: boolean
+  touch: boolean
+  actions: RowActions<TItem>
+}
+export interface ToolbarSlotProps {
+  applying: boolean
+  hasPendingChanges: boolean
+  movedCount: number
+  error: string | null
+  actions: { apply: () => Promise<void>; cancel: () => void }
+}
+export interface ReorderToggleSlotProps {
+  mode: ReorderMode
+  disabled: boolean
+  hasPendingChanges: boolean
+  actions: { enterReorderMode: () => void; exitReorderMode: () => void }
+}
+export interface HeaderSlotProps extends ReorderToggleSlotProps {
+  title: string | null
+}
+export interface EmptySlotProps {
+  readonly: boolean
+  disabled: boolean
+  actions: { add: () => void }
+}
+export interface AddButtonSlotProps {
+  readonly: boolean
+  disabled: boolean
+  props: { onClick: () => void }
+  actions: { add: () => void }
+}
 
 export interface Props<TItem extends Record<string, any>> {
   maxDepth: number
@@ -118,7 +199,7 @@ export interface Props<TItem extends Record<string, any>> {
   loadingKeys?: Set<ListEditorKey> | null
 
   showReorderToggle?: boolean
-  reorderDisabled?: boolean
+  disableReorder?: boolean
   disableDrag?: boolean
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
@@ -158,7 +239,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   closeVariant: 'auto',
   loadingKeys: null,
   showReorderToggle: true,
-  reorderDisabled: false,
+  disableReorder: false,
   disableDrag: false,
   onDeleteConfirm: undefined,
   onDelete: undefined,
@@ -186,29 +267,20 @@ const emit = defineEmits<{
 const modelValue = defineModel<NestedTree<TItem>>({ required: true })
 const mode = defineModel<ReorderMode>('mode', { default: 'view' })
 
-// Declare the public slot surface so consumers get typed slot props and so
-// `useSlots()` can detect which slots were passed. Without this, forwarding
-// slots to <LeNestedRow> strips the type info and template refs break.
-// Slots carry a variety of scopes (row-level with `raw`, header with `mode`,
-// reorder-toolbar with `applying`, empty with `actions`). Using `any` keeps the
-// template-compiler surface ergonomic without forcing a union type the consumer
-// has to discriminate.
-
-type NestedSlotScope = any
 defineSlots<{
-  header?(props: NestedSlotScope): unknown
-  'reorder-toggle'?(props: NestedSlotScope): unknown
-  'reorder-toolbar'?(props: NestedSlotScope): unknown
-  empty?(props: NestedSlotScope): unknown
-  'add-button'?(props: NestedSlotScope): unknown
-  item?(props: NestedSlotScope): unknown
-  'item-compact'?(props: NestedSlotScope): unknown
-  'item-readonly'?(props: NestedSlotScope): unknown
-  'item-status'?(props: NestedSlotScope): unknown
-  'item-footer'?(props: NestedSlotScope): unknown
-  'item-actions'?(props: NestedSlotScope): unknown
-  'before-item'?(props: NestedSlotScope): unknown
-  'after-item'?(props: NestedSlotScope): unknown
+  header?: (props: HeaderSlotProps) => unknown
+  'reorder-toggle'?: (props: ReorderToggleSlotProps) => unknown
+  'reorder-toolbar'?: (props: ToolbarSlotProps) => unknown
+  empty?: (props: EmptySlotProps) => unknown
+  'add-button'?: (props: AddButtonSlotProps) => unknown
+  item?: (props: RowSlotProps<TItem>) => unknown
+  'item-compact'?: (props: RowSlotProps<TItem>) => unknown
+  'item-readonly'?: (props: RowSlotProps<TItem>) => unknown
+  'item-status'?: (props: RowSlotProps<TItem>) => unknown
+  'item-footer'?: (props: RowSlotProps<TItem>) => unknown
+  'item-actions'?: (props: RowSlotProps<TItem>) => unknown
+  'before-item'?: (props: RowSlotProps<TItem>) => unknown
+  'after-item'?: (props: RowSlotProps<TItem>) => unknown
 }>()
 
 const { t } = useI18n()
@@ -318,21 +390,79 @@ const markMoved = (key: ListEditorKey) => {
   collect(node)
 }
 
+// Decoupled dirty pass — see AListEditor for rationale. Walk the tree once
+// to collect every dirty key; viewItemsDecorated then reads dirtyKeys.has()
+// instead of calling isItemDirty inline so flag-only re-renders skip the
+// stringify pass.
+const dirtyKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  const walk = (nodes: typeof modelValue.value.children) => {
+    for (const n of nodes) {
+      const key = n.data[props.keyField] as ListEditorKey
+      if (isItemDirty(key, n.data as TItem)) out.add(key)
+      if (n.children?.length) walk(n.children)
+    }
+  }
+  walk(modelValue.value.children)
+  return out
+})
+
+// Per-key decorator cache — see AListEditor for rationale. The base view item
+// for nested already carries a lot of stable shape info (parent, depth,
+// childrenCount, sibling-position flags, *Allowed); we only need to invalidate
+// when those, or any per-row flag, changes.
+const decoratorCache = new Map<ListEditorKey, DecoratedNestedViewItem<TItem>>()
 const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
-  return editor.viewItems.value.map((vi) => {
+  const next: DecoratedNestedViewItem<TItem>[] = []
+  const liveKeys = new Set<ListEditorKey>()
+  for (const vi of editor.viewItems.value) {
+    liveKeys.add(vi.key)
+    const editing = editingKeys.value.has(vi.key)
+    const expanded = detailExpandedKeys.value.has(vi.key)
+    const childrenExpanded = childrenExpandedKeys.value.has(vi.key)
+    const loading = props.loadingKeys?.has(vi.key) ?? false
     const moved = movedKeys.value.has(vi.key)
-    const dirty = isItemDirty(vi.key, vi.raw)
-    return {
+    const dirty = dirtyKeys.value.has(vi.key)
+    const unsaved = dirty || moved
+    const cached = decoratorCache.get(vi.key)
+    if (
+      cached
+      && cached.raw === vi.raw
+      && cached.index === vi.index
+      && cached.position === vi.position
+      && cached.depth === vi.depth
+      && cached.parentKey === vi.parentKey
+      && cached.childrenCount === vi.childrenCount
+      && cached.firstInParent === vi.firstInParent
+      && cached.lastInParent === vi.lastInParent
+      && cached.editing === editing
+      && cached.expanded === expanded
+      && cached.childrenExpanded === childrenExpanded
+      && cached.loading === loading
+      && cached.dirty === dirty
+      && cached.moved === moved
+      && cached.unsaved === unsaved
+    ) {
+      next.push(cached)
+      continue
+    }
+    const decorated: DecoratedNestedViewItem<TItem> = {
       ...vi,
-      editing: editingKeys.value.has(vi.key),
-      expanded: detailExpandedKeys.value.has(vi.key),
-      childrenExpanded: childrenExpandedKeys.value.has(vi.key),
-      loading: props.loadingKeys?.has(vi.key) ?? false,
+      editing,
+      expanded,
+      childrenExpanded,
+      loading,
       dirty,
       moved,
-      unsaved: dirty || moved,
+      unsaved,
     }
-  })
+    decoratorCache.set(vi.key, decorated)
+    next.push(decorated)
+  }
+  for (const key of decoratorCache.keys()) {
+    if (!liveKeys.has(key)) decoratorCache.delete(key)
+  }
+  return next
 })
 
 const isEmpty = computed(() => modelValue.value.children.length === 0)
@@ -342,7 +472,7 @@ const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 
 const canInteract = computed(() => !props.readonly && !props.disabled && !props.loading)
 const canEnterReorder = computed(
-  () => canInteract.value && !props.reorderDisabled && totalItemCount.value > 1,
+  () => canInteract.value && !props.disableReorder && totalItemCount.value > 1,
 )
 
 const isInlineEdit = computed(() => !!(slots as Record<string, unknown>).item)
@@ -634,9 +764,9 @@ const initSortables = () => {
       group: { name: 'a-nested', pull: true, put: true },
       handle: '.' + HANDLE_CLASS,
       animation: 0,
-      ghostClass: 'a-le-row--ghost',
-      chosenClass: 'a-le-row--chosen',
-      dragClass: 'a-le-row--drag',
+      ghostClass: DRAG_GHOST_CLASS,
+      chosenClass: DRAG_CHOSEN_CLASS,
+      dragClass: DRAG_CLASS,
       fallbackOnBody: true,
       forceFallback: true,
       fallbackTolerance: 3,
@@ -937,55 +1067,73 @@ const doOutdent = (vi: NestedViewItem<TItem>) => {
   emit('outdent', vi)
 }
 
-const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
-  const pick = (v: unknown): string | null => (v == null || v === '' ? null : String(v))
-  const fromField = props.compactField ? pick(raw[props.compactField]) : null
-  if (fromField !== null) return fromField
-  const fallbacks = [
-    pick(raw.title),
-    pick(raw.name),
-    pick(raw.texts?.title),
-    pick(raw.text),
-    pick(key),
-  ]
-  const hit = fallbacks.find((v): v is string => v !== null)
-  return hit ?? t('common.sortable.itemFallback')
-}
+const resolveCompactText = (raw: TItem, key: ListEditorKey): string =>
+  resolveCompactTextUtil(raw, key, {
+    compactField: props.compactField,
+    fallback: t('common.sortable.itemFallback'),
+  })
 
-const itemValidationStates = reactive(
-  new Map<ListEditorKey, Ref<ListEditorValidationState> | ComputedRef<ListEditorValidationState>>(),
-)
-
-provide<ListEditorValidationRegistry>(ListEditorValidationKey, {
-  register(key, state) {
-    itemValidationStates.set(key, state)
-  },
-  unregister(key) {
-    itemValidationStates.delete(key)
-  },
+const { resolveValidation } = useValidationRegistry<TItem>({
+  getValidationState: (item, key, index) => props.getValidationState?.(item, key, index) ?? null,
 })
 
-const resolveValidation = (
-  raw: TItem,
-  key?: ListEditorKey,
-  index?: number,
-): ListEditorValidationState => {
-  if (key !== undefined) {
-    const fromRegistry = itemValidationStates.get(key)?.value
-    if (fromRegistry === 'valid' || fromRegistry === 'invalid' || fromRegistry === 'warning') {
-      return fromRegistry
-    }
-  }
-  if (props.getValidationState && key !== undefined && index !== undefined) {
-    const fromProp = props.getValidationState(raw, key, index)
-    if (fromProp === 'valid' || fromProp === 'invalid' || fromProp === 'warning') {
-      return fromProp
-    }
-  }
-  const v = raw.validationState
-  if (v === 'valid' || v === 'invalid' || v === 'warning') return v
-  return null
+// Per-key actions cache: stable identity per row, see equivalent block in
+// AListEditor for rationale. Closures capture key (stable) and look up
+// the current vi via findVi at call time.
+type ActionsBundle = {
+  edit: () => void
+  save: () => Promise<void> | void
+  cancel: () => void
+  close: () => void
+  delete: () => Promise<void>
+  addAfter: () => void
+  addChild: () => void
+  toggleExpand: () => void
+  toggleDetail: () => void
+  moveUp: () => void
+  moveDown: () => void
+  moveTop: () => void
+  moveBottom: () => void
+  indent: () => void
+  outdent: () => void
+  update: (data: TItem) => NestedTree<TItem>
 }
+const actionsCache = new Map<ListEditorKey, ActionsBundle>()
+const getActions = (key: ListEditorKey): ActionsBundle => {
+  let actions = actionsCache.get(key)
+  if (!actions) {
+    actions = {
+      edit: () => { const vi = findVi(key); if (vi) onEditClick(vi) },
+      save: () => { const vi = findVi(key); if (vi) return onSaveClick(vi) },
+      cancel: () => { const vi = findVi(key); if (vi) onCancelClick(vi) },
+      close: () => { const vi = findVi(key); if (vi) onCloseClick(vi) },
+      delete: async () => { const vi = findVi(key); if (vi) await onDeleteClick(vi) },
+      addAfter: () => { const vi = findVi(key); if (vi) onRowAddAfterClick(vi) },
+      addChild: () => { const vi = findVi(key); if (vi) onAddChildClick(vi) },
+      toggleExpand: () => { const vi = findVi(key); if (vi) onChevronClick(vi) },
+      toggleDetail: () => { const vi = findVi(key); if (vi) onDetailToggle(vi) },
+      moveUp: () => moveUp(key),
+      moveDown: () => moveDown(key),
+      moveTop: () => moveTop(key),
+      moveBottom: () => moveBottom(key),
+      indent: () => { const vi = findVi(key); if (vi) doIndent(vi) },
+      outdent: () => { const vi = findVi(key); if (vi) doOutdent(vi) },
+      update: (data: TItem) => editor.updateItem(key, data),
+    }
+    actionsCache.set(key, actions)
+  }
+  return actions
+}
+watch(
+  () => viewItemsDecorated.value,
+  (now) => {
+    if (actionsCache.size === 0) return
+    const liveKeys = new Set(now.map((v) => v.key))
+    for (const key of actionsCache.keys()) {
+      if (!liveKeys.has(key)) actionsCache.delete(key)
+    }
+  },
+)
 
 const buildSlotProps = (vi: DecoratedNestedViewItem<TItem>) => ({
   item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
@@ -1015,24 +1163,7 @@ const buildSlotProps = (vi: DecoratedNestedViewItem<TItem>) => ({
   canOutdent: vi.canOutdent,
   canAddChild: vi.canAddChild,
   touch: isTouch.value,
-  actions: {
-    edit: () => onEditClick(vi),
-    save: () => onSaveClick(vi),
-    cancel: () => onCancelClick(vi),
-    close: () => onCloseClick(vi),
-    delete: () => onDeleteClick(vi),
-    addAfter: () => onRowAddAfterClick(vi),
-    addChild: () => onAddChildClick(vi),
-    toggleExpand: () => onChevronClick(vi),
-    toggleDetail: () => onDetailToggle(vi),
-    moveUp: () => moveUp(vi.key),
-    moveDown: () => moveDown(vi.key),
-    moveTop: () => moveTop(vi.key),
-    moveBottom: () => moveBottom(vi.key),
-    indent: () => doIndent(vi),
-    outdent: () => doOutdent(vi),
-    update: (data: TItem) => editor.updateItem(vi.key, data),
-  },
+  actions: getActions(vi.key),
 })
 
 const toolbarSlotProps = computed(() => ({
@@ -1228,6 +1359,14 @@ const rootViewItems = computed(() =>
 // These methods assume the caller has already persisted the change server-side,
 // so they re-capture the dirty baseline — the affected items should not render
 // as "unsaved" immediately after this call.
+//
+// All four `*ById` aliases are kept for backward-compat with the pre-Phase-7
+// `ASortableNested` API. New consumers should call `editor.addItem` /
+// `editor.deleteItem` / `editor.updateItem` directly via the exposed handle
+// (canonical names match the flat editors). The aliases will be removed in
+// the next major.
+
+/** @deprecated Use `addItem(data, { afterId, childrenAllowed })` directly. */
 const addAfterId = (
   targetId: ListEditorKey | null,
   data: TItem,
@@ -1237,6 +1376,7 @@ const addAfterId = (
   nextTick(() => captureDirtyBaseline())
   return res
 }
+/** @deprecated Use `addItem(data, { parentId, asFirstChild: true, childrenAllowed })`. */
 const addChildToId = (
   targetId: ListEditorKey,
   data: TItem,
@@ -1247,6 +1387,7 @@ const addChildToId = (
   nextTick(() => captureDirtyBaseline())
   return res
 }
+/** @deprecated Use `deleteItem(id)` instead. */
 const removeById = (id: ListEditorKey) => {
   editor.deleteItem(id)
   editingKeys.value.delete(id)
@@ -1255,6 +1396,7 @@ const removeById = (id: ListEditorKey) => {
   childrenExpandedKeys.value.delete(id)
   nextTick(() => captureDirtyBaseline())
 }
+/** @deprecated Use `updateItem(id, data)` instead. */
 const updateData = (
   id: ListEditorKey,
   data: TItem,
@@ -1278,53 +1420,18 @@ const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
   return out
 })
 
-const setsEqual = (a: Set<ListEditorKey>, b: Set<ListEditorKey>): boolean =>
-  a.size === b.size && [...a].every((k) => b.has(k))
-
-let suppressNextUnsavedModelWatch = false
-watch(
-  internalUnsavedKeys,
-  (now) => {
-    if (setsEqual(unsavedKeysModel.value, now)) return
-    suppressNextUnsavedModelWatch = true
-    unsavedKeysModel.value = new Set(now)
-  },
-  { immediate: true },
-)
-
-watch(
+const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSync({
   unsavedKeysModel,
-  (now) => {
-    if (suppressNextUnsavedModelWatch) {
-      suppressNextUnsavedModelWatch = false
-      return
-    }
-    if (now.size === 0 && internalUnsavedKeys.value.size > 0) {
-      captureDirtyBaseline()
-      movedKeys.value = new Set()
-    } else {
-      for (const key of internalUnsavedKeys.value) {
-        if (!now.has(key)) {
-          rebaselineKey(key)
-          movedKeys.value.delete(key)
-        }
-      }
-    }
-  },
-)
-
-const hasUnsavedChanges = computed<boolean>(() => internalUnsavedKeys.value.size > 0)
-const unsavedCount = computed<number>(() => internalUnsavedKeys.value.size)
-
-const clearUnsavedState = (key?: ListEditorKey) => {
-  if (key === undefined) {
+  internalUnsavedKeys,
+  onClearAll: () => {
     captureDirtyBaseline()
     movedKeys.value = new Set()
-  } else {
+  },
+  onClearKey: (key) => {
     rebaselineKey(key)
     movedKeys.value.delete(key)
-  }
-}
+  },
+})
 
 defineExpose({
   addItem: editor.addItem,
@@ -1718,13 +1825,12 @@ defineExpose({
       {{
         keyboardNav.grabbedKey.value !== null
           ? t('common.sortable.keyboardGrab.status', {
-              n: keyboardNav.grabbedIndex.value + 1,
-              total: keyboardNav.totalCount.value,
-            })
+            n: keyboardNav.grabbedIndex.value + 1,
+            total: keyboardNav.totalCount.value,
+          })
           : ''
       }}
     </div>
-
   </div>
 </template>
 

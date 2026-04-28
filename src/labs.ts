@@ -61,6 +61,11 @@ import {
   type UseNestedUnsavedKeysApi,
 } from '@/labs/listEditor/composables/useNestedUnsavedKeys'
 import {
+  type ReorderModeValue,
+  type SharedReorderRegistry,
+  SharedReorderRegistryKey,
+} from '@/labs/listEditor/composables/useReorderMode'
+import {
   useNestedListEditor,
   type NestedListEditorApi,
   type NestedViewItem,
@@ -142,6 +147,9 @@ export {
   type ListEditorValidationRegistry,
   useNestedUnsavedKeys,
   type UseNestedUnsavedKeysApi,
+  type ReorderModeValue,
+  type SharedReorderRegistry,
+  SharedReorderRegistryKey,
   type ListEditorApi,
   useNestedListEditor,
   type NestedListEditorApi,

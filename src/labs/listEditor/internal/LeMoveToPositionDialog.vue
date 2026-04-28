@@ -12,14 +12,18 @@ const props = withDefaults(defineProps<Props>(), {
   itemLabel: undefined,
 })
 
-const open = defineModel<boolean>({ required: true })
-
 const emit = defineEmits<{
   confirm: [newIndex: number]
 }>()
 
+const open = defineModel<boolean>({ required: true })
+
 const { t } = useI18n()
 
+// `currentIndex` is read once at setup to seed the field; subsequent changes
+// to the prop don't reset the user's typed-in value mid-edit, only re-opening
+// the dialog (via the `open` watcher below) does.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const targetPosition = ref<number>(props.currentIndex + 1)
 
 watch(open, (now) => {
@@ -57,7 +61,7 @@ const onCancel = () => {
       <VCardText>
         <p
           v-if="itemLabel"
-          class="text-body-2 mb-3"
+          class="text-body-medium mb-3"
         >
           {{ t('common.sortable.moveToPosition.itemDescription', { label: itemLabel }) }}
         </p>

@@ -1,3 +1,4 @@
+/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
@@ -600,7 +601,7 @@ describe('ANestedSortableListEditor', () => {
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
       // Simulate in-place mutation by replacing a node's data via fresh cloned tree
-      // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+
       const fresh = JSON.parse(JSON.stringify(model.value)) as NestedTree<MenuItem>
       fresh.children[0].data.title = 'Home RENAMED'
       model.value = fresh

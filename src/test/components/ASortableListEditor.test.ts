@@ -1,3 +1,4 @@
+/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
@@ -539,7 +540,7 @@ describe('ASortableListEditor', () => {
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
       // Mutate model content (simulate inline edit)
-      // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+
       model.value = [{ ...model.value[0], title: 'A-changed' }, model.value[1]]
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
@@ -568,7 +569,7 @@ describe('ASortableListEditor', () => {
       const editor = findSortable(wrapper)
       const exposed = (editor.vm as unknown as { $: { exposed: { resetDirtyBaseline: () => void } } })
         .$.exposed
-      // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+
       model.value = [{ ...model.value[0], title: 'A-changed' }]
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
@@ -718,7 +719,7 @@ describe('ASortableListEditor', () => {
       await nextTick()
       // Change only `position` on a row — the dirty compare strips it before
       // stringifying, so no row should light up unsaved.
-      // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+
       model.value = [
         { ...model.value[0], position: 999 },
         model.value[1],

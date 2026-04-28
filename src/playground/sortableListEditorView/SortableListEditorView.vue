@@ -114,11 +114,6 @@ const log = (msg: string) => {
   lastLog.value = `${new Date().toLocaleTimeString()}  ${msg}`
 }
 
-const onItemSave = async (item: FaqItem) => {
-  await new Promise((r) => setTimeout(r, 400))
-  log(`saved item ${item.id}: ${item.title}`)
-}
-
 const onReorderApplied = (items: FaqItem[]) => {
   log(`applied: ${items.map((i) => i.id).join(' → ')}`)
 }

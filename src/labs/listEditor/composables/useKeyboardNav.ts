@@ -97,6 +97,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
   // focus vanishes to <body> after a delete and the user has to Tab back in.
   // We snapshot the previous ordering so we can look up where the focused key
   // *was* — by the time the watcher fires, the key is already gone from `now`.
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   let prevOrderedKeys: ListEditorKey[] = [...orderedKeys.value]
   watch(
     orderedKeys,

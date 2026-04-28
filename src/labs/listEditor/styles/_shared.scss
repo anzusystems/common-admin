@@ -187,9 +187,10 @@
     outline: 3px solid var(--le-primary);
     outline-offset: -3px;
     background: var(--le-primary-state-press);
-    box-shadow: 0 0 0 6px var(--le-primary-state), 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 0 0 6px var(--le-primary-state), 0 4px 12px rgb(0 0 0 / 8%);
     z-index: 4;
   }
+
   &--grabbed::before {
     background: var(--le-primary) !important;
   }
@@ -222,6 +223,7 @@
   &--unsaved.a-le-row--validation-invalid {
     background: var(--le-error-container);
   }
+
   &--unsaved.a-le-row--validation-invalid .a-le-row-header {
     background: var(--le-error-container);
   }
@@ -247,7 +249,7 @@
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }

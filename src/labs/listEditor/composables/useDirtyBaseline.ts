@@ -40,11 +40,24 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
   options: UseDirtyBaselineOptions = {},
 ): UseDirtyBaselineApi<TItem> {
   const excludeFields = options.excludeFields ?? []
+  const hasExcludes = excludeFields.length > 0
+  // Pre-build the exclude lookup once at setup. With a typical exclude list
+  // of 1-2 fields the savings are tiny, but the Set is referenced from the
+  // hot stringify path so it's worth the one-time cost.
+  const excludeSet = hasExcludes ? new Set(excludeFields) : null
 
+  // `JSON.stringify` per-call is intentionally NOT memoized by data
+  // reference. Some consumers mutate item fields in place (e.g. a v-model
+  // bound to `data.title` inside an inline form) — that mutation doesn't
+  // change the object identity, so a WeakMap cache would return a stale
+  // dirty result. Correctness wins; the per-call cost is bounded by item
+  // size and only pays at render time. For very large forms (100+ rows of
+  // deeply-nested objects) this dominates GC; profile and revisit if it
+  // shows up in a flame graph for a real consumer.
   const stringifyContent = (data: TItem): string => {
-    if (excludeFields.length === 0) return JSON.stringify(data)
+    if (!hasExcludes) return JSON.stringify(data)
     const copy = { ...data } as Record<string, unknown>
-    for (const field of excludeFields) {
+    for (const field of excludeSet!) {
       delete copy[field]
     }
     return JSON.stringify(copy)

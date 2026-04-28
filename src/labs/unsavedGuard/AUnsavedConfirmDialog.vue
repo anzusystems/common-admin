@@ -15,11 +15,11 @@ withDefaults(defineProps<Props>(), {
   discardLabel: undefined,
 })
 
-const open = defineModel<boolean>({ required: true })
-
 const emit = defineEmits<{
   resolve: [discard: boolean]
 }>()
+
+const open = defineModel<boolean>({ required: true })
 
 const { t } = useI18n()
 

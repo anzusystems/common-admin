@@ -4,7 +4,6 @@ import {
   inject,
   onBeforeUnmount,
   provide,
-  reactive,
   ref,
   shallowReactive,
   shallowRef,
@@ -12,18 +11,16 @@ import {
   useTemplateRef,
   watch,
   type ComputedRef,
-  type Ref,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
-import {
-  ListEditorValidationKey,
-  type ListEditorValidationRegistry,
-} from '@/labs/listEditor/composables/useListEditorItemValidation'
+import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
+import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
+import { useUnsavedKeysSync } from '@/labs/listEditor/composables/useUnsavedKeysSync'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
@@ -38,6 +35,11 @@ import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
 import LeStatus from '@/labs/listEditor/internal/LeStatus.vue'
 import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
 import LeDragHandle from '@/labs/listEditor/internal/LeDragHandle.vue'
+import {
+  DRAG_GHOST_CLASS,
+  DRAG_CHOSEN_CLASS,
+  DRAG_CLASS,
+} from '@/labs/listEditor/internal/constants'
 import { cloneDeep } from '@/utils/common'
 import { stringToInt } from '@/utils/string'
 import type {
@@ -59,6 +61,67 @@ export interface DecoratedViewItem<T> extends ListViewItem<T> {
 }
 
 export type ReorderMode = 'view' | 'reorder'
+
+// Public slot scope shapes — see AListEditor for the rationale on hoisting.
+export interface RowActions<TItem> {
+  edit: () => void
+  save: () => Promise<void> | void
+  cancel: () => void
+  close: () => void
+  delete: () => Promise<void>
+  addAfter: () => void
+  toggleExpand: () => void
+  moveUp: () => void
+  moveDown: () => void
+  moveTop: () => void
+  moveBottom: () => void
+  update: (data: TItem) => TItem[]
+}
+export interface RowSlotProps<TItem extends Record<string, any>> {
+  item: DecoratedViewItem<TItem> & { validationState: ListEditorValidationState }
+  raw: TItem
+  index: number
+  key: ListEditorKey
+  readonly: boolean
+  disabled: boolean
+  expanded: boolean
+  editing: boolean
+  dirty: boolean
+  unsaved: boolean
+  reorderMode: boolean
+  moved: boolean
+  canMoveUp: boolean
+  canMoveDown: boolean
+  touch: boolean
+  actions: RowActions<TItem>
+}
+export interface ToolbarSlotProps {
+  applying: boolean
+  hasPendingChanges: boolean
+  movedCount: number
+  error: string | null
+  actions: { apply: () => Promise<void>; cancel: () => void }
+}
+export interface ReorderToggleSlotProps {
+  mode: ReorderMode
+  disabled: boolean
+  hasPendingChanges: boolean
+  actions: { enterReorderMode: () => void; exitReorderMode: () => void }
+}
+export interface HeaderSlotProps extends ReorderToggleSlotProps {
+  title: string | null
+}
+export interface EmptySlotProps {
+  readonly: boolean
+  disabled: boolean
+  actions: { add: () => void }
+}
+export interface AddButtonSlotProps {
+  readonly: boolean
+  disabled: boolean
+  props: { onClick: () => void }
+  actions: { add: () => void }
+}
 
 export interface Props<TItem extends Record<string, any>> {
   keyField?: string
@@ -97,7 +160,7 @@ export interface Props<TItem extends Record<string, any>> {
   loadingKeys?: Set<ListEditorKey> | null
 
   showReorderToggle?: boolean
-  reorderDisabled?: boolean
+  disableReorder?: boolean
   disableDrag?: boolean
   showMoveToPosition?: boolean
 
@@ -162,7 +225,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   closeVariant: 'auto',
   loadingKeys: null,
   showReorderToggle: true,
-  reorderDisabled: false,
+  disableReorder: false,
   disableDrag: false,
   showMoveToPosition: false,
   embedded: false,
@@ -188,6 +251,22 @@ const emit = defineEmits<{
   'reorder-end': []
 }>()
 
+defineSlots<{
+  header?: (props: HeaderSlotProps) => unknown
+  'reorder-toggle'?: (props: ReorderToggleSlotProps) => unknown
+  'reorder-toolbar'?: (props: ToolbarSlotProps) => unknown
+  empty?: (props: EmptySlotProps) => unknown
+  'add-button'?: (props: AddButtonSlotProps) => unknown
+  item?: (props: RowSlotProps<TItem>) => unknown
+  'item-compact'?: (props: RowSlotProps<TItem>) => unknown
+  'item-readonly'?: (props: RowSlotProps<TItem>) => unknown
+  'item-status'?: (props: RowSlotProps<TItem>) => unknown
+  'item-actions'?: (props: RowSlotProps<TItem>) => unknown
+  'item-footer'?: (props: RowSlotProps<TItem>) => unknown
+  'before-item'?: (props: RowSlotProps<TItem>) => unknown
+  'after-item'?: (props: RowSlotProps<TItem>) => unknown
+}>()
+
 const modelValue = defineModel<TItem[]>({ required: true })
 const mode = defineModel<ReorderMode>('mode', { default: 'view' })
 
@@ -199,12 +278,6 @@ const rootEl = useTemplateRef<HTMLElement>('rootEl')
 const { isNarrow } = useContainerWidth(rootEl)
 
 const isTouch = computed<boolean>(() => display.platform.value.touch)
-
-const effectiveCloseVariant = computed<'icon' | 'labeled'>(() => {
-  if (props.closeVariant === 'icon') return 'icon'
-  if (props.closeVariant === 'labeled') return 'labeled'
-  return isNarrow.value ? 'icon' : 'labeled'
-})
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const editor = useListEditor<TItem>(modelValue, {
@@ -278,7 +351,7 @@ const {
 
 const canInteract = computed(() => !props.readonly && !props.disabled && !props.loading)
 const canEnterReorder = computed(
-  () => canInteract.value && !props.reorderDisabled && modelValue.value.length > 1,
+  () => canInteract.value && !props.disableReorder && modelValue.value.length > 1,
 )
 
 const embeddedRef = computed(() => props.embedded)
@@ -335,6 +408,9 @@ const {
 // nearest parent's registry and registers itself.
 // shallowReactive (not reactive) so the stored ComputedRef objects don't get
 // auto-unwrapped — we read `.value` on them inside the aggregator computeds.
+// `embedded` is a setup-time decision; it doesn't flip during a component's
+// lifetime so reading it once at root scope is intentional.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const childContributions = props.embedded
   ? null
   : shallowReactive(
@@ -450,23 +526,68 @@ const markMoved = (key: ListEditorKey) => {
   movedKeys.value.add(key)
 }
 
+// Decoupled dirty pass — see AListEditor for rationale.
+const dirtyKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  for (const item of modelValue.value) {
+    const key = item[props.keyField] as ListEditorKey
+    if (isItemDirty(key, item)) out.add(key)
+  }
+  return out
+})
+
+// Per-key decorator cache — see AListEditor for rationale.
+const decoratorCache = new Map<ListEditorKey, DecoratedViewItem<TItem>>()
 const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
   const total = modelValue.value.length
-  return editor.viewItems.value.map((vi) => {
+  const next: DecoratedViewItem<TItem>[] = []
+  const liveKeys = new Set<ListEditorKey>()
+  for (const vi of editor.viewItems.value) {
+    liveKeys.add(vi.key)
+    const editing = editingKeys.value.has(vi.key)
+    const expanded = expandedKeys.value.has(vi.key)
+    const loading = props.loadingKeys?.has(vi.key) ?? false
     const moved = movedKeys.value.has(vi.key)
-    const dirty = isItemDirty(vi.key, vi.raw)
-    return {
+    const dirty = dirtyKeys.value.has(vi.key)
+    const unsaved = dirty || moved
+    const canMoveUp = vi.index > 0
+    const canMoveDown = vi.index < total - 1
+    const cached = decoratorCache.get(vi.key)
+    if (
+      cached
+      && cached.raw === vi.raw
+      && cached.index === vi.index
+      && cached.position === vi.position
+      && cached.editing === editing
+      && cached.expanded === expanded
+      && cached.loading === loading
+      && cached.dirty === dirty
+      && cached.moved === moved
+      && cached.unsaved === unsaved
+      && cached.canMoveUp === canMoveUp
+      && cached.canMoveDown === canMoveDown
+    ) {
+      next.push(cached)
+      continue
+    }
+    const decorated: DecoratedViewItem<TItem> = {
       ...vi,
-      editing: editingKeys.value.has(vi.key),
-      expanded: expandedKeys.value.has(vi.key),
-      loading: props.loadingKeys?.has(vi.key) ?? false,
+      editing,
+      expanded,
+      loading,
       dirty,
       moved,
-      unsaved: dirty || moved,
-      canMoveUp: vi.index > 0,
-      canMoveDown: vi.index < total - 1,
+      unsaved,
+      canMoveUp,
+      canMoveDown,
     }
-  })
+    decoratorCache.set(vi.key, decorated)
+    next.push(decorated)
+  }
+  for (const key of decoratorCache.keys()) {
+    if (!liveKeys.has(key)) decoratorCache.delete(key)
+  }
+  return next
 })
 
 const isEmpty = computed(() => viewItemsDecorated.value.length === 0)
@@ -528,56 +649,15 @@ const onMoveToPositionConfirm = (newIndex: number) => {
   markMoved(target.key)
 }
 
-const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
-  const pick = (v: unknown): string | null =>
-    v == null || v === '' ? null : String(v)
-  const fromField = props.compactField ? pick(raw[props.compactField]) : null
-  if (fromField !== null) return fromField
-  const fallbacks = [
-    pick(raw.title),
-    pick(raw.name),
-    pick(raw.texts?.title),
-    pick(raw.text),
-    pick(key),
-  ]
-  const hit = fallbacks.find((v): v is string => v !== null)
-  return hit ?? t('common.sortable.itemFallback')
-}
+const resolveCompactText = (raw: TItem, key: ListEditorKey): string =>
+  resolveCompactTextUtil(raw, key, {
+    compactField: props.compactField,
+    fallback: t('common.sortable.itemFallback'),
+  })
 
-const itemValidationStates = reactive(
-  new Map<ListEditorKey, Ref<ListEditorValidationState> | ComputedRef<ListEditorValidationState>>(),
-)
-
-provide<ListEditorValidationRegistry>(ListEditorValidationKey, {
-  register(key, state) {
-    itemValidationStates.set(key, state)
-  },
-  unregister(key) {
-    itemValidationStates.delete(key)
-  },
+const { resolveValidation } = useValidationRegistry<TItem>({
+  getValidationState: (item, key, index) => props.getValidationState?.(item, key, index) ?? null,
 })
-
-const resolveValidation = (
-  raw: TItem,
-  key?: ListEditorKey,
-  index?: number,
-): ListEditorValidationState => {
-  if (key !== undefined) {
-    const fromRegistry = itemValidationStates.get(key)?.value
-    if (fromRegistry === 'valid' || fromRegistry === 'invalid' || fromRegistry === 'warning') {
-      return fromRegistry
-    }
-  }
-  if (props.getValidationState && key !== undefined && index !== undefined) {
-    const fromProp = props.getValidationState(raw, key, index)
-    if (fromProp === 'valid' || fromProp === 'invalid' || fromProp === 'warning') {
-      return fromProp
-    }
-  }
-  const v = raw.validationState
-  if (v === 'valid' || v === 'invalid' || v === 'warning') return v
-  return null
-}
 
 // Skip SortableJS entirely on touch devices — touch users reorder via arrows + menu,
 // so the drag/drop library is never needed and there is no point paying its setup cost.
@@ -594,9 +674,9 @@ if (!isTouch.value) {
     forceFallback: true,
     fallbackTolerance: 3,
     fallbackOnBody: true,
-    ghostClass: 'a-le-row--ghost',
-    chosenClass: 'a-le-row--chosen',
-    dragClass: 'a-le-row--drag',
+    ghostClass: DRAG_GHOST_CLASS,
+    chosenClass: DRAG_CHOSEN_CLASS,
+    dragClass: DRAG_CLASS,
     disabled: !dragEnabled.value,
     onEnd: (event) => {
       // Resolve which row was dragged by reading its data-id attribute
@@ -763,6 +843,56 @@ const moveBottom = (idx: number) => {
   if (key !== null) markMoved(key)
 }
 
+// Per-key actions cache: stable identity per row, see equivalent block in
+// AListEditor for rationale. Closures capture key (stable) and look up the
+// current vi via findVi at call time.
+type ActionsBundle = {
+  edit: () => void
+  save: () => Promise<void> | void
+  cancel: () => void
+  close: () => void
+  delete: () => Promise<void>
+  addAfter: () => void
+  toggleExpand: () => void
+  moveUp: () => void
+  moveDown: () => void
+  moveTop: () => void
+  moveBottom: () => void
+  update: (data: TItem) => TItem[]
+}
+const actionsCache = new Map<ListEditorKey, ActionsBundle>()
+const getActions = (key: ListEditorKey): ActionsBundle => {
+  let actions = actionsCache.get(key)
+  if (!actions) {
+    actions = {
+      edit: () => { const vi = findVi(key); if (vi) onEditClick(vi) },
+      save: () => { const vi = findVi(key); if (vi) return onSaveClick(vi) },
+      cancel: () => { const vi = findVi(key); if (vi) onCancelClick(vi) },
+      close: () => { const vi = findVi(key); if (vi) onCloseClick(vi) },
+      delete: async () => { const vi = findVi(key); if (vi) await onDeleteClick(vi) },
+      addAfter: () => { const vi = findVi(key); if (vi) onRowAddAfterClick(vi) },
+      toggleExpand: () => { const vi = findVi(key); if (vi) onExpandClick(vi) },
+      moveUp: () => { const vi = findVi(key); if (vi) moveUp(vi.index) },
+      moveDown: () => { const vi = findVi(key); if (vi) moveDown(vi.index) },
+      moveTop: () => { const vi = findVi(key); if (vi) moveTop(vi.index) },
+      moveBottom: () => { const vi = findVi(key); if (vi) moveBottom(vi.index) },
+      update: (data: TItem) => editor.updateItem(key, data),
+    }
+    actionsCache.set(key, actions)
+  }
+  return actions
+}
+watch(
+  () => viewItemsDecorated.value,
+  (now) => {
+    if (actionsCache.size === 0) return
+    const liveKeys = new Set(now.map((v) => v.key))
+    for (const key of actionsCache.keys()) {
+      if (!liveKeys.has(key)) actionsCache.delete(key)
+    }
+  },
+)
+
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
   item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
   raw: vi.raw,
@@ -779,20 +909,7 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
   canMoveUp: vi.canMoveUp,
   canMoveDown: vi.canMoveDown,
   touch: isTouch.value,
-  actions: {
-    edit: () => onEditClick(vi),
-    save: () => onSaveClick(vi),
-    cancel: () => onCancelClick(vi),
-    close: () => onCloseClick(vi),
-    delete: () => onDeleteClick(vi),
-    addAfter: () => onRowAddAfterClick(vi),
-    toggleExpand: () => onExpandClick(vi),
-    moveUp: () => moveUp(vi.index),
-    moveDown: () => moveDown(vi.index),
-    moveTop: () => moveTop(vi.index),
-    moveBottom: () => moveBottom(vi.index),
-    update: (data: TItem) => editor.updateItem(vi.key, data),
-  },
+  actions: getActions(vi.key),
 })
 
 const toolbarSlotProps = computed(() => ({
@@ -828,53 +945,18 @@ const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
   return out
 })
 
-const setsEqual = (a: Set<ListEditorKey>, b: Set<ListEditorKey>): boolean =>
-  a.size === b.size && [...a].every((k) => b.has(k))
-
-let suppressNextUnsavedModelWatch = false
-watch(
-  internalUnsavedKeys,
-  (now) => {
-    if (setsEqual(unsavedKeysModel.value, now)) return
-    suppressNextUnsavedModelWatch = true
-    unsavedKeysModel.value = new Set(now)
-  },
-  { immediate: true },
-)
-
-watch(
+const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSync({
   unsavedKeysModel,
-  (now) => {
-    if (suppressNextUnsavedModelWatch) {
-      suppressNextUnsavedModelWatch = false
-      return
-    }
-    if (now.size === 0 && internalUnsavedKeys.value.size > 0) {
-      captureDirtyBaseline()
-      movedKeys.value = new Set()
-    } else {
-      for (const key of internalUnsavedKeys.value) {
-        if (!now.has(key)) {
-          rebaselineKey(key)
-          movedKeys.value.delete(key)
-        }
-      }
-    }
-  },
-)
-
-const hasUnsavedChanges = computed<boolean>(() => internalUnsavedKeys.value.size > 0)
-const unsavedCount = computed<number>(() => internalUnsavedKeys.value.size)
-
-const clearUnsavedState = (key?: ListEditorKey) => {
-  if (key === undefined) {
+  internalUnsavedKeys,
+  onClearAll: () => {
     captureDirtyBaseline()
     movedKeys.value = new Set()
-  } else {
+  },
+  onClearKey: (key) => {
     rebaselineKey(key)
     movedKeys.value.delete(key)
-  }
-}
+  },
+})
 
 defineExpose({
   addItem: editor.addItem,
@@ -1446,13 +1528,12 @@ defineExpose({
       {{
         keyboardNav.grabbedKey.value !== null
           ? t('common.sortable.keyboardGrab.status', {
-              n: keyboardNav.grabbedIndex.value + 1,
-              total: keyboardNav.totalCount.value,
-            })
+            n: keyboardNav.grabbedIndex.value + 1,
+            total: keyboardNav.totalCount.value,
+          })
           : ''
       }}
     </div>
-
   </div>
 </template>
 

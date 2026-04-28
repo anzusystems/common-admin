@@ -1,4 +1,3 @@
-/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'

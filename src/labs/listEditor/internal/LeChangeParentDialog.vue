@@ -26,11 +26,12 @@ interface Candidate {
 }
 
 const props = defineProps<Props<TItem>>()
-const open = defineModel<boolean>({ required: true })
 
 const emit = defineEmits<{
   confirm: [parentId: ListEditorKey | null, position: 'first' | 'last']
 }>()
+
+const open = defineModel<boolean>({ required: true })
 
 const { t } = useI18n()
 
@@ -201,7 +202,7 @@ const reasonLabel = (reason: Candidate['reason']): string => {
 
       <VCardText
         v-if="validCandidates.length === 0"
-        class="text-body-2"
+        class="text-body-medium"
       >
         <VAlert
           type="info"
@@ -256,7 +257,7 @@ const reasonLabel = (reason: Candidate['reason']): string => {
           v-if="showPlacementPicker"
           class="pt-0"
         >
-          <div class="text-body-2 mb-2">
+          <div class="text-body-medium mb-2">
             {{
               t('common.sortable.changeParent.placementHeading', {
                 label: selectedCandidate?.label ?? '',
