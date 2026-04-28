@@ -1508,13 +1508,14 @@ defineExpose({
   }
 
   &--embedded .a-le-row-add {
-    padding: 4px 8px;
+    min-height: var(--le-row-min-height);
+    padding: 0 16px;
     background: transparent;
     border: 1px dashed var(--le-border);
+    border-radius: 6px;
     color: var(--le-primary);
-    font-size: 12px;
-    align-self: flex-start;
-    margin-top: 6px;
+    margin-top: 4px;
+    width: 100%;
   }
 
   &--embedded .a-le-row-add:hover {

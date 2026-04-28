@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import useVuelidate from '@vuelidate/core'
+import { helpers } from '@vuelidate/validators'
 import ACard from '@/components/ACard.vue'
 import ARow from '@/components/ARow.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
@@ -52,12 +53,12 @@ const minLength = useValidateMinLength()
 const answerRules = {
   question: {
     answers: {
-      $each: {
+      $each: helpers.forEach({
         title: {
           required,
           minLength: minLength(1),
         },
-      },
+      }),
     },
   },
 }
@@ -72,9 +73,16 @@ const getAnswerValidationState = (
   __: ListEditorKey,
   index: number,
 ) => {
+  // helpers.forEach exposes per-row errors as an OBJECT keyed by property
+  // name → array of error entries. A row is invalid if any property has a
+  // non-empty error array. Plain `.length` is wrong (it's not an array).
   const errors =
     v$.value.question.answers.$each?.$response?.$errors?.[index]
-  return errors && errors.length > 0 ? 'invalid' : null
+  if (!errors || typeof errors !== 'object') return null
+  const hasErrors = Object.values(errors).some(
+    (propErrors) => Array.isArray(propErrors) && propErrors.length > 0,
+  )
+  return hasErrors ? 'invalid' : null
 }
 
 const onAddAnswer = () => {

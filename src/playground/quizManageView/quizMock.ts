@@ -1,5 +1,6 @@
 import { type Ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
+import { helpers } from '@vuelidate/validators'
 import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
 import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
 import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
@@ -110,7 +111,7 @@ export function useQuizValidation(quiz: Ref<Quiz>) {
       questions: {
         required,
         minLength: minLength(2),
-        $each: {
+        $each: helpers.forEach({
           title: {
             required,
             minLength: minLength(1),
@@ -118,14 +119,8 @@ export function useQuizValidation(quiz: Ref<Quiz>) {
           answers: {
             required,
             minLength: minLength(2),
-            $each: {
-              title: {
-                required,
-                minLength: minLength(1),
-              },
-            },
           },
-        },
+        }),
       },
     },
   }

@@ -49,13 +49,22 @@ watch(answerKeys.merged, (now) => {
 const { v$ } = useQuizValidation(selectedValue)
 
 const getQuestionValidationState = (
-  _: QuizQuestion,
+  q: QuizQuestion,
   __: ListEditorKey,
   index: number,
 ) => {
   const errors =
     v$.value.quiz.questions.$each?.$response?.$errors?.[index]
-  return errors && errors.length > 0 ? 'invalid' : null
+  if (errors && typeof errors === 'object') {
+    const hasOwnErrors = Object.values(errors).some(
+      (propErrors) => Array.isArray(propErrors) && propErrors.length > 0,
+    )
+    if (hasOwnErrors) return 'invalid'
+  }
+  // Roll up: question is invalid if any of its answers is empty.
+  if (q.answers.length < 2) return 'invalid'
+  if (q.answers.some((a) => !a.title)) return 'invalid'
+  return null
 }
 
 const onAddQuestion = () => {
