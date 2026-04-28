@@ -29,4 +29,6 @@ dist-ssr
 .playwright-cli
 .vitest-attachments
 todo
-src/test/**/__screenshots__
+
+# vitest-browser snapshot output — regenerated on every run, never check in.
+__screenshots__/
