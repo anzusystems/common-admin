@@ -1,9 +1,12 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
 import {
   computed,
+  inject,
+  onBeforeUnmount,
   provide,
   reactive,
   ref,
+  shallowReactive,
   shallowRef,
   useSlots,
   useTemplateRef,
@@ -24,7 +27,11 @@ import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
-import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
+import {
+  useReorderMode,
+  SharedReorderRegistryKey,
+  type SharedReorderRegistry,
+} from '@/labs/listEditor/composables/useReorderMode'
 import LeDeleteDialog from '@/labs/listEditor/internal/LeDeleteDialog.vue'
 import LeMoveToPositionDialog from '@/labs/listEditor/internal/LeMoveToPositionDialog.vue'
 import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
@@ -317,6 +324,63 @@ const {
     reorderApplyError: (err) => emit('reorder-apply-error', err),
     reorderEnd: () => emit('reorder-end'),
   },
+})
+
+// Cross-editor pending-changes aggregation. When this editor is the outer
+// (non-embedded) one in a stacked-editor setup, it provides a registry that
+// embedded children push their own movedCount + hasPendingChanges into.
+// The toolbar's "N pending changes" then totals across all levels — drag a
+// question OR drag an answer inside an open question and the same counter
+// increments either way. When this editor IS embedded, it injects the
+// nearest parent's registry and registers itself.
+// shallowReactive (not reactive) so the stored ComputedRef objects don't get
+// auto-unwrapped — we read `.value` on them inside the aggregator computeds.
+const childContributions = props.embedded
+  ? null
+  : shallowReactive(
+    new Map<
+      symbol,
+      { count: ComputedRef<number>; hasChanges: ComputedRef<boolean> }
+    >(),
+  )
+
+if (childContributions) {
+  const registry: SharedReorderRegistry = {
+    register: (id, count, hasChanges) => {
+      childContributions.set(id, { count, hasChanges })
+    },
+    unregister: (id) => {
+      childContributions.delete(id)
+    },
+  }
+  provide(SharedReorderRegistryKey, registry)
+}
+
+if (props.embedded) {
+  const parent = inject(SharedReorderRegistryKey, null)
+  if (parent) {
+    const id = Symbol('le.embedded')
+    parent.register(id, movedCount, hasPendingChanges)
+    onBeforeUnmount(() => parent.unregister(id))
+  }
+}
+
+const totalMovedCount = computed<number>(() => {
+  let sum = movedCount.value
+  if (childContributions) {
+    for (const c of childContributions.values()) sum += c.count.value
+  }
+  return sum
+})
+
+const totalHasPendingChanges = computed<boolean>(() => {
+  if (hasPendingChanges.value) return true
+  if (childContributions) {
+    for (const c of childContributions.values()) {
+      if (c.hasChanges.value) return true
+    }
+  }
+  return false
 })
 
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
@@ -733,8 +797,8 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
 
 const toolbarSlotProps = computed(() => ({
   applying: applying.value,
-  hasPendingChanges: hasPendingChanges.value,
-  movedCount: movedCount.value,
+  hasPendingChanges: totalHasPendingChanges.value,
+  movedCount: totalMovedCount.value,
   error: applyError.value,
   actions: {
     apply: applyReorder,
@@ -745,7 +809,7 @@ const toolbarSlotProps = computed(() => ({
 const reorderToggleSlotProps = computed(() => ({
   mode: mode.value,
   disabled: !canEnterReorder.value,
-  hasPendingChanges: hasPendingChanges.value,
+  hasPendingChanges: totalHasPendingChanges.value,
   actions: {
     enterReorderMode,
     exitReorderMode: cancelReorderMode,
@@ -880,9 +944,9 @@ defineExpose({
                   {{ t('common.sortable.reorderModeLabel') }}
                 </span>
                 <LeStatus
-                  :class="{ 'a-le-toolbar-status--pending': hasPendingChanges }"
-                  :has-pending-changes="hasPendingChanges"
-                  :pending-count="movedCount"
+                  :class="{ 'a-le-toolbar-status--pending': totalHasPendingChanges }"
+                  :has-pending-changes="totalHasPendingChanges"
+                  :pending-count="totalMovedCount"
                   :error="applyError"
                 />
                 <VBtn
@@ -899,7 +963,7 @@ defineExpose({
                   size="small"
                   prepend-icon="mdi-check"
                   :loading="applying"
-                  :disabled="applying || !hasPendingChanges"
+                  :disabled="applying || !totalHasPendingChanges"
                   @click="applyReorder"
                 >
                   {{ t('common.sortable.reorderApply') }}

@@ -1,5 +1,30 @@
-import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
+import {
+  computed,
+  ref,
+  watch,
+  type ComputedRef,
+  type InjectionKey,
+  type Ref,
+} from 'vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
+
+// Registry that lets embedded inner editors push their reorder pending-count
+// up to the nearest non-embedded outer editor. The outer's reorder toolbar
+// status ("N pending changes") then reflects child moves too — so toggling
+// the order of an answer inside a question increments the outer's counter
+// just like a question move would.
+export interface SharedReorderRegistry {
+  register: (
+    id: symbol,
+    movedCount: ComputedRef<number>,
+    hasPendingChanges: ComputedRef<boolean>,
+  ) => void
+  unregister: (id: symbol) => void
+}
+
+export const SharedReorderRegistryKey = Symbol(
+  'le.sharedReorderRegistry',
+) as InjectionKey<SharedReorderRegistry>
 
 export type ReorderModeValue = 'view' | 'reorder'
 
