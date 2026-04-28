@@ -1,0 +1,44 @@
+// Shared token set for all list-editor variants. Each variant root declares
+// the same `--le-*` custom-property block so descendant rules can share tokens
+// without per-variant duplication.
+// Vuetify v4 exports theme colours as comma-separated "R, G, B" lists, which
+// is why every primary/error/warning/surface var uses the explicit
+// `rgba(..., A)` form or `rgb(var(--v-theme-*, R, G, B))`. The slash-alpha
+// `rgb(R G B / A)` syntax produces invalid CSS when that var expands and
+// silently falls back to transparent.
+/* stylelint-disable color-function-alias-notation */
+
+.a-list-editor,
+.a-sortable-list-editor,
+.a-nested-list-editor {
+  position: relative;
+  container-type: inline-size;
+  container-name: le-shell;
+
+  --le-border: rgb(0 0 0 / 12%);
+  --le-surface: rgb(var(--v-theme-surface, 255, 255, 255));
+  --le-surface-container: rgb(0 0 0 / 2.5%);
+  --le-primary: rgb(var(--v-theme-primary, 63, 106, 216));
+  --le-primary-container: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
+  --le-primary-state: rgba(var(--v-theme-primary, 63, 106, 216), 0.04);
+  --le-primary-state-press: rgba(var(--v-theme-primary, 63, 106, 216), 0.12);
+  --le-success-container: rgb(76 175 80 / 18%);
+  --le-success-fg: #165634;
+  --le-warning-container: rgb(251 140 0 / 18%);
+  --le-warning-fg: #914000;
+  --le-warning: rgb(var(--v-theme-warning, 251, 140, 0));
+  --le-error-container: rgba(var(--v-theme-error, 217, 37, 80), 0.18);
+  --le-error-fg: rgb(var(--v-theme-error, 217, 37, 80));
+  --le-on-surface: rgb(var(--v-theme-on-surface, 51, 51, 51));
+  --le-on-surface-variant: rgb(var(--v-theme-on-surface-variant, 102, 102, 102));
+  --le-radius: 8px;
+  --le-radius-pill: 9999px;
+  --le-elev-1: 0 1px 2px rgb(0 0 0 / 12%), 0 1px 3px 1px rgb(0 0 0 / 6%);
+  --le-elev-3: 0 1px 3px rgb(0 0 0 / 16%), 0 4px 8px 3px rgb(0 0 0 / 10%);
+
+  // Compact density — baked in, aligned across every list-editor variant.
+  --le-row-min-height: 48px;
+  --le-row-pad-y: 6px;
+  --le-row-font: 13px;
+  --le-indent: 24px;
+}

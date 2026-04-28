@@ -1,0 +1,706 @@
+// Shared rules for list-editor variants. All cross-variant presentation lives
+// on the `.a-le-*` namespace — applied directly in each editor's template
+// alongside the variant root class (`.a-list-editor` / `.a-sortable-list-editor`
+// / `.a-nested-list-editor`). Because the classes are namespaced, this file
+// can be imported unscoped in each editor's `<style>` block without collision
+// — CSS de-duplicates identical rule text, so the bundle carries one copy.
+// Vuetify v4 exports theme colours as comma-separated "R, G, B" lists, which
+// is why every primary/error/warning/surface var uses the explicit
+// `rgba(..., A)` form or `rgb(var(--v-theme-*, R, G, B))`. The slash-alpha
+// `rgb(R G B / A)` syntax produces invalid CSS when that var expands.
+/* stylelint-disable color-function-alias-notation */
+
+// --- Disabled / readonly variant root modifiers -----------------------------
+
+.a-list-editor--disabled,
+.a-list-editor--readonly,
+.a-sortable-list-editor--disabled,
+.a-sortable-list-editor--readonly,
+.a-nested-list-editor--disabled,
+.a-nested-list-editor--readonly {
+  opacity: 0.85;
+}
+
+.a-list-editor--disabled,
+.a-sortable-list-editor--disabled,
+.a-nested-list-editor--disabled {
+  pointer-events: none;
+}
+
+// --- Card ------------------------------------------------------------------
+
+.a-le-card {
+  background: var(--le-surface);
+  border: 1px solid var(--le-border);
+  border-radius: var(--le-radius);
+  overflow: hidden;
+}
+
+// --- Header ----------------------------------------------------------------
+
+.a-le-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  height: 60px;
+  border-bottom: 1px solid var(--le-border);
+  background: var(--le-surface);
+  flex-shrink: 0;
+}
+
+.a-le-title-heading {
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: 0.009em;
+  color: var(--le-on-surface);
+  margin: 0;
+}
+
+.a-le-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+// --- State (loading / error / empty wrapper) --------------------------------
+
+.a-le-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+
+  &--error {
+    padding: 16px;
+
+    .v-alert {
+      width: 100%;
+    }
+  }
+}
+
+// --- Empty ------------------------------------------------------------------
+
+.a-le-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 16px;
+}
+
+.a-le-empty-title {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  color: var(--le-on-surface);
+}
+
+.a-le-empty-text {
+  font-size: 0.875rem;
+  color: var(--le-on-surface-variant);
+  margin: 0 0 12px;
+}
+
+// --- Row primitives ---------------------------------------------------------
+
+.a-le-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--le-surface);
+  border-bottom: 1px solid var(--le-border);
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &--clickable .a-le-row-header {
+    cursor: pointer;
+  }
+
+  // Editing / readonly-expanded rows keep the overall row transparent — the
+  // blue tint sits on the header only, and the form body gets its own soft
+  // gradient.
+  &--editing .a-le-row-header,
+  &--expanded .a-le-row-header {
+    background: var(--le-primary-container);
+  }
+
+  &--editing::before,
+  &--expanded::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--le-primary);
+    z-index: 1;
+  }
+
+  // Unsaved takes visual precedence over editing — swap the primary rail +
+  // header tint for warning so the whole row reads as "dirty, not active".
+  &--unsaved {
+    background: var(--le-warning-container);
+  }
+
+  &--unsaved::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--le-warning);
+    z-index: 2;
+  }
+
+  &--unsaved .a-le-row-header {
+    background: var(--le-warning-container);
+  }
+
+  &--unsaved.a-le-row--editing .a-le-row-main,
+  &--unsaved.a-le-row--editing .a-le-row-main *,
+  &--unsaved.a-le-row--expanded .a-le-row-main,
+  &--unsaved.a-le-row--expanded .a-le-row-main * {
+    color: var(--le-warning);
+  }
+
+  // Active row — bold primary title. Reaches consumer-provided #item-compact
+  // slot content via the universal descendant selector.
+  &--editing .a-le-row-main,
+  &--editing .a-le-row-main *,
+  &--expanded .a-le-row-main,
+  &--expanded .a-le-row-main * {
+    font-weight: 700;
+    color: var(--le-primary);
+  }
+
+  // Keyboard-grabbed row in reorder mode — strong outline + tinted background
+  // so the user can see which row their arrow keys will move next. Stronger
+  // than focus-visible because the grab state is action-mode, not just focus.
+  &--grabbed {
+    outline: 3px solid var(--le-primary);
+    outline-offset: -3px;
+    background: var(--le-primary-state-press);
+    box-shadow: 0 0 0 6px var(--le-primary-state), 0 4px 12px rgb(0 0 0 / 8%);
+    z-index: 4;
+  }
+
+  &--grabbed::before {
+    background: var(--le-primary) !important;
+  }
+
+  // Validation rail — red for invalid, yellow for warning. Painted as ::after
+  // so it sits visually on top of the unsaved orange rail (::before, z-index 2)
+  // when both apply: invalid wins because the user can't save anyway.
+  /* stylelint-disable selector-max-compound-selectors */
+  &--validation-invalid:not(.a-le-row--editing)::after,
+  &--validation-warning:not(.a-le-row--editing)::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    z-index: 3;
+  }
+
+  &--validation-invalid:not(.a-le-row--editing)::after {
+    background: var(--le-error-fg);
+  }
+
+  &--validation-warning:not(.a-le-row--editing)::after {
+    background: var(--le-warning);
+  }
+
+  // When the row is invalid AND unsaved, swap the row tint from orange to red
+  // so the entire row reads as a problem to fix, not a pending change.
+  &--unsaved.a-le-row--validation-invalid {
+    background: var(--le-error-container);
+  }
+
+  &--unsaved.a-le-row--validation-invalid .a-le-row-header {
+    background: var(--le-error-container);
+  }
+  /* stylelint-enable selector-max-compound-selectors */
+}
+
+// Focus-visible styling — applies when a row receives keyboard focus via the
+// roving tabindex (arrow keys). Distinct from the hover/focus-within rules
+// that reveal action buttons; this is purely a focus indicator.
+.a-le-row:focus-visible,
+.a-le-row-wrapper:focus-visible {
+  outline: 2px solid var(--le-primary);
+  outline-offset: -2px;
+}
+
+// Visually hidden but announced by screen readers. Used for the keyboard-grab
+// aria-live status region so AT users hear position updates while moving rows
+// with arrow keys.
+.a-le-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.a-le-row-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--le-row-pad-y) 12px var(--le-row-pad-y) 16px;
+  min-height: var(--le-row-min-height);
+  flex-shrink: 0;
+  position: relative;
+  transition: background-color 0.15s;
+}
+
+.a-le-row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.a-le-title {
+  flex: 1 1 auto;
+  font-size: var(--le-row-font);
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: 0.018em;
+  color: var(--le-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.a-le-row-body {
+  padding: 12px 16px;
+  transition: padding-left 0.2s ease;
+}
+
+// Form card — wraps consumer-provided #item / #item-readonly content so the
+// inline editor reads as a distinct surface against the tinted row-body
+// background.
+.a-le-form {
+  background: var(--le-surface);
+  border: 1px solid rgb(0 0 0 / 6%);
+  border-radius: var(--le-radius);
+  padding: 16px 16px 8px;
+}
+
+.a-le-row-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 16px;
+}
+
+.a-le-row-footer-spacer {
+  flex: 1 1 auto;
+}
+
+.a-le-unsaved-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--le-warning);
+  font-weight: 500;
+  padding: 2px 4px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.a-le-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.a-le-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 56px;
+  padding: 4px 10px;
+  font: 500 11px/1 var(--v-font-body, inherit);
+  letter-spacing: 0.02em;
+  background: var(--le-success-container);
+  color: var(--le-success-fg);
+  border-radius: var(--le-radius-pill);
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &--warning {
+    background: var(--le-warning-container);
+    color: var(--le-warning-fg);
+  }
+
+  &--error {
+    background: var(--le-error-container);
+    color: var(--le-error-fg);
+  }
+}
+
+.a-le-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+// --- Clickable row hover/active states --------------------------------------
+// AListEditor and ASortableListEditor render both `:hover` and `:active`;
+// the nested variant intentionally omits `:active` (drag-handle press is
+// the louder affordance there, an extra press state would read as noise).
+
+.a-le-row--clickable:not(.a-le-row--editing, .a-le-row--expanded):hover .a-le-row-header {
+  background: var(--le-primary-state);
+}
+
+.a-list-editor,
+.a-sortable-list-editor {
+  .a-le-row--clickable:not(.a-le-row--editing, .a-le-row--expanded):active .a-le-row-header {
+    background: var(--le-primary-state-press);
+  }
+}
+
+// --- Row "+ Add" button at list end -----------------------------------------
+
+.a-le-row-add {
+  width: 100%;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--le-primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  border: none;
+  border-top: 1px solid var(--le-border);
+  background: var(--le-surface-container);
+  letter-spacing: 0.02em;
+  transition: background-color 0.15s;
+  text-align: left;
+  font-family: inherit;
+
+  &:hover {
+    background: var(--le-primary-container);
+  }
+}
+
+// Flat + sortable variants emit an explicit focus ring; the nested editor
+// opts out (no `:focus-visible` rule scoped to it).
+.a-list-editor,
+.a-sortable-list-editor {
+  .a-le-row-add:focus-visible {
+    outline: 2px solid var(--le-primary);
+    outline-offset: -2px;
+  }
+}
+
+// --- Drag handle -----------------------------------------------------------
+
+.a-le-drag-handle {
+  cursor: grab;
+  flex-shrink: 0;
+  padding: 4px 0;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// --- Reorder-mode toolbar status pill ---------------------------------------
+
+.a-le-toolbar-status {
+  font-size: 0.85rem;
+  color: var(--le-on-surface);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 4px;
+
+  &--pending {
+    color: var(--le-warning);
+  }
+}
+
+// --- Two-rows layout (always on — for AListEditor + ASortableListEditor) ----
+// AListEditor applies `--two-rows` per-row when the prop is `'always'`.
+// ASortableListEditor does the same. The nested variant never renders
+// two-rows mode, so these rules don't apply there.
+
+.a-le-row--two-rows:not(.a-le-row--editing, .a-le-row--expanded) .a-le-row-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'title title' 'status actions';
+  align-items: center;
+  gap: 4px 8px;
+  padding: 10px 16px;
+  min-height: auto;
+}
+
+.a-le-row--two-rows .a-le-row-main {
+  grid-area: title;
+  min-width: 0;
+}
+
+.a-le-row--two-rows .a-le-row-main .a-le-title {
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.a-le-row--two-rows .a-le-status {
+  grid-area: status;
+}
+
+.a-le-row--two-rows .a-le-actions {
+  grid-area: actions;
+  margin-left: 0;
+}
+
+// --- Two-rows mobile variant — gated on `--two-rows-mobile` on the root -----
+
+@media (width <= 600px) {
+  .a-list-editor--two-rows-mobile,
+  .a-sortable-list-editor--two-rows-mobile {
+    .a-le-row:not(.a-le-row--editing, .a-le-row--expanded) .a-le-row-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas: 'title title' 'status actions';
+      align-items: center;
+      gap: 4px 8px;
+      padding: 10px 16px;
+      min-height: auto;
+    }
+
+    .a-le-row-main {
+      grid-area: title;
+      min-width: 0;
+    }
+
+    .a-le-row-main .a-le-title {
+      white-space: normal;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.35;
+      font-weight: 500;
+    }
+
+    .a-le-status {
+      grid-area: status;
+    }
+
+    .a-le-actions {
+      grid-area: actions;
+      margin-left: 0;
+    }
+  }
+}
+
+// --- Action-column opacity (show on hover / focus / touch) ------------------
+// The nested and sortable variants introduce `--up` / `--down` / `--add-child`
+// actions, which appear alongside the base `--edit` / `--delete` / `--menu`.
+// Listing all modifiers here once lets every variant share the same reveal
+// behaviour.
+
+.a-le-action--edit,
+.a-le-action--delete,
+.a-le-action--menu,
+.a-le-action--up,
+.a-le-action--down,
+.a-le-action--add-child {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+/* stylelint-disable selector-max-compound-selectors */
+.a-le-row:hover .a-le-action--edit,
+.a-le-row:hover .a-le-action--delete,
+.a-le-row:hover .a-le-action--menu,
+.a-le-row:hover .a-le-action--up,
+.a-le-row:hover .a-le-action--down,
+.a-le-row:hover .a-le-action--add-child,
+.a-le-row:focus-within .a-le-action--edit,
+.a-le-row:focus-within .a-le-action--delete,
+.a-le-row:focus-within .a-le-action--menu,
+.a-le-row:focus-within .a-le-action--up,
+.a-le-row:focus-within .a-le-action--down,
+.a-le-row:focus-within .a-le-action--add-child {
+  opacity: 1;
+}
+/* stylelint-enable selector-max-compound-selectors */
+
+.a-list-editor--touch,
+.a-sortable-list-editor--touch,
+.a-nested-list-editor--touch {
+  .a-le-action--edit,
+  .a-le-action--delete,
+  .a-le-action--menu,
+  .a-le-action--up,
+  .a-le-action--down,
+  .a-le-action--add-child {
+    opacity: 1;
+  }
+}
+
+// Active rows keep all affordances pinned open.
+.a-le-row--editing .a-le-action--edit,
+.a-le-row--editing .a-le-action--delete,
+.a-le-row--editing .a-le-action--menu,
+.a-le-row--expanded .a-le-action--edit,
+.a-le-row--expanded .a-le-action--delete,
+.a-le-row--expanded .a-le-action--menu {
+  opacity: 1;
+}
+
+// Disabled reorder arrows — muted but visible when the row is hovered /
+// focused / on a touch device.
+/* stylelint-disable selector-max-compound-selectors */
+.a-le-row:hover .a-le-action--up.v-btn--disabled,
+.a-le-row:hover .a-le-action--down.v-btn--disabled,
+.a-le-row:focus-within .a-le-action--up.v-btn--disabled,
+.a-le-row:focus-within .a-le-action--down.v-btn--disabled {
+  opacity: 0.3;
+}
+/* stylelint-enable selector-max-compound-selectors */
+
+.a-sortable-list-editor--touch,
+.a-nested-list-editor--touch {
+  .a-le-action--up.v-btn--disabled,
+  .a-le-action--down.v-btn--disabled {
+    opacity: 0.3;
+  }
+}
+
+// --- Container-query desktop form rail --------------------------------------
+// Primary rail + soft gradient on the editing/readonly form area so the whole
+// inline-edit block reads as a single continuous surface. The nested variant
+// extends this with a depth-aware padding-left override, applied in-component.
+
+@container le-shell (min-width: 769px) {
+  .a-le-row--editing .a-le-row-body,
+  .a-le-row--expanded .a-le-row-body,
+  .a-le-row--editing .a-le-row-footer,
+  .a-le-row--expanded .a-le-row-footer {
+    border-left: 2px solid rgba(var(--v-theme-primary, 63, 106, 216), 0.28);
+    background: linear-gradient(
+      to right,
+      rgba(var(--v-theme-primary, 63, 106, 216), 0.07),
+      rgba(var(--v-theme-primary, 63, 106, 216), 0.02) 50%,
+      transparent 85%
+    );
+  }
+
+  // Unsaved + editing: swap the primary rail + gradient for warning so the
+  // whole form surface matches the orange row accent.
+  .a-le-row--unsaved.a-le-row--editing .a-le-row-body,
+  .a-le-row--unsaved.a-le-row--expanded .a-le-row-body,
+  .a-le-row--unsaved.a-le-row--editing .a-le-row-footer,
+  .a-le-row--unsaved.a-le-row--expanded .a-le-row-footer {
+    border-left-color: rgb(251 140 0 / 35%);
+    background: linear-gradient(
+      to right,
+      rgb(251 140 0 / 7%),
+      rgb(251 140 0 / 2%) 50%,
+      transparent 85%
+    );
+  }
+}
+
+// --- Chips layout shared core (AListEditor + ASortableListEditor) -----------
+// Chips is a layout mode where every row collapses into a pill. The nested
+// variant has no chips mode, so these rules are keyed under the flat+sortable
+// roots only.
+
+.a-list-editor--chips,
+.a-sortable-list-editor--chips {
+  .a-le-card {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+    border-radius: var(--le-radius);
+    box-shadow: none;
+  }
+
+  .a-le-header {
+    flex: 1 1 100%;
+    padding: 4px 8px 8px;
+    border-bottom: none;
+    min-height: auto;
+  }
+
+  .a-le-row {
+    border-bottom: none;
+    background: var(--le-primary-container);
+    border-radius: var(--le-radius-full);
+    flex: 0 0 auto;
+    max-width: 100%;
+  }
+
+  .a-le-row-main {
+    gap: 6px;
+  }
+
+  .a-le-title {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--le-primary);
+  }
+
+  .a-le-action--chip-close {
+    opacity: 0.7;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .a-le-row-add {
+    flex: 0 0 auto;
+    width: auto;
+    border-top: none;
+    border: 1px dashed var(--le-border);
+    border-radius: var(--le-radius-full);
+    padding: 4px 12px;
+    font-size: 0.82rem;
+    background: transparent;
+
+    &:hover {
+      background: var(--le-primary-state);
+    }
+  }
+}
