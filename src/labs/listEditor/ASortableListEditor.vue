@@ -1,18 +1,45 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, ref, shallowRef, useSlots, useTemplateRef, watch } from 'vue'
+import {
+  computed,
+  inject,
+  onBeforeUnmount,
+  provide,
+  ref,
+  shallowReactive,
+  shallowRef,
+  useSlots,
+  useTemplateRef,
+  watch,
+  type ComputedRef,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
+import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
+import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
+import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
+import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
+import { useUnsavedKeysSync } from '@/labs/listEditor/composables/useUnsavedKeysSync'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
-import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
+import {
+  useReorderMode,
+  SharedReorderRegistryKey,
+  type SharedReorderRegistry,
+} from '@/labs/listEditor/composables/useReorderMode'
 import LeDeleteDialog from '@/labs/listEditor/internal/LeDeleteDialog.vue'
+import LeMoveToPositionDialog from '@/labs/listEditor/internal/LeMoveToPositionDialog.vue'
 import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
 import LeStatus from '@/labs/listEditor/internal/LeStatus.vue'
 import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
 import LeDragHandle from '@/labs/listEditor/internal/LeDragHandle.vue'
+import {
+  DRAG_GHOST_CLASS,
+  DRAG_CHOSEN_CLASS,
+  DRAG_CLASS,
+} from '@/labs/listEditor/internal/constants'
 import { cloneDeep } from '@/utils/common'
 import { stringToInt } from '@/utils/string'
 import type {
@@ -34,6 +61,67 @@ export interface DecoratedViewItem<T> extends ListViewItem<T> {
 }
 
 export type ReorderMode = 'view' | 'reorder'
+
+// Public slot scope shapes — see AListEditor for the rationale on hoisting.
+export interface RowActions<TItem> {
+  edit: () => void
+  save: () => Promise<void> | void
+  cancel: () => void
+  close: () => void
+  delete: () => Promise<void>
+  addAfter: () => void
+  toggleExpand: () => void
+  moveUp: () => void
+  moveDown: () => void
+  moveTop: () => void
+  moveBottom: () => void
+  update: (data: TItem) => TItem[]
+}
+export interface RowSlotProps<TItem extends Record<string, any>> {
+  item: DecoratedViewItem<TItem> & { validationState: ListEditorValidationState }
+  raw: TItem
+  index: number
+  key: ListEditorKey
+  readonly: boolean
+  disabled: boolean
+  expanded: boolean
+  editing: boolean
+  dirty: boolean
+  unsaved: boolean
+  reorderMode: boolean
+  moved: boolean
+  canMoveUp: boolean
+  canMoveDown: boolean
+  touch: boolean
+  actions: RowActions<TItem>
+}
+export interface ToolbarSlotProps {
+  applying: boolean
+  hasPendingChanges: boolean
+  movedCount: number
+  error: string | null
+  actions: { apply: () => Promise<void>; cancel: () => void }
+}
+export interface ReorderToggleSlotProps {
+  mode: ReorderMode
+  disabled: boolean
+  hasPendingChanges: boolean
+  actions: { enterReorderMode: () => void; exitReorderMode: () => void }
+}
+export interface HeaderSlotProps extends ReorderToggleSlotProps {
+  title: string | null
+}
+export interface EmptySlotProps {
+  readonly: boolean
+  disabled: boolean
+  actions: { add: () => void }
+}
+export interface AddButtonSlotProps {
+  readonly: boolean
+  disabled: boolean
+  props: { onClick: () => void }
+  actions: { add: () => void }
+}
 
 export interface Props<TItem extends Record<string, any>> {
   keyField?: string
@@ -72,9 +160,36 @@ export interface Props<TItem extends Record<string, any>> {
   loadingKeys?: Set<ListEditorKey> | null
 
   showReorderToggle?: boolean
-  reorderDisabled?: boolean
+  disableReorder?: boolean
   disableDrag?: boolean
   showMoveToPosition?: boolean
+
+  /**
+   * Embedded mode — this editor is nested inside another editor's `#item`
+   * slot and follows a shared `v-model:mode` from the outer editor. When
+   * set, the editor:
+   *   - hides its own Reorder button + Cancel/Apply toolbar
+   *   - skips the snapshot/restore (the outer editor's deep snapshot covers
+   *     nested data, so cancel at the top reverts everything)
+   *   - paints lighter chrome so it visually reads as part of the parent row
+   * Pair with `v-model:mode` bound to the same ref the outer editor uses.
+   */
+  embedded?: boolean
+  /**
+   * Allow rows to remain inline-editable while the editor is in reorder
+   * mode. By default, entering reorder closes any open inline edit and the
+   * `#item` slot body is hidden — this keeps the visual focus on dragging.
+   * Set this when the open row's body needs to render in reorder mode (e.g.
+   * the parent editor of a shared-reorder pair, where the open question
+   * exposes its embedded answers list for dragging).
+   */
+  allowEditInReorder?: boolean
+
+  getValidationState?: (
+    item: TItem,
+    key: ListEditorKey,
+    index: number,
+  ) => ListEditorValidationState
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
@@ -110,9 +225,12 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   closeVariant: 'auto',
   loadingKeys: null,
   showReorderToggle: true,
-  reorderDisabled: false,
+  disableReorder: false,
   disableDrag: false,
   showMoveToPosition: false,
+  embedded: false,
+  allowEditInReorder: false,
+  getValidationState: undefined,
   onDeleteConfirm: undefined,
   onDelete: undefined,
   onItemSave: undefined,
@@ -133,12 +251,31 @@ const emit = defineEmits<{
   'reorder-end': []
 }>()
 
+defineSlots<{
+  header?: (props: HeaderSlotProps) => unknown
+  'reorder-toggle'?: (props: ReorderToggleSlotProps) => unknown
+  'reorder-toolbar'?: (props: ToolbarSlotProps) => unknown
+  empty?: (props: EmptySlotProps) => unknown
+  'add-button'?: (props: AddButtonSlotProps) => unknown
+  item?: (props: RowSlotProps<TItem>) => unknown
+  'item-compact'?: (props: RowSlotProps<TItem>) => unknown
+  'item-readonly'?: (props: RowSlotProps<TItem>) => unknown
+  'item-status'?: (props: RowSlotProps<TItem>) => unknown
+  'item-actions'?: (props: RowSlotProps<TItem>) => unknown
+  'item-footer'?: (props: RowSlotProps<TItem>) => unknown
+  'before-item'?: (props: RowSlotProps<TItem>) => unknown
+  'after-item'?: (props: RowSlotProps<TItem>) => unknown
+}>()
+
 const modelValue = defineModel<TItem[]>({ required: true })
 const mode = defineModel<ReorderMode>('mode', { default: 'view' })
 
 const { t } = useI18n()
 const slots = useSlots()
 const display = useDisplay()
+
+const rootEl = useTemplateRef<HTMLElement>('rootEl')
+const { isNarrow } = useContainerWidth(rootEl)
 
 const isTouch = computed<boolean>(() => display.platform.value.touch)
 
@@ -159,7 +296,7 @@ const expandedKeys = ref<Set<ListEditorKey>>(new Set())
 // as dirty would paint ghost "unsaved" markers. The per-row visual cue is
 // what matters; position data still flows to the parent on apply.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { captureDirtyBaseline, isItemDirty } = useDirtyBaseline<TItem>(
+const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(
   () =>
     modelValue.value.map((item) => ({
       key: item[props.keyField] as ListEditorKey,
@@ -212,8 +349,11 @@ const {
 
 const canInteract = computed(() => !props.readonly && !props.disabled && !props.loading)
 const canEnterReorder = computed(
-  () => canInteract.value && !props.reorderDisabled && modelValue.value.length > 1,
+  () => canInteract.value && !props.disableReorder && modelValue.value.length > 1,
 )
+
+const embeddedRef = computed(() => props.embedded)
+const allowEditInReorderRef = computed(() => props.allowEditInReorder)
 
 const {
   applying,
@@ -234,13 +374,18 @@ const {
     modelValue.value = m
   },
   canEnterReorder,
+  embedded: embeddedRef,
   onEnter: () => {
-    clearEditing()
-    expandedKeys.value.clear()
+    if (!allowEditInReorderRef.value) {
+      clearEditing()
+      expandedKeys.value.clear()
+    }
   },
   onExternalEnter: () => {
-    clearEditing()
-    expandedKeys.value.clear()
+    if (!allowEditInReorderRef.value) {
+      clearEditing()
+      expandedKeys.value.clear()
+    }
   },
   onReorderApply: (items) => props.onReorderApply?.(items),
   emit: {
@@ -250,6 +395,66 @@ const {
     reorderApplyError: (err) => emit('reorder-apply-error', err),
     reorderEnd: () => emit('reorder-end'),
   },
+})
+
+// Cross-editor pending-changes aggregation. When this editor is the outer
+// (non-embedded) one in a stacked-editor setup, it provides a registry that
+// embedded children push their own movedCount + hasPendingChanges into.
+// The toolbar's "N pending changes" then totals across all levels — drag a
+// question OR drag an answer inside an open question and the same counter
+// increments either way. When this editor IS embedded, it injects the
+// nearest parent's registry and registers itself.
+// shallowReactive (not reactive) so the stored ComputedRef objects don't get
+// auto-unwrapped — we read `.value` on them inside the aggregator computeds.
+// `embedded` is a setup-time decision; it doesn't flip during a component's
+// lifetime so reading it once at root scope is intentional.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const childContributions = props.embedded
+  ? null
+  : shallowReactive(
+    new Map<
+      symbol,
+      { count: ComputedRef<number>; hasChanges: ComputedRef<boolean> }
+    >(),
+  )
+
+if (childContributions) {
+  const registry: SharedReorderRegistry = {
+    register: (id, count, hasChanges) => {
+      childContributions.set(id, { count, hasChanges })
+    },
+    unregister: (id) => {
+      childContributions.delete(id)
+    },
+  }
+  provide(SharedReorderRegistryKey, registry)
+}
+
+if (props.embedded) {
+  const parent = inject(SharedReorderRegistryKey, null)
+  if (parent) {
+    const id = Symbol('le.embedded')
+    parent.register(id, movedCount, hasPendingChanges)
+    onBeforeUnmount(() => parent.unregister(id))
+  }
+}
+
+const totalMovedCount = computed<number>(() => {
+  let sum = movedCount.value
+  if (childContributions) {
+    for (const c of childContributions.values()) sum += c.count.value
+  }
+  return sum
+})
+
+const totalHasPendingChanges = computed<boolean>(() => {
+  if (hasPendingChanges.value) return true
+  if (childContributions) {
+    for (const c of childContributions.values()) {
+      if (c.hasChanges.value) return true
+    }
+  }
+  return false
 })
 
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
@@ -270,23 +475,40 @@ const deleteConfirmTextResolved = computed(
 
 const reorderToggleVisible = computed<boolean>(
   (): boolean =>
-    !props.chips && props.showReorderToggle && !reorderMode.value && modelValue.value.length > 0,
+    !props.chips
+    && !props.embedded
+    && props.showReorderToggle
+    && !reorderMode.value
+    && modelValue.value.length > 0,
 )
 
 // When there IS a title and viewport is narrow, the reorder button shrinks to an
 // icon-only round button to keep the single-line header from overflowing.
 const compactReorderButton = computed<boolean>(
-  (): boolean => !!props.title && display.smAndDown.value,
+  (): boolean => !!props.title && isNarrow.value,
 )
 
 const headerVisible = computed<boolean>(
   (): boolean =>
     !!(
-      props.title ||
-      slots.header ||
-      slots['reorder-toggle'] ||
-      reorderToggleVisible.value ||
-      reorderMode.value
+      props.title
+      || slots.header
+      || slots['reorder-toggle']
+      || reorderToggleVisible.value
+      || (reorderMode.value && !props.embedded)
+    ),
+)
+
+// Editor band-only header — true when the only thing in the header is the
+// reorder button (no title, no slot). Lets the template float the button
+// over the editor's top-right corner instead of reserving an empty band.
+const headerHasContent = computed<boolean>(
+  (): boolean =>
+    !!(
+      props.title
+      || slots.header
+      || slots['reorder-toggle']
+      || (reorderMode.value && !props.embedded)
     ),
 )
 
@@ -302,47 +524,138 @@ const markMoved = (key: ListEditorKey) => {
   movedKeys.value.add(key)
 }
 
+// Decoupled dirty pass — see AListEditor for rationale.
+const dirtyKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  for (const item of modelValue.value) {
+    const key = item[props.keyField] as ListEditorKey
+    if (isItemDirty(key, item)) out.add(key)
+  }
+  return out
+})
+
+// Per-key decorator cache — see AListEditor for rationale.
+const decoratorCache = new Map<ListEditorKey, DecoratedViewItem<TItem>>()
 const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
   const total = modelValue.value.length
-  return editor.viewItems.value.map((vi) => {
+  const next: DecoratedViewItem<TItem>[] = []
+  const liveKeys = new Set<ListEditorKey>()
+  for (const vi of editor.viewItems.value) {
+    liveKeys.add(vi.key)
+    const editing = editingKeys.value.has(vi.key)
+    const expanded = expandedKeys.value.has(vi.key)
+    const loading = props.loadingKeys?.has(vi.key) ?? false
     const moved = movedKeys.value.has(vi.key)
-    const dirty = isItemDirty(vi.key, vi.raw)
-    return {
+    const dirty = dirtyKeys.value.has(vi.key)
+    const unsaved = dirty || moved
+    const canMoveUp = vi.index > 0
+    const canMoveDown = vi.index < total - 1
+    const cached = decoratorCache.get(vi.key)
+    if (
+      cached
+      && cached.raw === vi.raw
+      && cached.index === vi.index
+      && cached.position === vi.position
+      && cached.editing === editing
+      && cached.expanded === expanded
+      && cached.loading === loading
+      && cached.dirty === dirty
+      && cached.moved === moved
+      && cached.unsaved === unsaved
+      && cached.canMoveUp === canMoveUp
+      && cached.canMoveDown === canMoveDown
+    ) {
+      next.push(cached)
+      continue
+    }
+    const decorated: DecoratedViewItem<TItem> = {
       ...vi,
-      editing: editingKeys.value.has(vi.key),
-      expanded: expandedKeys.value.has(vi.key),
-      loading: props.loadingKeys?.has(vi.key) ?? false,
+      editing,
+      expanded,
+      loading,
       dirty,
       moved,
-      unsaved: dirty || moved,
-      canMoveUp: vi.index > 0,
-      canMoveDown: vi.index < total - 1,
+      unsaved,
+      canMoveUp,
+      canMoveDown,
     }
-  })
+    decoratorCache.set(vi.key, decorated)
+    next.push(decorated)
+  }
+  for (const key of decoratorCache.keys()) {
+    if (!liveKeys.has(key)) decoratorCache.delete(key)
+  }
+  return next
 })
 
 const isEmpty = computed(() => viewItemsDecorated.value.length === 0)
 
-const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
-  const pick = (v: unknown): string | null => (v == null || v === '' ? null : String(v))
-  const fromField = props.compactField ? pick(raw[props.compactField]) : null
-  if (fromField !== null) return fromField
-  const fallbacks = [
-    pick(raw.title),
-    pick(raw.name),
-    pick(raw.texts?.title),
-    pick(raw.text),
-    pick(key),
-  ]
-  const hit = fallbacks.find((v): v is string => v !== null)
-  return hit ?? t('common.sortable.itemFallback')
+const findVi = (key: ListEditorKey): DecoratedViewItem<TItem> | undefined =>
+  viewItemsDecorated.value.find((v) => v.key === key)
+
+const keyboardNav = useKeyboardNav({
+  viewItems: computed(() => viewItemsDecorated.value.map((vi) => ({ key: vi.key }))),
+  variant: 'sortable',
+  isReorderMode: reorderMode,
+  disabled: computed(() => !canInteract.value),
+  isEditing: (key) => editingKeys.value.has(key),
+  onToggleEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onEditClick(vi)
+  },
+  onCancelEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onCloseClick(vi)
+  },
+  onMoveUp: (key) => {
+    const vi = findVi(key)
+    if (vi) moveUp(vi.index)
+  },
+  onMoveDown: (key) => {
+    const vi = findVi(key)
+    if (vi) moveDown(vi.index)
+  },
+  onMoveTop: (key) => {
+    const vi = findVi(key)
+    if (vi) moveTop(vi.index)
+  },
+  onMoveBottom: (key) => {
+    const vi = findVi(key)
+    if (vi) moveBottom(vi.index)
+  },
+  onCancelReorder: () => cancelReorderMode(),
+})
+
+const moveToPositionDialogOpen = ref<boolean>(false)
+const moveToPositionTarget = shallowRef<DecoratedViewItem<TItem> | null>(null)
+const moveToPositionLabel = computed<string>(() =>
+  moveToPositionTarget.value
+    ? resolveCompactText(moveToPositionTarget.value.raw, moveToPositionTarget.value.key)
+    : '',
+)
+const openMoveToPosition = (vi: DecoratedViewItem<TItem>) => {
+  if (!props.showMoveToPosition) return
+  moveToPositionTarget.value = vi
+  moveToPositionDialogOpen.value = true
+}
+const onMoveToPositionConfirm = (newIndex: number) => {
+  const target = moveToPositionTarget.value
+  moveToPositionTarget.value = null
+  if (!target) return
+  if (newIndex === target.index) return
+  editor.moveItem(target.index, newIndex)
+  markMoved(target.key)
 }
 
-const resolveValidation = (raw: TItem): ListEditorValidationState => {
-  const v = raw.validationState
-  if (v === 'valid' || v === 'invalid' || v === 'warning') return v
-  return null
-}
+const resolveCompactText = (raw: TItem, key: ListEditorKey): string =>
+  resolveCompactTextUtil(raw, key, {
+    compactField: props.compactField,
+    fallback: t('common.sortable.itemFallback'),
+  })
+
+const { resolveValidation } = useValidationRegistry<TItem>({
+  getValidationState: (item, key, index) => props.getValidationState?.(item, key, index) ?? null,
+})
 
 // Skip SortableJS entirely on touch devices — touch users reorder via arrows + menu,
 // so the drag/drop library is never needed and there is no point paying its setup cost.
@@ -359,9 +672,9 @@ if (!isTouch.value) {
     forceFallback: true,
     fallbackTolerance: 3,
     fallbackOnBody: true,
-    ghostClass: 'a-le-row--ghost',
-    chosenClass: 'a-le-row--chosen',
-    dragClass: 'a-le-row--drag',
+    ghostClass: DRAG_GHOST_CLASS,
+    chosenClass: DRAG_CHOSEN_CLASS,
+    dragClass: DRAG_CLASS,
     disabled: !dragEnabled.value,
     onEnd: (event) => {
       // Resolve which row was dragged by reading its data-id attribute
@@ -401,7 +714,8 @@ const onRowAddAfterClick = (vi: ListViewItem<TItem>) => {
 }
 
 const onEditClick = (vi: ListViewItem<TItem>) => {
-  if (!canInteract.value || reorderMode.value) return
+  if (!canInteract.value) return
+  if (reorderMode.value && !props.allowEditInReorder) return
   // Toggle: clicking edit while already editing closes the form, matching the
   // row-header click behaviour.
   if (editingKeys.value.has(vi.key)) {
@@ -416,7 +730,8 @@ const onEditClick = (vi: ListViewItem<TItem>) => {
 }
 
 const onExpandClick = (vi: ListViewItem<TItem>) => {
-  if (props.disabled || props.loading || reorderMode.value) return
+  if (props.disabled || props.loading) return
+  if (reorderMode.value && !props.allowEditInReorder) return
   const key = vi.key
   const currentlyExpanded = expandedKeys.value.has(key)
   if (currentlyExpanded) {
@@ -432,7 +747,7 @@ const isRowClickable = (vi: DecoratedViewItem<TItem>): boolean => {
   if (props.chips) return false
   if (props.disableRowClick) return false
   if (props.disabled || props.loading) return false
-  if (reorderMode.value) return false
+  if (reorderMode.value && !props.allowEditInReorder) return false
   if (vi.editing || vi.expanded) return true
   if (!props.readonly && props.showEditButton) return true
   if (props.readonly && hasReadonlyDetail.value) return true
@@ -526,8 +841,58 @@ const moveBottom = (idx: number) => {
   if (key !== null) markMoved(key)
 }
 
+// Per-key actions cache: stable identity per row, see equivalent block in
+// AListEditor for rationale. Closures capture key (stable) and look up the
+// current vi via findVi at call time.
+type ActionsBundle = {
+  edit: () => void
+  save: () => Promise<void> | void
+  cancel: () => void
+  close: () => void
+  delete: () => Promise<void>
+  addAfter: () => void
+  toggleExpand: () => void
+  moveUp: () => void
+  moveDown: () => void
+  moveTop: () => void
+  moveBottom: () => void
+  update: (data: TItem) => TItem[]
+}
+const actionsCache = new Map<ListEditorKey, ActionsBundle>()
+const getActions = (key: ListEditorKey): ActionsBundle => {
+  let actions = actionsCache.get(key)
+  if (!actions) {
+    actions = {
+      edit: () => { const vi = findVi(key); if (vi) onEditClick(vi) },
+      save: () => { const vi = findVi(key); if (vi) return onSaveClick(vi) },
+      cancel: () => { const vi = findVi(key); if (vi) onCancelClick(vi) },
+      close: () => { const vi = findVi(key); if (vi) onCloseClick(vi) },
+      delete: async () => { const vi = findVi(key); if (vi) await onDeleteClick(vi) },
+      addAfter: () => { const vi = findVi(key); if (vi) onRowAddAfterClick(vi) },
+      toggleExpand: () => { const vi = findVi(key); if (vi) onExpandClick(vi) },
+      moveUp: () => { const vi = findVi(key); if (vi) moveUp(vi.index) },
+      moveDown: () => { const vi = findVi(key); if (vi) moveDown(vi.index) },
+      moveTop: () => { const vi = findVi(key); if (vi) moveTop(vi.index) },
+      moveBottom: () => { const vi = findVi(key); if (vi) moveBottom(vi.index) },
+      update: (data: TItem) => editor.updateItem(key, data),
+    }
+    actionsCache.set(key, actions)
+  }
+  return actions
+}
+watch(
+  () => viewItemsDecorated.value,
+  (now) => {
+    if (actionsCache.size === 0) return
+    const liveKeys = new Set(now.map((v) => v.key))
+    for (const key of actionsCache.keys()) {
+      if (!liveKeys.has(key)) actionsCache.delete(key)
+    }
+  },
+)
+
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
-  item: { ...vi, validationState: resolveValidation(vi.raw as TItem) },
+  item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
   raw: vi.raw,
   index: vi.index,
   key: vi.key,
@@ -542,25 +907,13 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
   canMoveUp: vi.canMoveUp,
   canMoveDown: vi.canMoveDown,
   touch: isTouch.value,
-  actions: {
-    edit: () => onEditClick(vi),
-    save: () => onSaveClick(vi),
-    cancel: () => onCancelClick(vi),
-    close: () => onCloseClick(vi),
-    delete: () => onDeleteClick(vi),
-    addAfter: () => onRowAddAfterClick(vi),
-    toggleExpand: () => onExpandClick(vi),
-    moveUp: () => moveUp(vi.index),
-    moveDown: () => moveDown(vi.index),
-    moveTop: () => moveTop(vi.index),
-    moveBottom: () => moveBottom(vi.index),
-  },
+  actions: getActions(vi.key),
 })
 
 const toolbarSlotProps = computed(() => ({
   applying: applying.value,
-  hasPendingChanges: hasPendingChanges.value,
-  movedCount: movedCount.value,
+  hasPendingChanges: totalHasPendingChanges.value,
+  movedCount: totalMovedCount.value,
   error: applyError.value,
   actions: {
     apply: applyReorder,
@@ -571,12 +924,37 @@ const toolbarSlotProps = computed(() => ({
 const reorderToggleSlotProps = computed(() => ({
   mode: mode.value,
   disabled: !canEnterReorder.value,
-  hasPendingChanges: hasPendingChanges.value,
+  hasPendingChanges: totalHasPendingChanges.value,
   actions: {
     enterReorderMode,
     exitReorderMode: cancelReorderMode,
   },
 }))
+
+const unsavedKeysModel = defineModel<Set<ListEditorKey>>('unsavedKeys', {
+  default: () => new Set<ListEditorKey>(),
+})
+
+const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  for (const vi of viewItemsDecorated.value) {
+    if (vi.unsaved) out.add(vi.key)
+  }
+  return out
+})
+
+const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSync({
+  unsavedKeysModel,
+  internalUnsavedKeys,
+  onClearAll: () => {
+    captureDirtyBaseline()
+    movedKeys.value = new Set()
+  },
+  onClearKey: (key) => {
+    rebaselineKey(key)
+    movedKeys.value.delete(key)
+  },
+})
 
 defineExpose({
   addItem: editor.addItem,
@@ -586,6 +964,9 @@ defineExpose({
   recalculatePositions: editor.recalculatePositions,
   viewItems: editor.viewItems,
   resetDirtyBaseline,
+  hasUnsavedChanges,
+  unsavedCount,
+  clearUnsavedState,
   enterReorderMode,
   cancelReorderMode,
   applyReorder,
@@ -594,6 +975,7 @@ defineExpose({
 
 <template>
   <div
+    ref="rootEl"
     class="a-sortable-list-editor"
     :class="[
       `a-sortable-list-editor--two-rows-${twoRows}`,
@@ -604,6 +986,9 @@ defineExpose({
         'a-sortable-list-editor--touch': isTouch,
         'a-sortable-list-editor--drag-enabled': dragEnabled,
         'a-sortable-list-editor--chips': chips,
+        'a-sortable-list-editor--embedded': embedded,
+        'a-sortable-list-editor--header-floating':
+          !embedded && !chips && !headerHasContent && headerVisible,
       },
     ]"
   >
@@ -624,7 +1009,7 @@ defineExpose({
             {{ title }}
           </h3>
           <div class="a-le-header-actions">
-            <template v-if="reorderMode">
+            <template v-if="reorderMode && !embedded">
               <!-- Reorder-mode header: pending-changes count + Cancel/Apply.
                    Replaces the old sticky bottom toolbar — the actions sit
                    where the "Reorder" button lives in view mode. -->
@@ -632,10 +1017,16 @@ defineExpose({
                 name="reorder-toolbar"
                 v-bind="toolbarSlotProps"
               >
+                <span
+                  v-if="!title"
+                  class="a-le-reorder-mode-label"
+                >
+                  {{ t('common.sortable.reorderModeLabel') }}
+                </span>
                 <LeStatus
-                  :class="{ 'a-le-toolbar-status--pending': hasPendingChanges }"
-                  :has-pending-changes="hasPendingChanges"
-                  :pending-count="movedCount"
+                  :class="{ 'a-le-toolbar-status--pending': totalHasPendingChanges }"
+                  :has-pending-changes="totalHasPendingChanges"
+                  :pending-count="totalMovedCount"
                   :error="applyError"
                 />
                 <VBtn
@@ -652,7 +1043,7 @@ defineExpose({
                   size="small"
                   prepend-icon="mdi-check"
                   :loading="applying"
-                  :disabled="applying || !hasPendingChanges"
+                  :disabled="applying || !totalHasPendingChanges"
                   @click="applyReorder"
                 >
                   {{ t('common.sortable.reorderApply') }}
@@ -753,6 +1144,8 @@ defineExpose({
           v-for="vi in viewItemsDecorated"
           :key="String(vi.key)"
           :data-id="String(vi.key)"
+          role="listitem"
+          :tabindex="keyboardNav.rowTabindex(vi.key)"
           class="a-le-row"
           :class="{
             'a-le-row--two-rows': twoRows === 'always',
@@ -760,10 +1153,12 @@ defineExpose({
             'a-le-row--expanded': vi.expanded,
             'a-le-row--unsaved': vi.unsaved,
             'a-le-row--reorder': reorderMode,
+            'a-le-row--grabbed': keyboardNav.isGrabbed(vi.key),
             'a-le-row--clickable': isRowClickable(vi),
-            [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
-              resolveValidation(vi.raw) !== null,
+            [`a-le-row--validation-${resolveValidation(vi.raw, vi.key, vi.index)}`]:
+              resolveValidation(vi.raw, vi.key, vi.index) !== null,
           }"
+          @keydown="keyboardNav.handleKeydown(vi.key, $event)"
         >
           <slot
             name="before-item"
@@ -906,6 +1301,17 @@ defineExpose({
                           </VListItemTitle>
                         </VListItem>
                         <VListItem
+                          v-if="showMoveToPosition && viewItemsDecorated.length > 1"
+                          @click.stop="openMoveToPosition(vi)"
+                        >
+                          <template #prepend>
+                            <VIcon icon="mdi-target" />
+                          </template>
+                          <VListItemTitle>
+                            {{ t('common.sortable.moveToPosition.action') }}
+                          </VListItemTitle>
+                        </VListItem>
+                        <VListItem
                           v-if="showAddAfterAction && canInteract"
                           @click.stop="onRowAddAfterClick(vi)"
                         >
@@ -1007,7 +1413,9 @@ defineExpose({
             </div>
           </div>
 
-          <template v-if="vi.editing && !reorderMode && $slots.item">
+          <template
+            v-if="vi.editing && (allowEditInReorder || !reorderMode) && $slots.item"
+          >
             <div class="a-le-row-body">
               <div class="a-le-form">
                 <slot
@@ -1021,7 +1429,7 @@ defineExpose({
               v-bind="buildSlotProps(vi)"
             >
               <div
-                v-if="showInlineSaveFooter"
+                v-if="showInlineSaveFooter && !reorderMode"
                 class="a-le-row-footer"
               >
                 <div class="a-le-row-footer-spacer" />
@@ -1046,7 +1454,11 @@ defineExpose({
           </template>
 
           <div
-            v-else-if="vi.expanded && !reorderMode && $slots['item-readonly']"
+            v-else-if="
+              vi.expanded
+                && (allowEditInReorder || !reorderMode)
+                && $slots['item-readonly']
+            "
             class="a-le-row-body"
           >
             <div class="a-le-form">
@@ -1086,6 +1498,14 @@ defineExpose({
       </slot>
     </div>
 
+    <LeMoveToPositionDialog
+      v-model="moveToPositionDialogOpen"
+      :total="viewItemsDecorated.length"
+      :current-index="moveToPositionTarget?.index ?? 0"
+      :item-label="moveToPositionLabel"
+      @confirm="onMoveToPositionConfirm"
+    />
+
     <LeDeleteDialog
       v-model="deleteDialog"
       :title="deleteConfirmTitleResolved"
@@ -1097,6 +1517,21 @@ defineExpose({
       @confirm="onDeleteDialogConfirm"
       @cancel="onDeleteDialogCancel"
     />
+
+    <div
+      class="a-le-sr-only"
+      aria-live="polite"
+      role="status"
+    >
+      {{
+        keyboardNav.grabbedKey.value !== null
+          ? t('common.sortable.keyboardGrab.status', {
+            n: keyboardNav.grabbedIndex.value + 1,
+            total: keyboardNav.totalCount.value,
+          })
+          : ''
+      }}
+    </div>
   </div>
 </template>
 
@@ -1119,29 +1554,6 @@ defineExpose({
     padding-right: 8px;
     gap: 8px;
   }
-
-  // Validation rail — excludes both `--editing` and `--unsaved` so the
-  // primary + warning rails (higher priority states) aren't overwritten by
-  // a validation-error stripe.
-  /* stylelint-disable selector-max-compound-selectors */
-  .a-le-row--validation-invalid::after,
-  .a-le-row--validation-warning::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-  }
-
-  .a-le-row--validation-invalid:not(.a-le-row--editing, .a-le-row--unsaved)::after {
-    background: var(--le-error-fg);
-  }
-
-  .a-le-row--validation-warning:not(.a-le-row--editing, .a-le-row--unsaved)::after {
-    background: var(--le-warning);
-  }
-  /* stylelint-enable selector-max-compound-selectors */
 
   // Drag rendering — SortableJS clone + ghost + chosen source.
   .a-le-row--ghost {
@@ -1168,6 +1580,90 @@ defineExpose({
   .a-le-row--drag .a-le-actions,
   .a-le-row--drag .a-le-status {
     display: none;
+  }
+
+  // Reorder-mode contextual label — shown when there's no title so the user
+  // sees a "Reorder mode" hint next to the pending-changes status. Hidden
+  // when the consumer passes a title (the title already provides context).
+  .a-le-reorder-mode-label {
+    font: 500 13px/1 var(--v-font-body, inherit);
+    color: var(--le-primary);
+    margin-right: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  // Floating-header variant — when the only thing in the header is the
+  // Reorder button, drop the band entirely and float the button absolutely
+  // over the editor's top-right corner so we don't waste ~50 px of vertical
+  // rhythm on an empty bar.
+  &--header-floating .a-le-card {
+    position: relative;
+  }
+
+  &--header-floating .a-le-header {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    z-index: 2;
+  }
+
+  &--header-floating .a-le-header-actions {
+    margin-left: 0;
+  }
+
+  // Embedded variant — this editor sits inside another editor's row. Drop
+  // the card chrome (border, shadow), tighten rows, lighten background so it
+  // visually reads as part of the parent's body, not a sibling list.
+  &--embedded .a-le-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  &--embedded .a-le-header {
+    padding: 4px 0 6px;
+    background: transparent;
+    border: none;
+  }
+
+  &--embedded .a-le-title-heading {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--le-on-surface-medium, rgb(0 0 0 / 70%));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &--embedded .a-le-row {
+    background: var(--le-surface);
+    border: 1px solid var(--le-border);
+    border-radius: 6px;
+    margin-bottom: 4px;
+  }
+
+  &--embedded .a-le-row:last-of-type {
+    margin-bottom: 0;
+  }
+
+  &--embedded .a-le-row-add {
+    min-height: var(--le-row-min-height);
+    padding: 0 16px;
+    background: transparent;
+    border: 1px dashed var(--le-border);
+    border-radius: 6px;
+    color: var(--le-primary);
+    margin-top: 4px;
+    width: 100%;
+  }
+
+  &--embedded .a-le-row-add:hover {
+    background: var(--le-primary-state);
+    border-style: solid;
   }
 
   // Chips-layout variant-specific overrides — `__rows` flex-wraps into pills,
@@ -1206,7 +1702,9 @@ defineExpose({
 
     .a-le-row .a-le-action--edit,
     .a-le-row .a-le-action--delete,
-    .a-le-row .a-le-action--menu {
+    .a-le-row .a-le-action--menu,
+    .a-le-row .a-le-action--up,
+    .a-le-row .a-le-action--down {
       opacity: 1;
     }
   }

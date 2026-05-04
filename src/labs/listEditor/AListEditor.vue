@@ -1,8 +1,12 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, ref, useSlots, useTemplateRef } from 'vue'
+import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
+import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
+import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
+import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
+import { useUnsavedKeysSync } from '@/labs/listEditor/composables/useUnsavedKeysSync'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
@@ -21,6 +25,54 @@ export interface DecoratedViewItem<T> extends ListViewItem<T> {
   expanded: boolean
   loading: boolean
   dirty: boolean
+}
+
+// Public slot scope shapes — mirror what `buildSlotProps(vi)` actually emits.
+// Hoisted to the top-level so vite-plugin-dts can include them in the .d.ts;
+// putting them after `defineProps`/`defineEmits` would emit `private name`
+// errors during d.ts rollup.
+export interface RowActions<TItem> {
+  edit: () => void
+  save: () => Promise<void> | void
+  cancel: () => void
+  close: () => void
+  delete: () => Promise<void>
+  addAfter: () => void
+  toggleExpand: () => void
+  update: (data: TItem) => TItem[]
+}
+export interface RowSlotProps<TItem extends Record<string, any>> {
+  item: DecoratedViewItem<TItem> & { validationState: ListEditorValidationState }
+  raw: TItem
+  index: number
+  key: ListEditorKey
+  readonly: boolean
+  disabled: boolean
+  expanded: boolean
+  editing: boolean
+  dirty: boolean
+  /**
+   * Aliases `dirty` on the flat editor (no reorder mode → no `moved` to OR
+   * with). Mirrors the field name on the sortable + nested variants so a
+   * consumer slot template can use the same name across all three editors.
+   */
+  unsaved: boolean
+  touch: boolean
+  actions: RowActions<TItem>
+}
+export interface EmptySlotProps {
+  readonly: boolean
+  disabled: boolean
+  actions: { add: () => void }
+}
+export interface AddButtonSlotProps {
+  readonly: boolean
+  disabled: boolean
+  props: { onClick: () => void }
+  actions: { add: () => void }
+}
+export interface HeaderSlotProps {
+  title: string | null
 }
 
 export interface Props<TItem extends Record<string, any>> {
@@ -59,6 +111,12 @@ export interface Props<TItem extends Record<string, any>> {
 
   loadingKeys?: Set<ListEditorKey> | null
 
+  getValidationState?: (
+    item: TItem,
+    key: ListEditorKey,
+    index: number,
+  ) => ListEditorValidationState
+
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
   onItemSave?: (item: TItem) => Promise<void> | void
@@ -91,6 +149,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   deleteConfirmText: null,
   closeVariant: 'auto',
   loadingKeys: null,
+  getValidationState: undefined,
   onDeleteConfirm: undefined,
   onDelete: undefined,
   onItemSave: undefined,
@@ -105,11 +164,27 @@ const emit = defineEmits<{
   'item-expand': [item: ListViewItem<TItem>, expanded: boolean]
 }>()
 
+defineSlots<{
+  header?: (props: HeaderSlotProps) => unknown
+  empty?: (props: EmptySlotProps) => unknown
+  'add-button'?: (props: AddButtonSlotProps) => unknown
+  item?: (props: RowSlotProps<TItem>) => unknown
+  'item-compact'?: (props: RowSlotProps<TItem>) => unknown
+  'item-readonly'?: (props: RowSlotProps<TItem>) => unknown
+  'item-status'?: (props: RowSlotProps<TItem>) => unknown
+  'item-actions'?: (props: RowSlotProps<TItem>) => unknown
+  'item-footer'?: (props: RowSlotProps<TItem>) => unknown
+  'before-item'?: (props: RowSlotProps<TItem>) => unknown
+  'after-item'?: (props: RowSlotProps<TItem>) => unknown
+}>()
+
 const modelValue = defineModel<TItem[]>({ required: true })
 
 const { t } = useI18n()
 const slots = useSlots()
 const display = useDisplay()
+
+const rootEl = useTemplateRef<HTMLElement>('rootEl')
 
 const isTouch = computed<boolean>(() => display.platform.value.touch)
 
@@ -131,7 +206,7 @@ const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'
 
 // Initial snapshot of each item, keyed by row key. Compared against current data to
 // detect "dirty" (unsaved) rows. Reset externally after a successful parent-form save.
-const { captureDirtyBaseline, isItemDirty } = useDirtyBaseline<TItem>(() =>
+const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(() =>
   modelValue.value.map((item) => ({
     key: item[props.keyField] as ListEditorKey,
     data: item,
@@ -181,38 +256,94 @@ const headerVisible = computed(() => !!(props.title || slots.header))
 // global save flushes everything, so we hide the per-row buttons by default.
 const showInlineSaveFooter = computed(() => !!props.onItemSave)
 
-const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() =>
-  editor.viewItems.value.map((vi) => ({
-    ...vi,
-    editing: editingKeys.value.has(vi.key),
-    expanded: expandedKeys.value.has(vi.key),
-    loading: props.loadingKeys?.has(vi.key) ?? false,
-    dirty: isItemDirty(vi.key, vi.raw),
-  })),
-)
+// Decoupled dirty pass: depends only on modelValue (via stringifyContent
+// reading nested fields) and dirtyBaseline. Editing/expanded/loading flag
+// changes do NOT re-trigger this — viewItemsDecorated reads dirtyKeys.has()
+// instead of calling isItemDirty inline, so we avoid stringifying every
+// row whenever the user clicks edit on one row.
+const dirtyKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  for (const item of modelValue.value) {
+    const key = item[props.keyField] as ListEditorKey
+    if (isItemDirty(key, item)) out.add(key)
+  }
+  return out
+})
+
+// Per-key decorator cache: we reuse the cached object when its base view item
+// AND every flag matches, giving slot consumers a stable reference for rows
+// whose state didn't change. Saves allocation on every render where only one
+// row's flag flipped.
+const decoratorCache = new Map<ListEditorKey, DecoratedViewItem<TItem>>()
+const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
+  const next: DecoratedViewItem<TItem>[] = []
+  const liveKeys = new Set<ListEditorKey>()
+  for (const vi of editor.viewItems.value) {
+    liveKeys.add(vi.key)
+    const editing = editingKeys.value.has(vi.key)
+    const expanded = expandedKeys.value.has(vi.key)
+    const loading = props.loadingKeys?.has(vi.key) ?? false
+    const dirty = dirtyKeys.value.has(vi.key)
+    const cached = decoratorCache.get(vi.key)
+    if (
+      cached
+      && cached.raw === vi.raw
+      && cached.index === vi.index
+      && cached.position === vi.position
+      && cached.editing === editing
+      && cached.expanded === expanded
+      && cached.loading === loading
+      && cached.dirty === dirty
+    ) {
+      next.push(cached)
+      continue
+    }
+    const decorated: DecoratedViewItem<TItem> = {
+      ...vi,
+      editing,
+      expanded,
+      loading,
+      dirty,
+    }
+    decoratorCache.set(vi.key, decorated)
+    next.push(decorated)
+  }
+  for (const key of decoratorCache.keys()) {
+    if (!liveKeys.has(key)) decoratorCache.delete(key)
+  }
+  return next
+})
 
 const isEmpty = computed(() => viewItemsDecorated.value.length === 0)
 
-const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
-  const pick = (v: unknown): string | null => (v == null || v === '' ? null : String(v))
-  const fromField = props.compactField ? pick(raw[props.compactField]) : null
-  if (fromField !== null) return fromField
-  const fallbacks = [
-    pick(raw.title),
-    pick(raw.name),
-    pick(raw.texts?.title),
-    pick(raw.text),
-    pick(key),
-  ]
-  const hit = fallbacks.find((v): v is string => v !== null)
-  return hit ?? t('common.sortable.itemFallback')
-}
+const findVi = (key: ListEditorKey): DecoratedViewItem<TItem> | undefined =>
+  viewItemsDecorated.value.find((v) => v.key === key)
 
-const resolveValidation = (raw: TItem): ListEditorValidationState => {
-  const v = raw.validationState
-  if (v === 'valid' || v === 'invalid' || v === 'warning') return v
-  return null
-}
+const keyboardNav = useKeyboardNav({
+  viewItems: computed(() => viewItemsDecorated.value.map((vi) => ({ key: vi.key }))),
+  variant: 'flat',
+  isReorderMode: ref(false),
+  disabled: computed(() => !canInteract.value),
+  isEditing: (key) => editingKeys.value.has(key),
+  onToggleEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onEditClick(vi)
+  },
+  onCancelEdit: (key) => {
+    const vi = findVi(key)
+    if (vi) onCloseClick(vi)
+  },
+})
+
+const resolveCompactText = (raw: TItem, key: ListEditorKey): string =>
+  resolveCompactTextUtil(raw, key, {
+    compactField: props.compactField,
+    fallback: t('common.sortable.itemFallback'),
+  })
+
+const { resolveValidation } = useValidationRegistry<TItem>({
+  getValidationState: (item, key, index) => props.getValidationState?.(item, key, index) ?? null,
+})
 
 const onAddClick = () => {
   if (!canAdd.value) return
@@ -320,8 +451,53 @@ const onCloseClick = (vi: ListViewItem<TItem>) => {
   emit('close', vi)
 }
 
+// Per-key actions cache: each row's `actions` bundle is allocated once and
+// reused on every render. Slot consumers receive a stable identity for
+// `actions.update` etc., so they don't see prop-ref churn that would
+// trigger spurious re-renders. Closures capture the row key (stable) and
+// look up the current decorator via `findVi(key)` on call.
+type ActionsBundle = {
+  edit: () => void
+  save: () => Promise<void> | void
+  cancel: () => void
+  close: () => void
+  delete: () => Promise<void>
+  addAfter: () => void
+  toggleExpand: () => void
+  update: (data: TItem) => TItem[]
+}
+const actionsCache = new Map<ListEditorKey, ActionsBundle>()
+const getActions = (key: ListEditorKey): ActionsBundle => {
+  let actions = actionsCache.get(key)
+  if (!actions) {
+    actions = {
+      edit: () => { const vi = findVi(key); if (vi) onEditClick(vi) },
+      save: () => { const vi = findVi(key); if (vi) return onSaveClick(vi) },
+      cancel: () => { const vi = findVi(key); if (vi) onCancelClick(vi) },
+      close: () => { const vi = findVi(key); if (vi) onCloseClick(vi) },
+      delete: async () => { const vi = findVi(key); if (vi) await onDeleteClick(vi) },
+      addAfter: () => { const vi = findVi(key); if (vi) onRowAddAfterClick(vi) },
+      toggleExpand: () => { const vi = findVi(key); if (vi) onExpandClick(vi) },
+      update: (data: TItem) => editor.updateItem(key, data),
+    }
+    actionsCache.set(key, actions)
+  }
+  return actions
+}
+// Garbage-collect cache entries for keys that have left the model.
+watch(
+  () => viewItemsDecorated.value,
+  (now) => {
+    if (actionsCache.size === 0) return
+    const liveKeys = new Set(now.map((v) => v.key))
+    for (const key of actionsCache.keys()) {
+      if (!liveKeys.has(key)) actionsCache.delete(key)
+    }
+  },
+)
+
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
-  item: { ...vi, validationState: resolveValidation(vi.raw as TItem) },
+  item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
   raw: vi.raw,
   index: vi.index,
   key: vi.key,
@@ -330,16 +506,28 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
   expanded: vi.expanded,
   editing: vi.editing,
   dirty: vi.dirty,
+  unsaved: vi.dirty,
   touch: isTouch.value,
-  actions: {
-    edit: () => onEditClick(vi),
-    save: () => onSaveClick(vi),
-    cancel: () => onCancelClick(vi),
-    close: () => onCloseClick(vi),
-    delete: () => onDeleteClick(vi),
-    addAfter: () => onRowAddAfterClick(vi),
-    toggleExpand: () => onExpandClick(vi),
-  },
+  actions: getActions(vi.key),
+})
+
+const unsavedKeysModel = defineModel<Set<ListEditorKey>>('unsavedKeys', {
+  default: () => new Set<ListEditorKey>(),
+})
+
+const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  for (const vi of viewItemsDecorated.value) {
+    if (vi.dirty) out.add(vi.key)
+  }
+  return out
+})
+
+const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSync({
+  unsavedKeysModel,
+  internalUnsavedKeys,
+  onClearAll: () => captureDirtyBaseline(),
+  onClearKey: (key) => rebaselineKey(key),
 })
 
 defineExpose({
@@ -350,11 +538,15 @@ defineExpose({
   recalculatePositions: editor.recalculatePositions,
   viewItems: editor.viewItems,
   resetDirtyBaseline: captureDirtyBaseline,
+  hasUnsavedChanges,
+  unsavedCount,
+  clearUnsavedState,
 })
 </script>
 
 <template>
   <div
+    ref="rootEl"
     class="a-list-editor"
     :class="[
       `a-list-editor--two-rows-${twoRows}`,
@@ -437,6 +629,8 @@ defineExpose({
           v-for="vi in viewItemsDecorated"
           :key="String(vi.key)"
           :data-id="String(vi.key)"
+          role="listitem"
+          :tabindex="keyboardNav.rowTabindex(vi.key)"
           class="a-le-row"
           :class="{
             'a-le-row--two-rows': twoRows === 'always',
@@ -444,9 +638,10 @@ defineExpose({
             'a-le-row--expanded': vi.expanded,
             'a-le-row--unsaved': vi.dirty,
             'a-le-row--clickable': isRowClickable(vi),
-            [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
-              resolveValidation(vi.raw) !== null,
+            [`a-le-row--validation-${resolveValidation(vi.raw, vi.key, vi.index)}`]:
+              resolveValidation(vi.raw, vi.key, vi.index) !== null,
           }"
+          @keydown="keyboardNav.handleKeydown(vi.key, $event)"
         >
           <slot
             name="before-item"
@@ -672,6 +867,21 @@ defineExpose({
       @confirm="onDeleteDialogConfirm"
       @cancel="onDeleteDialogCancel"
     />
+
+    <div
+      class="a-le-sr-only"
+      aria-live="polite"
+      role="status"
+    >
+      {{
+        keyboardNav.grabbedKey.value !== null
+          ? t('common.sortable.keyboardGrab.status', {
+            n: keyboardNav.grabbedIndex.value + 1,
+            total: keyboardNav.totalCount.value,
+          })
+          : ''
+      }}
+    </div>
   </div>
 </template>
 
@@ -681,26 +891,6 @@ defineExpose({
 
 // Variant-specific rules, scoped under the AListEditor root.
 .a-list-editor {
-  // Validation rail. Sortable excludes `--unsaved` too (see its style block);
-  // the nested variant doesn't surface validation visuals.
-  .a-le-row--validation-invalid::after,
-  .a-le-row--validation-warning::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-  }
-
-  .a-le-row--validation-invalid:not(.a-le-row--editing)::after {
-    background: rgb(var(--v-theme-error, 217 37 80));
-  }
-
-  .a-le-row--validation-warning:not(.a-le-row--editing)::after {
-    background: rgb(var(--v-theme-warning, 251 140 0));
-  }
-
   // Chips — row-header padding (12 px left for the flat variant vs 8 px in
   // sortable, which reserves room for the drag handle).
   &--chips .a-le-row-header {

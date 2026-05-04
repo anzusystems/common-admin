@@ -15,6 +15,7 @@
   "emptyText": "Začnite pridaním novej položky.",
   "itemFallback": "Položka",
   "reorder": "Preskupiť",
+  "reorderModeLabel": "Režim preskupovania",
   "expandAll": "Rozbaliť všetko",
   "collapseAll": "Zbaliť všetko",
   "reorderApply": "Použiť",
@@ -23,6 +24,35 @@
   "moveDown": "Posunúť dole",
   "moveToTop": "Presunúť na začiatok",
   "moveToBottom": "Presunúť na koniec",
+  "moveToPosition": {
+    "action": "Presunúť na pozíciu…",
+    "title": "Presunúť na pozíciu",
+    "itemDescription": "Vyberte novú pozíciu pre {label}.",
+    "positionLabel": "Pozícia (1-{max})",
+    "positionHint": "Aktuálne {current} z {max}.",
+    "confirm": "Presunúť"
+  },
+  "changeParent": {
+    "action": "Zmeniť rodiča…",
+    "title": "Zmeniť rodiča",
+    "rootLabel": "(najvyššia úroveň)",
+    "placementHeading": "Vložiť do {label}",
+    "placeFirst": "Na začiatok",
+    "placeLast": "Na koniec",
+    "confirm": "Presunúť",
+    "noTargetsTitle": "Žiadne dostupné ciele",
+    "noTargetsText": "Pre túto položku neexistuje iný rodič, do ktorého ju možno presunúť.",
+    "errorMaxDepth": "Sem nemožno presunúť — prekročená maximálna hĺbka."
+  },
+  "unsavedChanges": {
+    "title": "Neuložené zmeny",
+    "body": "Máte neuložené zmeny. Naozaj chcete odísť?",
+    "stay": "Zostať",
+    "discard": "Odísť aj tak"
+  },
+  "keyboardGrab": {
+    "status": "Uchopené, pozícia {n} z {total}. Šípkami presúvajte, Enter alebo medzerník vloží, Escape zruší."
+  },
   "indent": "Zanoriť (spraviť podradenou)",
   "outdent": "Vynoriť (na úroveň rodiča)",
   "unsaved": "Neuložené",

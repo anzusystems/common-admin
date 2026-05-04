@@ -179,6 +179,79 @@
     font-weight: 700;
     color: var(--le-primary);
   }
+
+  // Keyboard-grabbed row in reorder mode — strong outline + tinted background
+  // so the user can see which row their arrow keys will move next. Stronger
+  // than focus-visible because the grab state is action-mode, not just focus.
+  &--grabbed {
+    outline: 3px solid var(--le-primary);
+    outline-offset: -3px;
+    background: var(--le-primary-state-press);
+    box-shadow: 0 0 0 6px var(--le-primary-state), 0 4px 12px rgb(0 0 0 / 8%);
+    z-index: 4;
+  }
+
+  &--grabbed::before {
+    background: var(--le-primary) !important;
+  }
+
+  // Validation rail — red for invalid, yellow for warning. Painted as ::after
+  // so it sits visually on top of the unsaved orange rail (::before, z-index 2)
+  // when both apply: invalid wins because the user can't save anyway.
+  /* stylelint-disable selector-max-compound-selectors */
+  &--validation-invalid:not(.a-le-row--editing)::after,
+  &--validation-warning:not(.a-le-row--editing)::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    z-index: 3;
+  }
+
+  &--validation-invalid:not(.a-le-row--editing)::after {
+    background: var(--le-error-fg);
+  }
+
+  &--validation-warning:not(.a-le-row--editing)::after {
+    background: var(--le-warning);
+  }
+
+  // When the row is invalid AND unsaved, swap the row tint from orange to red
+  // so the entire row reads as a problem to fix, not a pending change.
+  &--unsaved.a-le-row--validation-invalid {
+    background: var(--le-error-container);
+  }
+
+  &--unsaved.a-le-row--validation-invalid .a-le-row-header {
+    background: var(--le-error-container);
+  }
+  /* stylelint-enable selector-max-compound-selectors */
+}
+
+// Focus-visible styling — applies when a row receives keyboard focus via the
+// roving tabindex (arrow keys). Distinct from the hover/focus-within rules
+// that reveal action buttons; this is purely a focus indicator.
+.a-le-row:focus-visible,
+.a-le-row-wrapper:focus-visible {
+  outline: 2px solid var(--le-primary);
+  outline-offset: -2px;
+}
+
+// Visually hidden but announced by screen readers. Used for the keyboard-grab
+// aria-live status region so AT users hear position updates while moving rows
+// with arrow keys.
+.a-le-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .a-le-row-header {
@@ -510,24 +583,6 @@
 .a-le-row--expanded .a-le-action--delete,
 .a-le-row--expanded .a-le-action--menu {
   opacity: 1;
-}
-
-@media (hover: none) {
-  .a-le-action--edit,
-  .a-le-action--delete,
-  .a-le-action--menu,
-  .a-le-action--up,
-  .a-le-action--down,
-  .a-le-action--add-child {
-    opacity: 1;
-  }
-
-  // Exception: the sortable editor's `--menu` stays hover-gated in coarse-pointer
-  // contexts — the dots-vertical menu is already always-visible in reorder mode,
-  // and the view-mode menu is reached via `--touch`/:hover instead.
-  .a-sortable-list-editor .a-le-action--menu {
-    opacity: 0;
-  }
 }
 
 // Disabled reorder arrows — muted but visible when the row is hovered /

@@ -38,7 +38,13 @@ const HANDLE_CLASS = 'a-le-drag-handle'
 
 const anchorName = (key: ListEditorKey): string => `--row-${String(key).replace(/\W/g, '_')}`
 
+// Delegate to the parent editor's resolver so the registry + getValidationState
+// prop apply consistently. Falls back to reading raw.validationState if context
+// doesn't supply one.
 const resolveValidation = (raw: TItem): ListEditorValidationState => {
+  if (typeof props.context.resolveValidation === 'function') {
+    return props.context.resolveValidation(raw, props.vi.key, props.vi.index)
+  }
   const v = raw.validationState
   if (v === 'valid' || v === 'invalid' || v === 'warning') return v
   return null
@@ -58,6 +64,10 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
       },
     ]"
     :data-id="String(vi.key)"
+    role="treeitem"
+    :aria-level="vi.depth + 1"
+    :tabindex="context.keyboardNav ? context.keyboardNav.rowTabindex(vi.key) : undefined"
+    @keydown="context.keyboardNav ? context.keyboardNav.handleKeydown(vi.key, $event) : undefined"
   >
     <div
       :class="[
@@ -68,6 +78,8 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
           'a-le-row--expanded': vi.expanded,
           'a-le-row--unsaved': vi.unsaved,
           'a-le-row--reorder': context.reorderMode,
+          'a-le-row--grabbed':
+            context.keyboardNav && context.keyboardNav.isGrabbed(vi.key),
           'a-le-row--clickable': context.isRowClickable(vi),
           'a-le-row--drop-source': dragState !== null && dragState.sourceKey === vi.key,
           [`a-le-row--validation-${resolveValidation(vi.raw)}`]: resolveValidation(vi.raw) !== null,
@@ -247,6 +259,28 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
                         <VIcon icon="mdi-arrow-collapse-down" />
                       </template>
                       <VListItemTitle>{{ t('common.sortable.moveToBottom') }}</VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      v-if="context.showMoveToPosition && (!vi.firstInParent || !vi.lastInParent)"
+                      @click.stop="callbacks.openMoveToPosition(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-target" />
+                      </template>
+                      <VListItemTitle>
+                        {{ t('common.sortable.moveToPosition.action') }}
+                      </VListItemTitle>
+                    </VListItem>
+                    <VListItem
+                      v-if="context.showChangeParent"
+                      @click.stop="callbacks.openChangeParent(vi)"
+                    >
+                      <template #prepend>
+                        <VIcon icon="mdi-folder-move-outline" />
+                      </template>
+                      <VListItemTitle>
+                        {{ t('common.sortable.changeParent.action') }}
+                      </VListItemTitle>
                     </VListItem>
                     <VListItem
                       :disabled="!vi.canIndent"

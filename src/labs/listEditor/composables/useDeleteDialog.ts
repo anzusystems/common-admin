@@ -51,7 +51,9 @@ export interface UseDeleteDialogApi<ViewItem> {
 export function useDeleteDialog<
   TItem extends Record<string, any>,
   ViewItem extends { key: string | number; raw: TItem },
->(options: UseDeleteDialogOptions<TItem, ViewItem>): UseDeleteDialogApi<ViewItem> {
+>(
+  options: UseDeleteDialogOptions<TItem, ViewItem>,
+): UseDeleteDialogApi<ViewItem> {
   const deleteDialog = ref(false)
   const deleteTarget = ref<ViewItem | null>(null) as Ref<ViewItem | null>
   const deleteInFlight = ref(false)

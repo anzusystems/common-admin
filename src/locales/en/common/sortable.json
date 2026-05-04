@@ -15,6 +15,7 @@
   "emptyText": "Start by adding a new item.",
   "itemFallback": "Item",
   "reorder": "Reorder",
+  "reorderModeLabel": "Reorder mode",
   "expandAll": "Expand all",
   "collapseAll": "Collapse all",
   "reorderApply": "Apply",
@@ -23,6 +24,35 @@
   "moveDown": "Move down",
   "moveToTop": "Move to top",
   "moveToBottom": "Move to bottom",
+  "moveToPosition": {
+    "action": "Move to position…",
+    "title": "Move to position",
+    "itemDescription": "Choose the new position for {label}.",
+    "positionLabel": "Position (1-{max})",
+    "positionHint": "Currently at {current} of {max}.",
+    "confirm": "Move"
+  },
+  "changeParent": {
+    "action": "Change parent…",
+    "title": "Change parent",
+    "rootLabel": "(top level)",
+    "placementHeading": "Place inside {label}",
+    "placeFirst": "At the beginning",
+    "placeLast": "At the end",
+    "confirm": "Move",
+    "noTargetsTitle": "No valid targets",
+    "noTargetsText": "There is no other parent this item can move to.",
+    "errorMaxDepth": "Cannot move here — maximum depth exceeded."
+  },
+  "unsavedChanges": {
+    "title": "Unsaved changes",
+    "body": "You have unsaved changes. Are you sure you want to leave?",
+    "stay": "Stay",
+    "discard": "Leave anyway"
+  },
+  "keyboardGrab": {
+    "status": "Grabbed, position {n} of {total}. Use arrow keys to move, Enter or Space to drop, Escape to cancel."
+  },
   "indent": "Indent (make child)",
   "outdent": "Outdent (move to parent level)",
   "unsaved": "Unsaved",
