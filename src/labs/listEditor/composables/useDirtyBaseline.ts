@@ -49,9 +49,7 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
     return JSON.stringify(copy)
   }
 
-  const dirtyBaseline = ref(new Map<ListEditorKey, string>()) as Ref<
-    Map<ListEditorKey, string>
-  >
+  const dirtyBaseline = ref(new Map<ListEditorKey, string>()) as Ref<Map<ListEditorKey, string>>
 
   const captureDirtyBaseline = () => {
     const next = new Map<ListEditorKey, string>()

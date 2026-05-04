@@ -1,4 +1,3 @@
-/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { describe, it, expect } from 'vitest'
 import { ref, type Ref } from 'vue'
 import { useNestedListEditor } from '@/labs/listEditor/composables/useNestedListEditor'
@@ -455,12 +454,6 @@ describe('useNestedListEditor', () => {
 
     it('returns null when resulting depth would exceed maxDepth', () => {
       const model = makeModel()
-      // Existing chain Docs(0) > Guides(1) > Vue(2) > Advanced(3) > leaves(4) is depth 5.
-      // Set maxDepth so indent of Reactivity(6) under Composition API(5) would exceed it.
-      const api = useNestedListEditor<MenuItem>(model, { maxDepth: 5 })
-
-      // Sanity: 5 and 6 are siblings; trying to indent 6 under 5 would go to depth 5 (0-indexed),
-      // which is maxDepth — allowed-boundary check. Lower the cap to force failure.
       const apiStrict = useNestedListEditor<MenuItem>(model, { maxDepth: 4 })
 
       const res = apiStrict.indent(6)
@@ -787,11 +780,7 @@ describe('useNestedListEditor', () => {
 
       const tree: NestedTree<MenuItem> = {
         meta: { dirty: false },
-        children: [
-          node(1, 'A', null, 0, []),
-          node(2, 'B', null, 0, []),
-          node(3, 'C', null, 0, []),
-        ],
+        children: [node(1, 'A', null, 0, []), node(2, 'B', null, 0, []), node(3, 'C', null, 0, [])],
       }
 
       const out = api.recalculatePositions(tree)
@@ -804,10 +793,7 @@ describe('useNestedListEditor', () => {
 
       const tree: NestedTree<MenuItem> = {
         meta: { dirty: false },
-        children: [
-          node(1, 'A', null, 0, [node(11, 'A1', 1, 0, [])]),
-          node(2, 'B', null, 0, []),
-        ],
+        children: [node(1, 'A', null, 0, [node(11, 'A1', 1, 0, [])]), node(2, 'B', null, 0, [])],
       }
       const snapshot = JSON.stringify(tree)
 

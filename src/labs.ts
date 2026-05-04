@@ -45,10 +45,7 @@ import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
-import {
-  useListEditor,
-  type ListEditorApi,
-} from '@/labs/listEditor/composables/useListEditor'
+import { useListEditor, type ListEditorApi } from '@/labs/listEditor/composables/useListEditor'
 import {
   useNestedListEditor,
   type NestedListEditorApi,

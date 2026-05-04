@@ -85,13 +85,9 @@ export interface UseInlineEditingApi<TItem, ViewItem> {
 export function useInlineEditing<
   TItem extends Record<string, any>,
   ViewItem extends { key: ListEditorKey; raw: TItem },
->(
-  options: UseInlineEditingOptions<TItem>,
-): UseInlineEditingApi<TItem, ViewItem> {
+>(options: UseInlineEditingOptions<TItem>): UseInlineEditingApi<TItem, ViewItem> {
   const editingKeys = ref<Set<ListEditorKey>>(new Set())
-  const editingSnapshots = ref(new Map<ListEditorKey, TItem>()) as Ref<
-    Map<ListEditorKey, TItem>
-  >
+  const editingSnapshots = ref(new Map<ListEditorKey, TItem>()) as Ref<Map<ListEditorKey, TItem>>
   const pendingAutoOpen = ref(false)
 
   const clearEditing = () => {

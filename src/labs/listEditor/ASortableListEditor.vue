@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, ref, shallowRef, useSlots, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useSortable } from '@vueuse/integrations/useSortable'
@@ -142,12 +142,6 @@ const display = useDisplay()
 
 const isTouch = computed<boolean>(() => display.platform.value.touch)
 
-const effectiveCloseVariant = computed<'icon' | 'labeled'>(() => {
-  if (props.closeVariant === 'icon') return 'icon'
-  if (props.closeVariant === 'labeled') return 'labeled'
-  return display.smAndDown.value ? 'icon' : 'labeled'
-})
-
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const editor = useListEditor<TItem>(modelValue, {
   keyField: props.keyField,
@@ -185,7 +179,7 @@ const resetDirtyBaseline = () => {
   movedKeys.value = new Set()
 }
 
-const snapshot = ref<TItem[] | null>(null)
+const snapshot = shallowRef<TItem[] | null>(null)
 
 const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 
@@ -208,9 +202,7 @@ const {
   restoreSnapshot: (key, data) => editor.updateItem(key, data),
   watchKeys: () => modelValue.value.map((it) => it[props.keyField] as ListEditorKey),
   findEntry: (key) => {
-    const hit = modelValue.value.find(
-      (it) => (it[props.keyField] as ListEditorKey) === key,
-    )
+    const hit = modelValue.value.find((it) => (it[props.keyField] as ListEditorKey) === key)
     return hit ? { data: hit } : null
   },
   afterAutoOpen: (key) => {
@@ -278,10 +270,7 @@ const deleteConfirmTextResolved = computed(
 
 const reorderToggleVisible = computed<boolean>(
   (): boolean =>
-    !props.chips
-    && props.showReorderToggle
-    && !reorderMode.value
-    && modelValue.value.length > 0,
+    !props.chips && props.showReorderToggle && !reorderMode.value && modelValue.value.length > 0,
 )
 
 // When there IS a title and viewport is narrow, the reorder button shrinks to an
@@ -293,11 +282,11 @@ const compactReorderButton = computed<boolean>(
 const headerVisible = computed<boolean>(
   (): boolean =>
     !!(
-      props.title
-      || slots.header
-      || slots['reorder-toggle']
-      || reorderToggleVisible.value
-      || reorderMode.value
+      props.title ||
+      slots.header ||
+      slots['reorder-toggle'] ||
+      reorderToggleVisible.value ||
+      reorderMode.value
     ),
 )
 
@@ -335,8 +324,7 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
 const isEmpty = computed(() => viewItemsDecorated.value.length === 0)
 
 const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
-  const pick = (v: unknown): string | null =>
-    v == null || v === '' ? null : String(v)
+  const pick = (v: unknown): string | null => (v == null || v === '' ? null : String(v))
   const fromField = props.compactField ? pick(raw[props.compactField]) : null
   if (fromField !== null) return fromField
   const fallbacks = [
@@ -1109,7 +1097,6 @@ defineExpose({
       @confirm="onDeleteDialogConfirm"
       @cancel="onDeleteDialogCancel"
     />
-
   </div>
 </template>
 

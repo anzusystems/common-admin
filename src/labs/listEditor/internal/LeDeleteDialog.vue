@@ -20,12 +20,12 @@ withDefaults(defineProps<Props>(), {
   inFlight: false,
 })
 
-const open = defineModel<boolean>({ required: true })
-
 defineEmits<{
   confirm: []
   cancel: []
 }>()
+
+const open = defineModel<boolean>({ required: true })
 </script>
 
 <template>

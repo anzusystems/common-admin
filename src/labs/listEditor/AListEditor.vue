@@ -113,12 +113,6 @@ const display = useDisplay()
 
 const isTouch = computed<boolean>(() => display.platform.value.touch)
 
-const effectiveCloseVariant = computed<'icon' | 'labeled'>(() => {
-  if (props.closeVariant === 'icon') return 'icon'
-  if (props.closeVariant === 'labeled') return 'labeled'
-  return display.smAndDown.value ? 'icon' : 'labeled'
-})
-
 // Options are captured once at setup; list-editor config is expected to be stable.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const editor = useListEditor<TItem>(modelValue, {
@@ -159,9 +153,7 @@ const {
   restoreSnapshot: (key, data) => editor.updateItem(key, data),
   watchKeys: () => modelValue.value.map((it) => it[props.keyField] as ListEditorKey),
   findEntry: (key) => {
-    const hit = modelValue.value.find(
-      (it) => (it[props.keyField] as ListEditorKey) === key,
-    )
+    const hit = modelValue.value.find((it) => (it[props.keyField] as ListEditorKey) === key)
     return hit ? { data: hit } : null
   },
   afterAutoOpen: (key) => {
@@ -202,8 +194,7 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() =>
 const isEmpty = computed(() => viewItemsDecorated.value.length === 0)
 
 const resolveCompactText = (raw: TItem, key: ListEditorKey): string => {
-  const pick = (v: unknown): string | null =>
-    v == null || v === '' ? null : String(v)
+  const pick = (v: unknown): string | null => (v == null || v === '' ? null : String(v))
   const fromField = props.compactField ? pick(raw[props.compactField]) : null
   if (fromField !== null) return fromField
   const fallbacks = [

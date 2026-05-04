@@ -108,7 +108,9 @@ describe('AListEditor', () => {
       })
       const wrapper = mount(ItemHost)
       // trigger edit on first row
-      const editBtn = wrapper.findAll('button').find((b) => b.attributes('class')?.includes('a-le-action--edit'))
+      const editBtn = wrapper
+        .findAll('button')
+        .find((b) => b.attributes('class')?.includes('a-le-action--edit'))
       expect(editBtn).toBeTruthy()
       await editBtn!.trigger('click')
       await nextTick()
@@ -232,11 +234,7 @@ describe('AListEditor', () => {
               },
               {
                 'item-actions': ({ actions }: { actions: { addAfter: () => void } }) =>
-                  h(
-                    'button',
-                    { class: 'test-add-after', onClick: actions.addAfter },
-                    'add after',
-                  ),
+                  h('button', { class: 'test-add-after', onClick: actions.addAfter }, 'add after'),
               },
             )
         },
@@ -698,16 +696,8 @@ describe('AListEditor', () => {
                 },
               },
               {
-                'add-button': ({
-                  actions,
-                }: {
-                  actions: { add: () => void }
-                }) =>
-                  h(
-                    'button',
-                    { class: 'my-add', onClick: actions.add },
-                    'Custom add',
-                  ),
+                'add-button': ({ actions }: { actions: { add: () => void } }) =>
+                  h('button', { class: 'my-add', onClick: actions.add }, 'Custom add'),
               },
             )
         },
@@ -763,9 +753,11 @@ describe('AListEditor', () => {
         updatePosition: true,
         positionMultiplier: 10,
       })
-      const exposed = (editor().vm as unknown as {
-        $: { exposed: { addItem: (d: FaqItem) => void } }
-      }).$.exposed
+      const exposed = (
+        editor().vm as unknown as {
+          $: { exposed: { addItem: (d: FaqItem) => void } }
+        }
+      ).$.exposed
       exposed.addItem({ id: 999, position: 0, title: 'Extra' })
       await flushPromises()
       const positions = model.value.map((i) => i.position)
@@ -774,9 +766,11 @@ describe('AListEditor', () => {
 
     it('does not touch positions when updatePosition=false (default)', async () => {
       const { model, editor } = mountEditor(items())
-      const exposed = (editor().vm as unknown as {
-        $: { exposed: { addItem: (d: FaqItem) => void } }
-      }).$.exposed
+      const exposed = (
+        editor().vm as unknown as {
+          $: { exposed: { addItem: (d: FaqItem) => void } }
+        }
+      ).$.exposed
       exposed.addItem({ id: 999, position: 99, title: 'Extra' })
       await flushPromises()
       // Original positions preserved, new item keeps its own

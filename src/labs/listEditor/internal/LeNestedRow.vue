@@ -36,8 +36,7 @@ const { t } = useI18n()
 const GROUP_CLASS = 'a-nested-list-editor__group'
 const HANDLE_CLASS = 'a-le-drag-handle'
 
-const anchorName = (key: ListEditorKey): string =>
-  `--row-${String(key).replace(/\W/g, '_')}`
+const anchorName = (key: ListEditorKey): string => `--row-${String(key).replace(/\W/g, '_')}`
 
 const resolveValidation = (raw: TItem): ListEditorValidationState => {
   const v = raw.validationState
@@ -47,8 +46,7 @@ const resolveValidation = (raw: TItem): ListEditorValidationState => {
 
 const buildSlotProps = () => props.context.buildSlotProps(props.vi)
 
-const directChildren = (): any[] =>
-  props.viewItems.filter((v) => v.parentKey === props.vi.key)
+const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey === props.vi.key)
 </script>
 
 <template>
@@ -56,8 +54,7 @@ const directChildren = (): any[] =>
     :class="[
       'a-le-row-wrapper',
       {
-        'a-le-row-wrapper--drop-disabled':
-          dragState !== null && dragState.sourceKey === vi.key,
+        'a-le-row-wrapper--drop-disabled': dragState !== null && dragState.sourceKey === vi.key,
       },
     ]"
     :data-id="String(vi.key)"
@@ -72,10 +69,8 @@ const directChildren = (): any[] =>
           'a-le-row--unsaved': vi.unsaved,
           'a-le-row--reorder': context.reorderMode,
           'a-le-row--clickable': context.isRowClickable(vi),
-          'a-le-row--drop-source':
-            dragState !== null && dragState.sourceKey === vi.key,
-          [`a-le-row--validation-${resolveValidation(vi.raw)}`]:
-            resolveValidation(vi.raw) !== null,
+          'a-le-row--drop-source': dragState !== null && dragState.sourceKey === vi.key,
+          [`a-le-row--validation-${resolveValidation(vi.raw)}`]: resolveValidation(vi.raw) !== null,
         },
       ]"
       :style="{
@@ -111,9 +106,7 @@ const directChildren = (): any[] =>
               'a-nested-list-editor__tree-toggle--open': vi.childrenExpanded,
             },
           ]"
-          :aria-label="
-            vi.childrenExpanded ? t('common.sortable.close') : t('common.sortable.edit')
-          "
+          :aria-label="vi.childrenExpanded ? t('common.sortable.close') : t('common.sortable.edit')"
           @click.stop="vi.hasChildren && callbacks.onChevronClick(vi)"
         >
           <span class="a-nested-list-editor__tree-toggle-caret" />
@@ -163,9 +156,9 @@ const directChildren = (): any[] =>
           >
             <span
               v-if="
-                context.statusField
-                  && vi.raw[context.statusField] != null
-                  && vi.raw[context.statusField] !== ''
+                context.statusField &&
+                  vi.raw[context.statusField] != null &&
+                  vi.raw[context.statusField] !== ''
               "
               class="a-le-status-badge"
             >
@@ -333,9 +326,8 @@ const directChildren = (): any[] =>
               </VBtn>
               <VBtn
                 v-if="
-                  context.canInteract
-                    && ((context.showAddChildButton && vi.canAddChild)
-                      || context.showAddAfterAction)
+                  context.canInteract &&
+                    ((context.showAddChildButton && vi.canAddChild) || context.showAddAfterAction)
                 "
                 icon
                 size="small"

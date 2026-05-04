@@ -5,6 +5,7 @@ import {
   onBeforeUnmount,
   onMounted,
   ref,
+  shallowRef,
   useSlots,
   useTemplateRef,
   watch,
@@ -261,7 +262,7 @@ const { captureDirtyBaseline, isItemDirty } = useDirtyBaseline<TItem>(
 // values, which flagged unmoved rows as "moved" whenever a neighbour shifted
 // sibling positions as a side-effect. Instead we track explicit user actions
 // in `movedKeys` below — only rows the user actively moved get marked.
-const snapshot = ref<NestedTree<TItem> | null>(null)
+const snapshot = shallowRef<NestedTree<TItem> | null>(null)
 // Keys the user has actively moved during this reorder session (drag, arrow
 // buttons, indent/outdent). Clearing this set is paired with
 // captureDirtyBaseline in the exposed resetDirtyBaseline cycle — consumers
@@ -319,9 +320,7 @@ const canEnterReorder = computed(
 )
 
 const isInlineEdit = computed(() => !!(slots as Record<string, unknown>).item)
-const hasReadonlyDetail = computed(
-  () => !!(slots as Record<string, unknown>)['item-readonly'],
-)
+const hasReadonlyDetail = computed(() => !!(slots as Record<string, unknown>)['item-readonly'])
 const showInlineSaveFooter = computed(() => !!props.onItemSave)
 
 const {
@@ -410,9 +409,7 @@ const {
 })
 
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
-const dragEnabled = computed(
-  () => reorderMode.value && !isTouch.value && !props.disableDrag,
-)
+const dragEnabled = computed(() => reorderMode.value && !isTouch.value && !props.disableDrag)
 
 const addLabelResolved = computed(() => props.addLabel ?? t('common.sortable.add'))
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
@@ -426,10 +423,7 @@ const deleteConfirmTextResolved = computed(
 
 const reorderToggleVisible = computed<boolean>(
   (): boolean =>
-    !props.readonly
-    && props.showReorderToggle
-    && !reorderMode.value
-    && totalItemCount.value > 0,
+    !props.readonly && props.showReorderToggle && !reorderMode.value && totalItemCount.value > 0,
 )
 
 const compactReorderButton = computed<boolean>(
@@ -451,9 +445,10 @@ const expandableKeys = computed<ListEditorKey[]>(() => {
   return out
 })
 
-const allExpanded = computed<boolean>(() =>
-  expandableKeys.value.length > 0
-  && expandableKeys.value.every((k) => childrenExpandedKeys.value.has(k)),
+const allExpanded = computed<boolean>(
+  () =>
+    expandableKeys.value.length > 0 &&
+    expandableKeys.value.every((k) => childrenExpandedKeys.value.has(k)),
 )
 
 const expandAllVisible = computed<boolean>(
@@ -471,21 +466,21 @@ const toggleExpandAll = () => {
 const headerVisible = computed<boolean>(
   (): boolean =>
     !!(
-      props.title
-      || (slots as Record<string, unknown>).header
-      || (slots as Record<string, unknown>)['reorder-toggle']
-      || reorderToggleVisible.value
-      || expandAllVisible.value
-      || reorderMode.value
+      props.title ||
+      (slots as Record<string, unknown>).header ||
+      (slots as Record<string, unknown>)['reorder-toggle'] ||
+      reorderToggleVisible.value ||
+      expandAllVisible.value ||
+      reorderMode.value
     ),
 )
 
 // Initialize nested SortableJS groups. We create one Sortable instance per group
 // so drag/drop can move items within/between groups — SortableJS handles the
 // pointer events; onEnd reconciles via editor.moveTo().
-const sortableInstances = ref<Array<{ stop: () => void; option?: (k: string, v: unknown) => void }>>(
-  [],
-)
+const sortableInstances = ref<
+  Array<{ stop: () => void; option?: (k: string, v: unknown) => void }>
+>([])
 const forceRerender = ref(0)
 
 const destroySortables = () => {
@@ -550,9 +545,7 @@ const recomputeInstruction = (clientX: number, clientY: number) => {
   // For hovered-row rect we read the row element (not the whole wrapper,
   // whose height balloons when children are rendered). The wrapper's first
   // `.a-le-row` child is the header+body we want to hit-test.
-  const rowEl = hit.el.querySelector(
-    ':scope > .a-le-row',
-  ) as HTMLElement | null
+  const rowEl = hit.el.querySelector(':scope > .a-le-row') as HTMLElement | null
   const rowRect = (rowEl ?? hit.el).getBoundingClientRect()
   dragState.value.instruction = computeInstruction({
     pointer: { x: clientX, y: clientY },
@@ -599,9 +592,7 @@ const initSortables = () => {
   destroySortables()
   if (!dragEnabled.value) return
   if (!rowsContainer.value) return
-  const groups = Array.from(
-    rowsContainer.value.querySelectorAll<HTMLElement>('.' + GROUP_CLASS),
-  )
+  const groups = Array.from(rowsContainer.value.querySelectorAll<HTMLElement>('.' + GROUP_CLASS))
   for (const group of groups) {
     const sortable = useSortable(group, [], {
       group: { name: 'a-nested', pull: true, put: true },
@@ -725,17 +716,13 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
     `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.refKey))}"]`,
   )
   if (!refWrapper) return null
-  const rowEl = refWrapper.querySelector<HTMLElement>(
-    ':scope > .a-le-row',
-  )
+  const rowEl = refWrapper.querySelector<HTMLElement>(':scope > .a-le-row')
   const containerRect = rowsContainer.value.getBoundingClientRect()
   const rowRect = (rowEl ?? refWrapper).getBoundingClientRect()
 
   const lineLeft = ANCHOR_X + inst.depth * INDENT_PX
   const lineTop =
-    inst.refEdge === 'top'
-      ? rowRect.top - containerRect.top
-      : rowRect.bottom - containerRect.top
+    inst.refEdge === 'top' ? rowRect.top - containerRect.top : rowRect.bottom - containerRect.top
   const line = { top: lineTop, left: lineLeft, right: 16 }
 
   let connector: OverlayVisual['connector'] = null
@@ -744,9 +731,7 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
       `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.levelRowKey))}"]`,
     )
     if (levelWrapper) {
-      const levelRow = levelWrapper.querySelector<HTMLElement>(
-        ':scope > .a-le-row',
-      )
+      const levelRow = levelWrapper.querySelector<HTMLElement>(':scope > .a-le-row')
       const levelRect = (levelRow ?? levelWrapper).getBoundingClientRect()
       const levelCentreY = levelRect.top - containerRect.top + levelRect.height / 2
       if (levelCentreY < lineTop) {
@@ -1039,29 +1024,19 @@ const rowCallbacks = {
   outdent: doOutdent,
 }
 
-const rootViewItems = computed(() =>
-  viewItemsDecorated.value.filter((v) => v.parentKey === null),
-)
+const rootViewItems = computed(() => viewItemsDecorated.value.filter((v) => v.parentKey === null))
 
 // Expose imperative API — mirrors legacy ASortableNested signatures for easier
 // migration of admin-cms consumers (LinkedListManage calls these on the ref).
 // These methods assume the caller has already persisted the change server-side,
 // so they re-capture the dirty baseline — the affected items should not render
 // as "unsaved" immediately after this call.
-const addAfterId = (
-  targetId: ListEditorKey | null,
-  data: TItem,
-  childrenAllowed: boolean,
-) => {
+const addAfterId = (targetId: ListEditorKey | null, data: TItem, childrenAllowed: boolean) => {
   const res = editor.addItem(data, { afterId: targetId ?? undefined, childrenAllowed })
   nextTick(() => captureDirtyBaseline())
   return res
 }
-const addChildToId = (
-  targetId: ListEditorKey,
-  data: TItem,
-  childrenAllowed: boolean,
-) => {
+const addChildToId = (targetId: ListEditorKey, data: TItem, childrenAllowed: boolean) => {
   childrenExpandedKeys.value.add(targetId)
   const res = editor.addItem(data, { parentId: targetId, asFirstChild: true, childrenAllowed })
   nextTick(() => captureDirtyBaseline())
@@ -1118,7 +1093,6 @@ defineExpose({
   expandDetail: (id: ListEditorKey) => detailExpandedKeys.value.add(id),
   collapseDetail: (id: ListEditorKey) => detailExpandedKeys.value.delete(id),
 })
-
 </script>
 
 <template>
@@ -1197,18 +1171,14 @@ defineExpose({
                 @click="toggleExpandAll"
               >
                 <VIcon
-                  :icon="
-                    allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'
-                  "
+                  :icon="allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'"
                   size="18"
                 />
                 <VTooltip
                   activator="parent"
                   location="bottom"
                   :text="
-                    allExpanded
-                      ? t('common.sortable.collapseAll')
-                      : t('common.sortable.expandAll')
+                    allExpanded ? t('common.sortable.collapseAll') : t('common.sortable.expandAll')
                   "
                 />
               </VBtn>
@@ -1223,9 +1193,7 @@ defineExpose({
                 @click="toggleExpandAll"
               >
                 {{
-                  allExpanded
-                    ? t('common.sortable.collapseAll')
-                    : t('common.sortable.expandAll')
+                  allExpanded ? t('common.sortable.collapseAll') : t('common.sortable.expandAll')
                 }}
               </VBtn>
               <slot
@@ -1446,7 +1414,6 @@ defineExpose({
       @confirm="onDeleteDialogConfirm"
       @cancel="onDeleteDialogCancel"
     />
-
   </div>
 </template>
 
@@ -1536,7 +1503,9 @@ defineExpose({
     color: rgb(0 0 0 / 54%);
     z-index: 2;
     flex-shrink: 0;
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
 
     &:hover {
       background: rgb(0 0 0 / 5%);

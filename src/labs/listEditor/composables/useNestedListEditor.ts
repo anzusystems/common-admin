@@ -36,10 +36,17 @@ export interface UseNestedListEditorOptions {
 
 export interface NestedListEditorApi<TItem extends Record<string, any>> {
   viewItems: ComputedRef<NestedViewItem<TItem>[]>
-  findNode: (id: ListEditorKey) => { node: NestedTreeNode<TItem> | null; parent: NestedTreeNode<TItem> | null }
+  findNode: (id: ListEditorKey) => {
+    node: NestedTreeNode<TItem> | null
+    parent: NestedTreeNode<TItem> | null
+  }
   addItem: (
     data: TItem,
-    hint?: PositionHint & { parentId?: ListEditorKey | null; asFirstChild?: boolean; childrenAllowed?: boolean },
+    hint?: PositionHint & {
+      parentId?: ListEditorKey | null
+      asFirstChild?: boolean
+      childrenAllowed?: boolean
+    },
   ) => NestedTree<TItem>
   deleteItem: (id: ListEditorKey) => NestedTree<TItem>
   updateItem: (id: ListEditorKey, data: TItem) => NestedTree<TItem>
@@ -188,10 +195,7 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     siblings.splice(afterIdx + 1, 0, newNode)
   }
 
-  const resolveInsertIndex = (
-    siblings: NestedTreeNode<TItem>[],
-    hint?: PositionHint,
-  ): number => {
+  const resolveInsertIndex = (siblings: NestedTreeNode<TItem>[], hint?: PositionHint): number => {
     if (!hint) return siblings.length
     if (hint.afterId !== undefined) {
       const idx = siblings.findIndex((s) => getKey(s.data) === hint.afterId)
@@ -209,7 +213,11 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
 
   const addItem = (
     data: TItem,
-    hint?: PositionHint & { parentId?: ListEditorKey | null; asFirstChild?: boolean; childrenAllowed?: boolean },
+    hint?: PositionHint & {
+      parentId?: ListEditorKey | null
+      asFirstChild?: boolean
+      childrenAllowed?: boolean
+    },
   ): NestedTree<TItem> => {
     const cloned = cloneDeep(model.value) as NestedTree<TItem>
     const childrenAllowed = hint?.childrenAllowed ?? true
@@ -233,7 +241,9 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     if (hint?.afterId !== undefined) {
       const { node: afterNode, parent: afterParent } = findNode(hint.afterId, cloned.children)
       if (afterNode) {
-        const siblings = afterParent ? (afterParent.children as NestedTreeNode<TItem>[]) : cloned.children
+        const siblings = afterParent
+          ? (afterParent.children as NestedTreeNode<TItem>[])
+          : cloned.children
         const idx = siblings.indexOf(afterNode)
         if (idx !== -1) {
           insertAfter(siblings, idx, newNode)
@@ -358,7 +368,9 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     if (!node || !parent) return null
 
     const { parent: grandParent } = findNode(getKey(parent.data), cloned.children)
-    const grandSiblings = grandParent ? (grandParent.children as NestedTreeNode<TItem>[]) : cloned.children
+    const grandSiblings = grandParent
+      ? (grandParent.children as NestedTreeNode<TItem>[])
+      : cloned.children
     const parentIdx = grandSiblings.indexOf(parent)
     if (parentIdx === -1) return null
 
@@ -376,10 +388,7 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
   }
 
   const calculateParentDepth = (tree: NestedTree<TItem>, id: ListEditorKey): number => {
-    const walk = (
-      arr: NestedTreeNode<TItem>[],
-      depth: number,
-    ): number | null => {
+    const walk = (arr: NestedTreeNode<TItem>[], depth: number): number | null => {
       for (const item of arr) {
         if (getKey(item.data) === id) return depth
         if (item.children && item.children.length) {

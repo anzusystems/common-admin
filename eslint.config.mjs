@@ -12,7 +12,15 @@ export default defineConfigWithVueTs(
   },
   {
     name: 'app/files-to-ignore',
-    ignores: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '.stylelintrc.cjs', '**/cypress/**', '**/docs/**'],
+    ignores: [
+      '**/dist/**',
+      '**/dist-ssr/**',
+      '**/coverage/**',
+      '.stylelintrc.cjs',
+      '**/cypress/**',
+      '**/docs/**',
+      '.playwright-cli/**',
+    ],
   },
   pluginVue.configs['flat/essential'],
   pluginVue.configs['flat/strongly-recommended'],

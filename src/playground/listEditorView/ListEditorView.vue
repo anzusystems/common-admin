@@ -129,9 +129,7 @@ const onInlineAdd = (hint: PositionHint | undefined) => {
     title: `New #${nextId}`,
     status: 'Draft',
   }
-  const anchor = hint?.afterId
-    ? inlineItems.value.findIndex((i) => i.id === hint.afterId)
-    : -1
+  const anchor = hint?.afterId ? inlineItems.value.findIndex((i) => i.id === hint.afterId) : -1
   if (anchor >= 0) {
     inlineItems.value.splice(anchor + 1, 0, fresh)
   } else {
@@ -146,7 +144,8 @@ const onLazyEdit = async (vi: ListViewItem<FaqItem>) => {
   await new Promise((r) => setTimeout(r, 900))
   const idx = lazyItems.value.findIndex((i) => i.id === vi.raw.id)
   if (idx !== -1) {
-    lazyItems.value[idx].answer = `Lazy-loaded answer for #${vi.raw.id} at ${new Date().toLocaleTimeString()}`
+    lazyItems.value[idx].answer =
+      `Lazy-loaded answer for #${vi.raw.id} at ${new Date().toLocaleTimeString()}`
   }
   loadingKeys.value.delete(vi.raw.id)
 }
@@ -183,8 +182,8 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — inline edit (title + status chip + Close vs Cancel distinction)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Click a row to activate. Close (X) keeps your changes.
-        Cancel rolls back to the snapshot taken when you opened the row. Save commits via
+        Click a row to activate. Close (X) keeps your changes. Cancel rolls back to the snapshot
+        taken when you opened the row. Save commits via
         <code>onItemSave</code>. Only one row can be edited at a time.
       </p>
       <AListEditor
@@ -225,9 +224,9 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — readonly with #item-readonly slot (click to expand detail view)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Component is <code>readonly</code>. Click a row to expand and see the detail in a
-        read-only form rendered via the <code>#item-readonly</code> slot. Close (X) collapses.
-        No Save / Cancel footer.
+        Component is <code>readonly</code>. Click a row to expand and see the detail in a read-only
+        form rendered via the <code>#item-readonly</code> slot. Close (X) collapses. No Save /
+        Cancel footer.
       </p>
       <AListEditor
         v-model="readonlyItems"
@@ -273,8 +272,8 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — lazy-loaded detail (async fetch on edit)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Rows only have title + status initially. Clicking a row triggers an async fetch
-        (simulated 900 ms) to load the answer. Spinner shows while loading, then the form renders.
+        Rows only have title + status initially. Clicking a row triggers an async fetch (simulated
+        900 ms) to load the answer. Spinner shows while loading, then the form renders.
       </p>
       <AListEditor
         v-model="lazyItems"
@@ -370,8 +369,8 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — imperative API via template ref
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Caller calls <code>editorRef.addItem(data, hint)</code> on the component; add button at
-        the bottom triggers it.
+        Caller calls <code>editorRef.addItem(data, hint)</code> on the component; add button at the
+        bottom triggers it.
       </p>
       <AListEditor
         ref="editorRef"
@@ -398,9 +397,9 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — <code>chips</code> layout (flat, no drag)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Flat inline-flex chip pills. No drag (non-sortable variant). Each chip has a built-in
-        close X — no confirm dialog. Add via an external input above. Chips wrap to the next
-        line when the container is narrow.
+        Flat inline-flex chip pills. No drag (non-sortable variant). Each chip has a built-in close
+        X — no confirm dialog. Add via an external input above. Chips wrap to the next line when the
+        container is narrow.
       </p>
       <div class="d-flex ga-2 mb-2">
         <AFormTextField
@@ -433,8 +432,8 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — <code>chips</code> readonly (no close X, display-only)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Passing <code>readonly</code> or <code>:show-delete-button="false"</code> suppresses
-        the close X on each chip.
+        Passing <code>readonly</code> or <code>:show-delete-button="false"</code> suppresses the
+        close X on each chip.
       </p>
       <AListEditor
         v-model="chipReadonlyItems"
