@@ -36,19 +36,14 @@ export interface UseNestedUnsavedKeysApi {
  *   // emit `childSets.merged.value` upward
  */
 export function useNestedUnsavedKeys(): UseNestedUnsavedKeysApi {
-  const byParent: Ref<Map<ListEditorKey, Set<ListEditorKey>>> = ref(
-    new Map(),
-  )
+  const byParent: Ref<Map<ListEditorKey, Set<ListEditorKey>>> = ref(new Map())
 
   const empty = new Set<ListEditorKey>()
 
   const getForParent = (parentKey: ListEditorKey): Set<ListEditorKey> =>
     byParent.value.get(parentKey) ?? empty
 
-  const setForParent = (
-    parentKey: ListEditorKey,
-    set: Set<ListEditorKey>,
-  ) => {
+  const setForParent = (parentKey: ListEditorKey, set: Set<ListEditorKey>) => {
     if (set.size === 0) {
       byParent.value.delete(parentKey)
     } else {

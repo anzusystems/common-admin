@@ -1,11 +1,4 @@
-import {
-  computed,
-  ref,
-  watch,
-  type ComputedRef,
-  type InjectionKey,
-  type Ref,
-} from 'vue'
+import { computed, ref, watch, type ComputedRef, type InjectionKey, type Ref } from 'vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
 // Registry that lets embedded inner editors push their reorder pending-count

@@ -78,8 +78,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
           'a-le-row--expanded': vi.expanded,
           'a-le-row--unsaved': vi.unsaved,
           'a-le-row--reorder': context.reorderMode,
-          'a-le-row--grabbed':
-            context.keyboardNav && context.keyboardNav.isGrabbed(vi.key),
+          'a-le-row--grabbed': context.keyboardNav && context.keyboardNav.isGrabbed(vi.key),
           'a-le-row--clickable': context.isRowClickable(vi),
           'a-le-row--drop-source': dragState !== null && dragState.sourceKey === vi.key,
           [`a-le-row--validation-${resolveValidation(vi.raw)}`]: resolveValidation(vi.raw) !== null,

@@ -1,10 +1,8 @@
 import { computed, watch, type ComputedRef, type Ref } from 'vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
-const setsEqual = (
-  a: Set<ListEditorKey>,
-  b: Set<ListEditorKey>,
-): boolean => a.size === b.size && [...a].every((k) => b.has(k))
+const setsEqual = (a: Set<ListEditorKey>, b: Set<ListEditorKey>): boolean =>
+  a.size === b.size && [...a].every((k) => b.has(k))
 
 export interface UseUnsavedKeysSyncOptions {
   /** v-model-bound external Set (consumer's `defineModel<Set<ListEditorKey>>('unsavedKeys', …)`). */
@@ -52,9 +50,7 @@ export interface UseUnsavedKeysSyncApi {
  *
  * Used by `AListEditor`, `ASortableListEditor`, `ANestedSortableListEditor`.
  */
-export function useUnsavedKeysSync(
-  options: UseUnsavedKeysSyncOptions,
-): UseUnsavedKeysSyncApi {
+export function useUnsavedKeysSync(options: UseUnsavedKeysSyncOptions): UseUnsavedKeysSyncApi {
   let suppressNextModelWatch = false
 
   watch(
@@ -83,12 +79,8 @@ export function useUnsavedKeysSync(
     }
   })
 
-  const hasUnsavedChanges = computed<boolean>(
-    () => options.internalUnsavedKeys.value.size > 0,
-  )
-  const unsavedCount = computed<number>(
-    () => options.internalUnsavedKeys.value.size,
-  )
+  const hasUnsavedChanges = computed<boolean>(() => options.internalUnsavedKeys.value.size > 0)
+  const unsavedCount = computed<number>(() => options.internalUnsavedKeys.value.size)
 
   const clearUnsavedState = (key?: ListEditorKey) => {
     if (key === undefined) {

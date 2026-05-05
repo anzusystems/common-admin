@@ -921,7 +921,6 @@ describe('ANestedSortableListEditor', () => {
 
       // Flip only position + parent on a clone — content is unchanged in the
       // sense the dirty comparator cares about.
-      // eslint-disable-next-line vue/no-ref-object-reactivity-loss
       const fresh = JSON.parse(JSON.stringify(model.value)) as NestedTree<MenuItem>
       fresh.children[0].data.position = 999
       fresh.children[0].data.parent = 777

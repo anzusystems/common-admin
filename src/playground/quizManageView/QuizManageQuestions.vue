@@ -4,10 +4,7 @@ import ACard from '@/components/ACard.vue'
 import ARow from '@/components/ARow.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
-import type {
-  ListEditorKey,
-  ListViewItem,
-} from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorKey, ListViewItem } from '@/labs/listEditor/types/listEditorTypes'
 import { useNestedUnsavedKeys } from '@/labs/listEditor/composables/useNestedUnsavedKeys'
 import QuizManageQuestionAnswers from '@/playground/quizManageView/QuizManageQuestionAnswers.vue'
 import {
@@ -48,13 +45,8 @@ watch(answerKeys.merged, (now) => {
 
 const { v$ } = useQuizValidation(selectedValue)
 
-const getQuestionValidationState = (
-  q: QuizQuestion,
-  __: ListEditorKey,
-  index: number,
-) => {
-  const errors =
-    v$.value.quiz.questions.$each?.$response?.$errors?.[index]
+const getQuestionValidationState = (q: QuizQuestion, __: ListEditorKey, index: number) => {
+  const errors = v$.value.quiz.questions.$each?.$response?.$errors?.[index]
   if (errors && typeof errors === 'object') {
     const hasOwnErrors = Object.values(errors).some(
       (propErrors) => Array.isArray(propErrors) && propErrors.length > 0,
@@ -70,8 +62,7 @@ const getQuestionValidationState = (
 const onAddQuestion = () => {
   const newQuestion = createQuizQuestion()
   newQuestion.quiz = selectedValue.value.id
-  newQuestion.position =
-    (selectedValue.value.questions.at(-1)?.position ?? 0) + 1
+  newQuestion.position = (selectedValue.value.questions.at(-1)?.position ?? 0) + 1
   selectedValue.value.questions.push(newQuestion)
 }
 const onDeleteQuestion = (vi: ListViewItem<QuizQuestion>) => {
@@ -135,19 +126,12 @@ onMounted(() => {
         <QuizManageQuestionAnswers
           :model-value="raw"
           :mode="mode"
-          :unsaved-keys="
-            answerKeys.getForParent(
-              (raw.id ?? raw.position) as ListEditorKey,
-            )
-          "
+          :unsaved-keys="answerKeys.getForParent((raw.id ?? raw.position) as ListEditorKey)"
           :answer-value-type="selectedValue.attributes.answerValueType"
           @update:model-value="actions.update"
           @update:unsaved-keys="
             (s: Set<ListEditorKey>) =>
-              answerKeys.setForParent(
-                (raw.id ?? raw.position) as ListEditorKey,
-                s,
-              )
+              answerKeys.setForParent((raw.id ?? raw.position) as ListEditorKey, s)
           "
         />
         <AFormTextarea
@@ -170,19 +154,12 @@ onMounted(() => {
         <QuizManageQuestionAnswers
           :model-value="raw"
           :mode="mode"
-          :unsaved-keys="
-            answerKeys.getForParent(
-              (raw.id ?? raw.position) as ListEditorKey,
-            )
-          "
+          :unsaved-keys="answerKeys.getForParent((raw.id ?? raw.position) as ListEditorKey)"
           :answer-value-type="selectedValue.attributes.answerValueType"
           @update:model-value="actions.update"
           @update:unsaved-keys="
             (s: Set<ListEditorKey>) =>
-              answerKeys.setForParent(
-                (raw.id ?? raw.position) as ListEditorKey,
-                s,
-              )
+              answerKeys.setForParent((raw.id ?? raw.position) as ListEditorKey, s)
           "
         />
       </div>

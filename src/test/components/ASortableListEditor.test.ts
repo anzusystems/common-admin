@@ -553,9 +553,9 @@ describe('ASortableListEditor', () => {
       })
       const wrapper = mount(Host)
       const editor = findSortable(wrapper)
-      const exposed = (editor.vm as unknown as { $: { exposed: { resetDirtyBaseline: () => void } } })
-        .$.exposed
-
+      const exposed = (
+        editor.vm as unknown as { $: { exposed: { resetDirtyBaseline: () => void } } }
+      ).$.exposed
 
       model.value = [{ ...model.value[0], title: 'A-changed' }]
       await nextTick()
@@ -709,10 +709,7 @@ describe('ASortableListEditor', () => {
       // Change only `position` on a row — the dirty compare strips it before
       // stringifying, so no row should light up unsaved.
 
-      model.value = [
-        { ...model.value[0], position: 999 },
-        model.value[1],
-      ]
+      model.value = [{ ...model.value[0], position: 999 }, model.value[1]]
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })

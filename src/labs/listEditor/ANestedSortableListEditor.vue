@@ -179,11 +179,7 @@ export interface Props<TItem extends Record<string, any>> {
   showChangeParent?: boolean
   showExpandToggle?: boolean
 
-  getValidationState?: (
-    item: TItem,
-    key: ListEditorKey,
-    index: number,
-  ) => ListEditorValidationState
+  getValidationState?: (item: TItem, key: ListEditorKey, index: number) => ListEditorValidationState
 
   addLabel?: string | null
   emptyTitle?: string | null
@@ -426,22 +422,22 @@ const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
     const unsaved = dirty || moved
     const cached = decoratorCache.get(vi.key)
     if (
-      cached
-      && cached.raw === vi.raw
-      && cached.index === vi.index
-      && cached.position === vi.position
-      && cached.depth === vi.depth
-      && cached.parentKey === vi.parentKey
-      && cached.childrenCount === vi.childrenCount
-      && cached.firstInParent === vi.firstInParent
-      && cached.lastInParent === vi.lastInParent
-      && cached.editing === editing
-      && cached.expanded === expanded
-      && cached.childrenExpanded === childrenExpanded
-      && cached.loading === loading
-      && cached.dirty === dirty
-      && cached.moved === moved
-      && cached.unsaved === unsaved
+      cached &&
+      cached.raw === vi.raw &&
+      cached.index === vi.index &&
+      cached.position === vi.position &&
+      cached.depth === vi.depth &&
+      cached.parentKey === vi.parentKey &&
+      cached.childrenCount === vi.childrenCount &&
+      cached.firstInParent === vi.firstInParent &&
+      cached.lastInParent === vi.lastInParent &&
+      cached.editing === editing &&
+      cached.expanded === expanded &&
+      cached.childrenExpanded === childrenExpanded &&
+      cached.loading === loading &&
+      cached.dirty === dirty &&
+      cached.moved === moved &&
+      cached.unsaved === unsaved
     ) {
       next.push(cached)
       continue
@@ -582,9 +578,7 @@ const reorderToggleVisible = computed<boolean>(
     !props.readonly && props.showReorderToggle && !reorderMode.value && totalItemCount.value > 0,
 )
 
-const compactReorderButton = computed<boolean>(
-  (): boolean => !!props.title && isNarrow.value,
-)
+const compactReorderButton = computed<boolean>((): boolean => !!props.title && isNarrow.value)
 
 // Keys of every node that *has* children — the candidates for expand/collapse.
 const expandableKeys = computed<ListEditorKey[]>(() => {
@@ -1087,21 +1081,54 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
   let actions = actionsCache.get(key)
   if (!actions) {
     actions = {
-      edit: () => { const vi = findVi(key); if (vi) onEditClick(vi) },
-      save: () => { const vi = findVi(key); if (vi) return onSaveClick(vi) },
-      cancel: () => { const vi = findVi(key); if (vi) onCancelClick(vi) },
-      close: () => { const vi = findVi(key); if (vi) onCloseClick(vi) },
-      delete: async () => { const vi = findVi(key); if (vi) await onDeleteClick(vi) },
-      addAfter: () => { const vi = findVi(key); if (vi) onRowAddAfterClick(vi) },
-      addChild: () => { const vi = findVi(key); if (vi) onAddChildClick(vi) },
-      toggleExpand: () => { const vi = findVi(key); if (vi) onChevronClick(vi) },
-      toggleDetail: () => { const vi = findVi(key); if (vi) onDetailToggle(vi) },
+      edit: () => {
+        const vi = findVi(key)
+        if (vi) onEditClick(vi)
+      },
+      save: () => {
+        const vi = findVi(key)
+        if (vi) return onSaveClick(vi)
+      },
+      cancel: () => {
+        const vi = findVi(key)
+        if (vi) onCancelClick(vi)
+      },
+      close: () => {
+        const vi = findVi(key)
+        if (vi) onCloseClick(vi)
+      },
+      delete: async () => {
+        const vi = findVi(key)
+        if (vi) await onDeleteClick(vi)
+      },
+      addAfter: () => {
+        const vi = findVi(key)
+        if (vi) onRowAddAfterClick(vi)
+      },
+      addChild: () => {
+        const vi = findVi(key)
+        if (vi) onAddChildClick(vi)
+      },
+      toggleExpand: () => {
+        const vi = findVi(key)
+        if (vi) onChevronClick(vi)
+      },
+      toggleDetail: () => {
+        const vi = findVi(key)
+        if (vi) onDetailToggle(vi)
+      },
       moveUp: () => moveUp(key),
       moveDown: () => moveDown(key),
       moveTop: () => moveTop(key),
       moveBottom: () => moveBottom(key),
-      indent: () => { const vi = findVi(key); if (vi) doIndent(vi) },
-      outdent: () => { const vi = findVi(key); if (vi) doOutdent(vi) },
+      indent: () => {
+        const vi = findVi(key)
+        if (vi) doIndent(vi)
+      },
+      outdent: () => {
+        const vi = findVi(key)
+        if (vi) doOutdent(vi)
+      },
       update: (data: TItem) => editor.updateItem(key, data),
     }
     actionsCache.set(key, actions)
@@ -1228,9 +1255,7 @@ const moveToPositionContext = computed<{
   if (!target) return null
   const found = editor.findNode(target.key)
   const siblings = found.parent?.children ?? modelValue.value.children
-  const idx = siblings.findIndex(
-    (s) => (s.data[props.keyField] as ListEditorKey) === target.key,
-  )
+  const idx = siblings.findIndex((s) => (s.data[props.keyField] as ListEditorKey) === target.key)
   return {
     parentId: found.parent ? (found.parent.data[props.keyField] as ListEditorKey) : null,
     total: siblings.length,
@@ -1265,10 +1290,7 @@ const openChangeParent = (vi: DecoratedNestedViewItem<TItem>) => {
   changeParentTarget.value = vi
   changeParentDialogOpen.value = true
 }
-const onChangeParentConfirm = (
-  parentId: ListEditorKey | null,
-  position: 'first' | 'last',
-) => {
+const onChangeParentConfirm = (parentId: ListEditorKey | null, position: 'first' | 'last') => {
   const target = changeParentTarget.value
   changeParentTarget.value = null
   if (!target) return
@@ -1349,21 +1371,13 @@ const rootViewItems = computed(() => viewItemsDecorated.value.filter((v) => v.pa
 // the next major.
 
 /** @deprecated Use `addItem(data, { afterId, childrenAllowed })` directly. */
-const addAfterId = (
-  targetId: ListEditorKey | null,
-  data: TItem,
-  childrenAllowed: boolean,
-) => {
+const addAfterId = (targetId: ListEditorKey | null, data: TItem, childrenAllowed: boolean) => {
   const res = editor.addItem(data, { afterId: targetId ?? undefined, childrenAllowed })
   nextTick(() => captureDirtyBaseline())
   return res
 }
 /** @deprecated Use `addItem(data, { parentId, asFirstChild: true, childrenAllowed })`. */
-const addChildToId = (
-  targetId: ListEditorKey,
-  data: TItem,
-  childrenAllowed: boolean,
-) => {
+const addChildToId = (targetId: ListEditorKey, data: TItem, childrenAllowed: boolean) => {
   childrenExpandedKeys.value.add(targetId)
   const res = editor.addItem(data, { parentId: targetId, asFirstChild: true, childrenAllowed })
   nextTick(() => captureDirtyBaseline())

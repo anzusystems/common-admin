@@ -111,11 +111,7 @@ export interface Props<TItem extends Record<string, any>> {
 
   loadingKeys?: Set<ListEditorKey> | null
 
-  getValidationState?: (
-    item: TItem,
-    key: ListEditorKey,
-    index: number,
-  ) => ListEditorValidationState
+  getValidationState?: (item: TItem, key: ListEditorKey, index: number) => ListEditorValidationState
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
@@ -286,14 +282,14 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
     const dirty = dirtyKeys.value.has(vi.key)
     const cached = decoratorCache.get(vi.key)
     if (
-      cached
-      && cached.raw === vi.raw
-      && cached.index === vi.index
-      && cached.position === vi.position
-      && cached.editing === editing
-      && cached.expanded === expanded
-      && cached.loading === loading
-      && cached.dirty === dirty
+      cached &&
+      cached.raw === vi.raw &&
+      cached.index === vi.index &&
+      cached.position === vi.position &&
+      cached.editing === editing &&
+      cached.expanded === expanded &&
+      cached.loading === loading &&
+      cached.dirty === dirty
     ) {
       next.push(cached)
       continue
@@ -471,13 +467,34 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
   let actions = actionsCache.get(key)
   if (!actions) {
     actions = {
-      edit: () => { const vi = findVi(key); if (vi) onEditClick(vi) },
-      save: () => { const vi = findVi(key); if (vi) return onSaveClick(vi) },
-      cancel: () => { const vi = findVi(key); if (vi) onCancelClick(vi) },
-      close: () => { const vi = findVi(key); if (vi) onCloseClick(vi) },
-      delete: async () => { const vi = findVi(key); if (vi) await onDeleteClick(vi) },
-      addAfter: () => { const vi = findVi(key); if (vi) onRowAddAfterClick(vi) },
-      toggleExpand: () => { const vi = findVi(key); if (vi) onExpandClick(vi) },
+      edit: () => {
+        const vi = findVi(key)
+        if (vi) onEditClick(vi)
+      },
+      save: () => {
+        const vi = findVi(key)
+        if (vi) return onSaveClick(vi)
+      },
+      cancel: () => {
+        const vi = findVi(key)
+        if (vi) onCancelClick(vi)
+      },
+      close: () => {
+        const vi = findVi(key)
+        if (vi) onCloseClick(vi)
+      },
+      delete: async () => {
+        const vi = findVi(key)
+        if (vi) await onDeleteClick(vi)
+      },
+      addAfter: () => {
+        const vi = findVi(key)
+        if (vi) onRowAddAfterClick(vi)
+      },
+      toggleExpand: () => {
+        const vi = findVi(key)
+        if (vi) onExpandClick(vi)
+      },
       update: (data: TItem) => editor.updateItem(key, data),
     }
     actionsCache.set(key, actions)

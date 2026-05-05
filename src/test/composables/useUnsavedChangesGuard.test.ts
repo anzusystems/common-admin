@@ -10,9 +10,7 @@ afterEach(() => {
   mounted = null
 })
 
-const mountWithGuard = (
-  setup: () => ReturnType<typeof useUnsavedChangesGuard>,
-) => {
+const mountWithGuard = (setup: () => ReturnType<typeof useUnsavedChangesGuard>) => {
   let api!: ReturnType<typeof useUnsavedChangesGuard>
   const Host = defineComponent({
     setup() {

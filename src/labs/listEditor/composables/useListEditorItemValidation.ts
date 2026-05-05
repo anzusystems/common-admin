@@ -47,9 +47,7 @@ export interface UseListEditorItemValidationOptions {
 //
 // No-op when called outside an editor (e.g. a form re-used elsewhere) — the
 // inject silently returns null.
-export function useListEditorItemValidation(
-  options: UseListEditorItemValidationOptions,
-): void {
+export function useListEditorItemValidation(options: UseListEditorItemValidationOptions): void {
   const registry = inject(ListEditorValidationKey, null)
   if (!registry) return
   if (!getCurrentInstance()) return

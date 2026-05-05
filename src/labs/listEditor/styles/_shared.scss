@@ -187,7 +187,9 @@
     outline: 3px solid var(--le-primary);
     outline-offset: -3px;
     background: var(--le-primary-state-press);
-    box-shadow: 0 0 0 6px var(--le-primary-state), 0 4px 12px rgb(0 0 0 / 8%);
+    box-shadow:
+      0 0 0 6px var(--le-primary-state),
+      0 4px 12px rgb(0 0 0 / 8%);
     z-index: 4;
   }
 

@@ -57,8 +57,7 @@ describe('AListEditor — validation', () => {
           return () =>
             h(AListEditor<Item>, {
               modelValue: data,
-              getValidationState: (item: Item) =>
-                item.id === 1 ? 'invalid' : null,
+              getValidationState: (item: Item) => (item.id === 1 ? 'invalid' : null),
             })
         },
       })
@@ -76,8 +75,7 @@ describe('AListEditor — validation', () => {
           return () =>
             h(AListEditor<Item>, {
               modelValue: data,
-              getValidationState: (item: Item) =>
-                item.id === targetId.value ? 'invalid' : null,
+              getValidationState: (item: Item) => (item.id === targetId.value ? 'invalid' : null),
             })
         },
       })
@@ -115,8 +113,7 @@ describe('AListEditor — validation', () => {
               AListEditor<Item>,
               { modelValue: data },
               {
-                item: ({ raw }: { raw: Item }) =>
-                  h(ChildForm, { itemKey: raw.id }),
+                item: ({ raw }: { raw: Item }) => h(ChildForm, { itemKey: raw.id }),
               },
             )
         },
@@ -169,8 +166,7 @@ describe('AListEditor — validation', () => {
               AListEditor<Item>,
               { modelValue: data },
               {
-                'item-compact': ({ raw }: { raw: Item }) =>
-                  h(ChildForm, { itemKey: raw.id }),
+                'item-compact': ({ raw }: { raw: Item }) => h(ChildForm, { itemKey: raw.id }),
               },
             )
         },
@@ -207,12 +203,10 @@ describe('AListEditor — validation', () => {
                 modelValue: data,
                 // Prop says row 2 is invalid — but registry hasn't registered row 2,
                 // so prop applies for row 2. Row 1 → registry says invalid (wins).
-                getValidationState: (item: Item) =>
-                  item.id === 2 ? 'invalid' : null,
+                getValidationState: (item: Item) => (item.id === 2 ? 'invalid' : null),
               },
               {
-                'item-compact': ({ raw }: { raw: Item }) =>
-                  h(ChildForm, { itemKey: raw.id }),
+                'item-compact': ({ raw }: { raw: Item }) => h(ChildForm, { itemKey: raw.id }),
               },
             )
         },
