@@ -86,6 +86,9 @@ export default defineConfig({
       'vuetify/components/VColorPicker',
       'vuetify/components/VSlider',
       'vuetify/components/VLabel',
+      'vuetify/components/VRadio',
+      'vuetify/components/VRadioGroup',
+      'vuetify/components/VBadge',
     ],
   },
   test: {
