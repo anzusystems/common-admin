@@ -122,6 +122,11 @@ export interface AddButtonSlotProps {
   props: { onClick: () => void }
   actions: { add: () => void }
 }
+export interface ViewBodySlotProps<TItem extends Record<string, any>> {
+  items: TItem[]
+  mode: ReorderMode
+  actions: { enterReorderMode: () => void }
+}
 
 export interface Props<TItem extends Record<string, any>> {
   keyField?: string
@@ -257,6 +262,7 @@ defineSlots<{
   'reorder-toolbar'?: (props: ToolbarSlotProps) => unknown
   empty?: (props: EmptySlotProps) => unknown
   'add-button'?: (props: AddButtonSlotProps) => unknown
+  'view-body'?: (props: ViewBodySlotProps<TItem>) => unknown
   item?: (props: RowSlotProps<TItem>) => unknown
   'item-compact'?: (props: RowSlotProps<TItem>) => unknown
   'item-readonly'?: (props: RowSlotProps<TItem>) => unknown
@@ -510,6 +516,7 @@ const headerHasContent = computed<boolean>(
       props.title
       || slots.header
       || slots['reorder-toggle']
+      || slots['view-body']
       || (reorderMode.value && !props.embedded)
     ),
 )
@@ -666,6 +673,13 @@ const { resolveValidation } = useValidationRegistry<TItem>({
 /* eslint-disable vue/no-ref-object-reactivity-loss */
 if (!isTouch.value) {
   const sortable = useSortable(rowsContainer, modelValue, {
+    // The rows container can mount/unmount across mode flips (e.g. when the
+    // consumer renders a `#view-body` slot in view mode and the rows are
+    // only mounted in reorder mode). vueuse's default `tryOnMounted` fires
+    // exactly once and would bind to a null ref, leaving SortableJS dead.
+    // `watchElement: true` re-initialises whenever the rows container ref
+    // populates.
+    watchElement: true,
     handle: '.a-le-drag-handle',
     animation: 150,
     // Force the fallback renderer so `dragClass` is applied to a CSS-controlled
@@ -1019,12 +1033,6 @@ defineExpose({
                 name="reorder-toolbar"
                 v-bind="toolbarSlotProps"
               >
-                <span
-                  v-if="!title"
-                  class="a-le-reorder-mode-label"
-                >
-                  {{ t('common.sortable.reorderModeLabel') }}
-                </span>
                 <LeStatus
                   :class="{ 'a-le-toolbar-status--pending': totalHasPendingChanges }"
                   :has-pending-changes="totalHasPendingChanges"
@@ -1115,6 +1123,18 @@ defineExpose({
         >
           {{ error }}
         </VAlert>
+      </div>
+
+      <div
+        v-else-if="!reorderMode && $slots['view-body']"
+        class="a-le-view-body"
+      >
+        <slot
+          name="view-body"
+          :items="modelValue"
+          :mode="mode"
+          :actions="{ enterReorderMode }"
+        />
       </div>
 
       <div
@@ -1549,6 +1569,13 @@ defineExpose({
     flex-direction: column;
   }
 
+  // View-mode body slot — gives the consumer's slot content breathing room
+  // inside the editor card. Match the row's horizontal rhythm (~16 px) and
+  // add a modest vertical inset so cards don't sit flush against the border.
+  .a-le-view-body {
+    padding: 12px 16px;
+  }
+
   // Reorder-mode trims the row-header padding since the drag handle already
   // eats some of the horizontal rhythm.
   .a-le-row--reorder .a-le-row-header {
@@ -1582,17 +1609,6 @@ defineExpose({
   .a-le-row--drag .a-le-actions,
   .a-le-row--drag .a-le-status {
     display: none;
-  }
-
-  // Reorder-mode contextual label — shown when there's no title so the user
-  // sees a "Reorder mode" hint next to the pending-changes status. Hidden
-  // when the consumer passes a title (the title already provides context).
-  .a-le-reorder-mode-label {
-    font: 500 13px/1 var(--v-font-body, inherit);
-    color: var(--le-primary);
-    margin-right: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
 
   // Floating-header variant — when the only thing in the header is the
