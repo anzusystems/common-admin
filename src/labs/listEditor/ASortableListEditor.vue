@@ -190,11 +190,7 @@ export interface Props<TItem extends Record<string, any>> {
    */
   allowEditInReorder?: boolean
 
-  getValidationState?: (
-    item: TItem,
-    key: ListEditorKey,
-    index: number,
-  ) => ListEditorValidationState
+  getValidationState?: (item: TItem, key: ListEditorKey, index: number) => ListEditorValidationState
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
@@ -345,9 +341,7 @@ const {
   restoreSnapshot: (key, data) => editor.updateItem(key, data),
   watchKeys: () => modelValue.value.map((it) => it[props.keyField] as ListEditorKey),
   findEntry: (key) => {
-    const hit = modelValue.value.find(
-      (it) => (it[props.keyField] as ListEditorKey) === key,
-    )
+    const hit = modelValue.value.find((it) => (it[props.keyField] as ListEditorKey) === key)
     return hit ? { data: hit } : null
   },
   afterAutoOpen: (key) => {
@@ -420,11 +414,8 @@ const {
 const childContributions = props.embedded
   ? null
   : shallowReactive(
-    new Map<
-      symbol,
-      { count: ComputedRef<number>; hasChanges: ComputedRef<boolean> }
-    >(),
-  )
+      new Map<symbol, { count: ComputedRef<number>; hasChanges: ComputedRef<boolean> }>(),
+    )
 
 if (childContributions) {
   const registry: SharedReorderRegistry = {
@@ -483,27 +474,25 @@ const deleteConfirmTextResolved = computed(
 
 const reorderToggleVisible = computed<boolean>(
   (): boolean =>
-    !props.chips
-    && !props.embedded
-    && props.showReorderToggle
-    && !reorderMode.value
-    && modelValue.value.length > 0,
+    !props.chips &&
+    !props.embedded &&
+    props.showReorderToggle &&
+    !reorderMode.value &&
+    modelValue.value.length > 0,
 )
 
 // When there IS a title and viewport is narrow, the reorder button shrinks to an
 // icon-only round button to keep the single-line header from overflowing.
-const compactReorderButton = computed<boolean>(
-  (): boolean => !!props.title && isNarrow.value,
-)
+const compactReorderButton = computed<boolean>((): boolean => !!props.title && isNarrow.value)
 
 const headerVisible = computed<boolean>(
   (): boolean =>
     !!(
-      props.title
-      || slots.header
-      || slots['reorder-toggle']
-      || reorderToggleVisible.value
-      || (reorderMode.value && !props.embedded)
+      props.title ||
+      slots.header ||
+      slots['reorder-toggle'] ||
+      reorderToggleVisible.value ||
+      (reorderMode.value && !props.embedded)
     ),
 )
 
@@ -513,11 +502,11 @@ const headerVisible = computed<boolean>(
 const headerHasContent = computed<boolean>(
   (): boolean =>
     !!(
-      props.title
-      || slots.header
-      || slots['reorder-toggle']
-      || slots['view-body']
-      || (reorderMode.value && !props.embedded)
+      props.title ||
+      slots.header ||
+      slots['reorder-toggle'] ||
+      slots['view-body'] ||
+      (reorderMode.value && !props.embedded)
     ),
 )
 
@@ -561,18 +550,18 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
     const canMoveDown = vi.index < total - 1
     const cached = decoratorCache.get(vi.key)
     if (
-      cached
-      && cached.raw === vi.raw
-      && cached.index === vi.index
-      && cached.position === vi.position
-      && cached.editing === editing
-      && cached.expanded === expanded
-      && cached.loading === loading
-      && cached.dirty === dirty
-      && cached.moved === moved
-      && cached.unsaved === unsaved
-      && cached.canMoveUp === canMoveUp
-      && cached.canMoveDown === canMoveDown
+      cached &&
+      cached.raw === vi.raw &&
+      cached.index === vi.index &&
+      cached.position === vi.position &&
+      cached.editing === editing &&
+      cached.expanded === expanded &&
+      cached.loading === loading &&
+      cached.dirty === dirty &&
+      cached.moved === moved &&
+      cached.unsaved === unsaved &&
+      cached.canMoveUp === canMoveUp &&
+      cached.canMoveDown === canMoveDown
     ) {
       next.push(cached)
       continue
@@ -879,17 +868,50 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
   let actions = actionsCache.get(key)
   if (!actions) {
     actions = {
-      edit: () => { const vi = findVi(key); if (vi) onEditClick(vi) },
-      save: () => { const vi = findVi(key); if (vi) return onSaveClick(vi) },
-      cancel: () => { const vi = findVi(key); if (vi) onCancelClick(vi) },
-      close: () => { const vi = findVi(key); if (vi) onCloseClick(vi) },
-      delete: async () => { const vi = findVi(key); if (vi) await onDeleteClick(vi) },
-      addAfter: () => { const vi = findVi(key); if (vi) onRowAddAfterClick(vi) },
-      toggleExpand: () => { const vi = findVi(key); if (vi) onExpandClick(vi) },
-      moveUp: () => { const vi = findVi(key); if (vi) moveUp(vi.index) },
-      moveDown: () => { const vi = findVi(key); if (vi) moveDown(vi.index) },
-      moveTop: () => { const vi = findVi(key); if (vi) moveTop(vi.index) },
-      moveBottom: () => { const vi = findVi(key); if (vi) moveBottom(vi.index) },
+      edit: () => {
+        const vi = findVi(key)
+        if (vi) onEditClick(vi)
+      },
+      save: () => {
+        const vi = findVi(key)
+        if (vi) return onSaveClick(vi)
+      },
+      cancel: () => {
+        const vi = findVi(key)
+        if (vi) onCancelClick(vi)
+      },
+      close: () => {
+        const vi = findVi(key)
+        if (vi) onCloseClick(vi)
+      },
+      delete: async () => {
+        const vi = findVi(key)
+        if (vi) await onDeleteClick(vi)
+      },
+      addAfter: () => {
+        const vi = findVi(key)
+        if (vi) onRowAddAfterClick(vi)
+      },
+      toggleExpand: () => {
+        const vi = findVi(key)
+        if (vi) onExpandClick(vi)
+      },
+      moveUp: () => {
+        const vi = findVi(key)
+        if (vi) moveUp(vi.index)
+      },
+      moveDown: () => {
+        const vi = findVi(key)
+        if (vi) moveDown(vi.index)
+      },
+      moveTop: () => {
+        const vi = findVi(key)
+        if (vi) moveTop(vi.index)
+      },
+      moveBottom: () => {
+        const vi = findVi(key)
+        if (vi) moveBottom(vi.index)
+      },
       update: (data: TItem) => editor.updateItem(key, data),
     }
     actionsCache.set(key, actions)
@@ -1435,9 +1457,7 @@ defineExpose({
             </div>
           </div>
 
-          <template
-            v-if="vi.editing && (allowEditInReorder || !reorderMode) && $slots.item"
-          >
+          <template v-if="vi.editing && (allowEditInReorder || !reorderMode) && $slots.item">
             <div class="a-le-row-body">
               <div class="a-le-form">
                 <slot
@@ -1477,9 +1497,7 @@ defineExpose({
 
           <div
             v-else-if="
-              vi.expanded
-                && (allowEditInReorder || !reorderMode)
-                && $slots['item-readonly']
+              vi.expanded && (allowEditInReorder || !reorderMode) && $slots['item-readonly']
             "
             class="a-le-row-body"
           >

@@ -15,8 +15,7 @@ export function resolveCompactText<TItem extends Record<string, any>>(
     fallback: string
   },
 ): string {
-  const pick = (v: unknown): string | null =>
-    v == null || v === '' ? null : String(v)
+  const pick = (v: unknown): string | null => (v == null || v === '' ? null : String(v))
   const fromField = options.compactField ? pick(raw[options.compactField]) : null
   if (fromField !== null) return fromField
   const fallbacks = [

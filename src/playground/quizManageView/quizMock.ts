@@ -5,16 +5,13 @@ import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRe
 import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
 import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
 
-export const QuizValidationSymbol = Symbol.for(
-  'playground:quiz-validation-scope',
-)
+export const QuizValidationSymbol = Symbol.for('playground:quiz-validation-scope')
 
 export const QuizAnswerValueType = {
   Bool: 'bool',
   Points: 'points',
 } as const
-export type QuizAnswerValueTypeType =
-  (typeof QuizAnswerValueType)[keyof typeof QuizAnswerValueType]
+export type QuizAnswerValueTypeType = (typeof QuizAnswerValueType)[keyof typeof QuizAnswerValueType]
 
 export interface QuizAttributes {
   answerValueType: QuizAnswerValueTypeType

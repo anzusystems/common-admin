@@ -56,8 +56,8 @@ const clickToggle = (wrapper: VueWrapper) =>
     .findAll('button')
     .find(
       (b) =>
-        b.text().toLowerCase().includes('reorder')
-        || (b.find('.mdi-sort').exists() && !b.classes().includes('v-btn--disabled')),
+        b.text().toLowerCase().includes('reorder') ||
+        (b.find('.mdi-sort').exists() && !b.classes().includes('v-btn--disabled')),
     )!
     .trigger('click')
 
@@ -74,7 +74,9 @@ describe('ASortableListEditor', () => {
 
     it('renders the reorder toggle button by default when showReorderToggle=true', () => {
       const { wrapper } = mountEditor()
-      const toggle = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))
+      const toggle = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('reorder'))
       expect(toggle).toBeTruthy()
     })
 
@@ -86,7 +88,9 @@ describe('ASortableListEditor', () => {
 
     it('disables the toggle when the list has fewer than 2 items', () => {
       const { wrapper } = mountEditor([items()[0]])
-      const toggle = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))
+      const toggle = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('reorder'))
       // with single-item list reorder toggle should not show at all OR be disabled
       if (toggle) {
         expect(toggle.attributes('disabled')).toBeDefined()
@@ -169,9 +173,7 @@ describe('ASortableListEditor', () => {
       await clickToggle(wrapper)
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
 
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -189,9 +191,7 @@ describe('ASortableListEditor', () => {
       await clickToggle(wrapper)
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
 
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -207,9 +207,7 @@ describe('ASortableListEditor', () => {
       await clickToggle(wrapper)
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
 
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -231,11 +229,7 @@ describe('ASortableListEditor', () => {
       // variant. Either the text button or the icon-only button must be present.
       const toggle = header
         .findAll('button')
-        .find(
-          (b) =>
-            b.text().toLowerCase().includes('reorder')
-            || b.find('.mdi-sort').exists(),
-        )
+        .find((b) => b.text().toLowerCase().includes('reorder') || b.find('.mdi-sort').exists())
       expect(toggle).toBeTruthy()
     })
 
@@ -258,11 +252,7 @@ describe('ASortableListEditor', () => {
       expect(header.text()).toContain('FAQ')
       const toggle = header
         .findAll('button')
-        .find(
-          (b) =>
-            b.text().toLowerCase().includes('reorder')
-            || b.find('.mdi-sort').exists(),
-        )
+        .find((b) => b.text().toLowerCase().includes('reorder') || b.find('.mdi-sort').exists())
       expect(toggle).toBeUndefined()
     })
   })
@@ -407,7 +397,9 @@ describe('ASortableListEditor', () => {
     it('renders --chips root modifier and has no reorder toggle', () => {
       const { wrapper } = mountChips()
       expect(wrapper.find('.a-sortable-list-editor--chips').exists()).toBe(true)
-      const toggle = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))
+      const toggle = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('reorder'))
       expect(toggle).toBeUndefined()
     })
 
@@ -483,9 +475,7 @@ describe('ASortableListEditor', () => {
       expect(cancel).toBeTruthy()
       expect(apply).toBeTruthy()
       // The status chip lives in the header actions region.
-      expect(
-        header.find('.a-le-toolbar-status').exists(),
-      ).toBe(true)
+      expect(header.find('.a-le-toolbar-status').exists()).toBe(true)
       // There is no separate bottom toolbar any more.
       expect(wrapper.find('.a-le-toolbar').exists()).toBe(false)
     })
@@ -494,9 +484,7 @@ describe('ASortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       expect(apply.attributes('disabled')).toBeDefined()
     })
 
@@ -506,9 +494,7 @@ describe('ASortableListEditor', () => {
       await flushPromises()
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       expect(apply.attributes('disabled')).toBeUndefined()
     })
   })
@@ -567,8 +553,9 @@ describe('ASortableListEditor', () => {
       })
       const wrapper = mount(Host)
       const editor = findSortable(wrapper)
-      const exposed = (editor.vm as unknown as { $: { exposed: { resetDirtyBaseline: () => void } } })
-        .$.exposed
+      const exposed = (
+        editor.vm as unknown as { $: { exposed: { resetDirtyBaseline: () => void } } }
+      ).$.exposed
 
       model.value = [{ ...model.value[0], title: 'A-changed' }]
       await nextTick()
@@ -656,9 +643,7 @@ describe('ASortableListEditor', () => {
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
 
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -667,9 +652,11 @@ describe('ASortableListEditor', () => {
       // server save confirms.
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
 
-      const exposed = (editor().vm as unknown as {
-        $: { exposed: { resetDirtyBaseline: () => void } }
-      }).$.exposed
+      const exposed = (
+        editor().vm as unknown as {
+          $: { exposed: { resetDirtyBaseline: () => void } }
+        }
+      ).$.exposed
       exposed.resetDirtyBaseline()
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
@@ -683,9 +670,11 @@ describe('ASortableListEditor', () => {
       await flushPromises()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
 
-      const exposed = (editor().vm as unknown as {
-        $: { exposed: { resetDirtyBaseline: () => void } }
-      }).$.exposed
+      const exposed = (
+        editor().vm as unknown as {
+          $: { exposed: { resetDirtyBaseline: () => void } }
+        }
+      ).$.exposed
       exposed.resetDirtyBaseline()
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
@@ -720,10 +709,7 @@ describe('ASortableListEditor', () => {
       // Change only `position` on a row — the dirty compare strips it before
       // stringifying, so no row should light up unsaved.
 
-      model.value = [
-        { ...model.value[0], position: 999 },
-        model.value[1],
-      ]
+      model.value = [{ ...model.value[0], position: 999 }, model.value[1]]
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })

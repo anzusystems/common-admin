@@ -1,11 +1,4 @@
-import {
-  computed,
-  ref,
-  watch,
-  type ComputedRef,
-  type InjectionKey,
-  type Ref,
-} from 'vue'
+import { computed, ref, watch, type ComputedRef, type InjectionKey, type Ref } from 'vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
 // Registry that lets embedded inner editors push their reorder pending-count
@@ -137,9 +130,7 @@ export interface UseReorderModeApi {
  * per-row decorator + dirty-baseline read them directly; the composable
  * takes them as refs so it can still drive the state machine.
  */
-export function useReorderMode<T>(
-  options: UseReorderModeOptions<T>,
-): UseReorderModeApi {
+export function useReorderMode<T>(options: UseReorderModeOptions<T>): UseReorderModeApi {
   const applying = ref(false)
   const applyError = ref<string | null>(null)
 

@@ -39,9 +39,7 @@ describe('AListEditor — slot actions.update', () => {
               },
             },
             {
-              'item-compact': (
-                slotProps: { actions?: { update?: (data: Item) => void } },
-              ) => {
+              'item-compact': (slotProps: { actions?: { update?: (data: Item) => void } }) => {
                 received.value = slotProps
                 return h('span', 'row')
               },

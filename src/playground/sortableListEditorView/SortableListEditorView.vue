@@ -97,9 +97,7 @@ const onAddAfter = (hint: PositionHint | undefined) => {
     title: `New #${nextId}`,
     status: 'Draft',
   }
-  const anchor = hint?.afterId
-    ? addAfterItems.value.findIndex((i) => i.id === hint.afterId)
-    : -1
+  const anchor = hint?.afterId ? addAfterItems.value.findIndex((i) => i.id === hint.afterId) : -1
   if (anchor >= 0) {
     addAfterItems.value.splice(anchor + 1, 0, fresh)
     log(`inserted ${fresh.id} after ${hint?.afterId}`)
@@ -233,8 +231,8 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — failing onReorderApply (stays in reorder mode, shows error)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Apply throws; the component keeps the reorder mode open with the error in the toolbar.
-        User can retry or Cancel.
+        Apply throws; the component keeps the reorder mode open with the error in the toolbar. User
+        can retry or Cancel.
       </p>
       <ASortableListEditor
         v-model="errorItems"
@@ -306,9 +304,8 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — <code>chips</code> layout (tags / authors)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Flat inline-flex pills. Drag reorders on desktop (always on, no mode toggle).
-        Each chip has a built-in close X — no confirm dialog. Use an external input
-        above the list for adding.
+        Flat inline-flex pills. Drag reorders on desktop (always on, no mode toggle). Each chip has
+        a built-in close X — no confirm dialog. Use an external input above the list for adding.
       </p>
       <div class="d-flex ga-2 mb-2">
         <AFormTextField
@@ -342,8 +339,8 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Enter reorder mode (top-right <code>Reorder</code> button), then open any row's
-        <code>⋮</code> menu — alongside move-to-top / move-to-bottom / delete, there's a new
-        "Add after this" entry. Parent receives <code>@add</code> with <code>{ afterId }</code>
+        <code>⋮</code> menu — alongside move-to-top / move-to-bottom / delete, there's a new "Add
+        after this" entry. Parent receives <code>@add</code> with <code>{ afterId }</code>
         and splices a new row directly below the anchor.
       </p>
       <ASortableListEditor

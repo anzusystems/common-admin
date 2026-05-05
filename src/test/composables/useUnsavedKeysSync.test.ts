@@ -12,9 +12,7 @@ afterEach(() => {
   mounted = null
 })
 
-const mountWithSync = (
-  setup: () => ReturnType<typeof useUnsavedKeysSync>,
-) => {
+const mountWithSync = (setup: () => ReturnType<typeof useUnsavedKeysSync>) => {
   let api!: ReturnType<typeof useUnsavedKeysSync>
   const Host = defineComponent({
     setup() {
@@ -30,9 +28,7 @@ describe('useUnsavedKeysSync', () => {
   describe('hasUnsavedChanges + unsavedCount', () => {
     it('mirror the internal set (empty + non-empty)', () => {
       const source = ref<ListEditorKey[]>([])
-      const internal = computed<Set<ListEditorKey>>(
-        () => new Set(source.value),
-      )
+      const internal = computed<Set<ListEditorKey>>(() => new Set(source.value))
       const model = ref(new Set<ListEditorKey>())
       const api = mountWithSync(() =>
         useUnsavedKeysSync({
@@ -53,9 +49,7 @@ describe('useUnsavedKeysSync', () => {
   describe('internal → external sync', () => {
     it('writes a fresh Set into the model on initial mount when internal is non-empty', async () => {
       const source = ref<ListEditorKey[]>([1, 2])
-      const internal = computed<Set<ListEditorKey>>(
-        () => new Set(source.value),
-      )
+      const internal = computed<Set<ListEditorKey>>(() => new Set(source.value))
       const model = ref(new Set<ListEditorKey>())
       mountWithSync(() =>
         useUnsavedKeysSync({
@@ -72,9 +66,7 @@ describe('useUnsavedKeysSync', () => {
 
     it('updates model when internal grows', async () => {
       const source = ref<ListEditorKey[]>([])
-      const internal = computed<Set<ListEditorKey>>(
-        () => new Set(source.value),
-      )
+      const internal = computed<Set<ListEditorKey>>(() => new Set(source.value))
       const model = ref(new Set<ListEditorKey>())
       mountWithSync(() =>
         useUnsavedKeysSync({
@@ -96,9 +88,7 @@ describe('useUnsavedKeysSync', () => {
 
     it('updates model when internal shrinks', async () => {
       const source = ref<ListEditorKey[]>([1, 2, 3])
-      const internal = computed<Set<ListEditorKey>>(
-        () => new Set(source.value),
-      )
+      const internal = computed<Set<ListEditorKey>>(() => new Set(source.value))
       const model = ref(new Set<ListEditorKey>())
       mountWithSync(() =>
         useUnsavedKeysSync({
@@ -116,9 +106,7 @@ describe('useUnsavedKeysSync', () => {
 
     it('does NOT trigger a model write when the new internal set equals the model', async () => {
       const source = ref<ListEditorKey[]>([1, 2])
-      const internal = computed<Set<ListEditorKey>>(
-        () => new Set(source.value),
-      )
+      const internal = computed<Set<ListEditorKey>>(() => new Set(source.value))
       const model = ref(new Set<ListEditorKey>([1, 2]))
       const initialModelRef = model.value
       mountWithSync(() =>
@@ -143,9 +131,7 @@ describe('useUnsavedKeysSync', () => {
       // returns false for all rows initially). Then a user action grows
       // internal, and the consumer later clears the model after a save.
       const source = ref<ListEditorKey[]>([])
-      const internal = computed<Set<ListEditorKey>>(
-        () => new Set(source.value),
-      )
+      const internal = computed<Set<ListEditorKey>>(() => new Set(source.value))
       const model = ref(new Set<ListEditorKey>())
       const onClearAll = vi.fn()
       const onClearKey = vi.fn()
@@ -171,9 +157,7 @@ describe('useUnsavedKeysSync', () => {
 
     it('does NOT call onClearAll when the model write came from the internal sync', async () => {
       const source = ref<ListEditorKey[]>([])
-      const internal = computed<Set<ListEditorKey>>(
-        () => new Set(source.value),
-      )
+      const internal = computed<Set<ListEditorKey>>(() => new Set(source.value))
       const model = ref(new Set<ListEditorKey>())
       const onClearAll = vi.fn()
       mountWithSync(() =>
@@ -196,9 +180,7 @@ describe('useUnsavedKeysSync', () => {
   describe('external → internal: per-key clear', () => {
     it('calls onClearKey for each key removed from the model that was internal-present', async () => {
       const source = ref<ListEditorKey[]>([])
-      const internal = computed<Set<ListEditorKey>>(
-        () => new Set(source.value),
-      )
+      const internal = computed<Set<ListEditorKey>>(() => new Set(source.value))
       const model = ref(new Set<ListEditorKey>())
       const onClearAll = vi.fn()
       const onClearKey = vi.fn()

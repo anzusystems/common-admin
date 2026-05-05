@@ -179,11 +179,7 @@ export interface Props<TItem extends Record<string, any>> {
   showChangeParent?: boolean
   showExpandToggle?: boolean
 
-  getValidationState?: (
-    item: TItem,
-    key: ListEditorKey,
-    index: number,
-  ) => ListEditorValidationState
+  getValidationState?: (item: TItem, key: ListEditorKey, index: number) => ListEditorValidationState
 
   addLabel?: string | null
   emptyTitle?: string | null
@@ -426,22 +422,22 @@ const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
     const unsaved = dirty || moved
     const cached = decoratorCache.get(vi.key)
     if (
-      cached
-      && cached.raw === vi.raw
-      && cached.index === vi.index
-      && cached.position === vi.position
-      && cached.depth === vi.depth
-      && cached.parentKey === vi.parentKey
-      && cached.childrenCount === vi.childrenCount
-      && cached.firstInParent === vi.firstInParent
-      && cached.lastInParent === vi.lastInParent
-      && cached.editing === editing
-      && cached.expanded === expanded
-      && cached.childrenExpanded === childrenExpanded
-      && cached.loading === loading
-      && cached.dirty === dirty
-      && cached.moved === moved
-      && cached.unsaved === unsaved
+      cached &&
+      cached.raw === vi.raw &&
+      cached.index === vi.index &&
+      cached.position === vi.position &&
+      cached.depth === vi.depth &&
+      cached.parentKey === vi.parentKey &&
+      cached.childrenCount === vi.childrenCount &&
+      cached.firstInParent === vi.firstInParent &&
+      cached.lastInParent === vi.lastInParent &&
+      cached.editing === editing &&
+      cached.expanded === expanded &&
+      cached.childrenExpanded === childrenExpanded &&
+      cached.loading === loading &&
+      cached.dirty === dirty &&
+      cached.moved === moved &&
+      cached.unsaved === unsaved
     ) {
       next.push(cached)
       continue
@@ -476,9 +472,7 @@ const canEnterReorder = computed(
 )
 
 const isInlineEdit = computed(() => !!(slots as Record<string, unknown>).item)
-const hasReadonlyDetail = computed(
-  () => !!(slots as Record<string, unknown>)['item-readonly'],
-)
+const hasReadonlyDetail = computed(() => !!(slots as Record<string, unknown>)['item-readonly'])
 const showInlineSaveFooter = computed(() => !!props.onItemSave)
 
 const {
@@ -567,9 +561,7 @@ const {
 })
 
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
-const dragEnabled = computed(
-  () => reorderMode.value && !isTouch.value && !props.disableDrag,
-)
+const dragEnabled = computed(() => reorderMode.value && !isTouch.value && !props.disableDrag)
 
 const addLabelResolved = computed(() => props.addLabel ?? t('common.sortable.add'))
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
@@ -583,15 +575,10 @@ const deleteConfirmTextResolved = computed(
 
 const reorderToggleVisible = computed<boolean>(
   (): boolean =>
-    !props.readonly
-    && props.showReorderToggle
-    && !reorderMode.value
-    && totalItemCount.value > 0,
+    !props.readonly && props.showReorderToggle && !reorderMode.value && totalItemCount.value > 0,
 )
 
-const compactReorderButton = computed<boolean>(
-  (): boolean => !!props.title && isNarrow.value,
-)
+const compactReorderButton = computed<boolean>((): boolean => !!props.title && isNarrow.value)
 
 // Keys of every node that *has* children — the candidates for expand/collapse.
 const expandableKeys = computed<ListEditorKey[]>(() => {
@@ -608,9 +595,10 @@ const expandableKeys = computed<ListEditorKey[]>(() => {
   return out
 })
 
-const allExpanded = computed<boolean>(() =>
-  expandableKeys.value.length > 0
-  && expandableKeys.value.every((k) => childrenExpandedKeys.value.has(k)),
+const allExpanded = computed<boolean>(
+  () =>
+    expandableKeys.value.length > 0 &&
+    expandableKeys.value.every((k) => childrenExpandedKeys.value.has(k)),
 )
 
 const expandAllVisible = computed<boolean>(
@@ -628,21 +616,21 @@ const toggleExpandAll = () => {
 const headerVisible = computed<boolean>(
   (): boolean =>
     !!(
-      props.title
-      || (slots as Record<string, unknown>).header
-      || (slots as Record<string, unknown>)['reorder-toggle']
-      || reorderToggleVisible.value
-      || expandAllVisible.value
-      || reorderMode.value
+      props.title ||
+      (slots as Record<string, unknown>).header ||
+      (slots as Record<string, unknown>)['reorder-toggle'] ||
+      reorderToggleVisible.value ||
+      expandAllVisible.value ||
+      reorderMode.value
     ),
 )
 
 // Initialize nested SortableJS groups. We create one Sortable instance per group
 // so drag/drop can move items within/between groups — SortableJS handles the
 // pointer events; onEnd reconciles via editor.moveTo().
-const sortableInstances = ref<Array<{ stop: () => void; option?: (k: string, v: unknown) => void }>>(
-  [],
-)
+const sortableInstances = ref<
+  Array<{ stop: () => void; option?: (k: string, v: unknown) => void }>
+>([])
 const forceRerender = ref(0)
 
 const destroySortables = () => {
@@ -707,9 +695,7 @@ const recomputeInstruction = (clientX: number, clientY: number) => {
   // For hovered-row rect we read the row element (not the whole wrapper,
   // whose height balloons when children are rendered). The wrapper's first
   // `.a-le-row` child is the header+body we want to hit-test.
-  const rowEl = hit.el.querySelector(
-    ':scope > .a-le-row',
-  ) as HTMLElement | null
+  const rowEl = hit.el.querySelector(':scope > .a-le-row') as HTMLElement | null
   const rowRect = (rowEl ?? hit.el).getBoundingClientRect()
   dragState.value.instruction = computeInstruction({
     pointer: { x: clientX, y: clientY },
@@ -756,9 +742,7 @@ const initSortables = () => {
   destroySortables()
   if (!dragEnabled.value) return
   if (!rowsContainer.value) return
-  const groups = Array.from(
-    rowsContainer.value.querySelectorAll<HTMLElement>('.' + GROUP_CLASS),
-  )
+  const groups = Array.from(rowsContainer.value.querySelectorAll<HTMLElement>('.' + GROUP_CLASS))
   for (const group of groups) {
     const sortable = useSortable(group, [], {
       group: { name: 'a-nested', pull: true, put: true },
@@ -882,17 +866,13 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
     `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.refKey))}"]`,
   )
   if (!refWrapper) return null
-  const rowEl = refWrapper.querySelector<HTMLElement>(
-    ':scope > .a-le-row',
-  )
+  const rowEl = refWrapper.querySelector<HTMLElement>(':scope > .a-le-row')
   const containerRect = rowsContainer.value.getBoundingClientRect()
   const rowRect = (rowEl ?? refWrapper).getBoundingClientRect()
 
   const lineLeft = ANCHOR_X + inst.depth * INDENT_PX
   const lineTop =
-    inst.refEdge === 'top'
-      ? rowRect.top - containerRect.top
-      : rowRect.bottom - containerRect.top
+    inst.refEdge === 'top' ? rowRect.top - containerRect.top : rowRect.bottom - containerRect.top
   const line = { top: lineTop, left: lineLeft, right: 16 }
 
   let connector: OverlayVisual['connector'] = null
@@ -901,9 +881,7 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
       `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.levelRowKey))}"]`,
     )
     if (levelWrapper) {
-      const levelRow = levelWrapper.querySelector<HTMLElement>(
-        ':scope > .a-le-row',
-      )
+      const levelRow = levelWrapper.querySelector<HTMLElement>(':scope > .a-le-row')
       const levelRect = (levelRow ?? levelWrapper).getBoundingClientRect()
       const levelCentreY = levelRect.top - containerRect.top + levelRect.height / 2
       if (levelCentreY < lineTop) {
@@ -1103,21 +1081,54 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
   let actions = actionsCache.get(key)
   if (!actions) {
     actions = {
-      edit: () => { const vi = findVi(key); if (vi) onEditClick(vi) },
-      save: () => { const vi = findVi(key); if (vi) return onSaveClick(vi) },
-      cancel: () => { const vi = findVi(key); if (vi) onCancelClick(vi) },
-      close: () => { const vi = findVi(key); if (vi) onCloseClick(vi) },
-      delete: async () => { const vi = findVi(key); if (vi) await onDeleteClick(vi) },
-      addAfter: () => { const vi = findVi(key); if (vi) onRowAddAfterClick(vi) },
-      addChild: () => { const vi = findVi(key); if (vi) onAddChildClick(vi) },
-      toggleExpand: () => { const vi = findVi(key); if (vi) onChevronClick(vi) },
-      toggleDetail: () => { const vi = findVi(key); if (vi) onDetailToggle(vi) },
+      edit: () => {
+        const vi = findVi(key)
+        if (vi) onEditClick(vi)
+      },
+      save: () => {
+        const vi = findVi(key)
+        if (vi) return onSaveClick(vi)
+      },
+      cancel: () => {
+        const vi = findVi(key)
+        if (vi) onCancelClick(vi)
+      },
+      close: () => {
+        const vi = findVi(key)
+        if (vi) onCloseClick(vi)
+      },
+      delete: async () => {
+        const vi = findVi(key)
+        if (vi) await onDeleteClick(vi)
+      },
+      addAfter: () => {
+        const vi = findVi(key)
+        if (vi) onRowAddAfterClick(vi)
+      },
+      addChild: () => {
+        const vi = findVi(key)
+        if (vi) onAddChildClick(vi)
+      },
+      toggleExpand: () => {
+        const vi = findVi(key)
+        if (vi) onChevronClick(vi)
+      },
+      toggleDetail: () => {
+        const vi = findVi(key)
+        if (vi) onDetailToggle(vi)
+      },
       moveUp: () => moveUp(key),
       moveDown: () => moveDown(key),
       moveTop: () => moveTop(key),
       moveBottom: () => moveBottom(key),
-      indent: () => { const vi = findVi(key); if (vi) doIndent(vi) },
-      outdent: () => { const vi = findVi(key); if (vi) doOutdent(vi) },
+      indent: () => {
+        const vi = findVi(key)
+        if (vi) doIndent(vi)
+      },
+      outdent: () => {
+        const vi = findVi(key)
+        if (vi) doOutdent(vi)
+      },
       update: (data: TItem) => editor.updateItem(key, data),
     }
     actionsCache.set(key, actions)
@@ -1244,9 +1255,7 @@ const moveToPositionContext = computed<{
   if (!target) return null
   const found = editor.findNode(target.key)
   const siblings = found.parent?.children ?? modelValue.value.children
-  const idx = siblings.findIndex(
-    (s) => (s.data[props.keyField] as ListEditorKey) === target.key,
-  )
+  const idx = siblings.findIndex((s) => (s.data[props.keyField] as ListEditorKey) === target.key)
   return {
     parentId: found.parent ? (found.parent.data[props.keyField] as ListEditorKey) : null,
     total: siblings.length,
@@ -1281,10 +1290,7 @@ const openChangeParent = (vi: DecoratedNestedViewItem<TItem>) => {
   changeParentTarget.value = vi
   changeParentDialogOpen.value = true
 }
-const onChangeParentConfirm = (
-  parentId: ListEditorKey | null,
-  position: 'first' | 'last',
-) => {
+const onChangeParentConfirm = (parentId: ListEditorKey | null, position: 'first' | 'last') => {
   const target = changeParentTarget.value
   changeParentTarget.value = null
   if (!target) return
@@ -1350,9 +1356,7 @@ const rowCallbacks = {
   openChangeParent,
 }
 
-const rootViewItems = computed(() =>
-  viewItemsDecorated.value.filter((v) => v.parentKey === null),
-)
+const rootViewItems = computed(() => viewItemsDecorated.value.filter((v) => v.parentKey === null))
 
 // Expose imperative API — mirrors legacy ASortableNested signatures for easier
 // migration of admin-cms consumers (LinkedListManage calls these on the ref).
@@ -1367,21 +1371,13 @@ const rootViewItems = computed(() =>
 // the next major.
 
 /** @deprecated Use `addItem(data, { afterId, childrenAllowed })` directly. */
-const addAfterId = (
-  targetId: ListEditorKey | null,
-  data: TItem,
-  childrenAllowed: boolean,
-) => {
+const addAfterId = (targetId: ListEditorKey | null, data: TItem, childrenAllowed: boolean) => {
   const res = editor.addItem(data, { afterId: targetId ?? undefined, childrenAllowed })
   nextTick(() => captureDirtyBaseline())
   return res
 }
 /** @deprecated Use `addItem(data, { parentId, asFirstChild: true, childrenAllowed })`. */
-const addChildToId = (
-  targetId: ListEditorKey,
-  data: TItem,
-  childrenAllowed: boolean,
-) => {
+const addChildToId = (targetId: ListEditorKey, data: TItem, childrenAllowed: boolean) => {
   childrenExpandedKeys.value.add(targetId)
   const res = editor.addItem(data, { parentId: targetId, asFirstChild: true, childrenAllowed })
   nextTick(() => captureDirtyBaseline())
@@ -1468,7 +1464,6 @@ defineExpose({
   expandDetail: (id: ListEditorKey) => detailExpandedKeys.value.add(id),
   collapseDetail: (id: ListEditorKey) => detailExpandedKeys.value.delete(id),
 })
-
 </script>
 
 <template>
@@ -1548,18 +1543,14 @@ defineExpose({
                 @click="toggleExpandAll"
               >
                 <VIcon
-                  :icon="
-                    allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'
-                  "
+                  :icon="allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'"
                   size="18"
                 />
                 <VTooltip
                   activator="parent"
                   location="bottom"
                   :text="
-                    allExpanded
-                      ? t('common.sortable.collapseAll')
-                      : t('common.sortable.expandAll')
+                    allExpanded ? t('common.sortable.collapseAll') : t('common.sortable.expandAll')
                   "
                 />
               </VBtn>
@@ -1574,9 +1565,7 @@ defineExpose({
                 @click="toggleExpandAll"
               >
                 {{
-                  allExpanded
-                    ? t('common.sortable.collapseAll')
-                    : t('common.sortable.expandAll')
+                  allExpanded ? t('common.sortable.collapseAll') : t('common.sortable.expandAll')
                 }}
               </VBtn>
               <slot
@@ -1920,7 +1909,9 @@ defineExpose({
     color: rgb(0 0 0 / 54%);
     z-index: 2;
     flex-shrink: 0;
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
 
     &:hover {
       background: rgb(0 0 0 / 5%);

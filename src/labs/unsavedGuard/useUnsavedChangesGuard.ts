@@ -1,4 +1,12 @@
-import { computed, getCurrentInstance, onBeforeUnmount, ref, watch, type ComputedRef, type Ref } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  onBeforeUnmount,
+  ref,
+  watch,
+  type ComputedRef,
+  type Ref,
+} from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 
 type UnsavedSource = Ref<boolean | Set<unknown> | unknown[] | null | undefined>

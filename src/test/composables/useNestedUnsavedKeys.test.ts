@@ -1,4 +1,3 @@
-/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { describe, expect, it } from 'vitest'
 import { useNestedUnsavedKeys } from '@/labs/listEditor/composables/useNestedUnsavedKeys'
 

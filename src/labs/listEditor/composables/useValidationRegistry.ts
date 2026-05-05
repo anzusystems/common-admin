@@ -8,9 +8,7 @@ import type {
   ListEditorValidationState,
 } from '@/labs/listEditor/types/listEditorTypes'
 
-const isValidState = (
-  v: unknown,
-): v is Exclude<ListEditorValidationState, null> =>
+const isValidState = (v: unknown): v is Exclude<ListEditorValidationState, null> =>
   v === 'valid' || v === 'invalid' || v === 'warning'
 
 export interface UseValidationRegistryOptions<TItem extends Record<string, any>> {
@@ -18,11 +16,7 @@ export interface UseValidationRegistryOptions<TItem extends Record<string, any>>
    * Caller-provided fallback callback. Tried only when no descendant has
    * registered a state for the row via `useListEditorItemValidation`.
    */
-  getValidationState?: (
-    item: TItem,
-    key: ListEditorKey,
-    index: number,
-  ) => ListEditorValidationState
+  getValidationState?: (item: TItem, key: ListEditorKey, index: number) => ListEditorValidationState
 }
 
 export interface UseValidationRegistryApi<TItem extends Record<string, any>> {
@@ -34,11 +28,7 @@ export interface UseValidationRegistryApi<TItem extends Record<string, any>> {
    *
    * Returns null when none of the above flagged a state.
    */
-  resolveValidation: (
-    raw: TItem,
-    key?: ListEditorKey,
-    index?: number,
-  ) => ListEditorValidationState
+  resolveValidation: (raw: TItem, key?: ListEditorKey, index?: number) => ListEditorValidationState
 }
 
 /**

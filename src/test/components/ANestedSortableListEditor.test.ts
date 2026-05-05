@@ -85,8 +85,8 @@ const clickReorder = (wrapper: VueWrapper) =>
     .findAll('button')
     .find(
       (b) =>
-        b.text().toLowerCase().includes('reorder')
-        || (b.find('.mdi-sort').exists() && !b.classes().includes('v-btn--disabled')),
+        b.text().toLowerCase().includes('reorder') ||
+        (b.find('.mdi-sort').exists() && !b.classes().includes('v-btn--disabled')),
     )!
     .trigger('click')
 
@@ -114,7 +114,9 @@ describe('ANestedSortableListEditor', () => {
 
     it('renders the reorder toggle by default', () => {
       const { wrapper } = mountEditor()
-      const toggle = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))
+      const toggle = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('reorder'))
       expect(toggle).toBeTruthy()
     })
   })
@@ -194,9 +196,7 @@ describe('ANestedSortableListEditor', () => {
       await flushPromises()
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
 
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -213,9 +213,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper, model, mode } = mountEditor(tree(), { onReorderApply: save })
       await clickReorder(wrapper)
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -229,9 +227,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper, mode, editor } = mountEditor(tree(), { onReorderApply: save })
       await clickReorder(wrapper)
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -472,9 +468,11 @@ describe('ANestedSortableListEditor', () => {
       await clickReorder(wrapper)
       await flushPromises()
       const editor = findEditor(wrapper)
-      const exposed = (editor.vm as unknown as {
-        $: { exposed: { moveTop: (id: number) => unknown } }
-      }).$.exposed
+      const exposed = (
+        editor.vm as unknown as {
+          $: { exposed: { moveTop: (id: number) => unknown } }
+        }
+      ).$.exposed
       exposed.moveTop(3) // About is last root; move to top
       await flushPromises()
       expect(model.value.children.map((n) => n.data.id)).toEqual([3, 1, 2])
@@ -485,9 +483,11 @@ describe('ANestedSortableListEditor', () => {
       await clickReorder(wrapper)
       await flushPromises()
       const editor = findEditor(wrapper)
-      const exposed = (editor.vm as unknown as {
-        $: { exposed: { moveBottom: (id: number) => unknown } }
-      }).$.exposed
+      const exposed = (
+        editor.vm as unknown as {
+          $: { exposed: { moveBottom: (id: number) => unknown } }
+        }
+      ).$.exposed
       exposed.moveBottom(1) // Home is first root; move to bottom
       await flushPromises()
       expect(model.value.children.map((n) => n.data.id)).toEqual([2, 3, 1])
@@ -609,9 +609,11 @@ describe('ANestedSortableListEditor', () => {
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
       // Reset baseline via exposed API
       const editor = findEditor(wrapper)
-      const exposed = (editor.vm as unknown as {
-        $: { exposed: { resetDirtyBaseline: () => void } }
-      }).$.exposed
+      const exposed = (
+        editor.vm as unknown as {
+          $: { exposed: { resetDirtyBaseline: () => void } }
+        }
+      ).$.exposed
       exposed.resetDirtyBaseline()
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
@@ -680,9 +682,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       expect(apply.attributes('disabled')).toBeDefined()
     })
 
@@ -692,9 +692,7 @@ describe('ANestedSortableListEditor', () => {
       await flushPromises()
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       expect(apply.attributes('disabled')).toBeUndefined()
     })
   })
@@ -727,9 +725,7 @@ describe('ANestedSortableListEditor', () => {
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
 
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -807,9 +803,7 @@ describe('ANestedSortableListEditor', () => {
         // portal children are fully mounted before we query.
         await new Promise((r) => setTimeout(r, 50))
 
-        const openItems = document.querySelectorAll(
-          '.v-overlay--active.v-menu .v-list-item',
-        )
+        const openItems = document.querySelectorAll('.v-overlay--active.v-menu .v-list-item')
         expect(openItems.length).toBeGreaterThanOrEqual(2)
         const titles = Array.from(openItems).map(
           (el) => el.querySelector('.v-list-item-title')?.textContent?.trim() ?? '',
@@ -817,9 +811,7 @@ describe('ANestedSortableListEditor', () => {
         // "Add after this item" comes first, "Add inside" second.
         expect(titles[0]).toBe('Add after this item')
         expect(titles[1]).toBe('Add inside')
-        const icons = Array.from(openItems).map(
-          (el) => el.querySelector('.mdi')?.className ?? '',
-        )
+        const icons = Array.from(openItems).map((el) => el.querySelector('.mdi')?.className ?? '')
         expect(icons[0]).toContain('mdi-playlist-plus')
         expect(icons[1]).toContain('mdi-subdirectory-arrow-right')
       } finally {
@@ -865,9 +857,9 @@ describe('ANestedSortableListEditor', () => {
         )
         const titleTexts = openMenuTitles.map((el) => el.textContent?.trim() ?? '')
         expect(titleTexts).toContain('Delete')
-        const deleteTitleEl = openMenuTitles.find(
-          (el) => el.textContent?.trim() === 'Delete',
-        ) as HTMLElement | undefined
+        const deleteTitleEl = openMenuTitles.find((el) => el.textContent?.trim() === 'Delete') as
+          | HTMLElement
+          | undefined
         expect(deleteTitleEl?.classList.contains('text-error')).toBe(true)
       } finally {
         wrapper.unmount()
@@ -883,13 +875,18 @@ describe('ANestedSortableListEditor', () => {
       // assert the new node lands at the end of the children array.
       const { wrapper, model } = mountEditor()
       const editor = findEditor(wrapper)
-      const exposed = (editor.vm as unknown as {
-        $: {
-          exposed: {
-            addItem: (data: MenuItem, hint?: { parentId?: number; childrenAllowed?: boolean }) => unknown
+      const exposed = (
+        editor.vm as unknown as {
+          $: {
+            exposed: {
+              addItem: (
+                data: MenuItem,
+                hint?: { parentId?: number; childrenAllowed?: boolean },
+              ) => unknown
+            }
           }
         }
-      }).$.exposed
+      ).$.exposed
       // News (id=2) already has children [21, 22]. Add inside should land as
       // the third and last child, NOT at index 0 (which was the old
       // `asFirstChild` semantic, still used by the imperative `addChildToId`).
@@ -947,7 +944,12 @@ interface EditorApi {
   resetDirtyBaseline: () => void
   addItem: (
     data: MenuItem,
-    hint?: { parentId?: number; afterId?: number; asFirstChild?: boolean; childrenAllowed?: boolean },
+    hint?: {
+      parentId?: number
+      afterId?: number
+      asFirstChild?: boolean
+      childrenAllowed?: boolean
+    },
   ) => unknown
 }
 function editorExposed(wrapper: VueWrapper): EditorApi {

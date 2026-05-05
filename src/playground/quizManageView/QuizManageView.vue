@@ -4,10 +4,7 @@ import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 import QuizManageQuestions from '@/playground/quizManageView/QuizManageQuestions.vue'
-import {
-  QuizAnswerValueType,
-  createQuiz,
-} from '@/playground/quizManageView/quizMock'
+import { QuizAnswerValueType, createQuiz } from '@/playground/quizManageView/quizMock'
 
 const quiz = ref(createQuiz())
 
@@ -26,17 +23,16 @@ const sharedMode = ref<'view' | 'reorder'>('view')
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Mirrors the admin-cms quiz edit page. The outer editor lists
-        <strong>questions</strong>; clicking a question opens its inline form
-        which renders an inner editor of that question's <strong>answers</strong>.
-        A <strong>single Reorder button</strong> on the outer editor drives
-        both — drag questions to reorder questions, open a question and drag
-        its answers to reorder answers, and Apply at the top commits everything.
+        <strong>questions</strong>; clicking a question opens its inline form which renders an inner
+        editor of that question's <strong>answers</strong>. A
+        <strong>single Reorder button</strong> on the outer editor drives both — drag questions to
+        reorder questions, open a question and drag its answers to reorder answers, and Apply at the
+        top commits everything.
       </p>
       <p class="text-body-medium text-medium-emphasis mb-6">
-        <strong>Try:</strong> click the Reorder button → open a question while
-        in reorder mode → drag answers; Apply commits, Cancel restores the
-        original order of both questions and answers. Clear an answer's title
-        to see the red rail propagate up to the question row.
+        <strong>Try:</strong> click the Reorder button → open a question while in reorder mode →
+        drag answers; Apply commits, Cancel restores the original order of both questions and
+        answers. Clear an answer's title to see the red rail propagate up to the question row.
       </p>
 
       <VRow class="mb-6">
@@ -74,10 +70,8 @@ const sharedMode = ref<'view' | 'reorder'>('view')
       />
 
       <div class="text-body-small text-medium-emphasis mt-4">
-        questions unsaved: {{ questionsUnsavedKeys.size }} —
-        answers unsaved (merged across all questions):
-        {{ answersUnsavedKeys.size }} —
-        mode: {{ sharedMode }}
+        questions unsaved: {{ questionsUnsavedKeys.size }} — answers unsaved (merged across all
+        questions): {{ answersUnsavedKeys.size }} — mode: {{ sharedMode }}
       </div>
     </VCardText>
   </VCard>

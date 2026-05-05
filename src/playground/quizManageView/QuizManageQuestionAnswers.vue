@@ -7,10 +7,7 @@ import ARow from '@/components/ARow.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
-import type {
-  ListEditorKey,
-  ListViewItem,
-} from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorKey, ListViewItem } from '@/labs/listEditor/types/listEditorTypes'
 import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
 import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
 import {
@@ -62,22 +59,13 @@ const answerRules = {
     },
   },
 }
-const v$ = useVuelidate(
-  answerRules,
-  { question: selectedValue },
-  { $scope: QuizValidationSymbol },
-)
+const v$ = useVuelidate(answerRules, { question: selectedValue }, { $scope: QuizValidationSymbol })
 
-const getAnswerValidationState = (
-  _: QuizQuestionAnswer,
-  __: ListEditorKey,
-  index: number,
-) => {
+const getAnswerValidationState = (_: QuizQuestionAnswer, __: ListEditorKey, index: number) => {
   // helpers.forEach exposes per-row errors as an OBJECT keyed by property
   // name → array of error entries. A row is invalid if any property has a
   // non-empty error array. Plain `.length` is wrong (it's not an array).
-  const errors =
-    v$.value.question.answers.$each?.$response?.$errors?.[index]
+  const errors = v$.value.question.answers.$each?.$response?.$errors?.[index]
   if (!errors || typeof errors !== 'object') return null
   const hasErrors = Object.values(errors).some(
     (propErrors) => Array.isArray(propErrors) && propErrors.length > 0,
@@ -88,8 +76,7 @@ const getAnswerValidationState = (
 const onAddAnswer = () => {
   const newAnswer = createQuizQuestionAnswer()
   newAnswer.question = selectedValue.value.id
-  newAnswer.position =
-    (selectedValue.value.answers.at(-1)?.position ?? 0) + 1
+  newAnswer.position = (selectedValue.value.answers.at(-1)?.position ?? 0) + 1
   selectedValue.value.answers.push(newAnswer)
 }
 const onDeleteAnswer = (vi: ListViewItem<QuizQuestionAnswer>) => {
@@ -130,15 +117,7 @@ onMounted(() => {
     <template #item-compact="{ raw }: { raw: QuizQuestionAnswer }">
       <span>{{ raw.title || '(empty answer)' }}</span>
     </template>
-    <template
-      #item="{
-        raw,
-        index,
-      }: {
-        raw: QuizQuestionAnswer
-        index: number
-      }"
-    >
+    <template #item="{ raw, index }: { raw: QuizQuestionAnswer; index: number }">
       <ACard class="pt-5">
         <VRow>
           <VCol cols="11">

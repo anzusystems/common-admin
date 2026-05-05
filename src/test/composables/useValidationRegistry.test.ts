@@ -1,7 +1,6 @@
-/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { computed, defineComponent, h, inject, nextTick, ref } from 'vue'
+import { computed, defineComponent, h, inject, nextTick, type PropType, ref } from 'vue'
 import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
 import {
   useListEditorItemValidation,
@@ -26,9 +25,7 @@ afterEach(() => {
   mounted = null
 })
 
-const mountWithRegistry = (
-  options: Parameters<typeof useValidationRegistry<Item>>[0],
-) => {
+const mountWithRegistry = (options: Parameters<typeof useValidationRegistry<Item>>[0]) => {
   let api!: ReturnType<typeof useValidationRegistry<Item>>
   const Host = defineComponent({
     setup() {
@@ -50,11 +47,7 @@ describe('useValidationRegistry', () => {
 
     it('uses raw.validationState when nothing else is set', () => {
       const api = mountWithRegistry({})
-      const result = api.resolveValidation(
-        { id: 1, title: 'A', validationState: 'invalid' },
-        1,
-        0,
-      )
+      const result = api.resolveValidation({ id: 1, title: 'A', validationState: 'invalid' }, 1, 0)
       expect(result).toBe('invalid')
     })
 
@@ -62,11 +55,7 @@ describe('useValidationRegistry', () => {
       const api = mountWithRegistry({
         getValidationState: () => 'warning',
       })
-      const result = api.resolveValidation(
-        { id: 1, title: 'A', validationState: 'invalid' },
-        1,
-        0,
-      )
+      const result = api.resolveValidation({ id: 1, title: 'A', validationState: 'invalid' }, 1, 0)
       expect(result).toBe('warning')
     })
 
@@ -74,11 +63,7 @@ describe('useValidationRegistry', () => {
       const api = mountWithRegistry({
         getValidationState: () => null,
       })
-      const result = api.resolveValidation(
-        { id: 1, title: 'A', validationState: 'invalid' },
-        1,
-        0,
-      )
+      const result = api.resolveValidation({ id: 1, title: 'A', validationState: 'invalid' }, 1, 0)
       expect(result).toBe('invalid')
     })
 
@@ -96,9 +81,7 @@ describe('useValidationRegistry', () => {
         // @ts-expect-error — testing runtime validation
         getValidationState: () => 'definitely-not-valid',
       })
-      expect(
-        fromProp.resolveValidation({ id: 1, title: 'A' }, 1, 0),
-      ).toBeNull()
+      expect(fromProp.resolveValidation({ id: 1, title: 'A' }, 1, 0)).toBeNull()
     })
   })
 
@@ -107,18 +90,17 @@ describe('useValidationRegistry', () => {
       const propGetValidationState = vi
         .fn<(item: Item, key: ListEditorKey, index: number) => ListEditorValidationState>()
         .mockReturnValue('warning')
-      let resolveAt!: (
-        raw: Item,
-        key?: ListEditorKey,
-        index?: number,
-      ) => ListEditorValidationState
+      let resolveAt!: (raw: Item, key?: ListEditorKey, index?: number) => ListEditorValidationState
 
       const Sentinel = defineComponent({
-        props: ['k', 's'],
+        props: {
+          k: { type: [Number, String] as PropType<ListEditorKey>, required: true },
+          s: { type: String as PropType<ListEditorValidationState>, default: null },
+        },
         setup(p) {
           useListEditorItemValidation({
-            key: () => p.k as ListEditorKey,
-            state: () => p.s as ListEditorValidationState,
+            key: () => p.k,
+            state: () => p.s,
           })
           return () => h('span', 'sentinel')
         },
@@ -131,27 +113,18 @@ describe('useValidationRegistry', () => {
           })
           resolveAt = api.resolveValidation
           return () =>
-            h('div', [
-              h(Sentinel, { k: 1, s: 'invalid' }),
-              h(Sentinel, { k: 2, s: 'valid' }),
-            ])
+            h('div', [h(Sentinel, { k: 1, s: 'invalid' }), h(Sentinel, { k: 2, s: 'valid' })])
         },
       })
       mounted = mount(Host)
       await nextTick()
 
       // Key 1 → registry says 'invalid' (wins over prop's 'warning')
-      expect(
-        resolveAt({ id: 1, title: 'A', validationState: 'valid' }, 1, 0),
-      ).toBe('invalid')
+      expect(resolveAt({ id: 1, title: 'A', validationState: 'valid' }, 1, 0)).toBe('invalid')
       // Key 2 → registry says 'valid' (still wins)
-      expect(
-        resolveAt({ id: 2, title: 'B' }, 2, 1),
-      ).toBe('valid')
+      expect(resolveAt({ id: 2, title: 'B' }, 2, 1)).toBe('valid')
       // No registered key → falls through to prop
-      expect(
-        resolveAt({ id: 3, title: 'C' }, 3, 2),
-      ).toBe('warning')
+      expect(resolveAt({ id: 3, title: 'C' }, 3, 2)).toBe('warning')
     })
 
     it('unregisters on sentinel unmount, falling through to prop again', async () => {
@@ -166,11 +139,7 @@ describe('useValidationRegistry', () => {
         },
       })
 
-      let resolveAt!: (
-        raw: Item,
-        key?: ListEditorKey,
-        index?: number,
-      ) => ListEditorValidationState
+      let resolveAt!: (raw: Item, key?: ListEditorKey, index?: number) => ListEditorValidationState
       const visible = ref(true)
       const Host = defineComponent({
         setup() {
@@ -178,8 +147,7 @@ describe('useValidationRegistry', () => {
             getValidationState: () => 'warning',
           })
           resolveAt = api.resolveValidation
-          return () =>
-            h('div', visible.value ? [h(Sentinel)] : [])
+          return () => h('div', visible.value ? [h(Sentinel)] : [])
         },
       })
       mounted = mount(Host)
@@ -203,11 +171,7 @@ describe('useValidationRegistry', () => {
           return () => h('span', 'sentinel')
         },
       })
-      let resolveAt!: (
-        raw: Item,
-        key?: ListEditorKey,
-        index?: number,
-      ) => ListEditorValidationState
+      let resolveAt!: (raw: Item, key?: ListEditorKey, index?: number) => ListEditorValidationState
       const Host = defineComponent({
         setup() {
           const api = useValidationRegistry<Item>({})
@@ -230,20 +194,19 @@ describe('useValidationRegistry', () => {
 
     it('different sentinels for different keys do not collide', async () => {
       const Sentinel = defineComponent({
-        props: ['k', 's'],
+        props: {
+          k: { type: [Number, String] as PropType<ListEditorKey>, required: true },
+          s: { type: String as PropType<ListEditorValidationState>, default: null },
+        },
         setup(p) {
           useListEditorItemValidation({
-            key: () => p.k as ListEditorKey,
-            state: computed(() => p.s as ListEditorValidationState),
+            key: () => p.k,
+            state: computed(() => p.s),
           })
           return () => h('span', String(p.k))
         },
       })
-      let resolveAt!: (
-        raw: Item,
-        key?: ListEditorKey,
-        index?: number,
-      ) => ListEditorValidationState
+      let resolveAt!: (raw: Item, key?: ListEditorKey, index?: number) => ListEditorValidationState
       const Host = defineComponent({
         setup() {
           const api = useValidationRegistry<Item>({})
