@@ -15,11 +15,11 @@ interface MockImage extends Record<string, any> {
 
 const palette = ['#ff8a80', '#ffd180', '#ffff8d', '#ccff90', '#80d8ff', '#b388ff']
 const makeSvgThumb = (label: string, color: string): string => {
-  const svg
-    = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">'
-    + `<rect width="320" height="180" fill="${color}"/>`
-    + `<text x="160" y="100" text-anchor="middle" font-family="sans-serif" font-size="40" fill="#222">${label}</text>`
-    + '</svg>'
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">' +
+    `<rect width="320" height="180" fill="${color}"/>` +
+    `<text x="160" y="100" text-anchor="middle" font-family="sans-serif" font-size="40" fill="#222">${label}</text>` +
+    '</svg>'
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
 }
 
@@ -65,10 +65,10 @@ const onReorderApplied = (items: MockImage[]) => {
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         The editor's header hosts the Reorder / Apply / Cancel buttons; the
-        <code>#view-body</code> slot lets you put any content (here, a card grid with form
-        fields) in place of the editor's default vertical list while in view mode. Click
-        <strong>Reorder</strong> in the editor's header to switch to the bigger-thumbnail
-        sortable list.
+        <code>#view-body</code> slot lets you put any content (here, a card grid with form fields)
+        in place of the editor's default vertical list while in view mode. Click
+        <strong>Reorder</strong> in the editor's header to switch to the bigger-thumbnail sortable
+        list.
       </p>
       <p class="text-body-medium text-medium-emphasis mb-4">
         This is the same pattern used by <code>AImageWidgetMultiple</code>.

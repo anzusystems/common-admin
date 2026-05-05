@@ -81,10 +81,13 @@ const clickByText = async (wrapper: VueWrapper, fragment: string) => {
 }
 
 const findReorderToggle = (wrapper: VueWrapper) =>
-  wrapper.find('.a-le-header').findAll('button').find((b) => {
-    const txt = b.text().toLowerCase()
-    return txt.includes('reorder') || b.find('.mdi-sort').exists()
-  })
+  wrapper
+    .find('.a-le-header')
+    .findAll('button')
+    .find((b) => {
+      const txt = b.text().toLowerCase()
+      return txt.includes('reorder') || b.find('.mdi-sort').exists()
+    })
 
 describe('Card-grid + reorder mode pattern (#view-body slot)', () => {
   describe('view mode', () => {
