@@ -28,9 +28,11 @@ const getSentry = (): Promise<typeof SentryType | null> => {
   return sentryPromise
 }
 
-export function useSentry() {
+export function useSentry(component = 'common-admin') {
+  const consoleLabel = `[${component}]`
+
   const logError = (error: Error, context?: SentryContext): void => {
-    console.error('[Common Admin]', error)
+    console.error(consoleLabel, error)
 
     if (window.Sentry) {
       try {
@@ -38,7 +40,7 @@ export function useSentry() {
           ...context,
           tags: {
             ...context?.tags,
-            component: 'common-admin',
+            component,
           },
         })
         return
@@ -54,7 +56,7 @@ export function useSentry() {
             ...context,
             tags: {
               ...context?.tags,
-              component: 'common-admin',
+              component,
             },
           })
         } catch (e) {
@@ -72,19 +74,19 @@ export function useSentry() {
     switch (level) {
       case 'fatal':
       case 'error':
-        console.error('[Common Admin]', message)
+        console.error(consoleLabel, message)
         break
       case 'warning':
-        console.warn('[Common Admin]', message)
+        console.warn(consoleLabel, message)
         break
       case 'info':
-        console.info('[Common Admin]', message)
+        console.info(consoleLabel, message)
         break
       case 'debug':
-        console.debug('[Common Admin]', message)
+        console.debug(consoleLabel, message)
         break
       default:
-        console.log('[Common Admin]', message)
+        console.log(consoleLabel, message)
     }
 
     if (window.Sentry) {
@@ -94,7 +96,7 @@ export function useSentry() {
           ...context,
           tags: {
             ...context?.tags,
-            component: 'common-admin',
+            component,
           },
         })
         return
@@ -111,7 +113,7 @@ export function useSentry() {
             ...context,
             tags: {
               ...context?.tags,
-              component: 'common-admin',
+              component,
             },
           })
         } catch (e) {
