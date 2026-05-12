@@ -19,7 +19,7 @@ import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
 } from '@/model/error/AnzuApiForbiddenOperationError'
-import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
+import { HTTP_STATUS_ACCEPTED, HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
 import {
   AnzuApiDependencyExistsError,
   axiosErrorResponseHasDependencyExistsData,
@@ -94,7 +94,7 @@ export const useApiRequest = <R, T = R>(
         return res.data as R
       }
 
-      if (res.status === HTTP_STATUS_NO_CONTENT) {
+      if (res.status === HTTP_STATUS_NO_CONTENT || res.status === HTTP_STATUS_ACCEPTED) {
         return undefined as R
       }
 
