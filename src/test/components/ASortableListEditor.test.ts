@@ -383,6 +383,9 @@ describe('ASortableListEditor', () => {
                 },
                 chips: true,
                 showAddButton: false,
+                onDeleted: ({ index }: { index: number }) => {
+                  model.value.splice(index, 1)
+                },
               },
               {
                 'item-compact': ({ raw }: { raw: Tag }) =>

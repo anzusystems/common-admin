@@ -452,7 +452,9 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
       </template>
 
       <div
-        v-else-if="vi.expanded && !context.reorderMode && $slots['item-readonly']"
+        v-else-if="
+          $slots['item-readonly'] && (context.readonly || vi.expanded) && !context.reorderMode
+        "
         class="a-le-row-body"
       >
         <div class="a-le-form">

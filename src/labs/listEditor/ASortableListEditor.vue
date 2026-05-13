@@ -462,7 +462,9 @@ const dragEnabled = computed(
   () => (reorderMode.value || props.chips) && !isTouch.value && !props.disableDrag,
 )
 
-const addLabelResolved = computed(() => props.addLabel ?? t('common.sortable.add'))
+const addLabelResolved = computed(() =>
+  props.addLabel ? t(props.addLabel) : t('common.sortable.add'),
+)
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
 const emptyTextResolved = computed(() => props.emptyText ?? t('common.sortable.emptyText'))
 const deleteConfirmTitleResolved = computed(
@@ -755,7 +757,6 @@ const isRowClickable = (vi: DecoratedViewItem<TItem>): boolean => {
   if (reorderMode.value && !props.allowEditInReorder) return false
   if (vi.editing || vi.expanded) return true
   if (!props.readonly && props.showEditButton) return true
-  if (props.readonly && hasReadonlyDetail.value) return true
   return false
 }
 
@@ -783,7 +784,6 @@ const {
   onDeleteConfirm: (raw) => (props.onDeleteConfirm ? props.onDeleteConfirm(raw) : true),
   onDelete: (raw) => props.onDelete?.(raw),
   onDeleted: (vi) => {
-    editor.deleteItem(vi.key)
     editingKeys.value.delete(vi.key)
     editingSnapshots.value.delete(vi.key)
     expandedKeys.value.delete(vi.key)
@@ -1497,7 +1497,9 @@ defineExpose({
 
           <div
             v-else-if="
-              vi.expanded && (allowEditInReorder || !reorderMode) && $slots['item-readonly']
+              $slots['item-readonly'] &&
+                (readonly || vi.expanded) &&
+                (allowEditInReorder || !reorderMode)
             "
             class="a-le-row-body"
           >

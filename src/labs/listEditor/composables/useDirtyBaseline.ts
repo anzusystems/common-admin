@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { ref, watch, type Ref } from 'vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
 export interface UseDirtyBaselineOptions {
@@ -33,7 +33,9 @@ export interface UseDirtyBaselineApi<TItem> {
  * Note: the initial baseline is captured the first time this function runs,
  * reading from `getEntries()` immediately. Callers that want to reset the
  * baseline later (e.g. after a successful parent-form save) call
- * `captureDirtyBaseline()` again.
+ * `captureDirtyBaseline()` again. If the eager snapshot is empty (async-loaded
+ * model patched in after the fetch resolves), we re-capture once on first
+ * non-empty so existing rows don't all read as "dirty".
  */
 export function useDirtyBaseline<TItem extends Record<string, any>>(
   getEntries: () => Array<{ key: ListEditorKey; data: TItem }>,
@@ -90,6 +92,18 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
   }
 
   captureDirtyBaseline()
+
+  if (dirtyBaseline.value.size === 0) {
+    const stopInitialFillWatch = watch(
+      () => getEntries().length,
+      (count) => {
+        if (count > 0) {
+          captureDirtyBaseline()
+          stopInitialFillWatch()
+        }
+      },
+    )
+  }
 
   return {
     dirtyBaseline,

@@ -29,6 +29,9 @@ const mountEditor = (data: FaqItem[] = items(), extra: Record<string, unknown> =
           'onUpdate:modelValue': (v: FaqItem[]) => {
             model.value = v
           },
+          onDeleted: ({ index }: { index: number }) => {
+            model.value.splice(index, 1)
+          },
           ...extra,
         })
     },

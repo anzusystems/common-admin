@@ -232,7 +232,9 @@ const {
   },
 })
 
-const addLabelResolved = computed(() => props.addLabel ?? t('common.sortable.add'))
+const addLabelResolved = computed(() =>
+  props.addLabel ? t(props.addLabel) : t('common.sortable.add'),
+)
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
 const emptyTextResolved = computed(() => props.emptyText ?? t('common.sortable.emptyText'))
 const deleteConfirmTitleResolved = computed(
@@ -387,7 +389,6 @@ const isRowClickable = (vi: DecoratedViewItem<TItem>): boolean => {
   if (props.disabled || props.loading) return false
   if (vi.editing || vi.expanded) return true
   if (!props.readonly && props.showEditButton) return true
-  if (props.readonly && hasReadonlyDetail.value) return true
   return false
 }
 
@@ -415,7 +416,6 @@ const {
   onDeleteConfirm: (raw) => (props.onDeleteConfirm ? props.onDeleteConfirm(raw) : true),
   onDelete: (raw) => props.onDelete?.(raw),
   onDeleted: (vi) => {
-    editor.deleteItem(vi.key)
     editingKeys.value.delete(vi.key)
     editingSnapshots.value.delete(vi.key)
     expandedKeys.value.delete(vi.key)
@@ -833,7 +833,7 @@ defineExpose({
           </template>
 
           <div
-            v-else-if="vi.expanded && $slots['item-readonly']"
+            v-else-if="$slots['item-readonly'] && (readonly || vi.expanded)"
             class="a-le-row-body"
           >
             <div class="a-le-form">
