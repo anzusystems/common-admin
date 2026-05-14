@@ -2,9 +2,9 @@ import { ref, watch, type Ref } from 'vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
 export interface UseDirtyBaselineOptions {
-  /** Field names stripped from the hash — for fields rewritten as a side effect (e.g. positionField on a move). */
+  /** Fields stripped from the hash — for fields rewritten as a side effect (e.g. positionField on a move). */
   excludeFields?: string[]
-  /** Source ref to watch — shallow watch re-baselines on `.value` reassignment (async fetch); in-place mutations don't fire. */
+  /** Source ref — shallow watch re-baselines on `.value` reassignment; in-place mutations don't fire. */
   source?: Ref<unknown>
 }
 

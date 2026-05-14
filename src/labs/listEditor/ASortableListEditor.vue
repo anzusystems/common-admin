@@ -390,7 +390,7 @@ const {
   },
 })
 
-// Stacked-editor registry: outer collects movedCount + hasChanges from embedded children for the shared toolbar counter.
+// Stacked-editor registry: outer collects movedCount + hasChanges from embedded children for the toolbar counter.
 // shallowReactive preserves ComputedRef identity (no auto-unwrap).
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const childContributions = props.embedded
