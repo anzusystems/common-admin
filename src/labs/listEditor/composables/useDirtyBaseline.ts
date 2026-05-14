@@ -2,20 +2,9 @@ import { ref, watch, type Ref } from 'vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
 export interface UseDirtyBaselineOptions {
-  /**
-   * Field names to strip from item payload before hashing. Useful when the
-   * consumer rewrites fields as a side effect of other operations (e.g. flat
-   * sortable rewrites `[positionField]` on every row whose index shifts after
-   * a move, nested sortable rewrites `[positionField, parentField]`) — those
-   * rewrites shouldn't flag unchanged rows as dirty.
-   */
+  /** Field names stripped from the hash — for fields rewritten as a side effect (e.g. positionField on a move). */
   excludeFields?: string[]
-  /**
-   * Source ref to watch for reassignments. When provided, a shallow watch
-   * captures the baseline on every `.value` reassignment (async fetch arriving
-   * is the canonical case). In-place mutations (push/splice) don't fire the
-   * watch, so a user-added row stays dirty against the prior baseline.
-   */
+  /** Source ref to watch — shallow watch re-baselines on `.value` reassignment (async fetch); in-place mutations don't fire. */
   source?: Ref<unknown>
 }
 
@@ -28,22 +17,10 @@ export interface UseDirtyBaselineApi<TItem> {
 }
 
 /**
- * Dirty-baseline tracking shared across list-editor variants. Captures a
- * content snapshot (key → stringified payload) so per-row "unsaved" markers
- * can be derived by diffing current data against the baseline.
- *
- * Pure data behaviour — no DOM, no emits, no editor-specific state. Consumers
- * (the components) own any related state like `movedKeys` and invoke
- * `captureDirtyBaseline()` themselves when resetting; splitting that out
- * keeps the composable focused on a single responsibility.
- *
- * Note: the initial baseline is captured the first time this function runs,
- * reading from `getEntries()` immediately. Callers that want to reset the
- * baseline later (e.g. after a successful parent-form save) call
- * `captureDirtyBaseline()` again. When `options.source` is provided, a shallow
- * watch re-captures the baseline on every source ref reassignment — covers the
- * async-load-fills-empty-editor case without conflating user-driven in-place
- * pushes (Vue 3 shallow watch only fires on `.value` replacement).
+ * Dirty-baseline tracking for list-editor variants. Snapshots `key → stringified payload`;
+ * `isItemDirty` derives the per-row unsaved marker by diffing.
+ * Initial snapshot is eager. Pass `options.source` for an async-loaded model — the shallow
+ * watch re-baselines on `.value` reassignment (typical fetch landing).
  */
 export function useDirtyBaseline<TItem extends Record<string, any>>(
   getEntries: () => Array<{ key: ListEditorKey; data: TItem }>,
@@ -51,19 +28,10 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
 ): UseDirtyBaselineApi<TItem> {
   const excludeFields = options.excludeFields ?? []
   const hasExcludes = excludeFields.length > 0
-  // Pre-build the exclude lookup once at setup. With a typical exclude list
-  // of 1-2 fields the savings are tiny, but the Set is referenced from the
-  // hot stringify path so it's worth the one-time cost.
   const excludeSet = hasExcludes ? new Set(excludeFields) : null
 
-  // `JSON.stringify` per-call is intentionally NOT memoized by data
-  // reference. Some consumers mutate item fields in place (e.g. a v-model
-  // bound to `data.title` inside an inline form) — that mutation doesn't
-  // change the object identity, so a WeakMap cache would return a stale
-  // dirty result. Correctness wins; the per-call cost is bounded by item
-  // size and only pays at render time. For very large forms (100+ rows of
-  // deeply-nested objects) this dominates GC; profile and revisit if it
-  // shows up in a flame graph for a real consumer.
+  // Not memoized by reference — consumers mutate item fields in place via inline-form v-models;
+  // a WeakMap cache would return stale dirty results.
   const stringifyContent = (data: TItem): string => {
     if (!hasExcludes) return JSON.stringify(data)
     const copy = { ...data } as Record<string, unknown>
@@ -101,16 +69,10 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
 
   captureDirtyBaseline()
 
-  // Editor mounted with empty model: capture baseline on the next source-ref
-  // reassignment (async fetch arriving). Vue's shallow watch only fires on
-  // `.value` replacement, not on in-place push/splice — so a user-driven first
-  // add stays dirty. Stops itself once the baseline has anything in it.
   if (options.source && dirtyBaseline.value.size === 0) {
     const stopInitialFillWatch = watch(options.source, () => {
       captureDirtyBaseline()
-      if (dirtyBaseline.value.size > 0) {
-        stopInitialFillWatch()
-      }
+      if (dirtyBaseline.value.size > 0) stopInitialFillWatch()
     })
   }
 

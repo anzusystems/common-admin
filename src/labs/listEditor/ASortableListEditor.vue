@@ -291,12 +291,7 @@ const editor = useListEditor<TItem>(modelValue, {
 
 const expandedKeys = ref<Set<ListEditorKey>>(new Set())
 
-// Initial snapshot of each item, keyed by row key. Compared against current data to
-// detect "dirty" (unsaved) rows. Reset externally after a successful parent-form save.
-// `position` is deliberately stripped out: drag-drop rewrites it on every row
-// whose flat index shifts as a side-effect, and flagging those unmoved rows
-// as dirty would paint ghost "unsaved" markers. The per-row visual cue is
-// what matters; position data still flows to the parent on apply.
+// `positionField` excluded: drag rewrites it on every shifted row, would falsely flag unmoved rows dirty.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(
   () =>
@@ -307,10 +302,6 @@ const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TI
   { excludeFields: [props.positionField], source: modelValue },
 )
 
-// Keys the user has actively moved during this reorder session. Clearing
-// this set is part of "mark current data as saved" — paired with
-// captureDirtyBaseline in the exposed resetDirtyBaseline so the orange
-// badges go away when consumers confirm a server save.
 const movedKeys = ref<Set<ListEditorKey>>(new Set())
 
 const resetDirtyBaseline = () => {
@@ -399,17 +390,8 @@ const {
   },
 })
 
-// Cross-editor pending-changes aggregation. When this editor is the outer
-// (non-embedded) one in a stacked-editor setup, it provides a registry that
-// embedded children push their own movedCount + hasPendingChanges into.
-// The toolbar's "N pending changes" then totals across all levels — drag a
-// question OR drag an answer inside an open question and the same counter
-// increments either way. When this editor IS embedded, it injects the
-// nearest parent's registry and registers itself.
-// shallowReactive (not reactive) so the stored ComputedRef objects don't get
-// auto-unwrapped — we read `.value` on them inside the aggregator computeds.
-// `embedded` is a setup-time decision; it doesn't flip during a component's
-// lifetime so reading it once at root scope is intentional.
+// Stacked-editor registry: outer collects movedCount + hasChanges from embedded children for the shared toolbar counter.
+// shallowReactive preserves ComputedRef identity (no auto-unwrap).
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const childContributions = props.embedded
   ? null

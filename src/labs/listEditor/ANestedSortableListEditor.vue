@@ -71,11 +71,7 @@ export interface DragState {
 
 export type ReorderMode = 'view' | 'reorder'
 
-// Public slot surface. Same general shape as the flat sortable variant but
-// row-level slots also carry depth/parent/childrenAllowed/firstInParent etc.
-// from the nested decorator, plus the actions bundle gains addChild,
-// toggleDetail, indent, outdent. Hoisted to top-level so vite-plugin-dts can
-// include them in the .d.ts.
+// Hoisted for vite-plugin-dts d.ts rollup.
 export interface RowActions<TItem> {
   edit: () => void
   save: () => Promise<void> | void
@@ -295,12 +291,8 @@ const effectiveCloseVariant = computed<'icon' | 'labeled'>(() => {
   return isNarrow.value ? 'icon' : 'labeled'
 })
 
-// Tree-level expand/collapse — controls which descendants are visible in the flat
-// viewItems list. Auto-populated at mount for every node that has children.
 const childrenExpandedKeys = ref<Set<ListEditorKey>>(new Set())
-// Row-level readonly detail visibility — used in readonly mode with #item-readonly slot.
-// Independent of children expansion, so a node can have its subtree visible while its
-// own detail body is collapsed, and vice versa.
+// Readonly detail body visibility — independent of subtree expansion.
 const detailExpandedKeys = ref<Set<ListEditorKey>>(new Set())
 
 const initChildrenExpanded = (tree: NestedTree<TItem>) => {
@@ -314,7 +306,6 @@ const initChildrenExpanded = (tree: NestedTree<TItem>) => {
   }
   walk(tree.children)
 }
-// One-shot init at setup time — subsequent expansions are user-driven.
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
 initChildrenExpanded(modelValue.value)
 
@@ -328,12 +319,7 @@ const editor = useNestedListEditor<TItem>(modelValue, {
   expandedKeys: childrenExpandedKeys,
 })
 
-// Dirty baseline — compares content (title, user-editable fields) against the
-// initial snapshot. `position` and `parent` are deliberately stripped out:
-// drag-drop rewrites those on side-effect rows (siblings shifted to keep the
-// position sequence consistent), and flagging those unmoved rows as dirty
-// would produce ghost "unsaved" markers everywhere. The consumer saves the
-// whole tree on apply anyway — we only care about the per-row visual cue.
+// `positionField` and `parentField` excluded: drag rewrites them on shifted siblings, would falsely flag unmoved rows.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(
   () => {
@@ -350,29 +336,16 @@ const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TI
   { excludeFields: [props.positionField, props.parentField], source: modelValue },
 )
 
-// Reorder snapshot — captures the tree at reorder-start so we can restore it
-// on cancel. Dirty/moved detection does NOT derive from the snapshot: we
-// used to compare each row's current parent + sibling-index against snapshot
-// values, which flagged unmoved rows as "moved" whenever a neighbour shifted
-// sibling positions as a side-effect. Instead we track explicit user actions
-// in `movedKeys` below — only rows the user actively moved get marked.
+// Snapshot for reorder-cancel restore only; dirty detection uses movedKeys (explicit user actions),
+// not snapshot diff (sibling shifts would falsely flag unmoved rows).
 const snapshot = shallowRef<NestedTree<TItem> | null>(null)
-// Keys the user has actively moved during this reorder session (drag, arrow
-// buttons, indent/outdent). Clearing this set is paired with
-// captureDirtyBaseline in the exposed resetDirtyBaseline cycle — consumers
-// expect the orange badges to go away once a server save confirms.
 const movedKeys = ref<Set<ListEditorKey>>(new Set())
 
 const resetDirtyBaseline = () => {
   captureDirtyBaseline()
   movedKeys.value = new Set()
 }
-// Mark the row AND every descendant. Moving a parent visually carries its
-// whole subtree to the new location, so the children are "moved" too from
-// the user's perspective — even though they stayed in place relative to
-// their parent. Without this, only the grabbed parent would light up orange
-// and its descendants would silently travel along, which reads as missing
-// feedback when nested trees are moved around.
+// Marks row + every descendant — moving a parent visually carries its subtree.
 const markMoved = (key: ListEditorKey) => {
   const { node } = editor.findNode(key)
   if (!node) {
@@ -386,10 +359,7 @@ const markMoved = (key: ListEditorKey) => {
   collect(node)
 }
 
-// Decoupled dirty pass — see AListEditor for rationale. Walk the tree once
-// to collect every dirty key; viewItemsDecorated then reads dirtyKeys.has()
-// instead of calling isItemDirty inline so flag-only re-renders skip the
-// stringify pass.
+// One-pass dirty-key computation so per-row decorator re-renders avoid the stringify cost.
 const dirtyKeys = computed<Set<ListEditorKey>>(() => {
   const out = new Set<ListEditorKey>()
   const walk = (nodes: typeof modelValue.value.children) => {
@@ -403,10 +373,6 @@ const dirtyKeys = computed<Set<ListEditorKey>>(() => {
   return out
 })
 
-// Per-key decorator cache — see AListEditor for rationale. The base view item
-// for nested already carries a lot of stable shape info (parent, depth,
-// childrenCount, sibling-position flags, *Allowed); we only need to invalidate
-// when those, or any per-row flag, changes.
 const decoratorCache = new Map<ListEditorKey, DecoratedNestedViewItem<TItem>>()
 const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
   const next: DecoratedNestedViewItem<TItem>[] = []
@@ -533,9 +499,7 @@ const {
   canEnterReorder,
   onEnter: () => {
     clearEditing()
-    // Expand every branch so the user can see (and reach) every row before
-    // picking something to drag — otherwise collapsed subtrees would be invisible
-    // reorder targets.
+    // Expand all branches so every row is a reachable drag target.
     for (const k of expandableKeys.value) childrenExpandedKeys.value.add(k)
     nextTick(() => {
       if (dragEnabled.value) initSortables()

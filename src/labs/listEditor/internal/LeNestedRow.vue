@@ -8,13 +8,7 @@ import type {
   ListEditorValidationState,
 } from '@/labs/listEditor/types/listEditorTypes'
 
-// Recursive nested row. Renders a single row plus — when expanded — a group of
-// child rows through self-reference, so trees of arbitrary depth share a single
-// template. All presentation flags + event callbacks are passed down as the
-// `context` and `callbacks` prop bundles (avoids 20+ individual prop-drills).
-//
-// Types intentionally use `any` on the interior: the strong typing lives on the
-// public `ANestedSortableListEditor` wrapper, where generics actually matter.
+// Self-recursive row. Interior uses `any` — strong typing lives on the public ANestedSortableListEditor wrapper.
 
 export type Props = {
   vi: any
@@ -25,10 +19,7 @@ export type Props = {
 }
 const props = defineProps<Props>()
 
-// Self-reference cast to any breaks the TypeScript circular type inference that
-// Vue's template compiler triggers when a `<script setup generic>` component
-// imports itself for recursion. The runtime behaviour is unaffected.
-
+// `as any` breaks Vue's circular type inference on self-import.
 const LeNestedRow = LeNestedRowSelf as any
 
 const { t } = useI18n()

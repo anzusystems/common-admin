@@ -27,10 +27,7 @@ export interface DecoratedViewItem<T> extends ListViewItem<T> {
   dirty: boolean
 }
 
-// Public slot scope shapes — mirror what `buildSlotProps(vi)` actually emits.
-// Hoisted to the top-level so vite-plugin-dts can include them in the .d.ts;
-// putting them after `defineProps`/`defineEmits` would emit `private name`
-// errors during d.ts rollup.
+// Hoisted for vite-plugin-dts d.ts rollup.
 export interface RowActions<TItem> {
   edit: () => void
   save: () => Promise<void> | void
@@ -51,11 +48,7 @@ export interface RowSlotProps<TItem extends Record<string, any>> {
   expanded: boolean
   editing: boolean
   dirty: boolean
-  /**
-   * Aliases `dirty` on the flat editor (no reorder mode → no `moved` to OR
-   * with). Mirrors the field name on the sortable + nested variants so a
-   * consumer slot template can use the same name across all three editors.
-   */
+  /** Aliases `dirty` here (no reorder mode → no `moved` to OR). Same field name as on sortable/nested variants. */
   unsaved: boolean
   touch: boolean
   actions: RowActions<TItem>
@@ -184,7 +177,6 @@ const rootEl = useTemplateRef<HTMLElement>('rootEl')
 
 const isTouch = computed<boolean>(() => display.platform.value.touch)
 
-// Options are captured once at setup; list-editor config is expected to be stable.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const editor = useListEditor<TItem>(modelValue, {
   keyField: props.keyField,
