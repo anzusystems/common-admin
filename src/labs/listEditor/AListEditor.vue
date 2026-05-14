@@ -202,11 +202,13 @@ const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'
 
 // Initial snapshot of each item, keyed by row key. Compared against current data to
 // detect "dirty" (unsaved) rows. Reset externally after a successful parent-form save.
-const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(() =>
-  modelValue.value.map((item) => ({
-    key: item[props.keyField] as ListEditorKey,
-    data: item,
-  })),
+const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(
+  () =>
+    modelValue.value.map((item) => ({
+      key: item[props.keyField] as ListEditorKey,
+      data: item,
+    })),
+  { source: modelValue },
 )
 
 const {

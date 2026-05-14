@@ -347,7 +347,7 @@ const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TI
     walk(modelValue.value.children)
     return out
   },
-  { excludeFields: [props.positionField, props.parentField] },
+  { excludeFields: [props.positionField, props.parentField], source: modelValue },
 )
 
 // Reorder snapshot — captures the tree at reorder-start so we can restore it

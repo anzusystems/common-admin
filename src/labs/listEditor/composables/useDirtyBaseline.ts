@@ -10,6 +10,13 @@ export interface UseDirtyBaselineOptions {
    * rewrites shouldn't flag unchanged rows as dirty.
    */
   excludeFields?: string[]
+  /**
+   * Source ref to watch for reassignments. When provided, a shallow watch
+   * captures the baseline on every `.value` reassignment (async fetch arriving
+   * is the canonical case). In-place mutations (push/splice) don't fire the
+   * watch, so a user-added row stays dirty against the prior baseline.
+   */
+  source?: Ref<unknown>
 }
 
 export interface UseDirtyBaselineApi<TItem> {
@@ -33,9 +40,10 @@ export interface UseDirtyBaselineApi<TItem> {
  * Note: the initial baseline is captured the first time this function runs,
  * reading from `getEntries()` immediately. Callers that want to reset the
  * baseline later (e.g. after a successful parent-form save) call
- * `captureDirtyBaseline()` again. If the eager snapshot is empty (async-loaded
- * model patched in after the fetch resolves), we re-capture once on first
- * non-empty so existing rows don't all read as "dirty".
+ * `captureDirtyBaseline()` again. When `options.source` is provided, a shallow
+ * watch re-captures the baseline on every source ref reassignment — covers the
+ * async-load-fills-empty-editor case without conflating user-driven in-place
+ * pushes (Vue 3 shallow watch only fires on `.value` replacement).
  */
 export function useDirtyBaseline<TItem extends Record<string, any>>(
   getEntries: () => Array<{ key: ListEditorKey; data: TItem }>,
@@ -93,16 +101,17 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
 
   captureDirtyBaseline()
 
-  if (dirtyBaseline.value.size === 0) {
-    const stopInitialFillWatch = watch(
-      () => getEntries().length,
-      (count) => {
-        if (count > 0) {
-          captureDirtyBaseline()
-          stopInitialFillWatch()
-        }
-      },
-    )
+  // Editor mounted with empty model: capture baseline on the next source-ref
+  // reassignment (async fetch arriving). Vue's shallow watch only fires on
+  // `.value` replacement, not on in-place push/splice — so a user-driven first
+  // add stays dirty. Stops itself once the baseline has anything in it.
+  if (options.source && dirtyBaseline.value.size === 0) {
+    const stopInitialFillWatch = watch(options.source, () => {
+      captureDirtyBaseline()
+      if (dirtyBaseline.value.size > 0) {
+        stopInitialFillWatch()
+      }
+    })
   }
 
   return {

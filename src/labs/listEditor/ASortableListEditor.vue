@@ -304,7 +304,7 @@ const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TI
       key: item[props.keyField] as ListEditorKey,
       data: item,
     })),
-  { excludeFields: [props.positionField] },
+  { excludeFields: [props.positionField], source: modelValue },
 )
 
 // Keys the user has actively moved during this reorder session. Clearing
