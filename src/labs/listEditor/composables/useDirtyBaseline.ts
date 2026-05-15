@@ -70,7 +70,7 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
   captureDirtyBaseline()
 
   if (options.source) {
-    const stopInitialFillWatch = watch(options.source, () => {      
+    const stopInitialFillWatch = watch(options.source, () => {
       const newKeys = new Set(getEntries().map((e) => e.key))
       const baselineKeys = dirtyBaseline.value
       if (newKeys.size === baselineKeys.size && [...newKeys].every((k) => baselineKeys.has(k))) return
