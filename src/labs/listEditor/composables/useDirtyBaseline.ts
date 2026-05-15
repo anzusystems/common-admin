@@ -69,10 +69,10 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
 
   captureDirtyBaseline()
 
-  if (options.source && dirtyBaseline.value.size === 0) {
+  if (options.source) {
     const stopInitialFillWatch = watch(options.source, () => {
       captureDirtyBaseline()
-      if (dirtyBaseline.value.size > 0) stopInitialFillWatch()
+      stopInitialFillWatch()
     })
   }
 
