@@ -73,7 +73,8 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
     const stopInitialFillWatch = watch(options.source, () => {
       const newKeys = new Set(getEntries().map((e) => e.key))
       const baselineKeys = dirtyBaseline.value
-      if (newKeys.size === baselineKeys.size && [...newKeys].every((k) => baselineKeys.has(k))) return
+      if (newKeys.size === baselineKeys.size && [...newKeys].every((k) => baselineKeys.has(k)))
+        return
       captureDirtyBaseline()
       stopInitialFillWatch()
     })
