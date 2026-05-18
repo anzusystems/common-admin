@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1778753782",
+  "version": "1.47.0-beta.dev-1778753785",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "@anzusystems/common-admin": "workspace:*",
-    "@intlify/unplugin-vue-i18n": "^11.2.1",
+    "@intlify/unplugin-vue-i18n": "^11.2.3",
     "@kyvg/vue3-notification": "^3.4.2",
     "@mdi/font": "^7.4.47",
     "@microsoft/api-extractor": "^7.58.7",
@@ -114,7 +114,7 @@
     "vitest": "^4.1.6",
     "vue": "3.5.34",
     "vue-eslint-parser": "^10.4.0",
-    "vue-i18n": "11.4.2",
+    "vue-i18n": "11.4.4",
     "vue-router": "5.0.7",
     "vue-tsc": "3.2.9",
     "vuetify": "4.0.7",
