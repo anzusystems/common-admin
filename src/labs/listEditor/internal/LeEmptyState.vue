@@ -39,7 +39,7 @@ const { t } = useI18n()
       prepend-icon="mdi-plus"
       @click="$emit('add')"
     >
-      {{ t('common.sortable.addFirst') }}
+      {{ addLabel || t('common.sortable.addFirst') }}
     </VBtn>
   </div>
 </template>

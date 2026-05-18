@@ -1613,26 +1613,13 @@ defineExpose({
     display: none;
   }
 
-  // Floating-header variant — when the only thing in the header is the
-  // Reorder button, drop the band entirely and float the button absolutely
-  // over the editor's top-right corner so we don't waste ~50 px of vertical
-  // rhythm on an empty bar.
-  &--header-floating .a-le-card {
-    position: relative;
-  }
-
+  // Header-only-with-reorder variant — when there's no title and no header
+  // slot, the header still renders but as a slim band right-aligning just
+  // the Preskupiť button.
   &--header-floating .a-le-header {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    padding: 0;
-    background: transparent;
-    border: none;
-    z-index: 2;
-  }
-
-  &--header-floating .a-le-header-actions {
-    margin-left: 0;
+    justify-content: flex-end;
+    padding: 6px 8px;
+    min-height: 0;
   }
 
   // Embedded variant — this editor sits inside another editor's row. Drop
