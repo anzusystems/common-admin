@@ -480,18 +480,12 @@ const headerVisible = computed<boolean>(
     ),
 )
 
-// Editor band-only header — true when the only thing in the header is the
-// reorder button (no title, no slot). Lets the template float the button
-// over the editor's top-right corner instead of reserving an empty band.
+// Editor band-only header — true when the header has substantive content
+// (title or custom header slot). When false, the header still renders but
+// as a slim band right-aligning just the reorder/apply controls — and stays
+// that height across idle ↔ reorder so the layout doesn't jump on toggle.
 const headerHasContent = computed<boolean>(
-  (): boolean =>
-    !!(
-      props.title ||
-      slots.header ||
-      slots['reorder-toggle'] ||
-      slots['view-body'] ||
-      (reorderMode.value && !props.embedded)
-    ),
+  (): boolean => !!(props.title || slots.header || slots['reorder-toggle'] || slots['view-body']),
 )
 
 // Per-row edit footer (Save + Cancel) is only meaningful if the consumer wants a
