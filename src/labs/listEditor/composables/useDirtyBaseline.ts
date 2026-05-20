@@ -14,6 +14,7 @@ export interface UseDirtyBaselineApi<TItem> {
   rebaselineKey: (key: ListEditorKey) => void
   isItemDirty: (key: ListEditorKey, data: TItem) => boolean
   stringifyContent: (data: TItem) => string
+  ignoreNextSourceChange: () => void
 }
 
 /**
@@ -69,12 +70,22 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
 
   captureDirtyBaseline()
 
+  let ignoreNext = false
+  const ignoreNextSourceChange = () => {
+    ignoreNext = true
+  }
+
   if (options.source) {
     const stopInitialFillWatch = watch(options.source, () => {
-      const newKeys = new Set(getEntries().map((e) => e.key))
-      const baselineKeys = dirtyBaseline.value
-      if (newKeys.size === baselineKeys.size && [...newKeys].every((k) => baselineKeys.has(k)))
+      if (ignoreNext) {
+        ignoreNext = false
         return
+      }
+      if (dirtyBaseline.value.size > 0) {
+        stopInitialFillWatch()
+        return
+      }
+      if (getEntries().length === 0) return
       captureDirtyBaseline()
       stopInitialFillWatch()
     })
@@ -86,5 +97,6 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
     rebaselineKey,
     isItemDirty,
     stringifyContent,
+    ignoreNextSourceChange,
   }
 }

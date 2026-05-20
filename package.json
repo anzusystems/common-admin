@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1778753787",
+  "version": "1.47.0-beta.dev-1778753790",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -101,7 +101,7 @@
     "sass": "1.99.0",
     "socket.io-client": "4.8.3",
     "sortablejs": "^1.15.7",
-    "stylelint": "17.11.1",
+    "stylelint": "17.12.0",
     "stylelint-config-recommended-vue": "^1.6.1",
     "stylelint-config-standard-scss": "^17.0.0",
     "typescript": "5.9.3",

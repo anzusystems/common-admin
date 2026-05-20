@@ -292,15 +292,17 @@ const editor = useListEditor<TItem>(modelValue, {
 const expandedKeys = ref<Set<ListEditorKey>>(new Set())
 
 // `positionField` excluded: drag rewrites it on every shifted row, would falsely flag unmoved rows dirty.
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(
-  () =>
-    modelValue.value.map((item) => ({
-      key: item[props.keyField] as ListEditorKey,
-      data: item,
-    })),
-  { excludeFields: [props.positionField], source: modelValue },
-)
+
+const { captureDirtyBaseline, rebaselineKey, isItemDirty, ignoreNextSourceChange } =
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  useDirtyBaseline<TItem>(
+    () =>
+      modelValue.value.map((item) => ({
+        key: item[props.keyField] as ListEditorKey,
+        data: item,
+      })),
+    { excludeFields: [props.positionField], source: modelValue },
+  )
 
 const movedKeys = ref<Set<ListEditorKey>>(new Set())
 
@@ -364,6 +366,7 @@ const {
   modelValue,
   cloneModel: (m) => cloneDeep(m) as TItem[],
   applyModel: (m) => {
+    ignoreNextSourceChange()
     modelValue.value = m
   },
   canEnterReorder,

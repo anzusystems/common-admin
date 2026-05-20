@@ -320,21 +320,23 @@ const editor = useNestedListEditor<TItem>(modelValue, {
 })
 
 // `positionField` and `parentField` excluded: drag rewrites them on shifted siblings, would falsely flag unmoved rows.
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(
-  () => {
-    const out: Array<{ key: ListEditorKey; data: TItem }> = []
-    const walk = (nodes: NestedTreeNode<TItem>[]) => {
-      for (const n of nodes) {
-        out.push({ key: n.data[props.keyField] as ListEditorKey, data: n.data })
-        if (n.children && n.children.length) walk(n.children)
+
+const { captureDirtyBaseline, rebaselineKey, isItemDirty, ignoreNextSourceChange } =
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  useDirtyBaseline<TItem>(
+    () => {
+      const out: Array<{ key: ListEditorKey; data: TItem }> = []
+      const walk = (nodes: NestedTreeNode<TItem>[]) => {
+        for (const n of nodes) {
+          out.push({ key: n.data[props.keyField] as ListEditorKey, data: n.data })
+          if (n.children && n.children.length) walk(n.children)
+        }
       }
-    }
-    walk(modelValue.value.children)
-    return out
-  },
-  { excludeFields: [props.positionField, props.parentField], source: modelValue },
-)
+      walk(modelValue.value.children)
+      return out
+    },
+    { excludeFields: [props.positionField, props.parentField], source: modelValue },
+  )
 
 // Snapshot for reorder-cancel restore only; dirty detection uses movedKeys (explicit user actions),
 // not snapshot diff (sibling shifts would falsely flag unmoved rows).
@@ -494,6 +496,7 @@ const {
   modelValue,
   cloneModel: (m) => cloneDeep(m) as NestedTree<TItem>,
   applyModel: (m) => {
+    ignoreNextSourceChange()
     modelValue.value = m
   },
   canEnterReorder,
