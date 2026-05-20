@@ -107,7 +107,10 @@
 
 .a-le-empty-text {
   font-size: 0.875rem;
-  color: var(--le-on-surface-variant);
+
+  // Explicit readable gray — the theme's on-surface-variant resolves too
+  // light here, making this hint text nearly invisible on white.
+  color: rgb(95 99 104);
   margin: 0 0 12px;
 }
 

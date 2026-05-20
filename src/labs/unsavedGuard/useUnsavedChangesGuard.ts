@@ -8,6 +8,11 @@ import {
   type Ref,
 } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
+import {
+  provideUnsavedSectionRegistry,
+  type UnsavedSectionDescriptor,
+  type UnsavedSectionSource,
+} from '@/labs/unsavedGuard/useUnsavedSection'
 
 type UnsavedSource = Ref<boolean | Set<unknown> | unknown[] | null | undefined>
 
@@ -33,10 +38,24 @@ export interface UseUnsavedChangesGuardOptions {
    * confirms via the confirm dialog or via `acknowledge()`.
    */
   guardDialogModel?: Ref<boolean>
+  /**
+   * Named sections owned by the guard host component itself. Descendants use
+   * `useUnsavedSection` instead — but a component can't `inject` its own
+   * `provide`, so when the host *is* the section owner (e.g. a dialog), pass
+   * the sections here.
+   */
+  ownSections?: UnsavedSectionSource
 }
 
 export interface UseUnsavedChangesGuardApi {
   hasUnsavedChanges: ComputedRef<boolean>
+  /**
+   * Labels of the dirty sections registered by descendants via
+   * `useUnsavedSection`. Bind to `AUnsavedConfirmDialog`'s `dirtyLabels` prop
+   * so the dialog names *which* parts are unsaved. Empty when no descendant
+   * registered a section (dialog falls back to the generic message).
+   */
+  dirtyLabels: ComputedRef<string[]>
   /**
    * v-model-bound to the confirm dialog. When the guard wants to ask the user
    * to confirm leaving, it sets this to true. The confirm dialog reads it.
@@ -73,8 +92,26 @@ const resolveBool = (v: boolean | Ref<boolean> | undefined, fallback: boolean): 
 export function useUnsavedChangesGuard(
   options: UseUnsavedChangesGuardOptions,
 ): UseUnsavedChangesGuardApi {
-  const hasUnsavedChanges = computed<boolean>(() =>
-    options.sources.some((s) => isTruthySource(s.value)),
+  // Provide a section registry so descendants can name their dirty sections
+  // via `useUnsavedSection`. The dialog reads `dirtyLabels` from this.
+  const sectionRegistry = provideUnsavedSectionRegistry()
+
+  // The host component can't inject its own provide, so register its own
+  // sections directly.
+  if (options.ownSections) {
+    const ownSections = options.ownSections
+    const id = Symbol('unsaved.section.own')
+    const normalized = computed<UnsavedSectionDescriptor[]>(() => {
+      const resolved = ownSections()
+      return Array.isArray(resolved) ? resolved : [resolved]
+    })
+    sectionRegistry.register(id, normalized)
+  }
+
+  const hasUnsavedChanges = computed<boolean>(
+    () =>
+      options.sources.some((s) => isTruthySource(s.value)) ||
+      sectionRegistry.dirtyLabels.value.length > 0,
   )
 
   const promptOpen = ref<boolean>(false)
@@ -160,6 +197,7 @@ export function useUnsavedChangesGuard(
 
   return {
     hasUnsavedChanges,
+    dirtyLabels: sectionRegistry.dirtyLabels,
     promptOpen,
     resolvePrompt,
     acknowledge,

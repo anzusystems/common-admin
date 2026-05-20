@@ -47,6 +47,8 @@
   "unsavedChanges": {
     "title": "Neuložené zmeny",
     "body": "Máte neuložené zmeny. Naozaj chcete odísť?",
+    "sectionsIntro": "Neuložené zmeny máte v týchto častiach:",
+    "leaveQuestion": "Naozaj chcete odísť?",
     "stay": "Zostať",
     "discard": "Odísť aj tak"
   },

@@ -1,6 +1,6 @@
 {
   "name": "@anzusystems/common-admin",
-  "packageManager": "yarn@4.14.1",
+  "packageManager": "yarn@4.15.0",
   "files": [
     "dist",
     "src/eslint"
@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1778753786",
+  "version": "1.47.0-beta.dev-1778753787",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -70,9 +70,9 @@
     "@types/sortablejs": "^1.15.9",
     "@types/webfontloader": "^1.6.38",
     "@vitejs/plugin-vue": "^6.0.7",
-    "@vitest/browser": "^4.1.6",
-    "@vitest/browser-playwright": "^4.1.6",
-    "@vitest/ui": "^4.1.6",
+    "@vitest/browser": "^4.1.7",
+    "@vitest/browser-playwright": "^4.1.7",
+    "@vitest/ui": "^4.1.7",
     "@vue/compiler-dom": "3.5.34",
     "@vue/eslint-config-typescript": "^14.7.0",
     "@vue/language-server": "3.3.1",
@@ -111,7 +111,7 @@
     "vite": "7.3.3",
     "vite-plugin-vuetify": "^2.1.3",
     "vitepress": "1.6.4",
-    "vitest": "^4.1.6",
+    "vitest": "^4.1.7",
     "vue": "3.5.34",
     "vue-eslint-parser": "^10.4.0",
     "vue-i18n": "11.4.4",

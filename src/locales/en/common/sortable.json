@@ -47,6 +47,8 @@
   "unsavedChanges": {
     "title": "Unsaved changes",
     "body": "You have unsaved changes. Are you sure you want to leave?",
+    "sectionsIntro": "You have unsaved changes in these sections:",
+    "leaveQuestion": "Are you sure you want to leave?",
     "stay": "Stay",
     "discard": "Leave anyway"
   },
