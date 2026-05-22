@@ -333,6 +333,13 @@
   flex-shrink: 0;
 }
 
+// Dot-only variant (chips mode) — drops the label text + padding, leaving
+// just the inline warning dot.
+.a-le-unsaved-label--dot {
+  gap: 0;
+  padding: 0;
+}
+
 .a-le-status {
   display: inline-flex;
   align-items: center;
@@ -682,9 +689,24 @@
   .a-le-row {
     border-bottom: none;
     background: var(--le-primary-container);
-    border-radius: var(--le-radius-full);
+    border-radius: var(--le-radius-pill);
     flex: 0 0 auto;
     max-width: 100%;
+  }
+
+  // Unsaved in chips mode — warning-tinted pill + the inline orange dot. The
+  // 4 px left rail is dropped (a square bar reads badly on a rounded pill);
+  // the header stays transparent so the row's rounded tint shows through.
+  .a-le-row--unsaved {
+    background: var(--le-warning-container);
+  }
+
+  .a-le-row--unsaved::before {
+    display: none;
+  }
+
+  .a-le-row--unsaved .a-le-row-header {
+    background: transparent;
   }
 
   .a-le-row-main {
@@ -711,7 +733,7 @@
     width: auto;
     border-top: none;
     border: 1px dashed var(--le-border);
-    border-radius: var(--le-radius-full);
+    border-radius: var(--le-radius-pill);
     padding: 4px 12px;
     font-size: 0.82rem;
     background: transparent;

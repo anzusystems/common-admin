@@ -1203,7 +1203,10 @@ defineExpose({
                   {{ resolveCompactText(vi.raw, vi.key) }}
                 </span>
               </slot>
-              <LeUnsavedLabel v-if="vi.unsaved" />
+              <LeUnsavedLabel
+                v-if="vi.unsaved"
+                :dot-only="chips"
+              />
             </div>
 
             <div
@@ -1675,7 +1678,9 @@ defineExpose({
   // in AListEditor), `drag-handle` shrinks to match the pill height.
   &--chips &__rows {
     display: flex;
-    flex-wrap: wrap;
+
+    // Reset the base column direction — chips flow inline and wrap.
+    flex-flow: row wrap;
     gap: 6px;
     flex: 1 1 100%;
   }

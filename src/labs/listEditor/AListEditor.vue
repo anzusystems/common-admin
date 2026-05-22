@@ -672,7 +672,10 @@ defineExpose({
                   {{ resolveCompactText(vi.raw, vi.key) }}
                 </span>
               </slot>
-              <LeUnsavedLabel v-if="vi.dirty" />
+              <LeUnsavedLabel
+                v-if="vi.dirty"
+                :dot-only="chips"
+              />
             </div>
 
             <div
