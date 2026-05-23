@@ -78,6 +78,10 @@
   justify-content: center;
   padding: 32px 16px;
 
+  &--empty {
+    padding: 12px 16px;
+  }
+
   &--error {
     padding: 16px;
 
@@ -95,7 +99,7 @@
   align-items: center;
   gap: 8px;
   text-align: center;
-  padding: 16px;
+  padding: 8px;
 }
 
 .a-le-empty-title {
@@ -103,15 +107,6 @@
   font-weight: 500;
   margin: 0;
   color: var(--le-on-surface);
-}
-
-.a-le-empty-text {
-  font-size: 0.875rem;
-
-  // Explicit readable gray — the theme's on-surface-variant resolves too
-  // light here, making this hint text nearly invisible on white.
-  color: rgb(95 99 104);
-  margin: 0 0 12px;
 }
 
 // --- Row primitives ---------------------------------------------------------

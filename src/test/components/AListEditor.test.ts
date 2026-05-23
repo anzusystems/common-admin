@@ -134,20 +134,16 @@ describe('AListEditor', () => {
       expect(err.text()).toContain('Something went wrong')
     })
 
-    it('renders empty state with default title/text', () => {
+    it('renders empty state with default title', () => {
       const { wrapper } = mountEditor([])
       expect(wrapper.find('.a-le-state--empty').exists()).toBe(true)
       expect(wrapper.find('.a-le-empty-title').text()).toBeTruthy()
-      expect(wrapper.find('.a-le-empty-text').text()).toBeTruthy()
+      expect(wrapper.find('.a-le-empty-text').exists()).toBe(false)
     })
 
-    it('renders empty state with custom title/text', () => {
-      const { wrapper } = mountEditor([], {
-        emptyTitle: 'Nothing here',
-        emptyText: 'Add one',
-      })
+    it('renders empty state with custom title', () => {
+      const { wrapper } = mountEditor([], { emptyTitle: 'Nothing here' })
       expect(wrapper.find('.a-le-empty-title').text()).toBe('Nothing here')
-      expect(wrapper.find('.a-le-empty-text').text()).toBe('Add one')
     })
   })
 

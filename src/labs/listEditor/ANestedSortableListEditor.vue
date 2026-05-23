@@ -179,7 +179,6 @@ export interface Props<TItem extends Record<string, any>> {
 
   addLabel?: string | null
   emptyTitle?: string | null
-  emptyText?: string | null
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
@@ -225,7 +224,6 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   getValidationState: undefined,
   addLabel: null,
   emptyTitle: null,
-  emptyText: null,
   disableRowClick: false,
   disableDeleteConfirm: false,
   deleteConfirmTitle: null,
@@ -537,7 +535,6 @@ const addLabelResolved = computed(() =>
   props.addLabel ? t(props.addLabel) : t('common.sortable.add'),
 )
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
-const emptyTextResolved = computed(() => props.emptyText ?? t('common.sortable.emptyText'))
 const deleteConfirmTitleResolved = computed(
   () => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'),
 )
@@ -1612,7 +1609,6 @@ defineExpose({
         >
           <LeEmptyState
             :title="emptyTitleResolved"
-            :text="emptyTextResolved"
             :add-label="addLabelResolved"
             :can-add="canAdd"
             @add="onAddClick"

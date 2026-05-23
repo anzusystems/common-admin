@@ -93,7 +93,6 @@ export interface Props<TItem extends Record<string, any>> {
 
   addLabel?: string | null
   emptyTitle?: string | null
-  emptyText?: string | null
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
@@ -103,6 +102,14 @@ export interface Props<TItem extends Record<string, any>> {
   deleteConfirmText?: string | null
 
   closeVariant?: 'auto' | 'icon' | 'labeled'
+
+  /**
+   * Render every row's `#item` slot expanded by default — no edit pencil, no
+   * inline Save/Cancel footer, no row-click toggle. Use when the editor has
+   * no reorder affordance and the consumer wants all forms visible at once
+   * (e.g. ThirdPartyTracker, bookmarks dialog).
+   */
+  defaultExpanded?: boolean
 
   loadingKeys?: Set<ListEditorKey> | null
 
@@ -133,13 +140,13 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showAddAfterAction: false,
   addLabel: null,
   emptyTitle: null,
-  emptyText: null,
   disableRowClick: false,
   disableDeleteConfirm: false,
   disableUnsaved: false,
   deleteConfirmTitle: null,
   deleteConfirmText: null,
   closeVariant: 'auto',
+  defaultExpanded: false,
   loadingKeys: null,
   getValidationState: undefined,
   onDeleteConfirm: undefined,
@@ -233,7 +240,6 @@ const addLabelResolved = computed(() =>
   props.addLabel ? t(props.addLabel) : t('common.sortable.add'),
 )
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
-const emptyTextResolved = computed(() => props.emptyText ?? t('common.sortable.emptyText'))
 const deleteConfirmTitleResolved = computed(
   () => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'),
 )
@@ -380,6 +386,7 @@ const onExpandClick = (vi: ListViewItem<TItem>) => {
 const isRowClickable = (vi: DecoratedViewItem<TItem>): boolean => {
   if (props.chips) return false
   if (props.disableRowClick) return false
+  if (props.defaultExpanded) return false
   if (props.disabled || props.loading) return false
   if (vi.editing || vi.expanded) return true
   if (!props.readonly && props.showEditButton) return true
@@ -515,7 +522,7 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
   readonly: props.readonly,
   disabled: props.disabled,
   expanded: vi.expanded,
-  editing: vi.editing,
+  editing: vi.editing || props.defaultExpanded,
   dirty: vi.dirty,
   unsaved: vi.dirty,
   touch: isTouch.value,
@@ -627,7 +634,6 @@ defineExpose({
         >
           <LeEmptyState
             :title="emptyTitleResolved"
-            :text="emptyTextResolved"
             :add-label="addLabelResolved"
             :can-add="canAdd"
             @add="onAddClick"
@@ -717,7 +723,7 @@ defineExpose({
                 </VBtn>
                 <template v-else>
                   <VBtn
-                    v-if="showEditButton && canInteract"
+                    v-if="showEditButton && canInteract && !defaultExpanded"
                     icon
                     size="small"
                     variant="tonal"
@@ -791,7 +797,7 @@ defineExpose({
             </div>
           </div>
 
-          <template v-if="vi.editing && $slots.item">
+          <template v-if="(vi.editing || defaultExpanded) && $slots.item">
             <div class="a-le-row-body">
               <div class="a-le-form">
                 <slot
@@ -805,7 +811,7 @@ defineExpose({
               v-bind="buildSlotProps(vi)"
             >
               <div
-                v-if="showInlineSaveFooter"
+                v-if="showInlineSaveFooter && !defaultExpanded"
                 class="a-le-row-footer"
               >
                 <div class="a-le-row-footer-spacer" />
