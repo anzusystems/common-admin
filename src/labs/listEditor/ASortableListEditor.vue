@@ -1739,9 +1739,7 @@ defineExpose({
 
     .a-le-row .a-le-action--edit,
     .a-le-row .a-le-action--delete,
-    .a-le-row .a-le-action--menu,
-    .a-le-row .a-le-action--up,
-    .a-le-row .a-le-action--down {
+    .a-le-row .a-le-action--menu {
       opacity: 1;
     }
   }
