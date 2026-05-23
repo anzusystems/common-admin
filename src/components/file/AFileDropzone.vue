@@ -106,11 +106,6 @@ $class-name-root: 'a-file-dropzone';
     border-radius: 5px;
   }
 
-  &--fill {
-    position: absolute !important;
-    inset: 0;
-  }
-
   &--bg {
     width: 100%;
   }
@@ -123,6 +118,12 @@ $class-name-root: 'a-file-dropzone';
 
   &--small {
     min-height: 70px;
+
+    .text {
+      font-size: 0.75rem;
+      line-height: 1.2;
+      padding: 4px;
+    }
   }
 
   &--default {
@@ -131,6 +132,12 @@ $class-name-root: 'a-file-dropzone';
 
   &--large {
     min-height: 210px;
+  }
+
+  &--fill {
+    position: absolute !important;
+    inset: 0;
+    min-height: 40px;
   }
 
   &--hover-only {

@@ -1662,6 +1662,7 @@ defineExpose({
 
   &--embedded .a-le-header {
     padding: 4px 0 6px;
+    min-height: auto;
     background: transparent;
     border: none;
   }
