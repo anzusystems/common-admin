@@ -239,7 +239,7 @@ __metadata:
     eslint-plugin-oxlint: "npm:1.66.0"
     eslint-plugin-vue: "npm:10.9.1"
     eslint-plugin-vuetify: "npm:^2.7.2"
-    npm-run-all2: "npm:^9.0.0"
+    npm-run-all2: "npm:^9.0.1"
     oxfmt: "npm:^0.51.0"
     oxlint: "npm:1.66.0"
     pinia: "npm:3.0.4"
@@ -7150,9 +7150,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"npm-run-all2@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "npm-run-all2@npm:9.0.0"
+"npm-run-all2@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "npm-run-all2@npm:9.0.1"
   dependencies:
     ansi-styles: "npm:^6.2.1"
     cross-spawn: "npm:^7.0.6"
@@ -7167,7 +7167,7 @@ __metadata:
     npm-run-all2: bin/npm-run-all/index.js
     run-p: bin/run-p/index.js
     run-s: bin/run-s/index.js
-  checksum: 10/ef2967fa88703242a214c2e33045a429083ab98850d952f841348a706963c7086af90385425c1709669e48208de0a288371e9187d83fbc12dfea87d345fd6a99
+  checksum: 10/b57332664facdd43b05f085836b7295ee809b0e3ac762c1e5d2909f2224b57c168f3eb48a547a04c9673729ebb706f4b6baa79baa692e1210adf293e615da175
   languageName: node
   linkType: hard
 

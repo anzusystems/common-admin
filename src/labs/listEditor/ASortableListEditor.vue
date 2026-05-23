@@ -167,6 +167,8 @@ export interface Props<TItem extends Record<string, any>> {
   showReorderToggle?: boolean
   disableReorder?: boolean
   disableDrag?: boolean
+  /** Disable unsaved-state tracking — no dirty/moved markers, never feeds `unsaved-keys`. */
+  disableUnsaved?: boolean
   showMoveToPosition?: boolean
 
   /**
@@ -228,6 +230,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showReorderToggle: true,
   disableReorder: false,
   disableDrag: false,
+  disableUnsaved: false,
   showMoveToPosition: false,
   embedded: false,
   allowEditInReorder: false,
@@ -524,8 +527,8 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
     const editing = editingKeys.value.has(vi.key)
     const expanded = expandedKeys.value.has(vi.key)
     const loading = props.loadingKeys?.has(vi.key) ?? false
-    const moved = movedKeys.value.has(vi.key)
-    const dirty = dirtyKeys.value.has(vi.key)
+    const moved = props.disableUnsaved ? false : movedKeys.value.has(vi.key)
+    const dirty = props.disableUnsaved ? false : dirtyKeys.value.has(vi.key)
     const unsaved = dirty || moved
     const canMoveUp = vi.index > 0
     const canMoveDown = vi.index < total - 1

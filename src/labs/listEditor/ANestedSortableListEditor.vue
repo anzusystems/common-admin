@@ -193,6 +193,8 @@ export interface Props<TItem extends Record<string, any>> {
   showReorderToggle?: boolean
   disableReorder?: boolean
   disableDrag?: boolean
+  /** Disable unsaved-state tracking — no dirty/moved markers, never feeds `unsaved-keys`. */
+  disableUnsaved?: boolean
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
@@ -233,6 +235,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showReorderToggle: true,
   disableReorder: false,
   disableDrag: false,
+  disableUnsaved: false,
   onDeleteConfirm: undefined,
   onDelete: undefined,
   onItemSave: undefined,
@@ -385,8 +388,8 @@ const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
     const expanded = detailExpandedKeys.value.has(vi.key)
     const childrenExpanded = childrenExpandedKeys.value.has(vi.key)
     const loading = props.loadingKeys?.has(vi.key) ?? false
-    const moved = movedKeys.value.has(vi.key)
-    const dirty = dirtyKeys.value.has(vi.key)
+    const moved = props.disableUnsaved ? false : movedKeys.value.has(vi.key)
+    const dirty = props.disableUnsaved ? false : dirtyKeys.value.has(vi.key)
     const unsaved = dirty || moved
     const cached = decoratorCache.get(vi.key)
     if (

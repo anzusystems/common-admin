@@ -97,6 +97,8 @@ export interface Props<TItem extends Record<string, any>> {
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
+  /** Disable unsaved-state tracking — no dirty markers, never feeds `unsaved-keys`. */
+  disableUnsaved?: boolean
   deleteConfirmTitle?: string | null
   deleteConfirmText?: string | null
 
@@ -134,6 +136,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   emptyText: null,
   disableRowClick: false,
   disableDeleteConfirm: false,
+  disableUnsaved: false,
   deleteConfirmTitle: null,
   deleteConfirmText: null,
   closeVariant: 'auto',
@@ -275,7 +278,7 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
     const editing = editingKeys.value.has(vi.key)
     const expanded = expandedKeys.value.has(vi.key)
     const loading = props.loadingKeys?.has(vi.key) ?? false
-    const dirty = dirtyKeys.value.has(vi.key)
+    const dirty = props.disableUnsaved ? false : dirtyKeys.value.has(vi.key)
     const cached = decoratorCache.get(vi.key)
     if (
       cached &&
