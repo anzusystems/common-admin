@@ -611,9 +611,7 @@ const keyboardNav = useKeyboardNav({
 const moveToPositionDialogOpen = ref<boolean>(false)
 const moveToPositionTarget = shallowRef<DecoratedViewItem<TItem> | null>(null)
 const moveToPositionLabel = computed<string>(() =>
-  moveToPositionTarget.value
-    ? resolveCompactText(moveToPositionTarget.value.raw, moveToPositionTarget.value.key)
-    : '',
+  moveToPositionTarget.value ? resolveCompactText(moveToPositionTarget.value.raw) : '',
 )
 const openMoveToPosition = (vi: DecoratedViewItem<TItem>) => {
   if (!props.showMoveToPosition) return
@@ -629,11 +627,8 @@ const onMoveToPositionConfirm = (newIndex: number) => {
   markMoved(target.key)
 }
 
-const resolveCompactText = (raw: TItem, key: ListEditorKey): string =>
-  resolveCompactTextUtil(raw, key, {
-    compactField: props.compactField,
-    fallback: t('common.sortable.itemFallback'),
-  })
+const resolveCompactText = (raw: TItem): string =>
+  resolveCompactTextUtil(raw, { compactField: props.compactField })
 
 const { resolveValidation } = useValidationRegistry<TItem>({
   getValidationState: (item, key, index) => props.getValidationState?.(item, key, index) ?? null,
@@ -1203,7 +1198,7 @@ defineExpose({
                 v-bind="buildSlotProps(vi)"
               >
                 <span class="a-le-title">
-                  {{ resolveCompactText(vi.raw, vi.key) }}
+                  {{ resolveCompactText(vi.raw) }}
                 </span>
               </slot>
               <LeUnsavedLabel

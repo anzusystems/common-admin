@@ -38,6 +38,7 @@ const mountEditor = (data: FaqItem[] = items(), extra: Record<string, unknown> =
           'onUpdate:mode': (v: 'view' | 'reorder') => {
             mode.value = v
           },
+          compactField: 'title',
           ...extra,
         })
     },
@@ -270,6 +271,7 @@ describe('ASortableListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                compactField: 'title',
               },
               {
                 item: ({ raw }: { raw: FaqItem }) =>

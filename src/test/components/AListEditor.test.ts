@@ -32,6 +32,7 @@ const mountEditor = (data: FaqItem[] = items(), extra: Record<string, unknown> =
           onDeleted: ({ index }: { index: number }) => {
             model.value.splice(index, 1)
           },
+          compactField: 'title',
           ...extra,
         })
     },
@@ -64,12 +65,10 @@ describe('AListEditor', () => {
       expect(wrapper.find('.a-le-title').text()).toBe('1')
     })
 
-    it('falls back to fallback label when nothing resolves', () => {
+    it('renders empty compact text when compactField does not resolve — no implicit fallback', () => {
       const data = [{ id: 1, position: 1 }] as unknown as FaqItem[]
       const { wrapper } = mountEditor(data, { compactField: 'nonexistent' })
-      // with compactField set but nothing to pick from fallback chain, falls through
-      // (id=1 is still picked via 'key' in fallback chain)
-      expect(wrapper.find('.a-le-title').text()).toBe('1')
+      expect(wrapper.find('.a-le-title').text()).toBe('')
     })
 
     it('renders the default add button row', () => {
@@ -315,6 +314,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                compactField: 'title',
                 ...extra,
               },
               {
@@ -396,6 +396,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                compactField: 'title',
                 onItemSave,
               },
               {
@@ -613,6 +614,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                compactField: 'title',
                 onAdd: () => {
                   model.value = [
                     ...model.value,

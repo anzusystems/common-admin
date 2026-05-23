@@ -1015,11 +1015,8 @@ const doOutdent = (vi: NestedViewItem<TItem>) => {
   emit('outdent', vi)
 }
 
-const resolveCompactText = (raw: TItem, key: ListEditorKey): string =>
-  resolveCompactTextUtil(raw, key, {
-    compactField: props.compactField,
-    fallback: t('common.sortable.itemFallback'),
-  })
+const resolveCompactText = (raw: TItem): string =>
+  resolveCompactTextUtil(raw, { compactField: props.compactField })
 
 const { resolveValidation } = useValidationRegistry<TItem>({
   getValidationState: (item, key, index) => props.getValidationState?.(item, key, index) ?? null,
@@ -1233,9 +1230,7 @@ const moveToPositionContext = computed<{
   }
 })
 const moveToPositionLabel = computed<string>(() =>
-  moveToPositionTarget.value
-    ? resolveCompactText(moveToPositionTarget.value.raw, moveToPositionTarget.value.key)
-    : '',
+  moveToPositionTarget.value ? resolveCompactText(moveToPositionTarget.value.raw) : '',
 )
 const openMoveToPosition = (vi: DecoratedNestedViewItem<TItem>) => {
   if (!props.showMoveToPosition) return
