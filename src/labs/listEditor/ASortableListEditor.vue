@@ -1229,21 +1229,55 @@ defineExpose({
                 name="item-actions"
                 v-bind="buildSlotProps(vi)"
               >
-                <VBtn
-                  v-if="chips && showDeleteButton && canInteract"
-                  icon
-                  size="x-small"
-                  variant="text"
-                  density="compact"
-                  :active="false"
-                  class="a-le-action a-le-action--chip-close"
-                  @click.stop="onDeleteClick(vi)"
-                >
-                  <VIcon
-                    icon="mdi-close"
-                    size="14"
-                  />
-                </VBtn>
+                <template v-if="chips && canInteract">
+                  <template v-if="isTouch && !disableReorder">
+                    <VBtn
+                      icon
+                      size="x-small"
+                      variant="text"
+                      density="compact"
+                      :active="false"
+                      :disabled="!vi.canMoveUp"
+                      class="a-le-action a-le-action--up"
+                      @click.stop="moveUp(vi.index)"
+                    >
+                      <VIcon
+                        icon="mdi-arrow-up"
+                        size="14"
+                      />
+                    </VBtn>
+                    <VBtn
+                      icon
+                      size="x-small"
+                      variant="text"
+                      density="compact"
+                      :active="false"
+                      :disabled="!vi.canMoveDown"
+                      class="a-le-action a-le-action--down"
+                      @click.stop="moveDown(vi.index)"
+                    >
+                      <VIcon
+                        icon="mdi-arrow-down"
+                        size="14"
+                      />
+                    </VBtn>
+                  </template>
+                  <VBtn
+                    v-if="showDeleteButton"
+                    icon
+                    size="x-small"
+                    variant="text"
+                    density="compact"
+                    :active="false"
+                    class="a-le-action a-le-action--chip-close"
+                    @click.stop="onDeleteClick(vi)"
+                  >
+                    <VIcon
+                      icon="mdi-close"
+                      size="14"
+                    />
+                  </VBtn>
+                </template>
                 <template v-else-if="reorderMode">
                   <VBtn
                     icon
