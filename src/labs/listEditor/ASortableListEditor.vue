@@ -447,7 +447,7 @@ const totalHasPendingChanges = computed<boolean>(() => {
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
 // Chips mode keeps drag always-on (no mode toggle) on non-touch devices.
 const dragEnabled = computed(
-  () => (reorderMode.value || props.chips) && !isTouch.value && !props.disableDrag,
+  () => canInteract.value && (reorderMode.value || props.chips) && !isTouch.value && !props.disableDrag,
 )
 
 const addLabelResolved = computed(() =>
