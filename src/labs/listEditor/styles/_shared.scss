@@ -202,8 +202,8 @@
   // so it sits visually on top of the unsaved orange rail (::before, z-index 2)
   // when both apply: invalid wins because the user can't save anyway.
   /* stylelint-disable selector-max-compound-selectors */
-  &--validation-invalid:not(.a-le-row--editing)::after,
-  &--validation-warning:not(.a-le-row--editing)::after {
+  &--validation-invalid::after,
+  &--validation-warning::after {
     content: '';
     position: absolute;
     left: 0;
@@ -213,11 +213,11 @@
     z-index: 3;
   }
 
-  &--validation-invalid:not(.a-le-row--editing)::after {
+  &--validation-invalid::after {
     background: var(--le-error-fg);
   }
 
-  &--validation-warning:not(.a-le-row--editing)::after {
+  &--validation-warning::after {
     background: var(--le-warning);
   }
 
