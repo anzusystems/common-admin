@@ -3,6 +3,7 @@ import AFilterDatetimePicker from '@/labs/filters/AFilterDatetimePicker.vue'
 import AFilterInteger from '@/labs/filters/AFilterInteger.vue'
 import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
 import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
+import AFormRemoteAutocompleteWithCached from '@/labs/form/AFormRemoteAutocompleteWithCached.vue'
 import AFilterRemoteAutocompleteWithMinimal from '@/labs/filters/AFilterRemoteAutocompleteWithMinimal.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
@@ -118,6 +119,7 @@ export {
   ADatatablePagination,
   DatatablePaginationKey,
   AFormRemoteAutocomplete,
+  AFormRemoteAutocompleteWithCached,
   createFilter,
   createFilterStore,
   useFilterHelpers,
