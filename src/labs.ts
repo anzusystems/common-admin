@@ -9,6 +9,7 @@ import AFilterString from '@/labs/filters/AFilterString.vue'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
 import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOptionsSelect.vue'
 import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
+import AFilterWrapperSidebar from '@/labs/filters/AFilterWrapperSidebar.vue'
 import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
@@ -102,6 +103,7 @@ import {
 export {
   // V2 FILTERS
   AFilterWrapper,
+  AFilterWrapperSidebar,
   AFilterWrapperSubjectSelect,
   AFilterBooleanSelect,
   AFilterDatetimePicker,
