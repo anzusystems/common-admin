@@ -11,8 +11,8 @@ import {
   watch,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDisplay } from 'vuetify'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
+import { useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
 import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
 import { useSortable } from '@vueuse/integrations/useSortable'
@@ -278,13 +278,12 @@ defineSlots<{
 
 const { t } = useI18n()
 const slots = useSlots()
-const display = useDisplay()
 const { showWarningT } = useAlerts()
 
 const rootEl = useTemplateRef<HTMLElement>('rootEl')
 const { isNarrow } = useContainerWidth(rootEl)
 
-const isTouch = computed<boolean>(() => display.platform.value.touch)
+const isTouch = useIsTouchDevice()
 
 const effectiveCloseVariant = computed<'icon' | 'labeled'>(() => {
   if (props.closeVariant === 'icon') return 'icon'

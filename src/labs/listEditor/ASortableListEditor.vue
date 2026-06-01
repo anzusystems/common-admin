@@ -13,8 +13,8 @@ import {
   type ComputedRef,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDisplay } from 'vuetify'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
+import { useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
 import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
 import { useSortable } from '@vueuse/integrations/useSortable'
@@ -275,12 +275,11 @@ const mode = defineModel<ReorderMode>('mode', { default: 'view' })
 
 const { t } = useI18n()
 const slots = useSlots()
-const display = useDisplay()
 
 const rootEl = useTemplateRef<HTMLElement>('rootEl')
 const { isNarrow } = useContainerWidth(rootEl)
 
-const isTouch = computed<boolean>(() => display.platform.value.touch)
+const isTouch = useIsTouchDevice()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const editor = useListEditor<TItem>(modelValue, {
@@ -634,8 +633,9 @@ const { resolveValidation } = useValidationRegistry<TItem>({
 
 // Skip SortableJS entirely on touch devices — touch users reorder via arrows + menu,
 // so the drag/drop library is never needed and there is no point paying its setup cost.
-// The one-shot reads below are intentional: touch detection is fixed at setup time,
-// and dragEnabled's initial value seeds SortableJS; later changes flow via the watch.
+// `isTouch` (Vuetify touch flag OR a reactive `(any-pointer: coarse)` query) resolves
+// synchronously, so this one-shot read captures the correct touch/coarse state at setup;
+// dragEnabled's initial value seeds SortableJS and later changes flow via the watch below.
 /* eslint-disable vue/no-ref-object-reactivity-loss */
 if (!isTouch.value) {
   const sortable = useSortable(rowsContainer, modelValue, {

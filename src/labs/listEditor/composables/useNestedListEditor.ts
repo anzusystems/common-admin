@@ -117,6 +117,11 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     for (const sibling of siblings) {
       if (sibling.data[positionField] !== pos) {
         ;(sibling.data as any)[positionField] = pos
+        // A renumbered sibling must be flagged dirty so consumers that persist
+        // only changed nodes (e.g. the linked-list partial-multi save) actually
+        // store the new position — otherwise add/move/delete reorders are lost on
+        // reload and rows collide on their old positions.
+        sibling.meta.dirty = true
       }
       pos += positionMultiplier
     }
