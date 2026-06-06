@@ -456,7 +456,9 @@ const {
   rowsContainer,
   rowSelector: '.a-le-row-wrapper',
   isInlineEdit,
-  restoreSnapshot: (key, data) => editor.updateItem(key, data),
+  // markDirty=false: restoring the pre-edit snapshot on cancel must not flag
+  // the node dirty (it would otherwise be resent by partial-multi saves).
+  restoreSnapshot: (key, data) => editor.updateItem(key, data, false),
   watchKeys: () => {
     const keys: ListEditorKey[] = []
     const walk = (nodes: NestedTreeNode<TItem>[]) => {

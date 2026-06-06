@@ -49,7 +49,7 @@ export interface NestedListEditorApi<TItem extends Record<string, any>> {
     },
   ) => NestedTree<TItem>
   deleteItem: (id: ListEditorKey) => NestedTree<TItem>
-  updateItem: (id: ListEditorKey, data: TItem) => NestedTree<TItem>
+  updateItem: (id: ListEditorKey, data: TItem, markDirty?: boolean) => NestedTree<TItem>
   moveUp: (id: ListEditorKey) => NestedTree<TItem> | null
   moveDown: (id: ListEditorKey) => NestedTree<TItem> | null
   moveTop: (id: ListEditorKey) => NestedTree<TItem> | null
@@ -281,11 +281,17 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     return cloned
   }
 
-  const updateItem = (id: ListEditorKey, data: TItem): NestedTree<TItem> => {
+  const updateItem = (id: ListEditorKey, data: TItem, markDirty = true): NestedTree<TItem> => {
     const cloned = cloneDeep(model.value) as NestedTree<TItem>
     const { node } = findNode(id, cloned.children)
     if (!node) return cloned
     node.data = cloneDeep(data) as TItem
+    // An edit IS a change that must be persisted. Consumers that save only the
+    // dirty subset (e.g. linked-list partial-multi update) drop the edited node
+    // otherwise, so the change is lost on reload. Mirrors add/move, which flag
+    // dirty via recalculateSiblings. `markDirty=false` is for snapshot restore
+    // on edit-cancel — restoring the original data must NOT flag it dirty.
+    if (markDirty) node.meta.dirty = true
     model.value = cloned
     return cloned
   }
