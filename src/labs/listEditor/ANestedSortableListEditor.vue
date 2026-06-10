@@ -773,10 +773,12 @@ const initSortables = () => {
 
 const parseKey = (raw: string | null): ListEditorKey | null => {
   if (raw === null || raw === '') return null
+  // Use the numeric key only when `data-id` is a pure integer string (incl.
+  // negative temp ids like "-1"); otherwise it's a DocId/UUID string key.
+  // `n > 0` wrongly sent negative temp ids to the string branch, so a freshly
+  // added (unsaved) row's move marked the wrong key.
   const n = stringToInt(raw)
-  if (n > 0) return n
-  // Fallback to string keys (DocId)
-  return raw
+  return String(n) === raw ? n : raw
 }
 
 watch(

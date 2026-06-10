@@ -2,6 +2,7 @@
 import {
   computed,
   inject,
+  nextTick,
   onBeforeUnmount,
   provide,
   ref,
@@ -667,12 +668,23 @@ if (!isTouch.value) {
       const el = event.item as HTMLElement
       const raw = el.getAttribute('data-id')
       if (raw !== null && raw !== '') {
+        // Use the numeric key only when `data-id` is a pure integer string
+        // (incl. negative temp ids like "-1"); otherwise it's a UUID-style key
+        // and must stay a string. `n > 0` wrongly sent negative ids to the
+        // string branch, so the moved row's amber landed on the wrong key.
         const n = stringToInt(raw)
-        const key: ListEditorKey = n > 0 ? n : raw
+        const key: ListEditorKey = String(n) === raw ? n : raw
         markMoved(key)
       }
       if (props.updatePosition) {
-        modelValue.value = editor.recalculatePositions(modelValue.value) as TItem[]
+        // vueuse's useSortable reorders the bound array inside a `nextTick`,
+        // so at this point `modelValue` is still in the pre-drop order.
+        // Renumbering here would stamp positions onto the old order and the
+        // new order's positions would be stale (the backend then sorts the
+        // reorder back). Defer to after vueuse's array write lands.
+        nextTick(() => {
+          modelValue.value = editor.recalculatePositions(modelValue.value) as TItem[]
+        })
       }
     },
   })

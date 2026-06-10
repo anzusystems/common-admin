@@ -1,5 +1,6 @@
 /* eslint-disable vue/no-ref-object-reactivity-loss */
 import { describe, it, expect, vi } from 'vitest'
+
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
@@ -165,6 +166,88 @@ describe('ASortableListEditor', () => {
       // Only the row the user actively moved is marked unsaved now —
       // `movedKeys` no longer flags sibling-index side-effects.
       expect(unsaved.length).toBe(1)
+    })
+  })
+
+  describe('drag reorder (SortableJS) recalculates positions', () => {
+    // Regression: vueuse's useSortable moves the bound array inside a nextTick,
+    // but the editor's onEnd ran recalculatePositions synchronously — so it
+    // renumbered the pre-drop order and the new positions stayed stale. The
+    // backend then sorts by position and the reorder is silently reverted.
+    // Real SortableJS drag needs live, attached DOM, so this mounts to body.
+    it('renumbers position to match the new order after a drag (no stale positions)', async () => {
+      const model = ref<FaqItem[]>(items())
+      const mode = ref<'view' | 'reorder'>('reorder')
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(ASortableListEditor<FaqItem>, {
+              modelValue: model.value,
+              'onUpdate:modelValue': (v: FaqItem[]) => {
+                model.value = v
+              },
+              mode: mode.value,
+              'onUpdate:mode': (v: 'view' | 'reorder') => {
+                mode.value = v
+              },
+              compactField: 'title',
+              updatePosition: true,
+            })
+        },
+      })
+      const wrapper = mount(Host, { attachTo: document.body })
+      await nextTick()
+      await flushPromises()
+
+      const handles = wrapper.findAll('.a-le-drag-handle')
+      expect(handles.length).toBe(4)
+      const rows = wrapper.findAll('.a-le-row')
+
+      // SortableJS runs with forceFallback:true, so it tracks raw mouse events
+      // (not native HTML5 drag) — drive it with a mousedown + stepped mousemoves
+      // + mouseup. Drag the last row's handle (id 4) up above the first row.
+      const handle = handles[3].element as HTMLElement
+      const targetRow = rows[0].element as HTMLElement
+      const sb = handle.getBoundingClientRect()
+      const tb = targetRow.getBoundingClientRect()
+      const x = Math.round(sb.x + sb.width / 2)
+      const startY = Math.round(sb.y + sb.height / 2)
+      const endY = Math.round(tb.y - 4)
+      const fire = (type: string, y: number, target: EventTarget = document) =>
+        target.dispatchEvent(
+          new MouseEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            clientX: x,
+            clientY: y,
+            button: 0,
+            buttons: type === 'mouseup' || type === 'pointerup' ? 0 : 1,
+            view: window,
+          }),
+        )
+      fire('pointerdown', startY, handle)
+      fire('mousedown', startY, handle)
+      const steps = 24
+      for (let i = 1; i <= steps; i++) {
+        const y = Math.round(startY + ((endY - startY) * i) / steps)
+        fire('pointermove', y)
+        fire('mousemove', y)
+        await new Promise((r) => setTimeout(r, 8))
+      }
+      await new Promise((r) => setTimeout(r, 60))
+      fire('pointerup', endY)
+      fire('mouseup', endY)
+      await flushPromises()
+      await nextTick()
+      await nextTick()
+
+      // The drag actually reordered the model (id 4 is no longer last).
+      expect(model.value.map((i) => i.id)).not.toEqual([1, 2, 3, 4])
+      // Positions are recalculated to the live array order — the regression
+      // left them stale (e.g. positions [4,1,2,3] on a [4,1,2,3] id order).
+      expect(model.value.map((i) => i.position)).toEqual(model.value.map((_, idx) => idx + 1))
+
+      wrapper.unmount()
     })
   })
 
