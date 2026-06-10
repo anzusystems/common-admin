@@ -2,7 +2,6 @@
 import {
   computed,
   inject,
-  nextTick,
   onBeforeUnmount,
   provide,
   ref,
@@ -659,6 +658,26 @@ if (!isTouch.value) {
     chosenClass: DRAG_CHOSEN_CLASS,
     dragClass: DRAG_CLASS,
     disabled: !dragEnabled.value,
+    // Own `onUpdate` REPLACES vueuse's default array-move. vueuse moved the
+    // bound array inside a `nextTick` and any position renumber had to run in a
+    // *separate* `nextTick` afterwards — that gap let a consumer's "sort by
+    // position" watch (e.g. minute-feed keywords) re-sort using the still-stale
+    // positions and silently revert the drop. Doing the move + renumber here in
+    // ONE synchronous `editor.moveItem` closes that window: every reactive
+    // observer (emit → store → watch) sees the final order and positions at once.
+    onUpdate: (event) => {
+      const { oldIndex, newIndex, item, from } = event
+      if (oldIndex === undefined || newIndex === undefined) return
+      // Undo SortableJS's own DOM relocation so Vue's keyed v-for stays the
+      // single source of truth (mirrors vueuse's removeNode + insertNodeAt).
+      if (item && from) {
+        item.parentNode?.removeChild(item)
+        from.insertBefore(item, from.children[oldIndex] ?? null)
+      }
+      // `moveItem` finalizes through the shared core: it rewrites the array and,
+      // when `updatePosition` is set, renumbers positions in the same call.
+      editor.moveItem(oldIndex, newIndex)
+    },
     onEnd: (event) => {
       // Resolve which row was dragged by reading its data-id attribute
       // (set via template binding on .row). SortableJS's `event.item` is
@@ -675,16 +694,6 @@ if (!isTouch.value) {
         const n = stringToInt(raw)
         const key: ListEditorKey = String(n) === raw ? n : raw
         markMoved(key)
-      }
-      if (props.updatePosition) {
-        // vueuse's useSortable reorders the bound array inside a `nextTick`,
-        // so at this point `modelValue` is still in the pre-drop order.
-        // Renumbering here would stamp positions onto the old order and the
-        // new order's positions would be stale (the backend then sorts the
-        // reorder back). Defer to after vueuse's array write lands.
-        nextTick(() => {
-          modelValue.value = editor.recalculatePositions(modelValue.value) as TItem[]
-        })
       }
     },
   })
