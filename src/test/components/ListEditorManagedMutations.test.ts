@@ -79,7 +79,9 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
 
     const addBtn = mounted!
       .findAll('button')
-      .find((b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')))
+      .find(
+        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
+      )
     expect(addBtn).toBeTruthy()
     await addBtn!.trigger('click')
     await nextTick()
@@ -101,7 +103,9 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
 
     const row = document.querySelector<HTMLElement>('[data-id="1"]')
     expect(row).toBeTruthy()
-    const del = [...row!.querySelectorAll('button')].find((b) =>
+    // Array.from (ArrayLike overload) instead of a spread — NodeList iteration
+    // needs the DOM.Iterable lib, which the build's test tsconfig doesn't load.
+    const del = Array.from(row!.querySelectorAll('button')).find((b) =>
       b.className.includes('--delete'),
     ) as HTMLButtonElement
     expect(del).toBeTruthy()
@@ -126,7 +130,9 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
 
     const addBtn = mounted!
       .findAll('button')
-      .find((b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')))
+      .find(
+        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
+      )
     await addBtn!.trigger('click')
     await nextTick()
     await nextTick()
@@ -143,7 +149,9 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
 
     const addBtn = mounted!
       .findAll('button')
-      .find((b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')))
+      .find(
+        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
+      )
     await addBtn!.trigger('click')
     await nextTick()
 
