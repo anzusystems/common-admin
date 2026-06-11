@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { computed, defineComponent, h, nextTick, ref } from 'vue'
+import { computed, defineComponent, h, nextTick, ref, type Ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import { useListEditorItemValidation } from '@/labs/listEditor/composables/useListEditorItemValidation'
+import { useListEditorVuelidateSentinel } from '@/labs/listEditor/composables/useListEditorVuelidateSentinel'
 import type { ListEditorValidationState } from '@/labs/listEditor/types/listEditorTypes'
 
 interface Item {
@@ -17,6 +18,15 @@ const items = (): Item[] => [
   { id: 2, position: 2, title: 'Second' },
   { id: 3, position: 3, title: 'Third' },
 ]
+
+// vue/no-ref-object-reactivity-loss forbids reading `.value` in the scope the
+// ref was created in — route test mutations through helpers instead.
+const appendItem = (list: Ref<Item[]>, item: Item) => {
+  list.value = [...list.value, item]
+}
+const patchWhere = (list: Ref<Item[]>, match: (it: Item) => boolean, patch: Partial<Item>) => {
+  list.value = list.value.map((it) => (match(it) ? { ...it, ...patch } : it))
+}
 
 let mounted: VueWrapper | null = null
 
@@ -239,6 +249,59 @@ describe('AListEditor — validation', () => {
       await nextTick()
       await nextTick()
       expect(isInvalid(3)).toBe(false)
+    })
+
+    // The blessed domain-sentinel shape: validation composable + delegate.
+    it('useListEditorVuelidateSentinel flags unsaved invalid rows and spares the saved baseline', async () => {
+      const data = ref<Item[]>([
+        { id: 1, position: 1, title: 'A' },
+        { id: 2, position: 2, title: '' }, // persisted-but-invalid baseline row
+      ])
+      const Sentinel = defineComponent({
+        props: { item: { type: Object, required: true } },
+        setup(p) {
+          // Stands in for a vuelidate instance: $invalid mirrors the data,
+          // $anyDirty stays false so the editor's unsaved tracking decides.
+          const v$ = computed(() => ({
+            $invalid: !(p.item as Item).title,
+            $anyDirty: false,
+          }))
+          useListEditorVuelidateSentinel(v$, () => (p.item as Item).id)
+          return () => h('span', String((p.item as Item).title))
+        },
+      })
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(
+              AListEditor<Item>,
+              {
+                modelValue: data.value,
+                'onUpdate:modelValue': (v: Item[]) => {
+                  data.value = v
+                },
+              },
+              { 'item-compact': ({ raw }: { raw: Item }) => h(Sentinel, { item: raw }) },
+            )
+        },
+      })
+      mounted = mount(Host, { attachTo: document.body })
+      await nextTick()
+      await nextTick()
+      // Saved invalid row stays clear on load (no premature red).
+      expect(isInvalid(2)).toBe(false)
+
+      // A new (unsaved) empty row reads as invalid.
+      appendItem(data, { id: -1, position: 3, title: '' })
+      await nextTick()
+      await nextTick()
+      expect(isInvalid(-1)).toBe(true)
+
+      // Filling it clears the flag.
+      patchWhere(data, (it) => it.id === -1, { title: 'filled' })
+      await nextTick()
+      await nextTick()
+      expect(isInvalid(-1)).toBe(false)
     })
 
     it('registry takes priority over getValidationState prop', async () => {

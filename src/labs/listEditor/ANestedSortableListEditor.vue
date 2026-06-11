@@ -30,6 +30,7 @@ import {
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
 import { useUnsavedKeysSync } from '@/labs/listEditor/composables/useUnsavedKeysSync'
+import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
 import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
@@ -201,9 +202,17 @@ export interface Props<TItem extends Record<string, any>> {
   onDelete?: (item: TItem) => Promise<void> | void
   onItemSave?: (item: TItem) => Promise<void> | void
   onReorderApply?: (tree: NestedTree<TItem>) => Promise<void> | void
+
+  /**
+   * Registers this editor as a named unsaved-changes section under the given
+   * (already translated) label — replaces the per-consumer `useUnsavedSection`
+   * call for the common one-editor case.
+   */
+  unsavedSectionLabel?: string
 }
 
 const props = withDefaults(defineProps<Props<TItem>>(), {
+  unsavedSectionLabel: undefined,
   keyField: 'id',
   positionField: 'position',
   parentField: 'parent',
@@ -1411,6 +1420,14 @@ const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSyn
     movedKeys.value.delete(key)
   },
 })
+
+// Registers this editor as a named unsaved-changes section when the consumer
+// passes a label — replaces the per-consumer useUnsavedSection boilerplate.
+useUnsavedSection(() =>
+  props.unsavedSectionLabel
+    ? { label: props.unsavedSectionLabel, dirty: unsavedCount.value > 0 }
+    : [],
+)
 
 defineExpose({
   addItem: editor.addItem,

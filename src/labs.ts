@@ -61,6 +61,12 @@ import {
   type ListEditorValidationRegistry,
 } from '@/labs/listEditor/composables/useListEditorItemValidation'
 import {
+  useListEditorVuelidateSentinel,
+  type VuelidateSentinelSource,
+} from '@/labs/listEditor/composables/useListEditorVuelidateSentinel'
+import { renumberPositions, type RenumberPositionsOptions } from '@/labs/listEditor/utils/positions'
+import { nextListEditorTempId } from '@/labs/listEditor/utils/tempId'
+import {
   useNestedUnsavedKeys,
   type UseNestedUnsavedKeysApi,
 } from '@/labs/listEditor/composables/useNestedUnsavedKeys'
@@ -154,6 +160,11 @@ export {
   useListEditorItemValidation,
   ListEditorValidationKey,
   type ListEditorValidationRegistry,
+  useListEditorVuelidateSentinel,
+  type VuelidateSentinelSource,
+  renumberPositions,
+  type RenumberPositionsOptions,
+  nextListEditorTempId,
   useNestedUnsavedKeys,
   type UseNestedUnsavedKeysApi,
   type ReorderModeValue,

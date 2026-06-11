@@ -22,6 +22,7 @@ import { useSortable } from '@vueuse/integrations/useSortable'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
 import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
 import { useUnsavedKeysSync } from '@/labs/listEditor/composables/useUnsavedKeysSync'
+import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
 import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
@@ -198,6 +199,26 @@ export interface Props<TItem extends Record<string, any>> {
   onDelete?: (item: TItem) => Promise<void> | void
   onItemSave?: (item: TItem) => Promise<void> | void
   onReorderApply?: (items: TItem[]) => Promise<void> | void
+
+  /**
+   * Editor-managed add: the add button and "add after this item" insert
+   * `itemFactory()` into the model directly (positions renumbered when
+   * `update-position` is on) and emit `added` — the `add` event does NOT fire,
+   * so no consumer push handler is needed.
+   */
+  itemFactory?: () => TItem
+  /**
+   * Editor-managed delete: a confirmed delete removes the row from the model
+   * itself. `deleted` still fires as a notification — consumers keep side
+   * effects but must not splice the model themselves.
+   */
+  manageDelete?: boolean
+  /**
+   * Registers this editor as a named unsaved-changes section under the given
+   * (already translated) label — replaces the per-consumer `useUnsavedSection`
+   * call for the common one-editor case.
+   */
+  unsavedSectionLabel?: string
 }
 
 const props = withDefaults(defineProps<Props<TItem>>(), {
@@ -238,10 +259,14 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   onDelete: undefined,
   onItemSave: undefined,
   onReorderApply: undefined,
+  itemFactory: undefined,
+  manageDelete: false,
+  unsavedSectionLabel: undefined,
 })
 
 const emit = defineEmits<{
   add: [positionHint: PositionHint | undefined]
+  added: [payload: { item: TItem; index: number }]
   edit: [item: ListViewItem<TItem>]
   deleted: [item: ListViewItem<TItem>]
   close: [item: ListViewItem<TItem>]
@@ -705,15 +730,35 @@ if (!isTouch.value) {
 }
 /* eslint-enable vue/no-ref-object-reactivity-loss */
 
+// Managed add (itemFactory): the editor inserts the item itself; finalize
+// renumbers positions when update-position is on, possibly replacing the
+// inserted object — locate it by key and emit the finalized one.
+const addViaFactory = (positionHint?: PositionHint): void => {
+  const item = props.itemFactory!()
+  const result = editor.addItem(item, positionHint)
+  const index = result.findIndex(
+    (x) => (x[props.keyField] as ListEditorKey) === (item[props.keyField] as ListEditorKey),
+  )
+  emit('added', { item: (index === -1 ? item : result[index]) as TItem, index })
+}
+
 const onAddClick = () => {
   if (!canAdd.value) return
   requestAutoOpen()
+  if (props.itemFactory) {
+    addViaFactory()
+    return
+  }
   emit('add', undefined)
 }
 
 const onRowAddAfterClick = (vi: ListViewItem<TItem>) => {
   if (!canInteract.value) return
   requestAutoOpen()
+  if (props.itemFactory) {
+    addViaFactory({ afterId: vi.key })
+    return
+  }
   emit('add', { afterId: vi.key })
 }
 
@@ -784,6 +829,7 @@ const {
     editingKeys.value.delete(vi.key)
     editingSnapshots.value.delete(vi.key)
     expandedKeys.value.delete(vi.key)
+    if (props.manageDelete) editor.deleteItem(vi.key)
     emit('deleted', vi)
   },
   disableDeleteConfirm: () => props.disableDeleteConfirm || props.chips,
@@ -1005,6 +1051,14 @@ const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSyn
     movedKeys.value.delete(key)
   },
 })
+
+// Registers this editor as a named unsaved-changes section when the consumer
+// passes a label — replaces the per-consumer useUnsavedSection boilerplate.
+useUnsavedSection(() =>
+  props.unsavedSectionLabel
+    ? { label: props.unsavedSectionLabel, dirty: unsavedCount.value > 0 }
+    : [],
+)
 
 defineExpose({
   addItem: editor.addItem,
