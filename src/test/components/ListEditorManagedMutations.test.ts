@@ -95,6 +95,31 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
     expect(events.add).toBeUndefined()
   })
 
+  // Regression: the dirty baseline's initial-fill watch treats the first model
+  // reassignment of an empty-at-mount list as async data landing. Managed add
+  // writes by reassignment, so without ignoreNextSourceChange the FIRST added
+  // row got baselined and never showed as unsaved/invalid (nested intentions).
+  it('first managed add into an EMPTY list still reads as unsaved', async () => {
+    const model = ref<Item[]>([])
+    const events: Record<string, unknown[]> = {}
+    mountManaged({ model, events })
+    await nextTick()
+
+    const addBtn = mounted!
+      .findAll('button')
+      .find(
+        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
+      )
+    await addBtn!.trigger('click')
+    await nextTick()
+    await nextTick()
+
+    expect(read(model).length).toBe(1)
+    const row = document.querySelector<HTMLElement>(`[data-id="${read(model)[0].id}"]`)
+    expect(row).toBeTruthy()
+    expect(row!.classList.contains('a-le-row--unsaved')).toBe(true)
+  })
+
   it('manageDelete removes the row from the model and still emits `deleted`', async () => {
     const model = ref<Item[]>(items())
     const events: Record<string, unknown[]> = {}

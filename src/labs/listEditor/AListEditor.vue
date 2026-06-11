@@ -230,7 +230,8 @@ const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'
 
 // Initial snapshot of each item, keyed by row key. Compared against current data to
 // detect "dirty" (unsaved) rows. Reset externally after a successful parent-form save.
-const { captureDirtyBaseline, rebaselineKey, isItemDirty } = useDirtyBaseline<TItem>(
+const { captureDirtyBaseline, rebaselineKey, isItemDirty, ignoreNextSourceChange } =
+  useDirtyBaseline<TItem>(
   () =>
     modelValue.value.map((item) => ({
       key: item[props.keyField] as ListEditorKey,
@@ -374,6 +375,11 @@ const { resolveValidation } = useValidationRegistry<TItem>({
 // inserted object — locate it by key and emit the finalized one.
 const addViaFactory = (positionHint?: PositionHint): void => {
   const item = props.itemFactory!()
+  // The editor writes the model by reassignment; without this, the dirty
+  // baseline's initial-fill watch would treat the FIRST add into an
+  // empty-at-mount list as async data landing and baseline it (the new row
+  // would never read as unsaved/invalid).
+  ignoreNextSourceChange()
   const result = editor.addItem(item, positionHint)
   const index = result.findIndex(
     (x) => (x[props.keyField] as ListEditorKey) === (item[props.keyField] as ListEditorKey),
@@ -466,7 +472,10 @@ const {
     editingKeys.value.delete(vi.key)
     editingSnapshots.value.delete(vi.key)
     expandedKeys.value.delete(vi.key)
-    if (props.manageDelete) editor.deleteItem(vi.key)
+    if (props.manageDelete) {
+      ignoreNextSourceChange()
+      editor.deleteItem(vi.key)
+    }
     emit('deleted', vi)
   },
   disableDeleteConfirm: () => props.disableDeleteConfirm || props.chips,
