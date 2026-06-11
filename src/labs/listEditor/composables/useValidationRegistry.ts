@@ -67,6 +67,23 @@ export function useValidationRegistry<TItem extends Record<string, any>>(
       const fromRegistry = itemValidationStates.get(key)?.value
       if (isValidState(fromRegistry)) return fromRegistry
     }
+    // Fallback: a sentinel may register under the item's own id/position when the
+    // editor's `key-field` resolves a different row key (e.g. a `position`-keyed
+    // editor over items that also carry a temp `id`). Look the row's own ids up
+    // so its state is still found. Each id is unique to the row, so this can only
+    // match that same row's registration.
+    if (raw) {
+      const rawId = (raw as Record<string, any>).id
+      if (rawId !== undefined && rawId !== null && rawId !== key) {
+        const byId = itemValidationStates.get(rawId)?.value
+        if (isValidState(byId)) return byId
+      }
+      const rawPos = (raw as Record<string, any>).position
+      if (rawPos !== undefined && rawPos !== null && rawPos !== key) {
+        const byPos = itemValidationStates.get(rawPos)?.value
+        if (isValidState(byPos)) return byPos
+      }
+    }
     if (options.getValidationState && key !== undefined && index !== undefined) {
       const fromProp = options.getValidationState(raw, key, index)
       if (isValidState(fromProp)) return fromProp

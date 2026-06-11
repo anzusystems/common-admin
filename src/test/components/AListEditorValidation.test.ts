@@ -178,6 +178,69 @@ describe('AListEditor — validation', () => {
       expect(isInvalid(1)).toBe(false)
     })
 
+    // Regression (QA Batch2 BUG-08): an invalid row showed amber, never red.
+    // Two causes, both fixed here: (1) sentinels gate on vuelidate `$anyDirty`,
+    // which is false for a freshly-added still-empty row, so use the editor's
+    // unsaved tracking via `invalid` + `dirty`; (2) the sentinel registers under
+    // `id ?? position` while a `key-field="position"` editor looks rows up by
+    // position — the registry now falls back to the row's own id/position.
+    it('flags an UNSAVED invalid row even when the sentinel keys by id and the editor by position', async () => {
+      // item 2 starts invalid (empty title) but is part of the saved baseline.
+      const baseline: Item[] = [
+        { id: 1, position: 1, title: 'A' },
+        { id: 2, position: 2, title: '' },
+      ]
+      const data = ref<Item[]>(baseline)
+      const Sentinel = defineComponent({
+        props: { item: { type: Object, required: true } },
+        setup(p) {
+          useListEditorItemValidation({
+            // keys by id (like ListItemDto-based sentinels) — differs from the
+            // editor's position key-field, exercising the id/position fallback.
+            key: () => (p.item as Item).id ?? (p.item as Item).position,
+            invalid: () => !(p.item as Item).title,
+            dirty: () => false, // rely purely on the editor's unsaved tracking
+          })
+          return () => h('span', String((p.item as Item).title))
+        },
+      })
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(
+              AListEditor<Item>,
+              {
+                modelValue: data.value,
+                'onUpdate:modelValue': (v: Item[]) => {
+                  data.value = v
+                },
+                keyField: 'position',
+              },
+              { 'item-compact': ({ raw }: { raw: Item }) => h(Sentinel, { item: raw }) },
+            )
+        },
+      })
+      mounted = mount(Host, { attachTo: document.body })
+      await nextTick()
+      await nextTick()
+      // Saved-but-invalid row on load stays clear — no premature red (Batch1 BUG-04).
+      expect(isInvalid(2)).toBe(false)
+
+      // Add a new invalid (empty) row — now unsaved → must read as invalid (red).
+      data.value = [...baseline, { id: -1, position: 3, title: '' }]
+      await nextTick()
+      await nextTick()
+      expect(isInvalid(3)).toBe(true)
+      // The pre-existing invalid baseline row is still not flagged.
+      expect(isInvalid(2)).toBe(false)
+
+      // Filling the new row clears the invalid flag (valid + unsaved → amber).
+      data.value = [...baseline, { id: -1, position: 3, title: 'now valid' }]
+      await nextTick()
+      await nextTick()
+      expect(isInvalid(3)).toBe(false)
+    })
+
     it('registry takes priority over getValidationState prop', async () => {
       const data = items()
       const ChildForm = defineComponent({

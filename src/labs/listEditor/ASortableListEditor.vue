@@ -17,6 +17,7 @@ import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWid
 import { useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
 import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
+import { ListEditorUnsavedKeysKey } from '@/labs/listEditor/composables/useListEditorItemValidation'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
 import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
@@ -976,6 +977,21 @@ const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
   }
   return out
 })
+// Let row validity sentinels surface 'invalid' as soon as their row is unsaved.
+// Includes each unsaved row's id/position too, so the lookup matches whatever
+// key the sentinel registers under (which may differ from the editor's key-field).
+const unsavedValidationKeys = computed<Set<ListEditorKey>>(() => {
+  const out = new Set<ListEditorKey>()
+  for (const vi of viewItemsDecorated.value) {
+    if (!vi.unsaved) continue
+    out.add(vi.key)
+    const raw = vi.raw as Record<string, any>
+    if (raw.id !== undefined && raw.id !== null) out.add(raw.id)
+    if (raw.position !== undefined && raw.position !== null) out.add(raw.position)
+  }
+  return out
+})
+provide(ListEditorUnsavedKeysKey, unsavedValidationKeys)
 
 const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSync({
   unsavedKeysModel,

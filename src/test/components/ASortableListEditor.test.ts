@@ -169,13 +169,16 @@ describe('ASortableListEditor', () => {
     })
   })
 
-  describe('drag reorder (SortableJS) recalculates positions', () => {
-    // Regression: vueuse's useSortable moves the bound array inside a nextTick,
-    // but the editor's onEnd ran recalculatePositions synchronously — so it
-    // renumbered the pre-drop order and the new positions stayed stale. The
-    // backend then sorts by position and the reorder is silently reverted.
-    // Real SortableJS drag needs live, attached DOM, so this mounts to body.
-    it('renumbers position to match the new order after a drag (no stale positions)', async () => {
+  describe('drag reorder (SortableJS) — synchronous move + position recalc', () => {
+    // Regression context: vueuse's useSortable moves the bound array inside a
+    // nextTick and the position renumber ran in a *separate* nextTick, leaving a
+    // window where a consumer "sort by position" watch re-sorted using stale
+    // positions and reverted the drop. The editor now does the move + renumber
+    // synchronously via editor.moveItem in its own onUpdate. These cover both
+    // drag directions, the no-updatePosition path, and DOM integrity to make
+    // sure the custom onUpdate didn't regress any consumer of the shared editor.
+    // Real SortableJS drag needs live, attached DOM, so these mount to body.
+    const mountSortable = (extraProps: Record<string, unknown> = {}) => {
       const model = ref<FaqItem[]>(items())
       const mode = ref<'view' | 'reorder'>('reorder')
       const Host = defineComponent({
@@ -191,30 +194,30 @@ describe('ASortableListEditor', () => {
                 mode.value = v
               },
               compactField: 'title',
-              updatePosition: true,
+              ...extraProps,
             })
         },
       })
       const wrapper = mount(Host, { attachTo: document.body })
-      await nextTick()
-      await flushPromises()
+      return { wrapper, model }
+    }
 
+    // Drive forceFallback SortableJS with raw pointer/mouse events: grab the
+    // handle of row `fromIdx`, drag onto the vertical centre of row `toIdx`.
+    const dragRowOntoRow = async (wrapper: VueWrapper, fromIdx: number, toIdx: number) => {
       const handles = wrapper.findAll('.a-le-drag-handle')
-      expect(handles.length).toBe(4)
       const rows = wrapper.findAll('.a-le-row')
-
-      // SortableJS runs with forceFallback:true, so it tracks raw mouse events
-      // (not native HTML5 drag) — drive it with a mousedown + stepped mousemoves
-      // + mouseup. Drag the last row's handle (id 4) up above the first row.
-      const handle = handles[3].element as HTMLElement
-      const targetRow = rows[0].element as HTMLElement
+      const handle = handles[fromIdx].element as HTMLElement
+      const target = rows[toIdx].element as HTMLElement
       const sb = handle.getBoundingClientRect()
-      const tb = targetRow.getBoundingClientRect()
+      const tb = target.getBoundingClientRect()
       const x = Math.round(sb.x + sb.width / 2)
       const startY = Math.round(sb.y + sb.height / 2)
-      const endY = Math.round(tb.y - 4)
-      const fire = (type: string, y: number, target: EventTarget = document) =>
-        target.dispatchEvent(
+      // Aim a few px past the target centre in the travel direction so the
+      // dragged row crosses the target midpoint and SortableJS commits a swap.
+      const endY = Math.round(tb.y + tb.height / 2 + (toIdx > fromIdx ? 6 : -6))
+      const fire = (type: string, y: number, target2: EventTarget = document) =>
+        target2.dispatchEvent(
           new MouseEvent(type, {
             bubbles: true,
             cancelable: true,
@@ -227,7 +230,7 @@ describe('ASortableListEditor', () => {
         )
       fire('pointerdown', startY, handle)
       fire('mousedown', startY, handle)
-      const steps = 24
+      const steps = 26
       for (let i = 1; i <= steps; i++) {
         const y = Math.round(startY + ((endY - startY) * i) / steps)
         fire('pointermove', y)
@@ -240,13 +243,61 @@ describe('ASortableListEditor', () => {
       await flushPromises()
       await nextTick()
       await nextTick()
+    }
 
-      // The drag actually reordered the model (id 4 is no longer last).
+    it('drag last → first renumbers positions to the new order (no stale positions)', async () => {
+      const { wrapper, model } = mountSortable({ updatePosition: true })
+      await nextTick()
+      await flushPromises()
+      expect(wrapper.findAll('.a-le-drag-handle').length).toBe(4)
+
+      await dragRowOntoRow(wrapper, 3, 0)
+
       expect(model.value.map((i) => i.id)).not.toEqual([1, 2, 3, 4])
-      // Positions are recalculated to the live array order — the regression
-      // left them stale (e.g. positions [4,1,2,3] on a [4,1,2,3] id order).
+      expect(model.value[0].id).toBe(4)
+      // Positions track the live array order — the regression left them stale.
       expect(model.value.map((i) => i.position)).toEqual(model.value.map((_, idx) => idx + 1))
+      wrapper.unmount()
+    })
 
+    it('drag first → last renumbers positions to the new order', async () => {
+      const { wrapper, model } = mountSortable({ updatePosition: true })
+      await nextTick()
+      await flushPromises()
+
+      await dragRowOntoRow(wrapper, 0, 3)
+
+      expect(model.value.map((i) => i.id)).not.toEqual([1, 2, 3, 4])
+      expect(model.value[model.value.length - 1].id).toBe(1)
+      expect(model.value.map((i) => i.position)).toEqual(model.value.map((_, idx) => idx + 1))
+      wrapper.unmount()
+    })
+
+    it('without updatePosition: reorders the array but leaves positions untouched', async () => {
+      const { wrapper, model } = mountSortable()
+      await nextTick()
+      await flushPromises()
+
+      await dragRowOntoRow(wrapper, 3, 0)
+
+      // Order changed...
+      expect(model.value.map((i) => i.id)).not.toEqual([1, 2, 3, 4])
+      // ...but positions are NOT rewritten (parity with vueuse's plain move).
+      expect(model.value.map((i) => i.position).sort((a, b) => a - b)).toEqual([1, 2, 3, 4])
+      wrapper.unmount()
+    })
+
+    it('keeps every row exactly once after a drag (no duplicate / lost rows)', async () => {
+      const { wrapper, model } = mountSortable({ updatePosition: true })
+      await nextTick()
+      await flushPromises()
+
+      await dragRowOntoRow(wrapper, 3, 0)
+
+      // No row duplicated or dropped — ids are still the same set of 4.
+      expect(model.value.map((i) => i.id).sort((a, b) => a - b)).toEqual([1, 2, 3, 4])
+      // DOM stays in sync with the model (one rendered row per item).
+      expect(wrapper.findAll('.a-le-row').length).toBe(4)
       wrapper.unmount()
     })
   })
@@ -506,6 +557,89 @@ describe('ASortableListEditor', () => {
       const rootHasDragClass = wrapper.find('.a-sortable-list-editor--drag-enabled').exists()
       const isTouch = wrapper.find('.a-sortable-list-editor--touch').exists()
       if (!isTouch) expect(rootHasDragClass).toBe(true)
+    })
+
+    it('drag reorders chips (horizontal) through the same synchronous onUpdate', async () => {
+      // Chips share the editor's SortableJS onUpdate but lay out horizontally and
+      // have always-on drag (no reorder toggle). Confirms the custom onUpdate
+      // also commits horizontal chip reorders and keeps the set intact.
+      interface Tag {
+        id: number
+        position: number
+        label: string
+      }
+      const model = ref<Tag[]>([
+        { id: 1, position: 1, label: 'alice' },
+        { id: 2, position: 2, label: 'bob' },
+        { id: 3, position: 3, label: 'carol' },
+      ])
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(
+              ASortableListEditor<Tag>,
+              {
+                modelValue: model.value,
+                'onUpdate:modelValue': (v: Tag[]) => {
+                  model.value = v
+                },
+                chips: true,
+                showAddButton: false,
+              },
+              {
+                'item-compact': ({ raw }: { raw: Tag }) =>
+                  h('span', { class: 'chip-x' }, raw.label),
+              },
+            )
+        },
+      })
+      const wrapper = mount(Host, { attachTo: document.body })
+      await nextTick()
+      await flushPromises()
+
+      const handles = wrapper.findAll('.a-le-drag-handle')
+      expect(handles.length).toBe(3)
+      // Drag the last chip (carol) onto the first chip (alice) — horizontal axis.
+      const handle = handles[2].element as HTMLElement
+      const target = wrapper.findAll('.a-le-row')[0].element as HTMLElement
+      const hb = handle.getBoundingClientRect()
+      const tb = target.getBoundingClientRect()
+      const y = Math.round(hb.y + hb.height / 2)
+      const startX = Math.round(hb.x + hb.width / 2)
+      const endX = Math.round(tb.x + tb.width / 2 - 6)
+      const fire = (type: string, cx: number, t: EventTarget = document) =>
+        t.dispatchEvent(
+          new MouseEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            clientX: cx,
+            clientY: y,
+            button: 0,
+            buttons: type === 'mouseup' || type === 'pointerup' ? 0 : 1,
+            view: window,
+          }),
+        )
+      fire('pointerdown', startX, handle)
+      fire('mousedown', startX, handle)
+      const steps = 26
+      for (let i = 1; i <= steps; i++) {
+        const cx = Math.round(startX + ((endX - startX) * i) / steps)
+        fire('pointermove', cx)
+        fire('mousemove', cx)
+        await new Promise((r) => setTimeout(r, 8))
+      }
+      await new Promise((r) => setTimeout(r, 60))
+      fire('pointerup', endX)
+      fire('mouseup', endX)
+      await flushPromises()
+      await nextTick()
+      await nextTick()
+
+      // carol is no longer last, and the full set survives the drag intact.
+      expect(model.value.map((t) => t.id)).not.toEqual([1, 2, 3])
+      expect(model.value.map((t) => t.id).sort((a, b) => a - b)).toEqual([1, 2, 3])
+      expect(wrapper.findAll('.a-le-row').length).toBe(3)
+      wrapper.unmount()
     })
   })
 
