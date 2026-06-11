@@ -64,7 +64,11 @@ import {
   useListEditorVuelidateSentinel,
   type VuelidateSentinelSource,
 } from '@/labs/listEditor/composables/useListEditorVuelidateSentinel'
-import { renumberPositions, type RenumberPositionsOptions } from '@/labs/listEditor/utils/positions'
+import {
+  renumberPositions,
+  sortByPosition,
+  type RenumberPositionsOptions,
+} from '@/labs/listEditor/utils/positions'
 import { nextListEditorTempId } from '@/labs/listEditor/utils/tempId'
 import {
   useNestedUnsavedKeys,
@@ -163,6 +167,7 @@ export {
   useListEditorVuelidateSentinel,
   type VuelidateSentinelSource,
   renumberPositions,
+  sortByPosition,
   type RenumberPositionsOptions,
   nextListEditorTempId,
   useNestedUnsavedKeys,

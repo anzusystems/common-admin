@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { renumberPositions } from '@/labs/listEditor/utils/positions'
+import { renumberPositions, sortByPosition } from '@/labs/listEditor/utils/positions'
 import { nextListEditorTempId } from '@/labs/listEditor/utils/tempId'
 
 describe('renumberPositions', () => {
@@ -36,6 +36,20 @@ describe('renumberPositions', () => {
 
   it('handles an empty list', () => {
     expect(renumberPositions([])).toEqual([])
+  })
+})
+
+describe('sortByPosition', () => {
+  it('returns a copy ordered by ascending position without mutating the input', () => {
+    const items = [
+      { id: 1, position: 3 },
+      { id: 2, position: 1 },
+      { id: 3, position: 2 },
+    ]
+    const result = sortByPosition(items)
+    expect(result.map((i) => i.id)).toEqual([2, 3, 1])
+    expect(items.map((i) => i.id)).toEqual([1, 2, 3])
+    expect(result).not.toBe(items)
   })
 })
 
