@@ -42,7 +42,7 @@
     "lint": "[ \"$*\" = \"--fix\" ] && yarn lint:fix || yarn ci",
     "lint:fix": "run-s --print-name lint:tsc format lint:oxlint:fix lint:eslint:fix lint:stylelint:fix",
     "lint:tsc": "NODE_OPTIONS=--max-old-space-size=4096 vue-tsc --build",
-    "lint:tsc:test": "NODE_OPTIONS=--max-old-space-size=4096 tsc --build tsconfig.test.json",
+    "lint:tsc:test": "NODE_OPTIONS=--max-old-space-size=4096 vue-tsc --build tsconfig.test.json",
     "lint:eslint": "eslint",
     "lint:eslint:fix": "eslint --fix",
     "lint:oxlint": "oxlint .",
