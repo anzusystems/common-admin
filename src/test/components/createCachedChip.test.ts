@@ -7,7 +7,14 @@ import { createCachedChip } from '@/components/createCachedChip'
 // the props/attrs the factory forwards.
 const ACachedChipStub = defineComponent({
   name: 'ACachedChip',
-  props: ['id', 'getCachedFn', 'route', 'displayTextPath', 'textOnly', 'size'],
+  props: {
+    id: { type: [Number, String], default: null },
+    getCachedFn: { type: Function, default: () => null },
+    route: { type: String, default: '' },
+    displayTextPath: { type: String, default: '' },
+    textOnly: { type: Boolean, default: false },
+    size: { type: String, default: '' },
+  },
   template: '<div class="cached-chip-stub" />',
 })
 
@@ -43,7 +50,10 @@ describe('createCachedChip', () => {
       displayTextPath: 'name',
       chipProps: { textOnly: true },
     })
-    const wrapper = mount(Baked, { props: { id: 1 }, global: { stubs: { ACachedChip: ACachedChipStub } } })
+    const wrapper = mount(Baked, {
+      props: { id: 1 },
+      global: { stubs: { ACachedChip: ACachedChipStub } },
+    })
     expect(wrapper.findComponent(ACachedChipStub).props('textOnly')).toBe(true)
   })
 })
