@@ -1270,3 +1270,6 @@ export {
   localTimeShiftInSeconds,
   useSystemBar,
 }
+
+export { createCachedChip } from '@/components/createCachedChip'
+export type { CreateCachedChipOptions, CachedChipId } from '@/components/createCachedChip'
