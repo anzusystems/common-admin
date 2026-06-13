@@ -48,40 +48,43 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
       setup() {
         if (opts.registry) provide(UnsavedSectionKey, opts.registry)
         return () =>
-          h(AListEditor<Item>, {
-            modelValue: opts.model.value,
-            'onUpdate:modelValue': (v: Item[]) => {
-              opts.model.value = v
+          h(
+            AListEditor<Item>,
+            {
+              modelValue: opts.model.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                opts.model.value = v
+              },
+              ...(opts.unsavedKeys
+                ? {
+                    unsavedKeys: opts.unsavedKeys.value,
+                    'onUpdate:unsavedKeys': (s: Set<ListEditorKey>) => {
+                      opts.unsavedKeys!.value = s
+                    },
+                  }
+                : {}),
+              compactField: 'title',
+              updatePosition: true,
+              itemFactory: makeItem,
+              manageDelete: true,
+              disableDeleteConfirm: true,
+              unsavedSectionLabel: opts.unsavedSectionLabel,
+              onAdded: (payload: { item: Item; index: number }) => {
+                opts.events.added = [...(opts.events.added ?? []), payload]
+              },
+              onAdd: (hint: unknown) => {
+                opts.events.add = [...(opts.events.add ?? []), hint]
+              },
+              onDeleted: (vi: unknown) => {
+                opts.events.deleted = [...(opts.events.deleted ?? []), vi]
+              },
             },
-            ...(opts.unsavedKeys
-              ? {
-                  unsavedKeys: opts.unsavedKeys.value,
-                  'onUpdate:unsavedKeys': (s: Set<ListEditorKey>) => {
-                    opts.unsavedKeys!.value = s
-                  },
-                }
-              : {}),
-            compactField: 'title',
-            updatePosition: true,
-            itemFactory: makeItem,
-            manageDelete: true,
-            disableDeleteConfirm: true,
-            unsavedSectionLabel: opts.unsavedSectionLabel,
-            onAdded: (payload: { item: Item; index: number }) => {
-              opts.events.added = [...(opts.events.added ?? []), payload]
-            },
-            onAdd: (hint: unknown) => {
-              opts.events.add = [...(opts.events.add ?? []), hint]
-            },
-            onDeleted: (vi: unknown) => {
-              opts.events.deleted = [...(opts.events.deleted ?? []), vi]
-            },
-          },
-          // An #item slot makes the editor inline-edit-capable, so added rows
-          // auto-open into edit mode (otherwise auto-open is a no-op).
-          opts.withItemSlot
-            ? { item: ({ raw }: { raw: Item }) => h('span', { class: 'test-item' }, raw.title) }
-            : undefined)
+            // An #item slot makes the editor inline-edit-capable, so added rows
+            // auto-open into edit mode (otherwise auto-open is a no-op).
+            opts.withItemSlot
+              ? { item: ({ raw }: { raw: Item }) => h('span', { class: 'test-item' }, raw.title) }
+              : undefined,
+          )
       },
     })
     mounted = mount(Host, { attachTo: document.body })

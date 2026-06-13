@@ -232,13 +232,13 @@ const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'
 // detect "dirty" (unsaved) rows. Reset externally after a successful parent-form save.
 const { captureDirtyBaseline, rebaselineKey, isItemDirty, ignoreNextSourceChange } =
   useDirtyBaseline<TItem>(
-  () =>
-    modelValue.value.map((item) => ({
-      key: item[props.keyField] as ListEditorKey,
-      data: item,
-    })),
-  { source: modelValue },
-)
+    () =>
+      modelValue.value.map((item) => ({
+        key: item[props.keyField] as ListEditorKey,
+        data: item,
+      })),
+    { source: modelValue },
+  )
 
 const {
   editingKeys,

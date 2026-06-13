@@ -59,7 +59,7 @@ export function createCachedChip(options: CreateCachedChipOptions): Component {
             ...options.chipProps,
             ...attrs,
           },
-          slots
+          slots,
         )
     },
   })
