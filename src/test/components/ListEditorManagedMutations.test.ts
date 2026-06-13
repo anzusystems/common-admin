@@ -3,6 +3,7 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, provide, ref, type Ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
+import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 import {
   createUnsavedSectionRegistry,
   UnsavedSectionKey,
@@ -40,6 +41,8 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
     events: Record<string, unknown[]>
     registry?: UnsavedSectionRegistry
     unsavedSectionLabel?: string
+    unsavedKeys?: Ref<Set<ListEditorKey>>
+    withItemSlot?: boolean
   }) => {
     const Host = defineComponent({
       setup() {
@@ -50,6 +53,14 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
             'onUpdate:modelValue': (v: Item[]) => {
               opts.model.value = v
             },
+            ...(opts.unsavedKeys
+              ? {
+                  unsavedKeys: opts.unsavedKeys.value,
+                  'onUpdate:unsavedKeys': (s: Set<ListEditorKey>) => {
+                    opts.unsavedKeys!.value = s
+                  },
+                }
+              : {}),
             compactField: 'title',
             updatePosition: true,
             itemFactory: makeItem,
@@ -65,7 +76,12 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
             onDeleted: (vi: unknown) => {
               opts.events.deleted = [...(opts.events.deleted ?? []), vi]
             },
-          })
+          },
+          // An #item slot makes the editor inline-edit-capable, so added rows
+          // auto-open into edit mode (otherwise auto-open is a no-op).
+          opts.withItemSlot
+            ? { item: ({ raw }: { raw: Item }) => h('span', { class: 'test-item' }, raw.title) }
+            : undefined)
       },
     })
     mounted = mount(Host, { attachTo: document.body })
@@ -118,6 +134,31 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
     const row = document.querySelector<HTMLElement>(`[data-id="${read(model)[0].id}"]`)
     expect(row).toBeTruthy()
     expect(row!.classList.contains('a-le-row--unsaved')).toBe(true)
+  })
+
+  it('collapses inline editing when the consumer empties unsaved-keys (post-save)', async () => {
+    const model = ref<Item[]>(items())
+    const unsavedKeys = ref(new Set<ListEditorKey>())
+    const events: Record<string, unknown[]> = {}
+    mountManaged({ model, events, unsavedKeys, withItemSlot: true })
+    await nextTick()
+
+    const addBtn = mounted!
+      .findAll('button')
+      .find(
+        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
+      )
+    await addBtn!.trigger('click')
+    await nextTick()
+    await nextTick()
+    // The freshly added row auto-opened for inline editing.
+    expect(document.querySelectorAll('.a-le-row--editing').length).toBeGreaterThan(0)
+
+    // Parent form persisted and cleared its unsaved-keys model → editing closes.
+    unsavedKeys.value = new Set()
+    await nextTick()
+    await nextTick()
+    expect(document.querySelectorAll('.a-le-row--editing').length).toBe(0)
   })
 
   it('manageDelete removes the row from the model and still emits `deleted`', async () => {

@@ -1053,6 +1053,8 @@ const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSyn
   onClearAll: () => {
     captureDirtyBaseline()
     movedKeys.value = new Set()
+    // Collapse open inline-edit forms once the parent persisted.
+    clearEditing()
   },
   onClearKey: (key) => {
     rebaselineKey(key)
@@ -1467,7 +1469,7 @@ defineExpose({
                         </VListItem>
                         <VListItem
                           v-if="showAddAfterAction && canInteract"
-                          @click.stop="onRowAddAfterClick(vi)"
+                          @click="onRowAddAfterClick(vi)"
                         >
                           <template #prepend>
                             <VIcon icon="mdi-plus" />
@@ -1551,7 +1553,7 @@ defineExpose({
                     />
                     <VMenu activator="parent">
                       <VList density="compact">
-                        <VListItem @click.stop="onRowAddAfterClick(vi)">
+                        <VListItem @click="onRowAddAfterClick(vi)">
                           <template #prepend>
                             <VIcon icon="mdi-plus" />
                           </template>

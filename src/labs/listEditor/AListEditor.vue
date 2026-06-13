@@ -248,6 +248,7 @@ const {
   commitEdit,
   closeEdit,
   requestAutoOpen,
+  clearEditing,
 } = useInlineEditing<TItem, ListViewItem<TItem>>({
   rowsContainer,
   rowSelector: '.a-le-row',
@@ -615,7 +616,12 @@ provide(ListEditorUnsavedKeysKey, unsavedValidationKeys)
 const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSync({
   unsavedKeysModel,
   internalUnsavedKeys,
-  onClearAll: () => captureDirtyBaseline(),
+  onClearAll: () => {
+    captureDirtyBaseline()
+    // Collapse open inline-edit forms once the parent persisted — the rows are
+    // saved, so leaving them in edit mode would be stale.
+    clearEditing()
+  },
   onClearKey: (key) => rebaselineKey(key),
 })
 
@@ -860,7 +866,7 @@ defineExpose({
                     />
                     <VMenu activator="parent">
                       <VList density="compact">
-                        <VListItem @click.stop="onRowAddAfterClick(vi)">
+                        <VListItem @click="onRowAddAfterClick(vi)">
                           <template #prepend>
                             <VIcon icon="mdi-plus" />
                           </template>

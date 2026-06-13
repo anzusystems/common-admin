@@ -1414,6 +1414,8 @@ const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSyn
   onClearAll: () => {
     captureDirtyBaseline()
     movedKeys.value = new Set()
+    // Collapse open inline-edit forms once the parent persisted.
+    clearEditing()
   },
   onClearKey: (key) => {
     rebaselineKey(key)
