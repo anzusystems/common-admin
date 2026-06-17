@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1778754005",
+  "version": "1.47.0-beta.dev-1778754006",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -117,7 +117,7 @@
     "vue-i18n": "11.4.5",
     "vue-router": "5.1.0",
     "vue-tsc": "3.3.5",
-    "vuetify": "4.1.1",
+    "vuetify": "4.1.2",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
