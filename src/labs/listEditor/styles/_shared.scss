@@ -221,13 +221,16 @@
     background: var(--le-warning);
   }
 
-  // When the row is invalid AND unsaved, swap the row tint from orange to red
-  // so the entire row reads as a problem to fix, not a pending change.
-  &--unsaved.a-le-row--validation-invalid {
+  // Error takes visual precedence over the unsaved/changed state: any invalid
+  // row tints the *whole* row red (header + body), overriding the orange unsaved
+  // tint, so it always reads as a problem to fix rather than a pending change —
+  // whether it is also unsaved or invalid on its own. (Source order beats the
+  // equal-specificity `--unsaved` rule above.)
+  &--validation-invalid {
     background: var(--le-error-container);
   }
 
-  &--unsaved.a-le-row--validation-invalid .a-le-row-header {
+  &--validation-invalid .a-le-row-header {
     background: var(--le-error-container);
   }
   /* stylelint-enable selector-max-compound-selectors */
