@@ -51,23 +51,32 @@ export interface UseUnsavedKeysSyncApi {
  * Used by `AListEditor`, `ASortableListEditor`, `ANestedSortableListEditor`.
  */
 export function useUnsavedKeysSync(options: UseUnsavedKeysSyncOptions): UseUnsavedKeysSyncApi {
-  let suppressNextModelWatch = false
+  // Tracks the exact Set we last pushed to the external model, so the model
+  // watcher skips ONLY that echo. The previous single-boolean flag mis-fired
+  // when the consumer cleared the model in the same tick as an internal change:
+  // the internal write armed the flag, the consumer's empty-Set clear consumed
+  // it, and `onClearAll` never ran — leaving rows amber after a successful save
+  // (QA 85050 BUG-06).
+  let lastEmitted: Set<ListEditorKey> | null = null
 
   watch(
     options.internalUnsavedKeys,
     (now) => {
       if (setsEqual(options.unsavedKeysModel.value, now)) return
-      suppressNextModelWatch = true
+      lastEmitted = new Set(now)
       options.unsavedKeysModel.value = new Set(now)
     },
     { immediate: true },
   )
 
   watch(options.unsavedKeysModel, (now) => {
-    if (suppressNextModelWatch) {
-      suppressNextModelWatch = false
+    // Skip only the echo of our own internal→external write; any other value the
+    // consumer writes (notably an empty Set to clear after save) is genuine.
+    if (lastEmitted && setsEqual(now, lastEmitted)) {
+      lastEmitted = null
       return
     }
+    lastEmitted = null
     if (now.size === 0 && options.internalUnsavedKeys.value.size > 0) {
       options.onClearAll()
     } else {

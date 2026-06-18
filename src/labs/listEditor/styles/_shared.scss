@@ -126,8 +126,10 @@
   // Editing / readonly-expanded rows keep the overall row transparent — the
   // blue tint sits on the header only, and the form body gets its own soft
   // gradient.
-  &--editing .a-le-row-header,
-  &--expanded .a-le-row-header {
+  // Direct child only — a nested editor rendered inside an expanded/editing row
+  // must NOT inherit the parent row's header tint (QA 85050 BUG-07 cascade leak).
+  &--editing > .a-le-row-header,
+  &--expanded > .a-le-row-header {
     background: var(--le-primary-container);
   }
 
@@ -160,7 +162,10 @@
     z-index: 2;
   }
 
-  &--unsaved .a-le-row-header {
+  // Direct child only: editing one nested row marks the parent dirty (the
+  // parent's hash includes its children), but that must not tint the untouched
+  // sibling rows' headers amber (QA 85050 BUG-07).
+  &--unsaved > .a-le-row-header {
     background: var(--le-warning-container);
   }
 
@@ -230,7 +235,9 @@
     background: var(--le-error-container);
   }
 
-  &--validation-invalid .a-le-row-header {
+  // Direct child only (same nested-leak guard as --unsaved above): a parent row
+  // flagged invalid must not paint nested child headers red (QA 85050 BUG-07).
+  &--validation-invalid > .a-le-row-header {
     background: var(--le-error-container);
   }
   /* stylelint-enable selector-max-compound-selectors */

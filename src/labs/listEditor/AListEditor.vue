@@ -140,6 +140,17 @@ export interface Props<TItem extends Record<string, any>> {
    * call for the common one-editor case.
    */
   unsavedSectionLabel?: string
+  /**
+   * Externally-supplied dirty baseline (opt-in): the *last-saved* rows the dirty/amber
+   * markers diff against. By default the editor snapshots the current model eagerly at
+   * mount, which means an editor that remounts over already-edited data re-baselines it
+   * as clean — silently dropping the unsaved markers. Pass the saved rows here — held above
+   * the editor, so they survive a remount — and every instance derives the SAME unsaved set
+   * from them instead of re-capturing clean. Update this value after a successful save so it
+   * becomes the new baseline. Absent → unchanged eager behaviour. Same shape as the model;
+   * do NOT pre-strip `position-field`.
+   */
+  dirtyBaseline?: TItem[] | null
 }
 
 const props = withDefaults(defineProps<Props<TItem>>(), {
@@ -177,6 +188,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   itemFactory: undefined,
   manageDelete: false,
   unsavedSectionLabel: undefined,
+  dirtyBaseline: undefined,
 })
 
 const emit = defineEmits<{
@@ -237,7 +249,23 @@ const { captureDirtyBaseline, rebaselineKey, isItemDirty, ignoreNextSourceChange
         key: item[props.keyField] as ListEditorKey,
         data: item,
       })),
-    { source: modelValue },
+    {
+      // `positionField` excluded from the dirty hash: with `update-position`, add/delete
+      // renumbers `position` on every shifted row, which would otherwise read those
+      // untouched rows as dirty (QA 85050 BUG-08/11/12). Mirrors ASortableListEditor.
+      excludeFields: [props.positionField],
+      source: modelValue,
+      // Opt-in: when the consumer supplies a saved-rows baseline, derive dirty from it so a
+      // remounted instance reuses the persisted baseline instead of re-baselining unsaved
+      // data as clean. Absent → null → unchanged eager behaviour. Mirrors ASortableListEditor.
+      baselineSource: () =>
+        props.dirtyBaseline
+          ? props.dirtyBaseline.map((item) => ({
+              key: item[props.keyField] as ListEditorKey,
+              data: item,
+            }))
+          : null,
+    },
   )
 
 const {

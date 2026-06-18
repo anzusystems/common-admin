@@ -26,6 +26,7 @@ const props = withDefaults(
     dataCy?: string
     collab?: CollabComponentConfig
     disabled?: boolean
+    readonly?: boolean
   }>(),
   {
     label: undefined,
@@ -39,6 +40,7 @@ const props = withDefaults(
     dataCy: '',
     collab: undefined,
     disabled: undefined,
+    readonly: undefined,
   },
 )
 const emit = defineEmits<{
@@ -149,6 +151,7 @@ watch(
     item-value="value"
     :multiple="multipleComputedVuetifyTypeFix"
     :disabled="disabledComputed"
+    :readonly="readonly"
     :clearable="clearable"
     :error-messages="errorMessageComputed"
     :data-cy="dataCy"

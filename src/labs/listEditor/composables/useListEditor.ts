@@ -34,6 +34,18 @@ export function useListEditor<TItem extends Record<string, any>>(
   const positionMultiplier = options.positionMultiplier ?? 1
   const updatePositionEnabled = options.updatePosition === true
 
+  // Using the position field as the row key while `update-position` is on is
+  // self-defeating: every reorder renumbers positions, which changes the keys,
+  // so dirty/validity tracking flags the displaced rows as unsaved (QA 85050
+  // BUG-09). Point key-field at a stable identity field (e.g. "id").
+  if (updatePositionEnabled && keyField === positionField) {
+    console.warn(
+      `[list-editor] key-field === position-field ("${keyField}") with update-position enabled. ` +
+        'Reordering renumbers positions and thus changes row keys, breaking dirty/validity ' +
+        'tracking. Point key-field at a stable identity field (e.g. "id").',
+    )
+  }
+
   // Surfaces row-key wiring bugs loudly: rows keyed `undefined` (item lacks the
   // key-field) or two rows sharing one key silently break dirty tracking,
   // validity rails and reorder targeting in ways that are hard to trace from

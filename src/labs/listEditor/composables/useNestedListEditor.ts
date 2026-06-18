@@ -363,6 +363,8 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     siblings.splice(idx, 1)
     prev.children!.push(node)
     ;(node.data as any)[parentField] = getKey(prev.data)
+    // Persist the reparent even when the position number is unchanged (QA 85050 BUG-13).
+    node.meta.dirty = true
     recalculateSiblings(siblings)
     recalculateSiblings(prev.children!)
     model.value = cloned
@@ -391,6 +393,8 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     currentSiblings.splice(idx, 1)
     grandSiblings.splice(parentIdx + 1, 0, node)
     ;(node.data as any)[parentField] = grandParent ? getKey(grandParent.data) : null
+    // Persist the reparent even when the position number is unchanged (QA 85050 BUG-13).
+    node.meta.dirty = true
 
     recalculateSiblings(currentSiblings)
     recalculateSiblings(grandSiblings)
@@ -465,6 +469,12 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     insertAt = Math.max(0, Math.min(insertAt, targetSiblings.length))
     targetSiblings.splice(insertAt, 0, removed)
     ;(removed.data as any)[parentField] = newParentNode ? getKey(newParentNode.data) : null
+    // A reparent must be persisted even when the node's position NUMBER is unchanged
+    // (e.g. a root item at pos 2 dropped as a group's 2nd child is also pos 2).
+    // recalculateSiblings only flags position-number changes, so flag the moved node
+    // explicitly — otherwise the partial save omits it and the parent reverts on
+    // reload, so the child re-appears at root after save+refresh (QA 85050 BUG-13).
+    removed.meta.dirty = true
 
     if (!samelist) recalculateSiblings(sourceSiblings)
     recalculateSiblings(targetSiblings)
