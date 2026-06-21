@@ -1,17 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted } from 'vue'
 import ACard from '@/components/ACard.vue'
 import ARow from '@/components/ARow.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
-import type { ListEditorKey, ListViewItem } from '@/labs/listEditor/types/listEditorTypes'
-import { useNestedUnsavedKeys } from '@/labs/listEditor/composables/useNestedUnsavedKeys'
 import QuizManageQuestionAnswers from '@/playground/quizManageView/QuizManageQuestionAnswers.vue'
 import {
   type Quiz,
   type QuizQuestion,
   createQuizQuestion,
-  useQuizValidation,
 } from '@/playground/quizManageView/quizMock'
 
 type ReorderMode = 'view' | 'reorder'
@@ -31,47 +28,22 @@ const selectedValue = computed({
   },
 })
 const mode = defineModel<ReorderMode>('mode', { default: 'view' })
-const unsavedKeys = defineModel<Set<ListEditorKey>>('unsavedKeys', {
-  default: () => new Set<ListEditorKey>(),
-})
-const answersUnsavedKeys = defineModel<Set<ListEditorKey>>('answersUnsavedKeys', {
-  default: () => new Set<ListEditorKey>(),
-})
 
-const answerKeys = useNestedUnsavedKeys()
-watch(answerKeys.merged, (now) => {
-  answersUnsavedKeys.value = now
-})
+// true = VALID. A question needs a title, at least 2 answers, and every
+// answer titled. (Field-level vuelidate messages stay inside the row form.)
+const validateQuestion = (q: QuizQuestion): boolean =>
+  !!q.title && q.answers.length >= 2 && q.answers.every((a) => !!a.title)
 
-const { v$ } = useQuizValidation(selectedValue)
-
-const getQuestionValidationState = (q: QuizQuestion, __: ListEditorKey, index: number) => {
-  const errors = v$.value.quiz.questions.$each?.$response?.$errors?.[index]
-  if (errors && typeof errors === 'object') {
-    const hasOwnErrors = Object.values(errors).some(
-      (propErrors) => Array.isArray(propErrors) && propErrors.length > 0,
-    )
-    if (hasOwnErrors) return 'invalid'
-  }
-  // Roll up: question is invalid if any of its answers is empty.
-  if (q.answers.length < 2) return 'invalid'
-  if (q.answers.some((a) => !a.title)) return 'invalid'
-  return null
-}
-
-const onAddQuestion = () => {
+const createQuestion = (): QuizQuestion => {
   const newQuestion = createQuizQuestion()
   newQuestion.quiz = selectedValue.value.id
   newQuestion.position = (selectedValue.value.questions.at(-1)?.position ?? 0) + 1
-  selectedValue.value.questions.push(newQuestion)
+  return newQuestion
 }
-const onDeleteQuestion = (vi: ListViewItem<QuizQuestion>) => {
-  selectedValue.value.questions.splice(vi.index, 1)
-}
+
 onMounted(() => {
   if (selectedValue.value.questions.length === 0) {
-    onAddQuestion()
-    onAddQuestion()
+    selectedValue.value.questions.push(createQuestion(), createQuestion())
   }
 })
 </script>
@@ -80,13 +52,11 @@ onMounted(() => {
   <ASortableListEditor
     v-model="selectedValue.questions"
     v-model:mode="mode"
-    v-model:unsaved-keys="unsavedKeys"
-    :get-validation-state="getQuestionValidationState"
+    :factory="createQuestion"
+    :validate="validateQuestion"
     title="Questions"
     add-label="Add question"
     allow-edit-in-reorder
-    @add="onAddQuestion"
-    @deleted="onDeleteQuestion"
   >
     <template #item-compact="{ raw }: { raw: QuizQuestion }">
       <span>{{ raw.title || '(empty question)' }}</span>
@@ -126,13 +96,8 @@ onMounted(() => {
         <QuizManageQuestionAnswers
           :model-value="raw"
           :mode="mode"
-          :unsaved-keys="answerKeys.getForParent((raw.id ?? raw.position) as ListEditorKey)"
           :answer-value-type="selectedValue.attributes.answerValueType"
           @update:model-value="actions.update"
-          @update:unsaved-keys="
-            (s: Set<ListEditorKey>) =>
-              answerKeys.setForParent((raw.id ?? raw.position) as ListEditorKey, s)
-          "
         />
         <AFormTextarea
           v-model="raw.explanation"
@@ -154,13 +119,8 @@ onMounted(() => {
         <QuizManageQuestionAnswers
           :model-value="raw"
           :mode="mode"
-          :unsaved-keys="answerKeys.getForParent((raw.id ?? raw.position) as ListEditorKey)"
           :answer-value-type="selectedValue.attributes.answerValueType"
           @update:model-value="actions.update"
-          @update:unsaved-keys="
-            (s: Set<ListEditorKey>) =>
-              answerKeys.setForParent((raw.id ?? raw.position) as ListEditorKey, s)
-          "
         />
       </div>
     </template>

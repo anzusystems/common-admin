@@ -27,6 +27,12 @@ export interface NestedViewItem<TItem> extends ListViewItem<TItem> {
 
 export interface UseNestedListEditorOptions {
   keyField?: string
+  /**
+   * Resolve a row's key; takes precedence over `keyField`. Pass the controller's
+   * `keyOf` so tree ops key rows the same way as dirty/validity tracking — incl.
+   * a FUNCTION get-key, which `keyField` lookup would miss.
+   */
+  getKey?: (data: any) => ListEditorKey
   positionField?: string
   parentField?: string
   positionMultiplier?: number
@@ -80,12 +86,14 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
   options: UseNestedListEditorOptions,
 ): NestedListEditorApi<TItem> {
   const keyField = options.keyField ?? DEFAULT_KEY_FIELD
+  const resolveKey = options.getKey
   const positionField = options.positionField ?? DEFAULT_POSITION_FIELD
   const parentField = options.parentField ?? DEFAULT_PARENT_FIELD
   const positionMultiplier = options.positionMultiplier ?? 1
   const maxDepth = options.maxDepth
 
-  const getKey = (data: TItem): ListEditorKey => data[keyField] as ListEditorKey
+  const getKey = (data: TItem): ListEditorKey =>
+    resolveKey ? resolveKey(data) : (data[keyField] as ListEditorKey)
 
   const calculateSubtreeDepth = (node: NestedTreeNode<TItem>): number => {
     if (!node.children || node.children.length === 0) return 1
@@ -117,10 +125,8 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     for (const sibling of siblings) {
       if (sibling.data[positionField] !== pos) {
         ;(sibling.data as any)[positionField] = pos
-        // A renumbered sibling must be flagged dirty so consumers that persist
-        // only changed nodes (e.g. the linked-list partial-multi save) actually
-        // store the new position — otherwise add/move/delete reorders are lost on
-        // reload and rows collide on their old positions.
+        // Flag dirty so a partial-subset save persists the new position;
+        // otherwise reorders are lost on reload and rows collide on old positions.
         sibling.meta.dirty = true
       }
       pos += positionMultiplier
@@ -286,11 +292,8 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     const { node } = findNode(id, cloned.children)
     if (!node) return cloned
     node.data = cloneDeep(data) as TItem
-    // An edit IS a change that must be persisted. Consumers that save only the
-    // dirty subset (e.g. linked-list partial-multi update) drop the edited node
-    // otherwise, so the change is lost on reload. Mirrors add/move, which flag
-    // dirty via recalculateSiblings. `markDirty=false` is for snapshot restore
-    // on edit-cancel — restoring the original data must NOT flag it dirty.
+    // An edit must be persisted by partial-subset saves. `markDirty=false` is for
+    // snapshot restore on edit-cancel, which must NOT flag the node dirty.
     if (markDirty) node.meta.dirty = true
     model.value = cloned
     return cloned
@@ -469,11 +472,9 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     insertAt = Math.max(0, Math.min(insertAt, targetSiblings.length))
     targetSiblings.splice(insertAt, 0, removed)
     ;(removed.data as any)[parentField] = newParentNode ? getKey(newParentNode.data) : null
-    // A reparent must be persisted even when the node's position NUMBER is unchanged
-    // (e.g. a root item at pos 2 dropped as a group's 2nd child is also pos 2).
-    // recalculateSiblings only flags position-number changes, so flag the moved node
-    // explicitly — otherwise the partial save omits it and the parent reverts on
-    // reload, so the child re-appears at root after save+refresh (QA 85050 BUG-13).
+    // Flag explicitly: a reparent at an unchanged position number (root pos 2 →
+    // a group's 2nd child, also pos 2) isn't caught by recalculateSiblings, so the
+    // partial save would omit it and the child reverts to root on reload (BUG-13).
     removed.meta.dirty = true
 
     if (!samelist) recalculateSiblings(sourceSiblings)

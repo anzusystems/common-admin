@@ -246,7 +246,7 @@ describe('ANestedSortableListEditor', () => {
       expect(api.indent).toBeTypeOf('function')
       const res = api.indent(3) // indent About (id=3)
       await flushPromises()
-      expect(res).not.toBeNull()
+      expect(res).toBe(true)
       // About should now be a child of News (the prev sibling)
       const news = model.value.children.find((n) => n.data.id === 2)!
       expect(news.children!.map((c) => c.data.id)).toEqual([21, 22, 3])
@@ -287,7 +287,7 @@ describe('ANestedSortableListEditor', () => {
       const api = editorExposed(wrapper)
       // Try to indent B (id=20) under A — would make B's subtree depth 4 (A>B>B1>B1a), exceeds 3
       const res = api.indent(20)
-      expect(res).toBeNull()
+      expect(res).toBe(false)
       // Model unchanged
       expect(model.value.children.map((n) => n.data.id)).toEqual([10, 20])
     })
@@ -308,7 +308,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor()
       const api = editorExposed(wrapper)
       const res = api.outdent(1) // Home is already root
-      expect(res).toBeNull()
+      expect(res).toBe(false)
     })
   })
 
@@ -935,15 +935,15 @@ describe('ANestedSortableListEditor', () => {
 // need to invoke tree mutations directly (kebab-menu targets are inside a
 // Vuetify VMenu popover and are not always stable in headless test DOM).
 interface EditorApi {
-  indent: (id: number) => unknown
-  outdent: (id: number) => unknown
+  indent: (id: number) => boolean
+  outdent: (id: number) => boolean
   addAfterId: (targetId: number | null, data: MenuItem, childrenAllowed: boolean) => unknown
   addChildToId: (targetId: number, data: MenuItem, childrenAllowed: boolean) => unknown
   removeById: (id: number) => void
   updateData: (id: number, data: MenuItem) => void
   resetDirtyBaseline: () => void
   addItem: (
-    data: MenuItem,
+    data?: MenuItem,
     hint?: {
       parentId?: number
       afterId?: number

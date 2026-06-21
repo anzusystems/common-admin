@@ -39,6 +39,7 @@ const mountWith = (data: Ref<Item[]>) => {
           'onUpdate:modelValue': (v: Item[]) => {
             data.value = v
           },
+          factory: (): Item => ({ position: 0, title: '' }),
           compactField: 'title',
         })
     },

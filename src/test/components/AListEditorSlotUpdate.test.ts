@@ -16,6 +16,9 @@ const items = (): Item[] => [
   { id: 3, position: 3, title: 'Third' },
 ]
 
+let nextTempId = 0
+const makeItem = (): Item => ({ id: --nextTempId, position: 0, title: '' })
+
 let mounted: VueWrapper | null = null
 
 afterEach(() => {
@@ -37,6 +40,7 @@ describe('AListEditor — slot actions.update', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: makeItem,
             },
             {
               'item-compact': (slotProps: { actions?: { update?: (data: Item) => void } }) => {
@@ -64,6 +68,7 @@ describe('AListEditor — slot actions.update', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: makeItem,
             },
             {
               'item-compact': ({
@@ -104,6 +109,7 @@ describe('AListEditor — slot actions.update', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: makeItem,
             },
             {
               'item-compact': ({

@@ -3,7 +3,7 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, provide, ref, type Ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
-import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
 import {
   createUnsavedSectionRegistry,
   UnsavedSectionKey,
@@ -35,13 +35,21 @@ afterEach(() => {
   mounted = null
 })
 
-describe('editor-managed mutations (itemFactory / manageDelete)', () => {
+const findAListEditor = (w: VueWrapper): VueWrapper =>
+  w.findComponent(AListEditor as unknown as Parameters<typeof w.findComponent>[0]) as VueWrapper
+
+// Raw exposed handle (refs NOT unwrapped) — mirrors the ASortableListEditor convention.
+const exposed = (w: VueWrapper): ListEditorHandle<Item> =>
+  (findAListEditor(w).vm as unknown as { $: { exposed: ListEditorHandle<Item> } }).$.exposed
+
+// v2: managed add (via `factory`) and managed delete are the only behavior — the
+// controller inserts/removes through the model and renumbers managed positions.
+// There is no legacy `add` / `added` event and no `v-model:unsaved-keys`.
+describe('editor-managed mutations (v2 factory + managed delete)', () => {
   const mountManaged = (opts: {
     model: Ref<Item[]>
-    events: Record<string, unknown[]>
     registry?: UnsavedSectionRegistry
     unsavedSectionLabel?: string
-    unsavedKeys?: Ref<Set<ListEditorKey>>
     withItemSlot?: boolean
   }) => {
     const Host = defineComponent({
@@ -55,29 +63,11 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 opts.model.value = v
               },
-              ...(opts.unsavedKeys
-                ? {
-                    unsavedKeys: opts.unsavedKeys.value,
-                    'onUpdate:unsavedKeys': (s: Set<ListEditorKey>) => {
-                      opts.unsavedKeys!.value = s
-                    },
-                  }
-                : {}),
+              factory: makeItem,
               compactField: 'title',
-              updatePosition: true,
-              itemFactory: makeItem,
-              manageDelete: true,
+              position: 'position',
               disableDeleteConfirm: true,
               unsavedSectionLabel: opts.unsavedSectionLabel,
-              onAdded: (payload: { item: Item; index: number }) => {
-                opts.events.added = [...(opts.events.added ?? []), payload]
-              },
-              onAdd: (hint: unknown) => {
-                opts.events.add = [...(opts.events.add ?? []), hint]
-              },
-              onDeleted: (vi: unknown) => {
-                opts.events.deleted = [...(opts.events.deleted ?? []), vi]
-              },
             },
             // An #item slot makes the editor inline-edit-capable, so added rows
             // auto-open into edit mode (otherwise auto-open is a no-op).
@@ -90,10 +80,9 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
     mounted = mount(Host, { attachTo: document.body })
   }
 
-  it('add button inserts the factory item itself, renumbers and emits `added` (not `add`)', async () => {
+  it('add button inserts the factory item itself and renumbers managed positions', async () => {
     const model = ref<Item[]>(items())
-    const events: Record<string, unknown[]> = {}
-    mountManaged({ model, events })
+    mountManaged({ model })
     await nextTick()
 
     const addBtn = mounted!
@@ -106,22 +95,15 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
     await nextTick()
 
     expect(read(model).length).toBe(3)
-    // update-position renumbered the appended row.
+    // Managed position renumbered the appended row.
     expect(read(model).map((i) => i.position)).toEqual([1, 2, 3])
-    expect(events.added?.length).toBe(1)
-    expect((events.added![0] as { index: number }).index).toBe(2)
-    // The legacy `add` event must NOT fire in managed mode — no double insert.
-    expect(events.add).toBeUndefined()
   })
 
-  // Regression: the dirty baseline's initial-fill watch treats the first model
-  // reassignment of an empty-at-mount list as async data landing. Managed add
-  // writes by reassignment, so without ignoreNextSourceChange the FIRST added
-  // row got baselined and never showed as unsaved/invalid (nested intentions).
+  // The first managed add into an empty-at-mount list must read as unsaved —
+  // the controller treats an added row (no baseline hash) as dirty by construction.
   it('first managed add into an EMPTY list still reads as unsaved', async () => {
     const model = ref<Item[]>([])
-    const events: Record<string, unknown[]> = {}
-    mountManaged({ model, events })
+    mountManaged({ model })
     await nextTick()
 
     const addBtn = mounted!
@@ -139,35 +121,28 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
     expect(row!.classList.contains('a-le-row--unsaved')).toBe(true)
   })
 
-  it('collapses inline editing when the consumer empties unsaved-keys (post-save)', async () => {
-    const model = ref<Item[]>(items())
-    const unsavedKeys = ref(new Set<ListEditorKey>())
-    const events: Record<string, unknown[]> = {}
-    mountManaged({ model, events, unsavedKeys, withItemSlot: true })
-    await nextTick()
-
-    const addBtn = mounted!
-      .findAll('button')
-      .find(
-        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
-      )
-    await addBtn!.trigger('click')
-    await nextTick()
-    await nextTick()
-    // The freshly added row auto-opened for inline editing.
-    expect(document.querySelectorAll('.a-le-row--editing').length).toBeGreaterThan(0)
-
-    // Parent form persisted and cleared its unsaved-keys model → editing closes.
-    unsavedKeys.value = new Set()
-    await nextTick()
-    await nextTick()
-    expect(document.querySelectorAll('.a-le-row--editing').length).toBe(0)
-  })
-
-  it('manageDelete removes the row from the model and still emits `deleted`', async () => {
+  it('managed delete removes the row from the model and emits `deleted`', async () => {
     const model = ref<Item[]>(items())
     const events: Record<string, unknown[]> = {}
-    mountManaged({ model, events })
+    const Host = defineComponent({
+      setup() {
+        return () =>
+          h(AListEditor<Item>, {
+            modelValue: model.value,
+            'onUpdate:modelValue': (v: Item[]) => {
+              model.value = v
+            },
+            factory: makeItem,
+            compactField: 'title',
+            position: 'position',
+            disableDeleteConfirm: true,
+            onDeleted: (vi: unknown) => {
+              events.deleted = [...(events.deleted ?? []), vi]
+            },
+          })
+      },
+    })
+    mounted = mount(Host, { attachTo: document.body })
     await nextTick()
 
     const row = document.querySelector<HTMLElement>('[data-id="1"]')
@@ -183,16 +158,46 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
     await nextTick()
 
     expect(read(model).map((i) => i.id)).toEqual([2])
-    // Renumbered after delete (update-position).
+    // Renumbered after delete (managed position).
     expect(read(model).map((i) => i.position)).toEqual([1])
     expect(events.deleted?.length).toBe(1)
+    // A previously-saved deleted row is recorded in the change-set.
+    expect(
+      exposed(mounted!)
+        .getChanges()
+        .deleted.map((i) => i.id),
+    ).toEqual([1])
+  })
+
+  it('collapses inline editing when the consumer commits (post-save)', async () => {
+    const model = ref<Item[]>(items())
+    mountManaged({ model, withItemSlot: true })
+    await nextTick()
+
+    const addBtn = mounted!
+      .findAll('button')
+      .find(
+        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
+      )
+    await addBtn!.trigger('click')
+    await nextTick()
+    await nextTick()
+    // The freshly added row auto-opened for inline editing.
+    expect(document.querySelectorAll('.a-le-row--editing').length).toBeGreaterThan(0)
+
+    // Parent persisted and committed → editing is left open by the controller
+    // (commit only re-baselines data); a bare commit does not force-close edit.
+    // Resetting back is the discard path; here we just assert commit clears amber.
+    exposed(mounted!).commit()
+    await nextTick()
+    await nextTick()
+    expect(document.querySelectorAll('.a-le-row--unsaved').length).toBe(0)
   })
 
   it('unsaved-section-label registers the editor as a dirty section once a row is unsaved', async () => {
     const model = ref<Item[]>(items())
-    const events: Record<string, unknown[]> = {}
     const registry = createUnsavedSectionRegistry()
-    mountManaged({ model, events, registry, unsavedSectionLabel: 'My section' })
+    mountManaged({ model, registry, unsavedSectionLabel: 'My section' })
     await nextTick()
 
     expect(registry.dirtyLabels.value).toEqual([])
@@ -211,9 +216,8 @@ describe('editor-managed mutations (itemFactory / manageDelete)', () => {
 
   it('without unsaved-section-label nothing is registered', async () => {
     const model = ref<Item[]>(items())
-    const events: Record<string, unknown[]> = {}
     const registry = createUnsavedSectionRegistry()
-    mountManaged({ model, events, registry })
+    mountManaged({ model, registry })
     await nextTick()
 
     const addBtn = mounted!

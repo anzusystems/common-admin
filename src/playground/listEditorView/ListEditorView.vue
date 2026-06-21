@@ -3,8 +3,8 @@ import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
-import type { ListEditorApi } from '@/labs/listEditor/composables/useListEditor'
-import type { ListViewItem, PositionHint } from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
+import type { ListViewItem } from '@/labs/listEditor/types/listEditorTypes'
 
 interface FaqItem extends Record<string, any> {
   id: number
@@ -15,6 +15,14 @@ interface FaqItem extends Record<string, any> {
 }
 
 let nextId = 100
+
+// New-row factory — the editor manages add itself (no consumer push handler).
+const createFaqItem = (): FaqItem => ({
+  id: nextId++,
+  position: 0,
+  title: `New #${nextId}`,
+  status: 'Draft',
+})
 
 const statusColor = (status: string): string => {
   if (status === 'Active') return 'success'
@@ -65,6 +73,7 @@ interface Keyword extends Record<string, any> {
   label: string
 }
 let nextKeywordId = 100
+const createKeyword = (): Keyword => ({ id: nextKeywordId++, label: '' })
 const chipItems = ref<Keyword[]>([
   { id: 1, label: 'breaking-news' },
   { id: 2, label: 'sport' },
@@ -110,7 +119,7 @@ const twoRowsItems = ref<FaqItem[]>([
   },
 ])
 
-const editorRef = ref<ListEditorApi<FaqItem> | null>(null)
+const editorRef = ref<ListEditorHandle<FaqItem> | null>(null)
 
 const lastLog = ref<string>('')
 const log = (msg: string) => {
@@ -120,21 +129,6 @@ const log = (msg: string) => {
 const onInlineItemSave = async (item: FaqItem) => {
   await new Promise((r) => setTimeout(r, 400))
   log(`saved item ${item.id}: ${item.title}`)
-}
-
-const onInlineAdd = (hint: PositionHint | undefined) => {
-  const fresh: FaqItem = {
-    id: nextId++,
-    position: 0,
-    title: `New #${nextId}`,
-    status: 'Draft',
-  }
-  const anchor = hint?.afterId ? inlineItems.value.findIndex((i) => i.id === hint.afterId) : -1
-  if (anchor >= 0) {
-    inlineItems.value.splice(anchor + 1, 0, fresh)
-  } else {
-    inlineItems.value.push(fresh)
-  }
 }
 
 const loadingKeys = ref<Set<number>>(new Set())
@@ -150,17 +144,8 @@ const onLazyEdit = async (vi: ListViewItem<FaqItem>) => {
   loadingKeys.value.delete(vi.raw.id)
 }
 
-const onRefAdd = (hint: PositionHint | undefined) => {
-  if (!editorRef.value) return
-  editorRef.value.addItem(
-    {
-      id: nextId++,
-      position: 0,
-      title: `New question #${nextId}`,
-      status: 'Draft',
-    },
-    hint,
-  )
+const onRefAdd = () => {
+  editorRef.value?.addItem()
 }
 
 const onDeleteAsync = async (item: FaqItem) => {
@@ -189,8 +174,8 @@ const onDeleteAsync = async (item: FaqItem) => {
       <AListEditor
         v-model="inlineItems"
         title="Časté otázky (FAQ)"
+        :factory="createFaqItem"
         :on-delete="onDeleteAsync"
-        @add="onInlineAdd"
       >
         <template #item-compact="{ raw }">
           <span class="faq-title">{{ raw.title }}</span>
@@ -231,6 +216,7 @@ const onDeleteAsync = async (item: FaqItem) => {
       <AListEditor
         v-model="readonlyItems"
         title="FAQ — read only"
+        :factory="createFaqItem"
         readonly
       >
         <template #item-compact="{ raw }">
@@ -278,6 +264,7 @@ const onDeleteAsync = async (item: FaqItem) => {
       <AListEditor
         v-model="lazyItems"
         title="FAQ — lazy detail"
+        :factory="createFaqItem"
         :loading-keys="loadingKeys"
         :on-item-save="onInlineItemSave"
         @edit="onLazyEdit"
@@ -334,6 +321,7 @@ const onDeleteAsync = async (item: FaqItem) => {
       <AListEditor
         v-model="twoRowsItems"
         title="FAQ — two-rows layout"
+        :factory="createFaqItem"
         two-rows="always"
         :on-item-save="onInlineItemSave"
       >
@@ -369,14 +357,24 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — imperative API via template ref
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Caller calls <code>editorRef.addItem(data, hint)</code> on the component; add button at the
-        bottom triggers it.
+        Caller calls <code>editorRef.addItem()</code> on the exposed handle; the external button
+        below triggers it (built-in add button hidden).
       </p>
+      <div class="d-flex ga-2 mb-2">
+        <VBtn
+          color="primary"
+          variant="flat"
+          @click="onRefAdd"
+        >
+          Add via handle
+        </VBtn>
+      </div>
       <AListEditor
         ref="editorRef"
         v-model="refEditorItems"
         title="FAQ — imperative ref"
-        @add="onRefAdd"
+        :factory="createFaqItem"
+        :show-add-button="false"
       >
         <template #item-compact="{ raw }">
           <span class="faq-title">{{ raw.title }}</span>
@@ -420,6 +418,8 @@ const onDeleteAsync = async (item: FaqItem) => {
       <AListEditor
         v-model="chipItems"
         title="Keywords"
+        :factory="createKeyword"
+        :position="false"
         chips
         :show-add-button="false"
       >
@@ -438,6 +438,8 @@ const onDeleteAsync = async (item: FaqItem) => {
       <AListEditor
         v-model="chipReadonlyItems"
         title="Tags (readonly)"
+        :factory="createKeyword"
+        :position="false"
         chips
         readonly
         :show-add-button="false"

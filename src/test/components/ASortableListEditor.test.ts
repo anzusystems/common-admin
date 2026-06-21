@@ -39,6 +39,7 @@ const mountEditor = (data: FaqItem[] = items(), extra: Record<string, unknown> =
           'onUpdate:mode': (v: 'view' | 'reorder') => {
             mode.value = v
           },
+          factory: (): FaqItem => ({ id: -Date.now(), position: 0, title: '' }),
           compactField: 'title',
           ...extra,
         })
@@ -193,6 +194,7 @@ describe('ASortableListEditor', () => {
               'onUpdate:mode': (v: 'view' | 'reorder') => {
                 mode.value = v
               },
+              factory: (): FaqItem => ({ id: -Date.now(), position: 0, title: '' }),
               compactField: 'title',
               ...extraProps,
             })
@@ -246,7 +248,7 @@ describe('ASortableListEditor', () => {
     }
 
     it('drag last → first renumbers positions to the new order (no stale positions)', async () => {
-      const { wrapper, model } = mountSortable({ updatePosition: true })
+      const { wrapper, model } = mountSortable()
       await nextTick()
       await flushPromises()
       expect(wrapper.findAll('.a-le-drag-handle').length).toBe(4)
@@ -261,7 +263,7 @@ describe('ASortableListEditor', () => {
     })
 
     it('drag first → last renumbers positions to the new order', async () => {
-      const { wrapper, model } = mountSortable({ updatePosition: true })
+      const { wrapper, model } = mountSortable()
       await nextTick()
       await flushPromises()
 
@@ -273,8 +275,8 @@ describe('ASortableListEditor', () => {
       wrapper.unmount()
     })
 
-    it('without updatePosition: reorders the array but leaves positions untouched', async () => {
-      const { wrapper, model } = mountSortable()
+    it('without managed position: reorders the array but leaves positions untouched', async () => {
+      const { wrapper, model } = mountSortable({ position: false })
       await nextTick()
       await flushPromises()
 
@@ -288,7 +290,7 @@ describe('ASortableListEditor', () => {
     })
 
     it('keeps every row exactly once after a drag (no duplicate / lost rows)', async () => {
-      const { wrapper, model } = mountSortable({ updatePosition: true })
+      const { wrapper, model } = mountSortable()
       await nextTick()
       await flushPromises()
 
@@ -405,6 +407,7 @@ describe('ASortableListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: (): FaqItem => ({ id: -Date.now(), position: 0, title: '' }),
                 compactField: 'title',
               },
               {
@@ -517,11 +520,9 @@ describe('ASortableListEditor', () => {
                 'onUpdate:modelValue': (v: Tag[]) => {
                   model.value = v
                 },
+                factory: (): Tag => ({ id: -Date.now(), position: 0, label: '' }),
                 chips: true,
                 showAddButton: false,
-                onDeleted: ({ index }: { index: number }) => {
-                  model.value.splice(index, 1)
-                },
               },
               {
                 'item-compact': ({ raw }: { raw: Tag }) =>
@@ -583,6 +584,7 @@ describe('ASortableListEditor', () => {
                 'onUpdate:modelValue': (v: Tag[]) => {
                   model.value = v
                 },
+                factory: (): Tag => ({ id: -Date.now(), position: 0, label: '' }),
                 chips: true,
                 showAddButton: false,
               },
@@ -741,6 +743,7 @@ describe('ASortableListEditor', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             })
         },
       })
@@ -754,7 +757,7 @@ describe('ASortableListEditor', () => {
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
     })
 
-    it('exposes resetDirtyBaseline which clears the unsaved indicator', async () => {
+    it('exposes commit() which re-baselines and clears the unsaved indicator', async () => {
       interface Item {
         id: number
         position: number
@@ -770,19 +773,20 @@ describe('ASortableListEditor', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             })
         },
       })
       const wrapper = mount(Host)
       const editor = findSortable(wrapper)
       const exposed = (
-        editor.vm as unknown as { $: { exposed: { resetDirtyBaseline: () => void } } }
+        editor.vm as unknown as { $: { exposed: { commit: (saved?: unknown[]) => void } } }
       ).$.exposed
 
       model.value = [{ ...model.value[0], title: 'A-changed' }]
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
-      exposed.resetDirtyBaseline()
+      exposed.commit()
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
@@ -801,6 +805,7 @@ describe('ASortableListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: (): FaqItem => ({ id: -Date.now(), position: 0, title: '' }),
               },
               {
                 'item-compact': ({ raw }: { raw: FaqItem }) =>
@@ -825,8 +830,13 @@ describe('ASortableListEditor', () => {
   // moves via the arrow-button actions + exposed API here and leave actual
   // pointer-drag coverage to the Playwright CLI skill.
   describe('movedKeys lifecycle', () => {
-    it('entering reorder mode clears any prior movedKeys', async () => {
-      const { wrapper } = mountEditor()
+    it('cancel restores the order and the reorder session resets on re-enter', async () => {
+      // v2: cancel restores the array (snapshot) and clears the reorder-session
+      // moved set, but the controller's persistent unsaved tracking only clears
+      // via reset()/commit() — so amber survives a bare cancel by design. We
+      // assert the order is restored, then reset() clears the amber, and a fresh
+      // reorder session starts with no pending changes.
+      const { wrapper, model, editor } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
@@ -834,15 +844,25 @@ describe('ASortableListEditor', () => {
       // One row is unsaved now (the actively moved row).
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
 
-      // Cancel — leaves reorder mode, clears movedKeys.
+      // Cancel — leaves reorder mode and restores the original order.
       const cancel = wrapper
         .findAll('button')
         .find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancel.trigger('click')
       await flushPromises()
+      expect(model.value.map((i) => i.id)).toEqual([1, 2, 3, 4])
+
+      // The controller still flags the moved row until the consumer resets.
+      const exposed = (
+        editor().vm as unknown as {
+          $: { exposed: { reset: (items?: unknown[]) => void } }
+        }
+      ).$.exposed
+      exposed.reset()
+      await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
 
-      // Re-enter — no stale movedKeys.
+      // Re-enter — a fresh session, no stale moved rows.
       await clickToggle(wrapper)
       await flushPromises()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
@@ -858,7 +878,7 @@ describe('ASortableListEditor', () => {
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
     })
 
-    it('applying reorder KEEPS movedKeys populated (cleared only via resetDirtyBaseline)', async () => {
+    it('applying reorder KEEPS movedKeys populated (cleared only via commit())', async () => {
       const { wrapper, editor } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
@@ -870,21 +890,21 @@ describe('ASortableListEditor', () => {
       await flushPromises()
 
       // Mode back to view, but the moved row is still flagged — the consumer
-      // is expected to flip it off by calling resetDirtyBaseline once their
-      // server save confirms.
+      // is expected to flip it off by calling commit() once their server save
+      // confirms (re-baselines current rows as saved).
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
 
       const exposed = (
         editor().vm as unknown as {
-          $: { exposed: { resetDirtyBaseline: () => void } }
+          $: { exposed: { commit: (saved?: unknown[]) => void } }
         }
       ).$.exposed
-      exposed.resetDirtyBaseline()
+      exposed.commit()
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
 
-    it('resetDirtyBaseline clears movedKeys', async () => {
+    it('commit() clears movedKeys', async () => {
       const { wrapper, editor } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
@@ -894,10 +914,10 @@ describe('ASortableListEditor', () => {
 
       const exposed = (
         editor().vm as unknown as {
-          $: { exposed: { resetDirtyBaseline: () => void } }
+          $: { exposed: { commit: (saved?: unknown[]) => void } }
         }
       ).$.exposed
-      exposed.resetDirtyBaseline()
+      exposed.commit()
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
@@ -923,6 +943,7 @@ describe('ASortableListEditor', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             })
         },
       })

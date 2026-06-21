@@ -56,6 +56,15 @@ import {
 } from '@/labs/unsavedGuard/useUnsavedSection'
 import { useListEditor, type ListEditorApi } from '@/labs/listEditor/composables/useListEditor'
 import {
+  useListEditorController,
+  type ListEditorHandle,
+  type UseListEditorControllerOptions,
+  type ListEditorChanges,
+  type ListEditorValidationResult,
+  type GetKey,
+  type PositionOption,
+} from '@/labs/listEditor/composables/useListEditorController'
+import {
   useListEditorItemValidation,
   ListEditorValidationKey,
   type ListEditorValidationRegistry,
@@ -84,6 +93,12 @@ import {
   type NestedListEditorApi,
   type NestedViewItem,
 } from '@/labs/listEditor/composables/useNestedListEditor'
+import {
+  useNestedListEditorController,
+  type NestedListEditorHandle,
+  type UseNestedListEditorControllerOptions,
+  type NestedListEditorChanges,
+} from '@/labs/listEditor/composables/useNestedListEditorController'
 import type {
   ListEditorKey,
   ListEditorValidationState,
@@ -161,6 +176,13 @@ export {
   type UnsavedSectionDescriptor,
   type UnsavedSectionSource,
   useListEditor,
+  useListEditorController,
+  type ListEditorHandle,
+  type UseListEditorControllerOptions,
+  type ListEditorChanges,
+  type ListEditorValidationResult,
+  type GetKey,
+  type PositionOption,
   useListEditorItemValidation,
   ListEditorValidationKey,
   type ListEditorValidationRegistry,
@@ -179,6 +201,10 @@ export {
   useNestedListEditor,
   type NestedListEditorApi,
   type NestedViewItem,
+  useNestedListEditorController,
+  type NestedListEditorHandle,
+  type UseNestedListEditorControllerOptions,
+  type NestedListEditorChanges,
   type ListEditorKey,
   type ListEditorValidationState,
   type ListViewItem,

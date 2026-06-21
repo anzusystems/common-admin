@@ -38,6 +38,7 @@ describe('ASortableListEditor — rail colors', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form'),
@@ -74,6 +75,7 @@ describe('ASortableListEditor — rail colors', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form'),
@@ -115,6 +117,7 @@ describe('ASortableListEditor — rail colors', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form'),
@@ -167,6 +170,7 @@ describe('ASortableListEditor — rail colors', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 outerModel.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
             {
               item: () =>
@@ -177,6 +181,7 @@ describe('ASortableListEditor — rail colors', () => {
                     'onUpdate:modelValue': (v: Item[]) => {
                       innerModel.value = v
                     },
+                    factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
                     embedded: true,
                   },
                   {

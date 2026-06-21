@@ -36,9 +36,13 @@ const mountPattern = (initial: MockImage[] = buildImages()) => {
             'onUpdate:mode': (v: 'view' | 'reorder') => {
               mode.value = v
             },
-            keyField: 'key',
-            positionField: 'position',
-            updatePosition: true,
+            factory: (): MockImage => ({
+              id: -Date.now(),
+              key: `img-${-Date.now()}`,
+              position: 0,
+              title: '',
+            }),
+            getKey: 'key',
             showAddButton: false,
             showDeleteButton: false,
             showEditButton: false,
@@ -193,8 +197,13 @@ describe('Card-grid + reorder mode pattern (#view-body slot)', () => {
               'onUpdate:mode': (v: 'view' | 'reorder') => {
                 mode.value = v
               },
-              keyField: 'key',
-              positionField: 'position',
+              factory: (): MockImage => ({
+                id: -Date.now(),
+                key: `img-${-Date.now()}`,
+                position: 0,
+                title: '',
+              }),
+              getKey: 'key',
             })
         },
       })

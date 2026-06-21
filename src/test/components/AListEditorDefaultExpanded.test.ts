@@ -15,6 +15,9 @@ const items = (): Item[] => [
   { id: 3, position: 3, title: 'Third' },
 ]
 
+let nextTempId = 0
+const makeItem = (): Item => ({ id: --nextTempId, position: 0, title: '' })
+
 let mounted: VueWrapper | null = null
 
 afterEach(() => {
@@ -34,6 +37,7 @@ const mountEditor = (defaultExpanded: boolean, extra: Record<string, unknown> = 
             'onUpdate:modelValue': (v: Item[]) => {
               model.value = v
             },
+            factory: makeItem,
             compactField: 'title',
             defaultExpanded,
             ...extra,
@@ -124,6 +128,7 @@ describe('AListEditor — defaultExpanded', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: makeItem,
               compactField: 'title',
               defaultExpanded: true,
             },

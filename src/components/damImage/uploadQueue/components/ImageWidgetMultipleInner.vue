@@ -501,6 +501,19 @@ const limitDialogComponent = ref<InstanceType<typeof ImageWidgetMultipleLimitDia
 
 const editorMode = ref<'view' | 'reorder'>('view')
 
+// Required by the editor, but never invoked here — adds happen through the
+// upload / asset-select flow, not the editor's add button (which is hidden).
+const createImageStoreItem = (): ImageStoreItem => ({
+  key: generateUUIDv1(),
+  texts: { description: '', source: '' },
+  dam: { damId: '', licenceId: 0, regionPosition: 0, internal: false },
+  flags: { showSource: true, internal: false, overrideInternal: false },
+  position: 0,
+  damAuthors: [],
+  showDamAuthors: false,
+  assetId: undefined,
+})
+
 const updateAllPositions = () => {
   let pos = 0
   images.value.forEach((image) => {
@@ -601,9 +614,9 @@ onMounted(() => {
       <ASortableListEditor
         v-model="images"
         v-model:mode="editorMode"
-        key-field="key"
-        position-field="position"
-        update-position
+        :factory="createImageStoreItem"
+        get-key="key"
+        position="position"
         :show-add-button="false"
         :show-delete-button="false"
         :show-edit-button="false"

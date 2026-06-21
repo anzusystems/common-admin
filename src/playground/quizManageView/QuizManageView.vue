@@ -2,14 +2,11 @@
 import { ref } from 'vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
-import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 import QuizManageQuestions from '@/playground/quizManageView/QuizManageQuestions.vue'
 import { QuizAnswerValueType, createQuiz } from '@/playground/quizManageView/quizMock'
 
 const quiz = ref(createQuiz())
 
-const questionsUnsavedKeys = ref(new Set<ListEditorKey>())
-const answersUnsavedKeys = ref(new Set<ListEditorKey>())
 const sharedMode = ref<'view' | 'reorder'>('view')
 </script>
 
@@ -65,13 +62,10 @@ const sharedMode = ref<'view' | 'reorder'>('view')
       <QuizManageQuestions
         v-model="quiz"
         v-model:mode="sharedMode"
-        v-model:unsaved-keys="questionsUnsavedKeys"
-        v-model:answers-unsaved-keys="answersUnsavedKeys"
       />
 
       <div class="text-body-small text-medium-emphasis mt-4">
-        questions unsaved: {{ questionsUnsavedKeys.size }} — answers unsaved (merged across all
-        questions): {{ answersUnsavedKeys.size }} — mode: {{ sharedMode }}
+        mode: {{ sharedMode }}
       </div>
     </VCardText>
   </VCard>

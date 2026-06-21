@@ -4,7 +4,6 @@ import {
   nextTick,
   onBeforeUnmount,
   onMounted,
-  provide,
   ref,
   shallowRef,
   useSlots,
@@ -15,24 +14,25 @@ import { useI18n } from 'vue-i18n'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
 import { useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
-import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
-import { ListEditorUnsavedKeysKey } from '@/labs/listEditor/composables/useListEditorItemValidation'
 import { useSortable } from '@vueuse/integrations/useSortable'
+import { type NestedViewItem } from '@/labs/listEditor/composables/useNestedListEditor'
 import {
-  useNestedListEditor,
-  type NestedViewItem,
-} from '@/labs/listEditor/composables/useNestedListEditor'
+  useNestedListEditorController,
+  type GetKey,
+  type ListEditorValidationResult,
+  type NestedListEditorHandle,
+  type PositionOption,
+} from '@/labs/listEditor/composables/useNestedListEditorController'
 import {
   computeInstruction,
   type ExecutableInstruction,
   type Instruction,
 } from '@/labs/listEditor/composables/useDragInstruction'
-import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
-import { useUnsavedKeysSync } from '@/labs/listEditor/composables/useUnsavedKeysSync'
 import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
+import { validateAllAndReveal } from '@/labs/listEditor/utils/revealInvalidRows'
 import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
 import { cloneDeep } from '@/utils/common'
 import type {
@@ -91,7 +91,7 @@ export interface RowActions<TItem> {
   moveBottom: () => void
   indent: () => void
   outdent: () => void
-  update: (data: TItem) => NestedTree<TItem>
+  update: (data: TItem) => void
 }
 export interface RowSlotProps<TItem extends Record<string, any>> {
   item: DecoratedNestedViewItem<TItem> & { validationState: ListEditorValidationState }
@@ -154,10 +154,39 @@ export interface AddButtonSlotProps {
 export interface Props<TItem extends Record<string, any>> {
   maxDepth: number
 
-  keyField?: string
-  positionField?: string
+  /**
+   * New-row factory; if set, add/add-after/add-inside insert through the
+   * controller (no `@add` handler needed). Optional for read-only trees.
+   */
+  factory?: () => TItem
+  /**
+   * Stable row identity. Default `'id'`. Never point at the position field.
+   * Typed `string` (not `keyof TItem`): a bare keyof compiles to a Boolean-only
+   * runtime type that silently coerces `get-key="id"` to `true`.
+   */
+  getKey?: string | ((item: TItem) => ListEditorKey)
+  /**
+   * Managed order field. Default `'position'`; `false` opts out. Typed
+   * `[String, Boolean, Object]` with `string` before `false`: a bare keyof
+   * compiles Boolean-only, and `false`-first would coerce `position="position"`
+   * (value == prop name) to `true`. Object form folds in `{ field, multiplier }`.
+   */
+  position?: string | false | { field: string; multiplier?: number }
+  /** Parent-key field written onto reparented rows. Default `'parent'`. */
   parentField?: string
-  positionMultiplier?: number
+  /**
+   * Extra fields dropped from the dirty content-hash (position + parent always
+   * dropped), e.g. a child collection tracked by a separate editor.
+   */
+  dirtyExclude?: string[]
+  /** Per-row validity — `true` (or `{ valid: true }`) = VALID. Drives the red rail + save guard. */
+  validate?: (item: TItem) => ListEditorValidationResult
+  /**
+   * Opt-in lifted controller (`useNestedListEditorController()`) so state
+   * survives unmount/remount; omitted = internal controller. Same handle
+   * reachable via `useTemplateRef`.
+   */
+  editor?: NestedListEditorHandle<TItem>
 
   readonly?: boolean
   disabled?: boolean
@@ -178,8 +207,6 @@ export interface Props<TItem extends Record<string, any>> {
   showChangeParent?: boolean
   showExpandToggle?: boolean
 
-  getValidationState?: (item: TItem, key: ListEditorKey, index: number) => ListEditorValidationState
-
   addLabel?: string | null
   emptyTitle?: string | null
 
@@ -195,28 +222,25 @@ export interface Props<TItem extends Record<string, any>> {
   showReorderToggle?: boolean
   disableReorder?: boolean
   disableDrag?: boolean
-  /** Disable unsaved-state tracking — no dirty/moved markers, never feeds `unsaved-keys`. */
-  disableUnsaved?: boolean
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
   onItemSave?: (item: TItem) => Promise<void> | void
   onReorderApply?: (tree: NestedTree<TItem>) => Promise<void> | void
 
-  /**
-   * Registers this editor as a named unsaved-changes section under the given
-   * (already translated) label — replaces the per-consumer `useUnsavedSection`
-   * call for the common one-editor case.
-   */
+  /** Registers this editor as a named unsaved-changes section under the given (translated) label. */
   unsavedSectionLabel?: string
 }
 
 const props = withDefaults(defineProps<Props<TItem>>(), {
   unsavedSectionLabel: undefined,
-  keyField: 'id',
-  positionField: 'position',
+  factory: undefined,
+  getKey: undefined,
+  position: undefined,
   parentField: 'parent',
-  positionMultiplier: 1,
+  dirtyExclude: undefined,
+  validate: undefined,
+  editor: undefined,
   readonly: false,
   disabled: false,
   loading: false,
@@ -232,7 +256,6 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showMoveToPosition: false,
   showChangeParent: false,
   showExpandToggle: true,
-  getValidationState: undefined,
   addLabel: null,
   emptyTitle: null,
   disableRowClick: false,
@@ -244,7 +267,6 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showReorderToggle: true,
   disableReorder: false,
   disableDrag: false,
-  disableUnsaved: false,
   onDeleteConfirm: undefined,
   onDelete: undefined,
   onItemSave: undefined,
@@ -306,11 +328,29 @@ const childrenExpandedKeys = ref<Set<ListEditorKey>>(new Set())
 // Readonly detail body visibility — independent of subtree expansion.
 const detailExpandedKeys = ref<Set<ListEditorKey>>(new Set())
 
+// Local mirror of the controller's key resolution so walkers + the template key
+// rows the same way the controller tracks them. Construction-time config, read once.
+/* eslint-disable vue/no-setup-props-reactivity-loss */
+const getKeyOpt = props.getKey ?? 'id'
+const keyFieldName = (typeof getKeyOpt === 'function' ? 'id' : getKeyOpt) as string
+const keyOf = (data: TItem): ListEditorKey =>
+  typeof getKeyOpt === 'function'
+    ? getKeyOpt(data)
+    : (data[getKeyOpt as keyof TItem] as ListEditorKey)
+
+// Managed position field (row position, move-to-position dialog, flatViewItems). Mirrors the controller.
+const positionFieldName = ((): string => {
+  const p = props.position
+  if (p === undefined || p === false) return 'position'
+  if (typeof p === 'object') return p.field
+  return p
+})()
+
 const initChildrenExpanded = (tree: NestedTree<TItem>) => {
   const walk = (nodes: NestedTreeNode<TItem>[]) => {
     for (const n of nodes) {
       if (n.children && n.children.length > 0) {
-        childrenExpandedKeys.value.add(n.data[props.keyField] as ListEditorKey)
+        childrenExpandedKeys.value.add(keyOf(n.data))
         walk(n.children)
       }
     }
@@ -320,85 +360,111 @@ const initChildrenExpanded = (tree: NestedTree<TItem>) => {
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
 initChildrenExpanded(modelValue.value)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const editor = useNestedListEditor<TItem>(modelValue, {
-  keyField: props.keyField,
-  positionField: props.positionField,
-  parentField: props.parentField,
-  positionMultiplier: props.positionMultiplier,
-  maxDepth: props.maxDepth,
-  expandedKeys: childrenExpandedKeys,
+// State controller (v2). Default: this editor owns it; opt-in `:editor` lift lets
+// state survive unmount/remount. Undefined getKey/position/validate fall back to
+// controller defaults ('id' / 'position' / always-valid). Its `viewItems` ignores
+// expand state, so we re-project an expand-aware list below (flatViewItems).
+const controller =
+  props.editor ??
+  useNestedListEditorController<TItem>({
+    get: () => modelValue.value,
+    set: (v) => (modelValue.value = v),
+    factory: props.factory,
+    getKey: props.getKey as GetKey<TItem> | undefined,
+    position: props.position as PositionOption<TItem> | undefined,
+    parentField: props.parentField,
+    maxDepth: props.maxDepth,
+    dirtyExclude: () => props.dirtyExclude ?? [],
+    validate: props.validate,
+  })
+/* eslint-enable vue/no-setup-props-reactivity-loss */
+
+// FULL flattened list (collapsed-branch rows included) built directly off the
+// tree: the recursive renderer (LeNestedRow) filters by parentKey + childrenExpandedKeys,
+// so it needs every row present in viewItemsDecorated even when hidden.
+const flatViewItems = computed<NestedViewItem<TItem>[]>(() => {
+  const flat: NestedViewItem<TItem>[] = []
+  let flatIndex = 0
+  const maxDepth = props.maxDepth
+  const walk = (
+    nodes: NestedTreeNode<TItem>[],
+    depth: number,
+    parentNode: NestedTreeNode<TItem> | null,
+  ) => {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
+      const key = keyOf(node.data)
+      const childrenAllowed = node.children !== undefined
+      const hasChildren = childrenAllowed && (node.children?.length ?? 0) > 0
+      const childrenCount = node.children?.length ?? 0
+      const remainingDepth = maxDepth - (depth + 1)
+      flat.push({
+        key,
+        index: flatIndex++,
+        raw: node.data,
+        position: node.data[positionFieldName] as number | undefined,
+        node,
+        depth,
+        parent: parentNode?.data ?? null,
+        parentKey: parentNode ? keyOf(parentNode.data) : null,
+        childrenCount,
+        hasChildren,
+        childrenAllowed,
+        siblingIndex: i,
+        siblingCount: nodes.length,
+        firstInParent: i === 0,
+        lastInParent: i === nodes.length - 1,
+        canAddChild: childrenAllowed && remainingDepth > 0,
+        canIndent: i > 0,
+        canOutdent: depth > 0,
+      })
+      if (hasChildren) walk(node.children as NestedTreeNode<TItem>[], depth + 1, node)
+    }
+  }
+  walk(modelValue.value.children, 0, null)
+  return flat
 })
 
-// `positionField` and `parentField` excluded: drag rewrites them on shifted siblings, would falsely flag unmoved rows.
-
-const { captureDirtyBaseline, rebaselineKey, isItemDirty, ignoreNextSourceChange } =
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-  useDirtyBaseline<TItem>(
-    () => {
-      const out: Array<{ key: ListEditorKey; data: TItem }> = []
-      const walk = (nodes: NestedTreeNode<TItem>[]) => {
-        for (const n of nodes) {
-          out.push({ key: n.data[props.keyField] as ListEditorKey, data: n.data })
-          if (n.children && n.children.length) walk(n.children)
-        }
-      }
-      walk(modelValue.value.children)
-      return out
-    },
-    { excludeFields: [props.positionField, props.parentField], source: modelValue },
-  )
-
-// Snapshot for reorder-cancel restore only; dirty detection uses movedKeys (explicit user actions),
-// not snapshot diff (sibling shifts would falsely flag unmoved rows).
+// Snapshot for reorder-cancel restore only; dirty detection lives in the controller.
+// `movedKeys` is component view state driving the toolbar "N pending" counter,
+// cleared on every mode transition by `useReorderMode`.
 const snapshot = shallowRef<NestedTree<TItem> | null>(null)
 const movedKeys = ref<Set<ListEditorKey>>(new Set())
 
+// Re-baseline current tree as saved. Legacy name kept; maps onto `controller.commit()`.
 const resetDirtyBaseline = () => {
-  captureDirtyBaseline()
+  controller.commit()
   movedKeys.value = new Set()
 }
-// Marks row + every descendant — moving a parent visually carries its subtree.
+// Mark row + every descendant moved — a moved parent visually carries its subtree.
 const markMoved = (key: ListEditorKey) => {
-  const { node } = editor.findNode(key)
+  const { node } = controller.findNode(key)
   if (!node) {
     movedKeys.value.add(key)
     return
   }
   const collect = (n: NestedTreeNode<TItem>) => {
-    movedKeys.value.add(n.data[props.keyField] as ListEditorKey)
+    movedKeys.value.add(keyOf(n.data))
     if (n.children) n.children.forEach(collect)
   }
   collect(node)
 }
 
-// One-pass dirty-key computation so per-row decorator re-renders avoid the stringify cost.
-const dirtyKeys = computed<Set<ListEditorKey>>(() => {
-  const out = new Set<ListEditorKey>()
-  const walk = (nodes: typeof modelValue.value.children) => {
-    for (const n of nodes) {
-      const key = n.data[props.keyField] as ListEditorKey
-      if (isItemDirty(key, n.data as TItem)) out.add(key)
-      if (n.children?.length) walk(n.children)
-    }
-  }
-  walk(modelValue.value.children)
-  return out
-})
-
 const decoratorCache = new Map<ListEditorKey, DecoratedNestedViewItem<TItem>>()
 const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
   const next: DecoratedNestedViewItem<TItem>[] = []
   const liveKeys = new Set<ListEditorKey>()
-  for (const vi of editor.viewItems.value) {
+  for (const vi of flatViewItems.value) {
     liveKeys.add(vi.key)
     const editing = editingKeys.value.has(vi.key)
     const expanded = detailExpandedKeys.value.has(vi.key)
     const childrenExpanded = childrenExpandedKeys.value.has(vi.key)
     const loading = props.loadingKeys?.has(vi.key) ?? false
-    const moved = props.disableUnsaved ? false : movedKeys.value.has(vi.key)
-    const dirty = props.disableUnsaved ? false : dirtyKeys.value.has(vi.key)
-    const unsaved = dirty || moved
+    const moved = movedKeys.value.has(vi.key)
+    // Amber = controller dirty OR reorder-session moved. readonly suppresses it
+    // (read-only views can't be unsaved; also dodges a mount-before-load baseline). (QA 85050 sweep)
+    const dirty = props.readonly ? false : controller.isUnsaved(vi.key)
+    const unsaved = props.readonly ? false : dirty || moved
     const cached = decoratorCache.get(vi.key)
     if (
       cached &&
@@ -441,7 +507,7 @@ const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
 })
 
 const isEmpty = computed(() => modelValue.value.children.length === 0)
-const totalItemCount = computed(() => editor.viewItems.value.length)
+const totalItemCount = computed(() => flatViewItems.value.length)
 
 const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 
@@ -467,14 +533,14 @@ const {
   rowsContainer,
   rowSelector: '.a-le-row-wrapper',
   isInlineEdit,
-  // markDirty=false: restoring the pre-edit snapshot on cancel must not flag
-  // the node dirty (it would otherwise be resent by partial-multi saves).
-  restoreSnapshot: (key, data) => editor.updateItem(key, data, false),
+  // markDirty=false: restoring the pre-edit snapshot on cancel must not flag the
+  // node dirty (it would otherwise be resent by partial-multi saves).
+  restoreSnapshot: (key, data) => controller.updateItem(key, data, false),
   watchKeys: () => {
     const keys: ListEditorKey[] = []
     const walk = (nodes: NestedTreeNode<TItem>[]) => {
       for (const n of nodes) {
-        keys.push(n.data[props.keyField] as ListEditorKey)
+        keys.push(keyOf(n.data))
         if (n.children && n.children.length) walk(n.children)
       }
     }
@@ -482,13 +548,13 @@ const {
     return keys
   },
   findEntry: (key) => {
-    const { node } = editor.findNode(key)
+    const { node } = controller.findNode(key)
     return node ? { data: node.data } : null
   },
   afterAutoOpen: (key) => {
-    const { parent } = editor.findNode(key)
+    const { parent } = controller.findNode(key)
     if (parent) {
-      childrenExpandedKeys.value.add(parent.data[props.keyField] as ListEditorKey)
+      childrenExpandedKeys.value.add(keyOf(parent.data))
     }
   },
 })
@@ -509,13 +575,12 @@ const {
   modelValue,
   cloneModel: (m) => cloneDeep(m) as NestedTree<TItem>,
   applyModel: (m) => {
-    ignoreNextSourceChange()
     modelValue.value = m
   },
   canEnterReorder,
   onEnter: () => {
     clearEditing()
-    // Expand all branches so every row is a reachable drag target.
+    // Expand every branch so all rows are reachable drag targets.
     for (const k of expandableKeys.value) childrenExpandedKeys.value.add(k)
     nextTick(() => {
       if (dragEnabled.value) initSortables()
@@ -561,13 +626,13 @@ const reorderToggleVisible = computed<boolean>(
 
 const compactReorderButton = computed<boolean>((): boolean => !!props.title && isNarrow.value)
 
-// Keys of every node that *has* children — the candidates for expand/collapse.
+// Keys of every node that has children — the expand/collapse candidates.
 const expandableKeys = computed<ListEditorKey[]>(() => {
   const out: ListEditorKey[] = []
   const walk = (nodes: NestedTreeNode<TItem>[]) => {
     for (const n of nodes) {
       if (n.children && n.children.length > 0) {
-        out.push(n.data[props.keyField] as ListEditorKey)
+        out.push(keyOf(n.data))
         walk(n.children)
       }
     }
@@ -606,9 +671,8 @@ const headerVisible = computed<boolean>(
     ),
 )
 
-// Initialize nested SortableJS groups. We create one Sortable instance per group
-// so drag/drop can move items within/between groups — SortableJS handles the
-// pointer events; onEnd reconciles via editor.moveTo().
+// One Sortable instance per group so drag/drop moves items within/between groups;
+// SortableJS owns the pointer events, onEnd reconciles via editor.moveTo().
 const sortableInstances = ref<
   Array<{ stop: () => void; option?: (k: string, v: unknown) => void }>
 >([])
@@ -628,22 +692,15 @@ const destroySortables = () => {
 const GROUP_CLASS = 'a-nested-list-editor__group'
 const HANDLE_CLASS = 'a-le-drag-handle'
 
-// Live drag state. `instruction` is recomputed on every pointermove while
-// drag is active — it encodes WHERE the dragged item will land (sibling-above/
-// below/make-child/blocked) and at WHAT DEPTH. The overlay template reads it
-// to render the drop indicator; `onEnd` applies it via `editor.moveTo`.
-//
-// We don't rely on SortableJS to move the DOM — onMove always returns false.
-// SortableJS is reduced to "drag lifecycle + floating clone"; hit-testing,
-// depth picking and the final mutation are all ours.
+// Live drag state. `instruction` is recomputed on every pointermove and encodes
+// where + at what depth the dragged item lands (sibling-above/below/make-child/blocked);
+// the overlay reads it, onEnd applies it via `editor.moveTo`. SortableJS never moves
+// the DOM (onMove always returns false) — hit-testing, depth and the mutation are all ours.
 const dragState = ref<DragState | null>(null)
 
-// Drop indicator anchor geometry — kept in sync with CSS:
-//   row-header padding-left (reorder mode) = 12px + depth * --ansle-indent(24)
-//   drag handle icon size                  = 20px (VIcon size="20")
-// Anchor X at depth 0 = padding-left (12) + half handle width (10) = 22px, so
-// the dot sits on top of the drag handle's visual centre and the line walks
-// right/left in 24px steps, visually matching the actual row indent hierarchy.
+// Drop indicator anchor geometry, kept in sync with CSS (reorder-mode header
+// padding-left = 12 + depth*24, drag handle = 20px). ANCHOR_X = 12 + half handle
+// (10) = 22 puts the dot on the handle's centre; the line steps 24px per depth.
 const INDENT_PX = 24
 const ANCHOR_X = 22
 
@@ -655,8 +712,8 @@ const hitTestRow = (
   if (!hit) return null
   const wrapper = hit.closest('.a-le-row-wrapper') as HTMLElement | null
   if (!wrapper) return null
-  // Only consider wrappers inside our rowsContainer — elementFromPoint could
-  // hit a different ANestedSortableListEditor instance on the same page.
+  // Only wrappers inside our rowsContainer — elementFromPoint could hit a
+  // different ANestedSortableListEditor instance on the same page.
   if (!rowsContainer.value || !rowsContainer.value.contains(wrapper)) return null
   const key = parseKey(wrapper.getAttribute('data-id'))
   if (key === null) return null
@@ -673,9 +730,8 @@ const recomputeInstruction = (clientX: number, clientY: number) => {
     return
   }
   const containerRect = rowsContainer.value.getBoundingClientRect()
-  // For hovered-row rect we read the row element (not the whole wrapper,
-  // whose height balloons when children are rendered). The wrapper's first
-  // `.a-le-row` child is the header+body we want to hit-test.
+  // Hit-test the `.a-le-row` child, not the wrapper — the wrapper's height
+  // balloons when children are rendered.
   const rowEl = hit.el.querySelector(':scope > .a-le-row') as HTMLElement | null
   const rowRect = (rowEl ?? hit.el).getBoundingClientRect()
   dragState.value.instruction = computeInstruction({
@@ -703,17 +759,15 @@ const onPointerMove = (e: PointerEvent) => {
 }
 
 const applyInstruction = (inst: ExecutableInstruction, sourceKey: ListEditorKey) => {
-  const res = editor.moveTo(sourceKey, inst.parentKey, inst.index)
-  if (res === null) {
+  const ok = controller.moveTo(sourceKey, inst.parentKey, inst.index)
+  if (!ok) {
     showWarningT('common.sortable.error.maxDeepExceed')
     forceRerender.value++
     nextTick(() => initSortables())
     return
   }
   markMoved(sourceKey)
-  // The dragged row landed as a new first child — expand the target so the
-  // just-moved row stays visible instead of disappearing into a collapsed
-  // branch. Only needed when we created a new parent (makeChild === true).
+  // makeChild: expand the new parent so the just-moved row doesn't vanish into a collapsed branch.
   if (inst.makeChild && inst.parentKey !== null) {
     childrenExpandedKeys.value.add(inst.parentKey)
   }
@@ -739,8 +793,8 @@ const initSortables = () => {
         const draggedEl = event.item as HTMLElement
         const id = parseKey(draggedEl.getAttribute('data-id'))
         if (id === null) return
-        const draggedNode = editor.findNode(id).node
-        const subtreeDepth = draggedNode ? editor.calculateSubtreeDepth(draggedNode) : 1
+        const draggedNode = controller.findNode(id).node
+        const subtreeDepth = draggedNode ? controller.calculateSubtreeDepth(draggedNode) : 1
         dragState.value = {
           sourceKey: id,
           sourceSubtreeDepth: subtreeDepth,
@@ -749,9 +803,8 @@ const initSortables = () => {
         document.addEventListener('pointermove', onPointerMove, { passive: true })
       },
       onMove: (event) => {
-        // Track pointer via SortableJS's event stream too (redundant with
-        // document pointermove but keeps `instruction` in sync when the
-        // browser coalesces pointermove events during fast drags).
+        // Also track the pointer via SortableJS's stream — keeps `instruction`
+        // in sync when the browser coalesces pointermove events during fast drags.
         const orig = (event as unknown as { originalEvent?: Event }).originalEvent
         if (orig) {
           if ('clientX' in orig && 'clientY' in orig) {
@@ -763,8 +816,7 @@ const initSortables = () => {
             }
           }
         }
-        // Always refuse SortableJS's own DOM insertion — our overlay and
-        // `editor.moveTo` in onEnd drive the actual move.
+        // Refuse SortableJS's own DOM insertion — onEnd's `editor.moveTo` drives the move.
         return false
       },
       onEnd: () => {
@@ -784,10 +836,9 @@ const initSortables = () => {
 
 const parseKey = (raw: string | null): ListEditorKey | null => {
   if (raw === null || raw === '') return null
-  // Use the numeric key only when `data-id` is a pure integer string (incl.
-  // negative temp ids like "-1"); otherwise it's a DocId/UUID string key.
-  // `n > 0` wrongly sent negative temp ids to the string branch, so a freshly
-  // added (unsaved) row's move marked the wrong key.
+  // Numeric key only when `data-id` is a pure integer string (incl. negative temp
+  // ids like "-1"); else a DocId/UUID. The old `n > 0` test sent negative temp ids
+  // to the string branch, so a freshly-added row's move marked the wrong key.
   const n = stringToInt(raw)
   return String(n) === raw ? n : raw
 }
@@ -807,8 +858,7 @@ watch(
   },
 )
 
-// Rebuild sortable instances whenever the tree shape changes during drag/drop mode —
-// otherwise newly rendered groups would not be draggable.
+// Rebuild sortables when the tree shape changes during drag mode, else newly rendered groups aren't draggable.
 watch(
   () => viewItemsDecorated.value.map((v) => v.key).join('|'),
   () => {
@@ -824,15 +874,11 @@ onBeforeUnmount(() => {
   document.removeEventListener('pointermove', onPointerMove)
 })
 
-// Visual props derived from the current instruction. `null` = overlay hidden
-// — either because no instruction is active, or because the instruction is
-// `blocked`. The optional connector is a thin rail from the drop line up to
-// the row whose level dictates the insert (previous sibling or the ancestor
-// being joined as sibling of). Positions are computed from getBoundingClientRect
-// rather than CSS anchor positioning: nested row elements in a deep tree
-// aren't always reachable from an overlay-level anchor() call (Chrome's
-// anchor reachability rule excludes some deeply-nested descendants), so
-// JS measurement is both simpler and more reliable here.
+// Overlay visual props from the current instruction; `null` = hidden (no
+// instruction, or blocked). The optional connector is a rail from the drop line
+// up to the row whose level dictates the insert. Measured via getBoundingClientRect
+// rather than CSS anchor positioning: Chrome's anchor-reachability rule excludes
+// some deeply-nested descendants, so JS measurement is simpler and more reliable.
 type OverlayVisual = {
   line: { top: number; left: number; right: number }
   connector: { top: number; height: number; left: number } | null
@@ -842,8 +888,7 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
   const state = dragState.value
   if (!state || state.instruction === null || !rowsContainer.value) return null
   const inst = state.instruction
-  // Blocked drops render nothing on purpose — the silent empty space IS the
-  // "not here" signal. No warning-coloured ghost of the attempted target.
+  // Blocked drops render nothing — the silent empty space is the "not here" signal.
   if (inst.type === 'blocked') return null
   const refWrapper = rowsContainer.value.querySelector<HTMLElement>(
     `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.refKey))}"]`,
@@ -880,15 +925,20 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
   return { line, connector }
 })
 
+// With a `factory`, the editor inserts through the controller; without one it
+// stays emit-only so legacy `@add` consumers drive the insert. The `add` event
+// fires either way.
 const onAddClick = () => {
   if (!canAdd.value) return
   requestAutoOpen()
+  if (props.factory) controller.addItem()
   emit('add', undefined)
 }
 
 const onRowAddAfterClick = (vi: NestedViewItem<TItem>) => {
   if (!canInteract.value) return
   requestAutoOpen()
+  if (props.factory) controller.addAfter(vi.key, undefined, vi.childrenAllowed)
   emit('add', { afterId: vi.key, childrenAllowed: vi.childrenAllowed })
 }
 
@@ -898,17 +948,15 @@ const onAddChildClick = (vi: NestedViewItem<TItem>) => {
   requestAutoOpen()
   childrenExpandedKeys.value.add(vi.key)
   emit('add-child', vi)
-  // Append to the end of existing children — matches the root-level "Add
-  // item" button's semantic (append to end of root). Drag-drop make-child
-  // still lands at index 0 because the drop line there is visually at the
-  // gap immediately below the parent.
+  // Append to the end of children, matching the root "Add item" semantic.
+  // (Drag-drop make-child still lands at index 0 — its drop line sits just below the parent.)
+  if (props.factory) controller.addChild(vi.key, undefined, true)
   emit('add', { parentId: vi.key, childrenAllowed: true })
 }
 
 const onEditClick = (vi: NestedViewItem<TItem>) => {
   if (!canInteract.value || reorderMode.value) return
-  // Clicking the edit affordance while already editing closes the form — so the
-  // pencil button works as a toggle just like clicking the row header.
+  // Clicking edit while already editing closes the form, so the pencil toggles like the row header.
   if (editingKeys.value.has(vi.key)) {
     onCloseClick(vi)
     return
@@ -919,7 +967,7 @@ const onEditClick = (vi: NestedViewItem<TItem>) => {
   emit('edit', vi)
 }
 
-// Chevron click — toggles tree children visibility.
+// Toggles tree children visibility (distinct from the readonly-detail body below).
 const onChevronClick = (vi: NestedViewItem<TItem>) => {
   if (props.disabled || props.loading) return
   const key = vi.key
@@ -929,7 +977,7 @@ const onChevronClick = (vi: NestedViewItem<TItem>) => {
   emit('item-expand', vi, !currently)
 }
 
-// Detail body toggle — controls the row's readonly-detail body (separate from tree).
+// Toggles the row's readonly-detail body (separate from tree children).
 const onDetailToggle = (vi: NestedViewItem<TItem>) => {
   if (props.disabled || props.loading) return
   const key = vi.key
@@ -999,20 +1047,19 @@ const onCloseClick = (vi: NestedViewItem<TItem>) => {
 }
 
 const moveUp = (id: ListEditorKey) => {
-  if (editor.moveUp(id)) markMoved(id)
+  if (controller.moveUp(id)) markMoved(id)
 }
 const moveDown = (id: ListEditorKey) => {
-  if (editor.moveDown(id)) markMoved(id)
+  if (controller.moveDown(id)) markMoved(id)
 }
 const moveTop = (id: ListEditorKey) => {
-  if (editor.moveTop(id)) markMoved(id)
+  if (controller.moveTop(id)) markMoved(id)
 }
 const moveBottom = (id: ListEditorKey) => {
-  if (editor.moveBottom(id)) markMoved(id)
+  if (controller.moveBottom(id)) markMoved(id)
 }
 const doIndent = (vi: NestedViewItem<TItem>) => {
-  const res = editor.indent(vi.key)
-  if (res === null) {
+  if (!controller.indent(vi.key)) {
     showWarningT('common.sortable.error.maxDeepExceed')
     return
   }
@@ -1020,8 +1067,7 @@ const doIndent = (vi: NestedViewItem<TItem>) => {
   emit('indent', vi)
 }
 const doOutdent = (vi: NestedViewItem<TItem>) => {
-  const res = editor.outdent(vi.key)
-  if (res === null) return
+  if (!controller.outdent(vi.key)) return
   markMoved(vi.key)
   emit('outdent', vi)
 }
@@ -1029,13 +1075,13 @@ const doOutdent = (vi: NestedViewItem<TItem>) => {
 const resolveCompactText = (raw: TItem): string =>
   resolveCompactTextUtil(raw, { compactField: props.compactField })
 
-const { resolveValidation } = useValidationRegistry<TItem>({
-  getValidationState: (item, key, index) => props.getValidationState?.(item, key, index) ?? null,
-})
+// Row validation from the controller's gated `rowState` — red rail shows only
+// once the row is unsaved or `validateAll()` ran.
+const resolveValidation = (raw: TItem, key?: ListEditorKey): ListEditorValidationState =>
+  key === undefined ? null : controller.rowState(raw, key)
 
-// Per-key actions cache: stable identity per row, see equivalent block in
-// AListEditor for rationale. Closures capture key (stable) and look up
-// the current vi via findVi at call time.
+// Per-key actions cache for stable per-row identity (see AListEditor). Closures
+// capture the stable key and look up the current vi via findVi at call time.
 type ActionsBundle = {
   edit: () => void
   save: () => Promise<void> | void
@@ -1052,7 +1098,7 @@ type ActionsBundle = {
   moveBottom: () => void
   indent: () => void
   outdent: () => void
-  update: (data: TItem) => NestedTree<TItem>
+  update: (data: TItem) => void
 }
 const actionsCache = new Map<ListEditorKey, ActionsBundle>()
 const getActions = (key: ListEditorKey): ActionsBundle => {
@@ -1107,7 +1153,7 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
         const vi = findVi(key)
         if (vi) doOutdent(vi)
       },
-      update: (data: TItem) => editor.updateItem(key, data),
+      update: (data: TItem) => controller.updateItem(key, data),
     }
     actionsCache.set(key, actions)
   }
@@ -1125,7 +1171,7 @@ watch(
 )
 
 const buildSlotProps = (vi: DecoratedNestedViewItem<TItem>) => ({
-  item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
+  item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key) },
   raw: vi.raw,
   index: vi.index,
   key: vi.key,
@@ -1231,11 +1277,11 @@ const moveToPositionContext = computed<{
 } | null>(() => {
   const target = moveToPositionTarget.value
   if (!target) return null
-  const found = editor.findNode(target.key)
+  const found = controller.findNode(target.key)
   const siblings = found.parent?.children ?? modelValue.value.children
-  const idx = siblings.findIndex((s) => (s.data[props.keyField] as ListEditorKey) === target.key)
+  const idx = siblings.findIndex((s) => keyOf(s.data) === target.key)
   return {
-    parentId: found.parent ? (found.parent.data[props.keyField] as ListEditorKey) : null,
+    parentId: found.parent ? keyOf(found.parent.data) : null,
     total: siblings.length,
     currentIndex: idx,
   }
@@ -1254,7 +1300,7 @@ const onMoveToPositionConfirm = (newIndex: number) => {
   moveToPositionTarget.value = null
   if (!ctx || !target) return
   if (newIndex === ctx.currentIndex) return
-  if (editor.moveTo(target.key, ctx.parentId, newIndex)) {
+  if (controller.moveTo(target.key, ctx.parentId, newIndex)) {
     markMoved(target.key)
   }
 }
@@ -1270,24 +1316,22 @@ const onChangeParentConfirm = (parentId: ListEditorKey | null, position: 'first'
   const target = changeParentTarget.value
   changeParentTarget.value = null
   if (!target) return
-  // Determine sibling count under the new parent so 'last' becomes the right
-  // numeric index. For 'first' the index is 0.
+  // Sibling count under the new parent so 'last' resolves to the right index ('first' = 0).
   let siblingCount = 0
   if (parentId === null) {
     siblingCount = modelValue.value.children.length
   } else {
-    const found = editor.findNode(parentId)
+    const found = controller.findNode(parentId)
     siblingCount = found.node?.children?.length ?? 0
   }
   const targetIndex = position === 'first' ? 0 : siblingCount
-  if (editor.moveTo(target.key, parentId, targetIndex)) {
+  if (controller.moveTo(target.key, parentId, targetIndex)) {
     markMoved(target.key)
     if (parentId !== null) childrenExpandedKeys.value.add(parentId)
   }
 }
 
-// Aggregated display flags + helpers passed into each <LeNestedRow>. Recomputed
-// reactively when any underlying dependency changes.
+// Aggregated display flags + helpers passed into each <LeNestedRow>.
 const rowContext = computed(() => ({
   reorderMode: reorderMode.value,
   readonly: props.readonly,
@@ -1306,13 +1350,11 @@ const rowContext = computed(() => ({
   keyboardNav,
   isRowClickable,
   resolveCompactText,
-  resolveValidation: (raw: TItem, key?: ListEditorKey, index?: number) =>
-    resolveValidation(raw, key, index),
+  resolveValidation: (raw: TItem, key?: ListEditorKey) => resolveValidation(raw, key),
   buildSlotProps,
 }))
 
-// Event callback bundle — each handler mutates the main component's local state
-// (editingKeys, expandedKeys, etc.) or delegates to the editor composable.
+// Event callback bundle passed to each row.
 const rowCallbacks = {
   onRowClick,
   onChevronClick,
@@ -1335,41 +1377,35 @@ const rowCallbacks = {
 
 const rootViewItems = computed(() => viewItemsDecorated.value.filter((v) => v.parentKey === null))
 
-// Expose imperative API — mirrors legacy ASortableNested signatures for easier
-// migration of admin-cms consumers (LinkedListManage calls these on the ref).
-// These methods assume the caller has already persisted the change server-side,
-// so they re-capture the dirty baseline — the affected items should not render
-// as "unsaved" immediately after this call.
-//
-// All four `*ById` aliases are kept for backward-compat with the pre-Phase-7
-// `ASortableNested` API. New consumers should call `editor.addItem` /
-// `editor.deleteItem` / `editor.updateItem` directly via the exposed handle
-// (canonical names match the flat editors). The aliases will be removed in
-// the next major.
+// Imperative aliases mirroring the legacy ASortableNested signatures so existing
+// consumers keep working. They assume the caller persists server-side, so they
+// re-baseline via `controller.commit()` (rows don't render "unsaved" after the
+// call) and return the live model. New consumers should use the controller handle directly.
 
-/** @deprecated Use `addItem(data, { afterId, childrenAllowed })` directly. */
+/** @deprecated Use `addItem(data, { afterId, childrenAllowed })` on the handle. */
 const addAfterId = (targetId: ListEditorKey | null, data: TItem, childrenAllowed: boolean) => {
-  const res = editor.addItem(data, { afterId: targetId ?? undefined, childrenAllowed })
-  nextTick(() => captureDirtyBaseline())
-  return res
+  controller.addItem(data, { afterId: targetId ?? undefined, childrenAllowed })
+  nextTick(() => controller.commit())
+  return modelValue.value
 }
-/** @deprecated Use `addItem(data, { parentId, asFirstChild: true, childrenAllowed })`. */
+/** @deprecated Use `addChild(parentKey, data, childrenAllowed)` on the handle. */
 const addChildToId = (targetId: ListEditorKey, data: TItem, childrenAllowed: boolean) => {
   childrenExpandedKeys.value.add(targetId)
-  const res = editor.addItem(data, { parentId: targetId, asFirstChild: true, childrenAllowed })
-  nextTick(() => captureDirtyBaseline())
-  return res
+  // Legacy "prepend as first child" semantic (canonical `addChild` appends to the end).
+  controller.addItem(data, { parentId: targetId, asFirstChild: true, childrenAllowed })
+  nextTick(() => controller.commit())
+  return modelValue.value
 }
-/** @deprecated Use `deleteItem(id)` instead. */
+/** @deprecated Use `deleteItem(id)` on the handle. */
 const removeById = (id: ListEditorKey) => {
-  editor.deleteItem(id)
+  controller.deleteItem(id)
   editingKeys.value.delete(id)
   editingSnapshots.value.delete(id)
   detailExpandedKeys.value.delete(id)
   childrenExpandedKeys.value.delete(id)
-  nextTick(() => captureDirtyBaseline())
+  nextTick(() => controller.commit())
 }
-/** @deprecated Use `updateItem(id, data)` instead. */
+/** @deprecated Use `updateItem(id, data)` on the handle. */
 const updateData = (
   id: ListEditorKey,
   data: TItem,
@@ -1377,92 +1413,86 @@ const updateData = (
   _position: unknown = null,
   _markUnsaved: unknown = null,
 ) => {
-  editor.updateItem(id, data)
-  nextTick(() => captureDirtyBaseline())
+  controller.updateItem(id, data)
+  nextTick(() => controller.commit())
 }
 
-const unsavedKeysModel = defineModel<Set<ListEditorKey>>('unsavedKeys', {
-  default: () => new Set<ListEditorKey>(),
-})
+// Count of unsaved rows (controller dirty ∪ reorder-session moved) — drives the unsaved-section label.
+const unsavedCount = computed<number>(
+  () => viewItemsDecorated.value.filter((v) => v.unsaved).length,
+)
 
-const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
-  const out = new Set<ListEditorKey>()
-  for (const vi of viewItemsDecorated.value) {
-    if (vi.unsaved) out.add(vi.key)
-  }
-  return out
-})
-// Let row validity sentinels surface 'invalid' as soon as their row is unsaved.
-// Includes each unsaved row's id/position too, so the lookup matches whatever
-// key the sentinel registers under (which may differ from the editor's key-field).
-const unsavedValidationKeys = computed<Set<ListEditorKey>>(() => {
-  const out = new Set<ListEditorKey>()
-  for (const vi of viewItemsDecorated.value) {
-    if (!vi.unsaved) continue
-    out.add(vi.key)
-    const raw = vi.raw as Record<string, any>
-    if (raw.id !== undefined && raw.id !== null) out.add(raw.id)
-    if (raw.position !== undefined && raw.position !== null) out.add(raw.position)
-  }
-  return out
-})
-provide(ListEditorUnsavedKeysKey, unsavedValidationKeys)
+// Re-baseline as saved, clear the moved set, close open edits. Legacy name kept.
+const clearUnsavedState = () => {
+  controller.commit()
+  movedKeys.value = new Set()
+  clearEditing()
+}
 
-const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSync({
-  unsavedKeysModel,
-  internalUnsavedKeys,
-  onClearAll: () => {
-    captureDirtyBaseline()
-    movedKeys.value = new Set()
-    // Collapse open inline-edit forms once the parent persisted.
-    clearEditing()
-  },
-  onClearKey: (key) => {
-    rebaselineKey(key)
-    movedKeys.value.delete(key)
-  },
-})
-
-// Registers this editor as a named unsaved-changes section when the consumer
-// passes a label — replaces the per-consumer useUnsavedSection boilerplate.
+// Registers this editor as a named unsaved-changes section when a label is passed.
 useUnsavedSection(() =>
   props.unsavedSectionLabel
     ? { label: props.unsavedSectionLabel, dirty: unsavedCount.value > 0 }
     : [],
 )
 
-defineExpose({
-  addItem: editor.addItem,
+// Expose the controller handle plus legacy aliases and reorder/expand controls.
+// Entries after the spread override controller methods where the historic name or
+// return shape differs (e.g. `viewItems` is this component's expand-aware list).
+defineExpose<
+  NestedListEditorHandle<TItem> & {
+    addAfterId: typeof addAfterId
+    addChildToId: typeof addChildToId
+    removeById: typeof removeById
+    updateData: typeof updateData
+    resetDirtyBaseline: () => void
+    hasUnsavedChanges: typeof controller.hasUnsaved
+    unsavedCount: typeof unsavedCount
+    clearUnsavedState: () => void
+    enterReorderMode: () => void
+    cancelReorderMode: () => void
+    applyReorder: () => Promise<void>
+    expand: (id: ListEditorKey) => void
+    collapse: (id: ListEditorKey) => void
+    toggleExpand: (id: ListEditorKey) => void
+    expandDetail: (id: ListEditorKey) => void
+    collapseDetail: (id: ListEditorKey) => void
+  }
+>({
+  ...controller,
+  // validateAll() opens invalid rows so a blocked save surfaces which are wrong
+  // (B4-17 reveal; `...controller` alone only flips the red rail). Nested also
+  // expands the offender's ancestor chain so a collapsed row becomes visible.
+  validateAll: () =>
+    validateAllAndReveal(controller, (key) => {
+      let ancestor = controller.findNode(key).parent
+      while (ancestor) {
+        childrenExpandedKeys.value.add(keyOf(ancestor.data))
+        ancestor = controller.findNode(keyOf(ancestor.data)).parent
+      }
+      const vi = controller.viewItems.value.find((v) => v.key === key)
+      if (vi) beginEdit(vi)
+    }),
+  // Legacy aliases (pre-v2 ASortableNested API).
   addAfterId,
   addChildToId,
   removeById,
   updateData,
-  updateItem: editor.updateItem,
-  deleteItem: editor.deleteItem,
-  moveUp: editor.moveUp,
-  moveDown: editor.moveDown,
-  moveTop: editor.moveTop,
-  moveBottom: editor.moveBottom,
-  indent: editor.indent,
-  outdent: editor.outdent,
-  moveTo: editor.moveTo,
-  recalculatePositions: editor.recalculatePositions,
-  viewItems: editor.viewItems,
   resetDirtyBaseline,
-  hasUnsavedChanges,
+  hasUnsavedChanges: controller.hasUnsaved,
   unsavedCount,
   clearUnsavedState,
+  // Expand-aware flattened view (controller's own `viewItems` ignores collapse state).
+  viewItems: flatViewItems,
   enterReorderMode,
   cancelReorderMode,
   applyReorder,
-  // Tree children visibility (expand/collapse a branch)
   expand: (id: ListEditorKey) => childrenExpandedKeys.value.add(id),
   collapse: (id: ListEditorKey) => childrenExpandedKeys.value.delete(id),
   toggleExpand: (id: ListEditorKey) => {
     if (childrenExpandedKeys.value.has(id)) childrenExpandedKeys.value.delete(id)
     else childrenExpandedKeys.value.add(id)
   },
-  // Row readonly-detail body visibility
   expandDetail: (id: ListEditorKey) => detailExpandedKeys.value.add(id),
   collapseDetail: (id: ListEditorKey) => detailExpandedKeys.value.delete(id),
 })
@@ -1500,10 +1530,8 @@ defineExpose({
           </h3>
           <div class="a-le-header-actions">
             <template v-if="reorderMode">
-              <!-- Reorder-mode header: pending-changes count + Cancel/Apply.
-                   Replaces the old sticky bottom toolbar — the actions sit
-                   where the "Reorder" button lives in view mode, so the eye
-                   doesn't have to hunt down the bottom of the widget. -->
+              <!-- Reorder-mode header: pending count + Cancel/Apply, sitting where
+                   the "Reorder" button lives in view mode (not a bottom toolbar). -->
               <slot
                 name="reorder-toolbar"
                 v-bind="toolbarSlotProps"
@@ -1726,11 +1754,9 @@ defineExpose({
           </LeNestedRow>
         </div>
 
-        <!-- Drop indicator overlay — only rendered for valid drops. Horizontal
-             line at a row edge (depth encoded in `left` offset) plus an
-             optional vertical connector rail linking the line up to the row
-             whose level the insert will match. Blocked drops render nothing
-             at all — the silent empty space IS the "not here". -->
+        <!-- Drop indicator overlay (valid drops only): horizontal line at a row
+             edge (depth in `left`) + an optional vertical connector rail to the
+             row whose level the insert matches. -->
         <template v-if="overlayVisual !== null">
           <div
             v-if="overlayVisual.connector !== null"
@@ -1788,10 +1814,10 @@ defineExpose({
       v-model="changeParentDialogOpen"
       :tree="modelValue"
       :source-key="changeParentTarget?.key ?? null"
-      :key-field="keyField"
+      :key-field="keyFieldName"
       :max-depth="maxDepth"
       :resolve-label="resolveCompactText"
-      :calculate-subtree-depth="editor.calculateSubtreeDepth"
+      :calculate-subtree-depth="controller.calculateSubtreeDepth"
       @confirm="onChangeParentConfirm"
     />
 
@@ -1828,8 +1854,8 @@ defineExpose({
 @use './styles/tokens';
 @use './styles/shared';
 
-// Variant-specific rules for ANestedSortableListEditor — depth-aware padding,
-// tree toggle caret, children groups, drop indicator overlay, drag clone.
+// Nested-variant rules — depth-aware padding, tree toggle caret, children
+// groups, drop indicator overlay, drag clone.
 .a-nested-list-editor {
   // Depth-aware left padding — caret column + indent per depth level.
   .a-le-row-header {
@@ -1849,10 +1875,8 @@ defineExpose({
     flex-direction: column;
   }
 
-  // Toolbar-status uses the shorthand `font: 500 13px/1 var(...)` — the
-  // shared class emits the equivalent longhand for the flat variants. Re-apply
-  // the shorthand here so the nested variant keeps its explicit line-height
-  // reset.
+  // Re-apply the `font` shorthand (shared class uses longhand for flat variants)
+  // so the nested variant keeps its explicit line-height reset.
   .a-le-toolbar-status {
     font: 500 13px/1 var(--v-font-body, inherit);
   }
@@ -1864,37 +1888,32 @@ defineExpose({
 }
 
 .a-nested-list-editor {
-  // Root-level rows carry a bolder title weight to anchor the visual
-  // hierarchy without separate header rows.
+  // Root rows get a bolder title weight to anchor the hierarchy without header rows.
   .a-le-row:not(.a-le-row--child) .a-le-title {
     font-weight: 600;
   }
 
-  // Reorder mode — depth-aware padding matches the flat variant's shape but
-  // offset by the row's indent level.
+  // Reorder mode — flat-variant padding offset by the row's indent level.
   .a-le-row--reorder .a-le-row-header {
     padding-left: calc(12px + var(--nested-depth, 0) * var(--le-indent));
     padding-right: 8px;
     gap: 8px;
   }
 
-  // Active (editing / readonly-expanded) tree-toggle picks up the primary
-  // tint so the whole header reads "active" together with the title color.
+  // Active (editing / readonly-expanded) tree-toggle picks up the primary tint
+  // so the header reads "active" together with the title color.
   .a-le-row--editing &__tree-toggle,
   .a-le-row--expanded &__tree-toggle {
     color: var(--le-primary);
   }
 
-  // Children wrapper — flat layout; depth is conveyed by the row's
-  // padding-left indent alone (no background tint or tree guide line).
+  // Children wrapper — depth conveyed by the row's padding-left indent alone.
   &__children {
     position: relative;
   }
 
-  // Triangle-caret toggle — VBtn-text-style circular button: transparent by
-  // default, subtle tinted circle on hover so the affordance is obvious.
-  // Size matches the flat icon-btn rhythm (24×24) with the triangle
-  // optically centred.
+  // Triangle-caret toggle — circular text-style button (24×24), transparent
+  // with a subtle tinted circle on hover.
   &__tree-toggle {
     width: 24px;
     height: 24px;
@@ -1925,8 +1944,7 @@ defineExpose({
     }
   }
 
-  // Spacer keeps caret column width reserved on leaf rows so titles align
-  // vertically across siblings regardless of whether they have children.
+  // Reserve caret column width on leaf rows so titles align across siblings.
   &__tree-toggle--spacer,
   &__tree-toggle--empty {
     width: 24px;
@@ -1952,9 +1970,8 @@ defineExpose({
     transform: translate(0, 1px) rotate(90deg);
   }
 
-  // Source row + every descendant inside the dragged subtree — dimmed and
-  // made non-hittable during drag. `!important` on display beats SortableJS's
-  // inline `display: none` under `forceFallback: true`.
+  // Dragged subtree (source + descendants) dimmed and non-hittable. `!important`
+  // on display beats SortableJS's inline `display: none` under `forceFallback`.
   .a-le-row-wrapper.a-le-row--chosen,
   .a-le-row-wrapper.a-le-row-wrapper--drop-disabled {
     display: flex !important;
@@ -1962,23 +1979,19 @@ defineExpose({
     pointer-events: none !important;
   }
 
-  // Hide SortableJS's own placeholder — our overlay (drop-line / drop-box)
-  // is the sole landing indicator.
+  // Hide SortableJS's placeholder — our overlay is the sole landing indicator.
   .a-le-row--ghost {
     display: none !important;
   }
 
-  // No floating clone at the cursor — for nested trees the line overlay
-  // carries all the "where will it land" information; a ghost card dragging
-  // behind the pointer is pure noise. The selector matches the wrapper to
-  // beat the `.row-wrapper--drop-disabled` rule that the clone inherits.
+  // No floating clone — the line overlay carries all the "where it lands" info.
+  // Wrapper selector beats the `.row-wrapper--drop-disabled` rule the clone inherits.
   .a-le-row-wrapper.a-le-row--drag {
     display: none !important;
   }
 
-  // Drop indicator line — 2 px primary stroke with an 8 px terminal dot on
-  // the left that bleeds 4 px outside the anchor column. Absolute-positioned
-  // inside `__rows` (position: relative).
+  // Drop indicator line — 2px primary stroke with an 8px left terminal dot,
+  // absolute-positioned inside `__rows`.
   &__drop-line {
     position: absolute;
     height: 2px;
@@ -2000,8 +2013,7 @@ defineExpose({
     transform: translateY(-50%);
   }
 
-  // Connector rail — thin vertical line linking the drop indicator line up
-  // to the row whose level is being matched.
+  // Connector rail — vertical line linking the drop line up to the level-match row.
   &__drop-connector {
     position: absolute;
     width: 2px;
@@ -2017,10 +2029,8 @@ defineExpose({
     opacity: 0.4;
   }
 
-  // "+N" children indicator — rendered on every row with children, but
-  // hidden in the normal DOM. Only becomes visible inside the SortableJS
-  // drag clone (carrying `.a-le-row--drag`) so the user sees that the
-  // whole branch will follow the item being moved.
+  // "+N" children indicator — hidden in the normal DOM, visible only inside the
+  // SortableJS drag clone so the user sees the whole branch will follow.
   &__drag-count {
     display: none;
     align-items: center;
@@ -2040,9 +2050,8 @@ defineExpose({
   }
 }
 
-// Container-query driven desktop layout — depth-aware padding-left so the
-// inline form aligns with the row title column: 16 (pad) + depth*24 (indent)
-// + 24 (caret) + 10 (gap) = 50 + depth*indent.
+// Desktop — depth-aware padding-left aligns the inline form with the title column:
+// 16 (pad) + 24 (caret) + 10 (gap) = 50, plus depth*indent.
 @container le-shell (min-width: 769px) {
   .a-nested-list-editor {
     .a-le-row--editing .a-le-row-body,
@@ -2055,9 +2064,8 @@ defineExpose({
   }
 }
 
-// Narrow-container / mobile layout — tighter indent so deep branches still
-// fit, taller rows for comfortable touch targets, always-visible actions,
-// status badge dropped to make room for the title.
+// Narrow / mobile — tighter indent so deep branches fit, taller touch rows,
+// always-visible actions, status badge dropped to make room for the title.
 /* stylelint-disable selector-max-compound-selectors */
 @container le-shell (max-width: 768px) {
   .a-nested-list-editor {

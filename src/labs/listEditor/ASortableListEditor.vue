@@ -16,16 +16,19 @@ import { useI18n } from 'vue-i18n'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
 import { useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
-import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
-import { ListEditorUnsavedKeysKey } from '@/labs/listEditor/composables/useListEditorItemValidation'
 import { useSortable } from '@vueuse/integrations/useSortable'
-import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
+import {
+  useListEditorController,
+  type GetKey,
+  type ListEditorHandle,
+  type ListEditorValidationResult,
+  type PositionOption,
+} from '@/labs/listEditor/composables/useListEditorController'
 import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
-import { useUnsavedKeysSync } from '@/labs/listEditor/composables/useUnsavedKeysSync'
 import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
-import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
+import { validateAllAndReveal } from '@/labs/listEditor/utils/revealInvalidRows'
 import {
   useReorderMode,
   SharedReorderRegistryKey,
@@ -48,7 +51,6 @@ import type {
   ListEditorKey,
   ListEditorValidationState,
   ListViewItem,
-  PositionHint,
 } from '@/labs/listEditor/types/listEditorTypes'
 
 export interface DecoratedViewItem<T> extends ListViewItem<T> {
@@ -58,13 +60,14 @@ export interface DecoratedViewItem<T> extends ListViewItem<T> {
   dirty: boolean
   moved: boolean
   unsaved: boolean
+  validationState: ListEditorValidationState
   canMoveUp: boolean
   canMoveDown: boolean
 }
 
 export type ReorderMode = 'view' | 'reorder'
 
-// Public slot scope shapes — see AListEditor for the rationale on hoisting.
+// Public slot scope shapes — see AListEditor for the hoisting rationale.
 export interface RowActions<TItem> {
   edit: () => void
   save: () => Promise<void> | void
@@ -77,10 +80,10 @@ export interface RowActions<TItem> {
   moveDown: () => void
   moveTop: () => void
   moveBottom: () => void
-  update: (data: TItem) => TItem[]
+  update: (next: TItem | Partial<TItem> | ((current: TItem) => TItem)) => void
 }
 export interface RowSlotProps<TItem extends Record<string, any>> {
-  item: DecoratedViewItem<TItem> & { validationState: ListEditorValidationState }
+  item: DecoratedViewItem<TItem>
   raw: TItem
   index: number
   key: ListEditorKey
@@ -131,10 +134,39 @@ export interface ViewBodySlotProps<TItem extends Record<string, any>> {
 }
 
 export interface Props<TItem extends Record<string, any>> {
-  keyField?: string
-  positionField?: string
-  positionMultiplier?: number
-  updatePosition?: boolean
+  /**
+   * New-row factory (required). The add button + "add after this item" insert
+   * `factory()` into the model directly through the controller (positions
+   * renumbered) — no consumer `@add` push handler is needed.
+   */
+  factory?: () => TItem
+  /**
+   * Stable row identity. Default `'id'`. Never point this at the position field.
+   * Typed `string` (not `keyof TItem`): a bare `keyof TItem` on a generic
+   * component compiles to a Boolean-only runtime type that coerces `get-key="id"` to `true`.
+   */
+  getKey?: string | ((item: TItem) => ListEditorKey)
+  /**
+   * Managed order field. Default `'position'`. `false` opts out. Typed `string`
+   * before `false` so the runtime prop type is `[String, Boolean, Object]`:
+   * `keyof TItem` would be Boolean-only, and `false` listed first would coerce
+   * `position="position"` (value == prop name) to `true`.
+   */
+  position?: string | false | { field: string; multiplier?: number }
+  /**
+   * Extra fields to drop from the dirty content-hash (position is always
+   * dropped). Use when a SEPARATE nested editor tracks a row's child collection,
+   * so editing a child doesn't flip the parent amber. The field is still saved.
+   */
+  dirtyExclude?: string[]
+  /** Per-row validity — `true` (or `{ valid: true }`) = VALID. Drives the red rail + save guard. */
+  validate?: (item: TItem) => ListEditorValidationResult
+  /**
+   * Opt-in lifted state controller (from consumer's `useListEditorController()`)
+   * so editor state survives this component's unmount/remount (pinned-widget
+   * relocation). When omitted the editor owns an internal controller.
+   */
+  editor?: ListEditorHandle<TItem>
 
   readonly?: boolean
   disabled?: boolean
@@ -168,76 +200,39 @@ export interface Props<TItem extends Record<string, any>> {
   showReorderToggle?: boolean
   disableReorder?: boolean
   disableDrag?: boolean
-  /** Disable unsaved-state tracking — no dirty/moved markers, never feeds `unsaved-keys`. */
-  disableUnsaved?: boolean
   showMoveToPosition?: boolean
 
   /**
-   * Embedded mode — this editor is nested inside another editor's `#item`
-   * slot and follows a shared `v-model:mode` from the outer editor. When
-   * set, the editor:
-   *   - hides its own Reorder button + Cancel/Apply toolbar
-   *   - skips the snapshot/restore (the outer editor's deep snapshot covers
-   *     nested data, so cancel at the top reverts everything)
-   *   - paints lighter chrome so it visually reads as part of the parent row
-   * Pair with `v-model:mode` bound to the same ref the outer editor uses.
+   * Embedded mode — nested inside another editor's `#item` slot, following a
+   * shared `v-model:mode`. Hides own Reorder button + toolbar, skips the
+   * snapshot/restore (the outer editor's deep snapshot covers nested data), and
+   * paints lighter chrome. Pair with `v-model:mode` bound to the outer ref.
    */
   embedded?: boolean
   /**
-   * Allow rows to remain inline-editable while the editor is in reorder
-   * mode. By default, entering reorder closes any open inline edit and the
-   * `#item` slot body is hidden — this keeps the visual focus on dragging.
-   * Set this when the open row's body needs to render in reorder mode (e.g.
-   * the parent editor of a shared-reorder pair, where the open question
-   * exposes its embedded answers list for dragging).
+   * Keep rows inline-editable in reorder mode. By default entering reorder
+   * closes any open edit and hides the `#item` body to focus on dragging. Set
+   * for a shared-reorder pair's parent, where the open row exposes its embedded
+   * answers list for dragging.
    */
   allowEditInReorder?: boolean
-
-  getValidationState?: (item: TItem, key: ListEditorKey, index: number) => ListEditorValidationState
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
   onItemSave?: (item: TItem) => Promise<void> | void
   onReorderApply?: (items: TItem[]) => Promise<void> | void
 
-  /**
-   * Editor-managed add: the add button and "add after this item" insert
-   * `itemFactory()` into the model directly (positions renumbered when
-   * `update-position` is on) and emit `added` — the `add` event does NOT fire,
-   * so no consumer push handler is needed.
-   */
-  itemFactory?: () => TItem
-  /**
-   * Editor-managed delete: a confirmed delete removes the row from the model
-   * itself. `deleted` still fires as a notification — consumers keep side
-   * effects but must not splice the model themselves.
-   */
-  manageDelete?: boolean
-  /**
-   * Registers this editor as a named unsaved-changes section under the given
-   * (already translated) label — replaces the per-consumer `useUnsavedSection`
-   * call for the common one-editor case.
-   */
+  /** Register as a named unsaved-changes section under this (translated) label. */
   unsavedSectionLabel?: string
-  /**
-   * Externally-supplied dirty baseline (opt-in): the *last-saved* rows the dirty/amber
-   * markers diff against. By default the editor snapshots the current model eagerly at
-   * mount, which means an editor that remounts over already-edited data re-baselines it
-   * as clean — silently dropping the unsaved markers (e.g. when a widget is relocated by
-   * a pin toggle, mounting a fresh instance over the unsaved data). Pass the saved rows
-   * here — held above the editor, so they survive the remount — and every instance derives
-   * the SAME unsaved set from them instead of re-capturing clean. Update this value after a
-   * successful save so it becomes the new baseline. Absent → unchanged eager behaviour.
-   * Same shape as the model; do NOT pre-strip `position-field`.
-   */
-  dirtyBaseline?: TItem[] | null
 }
 
 const props = withDefaults(defineProps<Props<TItem>>(), {
-  keyField: 'id',
-  positionField: 'position',
-  positionMultiplier: 1,
-  updatePosition: false,
+  factory: undefined,
+  getKey: undefined,
+  position: undefined,
+  dirtyExclude: undefined,
+  validate: undefined,
+  editor: undefined,
   readonly: false,
   disabled: false,
   loading: false,
@@ -262,24 +257,17 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   showReorderToggle: true,
   disableReorder: false,
   disableDrag: false,
-  disableUnsaved: false,
   showMoveToPosition: false,
   embedded: false,
   allowEditInReorder: false,
-  getValidationState: undefined,
   onDeleteConfirm: undefined,
   onDelete: undefined,
   onItemSave: undefined,
   onReorderApply: undefined,
-  itemFactory: undefined,
-  manageDelete: false,
   unsavedSectionLabel: undefined,
-  dirtyBaseline: undefined,
 })
 
 const emit = defineEmits<{
-  add: [positionHint: PositionHint | undefined]
-  added: [payload: { item: TItem; index: number }]
   edit: [item: ListViewItem<TItem>]
   deleted: [item: ListViewItem<TItem>]
   close: [item: ListViewItem<TItem>]
@@ -320,48 +308,59 @@ const { isNarrow } = useContainerWidth(rootEl)
 
 const isTouch = useIsTouchDevice()
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const editor = useListEditor<TItem>(modelValue, {
-  keyField: props.keyField,
-  positionField: props.positionField,
-  positionMultiplier: props.positionMultiplier,
-  updatePosition: props.updatePosition,
+// State controller (v2). Default: this editor owns it; opt-in lift via `:editor`.
+// `factory`/`getKey`/`position`/`validate` are construction-time options read
+// once to seed the controller, not reactive props — hence the suppressed
+// reactivity-loss rule. Undefined options fall back to controller defaults
+// ('id' / 'position' / always-valid).
+/* eslint-disable vue/no-setup-props-reactivity-loss */
+const controller =
+  props.editor ??
+  useListEditorController<TItem>({
+    get: () => modelValue.value,
+    set: (v) => (modelValue.value = v),
+    factory: props.factory,
+    getKey: props.getKey as GetKey<TItem> | undefined,
+    position: props.position as PositionOption<TItem> | undefined,
+    dirtyExclude: () => props.dirtyExclude ?? [],
+    validate: props.validate,
+  })
+
+// Local mirror of the controller's key resolution so rendered rows key the same
+// way the controller tracks them (v2 spec point 7).
+const getKeyOpt = props.getKey ?? 'id'
+/* eslint-enable vue/no-setup-props-reactivity-loss */
+const keyOf = (item: TItem): ListEditorKey =>
+  typeof getKeyOpt === 'function'
+    ? getKeyOpt(item)
+    : (item[getKeyOpt as keyof TItem] as ListEditorKey)
+
+// Managed position field (for the row position view field + move-to-position
+// dialog). Mirrors the controller's resolution.
+const positionFieldName = computed<string>(() => {
+  const p = props.position
+  if (p === undefined) return 'position'
+  if (p === false) return 'position'
+  if (typeof p === 'object') return p.field as string
+  return p as string
 })
+
+// Keyed render projection (key + index + raw + position); the controller owns the data.
+const viewItems = computed<ListViewItem<TItem>[]>(() =>
+  modelValue.value.map((raw, index) => ({
+    key: keyOf(raw),
+    index,
+    raw,
+    position: raw[positionFieldName.value] as number | undefined,
+  })),
+)
 
 const expandedKeys = ref<Set<ListEditorKey>>(new Set())
 
-// `positionField` excluded: drag rewrites it on every shifted row, would falsely flag unmoved rows dirty.
-
-const { captureDirtyBaseline, rebaselineKey, isItemDirty, ignoreNextSourceChange } =
-  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-  useDirtyBaseline<TItem>(
-    () =>
-      modelValue.value.map((item) => ({
-        key: item[props.keyField] as ListEditorKey,
-        data: item,
-      })),
-    {
-      excludeFields: [props.positionField],
-      source: modelValue,
-      // Opt-in: when the consumer supplies a saved-rows baseline, derive dirty from it so a
-      // remounted instance reuses the persisted baseline instead of re-baselining unsaved
-      // data as clean. Absent → null → unchanged eager behaviour.
-      baselineSource: () =>
-        props.dirtyBaseline
-          ? props.dirtyBaseline.map((item) => ({
-              key: item[props.keyField] as ListEditorKey,
-              data: item,
-            }))
-          : null,
-    },
-  )
-
+// Reorder-session moved set — component view state, distinct from the
+// controller's persistent moved tracking. Drives the toolbar's "N pending
+// changes" counter; cleared on every mode transition by `useReorderMode`.
 const movedKeys = ref<Set<ListEditorKey>>(new Set())
-
-const resetDirtyBaseline = () => {
-  captureDirtyBaseline()
-  movedKeys.value = new Set()
-}
 
 const snapshot = shallowRef<TItem[] | null>(null)
 
@@ -383,10 +382,10 @@ const {
   rowsContainer,
   rowSelector: '.a-le-row',
   isInlineEdit,
-  restoreSnapshot: (key, data) => editor.updateItem(key, data),
-  watchKeys: () => modelValue.value.map((it) => it[props.keyField] as ListEditorKey),
+  restoreSnapshot: (key, data) => controller.updateItem(key, data),
+  watchKeys: () => modelValue.value.map((it) => keyOf(it)),
   findEntry: (key) => {
-    const hit = modelValue.value.find((it) => (it[props.keyField] as ListEditorKey) === key)
+    const hit = modelValue.value.find((it) => keyOf(it) === key)
     return hit ? { data: hit } : null
   },
   afterAutoOpen: (key) => {
@@ -418,7 +417,6 @@ const {
   modelValue,
   cloneModel: (m) => cloneDeep(m) as TItem[],
   applyModel: (m) => {
-    ignoreNextSourceChange()
     modelValue.value = m
   },
   canEnterReorder,
@@ -445,8 +443,9 @@ const {
   },
 })
 
-// Stacked-editor registry: outer collects movedCount + hasChanges from embedded children for the toolbar counter.
-// shallowReactive preserves ComputedRef identity (no auto-unwrap).
+// Stacked-editor registry: outer collects movedCount + hasChanges from embedded
+// children for the toolbar counter. shallowReactive preserves ComputedRef
+// identity (no auto-unwrap).
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const childContributions = props.embedded
   ? null
@@ -520,8 +519,8 @@ const reorderToggleVisible = computed<boolean>(
     modelValue.value.length > 0,
 )
 
-// When there IS a title and viewport is narrow, the reorder button shrinks to an
-// icon-only round button to keep the single-line header from overflowing.
+// With a title and a narrow viewport, the reorder button shrinks to an icon-only
+// round button to keep the single-line header from overflowing.
 const compactReorderButton = computed<boolean>((): boolean => !!props.title && isNarrow.value)
 
 const headerVisible = computed<boolean>(
@@ -535,50 +534,42 @@ const headerVisible = computed<boolean>(
     ),
 )
 
-// Editor band-only header — true when the header has substantive content
-// (title or custom header slot). When false, the header still renders but
-// as a slim band right-aligning just the reorder/apply controls — and stays
-// that height across idle ↔ reorder so the layout doesn't jump on toggle.
+// True when the header has substantive content (title or custom header slot).
+// When false it still renders as a slim band right-aligning just the
+// reorder/apply controls, holding height across idle ↔ reorder so it doesn't jump.
 const headerHasContent = computed<boolean>(
   (): boolean => !!(props.title || slots.header || slots['reorder-toggle'] || slots['view-body']),
 )
 
-// Per-row edit footer (Save + Cancel) is only meaningful if the consumer wants a
-// per-item persist callback. Without it the expectation is that the parent form's
-// global save flushes everything, so we hide the per-row buttons by default.
+// Per-row Save/Cancel footer only matters with a per-item persist callback;
+// otherwise the parent form's global save flushes everything, so hide it.
 const showInlineSaveFooter = computed(() => !!props.onItemSave)
 
-// Tracks only rows the user actively moved (drag, arrow buttons) — snapshot
-// vs current-index diffing would also flag side-effect index shifts, which
-// isn't what the user means by "unsaved".
+// Reorder-session moved marker (drag, arrow buttons) feeding the toolbar counter;
+// the persistent amber `unsaved` flag is the controller's.
 const markMoved = (key: ListEditorKey) => {
   movedKeys.value.add(key)
 }
 
-// Decoupled dirty pass — see AListEditor for rationale.
-const dirtyKeys = computed<Set<ListEditorKey>>(() => {
-  const out = new Set<ListEditorKey>()
-  for (const item of modelValue.value) {
-    const key = item[props.keyField] as ListEditorKey
-    if (isItemDirty(key, item)) out.add(key)
-  }
-  return out
-})
-
-// Per-key decorator cache — see AListEditor for rationale.
+// Per-key decorator cache — see AListEditor for rationale. `unsaved` (amber) and
+// `validationState` (red rail) come from the controller; `moved` is the
+// reorder-session flag.
 const decoratorCache = new Map<ListEditorKey, DecoratedViewItem<TItem>>()
 const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
   const total = modelValue.value.length
   const next: DecoratedViewItem<TItem>[] = []
   const liveKeys = new Set<ListEditorKey>()
-  for (const vi of editor.viewItems.value) {
+  for (const vi of viewItems.value) {
     liveKeys.add(vi.key)
     const editing = editingKeys.value.has(vi.key)
     const expanded = expandedKeys.value.has(vi.key)
     const loading = props.loadingKeys?.has(vi.key) ?? false
-    const moved = props.disableUnsaved ? false : movedKeys.value.has(vi.key)
-    const dirty = props.disableUnsaved ? false : dirtyKeys.value.has(vi.key)
-    const unsaved = dirty || moved
+    const moved = movedKeys.value.has(vi.key)
+    // readonly → no amber markers (can't have unsaved changes; also dodges a
+    // mount-before-load empty baseline). (QA 85050 sweep)
+    const unsaved = props.readonly ? false : controller.isUnsaved(vi.key)
+    const dirty = unsaved
+    const validationState = controller.rowState(vi.raw, vi.key)
     const canMoveUp = vi.index > 0
     const canMoveDown = vi.index < total - 1
     const cached = decoratorCache.get(vi.key)
@@ -593,6 +584,7 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
       cached.dirty === dirty &&
       cached.moved === moved &&
       cached.unsaved === unsaved &&
+      cached.validationState === validationState &&
       cached.canMoveUp === canMoveUp &&
       cached.canMoveDown === canMoveDown
     ) {
@@ -607,6 +599,7 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
       dirty,
       moved,
       unsaved,
+      validationState,
       canMoveUp,
       canMoveDown,
     }
@@ -672,37 +665,30 @@ const onMoveToPositionConfirm = (newIndex: number) => {
   moveToPositionTarget.value = null
   if (!target) return
   if (newIndex === target.index) return
-  editor.moveItem(target.index, newIndex)
+  controller.moveItem(target.index, newIndex)
   markMoved(target.key)
 }
 
 const resolveCompactText = (raw: TItem): string =>
   resolveCompactTextUtil(raw, { compactField: props.compactField })
 
-const { resolveValidation } = useValidationRegistry<TItem>({
-  getValidationState: (item, key, index) => props.getValidationState?.(item, key, index) ?? null,
-})
-
-// Skip SortableJS entirely on touch devices — touch users reorder via arrows + menu,
-// so the drag/drop library is never needed and there is no point paying its setup cost.
-// `isTouch` (Vuetify touch flag OR a reactive `(any-pointer: coarse)` query) resolves
-// synchronously, so this one-shot read captures the correct touch/coarse state at setup;
-// dragEnabled's initial value seeds SortableJS and later changes flow via the watch below.
+// Skip SortableJS on touch devices — touch users reorder via arrows + menu, so
+// don't pay its setup cost. `isTouch` resolves synchronously, so this one-shot
+// read captures the right touch state at setup; `dragEnabled`'s initial value
+// seeds SortableJS and later changes flow via the watch below.
 /* eslint-disable vue/no-ref-object-reactivity-loss */
 if (!isTouch.value) {
   const sortable = useSortable(rowsContainer, modelValue, {
-    // The rows container can mount/unmount across mode flips (e.g. when the
-    // consumer renders a `#view-body` slot in view mode and the rows are
-    // only mounted in reorder mode). vueuse's default `tryOnMounted` fires
-    // exactly once and would bind to a null ref, leaving SortableJS dead.
-    // `watchElement: true` re-initialises whenever the rows container ref
-    // populates.
+    // The rows container can mount/unmount across mode flips (e.g. a `#view-body`
+    // slot in view mode, rows only in reorder mode). vueuse's default
+    // `tryOnMounted` fires once and would bind to a null ref, leaving SortableJS
+    // dead; `watchElement: true` re-inits whenever the ref populates.
     watchElement: true,
     handle: '.a-le-drag-handle',
     animation: 150,
-    // Force the fallback renderer so `dragClass` is applied to a CSS-controlled
-    // clone that follows the cursor — gives us a custom, row-shaped ghost
-    // instead of the opaque browser-native drag bitmap.
+    // Force the fallback renderer so `dragClass` applies to a CSS-controlled
+    // clone following the cursor — a row-shaped ghost instead of the opaque
+    // browser-native drag bitmap.
     forceFallback: true,
     fallbackTolerance: 3,
     fallbackOnBody: true,
@@ -710,39 +696,34 @@ if (!isTouch.value) {
     chosenClass: DRAG_CHOSEN_CLASS,
     dragClass: DRAG_CLASS,
     disabled: !dragEnabled.value,
-    // Own `onUpdate` REPLACES vueuse's default array-move. vueuse moved the
-    // bound array inside a `nextTick` and any position renumber had to run in a
-    // *separate* `nextTick` afterwards — that gap let a consumer's "sort by
-    // position" watch (e.g. minute-feed keywords) re-sort using the still-stale
-    // positions and silently revert the drop. Doing the move + renumber here in
-    // ONE synchronous `editor.moveItem` closes that window: every reactive
-    // observer (emit → store → watch) sees the final order and positions at once.
+    // Own `onUpdate` REPLACES vueuse's default array-move, which moved the array
+    // and renumbered positions in separate `nextTick`s — a gap that let a
+    // consumer's "sort by position" watch re-sort on stale positions and revert
+    // the drop. One synchronous `controller.moveItem` closes that window so every
+    // observer sees the final order and positions at once.
     onUpdate: (event) => {
       const { oldIndex, newIndex, item, from } = event
       if (oldIndex === undefined || newIndex === undefined) return
-      // Undo SortableJS's own DOM relocation so Vue's keyed v-for stays the
-      // single source of truth (mirrors vueuse's removeNode + insertNodeAt).
+      // Undo SortableJS's DOM relocation so Vue's keyed v-for stays the single
+      // source of truth (mirrors vueuse's removeNode + insertNodeAt).
       if (item && from) {
         item.parentNode?.removeChild(item)
         from.insertBefore(item, from.children[oldIndex] ?? null)
       }
-      // `moveItem` finalizes through the shared core: it rewrites the array and,
-      // when `updatePosition` is set, renumbers positions in the same call.
-      editor.moveItem(oldIndex, newIndex)
+      // moveItem rewrites the array, renumbers positions, and records the moved
+      // key — all synchronously.
+      controller.moveItem(oldIndex, newIndex)
     },
     onEnd: (event) => {
-      // Resolve which row was dragged by reading its data-id attribute
-      // (set via template binding on .row). SortableJS's `event.item` is
-      // the moved DOM element; we only mark that one specific key as moved
-      // rather than diffing the whole list, so siblings that shifted index
-      // as a side-effect stay clean.
+      // Mark only the dragged row (via its data-id) moved rather than diffing the
+      // whole list, so siblings that shifted index stay clean.
       const el = event.item as HTMLElement
       const raw = el.getAttribute('data-id')
       if (raw !== null && raw !== '') {
-        // Use the numeric key only when `data-id` is a pure integer string
-        // (incl. negative temp ids like "-1"); otherwise it's a UUID-style key
-        // and must stay a string. `n > 0` wrongly sent negative ids to the
-        // string branch, so the moved row's amber landed on the wrong key.
+        // Numeric key only when `data-id` is a pure integer string (incl. negative
+        // temp ids like "-1"); otherwise keep the UUID-style string. `n > 0`
+        // wrongly sent negative ids down the string branch, landing amber on the
+        // wrong key.
         const n = stringToInt(raw)
         const key: ListEditorKey = String(n) === raw ? n : raw
         markMoved(key)
@@ -756,48 +737,24 @@ if (!isTouch.value) {
 }
 /* eslint-enable vue/no-ref-object-reactivity-loss */
 
-// Managed add (itemFactory): the editor inserts the item itself; finalize
-// renumbers positions when update-position is on, possibly replacing the
-// inserted object — locate it by key and emit the finalized one.
-const addViaFactory = (positionHint?: PositionHint): void => {
-  const item = props.itemFactory!()
-  // The editor writes the model by reassignment; without this, the dirty
-  // baseline's initial-fill watch would treat the FIRST add into an
-  // empty-at-mount list as async data landing and baseline it (the new row
-  // would never read as unsaved/invalid).
-  ignoreNextSourceChange()
-  const result = editor.addItem(item, positionHint)
-  const index = result.findIndex(
-    (x) => (x[props.keyField] as ListEditorKey) === (item[props.keyField] as ListEditorKey),
-  )
-  emit('added', { item: (index === -1 ? item : result[index]) as TItem, index })
-}
-
+// Managed add: the controller mints + inserts `factory()` and renumbers
+// positions; the inline-editing watch picks up the new key and auto-opens it.
 const onAddClick = () => {
   if (!canAdd.value) return
   requestAutoOpen()
-  if (props.itemFactory) {
-    addViaFactory()
-    return
-  }
-  emit('add', undefined)
+  controller.addItem(undefined, undefined)
 }
 
 const onRowAddAfterClick = (vi: ListViewItem<TItem>) => {
   if (!canInteract.value) return
   requestAutoOpen()
-  if (props.itemFactory) {
-    addViaFactory({ afterId: vi.key })
-    return
-  }
-  emit('add', { afterId: vi.key })
+  controller.addItem(undefined, { afterId: vi.key })
 }
 
 const onEditClick = (vi: ListViewItem<TItem>) => {
   if (!canInteract.value) return
   if (reorderMode.value && !props.allowEditInReorder) return
-  // Toggle: clicking edit while already editing closes the form, matching the
-  // row-header click behaviour.
+  // Clicking edit while already editing closes the form (matches row-header click).
   if (editingKeys.value.has(vi.key)) {
     onCloseClick(vi)
     return
@@ -860,10 +817,10 @@ const {
     editingKeys.value.delete(vi.key)
     editingSnapshots.value.delete(vi.key)
     expandedKeys.value.delete(vi.key)
-    if (props.manageDelete) {
-      ignoreNextSourceChange()
-      editor.deleteItem(vi.key)
-    }
+    movedKeys.value.delete(vi.key)
+    // Controller owns the data: temp rows vanish; saved rows leave the visible
+    // list and land in `getChanges().deleted`.
+    controller.deleteItem(vi.key)
     emit('deleted', vi)
   },
   disableDeleteConfirm: () => props.disableDeleteConfirm || props.chips,
@@ -895,37 +852,37 @@ const onCloseClick = (vi: ListViewItem<TItem>) => {
 const keyAtIndex = (idx: number): ListEditorKey | null => {
   const item = modelValue.value[idx]
   if (!item) return null
-  return item[props.keyField] as ListEditorKey
+  return keyOf(item)
 }
 
 const moveUp = (idx: number) => {
   if (idx <= 0) return
   const key = keyAtIndex(idx)
-  editor.moveItem(idx, idx - 1)
+  controller.moveItem(idx, idx - 1)
   if (key !== null) markMoved(key)
 }
 const moveDown = (idx: number) => {
   if (idx >= modelValue.value.length - 1) return
   const key = keyAtIndex(idx)
-  editor.moveItem(idx, idx + 1)
+  controller.moveItem(idx, idx + 1)
   if (key !== null) markMoved(key)
 }
 const moveTop = (idx: number) => {
   if (idx <= 0) return
   const key = keyAtIndex(idx)
-  editor.moveItem(idx, 0)
+  controller.moveItem(idx, 0)
   if (key !== null) markMoved(key)
 }
 const moveBottom = (idx: number) => {
   if (idx >= modelValue.value.length - 1) return
   const key = keyAtIndex(idx)
-  editor.moveItem(idx, modelValue.value.length - 1)
+  controller.moveItem(idx, modelValue.value.length - 1)
   if (key !== null) markMoved(key)
 }
 
-// Per-key actions cache: stable identity per row, see equivalent block in
-// AListEditor for rationale. Closures capture key (stable) and look up the
-// current vi via findVi at call time.
+// Per-key actions cache: stable identity per row — see AListEditor for
+// rationale. Closures capture the stable key and resolve the current vi via
+// findVi at call time.
 type ActionsBundle = {
   edit: () => void
   save: () => Promise<void> | void
@@ -938,7 +895,7 @@ type ActionsBundle = {
   moveDown: () => void
   moveTop: () => void
   moveBottom: () => void
-  update: (data: TItem) => TItem[]
+  update: (next: TItem | Partial<TItem> | ((current: TItem) => TItem)) => void
 }
 const actionsCache = new Map<ListEditorKey, ActionsBundle>()
 const getActions = (key: ListEditorKey): ActionsBundle => {
@@ -989,7 +946,7 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
         const vi = findVi(key)
         if (vi) moveBottom(vi.index)
       },
-      update: (data: TItem) => editor.updateItem(key, data),
+      update: (next) => controller.updateItem(key, next),
     }
     actionsCache.set(key, actions)
   }
@@ -1007,7 +964,7 @@ watch(
 )
 
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
-  item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
+  item: vi,
   raw: vi.raw,
   index: vi.index,
   key: vi.key,
@@ -1046,67 +1003,32 @@ const reorderToggleSlotProps = computed(() => ({
   },
 }))
 
-const unsavedKeysModel = defineModel<Set<ListEditorKey>>('unsavedKeys', {
-  default: () => new Set<ListEditorKey>(),
-})
-
-const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
-  const out = new Set<ListEditorKey>()
-  for (const vi of viewItemsDecorated.value) {
-    if (vi.unsaved) out.add(vi.key)
-  }
-  return out
-})
-// Let row validity sentinels surface 'invalid' as soon as their row is unsaved.
-// Includes each unsaved row's id/position too, so the lookup matches whatever
-// key the sentinel registers under (which may differ from the editor's key-field).
-const unsavedValidationKeys = computed<Set<ListEditorKey>>(() => {
-  const out = new Set<ListEditorKey>()
-  for (const vi of viewItemsDecorated.value) {
-    if (!vi.unsaved) continue
-    out.add(vi.key)
-    const raw = vi.raw as Record<string, any>
-    if (raw.id !== undefined && raw.id !== null) out.add(raw.id)
-    if (raw.position !== undefined && raw.position !== null) out.add(raw.position)
-  }
-  return out
-})
-provide(ListEditorUnsavedKeysKey, unsavedValidationKeys)
-
-const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSync({
-  unsavedKeysModel,
-  internalUnsavedKeys,
-  onClearAll: () => {
-    captureDirtyBaseline()
-    movedKeys.value = new Set()
-    // Collapse open inline-edit forms once the parent persisted.
-    clearEditing()
-  },
-  onClearKey: (key) => {
-    rebaselineKey(key)
-    movedKeys.value.delete(key)
-  },
-})
-
-// Registers this editor as a named unsaved-changes section when the consumer
-// passes a label — replaces the per-consumer useUnsavedSection boilerplate.
+// Registers a named unsaved-changes section when the consumer passes a label.
 useUnsavedSection(() =>
   props.unsavedSectionLabel
-    ? { label: props.unsavedSectionLabel, dirty: unsavedCount.value > 0 }
+    ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value }
     : [],
 )
 
-defineExpose({
-  addItem: editor.addItem,
-  deleteItem: editor.deleteItem,
-  updateItem: editor.updateItem,
-  moveItem: editor.moveItem,
-  recalculatePositions: editor.recalculatePositions,
-  viewItems: editor.viewItems,
-  resetDirtyBaseline,
-  hasUnsavedChanges,
-  unsavedCount,
-  clearUnsavedState,
+// Expose the controller handle (validateAll/getPayload/commit/etc. via
+// `useTemplateRef<ListEditorHandle<TItem>>`) plus the reorder-mode controls.
+defineExpose<
+  ListEditorHandle<TItem> & {
+    enterReorderMode: () => void
+    cancelReorderMode: () => void
+    applyReorder: () => Promise<void>
+  }
+>({
+  ...controller,
+  // validateAll() also opens invalid rows so a blocked save surfaces WHICH rows
+  // are wrong — their #item form mounts instead of a collapsed red rail (QA 85050
+  // B4-17). The body is gated on `editing` (not `expanded`), so drive `beginEdit`.
+  // Shared with AListEditor + ANestedSortableListEditor via the helper.
+  validateAll: () =>
+    validateAllAndReveal(controller, (key) => {
+      const vi = viewItems.value.find((v) => v.key === key)
+      if (vi) beginEdit(vi)
+    }),
   enterReorderMode,
   cancelReorderMode,
   applyReorder,
@@ -1150,8 +1072,7 @@ defineExpose({
           </h3>
           <div class="a-le-header-actions">
             <template v-if="reorderMode && !embedded">
-              <!-- Reorder-mode header: pending-changes count + Cancel/Apply.
-                   Replaces the old sticky bottom toolbar — the actions sit
+              <!-- Reorder-mode header: pending count + Cancel/Apply, sitting
                    where the "Reorder" button lives in view mode. -->
               <slot
                 name="reorder-toolbar"
@@ -1300,8 +1221,7 @@ defineExpose({
             'a-le-row--reorder': reorderMode,
             'a-le-row--grabbed': keyboardNav.isGrabbed(vi.key),
             'a-le-row--clickable': isRowClickable(vi),
-            [`a-le-row--validation-${resolveValidation(vi.raw, vi.key, vi.index)}`]:
-              resolveValidation(vi.raw, vi.key, vi.index) !== null,
+            [`a-le-row--validation-${vi.validationState}`]: vi.validationState !== null,
           }"
           @keydown="keyboardNav.handleKeydown(vi.key, $event)"
         >
@@ -1719,23 +1639,21 @@ defineExpose({
 @use './styles/tokens';
 @use './styles/shared';
 
-// Variant-specific rules for ASortableListEditor — reorder-mode trims, drag
-// clone styling, chips flex-wrap layout, and the validation rail.
+// Variant-specific rules: reorder-mode trims, drag clone styling, chips
+// flex-wrap layout, validation rail.
 .a-sortable-list-editor {
   &__rows {
     display: flex;
     flex-direction: column;
   }
 
-  // View-mode body slot — gives the consumer's slot content breathing room
-  // inside the editor card. Match the row's horizontal rhythm (~16 px) and
-  // add a modest vertical inset so cards don't sit flush against the border.
+  // View-mode body slot — match the row's horizontal rhythm (~16 px) with a
+  // vertical inset so content doesn't sit flush against the border.
   .a-le-view-body {
     padding: 12px 16px;
   }
 
-  // Reorder-mode trims the row-header padding since the drag handle already
-  // eats some of the horizontal rhythm.
+  // Reorder mode trims row-header padding since the drag handle eats some of it.
   .a-le-row--reorder .a-le-row-header {
     padding-left: 12px;
     padding-right: 8px;
@@ -1752,8 +1670,8 @@ defineExpose({
     opacity: 0.5;
   }
 
-  // Floating clone that follows the cursor. Row-shaped card with elevation;
-  // action column and status badge hidden so the preview stays clean.
+  // Floating clone following the cursor — row-shaped card with elevation; action
+  // column + status badge hidden (below) so the preview stays clean.
   .a-le-row--drag {
     background: var(--le-surface);
     border: 1px solid var(--le-border);
@@ -1769,18 +1687,16 @@ defineExpose({
     display: none;
   }
 
-  // Header-only-with-reorder variant — when there's no title and no header
-  // slot, the header still renders but as a slim band right-aligning just
-  // the Preskupiť button.
+  // Header-only-with-reorder variant — no title/header slot, so render a slim
+  // band right-aligning just the Reorder button.
   &--header-floating .a-le-header {
     justify-content: flex-end;
     padding: 6px 8px;
     min-height: 0;
   }
 
-  // Embedded variant — this editor sits inside another editor's row. Drop
-  // the card chrome (border, shadow), tighten rows, lighten background so it
-  // visually reads as part of the parent's body, not a sibling list.
+  // Embedded variant — sits inside another editor's row. Drop card chrome,
+  // tighten rows, lighten background so it reads as part of the parent's body.
   &--embedded .a-le-card {
     background: transparent;
     border: none;
@@ -1830,9 +1746,9 @@ defineExpose({
     border-style: solid;
   }
 
-  // Chips-layout variant-specific overrides — `__rows` flex-wraps into pills,
-  // `row-header` gets the drag-handle-friendly 8 px left padding (vs 12 px
-  // in AListEditor), `drag-handle` shrinks to match the pill height.
+  // Chips-layout overrides — `__rows` flex-wraps into pills, `row-header` gets
+  // 8 px left padding (vs 12 px in AListEditor), `drag-handle` shrinks to the
+  // pill height.
   &--chips &__rows {
     display: flex;
 
@@ -1855,7 +1771,7 @@ defineExpose({
 }
 
 // Narrow-container / mobile layout — taller rows, always-visible actions,
-// status badge dropped to make room.
+// status badge dropped for room.
 /* stylelint-disable selector-max-compound-selectors */
 @container le-shell (max-width: 768px) {
   .a-sortable-list-editor {

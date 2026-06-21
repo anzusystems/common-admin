@@ -36,6 +36,19 @@ const buildImages = (): MockImage[] =>
 const images = ref<MockImage[]>(buildImages())
 const editorMode = ref<'view' | 'reorder'>('view')
 
+let nextCardId = 100
+const createImage = (): MockImage => {
+  const id = nextCardId++
+  return {
+    id,
+    key: `img-${id}`,
+    position: 0,
+    src: makeSvgThumb(String(id), palette[id % palette.length]),
+    title: `Image ${id}`,
+    description: '',
+  }
+}
+
 const reset = () => {
   images.value = buildImages()
   editorMode.value = 'view'
@@ -87,9 +100,9 @@ const onReorderApplied = (items: MockImage[]) => {
       <ASortableListEditor
         v-model="images"
         v-model:mode="editorMode"
-        key-field="key"
-        position-field="position"
-        update-position
+        :factory="createImage"
+        get-key="key"
+        position="position"
         :show-add-button="false"
         :show-delete-button="false"
         :show-edit-button="false"

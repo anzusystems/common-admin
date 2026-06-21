@@ -1,3 +1,4 @@
+/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, ref, nextTick } from 'vue'
@@ -19,6 +20,9 @@ const items = (): FaqItem[] => [
   { id: 3, position: 3, title: 'Third', status: 'Active' },
 ]
 
+let nextTempId = 0
+const makeFaqItem = (): FaqItem => ({ id: --nextTempId, position: 0, title: '' })
+
 const mountEditor = (data: FaqItem[] = items(), extra: Record<string, unknown> = {}) => {
   const model = ref<FaqItem[]>(data)
   const Host = defineComponent({
@@ -29,9 +33,7 @@ const mountEditor = (data: FaqItem[] = items(), extra: Record<string, unknown> =
           'onUpdate:modelValue': (v: FaqItem[]) => {
             model.value = v
           },
-          onDeleted: ({ index }: { index: number }) => {
-            model.value.splice(index, 1)
-          },
+          factory: makeFaqItem,
           compactField: 'title',
           ...extra,
         })
@@ -100,6 +102,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               {
                 item: ({ raw }: { raw: FaqItem }) =>
@@ -148,11 +151,13 @@ describe('AListEditor', () => {
   })
 
   describe('events and interactions', () => {
-    it('emits add with no hint when the add button is clicked', async () => {
-      const { wrapper, editor } = mountEditor()
+    it('inserts a factory row into the model when the add button is clicked', async () => {
+      const { wrapper, model } = mountEditor()
       await wrapper.find('.a-le-row-add').trigger('click')
-      expect(editor().emitted('add')).toBeTruthy()
-      expect(editor().emitted('add')![0][0]).toBeUndefined()
+      await flushPromises()
+      expect(model.value).toHaveLength(4)
+      // Appended at the end (no hint).
+      expect(model.value[3].title).toBe('')
     })
 
     it('emits edit when the edit button is clicked', async () => {
@@ -217,10 +222,10 @@ describe('AListEditor', () => {
   })
 
   describe('position hints', () => {
-    it('emits add with afterId hint when the slot addAfter action is triggered', async () => {
+    it('inserts the factory row right after the row when the slot addAfter action is triggered', async () => {
+      const model = ref<FaqItem[]>(items())
       const Host = defineComponent({
         setup() {
-          const model = ref<FaqItem[]>(items())
           return () =>
             h(
               AListEditor<FaqItem>,
@@ -229,6 +234,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               {
                 'item-actions': ({ actions }: { actions: { addAfter: () => void } }) =>
@@ -240,10 +246,11 @@ describe('AListEditor', () => {
       const wrapper = mount(Host)
       const btns = wrapper.findAll('.test-add-after')
       await btns[1].trigger('click')
-      const editor = findAListEditor(wrapper)
-      const addEvents = editor.emitted('add') as Array<[{ afterId: number } | undefined]>
-      expect(addEvents).toBeTruthy()
-      expect(addEvents[0][0]).toEqual({ afterId: 2 })
+      await flushPromises()
+      // New row inserted after id 2 (index 1).
+      expect(model.value).toHaveLength(4)
+      expect(model.value[2].title).toBe('')
+      expect(model.value.map((i) => i.id).slice(0, 2)).toEqual([1, 2])
     })
   })
 
@@ -272,6 +279,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
                 title: 'X',
               },
               {
@@ -310,6 +318,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
                 compactField: 'title',
                 ...extra,
               },
@@ -392,6 +401,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
                 compactField: 'title',
                 onItemSave,
               },
@@ -480,6 +490,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               {
                 item: ({ raw }: { raw: FaqItem }) => h('div', `editing ${raw.id}`),
@@ -580,6 +591,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) },
             )
@@ -598,7 +610,7 @@ describe('AListEditor', () => {
   })
 
   describe('auto-open on add', () => {
-    it('auto-enters editing on the newly-added row after @add is handled by the parent', async () => {
+    it('auto-enters editing on the newly-added managed row', async () => {
       const model = ref<FaqItem[]>(items())
       const Host = defineComponent({
         setup() {
@@ -610,13 +622,8 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: (): FaqItem => ({ id: 999, position: 0, title: 'New', status: 'Draft' }),
                 compactField: 'title',
-                onAdd: () => {
-                  model.value = [
-                    ...model.value,
-                    { id: 999, position: 0, title: 'New', status: 'Draft' },
-                  ]
-                },
               },
               { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) },
             )
@@ -645,6 +652,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) },
             )
@@ -673,6 +681,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               { empty: () => h('div', { class: 'my-empty' }, 'Nothing here yet') },
             )
@@ -695,6 +704,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               {
                 'add-button': ({ actions }: { actions: { add: () => void } }) =>
@@ -720,6 +730,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               {
                 'item-actions': ({ raw }: { raw: FaqItem }) =>
@@ -736,27 +747,31 @@ describe('AListEditor', () => {
     })
   })
 
-  describe('exposed imperative API', () => {
-    it('exposes resetDirtyBaseline via defineExpose', () => {
+  describe('exposed imperative API (v2 controller handle)', () => {
+    it('exposes the controller handle via defineExpose', () => {
       const { editor } = mountEditor()
       const exposed = (editor().vm as unknown as { $: { exposed: Record<string, unknown> } }).$
         .exposed
-      expect(typeof exposed.resetDirtyBaseline).toBe('function')
+      expect(typeof exposed.commit).toBe('function')
+      expect(typeof exposed.reset).toBe('function')
+      expect(typeof exposed.validateAll).toBe('function')
+      expect(typeof exposed.getPayload).toBe('function')
       expect(typeof exposed.addItem).toBe('function')
       expect(typeof exposed.deleteItem).toBe('function')
       expect(typeof exposed.updateItem).toBe('function')
     })
   })
 
-  describe('position recalculation (updatePosition)', () => {
-    it('recalculates positions on add when updatePosition=true', async () => {
+  describe('managed position (position prop)', () => {
+    it('recalculates positions on add when position is managed with a multiplier', async () => {
       const { model, editor } = mountEditor(items(), {
-        updatePosition: true,
-        positionMultiplier: 10,
+        position: { field: 'position', multiplier: 10 },
       })
+      // Baseline renumbers eagerly to the multiplier grid.
+      await flushPromises()
       const exposed = (
         editor().vm as unknown as {
-          $: { exposed: { addItem: (d: FaqItem) => void } }
+          $: { exposed: { addItem: (d?: FaqItem) => void } }
         }
       ).$.exposed
       exposed.addItem({ id: 999, position: 0, title: 'Extra' })
@@ -765,11 +780,11 @@ describe('AListEditor', () => {
       expect(positions).toEqual([10, 20, 30, 40])
     })
 
-    it('does not touch positions when updatePosition=false (default)', async () => {
-      const { model, editor } = mountEditor(items())
+    it('does not touch positions when position=false', async () => {
+      const { model, editor } = mountEditor(items(), { position: false })
       const exposed = (
         editor().vm as unknown as {
-          $: { exposed: { addItem: (d: FaqItem) => void } }
+          $: { exposed: { addItem: (d?: FaqItem) => void } }
         }
       ).$.exposed
       exposed.addItem({ id: 999, position: 99, title: 'Extra' })

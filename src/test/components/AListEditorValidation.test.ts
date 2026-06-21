@@ -1,16 +1,14 @@
+/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { computed, defineComponent, h, nextTick, ref, type Ref } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
-import { useListEditorItemValidation } from '@/labs/listEditor/composables/useListEditorItemValidation'
-import { useListEditorVuelidateSentinel } from '@/labs/listEditor/composables/useListEditorVuelidateSentinel'
-import type { ListEditorValidationState } from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
 
 interface Item {
   id: number
   position: number
   title: string
-  validationState?: ListEditorValidationState
 }
 
 const items = (): Item[] => [
@@ -19,14 +17,8 @@ const items = (): Item[] => [
   { id: 3, position: 3, title: 'Third' },
 ]
 
-// vue/no-ref-object-reactivity-loss forbids reading `.value` in the scope the
-// ref was created in — route test mutations through helpers instead.
-const appendItem = (list: Ref<Item[]>, item: Item) => {
-  list.value = [...list.value, item]
-}
-const patchWhere = (list: Ref<Item[]>, match: (it: Item) => boolean, patch: Partial<Item>) => {
-  list.value = list.value.map((it) => (match(it) ? { ...it, ...patch } : it))
-}
+let nextTempId = 0
+const makeItem = (): Item => ({ id: --nextTempId, position: 0, title: '' })
 
 let mounted: VueWrapper | null = null
 
@@ -41,308 +33,218 @@ const findRow = (key: number): HTMLElement | null =>
 const isInvalid = (key: number): boolean =>
   findRow(key)?.classList.contains('a-le-row--validation-invalid') ?? false
 
-describe('AListEditor — validation', () => {
-  describe('via raw.validationState (data-driven)', () => {
-    it('applies invalid class when raw.validationState = "invalid"', async () => {
-      const data = items()
-      data[1].validationState = 'invalid'
-      const Host = defineComponent({
-        setup() {
-          return () => h(AListEditor<Item>, { modelValue: data })
-        },
-      })
-      mounted = mount(Host, { attachTo: document.body })
-      await nextTick()
-      expect(isInvalid(2)).toBe(true)
-      expect(isInvalid(1)).toBe(false)
-      expect(isInvalid(3)).toBe(false)
-    })
-  })
+const findAListEditor = (w: VueWrapper): VueWrapper =>
+  w.findComponent(AListEditor as unknown as Parameters<typeof w.findComponent>[0]) as VueWrapper
 
-  describe('via getValidationState prop (caller function)', () => {
-    it('applies invalid class for keys returned by the function', async () => {
-      const data = items()
+// Raw exposed handle — refs NOT unwrapped, so `.value` matches the declared
+// ComputedRef types (mirrors the ASortableListEditor test convention).
+const exposed = (w: VueWrapper): ListEditorHandle<Item> =>
+  (findAListEditor(w).vm as unknown as { $: { exposed: ListEditorHandle<Item> } }).$.exposed
+
+// v2 validation flows through the `:validate` prop (true = VALID). The red rail
+// is GATED: an invalid row only paints red once it is unsaved (added / edited)
+// OR the consumer called `validateAll()` — so a freshly-loaded invalid baseline
+// row stays clear until interaction. This mirrors ASortableListEditor.
+describe('AListEditor — validation (:validate + gated red rail)', () => {
+  describe('unsaved-gated red rail', () => {
+    it('does not flag a loaded-but-invalid baseline row before interaction', async () => {
+      const data = ref<Item[]>([
+        { id: 1, position: 1, title: 'A' },
+        { id: 2, position: 2, title: '' }, // invalid (empty title) but persisted
+      ])
       const Host = defineComponent({
         setup() {
           return () =>
             h(AListEditor<Item>, {
-              modelValue: data,
-              getValidationState: (item: Item) => (item.id === 1 ? 'invalid' : null),
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                data.value = v
+              },
+              factory: makeItem,
+              validate: (item: Item) => !!item.title,
             })
         },
       })
       mounted = mount(Host, { attachTo: document.body })
       await nextTick()
-      expect(isInvalid(1)).toBe(true)
+      // Persisted invalid row stays clear on load — no premature red.
       expect(isInvalid(2)).toBe(false)
     })
 
-    it('reacts to function output changes', async () => {
-      const data = items()
-      const targetId = ref(1)
-      const Host = defineComponent({
-        setup() {
-          return () =>
-            h(AListEditor<Item>, {
-              modelValue: data,
-              getValidationState: (item: Item) => (item.id === targetId.value ? 'invalid' : null),
-            })
-        },
-      })
-      mounted = mount(Host, { attachTo: document.body })
-      await nextTick()
-      expect(isInvalid(1)).toBe(true)
-      expect(isInvalid(3)).toBe(false)
-      targetId.value = 3
-      await nextTick()
-      expect(isInvalid(1)).toBe(false)
-      expect(isInvalid(3)).toBe(true)
-    })
-  })
-
-  describe('via useListEditorItemValidation (provide/inject from slot)', () => {
-    it('child in #item slot can register its validity, editor applies the class', async () => {
-      const data = items()
-      const ChildForm = defineComponent({
-        props: { itemKey: { type: Number, required: true } },
-        setup(p) {
-          const isInvalidLocal = computed<ListEditorValidationState>(() =>
-            p.itemKey === 2 ? 'invalid' : null,
-          )
-          useListEditorItemValidation({
-            key: () => p.itemKey,
-            state: isInvalidLocal,
-          })
-          return () => h('div', `child-${p.itemKey}`)
-        },
-      })
-      const Host = defineComponent({
-        setup() {
-          return () =>
-            h(
-              AListEditor<Item>,
-              { modelValue: data },
-              {
-                item: ({ raw }: { raw: Item }) => h(ChildForm, { itemKey: raw.id }),
-              },
-            )
-        },
-      })
-      mounted = mount(Host, { attachTo: document.body })
-      await nextTick()
-      // Open row 2 to mount its #item slot, where the child registers validity.
-      // Then close and verify the registered state still applies via class on the row.
-      // Quicker: edit-mode hides validation, so trigger by registering via expanded
-      // state. For this test we simply read state via raw.validationState fallback
-      // — but since no fallback set, registry only fires for OPEN rows. Let's edit:
-      const row2 = findRow(2)
-      row2?.click()
-      await nextTick()
-      await nextTick()
-      // Validation rail is hidden while editing, so close after registration.
-      // To make this assert deterministic we instead pre-open via API: click
-      // to open, then click to close.
-      row2?.click()
-      await nextTick()
-      // Note: useListEditorItemValidation only runs when the child component is
-      // mounted. With #item slot mounted only during edit, the registration
-      // only happens during edit, then unregisters on unmount (close edit).
-      // So the rail won't persist after close — this is the expected behavior
-      // unless the child lives outside the edit slot.
-      expect(true).toBe(true)
-    })
-
-    it('child rendered outside the edit slot keeps the invalid class', async () => {
-      // Render the child inside #item-compact (always mounted) so registration
-      // sticks regardless of edit state.
-      const data = items()
-      const ChildForm = defineComponent({
-        props: { itemKey: { type: Number, required: true } },
-        setup(p) {
-          const localState = computed<ListEditorValidationState>(() =>
-            p.itemKey === 2 ? 'invalid' : null,
-          )
-          useListEditorItemValidation({
-            key: () => p.itemKey,
-            state: localState,
-          })
-          return () => h('span', `compact-${p.itemKey}`)
-        },
-      })
-      const Host = defineComponent({
-        setup() {
-          return () =>
-            h(
-              AListEditor<Item>,
-              { modelValue: data },
-              {
-                'item-compact': ({ raw }: { raw: Item }) => h(ChildForm, { itemKey: raw.id }),
-              },
-            )
-        },
-      })
-      mounted = mount(Host, { attachTo: document.body })
-      await nextTick()
-      await nextTick()
-      expect(isInvalid(2)).toBe(true)
-      expect(isInvalid(1)).toBe(false)
-    })
-
-    // Regression (QA Batch2 BUG-08): an invalid row showed amber, never red.
-    // Two causes, both fixed here: (1) sentinels gate on vuelidate `$anyDirty`,
-    // which is false for a freshly-added still-empty row, so use the editor's
-    // unsaved tracking via `invalid` + `dirty`; (2) the sentinel registers under
-    // `id ?? position` while a `key-field="position"` editor looks rows up by
-    // position — the registry now falls back to the row's own id/position.
-    it('flags an UNSAVED invalid row even when the sentinel keys by id and the editor by position', async () => {
-      // item 2 starts invalid (empty title) but is part of the saved baseline.
+    it('flags an UNSAVED invalid row (added empty row reads red)', async () => {
       const baseline: Item[] = [
         { id: 1, position: 1, title: 'A' },
         { id: 2, position: 2, title: '' },
       ]
       const data = ref<Item[]>(baseline)
-      const Sentinel = defineComponent({
-        props: { item: { type: Object, required: true } },
-        setup(p) {
-          useListEditorItemValidation({
-            // keys by id (like ListItemDto-based sentinels) — differs from the
-            // editor's position key-field, exercising the id/position fallback.
-            key: () => (p.item as Item).id ?? (p.item as Item).position,
-            invalid: () => !(p.item as Item).title,
-            dirty: () => false, // rely purely on the editor's unsaved tracking
-          })
-          return () => h('span', String((p.item as Item).title))
-        },
-      })
       const Host = defineComponent({
         setup() {
           return () =>
-            h(
-              AListEditor<Item>,
-              {
-                modelValue: data.value,
-                'onUpdate:modelValue': (v: Item[]) => {
-                  data.value = v
-                },
-                keyField: 'position',
+            h(AListEditor<Item>, {
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                data.value = v
               },
-              { 'item-compact': ({ raw }: { raw: Item }) => h(Sentinel, { item: raw }) },
-            )
+              factory: makeItem,
+              validate: (item: Item) => !!item.title,
+            })
         },
       })
       mounted = mount(Host, { attachTo: document.body })
       await nextTick()
-      await nextTick()
-      // Saved-but-invalid row on load stays clear — no premature red (Batch1 BUG-04).
       expect(isInvalid(2)).toBe(false)
 
-      // Add a new invalid (empty) row — now unsaved → must read as invalid (red).
+      // Add a new invalid (empty) row — now unsaved → must read red.
       data.value = [...baseline, { id: -1, position: 3, title: '' }]
       await nextTick()
       await nextTick()
-      expect(isInvalid(3)).toBe(true)
+      expect(isInvalid(-1)).toBe(true)
       // The pre-existing invalid baseline row is still not flagged.
       expect(isInvalid(2)).toBe(false)
 
-      // Filling the new row clears the invalid flag (valid + unsaved → amber).
-      data.value = [...baseline, { id: -1, position: 3, title: 'now valid' }]
-      await nextTick()
-      await nextTick()
-      expect(isInvalid(3)).toBe(false)
-    })
-
-    // The blessed domain-sentinel shape: validation composable + delegate.
-    it('useListEditorVuelidateSentinel flags unsaved invalid rows and spares the saved baseline', async () => {
-      const data = ref<Item[]>([
-        { id: 1, position: 1, title: 'A' },
-        { id: 2, position: 2, title: '' }, // persisted-but-invalid baseline row
-      ])
-      const Sentinel = defineComponent({
-        props: { item: { type: Object, required: true } },
-        setup(p) {
-          // Stands in for a vuelidate instance: $invalid mirrors the data,
-          // $anyDirty stays false so the editor's unsaved tracking decides.
-          const v$ = computed(() => ({
-            $invalid: !(p.item as Item).title,
-            $anyDirty: false,
-          }))
-          useListEditorVuelidateSentinel(v$, () => (p.item as Item).id)
-          return () => h('span', String((p.item as Item).title))
-        },
-      })
-      const Host = defineComponent({
-        setup() {
-          return () =>
-            h(
-              AListEditor<Item>,
-              {
-                modelValue: data.value,
-                'onUpdate:modelValue': (v: Item[]) => {
-                  data.value = v
-                },
-              },
-              { 'item-compact': ({ raw }: { raw: Item }) => h(Sentinel, { item: raw }) },
-            )
-        },
-      })
-      mounted = mount(Host, { attachTo: document.body })
-      await nextTick()
-      await nextTick()
-      // Saved invalid row stays clear on load (no premature red).
-      expect(isInvalid(2)).toBe(false)
-
-      // A new (unsaved) empty row reads as invalid.
-      appendItem(data, { id: -1, position: 3, title: '' })
-      await nextTick()
-      await nextTick()
-      expect(isInvalid(-1)).toBe(true)
-
-      // Filling it clears the flag.
-      patchWhere(data, (it) => it.id === -1, { title: 'filled' })
+      // Filling the new row clears the invalid flag (valid + unsaved → amber only).
+      data.value = [...baseline.slice(0, 2), { id: -1, position: 3, title: 'now valid' }]
       await nextTick()
       await nextTick()
       expect(isInvalid(-1)).toBe(false)
     })
 
-    it('registry takes priority over getValidationState prop', async () => {
-      const data = items()
-      const ChildForm = defineComponent({
-        props: { itemKey: { type: Number, required: true } },
-        setup(p) {
-          // Child says row 1 is invalid (registry source)
-          const localState = computed<ListEditorValidationState>(() =>
-            p.itemKey === 1 ? 'invalid' : null,
-          )
-          useListEditorItemValidation({
-            key: () => p.itemKey,
-            state: localState,
-          })
-          return () => h('span', String(p.itemKey))
-        },
-      })
+    it('an edited (unsaved) baseline row that is invalid reads red', async () => {
+      const data = ref<Item[]>(items())
       const Host = defineComponent({
         setup() {
           return () =>
-            h(
-              AListEditor<Item>,
-              {
-                modelValue: data,
-                // Prop says row 2 is invalid — but registry hasn't registered row 2,
-                // so prop applies for row 2. Row 1 → registry says invalid (wins).
-                getValidationState: (item: Item) => (item.id === 2 ? 'invalid' : null),
+            h(AListEditor<Item>, {
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                data.value = v
               },
-              {
-                'item-compact': ({ raw }: { raw: Item }) => h(ChildForm, { itemKey: raw.id }),
-              },
-            )
+              factory: makeItem,
+              validate: (item: Item) => !!item.title,
+            })
         },
       })
       mounted = mount(Host, { attachTo: document.body })
       await nextTick()
+      expect(isInvalid(1)).toBe(false)
+
+      // Edit row 1 to an invalid (empty) value → unsaved + invalid → red.
+      data.value = [{ ...data.value[0], title: '' }, data.value[1], data.value[2]]
       await nextTick()
       expect(isInvalid(1)).toBe(true)
+    })
+  })
+
+  describe('validateAll() force-reveals every invalid row', () => {
+    it('lights up untouched invalid baseline rows after validateAll()', async () => {
+      const data = ref<Item[]>([
+        { id: 1, position: 1, title: 'A' },
+        { id: 2, position: 2, title: '' }, // invalid, untouched
+      ])
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(AListEditor<Item>, {
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                data.value = v
+              },
+              factory: makeItem,
+              validate: (item: Item) => !!item.title,
+            })
+        },
+      })
+      mounted = mount(Host, { attachTo: document.body })
+      await nextTick()
+      // Before validateAll() the untouched invalid row is clear.
+      expect(isInvalid(2)).toBe(false)
+
+      const valid = exposed(mounted!).validateAll()
+      expect(valid).toBe(false)
+      await nextTick()
+      // Now the collapsed/untouched offender is revealed.
       expect(isInvalid(2)).toBe(true)
-      expect(isInvalid(3)).toBe(false)
+      expect(isInvalid(1)).toBe(false)
+    })
+
+    it('validateAll() returns true when every row is valid', async () => {
+      const data = ref<Item[]>(items())
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(AListEditor<Item>, {
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                data.value = v
+              },
+              factory: makeItem,
+              validate: (item: Item) => !!item.title,
+            })
+        },
+      })
+      mounted = mount(Host, { attachTo: document.body })
+      await nextTick()
+      expect(exposed(mounted!).validateAll()).toBe(true)
+    })
+  })
+
+  describe('validate reactivity + handle summary', () => {
+    it('hasErrors / invalidKeys reflect the current validate result', async () => {
+      const data = ref<Item[]>([
+        { id: 1, position: 1, title: 'A' },
+        { id: 2, position: 2, title: '' },
+      ])
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(AListEditor<Item>, {
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                data.value = v
+              },
+              factory: makeItem,
+              validate: (item: Item) => !!item.title,
+            })
+        },
+      })
+      mounted = mount(Host, { attachTo: document.body })
+      await nextTick()
+      expect(exposed(mounted!).hasErrors.value).toBe(true)
+      expect(exposed(mounted!).invalidKeys.value.has(2)).toBe(true)
+      expect(exposed(mounted!).invalidKeys.value.has(1)).toBe(false)
+
+      // Fix row 2 → no more errors.
+      data.value = [data.value[0], { ...data.value[1], title: 'B' }]
+      await nextTick()
+      expect(exposed(mounted!).hasErrors.value).toBe(false)
+      expect(exposed(mounted!).invalidKeys.value.size).toBe(0)
+    })
+
+    it('supports the { valid, state: "warning" } shape (warning never blocks save)', async () => {
+      const data = ref<Item[]>([{ id: 1, position: 1, title: 'short' }])
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(AListEditor<Item>, {
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                data.value = v
+              },
+              factory: makeItem,
+              validate: (item: Item) =>
+                item.title.length > 10
+                  ? { valid: true }
+                  : { valid: true, state: 'warning' as const },
+            })
+        },
+      })
+      mounted = mount(Host, { attachTo: document.body })
+      await nextTick()
+      // Warning paints the warning rail (not invalid) and never blocks save.
+      expect(findRow(1)?.classList.contains('a-le-row--validation-warning')).toBe(true)
+      expect(isInvalid(1)).toBe(false)
+      expect(exposed(mounted!).hasErrors.value).toBe(false)
+      expect(exposed(mounted!).validateAll()).toBe(true)
     })
   })
 })

@@ -1,10 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
-import { type Component, defineComponent, h, nextTick, ref } from 'vue'
+import { mount, type VueWrapper } from '@vue/test-utils'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
-import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
-import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
-import type { ListEditorKey, NestedTree } from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
 
 interface Item {
   id: number
@@ -12,15 +10,13 @@ interface Item {
   title: string
 }
 
-interface EditorExposed {
-  hasUnsavedChanges: boolean
-  unsavedCount: number
-}
-
 const items = (): Item[] => [
   { id: 1, position: 1, title: 'First' },
   { id: 2, position: 2, title: 'Second' },
 ]
+
+let nextTempId = 0
+const makeItem = (): Item => ({ id: --nextTempId, position: 0, title: '' })
 
 let mounted: VueWrapper | null = null
 
@@ -29,135 +25,83 @@ afterEach(() => {
   mounted = null
 })
 
-const mountFlat = (Editor: Component, disableUnsaved: boolean) => {
+const findAListEditor = (w: VueWrapper): VueWrapper =>
+  w.findComponent(AListEditor as unknown as Parameters<typeof w.findComponent>[0]) as VueWrapper
+
+// Raw exposed handle (refs NOT unwrapped) — mirrors the ASortableListEditor convention.
+const exposed = (w: VueWrapper): ListEditorHandle<Item> =>
+  (findAListEditor(w).vm as unknown as { $: { exposed: ListEditorHandle<Item> } }).$.exposed
+
+const mountFlat = (disableUnsaved: boolean) => {
   const model = ref<Item[]>(items())
-  const unsavedKeys = ref(new Set<ListEditorKey>())
-  const editorRef = ref<EditorExposed | null>(null)
   const Host = defineComponent({
     setup() {
       return () =>
-        h(Editor, {
-          ref: (r: unknown) => {
-            editorRef.value = r as EditorExposed | null
-          },
+        h(AListEditor<Item>, {
           modelValue: model.value,
           'onUpdate:modelValue': (v: Item[]) => {
             model.value = v
           },
-          unsavedKeys: unsavedKeys.value,
-          'onUpdate:unsavedKeys': (v: Set<ListEditorKey>) => {
-            unsavedKeys.value = v
-          },
+          factory: makeItem,
           disableUnsaved,
         })
     },
   })
   mounted = mount(Host)
-  return { wrapper: mounted, model, unsavedKeys, editorRef }
+  return { wrapper: mounted, model, handle: () => exposed(mounted!) }
 }
 
-describe.each([
-  ['AListEditor', AListEditor as Component],
-  ['ASortableListEditor', ASortableListEditor as Component],
-])('%s — disableUnsaved', (_name, Editor) => {
-  it('mutating an item does NOT flag it as unsaved when disableUnsaved is true', async () => {
-    const { wrapper, model, unsavedKeys, editorRef } = mountFlat(Editor, true)
+// ASortableListEditor and ANestedSortableListEditor dropped `disableUnsaved` /
+// `v-model:unsaved-keys` in the v2 redesign (the controller owns dirty state,
+// read via the exposed handle), so they're no longer parametrized here.
+// AListEditor keeps the `disableUnsaved` opt-out (suppresses only the amber
+// "unsaved" markers; the validation rail still shows so real errors aren't
+// hidden). The controller still tracks dirty state internally.
+describe('AListEditor — disableUnsaved', () => {
+  it('mutating an item does NOT show the unsaved row marker when disableUnsaved is true', async () => {
+    const { wrapper, model } = mountFlat(true)
     await nextTick()
-    model.value[0].title = 'changed'
+    model.value = [{ ...model.value[0], title: 'changed' }, model.value[1]]
     await nextTick()
-    expect(unsavedKeys.value.size).toBe(0)
-    expect(editorRef.value?.hasUnsavedChanges).toBe(false)
-    expect(editorRef.value?.unsavedCount).toBe(0)
     expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(0)
   })
 
-  it('mutating an item DOES flag it as unsaved when disableUnsaved is false (default behavior)', async () => {
-    const { model, unsavedKeys } = mountFlat(Editor, false)
+  it('mutating an item DOES show the unsaved row marker when disableUnsaved is false (default behavior)', async () => {
+    const { wrapper, model, handle } = mountFlat(false)
     await nextTick()
-    model.value[0].title = 'changed'
+    model.value = [{ ...model.value[0], title: 'changed' }, model.value[1]]
     await nextTick()
-    expect(unsavedKeys.value.has(1)).toBe(true)
+    expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(1)
+    expect(handle().isUnsaved(1)).toBe(true)
   })
 })
 
-interface MenuItem {
-  id: number
-  position: number
-  parent: number | null
-  title: string
-}
-
-const tree = (): NestedTree<MenuItem> => ({
-  children: [
-    {
-      data: { id: 1, position: 1, parent: null, title: 'Home' },
-      children: [],
-      meta: { dirty: false },
-    },
-    {
-      data: { id: 2, position: 2, parent: null, title: 'News' },
-      children: [],
-      meta: { dirty: false },
-    },
-    {
-      data: { id: 3, position: 3, parent: null, title: 'About' },
-      children: [],
-      meta: { dirty: false },
-    },
-  ],
-  meta: { dirty: false },
-})
-
-const clickReorder = (wrapper: VueWrapper) =>
-  wrapper
-    .findAll('button')
-    .find(
-      (b) =>
-        b.text().toLowerCase().includes('reorder') ||
-        (b.find('.mdi-sort').exists() && !b.classes().includes('v-btn--disabled')),
-    )!
-    .trigger('click')
-
-const mountNested = (disableUnsaved: boolean) => {
-  const model = ref<NestedTree<MenuItem>>(tree())
-  const mode = ref<'view' | 'reorder'>('view')
-  const Host = defineComponent({
-    setup() {
-      return () =>
-        h(ANestedSortableListEditor<MenuItem>, {
-          modelValue: model.value,
-          'onUpdate:modelValue': (v: NestedTree<MenuItem>) => {
-            model.value = v
-          },
-          mode: mode.value,
-          'onUpdate:mode': (v: 'view' | 'reorder') => {
-            mode.value = v
-          },
-          maxDepth: 2,
-          disableUnsaved,
-        })
-    },
-  })
-  mounted = mount(Host)
-  return { wrapper: mounted, model }
-}
-
-describe('ANestedSortableListEditor — disableUnsaved', () => {
-  it('moved rows are NOT marked unsaved when disableUnsaved is true', async () => {
-    const { wrapper } = mountNested(true)
-    await clickReorder(wrapper)
-    await flushPromises()
-    await wrapper.findAll('.a-le-action--down')[0].trigger('click')
-    await flushPromises()
-    expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(0)
-  })
-
-  it('moved rows ARE marked unsaved when disableUnsaved is false (default behavior)', async () => {
-    const { wrapper } = mountNested(false)
-    await clickReorder(wrapper)
-    await flushPromises()
-    await wrapper.findAll('.a-le-action--down')[0].trigger('click')
-    await flushPromises()
-    expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
+// A readonly editor (e.g. a *Detail.vue view) must NEVER paint the amber
+// "Neuložené" marker — the user can't make unsaved changes there, and a
+// mount-before-load baseline would otherwise flag every loaded row as added.
+// (QA 85050 sweep — Detail views showed all rows amber.)
+describe('AListEditor — readonly suppresses the unsaved marker', () => {
+  it('a readonly editor shows NO unsaved markers even when the model mutates', async () => {
+    const rows = items()
+    const model = ref<Item[]>(rows)
+    const Host = defineComponent({
+      setup() {
+        return () =>
+          h(AListEditor<Item>, {
+            modelValue: model.value,
+            'onUpdate:modelValue': (v: Item[]) => {
+              model.value = v
+            },
+            factory: makeItem,
+            readonly: true,
+          })
+      },
+    })
+    mounted = mount(Host)
+    await nextTick()
+    // Even an externally-mutated row stays clean in a readonly view.
+    model.value = [{ ...rows[0], title: 'changed' }, rows[1]]
+    await nextTick()
+    expect(mounted.findAll('.a-le-row--unsaved')).toHaveLength(0)
   })
 })

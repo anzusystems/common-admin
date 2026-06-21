@@ -1,17 +1,20 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, provide, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, ref, useSlots, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
-import { useValidationRegistry } from '@/labs/listEditor/composables/useValidationRegistry'
-import { ListEditorUnsavedKeysKey } from '@/labs/listEditor/composables/useListEditorItemValidation'
-import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
+import {
+  useListEditorController,
+  type GetKey,
+  type ListEditorHandle,
+  type ListEditorValidationResult,
+  type PositionOption,
+} from '@/labs/listEditor/composables/useListEditorController'
 import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
-import { useUnsavedKeysSync } from '@/labs/listEditor/composables/useUnsavedKeysSync'
 import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
-import { useDirtyBaseline } from '@/labs/listEditor/composables/useDirtyBaseline'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
+import { validateAllAndReveal } from '@/labs/listEditor/utils/revealInvalidRows'
 import LeDeleteDialog from '@/labs/listEditor/internal/LeDeleteDialog.vue'
 import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
 import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
@@ -19,7 +22,6 @@ import type {
   ListEditorKey,
   ListEditorValidationState,
   ListViewItem,
-  PositionHint,
 } from '@/labs/listEditor/types/listEditorTypes'
 
 export interface DecoratedViewItem<T> extends ListViewItem<T> {
@@ -27,6 +29,8 @@ export interface DecoratedViewItem<T> extends ListViewItem<T> {
   expanded: boolean
   loading: boolean
   dirty: boolean
+  unsaved: boolean
+  validationState: ListEditorValidationState
 }
 
 // Hoisted for vite-plugin-dts d.ts rollup.
@@ -38,10 +42,10 @@ export interface RowActions<TItem> {
   delete: () => Promise<void>
   addAfter: () => void
   toggleExpand: () => void
-  update: (data: TItem) => TItem[]
+  update: (next: TItem | Partial<TItem> | ((current: TItem) => TItem)) => void
 }
 export interface RowSlotProps<TItem extends Record<string, any>> {
-  item: DecoratedViewItem<TItem> & { validationState: ListEditorValidationState }
+  item: DecoratedViewItem<TItem>
   raw: TItem
   index: number
   key: ListEditorKey
@@ -71,10 +75,37 @@ export interface HeaderSlotProps {
 }
 
 export interface Props<TItem extends Record<string, any>> {
-  keyField?: string
-  positionField?: string
-  positionMultiplier?: number
-  updatePosition?: boolean
+  /**
+   * New-row factory. Add / "add after" insert `factory()` through the controller
+   * (positions renumbered) — no consumer `@add` push handler is needed.
+   */
+  factory?: () => TItem
+  /**
+   * Stable row identity. Default `'id'`; never the position field. Typed `string`
+   * not `keyof TItem` because the latter compiles to a Boolean-only runtime prop
+   * type that silently coerces `get-key="id"` to `true`.
+   */
+  getKey?: string | ((item: TItem) => ListEditorKey)
+  /**
+   * Managed order field. Default `'position'`; `false` opts out. `string` must be
+   * listed before `false` (and not be `keyof TItem`): otherwise Vue's runtime
+   * type goes Boolean-first and coerces `position="position"` to `true`.
+   */
+  position?: string | false | { field: string; multiplier?: number }
+  /**
+   * Extra fields to drop from the dirty content-hash (position is always dropped).
+   * Use when a SEPARATE nested editor already tracks a child collection, so editing
+   * a child doesn't flip the parent row amber. Still saved; only the diff ignores it.
+   */
+  dirtyExclude?: string[]
+  /** Per-row validity — `true` (or `{ valid: true }`) = VALID. Drives the red rail + save guard. */
+  validate?: (item: TItem) => ListEditorValidationResult
+  /**
+   * Opt-in lifted controller from `useListEditorController()` — pass it so editor
+   * state survives this component's unmount/remount. Omitted: the editor owns one
+   * internally. Either way the `ListEditorHandle` is reachable via `useTemplateRef`.
+   */
+  editor?: ListEditorHandle<TItem>
 
   readonly?: boolean
   disabled?: boolean
@@ -98,7 +129,7 @@ export interface Props<TItem extends Record<string, any>> {
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
-  /** Disable unsaved-state tracking — no dirty markers, never feeds `unsaved-keys`. */
+  /** Disable unsaved-state tracking — no dirty markers, never reads as unsaved. */
   disableUnsaved?: boolean
   deleteConfirmTitle?: string | null
   deleteConfirmText?: string | null
@@ -106,58 +137,31 @@ export interface Props<TItem extends Record<string, any>> {
   closeVariant?: 'auto' | 'icon' | 'labeled'
 
   /**
-   * Render every row's `#item` slot expanded by default — no edit pencil, no
-   * inline Save/Cancel footer, no row-click toggle. Use when the editor has
-   * no reorder affordance and the consumer wants all forms visible at once
-   * (e.g. ThirdPartyTracker, bookmarks dialog).
+   * Render every `#item` slot expanded — no edit pencil, inline footer, or row-click
+   * toggle. Use when all forms should be visible at once (e.g. ThirdPartyTracker).
    */
   defaultExpanded?: boolean
 
   loadingKeys?: Set<ListEditorKey> | null
-
-  getValidationState?: (item: TItem, key: ListEditorKey, index: number) => ListEditorValidationState
 
   onDeleteConfirm?: (item: TItem) => Promise<boolean> | boolean
   onDelete?: (item: TItem) => Promise<void> | void
   onItemSave?: (item: TItem) => Promise<void> | void
 
   /**
-   * Editor-managed add: the add button and "add after this item" insert
-   * `itemFactory()` into the model directly (positions renumbered when
-   * `update-position` is on) and emit `added` — the `add` event does NOT fire,
-   * so no consumer push handler is needed.
-   */
-  itemFactory?: () => TItem
-  /**
-   * Editor-managed delete: a confirmed delete removes the row from the model
-   * itself. `deleted` still fires as a notification — consumers keep side
-   * effects but must not splice the model themselves.
-   */
-  manageDelete?: boolean
-  /**
-   * Registers this editor as a named unsaved-changes section under the given
-   * (already translated) label — replaces the per-consumer `useUnsavedSection`
-   * call for the common one-editor case.
+   * Registers this editor as a named unsaved-changes section under this (already
+   * translated) label — replaces a per-consumer `useUnsavedSection` call.
    */
   unsavedSectionLabel?: string
-  /**
-   * Externally-supplied dirty baseline (opt-in): the *last-saved* rows the dirty/amber
-   * markers diff against. By default the editor snapshots the current model eagerly at
-   * mount, which means an editor that remounts over already-edited data re-baselines it
-   * as clean — silently dropping the unsaved markers. Pass the saved rows here — held above
-   * the editor, so they survive a remount — and every instance derives the SAME unsaved set
-   * from them instead of re-capturing clean. Update this value after a successful save so it
-   * becomes the new baseline. Absent → unchanged eager behaviour. Same shape as the model;
-   * do NOT pre-strip `position-field`.
-   */
-  dirtyBaseline?: TItem[] | null
 }
 
 const props = withDefaults(defineProps<Props<TItem>>(), {
-  keyField: 'id',
-  positionField: 'position',
-  positionMultiplier: 1,
-  updatePosition: false,
+  factory: undefined,
+  getKey: undefined,
+  position: undefined,
+  dirtyExclude: undefined,
+  validate: undefined,
+  editor: undefined,
   readonly: false,
   disabled: false,
   loading: false,
@@ -181,19 +185,13 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   closeVariant: 'auto',
   defaultExpanded: false,
   loadingKeys: null,
-  getValidationState: undefined,
   onDeleteConfirm: undefined,
   onDelete: undefined,
   onItemSave: undefined,
-  itemFactory: undefined,
-  manageDelete: false,
   unsavedSectionLabel: undefined,
-  dirtyBaseline: undefined,
 })
 
 const emit = defineEmits<{
-  add: [positionHint: PositionHint | undefined]
-  added: [payload: { item: TItem; index: number }]
   edit: [item: ListViewItem<TItem>]
   deleted: [item: ListViewItem<TItem>]
   close: [item: ListViewItem<TItem>]
@@ -225,13 +223,89 @@ const rootEl = useTemplateRef<HTMLElement>('rootEl')
 
 const isTouch = computed<boolean>(() => display.platform.value.touch)
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const editor = useListEditor<TItem>(modelValue, {
-  keyField: props.keyField,
-  positionField: props.positionField,
-  positionMultiplier: props.positionMultiplier,
-  updatePosition: props.updatePosition,
+// State controller (v2): this editor owns one unless a lifted `:editor` is passed.
+// `factory`/`getKey`/`position`/`validate` are construction-time options read once
+// to seed it (undefined → controller defaults 'id'/'position'/always-valid), not
+// reactive props — so the reactivity-loss rule is intentionally suppressed here.
+/* eslint-disable vue/no-setup-props-reactivity-loss */
+const controller =
+  props.editor ??
+  useListEditorController<TItem>({
+    get: () => modelValue.value,
+    set: (v) => (modelValue.value = v),
+    factory: props.factory,
+    getKey: props.getKey as GetKey<TItem> | undefined,
+    position: props.position as PositionOption<TItem> | undefined,
+    dirtyExclude: () => props.dirtyExclude ?? [],
+    validate: props.validate,
+  })
+
+// Mirror the controller's key resolution so rendered rows key the way it tracks them.
+const getKeyOpt = props.getKey ?? 'id'
+/* eslint-enable vue/no-setup-props-reactivity-loss */
+const keyOf = (item: TItem): ListEditorKey =>
+  typeof getKeyOpt === 'function'
+    ? getKeyOpt(item)
+    : (item[getKeyOpt as keyof TItem] as ListEditorKey)
+
+const keyFieldName = computed<string>(() =>
+  typeof getKeyOpt === 'function' ? '(fn)' : (getKeyOpt as string),
+)
+
+// Managed position field name, mirroring the controller's resolution.
+const positionFieldName = computed<string>(() => {
+  const p = props.position
+  if (p === undefined) return 'position'
+  if (p === false) return 'position'
+  if (typeof p === 'object') return p.field as string
+  return p as string
 })
+
+// Render projection only — the controller owns the data (key + index + raw + position).
+const viewItems = computed<ListViewItem<TItem>[]>(() =>
+  modelValue.value.map((raw, index) => ({
+    key: keyOf(raw),
+    index,
+    raw,
+    position: raw[positionFieldName.value] as number | undefined,
+  })),
+)
+
+// Surfaces row-key wiring bugs loudly: undefined or duplicate keys silently break
+// dirty tracking, validity rails and reorder targeting and are hard to trace from
+// symptoms. Deduped per signature so a stable bad state warns once, a new one again.
+const warnedKeySignatures = new Set<string>()
+const warnOnBadKeys = (items: ListViewItem<TItem>[]): void => {
+  const seen = new Set<ListEditorKey>()
+  const duplicates = new Set<string>()
+  let missing = 0
+  for (const vi of items) {
+    if (vi.key === undefined || vi.key === null) {
+      missing++
+      continue
+    }
+    if (seen.has(vi.key)) duplicates.add(String(vi.key))
+    seen.add(vi.key)
+  }
+  if (missing === 0 && duplicates.size === 0) return
+  const signature = `${missing}|${[...duplicates].sort().join(',')}`
+  if (warnedKeySignatures.has(signature)) return
+  warnedKeySignatures.add(signature)
+  if (missing > 0) {
+    console.warn(
+      `[list-editor] ${missing} row(s) resolve to an undefined key (key-field "${keyFieldName.value}"). ` +
+        'Point get-key at a field every item has, or give new items unique temp ids ' +
+        '(see nextListEditorTempId).',
+    )
+  }
+  if (duplicates.size > 0) {
+    console.warn(
+      `[list-editor] duplicate row keys (key-field "${keyFieldName.value}"): ${[...duplicates].join(', ')}. ` +
+        'Row keys must be unique — dirty tracking and validation rails target rows by key.',
+    )
+  }
+}
+watch(viewItems, (items) => warnOnBadKeys(items), { immediate: true })
 
 const expandedKeys = ref<Set<ListEditorKey>>(new Set())
 
@@ -239,34 +313,6 @@ const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 
 const isInlineEdit = computed(() => !props.chips && !!slots.item)
 const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'])
-
-// Initial snapshot of each item, keyed by row key. Compared against current data to
-// detect "dirty" (unsaved) rows. Reset externally after a successful parent-form save.
-const { captureDirtyBaseline, rebaselineKey, isItemDirty, ignoreNextSourceChange } =
-  useDirtyBaseline<TItem>(
-    () =>
-      modelValue.value.map((item) => ({
-        key: item[props.keyField] as ListEditorKey,
-        data: item,
-      })),
-    {
-      // `positionField` excluded from the dirty hash: with `update-position`, add/delete
-      // renumbers `position` on every shifted row, which would otherwise read those
-      // untouched rows as dirty (QA 85050 BUG-08/11/12). Mirrors ASortableListEditor.
-      excludeFields: [props.positionField],
-      source: modelValue,
-      // Opt-in: when the consumer supplies a saved-rows baseline, derive dirty from it so a
-      // remounted instance reuses the persisted baseline instead of re-baselining unsaved
-      // data as clean. Absent → null → unchanged eager behaviour. Mirrors ASortableListEditor.
-      baselineSource: () =>
-        props.dirtyBaseline
-          ? props.dirtyBaseline.map((item) => ({
-              key: item[props.keyField] as ListEditorKey,
-              data: item,
-            }))
-          : null,
-    },
-  )
 
 const {
   editingKeys,
@@ -276,15 +322,14 @@ const {
   commitEdit,
   closeEdit,
   requestAutoOpen,
-  clearEditing,
 } = useInlineEditing<TItem, ListViewItem<TItem>>({
   rowsContainer,
   rowSelector: '.a-le-row',
   isInlineEdit,
-  restoreSnapshot: (key, data) => editor.updateItem(key, data),
-  watchKeys: () => modelValue.value.map((it) => it[props.keyField] as ListEditorKey),
+  restoreSnapshot: (key, data) => controller.updateItem(key, data),
+  watchKeys: () => modelValue.value.map((it) => keyOf(it)),
   findEntry: (key) => {
-    const hit = modelValue.value.find((it) => (it[props.keyField] as ListEditorKey) === key)
+    const hit = modelValue.value.find((it) => keyOf(it) === key)
     return hit ? { data: hit } : null
   },
   afterAutoOpen: (key) => {
@@ -308,39 +353,28 @@ const canAdd = computed(() => canInteract.value && props.showAddButton)
 
 const headerVisible = computed(() => !!(props.title || slots.header))
 
-// Per-row edit footer (Save + Cancel) is only meaningful if the consumer wants a
-// per-item persist callback. Without it the expectation is that the parent form's
-// global save flushes everything, so we hide the per-row buttons by default.
+// Per-row Save/Cancel footer only makes sense with a per-item persist callback;
+// without one the parent form's global save flushes everything, so hide it.
 const showInlineSaveFooter = computed(() => !!props.onItemSave)
 
-// Decoupled dirty pass: depends only on modelValue (via stringifyContent
-// reading nested fields) and dirtyBaseline. Editing/expanded/loading flag
-// changes do NOT re-trigger this — viewItemsDecorated reads dirtyKeys.has()
-// instead of calling isItemDirty inline, so we avoid stringifying every
-// row whenever the user clicks edit on one row.
-const dirtyKeys = computed<Set<ListEditorKey>>(() => {
-  const out = new Set<ListEditorKey>()
-  for (const item of modelValue.value) {
-    const key = item[props.keyField] as ListEditorKey
-    if (isItemDirty(key, item)) out.add(key)
-  }
-  return out
-})
-
-// Per-key decorator cache: we reuse the cached object when its base view item
-// AND every flag matches, giving slot consumers a stable reference for rows
-// whose state didn't change. Saves allocation on every render where only one
-// row's flag flipped.
+// Per-key decorator cache: reuse the cached object when base item AND every flag
+// match, giving slot consumers a stable reference for unchanged rows. `disableUnsaved`
+// suppresses only the amber marker — the validation rail still shows, since hiding
+// dirty-state shouldn't hide a real error.
 const decoratorCache = new Map<ListEditorKey, DecoratedViewItem<TItem>>()
 const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
   const next: DecoratedViewItem<TItem>[] = []
   const liveKeys = new Set<ListEditorKey>()
-  for (const vi of editor.viewItems.value) {
+  for (const vi of viewItems.value) {
     liveKeys.add(vi.key)
     const editing = editingKeys.value.has(vi.key)
     const expanded = expandedKeys.value.has(vi.key)
     const loading = props.loadingKeys?.has(vi.key) ?? false
-    const dirty = props.disableUnsaved ? false : dirtyKeys.value.has(vi.key)
+    // Readonly can't have user-unsaved changes; never paint amber there (also avoids
+    // a mount-before-load baseline marking every loaded row added). (QA 85050 sweep)
+    const unsaved = props.disableUnsaved || props.readonly ? false : controller.isUnsaved(vi.key)
+    const dirty = unsaved
+    const validationState = controller.rowState(vi.raw, vi.key)
     const cached = decoratorCache.get(vi.key)
     if (
       cached &&
@@ -350,7 +384,9 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
       cached.editing === editing &&
       cached.expanded === expanded &&
       cached.loading === loading &&
-      cached.dirty === dirty
+      cached.dirty === dirty &&
+      cached.unsaved === unsaved &&
+      cached.validationState === validationState
     ) {
       next.push(cached)
       continue
@@ -361,6 +397,8 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
       expanded,
       loading,
       dirty,
+      unsaved,
+      validationState,
     }
     decoratorCache.set(vi.key, decorated)
     next.push(decorated)
@@ -395,51 +433,23 @@ const keyboardNav = useKeyboardNav({
 const resolveCompactText = (raw: TItem): string =>
   resolveCompactTextUtil(raw, { compactField: props.compactField })
 
-const { resolveValidation } = useValidationRegistry<TItem>({
-  getValidationState: (item, key, index) => props.getValidationState?.(item, key, index) ?? null,
-})
-
-// Managed add (itemFactory): the editor inserts the item itself; finalize
-// renumbers positions when update-position is on, possibly replacing the
-// inserted object — locate it by key and emit the finalized one.
-const addViaFactory = (positionHint?: PositionHint): void => {
-  const item = props.itemFactory!()
-  // The editor writes the model by reassignment; without this, the dirty
-  // baseline's initial-fill watch would treat the FIRST add into an
-  // empty-at-mount list as async data landing and baseline it (the new row
-  // would never read as unsaved/invalid).
-  ignoreNextSourceChange()
-  const result = editor.addItem(item, positionHint)
-  const index = result.findIndex(
-    (x) => (x[props.keyField] as ListEditorKey) === (item[props.keyField] as ListEditorKey),
-  )
-  emit('added', { item: (index === -1 ? item : result[index]) as TItem, index })
-}
-
+// Managed add: the controller inserts `factory()` and renumbers; the inline-editing
+// watch picks up the new key off the model change and auto-opens it.
 const onAddClick = () => {
   if (!canAdd.value) return
   requestAutoOpen()
-  if (props.itemFactory) {
-    addViaFactory()
-    return
-  }
-  emit('add', undefined)
+  controller.addItem(undefined, undefined)
 }
 
 const onRowAddAfterClick = (vi: ListViewItem<TItem>) => {
   if (!canInteract.value) return
   requestAutoOpen()
-  if (props.itemFactory) {
-    addViaFactory({ afterId: vi.key })
-    return
-  }
-  emit('add', { afterId: vi.key })
+  controller.addItem(undefined, { afterId: vi.key })
 }
 
 const onEditClick = (vi: ListViewItem<TItem>) => {
   if (!canInteract.value) return
-  // Toggle: clicking edit while already editing closes the form, matching the
-  // row-header click behaviour.
+  // Toggle: edit while already editing closes the form, matching row-header click.
   if (editingKeys.value.has(vi.key)) {
     onCloseClick(vi)
     return
@@ -501,10 +511,9 @@ const {
     editingKeys.value.delete(vi.key)
     editingSnapshots.value.delete(vi.key)
     expandedKeys.value.delete(vi.key)
-    if (props.manageDelete) {
-      ignoreNextSourceChange()
-      editor.deleteItem(vi.key)
-    }
+    // Controller owns removal: a temp row vanishes, a saved row is recorded in
+    // `getChanges().deleted`.
+    controller.deleteItem(vi.key)
     emit('deleted', vi)
   },
   disableDeleteConfirm: () => props.disableDeleteConfirm || props.chips,
@@ -533,11 +542,9 @@ const onCloseClick = (vi: ListViewItem<TItem>) => {
   emit('close', vi)
 }
 
-// Per-key actions cache: each row's `actions` bundle is allocated once and
-// reused on every render. Slot consumers receive a stable identity for
-// `actions.update` etc., so they don't see prop-ref churn that would
-// trigger spurious re-renders. Closures capture the row key (stable) and
-// look up the current decorator via `findVi(key)` on call.
+// Per-key actions cache: each row's `actions` bundle is allocated once so slot
+// consumers get a stable identity (no prop-ref churn → no spurious re-renders).
+// Closures capture the stable key and look up the live decorator via `findVi(key)`.
 type ActionsBundle = {
   edit: () => void
   save: () => Promise<void> | void
@@ -546,7 +553,7 @@ type ActionsBundle = {
   delete: () => Promise<void>
   addAfter: () => void
   toggleExpand: () => void
-  update: (data: TItem) => TItem[]
+  update: (next: TItem | Partial<TItem> | ((current: TItem) => TItem)) => void
 }
 const actionsCache = new Map<ListEditorKey, ActionsBundle>()
 const getActions = (key: ListEditorKey): ActionsBundle => {
@@ -581,7 +588,7 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
         const vi = findVi(key)
         if (vi) onExpandClick(vi)
       },
-      update: (data: TItem) => editor.updateItem(key, data),
+      update: (next) => controller.updateItem(key, next),
     }
     actionsCache.set(key, actions)
   }
@@ -600,7 +607,7 @@ watch(
 )
 
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
-  item: { ...vi, validationState: resolveValidation(vi.raw as TItem, vi.key, vi.index) },
+  item: vi,
   raw: vi.raw,
   index: vi.index,
   key: vi.key,
@@ -609,69 +616,29 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
   expanded: vi.expanded,
   editing: vi.editing || props.defaultExpanded,
   dirty: vi.dirty,
-  unsaved: vi.dirty,
+  unsaved: vi.unsaved,
   touch: isTouch.value,
   actions: getActions(vi.key),
 })
 
-const unsavedKeysModel = defineModel<Set<ListEditorKey>>('unsavedKeys', {
-  default: () => new Set<ListEditorKey>(),
-})
-
-const internalUnsavedKeys = computed<Set<ListEditorKey>>(() => {
-  const out = new Set<ListEditorKey>()
-  for (const vi of viewItemsDecorated.value) {
-    if (vi.dirty) out.add(vi.key)
-  }
-  return out
-})
-// Let row validity sentinels surface 'invalid' as soon as their row is unsaved.
-// Includes each unsaved row's id/position too, so the lookup matches whatever
-// key the sentinel registers under (which may differ from the editor's key-field).
-const unsavedValidationKeys = computed<Set<ListEditorKey>>(() => {
-  const out = new Set<ListEditorKey>()
-  for (const vi of viewItemsDecorated.value) {
-    if (!vi.dirty) continue
-    out.add(vi.key)
-    const raw = vi.raw as Record<string, any>
-    if (raw.id !== undefined && raw.id !== null) out.add(raw.id)
-    if (raw.position !== undefined && raw.position !== null) out.add(raw.position)
-  }
-  return out
-})
-provide(ListEditorUnsavedKeysKey, unsavedValidationKeys)
-
-const { hasUnsavedChanges, unsavedCount, clearUnsavedState } = useUnsavedKeysSync({
-  unsavedKeysModel,
-  internalUnsavedKeys,
-  onClearAll: () => {
-    captureDirtyBaseline()
-    // Collapse open inline-edit forms once the parent persisted — the rows are
-    // saved, so leaving them in edit mode would be stale.
-    clearEditing()
-  },
-  onClearKey: (key) => rebaselineKey(key),
-})
-
-// Registers this editor as a named unsaved-changes section when the consumer
-// passes a label — replaces the per-consumer useUnsavedSection boilerplate.
+// Named unsaved-changes section, registered only when a label is passed.
 useUnsavedSection(() =>
-  props.unsavedSectionLabel
-    ? { label: props.unsavedSectionLabel, dirty: unsavedCount.value > 0 }
+  props.unsavedSectionLabel && !props.disableUnsaved
+    ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value }
     : [],
 )
 
-defineExpose({
-  addItem: editor.addItem,
-  deleteItem: editor.deleteItem,
-  updateItem: editor.updateItem,
-  moveItem: editor.moveItem,
-  recalculatePositions: editor.recalculatePositions,
-  viewItems: editor.viewItems,
-  resetDirtyBaseline: captureDirtyBaseline,
-  hasUnsavedChanges,
-  unsavedCount,
-  clearUnsavedState,
+// Expose the controller handle via `useTemplateRef<ListEditorHandle<TItem>>`.
+defineExpose<ListEditorHandle<TItem>>({
+  ...controller,
+  // Opens invalid rows so a blocked save surfaces WHICH rows are wrong instead of a
+  // collapsed red rail. The body is gated on `editing` not `expanded`, so drive
+  // `beginEdit` not `expandedKeys` (QA 85050 B4-17). Shared via the helper.
+  validateAll: () =>
+    validateAllAndReveal(controller, (key) => {
+      const vi = viewItems.value.find((v) => v.key === key)
+      if (vi) beginEdit(vi)
+    }),
 })
 </script>
 
@@ -766,10 +733,9 @@ defineExpose({
             'a-le-row--two-rows': twoRows === 'always',
             'a-le-row--editing': vi.editing,
             'a-le-row--expanded': vi.expanded,
-            'a-le-row--unsaved': vi.dirty,
+            'a-le-row--unsaved': vi.unsaved,
             'a-le-row--clickable': isRowClickable(vi),
-            [`a-le-row--validation-${resolveValidation(vi.raw, vi.key, vi.index)}`]:
-              resolveValidation(vi.raw, vi.key, vi.index) !== null,
+            [`a-le-row--validation-${vi.validationState}`]: vi.validationState !== null,
           }"
           @keydown="keyboardNav.handleKeydown(vi.key, $event)"
         >
@@ -792,7 +758,7 @@ defineExpose({
                 </span>
               </slot>
               <LeUnsavedLabel
-                v-if="vi.dirty"
+                v-if="vi.unsaved"
                 :dot-only="chips"
               />
             </div>
@@ -1024,8 +990,7 @@ defineExpose({
 
 // Variant-specific rules, scoped under the AListEditor root.
 .a-list-editor {
-  // Chips — row-header padding (12 px left for the flat variant vs 8 px in
-  // sortable, which reserves room for the drag handle).
+  // Chips: 12px left padding (flat) vs 8px in sortable, which reserves drag-handle room.
   &--chips .a-le-row-header {
     padding: 2px 4px 2px 12px;
     gap: 4px;
@@ -1033,8 +998,7 @@ defineExpose({
   }
 }
 
-// Narrow-container / mobile layout — taller rows, always-visible actions,
-// status badge dropped to make room.
+// Narrow/mobile layout: taller rows, always-visible actions, status badge dropped for room.
 /* stylelint-disable selector-max-compound-selectors */
 @container le-shell (max-width: 768px) {
   .a-list-editor {
