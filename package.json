@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1782072279",
+  "version": "1.47.0-beta.dev-1782072289",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -105,8 +105,8 @@
     "stylelint-config-recommended-vue": "^1.6.1",
     "stylelint-config-standard-scss": "^17.0.0",
     "typescript": "5.9.3",
-    "unplugin": "3.0.0",
-    "unplugin-dts": "^1.0.2",
+    "unplugin": "3.2.0",
+    "unplugin-dts": "^1.0.3",
     "uuid": "^14.0.1",
     "vite": "7.3.5",
     "vite-plugin-vuetify": "^2.1.3",
