@@ -197,6 +197,8 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted') => {
       fetchedItems.value = res
     }
     prefetchCompleted.value = true
+  } catch (e) {
+    showErrorsDefault(e)
   } finally {
     loading.value = false
   }
