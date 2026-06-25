@@ -288,6 +288,35 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     return false
   }
 
+  // `addedBaseline` = first-seen content hash of each ADDED node; `editedKeys` = STICKY set of
+  // nodes whose content has since diverged. Gates the validation rail on "has this row been edited"
+  // rather than just "is it unsaved" (sticky like vuelidate `$dirty`) — mirrors the flat controller.
+  const addedBaseline = ref(new Map<ListEditorKey, string>()) as Ref<Map<ListEditorKey, string>>
+  const editedKeys = ref(new Set<ListEditorKey>()) as Ref<Set<ListEditorKey>>
+  watch(
+    () => options.get(),
+    (tree) => {
+      const live = new Set<ListEditorKey>()
+      walkNodes(tree, (n) => {
+        const key = keyOf(n.data)
+        live.add(key)
+        if (!baselineHashes.value.has(key) && !addedBaseline.value.has(key)) {
+          addedBaseline.value.set(key, normalize(n.data))
+        }
+        if (!editedKeys.value.has(key)) {
+          const base = baselineHashes.value.get(key) ?? addedBaseline.value.get(key)
+          if (base !== undefined && base !== normalize(n.data)) editedKeys.value.add(key)
+        }
+      })
+      const stale: ListEditorKey[] = []
+      for (const key of addedBaseline.value.keys()) if (!live.has(key)) stale.push(key)
+      for (const key of stale) addedBaseline.value.delete(key)
+    },
+    { immediate: true, deep: true },
+  )
+
+  const isRowEdited = (key: ListEditorKey): boolean => editedKeys.value.has(key)
+
   const baselineTreeRow = (key: ListEditorKey): TItem | undefined => {
     if (!baselineTree.value) return undefined
     let hit: TItem | undefined
@@ -335,12 +364,12 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   })
   const hasErrors = computed<boolean>(() => invalidKeys.value.size > 0)
 
-  // Red rail gated behind "row interacted with" (unsaved) or an explicit
-  // validateAll() — mirrors the flat controller. Kills the collapsed-row
-  // save-guard gap: validateAll() surfaces every offender, mounted or not.
+  // Red rail gated behind "row has been edited" (content changed since add/baseline) or an
+  // explicit validateAll() — mirrors the flat controller. A freshly added still-untouched row
+  // stays amber; validateAll() surfaces every offender on save, mounted or not.
   const rowState = (item: TItem, key: ListEditorKey): ListEditorValidationState => {
     const { invalid, warning } = resolveValidity(item, key)
-    if (invalid) return isUnsaved(key) || submitted.value ? 'invalid' : null
+    if (invalid) return isRowEdited(key) || submitted.value ? 'invalid' : null
     if (warning) return 'warning'
     return null
   }
@@ -427,12 +456,16 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     })
     options.set(next)
     captureBaseline(next)
+    addedBaseline.value = new Map()
+    editedKeys.value = new Set()
     submitted.value = false
   }
 
   const reset = (t?: NestedTree<TItem>): void => {
     const restore = t ?? (baselineTree.value ? cloneTree(baselineTree.value) : options.get())
     options.set(restore)
+    addedBaseline.value = new Map()
+    editedKeys.value = new Set()
     submitted.value = false
   }
 

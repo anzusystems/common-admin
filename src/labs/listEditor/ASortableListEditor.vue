@@ -450,13 +450,16 @@ const {
 const childContributions = props.embedded
   ? null
   : shallowReactive(
-      new Map<symbol, { count: ComputedRef<number>; hasChanges: ComputedRef<boolean> }>(),
+      new Map<
+        symbol,
+        { count: ComputedRef<number>; hasChanges: ComputedRef<boolean>; validateAll: () => boolean }
+      >(),
     )
 
 if (childContributions) {
   const registry: SharedReorderRegistry = {
-    register: (id, count, hasChanges) => {
-      childContributions.set(id, { count, hasChanges })
+    register: (id, count, hasChanges, validateAll) => {
+      childContributions.set(id, { count, hasChanges, validateAll })
     },
     unregister: (id) => {
       childContributions.delete(id)
@@ -469,7 +472,8 @@ if (props.embedded) {
   const parent = inject(SharedReorderRegistryKey, null)
   if (parent) {
     const id = Symbol('le.embedded')
-    parent.register(id, movedCount, hasPendingChanges)
+    // `() => validateAllSelf()` (not the bare ref) — validateAllSelf is declared later in setup.
+    parent.register(id, movedCount, hasPendingChanges, () => validateAllSelf())
     onBeforeUnmount(() => parent.unregister(id))
   }
 }
@@ -616,6 +620,27 @@ const isEmpty = computed(() => viewItemsDecorated.value.length === 0)
 
 const findVi = (key: ListEditorKey): DecoratedViewItem<TItem> | undefined =>
   viewItemsDecorated.value.find((v) => v.key === key)
+
+// Programmatically open a row's inline-edit form (e.g. open auto-seeded rows on mount). Multiple
+// rows can be open at once. No-op for chips / when there is no `#item` slot.
+const openRow = (key: ListEditorKey): void => {
+  if (!isInlineEdit.value) return
+  const vi = findVi(key)
+  if (vi) beginEdit(vi)
+}
+const openAll = (): void => {
+  if (!isInlineEdit.value) return
+  for (const vi of viewItemsDecorated.value) beginEdit(vi)
+}
+
+// Validate + reveal this editor's OWN rows (no cascade). The exposed `validateAll`
+// wraps this and also cascades into embedded children; embedded children register
+// this self-only variant so a parent save reveals their invalid rows red too.
+const validateAllSelf = (): boolean =>
+  validateAllAndReveal(controller, (key) => {
+    const vi = viewItems.value.find((v) => v.key === key)
+    if (vi) beginEdit(vi)
+  })
 
 const keyboardNav = useKeyboardNav({
   viewItems: computed(() => viewItemsDecorated.value.map((vi) => ({ key: vi.key }))),
@@ -1017,18 +1042,37 @@ defineExpose<
     enterReorderMode: () => void
     cancelReorderMode: () => void
     applyReorder: () => Promise<void>
+    openRow: (key: ListEditorKey) => void
+    openAll: () => void
   }
 >({
   ...controller,
+  openRow,
+  openAll,
+  // Saving is separate from the editor's "Apply", so a consumer can commit while still in
+  // reorder mode with an unapplied move. The reorder session (component-level `movedKeys` +
+  // snapshot) is NOT controller state, so re-baseline it here too — otherwise the "N pending
+  // changes" badge lingers after the save and a later Cancel would revert past it.
+  commit: (savedItems?: TItem[]) => {
+    controller.commit(savedItems)
+    movedKeys.value = new Set()
+    if (snapshot.value) snapshot.value = cloneDeep(modelValue.value) as TItem[]
+  },
   // validateAll() also opens invalid rows so a blocked save surfaces WHICH rows
   // are wrong — their #item form mounts instead of a collapsed red rail (QA 85050
   // B4-17). The body is gated on `editing` (not `expanded`), so drive `beginEdit`.
   // Shared with AListEditor + ANestedSortableListEditor via the helper.
-  validateAll: () =>
-    validateAllAndReveal(controller, (key) => {
-      const vi = viewItems.value.find((v) => v.key === key)
-      if (vi) beginEdit(vi)
-    }),
+  validateAll: () => {
+    // Cascade into embedded children — a single outer save reveals invalid rows red
+    // at every nesting level (e.g. quiz question turning red must also red its answers).
+    const selfValid = validateAllSelf()
+    if (!childContributions) return selfValid
+    let valid = selfValid
+    for (const child of childContributions.values()) {
+      if (!child.validateAll()) valid = false
+    }
+    return valid
+  },
   enterReorderMode,
   cancelReorderMode,
   applyReorder,

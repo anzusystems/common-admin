@@ -178,6 +178,39 @@ export function useListEditorController<TItem extends Record<string, any>>(
     return movedKeys.value.has(key) // moved (content-invisible)
   }
 
+  // Gate the validation rail on "has this row actually been edited" rather than just "is it
+  // unsaved", so a freshly added still-untouched row is amber but not yet red. `addedBaseline` =
+  // first-seen content hash of each ADDED row; `editedKeys` = STICKY set of rows whose content has
+  // since diverged from that first-seen / committed baseline. Sticky like vuelidate `$dirty`: once
+  // edited a row stays dirty until commit/reset, so clearing a field back to empty keeps the rail
+  // consistent with the field's own error state. Position / `dirtyExclude` are normalized out, so a
+  // reorder never counts as an edit.
+  const addedBaseline = ref(new Map<ListEditorKey, string>()) as Ref<Map<ListEditorKey, string>>
+  const editedKeys = ref(new Set<ListEditorKey>()) as Ref<Set<ListEditorKey>>
+  watch(
+    items,
+    (rows) => {
+      const live = new Set<ListEditorKey>()
+      for (const r of rows) {
+        const key = keyOf(r)
+        live.add(key)
+        if (!baselineHashes.value.has(key) && !addedBaseline.value.has(key)) {
+          addedBaseline.value.set(key, normalize(r))
+        }
+        if (!editedKeys.value.has(key)) {
+          const base = baselineHashes.value.get(key) ?? addedBaseline.value.get(key)
+          if (base !== undefined && base !== normalize(r)) editedKeys.value.add(key)
+        }
+      }
+      const stale: ListEditorKey[] = []
+      for (const key of addedBaseline.value.keys()) if (!live.has(key)) stale.push(key)
+      for (const key of stale) addedBaseline.value.delete(key)
+    },
+    { immediate: true, deep: true },
+  )
+
+  const isRowEdited = (key: ListEditorKey): boolean => editedKeys.value.has(key)
+
   const unsavedKeys = computed<Set<ListEditorKey>>(() => {
     const out = new Set<ListEditorKey>()
     for (const item of options.get()) {
@@ -214,12 +247,13 @@ export function useListEditorController<TItem extends Record<string, any>>(
   })
   const hasErrors = computed<boolean>(() => invalidKeys.value.size > 0)
 
-  // Red rail gated behind "row has been interacted with" (unsaved) or an explicit
-  // validateAll() — so a loaded-but-invalid row doesn't light up before interaction,
-  // but a save attempt reveals every offender (mounted or collapsed).
+  // Red rail gated behind "row has been edited" (content changed since add/baseline — mirrors the
+  // field's vuelidate `$dirty`) or an explicit validateAll() — so a freshly added still-untouched
+  // row stays amber (not red) and a loaded-but-invalid row doesn't light up before interaction,
+  // while a save attempt reveals every offender (mounted or collapsed).
   const rowState = (item: TItem, key: ListEditorKey): ListEditorValidationState => {
     const { invalid, warning } = resolveValidity(item, key)
-    if (invalid) return isUnsaved(key) || submitted.value ? 'invalid' : null
+    if (invalid) return isRowEdited(key) || submitted.value ? 'invalid' : null
     if (warning) return 'warning'
     return null
   }
@@ -270,6 +304,8 @@ export function useListEditorController<TItem extends Record<string, any>>(
     captureBaseline(next)
     movedKeys.value = new Set()
     deletedRows.value = []
+    addedBaseline.value = new Map()
+    editedKeys.value = new Set()
     submitted.value = false
   }
 
@@ -277,6 +313,8 @@ export function useListEditorController<TItem extends Record<string, any>>(
     options.set(rows ?? baselineRows.value.map((r) => cloneDeep(r)))
     movedKeys.value = new Set()
     deletedRows.value = []
+    addedBaseline.value = new Map()
+    editedKeys.value = new Set()
     submitted.value = false
   }
 

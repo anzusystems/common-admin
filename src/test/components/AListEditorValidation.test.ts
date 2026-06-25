@@ -42,11 +42,12 @@ const exposed = (w: VueWrapper): ListEditorHandle<Item> =>
   (findAListEditor(w).vm as unknown as { $: { exposed: ListEditorHandle<Item> } }).$.exposed
 
 // v2 validation flows through the `:validate` prop (true = VALID). The red rail
-// is GATED: an invalid row only paints red once it is unsaved (added / edited)
-// OR the consumer called `validateAll()` — so a freshly-loaded invalid baseline
-// row stays clear until interaction. This mirrors ASortableListEditor.
+// is GATED: an invalid row only paints red once it has been EDITED (content changed
+// since it was added / its baseline — mirrors the field's vuelidate `$dirty`) OR the
+// consumer called `validateAll()` — so a freshly-loaded invalid baseline row AND a
+// freshly-added still-untouched row stay clear until interaction. Mirrors ASortableListEditor.
 describe('AListEditor — validation (:validate + gated red rail)', () => {
-  describe('unsaved-gated red rail', () => {
+  describe('edited-gated red rail', () => {
     it('does not flag a loaded-but-invalid baseline row before interaction', async () => {
       const data = ref<Item[]>([
         { id: 1, position: 1, title: 'A' },
@@ -71,7 +72,7 @@ describe('AListEditor — validation (:validate + gated red rail)', () => {
       expect(isInvalid(2)).toBe(false)
     })
 
-    it('flags an UNSAVED invalid row (added empty row reads red)', async () => {
+    it('an added still-untouched invalid row is amber, not red until edited', async () => {
       const baseline: Item[] = [
         { id: 1, position: 1, title: 'A' },
         { id: 2, position: 2, title: '' },
@@ -94,15 +95,14 @@ describe('AListEditor — validation (:validate + gated red rail)', () => {
       await nextTick()
       expect(isInvalid(2)).toBe(false)
 
-      // Add a new invalid (empty) row — now unsaved → must read red.
+      // Add a new invalid (empty) row — unsaved (amber) but NOT red until it is edited.
       data.value = [...baseline, { id: -1, position: 3, title: '' }]
       await nextTick()
       await nextTick()
-      expect(isInvalid(-1)).toBe(true)
-      // The pre-existing invalid baseline row is still not flagged.
+      expect(isInvalid(-1)).toBe(false)
       expect(isInvalid(2)).toBe(false)
 
-      // Filling the new row clears the invalid flag (valid + unsaved → amber only).
+      // Filling the new row keeps it clear (now valid).
       data.value = [...baseline.slice(0, 2), { id: -1, position: 3, title: 'now valid' }]
       await nextTick()
       await nextTick()

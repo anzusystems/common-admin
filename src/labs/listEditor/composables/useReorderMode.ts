@@ -11,6 +11,7 @@ export interface SharedReorderRegistry {
     id: symbol,
     movedCount: ComputedRef<number>,
     hasPendingChanges: ComputedRef<boolean>,
+    validateAll: () => boolean,
   ) => void
   unregister: (id: symbol) => void
 }
