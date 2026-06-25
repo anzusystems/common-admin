@@ -45,7 +45,9 @@ const mountEditor = () => {
 }
 
 const pendingText = (wrapper: VueWrapper): string =>
-  wrapper.find('.a-le-toolbar-status').exists() ? wrapper.find('.a-le-toolbar-status').text() : '(no toolbar)'
+  wrapper.find('.a-le-toolbar-status').exists()
+    ? wrapper.find('.a-le-toolbar-status').text()
+    : '(no toolbar)'
 
 describe('ASortableListEditor — saving during reorder clears the pending-changes state', () => {
   // Repro of the FAQ bug: the page "Save" (commit) is separate from the editor's "Apply", so a

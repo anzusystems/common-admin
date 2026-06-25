@@ -32,7 +32,8 @@ const row = (key: number): Element | null => {
   if (!el) return null
   return el.classList.contains('a-le-row') ? el : el.querySelector('.a-le-row')
 }
-const isRed = (key: number): boolean => row(key)?.classList.contains('a-le-row--validation-invalid') ?? false
+const isRed = (key: number): boolean =>
+  row(key)?.classList.contains('a-le-row--validation-invalid') ?? false
 const isAmber = (key: number): boolean => row(key)?.classList.contains('a-le-row--unsaved') ?? false
 const validateAll = (w: VueWrapper, comp: unknown): void => {
   const vm = w.findComponent(comp as Parameters<typeof w.findComponent>[0]).vm as unknown as {
@@ -133,7 +134,13 @@ interface Node {
   title: string
 }
 const baseTree = (): NestedTree<Node> => ({
-  children: [{ data: { id: 1, position: 1, parent: null, title: 'Valid' }, children: [], meta: { dirty: false } }],
+  children: [
+    {
+      data: { id: 1, position: 1, parent: null, title: 'Valid' },
+      children: [],
+      meta: { dirty: false },
+    },
+  ],
   meta: { dirty: false },
 })
 const withAdded = (title: string): NestedTree<Node> => ({

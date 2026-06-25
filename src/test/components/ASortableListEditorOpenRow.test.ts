@@ -48,8 +48,11 @@ const mountEditor = (extra: Record<string, unknown> = {}, withItemSlot = true) =
           },
           // An `#item` slot makes the editor inline-editable (otherwise open is a no-op).
           withItemSlot
-            ? { item: ({ raw }: { raw: Item }) => h('input', { class: 'item-input', value: raw.title }) }
-            : {}
+            ? {
+                item: ({ raw }: { raw: Item }) =>
+                  h('input', { class: 'item-input', value: raw.title }),
+              }
+            : {},
         )
     },
   })
