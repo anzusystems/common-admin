@@ -1,4 +1,3 @@
-/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, ref, nextTick } from 'vue'
@@ -222,7 +221,10 @@ describe('AListEditor', () => {
   })
 
   describe('position hints', () => {
-    it('inserts the factory row right after the row when the slot addAfter action is triggered', async () => {
+    // Drives add-after from the row slot scope (`actions.addAfter`) — the same
+    // handler the kebab "add after this" VListItem calls — so we don't fight the
+    // Vuetify VMenu overlay.
+    const mountWithAddAfterSlot = (extra: Record<string, unknown> = {}) => {
       const model = ref<FaqItem[]>(items())
       const Host = defineComponent({
         setup() {
@@ -235,6 +237,7 @@ describe('AListEditor', () => {
                   model.value = v
                 },
                 factory: makeFaqItem,
+                ...extra,
               },
               {
                 'item-actions': ({ actions }: { actions: { addAfter: () => void } }) =>
@@ -244,6 +247,11 @@ describe('AListEditor', () => {
         },
       })
       const wrapper = mount(Host)
+      return { wrapper, model }
+    }
+
+    it('inserts the factory row right after the row when the slot addAfter action is triggered', async () => {
+      const { wrapper, model } = mountWithAddAfterSlot()
       const btns = wrapper.findAll('.test-add-after')
       await btns[1].trigger('click')
       await flushPromises()
@@ -251,6 +259,47 @@ describe('AListEditor', () => {
       expect(model.value).toHaveLength(4)
       expect(model.value[2].title).toBe('')
       expect(model.value.map((i) => i.id).slice(0, 2)).toEqual([1, 2])
+    })
+
+    it('add-after inserts the new row immediately after the source row and renumbers positions', async () => {
+      const { wrapper, model } = mountWithAddAfterSlot({
+        position: 'position',
+        showAddAfterAction: true,
+      })
+      await flushPromises()
+
+      // Trigger add-after on the MIDDLE row (id 2).
+      const btns = wrapper.findAll('.test-add-after')
+      await btns[1].trigger('click')
+      await flushPromises()
+
+      expect(model.value).toHaveLength(4)
+      // The blank factory row lands at index 2 — right after id 2.
+      expect(model.value[2].title).toBe('')
+      const newId = model.value[2].id
+      // ids order: [1, 2, <new>, 3]
+      expect(model.value.map((i) => i.id)).toEqual([1, 2, newId, 3])
+      // Managed position renumbered contiguous 1..4.
+      expect(model.value.map((i) => i.position)).toEqual([1, 2, 3, 4])
+    })
+
+    it('add-after on the last row appends at the end', async () => {
+      const { wrapper, model } = mountWithAddAfterSlot({
+        position: 'position',
+        showAddAfterAction: true,
+      })
+      await flushPromises()
+
+      const btns = wrapper.findAll('.test-add-after')
+      await btns[2].trigger('click')
+      await flushPromises()
+
+      expect(model.value).toHaveLength(4)
+      // New blank row appended after the original last row (id 3).
+      expect(model.value[3].title).toBe('')
+      const newId = model.value[3].id
+      expect(model.value.map((i) => i.id)).toEqual([1, 2, 3, newId])
+      expect(model.value.map((i) => i.position)).toEqual([1, 2, 3, 4])
     })
   })
 
