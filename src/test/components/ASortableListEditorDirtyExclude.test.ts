@@ -26,7 +26,9 @@ afterEach(() => {
 
 // The PARENT row in the outer (non-embedded) editor.
 const parentRow = (): Element | null =>
-  document.querySelector('.a-sortable-list-editor:not(.a-sortable-list-editor--embedded) .a-le-row[data-id="1"]')
+  document.querySelector(
+    '.a-sortable-list-editor:not(.a-sortable-list-editor--embedded) .a-le-row[data-id="1"]',
+  )
 // The CHILD row in the embedded editor.
 const childRow = (): Element | null =>
   document.querySelector('.a-sortable-list-editor--embedded .a-le-row')
@@ -101,9 +103,11 @@ describe('ASortableListEditor — dirtyExclude shields the parent from child edi
     // parent row's `answers` field genuinely changes (the realistic write-back).
     const innerEditors = mounted!.findAllComponents(ASortableListEditor)
     // findAllComponents on a generic component infers DOMWrapper (no `.vm`) — cast to reach it.
-    const inner = (innerEditors[innerEditors.length - 1] as unknown as {
-      vm: { $: { exposed: ChildHandle } }
-    }).vm
+    const inner = (
+      innerEditors[innerEditors.length - 1] as unknown as {
+        vm: { $: { exposed: ChildHandle } }
+      }
+    ).vm
     inner.$.exposed.updateItem(11, { title: 'A1 edited' })
     await nextTick()
     await nextTick()

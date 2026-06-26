@@ -61,7 +61,7 @@
     "@kyvg/vue3-notification": "^3.4.2",
     "@mdi/font": "^7.4.47",
     "@microsoft/api-extractor": "^7.58.9",
-    "@sentry/vue": "^10.61.0",
+    "@sentry/vue": "^10.62.0",
     "@shikijs/vitepress-twoslash": "^4.3.0",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@tsconfig/node22": "^22.0.5",

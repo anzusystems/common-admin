@@ -17,10 +17,7 @@ interface CachedEntry {
 
 // reactive so `getCachedFn(id)` reads are tracked by the component's `cached`
 // computed — mutating an entry re-resolves the chip without remounting.
-const mountChip = (
-  cache: Record<number, CachedEntry>,
-  props: Record<string, unknown> = {},
-) =>
+const mountChip = (cache: Record<number, CachedEntry>, props: Record<string, unknown> = {}) =>
   mount(ACachedChip, {
     props: {
       id: 7,

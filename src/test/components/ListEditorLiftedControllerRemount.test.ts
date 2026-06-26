@@ -115,7 +115,9 @@ describe('AListEditor — lifted controller survives unmount/remount (U-16)', ()
     await nextTick()
 
     // Drive the add through the editor's own exposed controller handle.
-    const editorVm = (mounted.findComponent(AListEditor) as unknown as { vm: { $: { exposed: Handle } } }).vm
+    const editorVm = (
+      mounted.findComponent(AListEditor) as unknown as { vm: { $: { exposed: Handle } } }
+    ).vm
     editorVm.$.exposed.addItem({ id: -1, position: 2, title: '' })
     await nextTick()
     editorVm.$.exposed.updateItem(-1, { title: 'new' })

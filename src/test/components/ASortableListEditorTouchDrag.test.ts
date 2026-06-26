@@ -87,7 +87,7 @@ describe('ASortableListEditor — touch drag (chips mode), QA 85050 U-03', () =>
 
     // Root carries the touch modifier.
     expect(mounted.find('.a-sortable-list-editor').classes()).toContain(
-      'a-sortable-list-editor--touch'
+      'a-sortable-list-editor--touch',
     )
   })
 
@@ -98,7 +98,7 @@ describe('ASortableListEditor — touch drag (chips mode), QA 85050 U-03', () =>
 
     expect(mounted.find('.a-le-drag-handle').exists()).toBe(true)
     expect(mounted.find('.a-sortable-list-editor').classes()).not.toContain(
-      'a-sortable-list-editor--touch'
+      'a-sortable-list-editor--touch',
     )
   })
 })
