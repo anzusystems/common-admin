@@ -76,6 +76,7 @@ import {
 import {
   renumberPositions,
   sortByPosition,
+  sortByPositionDeep,
   type RenumberPositionsOptions,
 } from '@/labs/listEditor/utils/positions'
 import { nextListEditorTempId } from '@/labs/listEditor/utils/tempId'
@@ -190,6 +191,7 @@ export {
   type VuelidateSentinelSource,
   renumberPositions,
   sortByPosition,
+  sortByPositionDeep,
   type RenumberPositionsOptions,
   nextListEditorTempId,
   useNestedUnsavedKeys,
