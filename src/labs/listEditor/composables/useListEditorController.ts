@@ -158,7 +158,32 @@ export function useListEditorController<TItem extends Record<string, any>>(
     },
     { flush: 'sync' },
   )
-  captureBaseline(options.get())
+  // Ensure every row has a resolvable, UNIQUE key before the first baseline
+  // capture. Server rows lacking the key field (e.g. no `id` and no custom
+  // get-key → keyOf() is undefined for ALL of them) would collapse to a single
+  // baseline entry and read as perpetually unsaved even on a clean load
+  // (QA 85050 BUG-03). Mint a temp id for those rows — exactly what commit()
+  // already does on save (line ~299). Rows that DO resolve a key (the common
+  // case) are untouched, so id-backed editors are unaffected.
+  const ensureKeys = (rows: TItem[]): { rows: TItem[]; changed: boolean } => {
+    if (!keyField) return { rows, changed: false }
+    let changed = false
+    const next = rows.map((item) => {
+      const k = keyOf(item)
+      if (k === undefined || k === null) {
+        changed = true
+        return { ...item, [keyField]: nextListEditorTempId() } as TItem
+      }
+      return item
+    })
+    return { rows: next, changed }
+  }
+  const seeded = ensureKeys(options.get())
+  if (seeded.changed) options.set(seeded.rows)
+  // Capture from the seeded array directly (not a re-read of options.get()): when
+  // set() emits through v-model the prop update is async, so options.get() would
+  // still return the pre-mint colliding rows here. Mirrors commit()'s pattern.
+  captureBaseline(seeded.rows)
 
   // Declared structural state the content-diff can't see.
   const movedKeys = ref(new Set<ListEditorKey>()) as Ref<Set<ListEditorKey>>

@@ -60,6 +60,14 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
     :tabindex="context.keyboardNav ? context.keyboardNav.rowTabindex(vi.key) : undefined"
     @keydown="context.keyboardNav ? context.keyboardNav.handleKeydown(vi.key, $event) : undefined"
   >
+    <!-- Interstitial slots are SIBLINGS of `.a-le-row` (children of this wrapper),
+         so between-row content never inherits the row's unsaved/editing/grabbed/
+         validation tint. (QA 85050 BUG-04/05) -->
+    <slot
+      name="before-item"
+      v-bind="buildSlotProps()"
+    />
+
     <div
       :class="[
         'a-le-row',
@@ -81,11 +89,6 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
         '--parent-anchor': vi.parentKey !== null ? anchorName(vi.parentKey) : 'none',
       }"
     >
-      <slot
-        name="before-item"
-        v-bind="buildSlotProps()"
-      />
-
       <div
         class="a-le-row-header"
         @click="callbacks.onRowClick(vi)"
@@ -455,12 +458,12 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
           />
         </div>
       </div>
-
-      <slot
-        name="after-item"
-        v-bind="buildSlotProps()"
-      />
     </div>
+
+    <slot
+      name="after-item"
+      v-bind="buildSlotProps()"
+    />
 
     <!-- Recursive children — any depth level. The `::before` on this wrapper
          renders the single continuous vertical tree line at the parent's

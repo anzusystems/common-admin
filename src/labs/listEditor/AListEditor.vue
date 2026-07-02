@@ -725,204 +725,211 @@ defineExpose<ListEditorHandle<TItem>>({
         <div
           v-for="vi in viewItemsDecorated"
           :key="String(vi.key)"
-          :data-id="String(vi.key)"
-          role="listitem"
-          :tabindex="keyboardNav.rowTabindex(vi.key)"
-          class="a-le-row"
-          :class="{
-            'a-le-row--two-rows': twoRows === 'always',
-            'a-le-row--editing': vi.editing,
-            'a-le-row--expanded': vi.expanded,
-            'a-le-row--unsaved': vi.unsaved,
-            'a-le-row--clickable': isRowClickable(vi),
-            [`a-le-row--validation-${vi.validationState}`]: vi.validationState !== null,
-          }"
-          @keydown="keyboardNav.handleKeydown(vi.key, $event)"
+          class="a-le-row-wrapper"
         >
+          <!-- Interstitial slots render as SIBLINGS of `.a-le-row` (inside this
+               wrapper), so consumer content placed between rows never inherits the
+               row's unsaved/editing/validation tint. (QA 85050 BUG-04/05) -->
           <slot
             name="before-item"
             v-bind="buildSlotProps(vi)"
           />
 
           <div
-            class="a-le-row-header"
-            @click="onRowClick(vi)"
+            :data-id="String(vi.key)"
+            role="listitem"
+            :tabindex="keyboardNav.rowTabindex(vi.key)"
+            class="a-le-row"
+            :class="{
+              'a-le-row--two-rows': twoRows === 'always',
+              'a-le-row--editing': vi.editing,
+              'a-le-row--expanded': vi.expanded,
+              'a-le-row--unsaved': vi.unsaved,
+              'a-le-row--clickable': isRowClickable(vi),
+              [`a-le-row--validation-${vi.validationState}`]: vi.validationState !== null,
+            }"
+            @keydown="keyboardNav.handleKeydown(vi.key, $event)"
           >
-            <div class="a-le-row-main">
-              <slot
-                name="item-compact"
-                v-bind="buildSlotProps(vi)"
-              >
-                <span class="a-le-title">
-                  {{ resolveCompactText(vi.raw) }}
-                </span>
-              </slot>
-              <LeUnsavedLabel
-                v-if="vi.unsaved"
-                :dot-only="chips"
-              />
-            </div>
-
             <div
-              v-if="!chips"
-              class="a-le-status"
+              class="a-le-row-header"
+              @click="onRowClick(vi)"
             >
-              <slot
-                name="item-status"
-                v-bind="buildSlotProps(vi)"
-              >
-                <span
-                  v-if="statusField && vi.raw[statusField] != null && vi.raw[statusField] !== ''"
-                  class="a-le-status-badge"
+              <div class="a-le-row-main">
+                <slot
+                  name="item-compact"
+                  v-bind="buildSlotProps(vi)"
                 >
-                  {{ vi.raw[statusField] }}
-                </span>
-              </slot>
-            </div>
+                  <span class="a-le-title">
+                    {{ resolveCompactText(vi.raw) }}
+                  </span>
+                </slot>
+                <LeUnsavedLabel
+                  v-if="vi.unsaved"
+                  :dot-only="chips"
+                />
+              </div>
 
-            <div class="a-le-actions">
-              <slot
-                name="item-actions"
-                v-bind="buildSlotProps(vi)"
+              <div
+                v-if="!chips"
+                class="a-le-status"
               >
-                <VBtn
-                  v-if="chips && showDeleteButton && canInteract"
-                  icon
-                  size="x-small"
-                  variant="text"
-                  density="compact"
-                  :active="false"
-                  class="a-le-action a-le-action--chip-close"
-                  @click.stop="onDeleteClick(vi)"
+                <slot
+                  name="item-status"
+                  v-bind="buildSlotProps(vi)"
                 >
-                  <VIcon
-                    icon="mdi-close"
-                    size="14"
-                  />
-                </VBtn>
-                <template v-else>
-                  <VBtn
-                    v-if="showEditButton && canInteract && !defaultExpanded"
-                    icon
-                    size="small"
-                    variant="tonal"
-                    color="primary"
-                    density="comfortable"
-                    class="mx-1 a-le-action a-le-action--edit"
-                    @click.stop="onEditClick(vi)"
+                  <span
+                    v-if="statusField && vi.raw[statusField] != null && vi.raw[statusField] !== ''"
+                    class="a-le-status-badge"
                   >
-                    <VIcon
-                      icon="mdi-pencil-outline"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.edit')"
-                    />
-                  </VBtn>
+                    {{ vi.raw[statusField] }}
+                  </span>
+                </slot>
+              </div>
+
+              <div class="a-le-actions">
+                <slot
+                  name="item-actions"
+                  v-bind="buildSlotProps(vi)"
+                >
                   <VBtn
-                    v-if="showDeleteButton && canInteract"
+                    v-if="chips && showDeleteButton && canInteract"
                     icon
-                    size="small"
+                    size="x-small"
                     variant="text"
-                    density="comfortable"
-                    class="mx-1 a-le-action a-le-action--delete"
+                    density="compact"
+                    :active="false"
+                    class="a-le-action a-le-action--chip-close"
                     @click.stop="onDeleteClick(vi)"
                   >
                     <VIcon
-                      icon="mdi-trash-can-outline"
-                      size="18"
+                      icon="mdi-close"
+                      size="14"
                     />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.delete')"
-                    />
+                  </VBtn>
+                  <template v-else>
+                    <VBtn
+                      v-if="showEditButton && canInteract && !defaultExpanded"
+                      icon
+                      size="small"
+                      variant="tonal"
+                      color="primary"
+                      density="comfortable"
+                      class="mx-1 a-le-action a-le-action--edit"
+                      @click.stop="onEditClick(vi)"
+                    >
+                      <VIcon
+                        icon="mdi-pencil-outline"
+                        size="18"
+                      />
+                      <VTooltip
+                        activator="parent"
+                        location="bottom"
+                        :text="t('common.sortable.edit')"
+                      />
+                    </VBtn>
+                    <VBtn
+                      v-if="showDeleteButton && canInteract"
+                      icon
+                      size="small"
+                      variant="text"
+                      density="comfortable"
+                      class="mx-1 a-le-action a-le-action--delete"
+                      @click.stop="onDeleteClick(vi)"
+                    >
+                      <VIcon
+                        icon="mdi-trash-can-outline"
+                        size="18"
+                      />
+                      <VTooltip
+                        activator="parent"
+                        location="bottom"
+                        :text="t('common.sortable.delete')"
+                      />
+                    </VBtn>
+                    <VBtn
+                      v-if="showAddAfterAction && canInteract"
+                      icon
+                      size="small"
+                      variant="text"
+                      density="comfortable"
+                      :active="false"
+                      class="mx-1 a-le-action a-le-action--menu"
+                    >
+                      <VIcon
+                        icon="mdi-dots-vertical"
+                        size="18"
+                      />
+                      <VTooltip
+                        activator="parent"
+                        location="bottom"
+                        :text="t('common.sortable.more')"
+                      />
+                      <VMenu activator="parent">
+                        <VList density="compact">
+                          <VListItem @click="onRowAddAfterClick(vi)">
+                            <template #prepend>
+                              <VIcon icon="mdi-plus" />
+                            </template>
+                            <VListItemTitle>
+                              {{ t('common.sortable.addAfter') }}
+                            </VListItemTitle>
+                          </VListItem>
+                        </VList>
+                      </VMenu>
+                    </VBtn>
+                  </template>
+                </slot>
+              </div>
+            </div>
+
+            <template v-if="(vi.editing || defaultExpanded) && $slots.item">
+              <div class="a-le-row-body">
+                <div class="a-le-form">
+                  <slot
+                    name="item"
+                    v-bind="buildSlotProps(vi)"
+                  />
+                </div>
+              </div>
+              <slot
+                name="item-footer"
+                v-bind="buildSlotProps(vi)"
+              >
+                <div
+                  v-if="showInlineSaveFooter && !defaultExpanded"
+                  class="a-le-row-footer"
+                >
+                  <div class="a-le-row-footer-spacer" />
+                  <VBtn
+                    variant="text"
+                    :disabled="vi.loading"
+                    @click.stop="onCancelClick(vi)"
+                  >
+                    {{ t('common.button.cancel') }}
                   </VBtn>
                   <VBtn
-                    v-if="showAddAfterAction && canInteract"
-                    icon
-                    size="small"
-                    variant="text"
-                    density="comfortable"
-                    :active="false"
-                    class="mx-1 a-le-action a-le-action--menu"
+                    color="primary"
+                    variant="flat"
+                    prepend-icon="mdi-check"
+                    :disabled="vi.loading"
+                    @click.stop="onSaveClick(vi)"
                   >
-                    <VIcon
-                      icon="mdi-dots-vertical"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.more')"
-                    />
-                    <VMenu activator="parent">
-                      <VList density="compact">
-                        <VListItem @click="onRowAddAfterClick(vi)">
-                          <template #prepend>
-                            <VIcon icon="mdi-plus" />
-                          </template>
-                          <VListItemTitle>
-                            {{ t('common.sortable.addAfter') }}
-                          </VListItemTitle>
-                        </VListItem>
-                      </VList>
-                    </VMenu>
+                    {{ t('common.button.save') }}
                   </VBtn>
-                </template>
+                </div>
               </slot>
-            </div>
-          </div>
+            </template>
 
-          <template v-if="(vi.editing || defaultExpanded) && $slots.item">
-            <div class="a-le-row-body">
+            <div
+              v-else-if="$slots['item-readonly'] && (readonly || vi.expanded)"
+              class="a-le-row-body"
+            >
               <div class="a-le-form">
                 <slot
-                  name="item"
+                  name="item-readonly"
                   v-bind="buildSlotProps(vi)"
                 />
               </div>
-            </div>
-            <slot
-              name="item-footer"
-              v-bind="buildSlotProps(vi)"
-            >
-              <div
-                v-if="showInlineSaveFooter && !defaultExpanded"
-                class="a-le-row-footer"
-              >
-                <div class="a-le-row-footer-spacer" />
-                <VBtn
-                  variant="text"
-                  :disabled="vi.loading"
-                  @click.stop="onCancelClick(vi)"
-                >
-                  {{ t('common.button.cancel') }}
-                </VBtn>
-                <VBtn
-                  color="primary"
-                  variant="flat"
-                  prepend-icon="mdi-check"
-                  :disabled="vi.loading"
-                  @click.stop="onSaveClick(vi)"
-                >
-                  {{ t('common.button.save') }}
-                </VBtn>
-              </div>
-            </slot>
-          </template>
-
-          <div
-            v-else-if="$slots['item-readonly'] && (readonly || vi.expanded)"
-            class="a-le-row-body"
-          >
-            <div class="a-le-form">
-              <slot
-                name="item-readonly"
-                v-bind="buildSlotProps(vi)"
-              />
             </div>
           </div>
 

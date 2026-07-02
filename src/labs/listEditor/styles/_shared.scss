@@ -169,19 +169,26 @@
     background: var(--le-warning-container);
   }
 
-  &--unsaved.a-le-row--editing .a-le-row-main,
-  &--unsaved.a-le-row--editing .a-le-row-main *,
-  &--unsaved.a-le-row--expanded .a-le-row-main,
-  &--unsaved.a-le-row--expanded .a-le-row-main * {
+  // Scope to the row's OWN main (direct `> header > main`), NOT any descendant
+  // `.a-le-row-main` — otherwise the amber text colour cascades into the titles
+  // of NESTED child rows (which each have their own `.a-le-row-main`) that live
+  // in this row's `.a-le-row-body`, so an untouched child reads amber though it
+  // is not unsaved (QA 85050 BUG-02). A nested row that is itself unsaved still
+  // colours its own main via its own (deeper, higher-specificity) rule.
+  &--unsaved.a-le-row--editing > .a-le-row-header > .a-le-row-main,
+  &--unsaved.a-le-row--editing > .a-le-row-header > .a-le-row-main *,
+  &--unsaved.a-le-row--expanded > .a-le-row-header > .a-le-row-main,
+  &--unsaved.a-le-row--expanded > .a-le-row-header > .a-le-row-main * {
     color: var(--le-warning);
   }
 
   // Active row — bold primary title. Reaches consumer-provided #item-compact
-  // slot content via the universal descendant selector.
-  &--editing .a-le-row-main,
-  &--editing .a-le-row-main *,
-  &--expanded .a-le-row-main,
-  &--expanded .a-le-row-main * {
+  // slot content via the universal descendant selector. Same direct-chain scope
+  // as the unsaved rule above so it doesn't bleed into nested child rows.
+  &--editing > .a-le-row-header > .a-le-row-main,
+  &--editing > .a-le-row-header > .a-le-row-main *,
+  &--expanded > .a-le-row-header > .a-le-row-main,
+  &--expanded > .a-le-row-header > .a-le-row-main * {
     font-weight: 700;
     color: var(--le-primary);
   }
@@ -689,6 +696,16 @@
     padding: 4px 8px 8px;
     border-bottom: none;
     min-height: auto;
+  }
+
+  // The wrapper is the flex item `__rows` flex-wraps (interstitial `#before/#after-item`
+  // slots now live outside `.a-le-row`); carry the pill's flex sizing here so long
+  // labels wrap/shrink as before, and let the inner `.a-le-row` fill it. (QA 85050 BUG-04/05)
+  .a-le-row-wrapper {
+    display: flex;
+    flex: 0 0 auto;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .a-le-row {

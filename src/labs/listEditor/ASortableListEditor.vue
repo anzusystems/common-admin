@@ -741,9 +741,12 @@ if (!isTouch.value) {
     },
     onEnd: (event) => {
       // Mark only the dragged row (via its data-id) moved rather than diffing the
-      // whole list, so siblings that shifted index stay clean.
+      // whole list, so siblings that shifted index stay clean. `event.item` is the
+      // `.a-le-row-wrapper` sortable item; the `[data-id]` lives on the inner `.a-le-row`.
       const el = event.item as HTMLElement
-      const raw = el.getAttribute('data-id')
+      // `:scope >` so a consumer editor nested in a `#before-item` slot (its own
+      // `.a-le-row` descendants) can't shadow this row's own id.
+      const raw = (el.querySelector(':scope > .a-le-row') ?? el).getAttribute('data-id')
       if (raw !== null && raw !== '') {
         // Numeric key only when `data-id` is a pure integer string (incl. negative
         // temp ids like "-1"); otherwise keep the UUID-style string. `n > 0`
@@ -1253,363 +1256,370 @@ defineExpose<
         <div
           v-for="vi in viewItemsDecorated"
           :key="String(vi.key)"
-          :data-id="String(vi.key)"
-          role="listitem"
-          :tabindex="keyboardNav.rowTabindex(vi.key)"
-          class="a-le-row"
-          :class="{
-            'a-le-row--two-rows': twoRows === 'always',
-            'a-le-row--editing': vi.editing,
-            'a-le-row--expanded': vi.expanded,
-            'a-le-row--unsaved': vi.unsaved,
-            'a-le-row--reorder': reorderMode,
-            'a-le-row--grabbed': keyboardNav.isGrabbed(vi.key),
-            'a-le-row--clickable': isRowClickable(vi),
-            [`a-le-row--validation-${vi.validationState}`]: vi.validationState !== null,
-          }"
-          @keydown="keyboardNav.handleKeydown(vi.key, $event)"
+          class="a-le-row-wrapper"
         >
+          <!-- Interstitial slots render as SIBLINGS of `.a-le-row` (inside this
+               wrapper), so consumer content placed between rows never inherits the
+               row's unsaved/editing/grabbed/validation tint. (QA 85050 BUG-04/05) -->
           <slot
             name="before-item"
             v-bind="buildSlotProps(vi)"
           />
 
           <div
-            class="a-le-row-header"
-            @click="onRowClick(vi)"
+            :data-id="String(vi.key)"
+            role="listitem"
+            :tabindex="keyboardNav.rowTabindex(vi.key)"
+            class="a-le-row"
+            :class="{
+              'a-le-row--two-rows': twoRows === 'always',
+              'a-le-row--editing': vi.editing,
+              'a-le-row--expanded': vi.expanded,
+              'a-le-row--unsaved': vi.unsaved,
+              'a-le-row--reorder': reorderMode,
+              'a-le-row--grabbed': keyboardNav.isGrabbed(vi.key),
+              'a-le-row--clickable': isRowClickable(vi),
+              [`a-le-row--validation-${vi.validationState}`]: vi.validationState !== null,
+            }"
+            @keydown="keyboardNav.handleKeydown(vi.key, $event)"
           >
-            <LeDragHandle v-if="dragEnabled" />
-
-            <div class="a-le-row-main">
-              <slot
-                name="item-compact"
-                v-bind="buildSlotProps(vi)"
-              >
-                <span class="a-le-title">
-                  {{ resolveCompactText(vi.raw) }}
-                </span>
-              </slot>
-              <LeUnsavedLabel
-                v-if="vi.unsaved"
-                :dot-only="chips"
-              />
-            </div>
-
             <div
-              v-if="!chips && !reorderMode"
-              class="a-le-status"
+              class="a-le-row-header"
+              @click="onRowClick(vi)"
             >
-              <slot
-                name="item-status"
-                v-bind="buildSlotProps(vi)"
-              >
-                <span
-                  v-if="statusField && vi.raw[statusField] != null && vi.raw[statusField] !== ''"
-                  class="a-le-status-badge"
-                >
-                  {{ vi.raw[statusField] }}
-                </span>
-              </slot>
-            </div>
+              <LeDragHandle v-if="dragEnabled" />
 
-            <div class="a-le-actions">
-              <slot
-                name="item-actions"
-                v-bind="buildSlotProps(vi)"
+              <div class="a-le-row-main">
+                <slot
+                  name="item-compact"
+                  v-bind="buildSlotProps(vi)"
+                >
+                  <span class="a-le-title">
+                    {{ resolveCompactText(vi.raw) }}
+                  </span>
+                </slot>
+                <LeUnsavedLabel
+                  v-if="vi.unsaved"
+                  :dot-only="chips"
+                />
+              </div>
+
+              <div
+                v-if="!chips && !reorderMode"
+                class="a-le-status"
               >
-                <template v-if="chips && canInteract">
-                  <template v-if="isTouch && !disableReorder">
+                <slot
+                  name="item-status"
+                  v-bind="buildSlotProps(vi)"
+                >
+                  <span
+                    v-if="statusField && vi.raw[statusField] != null && vi.raw[statusField] !== ''"
+                    class="a-le-status-badge"
+                  >
+                    {{ vi.raw[statusField] }}
+                  </span>
+                </slot>
+              </div>
+
+              <div class="a-le-actions">
+                <slot
+                  name="item-actions"
+                  v-bind="buildSlotProps(vi)"
+                >
+                  <template v-if="chips && canInteract">
+                    <template v-if="isTouch && !disableReorder">
+                      <VBtn
+                        icon
+                        size="x-small"
+                        variant="text"
+                        density="compact"
+                        :active="false"
+                        :disabled="!vi.canMoveUp"
+                        class="a-le-action a-le-action--up"
+                        @click.stop="moveUp(vi.index)"
+                      >
+                        <VIcon
+                          icon="mdi-arrow-up"
+                          size="14"
+                        />
+                      </VBtn>
+                      <VBtn
+                        icon
+                        size="x-small"
+                        variant="text"
+                        density="compact"
+                        :active="false"
+                        :disabled="!vi.canMoveDown"
+                        class="a-le-action a-le-action--down"
+                        @click.stop="moveDown(vi.index)"
+                      >
+                        <VIcon
+                          icon="mdi-arrow-down"
+                          size="14"
+                        />
+                      </VBtn>
+                    </template>
                     <VBtn
+                      v-if="showDeleteButton"
                       icon
                       size="x-small"
                       variant="text"
                       density="compact"
                       :active="false"
-                      :disabled="!vi.canMoveUp"
-                      class="a-le-action a-le-action--up"
-                      @click.stop="moveUp(vi.index)"
+                      class="a-le-action a-le-action--chip-close"
+                      @click.stop="onDeleteClick(vi)"
                     >
                       <VIcon
-                        icon="mdi-arrow-up"
-                        size="14"
-                      />
-                    </VBtn>
-                    <VBtn
-                      icon
-                      size="x-small"
-                      variant="text"
-                      density="compact"
-                      :active="false"
-                      :disabled="!vi.canMoveDown"
-                      class="a-le-action a-le-action--down"
-                      @click.stop="moveDown(vi.index)"
-                    >
-                      <VIcon
-                        icon="mdi-arrow-down"
+                        icon="mdi-close"
                         size="14"
                       />
                     </VBtn>
                   </template>
-                  <VBtn
-                    v-if="showDeleteButton"
-                    icon
-                    size="x-small"
-                    variant="text"
-                    density="compact"
-                    :active="false"
-                    class="a-le-action a-le-action--chip-close"
-                    @click.stop="onDeleteClick(vi)"
-                  >
-                    <VIcon
-                      icon="mdi-close"
-                      size="14"
-                    />
-                  </VBtn>
-                </template>
-                <template v-else-if="reorderMode">
-                  <VBtn
-                    icon
-                    size="small"
-                    variant="text"
-                    density="comfortable"
-                    :disabled="!vi.canMoveUp"
-                    class="mx-1 a-le-action a-le-action--up"
-                    @click.stop="moveUp(vi.index)"
-                  >
-                    <VIcon
-                      icon="mdi-arrow-up"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.moveUp')"
-                    />
-                  </VBtn>
-                  <VBtn
-                    icon
-                    size="small"
-                    variant="text"
-                    density="comfortable"
-                    :disabled="!vi.canMoveDown"
-                    class="mx-1 a-le-action a-le-action--down"
-                    @click.stop="moveDown(vi.index)"
-                  >
-                    <VIcon
-                      icon="mdi-arrow-down"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.moveDown')"
-                    />
-                  </VBtn>
-                  <VBtn
-                    icon
-                    size="small"
-                    variant="text"
-                    density="comfortable"
-                    :active="false"
-                    class="mx-1 a-le-action a-le-action--menu"
-                  >
-                    <VIcon
-                      icon="mdi-dots-vertical"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.more')"
-                    />
-                    <VMenu activator="parent">
-                      <VList density="compact">
-                        <VListItem
-                          :disabled="!vi.canMoveUp"
-                          @click.stop="moveTop(vi.index)"
-                        >
-                          <template #prepend>
-                            <VIcon icon="mdi-arrow-collapse-up" />
-                          </template>
-                          <VListItemTitle>
-                            {{ t('common.sortable.moveToTop') }}
-                          </VListItemTitle>
-                        </VListItem>
-                        <VListItem
-                          :disabled="!vi.canMoveDown"
-                          @click.stop="moveBottom(vi.index)"
-                        >
-                          <template #prepend>
-                            <VIcon icon="mdi-arrow-collapse-down" />
-                          </template>
-                          <VListItemTitle>
-                            {{ t('common.sortable.moveToBottom') }}
-                          </VListItemTitle>
-                        </VListItem>
-                        <VListItem
-                          v-if="showMoveToPosition && viewItemsDecorated.length > 1"
-                          @click.stop="openMoveToPosition(vi)"
-                        >
-                          <template #prepend>
-                            <VIcon icon="mdi-target" />
-                          </template>
-                          <VListItemTitle>
-                            {{ t('common.sortable.moveToPosition.action') }}
-                          </VListItemTitle>
-                        </VListItem>
-                        <VListItem
-                          v-if="showAddAfterAction && canInteract"
-                          @click="onRowAddAfterClick(vi)"
-                        >
-                          <template #prepend>
-                            <VIcon icon="mdi-plus" />
-                          </template>
-                          <VListItemTitle>
-                            {{ t('common.sortable.addAfter') }}
-                          </VListItemTitle>
-                        </VListItem>
-                        <VListItem
-                          v-if="showDeleteButton && canInteract"
-                          @click.stop="onDeleteClick(vi)"
-                        >
-                          <template #prepend>
-                            <VIcon icon="mdi-trash-can-outline" />
-                          </template>
-                          <VListItemTitle>
-                            {{ t('common.sortable.delete') }}
-                          </VListItemTitle>
-                        </VListItem>
-                      </VList>
-                    </VMenu>
-                  </VBtn>
-                </template>
-                <template v-else>
-                  <VBtn
-                    v-if="showEditButton && canInteract"
-                    icon
-                    size="small"
-                    variant="tonal"
-                    color="primary"
-                    density="comfortable"
-                    class="mx-1 a-le-action a-le-action--edit"
-                    @click.stop="onEditClick(vi)"
-                  >
-                    <VIcon
-                      icon="mdi-pencil-outline"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.edit')"
-                    />
-                  </VBtn>
-                  <VBtn
-                    v-if="showDeleteButton && canInteract"
-                    icon
-                    size="small"
-                    variant="text"
-                    density="comfortable"
-                    class="mx-1 a-le-action a-le-action--delete"
-                    @click.stop="onDeleteClick(vi)"
-                  >
-                    <VIcon
-                      icon="mdi-trash-can-outline"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.delete')"
-                    />
-                  </VBtn>
-                  <VBtn
-                    v-if="showAddAfterAction && canInteract"
-                    icon
-                    size="small"
-                    variant="text"
-                    density="comfortable"
-                    :active="false"
-                    class="mx-1 a-le-action a-le-action--menu"
-                  >
-                    <VIcon
-                      icon="mdi-dots-vertical"
-                      size="18"
-                    />
-                    <VTooltip
-                      activator="parent"
-                      location="bottom"
-                      :text="t('common.sortable.more')"
-                    />
-                    <VMenu activator="parent">
-                      <VList density="compact">
-                        <VListItem @click="onRowAddAfterClick(vi)">
-                          <template #prepend>
-                            <VIcon icon="mdi-plus" />
-                          </template>
-                          <VListItemTitle>
-                            {{ t('common.sortable.addAfter') }}
-                          </VListItemTitle>
-                        </VListItem>
-                      </VList>
-                    </VMenu>
-                  </VBtn>
-                </template>
-              </slot>
+                  <template v-else-if="reorderMode">
+                    <VBtn
+                      icon
+                      size="small"
+                      variant="text"
+                      density="comfortable"
+                      :disabled="!vi.canMoveUp"
+                      class="mx-1 a-le-action a-le-action--up"
+                      @click.stop="moveUp(vi.index)"
+                    >
+                      <VIcon
+                        icon="mdi-arrow-up"
+                        size="18"
+                      />
+                      <VTooltip
+                        activator="parent"
+                        location="bottom"
+                        :text="t('common.sortable.moveUp')"
+                      />
+                    </VBtn>
+                    <VBtn
+                      icon
+                      size="small"
+                      variant="text"
+                      density="comfortable"
+                      :disabled="!vi.canMoveDown"
+                      class="mx-1 a-le-action a-le-action--down"
+                      @click.stop="moveDown(vi.index)"
+                    >
+                      <VIcon
+                        icon="mdi-arrow-down"
+                        size="18"
+                      />
+                      <VTooltip
+                        activator="parent"
+                        location="bottom"
+                        :text="t('common.sortable.moveDown')"
+                      />
+                    </VBtn>
+                    <VBtn
+                      icon
+                      size="small"
+                      variant="text"
+                      density="comfortable"
+                      :active="false"
+                      class="mx-1 a-le-action a-le-action--menu"
+                    >
+                      <VIcon
+                        icon="mdi-dots-vertical"
+                        size="18"
+                      />
+                      <VTooltip
+                        activator="parent"
+                        location="bottom"
+                        :text="t('common.sortable.more')"
+                      />
+                      <VMenu activator="parent">
+                        <VList density="compact">
+                          <VListItem
+                            :disabled="!vi.canMoveUp"
+                            @click.stop="moveTop(vi.index)"
+                          >
+                            <template #prepend>
+                              <VIcon icon="mdi-arrow-collapse-up" />
+                            </template>
+                            <VListItemTitle>
+                              {{ t('common.sortable.moveToTop') }}
+                            </VListItemTitle>
+                          </VListItem>
+                          <VListItem
+                            :disabled="!vi.canMoveDown"
+                            @click.stop="moveBottom(vi.index)"
+                          >
+                            <template #prepend>
+                              <VIcon icon="mdi-arrow-collapse-down" />
+                            </template>
+                            <VListItemTitle>
+                              {{ t('common.sortable.moveToBottom') }}
+                            </VListItemTitle>
+                          </VListItem>
+                          <VListItem
+                            v-if="showMoveToPosition && viewItemsDecorated.length > 1"
+                            @click.stop="openMoveToPosition(vi)"
+                          >
+                            <template #prepend>
+                              <VIcon icon="mdi-target" />
+                            </template>
+                            <VListItemTitle>
+                              {{ t('common.sortable.moveToPosition.action') }}
+                            </VListItemTitle>
+                          </VListItem>
+                          <VListItem
+                            v-if="showAddAfterAction && canInteract"
+                            @click="onRowAddAfterClick(vi)"
+                          >
+                            <template #prepend>
+                              <VIcon icon="mdi-plus" />
+                            </template>
+                            <VListItemTitle>
+                              {{ t('common.sortable.addAfter') }}
+                            </VListItemTitle>
+                          </VListItem>
+                          <VListItem
+                            v-if="showDeleteButton && canInteract"
+                            @click.stop="onDeleteClick(vi)"
+                          >
+                            <template #prepend>
+                              <VIcon icon="mdi-trash-can-outline" />
+                            </template>
+                            <VListItemTitle>
+                              {{ t('common.sortable.delete') }}
+                            </VListItemTitle>
+                          </VListItem>
+                        </VList>
+                      </VMenu>
+                    </VBtn>
+                  </template>
+                  <template v-else>
+                    <VBtn
+                      v-if="showEditButton && canInteract"
+                      icon
+                      size="small"
+                      variant="tonal"
+                      color="primary"
+                      density="comfortable"
+                      class="mx-1 a-le-action a-le-action--edit"
+                      @click.stop="onEditClick(vi)"
+                    >
+                      <VIcon
+                        icon="mdi-pencil-outline"
+                        size="18"
+                      />
+                      <VTooltip
+                        activator="parent"
+                        location="bottom"
+                        :text="t('common.sortable.edit')"
+                      />
+                    </VBtn>
+                    <VBtn
+                      v-if="showDeleteButton && canInteract"
+                      icon
+                      size="small"
+                      variant="text"
+                      density="comfortable"
+                      class="mx-1 a-le-action a-le-action--delete"
+                      @click.stop="onDeleteClick(vi)"
+                    >
+                      <VIcon
+                        icon="mdi-trash-can-outline"
+                        size="18"
+                      />
+                      <VTooltip
+                        activator="parent"
+                        location="bottom"
+                        :text="t('common.sortable.delete')"
+                      />
+                    </VBtn>
+                    <VBtn
+                      v-if="showAddAfterAction && canInteract"
+                      icon
+                      size="small"
+                      variant="text"
+                      density="comfortable"
+                      :active="false"
+                      class="mx-1 a-le-action a-le-action--menu"
+                    >
+                      <VIcon
+                        icon="mdi-dots-vertical"
+                        size="18"
+                      />
+                      <VTooltip
+                        activator="parent"
+                        location="bottom"
+                        :text="t('common.sortable.more')"
+                      />
+                      <VMenu activator="parent">
+                        <VList density="compact">
+                          <VListItem @click="onRowAddAfterClick(vi)">
+                            <template #prepend>
+                              <VIcon icon="mdi-plus" />
+                            </template>
+                            <VListItemTitle>
+                              {{ t('common.sortable.addAfter') }}
+                            </VListItemTitle>
+                          </VListItem>
+                        </VList>
+                      </VMenu>
+                    </VBtn>
+                  </template>
+                </slot>
+              </div>
             </div>
-          </div>
 
-          <template v-if="vi.editing && (allowEditInReorder || !reorderMode) && $slots.item">
-            <div class="a-le-row-body">
+            <template v-if="vi.editing && (allowEditInReorder || !reorderMode) && $slots.item">
+              <div class="a-le-row-body">
+                <div class="a-le-form">
+                  <slot
+                    name="item"
+                    v-bind="buildSlotProps(vi)"
+                  />
+                </div>
+              </div>
+              <slot
+                name="item-footer"
+                v-bind="buildSlotProps(vi)"
+              >
+                <div
+                  v-if="showInlineSaveFooter && !reorderMode"
+                  class="a-le-row-footer"
+                >
+                  <div class="a-le-row-footer-spacer" />
+                  <VBtn
+                    variant="text"
+                    :disabled="vi.loading"
+                    @click.stop="onCancelClick(vi)"
+                  >
+                    {{ t('common.button.cancel') }}
+                  </VBtn>
+                  <VBtn
+                    color="primary"
+                    variant="flat"
+                    prepend-icon="mdi-check"
+                    :disabled="vi.loading"
+                    @click.stop="onSaveClick(vi)"
+                  >
+                    {{ t('common.button.save') }}
+                  </VBtn>
+                </div>
+              </slot>
+            </template>
+
+            <div
+              v-else-if="
+                $slots['item-readonly'] &&
+                  (readonly || vi.expanded) &&
+                  (allowEditInReorder || !reorderMode)
+              "
+              class="a-le-row-body"
+            >
               <div class="a-le-form">
                 <slot
-                  name="item"
+                  name="item-readonly"
                   v-bind="buildSlotProps(vi)"
                 />
               </div>
-            </div>
-            <slot
-              name="item-footer"
-              v-bind="buildSlotProps(vi)"
-            >
-              <div
-                v-if="showInlineSaveFooter && !reorderMode"
-                class="a-le-row-footer"
-              >
-                <div class="a-le-row-footer-spacer" />
-                <VBtn
-                  variant="text"
-                  :disabled="vi.loading"
-                  @click.stop="onCancelClick(vi)"
-                >
-                  {{ t('common.button.cancel') }}
-                </VBtn>
-                <VBtn
-                  color="primary"
-                  variant="flat"
-                  prepend-icon="mdi-check"
-                  :disabled="vi.loading"
-                  @click.stop="onSaveClick(vi)"
-                >
-                  {{ t('common.button.save') }}
-                </VBtn>
-              </div>
-            </slot>
-          </template>
-
-          <div
-            v-else-if="
-              $slots['item-readonly'] &&
-                (readonly || vi.expanded) &&
-                (allowEditInReorder || !reorderMode)
-            "
-            class="a-le-row-body"
-          >
-            <div class="a-le-form">
-              <slot
-                name="item-readonly"
-                v-bind="buildSlotProps(vi)"
-              />
             </div>
           </div>
 
@@ -1767,11 +1777,13 @@ defineExpose<
     background: var(--le-surface);
     border: 1px solid var(--le-border);
     border-radius: 6px;
-    margin-bottom: 4px;
   }
 
-  &--embedded .a-le-row:last-of-type {
-    margin-bottom: 0;
+  // The inter-row gap lives on the wrapper (the real list item). `.a-le-row` is no
+  // longer its wrapper's last child once `#after-item` renders, so the old
+  // `.a-le-row:last-of-type` reset stopped clearing the trailing gap. (QA 85050 BUG-04/05)
+  &--embedded .a-le-row-wrapper:not(:last-child) {
+    margin-bottom: 4px;
   }
 
   &--embedded .a-le-row-add {
