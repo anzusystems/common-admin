@@ -4,6 +4,8 @@ import { defineComponent, h, nextTick, ref, type Component, type Ref } from 'vue
 import useVuelidate from '@vuelidate/core'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
+import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
+import type { ListEditorKey, NestedTree } from '@/labs/listEditor/types/listEditorTypes'
 
 /**
  * QA 85050 — the `validation-scope` bridge. A COLLAPSED invalid row unmounts its own row-form
@@ -105,3 +107,115 @@ describe.each([
     })
   },
 )
+
+// The nested tree editor is separate: its aggregate validity walks the WHOLE tree (deep collapsed
+// children included) and its reveal must re-expand the offender's ANCESTOR chain, not just open a
+// flat row. Same scope bridge, exercised end-to-end on a two-level tree.
+describe('useListEditorScopeValidity — ANestedSortableListEditor flows deep tree validity into the scope collector', () => {
+  interface TreeRow {
+    id: number
+    name: string
+    position: number
+  }
+  const treeValidate = (r: TreeRow): boolean => !!r.name // name required
+
+  // Root parent (valid) with one leaf child whose validity is the `childName` arg.
+  const makeTree = (childName: string): NestedTree<TreeRow> => ({
+    meta: { dirty: false },
+    children: [
+      {
+        data: { id: 1, name: 'Parent', position: 1 },
+        meta: { dirty: false },
+        children: [
+          { data: { id: 2, name: childName, position: 1 }, meta: { dirty: false }, children: [] },
+        ],
+      },
+    ],
+  })
+
+  // Capture the editor's exposed handle via a function ref (a template/function ref on a
+  // defineExpose'd component receives the exposed proxy — `.collapse` etc. — unlike VTU's `.vm`).
+  function mountNestedHost(
+    tree: Ref<NestedTree<TreeRow>>,
+    scope: symbol | undefined,
+  ): { collector: Collector; editor: () => { collapse: (id: ListEditorKey) => void } } {
+    let collector: Collector | null = null
+    let editorRef: { collapse: (id: ListEditorKey) => void } | null = null
+    const Host = defineComponent({
+      setup() {
+        collector = useVuelidate({ $scope: SCOPE }) as unknown as Collector
+        return () =>
+          h(
+            ANestedSortableListEditor as Component,
+            {
+              ref: (el: unknown) => {
+                if (el) editorRef = el as { collapse: (id: ListEditorKey) => void }
+              },
+              maxDepth: 3,
+              modelValue: tree.value,
+              'onUpdate:modelValue': (v: NestedTree<TreeRow>) => {
+                tree.value = v
+              },
+              validate: treeValidate,
+              validationScope: scope,
+            },
+            { item: ({ raw }: { raw: TreeRow }) => h('input', { value: raw.name }) },
+          )
+      },
+    })
+    mounted = mount(Host, { attachTo: document.body })
+    return { collector: collector as unknown as Collector, editor: () => editorRef! }
+  }
+
+  it('a COLLAPSED deep invalid row makes the scope collector $invalid (blocks the save)', async () => {
+    const tree = ref<NestedTree<TreeRow>>(makeTree('')) // invalid leaf (empty name)
+    const { collector, editor } = mountNestedHost(tree, SCOPE)
+    await nextTick()
+    await nextTick()
+    editor().collapse(1) // hide the invalid child behind its collapsed parent
+    await nextTick()
+    await nextTick()
+
+    // Only the parent row is in the DOM; the invalid child is collapsed away (its form unmounted).
+    expect(document.querySelectorAll('.a-le-row').length).toBe(1)
+    expect(document.querySelectorAll('.a-le-row-body').length).toBe(0)
+    // Oracle: the editor's whole-tree validity is registered under the scope → the save gate blocks.
+    expect(collector.value.$invalid).toBe(true)
+  })
+
+  it('a collector $touch() expands the ancestor chain and reveals the deep offender red', async () => {
+    const tree = ref<NestedTree<TreeRow>>(makeTree(''))
+    const { collector, editor } = mountNestedHost(tree, SCOPE)
+    await nextTick()
+    await nextTick()
+    editor().collapse(1)
+    await nextTick()
+    await nextTick()
+    expect(document.querySelectorAll('.a-le-row').length).toBe(1)
+    expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBe(0)
+
+    // The save flow's `v$.$touch()` propagates to the scoped child → the nested reveal re-expands the
+    // parent so the collapsed offender becomes visible and flagged red.
+    collector.value.$touch()
+    await nextTick()
+    await nextTick()
+    expect(document.querySelectorAll('.a-le-row').length).toBe(2)
+    expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBeGreaterThan(0)
+  })
+
+  it('a fully valid tree leaves the collector valid', async () => {
+    const tree = ref<NestedTree<TreeRow>>(makeTree('Child')) // valid leaf
+    const { collector } = mountNestedHost(tree, SCOPE)
+    await nextTick()
+    await nextTick()
+    expect(collector.value.$invalid).toBe(false)
+  })
+
+  it('backward-compat: WITHOUT validation-scope the editor never touches the collector', async () => {
+    const tree = ref<NestedTree<TreeRow>>(makeTree('')) // invalid, but not wired
+    const { collector } = mountNestedHost(tree, undefined)
+    await nextTick()
+    await nextTick()
+    expect(collector.value.$invalid).toBe(false)
+  })
+})
