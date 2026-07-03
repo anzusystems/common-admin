@@ -29,6 +29,7 @@ import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
 import { validateAllAndReveal } from '@/labs/listEditor/utils/revealInvalidRows'
+import { useListEditorScopeValidity } from '@/labs/listEditor/composables/useListEditorScopeValidity'
 import {
   useReorderMode,
   SharedReorderRegistryKey,
@@ -49,6 +50,7 @@ import { cloneDeep } from '@/utils/common'
 import { stringToInt } from '@/utils/string'
 import type {
   ListEditorKey,
+  ListEditorValidationScope,
   ListEditorValidationState,
   ListViewItem,
 } from '@/labs/listEditor/types/listEditorTypes'
@@ -162,6 +164,13 @@ export interface Props<TItem extends Record<string, any>> {
   /** Per-row validity — `true` (or `{ valid: true }`) = VALID. Drives the red rail + save guard. */
   validate?: (item: TItem) => ListEditorValidationResult
   /**
+   * Vuelidate `$scope` (the same one the consumer's row forms / save-gate collector use). When set,
+   * the editor registers its aggregate validity under it, so a plain `v$.$invalid` save gate blocks
+   * AND reveals a collapsed invalid row — no `validateAll()` call needed in the save flow. Omit to
+   * keep legacy behavior (gate the save on the exposed `validateAll()` yourself); `false` opts out.
+   */
+  validationScope?: ListEditorValidationScope | false
+  /**
    * Opt-in lifted state controller (from consumer's `useListEditorController()`)
    * so editor state survives this component's unmount/remount (pinned-widget
    * relocation). When omitted the editor owns an internal controller.
@@ -232,6 +241,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   position: undefined,
   dirtyExclude: undefined,
   validate: undefined,
+  validationScope: undefined,
   editor: undefined,
   readonly: false,
   disabled: false,
@@ -641,6 +651,15 @@ const validateAllSelf = (): boolean =>
     const vi = viewItems.value.find((v) => v.key === key)
     if (vi) beginEdit(vi)
   })
+
+// Auto-bridge the editor's aggregate validity into the consumer's `validation-scope` collector so a
+// plain `$invalid` save gate blocks (and reveals) a collapsed invalid row. No-op without the prop.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss -- construction-time opt-in, read once
+useListEditorScopeValidity({
+  hasErrors: controller.hasErrors,
+  validationScope: props.validationScope,
+  reveal: validateAllSelf,
+})
 
 const keyboardNav = useKeyboardNav({
   viewItems: computed(() => viewItemsDecorated.value.map((vi) => ({ key: vi.key }))),

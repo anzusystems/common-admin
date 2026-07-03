@@ -15,11 +15,13 @@ import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
 import { validateAllAndReveal } from '@/labs/listEditor/utils/revealInvalidRows'
+import { useListEditorScopeValidity } from '@/labs/listEditor/composables/useListEditorScopeValidity'
 import LeDeleteDialog from '@/labs/listEditor/internal/LeDeleteDialog.vue'
 import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
 import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
 import type {
   ListEditorKey,
+  ListEditorValidationScope,
   ListEditorValidationState,
   ListViewItem,
 } from '@/labs/listEditor/types/listEditorTypes'
@@ -101,6 +103,13 @@ export interface Props<TItem extends Record<string, any>> {
   /** Per-row validity — `true` (or `{ valid: true }`) = VALID. Drives the red rail + save guard. */
   validate?: (item: TItem) => ListEditorValidationResult
   /**
+   * Vuelidate `$scope` (the same one the consumer's row forms / save-gate collector use). When set,
+   * the editor registers its aggregate validity under it, so a plain `v$.$invalid` save gate blocks
+   * AND reveals a collapsed invalid row — no `validateAll()` call needed in the save flow. Omit to
+   * keep legacy behavior (gate the save on the exposed `validateAll()` yourself); `false` opts out.
+   */
+  validationScope?: ListEditorValidationScope | false
+  /**
    * Opt-in lifted controller from `useListEditorController()` — pass it so editor
    * state survives this component's unmount/remount. Omitted: the editor owns one
    * internally. Either way the `ListEditorHandle` is reachable via `useTemplateRef`.
@@ -161,6 +170,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   position: undefined,
   dirtyExclude: undefined,
   validate: undefined,
+  validationScope: undefined,
   editor: undefined,
   readonly: false,
   disabled: false,
@@ -628,17 +638,28 @@ useUnsavedSection(() =>
     : [],
 )
 
+// Opens invalid rows so a blocked save surfaces WHICH rows are wrong instead of a collapsed red
+// rail. The body is gated on `editing` not `expanded`, so drive `beginEdit` not `expandedKeys`
+// (QA 85050 B4-17). Shared by the exposed `validateAll` and the scope-collector reveal-on-touch.
+const runValidateAndReveal = (): boolean =>
+  validateAllAndReveal(controller, (key) => {
+    const vi = viewItems.value.find((v) => v.key === key)
+    if (vi) beginEdit(vi)
+  })
+
+// Auto-bridge the editor's aggregate validity into the consumer's `validation-scope` collector so a
+// plain `$invalid` save gate blocks (and reveals) a collapsed invalid row. No-op without the prop.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss -- construction-time opt-in, read once
+useListEditorScopeValidity({
+  hasErrors: controller.hasErrors,
+  validationScope: props.validationScope,
+  reveal: runValidateAndReveal,
+})
+
 // Expose the controller handle via `useTemplateRef<ListEditorHandle<TItem>>`.
 defineExpose<ListEditorHandle<TItem>>({
   ...controller,
-  // Opens invalid rows so a blocked save surfaces WHICH rows are wrong instead of a
-  // collapsed red rail. The body is gated on `editing` not `expanded`, so drive
-  // `beginEdit` not `expandedKeys` (QA 85050 B4-17). Shared via the helper.
-  validateAll: () =>
-    validateAllAndReveal(controller, (key) => {
-      const vi = viewItems.value.find((v) => v.key === key)
-      if (vi) beginEdit(vi)
-    }),
+  validateAll: runValidateAndReveal,
 })
 </script>
 

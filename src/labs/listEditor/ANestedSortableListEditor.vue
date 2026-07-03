@@ -33,10 +33,12 @@ import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
 import { useInlineEditing } from '@/labs/listEditor/composables/useInlineEditing'
 import { validateAllAndReveal } from '@/labs/listEditor/utils/revealInvalidRows'
+import { useListEditorScopeValidity } from '@/labs/listEditor/composables/useListEditorScopeValidity'
 import { useReorderMode } from '@/labs/listEditor/composables/useReorderMode'
 import { cloneDeep } from '@/utils/common'
 import type {
   ListEditorKey,
+  ListEditorValidationScope,
   ListEditorValidationState,
   NestedPositionHint,
   NestedTree,
@@ -182,6 +184,13 @@ export interface Props<TItem extends Record<string, any>> {
   /** Per-row validity — `true` (or `{ valid: true }`) = VALID. Drives the red rail + save guard. */
   validate?: (item: TItem) => ListEditorValidationResult
   /**
+   * Vuelidate `$scope` (the same one the consumer's row forms / save-gate collector use). When set,
+   * the editor registers its aggregate validity under it, so a plain `v$.$invalid` save gate blocks
+   * AND reveals a collapsed invalid row — no `validateAll()` call needed in the save flow. Omit to
+   * keep legacy behavior (gate the save on the exposed `validateAll()` yourself); `false` opts out.
+   */
+  validationScope?: ListEditorValidationScope | false
+  /**
    * Opt-in lifted controller (`useNestedListEditorController()`) so state
    * survives unmount/remount; omitted = internal controller. Same handle
    * reachable via `useTemplateRef`.
@@ -240,6 +249,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   parentField: 'parent',
   dirtyExclude: undefined,
   validate: undefined,
+  validationScope: undefined,
   editor: undefined,
   readonly: false,
   disabled: false,
@@ -1439,6 +1449,28 @@ useUnsavedSection(() =>
 // Expose the controller handle plus legacy aliases and reorder/expand controls.
 // Entries after the spread override controller methods where the historic name or
 // return shape differs (e.g. `viewItems` is this component's expand-aware list).
+// Reveal for a blocked save: open invalid rows AND expand the offender's ancestor chain so a
+// collapsed nested row becomes visible. Shared by the exposed validateAll + scope reveal-on-touch.
+const revealNestedInvalid = (): boolean =>
+  validateAllAndReveal(controller, (key) => {
+    let ancestor = controller.findNode(key).parent
+    while (ancestor) {
+      childrenExpandedKeys.value.add(keyOf(ancestor.data))
+      ancestor = controller.findNode(keyOf(ancestor.data)).parent
+    }
+    const vi = controller.viewItems.value.find((v) => v.key === key)
+    if (vi) beginEdit(vi)
+  })
+
+// Auto-bridge the editor's aggregate validity into the consumer's `validation-scope` collector so a
+// plain `$invalid` save gate blocks (and reveals) a collapsed invalid row. No-op without the prop.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss -- construction-time opt-in, read once
+useListEditorScopeValidity({
+  hasErrors: controller.hasErrors,
+  validationScope: props.validationScope,
+  reveal: revealNestedInvalid,
+})
+
 defineExpose<
   NestedListEditorHandle<TItem> & {
     addAfterId: typeof addAfterId
@@ -1460,19 +1492,7 @@ defineExpose<
   }
 >({
   ...controller,
-  // validateAll() opens invalid rows so a blocked save surfaces which are wrong
-  // (B4-17 reveal; `...controller` alone only flips the red rail). Nested also
-  // expands the offender's ancestor chain so a collapsed row becomes visible.
-  validateAll: () =>
-    validateAllAndReveal(controller, (key) => {
-      let ancestor = controller.findNode(key).parent
-      while (ancestor) {
-        childrenExpandedKeys.value.add(keyOf(ancestor.data))
-        ancestor = controller.findNode(keyOf(ancestor.data)).parent
-      }
-      const vi = controller.viewItems.value.find((v) => v.key === key)
-      if (vi) beginEdit(vi)
-    }),
+  validateAll: revealNestedInvalid,
   // Legacy aliases (pre-v2 ASortableNested API).
   addAfterId,
   addChildToId,

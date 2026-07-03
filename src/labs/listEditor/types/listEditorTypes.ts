@@ -23,6 +23,13 @@ export type ListEditorKey = DocId | IntegerId | string
 
 export type ListEditorValidationState = 'valid' | 'invalid' | 'warning' | null
 
+/**
+ * A vuelidate `$scope` (the same value the consumer's `useVuelidate({ $scope })` collector uses).
+ * Passed to an editor via `validation-scope` to auto-register the editor's aggregate row validity
+ * into that collector — so a plain `v$.$invalid` save gate blocks even a collapsed invalid row.
+ */
+export type ListEditorValidationScope = string | number | symbol
+
 export interface ListViewItem<TItem> {
   key: ListEditorKey
   index: number
