@@ -58,47 +58,50 @@ function mountHost(comp: Component, data: Ref<Row[]>, scope: symbol | undefined)
 describe.each([
   { name: 'AListEditor', comp: AListEditor as Component },
   { name: 'ASortableListEditor', comp: ASortableListEditor as Component },
-])('useListEditorScopeValidity — $name flows validity into the consumer scope collector', ({ comp }) => {
-  it('a COLLAPSED invalid row makes the scope collector $invalid (blocks the save)', async () => {
-    const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // one invalid row (empty name)
-    const collector = mountHost(comp, data, SCOPE)
-    await nextTick()
-    await nextTick()
+])(
+  'useListEditorScopeValidity — $name flows validity into the consumer scope collector',
+  ({ comp }) => {
+    it('a COLLAPSED invalid row makes the scope collector $invalid (blocks the save)', async () => {
+      const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // one invalid row (empty name)
+      const collector = mountHost(comp, data, SCOPE)
+      await nextTick()
+      await nextTick()
 
-    // Row renders collapsed (no #item form mounted) — the old bug: the collector wouldn't see it.
-    expect(document.querySelectorAll('.a-le-row-body').length).toBe(0)
-    // Oracle: the editor's aggregate validity is in the collector → the save gate blocks.
-    expect(collector.value.$invalid).toBe(true)
-  })
+      // Row renders collapsed (no #item form mounted) — the old bug: the collector wouldn't see it.
+      expect(document.querySelectorAll('.a-le-row-body').length).toBe(0)
+      // Oracle: the editor's aggregate validity is in the collector → the save gate blocks.
+      expect(collector.value.$invalid).toBe(true)
+    })
 
-  it('a collector $touch() reveals the offending row red (opens it, not just a collapsed rail)', async () => {
-    const data = ref<Row[]>([{ id: 1, name: '', position: 1 }])
-    const collector = mountHost(comp, data, SCOPE)
-    await nextTick()
-    await nextTick()
-    expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBe(0)
+    it('a collector $touch() reveals the offending row red (opens it, not just a collapsed rail)', async () => {
+      const data = ref<Row[]>([{ id: 1, name: '', position: 1 }])
+      const collector = mountHost(comp, data, SCOPE)
+      await nextTick()
+      await nextTick()
+      expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBe(0)
 
-    // The save flow's `v$.$touch()` propagates to the editor's scoped child → reveal-on-touch.
-    collector.value.$touch()
-    await nextTick()
-    await nextTick()
-    expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBeGreaterThan(0)
-  })
+      // The save flow's `v$.$touch()` propagates to the editor's scoped child → reveal-on-touch.
+      collector.value.$touch()
+      await nextTick()
+      await nextTick()
+      expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBeGreaterThan(0)
+    })
 
-  it('a valid row leaves the collector valid', async () => {
-    const data = ref<Row[]>([{ id: 1, name: 'ok', position: 1 }])
-    const collector = mountHost(comp, data, SCOPE)
-    await nextTick()
-    await nextTick()
-    expect(collector.value.$invalid).toBe(false)
-  })
+    it('a valid row leaves the collector valid', async () => {
+      const data = ref<Row[]>([{ id: 1, name: 'ok', position: 1 }])
+      const collector = mountHost(comp, data, SCOPE)
+      await nextTick()
+      await nextTick()
+      expect(collector.value.$invalid).toBe(false)
+    })
 
-  it('backward-compat: WITHOUT validation-scope the editor never touches the collector', async () => {
-    const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // invalid, but not wired
-    const collector = mountHost(comp, data, undefined)
-    await nextTick()
-    await nextTick()
-    // No registration under the scope → the collector is unaffected (identical legacy behavior).
-    expect(collector.value.$invalid).toBe(false)
-  })
-})
+    it('backward-compat: WITHOUT validation-scope the editor never touches the collector', async () => {
+      const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // invalid, but not wired
+      const collector = mountHost(comp, data, undefined)
+      await nextTick()
+      await nextTick()
+      // No registration under the scope → the collector is unaffected (identical legacy behavior).
+      expect(collector.value.$invalid).toBe(false)
+    })
+  },
+)
