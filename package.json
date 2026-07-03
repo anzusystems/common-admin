@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1782072599",
+  "version": "1.47.0-beta.dev-1782072699",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -61,7 +61,7 @@
     "@kyvg/vue3-notification": "^3.4.2",
     "@mdi/font": "^7.4.47",
     "@microsoft/api-extractor": "^7.58.9",
-    "@sentry/vue": "^10.62.0",
+    "@sentry/vue": "^10.63.0",
     "@shikijs/vitepress-twoslash": "^4.3.0",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@tsconfig/node22": "^22.0.5",
@@ -117,7 +117,7 @@
     "vue-i18n": "11.4.6",
     "vue-router": "5.1.0",
     "vue-tsc": "3.3.6",
-    "vuetify": "4.1.2",
+    "vuetify": "4.1.3",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {

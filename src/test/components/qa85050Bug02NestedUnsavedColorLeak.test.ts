@@ -72,9 +72,9 @@ describe('QA 85050 BUG-02 — unsaved parent must not colour nested clean child 
                   },
                   {
                     item: () => h('div', { class: 'inline-form' }, 'form'),
-                  }
+                  },
                 ),
-            }
+            },
           )
       },
     })
@@ -95,12 +95,12 @@ describe('QA 85050 BUG-02 — unsaved parent must not colour nested clean child 
     // rule fires for both. Either way the nested children editor is mounted.
     expect(
       outerRow.classList.contains('a-le-row--editing') ||
-        outerRow.classList.contains('a-le-row--expanded')
+        outerRow.classList.contains('a-le-row--expanded'),
     ).toBe(true)
 
     // The inner child rows are CLEAN (never edited) — their own row is not unsaved.
     const innerRows = Array.from(
-      document.querySelectorAll<HTMLElement>('.a-sortable-list-editor--embedded .a-le-row')
+      document.querySelectorAll<HTMLElement>('.a-sortable-list-editor--embedded .a-le-row'),
     )
     expect(innerRows.length).toBeGreaterThanOrEqual(2)
     for (const innerRow of innerRows) {
