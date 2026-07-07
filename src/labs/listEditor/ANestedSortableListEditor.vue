@@ -223,6 +223,12 @@ export interface Props<TItem extends Record<string, any>> {
   disableDeleteConfirm?: boolean
   deleteConfirmTitle?: string | null
   deleteConfirmText?: string | null
+  /**
+   * How a row delete persists. `deferred` (default): the row disappears but the deletion counts as an
+   * unconfirmed change until save (revertible until then, incl. via reorder Cancel). `immediate`: the
+   * consumer deletes on the backend — the dialog says it is irreversible and it does NOT read as unsaved.
+   */
+  deleteMode?: 'immediate' | 'deferred'
 
   closeVariant?: 'auto' | 'icon' | 'labeled'
 
@@ -272,6 +278,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   disableDeleteConfirm: false,
   deleteConfirmTitle: null,
   deleteConfirmText: null,
+  deleteMode: 'deferred',
   closeVariant: 'auto',
   loadingKeys: null,
   showReorderToggle: true,
@@ -440,6 +447,11 @@ const flatViewItems = computed<NestedViewItem<TItem>[]>(() => {
 // cleared on every mode transition by `useReorderMode`.
 const snapshot = shallowRef<NestedTree<TItem> | null>(null)
 const movedKeys = ref<Set<ListEditorKey>>(new Set())
+// Deletes made during the current reorder session, split by mode — deferred ones count in the toolbar
+// and revert on Cancel; immediate (backend) ones are re-applied on Cancel so they stay gone (else the
+// snapshot-restore would resurrect a server-deleted row). Mirrors ASortableListEditor.
+const sessionDeferredDeletes = ref<Set<ListEditorKey>>(new Set())
+const sessionImmediateDeletes = ref<Set<ListEditorKey>>(new Set())
 
 // Re-baseline current tree as saved. Legacy name kept; maps onto `controller.commit()`.
 const resetDirtyBaseline = () => {
@@ -589,6 +601,8 @@ const {
   },
   canEnterReorder,
   onEnter: () => {
+    sessionDeferredDeletes.value = new Set()
+    sessionImmediateDeletes.value = new Set()
     clearEditing()
     // Expand every branch so all rows are reachable drag targets.
     for (const k of expandableKeys.value) childrenExpandedKeys.value.add(k)
@@ -597,12 +611,24 @@ const {
     })
   },
   onExternalEnter: () => {
+    sessionDeferredDeletes.value = new Set()
+    sessionImmediateDeletes.value = new Set()
     clearEditing()
   },
+  // Cancel: the snapshot-restore has brought every deleted row back; reconcile the controller so a
+  // deferred delete truly reverts (clear tombstone, row stays) and an immediate delete stays gone (row
+  // removed again — it is deleted on the backend and must not resurrect / be re-created by a save).
   onCancel: () => {
+    for (const key of sessionDeferredDeletes.value) controller.restoreDeleted(key)
+    for (const key of sessionImmediateDeletes.value)
+      controller.deleteItem(key, { trackDeleted: false })
+    sessionDeferredDeletes.value = new Set()
+    sessionImmediateDeletes.value = new Set()
     destroySortables()
   },
   onApplyEnd: () => {
+    sessionDeferredDeletes.value = new Set()
+    sessionImmediateDeletes.value = new Set()
     destroySortables()
   },
   onReorderApply: (tree) => props.onReorderApply?.(tree),
@@ -615,6 +641,15 @@ const {
   },
 })
 
+// Reorder-toolbar pending indicator = session moves + deferred deletes made in the session, so a delete
+// in reorder mode no longer reads as "no pending changes" and Apply stays enabled.
+const nestedPendingCount = computed<number>(
+  () => movedCount.value + sessionDeferredDeletes.value.size,
+)
+const nestedPendingChanges = computed<boolean>(
+  () => hasPendingChanges.value || sessionDeferredDeletes.value.size > 0,
+)
+
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
 const dragEnabled = computed(() => reorderMode.value && !isTouch.value && !props.disableDrag)
 
@@ -626,7 +661,11 @@ const deleteConfirmTitleResolved = computed(
   () => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'),
 )
 const deleteConfirmTextResolved = computed(
-  () => props.deleteConfirmText ?? t('common.sortable.deleteConfirmText'),
+  () =>
+    props.deleteConfirmText ??
+    (props.deleteMode === 'immediate'
+      ? t('common.sortable.deleteConfirmText')
+      : t('common.sortable.deleteConfirmTextDeferred')),
 )
 
 const reorderToggleVisible = computed<boolean>(
@@ -1031,6 +1070,17 @@ const {
     editingSnapshots.value.delete(vi.key)
     detailExpandedKeys.value.delete(vi.key)
     childrenExpandedKeys.value.delete(vi.key)
+    const deferred = props.deleteMode === 'deferred'
+    // A delete in reorder mode is a session change: deferred reverts on Cancel, immediate stays gone
+    // (re-applied after Cancel's snapshot-restore).
+    if (reorderMode.value) {
+      if (deferred) sessionDeferredDeletes.value.add(vi.key)
+      else sessionImmediateDeletes.value.add(vi.key)
+    }
+    // Controller owns removal (mirrors the flat editors): a deferred saved-row delete is tombstoned
+    // (counts as unsaved); immediate skips it (already deleted on the backend). Runs before the
+    // `deleted` emit so a consumer's handler still receives `vi.raw`.
+    controller.deleteItem(vi.key, { trackDeleted: deferred })
     emit('deleted', vi)
   },
   disableDeleteConfirm: () => props.disableDeleteConfirm,
@@ -1213,8 +1263,8 @@ const buildSlotProps = (vi: DecoratedNestedViewItem<TItem>) => ({
 
 const toolbarSlotProps = computed(() => ({
   applying: applying.value,
-  hasPendingChanges: hasPendingChanges.value,
-  movedCount: movedCount.value,
+  hasPendingChanges: nestedPendingChanges.value,
+  movedCount: nestedPendingCount.value,
   error: applyError.value,
   actions: {
     apply: applyReorder,
@@ -1427,10 +1477,9 @@ const updateData = (
   nextTick(() => controller.commit())
 }
 
-// Count of unsaved rows (controller dirty ∪ reorder-session moved) — drives the unsaved-section label.
-const unsavedCount = computed<number>(
-  () => viewItemsDecorated.value.filter((v) => v.unsaved).length,
-)
+// Total distinct unconfirmed changes (added/edited/moved/reparented rows + deferred deletions) — a
+// delete counts even though its row is gone. Drives the unsaved-section label + the exposed handle.
+const unsavedCount = controller.unsavedCount
 
 // Re-baseline as saved, clear the moved set, close open edits. Legacy name kept.
 const clearUnsavedState = () => {
@@ -1557,9 +1606,9 @@ defineExpose<
                 v-bind="toolbarSlotProps"
               >
                 <LeStatus
-                  :class="{ 'a-le-toolbar-status--pending': hasPendingChanges }"
-                  :has-pending-changes="hasPendingChanges"
-                  :pending-count="movedCount"
+                  :class="{ 'a-le-toolbar-status--pending': nestedPendingChanges }"
+                  :has-pending-changes="nestedPendingChanges"
+                  :pending-count="nestedPendingCount"
                   :error="applyError"
                 />
                 <VBtn
@@ -1576,7 +1625,7 @@ defineExpose<
                   size="small"
                   prepend-icon="mdi-check"
                   :loading="applying"
-                  :disabled="applying || !hasPendingChanges"
+                  :disabled="applying || !nestedPendingChanges"
                   @click="applyReorder"
                 >
                   {{ t('common.sortable.reorderApply') }}

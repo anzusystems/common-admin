@@ -142,6 +142,13 @@ export interface Props<TItem extends Record<string, any>> {
   disableUnsaved?: boolean
   deleteConfirmTitle?: string | null
   deleteConfirmText?: string | null
+  /**
+   * How a row delete persists. `deferred` (default): the row disappears but the deletion counts as an
+   * unconfirmed change (`unsavedCount`) until save, and is revertible until then. `immediate`: the
+   * consumer deletes on the backend (`:on-delete`) — the dialog states it is irreversible and the
+   * delete does NOT read as unsaved.
+   */
+  deleteMode?: 'immediate' | 'deferred'
 
   closeVariant?: 'auto' | 'icon' | 'labeled'
 
@@ -192,6 +199,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   disableUnsaved: false,
   deleteConfirmTitle: null,
   deleteConfirmText: null,
+  deleteMode: 'deferred',
   closeVariant: 'auto',
   defaultExpanded: false,
   loadingKeys: null,
@@ -355,13 +363,23 @@ const deleteConfirmTitleResolved = computed(
   () => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'),
 )
 const deleteConfirmTextResolved = computed(
-  () => props.deleteConfirmText ?? t('common.sortable.deleteConfirmText'),
+  () =>
+    props.deleteConfirmText ??
+    (props.deleteMode === 'immediate'
+      ? t('common.sortable.deleteConfirmText')
+      : t('common.sortable.deleteConfirmTextDeferred')),
 )
 
 const canInteract = computed(() => !props.readonly && !props.disabled && !props.loading)
 const canAdd = computed(() => canInteract.value && props.showAddButton)
 
-const headerVisible = computed(() => !!(props.title || slots.header))
+// Total unconfirmed-change count (added/edited/moved rows + deferred deletions). A delete lights this
+// up even though its row is gone. Shown as a header badge + exposed on the handle.
+const unsavedCount = controller.unsavedCount
+const unsavedCountVisible = computed(
+  () => !props.readonly && !props.disableUnsaved && unsavedCount.value > 0,
+)
+const headerVisible = computed(() => !!(props.title || slots.header) || unsavedCountVisible.value)
 
 // Per-row Save/Cancel footer only makes sense with a per-item persist callback;
 // without one the parent form's global save flushes everything, so hide it.
@@ -521,9 +539,10 @@ const {
     editingKeys.value.delete(vi.key)
     editingSnapshots.value.delete(vi.key)
     expandedKeys.value.delete(vi.key)
-    // Controller owns removal: a temp row vanishes, a saved row is recorded in
-    // `getChanges().deleted`.
-    controller.deleteItem(vi.key)
+    // Controller owns removal: a temp row vanishes; a saved row is recorded in `getChanges().deleted`
+    // and counts as an unconfirmed change (deferred) — unless immediate mode (already deleted on the
+    // backend), which skips the tombstone.
+    controller.deleteItem(vi.key, { trackDeleted: props.deleteMode === 'deferred' })
     emit('deleted', vi)
   },
   disableDeleteConfirm: () => props.disableDeleteConfirm || props.chips,
@@ -696,6 +715,13 @@ defineExpose<ListEditorHandle<TItem>>({
             {{ title }}
           </h3>
         </slot>
+        <span
+          v-if="unsavedCountVisible"
+          class="a-le-unsaved-count"
+          :data-unsaved-count="unsavedCount"
+        >
+          {{ t('common.sortable.pendingChanges', { count: unsavedCount }) }}
+        </span>
       </div>
 
       <div

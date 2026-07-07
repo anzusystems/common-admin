@@ -7,6 +7,7 @@
   "delete": "Smazat",
   "deleteConfirmTitle": "Smazat položku?",
   "deleteConfirmText": "Opravdu chcete smazat tuto položku? Tuto akci nelze vrátit zpět.",
+  "deleteConfirmTextDeferred": "Tato položka se smaže při uložení. Do té doby lze akci vrátit.",
   "remove": "Odstranit",
   "addAfter": "Přidat za tuto položku",
   "addChild": "Přidat dovnitř",

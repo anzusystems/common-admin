@@ -69,6 +69,8 @@ export interface UseListEditorControllerOptions<TItem extends Record<string, any
 export interface ListEditorHandle<TItem extends Record<string, any>> {
   items: ComputedRef<TItem[]>
   hasUnsaved: ComputedRef<boolean>
+  /** Count of distinct unconfirmed changes (added/edited/moved rows + deferred-deletion tombstones). */
+  unsavedCount: ComputedRef<number>
   hasErrors: ComputedRef<boolean>
   invalidKeys: ComputedRef<Set<ListEditorKey>>
   /** Amber: is this row added / edited / moved since the last commit? */
@@ -90,7 +92,10 @@ export interface ListEditorHandle<TItem extends Record<string, any>> {
     key: ListEditorKey,
     next: TItem | Partial<TItem> | ((current: TItem) => TItem),
   ) => void
-  deleteItem: (key: ListEditorKey) => void
+  /** Remove a row. `trackDeleted: false` (immediate mode) skips the deferred-deletion tombstone. */
+  deleteItem: (key: ListEditorKey, opts?: { trackDeleted?: boolean }) => void
+  /** Clear a deferred-deletion tombstone (the caller re-inserts the row, e.g. reorder Cancel). */
+  restoreDeleted: (key: ListEditorKey) => void
   moveItem: (fromIndex: number, toIndex: number) => void
   /** Escape hatch: a row form (e.g. vuelidate) reports its own validity instead of `validate`. */
   registerValidity: (key: ListEditorKey, isValid: () => boolean) => () => void
@@ -230,6 +235,11 @@ export function useListEditorController<TItem extends Record<string, any>>(
       const stale: ListEditorKey[] = []
       for (const key of addedBaseline.value.keys()) if (!live.has(key)) stale.push(key)
       for (const key of stale) addedBaseline.value.delete(key)
+      // A deferred-deleted key that becomes live again (re-add before save) must drop its tombstone —
+      // otherwise it would both render and still count/report as deleted.
+      if (deletedRows.value.some((r) => live.has(keyOf(r)))) {
+        deletedRows.value = deletedRows.value.filter((r) => !live.has(keyOf(r)))
+      }
     },
     { immediate: true, deep: true },
   )
@@ -249,6 +259,16 @@ export function useListEditorController<TItem extends Record<string, any>>(
   const hasUnsaved = computed<boolean>(
     () => unsavedKeys.value.size > 0 || deletedRows.value.length > 0,
   )
+
+  // Count of DISTINCT unconfirmed changes = union of live dirty keys (added / edited / moved) and
+  // deferred-deletion tombstones. A key that is both live and tombstoned (delete-then-re-add) counts
+  // once; a deleted row (no longer live) adds one. Drives the "N unconfirmed changes" indicator, so a
+  // delete lights up as a change even though the row itself is gone.
+  const unsavedCount = computed<number>(() => {
+    const keys = new Set<ListEditorKey>(unsavedKeys.value)
+    for (const r of deletedRows.value) keys.add(keyOf(r))
+    return keys.size
+  })
 
   const resolveValidity = (
     item: TItem,
@@ -377,16 +397,27 @@ export function useListEditorController<TItem extends Record<string, any>>(
     write(arr)
   }
 
-  const deleteItem = (key: ListEditorKey): void => {
+  const deleteItem = (key: ListEditorKey, opts?: { trackDeleted?: boolean }): void => {
     const arr = [...options.get()]
     const i = indexOfKey(arr, key)
     if (i === -1) return
     const [removed] = arr.splice(i, 1)
-    // A previously-saved row that's removed must be reported in the change-set;
-    // an unsaved temp row just vanishes.
-    if (baselineHashes.value.has(key)) deletedRows.value = [...deletedRows.value, removed]
+    // A previously-saved row that's removed is a DEFERRED deletion: reported in the change-set and
+    // counted as one unconfirmed change (`unsavedCount`) until save. `trackDeleted: false` (immediate
+    // mode — the row is already deleted on the backend) skips the tombstone so it does NOT read as
+    // unsaved. An unsaved temp row just vanishes either way.
+    if (baselineHashes.value.has(key) && opts?.trackDeleted !== false) {
+      deletedRows.value = [...deletedRows.value, removed]
+    }
     movedKeys.value.delete(key)
     write(arr)
+  }
+
+  // Un-tombstone a deferred-deleted row. Re-inserting the row into the model is the caller's job
+  // (e.g. reorder Cancel restoring the pre-session snapshot); this only clears the deletion record so
+  // `deletedRows` / `unsavedCount` / `getChanges().deleted` stay consistent.
+  const restoreDeleted = (key: ListEditorKey): void => {
+    deletedRows.value = deletedRows.value.filter((r) => keyOf(r) !== key)
   }
 
   const moveItem = (fromIndex: number, toIndex: number): void => {
@@ -407,6 +438,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
   return {
     items,
     hasUnsaved,
+    unsavedCount,
     hasErrors,
     invalidKeys,
     isUnsaved,
@@ -419,6 +451,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     addItem,
     updateItem,
     deleteItem,
+    restoreDeleted,
     moveItem,
     registerValidity,
   }

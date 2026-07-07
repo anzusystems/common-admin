@@ -201,6 +201,12 @@ export interface Props<TItem extends Record<string, any>> {
   disableDeleteConfirm?: boolean
   deleteConfirmTitle?: string | null
   deleteConfirmText?: string | null
+  /**
+   * How a row delete persists. `deferred` (default): the row disappears but the deletion counts as an
+   * unconfirmed change until save (revertible until then, incl. via reorder Cancel). `immediate`: the
+   * consumer deletes on the backend — the dialog says it is irreversible and it does NOT read as unsaved.
+   */
+  deleteMode?: 'immediate' | 'deferred'
 
   closeVariant?: 'auto' | 'icon' | 'labeled'
 
@@ -262,6 +268,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   disableDeleteConfirm: false,
   deleteConfirmTitle: null,
   deleteConfirmText: null,
+  deleteMode: 'deferred',
   closeVariant: 'auto',
   loadingKeys: null,
   showReorderToggle: true,
@@ -371,6 +378,12 @@ const expandedKeys = ref<Set<ListEditorKey>>(new Set())
 // controller's persistent moved tracking. Drives the toolbar's "N pending
 // changes" counter; cleared on every mode transition by `useReorderMode`.
 const movedKeys = ref<Set<ListEditorKey>>(new Set())
+// Deletes made DURING the current reorder session, split by mode. Deferred ones count in the toolbar
+// and are reverted on Cancel (row restored, tombstone cleared). Immediate (backend) ones are re-applied
+// on Cancel so they stay gone — else Cancel's snapshot-restore would resurrect a row already deleted on
+// the server (a phantom a later save could re-create).
+const sessionDeferredDeletes = ref<Set<ListEditorKey>>(new Set())
+const sessionImmediateDeletes = ref<Set<ListEditorKey>>(new Set())
 
 const snapshot = shallowRef<TItem[] | null>(null)
 
@@ -432,16 +445,46 @@ const {
   canEnterReorder,
   embedded: embeddedRef,
   onEnter: () => {
+    sessionDeferredDeletes.value = new Set()
+    sessionImmediateDeletes.value = new Set()
     if (!allowEditInReorderRef.value) {
       clearEditing()
       expandedKeys.value.clear()
     }
   },
   onExternalEnter: () => {
+    sessionDeferredDeletes.value = new Set()
+    sessionImmediateDeletes.value = new Set()
     if (!allowEditInReorderRef.value) {
       clearEditing()
       expandedKeys.value.clear()
     }
+  },
+  // Cancel reverts the session. The composable's snapshot-restore has already brought EVERY deleted row
+  // back into the model; reconcile the controller: deferred deletes are truly reverted (clear tombstone,
+  // row stays), immediate deletes are re-applied (row removed again — it is gone on the backend and must
+  // not resurrect or be re-created by a later save).
+  onCancel: () => {
+    for (const key of sessionDeferredDeletes.value) controller.restoreDeleted(key)
+    for (const key of sessionImmediateDeletes.value)
+      controller.deleteItem(key, { trackDeleted: false })
+    sessionDeferredDeletes.value = new Set()
+    sessionImmediateDeletes.value = new Set()
+  },
+  // Apply keeps the session's changes (deferred deletes persist on the entity's main save).
+  onApplyEnd: () => {
+    sessionDeferredDeletes.value = new Set()
+    sessionImmediateDeletes.value = new Set()
+  },
+  // Embedded editor exit (parent Cancel or Apply — it owns the snapshot, we never do). On a parent
+  // Cancel the snapshot-restore resurrects any row we deleted IMMEDIATELY on the backend; re-remove it so
+  // it stays gone. On Apply it never came back, so `deleteItem` is a no-op. Deferred deletes need nothing:
+  // the controller's re-add watch drops their tombstone when the restore brings the row back.
+  onEmbeddedExit: () => {
+    for (const key of sessionImmediateDeletes.value)
+      controller.deleteItem(key, { trackDeleted: false })
+    sessionDeferredDeletes.value = new Set()
+    sessionImmediateDeletes.value = new Set()
   },
   onReorderApply: (items) => props.onReorderApply?.(items),
   emit: {
@@ -478,16 +521,9 @@ if (childContributions) {
   provide(SharedReorderRegistryKey, registry)
 }
 
-if (props.embedded) {
-  const parent = inject(SharedReorderRegistryKey, null)
-  if (parent) {
-    const id = Symbol('le.embedded')
-    // `() => validateAllSelf()` (not the bare ref) — validateAllSelf is declared later in setup.
-    parent.register(id, movedCount, hasPendingChanges, () => validateAllSelf())
-    onBeforeUnmount(() => parent.unregister(id))
-  }
-}
-
+// Own session moves + each embedded child's FULL pending contribution (moves + its own deferred
+// deletes — children register `totalPendingCount`, see below). The outer's own deferred deletes are
+// added on top in `totalPendingCount`.
 const totalMovedCount = computed<number>(() => {
   let sum = movedCount.value
   if (childContributions) {
@@ -506,6 +542,28 @@ const totalHasPendingChanges = computed<boolean>(() => {
   return false
 })
 
+// Reorder-toolbar pending indicator = session moves + deferred deletes made in the session, so
+// deleting a row in reorder mode no longer reads as "no pending changes" and Apply stays enabled.
+const totalPendingCount = computed<number>(
+  () => totalMovedCount.value + sessionDeferredDeletes.value.size,
+)
+const totalPendingChanges = computed<boolean>(
+  () => totalHasPendingChanges.value || sessionDeferredDeletes.value.size > 0,
+)
+
+// An embedded editor pushes its FULL pending contribution — moves AND deferred deletes — up to the
+// nearest non-embedded outer, so deleting a row in an embedded child during a shared reorder lights up
+// the outer's toolbar (count + Apply-enabled) instead of reading "no pending changes". Registered after
+// `totalPendingCount`/`totalPendingChanges` so they exist (TDZ); `validateAllSelf` is a lazy thunk.
+if (props.embedded) {
+  const parent = inject(SharedReorderRegistryKey, null)
+  if (parent) {
+    const id = Symbol('le.embedded')
+    parent.register(id, totalPendingCount, totalPendingChanges, () => validateAllSelf())
+    onBeforeUnmount(() => parent.unregister(id))
+  }
+}
+
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
 // Chips mode keeps drag always-on (no mode toggle) on non-touch devices.
 const dragEnabled = computed(
@@ -521,7 +579,11 @@ const deleteConfirmTitleResolved = computed(
   () => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'),
 )
 const deleteConfirmTextResolved = computed(
-  () => props.deleteConfirmText ?? t('common.sortable.deleteConfirmText'),
+  () =>
+    props.deleteConfirmText ??
+    (props.deleteMode === 'immediate'
+      ? t('common.sortable.deleteConfirmText')
+      : t('common.sortable.deleteConfirmTextDeferred')),
 )
 
 const reorderToggleVisible = computed<boolean>(
@@ -537,6 +599,11 @@ const reorderToggleVisible = computed<boolean>(
 // round button to keep the single-line header from overflowing.
 const compactReorderButton = computed<boolean>((): boolean => !!props.title && isNarrow.value)
 
+// Total unconfirmed-change count (added/edited/moved rows + deferred deletions) — a delete lights it
+// up even though its row is gone. Shown as a view-mode header badge + on the handle; in reorder mode
+// the toolbar status shows the session count instead.
+const unsavedCount = controller.unsavedCount
+const unsavedCountVisible = computed(() => !props.readonly && unsavedCount.value > 0)
 const headerVisible = computed<boolean>(
   (): boolean =>
     !!(
@@ -544,7 +611,8 @@ const headerVisible = computed<boolean>(
       slots.header ||
       slots['reorder-toggle'] ||
       reorderToggleVisible.value ||
-      (reorderMode.value && !props.embedded)
+      (reorderMode.value && !props.embedded) ||
+      (!reorderMode.value && unsavedCountVisible.value)
     ),
 )
 
@@ -865,9 +933,17 @@ const {
     editingSnapshots.value.delete(vi.key)
     expandedKeys.value.delete(vi.key)
     movedKeys.value.delete(vi.key)
-    // Controller owns the data: temp rows vanish; saved rows leave the visible
-    // list and land in `getChanges().deleted`.
-    controller.deleteItem(vi.key)
+    const deferred = props.deleteMode === 'deferred'
+    // In reorder mode: a deferred delete is a reversible session change (counts in the toolbar,
+    // reverts on Cancel); an immediate delete is already gone on the backend, so drop it from the
+    // reorder snapshot too — else Cancel's snapshot-restore would resurrect it.
+    if (reorderMode.value) {
+      if (deferred) sessionDeferredDeletes.value.add(vi.key)
+      else sessionImmediateDeletes.value.add(vi.key)
+    }
+    // Controller owns the data: temp rows vanish; a deferred saved-row delete lands in
+    // `getChanges().deleted` + counts as unsaved; immediate skips the tombstone (already persisted).
+    controller.deleteItem(vi.key, { trackDeleted: deferred })
     emit('deleted', vi)
   },
   disableDeleteConfirm: () => props.disableDeleteConfirm || props.chips,
@@ -1031,8 +1107,8 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
 
 const toolbarSlotProps = computed(() => ({
   applying: applying.value,
-  hasPendingChanges: totalHasPendingChanges.value,
-  movedCount: totalMovedCount.value,
+  hasPendingChanges: totalPendingChanges.value,
+  movedCount: totalPendingCount.value,
   error: applyError.value,
   actions: {
     apply: applyReorder,
@@ -1136,6 +1212,13 @@ defineExpose<
           >
             {{ title }}
           </h3>
+          <span
+            v-if="!reorderMode && unsavedCountVisible"
+            class="a-le-unsaved-count"
+            :data-unsaved-count="unsavedCount"
+          >
+            {{ t('common.sortable.pendingChanges', { count: unsavedCount }) }}
+          </span>
           <div class="a-le-header-actions">
             <template v-if="reorderMode && !embedded">
               <!-- Reorder-mode header: pending count + Cancel/Apply, sitting
@@ -1145,9 +1228,9 @@ defineExpose<
                 v-bind="toolbarSlotProps"
               >
                 <LeStatus
-                  :class="{ 'a-le-toolbar-status--pending': totalHasPendingChanges }"
-                  :has-pending-changes="totalHasPendingChanges"
-                  :pending-count="totalMovedCount"
+                  :class="{ 'a-le-toolbar-status--pending': totalPendingChanges }"
+                  :has-pending-changes="totalPendingChanges"
+                  :pending-count="totalPendingCount"
                   :error="applyError"
                 />
                 <VBtn
@@ -1164,7 +1247,7 @@ defineExpose<
                   size="small"
                   prepend-icon="mdi-check"
                   :loading="applying"
-                  :disabled="applying || !totalHasPendingChanges"
+                  :disabled="applying || !totalPendingChanges"
                   @click="applyReorder"
                 >
                   {{ t('common.sortable.reorderApply') }}

@@ -90,6 +90,8 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
   /** Tree view rows (key/index/raw/depth/parent…), as consumed by the renderer. */
   viewItems: ComputedRef<NestedViewItem<TItem>[]>
   hasUnsaved: ComputedRef<boolean>
+  /** Count of distinct unconfirmed changes (added/edited/moved/reparented rows + deferred deletions). */
+  unsavedCount: ComputedRef<number>
   hasErrors: ComputedRef<boolean>
   invalidKeys: ComputedRef<Set<ListEditorKey>>
   /** Amber: is this row added / edited / moved / reparented since the last commit? */
@@ -112,7 +114,8 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
   addAfter: (afterKey: ListEditorKey, item?: TItem, childrenAllowed?: boolean) => void
   addChild: (parentKey: ListEditorKey, item?: TItem, childrenAllowed?: boolean) => void
   updateItem: (key: ListEditorKey, data: TItem, markDirty?: boolean) => void
-  deleteItem: (key: ListEditorKey) => void
+  deleteItem: (key: ListEditorKey, opts?: { trackDeleted?: boolean }) => void
+  restoreDeleted: (key: ListEditorKey) => void
   moveUp: (key: ListEditorKey) => boolean
   moveDown: (key: ListEditorKey) => boolean
   moveTop: (key: ListEditorKey) => boolean
@@ -293,6 +296,9 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   // rather than just "is it unsaved" (sticky like vuelidate `$dirty`) — mirrors the flat controller.
   const addedBaseline = ref(new Map<ListEditorKey, string>()) as Ref<Map<ListEditorKey, string>>
   const editedKeys = ref(new Set<ListEditorKey>()) as Ref<Set<ListEditorKey>>
+  // Deferred-deletion tombstones (baseline keys removed but not yet saved). Immediate deletes skip
+  // this so they don't read as unsaved. Drives hasUnsaved / unsavedCount / getChanges().deleted.
+  const deletedKeys = ref(new Set<ListEditorKey>()) as Ref<Set<ListEditorKey>>
   watch(
     () => options.get(),
     (tree) => {
@@ -311,6 +317,10 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
       const stale: ListEditorKey[] = []
       for (const key of addedBaseline.value.keys()) if (!live.has(key)) stale.push(key)
       for (const key of stale) addedBaseline.value.delete(key)
+      // A tombstoned key that becomes live again (re-add before save) drops its tombstone.
+      const revived: ListEditorKey[] = []
+      for (const key of deletedKeys.value) if (live.has(key)) revived.push(key)
+      for (const key of revived) deletedKeys.value.delete(key)
     },
     { immediate: true, deep: true },
   )
@@ -324,6 +334,14 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
       if (hit === undefined && keyOf(n.data) === key) hit = n.data
     })
     return hit
+  }
+
+  const treeHasKey = (key: ListEditorKey): boolean => {
+    let found = false
+    walkNodes(options.get(), (n) => {
+      if (!found && keyOf(n.data) === key) found = true
+    })
+    return found
   }
 
   const unsavedKeys = computed<Set<ListEditorKey>>(() => {
@@ -340,7 +358,16 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   })
 
   const isUnsaved = (key: ListEditorKey): boolean => unsavedKeys.value.has(key)
-  const hasUnsaved = computed<boolean>(() => unsavedKeys.value.size > 0)
+  const hasUnsaved = computed<boolean>(
+    () => unsavedKeys.value.size > 0 || deletedKeys.value.size > 0,
+  )
+  // Distinct unconfirmed changes = union of live dirty keys (added/edited/moved/reparented) and
+  // deferred-deletion tombstones. Drives the "N unconfirmed changes" indicator.
+  const unsavedCount = computed<number>(() => {
+    const keys = new Set<ListEditorKey>(unsavedKeys.value)
+    for (const key of deletedKeys.value) keys.add(key)
+    return keys.size
+  })
 
   const resolveValidity = (
     item: TItem,
@@ -430,13 +457,12 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
       }
     })
 
+    // Deferred deletions come from the tombstone set, so an IMMEDIATE delete (already persisted on the
+    // backend, no tombstone) does not re-appear here as a local deleted change.
     const deleted: TItem[] = []
-    if (baselineTree.value) {
-      const liveKeys = new Set<ListEditorKey>()
-      walkNodes(options.get(), (n) => liveKeys.add(keyOf(n.data)))
-      walkNodes(baselineTree.value, (n) => {
-        if (!liveKeys.has(keyOf(n.data))) deleted.push(n.data)
-      })
+    for (const key of deletedKeys.value) {
+      const row = baselineTreeRow(key)
+      if (row !== undefined) deleted.push(row)
     }
     return { added, updated, moved, deleted, reparented }
   }
@@ -458,6 +484,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     captureBaseline(next)
     addedBaseline.value = new Map()
     editedKeys.value = new Set()
+    deletedKeys.value = new Set()
     submitted.value = false
   }
 
@@ -466,6 +493,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     options.set(restore)
     addedBaseline.value = new Map()
     editedKeys.value = new Set()
+    deletedKeys.value = new Set()
     submitted.value = false
   }
 
@@ -489,8 +517,21 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   const updateItem = (key: ListEditorKey, data: TItem, markDirty = true): void => {
     tree.updateItem(key, data, markDirty)
   }
-  const deleteItem = (key: ListEditorKey): void => {
+  const deleteItem = (key: ListEditorKey, opts?: { trackDeleted?: boolean }): void => {
+    // A previously-saved row removed in deferred mode is tombstoned (counts as unsaved + reported in
+    // getChanges().deleted). `trackDeleted: false` (immediate — already deleted on the backend) skips it.
+    // `treeHasKey` guards against a phantom tombstone: an immediate delete removes the row in the
+    // component's own handler (trackDeleted:false), then the consumer's removeById re-calls deleteItem
+    // for the now-gone key — without the guard that second call would tombstone a baseline row that is
+    // already deleted, surfacing a bogus unconfirmed change.
+    if (baselineHashes.value.has(key) && opts?.trackDeleted !== false && treeHasKey(key)) {
+      deletedKeys.value.add(key)
+    }
     tree.deleteItem(key)
+  }
+
+  const restoreDeleted = (key: ListEditorKey): void => {
+    deletedKeys.value.delete(key)
   }
   const moveUp = (key: ListEditorKey): boolean => tree.moveUp(key) !== null
   const moveDown = (key: ListEditorKey): boolean => tree.moveDown(key) !== null
@@ -516,6 +557,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     items,
     viewItems,
     hasUnsaved,
+    unsavedCount,
     hasErrors,
     invalidKeys,
     isUnsaved,
@@ -530,6 +572,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     addChild,
     updateItem,
     deleteItem,
+    restoreDeleted,
     moveUp,
     moveDown,
     moveTop,
