@@ -49,6 +49,7 @@ import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
 import AUnsavedConfirmDialog from '@/labs/unsavedGuard/AUnsavedConfirmDialog.vue'
 import { useUnsavedChangesGuard } from '@/labs/unsavedGuard/useUnsavedChangesGuard'
+import { useGuardedDelete } from '@/labs/unsavedGuard/useGuardedDelete'
 import {
   useUnsavedSection,
   type UnsavedSectionDescriptor,
@@ -173,6 +174,7 @@ export {
   ANestedSortableListEditor,
   AUnsavedConfirmDialog,
   useUnsavedChangesGuard,
+  useGuardedDelete,
   useUnsavedSection,
   type UnsavedSectionDescriptor,
   type UnsavedSectionSource,

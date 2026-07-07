@@ -384,6 +384,10 @@ const movedKeys = ref<Set<ListEditorKey>>(new Set())
 // the server (a phantom a later save could re-create).
 const sessionDeferredDeletes = ref<Set<ListEditorKey>>(new Set())
 const sessionImmediateDeletes = ref<Set<ListEditorKey>>(new Set())
+// Rows ADDED during the current reorder session ("Pridať za túto položku"). Count in the toolbar so
+// Apply enables instead of trapping the user; Cancel drops them (snapshot-restore removes rows that
+// weren't in the enter-time snapshot).
+const sessionAddedKeys = ref<Set<ListEditorKey>>(new Set())
 
 const snapshot = shallowRef<TItem[] | null>(null)
 
@@ -447,6 +451,7 @@ const {
   onEnter: () => {
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
+    sessionAddedKeys.value = new Set()
     if (!allowEditInReorderRef.value) {
       clearEditing()
       expandedKeys.value.clear()
@@ -455,6 +460,7 @@ const {
   onExternalEnter: () => {
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
+    sessionAddedKeys.value = new Set()
     if (!allowEditInReorderRef.value) {
       clearEditing()
       expandedKeys.value.clear()
@@ -470,11 +476,13 @@ const {
       controller.deleteItem(key, { trackDeleted: false })
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
+    sessionAddedKeys.value = new Set()
   },
   // Apply keeps the session's changes (deferred deletes persist on the entity's main save).
   onApplyEnd: () => {
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
+    sessionAddedKeys.value = new Set()
   },
   // Embedded editor exit (parent Cancel or Apply — it owns the snapshot, we never do). On a parent
   // Cancel the snapshot-restore resurrects any row we deleted IMMEDIATELY on the backend; re-remove it so
@@ -485,6 +493,7 @@ const {
       controller.deleteItem(key, { trackDeleted: false })
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
+    sessionAddedKeys.value = new Set()
   },
   onReorderApply: (items) => props.onReorderApply?.(items),
   emit: {
@@ -545,10 +554,13 @@ const totalHasPendingChanges = computed<boolean>(() => {
 // Reorder-toolbar pending indicator = session moves + deferred deletes made in the session, so
 // deleting a row in reorder mode no longer reads as "no pending changes" and Apply stays enabled.
 const totalPendingCount = computed<number>(
-  () => totalMovedCount.value + sessionDeferredDeletes.value.size,
+  () => totalMovedCount.value + sessionDeferredDeletes.value.size + sessionAddedKeys.value.size,
 )
 const totalPendingChanges = computed<boolean>(
-  () => totalHasPendingChanges.value || sessionDeferredDeletes.value.size > 0,
+  () =>
+    totalHasPendingChanges.value ||
+    sessionDeferredDeletes.value.size > 0 ||
+    sessionAddedKeys.value.size > 0,
 )
 
 // An embedded editor pushes its FULL pending contribution — moves AND deferred deletes — up to the
@@ -651,7 +663,8 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
     // mount-before-load empty baseline). (QA 85050 sweep)
     const unsaved = props.readonly ? false : controller.isUnsaved(vi.key)
     const dirty = unsaved
-    const validationState = controller.rowState(vi.raw, vi.key)
+    // `editing` → the controller reads amber (not red) while the row is being filled in. (QA 85050 b7)
+    const validationState = controller.rowState(vi.raw, vi.key, editing)
     const canMoveUp = vi.index > 0
     const canMoveDown = vi.index < total - 1
     const cached = decoratorCache.get(vi.key)
@@ -863,7 +876,9 @@ const onAddClick = () => {
 const onRowAddAfterClick = (vi: ListViewItem<TItem>) => {
   if (!canInteract.value) return
   requestAutoOpen()
-  controller.addItem(undefined, { afterId: vi.key })
+  const key = controller.addItem(undefined, { afterId: vi.key })
+  // Added during a reorder session ("Pridať za túto položku") → count it in the toolbar.
+  if (reorderMode.value && key !== undefined) sessionAddedKeys.value.add(key)
 }
 
 const onEditClick = (vi: ListViewItem<TItem>) => {

@@ -1,4 +1,3 @@
-/* eslint-disable vue/no-ref-object-reactivity-loss */
 import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
@@ -7,11 +6,12 @@ import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
 import type { NestedTree } from '@/labs/listEditor/types/listEditorTypes'
 
-// Uniform behaviour across all 3 editor variants: the red "invalid" rail is gated on the row
-// having been EDITED (content changed since it was added / its baseline — mirrors the field's
-// vuelidate `$dirty`) — NOT merely on it being unsaved. A freshly added, still-untouched invalid
-// row is AMBER (unsaved), turning red only once edited or when a save is attempted
-// (`validateAll()` reveals every offender). Replaces the old "added → red immediately".
+// Uniform behaviour across all 3 editor variants. The red "invalid" rail shows for an invalid row that
+// is EDITED, UNSAVED (added), or after a save attempt (`validateAll()`) — but is SUPPRESSED while the row
+// is the one being edited, so a still-being-filled row reads amber and only goes red once collapsed.
+// A LOADED (baseline) invalid row stays quiet until it is edited or `validateAll()` runs. `position` and
+// `dirtyExclude`-d fields are normalized out, so a reorder or an excluded-field change never counts.
+// (QA 85050 batch 7 — decision A: red once collapsed, not while editing. Replaces the old amber-only.)
 
 interface Item {
   id: number
@@ -53,8 +53,8 @@ const flatCases = [
 for (const { name, comp, extra } of flatCases) {
   describe(`${name} — dirty-gated invalid rail`, () => {
     const BASE: Item[] = [{ id: 1, position: 1, title: 'Valid' }]
-    const mountFlat = () => {
-      const data = ref<Item[]>([...BASE])
+    const mountFlat = (initial: Item[] = [...BASE]) => {
+      const data = ref<Item[]>(initial)
       const Host = defineComponent({
         setup() {
           return () =>
@@ -73,43 +73,40 @@ for (const { name, comp, extra } of flatCases) {
       return { data }
     }
 
-    it('added still-untouched invalid row is amber, not red', async () => {
+    it('added still-untouched invalid row is RED once collapsed (unsaved)', async () => {
       const { data } = mountFlat()
       await nextTick()
       data.value = [...BASE, { id: -1, position: 2, title: '' }]
       await nextTick()
       await nextTick()
-      expect(isAmber(-1)).toBe(true)
-      expect(isRed(-1)).toBe(false)
+      expect(isRed(-1)).toBe(true) // unsaved + invalid, not being edited → red
+      expect(isAmber(-1)).toBe(true) // still an unsaved change too
     })
 
-    it('editing the added row to a still-invalid value turns it red, then clears when valid', async () => {
+    it('a LOADED (baseline) invalid row stays quiet until validateAll()', async () => {
+      const { data } = mountFlat([...BASE, { id: 2, position: 2, title: 'ab' }])
+      await nextTick()
+      await nextTick()
+      expect(isRed(2)).toBe(false) // loaded, untouched, not submitted → not red
+      expect(isAmber(2)).toBe(false)
+      validateAll(mounted!, comp)
+      await nextTick()
+      await nextTick()
+      expect(isRed(2)).toBe(true) // a save attempt reveals every offender
+      void data
+    })
+
+    it('editing back to valid clears the rail', async () => {
       const { data } = mountFlat()
       await nextTick()
       data.value = [...BASE, { id: -1, position: 2, title: '' }]
-      await nextTick()
-      await nextTick()
-      data.value = [...BASE, { id: -1, position: 2, title: 'ab' }]
       await nextTick()
       await nextTick()
       expect(isRed(-1)).toBe(true)
       data.value = [...BASE, { id: -1, position: 2, title: 'abc' }]
       await nextTick()
       await nextTick()
-      expect(isRed(-1)).toBe(false)
-    })
-
-    it('validateAll() reveals the untouched added empty row as red', async () => {
-      const { data } = mountFlat()
-      await nextTick()
-      data.value = [...BASE, { id: -1, position: 2, title: '' }]
-      await nextTick()
-      await nextTick()
-      expect(isRed(-1)).toBe(false)
-      validateAll(mounted!, comp)
-      await nextTick()
-      await nextTick()
-      expect(isRed(-1)).toBe(true)
+      expect(isRed(-1)).toBe(false) // now valid
     })
 
     it('stays red after editing then clearing back to empty (sticky, like vuelidate $dirty)', async () => {
@@ -121,10 +118,55 @@ for (const { name, comp, extra } of flatCases) {
       data.value = [...BASE, { id: -1, position: 2, title: '' }] // clear back to empty
       await nextTick()
       await nextTick()
-      expect(isRed(-1)).toBe(true) // dirty is sticky → still red (matches the field)
+      expect(isRed(-1)).toBe(true)
     })
   })
 }
+
+// --- red is suppressed while the row is being edited (item slot → inline edit) -------------------
+describe('invalid rail is suppressed while the row is being edited', () => {
+  const mountEditable = () => {
+    const data = ref<Item[]>([{ id: 1, position: 1, title: 'Valid' }])
+    const Host = defineComponent({
+      setup() {
+        return () =>
+          h(
+            ASortableListEditor as typeof AListEditor<Item>,
+            {
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Item[]) => {
+                data.value = v
+              },
+              factory: (): Item => ({ id: -1, position: 0, title: '' }),
+              validate: VALID,
+            },
+            {
+              item: ({ raw }: { raw: Item }) => h('span', raw.title),
+              'item-compact': ({ raw }: { raw: Item }) => h('span', raw.title),
+            },
+          )
+      },
+    })
+    mounted = mount(Host, { attachTo: document.body })
+    return { data }
+  }
+
+  it('reads amber (not red) while open for editing, red once collapsed', async () => {
+    const { data } = mountEditable()
+    await nextTick()
+    data.value = [data.value[0], { id: -1, position: 2, title: '' }]
+    await nextTick()
+    await nextTick()
+    // collapsed unsaved invalid → red
+    expect(isRed(-1)).toBe(true)
+    // open it for editing → the red is suppressed (amber while you fill it in)
+    await mounted!.findAll('.a-le-action--edit')[1].trigger('click')
+    await nextTick()
+    await nextTick()
+    expect(isRed(-1)).toBe(false)
+    expect(isAmber(-1)).toBe(true)
+  })
+})
 
 // --- nested editor (useNestedListEditorController) ---------------------------------------------
 interface Node {
@@ -176,46 +218,32 @@ describe('ANestedSortableListEditor — dirty-gated invalid rail', () => {
     return { model }
   }
 
-  it('added still-untouched invalid row is amber, not red', async () => {
+  it('added still-untouched invalid row is RED once collapsed (unsaved)', async () => {
     const { model } = mountNested()
     await nextTick()
     model.value = withAdded('')
-    await nextTick()
-    await nextTick()
-    expect(isAmber(-1)).toBe(true)
-    expect(isRed(-1)).toBe(false)
-  })
-
-  it('editing the added row to a still-invalid value turns it red', async () => {
-    const { model } = mountNested()
-    await nextTick()
-    model.value = withAdded('')
-    await nextTick()
-    await nextTick()
-    expect(isRed(-1)).toBe(false)
-    model.value = withAdded('ab')
     await nextTick()
     await nextTick()
     expect(isRed(-1)).toBe(true)
   })
 
-  it('validateAll() reveals the untouched added empty row as red', async () => {
+  it('editing the added row to a valid value clears the rail', async () => {
     const { model } = mountNested()
     await nextTick()
     model.value = withAdded('')
     await nextTick()
     await nextTick()
-    expect(isRed(-1)).toBe(false)
-    validateAll(mounted!, ANestedSortableListEditor)
-    await nextTick()
-    await nextTick()
     expect(isRed(-1)).toBe(true)
+    model.value = withAdded('abc')
+    await nextTick()
+    await nextTick()
+    expect(isRed(-1)).toBe(false)
   })
 })
 
-// A `dirtyExclude`-d field is normalized out of the content hash, so changing it never marks the
-// row edited — this is how the quiz excludes `answers` so the embedded answers-editor auto-seeding
-// the parent question's `answers` does not flip the question's rail red on init.
+// A `dirtyExclude`-d field is normalized out of the content hash, so changing it on a BASELINE row never
+// marks it edited or unsaved — this is how the quiz excludes `answers` so the embedded answers-editor
+// auto-seeding the parent question's `answers` does not flip an existing question's rail red.
 interface ItemX {
   id: number
   position: number
@@ -224,8 +252,9 @@ interface ItemX {
 }
 
 describe('dirty-gate respects dirtyExclude', () => {
-  it('a change to a dirtyExclude-d field does NOT mark the row edited (stays amber, not red)', async () => {
-    const data = ref<ItemX[]>([{ id: 1, position: 1, title: 'Valid', note: '' }])
+  it('changing a dirtyExclude-d field on a baseline row does NOT turn it red', async () => {
+    // Baseline row is invalid (title too short) but LOADED → quiet until edited/validated.
+    const data = ref<ItemX[]>([{ id: 1, position: 1, title: 'ab', note: '' }])
     const Host = defineComponent({
       setup() {
         return () =>
@@ -242,25 +271,20 @@ describe('dirty-gate respects dirtyExclude', () => {
     })
     mounted = mount(Host, { attachTo: document.body })
     await nextTick()
+    await nextTick()
+    expect(isRed(1)).toBe(false) // loaded invalid, untouched → not red
 
-    // Add an empty (invalid) row → amber, not red.
-    data.value = [data.value[0], { id: -1, position: 2, title: '', note: '' }]
+    // Change ONLY the excluded `note` (like the quiz auto-seeding answers) → still not red/unsaved.
+    data.value = [{ id: 1, position: 1, title: 'ab', note: 'seeded' }]
     await nextTick()
     await nextTick()
-    expect(isAmber(-1)).toBe(true)
-    expect(isRed(-1)).toBe(false)
+    expect(isRed(1)).toBe(false)
+    expect(isAmber(1)).toBe(false)
 
-    // Change ONLY the excluded `note` field (like the quiz auto-seeding answers) → still not red.
-    data.value = [data.value[0], { id: -1, position: 2, title: '', note: 'seeded' }]
+    // Change the validated, non-excluded title (still invalid) → now edited → red.
+    data.value = [{ id: 1, position: 1, title: 'x', note: 'seeded' }]
     await nextTick()
     await nextTick()
-    expect(isAmber(-1)).toBe(true)
-    expect(isRed(-1)).toBe(false)
-
-    // Change the validated, non-excluded title → now edited + invalid → red.
-    data.value = [data.value[0], { id: -1, position: 2, title: 'ab', note: 'seeded' }]
-    await nextTick()
-    await nextTick()
-    expect(isRed(-1)).toBe(true)
+    expect(isRed(1)).toBe(true)
   })
 })

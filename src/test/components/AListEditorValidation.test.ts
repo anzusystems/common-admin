@@ -72,7 +72,7 @@ describe('AListEditor — validation (:validate + gated red rail)', () => {
       expect(isInvalid(2)).toBe(false)
     })
 
-    it('an added still-untouched invalid row is amber, not red until edited', async () => {
+    it('an added invalid row reads red once collapsed (unsaved); a loaded invalid row stays clear', async () => {
       const baseline: Item[] = [
         { id: 1, position: 1, title: 'A' },
         { id: 2, position: 2, title: '' },
@@ -95,11 +95,12 @@ describe('AListEditor — validation (:validate + gated red rail)', () => {
       await nextTick()
       expect(isInvalid(2)).toBe(false)
 
-      // Add a new invalid (empty) row — unsaved (amber) but NOT red until it is edited.
+      // Add a new invalid (empty) row — unsaved and collapsed (not being edited) → red. The loaded
+      // baseline invalid row (2) stays clear (quiet until edited / a save attempt). (QA 85050 batch 7)
       data.value = [...baseline, { id: -1, position: 3, title: '' }]
       await nextTick()
       await nextTick()
-      expect(isInvalid(-1)).toBe(false)
+      expect(isInvalid(-1)).toBe(true)
       expect(isInvalid(2)).toBe(false)
 
       // Filling the new row keeps it clear (now valid).

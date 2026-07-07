@@ -97,7 +97,7 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
   /** Amber: is this row added / edited / moved / reparented since the last commit? */
   isUnsaved: (key: ListEditorKey) => boolean
   /** Red rail (gated): 'invalid' only once the row is unsaved or `validateAll()` ran. */
-  rowState: (item: TItem, key: ListEditorKey) => ListEditorValidationState
+  rowState: (item: TItem, key: ListEditorKey, editing?: boolean) => ListEditorValidationState
   /** Force-show all invalid rows + return whether the tree is valid. The save guard. */
   validateAll: () => boolean
   /** Flattened ordered array (each row carrying its resolved position + parent key) for a full-DTO save. */
@@ -391,12 +391,22 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   })
   const hasErrors = computed<boolean>(() => invalidKeys.value.size > 0)
 
-  // Red rail gated behind "row has been edited" (content changed since add/baseline) or an
-  // explicit validateAll() — mirrors the flat controller. A freshly added still-untouched row
-  // stays amber; validateAll() surfaces every offender on save, mounted or not.
-  const rowState = (item: TItem, key: ListEditorKey): ListEditorValidationState => {
+  // Red rail for an invalid row that has been edited, is unsaved (added), or after a save attempt —
+  // mirrors the flat controller. The editor suppresses the red while the row is the one being edited,
+  // so a still-being-filled row reads amber and only goes red once collapsed. (QA 85050 batch 7)
+  const rowState = (
+    item: TItem,
+    key: ListEditorKey,
+    editing = false,
+  ): ListEditorValidationState => {
     const { invalid, warning } = resolveValidity(item, key)
-    if (invalid) return isRowEdited(key) || submitted.value ? 'invalid' : null
+    // See flat controller: red when edited/unsaved/submitted, amber while being filled, red once
+    // collapsed; a save attempt (`submitted`) reds it even while open. (QA 85050 batch 7)
+    if (invalid) {
+      if (submitted.value) return 'invalid'
+      if (editing) return null
+      return isRowEdited(key) || isUnsaved(key) ? 'invalid' : null
+    }
     if (warning) return 'warning'
     return null
   }

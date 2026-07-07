@@ -76,7 +76,7 @@ export interface ListEditorHandle<TItem extends Record<string, any>> {
   /** Amber: is this row added / edited / moved since the last commit? */
   isUnsaved: (key: ListEditorKey) => boolean
   /** Red rail (gated): 'invalid' only once the row is unsaved or `validateAll()` ran. */
-  rowState: (item: TItem, key: ListEditorKey) => ListEditorValidationState
+  rowState: (item: TItem, key: ListEditorKey, editing?: boolean) => ListEditorValidationState
   /** Force-show all invalid rows + return whether the list is valid. The save guard. */
   validateAll: () => boolean
   /** Normalized ordered array for a full-DTO save. */
@@ -87,7 +87,7 @@ export interface ListEditorHandle<TItem extends Record<string, any>> {
   commit: (savedItems?: TItem[]) => void
   /** Discard unsaved edits back to the last committed baseline (or given items). */
   reset: (items?: TItem[]) => void
-  addItem: (item?: TItem, hint?: PositionHint) => void
+  addItem: (item?: TItem, hint?: PositionHint) => ListEditorKey | undefined
   updateItem: (
     key: ListEditorKey,
     next: TItem | Partial<TItem> | ((current: TItem) => TItem),
@@ -296,9 +296,20 @@ export function useListEditorController<TItem extends Record<string, any>>(
   // field's vuelidate `$dirty`) or an explicit validateAll() — so a freshly added still-untouched
   // row stays amber (not red) and a loaded-but-invalid row doesn't light up before interaction,
   // while a save attempt reveals every offender (mounted or collapsed).
-  const rowState = (item: TItem, key: ListEditorKey): ListEditorValidationState => {
+  const rowState = (
+    item: TItem,
+    key: ListEditorKey,
+    editing = false,
+  ): ListEditorValidationState => {
     const { invalid, warning } = resolveValidity(item, key)
-    if (invalid) return isRowEdited(key) || submitted.value ? 'invalid' : null
+    // Red rail for an invalid row that is edited, unsaved (added), or after a save attempt. A row being
+    // filled in reads amber (not red) and goes red once collapsed — but a save attempt (`submitted`,
+    // which also reveals collapsed offenders) always reds it, even while open. (QA 85050 batch 7)
+    if (invalid) {
+      if (submitted.value) return 'invalid'
+      if (editing) return null
+      return isRowEdited(key) || isUnsaved(key) ? 'invalid' : null
+    }
     if (warning) return 'warning'
     return null
   }
@@ -366,9 +377,9 @@ export function useListEditorController<TItem extends Record<string, any>>(
   const indexOfKey = (arr: TItem[], key: ListEditorKey): number =>
     arr.findIndex((x) => keyOf(x) === key)
 
-  const addItem = (item?: TItem, hint?: PositionHint): void => {
+  const addItem = (item?: TItem, hint?: PositionHint): ListEditorKey | undefined => {
     const row = item ?? options.factory?.()
-    if (row === undefined) return // no item + no factory (read-only list) → no-op
+    if (row === undefined) return undefined // no item + no factory (read-only list) → no-op
     const arr = [...options.get()]
     let at = arr.length
     if (hint?.afterId !== undefined) {
@@ -379,6 +390,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     }
     arr.splice(at, 0, row)
     write(arr)
+    return keyOf(row)
   }
 
   const updateItem = (

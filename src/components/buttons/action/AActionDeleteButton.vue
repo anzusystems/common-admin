@@ -22,6 +22,9 @@ const props = withDefaults(
     loading?: boolean
     color?: string | undefined
     size?: number
+    // When set, deleting acknowledges the unsaved-changes leave guard first, so the delete's follow-up
+    // navigation is not blocked by a now-meaningless "unsaved changes, really leave?" prompt. (BUG-08)
+    guard?: { acknowledge: () => void }
   }>(),
   {
     variant: 'icon',
@@ -38,6 +41,7 @@ const props = withDefaults(
     disableCloseAfterConfirm: false,
     color: undefined,
     size: 36,
+    guard: undefined,
   },
 )
 const emit = defineEmits<{
@@ -51,6 +55,7 @@ const onClick = (event: Event) => {
   dialog.value = true
 }
 const onConfirm = () => {
+  props.guard?.acknowledge()
   emit('deleteRecord')
   if (!props.disableCloseAfterConfirm) closeDialog()
 }

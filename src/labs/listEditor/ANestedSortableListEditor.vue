@@ -1137,8 +1137,9 @@ const resolveCompactText = (raw: TItem): string =>
 
 // Row validation from the controller's gated `rowState` — red rail shows only
 // once the row is unsaved or `validateAll()` ran.
+// `editing` → the controller reads amber (not red) while the row is being filled in. (QA 85050 b7)
 const resolveValidation = (raw: TItem, key?: ListEditorKey): ListEditorValidationState =>
-  key === undefined ? null : controller.rowState(raw, key)
+  key === undefined ? null : controller.rowState(raw, key, editingKeys.value.has(key))
 
 // Per-key actions cache for stable per-row identity (see AListEditor). Closures
 // capture the stable key and look up the current vi via findVi at call time.

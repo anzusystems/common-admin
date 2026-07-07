@@ -402,7 +402,8 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
     // a mount-before-load baseline marking every loaded row added). (QA 85050 sweep)
     const unsaved = props.disableUnsaved || props.readonly ? false : controller.isUnsaved(vi.key)
     const dirty = unsaved
-    const validationState = controller.rowState(vi.raw, vi.key)
+    // `editing` → the controller reads amber (not red) while the row is being filled in. (QA 85050 b7)
+    const validationState = controller.rowState(vi.raw, vi.key, editing)
     const cached = decoratorCache.get(vi.key)
     if (
       cached &&
