@@ -146,10 +146,17 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
  * Consumer-facing shape of a nested-list-editor handle read through a template/function ref — Vue's
  * `expose` proxy unwraps the exposed refs, so read `handle.hasUnsaved` (a boolean), not
  * `handle.hasUnsaved.value`. See {@link ExposedListEditorHandle}.
+ *
+ * The `ANestedSortableListEditor` component also exposes `hasUnsavedChanges` (a legacy alias of
+ * `hasUnsaved`, likewise a ComputedRef → unwrapped to a boolean here) — included so it can't be
+ * `.value`-read by accident. Its imperative-only extras (addAfterId / resetDirtyBaseline / expand /
+ * reorder / …) are not refs and carry no unwrap hazard; intersect them in the consumer if you call them.
  */
 export type ExposedNestedListEditorHandle<TItem extends Record<string, any>> = ShallowUnwrapRef<
   NestedListEditorHandle<TItem>
->
+> & {
+  hasUnsavedChanges: boolean
+}
 
 const flatten = <TItem extends Record<string, any>>(tree: NestedTree<TItem>): TItem[] => {
   const out: TItem[] = []

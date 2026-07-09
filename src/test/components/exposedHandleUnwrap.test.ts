@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, expectTypeOf } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref, unref, useTemplateRef } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
-import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
+import type {
+  ExposedListEditorHandle,
+  ListEditorHandle,
+} from '@/labs/listEditor/composables/useListEditorController'
 
 interface Row {
   id: number
@@ -121,5 +124,18 @@ describe('exposed list-editor handle — hasUnsaved/hasErrors are unwrapped thro
     expect(typeof collected!.hasUnsaved).toBe('boolean')
     expect((collected!.hasUnsaved as unknown as { value?: unknown }).value).toBeUndefined()
     expect(unref(collected!.hasUnsaved)).toBe(false)
+  })
+
+  it('the ExposedListEditorHandle TYPE unwraps the ref fields (so a stray .value is a compile error)', () => {
+    type H = ExposedListEditorHandle<Row>
+    // The whole point of the alias: ref fields collapse to their inner value, so typing a consumer's
+    // template/function ref with it makes `handle.hasUnsaved.value` fail to compile (boolean has no
+    // `.value`), instead of silently reading undefined.
+    expectTypeOf<H['hasUnsaved']>().toEqualTypeOf<boolean>()
+    expectTypeOf<H['hasErrors']>().toEqualTypeOf<boolean>()
+    expectTypeOf<H['unsavedCount']>().toEqualTypeOf<number>()
+    expectTypeOf<H['items']>().toEqualTypeOf<Row[]>()
+    // Methods stay callable (not unwrapped).
+    expectTypeOf<H['validateAll']>().returns.toEqualTypeOf<boolean>()
   })
 })

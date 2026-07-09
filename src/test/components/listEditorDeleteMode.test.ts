@@ -205,11 +205,11 @@ describe('list-editor delete-mode — deferred (default)', () => {
     const { wrapper, handle } = mountEditor({ deleteMode: 'deferred', statusField: 'title' })
     await wrapper.find('.a-le-row-add').trigger('click')
     await nextTick()
-    const afterAdd = handle().unsavedCount // one added row
+    expect(handle().unsavedCount).toBe(1) // exactly one added row (not 2 — no double-count on add)
     const delBtns = wrapper.findAll('.a-le-action--delete')
     await delBtns[delBtns.length - 1].trigger('click') // delete the just-added (never-saved) row
     await confirmDialog()
-    expect(handle().unsavedCount).toBe(afterAdd - 1) // deleting a temp row removes its own change
+    expect(handle().unsavedCount).toBe(0) // add + delete of the same temp row truly nets zero
   })
 
   it('union, not sum: a SAVED row edited THEN deleted counts as 1 change, not 2', async () => {
