@@ -7,6 +7,7 @@ import {
   type ComputedRef,
   type MaybeRefOrGetter,
   type Ref,
+  type ShallowUnwrapRef,
 } from 'vue'
 import type {
   ListEditorKey,
@@ -140,6 +141,15 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
   }
   calculateSubtreeDepth: (node: NestedTreeNode<TItem>) => number
 }
+
+/**
+ * Consumer-facing shape of a nested-list-editor handle read through a template/function ref — Vue's
+ * `expose` proxy unwraps the exposed refs, so read `handle.hasUnsaved` (a boolean), not
+ * `handle.hasUnsaved.value`. See {@link ExposedListEditorHandle}.
+ */
+export type ExposedNestedListEditorHandle<TItem extends Record<string, any>> = ShallowUnwrapRef<
+  NestedListEditorHandle<TItem>
+>
 
 const flatten = <TItem extends Record<string, any>>(tree: NestedTree<TItem>): TItem[] => {
   const out: TItem[] = []

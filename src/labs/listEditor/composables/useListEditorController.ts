@@ -7,6 +7,7 @@ import {
   type ComputedRef,
   type MaybeRefOrGetter,
   type Ref,
+  type ShallowUnwrapRef,
 } from 'vue'
 import type {
   ListEditorKey,
@@ -102,6 +103,17 @@ export interface ListEditorHandle<TItem extends Record<string, any>> {
   /** Escape hatch: a row form (e.g. vuelidate) reports its own validity instead of `validate`. */
   registerValidity: (key: ListEditorKey, isValid: () => boolean) => () => void
 }
+
+/**
+ * The shape a CONSUMER sees when it reads a list-editor handle through a template/function ref.
+ * Vue's `expose` proxy unwraps every exposed ref, so the reactive fields (`hasUnsaved`, `hasErrors`,
+ * `unsavedCount`, …) arrive as plain VALUES here, not `Ref`s: read `handle.hasUnsaved` (a boolean),
+ * never `handle.hasUnsaved.value` (that is `undefined`). Type your `useTemplateRef` / collected-ref
+ * maps with this so a stray `.value` is a compile error instead of a silently-dead guard/save-gate.
+ */
+export type ExposedListEditorHandle<TItem extends Record<string, any>> = ShallowUnwrapRef<
+  ListEditorHandle<TItem>
+>
 
 /**
  * Component-owned state controller for the list editors (v2). Owns row keys,

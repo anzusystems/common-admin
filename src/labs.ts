@@ -59,6 +59,7 @@ import { useListEditor, type ListEditorApi } from '@/labs/listEditor/composables
 import {
   useListEditorController,
   type ListEditorHandle,
+  type ExposedListEditorHandle,
   type UseListEditorControllerOptions,
   type ListEditorChanges,
   type ListEditorValidationResult,
@@ -89,6 +90,7 @@ import {
 import {
   useNestedListEditorController,
   type NestedListEditorHandle,
+  type ExposedNestedListEditorHandle,
   type UseNestedListEditorControllerOptions,
   type NestedListEditorChanges,
 } from '@/labs/listEditor/composables/useNestedListEditorController'
@@ -172,6 +174,7 @@ export {
   useListEditor,
   useListEditorController,
   type ListEditorHandle,
+  type ExposedListEditorHandle,
   type UseListEditorControllerOptions,
   type ListEditorChanges,
   type ListEditorValidationResult,
@@ -193,6 +196,7 @@ export {
   type NestedViewItem,
   useNestedListEditorController,
   type NestedListEditorHandle,
+  type ExposedNestedListEditorHandle,
   type UseNestedListEditorControllerOptions,
   type NestedListEditorChanges,
   type ListEditorKey,
