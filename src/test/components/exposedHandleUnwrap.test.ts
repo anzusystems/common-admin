@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref, unref, useTemplateRef } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
-import type { ListEditorHandle } from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
 
 interface Row {
   id: number
@@ -93,5 +93,33 @@ describe('exposed list-editor handle — hasUnsaved/hasErrors are unwrapped thro
     expect(unref(handle.hasErrors)).toBe(true)
     expect(typeof handle.hasErrors).toBe('boolean')
     expect((handle.hasErrors as unknown as { value?: unknown }).value).toBeUndefined()
+  })
+
+  it('a FUNCTION-ref collected handle is unwrapped too (the access form a grep sweep can miss)', async () => {
+    // Handles collected via `:ref="(el) => ..."` (e.g. one per position in a v-for) go through the
+    // same exposeProxy, so `handle.hasUnsaved` is a bare boolean there as well — `.value` is undefined.
+    const model = ref<Row[]>([{ id: 1, position: 1, title: 'A' }])
+    let collected: ListEditorHandle<Row> | null = null
+    const Host = defineComponent({
+      render() {
+        return h(AListEditor<Row>, {
+          ref: (el: unknown) => {
+            collected = el as ListEditorHandle<Row> | null
+          },
+          modelValue: model.value,
+          'onUpdate:modelValue': (v: Row[]) => {
+            model.value = v
+          },
+          factory: (): Row => ({ id: -1, position: 0, title: '' }),
+        })
+      },
+    })
+    mount(Host)
+    await nextTick()
+
+    expect(collected).not.toBeNull()
+    expect(typeof collected!.hasUnsaved).toBe('boolean')
+    expect((collected!.hasUnsaved as unknown as { value?: unknown }).value).toBeUndefined()
+    expect(unref(collected!.hasUnsaved)).toBe(false)
   })
 })
