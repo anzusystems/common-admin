@@ -352,6 +352,14 @@
   padding: 0;
 }
 
+// View-mode header "N unconfirmed changes" pill — amber, matching the reorder-mode LeStatus
+// `--pending` treatment + the per-row unsaved markers (was unstyled → inherited black text). BUG-03
+.a-le-unsaved-count {
+  color: var(--le-warning);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
 .a-le-status {
   display: inline-flex;
   align-items: center;
