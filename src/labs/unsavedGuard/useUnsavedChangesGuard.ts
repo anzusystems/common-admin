@@ -71,9 +71,26 @@ export interface UseUnsavedChangesGuardApi {
    * route/dialog/unload attempt proceeds without prompting. Useful right
    * before a programmatic navigation that the consumer has already
    * confirmed.
+   *
+   * The acknowledgement AUTO-EXPIRES after a few seconds if nothing consumes it
+   * (see `ACKNOWLEDGE_TTL_MS`): a delete that acknowledges up-front but then FAILS
+   * (throws, never navigates) must not leave the guard silently disarmed for the
+   * next unrelated navigation. Consuming it (a real leave) clears the timer.
    */
   acknowledge: () => void
+  /**
+   * Cancel a pending `acknowledge()` (disarm). Call from a delete's failure path
+   * so a failed/aborted delete restores the guard immediately instead of waiting
+   * for the TTL. No-op if nothing is acknowledged.
+   */
+  unacknowledge: () => void
 }
+
+// An acknowledgement is meant for an IMMINENT navigation (a delete's router.push after its HTTP
+// round-trip — tens to hundreds of ms). If none arrives within this window the delete almost
+// certainly failed, so the one-shot expires rather than arming an unrelated later navigation.
+// Generously longer than any real delete request so a legitimate slow-success never false-prompts.
+const ACKNOWLEDGE_TTL_MS = 8000
 
 const isTruthySource = (value: unknown): boolean => {
   if (value === null || value === undefined) return false
@@ -117,10 +134,19 @@ export function useUnsavedChangesGuard(
   const promptOpen = ref<boolean>(false)
   let pendingResolver: ((discard: boolean) => void) | null = null
   let acknowledgedOnce = false
+  let acknowledgeTimer: ReturnType<typeof setTimeout> | null = null
+
+  const clearAcknowledgeTimer = () => {
+    if (acknowledgeTimer !== null) {
+      clearTimeout(acknowledgeTimer)
+      acknowledgeTimer = null
+    }
+  }
 
   const askToLeave = (): Promise<boolean> => {
     if (acknowledgedOnce) {
       acknowledgedOnce = false
+      clearAcknowledgeTimer()
       return Promise.resolve(true)
     }
     return new Promise((resolve) => {
@@ -139,6 +165,18 @@ export function useUnsavedChangesGuard(
 
   const acknowledge = () => {
     acknowledgedOnce = true
+    // Auto-expire: if the imminent navigation never arrives (e.g. the delete threw), don't leave
+    // the guard armed for an unrelated later leave. A real consume (askToLeave) clears this first.
+    clearAcknowledgeTimer()
+    acknowledgeTimer = setTimeout(() => {
+      acknowledgedOnce = false
+      acknowledgeTimer = null
+    }, ACKNOWLEDGE_TTL_MS)
+  }
+
+  const unacknowledge = () => {
+    acknowledgedOnce = false
+    clearAcknowledgeTimer()
   }
 
   // Route guard — `onBeforeRouteLeave` only works inside a route component
@@ -195,11 +233,16 @@ export function useUnsavedChangesGuard(
     })
   }
 
+  if (getCurrentInstance()) {
+    onBeforeUnmount(clearAcknowledgeTimer)
+  }
+
   return {
     hasUnsavedChanges,
     dirtyLabels: sectionRegistry.dirtyLabels,
     promptOpen,
     resolvePrompt,
     acknowledge,
+    unacknowledge,
   }
 }

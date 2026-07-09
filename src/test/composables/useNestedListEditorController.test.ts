@@ -71,17 +71,22 @@ describe('useNestedListEditorController', () => {
     expect(h.isUnsaved(1)).toBe(true)
   })
 
-  it('pure position reorder is NOT amber via the controller (mirrors the flat editor; position excluded)', () => {
+  it('pure position reorder arms the leave guard via hasUnsaved (M2b), without per-row amber', () => {
     const { h } = setup()
     expect(h.moveDown(1)).toBe(true) // Home <-> News at root — content + parent unchanged
-    // The controller's `isUnsaved` excludes pure position renumbers, exactly
-    // like a displaced row in the flat editor. The editor layers the
-    // actively-moved row's amber on top via its reorder-session moved set.
+    // Per-row `isUnsaved` still excludes pure position renumbers — the editor layers the
+    // actively-moved subtree's amber on top via its reorder-session moved set, so displaced
+    // siblings do NOT light up.
     expect(h.isUnsaved(1)).toBe(false)
+    // But `hasUnsaved` — which feeds the unsaved-changes leave guard — now DOES fire after a
+    // reorder (was blind: M2b). It survives Apply (meta.dirty persists) and clears on commit.
+    expect(h.hasUnsaved.value).toBe(true)
     expect(h.items.value.map((r) => r.id)).toEqual([2, 21, 22, 1, 3])
-    // The positions are still renumbered for persistence, and `getChanges().moved`
-    // reports the rows whose position changed (meta.dirty).
+    // getChanges().moved reports the rows whose position changed (meta.dirty) for persistence.
     expect(h.getChanges().moved.map((r) => r.id)).toContain(1)
+    // Committing the save re-baselines (meta.dirty cleared) → guard goes clean.
+    h.commit()
+    expect(h.hasUnsaved.value).toBe(false)
   })
 
   it('indent reparents and flags dirty even though the position number may be unchanged (BUG-13)', () => {

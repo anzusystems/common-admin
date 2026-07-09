@@ -1492,7 +1492,7 @@ const clearUnsavedState = () => {
 // Registers this editor as a named unsaved-changes section when a label is passed.
 useUnsavedSection(() =>
   props.unsavedSectionLabel
-    ? { label: props.unsavedSectionLabel, dirty: unsavedCount.value > 0 }
+    ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value }
     : [],
 )
 
@@ -1518,6 +1518,7 @@ const revealNestedInvalid = (): boolean =>
 useListEditorScopeValidity({
   hasErrors: controller.hasErrors,
   validationScope: props.validationScope,
+  validateProvided: props.validate !== undefined,
   reveal: revealNestedInvalid,
 })
 

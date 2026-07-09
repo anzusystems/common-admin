@@ -388,6 +388,10 @@ const sessionImmediateDeletes = ref<Set<ListEditorKey>>(new Set())
 // Apply enables instead of trapping the user; Cancel drops them (snapshot-restore removes rows that
 // weren't in the enter-time snapshot).
 const sessionAddedKeys = ref<Set<ListEditorKey>>(new Set())
+// Rows MOVED during the current reorder session. On Cancel the snapshot-restore undoes the reorder, so
+// these keys' persistent "moved" flag must be dropped from the controller too (else they stay falsely
+// amber + arm the leave guard for a reorder that never happened). Apply keeps them (persisted on save).
+const sessionMovedKeys = ref<Set<ListEditorKey>>(new Set())
 
 const snapshot = shallowRef<TItem[] | null>(null)
 
@@ -452,6 +456,7 @@ const {
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
     sessionAddedKeys.value = new Set()
+    sessionMovedKeys.value = new Set()
     if (!allowEditInReorderRef.value) {
       clearEditing()
       expandedKeys.value.clear()
@@ -461,6 +466,7 @@ const {
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
     sessionAddedKeys.value = new Set()
+    sessionMovedKeys.value = new Set()
     if (!allowEditInReorderRef.value) {
       clearEditing()
       expandedKeys.value.clear()
@@ -474,15 +480,21 @@ const {
     for (const key of sessionDeferredDeletes.value) controller.restoreDeleted(key)
     for (const key of sessionImmediateDeletes.value)
       controller.deleteItem(key, { trackDeleted: false })
+    // Snapshot-restore already undid the reorder — drop the controller's "moved" flag for exactly the
+    // rows moved this session (edits/adds keep their amber), so a cancelled reorder leaves no false unsaved.
+    controller.clearMoved(sessionMovedKeys.value)
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
     sessionAddedKeys.value = new Set()
+    sessionMovedKeys.value = new Set()
   },
-  // Apply keeps the session's changes (deferred deletes persist on the entity's main save).
+  // Apply keeps the session's changes (deferred deletes persist on the entity's main save; moved rows stay
+  // amber in the controller until the consumer commits after their save — only reset the session tracker).
   onApplyEnd: () => {
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
     sessionAddedKeys.value = new Set()
+    sessionMovedKeys.value = new Set()
   },
   // Embedded editor exit (parent Cancel or Apply — it owns the snapshot, we never do). On a parent
   // Cancel the snapshot-restore resurrects any row we deleted IMMEDIATELY on the backend; re-remove it so
@@ -494,6 +506,7 @@ const {
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
     sessionAddedKeys.value = new Set()
+    sessionMovedKeys.value = new Set()
   },
   onReorderApply: (items) => props.onReorderApply?.(items),
   emit: {
@@ -643,6 +656,7 @@ const showInlineSaveFooter = computed(() => !!props.onItemSave)
 // the persistent amber `unsaved` flag is the controller's.
 const markMoved = (key: ListEditorKey) => {
   movedKeys.value.add(key)
+  sessionMovedKeys.value.add(key)
 }
 
 // Per-key decorator cache — see AListEditor for rationale. `unsaved` (amber) and
@@ -739,6 +753,7 @@ const validateAllSelf = (): boolean =>
 useListEditorScopeValidity({
   hasErrors: controller.hasErrors,
   validationScope: props.validationScope,
+  validateProvided: props.validate !== undefined,
   reveal: validateAllSelf,
 })
 
@@ -953,8 +968,15 @@ const {
     // reverts on Cancel); an immediate delete is already gone on the backend, so drop it from the
     // reorder snapshot too — else Cancel's snapshot-restore would resurrect it.
     if (reorderMode.value) {
-      if (deferred) sessionDeferredDeletes.value.add(vi.key)
-      else sessionImmediateDeletes.value.add(vi.key)
+      if (sessionAddedKeys.value.has(vi.key)) {
+        // Added AND deleted within the same reorder session — net zero. The controller drops the temp
+        // row with no tombstone, so it must not linger in either counter (was double-counted: L1).
+        sessionAddedKeys.value.delete(vi.key)
+      } else if (deferred) {
+        sessionDeferredDeletes.value.add(vi.key)
+      } else {
+        sessionImmediateDeletes.value.add(vi.key)
+      }
     }
     // Controller owns the data: temp rows vanish; a deferred saved-row delete lands in
     // `getChanges().deleted` + counts as unsaved; immediate skips the tombstone (already persisted).

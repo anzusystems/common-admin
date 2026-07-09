@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { defineComponent, h, nextTick, ref } from 'vue'
+import { defineComponent, h, nextTick, ref, type Ref } from 'vue'
 import { useUnsavedChangesGuard } from '@/labs/unsavedGuard/useUnsavedChangesGuard'
 
 let mounted: VueWrapper | null = null
@@ -8,6 +8,7 @@ let mounted: VueWrapper | null = null
 afterEach(() => {
   mounted?.unmount()
   mounted = null
+  vi.useRealTimers()
 })
 
 const mountWithGuard = (setup: () => ReturnType<typeof useUnsavedChangesGuard>) => {
@@ -201,6 +202,68 @@ describe('useUnsavedChangesGuard', () => {
       api.acknowledge()
       // After acknowledge, the prompt should never open even if hasUnsavedChanges.
       // Simulate by setting promptOpen and confirming it doesn't latch.
+      expect(api.promptOpen.value).toBe(false)
+    })
+
+    // The dialog-close watch is the unit-testable consume path for `askToLeave` (route-leave needs a
+    // real router). A dirty dialog closing while acknowledged passes silently; otherwise it re-opens
+    // and prompts.
+    const mountDialogGuard = (dialogModel: Ref<boolean>) =>
+      mountWithGuard(() =>
+        useUnsavedChangesGuard({
+          sources: [ref(true)],
+          guardRoute: false,
+          guardWindowUnload: false,
+          guardDialogModel: dialogModel,
+        }),
+      )
+
+    it('lets a dirty dialog-close pass without prompting once acknowledged', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
+      api.acknowledge()
+      dialogModel.value = false
+      await nextTick()
+      await nextTick()
+      expect(api.promptOpen.value).toBe(false)
+      expect(dialogModel.value).toBe(false) // closed, not re-opened
+    })
+
+    it('auto-expires the acknowledgement after the TTL (M1 — a failed delete stays guarded)', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
+      vi.useFakeTimers()
+      api.acknowledge()
+      vi.advanceTimersByTime(8001) // TTL elapsed with nothing consuming it (delete never navigated)
+      dialogModel.value = false
+      await nextTick()
+      await nextTick()
+      expect(api.promptOpen.value).toBe(true) // now prompts — the stale acknowledge expired
+      expect(dialogModel.value).toBe(true) // re-opened, awaiting the user's choice
+    })
+
+    it('unacknowledge disarms a pending acknowledgement immediately (M1 failure path)', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
+      api.acknowledge()
+      api.unacknowledge()
+      dialogModel.value = false
+      await nextTick()
+      await nextTick()
+      expect(api.promptOpen.value).toBe(true) // disarmed → prompts
+    })
+
+    it('a consumed acknowledgement clears the timer (no spurious later expiry)', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
+      vi.useFakeTimers()
+      api.acknowledge()
+      dialogModel.value = false // consume it now
+      await nextTick()
+      await nextTick()
+      expect(api.promptOpen.value).toBe(false)
+      // Re-arm and let the (fresh) timer run out to prove the prior consume didn't leave a stale timer.
+      vi.advanceTimersByTime(8001)
       expect(api.promptOpen.value).toBe(false)
     })
   })

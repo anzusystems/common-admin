@@ -97,6 +97,8 @@ export interface ListEditorHandle<TItem extends Record<string, any>> {
   /** Clear a deferred-deletion tombstone (the caller re-inserts the row, e.g. reorder Cancel). */
   restoreDeleted: (key: ListEditorKey) => void
   moveItem: (fromIndex: number, toIndex: number) => void
+  /** Drop the "moved" flag for the given keys (or all) without touching edits/adds — e.g. reorder Cancel. */
+  clearMoved: (keys?: Iterable<ListEditorKey>) => void
   /** Escape hatch: a row form (e.g. vuelidate) reports its own validity instead of `validate`. */
   registerValidity: (key: ListEditorKey, isValid: () => boolean) => () => void
 }
@@ -442,6 +444,18 @@ export function useListEditorController<TItem extends Record<string, any>>(
     write(arr)
   }
 
+  // Reorder Cancel restores the pre-session order, so the moves are undone — drop
+  // just those keys' "moved" flag (edits/adds stay dirty). No arg = clear all.
+  const clearMoved = (keys?: Iterable<ListEditorKey>): void => {
+    if (keys === undefined) {
+      movedKeys.value = new Set()
+      return
+    }
+    const next = new Set(movedKeys.value)
+    for (const key of keys) next.delete(key)
+    movedKeys.value = next
+  }
+
   const registerValidity = (key: ListEditorKey, isValid: () => boolean): (() => void) => {
     registeredValidity.set(key, isValid)
     return () => registeredValidity.delete(key)
@@ -465,6 +479,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     deleteItem,
     restoreDeleted,
     moveItem,
+    clearMoved,
     registerValidity,
   }
 }

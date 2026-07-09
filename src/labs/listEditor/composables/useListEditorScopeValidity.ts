@@ -18,6 +18,13 @@ export interface UseListEditorScopeValidityOptions {
    * `validateAllAndReveal` routine so nested editors also expand ancestors.
    */
   reveal: () => void
+  /**
+   * Whether the editor got a `:validate` predicate. `hasErrors` is driven solely by it
+   * (row-form vuelidate feeds a separate display registry, not `hasErrors`), so a scope
+   * wired WITHOUT `:validate` yields `hasErrors === false` forever — a silently-dead gate.
+   * Passed so this composable can warn (dev) instead of failing open.
+   */
+  validateProvided: boolean
 }
 
 /**
@@ -33,8 +40,30 @@ export interface UseListEditorScopeValidityOptions {
  * exactly as before.
  */
 export function useListEditorScopeValidity(options: UseListEditorScopeValidityOptions): void {
-  const { hasErrors, validationScope, reveal } = options
+  const { hasErrors, validationScope, reveal, validateProvided } = options
   if (validationScope === undefined || validationScope === false) return
+
+  // `true` = vuelidate's GLOBAL scope. A globally-scoped child is NOT collected by a parent that
+  // uses a NAMED ($scope: Symbol) collector — so under the typical named save gate the bridge is
+  // silently dropped. Warn: the consumer almost always wants their collector's exact scope value.
+  if (validationScope === true) {
+    console.warn(
+      '[list-editor] `:validation-scope="true"` uses vuelidate’s GLOBAL scope. If your save gate ' +
+        'collects a NAMED scope (useVuelidate({ $scope: someSymbol })), this editor’s validity is ' +
+        'NOT collected by it and the gate won’t block. Pass the SAME scope value your collector uses.',
+    )
+  }
+
+  // A scope with no `:validate` bridges an always-false `hasErrors` — the gate never blocks. Warn
+  // (dev) so the misconfiguration is visible instead of silently letting invalid rows through save.
+  if (!validateProvided) {
+    console.warn(
+      '[list-editor] `:validation-scope` is set but `:validate` is missing. The scope save-gate ' +
+        'bridges the editor’s aggregate `hasErrors`, which is driven only by `:validate`; without ' +
+        'it the gate never blocks (hasErrors stays false). Pass `:validate` so collapsed/invalid ' +
+        'rows block the consumer save, or drop `:validation-scope` if you gate validity yourself.',
+    )
+  }
 
   // One editor-level child registered under the consumer's scope. The validator reads `hasErrors`
   // reactively (vuelidate's sync `$invalid` is a computed that runs it), so the collector's

@@ -830,13 +830,12 @@ describe('ASortableListEditor', () => {
   // moves via the arrow-button actions + exposed API here and leave actual
   // pointer-drag coverage to the Playwright CLI skill.
   describe('movedKeys lifecycle', () => {
-    it('cancel restores the order and the reorder session resets on re-enter', async () => {
-      // v2: cancel restores the array (snapshot) and clears the reorder-session
-      // moved set, but the controller's persistent unsaved tracking only clears
-      // via reset()/commit() — so amber survives a bare cancel by design. We
-      // assert the order is restored, then reset() clears the amber, and a fresh
-      // reorder session starts with no pending changes.
-      const { wrapper, model, editor } = mountEditor()
+    it('cancel restores the order AND clears the moved amber (H1 — no reset() needed)', async () => {
+      // v2 fix (H1): cancel restores the array (snapshot) AND drops the controller's
+      // "moved" flag for exactly the rows moved this session — so a cancelled reorder
+      // leaves no false-unsaved amber and never arms the leave guard. (Apply, by
+      // contrast, keeps the amber until the consumer commit()s — see the Apply test.)
+      const { wrapper, model } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
@@ -844,28 +843,50 @@ describe('ASortableListEditor', () => {
       // One row is unsaved now (the actively moved row).
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
 
-      // Cancel — leaves reorder mode and restores the original order.
+      // Cancel — leaves reorder mode, restores the original order, and clears the amber
+      // with no consumer reset() call.
       const cancel = wrapper
         .findAll('button')
         .find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancel.trigger('click')
       await flushPromises()
       expect(model.value.map((i) => i.id)).toEqual([1, 2, 3, 4])
-
-      // The controller still flags the moved row until the consumer resets.
-      const exposed = (
-        editor().vm as unknown as {
-          $: { exposed: { reset: (items?: unknown[]) => void } }
-        }
-      ).$.exposed
-      exposed.reset()
-      await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
 
       // Re-enter — a fresh session, no stale moved rows.
       await clickToggle(wrapper)
       await flushPromises()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
+    })
+
+    it('a later Cancel keeps a prior APPLIED move amber (H1 clear is session-scoped)', async () => {
+      // The fix must be surgical: cancelling session 2 clears only session 2's moves,
+      // never a move applied (but not yet committed) in session 1 — so clearMoved()
+      // takes the session's keys, not a blanket wipe.
+      const { wrapper } = mountEditor()
+      // Session 1: move row 0 down, Apply — its amber persists (awaiting commit()).
+      await clickToggle(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
+      await flushPromises()
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
+      await apply.trigger('click')
+      await flushPromises()
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
+
+      // Session 2: move a DIFFERENT row, then Cancel.
+      await clickToggle(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-le-action--down')[2].trigger('click')
+      await flushPromises()
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(2)
+      const cancel = wrapper
+        .findAll('button')
+        .find((b) => b.text().toLowerCase().includes('cancel'))!
+      await cancel.trigger('click')
+      await flushPromises()
+      // Session 2's move is undone (amber cleared); session 1's applied move stays amber.
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
     })
 
     it('only the actively moved row gets marked (no side-effect index shifts)', async () => {

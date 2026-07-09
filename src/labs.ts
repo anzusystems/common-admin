@@ -66,15 +66,6 @@ import {
   type PositionOption,
 } from '@/labs/listEditor/composables/useListEditorController'
 import {
-  useListEditorItemValidation,
-  ListEditorValidationKey,
-  type ListEditorValidationRegistry,
-} from '@/labs/listEditor/composables/useListEditorItemValidation'
-import {
-  useListEditorVuelidateSentinel,
-  type VuelidateSentinelSource,
-} from '@/labs/listEditor/composables/useListEditorVuelidateSentinel'
-import {
   renumberPositions,
   sortByPosition,
   sortByPositionDeep,
@@ -186,11 +177,6 @@ export {
   type ListEditorValidationResult,
   type GetKey,
   type PositionOption,
-  useListEditorItemValidation,
-  ListEditorValidationKey,
-  type ListEditorValidationRegistry,
-  useListEditorVuelidateSentinel,
-  type VuelidateSentinelSource,
   renumberPositions,
   sortByPosition,
   sortByPositionDeep,

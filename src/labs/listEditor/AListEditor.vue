@@ -673,6 +673,7 @@ const runValidateAndReveal = (): boolean =>
 useListEditorScopeValidity({
   hasErrors: controller.hasErrors,
   validationScope: props.validationScope,
+  validateProvided: props.validate !== undefined,
   reveal: runValidateAndReveal,
 })
 

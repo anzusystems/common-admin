@@ -267,10 +267,11 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   const registeredValidity = reactive(new Map<ListEditorKey, () => boolean>())
 
   // Amber = added OR content-edited OR reparented (vs baseline). Position is
-  // excluded, so a displaced sibling's pure renumber is NOT amber (like the flat
-  // editor); BUG-13 adds the parent-changed signal so a reparent registers even
-  // at an unchanged position number. `getChanges().moved` still reads meta.dirty,
-  // so displaced siblings' new positions are persisted regardless.
+  // excluded, so a displaced sibling's pure renumber is NOT amber (matches the flat
+  // editor + the "only the actively-moved subtree lights up" UX); BUG-13 adds the
+  // parent-changed signal so a reparent registers even at an unchanged position
+  // number. `getChanges().moved` reads meta.dirty, so displaced siblings' new
+  // positions are still persisted; `hasPendingMove` (below) feeds the leave guard.
   const isItemDirty = (
     node: NestedTreeNode<TItem>,
     key: ListEditorKey,
@@ -358,8 +359,19 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   })
 
   const isUnsaved = (key: ListEditorKey): boolean => unsavedKeys.value.has(key)
+  // A pure position reorder sets meta.dirty (recalculateSiblings) but is deliberately
+  // kept OUT of per-row amber (only the actively-moved subtree lights up). It IS a
+  // pending change though, so it must arm the leave guard — surface it as an aggregate
+  // signal (M2b) that survives Apply and clears on commit (which resets meta.dirty).
+  const hasPendingMove = computed<boolean>(() => {
+    let found = false
+    walkNodes(options.get(), (n) => {
+      if (n.meta.dirty) found = true
+    })
+    return found
+  })
   const hasUnsaved = computed<boolean>(
-    () => unsavedKeys.value.size > 0 || deletedKeys.value.size > 0,
+    () => unsavedKeys.value.size > 0 || deletedKeys.value.size > 0 || hasPendingMove.value,
   )
   // Distinct unconfirmed changes = union of live dirty keys (added/edited/moved/reparented) and
   // deferred-deletion tombstones. Drives the "N unconfirmed changes" indicator.

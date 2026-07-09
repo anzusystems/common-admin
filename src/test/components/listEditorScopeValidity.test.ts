@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref, type Component, type Ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
@@ -217,5 +217,97 @@ describe('useListEditorScopeValidity — ANestedSortableListEditor flows deep tr
     await nextTick()
     await nextTick()
     expect(collector.value.$invalid).toBe(false)
+  })
+})
+
+// M3 — a scope wired WITHOUT `:validate` bridges an always-false `hasErrors`, so the save gate
+// never blocks. That misconfiguration must surface a dev warning instead of failing open silently.
+describe('useListEditorScopeValidity — warns on :validation-scope without :validate (M3)', () => {
+  const M3 = '`:validation-scope` is set but `:validate` is missing'
+  function mountScopeOnly(scope: symbol | undefined, withValidate: boolean) {
+    const data = ref<Row[]>([{ id: 1, name: '', position: 1 }])
+    const Host = defineComponent({
+      setup() {
+        useVuelidate({ $scope: SCOPE })
+        return () =>
+          h(
+            AListEditor as Component,
+            {
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Row[]) => {
+                data.value = v
+              },
+              ...(withValidate ? { validate } : {}),
+              validationScope: scope,
+            },
+            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) }
+          )
+      },
+    })
+    mounted = mount(Host, { attachTo: document.body })
+  }
+
+  it('warns when the scope is set but no :validate predicate is provided', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mountScopeOnly(SCOPE, false)
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining(M3))
+    spy.mockRestore()
+  })
+
+  it('does NOT warn when :validate accompanies the scope', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mountScopeOnly(SCOPE, true)
+    expect(spy).not.toHaveBeenCalledWith(expect.stringContaining(M3))
+    spy.mockRestore()
+  })
+
+  it('does NOT warn when there is no scope at all (opt-out, legacy behavior)', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mountScopeOnly(undefined, false)
+    expect(spy).not.toHaveBeenCalledWith(expect.stringContaining(M3))
+    spy.mockRestore()
+  })
+})
+
+// L2 — `:validation-scope="true"` selects vuelidate's GLOBAL scope, which a NAMED parent collector
+// does not gather. It's a latent footgun (no consumer passes `true`); the boolean stays in the type
+// (canonical ValidationScope), so a runtime warning is the guard.
+describe('useListEditorScopeValidity — warns on :validation-scope="true" (L2)', () => {
+  const L2 = 'GLOBAL scope. If your save gate'
+  function mountBooleanScope(scopeVal: boolean) {
+    const data = ref<Row[]>([{ id: 1, name: '', position: 1 }])
+    const Host = defineComponent({
+      setup() {
+        useVuelidate({ $scope: SCOPE })
+        return () =>
+          h(
+            AListEditor as Component,
+            {
+              modelValue: data.value,
+              'onUpdate:modelValue': (v: Row[]) => {
+                data.value = v
+              },
+              validate,
+              validationScope: scopeVal,
+            },
+            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) }
+          )
+      },
+    })
+    mounted = mount(Host, { attachTo: document.body })
+  }
+
+  it('warns when :validation-scope is true (global scope under a named collector)', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mountBooleanScope(true)
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining(L2))
+    spy.mockRestore()
+  })
+
+  it('does NOT warn when :validation-scope is false (explicit opt-out)', () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mountBooleanScope(false)
+    expect(spy).not.toHaveBeenCalledWith(expect.stringContaining(L2))
+    spy.mockRestore()
   })
 })
