@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent, h, nextTick, ref, unref, useTemplateRef } from 'vue'
+import { defineComponent, h, nextTick, onMounted, ref, unref, useTemplateRef } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import type {
   ExposedListEditorHandle,
@@ -26,20 +26,18 @@ describe('exposed list-editor handle — hasUnsaved/hasErrors are unwrapped thro
     const Host = defineComponent({
       setup() {
         const editor = useTemplateRef<ListEditorHandle<Row>>('editor')
-        return { editor }
-      },
-      mounted() {
-        handle = this.editor as unknown as ListEditorHandle<Row>
-      },
-      render() {
-        return h(AListEditor<Row>, {
-          ref: 'editor',
-          modelValue: model.value,
-          'onUpdate:modelValue': (v: Row[]) => {
-            model.value = v
-          },
-          factory: (): Row => ({ id: (id -= 1), position: 0, title: '' }),
+        onMounted(() => {
+          handle = editor.value as unknown as ListEditorHandle<Row>
         })
+        return () =>
+          h(AListEditor<Row>, {
+            ref: 'editor',
+            modelValue: model.value,
+            'onUpdate:modelValue': (v: Row[]) => {
+              model.value = v
+            },
+            factory: (): Row => ({ id: (id -= 1), position: 0, title: '' }),
+          })
       },
     })
     const wrapper = mount(Host)
@@ -73,21 +71,19 @@ describe('exposed list-editor handle — hasUnsaved/hasErrors are unwrapped thro
     const Host = defineComponent({
       setup() {
         const editor = useTemplateRef<ListEditorHandle<Row>>('editor')
-        return { editor }
-      },
-      mounted() {
-        handle = this.editor as unknown as ListEditorHandle<Row>
-      },
-      render() {
-        return h(AListEditor<Row>, {
-          ref: 'editor',
-          modelValue: model.value,
-          'onUpdate:modelValue': (v: Row[]) => {
-            model.value = v
-          },
-          validate: (r: Row) => !!r.title,
-          factory: (): Row => ({ id: -1, position: 0, title: '' }),
+        onMounted(() => {
+          handle = editor.value as unknown as ListEditorHandle<Row>
         })
+        return () =>
+          h(AListEditor<Row>, {
+            ref: 'editor',
+            modelValue: model.value,
+            'onUpdate:modelValue': (v: Row[]) => {
+              model.value = v
+            },
+            validate: (r: Row) => !!r.title,
+            factory: (): Row => ({ id: -1, position: 0, title: '' }),
+          })
       },
     })
     mount(Host)
@@ -104,17 +100,18 @@ describe('exposed list-editor handle — hasUnsaved/hasErrors are unwrapped thro
     const model = ref<Row[]>([{ id: 1, position: 1, title: 'A' }])
     let collected: ListEditorHandle<Row> | null = null
     const Host = defineComponent({
-      render() {
-        return h(AListEditor<Row>, {
-          ref: (el: unknown) => {
-            collected = el as ListEditorHandle<Row> | null
-          },
-          modelValue: model.value,
-          'onUpdate:modelValue': (v: Row[]) => {
-            model.value = v
-          },
-          factory: (): Row => ({ id: -1, position: 0, title: '' }),
-        })
+      setup() {
+        return () =>
+          h(AListEditor<Row>, {
+            ref: (el: unknown) => {
+              collected = el as ListEditorHandle<Row> | null
+            },
+            modelValue: model.value,
+            'onUpdate:modelValue': (v: Row[]) => {
+              model.value = v
+            },
+            factory: (): Row => ({ id: -1, position: 0, title: '' }),
+          })
       },
     })
     mount(Host)

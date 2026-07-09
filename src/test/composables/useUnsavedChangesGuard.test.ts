@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue'
+import { defineComponent, h, nextTick, ref, unref, type Ref } from 'vue'
 import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import { useUnsavedChangesGuard } from '@/labs/unsavedGuard/useUnsavedChangesGuard'
 
@@ -217,7 +217,7 @@ describe('useUnsavedChangesGuard', () => {
       await nextTick()
       await nextTick()
       expect(api.promptOpen.value).toBe(false)
-      expect(dialogModel.value).toBe(false) // closed, not re-opened
+      expect(unref(dialogModel)).toBe(false) // closed, not re-opened
     })
 
     it('auto-expires the acknowledgement after the TTL (M1 — a failed delete stays guarded)', async () => {
@@ -230,7 +230,7 @@ describe('useUnsavedChangesGuard', () => {
       await nextTick()
       await nextTick()
       expect(api.promptOpen.value).toBe(true) // now prompts — the stale acknowledge expired
-      expect(dialogModel.value).toBe(true) // re-opened, awaiting the user's choice
+      expect(unref(dialogModel)).toBe(true) // re-opened, awaiting the user's choice
     })
 
     it('unacknowledge disarms a pending acknowledgement immediately (M1 failure path)', async () => {
@@ -282,10 +282,12 @@ describe('useUnsavedChangesGuard — route-leave guard (router harness)', () => 
       history: createMemoryHistory(),
       routes: [
         { path: '/', component: Guarded },
-        { path: '/other', component: defineComponent({ render: () => h('div', 'other') }) },
+        { path: '/other', component: defineComponent({ setup: () => () => h('div', 'other') }) },
       ],
     })
-    routed = mount(defineComponent({ render: () => h(RouterView) }), { global: { plugins: [router] } })
+    routed = mount(defineComponent({ setup: () => () => h(RouterView) }), {
+      global: { plugins: [router] },
+    })
     return { router, api: () => api }
   }
 

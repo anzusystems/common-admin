@@ -265,7 +265,7 @@ describe('useListEditorScopeValidity — warns on :validation-scope without :val
               ...(withValidate ? { validate } : {}),
               validationScope: scope,
             },
-            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) }
+            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) },
           )
       },
     })
@@ -315,7 +315,7 @@ describe('useListEditorScopeValidity — warns on :validation-scope="true" (L2)'
               validate,
               validationScope: scopeVal,
             },
-            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) }
+            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) },
           )
       },
     })
