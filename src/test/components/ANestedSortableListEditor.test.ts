@@ -348,14 +348,17 @@ describe('ANestedSortableListEditor', () => {
     })
 
     it('resetDirtyBaseline clears the unsaved indicator after server-confirmed operation', async () => {
-      const { wrapper } = mountEditor()
+      const { wrapper, model } = mountEditor()
       const api = editorExposed(wrapper)
-      // Simulate external mutation — change title in-place (dirty)
-      await wrapper.vm.$nextTick()
-      // Re-capture baseline after the supposed save
+      // Actually dirty a row FIRST — edit a node's title in place — so a no-op reset can't pass.
+      const fresh = JSON.parse(JSON.stringify(model.value)) as NestedTree<MenuItem>
+      fresh.children[0].data.title = 'Home edited'
+      model.value = fresh
+      await nextTick()
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
+      // Re-capture baseline (as after a successful save) — the dirty marker must clear.
       api.resetDirtyBaseline()
       await flushPromises()
-      // No dirty rows in DOM
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
   })

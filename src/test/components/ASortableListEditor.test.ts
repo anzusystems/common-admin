@@ -646,15 +646,15 @@ describe('ASortableListEditor', () => {
   })
 
   describe('showAddAfterAction (kebab in reorder mode)', () => {
-    it('exposes the exposed API method to enterReorderMode programmatically', async () => {
-      const { wrapper, editor } = mountEditor(items(), { showAddAfterAction: true })
+    // The add-after ACTION (open ⋮ → "Pridať za túto položku" → insert + session-count) is exercised
+    // end-to-end by the admin-cms e2e (@list-editor: qa85050 BUG-02 + the L1 add-then-delete spec) —
+    // the Vuetify menu popover is unstable to target in jsdom. Here we only assert the per-row ⋮
+    // trigger renders (one per row) when the prop is on.
+    it('renders a ⋮ action menu on every row in reorder mode when showAddAfterAction is set', async () => {
+      const { wrapper } = mountEditor(items(), { showAddAfterAction: true })
       await clickToggle(wrapper)
       await flushPromises()
-      // Menu buttons rendered in each reorder row — clicking menu opens popover which is
-      // unstable to target in headless. Just verify the menu button exists in reorder mode.
-      const menus = wrapper.findAll('.a-le-action--menu')
-      expect(menus.length).toBeGreaterThan(0)
-      void editor
+      expect(wrapper.findAll('.a-le-action--menu').length).toBe(items().length)
     })
   })
 

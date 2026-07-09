@@ -191,19 +191,9 @@ describe('useUnsavedChangesGuard', () => {
   })
 
   describe('acknowledge', () => {
-    it('makes the next ask resolve immediately as discard', async () => {
-      const { api } = mountWithGuard(() =>
-        useUnsavedChangesGuard({
-          sources: [ref(true)],
-          guardRoute: false,
-          guardWindowUnload: false,
-        }),
-      )
-      api.acknowledge()
-      // After acknowledge, the prompt should never open even if hasUnsavedChanges.
-      // Simulate by setting promptOpen and confirming it doesn't latch.
-      expect(api.promptOpen.value).toBe(false)
-    })
+    // (A prior "prompt stays closed after acknowledge()" test was removed: `promptOpen` is false
+    // without acknowledge() too, so it proved nothing. The dialog-close path below actually consumes
+    // the acknowledgement.)
 
     // The dialog-close watch is the unit-testable consume path for `askToLeave` (route-leave needs a
     // real router). A dirty dialog closing while acknowledged passes silently; otherwise it re-opens

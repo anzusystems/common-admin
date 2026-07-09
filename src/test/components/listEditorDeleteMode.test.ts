@@ -200,10 +200,8 @@ describe('list-editor delete-mode — deferred (default)', () => {
     expect(handle().unsavedCount).toBe(2) // 1 add + 1 delete
   })
 
-  it('union, not sum: editing a row and then deleting it collapses to 1 change (no double-count)', async () => {
+  it('deleting a just-added temp row removes its own pending change (add+delete nets zero)', async () => {
     const { wrapper, handle } = mountEditor({ deleteMode: 'deferred', statusField: 'title' })
-    // Edit row 0 via the exposed update path would need the item slot; instead assert the invariant
-    // through add+delete of the SAME temp row nets zero, proving deletes reconcile with live changes.
     await wrapper.find('.a-le-row-add').trigger('click')
     await nextTick()
     const afterAdd = handle().unsavedCount // one added row
@@ -211,6 +209,19 @@ describe('list-editor delete-mode — deferred (default)', () => {
     await delBtns[delBtns.length - 1].trigger('click') // delete the just-added (never-saved) row
     await confirmDialog()
     expect(handle().unsavedCount).toBe(afterAdd - 1) // deleting a temp row removes its own change
+  })
+
+  it('union, not sum: a SAVED row edited THEN deleted counts as 1 change, not 2', async () => {
+    const { wrapper, handle } = mountEditor({ deleteMode: 'deferred', statusField: 'title' })
+    // Edit a persisted row via the exposed handle → one pending (edit) change.
+    handle().updateItem(1, { title: 'edited-1' })
+    await nextTick()
+    expect(handle().unsavedCount).toBe(1)
+    // Delete that SAME edited row → the edit + the delete collapse to one change (the deleted row
+    // is no longer live, so it is not double-counted alongside its tombstone).
+    await clickDelete(wrapper, 0)
+    await confirmDialog()
+    expect(handle().unsavedCount).toBe(1)
   })
 
   it('commit() (save) clears the unconfirmed change', async () => {
