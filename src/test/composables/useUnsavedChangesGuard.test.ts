@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount, type VueWrapper } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue'
+import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import { useUnsavedChangesGuard } from '@/labs/unsavedGuard/useUnsavedChangesGuard'
 
 let mounted: VueWrapper | null = null
@@ -256,5 +257,88 @@ describe('useUnsavedChangesGuard', () => {
       vi.advanceTimersByTime(8001)
       expect(api.promptOpen.value).toBe(false)
     })
+  })
+})
+
+// The route-leave guard (onBeforeRouteLeave) is the PRIMARY mechanism — the dialog-close tests above
+// only exercise askToLeave's consume path. This harness mounts the guard as a real route component and
+// drives actual navigations. (C10 — codex test-review gap.)
+describe('useUnsavedChangesGuard — route-leave guard (router harness)', () => {
+  let routed: VueWrapper | null = null
+  afterEach(() => {
+    routed?.unmount()
+    routed = null
+  })
+
+  const mountRouted = (dirty: Ref<boolean>) => {
+    let api!: ReturnType<typeof useUnsavedChangesGuard>
+    const Guarded = defineComponent({
+      setup() {
+        api = useUnsavedChangesGuard({ sources: [dirty], guardWindowUnload: false })
+        return () => h('div', 'guarded')
+      },
+    })
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', component: Guarded },
+        { path: '/other', component: defineComponent({ render: () => h('div', 'other') }) },
+      ],
+    })
+    routed = mount(defineComponent({ render: () => h(RouterView) }), { global: { plugins: [router] } })
+    return { router, api: () => api }
+  }
+
+  it('blocks a dirty route-leave (prompt opens, navigation held) and proceeds only on discard', async () => {
+    const dirty = ref(true)
+    const { router, api } = mountRouted(dirty)
+    await router.isReady()
+    await flushPromises()
+
+    // Navigate away while dirty → onBeforeRouteLeave opens the prompt and holds the navigation on '/'.
+    const nav = router.push('/other')
+    await flushPromises()
+    expect(api().promptOpen.value).toBe(true)
+    expect(router.currentRoute.value.path).toBe('/')
+
+    // "Stay" → the navigation aborts.
+    api().resolvePrompt(false)
+    await nav
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/')
+
+    // Try again, "discard" → the navigation proceeds.
+    const nav2 = router.push('/other')
+    await flushPromises()
+    expect(api().promptOpen.value).toBe(true)
+    api().resolvePrompt(true)
+    await nav2
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/other')
+  })
+
+  it('a clean route-leave passes without prompting', async () => {
+    const dirty = ref(false)
+    const { router, api } = mountRouted(dirty)
+    await router.isReady()
+    await flushPromises()
+
+    await router.push('/other')
+    await flushPromises()
+    expect(api().promptOpen.value).toBe(false)
+    expect(router.currentRoute.value.path).toBe('/other')
+  })
+
+  it('acknowledge() lets the next dirty route-leave through without prompting', async () => {
+    const dirty = ref(true)
+    const { router, api } = mountRouted(dirty)
+    await router.isReady()
+    await flushPromises()
+
+    api().acknowledge()
+    await router.push('/other')
+    await flushPromises()
+    expect(api().promptOpen.value).toBe(false)
+    expect(router.currentRoute.value.path).toBe('/other')
   })
 })

@@ -11,6 +11,7 @@ interface EditorHandle {
   unsavedCount: number
   commit: () => void
   removeById: (id: number) => void
+  updateItem: (key: number, next: Partial<Row>) => void
 }
 
 /**

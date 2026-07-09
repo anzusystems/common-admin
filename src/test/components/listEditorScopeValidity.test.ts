@@ -105,6 +105,31 @@ describe.each([
       // No registration under the scope → the collector is unaffected (identical legacy behavior).
       expect(collector.value.$invalid).toBe(false)
     })
+
+    it('a collapsed invalid row FIXED in place clears the collector (dynamic transition)', async () => {
+      const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // invalid (empty name)
+      const collector = mountHost(comp, data, SCOPE)
+      await nextTick()
+      await nextTick()
+      expect(collector.value.$invalid).toBe(true)
+      // Fix the row while it stays collapsed — the aggregate validity must re-flow and clear the gate.
+      data.value[0].name = 'now valid'
+      await nextTick()
+      await nextTick()
+      expect(collector.value.$invalid).toBe(false)
+    })
+
+    it('a collapsed valid row that BECOMES invalid re-blocks the collector', async () => {
+      const data = ref<Row[]>([{ id: 1, name: 'ok', position: 1 }])
+      const collector = mountHost(comp, data, SCOPE)
+      await nextTick()
+      await nextTick()
+      expect(collector.value.$invalid).toBe(false)
+      data.value[0].name = '' // now invalid
+      await nextTick()
+      await nextTick()
+      expect(collector.value.$invalid).toBe(true)
+    })
   },
 )
 
