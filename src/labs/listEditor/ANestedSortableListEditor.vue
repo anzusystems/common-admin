@@ -28,6 +28,11 @@ import {
   type ExecutableInstruction,
   type Instruction,
 } from '@/labs/listEditor/composables/useDragInstruction'
+import {
+  provideListEditorStateScope,
+  useNestedListEditorStateEntry,
+  type NestedListEditorStateBindings,
+} from '@/labs/listEditor/composables/useListEditorStateScope'
 import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
 import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
@@ -123,6 +128,13 @@ export interface RowSlotProps<TItem extends Record<string, any>> {
   canOutdent: boolean
   canAddChild: boolean
   touch: boolean
+  /**
+   * Row-scoped `state-key` prefix. Thread it down to any list editor rendered in this slot and set
+   * its `:state-key="`${stateKeyPrefix}:someList`"` — that editor's controller then lives in THIS
+   * editor's scope and survives the row collapsing (which unmounts the whole slot subtree). Entries
+   * under this prefix are disposed when the row is removed.
+   */
+  stateKeyPrefix: string
   actions: RowActions<TItem>
 }
 export interface ToolbarSlotProps {
@@ -196,6 +208,15 @@ export interface Props<TItem extends Record<string, any>> {
    * reachable via `useTemplateRef`.
    */
   editor?: NestedListEditorHandle<TItem>
+  /**
+   * Persist this editor's controller in the nearest ANCESTOR editor's row-state scope under this
+   * key, instead of owning it. Use it for an editor rendered in another editor's `#item` slot (that
+   * slot is behind a `v-if`, so collapsing the row unmounts this editor and a component-owned
+   * controller would re-baseline the already-edited tree on re-expand). Derive the key from the row
+   * slot's `stateKeyPrefix`. Options stay declared here, on this tag. Ignored when `:editor` is
+   * passed, and a no-op without an ancestor scope.
+   */
+  stateKey?: string
 
   readonly?: boolean
   disabled?: boolean
@@ -257,6 +278,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   validate: undefined,
   validationScope: undefined,
   editor: undefined,
+  stateKey: undefined,
   readonly: false,
   disabled: false,
   loading: false,
@@ -377,24 +399,32 @@ const initChildrenExpanded = (tree: NestedTree<TItem>) => {
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss
 initChildrenExpanded(modelValue.value)
 
-// State controller (v2). Default: this editor owns it; opt-in `:editor` lift lets
-// state survive unmount/remount. Undefined getKey/position/validate fall back to
-// controller defaults ('id' / 'position' / always-valid). Its `viewItems` ignores
-// expand state, so we re-project an expand-aware list below (flatViewItems).
+// State controller (v2). Undefined getKey/position/validate fall back to controller defaults
+// ('id' / 'position' / always-valid). Its `viewItems` ignores expand state, so we re-project an
+// expand-aware list below (flatViewItems).
+const controllerOptions: NestedListEditorStateBindings<TItem> = {
+  get: () => modelValue.value,
+  set: (v) => (modelValue.value = v),
+  factory: props.factory,
+  getKey: props.getKey as GetKey<TItem> | undefined,
+  position: props.position as PositionOption<TItem> | undefined,
+  parentField: props.parentField,
+  maxDepth: props.maxDepth,
+  dirtyExclude: () => props.dirtyExclude ?? [],
+  validate: props.validate,
+}
+// Precedence: an explicitly lifted `:editor` wins; then a `state-key`'d entry persisted in the
+// nearest ancestor editor's row-state scope (rebound to this instance on every remount); else this
+// component owns the controller — today's behaviour, unchanged.
+const stateEntry = props.editor
+  ? null
+  : useNestedListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
 const controller =
-  props.editor ??
-  useNestedListEditorController<TItem>({
-    get: () => modelValue.value,
-    set: (v) => (modelValue.value = v),
-    factory: props.factory,
-    getKey: props.getKey as GetKey<TItem> | undefined,
-    position: props.position as PositionOption<TItem> | undefined,
-    parentField: props.parentField,
-    maxDepth: props.maxDepth,
-    dirtyExclude: () => props.dirtyExclude ?? [],
-    validate: props.validate,
-  })
+  props.editor ?? stateEntry?.handle ?? useNestedListEditorController<TItem>(controllerOptions)
 /* eslint-enable vue/no-setup-props-reactivity-loss */
+
+// Row-state scope for THIS editor's `#item` slot subtree — see ASortableListEditor.
+const rowStateScope = provideListEditorStateScope(stateEntry?.childScope ?? null)
 
 // FULL flattened list (collapsed-branch rows included) built directly off the
 // tree: the recursive renderer (LeNestedRow) filters by parentKey + childrenExpandedKeys,
@@ -441,6 +471,14 @@ const flatViewItems = computed<NestedViewItem<TItem>[]>(() => {
   walk(modelValue.value.children, 0, null)
   return flat
 })
+
+// Drop the persisted controllers of rows that no longer exist. `post` so the removed row's subtree
+// has already unmounted (its editors released their entries) before we stop their effect scopes.
+watch(
+  () => flatViewItems.value.map((vi) => String(vi.key)).join('|'),
+  () => rowStateScope.retainOwners(flatViewItems.value.map((vi) => vi.key)),
+  { flush: 'post' },
+)
 
 // Snapshot for reorder-cancel restore only; dirty detection lives in the controller.
 // `movedKeys` is component view state driving the toolbar "N pending" counter,
@@ -1259,6 +1297,7 @@ const buildSlotProps = (vi: DecoratedNestedViewItem<TItem>) => ({
   canOutdent: vi.canOutdent,
   canAddChild: vi.canAddChild,
   touch: isTouch.value,
+  stateKeyPrefix: rowStateScope.prefixFor(vi.key),
   actions: getActions(vi.key),
 })
 

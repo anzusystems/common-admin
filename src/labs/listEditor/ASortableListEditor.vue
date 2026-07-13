@@ -24,6 +24,11 @@ import {
   type ListEditorValidationResult,
   type PositionOption,
 } from '@/labs/listEditor/composables/useListEditorController'
+import {
+  provideListEditorStateScope,
+  useListEditorStateEntry,
+  type ListEditorStateBindings,
+} from '@/labs/listEditor/composables/useListEditorStateScope'
 import { resolveCompactText as resolveCompactTextUtil } from '@/labs/listEditor/composables/resolveCompactText'
 import { useUnsavedSection } from '@/labs/unsavedGuard/useUnsavedSection'
 import { useDeleteDialog } from '@/labs/listEditor/composables/useDeleteDialog'
@@ -100,6 +105,13 @@ export interface RowSlotProps<TItem extends Record<string, any>> {
   canMoveUp: boolean
   canMoveDown: boolean
   touch: boolean
+  /**
+   * Row-scoped `state-key` prefix. Thread it down to any list editor rendered in this slot and set
+   * its `:state-key="`${stateKeyPrefix}:someList`"` — that editor's controller then lives in THIS
+   * editor's scope and survives the row collapsing (which unmounts the whole slot subtree). Entries
+   * under this prefix are disposed when the row is removed.
+   */
+  stateKeyPrefix: string
   actions: RowActions<TItem>
 }
 export interface ToolbarSlotProps {
@@ -176,6 +188,18 @@ export interface Props<TItem extends Record<string, any>> {
    * relocation). When omitted the editor owns an internal controller.
    */
   editor?: ListEditorHandle<TItem>
+  /**
+   * Persist this editor's controller in the nearest ANCESTOR editor's row-state scope under this
+   * key, instead of owning it. Use it for an editor rendered in another editor's `#item` slot: that
+   * slot is behind a `v-if`, so collapsing the row unmounts this editor and a component-owned
+   * controller would re-baseline the already-edited data on re-expand (losing amber, moved rows,
+   * tombstones and the red rail). Derive the key from the row slot's `stateKeyPrefix`, e.g.
+   * `:state-key="`${stateKeyPrefix}:answers`"`. Options stay declared here, on this tag: the
+   * controller is built from THIS editor's `factory`/`get-key`/`position`/`dirty-exclude`/`validate`
+   * and rebound to each new instance's model on remount. Ignored when `:editor` is passed, and a
+   * no-op without an ancestor scope.
+   */
+  stateKey?: string
 
   readonly?: boolean
   disabled?: boolean
@@ -249,6 +273,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   validate: undefined,
   validationScope: undefined,
   editor: undefined,
+  stateKey: undefined,
   readonly: false,
   disabled: false,
   loading: false,
@@ -325,28 +350,37 @@ const { isNarrow } = useContainerWidth(rootEl)
 
 const isTouch = useIsTouchDevice()
 
-// State controller (v2). Default: this editor owns it; opt-in lift via `:editor`.
-// `factory`/`getKey`/`position`/`validate` are construction-time options read
-// once to seed the controller, not reactive props — hence the suppressed
-// reactivity-loss rule. Undefined options fall back to controller defaults
-// ('id' / 'position' / always-valid).
+// State controller (v2). `factory`/`getKey`/`position`/`validate` are construction-time options read
+// once to seed the controller, not reactive props — hence the suppressed reactivity-loss rule.
+// Undefined options fall back to controller defaults ('id' / 'position' / always-valid).
 /* eslint-disable vue/no-setup-props-reactivity-loss */
+const controllerOptions: ListEditorStateBindings<TItem> = {
+  get: () => modelValue.value,
+  set: (v) => (modelValue.value = v),
+  factory: props.factory,
+  getKey: props.getKey as GetKey<TItem> | undefined,
+  position: props.position as PositionOption<TItem> | undefined,
+  dirtyExclude: () => props.dirtyExclude ?? [],
+  validate: props.validate,
+}
+// Precedence: an explicitly lifted `:editor` wins; then a `state-key`'d entry persisted in the
+// nearest ancestor editor's row-state scope (built from the options above, rebound to this instance
+// on every remount); else this component owns the controller — today's behaviour, unchanged.
+const stateEntry = props.editor
+  ? null
+  : useListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
 const controller =
-  props.editor ??
-  useListEditorController<TItem>({
-    get: () => modelValue.value,
-    set: (v) => (modelValue.value = v),
-    factory: props.factory,
-    getKey: props.getKey as GetKey<TItem> | undefined,
-    position: props.position as PositionOption<TItem> | undefined,
-    dirtyExclude: () => props.dirtyExclude ?? [],
-    validate: props.validate,
-  })
+  props.editor ?? stateEntry?.handle ?? useListEditorController<TItem>(controllerOptions)
 
 // Local mirror of the controller's key resolution so rendered rows key the same
 // way the controller tracks them (v2 spec point 7).
 const getKeyOpt = props.getKey ?? 'id'
 /* eslint-enable vue/no-setup-props-reactivity-loss */
+
+// Row-state scope for THIS editor's `#item` slot subtree: a nested editor with a `state-key` builds
+// its controller in here, so it outlives the row collapsing (which unmounts the slot). When this
+// editor is itself persisted, the scope comes from its own entry — so the chain holds at any depth.
+const rowStateScope = provideListEditorStateScope(stateEntry?.childScope ?? null)
 const keyOf = (item: TItem): ListEditorKey =>
   typeof getKeyOpt === 'function'
     ? getKeyOpt(item)
@@ -370,6 +404,14 @@ const viewItems = computed<ListViewItem<TItem>[]>(() =>
     raw,
     position: raw[positionFieldName.value] as number | undefined,
   })),
+)
+
+// Drop the persisted controllers of rows that no longer exist. `post` so the removed row's subtree
+// has already unmounted (its editors released their entries) before we stop their effect scopes.
+watch(
+  () => viewItems.value.map((vi) => String(vi.key)).join('|'),
+  () => rowStateScope.retainOwners(viewItems.value.map((vi) => vi.key)),
+  { flush: 'post' },
 )
 
 const expandedKeys = ref<Set<ListEditorKey>>(new Set())
@@ -1139,6 +1181,7 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
   canMoveUp: vi.canMoveUp,
   canMoveDown: vi.canMoveDown,
   touch: isTouch.value,
+  stateKeyPrefix: rowStateScope.prefixFor(vi.key),
   actions: getActions(vi.key),
 })
 

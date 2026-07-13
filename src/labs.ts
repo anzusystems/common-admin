@@ -67,6 +67,17 @@ import {
   type PositionOption,
 } from '@/labs/listEditor/composables/useListEditorController'
 import {
+  createListEditorStateScope,
+  provideListEditorStateScope,
+  useListEditorStateEntry,
+  useNestedListEditorStateEntry,
+  ListEditorStateScopeKey,
+  type ListEditorStateScope,
+  type ListEditorStateBindings,
+  type NestedListEditorStateBindings,
+  type ListEditorStateEntry,
+} from '@/labs/listEditor/composables/useListEditorStateScope'
+import {
   renumberPositions,
   sortByPosition,
   sortByPositionDeep,
@@ -180,6 +191,15 @@ export {
   type ListEditorValidationResult,
   type GetKey,
   type PositionOption,
+  createListEditorStateScope,
+  provideListEditorStateScope,
+  useListEditorStateEntry,
+  useNestedListEditorStateEntry,
+  ListEditorStateScopeKey,
+  type ListEditorStateScope,
+  type ListEditorStateBindings,
+  type NestedListEditorStateBindings,
+  type ListEditorStateEntry,
   renumberPositions,
   sortByPosition,
   sortByPositionDeep,
