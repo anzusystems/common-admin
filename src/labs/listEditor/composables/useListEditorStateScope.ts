@@ -110,8 +110,9 @@ export interface ListEditorStateScope {
   dispose(): void
 }
 
-export const ListEditorStateScopeKey: InjectionKey<ListEditorStateScope> =
-  Symbol('le.stateScope') as InjectionKey<ListEditorStateScope>
+export const ListEditorStateScopeKey: InjectionKey<ListEditorStateScope> = Symbol(
+  'le.stateScope',
+) as InjectionKey<ListEditorStateScope>
 
 let scopeSeq = 0
 
@@ -156,7 +157,9 @@ export function createListEditorStateScope(): ListEditorStateScope {
         existing.live.value = bindings
         return existing.handle as THandle
       }
-      const entryScope = root.active ? (root.run(() => effectScope()) as EffectScope) : effectScope()
+      const entryScope = root.active
+        ? (root.run(() => effectScope()) as EffectScope)
+        : effectScope()
       const live = shallowRef(bindings) as ShallowRef<TBindings>
       const handle = entryScope.run(() => create(live)) as THandle
       entries.set(key, { scope: entryScope, live, handle, children: null, boundUid: uid })
@@ -284,10 +287,7 @@ export function useNestedListEditorStateEntry<TItem extends Record<string, any>>
   const scope = inject(ListEditorStateScopeKey, null)
   if (!stateKey || !scope) return null
   const uid = getCurrentInstance()?.uid ?? null
-  const handle = scope.resolve<
-    NestedListEditorStateBindings<TItem>,
-    NestedListEditorHandle<TItem>
-  >(
+  const handle = scope.resolve<NestedListEditorStateBindings<TItem>, NestedListEditorHandle<TItem>>(
     stateKey,
     bindings,
     (live) =>

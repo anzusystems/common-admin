@@ -38,8 +38,7 @@ afterEach(() => {
   mounted = null
 })
 
-const innerRows = (): Element[] =>
-  Array.from(document.querySelectorAll('.a-list-editor .a-le-row'))
+const innerRows = (): Element[] => Array.from(document.querySelectorAll('.a-list-editor .a-le-row'))
 const innerUnsavedRows = (): Element[] =>
   Array.from(document.querySelectorAll('.a-list-editor .a-le-row--unsaved'))
 const innerInvalidRows = (): Element[] =>
@@ -334,7 +333,12 @@ describe('list-editor state scope — the tree editor', () => {
                     'onUpdate:modelValue': (v: NestedTree<Node>) => {
                       tree.value = v
                     },
-                    factory: (): Node => ({ id: -Date.now(), position: 0, parent: null, title: '' }),
+                    factory: (): Node => ({
+                      id: -Date.now(),
+                      position: 0,
+                      parent: null,
+                      title: '',
+                    }),
                     maxDepth: 2,
                     compactField: 'title',
                     stateKey: `${slotProps.stateKeyPrefix}:tree`,
@@ -450,7 +454,10 @@ describe('createListEditorStateScope', () => {
         written = v
       },
     }
-    const handle = scope.resolve<ModelBindings, { write: (v: number[]) => void; read: () => number[] }>(
+    const handle = scope.resolve<
+      ModelBindings,
+      { write: (v: number[]) => void; read: () => number[] }
+    >(
       'k',
       bindings,
       (live) => ({ write: (v) => live.value.set(v), read: () => live.value.get() }),
