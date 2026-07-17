@@ -129,10 +129,13 @@ describe('preservePositionValues', () => {
 
   it('names the custom positionField in the warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    preservePositionValues([{ id: 'A', order: undefined }] as Array<{
-      id: string
-      order?: number
-    }>, { positionField: 'order' })
+    preservePositionValues(
+      [{ id: 'A', order: undefined }] as Array<{
+        id: string
+        order?: number
+      }>,
+      { positionField: 'order' },
+    )
     expect(String(warn.mock.calls[0][0])).toContain('`order`')
   })
 
