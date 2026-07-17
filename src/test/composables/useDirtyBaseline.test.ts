@@ -21,8 +21,10 @@ describe('useDirtyBaseline', () => {
         items.map((it) => ({ key: it.id, data: it })),
       )
       expect(dirtyBaseline.value.size).toBe(2)
-      expect(dirtyBaseline.value.has(1)).toBe(true)
-      expect(dirtyBaseline.value.has(2)).toBe(true)
+      // The name's actual claim is the stringified CONTENT — key presence alone would survive a
+      // baseline that stored nothing (or every row's hash under one key).
+      expect(dirtyBaseline.value.get(1)).toBe(JSON.stringify({ id: 1, title: 'A' }))
+      expect(dirtyBaseline.value.get(2)).toBe(JSON.stringify({ id: 2, title: 'B' }))
     })
   })
 

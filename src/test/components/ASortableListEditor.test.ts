@@ -1,9 +1,38 @@
 /* eslint-disable vue/no-ref-object-reactivity-loss */
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
+
+// Drag is gated on `useIsTouchDevice()` (`display.platform.touch || matchMedia('(any-pointer:
+// coarse)')`). Tests that assert drag state must DRIVE that input rather than read it back off
+// the component, so pin the pointer kind explicitly before mount — same lever as
+// ASortableListEditorTouchDrag.test.ts. `isTouch` is read at setup, so install it first.
+const makeMatchMedia = (coarseMatches: boolean) =>
+  vi.fn((q: string) => ({
+    matches: coarseMatches && q.includes('any-pointer: coarse'),
+    media: q,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    onchange: null,
+    dispatchEvent: vi.fn(),
+  }))
+
+let restoreMatchMedia: (() => void) | null = null
+const forcePointerKind = (coarse: boolean) => {
+  const original = window.matchMedia
+  restoreMatchMedia = () => {
+    window.matchMedia = original
+  }
+  window.matchMedia = makeMatchMedia(coarse) as unknown as typeof window.matchMedia
+}
+afterEach(() => {
+  restoreMatchMedia?.()
+  restoreMatchMedia = null
+})
 
 interface FaqItem {
   id: number
@@ -12,11 +41,15 @@ interface FaqItem {
   status?: string
 }
 
+// Positions are deliberately SPARSE and non-sequential. With `index + 1` positions
+// (1,2,3,4) every position assertion here is degenerate: that is exactly what
+// `renumberPositions` emits, so "left untouched" and "fully renumbered" produce the same
+// array and no assertion can tell them apart. Sparse values keep the two distinguishable.
 const items = (): FaqItem[] => [
-  { id: 1, position: 1, title: 'First', status: 'Active' },
-  { id: 2, position: 2, title: 'Second', status: 'Draft' },
-  { id: 3, position: 3, title: 'Third', status: 'Active' },
-  { id: 4, position: 4, title: 'Fourth', status: 'Draft' },
+  { id: 1, position: 10, title: 'First', status: 'Active' },
+  { id: 2, position: 20, title: 'Second', status: 'Draft' },
+  { id: 3, position: 310, title: 'Third', status: 'Active' },
+  { id: 4, position: 400, title: 'Fourth', status: 'Draft' },
 ]
 
 const findSortable = (w: VueWrapper): VueWrapper =>
@@ -276,6 +309,7 @@ describe('ASortableListEditor', () => {
     })
 
     it('without managed position: reorders the array but leaves positions untouched', async () => {
+      const loadedPosition = new Map(items().map((i) => [i.id, i.position]))
       const { wrapper, model } = mountSortable({ position: false })
       await nextTick()
       await flushPromises()
@@ -284,8 +318,15 @@ describe('ASortableListEditor', () => {
 
       // Order changed...
       expect(model.value.map((i) => i.id)).not.toEqual([1, 2, 3, 4])
-      // ...but positions are NOT rewritten (parity with vueuse's plain move).
-      expect(model.value.map((i) => i.position).sort((a, b) => a - b)).toEqual([1, 2, 3, 4])
+      expect(model.value[0].id).toBe(4)
+      // ...but every row still carries the exact position value it was LOADED with — the
+      // position travels with its row instead of being rewritten to the new index.
+      // (The old assertion sorted the positions first, which threw away the row↔position
+      // pairing the claim rests on, and then compared against [1,2,3,4] — the very series
+      // renumbering emits. It passed whether or not the `position: false` opt-out worked.)
+      expect(model.value.map((i) => i.position)).toEqual(
+        model.value.map((i) => loadedPosition.get(i.id)),
+      )
       wrapper.unmount()
     })
 
@@ -296,6 +337,10 @@ describe('ASortableListEditor', () => {
 
       await dragRowOntoRow(wrapper, 3, 0)
 
+      // The drag actually fired — without this the whole assertion below is just the
+      // INITIAL state (4 rows, ids {1,2,3,4}) and a drag that silently stops working
+      // stays green. Siblings above assert the same guard; this one used to omit it.
+      expect(model.value.map((i) => i.id)).not.toEqual([1, 2, 3, 4])
       // No row duplicated or dropped — ids are still the same set of 4.
       expect(model.value.map((i) => i.id).sort((a, b) => a - b)).toEqual([1, 2, 3, 4])
       // DOM stays in sync with the model (one rendered row per item).
@@ -479,15 +524,28 @@ describe('ASortableListEditor', () => {
     })
 
     it('exposes a --drag-enabled class when in reorder mode on desktop', async () => {
+      // A fine pointer is a precondition of the claim, so drive it — don't branch on the
+      // component's own output. (The old `rootHasClass ? handles : arrows` ternary degraded
+      // to `arrows > 0` whenever the class was missing, which is unconditionally true in
+      // reorder mode: the arrows are not drag-gated.)
+      forcePointerKind(false)
       const { wrapper } = mountEditor()
       await clickToggle(wrapper)
       await flushPromises()
-      // On desktop: drag-enabled class is set; on small viewports arrows are shown instead.
-      // Both behaviors are correct, so test asserts either state is consistent with viewport.
-      const rootHasClass = wrapper.find('.a-sortable-list-editor--drag-enabled').exists()
-      const handlesCount = wrapper.findAll('.a-le-drag-handle').length
-      const arrowsCount = wrapper.findAll('.a-le-action--up').length
-      expect(rootHasClass ? handlesCount : arrowsCount).toBeGreaterThan(0)
+      expect(wrapper.find('.a-sortable-list-editor--drag-enabled').exists()).toBe(true)
+      expect(wrapper.findAll('.a-le-drag-handle').length).toBe(4)
+    })
+
+    it('withholds --drag-enabled in reorder mode on a coarse pointer', async () => {
+      forcePointerKind(true)
+      const { wrapper } = mountEditor()
+      await clickToggle(wrapper)
+      await flushPromises()
+      expect(wrapper.find('.a-sortable-list-editor--drag-enabled').exists()).toBe(false)
+      expect(wrapper.find('.a-le-drag-handle').exists()).toBe(false)
+      // Arrows are the touch fallback — they are present in BOTH cases, which is exactly
+      // why they cannot stand in as the oracle for drag state.
+      expect(wrapper.findAll('.a-le-action--up').length).toBeGreaterThan(0)
     })
 
     it('hides drag handle when disableDrag=true even in reorder mode', async () => {
@@ -553,11 +611,15 @@ describe('ASortableListEditor', () => {
     })
 
     it('sets --drag-enabled class on desktop (chips drag is always on)', () => {
+      // The old `if (!isTouch)` guard read `--touch` off the component itself, so the very
+      // mutation that wrongly forced touch also suppressed the assertion — the test then
+      // executed ZERO expects. Drive the pointer kind instead and assert unconditionally.
+      forcePointerKind(false)
       const { wrapper } = mountChips()
-      // On desktop-sized test viewport. On touch the class is absent, arrows take over.
-      const rootHasDragClass = wrapper.find('.a-sortable-list-editor--drag-enabled').exists()
-      const isTouch = wrapper.find('.a-sortable-list-editor--touch').exists()
-      if (!isTouch) expect(rootHasDragClass).toBe(true)
+      expect(wrapper.find('.a-sortable-list-editor--touch').exists()).toBe(false)
+      expect(wrapper.find('.a-sortable-list-editor--drag-enabled').exists()).toBe(true)
+      // Chips have no reorder toggle — drag must be live without entering reorder mode.
+      expect(wrapper.findAll('.a-le-drag-handle').length).toBe(2)
     })
 
     it('drag reorders chips (horizontal) through the same synchronous onUpdate', async () => {
@@ -645,16 +707,30 @@ describe('ASortableListEditor', () => {
     })
   })
 
-  describe('showAddAfterAction (kebab in reorder mode)', () => {
+  describe('showAddAfterAction (kebab)', () => {
     // The add-after ACTION (open ⋮ → "Pridať za túto položku" → insert + session-count) is exercised
     // end-to-end by the admin-cms e2e (@list-editor: qa85050 BUG-02 + the L1 add-then-delete spec) —
-    // the Vuetify menu popover is unstable to target in jsdom. Here we only assert the per-row ⋮
-    // trigger renders (one per row) when the prop is on.
-    it('renders a ⋮ action menu on every row in reorder mode when showAddAfterAction is set', async () => {
-      const { wrapper } = mountEditor(items(), { showAddAfterAction: true })
-      await clickToggle(wrapper)
-      await flushPromises()
-      expect(wrapper.findAll('.a-le-action--menu').length).toBe(items().length)
+    // the Vuetify menu popover is unstable to target here. These only assert the per-row ⋮ trigger.
+    it('renders a ⋮ action menu on every row in reorder mode, with or without showAddAfterAction', async () => {
+      // The REORDER-mode kebab is the general overflow menu (move-to-position, delete, …) and
+      // carries no `v-if` on `showAddAfterAction` — only the VIEW-mode kebab is gated on it
+      // (asserted below). The old name claimed the prop was what made this menu appear, so the
+      // prop it named was not load-bearing and removing that `v-if` could not fail the test.
+      for (const extra of [{}, { showAddAfterAction: true }]) {
+        const { wrapper } = mountEditor(items(), extra)
+        await clickToggle(wrapper)
+        await flushPromises()
+        expect(wrapper.findAll('.a-le-action--menu').length).toBe(items().length)
+        wrapper.unmount()
+      }
+    })
+
+    it('gates the view-mode ⋮ menu on showAddAfterAction', () => {
+      // This is where the prop IS load-bearing — nothing covered it before.
+      const off = mountEditor()
+      expect(off.wrapper.find('.a-le-action--menu').exists()).toBe(false)
+      const on = mountEditor(items(), { showAddAfterAction: true })
+      expect(on.wrapper.findAll('.a-le-action--menu').length).toBe(items().length)
     })
   })
 

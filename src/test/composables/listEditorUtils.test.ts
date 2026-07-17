@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  preservePositionValues,
   renumberPositions,
   sortByPosition,
   sortByPositionDeep,
@@ -40,6 +41,126 @@ describe('renumberPositions', () => {
 
   it('handles an empty list', () => {
     expect(renumberPositions([])).toEqual([])
+  })
+})
+
+describe('preservePositionValues', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('reassigns the EXISTING value set, ascending, to the current array order', () => {
+    // The point of the strategy: the slot values {10, 310} are untouched, the rows move through them.
+    const items = [
+      { id: 'B', position: 310 },
+      { id: 'A', position: 10 },
+    ]
+    const result = preservePositionValues(items)
+    expect(result.map((i) => [i.id, i.position])).toEqual([
+      ['B', 10],
+      ['A', 310],
+    ])
+  })
+
+  it('sorts the slots ascending regardless of the input order', () => {
+    const items = [
+      { id: 'C', position: 310 },
+      { id: 'A', position: 10 },
+      { id: 'B', position: 100 },
+    ]
+    expect(preservePositionValues(items).map((i) => [i.id, i.position])).toEqual([
+      ['C', 10],
+      ['A', 100],
+      ['B', 310],
+    ])
+  })
+
+  it('keeps a row already sitting in its slot reference-equal and never mutates the input', () => {
+    const a = { id: 'A', position: 10 } // already in slot 0 → must not be cloned
+    const c = { id: 'C', position: 310 }
+    const b = { id: 'B', position: 100 }
+    const items = [a, c, b]
+    const result = preservePositionValues(items)
+    expect(result[0]).toBe(a)
+    expect(result[1]).not.toBe(c) // reassigned 310 → 100, so cloned
+    expect(result[2]).not.toBe(b)
+    expect(c.position).toBe(310) // input objects untouched
+    expect(b.position).toBe(100)
+    expect(result).not.toBe(items)
+    expect(result.map((i) => i.position)).toEqual([10, 100, 310])
+  })
+
+  it('supports a custom positionField', () => {
+    const items = [
+      { id: 'B', order: 310 },
+      { id: 'A', order: 10 },
+    ]
+    const result = preservePositionValues(items, { positionField: 'order' })
+    expect(result.map((i) => [i.id, i.order])).toEqual([
+      ['B', 10],
+      ['A', 310],
+    ])
+  })
+
+  it('warns and leaves positions UNTOUCHED when a position is missing', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const items = [{ id: 'B', position: 310 }, { id: 'A' }] as Array<{
+      id: string
+      position?: number
+    }>
+    const result = preservePositionValues(items)
+    expect(result).toBe(items) // the SAME array back — no invented values
+    expect(items.map((i) => i.position)).toEqual([310, undefined])
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('leaving positions untouched')
+  })
+
+  it('warns and leaves positions UNTOUCHED when a position is non-finite', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const items = [
+      { id: 'A', position: Number.NaN },
+      { id: 'B', position: 10 },
+    ]
+    const result = preservePositionValues(items)
+    expect(result).toBe(items)
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('leaving positions untouched')
+  })
+
+  it('names the custom positionField in the warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    preservePositionValues([{ id: 'A', order: undefined }] as Array<{
+      id: string
+      order?: number
+    }>, { positionField: 'order' })
+    expect(String(warn.mock.calls[0][0])).toContain('`order`')
+  })
+
+  it('warns about DUPLICATE positions but still reassigns', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const items = [
+      { id: 'A', position: 10 },
+      { id: 'B', position: 10 },
+    ]
+    const result = preservePositionValues(items)
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('DUPLICATE')
+    expect(result.map((i) => i.position)).toEqual([10, 10]) // still assigns the (duplicate) slots
+  })
+
+  it('does not warn on the happy path', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    preservePositionValues([
+      { id: 'B', position: 310 },
+      { id: 'A', position: 10 },
+    ])
+    expect(warn).not.toHaveBeenCalled()
+  })
+
+  it('handles an empty list without warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    expect(preservePositionValues([])).toEqual([])
+    expect(warn).not.toHaveBeenCalled()
   })
 })
 

@@ -169,7 +169,10 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
     ).toEqual([1])
   })
 
-  it('collapses inline editing when the consumer commits (post-save)', async () => {
+  // Named for what it asserts: `commit()` re-baselines (amber clears) and deliberately LEAVES
+  // the inline form open. It was previously called "collapses inline editing when the consumer
+  // commits", which documented the opposite of both the body and the behaviour.
+  it('clears amber but keeps inline editing open when the consumer commits (post-save)', async () => {
     const model = ref<Item[]>(items())
     mountManaged({ model, withItemSlot: true })
     await nextTick()
@@ -187,11 +190,14 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
 
     // Parent persisted and committed → editing is left open by the controller
     // (commit only re-baselines data); a bare commit does not force-close edit.
-    // Resetting back is the discard path; here we just assert commit clears amber.
+    // Resetting back is the discard path.
     exposed(mounted!).commit()
     await nextTick()
     await nextTick()
     expect(document.querySelectorAll('.a-le-row--unsaved').length).toBe(0)
+    // Both halves of the name are now asserted — the "keeps editing open" half was only
+    // ever stated in a comment, so nothing pinned it.
+    expect(document.querySelectorAll('.a-le-row--editing').length).toBeGreaterThan(0)
   })
 
   it('unsaved-section-label registers the editor as a dirty section once a row is unsaved', async () => {

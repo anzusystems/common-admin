@@ -53,6 +53,22 @@ const setup = (
   return { store, h }
 }
 
+type SlugRow = Row & { slug: string }
+
+// Rows keyed by `slug` instead of `id`. Built here rather than inline so the assertions can read
+// `store.value` (vue/no-ref-object-reactivity-loss forbids that in the ref's own scope).
+const setupSlug = (children: NestedTreeNode<SlugRow>[]) => {
+  const store = ref<NestedTree<SlugRow>>({ children, meta: { dirty: false } })
+  const h = useNestedListEditorController<SlugRow>({
+    get: () => store.value,
+    set: (v) => (store.value = v),
+    factory: () => ({ id: -1, title: '', position: 0, parent: null, slug: '' }),
+    getKey: (i) => i.slug,
+    maxDepth: 2,
+  })
+  return { store, h }
+}
+
 describe('useNestedListEditorController', () => {
   it('items flattens the tree depth-first in render order', () => {
     const { h } = setup()
@@ -193,7 +209,7 @@ describe('useNestedListEditorController', () => {
     expect(warn.h.hasErrors.value).toBe(false)
   })
 
-  it('rowState gates red: clear until unsaved or validateAll(); warning shows immediately', () => {
+  it('rowState gates red behind validateAll(); an open row stays clear', () => {
     const { h } = setup(
       {
         children: [node({ id: 1, title: '', position: 1, parent: null })],
@@ -202,9 +218,40 @@ describe('useNestedListEditorController', () => {
       { validate: (r) => r.title.length > 0 },
     )
     const row = { id: 1, title: '', position: 1, parent: null }
-    expect(h.rowState(row, 1)).toBeNull() // invalid but not unsaved/submitted
+    expect(h.rowState(row, 1)).toBeNull() // invalid on load, but untouched → no red
+    expect(h.rowState(row, 1, true)).toBeNull() // being edited → no red either
     expect(h.validateAll()).toBe(false)
-    expect(h.rowState(row, 1)).toBe('invalid') // submitted -> shows
+    expect(h.rowState(row, 1)).toBe('invalid') // a save attempt reveals it
+    expect(h.rowState(row, 1, true)).toBe('invalid') // …even while the row is open
+  })
+
+  it('rowState reds an UNSAVED invalid row without any validateAll()', () => {
+    const { store, h } = setup(
+      {
+        children: [node({ id: 1, title: 'a', position: 1, parent: null })],
+        meta: { dirty: false },
+      },
+      { validate: (r) => r.title.length > 0 },
+    )
+    const row = store.value.children[0].data
+    expect(h.rowState(row, 1)).toBeNull() // clean + valid
+    row.title = '' // now invalid AND unsaved
+    expect(h.rowState(row, 1)).toBe('invalid')
+    expect(h.rowState(row, 1, true)).toBeNull() // suppressed while open (still typing)
+  })
+
+  it('rowState shows a warning immediately — no dirty/submitted gate', () => {
+    const { h } = setup(
+      {
+        children: [node({ id: 1, title: 'x', position: 1, parent: null })],
+        meta: { dirty: false },
+      },
+      { validate: () => ({ valid: true, state: 'warning' }) },
+    )
+    const row = { id: 1, title: 'x', position: 1, parent: null }
+    expect(h.rowState(row, 1)).toBe('warning') // clean, untouched, never submitted
+    expect(h.rowState(row, 1, true)).toBe('warning') // and while open
+    expect(h.hasErrors.value).toBe(false) // a warning never blocks save
   })
 
   it('getPayload flattens ordered rows carrying resolved position + parent key', () => {
@@ -282,21 +329,90 @@ describe('useNestedListEditorController', () => {
     expect(store.value.children[0].data.title).toBe('Home')
   })
 
-  it('custom getKey fn + position:false (no renumber on payload)', () => {
-    const store = ref<NestedTree<Row & { slug: string }>>({
-      children: [gnode({ id: undefined, title: 'a', position: 7, parent: null, slug: 'x' })],
+  it('custom getKey fn: every key-addressed op resolves rows by that field, not by id', () => {
+    // The rows carry NO id on purpose — if the controller fell back to `id`, every key would be
+    // `undefined`. A negative check like `isUnsaved('x') === false` cannot see that (a broken key is
+    // simply absent from the set), so every oracle here is POSITIVE: address a row by its slug and
+    // require the effect to land.
+    const { store, h } = setupSlug([
+      gnode({ id: undefined, title: 'a', position: 1, parent: null, slug: 'x' }),
+      gnode({ id: undefined, title: 'b', position: 2, parent: null, slug: 'y' }),
+    ])
+    expect(h.isUnsaved('x')).toBe(false) // clean load, keyed by slug
+
+    h.updateItem('x', { id: undefined, title: 'edited', position: 1, parent: null, slug: 'x' })
+    expect(store.value.children[0].data.title).toBe('edited') // found BY slug
+    expect(h.isUnsaved('x')).toBe(true) // and reported unsaved UNDER the slug key
+    expect(h.isUnsaved('y')).toBe(false)
+    expect(h.getChanges().updated.map((r) => r.slug)).toEqual(['x'])
+
+    h.addChild('x', { id: undefined, title: 'kid', position: 1, parent: null, slug: 'k' })
+    expect(store.value.children[0].children!.map((c) => c.data.slug)).toEqual(['k']) // parent by slug
+    expect(h.isUnsaved('k')).toBe(true)
+
+    h.deleteItem('y') // removed BY slug
+    expect(h.items.value.map((r) => r.slug)).toEqual(['x', 'k'])
+    expect(h.getChanges().deleted.map((r) => r.slug)).toEqual(['y'])
+
+    const off = h.registerValidity('x', () => false)
+    expect(h.invalidKeys.value.has('x')).toBe(true) // validity registers under the slug key too
+    off()
+  })
+
+  it('position:false makes the position field count as row content', () => {
+    // What `position: false` actually changes in the NESTED controller is the dirty content hash:
+    // an unmanaged position is ordinary data, so editing it IS an edit. (It does NOT stop the tree
+    // renumbering — see the report/KNOWN ISSUE: useNestedListEditor.recalculateSiblings still
+    // rewrites the field. The old name here, "no renumber on payload", described neither: the
+    // nested buildPayload never renumbers under ANY position option.)
+    const build = (unmanaged: boolean) => {
+      const store = ref<NestedTree<Row>>({
+        children: [
+          node({ id: 1, title: 'a', position: 1, parent: null }),
+          node({ id: 2, title: 'b', position: 2, parent: null }),
+        ],
+        meta: { dirty: false },
+      })
+      const h = useNestedListEditorController<Row>({
+        get: () => store.value,
+        set: (v) => (store.value = v),
+        maxDepth: 2,
+        ...(unmanaged ? { position: false as const } : {}),
+      })
+      return { store, h }
+    }
+
+    const off = build(true)
+    off.store.value.children[0].data.position = 99
+    expect(off.h.isUnsaved(1)).toBe(true) // unmanaged → position is content → dirty
+    expect(off.h.isUnsaved(2)).toBe(false)
+
+    const on = build(false)
+    on.store.value.children[0].data.position = 99
+    expect(on.h.isUnsaved(1)).toBe(false) // managed → stripped from the hash → a reorder never ambers
+  })
+
+  it('getPayload never renumbers: positions come from the tree ops, not the payload build', () => {
+    // Distinct from the FLAT controller, whose getPayload DOES renumber. Here the positions in the
+    // payload are whatever the tree last wrote — a gappy store comes back gappy.
+    const store = ref<NestedTree<Row>>({
+      children: [
+        node({ id: 1, title: 'a', position: 7, parent: null }),
+        node({ id: 2, title: 'b', position: 30, parent: null }),
+      ],
       meta: { dirty: false },
     })
-    const h = useNestedListEditorController<Row & { slug: string }>({
+    const h = useNestedListEditorController<Row>({
       get: () => store.value,
       set: (v) => (store.value = v),
-      factory: () => ({ id: -1, title: '', position: 0, parent: null, slug: '' }),
-      getKey: (i) => i.slug,
-      position: false,
       maxDepth: 2,
     })
-    expect(h.isUnsaved('x')).toBe(false)
-    expect(h.getPayload()[0].position).toBe(7) // not renumbered
+    expect(h.getPayload().map((r) => r.position)).toEqual([7, 30]) // untouched, NOT 1/2
+    h.moveDown(1) // a tree op DOES renumber (that is where positions come from)
+    expect(h.getPayload().map((r) => [r.id, r.position])).toEqual([
+      [2, 1],
+      [1, 2],
+    ])
   })
 
   it('registerValidity escape hatch overrides validate for that row', () => {
@@ -306,6 +422,99 @@ describe('useNestedListEditorController', () => {
     expect(h.invalidKeys.value.has(1)).toBe(true)
     off()
     expect(h.invalidKeys.value.has(1)).toBe(false)
+  })
+
+  it('restoreDeleted un-tombstones a deferred-deleted row (the reorder-Cancel path)', () => {
+    const { h } = setup()
+    // Delete the LAST root row: removing it renumbers no sibling, so the tombstone is the only
+    // pending change and `hasUnsaved` can prove it was cleared. (Deleting a middle row would leave
+    // `hasPendingMove` true via the survivors' recalculated positions — correctly so.)
+    h.deleteItem(3) // deferred: About is gone from the tree but tombstoned until save
+    expect(h.getChanges().deleted.map((r) => r.id)).toEqual([3])
+    expect(h.unsavedCount.value).toBe(1)
+    expect(h.hasUnsaved.value).toBe(true)
+
+    h.restoreDeleted(3) // Cancel: drop the deletion record
+    expect(h.getChanges().deleted).toEqual([])
+    expect(h.unsavedCount.value).toBe(0)
+    expect(h.hasUnsaved.value).toBe(false) // the tombstone was the ONLY unconfirmed change
+  })
+
+  it('restoreDeleted only clears the named key and ignores unknown keys', () => {
+    const { h } = setup()
+    h.deleteItem(21)
+    h.deleteItem(3)
+    h.restoreDeleted(999) // unknown → no-op, must not wipe the set
+    expect(h.getChanges().deleted.map((r) => r.id)).toEqual([21, 3])
+    h.restoreDeleted(21)
+    expect(h.getChanges().deleted.map((r) => r.id)).toEqual([3])
+    expect(h.unsavedCount.value).toBe(1)
+  })
+
+  it('isDirty overrides the default content-diff and is handed the BASELINE row', () => {
+    // `points` is the discriminator: the DEFAULT nested hash strips position + parent, so editing
+    // either of those proves nothing about the override — only a field the default WOULD catch does.
+    const store = ref<NestedTree<Row & { points: number }>>({
+      children: [gnode({ id: 1, title: 'Home', position: 1, parent: null, points: 0 })],
+      meta: { dirty: false },
+    })
+    const h = useNestedListEditorController<Row & { points: number }>({
+      get: () => store.value,
+      set: (v) => (store.value = v),
+      maxDepth: 2,
+      // Only `title` counts. If `saved` were the LIVE row instead of the baseline, this could never
+      // return true — so the title assertion below also pins WHICH row the predicate receives.
+      isDirty: (current, saved) => current.title !== saved?.title,
+    })
+    expect(h.isUnsaved(1)).toBe(false)
+
+    store.value.children[0].data.points = 99 // the DEFAULT hash WOULD dirty on this…
+    expect(h.isUnsaved(1)).toBe(false) // …the custom predicate ignores everything but title
+    expect(h.hasUnsaved.value).toBe(false)
+
+    store.value.children[0].data.title = 'Home!' // the one field the predicate watches
+    expect(h.isUnsaved(1)).toBe(true)
+    expect(h.hasUnsaved.value).toBe(true)
+  })
+
+  it('normalizeSaved rewrites the server tree before it becomes the store AND the baseline', () => {
+    const { store, h } = setup(tree(), {
+      normalizeSaved: (saved) => ({
+        ...saved,
+        children: [...saved.children].sort((a, b) => a.data.position - b.data.position),
+      }),
+    })
+    // The server echoes the root rows out of position order.
+    h.commit({
+      children: [
+        node({ id: 3, title: 'About', position: 3, parent: null }),
+        node({ id: 1, title: 'Home', position: 1, parent: null }),
+      ],
+      meta: { dirty: false },
+    })
+    expect(store.value.children.map((n) => n.data.id)).toEqual([1, 3]) // sorted back by position
+    expect(h.hasUnsaved.value).toBe(false) // …and THAT normalized shape is the new baseline
+  })
+
+  it('commitKey resolves a saved row identity, suppressing the temp-id backfill', () => {
+    const seen: string[] = []
+    const { store, h } = setup(tree(), {
+      commitKey: (saved) => {
+        seen.push(saved.title)
+        return saved.title === 'keep' ? 'declared-key' : (undefined as unknown as number)
+      },
+    })
+    h.commit({
+      children: [
+        node({ id: undefined, title: 'keep', position: 1, parent: null }),
+        node({ id: undefined, title: 'mint', position: 2, parent: null }),
+      ],
+      meta: { dirty: false },
+    })
+    expect(seen).toEqual(['keep', 'mint']) // called per saved row
+    expect(store.value.children[0].data.id).toBeUndefined() // identity declared → left as sent
+    expect(typeof store.value.children[1].data.id).toBe('number') // nullish → temp id minted
+    expect(store.value.children[1].data.id! < 0).toBe(true)
   })
 
   it('addItem with no factory + no item is a no-op (read-only tree)', () => {

@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
-import { defineComponent, h, ref, nextTick } from 'vue'
+import { defineComponent, h, ref, nextTick, type Ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
+
+// Read a ref out of the scope that created it (same helper as ListEditorManagedMutations),
+// so asserting on the model doesn't trip vue/no-ref-object-reactivity-loss.
+const read = (list: Ref<FaqItem[]>): FaqItem[] => list.value
 
 const findAListEditor = (w: VueWrapper): VueWrapper =>
   w.findComponent(AListEditor as unknown as Parameters<typeof w.findComponent>[0]) as VueWrapper
@@ -67,7 +71,12 @@ describe('AListEditor', () => {
     })
 
     it('renders empty compact text when compactField does not resolve — no implicit fallback', () => {
-      const data = [{ id: 1, position: 1 }] as unknown as FaqItem[]
+      // The row deliberately CARRIES the field names an implicit fallback would reach for
+      // (`title` / `name` / `label`). Without them the claim is unfalsifiable: a fallback
+      // would resolve to '' anyway and the test would pass either way.
+      const data = [
+        { id: 1, position: 1, title: 'from title', name: 'from name', label: 'from label' },
+      ] as unknown as FaqItem[]
       const { wrapper } = mountEditor(data, { compactField: 'nonexistent' })
       expect(wrapper.find('.a-le-title').text()).toBe('')
     })
@@ -210,13 +219,92 @@ describe('AListEditor', () => {
       expect(editor().emitted('deleted')).toBeTruthy()
     })
 
-    it('does not emit or mutate when readonly', async () => {
-      const { wrapper, model } = mountEditor(items(), { readonly: true })
-      // edit/delete buttons should not render when !canInteract
+    it('does not render the built-in mutating affordances when readonly', () => {
+      const { wrapper } = mountEditor(items(), { readonly: true })
+      // The DEFAULT buttons are `v-if`'d out on !canInteract...
       expect(wrapper.findAll('.a-le-action--edit')).toHaveLength(0)
       expect(wrapper.findAll('.a-le-action--delete')).toHaveLength(0)
       expect(wrapper.find('.a-le-row-add').exists()).toBe(false)
-      expect(model.value).toHaveLength(3)
+    })
+
+    it('does not emit or mutate when readonly, even via slot-reachable actions', async () => {
+      // ...but hiding the buttons is not the guarantee. `#item-actions` is NOT gated on
+      // canInteract, so a slot consumer still holds `actions.delete` / `actions.addAfter`;
+      // `#empty` likewise hands out `actions.add`. Those handlers are what must refuse.
+      // The old test clicked nothing and asserted `model.value` still had its 3 rows —
+      // which no mutation of the guards could ever falsify.
+      const model = ref<FaqItem[]>(items())
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(
+              AListEditor<FaqItem>,
+              {
+                modelValue: model.value,
+                'onUpdate:modelValue': (v: FaqItem[]) => {
+                  model.value = v
+                },
+                factory: makeFaqItem,
+                readonly: true,
+              },
+              {
+                'item-actions': ({
+                  actions,
+                }: {
+                  actions: { delete: () => Promise<void>; addAfter: () => void }
+                }) => [
+                  h('button', { class: 'ro-delete', onClick: actions.delete }, 'delete'),
+                  h('button', { class: 'ro-add-after', onClick: actions.addAfter }, 'add after'),
+                ],
+              },
+            )
+        },
+      })
+      const wrapper = mount(Host)
+      const editor = findAListEditor(wrapper)
+
+      await wrapper.findAll('.ro-delete')[0].trigger('click')
+      await flushPromises()
+      await wrapper.findAll('.ro-add-after')[0].trigger('click')
+      await flushPromises()
+
+      expect(read(model).map((i) => i.id)).toEqual([1, 2, 3])
+      expect(editor.emitted('deleted')).toBeFalsy()
+      expect(editor.emitted('update:modelValue')).toBeFalsy()
+    })
+
+    it('does not add when readonly via the #empty slot add action', async () => {
+      // `onAddClick` guards on `canAdd` (= canInteract && showAddButton). The default add
+      // row is `v-if`'d away in readonly, so the #empty slot is the reachable path to it.
+      const model = ref<FaqItem[]>([])
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(
+              AListEditor<FaqItem>,
+              {
+                modelValue: model.value,
+                'onUpdate:modelValue': (v: FaqItem[]) => {
+                  model.value = v
+                },
+                factory: makeFaqItem,
+                readonly: true,
+              },
+              {
+                empty: ({ actions }: { actions: { add: () => void } }) =>
+                  h('button', { class: 'ro-add', onClick: actions.add }, 'add'),
+              },
+            )
+        },
+      })
+      const wrapper = mount(Host)
+      const editor = findAListEditor(wrapper)
+
+      await wrapper.find('.ro-add').trigger('click')
+      await flushPromises()
+
+      expect(read(model)).toHaveLength(0)
+      expect(editor.emitted('update:modelValue')).toBeFalsy()
     })
   })
 
@@ -528,6 +616,11 @@ describe('AListEditor', () => {
     })
 
     it('#item-footer slot overrides the default footer', async () => {
+      // `onItemSave` is load-bearing: the default footer only renders when it is provided
+      // (`showInlineSaveFooter`). Without it the host could never have shown a default
+      // footer in the first place, so "overrides" asserted nothing — the sibling test above
+      // proves this exact config DOES render `.a-le-row-footer` when the slot is absent.
+      const save = vi.fn().mockResolvedValue(undefined)
       const model = ref<FaqItem[]>(items())
       const Host = defineComponent({
         setup() {
@@ -540,6 +633,7 @@ describe('AListEditor', () => {
                   model.value = v
                 },
                 factory: makeFaqItem,
+                onItemSave: save,
               },
               {
                 item: ({ raw }: { raw: FaqItem }) => h('div', `editing ${raw.id}`),

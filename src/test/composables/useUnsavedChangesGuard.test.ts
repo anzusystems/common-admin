@@ -177,7 +177,7 @@ describe('useUnsavedChangesGuard', () => {
       expect(preventSpy).not.toHaveBeenCalled()
     })
 
-    it('removes the listener on unmount', () => {
+    it('removes the SAME listener reference it added on unmount', () => {
       const { host } = mountWithGuard(() =>
         useUnsavedChangesGuard({
           sources: [ref(true)],
@@ -185,9 +185,13 @@ describe('useUnsavedChangesGuard', () => {
           guardWindowUnload: true,
         }),
       )
+      // Capture the exact handler that was added. `expect.any(Function)` would match a DIFFERENT
+      // reference too — i.e. the classic leak where the removal silently detaches nothing.
+      const added = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'beforeunload')?.[1]
+      expect(typeof added).toBe('function')
       host.unmount()
       mounted = null
-      expect(removeSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
+      expect(removeSpy).toHaveBeenCalledWith('beforeunload', added)
     })
   })
 
@@ -244,18 +248,39 @@ describe('useUnsavedChangesGuard', () => {
       expect(api.promptOpen.value).toBe(true) // disarmed → prompts
     })
 
-    it('a consumed acknowledgement clears the timer (no spurious later expiry)', async () => {
+    // A consumed acknowledgement cannot produce a "spurious later expiry" through the public API:
+    // the TTL callback only writes `acknowledgedOnce = false`, and any FRESH acknowledge() re-clears
+    // the pending timer before arming its own — so a stale timer can never disarm a later
+    // acknowledgement (verified: the consume→re-arm→advance-past-the-first-deadline shape passes
+    // WITH the clear deleted). What the clear does buy is real but narrower: no leaked pending timer.
+    // `vi.getTimerCount()` is the only oracle that can see it, and it does kill that mutant.
+    it('a consumed acknowledgement leaves no pending TTL timer behind', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
+      vi.useFakeTimers()
+      expect(vi.getTimerCount()).toBe(0)
+      api.acknowledge()
+      expect(vi.getTimerCount()).toBe(1) // TTL armed
+      dialogModel.value = false // consume it (a dirty close passes silently)
+      await nextTick()
+      await nextTick()
+      expect(api.promptOpen.value).toBe(false)
+      expect(vi.getTimerCount()).toBe(0) // consumed → cleared, not left pending
+    })
+
+    it('re-arming acknowledge() restarts the TTL: the FIRST deadline must not disarm the fresh one', async () => {
       const dialogModel = ref(true)
       const { api } = mountDialogGuard(dialogModel)
       vi.useFakeTimers()
       api.acknowledge()
-      dialogModel.value = false // consume it now
+      vi.advanceTimersByTime(5000) // 5s into the first acknowledgement's 8s TTL
+      api.acknowledge() // re-arm → the TTL restarts here (deadline moves to t=13s)
+      vi.advanceTimersByTime(4000) // t=9s: past the FIRST deadline, short of the fresh one
+      dialogModel.value = false
       await nextTick()
       await nextTick()
-      expect(api.promptOpen.value).toBe(false)
-      // Re-arm and let the (fresh) timer run out to prove the prior consume didn't leave a stale timer.
-      vi.advanceTimersByTime(8001)
-      expect(api.promptOpen.value).toBe(false)
+      expect(api.promptOpen.value).toBe(false) // the fresh acknowledgement is still live
+      expect(unref(dialogModel)).toBe(false) // closed, not re-opened
     })
   })
 })

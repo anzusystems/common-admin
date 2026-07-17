@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import { useListEditorController } from '@/labs/listEditor/composables/useListEditorController'
 
@@ -107,8 +107,11 @@ describe('useListEditorController — position strategy', () => {
     h.addItem(undefined, undefined)
 
     // ORACLE (fails today): the two existing rows keep 10 / 310 — add must not compact or renumber.
-    expect(store.value[0].position).toBe(10)
-    expect(store.value[1].position).toBe(310)
+    // Assert the WHOLE list, not just the two survivors' positions: a bad addItem could insert at
+    // the wrong index, drop a row, or renumber the new row and still satisfy a per-row check.
+    expect(store.value).toHaveLength(3)
+    expect(titles(store)).toEqual(['A', 'B', 'new']) // appended last, existing order intact
+    expect(positions(store)).toEqual([10, 310, 0]) // …and the new row keeps the factory's own value
   })
 
   it('preserve-values: deleting a row leaves a hole rather than compacting', () => {
@@ -123,7 +126,53 @@ describe('useListEditorController — position strategy', () => {
     h.deleteItem(2) // drop B (by key)
 
     // ORACLE (fails today → compacted to [100, 200]): the survivors keep their own slots.
+    expect(store.value).toHaveLength(2)
     expect(titles(store)).toEqual(['A', 'C'])
-    expect(positions(store)).toEqual([10, 310])
+    expect(positions(store)).toEqual([10, 310]) // the 100 hole is NOT closed up
+  })
+
+  it('preserve-values: deleting the FIRST row keeps the survivors off a 1..n series', () => {
+    // The ascending survivors in the test above cannot tell `return arr` from a re-preserve — both
+    // yield [10, 310]. Dropping the row that owns the LOWEST slot can: compaction/renumbering would
+    // pull C down to 10/100, and only "leave the values alone" keeps 100/310.
+    const { store, h } = setup(
+      [
+        { id: 1, title: 'A', position: 10 },
+        { id: 2, title: 'B', position: 100 },
+        { id: 3, title: 'C', position: 310 },
+      ],
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
+    )
+    h.deleteItem(1)
+    expect(titles(store)).toEqual(['B', 'C'])
+    expect(positions(store)).toEqual([100, 310]) // NOT [10, 310] and NOT [100, 200]
+  })
+
+  it('preserve-values + a factory that omits position: the next move warns and changes nothing', () => {
+    // Reachable in practice: `add` deliberately does not renumber under preserve-values, so a
+    // factory that forgets `position` leaves a row with no slot. The NEXT move then hands
+    // preservePositionValues an unusable value set — it must warn and leave every position alone
+    // rather than invent numbers that would move unrelated interleaved rows on the live site.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { store, h } = setup(
+      [
+        { id: 1, title: 'A', position: 10 },
+        { id: 2, title: 'B', position: 310 },
+      ],
+      {
+        position: { field: 'position', multiplier: 100, strategy: 'preserve-values' },
+        factory: () => ({ id: -99, title: 'new' }) as unknown as Row, // no position
+      },
+    )
+    h.addItem()
+    expect(store.value[2].position).toBeUndefined() // add did not invent one
+
+    h.moveItem(0, 1) // A <-> B; the value set is [10, 310, undefined] → unusable
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('leaving positions untouched')
+    // The rows still REORDER (that is array order); only the position values are left as they were.
+    expect(titles(store)).toEqual(['B', 'A', 'new'])
+    expect(positions(store)).toEqual([310, 10, undefined])
+    warn.mockRestore()
   })
 })

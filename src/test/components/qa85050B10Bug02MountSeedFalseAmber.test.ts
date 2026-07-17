@@ -45,6 +45,22 @@ afterEach(() => {
   mounted = null
 })
 
+// `.a-le-row` and `.a-le-row-add` match BOTH editors — the nested one renders inside the
+// parent row's body, and each editor's add button renders after its own rows (so a flat
+// `findAll('.a-le-row-add')` yields [inner, outer], and the LAST entry is the OUTER one).
+// Everything below therefore addresses the two editors explicitly.
+// Read a ref out of the scope that created it, so asserting on the model doesn't trip
+// vue/no-ref-object-reactivity-loss.
+const read = (list: Ref<Row[]>): Row[] => list.value
+const nestedEditor = (w: VueWrapper) => w.find('.a-list-editor')
+const parentRows = (w: VueWrapper): HTMLElement[] => {
+  const nestedRoots = w.findAll('.a-list-editor').map((e) => e.element)
+  return w
+    .findAll('.a-sortable-list-editor .a-le-row')
+    .map((e) => e.element as HTMLElement)
+    .filter((row) => !nestedRoots.some((nested) => nested.contains(row)))
+}
+
 // Server shape: the nested adverts carry NO `id` — exactly what the API returns for
 // these embedded DTOs, and what makes `ensureKeys` mint one on mount.
 const serverRows = (): Row[] => [
@@ -114,13 +130,21 @@ describe('QA 85050 B10 BUG-02 — expanding a row must not mark it unsaved', () 
     await mounted.findAll('.a-le-row-header')[0].trigger('click')
     await nextTick()
 
-    // Add a nested advert row through the nested editor's own add button.
-    const add = mounted.findAll('.a-le-row-add')
-    await add[add.length - 1].trigger('click')
+    // Add a nested advert row through the NESTED editor's own add button.
+    await nestedEditor(mounted).find('.a-le-row-add').trigger('click')
     await nextTick()
     await nextTick()
 
-    // The parent row must read unsaved — a real pending nested change.
-    expect(mounted.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
+    // Pre-condition for the oracle below: a nested row was really added. Without this the
+    // test can silently degrade into "the outer editor grew a row", which is amber by
+    // construction (no baseline entry) and would pass no matter what the hash excludes.
+    expect(read(model)).toHaveLength(1)
+    expect(read(model)[0].adverts).toHaveLength(2)
+
+    // ORACLE: the PARENT row itself must read unsaved — its content genuinely differs from
+    // the baseline now, so excluding temp ids from the hash must not silence it.
+    const rows = parentRows(mounted)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].classList.contains('a-le-row--unsaved')).toBe(true)
   })
 })
