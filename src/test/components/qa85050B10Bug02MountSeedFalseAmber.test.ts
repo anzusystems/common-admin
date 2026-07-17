@@ -84,7 +84,10 @@ const buildHost = (model: Ref<Row[]>) =>
 describe('QA 85050 B10 BUG-02 — expanding a row must not mark it unsaved', () => {
   it('a mount-time key seed in a nested editor does not flip the parent row amber', async () => {
     const model = ref<Row[]>(serverRows())
-    mounted = mount(buildHost(model), { attachTo: document.body, attrs: { style: 'width: 1000px;' } })
+    mounted = mount(buildHost(model), {
+      attachTo: document.body,
+      attrs: { style: 'width: 1000px;' },
+    })
     await nextTick()
 
     // Pre-condition: freshly loaded, collapsed, nothing pending.
@@ -103,7 +106,10 @@ describe('QA 85050 B10 BUG-02 — expanding a row must not mark it unsaved', () 
     // Guards the fix against over-reach: excluding temp ids from the hash must not
     // silence a real nested addition (the array content itself still differs).
     const model = ref<Row[]>(serverRows())
-    mounted = mount(buildHost(model), { attachTo: document.body, attrs: { style: 'width: 1000px;' } })
+    mounted = mount(buildHost(model), {
+      attachTo: document.body,
+      attrs: { style: 'width: 1000px;' },
+    })
     await nextTick()
     await mounted.findAll('.a-le-row-header')[0].trigger('click')
     await nextTick()

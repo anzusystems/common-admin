@@ -57,7 +57,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 1, title: 'A', position: 10 },
         { id: 2, title: 'B', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100 } }
+      { position: { field: 'position', multiplier: 100 } },
     )
     h.moveItem(0, 1)
     // Unchanged behaviour for every existing consumer: values are rewritten from array order.
@@ -71,7 +71,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 1, title: 'A', position: 10 },
         { id: 2, title: 'B', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } }
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
     )
     h.moveItem(0, 1)
 
@@ -87,7 +87,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 2, title: 'B', position: 100 },
         { id: 3, title: 'C', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } }
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
     )
     h.moveItem(2, 0) // drag C to the top
 
@@ -102,7 +102,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 1, title: 'A', position: 10 },
         { id: 2, title: 'B', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } }
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
     )
     h.addItem(undefined, undefined)
 
@@ -118,7 +118,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 2, title: 'B', position: 100 },
         { id: 3, title: 'C', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } }
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
     )
     h.deleteItem(2) // drop B (by key)
 
