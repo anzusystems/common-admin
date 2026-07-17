@@ -22,6 +22,7 @@ import {
   type ListEditorValidationResult,
   type NestedListEditorHandle,
   type PositionOption,
+  type PositionStrategy,
 } from '@/labs/listEditor/composables/useNestedListEditorController'
 import {
   computeInstruction,
@@ -185,7 +186,7 @@ export interface Props<TItem extends Record<string, any>> {
    * compiles Boolean-only, and `false`-first would coerce `position="position"`
    * (value == prop name) to `true`. Object form folds in `{ field, multiplier }`.
    */
-  position?: string | false | { field: string; multiplier?: number }
+  position?: string | false | { field: string; multiplier?: number; strategy?: PositionStrategy }
   /** Parent-key field written onto reparented rows. Default `'parent'`. */
   parentField?: string
   /**

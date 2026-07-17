@@ -24,11 +24,12 @@ import type {
   GetKey,
   ListEditorValidationResult,
   PositionOption,
+  PositionStrategy,
 } from '@/labs/listEditor/composables/useListEditorController'
 import { nextListEditorTempId } from '@/labs/listEditor/utils/tempId'
 import { cloneDeep } from '@/utils/common'
 
-export type { ListEditorValidationResult, GetKey, PositionOption }
+export type { ListEditorValidationResult, GetKey, PositionOption, PositionStrategy }
 
 /** Flattened ordered row carrying its resolved key (for change-sets + payload). */
 export interface NestedListEditorChanges<TItem> {

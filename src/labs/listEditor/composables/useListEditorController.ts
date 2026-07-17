@@ -14,7 +14,7 @@ import type {
   ListEditorValidationState,
   PositionHint,
 } from '@/labs/listEditor/types/listEditorTypes'
-import { renumberPositions } from '@/labs/listEditor/utils/positions'
+import { preservePositionValues, renumberPositions } from '@/labs/listEditor/utils/positions'
 import { nextListEditorTempId } from '@/labs/listEditor/utils/tempId'
 import { cloneDeep } from '@/utils/common'
 
@@ -24,10 +24,26 @@ export type ListEditorValidationResult =
   | { valid: boolean; state?: 'invalid' | 'warning'; message?: string }
 
 export type GetKey<TItem> = keyof TItem | ((item: TItem) => ListEditorKey)
+/**
+ * How the managed order field is maintained.
+ * - `renumber` (default) — positions are opaque ordinals: every write rewrites them to a clean
+ *   `(index + 1) * multiplier` series.
+ * - `preserve-values` — positions are meaningful ABSOLUTE numbers (e.g. a CMS page interleaves its
+ *   rows with another collection on the same numeric scale, so rewriting 10/310 to 100/200 would
+ *   move unrelated items). A REORDER then only swaps rows through the EXISTING slots: the set of
+ *   values is kept and reassigned, ascending, to the new row order. It is a reorder policy, not a
+ *   normalization policy — `add` keeps the position the factory/consumer supplied, `delete` leaves
+ *   holes rather than compacting.
+ */
+export type PositionStrategy = 'renumber' | 'preserve-values'
+
+/** Which mutation is asking for positions to be (re)assigned. */
+type PositionWriteAction = 'add' | 'update' | 'remove' | 'move' | 'payload'
+
 export type PositionOption<TItem> =
   | false
   | keyof TItem
-  | { field: keyof TItem; multiplier?: number }
+  | { field: keyof TItem; multiplier?: number; strategy?: PositionStrategy }
 
 export interface ListEditorChanges<TItem> {
   added: TItem[]
@@ -144,17 +160,28 @@ export function useListEditorController<TItem extends Record<string, any>>(
   ) as string
   const positionMultiplier =
     typeof positionOpt === 'object' && positionOpt.multiplier ? positionOpt.multiplier : 1
+  const positionStrategy: PositionStrategy =
+    (typeof positionOpt === 'object' && positionOpt.strategy) || 'renumber'
 
   const items = computed<TItem[]>(() => options.get())
 
   // Baseline = last committed snapshot. `hashes` powers content-diff dirty
   // (position excluded so a reorder never marks a row dirty); `rows` powers `reset`.
   const dirtyExclude = computed<string[]>(() => toValue(options.dirtyExclude) ?? [])
+  // Temp ids are client identity bookkeeping, never content. `ensureKeys` mints one INTO the model
+  // for rows the server returns without a key — and for a NESTED editor that write happens on mount,
+  // i.e. when a parent row is merely expanded to be read. The parent hashes the whole row, so without
+  // this the seed would retroactively invalidate the parent's baseline and expanding a row to LOOK at
+  // it would mark it unsaved (QA 85050 batch 10 BUG-02). Only negative NUMBERS are stripped —
+  // persisted ids are positive (see `nextListEditorTempId`), so real ids still count as content, and
+  // a genuinely added row still differs by its other fields.
+  const stripTempIds = (_k: string, v: unknown): unknown =>
+    _k === 'id' && typeof v === 'number' && v < 0 ? undefined : v
   const normalize = (item: TItem): string => {
     const copy = { ...item } as Record<string, unknown>
     if (managedPosition) delete copy[positionField]
     for (const f of dirtyExclude.value) delete copy[f]
-    return JSON.stringify(copy)
+    return JSON.stringify(copy, stripTempIds)
   }
   const baselineHashes = ref(new Map<ListEditorKey, string>()) as Ref<Map<ListEditorKey, string>>
   const baselineRows = ref<TItem[]>([]) as Ref<TItem[]>
@@ -333,13 +360,21 @@ export function useListEditorController<TItem extends Record<string, any>>(
     return invalidKeys.value.size === 0
   }
 
-  const renumber = (arr: TItem[]): TItem[] =>
-    managedPosition ? renumberPositions(arr, { positionField, positionMultiplier }) : arr
+  // `preserve-values` is a REORDER policy, not a normalization policy: only a move reassigns (the
+  // existing slots, kept), while add keeps the position it was handed, delete leaves holes, and
+  // update/payload never touch positions. `renumber` (default) rewrites on every write, as before.
+  const renumber = (arr: TItem[], action: PositionWriteAction): TItem[] => {
+    if (!managedPosition) return arr
+    if (positionStrategy === 'preserve-values') {
+      return action === 'move' ? preservePositionValues(arr, { positionField }) : arr
+    }
+    return renumberPositions(arr, { positionField, positionMultiplier })
+  }
 
-  const write = (arr: TItem[]) => options.set(renumber(arr))
+  const write = (arr: TItem[], action: PositionWriteAction) => options.set(renumber(arr, action))
 
   const getPayload = (): TItem[] =>
-    options.payload ? options.payload(options.get()) : renumber(options.get())
+    options.payload ? options.payload(options.get()) : renumber(options.get(), 'payload')
 
   const getChanges = (): ListEditorChanges<TItem> => {
     const added: TItem[] = []
@@ -403,7 +438,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
       at = Math.max(0, Math.min(hint.index, arr.length))
     }
     arr.splice(at, 0, row)
-    write(arr)
+    write(arr, 'add')
     return keyOf(row)
   }
 
@@ -420,7 +455,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
         ? (next as (c: TItem) => TItem)(current)
         : ({ ...current, ...(next as Partial<TItem>) } as TItem)
     arr[i] = resolved
-    write(arr)
+    write(arr, 'update')
   }
 
   const deleteItem = (key: ListEditorKey, opts?: { trackDeleted?: boolean }): void => {
@@ -436,7 +471,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
       deletedRows.value = [...deletedRows.value, removed]
     }
     movedKeys.value.delete(key)
-    write(arr)
+    write(arr, 'remove')
   }
 
   // Un-tombstone a deferred-deleted row. Re-inserting the row into the model is the caller's job
@@ -453,7 +488,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     const [el] = arr.splice(fromIndex, 1)
     arr.splice(toIndex, 0, el)
     movedKeys.value.add(keyOf(el))
-    write(arr)
+    write(arr, 'move')
   }
 
   // Reorder Cancel restores the pre-session order, so the moves are undone — drop

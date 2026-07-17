@@ -65,6 +65,7 @@ import {
   type ListEditorValidationResult,
   type GetKey,
   type PositionOption,
+  type PositionStrategy,
 } from '@/labs/listEditor/composables/useListEditorController'
 import {
   createListEditorStateScope,
@@ -191,6 +192,7 @@ export {
   type ListEditorValidationResult,
   type GetKey,
   type PositionOption,
+  type PositionStrategy,
   createListEditorStateScope,
   provideListEditorStateScope,
   useListEditorStateEntry,

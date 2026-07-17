@@ -9,6 +9,7 @@ import {
   type ListEditorHandle,
   type ListEditorValidationResult,
   type PositionOption,
+  type PositionStrategy,
 } from '@/labs/listEditor/composables/useListEditorController'
 import {
   provideListEditorStateScope,
@@ -105,7 +106,7 @@ export interface Props<TItem extends Record<string, any>> {
    * listed before `false` (and not be `keyof TItem`): otherwise Vue's runtime
    * type goes Boolean-first and coerces `position="position"` to `true`.
    */
-  position?: string | false | { field: string; multiplier?: number }
+  position?: string | false | { field: string; multiplier?: number; strategy?: PositionStrategy }
   /**
    * Extra fields to drop from the dirty content-hash (position is always dropped).
    * Use when a SEPARATE nested editor already tracks a child collection, so editing

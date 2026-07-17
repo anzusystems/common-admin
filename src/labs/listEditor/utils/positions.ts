@@ -53,3 +53,43 @@ export const renumberPositions = <TItem extends Record<string, any>>(
     return { ...item, [positionField]: newPosition }
   })
 }
+
+/**
+ * Reassign the EXISTING position values to the current array order.
+ *
+ * For consumers whose position is a meaningful absolute number rather than an opaque ordinal (e.g. a
+ * CMS page whose backend interleaves these rows with another collection on the same numeric scale),
+ * a reorder must move rows THROUGH the existing slots instead of rewriting them: `A:10, B:310` with
+ * A and B swapped becomes `B:10, A:310` — the value set {10, 310} is untouched.
+ *
+ * Non-mutating; unchanged items stay reference-equal. Rows whose position is missing or non-numeric
+ * are left alone and warn in dev — silently inventing a value here would produce a wrong payload.
+ */
+export const preservePositionValues = <TItem extends Record<string, any>>(
+  items: TItem[],
+  options: RenumberPositionsOptions = {},
+): TItem[] => {
+  const positionField = options.positionField ?? 'position'
+  const values = items.map((i) => i[positionField])
+  const usable = values.every((v) => typeof v === 'number' && Number.isFinite(v))
+  if (!usable) {
+    console.warn(
+      `[listEditor] position strategy "preserve-values" needs a finite numeric \`${positionField}\` ` +
+        'on every row; found ' +
+        JSON.stringify(values) +
+        ' — leaving positions untouched.',
+    )
+    return items
+  }
+  if (new Set(values).size !== values.length) {
+    console.warn(
+      `[listEditor] position strategy "preserve-values" found DUPLICATE \`${positionField}\` values ` +
+        JSON.stringify(values) +
+        ' — the resulting order is not well defined relative to any interleaved collection.',
+    )
+  }
+  const slots = [...(values as number[])].sort((a, b) => a - b)
+  return items.map((item, idx) =>
+    item[positionField] === slots[idx] ? item : { ...item, [positionField]: slots[idx] },
+  )
+}
