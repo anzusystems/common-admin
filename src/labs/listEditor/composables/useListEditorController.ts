@@ -34,16 +34,29 @@ export type GetKey<TItem> = keyof TItem | ((item: TItem) => ListEditorKey)
  *   values is kept and reassigned, ascending, to the new row order. It is a reorder policy, not a
  *   normalization policy — `add` keeps the position the factory/consumer supplied, `delete` leaves
  *   holes rather than compacting.
+ *
+ * Per-action exceptions go through `strategyOverrides` (e.g. base `preserve-values` +
+ * `{ remove: 'renumber' }` to keep absolute values on reorder/save but still close the gap on delete).
  */
 export type PositionStrategy = 'renumber' | 'preserve-values'
 
 /** Which mutation is asking for positions to be (re)assigned. */
-type PositionWriteAction = 'add' | 'update' | 'remove' | 'move' | 'payload'
+export type PositionAction = 'add' | 'update' | 'remove' | 'move' | 'payload'
 
 export type PositionOption<TItem> =
   | false
   | keyof TItem
-  | { field: keyof TItem; multiplier?: number; strategy?: PositionStrategy }
+  | {
+      field: keyof TItem
+      multiplier?: number
+      strategy?: PositionStrategy
+      /**
+       * Per-action override of `strategy`. Each entry replaces the base strategy for that one
+       * action only; omitted actions inherit `strategy`. This is what lets a consumer mix policies
+       * without a bespoke preset — the behaviour is visible at the call site, one action per key.
+       */
+      strategyOverrides?: Partial<Record<PositionAction, PositionStrategy>>
+    }
 
 export interface ListEditorChanges<TItem> {
   added: TItem[]
@@ -162,6 +175,8 @@ export function useListEditorController<TItem extends Record<string, any>>(
     typeof positionOpt === 'object' && positionOpt.multiplier ? positionOpt.multiplier : 1
   const positionStrategy: PositionStrategy =
     (typeof positionOpt === 'object' && positionOpt.strategy) || 'renumber'
+  const positionOverrides: Partial<Record<PositionAction, PositionStrategy>> =
+    (typeof positionOpt === 'object' && positionOpt.strategyOverrides) || {}
 
   const items = computed<TItem[]>(() => options.get())
 
@@ -360,18 +375,20 @@ export function useListEditorController<TItem extends Record<string, any>>(
     return invalidKeys.value.size === 0
   }
 
-  // `preserve-values` is a REORDER policy, not a normalization policy: only a move reassigns (the
-  // existing slots, kept), while add keeps the position it was handed, delete leaves holes, and
-  // update/payload never touch positions. `renumber` (default) rewrites on every write, as before.
-  const renumber = (arr: TItem[], action: PositionWriteAction): TItem[] => {
+  // Resolve the policy for THIS action: a per-action override wins, else the base strategy.
+  // Under 'preserve-values' only a move reassigns (through the existing kept slots); every other
+  // action leaves positions as-is (add keeps the handed value, delete leaves a hole, update/payload
+  // never touch them). Under 'renumber' every action rewrites to a clean `(index+1)*multiplier`.
+  const renumber = (arr: TItem[], action: PositionAction): TItem[] => {
     if (!managedPosition) return arr
-    if (positionStrategy === 'preserve-values') {
+    const strategy = positionOverrides[action] ?? positionStrategy
+    if (strategy === 'preserve-values') {
       return action === 'move' ? preservePositionValues(arr, { positionField }) : arr
     }
     return renumberPositions(arr, { positionField, positionMultiplier })
   }
 
-  const write = (arr: TItem[], action: PositionWriteAction) => options.set(renumber(arr, action))
+  const write = (arr: TItem[], action: PositionAction) => options.set(renumber(arr, action))
 
   const getPayload = (): TItem[] =>
     options.payload ? options.payload(options.get()) : renumber(options.get(), 'payload')

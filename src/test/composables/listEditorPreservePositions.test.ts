@@ -176,3 +176,130 @@ describe('useListEditorController — position strategy', () => {
     warn.mockRestore()
   })
 })
+
+/**
+ * Per-action override matrix (`strategyOverrides`). The base `strategy` sets the default for every
+ * action; a `strategyOverrides` entry replaces it for that one action. This is what lets a consumer
+ * mix policies — e.g. a CMS page preserves absolute positions on reorder/save (so it does not move
+ * interleaved auto-distribution boxes on a no-op save) but still CLOSES the gap on delete, matching
+ * the legacy pre-migration behaviour (QA 85050 batch 11 BUG-01).
+ */
+describe('useListEditorController — strategyOverrides (per-action policy)', () => {
+  const pageContents = {
+    field: 'position' as const,
+    multiplier: 100,
+    strategy: 'preserve-values' as const,
+    strategyOverrides: { remove: 'renumber' as const },
+  }
+
+  it("remove:'renumber' closes the gap on delete (the tester's exact example)", () => {
+    const { store, h } = setup(
+      [
+        { id: 1, title: 'A', position: 100 },
+        { id: 2, title: 'B', position: 200 },
+        { id: 3, title: 'C', position: 300 },
+        { id: 4, title: 'D', position: 400 },
+      ],
+      { position: pageContents },
+    )
+    h.deleteItem(3) // drop C (position 300)
+
+    // ORACLE (fails until strategyOverrides is honoured → today keeps the hole [100, 200, 400]):
+    // the survivors renumber to a clean series, closing the gap the deleted row left.
+    expect(titles(store)).toEqual(['A', 'B', 'D'])
+    expect(positions(store)).toEqual([100, 200, 300])
+  })
+
+  it('the override does NOT touch reorder — a move still swaps rows through the existing slots', () => {
+    const { store, h } = setup(
+      [
+        { id: 1, title: 'A', position: 10 },
+        { id: 2, title: 'B', position: 310 },
+      ],
+      { position: pageContents },
+    )
+    h.moveItem(0, 1)
+
+    // reorder still resolves to the base 'preserve-values': the slots {10, 310} stay, rows move.
+    expect(titles(store)).toEqual(['B', 'A'])
+    expect(positions(store)).toEqual([10, 310])
+  })
+
+  it('the override does NOT touch save — getPayload does not rewrite the preserved values', () => {
+    const { store, h } = setup(
+      [
+        { id: 1, title: 'A', position: 10 },
+        { id: 2, title: 'B', position: 310 },
+      ],
+      { position: pageContents },
+    )
+    h.moveItem(0, 1) // preserved swap → store is [B:10, A:310]
+
+    // payload inherits the base 'preserve-values': it serialises the store AS-IS, no renumber.
+    // (A no-op save must not move interleaved AD boxes on the same numeric scale.)
+    expect(h.getPayload().map((r) => r.position)).toEqual([10, 310])
+    expect(positions(store)).toEqual([10, 310])
+  })
+
+  it('the override does NOT touch add — a new row keeps the position it was handed', () => {
+    const { store, h } = setup(
+      [
+        { id: 1, title: 'A', position: 100 },
+        { id: 2, title: 'B', position: 200 },
+      ],
+      {
+        position: pageContents,
+        factory: () => ({ id: -99, title: 'new', position: 300 }) as Row,
+      },
+    )
+    h.addItem()
+
+    // add inherits base 'preserve-values' → the factory's 300 is kept, existing rows untouched.
+    expect(titles(store)).toEqual(['A', 'B', 'new'])
+    expect(positions(store)).toEqual([100, 200, 300])
+  })
+
+  it('resolves per-action independently: base renumber with a move:preserve override', () => {
+    const { store, h } = setup(
+      [
+        { id: 1, title: 'A', position: 10 },
+        { id: 2, title: 'B', position: 310 },
+      ],
+      {
+        position: {
+          field: 'position' as const,
+          multiplier: 100,
+          strategy: 'renumber' as const,
+          strategyOverrides: { move: 'preserve-values' as const },
+        },
+      },
+    )
+    h.moveItem(0, 1)
+
+    // move resolves to the override 'preserve-values' (slots kept), NOT the base 'renumber'.
+    expect(titles(store)).toEqual(['B', 'A'])
+    expect(positions(store)).toEqual([10, 310])
+  })
+
+  it('an omitted action inherits the base strategy (base renumber → delete still renumbers)', () => {
+    const { store, h } = setup(
+      [
+        { id: 1, title: 'A', position: 10 },
+        { id: 2, title: 'B', position: 310 },
+        { id: 3, title: 'C', position: 500 },
+      ],
+      {
+        position: {
+          field: 'position' as const,
+          multiplier: 100,
+          strategy: 'renumber' as const,
+          strategyOverrides: { move: 'preserve-values' as const },
+        },
+      },
+    )
+    h.deleteItem(2) // remove is NOT overridden → inherits base 'renumber'
+
+    expect(titles(store)).toEqual(['A', 'C'])
+    expect(positions(store)).toEqual([100, 200])
+  })
+})

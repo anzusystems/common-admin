@@ -66,6 +66,7 @@ import {
   type GetKey,
   type PositionOption,
   type PositionStrategy,
+  type PositionAction,
 } from '@/labs/listEditor/composables/useListEditorController'
 import {
   createListEditorStateScope,
@@ -193,6 +194,7 @@ export {
   type GetKey,
   type PositionOption,
   type PositionStrategy,
+  type PositionAction,
   createListEditorStateScope,
   provideListEditorStateScope,
   useListEditorStateEntry,

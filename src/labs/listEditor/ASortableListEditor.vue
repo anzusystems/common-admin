@@ -22,6 +22,7 @@ import {
   type GetKey,
   type ListEditorHandle,
   type ListEditorValidationResult,
+  type PositionAction,
   type PositionOption,
   type PositionStrategy,
 } from '@/labs/listEditor/composables/useListEditorController'
@@ -167,7 +168,15 @@ export interface Props<TItem extends Record<string, any>> {
    * `keyof TItem` would be Boolean-only, and `false` listed first would coerce
    * `position="position"` (value == prop name) to `true`.
    */
-  position?: string | false | { field: string; multiplier?: number; strategy?: PositionStrategy }
+  position?:
+    | string
+    | false
+    | {
+        field: string
+        multiplier?: number
+        strategy?: PositionStrategy
+        strategyOverrides?: Partial<Record<PositionAction, PositionStrategy>>
+      }
   /**
    * Extra fields to drop from the dirty content-hash (position is always
    * dropped). Use when a SEPARATE nested editor tracks a row's child collection,
