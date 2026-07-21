@@ -8,6 +8,7 @@ import {
 } from '@/labs/filters/filterInjectionKeys'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { isUndefined } from '@/utils/common'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
 withDefaults(
   defineProps<{
@@ -28,11 +29,24 @@ if (isUndefined(filterConfig) || isUndefined(filterData)) {
 }
 
 provide(FilterSubmitResetCounterKey, ref(0))
-provide(FilterSelectedKey, ref<Map<string, ValueObjectOption<string | number>[]>>(new Map()))
+const filterSelected = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
+provide(FilterSelectedKey, filterSelected)
+
+const { clearAll, clearAllFilterSelected } = useFilterClearHelpers()
 
 const submitFilter = () => {
   emit('submit')
 }
+
+// AFilterWrapperSidebar has no reset button of its own (the consumer renders it, e.g. in the drawer
+// footer). Expose the same reset AFilterWrapper does so that button also clears the filter values and
+// the selected-filter chips.
+const resetFilter = () => {
+  clearAll(filterData, filterConfig)
+  clearAllFilterSelected(filterData, filterConfig, filterSelected)
+}
+
+defineExpose({ resetFilter })
 </script>
 
 <template>

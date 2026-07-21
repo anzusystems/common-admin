@@ -28,6 +28,7 @@ const getTitleFromConfig = (name: string) => {
 const selectedArray = computed(() => {
   const fieldOrder = Object.keys(filterConfig.fields)
   return Array.from(filterSelected.value)
+    .filter(([key]) => filterConfig.fields?.[key]?.render?.selected !== false)
     .map(([key, valueArray]) => ({
       name: key,
       title: getTitleFromConfig(key),

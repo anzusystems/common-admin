@@ -54,6 +54,7 @@ describe('AFormRemoteAutocomplete', () => {
         related: undefined,
         render: {
           skip: false,
+          selected: true,
           xs: undefined,
           sm: undefined,
           md: undefined,
