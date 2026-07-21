@@ -53,6 +53,7 @@ defineExpose({ resetFilter })
   <VForm
     :name="formName"
     @submit.prevent="submitFilter"
+    @keyup.enter="submitFilter"
   >
     <slot />
   </VForm>
