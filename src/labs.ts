@@ -11,6 +11,7 @@ import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOp
 import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
 import AFilterWrapperSidebar from '@/labs/filters/AFilterWrapperSidebar.vue'
 import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
+import FiltersSelected from '@/labs/filters/FiltersSelected.vue'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
@@ -138,6 +139,7 @@ export {
   AFilterWrapper,
   AFilterWrapperSidebar,
   AFilterWrapperSubjectSelect,
+  FiltersSelected,
   AFilterBooleanSelect,
   AFilterDatetimePicker,
   AFilterInteger,
