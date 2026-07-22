@@ -2,7 +2,7 @@
 import { computed, inject, ref, watch } from 'vue'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { ErrorObject } from '@vuelidate/core'
-import { cloneDeep, isDefined, isUndefined } from '@/utils/common'
+import { cloneDeep, isDefined, isNull, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { useI18n } from 'vue-i18n'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
@@ -54,6 +54,8 @@ const modelValue = computed({
     return props.modelValue
   },
   set(newValue) {
+    // VAutocomplete drops the selection when its search text is emptied, emitting null even when not clearable
+    if (!props.clearable && !props.multiple && isNull(newValue) && !isNull(props.modelValue)) return
     emit('update:modelValue', cloneDeep<any>(newValue))
   },
 })
