@@ -146,9 +146,20 @@ export function defineCached<
     }
   }
 
+  // Caught inside the debounced callback, not on the promise it returns: the maxWait timer
+  // is a second invocation path whose promise never reaches the caller, so a rejection
+  // there would escape as an unhandled rejection.
   const debouncedFetch = useDebounceFn(
     async () => {
-      return await apiFetch()
+      try {
+        return await apiFetch()
+      } catch (error: unknown) {
+        logError(error instanceof Error ? error : new Error(String(error)), {
+          level: 'warning',
+          tags: { cachedFetch: 'failed' },
+        })
+        return [] as T[]
+      }
     },
     1500,
     { maxWait: 5000 },
@@ -161,13 +172,7 @@ export function defineCached<
    * Called fire-and-forget, so it never rejects. Use `immediateFetch()` to handle errors.
    */
   const fetch = () => {
-    return debouncedFetch().catch((error: unknown) => {
-      logError(error instanceof Error ? error : new Error(String(error)), {
-        level: 'warning',
-        tags: { cachedFetch: 'failed' },
-      })
-      return [] as T[]
-    })
+    return debouncedFetch()
   }
 
   /**
