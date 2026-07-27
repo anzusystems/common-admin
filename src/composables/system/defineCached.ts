@@ -90,7 +90,12 @@ export function defineCached<
    * Must include `_unresolved`, otherwise repeated failures grow the cache past `maxLimit`.
    */
   const prune = (protectedIds?: Set<I>) => {
-    const overflow = cache.value.size + (protectedIds?.size ?? 0) - maxLimit
+    let incoming = 0
+    if (protectedIds) {
+      // Re-queued unresolved ids are already in the cache and do not grow it.
+      for (const id of protectedIds) if (!cache.value.has(id)) incoming += 1
+    }
+    const overflow = cache.value.size + incoming - maxLimit
     if (overflow <= 0) return
     let removed = 0
     for (const [key, value] of cache.value) {
@@ -194,6 +199,12 @@ export function defineCached<
     return item._loaded
   }
 
+  /** Terminal counterpart of `isLoaded`: the fetch settled without resolving the item. */
+  const isUnresolved = (id: I | null | undefined): boolean => {
+    if (!id) return false
+    return cache.value.get(id)?._unresolved === true
+  }
+
   return {
     cache,
     toFetch,
@@ -206,5 +217,6 @@ export function defineCached<
     get,
     clear,
     isLoaded,
+    isUnresolved,
   }
 }
