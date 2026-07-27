@@ -4,12 +4,14 @@ import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
 
-// Drag is gated on `useIsTouchDevice()` (`display.platform.touch || matchMedia('(any-pointer:
-// coarse)')`). Drive that input explicitly rather than tolerating whatever the environment
-// happens to report — `isTouch` is read at setup, so install before mount.
-const makeMatchMedia = (coarseMatches: boolean) =>
+// Drag is gated on `useIsTouchDevice()` (`!matchMedia('(any-pointer: fine)')` — only a device
+// with NO precise pointer cannot drag). Drive that input explicitly rather than tolerating
+// whatever the environment happens to report — `isTouch` is read at setup, so install before mount.
+const makeMatchMedia = (hasFinePointer: boolean) =>
   vi.fn((q: string) => ({
-    matches: coarseMatches && q.includes('any-pointer: coarse'),
+    matches:
+      (hasFinePointer && q.includes('any-pointer: fine')) ||
+      (!hasFinePointer && q.includes('any-pointer: coarse')),
     media: q,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
@@ -20,12 +22,13 @@ const makeMatchMedia = (coarseMatches: boolean) =>
   }))
 
 let restoreMatchMedia: (() => void) | null = null
-const forcePointerKind = (coarse: boolean) => {
+// `coarseOnly: true` = a touch-only device (no mouse/trackpad/pen) — the one case that cannot drag.
+const forcePointerKind = (coarseOnly: boolean) => {
   const original = window.matchMedia
   restoreMatchMedia = () => {
     window.matchMedia = original
   }
-  window.matchMedia = makeMatchMedia(coarse) as unknown as typeof window.matchMedia
+  window.matchMedia = makeMatchMedia(!coarseOnly) as unknown as typeof window.matchMedia
 }
 afterEach(() => {
   restoreMatchMedia?.()

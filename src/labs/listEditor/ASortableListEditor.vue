@@ -14,7 +14,10 @@ import {
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
-import { useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
+import {
+  useHasCoarsePointer,
+  useIsTouchDevice,
+} from '@/labs/listEditor/composables/useIsTouchDevice'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import {
@@ -359,6 +362,7 @@ const rootEl = useTemplateRef<HTMLElement>('rootEl')
 const { isNarrow } = useContainerWidth(rootEl)
 
 const isTouch = useIsTouchDevice()
+const hasCoarsePointer = useHasCoarsePointer()
 
 // State controller (v2). `factory`/`getKey`/`position`/`validate` are construction-time options read
 // once to seed the controller, not reactive props — hence the suppressed reactivity-loss rule.
@@ -864,72 +868,72 @@ const onMoveToPositionConfirm = (newIndex: number) => {
 const resolveCompactText = (raw: TItem): string =>
   resolveCompactTextUtil(raw, { compactField: props.compactField })
 
-// Skip SortableJS on touch devices — touch users reorder via arrows + menu, so
-// don't pay its setup cost. `isTouch` resolves synchronously, so this one-shot
-// read captures the right touch state at setup; `dragEnabled`'s initial value
-// seeds SortableJS and later changes flow via the watch below.
+// Always instantiate SortableJS, seeded `disabled: !dragEnabled` and kept in sync
+// by the watch below. It used to be created only when `isTouch` was false at setup
+// — but `isTouch` is a live media query (plug in a mouse, toggle device emulation),
+// and that one-shot read left the instance missing when it later flipped: the drag
+// handle rendered but dragging did nothing. The setup cost this saved on touch
+// devices is not worth a dead handle.
 /* eslint-disable vue/no-ref-object-reactivity-loss */
-if (!isTouch.value) {
-  const sortable = useSortable(rowsContainer, modelValue, {
-    // The rows container can mount/unmount across mode flips (e.g. a `#view-body`
-    // slot in view mode, rows only in reorder mode). vueuse's default
-    // `tryOnMounted` fires once and would bind to a null ref, leaving SortableJS
-    // dead; `watchElement: true` re-inits whenever the ref populates.
-    watchElement: true,
-    handle: '.a-le-drag-handle',
-    animation: 150,
-    // Force the fallback renderer so `dragClass` applies to a CSS-controlled
-    // clone following the cursor — a row-shaped ghost instead of the opaque
-    // browser-native drag bitmap.
-    forceFallback: true,
-    fallbackTolerance: 3,
-    fallbackOnBody: true,
-    ghostClass: DRAG_GHOST_CLASS,
-    chosenClass: DRAG_CHOSEN_CLASS,
-    dragClass: DRAG_CLASS,
-    disabled: !dragEnabled.value,
-    // Own `onUpdate` REPLACES vueuse's default array-move, which moved the array
-    // and renumbered positions in separate `nextTick`s — a gap that let a
-    // consumer's "sort by position" watch re-sort on stale positions and revert
-    // the drop. One synchronous `controller.moveItem` closes that window so every
-    // observer sees the final order and positions at once.
-    onUpdate: (event) => {
-      const { oldIndex, newIndex, item, from } = event
-      if (oldIndex === undefined || newIndex === undefined) return
-      // Undo SortableJS's DOM relocation so Vue's keyed v-for stays the single
-      // source of truth (mirrors vueuse's removeNode + insertNodeAt).
-      if (item && from) {
-        item.parentNode?.removeChild(item)
-        from.insertBefore(item, from.children[oldIndex] ?? null)
-      }
-      // moveItem rewrites the array, renumbers positions, and records the moved
-      // key — all synchronously.
-      controller.moveItem(oldIndex, newIndex)
-    },
-    onEnd: (event) => {
-      // Mark only the dragged row (via its data-id) moved rather than diffing the
-      // whole list, so siblings that shifted index stay clean. `event.item` is the
-      // `.a-le-row-wrapper` sortable item; the `[data-id]` lives on the inner `.a-le-row`.
-      const el = event.item as HTMLElement
-      // `:scope >` so a consumer editor nested in a `#before-item` slot (its own
-      // `.a-le-row` descendants) can't shadow this row's own id.
-      const raw = (el.querySelector(':scope > .a-le-row') ?? el).getAttribute('data-id')
-      if (raw !== null && raw !== '') {
-        // Numeric key only when `data-id` is a pure integer string (incl. negative
-        // temp ids like "-1"); otherwise keep the UUID-style string. `n > 0`
-        // wrongly sent negative ids down the string branch, landing amber on the
-        // wrong key.
-        const n = stringToInt(raw)
-        const key: ListEditorKey = String(n) === raw ? n : raw
-        markMoved(key)
-      }
-    },
-  })
+const sortable = useSortable(rowsContainer, modelValue, {
+  // The rows container can mount/unmount across mode flips (e.g. a `#view-body`
+  // slot in view mode, rows only in reorder mode). vueuse's default
+  // `tryOnMounted` fires once and would bind to a null ref, leaving SortableJS
+  // dead; `watchElement: true` re-inits whenever the ref populates.
+  watchElement: true,
+  handle: '.a-le-drag-handle',
+  animation: 150,
+  // Force the fallback renderer so `dragClass` applies to a CSS-controlled
+  // clone following the cursor — a row-shaped ghost instead of the opaque
+  // browser-native drag bitmap.
+  forceFallback: true,
+  fallbackTolerance: 3,
+  fallbackOnBody: true,
+  ghostClass: DRAG_GHOST_CLASS,
+  chosenClass: DRAG_CHOSEN_CLASS,
+  dragClass: DRAG_CLASS,
+  disabled: !dragEnabled.value,
+  // Own `onUpdate` REPLACES vueuse's default array-move, which moved the array
+  // and renumbered positions in separate `nextTick`s — a gap that let a
+  // consumer's "sort by position" watch re-sort on stale positions and revert
+  // the drop. One synchronous `controller.moveItem` closes that window so every
+  // observer sees the final order and positions at once.
+  onUpdate: (event) => {
+    const { oldIndex, newIndex, item, from } = event
+    if (oldIndex === undefined || newIndex === undefined) return
+    // Undo SortableJS's DOM relocation so Vue's keyed v-for stays the single
+    // source of truth (mirrors vueuse's removeNode + insertNodeAt).
+    if (item && from) {
+      item.parentNode?.removeChild(item)
+      from.insertBefore(item, from.children[oldIndex] ?? null)
+    }
+    // moveItem rewrites the array, renumbers positions, and records the moved
+    // key — all synchronously.
+    controller.moveItem(oldIndex, newIndex)
+  },
+  onEnd: (event) => {
+    // Mark only the dragged row (via its data-id) moved rather than diffing the
+    // whole list, so siblings that shifted index stay clean. `event.item` is the
+    // `.a-le-row-wrapper` sortable item; the `[data-id]` lives on the inner `.a-le-row`.
+    const el = event.item as HTMLElement
+    // `:scope >` so a consumer editor nested in a `#before-item` slot (its own
+    // `.a-le-row` descendants) can't shadow this row's own id.
+    const raw = (el.querySelector(':scope > .a-le-row') ?? el).getAttribute('data-id')
+    if (raw !== null && raw !== '') {
+      // Numeric key only when `data-id` is a pure integer string (incl. negative
+      // temp ids like "-1"); otherwise keep the UUID-style string. `n > 0`
+      // wrongly sent negative ids down the string branch, landing amber on the
+      // wrong key.
+      const n = stringToInt(raw)
+      const key: ListEditorKey = String(n) === raw ? n : raw
+      markMoved(key)
+    }
+  },
+})
 
-  watch(dragEnabled, (enabled) => {
-    sortable.option('disabled', !enabled)
-  })
-}
+watch(dragEnabled, (enabled) => {
+  sortable.option('disabled', !enabled)
+})
 /* eslint-enable vue/no-ref-object-reactivity-loss */
 
 // Managed add: the controller mints + inserts `factory()` and renumbers
@@ -1519,7 +1523,12 @@ defineExpose<
                   v-bind="buildSlotProps(vi)"
                 >
                   <template v-if="chips && canInteract">
-                    <template v-if="isTouch && !disableReorder">
+                    <!-- Chips is the one layout that would otherwise swap the arrows out for the handle.
+                         Keep them whenever dragging is unavailable (covers `disable-drag`, which gating on
+                         `isTouch` did not) AND whenever a finger could be used at all — a hybrid gets both,
+                         so putting the mouse down never leaves the row unmovable. Every other layout here
+                         already keeps its arrows unconditionally in reorder mode. -->
+                    <template v-if="(!dragEnabled || hasCoarsePointer) && !disableReorder">
                       <VBtn
                         icon
                         size="x-small"
