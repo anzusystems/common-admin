@@ -4,9 +4,11 @@ export const isAnzuFatalError = (error: any): error is AnzuFatalError => {
 
 export class AnzuFatalError extends Error {
   constructor(cause?: Error, message = '') {
-    super(message)
+    // Empty message renders as "No error message" in Sentry.
+    const resolvedMessage = message || 'Unexpected error'
+    super(resolvedMessage)
     this.name = 'AnzuFatalError'
     this.cause = cause
-    this.message = message
+    this.message = resolvedMessage
   }
 }
