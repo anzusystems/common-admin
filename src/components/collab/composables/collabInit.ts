@@ -28,8 +28,13 @@ import { isNull } from '@/utils/common'
 export function useCollabInit() {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { showWarningT, showSuccessT } = useAlerts()
-  const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState } =
-    useCollabState()
+  const {
+    collabConnected,
+    collabSocket,
+    collabRoomInfoState,
+    collabFieldLocksState,
+    resetRoomInfoWrites,
+  } = useCollabState()
 
   const { logError } = useSentry()
 
@@ -131,6 +136,8 @@ export function useCollabInit() {
       )
       collabSocket.value.on('connect', async () => {
         collabRoomInfoState.clear()
+        // Or an acknowledgement emitted before the reconnect would be judged against the fresh state.
+        resetRoomInfoWrites()
         // Without the reset a transient network error burns the flag and a later JWT
         // expiration never triggers a token refresh.
         authorizationReconnectTriggered = false
