@@ -339,6 +339,10 @@ export function useCollabRoom(
 
   const enteredCollabRoom = () => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    /* Anything remembered from a previous stay in this room is a guess: the server answers with the
+     * locks it holds only when it holds some, so a lock released while this client was away produces
+     * no event and the field would read as locked until some later one arrives. */
+    collabFieldLocksState.set(room, new Map())
     collabSocket.value?.emit('enteredCollabRoom', room)
   }
 
