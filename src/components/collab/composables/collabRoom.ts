@@ -225,6 +225,9 @@ export function useCollabRoom(
 
   tryOnBeforeUnmount(() => {
     if (disableAutoUnsubscribe) return
+    if (isDefined(unsubscribeCollabReconnectListener.value)) {
+      unsubscribeCollabReconnectListener.value()
+    }
     if (isDefined(unsubscribeJoinRequestListener.value)) {
       unsubscribeJoinRequestListener.value()
     }
