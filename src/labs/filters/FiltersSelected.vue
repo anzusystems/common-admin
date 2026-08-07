@@ -124,4 +124,14 @@ const clickClose = (name: string, optionValue: number | string) => {
     transition: opacity 0.2s;
   }
 }
+
+// Values above are hardcoded light, which renders white-on-white in dark theme.
+.v-theme--dark .a-selected-filters {
+  background: rgb(var(--v-theme-on-surface), 0.08);
+
+  .a-selected-filters__chip {
+    background: rgb(var(--v-theme-on-surface), 0.16);
+    color: rgb(var(--v-theme-on-surface));
+  }
+}
 </style>

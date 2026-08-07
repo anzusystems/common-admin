@@ -13,8 +13,8 @@
     "modified": "Modified"
   },
   "filterPlaceholder": {
-    "eq": "Presný výraz",
-    "contains": "Kdekolvek vo výraze",
-    "startsWith": "Začiatok výrazu"
+    "eq": "Exact match",
+    "contains": "Anywhere in the text",
+    "startsWith": "Starts with"
   }
 }
