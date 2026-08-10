@@ -52,17 +52,12 @@ export function useCollabState() {
    * it — after which the client goes quiet with nothing visible to show for it.
    */
   const claimRoomInfoWrite = (room: CollabRoom) => {
-    /* Never restarts. A per-room counter reset by `resetRoomInfoWrites` hands the same number out
-     * twice, and a claim from before a reconnect would then match the re-join's after it. */
+    /* Global and never restarting, so a number is never handed out twice. Claims outlive a
+     * reconnect on purpose — see the `connect` handler in `collabInit.ts`. */
     const seq = ++collabRoomInfoWriteCounter
     collabRoomInfoWriteSeq.set(room, seq)
 
     return () => collabRoomInfoWriteSeq.get(room) === seq
-  }
-
-  /** Invalidates every in-flight acknowledgement; pairs with `collabRoomInfoState.clear()`. */
-  const resetRoomInfoWrites = () => {
-    collabRoomInfoWriteSeq.clear()
   }
 
   return {
@@ -71,7 +66,6 @@ export function useCollabState() {
     collabSocket,
     collabRoomInfoState,
     claimRoomInfoWrite,
-    resetRoomInfoWrites,
     collabFieldLocksState,
     collabFieldDataBufferState,
     gatherBufferData,
