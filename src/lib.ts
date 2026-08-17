@@ -633,7 +633,11 @@ import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
-import { fetchAssetAsCmsMedia } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  fetchAsset,
+  fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -1113,7 +1117,9 @@ export {
   updateDamUser,
   fetchDamUser,
   fetchAssetAndCheckForSingleUseByFileIds,
+  fetchAsset,
   fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
 
   // TRANSLATIONS
   messagesCs,
