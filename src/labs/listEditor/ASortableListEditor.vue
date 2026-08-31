@@ -1,5 +1,6 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
 import {
+  nextTick,
   computed,
   inject,
   onBeforeUnmount,
@@ -931,9 +932,18 @@ const sortable = useSortable(rowsContainer, modelValue, {
   },
 })
 
-watch(dragEnabled, (enabled) => {
-  sortable.option('disabled', !enabled)
-})
+// Options are built once at setup, when a `#view-body` consumer is still in view mode and
+// `dragEnabled` is false; entering reorder mode mounts the container and `watchElement` re-creates
+// SortableJS from that stale object. Hence watching the container too.
+watch(
+  [dragEnabled, rowsContainer],
+  async () => {
+    // after `watchElement` has re-created the instance
+    await nextTick()
+    sortable.option('disabled', !dragEnabled.value)
+  },
+  { flush: 'post' },
+)
 /* eslint-enable vue/no-ref-object-reactivity-loss */
 
 // Managed add: the controller mints + inserts `factory()` and renumbers

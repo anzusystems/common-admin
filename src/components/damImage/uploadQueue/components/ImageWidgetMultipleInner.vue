@@ -99,7 +99,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient, imageApi } = imageOptions
-const { showErrorsDefault, showValidationError, showErrorT } = useAlerts()
+const { showErrorsDefault, showValidationError, showErrorT, showUnknownError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -110,6 +110,14 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
 const { t } = useI18n()
 
 const imagesLoading = ref(false)
+const imagesLoadFailed = ref(false)
+
+// Editor must not mount before the fetch lands: its dirty baseline is captured once, so rows
+// arriving later would read as "added". One-shot, like the fetch.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const imagesReady = ref(props.modelValue.length === 0)
+
+const listEditor = ref<{ commit: (rows?: ImageStoreItem[]) => void } | null>(null)
 
 const imageStore = useImageStore()
 const { images, maxPosition } = storeToRefs(imageStore)
@@ -158,9 +166,11 @@ const fetchImagesOnLoad = async () => {
       images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[],
     )
   } catch (e) {
+    imagesLoadFailed.value = true
     showErrorsDefault(e)
   } finally {
     imagesLoading.value = false
+    imagesReady.value = true
   }
 }
 
@@ -415,6 +425,12 @@ const authorEnabled = computed(() => {
 })
 
 const saveImages = async () => {
+  // Empty store here means the fetch is pending or failed, not a user deletion — the empty
+  // path below would detach every image.
+  if (imagesLoading.value || imagesLoadFailed.value) {
+    showUnknownError()
+    return false
+  }
   v$.value.$touch()
   if (v$.value.$invalid) {
     showValidationError()
@@ -452,7 +468,12 @@ const saveImages = async () => {
         assetId: undefined,
       }
     })
-    if (imageStore.images.length === 0) return true
+    if (imageStore.images.length === 0) {
+      listEditor.value?.commit([])
+      // Emptying is a change too — without this the parent kept its old ids.
+      emit('update:modelValue', ids)
+      return true
+    }
 
     const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
       const matchedImage = imageStore.images.find(
@@ -471,9 +492,14 @@ const saveImages = async () => {
 
     const updatedItems = await Promise.all(items.map((item) => getUpdatedItem(item)))
     imageStore.setImages(updatedItems)
+    // Rows passed explicitly: setImages just replaced their keys, bare commit() would read the
+    // not-yet-rerendered prop.
+    listEditor.value?.commit(updatedItems)
     emit('update:modelValue', ids)
     return true
   } catch (e) {
+    // showErrorsDefault reports nothing for non-Anzu errors; its boolean return is for this fallback.
+    if (!showErrorsDefault(e)) showUnknownError()
     return false
   }
 }
@@ -521,14 +547,6 @@ const updateAllPositions = () => {
     image.position = pos
   })
   imageStore.maxPosition = pos
-}
-
-const moveImagePositions = (from: number, to: number) => {
-  if (to >= 0 && to < images.value.length) {
-    const element = images.value.splice(from, 1)[0]
-    images.value.splice(to, 0, element)
-    updateAllPositions()
-  }
 }
 
 const onReorderApplied = () => {
@@ -612,6 +630,8 @@ onMounted(() => {
       style="min-height: 140px"
     >
       <ASortableListEditor
+        v-if="imagesReady"
+        ref="listEditor"
         v-model="images"
         v-model:mode="editorMode"
         :factory="createImageStoreItem"
@@ -629,16 +649,12 @@ onMounted(() => {
               v-for="(image, index) in images"
               :key="image.key"
               :index="index"
-              :total-count="images.length"
-              :disable-draggable="disableDraggable"
               :show-source-enabled="showSourceEnabled"
               :source-label="sourceLabel"
               :edit-asset-label="editAssetLabel"
               :author-enabled="authorEnabled"
               @edit-asset="onEditAsset"
               @remove-item="removeItem"
-              @move-up="(i) => moveImagePositions(i, i - 1)"
-              @move-down="(i) => moveImagePositions(i, i + 1)"
             />
           </div>
         </template>
