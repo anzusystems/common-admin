@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1788275013",
+  "version": "1.47.0-beta.dev-1788289119",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -87,12 +87,12 @@
     "cropperjs": "^1.6.3",
     "dayjs": "1.11.23",
     "eslint": "^10.9.1",
-    "eslint-plugin-oxlint": "1.80.0",
+    "eslint-plugin-oxlint": "1.81.0",
     "eslint-plugin-vue": "10.10.0",
     "eslint-plugin-vuetify": "^2.7.2",
     "npm-run-all2": "^9.0.3",
     "oxfmt": "^0.65.0",
-    "oxlint": "1.80.0",
+    "oxlint": "1.81.0",
     "pinia": "4.0.3",
     "playwright": "^1.62.1",
     "postcss": "^8.5.26",
