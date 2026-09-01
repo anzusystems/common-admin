@@ -515,5 +515,6 @@ export function useCollabRoom(
     unsubscribeRejectedRequestToTakeModerationListener,
     unsubscribeKickedFromRoomListener,
     unsubscribeCollabStartingListener,
+    unsubscribeCollabReconnectListener,
   }
 }

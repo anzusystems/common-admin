@@ -79,6 +79,13 @@ export interface UseUnsavedChangesGuardApi {
    */
   acknowledge: () => void
   /**
+   * Releases what the guard registered imperatively — `beforeunload` listener, acknowledge timer,
+   * dialog watcher — and settles an open prompt as "stay". Idempotent, and called automatically on
+   * unmount; outside a component it is the only way to clean up. The route-leave guard is
+   * lifecycle-bound and unaffected.
+   */
+  stop: () => void
+  /**
    * Cancel a pending `acknowledge()` (disarm). Call from a delete's failure path
    * so a failed/aborted delete restores the guard immediately instead of waiting
    * for the TTL. No-op if nothing is acknowledged.
@@ -195,6 +202,10 @@ export function useUnsavedChangesGuard(
 
   // beforeunload — modern browsers strip custom messages but still display a
   // generic confirm. Setting `returnValue` is the canonical way to opt in.
+  // Collected, not tied to onBeforeUnmount: outside a component that hook is a silent no-op.
+  const disposers: Array<() => void> = [clearAcknowledgeTimer]
+  let stopped = false
+
   if (resolveBool(options.guardWindowUnload, true)) {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!hasUnsavedChanges.value) return
@@ -203,9 +214,7 @@ export function useUnsavedChangesGuard(
     }
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', onBeforeUnload)
-      onBeforeUnmount(() => {
-        window.removeEventListener('beforeunload', onBeforeUnload)
-      })
+      disposers.push(() => window.removeEventListener('beforeunload', onBeforeUnload))
     }
   }
 
@@ -215,7 +224,7 @@ export function useUnsavedChangesGuard(
   if (options.guardDialogModel) {
     const dialogModel = options.guardDialogModel
     let suppressNext = false
-    watch(dialogModel, async (now, prev) => {
+    const stopDialogWatch = watch(dialogModel, async (now, prev) => {
       if (suppressNext) {
         suppressNext = false
         return
@@ -225,16 +234,27 @@ export function useUnsavedChangesGuard(
         suppressNext = true
         dialogModel.value = true
         const discard = await askToLeave()
+        // A teardown mid-prompt must not fall through and mutate the caller's dialog model.
+        if (stopped) return
         if (discard) {
           suppressNext = true
           dialogModel.value = false
         }
       }
     })
+    disposers.push(stopDialogWatch)
+  }
+
+  const stop = () => {
+    if (stopped) return
+    stopped = true
+    // An open prompt would leave whoever awaits askToLeave() pending forever; "stay" is safe.
+    resolvePrompt(false)
+    disposers.forEach((dispose) => dispose())
   }
 
   if (getCurrentInstance()) {
-    onBeforeUnmount(clearAcknowledgeTimer)
+    onBeforeUnmount(stop)
   }
 
   return {
@@ -244,5 +264,6 @@ export function useUnsavedChangesGuard(
     resolvePrompt,
     acknowledge,
     unacknowledge,
+    stop,
   }
 }
