@@ -419,6 +419,8 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   function removeByIndex(queueKey: UploadQueueKey, index: number) {
     const queue = queues.value.get(queueKey)
     if (!queue || !queue.items[index]) return
+    // The fallback reschedules itself for up to 550s, polling fetchAsset and holding the File.
+    clearTimeout(queue.items[index].notificationFallbackTimer)
     queue.items.splice(index, 1)
     recalculateQueueCounts(queueKey)
   }
@@ -512,6 +514,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
   function clearQueue(queueKey: UploadQueueKey) {
     const queue = queues.value.get(queueKey)
     if (!queue) return
+    queue.items.forEach((item) => clearTimeout(item.notificationFallbackTimer))
     queues.value.set(queueKey, {
       items: [],
       totalCount: 0,
