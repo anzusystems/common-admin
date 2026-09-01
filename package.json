@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1784059879",
+  "version": "1.47.0-beta.dev-1788275013",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -109,7 +109,7 @@
     "stylelint-config-standard-scss": "^17.0.0",
     "typescript": "5.9.3",
     "unplugin": "3.3.0",
-    "unplugin-dts": "^1.0.3",
+    "unplugin-dts": "^1.1.0",
     "uuid": "^14.0.2",
     "vite": "7.3.6",
     "vite-plugin-vuetify": "^2.1.3",
