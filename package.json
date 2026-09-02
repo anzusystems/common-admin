@@ -5,7 +5,7 @@
     "dist",
     "src/eslint/**"
   ],
-  "module": "./dist/common-admin.es.js",
+  "module": "./dist/common-admin.js",
   "types": "./dist/common-admin.d.ts",
   "exports": {
     ".": {
