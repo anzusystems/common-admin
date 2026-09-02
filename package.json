@@ -20,7 +20,7 @@
     "./eslint": "./src/eslint/plugin.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1788289119",
+  "version": "1.47.0-beta.dev-1788289120",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -91,7 +91,7 @@
     "eslint-plugin-vue": "10.10.0",
     "eslint-plugin-vuetify": "^2.7.2",
     "npm-run-all2": "^9.0.3",
-    "oxfmt": "^0.65.0",
+    "oxfmt": "^0.66.0",
     "oxlint": "1.81.0",
     "pinia": "4.0.3",
     "playwright": "^1.62.1",
@@ -120,7 +120,7 @@
     "vue-i18n": "11.4.10",
     "vue-router": "5.3.0",
     "vue-tsc": "3.3.11",
-    "vuetify": "4.1.12",
+    "vuetify": "4.2.0",
     "webfontloader": "^1.6.28"
   },
   "peerDependencies": {
