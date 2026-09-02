@@ -13,7 +13,6 @@
     "skipLibCheck": true,
     "noEmit": true,
     "preserveSymlinks": false,
-    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./src/*"
