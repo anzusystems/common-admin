@@ -235,17 +235,13 @@ const onDeleteAsync = async (item: FaqItem) => {
         <template #item-readonly="{ raw }">
           <div class="d-flex flex-column ga-3">
             <div>
-              <div class="text-body-small text-medium-emphasis mb-1">
-                Title
-              </div>
+              <div class="text-body-small text-medium-emphasis mb-1">Title</div>
               <div class="text-body-medium">
                 {{ raw.title }}
               </div>
             </div>
             <div>
-              <div class="text-body-small text-medium-emphasis mb-1">
-                Answer
-              </div>
+              <div class="text-body-small text-medium-emphasis mb-1">Answer</div>
               <div class="text-body-medium">
                 {{ raw.answer }}
               </div>
@@ -353,9 +349,7 @@ const onDeleteAsync = async (item: FaqItem) => {
         </template>
       </AListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        AListEditor — imperative API via template ref
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">AListEditor — imperative API via template ref</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Caller calls <code>editorRef.addItem()</code> on the exposed handle; the external button
         below triggers it (built-in add button hidden).

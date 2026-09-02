@@ -162,8 +162,8 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
             <span
               v-if="
                 context.statusField &&
-                  vi.raw[context.statusField] != null &&
-                  vi.raw[context.statusField] !== ''
+                vi.raw[context.statusField] != null &&
+                vi.raw[context.statusField] !== ''
               "
               class="a-le-status-badge"
             >
@@ -354,7 +354,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
               <VBtn
                 v-if="
                   context.canInteract &&
-                    ((context.showAddChildButton && vi.canAddChild) || context.showAddAfterAction)
+                  ((context.showAddChildButton && vi.canAddChild) || context.showAddAfterAction)
                 "
                 icon
                 size="small"

@@ -182,7 +182,7 @@ defineExpose({
         @focus="selectContent"
         @blur="onBlurHours"
         @keyup.enter="onEnterHoursKeyup"
-      >
+      />
       <div class="a-datetime-picker-time__arrows">
         <VBtn
           tabindex="-1"
@@ -216,7 +216,7 @@ defineExpose({
         @focus="selectContent"
         @blur="onBlurMinutes"
         @keyup.enter="onEnterMinutesKeyup"
-      >
+      />
       <div class="a-datetime-picker-time__arrows">
         <VBtn
           tabindex="-1"

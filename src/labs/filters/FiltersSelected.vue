@@ -51,9 +51,7 @@ const clickClose = (name: string, optionValue: number | string) => {
     :key="item.name"
     class="a-selected-filters"
   >
-    <div class="a-selected-filters__label text-body-small">
-      {{ item.title }}:
-    </div>
+    <div class="a-selected-filters__label text-body-small">{{ item.title }}:</div>
     <div
       v-for="option in item.options"
       :key="option.value"

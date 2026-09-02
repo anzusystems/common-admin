@@ -162,9 +162,11 @@ watch(
     @focus="onFocus"
   >
     <template #label>
-      <span v-if="!hideLabel">{{ labelComputed }}<span
-        v-if="requiredComputed"
-        class="required"
+      <span v-if="!hideLabel"
+        >{{ labelComputed
+        }}<span
+          v-if="requiredComputed"
+          class="required"
       /></span>
     </template>
     <template

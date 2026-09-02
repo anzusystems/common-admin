@@ -684,7 +684,8 @@ defineExpose({
         v-if="label"
         class="font-weight-bold text-label-large"
       >
-        {{ label }}<span
+        {{ label
+        }}<span
           v-if="required"
           class="required-mark"
         />

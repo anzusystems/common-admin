@@ -64,9 +64,7 @@ const sharedMode = ref<'view' | 'reorder'>('view')
         v-model:mode="sharedMode"
       />
 
-      <div class="text-body-small text-medium-emphasis mt-4">
-        mode: {{ sharedMode }}
-      </div>
+      <div class="text-body-small text-medium-emphasis mt-4">mode: {{ sharedMode }}</div>
     </VCardText>
   </VCard>
 </template>

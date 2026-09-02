@@ -1820,8 +1820,8 @@ defineExpose<
             <div
               v-else-if="
                 $slots['item-readonly'] &&
-                  (readonly || vi.expanded) &&
-                  (allowEditInReorder || !reorderMode)
+                (readonly || vi.expanded) &&
+                (allowEditInReorder || !reorderMode)
               "
               class="a-le-row-body"
             >
@@ -1891,9 +1891,9 @@ defineExpose<
       {{
         keyboardNav.grabbedKey.value !== null
           ? t('common.sortable.keyboardGrab.status', {
-            n: keyboardNav.grabbedIndex.value + 1,
-            total: keyboardNav.totalCount.value,
-          })
+              n: keyboardNav.grabbedIndex.value + 1,
+              total: keyboardNav.totalCount.value,
+            })
           : ''
       }}
     </div>

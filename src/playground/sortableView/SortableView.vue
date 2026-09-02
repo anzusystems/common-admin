@@ -302,9 +302,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
             label="remove id"
           />
         </div>
-        <VBtn @click.stop="confirmDeleteNested">
-          confirm remove
-        </VBtn>
+        <VBtn @click.stop="confirmDeleteNested">confirm remove</VBtn>
       </div>
       <pre class="my-5">{{ itemsNested }}</pre>
       <h2 class="text-headline-medium mt-5 mb-2">
@@ -320,9 +318,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
           {{ item.raw.id }} {{ item.raw.text }}
         </template>
       </ASortable>
-      <h2 class="text-headline-medium mt-5 mb-2">
-        ASortable as chips
-      </h2>
+      <h2 class="text-headline-medium mt-5 mb-2">ASortable as chips</h2>
       <ASortable
         v-model="itemsBasic"
         chips
@@ -337,9 +333,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         </template>
       </ASortable>
 
-      <h2 class="text-headline-medium mt-5 mb-2">
-        ASortable disabled dragging
-      </h2>
+      <h2 class="text-headline-medium mt-5 mb-2">ASortable disabled dragging</h2>
       <ASortable
         v-model="itemsBasic"
         disable-draggable
@@ -349,9 +343,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         </template>
       </ASortable>
 
-      <h2 class="text-headline-medium mt-5 mb-2">
-        ASortable items without id
-      </h2>
+      <h2 class="text-headline-medium mt-5 mb-2">ASortable items without id</h2>
       <ASortable v-model="itemsWithoutId">
         <template #item="{ item }: { item: SortableItem<ItemWithoutIdDemo> }">
           {{ item.raw.position }} {{ item.raw.title }}
@@ -409,9 +401,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
             label="remove id"
           />
         </div>
-        <VBtn @click.stop="confirmDeleteBasic">
-          confirm remove
-        </VBtn>
+        <VBtn @click.stop="confirmDeleteBasic">confirm remove</VBtn>
       </div>
       <div class="my-3 w-100 d-flex">
         <div style="width: 300px">
@@ -421,9 +411,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
             label="remove index"
           />
         </div>
-        <VBtn @click.stop="confirmDeleteIndexBasic">
-          confirm remove
-        </VBtn>
+        <VBtn @click.stop="confirmDeleteIndexBasic">confirm remove</VBtn>
       </div>
       <div class="my-3 w-100 d-flex">
         <div style="width: 300px">
@@ -433,9 +421,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
             label="add after index"
           />
         </div>
-        <VBtn @click.stop="confirmAddIndexBasic">
-          confirm add after index
-        </VBtn>
+        <VBtn @click.stop="confirmAddIndexBasic">confirm add after index</VBtn>
       </div>
     </VCardText>
   </VCard>

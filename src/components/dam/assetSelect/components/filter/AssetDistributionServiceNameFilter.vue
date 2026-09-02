@@ -55,9 +55,7 @@ onMounted(async () => {
   >
     <VProgressCircular indeterminate />
   </div>
-  <div v-else-if="status === 'error'">
-    Error loading distribution services.
-  </div>
+  <div v-else-if="status === 'error'">Error loading distribution services.</div>
   <AFilterValueObjectOptionsSelect
     v-else
     :name="name"

@@ -249,7 +249,8 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — external mode control via <code>v-model:mode</code>
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Parent controls mode. Current: <strong>{{ externalMode }}</strong>.
+        Parent controls mode. Current: <strong>{{ externalMode }}</strong
+        >.
       </p>
       <div class="d-flex ga-2 mb-2">
         <VBtn

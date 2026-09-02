@@ -30,7 +30,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
   <VCard>
     <VCardText>
       <VRow>
-        <VCol> Open using activator: </VCol>
+        <VCol>Open using activator:</VCol>
       </VRow>
       <VRow>
         <VCol cols="10">
@@ -53,7 +53,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
         </VCol>
       </VRow>
       <VRow>
-        <VCol> Open using v-model: </VCol>
+        <VCol>Open using v-model:</VCol>
       </VRow>
       <VRow>
         <VCol cols="10">
@@ -74,7 +74,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
         </VCol>
       </VRow>
       <VRow>
-        <VCol> Open using template ref: </VCol>
+        <VCol>Open using template ref:</VCol>
       </VRow>
       <VRow>
         <VCol cols="10">

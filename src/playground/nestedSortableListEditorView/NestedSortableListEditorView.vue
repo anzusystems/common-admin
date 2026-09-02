@@ -415,9 +415,7 @@ const totalCount = computed(() => {
         </template>
       </ANestedSortableListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        ANestedSortableListEditor — readonly detail
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">ANestedSortableListEditor — readonly detail</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Readonly mode — no edit, delete, add, or reorder toggle. Rows are expandable to show a
         read-only detail body via <code>#item-readonly</code>.
@@ -477,7 +475,8 @@ const totalCount = computed(() => {
         ANestedSortableListEditor — external mode control via <code>v-model:mode</code>
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Parent controls mode. Current: <strong>{{ externalMode }}</strong>.
+        Parent controls mode. Current: <strong>{{ externalMode }}</strong
+        >.
       </p>
       <div class="d-flex ga-2 mb-2">
         <VBtn

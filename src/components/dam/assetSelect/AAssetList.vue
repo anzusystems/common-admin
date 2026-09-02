@@ -109,7 +109,5 @@ onMounted(async () => {
   >
     Loading DAM config error
   </div>
-  <div v-else>
-    Error, no select licence.
-  </div>
+  <div v-else>Error, no select licence.</div>
 </template>

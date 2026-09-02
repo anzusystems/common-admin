@@ -123,7 +123,7 @@ const onReorderApplied = (items: MockImage[]) => {
                 :src="image.src"
                 :alt="image.title"
                 class="card-grid__thumb"
-              >
+              />
               <div class="card-grid__body">
                 <div class="card-grid__title">
                   {{ image.title }}
@@ -153,7 +153,7 @@ const onReorderApplied = (items: MockImage[]) => {
               :src="raw.src"
               :alt="raw.title"
               class="card-grid-reorder-row__thumb"
-            >
+            />
             <div class="card-grid-reorder-row__meta">
               <div class="card-grid-reorder-row__title">
                 {{ raw.title }}
@@ -174,9 +174,7 @@ const onReorderApplied = (items: MockImage[]) => {
         last event: {{ lastEvent }}
       </div>
 
-      <h3 class="text-title-large mt-6 mb-2">
-        Order (live)
-      </h3>
+      <h3 class="text-title-large mt-6 mb-2">Order (live)</h3>
       <div class="text-body-small text-medium-emphasis">
         {{ images.map((i) => `${i.position}:${i.id}`).join(' · ') }}
       </div>

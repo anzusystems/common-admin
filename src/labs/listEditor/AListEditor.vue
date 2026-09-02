@@ -1085,9 +1085,9 @@ defineExpose<ListEditorHandle<TItem>>({
       {{
         keyboardNav.grabbedKey.value !== null
           ? t('common.sortable.keyboardGrab.status', {
-            n: keyboardNav.grabbedIndex.value + 1,
-            total: keyboardNav.totalCount.value,
-          })
+              n: keyboardNav.grabbedIndex.value + 1,
+              total: keyboardNav.totalCount.value,
+            })
           : ''
       }}
     </div>
