@@ -107,7 +107,6 @@ describe('AFormRemoteAutocomplete', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks()
     mockFetchItems.mockResolvedValue(mockItems)
     mockFetchItemsByIds.mockResolvedValue(mockItems)
   })

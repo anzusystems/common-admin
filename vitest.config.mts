@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'
 import { fileURLToPath, URL } from 'url'
 import vue from '@vitejs/plugin-vue'
@@ -93,6 +92,8 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    // v5 default; pinned so it cannot silently flip.
+    clearMocks: true,
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 30000,
     hookTimeout: 30000,

@@ -29,6 +29,7 @@ dist-ssr
 *.sw?
 
 .playwright-cli
+.vitest
 .vitest-attachments
 todo
 # lint caches

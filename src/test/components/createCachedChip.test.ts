@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent } from 'vue'
+import { defineComponent, h } from 'vue'
 import { createCachedChip } from '@/components/createCachedChip'
 
 // Stub stands in for the real ACachedChip (which needs a router) and records
@@ -15,7 +15,8 @@ const ACachedChipStub = defineComponent({
     textOnly: { type: Boolean, default: false },
     size: { type: String, default: '' },
   },
-  template: '<div class="cached-chip-stub" />',
+  // setup-returned render fn, not `template`: this Vue build has no template compiler
+  setup: () => () => h('div', { class: 'cached-chip-stub' }),
 })
 
 describe('createCachedChip', () => {
