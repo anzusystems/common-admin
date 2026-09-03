@@ -224,7 +224,9 @@ const checkCollab = async (
     try {
       await joinCollabRoom({ joinStrategy: collab.joinStrategy, editors: collab.editors })
     } catch (error) {
-      if (error instanceof Error && error.message === CollabAccessRoomStatus.Failed) {
+      // By identity: joinCollabRoom rejects with the bare status, not an Error.
+      if (error === CollabAccessRoomStatus.Superseded) return
+      if (error === CollabAccessRoomStatus.Failed) {
         showErrorT('common.collab.alert.error')
         return from
       }
@@ -255,7 +257,7 @@ router.beforeEach(async (to, from): Promise<NavigationGuardReturn> => {
     initCollab()
     initialized.value = true
   }
-  await checkCollab(to, from)
+  return await checkCollab(to, from)
 })
 
 export default router
