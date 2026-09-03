@@ -96,7 +96,7 @@
     "oxlint": "1.81.0",
     "pinia": "4.0.3",
     "playwright": "^1.62.1",
-    "postcss": "^8.5.26",
+    "postcss": "^8.5.27",
     "postcss-html": "^2.0.0",
     "postcss-prefix-selector": "^2.2.0",
     "rusha": "^0.8.14",
