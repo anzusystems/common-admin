@@ -228,7 +228,7 @@ onUnmounted(() => {
             v-if="item.error.hasError"
             :class="
               'dam-upload-queue__overlay dam-upload-queue__overlay--error ' +
-                'd-flex align-center justify-center flex-column'
+              'd-flex align-center justify-center flex-column'
             "
           >
             <VIcon

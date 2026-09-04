@@ -111,11 +111,16 @@ export function defineAuth<TAclValue extends AclValue>(
       }
     }
 
+    /**
+     * Answers `undefined` for every failure by default, which loses the reason. `throwOnError`
+     * hands the original error back, for callers that must tell a lost session from a dead backend.
+     */
     const fetchCurrentUser = async (
       client: () => AxiosInstance,
       endPoint = '/adm/v1/users/current',
       urlParams: UrlParams | undefined = undefined,
       entity = 'user',
+      options: { throwOnError?: boolean } = {},
     ) => {
       try {
         const res = await apiFetchOne<TCurrentUser>(client, endPoint, urlParams, system, entity)
@@ -124,7 +129,9 @@ export function defineAuth<TAclValue extends AclValue>(
         storeAdminRoleBySystem()
         return currentUser.value
       } catch (error) {
+        // Set before rethrowing too, or `can()` throws "must try to load currentUser first".
         authStore.currentUsersLoaded.value.set(system, true)
+        if (options.throwOnError) throw error
         return undefined
       }
     }

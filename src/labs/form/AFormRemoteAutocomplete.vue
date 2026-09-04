@@ -241,6 +241,9 @@ const loadListItems = async (ids: T[] | T) => {
     modelValueSelected.value = selectedNewValue
     modelValueAutocomplete.value = selectedNewValue
     return selectedItemsCache.value
+  } catch (e) {
+    // Mirror tryLoadModelValue: don't let a failed by-ids resolve become a generic global toast (QA 85050).
+    showErrorsDefault(e)
   } finally {
     loadingLocal.value = false
   }
@@ -316,6 +319,8 @@ const tryAutoFetch = async (
       }
     }
     prefetchCompleted.value = true
+  } catch (e) {
+    showErrorsDefault(e)
   } finally {
     loadingLocal.value = false
   }

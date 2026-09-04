@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
-import { defineComponent, h, ref, nextTick } from 'vue'
+import { defineComponent, h, ref, nextTick, type Ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
+
+// Read a ref out of the scope that created it (same helper as ListEditorManagedMutations),
+// so asserting on the model doesn't trip vue/no-ref-object-reactivity-loss.
+const read = (list: Ref<FaqItem[]>): FaqItem[] => list.value
 
 const findAListEditor = (w: VueWrapper): VueWrapper =>
   w.findComponent(AListEditor as unknown as Parameters<typeof w.findComponent>[0]) as VueWrapper
@@ -19,6 +23,9 @@ const items = (): FaqItem[] => [
   { id: 3, position: 3, title: 'Third', status: 'Active' },
 ]
 
+let nextTempId = 0
+const makeFaqItem = (): FaqItem => ({ id: --nextTempId, position: 0, title: '' })
+
 const mountEditor = (data: FaqItem[] = items(), extra: Record<string, unknown> = {}) => {
   const model = ref<FaqItem[]>(data)
   const Host = defineComponent({
@@ -29,6 +36,8 @@ const mountEditor = (data: FaqItem[] = items(), extra: Record<string, unknown> =
           'onUpdate:modelValue': (v: FaqItem[]) => {
             model.value = v
           },
+          factory: makeFaqItem,
+          compactField: 'title',
           ...extra,
         })
     },
@@ -61,12 +70,15 @@ describe('AListEditor', () => {
       expect(wrapper.find('.a-le-title').text()).toBe('1')
     })
 
-    it('falls back to fallback label when nothing resolves', () => {
-      const data = [{ id: 1, position: 1 }] as unknown as FaqItem[]
+    it('renders empty compact text when compactField does not resolve — no implicit fallback', () => {
+      // The row deliberately CARRIES the field names an implicit fallback would reach for
+      // (`title` / `name` / `label`). Without them the claim is unfalsifiable: a fallback
+      // would resolve to '' anyway and the test would pass either way.
+      const data = [
+        { id: 1, position: 1, title: 'from title', name: 'from name', label: 'from label' },
+      ] as unknown as FaqItem[]
       const { wrapper } = mountEditor(data, { compactField: 'nonexistent' })
-      // with compactField set but nothing to pick from fallback chain, falls through
-      // (id=1 is still picked via 'key' in fallback chain)
-      expect(wrapper.find('.a-le-title').text()).toBe('1')
+      expect(wrapper.find('.a-le-title').text()).toBe('')
     })
 
     it('renders the default add button row', () => {
@@ -98,6 +110,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               {
                 item: ({ raw }: { raw: FaqItem }) =>
@@ -108,7 +121,9 @@ describe('AListEditor', () => {
       })
       const wrapper = mount(ItemHost)
       // trigger edit on first row
-      const editBtn = wrapper.findAll('button').find((b) => b.attributes('class')?.includes('a-le-action--edit'))
+      const editBtn = wrapper
+        .findAll('button')
+        .find((b) => b.attributes('class')?.includes('a-le-action--edit'))
       expect(editBtn).toBeTruthy()
       await editBtn!.trigger('click')
       await nextTick()
@@ -130,29 +145,27 @@ describe('AListEditor', () => {
       expect(err.text()).toContain('Something went wrong')
     })
 
-    it('renders empty state with default title/text', () => {
+    it('renders empty state with default title', () => {
       const { wrapper } = mountEditor([])
       expect(wrapper.find('.a-le-state--empty').exists()).toBe(true)
       expect(wrapper.find('.a-le-empty-title').text()).toBeTruthy()
-      expect(wrapper.find('.a-le-empty-text').text()).toBeTruthy()
+      expect(wrapper.find('.a-le-empty-text').exists()).toBe(false)
     })
 
-    it('renders empty state with custom title/text', () => {
-      const { wrapper } = mountEditor([], {
-        emptyTitle: 'Nothing here',
-        emptyText: 'Add one',
-      })
+    it('renders empty state with custom title', () => {
+      const { wrapper } = mountEditor([], { emptyTitle: 'Nothing here' })
       expect(wrapper.find('.a-le-empty-title').text()).toBe('Nothing here')
-      expect(wrapper.find('.a-le-empty-text').text()).toBe('Add one')
     })
   })
 
   describe('events and interactions', () => {
-    it('emits add with no hint when the add button is clicked', async () => {
-      const { wrapper, editor } = mountEditor()
+    it('inserts a factory row into the model when the add button is clicked', async () => {
+      const { wrapper, model } = mountEditor()
       await wrapper.find('.a-le-row-add').trigger('click')
-      expect(editor().emitted('add')).toBeTruthy()
-      expect(editor().emitted('add')![0][0]).toBeUndefined()
+      await flushPromises()
+      expect(model.value).toHaveLength(4)
+      // Appended at the end (no hint).
+      expect(model.value[3].title).toBe('')
     })
 
     it('emits edit when the edit button is clicked', async () => {
@@ -206,21 +219,23 @@ describe('AListEditor', () => {
       expect(editor().emitted('deleted')).toBeTruthy()
     })
 
-    it('does not emit or mutate when readonly', async () => {
-      const { wrapper, model } = mountEditor(items(), { readonly: true })
-      // edit/delete buttons should not render when !canInteract
+    it('does not render the built-in mutating affordances when readonly', () => {
+      const { wrapper } = mountEditor(items(), { readonly: true })
+      // The DEFAULT buttons are `v-if`'d out on !canInteract...
       expect(wrapper.findAll('.a-le-action--edit')).toHaveLength(0)
       expect(wrapper.findAll('.a-le-action--delete')).toHaveLength(0)
       expect(wrapper.find('.a-le-row-add').exists()).toBe(false)
-      expect(model.value).toHaveLength(3)
     })
-  })
 
-  describe('position hints', () => {
-    it('emits add with afterId hint when the slot addAfter action is triggered', async () => {
+    it('does not emit or mutate when readonly, even via slot-reachable actions', async () => {
+      // ...but hiding the buttons is not the guarantee. `#item-actions` is NOT gated on
+      // canInteract, so a slot consumer still holds `actions.delete` / `actions.addAfter`;
+      // `#empty` likewise hands out `actions.add`. Those handlers are what must refuse.
+      // The old test clicked nothing and asserted `model.value` still had its 3 rows —
+      // which no mutation of the guards could ever falsify.
+      const model = ref<FaqItem[]>(items())
       const Host = defineComponent({
         setup() {
-          const model = ref<FaqItem[]>(items())
           return () =>
             h(
               AListEditor<FaqItem>,
@@ -229,25 +244,150 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
+                readonly: true,
               },
               {
-                'item-actions': ({ actions }: { actions: { addAfter: () => void } }) =>
-                  h(
-                    'button',
-                    { class: 'test-add-after', onClick: actions.addAfter },
-                    'add after',
-                  ),
+                'item-actions': ({
+                  actions,
+                }: {
+                  actions: { delete: () => Promise<void>; addAfter: () => void }
+                }) => [
+                  h('button', { class: 'ro-delete', onClick: actions.delete }, 'delete'),
+                  h('button', { class: 'ro-add-after', onClick: actions.addAfter }, 'add after'),
+                ],
               },
             )
         },
       })
       const wrapper = mount(Host)
+      const editor = findAListEditor(wrapper)
+
+      await wrapper.findAll('.ro-delete')[0].trigger('click')
+      await flushPromises()
+      await wrapper.findAll('.ro-add-after')[0].trigger('click')
+      await flushPromises()
+
+      expect(read(model).map((i) => i.id)).toEqual([1, 2, 3])
+      expect(editor.emitted('deleted')).toBeFalsy()
+      expect(editor.emitted('update:modelValue')).toBeFalsy()
+    })
+
+    it('does not add when readonly via the #empty slot add action', async () => {
+      // `onAddClick` guards on `canAdd` (= canInteract && showAddButton). The default add
+      // row is `v-if`'d away in readonly, so the #empty slot is the reachable path to it.
+      const model = ref<FaqItem[]>([])
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(
+              AListEditor<FaqItem>,
+              {
+                modelValue: model.value,
+                'onUpdate:modelValue': (v: FaqItem[]) => {
+                  model.value = v
+                },
+                factory: makeFaqItem,
+                readonly: true,
+              },
+              {
+                empty: ({ actions }: { actions: { add: () => void } }) =>
+                  h('button', { class: 'ro-add', onClick: actions.add }, 'add'),
+              },
+            )
+        },
+      })
+      const wrapper = mount(Host)
+      const editor = findAListEditor(wrapper)
+
+      await wrapper.find('.ro-add').trigger('click')
+      await flushPromises()
+
+      expect(read(model)).toHaveLength(0)
+      expect(editor.emitted('update:modelValue')).toBeFalsy()
+    })
+  })
+
+  describe('position hints', () => {
+    // Drives add-after from the row slot scope (`actions.addAfter`) — the same
+    // handler the kebab "add after this" VListItem calls — so we don't fight the
+    // Vuetify VMenu overlay.
+    const mountWithAddAfterSlot = (extra: Record<string, unknown> = {}) => {
+      const model = ref<FaqItem[]>(items())
+      const Host = defineComponent({
+        setup() {
+          return () =>
+            h(
+              AListEditor<FaqItem>,
+              {
+                modelValue: model.value,
+                'onUpdate:modelValue': (v: FaqItem[]) => {
+                  model.value = v
+                },
+                factory: makeFaqItem,
+                ...extra,
+              },
+              {
+                'item-actions': ({ actions }: { actions: { addAfter: () => void } }) =>
+                  h('button', { class: 'test-add-after', onClick: actions.addAfter }, 'add after'),
+              },
+            )
+        },
+      })
+      const wrapper = mount(Host)
+      return { wrapper, model }
+    }
+
+    it('inserts the factory row right after the row when the slot addAfter action is triggered', async () => {
+      const { wrapper, model } = mountWithAddAfterSlot()
       const btns = wrapper.findAll('.test-add-after')
       await btns[1].trigger('click')
-      const editor = findAListEditor(wrapper)
-      const addEvents = editor.emitted('add') as Array<[{ afterId: number } | undefined]>
-      expect(addEvents).toBeTruthy()
-      expect(addEvents[0][0]).toEqual({ afterId: 2 })
+      await flushPromises()
+      // New row inserted after id 2 (index 1).
+      expect(model.value).toHaveLength(4)
+      expect(model.value[2].title).toBe('')
+      expect(model.value.map((i) => i.id).slice(0, 2)).toEqual([1, 2])
+    })
+
+    it('add-after inserts the new row immediately after the source row and renumbers positions', async () => {
+      const { wrapper, model } = mountWithAddAfterSlot({
+        position: 'position',
+        showAddAfterAction: true,
+      })
+      await flushPromises()
+
+      // Trigger add-after on the MIDDLE row (id 2).
+      const btns = wrapper.findAll('.test-add-after')
+      await btns[1].trigger('click')
+      await flushPromises()
+
+      expect(model.value).toHaveLength(4)
+      // The blank factory row lands at index 2 — right after id 2.
+      expect(model.value[2].title).toBe('')
+      const newId = model.value[2].id
+      // ids order: [1, 2, <new>, 3]
+      expect(model.value.map((i) => i.id)).toEqual([1, 2, newId, 3])
+      // Managed position renumbered contiguous 1..4.
+      expect(model.value.map((i) => i.position)).toEqual([1, 2, 3, 4])
+    })
+
+    it('add-after on the last row appends at the end', async () => {
+      const { wrapper, model } = mountWithAddAfterSlot({
+        position: 'position',
+        showAddAfterAction: true,
+      })
+      await flushPromises()
+
+      const btns = wrapper.findAll('.test-add-after')
+      await btns[2].trigger('click')
+      await flushPromises()
+
+      expect(model.value).toHaveLength(4)
+      // New blank row appended after the original last row (id 3).
+      expect(model.value[3].title).toBe('')
+      const newId = model.value[3].id
+      expect(model.value.map((i) => i.id)).toEqual([1, 2, 3, newId])
+      expect(model.value.map((i) => i.position)).toEqual([1, 2, 3, 4])
     })
   })
 
@@ -276,6 +416,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
                 title: 'X',
               },
               {
@@ -314,6 +455,8 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
+                compactField: 'title',
                 ...extra,
               },
               {
@@ -395,6 +538,8 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
+                compactField: 'title',
                 onItemSave,
               },
               {
@@ -471,6 +616,11 @@ describe('AListEditor', () => {
     })
 
     it('#item-footer slot overrides the default footer', async () => {
+      // `onItemSave` is load-bearing: the default footer only renders when it is provided
+      // (`showInlineSaveFooter`). Without it the host could never have shown a default
+      // footer in the first place, so "overrides" asserted nothing — the sibling test above
+      // proves this exact config DOES render `.a-le-row-footer` when the slot is absent.
+      const save = vi.fn().mockResolvedValue(undefined)
       const model = ref<FaqItem[]>(items())
       const Host = defineComponent({
         setup() {
@@ -482,6 +632,8 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
+                onItemSave: save,
               },
               {
                 item: ({ raw }: { raw: FaqItem }) => h('div', `editing ${raw.id}`),
@@ -582,6 +734,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) },
             )
@@ -600,7 +753,7 @@ describe('AListEditor', () => {
   })
 
   describe('auto-open on add', () => {
-    it('auto-enters editing on the newly-added row after @add is handled by the parent', async () => {
+    it('auto-enters editing on the newly-added managed row', async () => {
       const model = ref<FaqItem[]>(items())
       const Host = defineComponent({
         setup() {
@@ -612,12 +765,8 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
-                onAdd: () => {
-                  model.value = [
-                    ...model.value,
-                    { id: 999, position: 0, title: 'New', status: 'Draft' },
-                  ]
-                },
+                factory: (): FaqItem => ({ id: 999, position: 0, title: 'New', status: 'Draft' }),
+                compactField: 'title',
               },
               { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) },
             )
@@ -646,6 +795,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) },
             )
@@ -674,6 +824,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               { empty: () => h('div', { class: 'my-empty' }, 'Nothing here yet') },
             )
@@ -696,18 +847,11 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               {
-                'add-button': ({
-                  actions,
-                }: {
-                  actions: { add: () => void }
-                }) =>
-                  h(
-                    'button',
-                    { class: 'my-add', onClick: actions.add },
-                    'Custom add',
-                  ),
+                'add-button': ({ actions }: { actions: { add: () => void } }) =>
+                  h('button', { class: 'my-add', onClick: actions.add }, 'Custom add'),
               },
             )
         },
@@ -729,6 +873,7 @@ describe('AListEditor', () => {
                 'onUpdate:modelValue': (v: FaqItem[]) => {
                   model.value = v
                 },
+                factory: makeFaqItem,
               },
               {
                 'item-actions': ({ raw }: { raw: FaqItem }) =>
@@ -745,38 +890,46 @@ describe('AListEditor', () => {
     })
   })
 
-  describe('exposed imperative API', () => {
-    it('exposes resetDirtyBaseline via defineExpose', () => {
+  describe('exposed imperative API (v2 controller handle)', () => {
+    it('exposes the controller handle via defineExpose', () => {
       const { editor } = mountEditor()
       const exposed = (editor().vm as unknown as { $: { exposed: Record<string, unknown> } }).$
         .exposed
-      expect(typeof exposed.resetDirtyBaseline).toBe('function')
+      expect(typeof exposed.commit).toBe('function')
+      expect(typeof exposed.reset).toBe('function')
+      expect(typeof exposed.validateAll).toBe('function')
+      expect(typeof exposed.getPayload).toBe('function')
       expect(typeof exposed.addItem).toBe('function')
       expect(typeof exposed.deleteItem).toBe('function')
       expect(typeof exposed.updateItem).toBe('function')
     })
   })
 
-  describe('position recalculation (updatePosition)', () => {
-    it('recalculates positions on add when updatePosition=true', async () => {
+  describe('managed position (position prop)', () => {
+    it('recalculates positions on add when position is managed with a multiplier', async () => {
       const { model, editor } = mountEditor(items(), {
-        updatePosition: true,
-        positionMultiplier: 10,
+        position: { field: 'position', multiplier: 10 },
       })
-      const exposed = (editor().vm as unknown as {
-        $: { exposed: { addItem: (d: FaqItem) => void } }
-      }).$.exposed
+      // Baseline renumbers eagerly to the multiplier grid.
+      await flushPromises()
+      const exposed = (
+        editor().vm as unknown as {
+          $: { exposed: { addItem: (d?: FaqItem) => void } }
+        }
+      ).$.exposed
       exposed.addItem({ id: 999, position: 0, title: 'Extra' })
       await flushPromises()
       const positions = model.value.map((i) => i.position)
       expect(positions).toEqual([10, 20, 30, 40])
     })
 
-    it('does not touch positions when updatePosition=false (default)', async () => {
-      const { model, editor } = mountEditor(items())
-      const exposed = (editor().vm as unknown as {
-        $: { exposed: { addItem: (d: FaqItem) => void } }
-      }).$.exposed
+    it('does not touch positions when position=false', async () => {
+      const { model, editor } = mountEditor(items(), { position: false })
+      const exposed = (
+        editor().vm as unknown as {
+          $: { exposed: { addItem: (d?: FaqItem) => void } }
+        }
+      ).$.exposed
       exposed.addItem({ id: 999, position: 99, title: 'Extra' })
       await flushPromises()
       // Original positions preserved, new item keeps its own

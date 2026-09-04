@@ -56,8 +56,13 @@ export function useCollabRoom(
   fetchCachedUsers: (() => Promisify<Promise<any>>) | undefined = undefined,
   disableAutoUnsubscribe = false,
 ) {
-  const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState } =
-    useCollabState()
+  const {
+    collabSocket,
+    collabRoomInfoState,
+    collabFieldDataBufferState,
+    collabFieldLocksState,
+    claimRoomInfoWrite,
+  } = useCollabState()
 
   const reconnectEventBus = useCollabReconnectEventBus()
   const unsubscribeCollabReconnectListener = ref<undefined | Fn>()
@@ -220,6 +225,9 @@ export function useCollabRoom(
 
   tryOnBeforeUnmount(() => {
     if (disableAutoUnsubscribe) return
+    if (isDefined(unsubscribeCollabReconnectListener.value)) {
+      unsubscribeCollabReconnectListener.value()
+    }
     if (isDefined(unsubscribeJoinRequestListener.value)) {
       unsubscribeJoinRequestListener.value()
     }
@@ -250,17 +258,21 @@ export function useCollabRoom(
 
   const subscribeCollabRoomInfo = () => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    const isNewestWrite = claimRoomInfoWrite(room)
     collabSocket.value.emit('subscribeCollabRoomInfo', room, (response: CollabRoomInfoCallback) => {
+      if (!isNewestWrite()) return
       collabRoomInfoState.set(room, response.room)
     })
   }
 
   const unsubscribeCollabRoomInfo = () => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    const isNewestWrite = claimRoomInfoWrite(room)
     collabSocket.value.emit(
       'unsubscribeCollabRoomInfo',
       room,
       (response: CollabRoomInfoCallback) => {
+        if (!isNewestWrite()) return
         collabRoomInfoState.set(room, response.room)
       },
     )
@@ -272,32 +284,65 @@ export function useCollabRoom(
     return new Promise((resolve, reject) => {
       if (!collabOptions.value.enabled || isUndefined(collabSocket.value))
         return reject(CollabAccessRoomStatus.Failed)
+      const isNewestWrite = claimRoomInfoWrite(room)
       collabSocket.value
         ?.timeout(5000)
         .emit('joinCollabRoom', room, options, (error, response: CollabAccessRoomCallbackTypes) => {
           if (error) {
+            markRoomInactiveOnFailedClaim()
+            /* No cleanup leave here, though a timed-out join can leave the server holding a
+             * membership this client never hears about: a leave is not tied to the join it cleans up,
+             * so it could remove the membership of a remount that succeeded in the meantime. Marking
+             * inactive keeps the failure on the safe side — the stale membership is released on
+             * disconnect. Closing it properly needs a generation the server can compare. */
             return void reject(CollabAccessRoomStatus.Failed)
           }
           if (isCollabSuccessAccessRoomCallback(response)) {
-            collabRoomInfoState.set(room, response.room)
+            if (isNewestWrite()) collabRoomInfoState.set(room, response.room)
             return void resolve(response.status)
           }
+          markRoomInactiveOnFailedClaim()
           return void reject(response.status)
         })
+
+      /**
+       * A failed claim writes nothing yet still suppresses older acknowledgements, so without this a
+       * failed join would keep showing the membership from before the leave. Recorded as an explicitly
+       * inactive room, never deleted: the mutation guards test `roomInfo && status === Inactive`, so a
+       * missing entry falls through and emits. Only while this claim is still the newest.
+       */
+      function markRoomInactiveOnFailedClaim() {
+        if (isNewestWrite()) collabRoomInfoState.set(room, createDefaultCollabRoomInfo())
+      }
     })
   }
 
-  const leaveCollabRoom = () => {
-    if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
-    collabSocket.value.emit('leaveCollabRoom', room, (response: CollabAccessRoomCallbackTypes) => {
-      if (isCollabSuccessAccessRoomCallback(response)) {
-        collabRoomInfoState.set(room, response.room)
-      }
+  /**
+   * Resolves once the server has acknowledged the leave, so a caller that re-joins the same room can
+   * serialise the two. Never rejects: every existing caller invokes it without handling the result,
+   * mostly from unmount hooks. A missing ack resolves on the timeout rather than hanging.
+   */
+  const leaveCollabRoom = (): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return void resolve()
+      const isNewestWrite = claimRoomInfoWrite(room)
+      collabSocket.value
+        ?.timeout(5000)
+        .emit('leaveCollabRoom', room, (error, response: CollabAccessRoomCallbackTypes) => {
+          if (!error && isNewestWrite() && isCollabSuccessAccessRoomCallback(response)) {
+            collabRoomInfoState.set(room, response.room)
+          }
+          resolve()
+        })
     })
   }
 
   const enteredCollabRoom = () => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    /* Anything remembered from a previous stay in this room is a guess: the server answers with the
+     * locks it holds only when it holds some, so a lock released while this client was away produces
+     * no event and the field would read as locked until some later one arrives. */
+    collabFieldLocksState.set(room, new Map())
     collabSocket.value?.emit('enteredCollabRoom', room)
   }
 
@@ -470,5 +515,6 @@ export function useCollabRoom(
     unsubscribeRejectedRequestToTakeModerationListener,
     unsubscribeKickedFromRoomListener,
     unsubscribeCollabStartingListener,
+    unsubscribeCollabReconnectListener,
   }
 }

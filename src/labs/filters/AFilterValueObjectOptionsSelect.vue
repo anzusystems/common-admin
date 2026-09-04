@@ -78,7 +78,10 @@ const clearField = () => {
 }
 
 const updateSelected = (newValue: AllowedFilterValues) => {
-  if (isArray(newValue) && newValue.length === 0) return
+  if (isArray(newValue) && newValue.length === 0) {
+    filterSelected.value.delete(props.name)
+    return
+  }
   if (isArray(newValue)) {
     filterSelected.value.set(
       props.name,

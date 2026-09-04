@@ -157,9 +157,7 @@ watch(
 
 <template>
   <div class="d-flex align-center justify-center">
-    <div class="text-body-small mr-1">
-      {{ t('common.system.datatable.ordering.title') }}:
-    </div>
+    <div class="text-body-small mr-1">{{ t('common.system.datatable.ordering.title') }}:</div>
     <VBtn
       variant="text"
       rounded="xl"

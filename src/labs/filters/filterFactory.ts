@@ -24,6 +24,7 @@ const SORT_URL_PARAM = '_sort'
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,
+  selected: true,
   xs: undefined,
   sm: undefined,
   md: undefined,
@@ -446,6 +447,9 @@ export interface GeneralFilterOptions {
 
 export interface FilerRenderOptions {
   skip: boolean
+  // Whether the field is shown as a selected-filter chip (FiltersSelected). Default true.
+  // Optional for backward compatibility (other admins may construct FilerRenderOptions).
+  selected?: boolean
   xs: number | undefined
   sm: number | undefined
   md: number | undefined

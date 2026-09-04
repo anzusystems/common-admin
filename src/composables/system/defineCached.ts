@@ -2,8 +2,13 @@ import { type Ref, ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import type { DocId, IntegerId } from '@/types/common'
 import { isArray, isNull, isUndefined } from '@/utils/common'
+import { useSentry } from '@/services/sentry'
 
-export type CachedItem<T extends object> = T & { _loaded: boolean }
+/**
+ * `_unresolved` is terminal: the fetch settled without resolving the item, either because
+ * it failed or because the server did not return it.
+ */
+export type CachedItem<T extends object> = T & { _loaded: boolean; _unresolved?: boolean }
 
 export type AddToCachedArgs<T extends DocId | IntegerId> =
   | Array<T | null | undefined>
@@ -27,6 +32,13 @@ export function defineCached<
 ) {
   const cache: Ref<Map<I, CachedItem<M>>> = ref(new Map())
   const toFetch = ref(new Set()) as Ref<Set<I>>
+  const { logError } = useSentry()
+
+  /** Unresolved items are re-queued on the next `add()`, never retried from the queue itself. */
+  const isCached = (id: I) => {
+    const item = cache.value.get(id)
+    return !isUndefined(item) && item._unresolved !== true
+  }
 
   const add = (...args: AddToCachedArgs<I>) => {
     const toAdd = <Set<I>>new Set()
@@ -37,12 +49,14 @@ export function defineCached<
         for (let j = 0; j < arg.length; j++) {
           const item = arg[j]
           if (isNull(item) || isUndefined(item)) continue
-          if (!cache.value.has(item)) toAdd.add(item)
+          if (!isCached(item)) toAdd.add(item)
         }
         continue
       }
-      if (!cache.value.has(arg)) toAdd.add(arg)
+      if (!isCached(arg)) toAdd.add(arg)
     }
+    if (toAdd.size === 0) return
+    prune(toAdd)
     toAdd.forEach((id) => {
       cache.value.set(id, {
         ...mapIdToMinimal(id),
@@ -70,14 +84,32 @@ export function defineCached<
     }
   }
 
-  const updateMap = (data: T[]) => {
-    if (cache.value.size >= maxLimit) {
-      for (const [key, value] of cache.value) {
-        if (value._loaded) {
-          cache.value.delete(key)
-        }
+  /**
+   * Drops only as many oldest terminal entries as the overflow requires; dropping every one
+   * of them would send currently rendered chips back to their loading state.
+   * Must include `_unresolved`, otherwise repeated failures grow the cache past `maxLimit`.
+   */
+  const prune = (protectedIds?: Set<I>) => {
+    let incoming = 0
+    if (protectedIds) {
+      // Re-queued unresolved ids are already in the cache and do not grow it.
+      for (const id of protectedIds) if (!cache.value.has(id)) incoming += 1
+    }
+    const overflow = cache.value.size + incoming - maxLimit
+    if (overflow <= 0) return
+    let removed = 0
+    for (const [key, value] of cache.value) {
+      if (removed >= overflow) break
+      if (protectedIds?.has(key)) continue
+      if (value._loaded || value._unresolved) {
+        cache.value.delete(key)
+        removed += 1
       }
     }
+  }
+
+  const updateMap = (data: T[]) => {
+    prune()
     for (let i = 0; i < data.length; i += 1) {
       cache.value.set(data[i][idProp] as I, {
         ...mapFullToMinimal(data[i]),
@@ -92,20 +124,42 @@ export function defineCached<
     }
   }
 
-  async function apiFetch() {
-    if (toFetch.value.size > 0) {
-      const ids = Array.from(toFetch.value)
-      const res = await fetchCallback(ids)
-      updateToFetch(ids)
-      updateMap(res)
-      return res
+  const markUnresolved = (ids: Array<I>) => {
+    for (let i = 0; i < ids.length; i += 1) {
+      const item = cache.value.get(ids[i])
+      if (isUndefined(item) || item._loaded) continue
+      cache.value.set(ids[i], { ...item, _unresolved: true })
     }
-    return []
   }
 
+  async function apiFetch() {
+    if (toFetch.value.size === 0) return []
+    const ids = Array.from(toFetch.value)
+    try {
+      const res = await fetchCallback(ids)
+      updateMap(res)
+      return res
+    } finally {
+      // Always drain, otherwise a failing batch is resent on every subsequent fetch().
+      updateToFetch(ids)
+      markUnresolved(ids)
+    }
+  }
+
+  // Caught inside the debounced callback, not on the promise it returns: the maxWait timer
+  // is a second invocation path whose promise never reaches the caller, so a rejection
+  // there would escape as an unhandled rejection.
   const debouncedFetch = useDebounceFn(
     async () => {
-      return await apiFetch()
+      try {
+        return await apiFetch()
+      } catch (error: unknown) {
+        logError(error instanceof Error ? error : new Error(String(error)), {
+          level: 'warning',
+          tags: { cachedFetch: 'failed' },
+        })
+        return [] as T[]
+      }
     },
     1500,
     { maxWait: 5000 },
@@ -114,6 +168,8 @@ export function defineCached<
   /**
    * Debounced fetch for best performance.
    * For general usage.
+   *
+   * Called fire-and-forget, so it never rejects. Use `immediateFetch()` to handle errors.
    */
   const fetch = () => {
     return debouncedFetch()
@@ -148,6 +204,12 @@ export function defineCached<
     return item._loaded
   }
 
+  /** Terminal counterpart of `isLoaded`: the fetch settled without resolving the item. */
+  const isUnresolved = (id: I | null | undefined): boolean => {
+    if (!id) return false
+    return cache.value.get(id)?._unresolved === true
+  }
+
   return {
     cache,
     toFetch,
@@ -160,5 +222,6 @@ export function defineCached<
     get,
     clear,
     isLoaded,
+    isUnresolved,
   }
 }

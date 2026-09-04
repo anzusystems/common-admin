@@ -88,7 +88,7 @@ const showIconComputed = computed(() => {
       loading="lazy"
       :style="'background-color:' + backgroundColor"
       @onerror="onError"
-    >
+    />
     <div
       v-if="showIconComputed"
       class="anzu-common-asset-image__icon-wrapper"

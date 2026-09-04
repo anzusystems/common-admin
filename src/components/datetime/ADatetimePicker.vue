@@ -232,7 +232,14 @@ const onTextFieldBlur = () => {
       const modelDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
       if (modelDate.isValid()) seconds = modelDate.second()
     }
-    datetimeInternal.value = parsed.second(seconds)
+    const reparsed = parsed.second(seconds)
+    // A day click blurs this field before the picker emits, so re-assigning an unchanged datetime
+    // would push the stale date back into it. By second, as `lastMinuteMoment` holds ms at 999.
+    if (reparsed.isSame(toRaw(datetimeInternal.value), 'second')) {
+      textFieldValue.value = reparsed.format(displayFormat.value)
+    } else {
+      datetimeInternal.value = reparsed
+    }
     v$.value.textFieldValue.$touch()
     emit('blur')
     return
@@ -393,7 +400,8 @@ const now = () => {
       v-if="!hideLabel"
       #label
     >
-      {{ label }}<span
+      {{ label
+      }}<span
         v-if="required"
         class="required"
       />

@@ -125,5 +125,5 @@ defineExpose({
     tabindex="-1"
     type="file"
     @change="onInputFileChange"
-  >
+  />
 </template>

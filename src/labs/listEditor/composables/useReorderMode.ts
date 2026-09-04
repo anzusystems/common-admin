@@ -1,11 +1,4 @@
-import {
-  computed,
-  ref,
-  watch,
-  type ComputedRef,
-  type InjectionKey,
-  type Ref,
-} from 'vue'
+import { computed, ref, watch, type ComputedRef, type InjectionKey, type Ref } from 'vue'
 import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
 // Registry that lets embedded inner editors push their reorder pending-count
@@ -18,6 +11,7 @@ export interface SharedReorderRegistry {
     id: symbol,
     movedCount: ComputedRef<number>,
     hasPendingChanges: ComputedRef<boolean>,
+    validateAll: () => boolean,
   ) => void
   unregister: (id: symbol) => void
 }
@@ -92,6 +86,15 @@ export interface UseReorderModeOptions<T> {
    */
   onExternalEnter?: () => void
   /**
+   * Called from the mode watcher when an EMBEDDED editor flips externally from
+   * `reorder` back to `view` (its parent's Cancel or Apply). Embedded editors
+   * have no own snapshot/apply/cancel, so this is their only exit hook — the
+   * flat variant uses it to reconcile immediate (backend) deletes made during
+   * the session: on a parent Cancel the parent's snapshot restore resurrects
+   * the deleted row, which must be re-removed; on Apply it stayed gone (no-op).
+   */
+  onEmbeddedExit?: () => void
+  /**
    * Async persist callback wired from the parent — identical semantics to
    * the old `props.onReorderApply`. Receives the cloned payload (array for
    * flat, tree for nested); throwing surfaces the error in the header
@@ -137,9 +140,7 @@ export interface UseReorderModeApi {
  * per-row decorator + dirty-baseline read them directly; the composable
  * takes them as refs so it can still drive the state machine.
  */
-export function useReorderMode<T>(
-  options: UseReorderModeOptions<T>,
-): UseReorderModeApi {
+export function useReorderMode<T>(options: UseReorderModeOptions<T>): UseReorderModeApi {
   const applying = ref(false)
   const applyError = ref<string | null>(null)
 
@@ -241,6 +242,10 @@ export function useReorderMode<T>(
         options.movedKeys.value = new Set()
         applyError.value = null
         applying.value = false
+        // Reconcile session immediate (backend) deletes: the parent has already flushed both props, so
+        // the model reflects a Cancel's snapshot-restore (deleted row resurrected → re-remove) or an
+        // Apply (row stayed gone → the re-remove is a no-op). Deferred deletes need nothing here.
+        options.onEmbeddedExit?.()
       }
     }
   })

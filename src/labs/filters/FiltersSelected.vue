@@ -28,6 +28,7 @@ const getTitleFromConfig = (name: string) => {
 const selectedArray = computed(() => {
   const fieldOrder = Object.keys(filterConfig.fields)
   return Array.from(filterSelected.value)
+    .filter(([key]) => filterConfig.fields?.[key]?.render?.selected !== false)
     .map(([key, valueArray]) => ({
       name: key,
       title: getTitleFromConfig(key),
@@ -50,9 +51,7 @@ const clickClose = (name: string, optionValue: number | string) => {
     :key="item.name"
     class="a-selected-filters"
   >
-    <div class="a-selected-filters__label text-body-small">
-      {{ item.title }}:
-    </div>
+    <div class="a-selected-filters__label text-body-small">{{ item.title }}:</div>
     <div
       v-for="option in item.options"
       :key="option.value"
@@ -121,6 +120,16 @@ const clickClose = (name: string, optionValue: number | string) => {
   .v-chip__close {
     opacity: 0.3;
     transition: opacity 0.2s;
+  }
+}
+
+// Values above are hardcoded light, which renders white-on-white in dark theme.
+.v-theme--dark .a-selected-filters {
+  background: rgb(var(--v-theme-on-surface), 0.08);
+
+  .a-selected-filters__chip {
+    background: rgb(var(--v-theme-on-surface), 0.16);
+    color: rgb(var(--v-theme-on-surface));
   }
 }
 </style>

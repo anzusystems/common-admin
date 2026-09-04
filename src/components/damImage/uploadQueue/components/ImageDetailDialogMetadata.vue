@@ -318,9 +318,7 @@ defineExpose({
               icon="mdi-movie-off-outline"
               class="mr-1"
               size="small"
-            />{{
-              t('common.damImage.media.meta.notPlayable')
-            }}
+            />{{ t('common.damImage.media.meta.notPlayable') }}
           </div>
           <ARow :title="t('common.damImage.media.model.damMedia.title')">
             {{ detail.damMedia.title }}

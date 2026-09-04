@@ -3,7 +3,7 @@ import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
-import type { ListViewItem, PositionHint } from '@/labs/listEditor/types/listEditorTypes'
+import type { ListViewItem } from '@/labs/listEditor/types/listEditorTypes'
 
 interface FaqItem extends Record<string, any> {
   id: number
@@ -65,6 +65,14 @@ const errorItems = ref<FaqItem[]>(makeItems())
 const externalToolbarItems = ref<FaqItem[]>(makeItems())
 const externalMode = ref<'view' | 'reorder'>('view')
 
+const createFaqItem = (): FaqItem => ({
+  id: nextId++,
+  position: 0,
+  title: `New #${nextId}`,
+  status: 'Draft',
+})
+const validateFaqItem = (item: FaqItem): boolean => !!item.title && item.title.length <= 255
+
 interface Tag extends Record<string, any> {
   id: number
   position: number
@@ -78,6 +86,11 @@ const chipItems = ref<Tag[]>([
   { id: 4, position: 40, label: 'external-contributor' },
 ])
 const chipInput = ref<string>('')
+const createTag = (): Tag => ({
+  id: nextTagId++,
+  position: chipItems.value.length * 10,
+  label: chipInput.value.trim() || `tag-${nextTagId}`,
+})
 const addChip = () => {
   const label = chipInput.value.trim()
   if (!label) return
@@ -90,24 +103,6 @@ const addChip = () => {
 }
 
 const addAfterItems = ref<FaqItem[]>(makeItems())
-const onAddAfter = (hint: PositionHint | undefined) => {
-  const fresh: FaqItem = {
-    id: nextId++,
-    position: 0,
-    title: `New #${nextId}`,
-    status: 'Draft',
-  }
-  const anchor = hint?.afterId
-    ? addAfterItems.value.findIndex((i) => i.id === hint.afterId)
-    : -1
-  if (anchor >= 0) {
-    addAfterItems.value.splice(anchor + 1, 0, fresh)
-    log(`inserted ${fresh.id} after ${hint?.afterId}`)
-  } else {
-    addAfterItems.value.push(fresh)
-    log(`appended ${fresh.id}`)
-  }
-}
 
 const lastLog = ref<string>('')
 const log = (msg: string) => {
@@ -138,13 +133,6 @@ const onDeleteAsync = async (item: FaqItem) => {
   log(`deleted ${item.id}`)
 }
 
-const onAdd = () => {
-  basicItems.value = [
-    ...basicItems.value,
-    { id: nextId++, position: 0, title: `New #${nextId}`, status: 'Draft' },
-  ]
-}
-
 const onEdit = (vi: ListViewItem<FaqItem>) => log(`edit ${vi.key}`)
 const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
 </script>
@@ -165,10 +153,10 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
       <ASortableListEditor
         v-model="basicItems"
         title="Časté otázky (FAQ)"
-        update-position
-        :position-multiplier="10"
+        :factory="createFaqItem"
+        :position="{ field: 'position', multiplier: 10 }"
+        :validate="validateFaqItem"
         :on-delete="onDeleteAsync"
-        @add="onAdd"
         @edit="onEdit"
         @deleted="onDelete"
         @reorder-applied="onReorderApplied"
@@ -210,8 +198,8 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
       <ASortableListEditor
         v-model="callbackItems"
         title="Steps"
-        update-position
-        :position-multiplier="10"
+        :factory="createFaqItem"
+        :position="{ field: 'position', multiplier: 10 }"
         :on-reorder-apply="onReorderApplyCallback"
       >
         <template #item-compact="{ raw }">
@@ -233,12 +221,13 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — failing onReorderApply (stays in reorder mode, shows error)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Apply throws; the component keeps the reorder mode open with the error in the toolbar.
-        User can retry or Cancel.
+        Apply throws; the component keeps the reorder mode open with the error in the toolbar. User
+        can retry or Cancel.
       </p>
       <ASortableListEditor
         v-model="errorItems"
         title="Fails on save"
+        :factory="createFaqItem"
         :on-reorder-apply="failingApply"
       >
         <template #item-compact="{ raw }">
@@ -260,7 +249,8 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — external mode control via <code>v-model:mode</code>
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Parent controls mode. Current: <strong>{{ externalMode }}</strong>.
+        Parent controls mode. Current: <strong>{{ externalMode }}</strong
+        >.
       </p>
       <div class="d-flex ga-2 mb-2">
         <VBtn
@@ -285,6 +275,7 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         v-model="externalToolbarItems"
         v-model:mode="externalMode"
         title="External mode"
+        :factory="createFaqItem"
         :show-reorder-toggle="false"
       >
         <template #item-compact="{ raw }">
@@ -306,9 +297,8 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
         ASortableListEditor — <code>chips</code> layout (tags / authors)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Flat inline-flex pills. Drag reorders on desktop (always on, no mode toggle).
-        Each chip has a built-in close X — no confirm dialog. Use an external input
-        above the list for adding.
+        Flat inline-flex pills. Drag reorders on desktop (always on, no mode toggle). Each chip has
+        a built-in close X — no confirm dialog. Use an external input above the list for adding.
       </p>
       <div class="d-flex ga-2 mb-2">
         <AFormTextField
@@ -329,6 +319,7 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
       <ASortableListEditor
         v-model="chipItems"
         title="Authors"
+        :factory="createTag"
         chips
         :show-add-button="false"
       >
@@ -342,15 +333,15 @@ const onDelete = (vi: ListViewItem<FaqItem>) => log(`delete ${vi.key}`)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Enter reorder mode (top-right <code>Reorder</code> button), then open any row's
-        <code>⋮</code> menu — alongside move-to-top / move-to-bottom / delete, there's a new
-        "Add after this" entry. Parent receives <code>@add</code> with <code>{ afterId }</code>
+        <code>⋮</code> menu — alongside move-to-top / move-to-bottom / delete, there's a new "Add
+        after this" entry. Parent receives <code>@add</code> with <code>{ afterId }</code>
         and splices a new row directly below the anchor.
       </p>
       <ASortableListEditor
         v-model="addAfterItems"
         title="FAQ — add-after menu"
+        :factory="createFaqItem"
         show-add-after-action
-        @add="onAddAfter"
       >
         <template #item-compact="{ raw }">
           <span class="faq-title">{{ raw.title }}</span>

@@ -19,7 +19,7 @@ export const axiosErrorIsTimeout = (error: Error) => {
 export class AnzuApiTimeoutError extends Error {
   constructor(cause: Error | undefined = undefined) {
     super('API request timed out')
-    this.name = 'AnzuApiAxiosError'
+    this.name = 'AnzuApiTimeoutError'
     this.cause = cause
   }
 }

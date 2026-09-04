@@ -6,8 +6,6 @@ import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import type { DocId } from '@/types/common'
 import { isNull, isUndefined } from '@/utils/common'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
-import { HANDLE_CLASS } from '@/components/sortable/sortableActions'
-import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
 import {
   AImageMetadataValidationScopeSymbol,
@@ -20,8 +18,6 @@ import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/compo
 const props = withDefaults(
   defineProps<{
     index: number
-    totalCount: number
-    disableDraggable: boolean
     authorEnabled: boolean
     showSourceEnabled?: boolean
     sourceLabel?: string
@@ -37,13 +33,10 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'editAsset', data: DocId): void
   (e: 'removeItem', index: number): void
-  (e: 'moveUp', index: number): void
-  (e: 'moveDown', index: number): void
 }>()
 
 const imageStore = useImageStore()
 const { t } = useI18n()
-const { mdAndDown } = useDisplay()
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
 const authorConflicts = ref<DocId[]>([])
@@ -70,42 +63,8 @@ const removeItem = () => {
   <div class="asset-list-tiles__item">
     <div class="asset-list-tiles__item-card">
       <div class="ma-2">
-        <div class="d-flex align-center">
-          <VIcon
-            v-if="!mdAndDown"
-            :class="{
-              [HANDLE_CLASS]: true,
-              [HANDLE_CLASS + '--disabled']: disableDraggable,
-            }"
-            icon="mdi-drag"
-          />
-          <template v-else>
-            <VBtn
-              icon
-              size="x-small"
-              variant="text"
-              :disabled="disableDraggable || index === 0"
-              @click="emit('moveUp', index)"
-            >
-              <VIcon
-                icon="mdi-arrow-up"
-                size="small"
-              />
-            </VBtn>
-            <VBtn
-              icon
-              size="x-small"
-              variant="text"
-              :disabled="disableDraggable || index === totalCount - 1"
-              @click="emit('moveDown', index)"
-            >
-              <VIcon
-                icon="mdi-arrow-down"
-                size="small"
-              />
-            </VBtn>
-          </template>
-        </div>
+        <!-- No reorder controls here: the grid is `#view-body`, which SortableJS never binds to.
+             Reordering lives in reorder mode. -->
         <AImageWidgetSimple
           :model-value="image.id"
           :image="image"

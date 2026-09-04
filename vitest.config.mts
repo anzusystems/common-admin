@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'
 import { fileURLToPath, URL } from 'url'
 import vue from '@vitejs/plugin-vue'
@@ -86,10 +85,15 @@ export default defineConfig({
       'vuetify/components/VColorPicker',
       'vuetify/components/VSlider',
       'vuetify/components/VLabel',
+      'vuetify/components/VRadio',
+      'vuetify/components/VRadioGroup',
+      'vuetify/components/VBadge',
     ],
   },
   test: {
     globals: true,
+    // v5 default; pinned so it cannot silently flip.
+    clearMocks: true,
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 30000,
     hookTimeout: 30000,

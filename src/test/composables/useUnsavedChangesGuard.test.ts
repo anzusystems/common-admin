@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount, type VueWrapper } from '@vue/test-utils'
-import { defineComponent, h, nextTick, ref } from 'vue'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
+import { defineComponent, h, nextTick, ref, unref, type Ref } from 'vue'
+import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import { useUnsavedChangesGuard } from '@/labs/unsavedGuard/useUnsavedChangesGuard'
 
 let mounted: VueWrapper | null = null
@@ -8,11 +9,10 @@ let mounted: VueWrapper | null = null
 afterEach(() => {
   mounted?.unmount()
   mounted = null
+  vi.useRealTimers()
 })
 
-const mountWithGuard = (
-  setup: () => ReturnType<typeof useUnsavedChangesGuard>,
-) => {
+const mountWithGuard = (setup: () => ReturnType<typeof useUnsavedChangesGuard>) => {
   let api!: ReturnType<typeof useUnsavedChangesGuard>
   const Host = defineComponent({
     setup() {
@@ -177,7 +177,7 @@ describe('useUnsavedChangesGuard', () => {
       expect(preventSpy).not.toHaveBeenCalled()
     })
 
-    it('removes the listener on unmount', () => {
+    it('removes the SAME listener reference it added on unmount', () => {
       const { host } = mountWithGuard(() =>
         useUnsavedChangesGuard({
           sources: [ref(true)],
@@ -185,25 +185,187 @@ describe('useUnsavedChangesGuard', () => {
           guardWindowUnload: true,
         }),
       )
+      // Capture the exact handler that was added. `expect.any(Function)` would match a DIFFERENT
+      // reference too — i.e. the classic leak where the removal silently detaches nothing.
+      const added = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'beforeunload')?.[1]
+      expect(typeof added).toBe('function')
       host.unmount()
       mounted = null
-      expect(removeSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
+      expect(removeSpy).toHaveBeenCalledWith('beforeunload', added)
     })
   })
 
   describe('acknowledge', () => {
-    it('makes the next ask resolve immediately as discard', async () => {
-      const { api } = mountWithGuard(() =>
+    // (A prior "prompt stays closed after acknowledge()" test was removed: `promptOpen` is false
+    // without acknowledge() too, so it proved nothing. The dialog-close path below actually consumes
+    // the acknowledgement.)
+
+    // The dialog-close watch is the unit-testable consume path for `askToLeave` (route-leave needs a
+    // real router). A dirty dialog closing while acknowledged passes silently; otherwise it re-opens
+    // and prompts.
+    const mountDialogGuard = (dialogModel: Ref<boolean>) =>
+      mountWithGuard(() =>
         useUnsavedChangesGuard({
           sources: [ref(true)],
           guardRoute: false,
           guardWindowUnload: false,
+          guardDialogModel: dialogModel,
         }),
       )
+
+    it('lets a dirty dialog-close pass without prompting once acknowledged', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
       api.acknowledge()
-      // After acknowledge, the prompt should never open even if hasUnsavedChanges.
-      // Simulate by setting promptOpen and confirming it doesn't latch.
+      dialogModel.value = false
+      await nextTick()
+      await nextTick()
       expect(api.promptOpen.value).toBe(false)
+      expect(unref(dialogModel)).toBe(false) // closed, not re-opened
     })
+
+    it('auto-expires the acknowledgement after the TTL (M1 — a failed delete stays guarded)', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
+      vi.useFakeTimers()
+      api.acknowledge()
+      vi.advanceTimersByTime(8001) // TTL elapsed with nothing consuming it (delete never navigated)
+      dialogModel.value = false
+      await nextTick()
+      await nextTick()
+      expect(api.promptOpen.value).toBe(true) // now prompts — the stale acknowledge expired
+      expect(unref(dialogModel)).toBe(true) // re-opened, awaiting the user's choice
+    })
+
+    it('unacknowledge disarms a pending acknowledgement immediately (M1 failure path)', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
+      api.acknowledge()
+      api.unacknowledge()
+      dialogModel.value = false
+      await nextTick()
+      await nextTick()
+      expect(api.promptOpen.value).toBe(true) // disarmed → prompts
+    })
+
+    // A consumed acknowledgement cannot produce a "spurious later expiry" through the public API:
+    // the TTL callback only writes `acknowledgedOnce = false`, and any FRESH acknowledge() re-clears
+    // the pending timer before arming its own — so a stale timer can never disarm a later
+    // acknowledgement (verified: the consume→re-arm→advance-past-the-first-deadline shape passes
+    // WITH the clear deleted). What the clear does buy is real but narrower: no leaked pending timer.
+    // `vi.getTimerCount()` is the only oracle that can see it, and it does kill that mutant.
+    it('a consumed acknowledgement leaves no pending TTL timer behind', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
+      vi.useFakeTimers()
+      expect(vi.getTimerCount()).toBe(0)
+      api.acknowledge()
+      expect(vi.getTimerCount()).toBe(1) // TTL armed
+      dialogModel.value = false // consume it (a dirty close passes silently)
+      await nextTick()
+      await nextTick()
+      expect(api.promptOpen.value).toBe(false)
+      expect(vi.getTimerCount()).toBe(0) // consumed → cleared, not left pending
+    })
+
+    it('re-arming acknowledge() restarts the TTL: the FIRST deadline must not disarm the fresh one', async () => {
+      const dialogModel = ref(true)
+      const { api } = mountDialogGuard(dialogModel)
+      vi.useFakeTimers()
+      api.acknowledge()
+      vi.advanceTimersByTime(5000) // 5s into the first acknowledgement's 8s TTL
+      api.acknowledge() // re-arm → the TTL restarts here (deadline moves to t=13s)
+      vi.advanceTimersByTime(4000) // t=9s: past the FIRST deadline, short of the fresh one
+      dialogModel.value = false
+      await nextTick()
+      await nextTick()
+      expect(api.promptOpen.value).toBe(false) // the fresh acknowledgement is still live
+      expect(unref(dialogModel)).toBe(false) // closed, not re-opened
+    })
+  })
+})
+
+// The route-leave guard (onBeforeRouteLeave) is the PRIMARY mechanism — the dialog-close tests above
+// only exercise askToLeave's consume path. This harness mounts the guard as a real route component and
+// drives actual navigations. (C10 — codex test-review gap.)
+describe('useUnsavedChangesGuard — route-leave guard (router harness)', () => {
+  let routed: VueWrapper | null = null
+  afterEach(() => {
+    routed?.unmount()
+    routed = null
+  })
+
+  const mountRouted = (dirty: Ref<boolean>) => {
+    let api!: ReturnType<typeof useUnsavedChangesGuard>
+    const Guarded = defineComponent({
+      setup() {
+        api = useUnsavedChangesGuard({ sources: [dirty], guardWindowUnload: false })
+        return () => h('div', 'guarded')
+      },
+    })
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', component: Guarded },
+        { path: '/other', component: defineComponent({ setup: () => () => h('div', 'other') }) },
+      ],
+    })
+    routed = mount(defineComponent({ setup: () => () => h(RouterView) }), {
+      global: { plugins: [router] },
+    })
+    return { router, api: () => api }
+  }
+
+  it('blocks a dirty route-leave (prompt opens, navigation held) and proceeds only on discard', async () => {
+    const dirty = ref(true)
+    const { router, api } = mountRouted(dirty)
+    await router.isReady()
+    await flushPromises()
+
+    // Navigate away while dirty → onBeforeRouteLeave opens the prompt and holds the navigation on '/'.
+    const nav = router.push('/other')
+    await flushPromises()
+    expect(api().promptOpen.value).toBe(true)
+    expect(router.currentRoute.value.path).toBe('/')
+
+    // "Stay" → the navigation aborts.
+    api().resolvePrompt(false)
+    await nav
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/')
+
+    // Try again, "discard" → the navigation proceeds.
+    const nav2 = router.push('/other')
+    await flushPromises()
+    expect(api().promptOpen.value).toBe(true)
+    api().resolvePrompt(true)
+    await nav2
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/other')
+  })
+
+  it('a clean route-leave passes without prompting', async () => {
+    const dirty = ref(false)
+    const { router, api } = mountRouted(dirty)
+    await router.isReady()
+    await flushPromises()
+
+    await router.push('/other')
+    await flushPromises()
+    expect(api().promptOpen.value).toBe(false)
+    expect(router.currentRoute.value.path).toBe('/other')
+  })
+
+  it('acknowledge() lets the next dirty route-leave through without prompting', async () => {
+    const dirty = ref(true)
+    const { router, api } = mountRouted(dirty)
+    await router.isReady()
+    await flushPromises()
+
+    api().acknowledge()
+    await router.push('/other')
+    await flushPromises()
+    expect(api().promptOpen.value).toBe(false)
+    expect(router.currentRoute.value.path).toBe('/other')
   })
 })

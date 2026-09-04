@@ -27,6 +27,12 @@ export interface NestedViewItem<TItem> extends ListViewItem<TItem> {
 
 export interface UseNestedListEditorOptions {
   keyField?: string
+  /**
+   * Resolve a row's key; takes precedence over `keyField`. Pass the controller's
+   * `keyOf` so tree ops key rows the same way as dirty/validity tracking — incl.
+   * a FUNCTION get-key, which `keyField` lookup would miss.
+   */
+  getKey?: (data: any) => ListEditorKey
   positionField?: string
   parentField?: string
   positionMultiplier?: number
@@ -36,13 +42,20 @@ export interface UseNestedListEditorOptions {
 
 export interface NestedListEditorApi<TItem extends Record<string, any>> {
   viewItems: ComputedRef<NestedViewItem<TItem>[]>
-  findNode: (id: ListEditorKey) => { node: NestedTreeNode<TItem> | null; parent: NestedTreeNode<TItem> | null }
+  findNode: (id: ListEditorKey) => {
+    node: NestedTreeNode<TItem> | null
+    parent: NestedTreeNode<TItem> | null
+  }
   addItem: (
     data: TItem,
-    hint?: PositionHint & { parentId?: ListEditorKey | null; asFirstChild?: boolean; childrenAllowed?: boolean },
+    hint?: PositionHint & {
+      parentId?: ListEditorKey | null
+      asFirstChild?: boolean
+      childrenAllowed?: boolean
+    },
   ) => NestedTree<TItem>
   deleteItem: (id: ListEditorKey) => NestedTree<TItem>
-  updateItem: (id: ListEditorKey, data: TItem) => NestedTree<TItem>
+  updateItem: (id: ListEditorKey, data: TItem, markDirty?: boolean) => NestedTree<TItem>
   moveUp: (id: ListEditorKey) => NestedTree<TItem> | null
   moveDown: (id: ListEditorKey) => NestedTree<TItem> | null
   moveTop: (id: ListEditorKey) => NestedTree<TItem> | null
@@ -73,12 +86,14 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
   options: UseNestedListEditorOptions,
 ): NestedListEditorApi<TItem> {
   const keyField = options.keyField ?? DEFAULT_KEY_FIELD
+  const resolveKey = options.getKey
   const positionField = options.positionField ?? DEFAULT_POSITION_FIELD
   const parentField = options.parentField ?? DEFAULT_PARENT_FIELD
   const positionMultiplier = options.positionMultiplier ?? 1
   const maxDepth = options.maxDepth
 
-  const getKey = (data: TItem): ListEditorKey => data[keyField] as ListEditorKey
+  const getKey = (data: TItem): ListEditorKey =>
+    resolveKey ? resolveKey(data) : (data[keyField] as ListEditorKey)
 
   const calculateSubtreeDepth = (node: NestedTreeNode<TItem>): number => {
     if (!node.children || node.children.length === 0) return 1
@@ -110,6 +125,9 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     for (const sibling of siblings) {
       if (sibling.data[positionField] !== pos) {
         ;(sibling.data as any)[positionField] = pos
+        // Flag dirty so a partial-subset save persists the new position;
+        // otherwise reorders are lost on reload and rows collide on old positions.
+        sibling.meta.dirty = true
       }
       pos += positionMultiplier
     }
@@ -188,10 +206,7 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     siblings.splice(afterIdx + 1, 0, newNode)
   }
 
-  const resolveInsertIndex = (
-    siblings: NestedTreeNode<TItem>[],
-    hint?: PositionHint,
-  ): number => {
+  const resolveInsertIndex = (siblings: NestedTreeNode<TItem>[], hint?: PositionHint): number => {
     if (!hint) return siblings.length
     if (hint.afterId !== undefined) {
       const idx = siblings.findIndex((s) => getKey(s.data) === hint.afterId)
@@ -209,7 +224,11 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
 
   const addItem = (
     data: TItem,
-    hint?: PositionHint & { parentId?: ListEditorKey | null; asFirstChild?: boolean; childrenAllowed?: boolean },
+    hint?: PositionHint & {
+      parentId?: ListEditorKey | null
+      asFirstChild?: boolean
+      childrenAllowed?: boolean
+    },
   ): NestedTree<TItem> => {
     const cloned = cloneDeep(model.value) as NestedTree<TItem>
     const childrenAllowed = hint?.childrenAllowed ?? true
@@ -233,7 +252,9 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     if (hint?.afterId !== undefined) {
       const { node: afterNode, parent: afterParent } = findNode(hint.afterId, cloned.children)
       if (afterNode) {
-        const siblings = afterParent ? (afterParent.children as NestedTreeNode<TItem>[]) : cloned.children
+        const siblings = afterParent
+          ? (afterParent.children as NestedTreeNode<TItem>[])
+          : cloned.children
         const idx = siblings.indexOf(afterNode)
         if (idx !== -1) {
           insertAfter(siblings, idx, newNode)
@@ -266,11 +287,14 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     return cloned
   }
 
-  const updateItem = (id: ListEditorKey, data: TItem): NestedTree<TItem> => {
+  const updateItem = (id: ListEditorKey, data: TItem, markDirty = true): NestedTree<TItem> => {
     const cloned = cloneDeep(model.value) as NestedTree<TItem>
     const { node } = findNode(id, cloned.children)
     if (!node) return cloned
     node.data = cloneDeep(data) as TItem
+    // An edit must be persisted by partial-subset saves. `markDirty=false` is for
+    // snapshot restore on edit-cancel, which must NOT flag the node dirty.
+    if (markDirty) node.meta.dirty = true
     model.value = cloned
     return cloned
   }
@@ -342,6 +366,8 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     siblings.splice(idx, 1)
     prev.children!.push(node)
     ;(node.data as any)[parentField] = getKey(prev.data)
+    // Persist the reparent even when the position number is unchanged (QA 85050 BUG-13).
+    node.meta.dirty = true
     recalculateSiblings(siblings)
     recalculateSiblings(prev.children!)
     model.value = cloned
@@ -358,7 +384,9 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     if (!node || !parent) return null
 
     const { parent: grandParent } = findNode(getKey(parent.data), cloned.children)
-    const grandSiblings = grandParent ? (grandParent.children as NestedTreeNode<TItem>[]) : cloned.children
+    const grandSiblings = grandParent
+      ? (grandParent.children as NestedTreeNode<TItem>[])
+      : cloned.children
     const parentIdx = grandSiblings.indexOf(parent)
     if (parentIdx === -1) return null
 
@@ -368,6 +396,8 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     currentSiblings.splice(idx, 1)
     grandSiblings.splice(parentIdx + 1, 0, node)
     ;(node.data as any)[parentField] = grandParent ? getKey(grandParent.data) : null
+    // Persist the reparent even when the position number is unchanged (QA 85050 BUG-13).
+    node.meta.dirty = true
 
     recalculateSiblings(currentSiblings)
     recalculateSiblings(grandSiblings)
@@ -376,10 +406,7 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
   }
 
   const calculateParentDepth = (tree: NestedTree<TItem>, id: ListEditorKey): number => {
-    const walk = (
-      arr: NestedTreeNode<TItem>[],
-      depth: number,
-    ): number | null => {
+    const walk = (arr: NestedTreeNode<TItem>[], depth: number): number | null => {
       for (const item of arr) {
         if (getKey(item.data) === id) return depth
         if (item.children && item.children.length) {
@@ -445,6 +472,10 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     insertAt = Math.max(0, Math.min(insertAt, targetSiblings.length))
     targetSiblings.splice(insertAt, 0, removed)
     ;(removed.data as any)[parentField] = newParentNode ? getKey(newParentNode.data) : null
+    // Flag explicitly: a reparent at an unchanged position number (root pos 2 →
+    // a group's 2nd child, also pos 2) isn't caught by recalculateSiblings, so the
+    // partial save would omit it and the child reverts to root on reload (BUG-13).
+    removed.meta.dirty = true
 
     if (!samelist) recalculateSiblings(sourceSiblings)
     recalculateSiblings(targetSiblings)

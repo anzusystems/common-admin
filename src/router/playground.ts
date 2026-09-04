@@ -29,6 +29,7 @@ import {
 import AlertView from '@/playground/alertView/AlertView.vue'
 import SubjectSelectView from '@/playground/subjectSelectView/SubjectSelectView.vue'
 import ImageMultipleView from '@/playground/imageMultipleView/ImageMultipleView.vue'
+import CardGridReorderView from '@/playground/cardGridReorderView/CardGridReorderView.vue'
 import CollabDetailView from '@/playground/collabView/CollabDetailView.vue'
 import CollabEditView from '@/playground/collabView/CollabEditView.vue'
 import { useCollabHelpers } from '@/components/collab/composables/collabHelpers'
@@ -126,6 +127,11 @@ const router = createRouter({
       path: '/view/image-multiple',
       name: 'view-image-multiple',
       component: ImageMultipleView,
+    },
+    {
+      path: '/view/card-grid-reorder',
+      name: 'view-card-grid-reorder',
+      component: CardGridReorderView,
     },
     {
       path: '/view/image-public-input',

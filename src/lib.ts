@@ -443,6 +443,7 @@ import { damFileTypeFix } from '@/components/file/composables/fileType'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
 import {
+  destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
 } from '@/components/damImage/uploadQueue/composables/damNotifications'
@@ -633,7 +634,11 @@ import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
-import { fetchAssetAsCmsMedia } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  fetchAsset,
+  fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -792,6 +797,7 @@ export {
   useDamUploadChunkSize,
   useDamAcceptTypeAndSizeHelper,
   useAssetSuggestions,
+  destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
   useDropzoneGlobalDragState,
@@ -1113,7 +1119,9 @@ export {
   updateDamUser,
   fetchDamUser,
   fetchAssetAndCheckForSingleUseByFileIds,
+  fetchAsset,
   fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
 
   // TRANSLATIONS
   messagesCs,
@@ -1270,3 +1278,6 @@ export {
   localTimeShiftInSeconds,
   useSystemBar,
 }
+
+export { createCachedChip } from '@/components/createCachedChip'
+export type { CreateCachedChipOptions, CachedChipId } from '@/components/createCachedChip'

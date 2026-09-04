@@ -784,11 +784,7 @@ describe('useNestedListEditor', () => {
 
       const tree: NestedTree<MenuItem> = {
         meta: { dirty: false },
-        children: [
-          node(1, 'A', null, 0, []),
-          node(2, 'B', null, 0, []),
-          node(3, 'C', null, 0, []),
-        ],
+        children: [node(1, 'A', null, 0, []), node(2, 'B', null, 0, []), node(3, 'C', null, 0, [])],
       }
 
       const out = api.recalculatePositions(tree)
@@ -801,10 +797,7 @@ describe('useNestedListEditor', () => {
 
       const tree: NestedTree<MenuItem> = {
         meta: { dirty: false },
-        children: [
-          node(1, 'A', null, 0, [node(11, 'A1', 1, 0, [])]),
-          node(2, 'B', null, 0, []),
-        ],
+        children: [node(1, 'A', null, 0, [node(11, 'A1', 1, 0, [])]), node(2, 'B', null, 0, [])],
       }
       const snapshot = JSON.stringify(tree)
 

@@ -1,20 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
-import useVuelidate from '@vuelidate/core'
-import { helpers } from '@vuelidate/validators'
 import ACard from '@/components/ACard.vue'
 import ARow from '@/components/ARow.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
-import type {
-  ListEditorKey,
-  ListViewItem,
-} from '@/labs/listEditor/types/listEditorTypes'
-import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
-import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
 import {
-  QuizValidationSymbol,
   type QuizQuestion,
   type QuizQuestionAnswer,
   type QuizAnswerValueTypeType,
@@ -40,60 +31,19 @@ const selectedValue = computed({
   },
 })
 const mode = defineModel<ReorderMode>('mode', { default: 'view' })
-const unsavedKeys = defineModel<Set<ListEditorKey>>('unsavedKeys', {
-  default: () => new Set<ListEditorKey>(),
-})
 const valueType = computed(() => props.answerValueType)
 watch(valueType, () => {
   selectCorrectAnswer(-1)
 })
 
-const required = useValidateRequired()
-const minLength = useValidateMinLength()
-const answerRules = {
-  question: {
-    answers: {
-      $each: helpers.forEach({
-        title: {
-          required,
-          minLength: minLength(1),
-        },
-      }),
-    },
-  },
-}
-const v$ = useVuelidate(
-  answerRules,
-  { question: selectedValue },
-  { $scope: QuizValidationSymbol },
-)
+// true = VALID. An answer needs a non-empty title.
+const validateAnswer = (a: QuizQuestionAnswer): boolean => !!a.title && a.title.trim().length > 0
 
-const getAnswerValidationState = (
-  _: QuizQuestionAnswer,
-  __: ListEditorKey,
-  index: number,
-) => {
-  // helpers.forEach exposes per-row errors as an OBJECT keyed by property
-  // name → array of error entries. A row is invalid if any property has a
-  // non-empty error array. Plain `.length` is wrong (it's not an array).
-  const errors =
-    v$.value.question.answers.$each?.$response?.$errors?.[index]
-  if (!errors || typeof errors !== 'object') return null
-  const hasErrors = Object.values(errors).some(
-    (propErrors) => Array.isArray(propErrors) && propErrors.length > 0,
-  )
-  return hasErrors ? 'invalid' : null
-}
-
-const onAddAnswer = () => {
+const createAnswer = (): QuizQuestionAnswer => {
   const newAnswer = createQuizQuestionAnswer()
   newAnswer.question = selectedValue.value.id
-  newAnswer.position =
-    (selectedValue.value.answers.at(-1)?.position ?? 0) + 1
-  selectedValue.value.answers.push(newAnswer)
-}
-const onDeleteAnswer = (vi: ListViewItem<QuizQuestionAnswer>) => {
-  selectedValue.value.answers.splice(vi.index, 1)
+  newAnswer.position = (selectedValue.value.answers.at(-1)?.position ?? 0) + 1
+  return newAnswer
 }
 
 const selectCorrectAnswer = (answerIndex: number) => {
@@ -109,8 +59,7 @@ const selectCorrectAnswer = (answerIndex: number) => {
 
 onMounted(() => {
   if (selectedValue.value.answers.length === 0) {
-    onAddAnswer()
-    onAddAnswer()
+    selectedValue.value.answers.push(createAnswer(), createAnswer())
   }
 })
 </script>
@@ -119,26 +68,16 @@ onMounted(() => {
   <ASortableListEditor
     v-model="selectedValue.answers"
     v-model:mode="mode"
-    v-model:unsaved-keys="unsavedKeys"
-    :get-validation-state="getAnswerValidationState"
+    :factory="createAnswer"
+    :validate="validateAnswer"
     title="Answers"
     add-label="Add answer"
     embedded
-    @add="onAddAnswer"
-    @deleted="onDeleteAnswer"
   >
     <template #item-compact="{ raw }: { raw: QuizQuestionAnswer }">
       <span>{{ raw.title || '(empty answer)' }}</span>
     </template>
-    <template
-      #item="{
-        raw,
-        index,
-      }: {
-        raw: QuizQuestionAnswer
-        index: number
-      }"
-    >
+    <template #item="{ raw, index }: { raw: QuizQuestionAnswer; index: number }">
       <ACard class="pt-5">
         <VRow>
           <VCol cols="11">

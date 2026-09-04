@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- node.js latest version 20
+- node.js 24 (matches CI; Vitest 5 requires >= 22.12)
 - enable corepack, so yarn v4 from package.json will be used
 - copy `.env` to `.env.local` and update paths inside (COMMON_ADMIN_PROJECT and ADMIN_PROJECT)
 

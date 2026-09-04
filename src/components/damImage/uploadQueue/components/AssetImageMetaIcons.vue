@@ -103,7 +103,7 @@ const data = computed(() => {
       :src="item"
       alt=""
       :title="data.titles[index] || ''"
-    >
+    />
   </div>
 </template>
 

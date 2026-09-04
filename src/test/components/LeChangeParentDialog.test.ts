@@ -21,7 +21,11 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-const node = (id: number, title: string, children: NestedTreeNode<Item>[] = []): NestedTreeNode<Item> => ({
+const node = (
+  id: number,
+  title: string,
+  children: NestedTreeNode<Item>[] = [],
+): NestedTreeNode<Item> => ({
   data: { id, title },
   children,
   meta: { dirty: false },
@@ -30,10 +34,7 @@ const node = (id: number, title: string, children: NestedTreeNode<Item>[] = []):
 const buildTree = (): NestedTree<Item> => ({
   meta: { dirty: false },
   children: [
-    node(1, 'Root A', [
-      node(11, 'A.1'),
-      node(12, 'A.2', [node(121, 'A.2.1')]),
-    ]),
+    node(1, 'Root A', [node(11, 'A.1'), node(12, 'A.2', [node(121, 'A.2.1')])]),
     node(2, 'Root B'),
     node(3, 'Root C', [node(31, 'C.1')]),
   ],
@@ -44,11 +45,7 @@ const calculateSubtreeDepth = (n: NestedTreeNode<Item>): number => {
   return 1 + Math.max(...n.children.map(calculateSubtreeDepth))
 }
 
-const mountDialog = (
-  sourceKey: number | null,
-  maxDepth = 5,
-  tree = buildTree(),
-) => {
+const mountDialog = (sourceKey: number | null, maxDepth = 5, tree = buildTree()) => {
   const open = ref(true)
   const onConfirm = vi.fn()
   const Host = defineComponent({
@@ -64,8 +61,7 @@ const mountDialog = (
           keyField: 'id',
           maxDepth,
           resolveLabel: (raw) => (raw as Item).title,
-          calculateSubtreeDepth: (n) =>
-            calculateSubtreeDepth(n as NestedTreeNode<Item>),
+          calculateSubtreeDepth: (n) => calculateSubtreeDepth(n as NestedTreeNode<Item>),
           onConfirm,
         })
     },
@@ -83,9 +79,9 @@ const isDisabledItem = (text: string): boolean => {
   const el = findItemByText(text)
   if (!el) return false
   return (
-    el.classList.contains('v-list-item--disabled')
-    || el.getAttribute('aria-disabled') === 'true'
-    || el.querySelector('[aria-disabled="true"]') !== null
+    el.classList.contains('v-list-item--disabled') ||
+    el.getAttribute('aria-disabled') === 'true' ||
+    el.querySelector('[aria-disabled="true"]') !== null
   )
 }
 

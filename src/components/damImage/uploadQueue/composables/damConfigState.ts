@@ -149,15 +149,31 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
       }
       const promises = types.map((type) => fetchAssetCustomFormElements(client, extSystemId, type))
 
-      Promise.all(promises)
-        .then((responses) => {
-          if (
-            responses.length !== types.length ||
-            responses.some((response) => Object.keys(response).length < 1)
-          ) {
+      // allSettled: one unavailable type must not discard the successfully loaded ones.
+      Promise.allSettled(promises)
+        .then((results) => {
+          const loadedTypes: DamAssetTypeType[] = []
+          const loadedResponses: Awaited<{ data: CustomDataFormElement[] }>[] = []
+          const failedTypes: DamAssetTypeType[] = []
+
+          results.forEach((result, index) => {
+            if (result.status === 'fulfilled' && Object.keys(result.value).length > 0) {
+              loadedTypes.push(types[index])
+              loadedResponses.push(result.value)
+              return
+            }
+            failedTypes.push(types[index])
+          })
+
+          if (loadedTypes.length === 0 && types.length > 0) {
             throw new Error('Unable to load asset custom form config. Incorrect response body.')
           }
-          setDamConfigAssetCustomFormElements(responses, extSystemId, types)
+          setDamConfigAssetCustomFormElements(loadedResponses, extSystemId, loadedTypes)
+          if (failedTypes.length > 0) {
+            onConfigError(
+              new Error(`Unable to load asset custom form config for: ${failedTypes.join(', ')}.`),
+            )
+          }
           resolve(true)
         })
         .catch((err) => {

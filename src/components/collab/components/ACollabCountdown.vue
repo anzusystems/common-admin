@@ -49,7 +49,8 @@ onUnmounted(() => {
     <span
       v-if="label"
       class="font-weight-bold mr-1"
-    >{{ label }} </span>
+      >{{ label }}
+    </span>
     <span>{{ countdown }}</span>
     <span v-if="parentheses">)</span>
   </span>

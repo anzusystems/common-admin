@@ -7,6 +7,7 @@
   "delete": "Delete",
   "deleteConfirmTitle": "Delete item?",
   "deleteConfirmText": "Are you sure you want to delete this item? This action cannot be undone.",
+  "deleteConfirmTextDeferred": "This item will be deleted when you save. You can still revert the action until then.",
   "remove": "Remove",
   "addAfter": "Add after this item",
   "addChild": "Add inside",
@@ -47,6 +48,8 @@
   "unsavedChanges": {
     "title": "Unsaved changes",
     "body": "You have unsaved changes. Are you sure you want to leave?",
+    "sectionsIntro": "You have unsaved changes in these sections:",
+    "leaveQuestion": "Are you sure you want to leave?",
     "stay": "Stay",
     "discard": "Leave anyway"
   },

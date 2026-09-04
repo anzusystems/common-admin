@@ -19,7 +19,16 @@ import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
-import { computed, inject, onMounted, ref, type ShallowRef, toRaw, watch } from 'vue'
+import {
+  computed,
+  inject,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  type ShallowRef,
+  toRaw,
+  watch,
+} from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -243,6 +252,22 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 // this ref is updating only when the lock was really success or failure using sockets, needed for drop files
 const collabFieldLockReallyLocked = ref(false)
 
+// Cancelling must settle the promise, not just clear the timer — `onDrop` awaits it. A Set
+// because overlapping drops each have their own wait.
+const LOCK_WAIT_CANCELLED = Symbol('lock wait cancelled')
+type PendingLockWait = { timer: ReturnType<typeof setTimeout>; reject: (reason: unknown) => void }
+const pendingLockWaits = new Set<PendingLockWait>()
+let disposed = false
+
+onBeforeUnmount(() => {
+  disposed = true
+  pendingLockWaits.forEach((wait) => {
+    clearTimeout(wait.timer)
+    wait.reject(LOCK_WAIT_CANCELLED)
+  })
+  pendingLockWaits.clear()
+})
+
 const waitForFieldLockIsReallyAcquired = async () => {
   if (
     !collabOptions.value.enabled ||
@@ -255,13 +280,25 @@ const waitForFieldLockIsReallyAcquired = async () => {
   let count = 0
 
   const checkLock: () => Promise<Awaited<boolean>> = () => {
+    if (disposed) {
+      return Promise.reject(LOCK_WAIT_CANCELLED)
+    }
     if (collabFieldLockReallyLocked.value) {
       return Promise.resolve(true)
     }
 
     count++
     if (count < 50) {
-      return new Promise((resolve) => setTimeout(() => resolve(checkLock()), 100))
+      return new Promise((resolve, reject) => {
+        const wait: PendingLockWait = {
+          timer: setTimeout(() => {
+            pendingLockWaits.delete(wait)
+            resolve(checkLock())
+          }, 100),
+          reject,
+        }
+        pendingLockWaits.add(wait)
+      })
     }
 
     return Promise.reject(false)
@@ -275,10 +312,13 @@ const onDrop = async (files: File[]) => {
   const config = imageWidgetUploadConfig.value!
   try {
     await waitForFieldLockIsReallyAcquired()
+    // The lock can resolve after the widget is gone; uploading into it is worse than dropping.
+    if (disposed) return
     cachedExtSystemId.value = config.extSystem
     uploadQueuesStore.addByFiles(props.queueKey, config.extSystem, config.licence, files)
     uploadQueueDialog.value = props.queueKey
   } catch (e) {
+    if (disposed || e === LOCK_WAIT_CANCELLED) return
     showError('Unable to lock image widget by current user.')
   }
 }
@@ -792,7 +832,8 @@ defineExpose({
         v-if="label"
         class="font-weight-bold text-label-large"
       >
-        {{ label }}<span
+        {{ label
+        }}<span
           v-if="required"
           class="required-mark"
         />

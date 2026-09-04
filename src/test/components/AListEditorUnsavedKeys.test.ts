@@ -2,13 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
-import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
-
-interface AListEditorExposed {
-  hasUnsavedChanges: boolean
-  unsavedCount: number
-  clearUnsavedState: (key?: ListEditorKey) => void
-}
+import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
 
 interface Item {
   id: number
@@ -22,6 +16,9 @@ const items = (): Item[] => [
   { id: 3, position: 3, title: 'Third' },
 ]
 
+let nextTempId = 0
+const makeItem = (): Item => ({ id: --nextTempId, position: 0, title: '' })
+
 let mounted: VueWrapper | null = null
 
 afterEach(() => {
@@ -29,110 +26,108 @@ afterEach(() => {
   mounted = null
 })
 
+const findAListEditor = (w: VueWrapper): VueWrapper =>
+  w.findComponent(AListEditor as unknown as Parameters<typeof w.findComponent>[0]) as VueWrapper
+
+// Read the raw exposed handle (refs NOT unwrapped, so `.value` matches the
+// declared ComputedRef types) — mirrors the ASortableListEditor test convention.
+const exposed = (w: VueWrapper): ListEditorHandle<Item> =>
+  (findAListEditor(w).vm as unknown as { $: { exposed: ListEditorHandle<Item> } }).$.exposed
+
 const mountEditor = () => {
   const model = ref<Item[]>(items())
-  const unsavedKeys = ref(new Set<ListEditorKey>())
-  const editorRef = ref<AListEditorExposed | null>(null)
   const Host = defineComponent({
     setup() {
       return () =>
         h(AListEditor<Item>, {
-          ref: (r: unknown) => {
-            editorRef.value = r as AListEditorExposed | null
-          },
           modelValue: model.value,
           'onUpdate:modelValue': (v: Item[]) => {
             model.value = v
           },
-          unsavedKeys: unsavedKeys.value,
-          'onUpdate:unsavedKeys': (v: Set<ListEditorKey>) => {
-            unsavedKeys.value = v
-          },
+          factory: makeItem,
         })
     },
   })
   mounted = mount(Host)
-  return { wrapper: mounted, model, unsavedKeys, editorRef }
+  return { wrapper: mounted, model, handle: () => exposed(mounted!) }
 }
 
-describe('AListEditor — unsavedKeys v-model + clearUnsavedState', () => {
-  it('unsavedKeys is empty on initial mount', async () => {
-    const { unsavedKeys } = mountEditor()
+// v2 dropped the `v-model:unsaved-keys` Set plumbing — the controller owns the
+// dirty state, surfaced via the exposed handle (`hasUnsaved` / `isUnsaved`) and
+// the `a-le-row--unsaved` row class. `commit()` re-baselines (post-save),
+// `reset()` discards back to the last baseline.
+describe('AListEditor — controller unsaved tracking', () => {
+  it('nothing is unsaved on initial mount', async () => {
+    const { wrapper, handle } = mountEditor()
     await nextTick()
-    expect(unsavedKeys.value.size).toBe(0)
+    expect(handle().hasUnsaved.value).toBe(false)
+    expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(0)
   })
 
-  it('mutating an item flags it as unsaved in the v-model', async () => {
-    const { unsavedKeys, model } = mountEditor()
+  it('mutating an item flags it as unsaved', async () => {
+    const { wrapper, model, handle } = mountEditor()
     await nextTick()
-    expect(unsavedKeys.value.has(1)).toBe(false)
-    model.value[0].title = 'changed'
+    expect(handle().isUnsaved(1)).toBe(false)
+    model.value = [{ ...model.value[0], title: 'changed' }, model.value[1], model.value[2]]
     await nextTick()
-    expect(unsavedKeys.value.has(1)).toBe(true)
-    expect(unsavedKeys.value.size).toBe(1)
+    expect(handle().isUnsaved(1)).toBe(true)
+    expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(1)
   })
 
-  it('reverting the mutation removes the key', async () => {
-    const { unsavedKeys, model } = mountEditor()
+  it('reverting the mutation clears the unsaved flag', async () => {
+    const { model, handle } = mountEditor()
     await nextTick()
-    model.value[0].title = 'changed'
+    model.value = [{ ...model.value[0], title: 'changed' }, model.value[1], model.value[2]]
     await nextTick()
-    expect(unsavedKeys.value.has(1)).toBe(true)
-    model.value[0].title = 'First'
+    expect(handle().isUnsaved(1)).toBe(true)
+    model.value = [{ ...model.value[0], title: 'First' }, model.value[1], model.value[2]]
     await nextTick()
-    expect(unsavedKeys.value.has(1)).toBe(false)
+    expect(handle().isUnsaved(1)).toBe(false)
   })
 
-  it('parent clearing the v-model rebaselines all rows', async () => {
-    const { unsavedKeys, model } = mountEditor()
+  it('commit() re-baselines all rows (post-save)', async () => {
+    const { wrapper, model, handle } = mountEditor()
     await nextTick()
-    model.value[0].title = 'changed-A'
-    model.value[1].title = 'changed-B'
+    model.value = [
+      { ...model.value[0], title: 'changed-A' },
+      { ...model.value[1], title: 'changed-B' },
+      model.value[2],
+    ]
     await nextTick()
-    expect(unsavedKeys.value.size).toBe(2)
-    // Parent-side clear (e.g., after a successful save)
-    unsavedKeys.value = new Set()
+    expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(2)
+
+    // Consumer persisted → commit current rows as the new baseline.
+    handle().commit()
     await nextTick()
-    // Editor should have rebaselined: subsequent mutations re-flag dirty
-    expect(unsavedKeys.value.size).toBe(0)
-    // No further mutation — should stay clean
-    await nextTick()
-    expect(unsavedKeys.value.size).toBe(0)
+    expect(handle().hasUnsaved.value).toBe(false)
+    expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(0)
   })
 
-  it('clearUnsavedState() clears all and re-baselines', async () => {
-    const { unsavedKeys, model, editorRef } = mountEditor()
+  it('reset() discards unsaved edits back to the last baseline', async () => {
+    const { wrapper, model, handle } = mountEditor()
     await nextTick()
-    model.value[0].title = 'changed'
+    model.value = [{ ...model.value[0], title: 'changed' }, model.value[1], model.value[2]]
     await nextTick()
-    expect(unsavedKeys.value.size).toBe(1)
-    editorRef.value?.clearUnsavedState()
+    expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(1)
+
+    handle().reset()
     await nextTick()
-    expect(unsavedKeys.value.size).toBe(0)
+    expect(model.value[0].title).toBe('First')
+    expect(handle().hasUnsaved.value).toBe(false)
+    expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(0)
   })
 
-  it('clearUnsavedState(key) clears just that row', async () => {
-    const { unsavedKeys, model, editorRef } = mountEditor()
+  it('hasUnsaved mirrors whether any row is dirty', async () => {
+    const { model, handle } = mountEditor()
     await nextTick()
-    model.value[0].title = 'changed-A'
-    model.value[1].title = 'changed-B'
+    expect(handle().hasUnsaved.value).toBe(false)
+    model.value = [
+      { ...model.value[0], title: 'a' },
+      { ...model.value[1], title: 'b' },
+      model.value[2],
+    ]
     await nextTick()
-    expect(unsavedKeys.value.size).toBe(2)
-    editorRef.value?.clearUnsavedState(1)
-    await nextTick()
-    expect(unsavedKeys.value.has(1)).toBe(false)
-    expect(unsavedKeys.value.has(2)).toBe(true)
-  })
-
-  it('hasUnsavedChanges and unsavedCount mirror the v-model', async () => {
-    const { model, editorRef } = mountEditor()
-    await nextTick()
-    expect(editorRef.value?.hasUnsavedChanges).toBe(false)
-    expect(editorRef.value?.unsavedCount).toBe(0)
-    model.value[0].title = 'a'
-    model.value[1].title = 'b'
-    await nextTick()
-    expect(editorRef.value?.hasUnsavedChanges).toBe(true)
-    expect(editorRef.value?.unsavedCount).toBe(2)
+    expect(handle().hasUnsaved.value).toBe(true)
+    expect(handle().invalidKeys.value.size).toBe(0)
   })
 })

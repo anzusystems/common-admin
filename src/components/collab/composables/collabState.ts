@@ -18,6 +18,9 @@ const collabSocket: Ref<
   Socket<CollabServerToClientEvents, CollabClientToServerEvents> | undefined
 > = ref()
 const collabRoomInfoState = reactive(new Map<CollabRoom, CollabRoomInfo>())
+// Plain, not reactive: bookkeeping for the map above, nothing renders from it.
+let collabRoomInfoWriteCounter = 0
+const collabRoomInfoWriteSeq = new Map<CollabRoom, number>()
 const collabFieldLocksState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldLock>>())
 const collabFieldDataBufferState = reactive(
   new Map<CollabRoom, Map<CollabFieldName, CollabFieldData>>(),
@@ -40,11 +43,29 @@ export function useCollabState() {
     return dataBuffer
   }
 
+  /**
+   * Call before emitting anything whose acknowledgement writes `collabRoomInfoState`, and let the
+   * returned predicate decide whether that write still applies.
+   *
+   * The server serialises join and leave per room only for the lifetime of its lease, so a leave that
+   * outruns it can acknowledge after a following join and mark a room inactive while the client is in
+   * it — after which the client goes quiet with nothing visible to show for it.
+   */
+  const claimRoomInfoWrite = (room: CollabRoom) => {
+    /* Global and never restarting, so a number is never handed out twice. Claims outlive a
+     * reconnect on purpose — see the `connect` handler in `collabInit.ts`. */
+    const seq = ++collabRoomInfoWriteCounter
+    collabRoomInfoWriteSeq.set(room, seq)
+
+    return () => collabRoomInfoWriteSeq.get(room) === seq
+  }
+
   return {
     collabReconnecting,
     collabConnected,
     collabSocket,
     collabRoomInfoState,
+    claimRoomInfoWrite,
     collabFieldLocksState,
     collabFieldDataBufferState,
     gatherBufferData,

@@ -52,7 +52,7 @@ export const imageUploadStart = (
 }
 
 export const imageUploadChunk = (
-  client: (timeout?: number) => AxiosInstance,
+  client: () => AxiosInstance,
   endPoint: string,
   item: UploadQueueItem,
   imageId: DocId,
@@ -162,11 +162,12 @@ export const imageUploadChunk = (
 
     formData.append('chunk', chunkData)
 
-    client(CHUNK_UPLOAD_TIMEOUT)
+    client()
       .post(url, formData, {
         headers: {
           'Content-Type': undefined, // Let Axios automatically set multipart/form-data with boundary
         },
+        timeout: CHUNK_UPLOAD_TIMEOUT * 1000,
         cancelToken: item.latestChunkCancelToken ? item.latestChunkCancelToken.token : undefined,
         onUploadProgress: onUploadProgressCallback,
       })

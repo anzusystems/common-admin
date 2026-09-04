@@ -2,17 +2,19 @@ import path from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
-import dts from 'vite-plugin-dts'
+import dts from 'unplugin-dts/vite'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { fileURLToPath, URL } from 'url'
+
+const _dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   build: {
     sourcemap: true,
     lib: {
       entry: {
-        'common-admin': path.resolve(__dirname, 'src/lib.ts'),
-        'labs': path.resolve(__dirname, 'src/labs.ts')
+        'common-admin': path.resolve(_dirname, 'src/lib.ts'),
+        'labs': path.resolve(_dirname, 'src/labs.ts')
       },
       name: 'CommonAdmin',
       fileName: (format, entryName) => `${entryName}.js`,
@@ -40,9 +42,9 @@ export default defineConfig({
     VueI18nPlugin({
       globalSFCScope: true,
       runtimeOnly: false,
-      include: path.resolve(__dirname, 'src/locales/**.json'),
+      include: path.resolve(_dirname, 'src/locales/**.json'),
     }),
-    dts({ rollupTypes: true, tsconfigPath: 'tsconfig.libdts.json' }),
+    dts({ bundleTypes: true, tsconfigPath: 'tsconfig.libdts.json' }),
   ],
   resolve: {
     alias: {
