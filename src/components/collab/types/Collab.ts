@@ -50,11 +50,6 @@ export const CollabAccessRoomStatus = {
   Ok: 'ok',
   Occupied: 'occupied',
   Failed: 'failed',
-  /**
-   * Client-only: a later leave invalidated this join while it waited in the membership queue, so
-   * nothing was emitted.
-   */
-  Superseded: 'superseded',
 } as const
 export type CollabAccessRoomStatusType =
   (typeof CollabAccessRoomStatus)[keyof typeof CollabAccessRoomStatus]

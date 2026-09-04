@@ -5,7 +5,7 @@ import { useCollabHelpers } from '@/components/collab/composables/collabHelpers'
 import { useCachedUsers } from '@/playground/collabView/cachedUsers'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { CollabAccessRoomStatus, type CollabConfig } from '@/components/collab/types/Collab'
+import type { CollabConfig } from '@/components/collab/types/Collab'
 import { useCollabState } from '@/components/collab/composables/collabState'
 import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
@@ -60,7 +60,6 @@ addCollabReconnectListener(async () => {
     await joinCollabRoom({ joinStrategy: collab.joinStrategy, editors: collab.editors })
     enteredCollabRoom()
   } catch (error) {
-    if (error === CollabAccessRoomStatus.Superseded) return
     await router.push({ name: collab.occupiedOrKickedRedirectToRoute })
   }
 })
