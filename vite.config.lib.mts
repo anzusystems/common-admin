@@ -21,6 +21,7 @@ export default defineConfig({
       formats: ['es'],
     },
     rollupOptions: {
+      checks: { pluginTimings: false },
       external: [
         'vue',
         /^vuetify(\/.*)?$/,
