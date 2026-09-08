@@ -281,16 +281,11 @@ export function useFilterHelpers<
     if (!hash) return null
     if (hash.startsWith('#')) hash = hash.substring(1)
 
-    if (!hash.endsWith(END_FILTER_MARKER)) {
-      const lastAmpersand = hash.lastIndexOf('&')
-      if (lastAmpersand !== -1) {
-        hash = hash.substring(0, lastAmpersand)
-      } else {
-        return null
-      }
-    } else {
-      hash = hash.slice(0, -1)
-    }
+    // URLSearchParams percent-encodes `~` in values, so the marker cannot occur inside our own
+    // data — a hash without it is foreign or truncated, and null lets localStorage take over.
+    const markerIndex = hash.indexOf(END_FILTER_MARKER)
+    if (markerIndex === -1) return null
+    hash = hash.slice(0, markerIndex)
 
     const params = new URLSearchParams(hash)
     const result: Record<string, AllowedFilterValues> = {}
@@ -323,6 +318,9 @@ export function useFilterHelpers<
         result[key] = value
       }
     }
+
+    // An empty result would still count as "found", shadowing localStorage.
+    if (isEmptyObject(result) && isNull(sortBy)) return null
 
     return { filters: result, sortBy }
   }
@@ -384,7 +382,7 @@ export function useFilterHelpers<
     }
     if (
       isNull(storedFromHash) ||
-      (isEmptyObject(storedFromHash.filters) && isEmptyObject(storedFromHash.sortBy))
+      (isEmptyObject(storedFromHash.filters) && isNull(storedFromHash.sortBy))
     ) {
       const restoredPage = consumeStoredPage()
       if (restoredPage !== null) {
