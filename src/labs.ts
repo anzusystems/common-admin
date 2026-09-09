@@ -28,11 +28,13 @@ import {
   FilterInnerDataKey,
 } from '@/labs/filters/filterInjectionKeys'
 import {
+  buildFilterHash,
   createFilter,
   createFilterStore,
   type FilterConfig,
   type FilterData,
   type FilterStore,
+  isRouterSafeHash,
   type MakeFilterOption,
   useFilterHelpers,
 } from '@/labs/filters/filterFactory'
@@ -157,8 +159,10 @@ export {
   DatatablePaginationKey,
   AFormRemoteAutocomplete,
   AFormRemoteAutocompleteWithCached,
+  buildFilterHash,
   createFilter,
   createFilterStore,
+  isRouterSafeHash,
   useFilterHelpers,
   type FilterConfig,
   type FilterData,

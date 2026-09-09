@@ -76,8 +76,13 @@ const clearField = () => {
 }
 
 const updateSelected = () => {
-  if (!isString(modelValue.value) || (isString(modelValue.value) && modelValue.value.length === 0))
-    return
+  // Unlike its siblings this component has no watcher on `filterData`, so `updateSelected` only
+  // ever runs from the model setter - which `ADatetimePicker` suppresses for a programmatic
+  // change. Deleting the chip here would be dead code. The gap that does exist is the opposite
+  // one: a datetime restored from a hash or local storage never shows a chip at all. Adding the
+  // watcher is not mechanical - it makes `clearField` recreate the chip for a non-empty default,
+  // and starts showing datetime chips on eight lists that have none today.
+  if (!isString(modelValue.value) || modelValue.value.length === 0) return
   filterSelected.value.set(props.name, [
     { title: dateTimePretty(modelValue.value), value: modelValue.value },
   ])
