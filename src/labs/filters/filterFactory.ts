@@ -1,5 +1,6 @@
-import { reactive, type Ref, toRaw } from 'vue'
-import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
+import { getCurrentInstance, provide, reactive, type Ref, toRaw } from 'vue'
+import { datatablePageKey, useDatatablePageStore } from '@/composables/system/datatablePageStore'
+import { DatatablePageStoreKey } from '@/labs/filters/filterInjectionKeys'
 import {
   cloneDeep,
   isArray,
@@ -229,6 +230,17 @@ export function useFilterHelpers<
     storeKey = 'tableFilter_' + filterConfig.general.system + '_' + filterConfig.general.subject
   }
 
+  // Independent of `storeFiltersLocalStorage` being on: the remembered page is keyed even when
+  // filters are not persisted. A string override is what distinguishes tables sharing a subject.
+  const pageStoreKey = isString(options.storeFiltersLocalStorage)
+    ? options.storeFiltersLocalStorage
+    : datatablePageKey(filterConfig.general.system, filterConfig.general.subject)
+  // Called from a datatable's setup, so `ADatatablePagination` picks it up. Guarded because a
+  // composable may legitimately be called outside setup, and Vue would warn.
+  if (getCurrentInstance()) {
+    provide(DatatablePageStoreKey, pageStoreKey)
+  }
+
   const getFilterDataForStoring = (): Record<string, AllowedFilterValues> => {
     const data: Record<string, AllowedFilterValues> = {}
     for (const filterName in filterData) {
@@ -384,7 +396,7 @@ export function useFilterHelpers<
       isNull(storedFromHash) ||
       (isEmptyObject(storedFromHash.filters) && isNull(storedFromHash.sortBy))
     ) {
-      const restoredPage = consumeStoredPage()
+      const restoredPage = consumeStoredPage(pageStoreKey)
       if (restoredPage !== null) {
         pagination.value = { ...pagination.value, page: restoredPage }
       }
@@ -415,7 +427,7 @@ export function useFilterHelpers<
         updateLocationHash(stored)
       }
     }
-    const restoredPage = consumeStoredPage()
+    const restoredPage = consumeStoredPage(pageStoreKey)
     pagination.value = {
       ...pagination.value,
       sortBy: storedFromHash.sortBy,

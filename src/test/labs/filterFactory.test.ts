@@ -6,6 +6,7 @@ import {
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
 import { usePagination } from '@/labs/filters/pagination'
+import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
 // A hash that lost its `~` marker used to be salvaged by dropping everything after the last `&`.
 // Since `serializeFilters` appends `_sort` last, that removed precisely the sort, pagination got
@@ -31,6 +32,7 @@ const setup = (moreOptions: Record<string, unknown> = {}, sortKey: string | null
 }
 
 beforeEach(() => {
+  vi.restoreAllMocks()
   localStorage.clear()
   window.location.hash = ''
   vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -131,5 +133,39 @@ describe('loadStoredFilters — sort survives', () => {
 
     expect(loadStoredFilters(pagination)).toBe(false)
     expect(pagination.value.sortBy).toEqual({ key: 'id', order: 'desc' })
+  })
+})
+
+// Several datatables can share one system/subject — cms has seven for `cms/article` — and they
+// tell themselves apart by overriding `storeFiltersLocalStorage`. The remembered page used to be
+// keyed by system/subject alone, so the dashboard's article table handed its page to the main
+// article list. The second case below is the detector: with the old key the override'd table read
+// from `sys_subj` and got nothing. The first is a guard — it passes either way.
+describe('loadStoredFilters — the remembered page is keyed per table', () => {
+  const { setStoredPage, setPreservePage, consumeStoredPage } = useDatatablePageStore()
+  const otherTableKey = 'tableFilter_sys_subj_personal'
+
+  beforeEach(() => {
+    consumeStoredPage(otherTableKey) // drain a flag left by a previous case
+  })
+
+  it('does not restore a page stored by another table of the same subject', () => {
+    setStoredPage(otherTableKey, 4)
+    setPreservePage()
+
+    const { pagination, loadStoredFilters } = setup()
+    loadStoredFilters(pagination)
+
+    expect(pagination.value.page).toBe(1)
+  })
+
+  it('restores the page stored under its own override key', () => {
+    setStoredPage(otherTableKey, 4)
+    setPreservePage()
+
+    const { pagination, loadStoredFilters } = setup({ storeFiltersLocalStorage: otherTableKey })
+    loadStoredFilters(pagination)
+
+    expect(pagination.value.page).toBe(4)
   })
 })

@@ -35,14 +35,14 @@ const toggleAdvancedFilter = () => {
 <template>
   <VRow
     v-if="enableTop"
-    density="comfortable"
+    density="compact"
   >
     <VCol class="">
       <slot name="top" />
     </VCol>
   </VRow>
   <VRow
-    density="comfortable"
+    density="compact"
     class="a-filter-advanced"
     :class="{ 'a-filter-advanced--active': showAdvanced }"
   >

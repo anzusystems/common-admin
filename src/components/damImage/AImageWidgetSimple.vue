@@ -144,7 +144,7 @@ watch(
   >
     <VRow
       v-if="showDescription"
-      density="comfortable"
+      density="compact"
     >
       <VCol>
         <span class="text-body-small text-medium-emphasis">
@@ -155,7 +155,7 @@ watch(
     </VRow>
     <VRow
       v-if="showSource"
-      density="comfortable"
+      density="compact"
     >
       <VCol>
         <span class="text-body-small text-medium-emphasis">{{ sourceLabel }}:</span>

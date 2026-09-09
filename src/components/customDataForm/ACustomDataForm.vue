@@ -78,7 +78,7 @@ defineExpose({
     <VRow
       v-for="element in elementsPinned"
       :key="element.id"
-      density="comfortable"
+      density="compact"
       class="mt-1"
     >
       <VCol>
@@ -106,7 +106,7 @@ defineExpose({
     <VRow
       v-for="element in elementsOther"
       :key="element.id"
-      density="comfortable"
+      density="compact"
       class="mt-1"
     >
       <VCol>

@@ -99,7 +99,7 @@ const removeItem = () => {
         </VRow>
         <VRow
           v-if="image.showDamAuthors && authorEnabled"
-          density="comfortable"
+          density="compact"
         >
           <VCol>
             <ASystemEntityScope
@@ -121,7 +121,7 @@ const removeItem = () => {
         </VRow>
         <VRow
           v-else
-          density="comfortable"
+          density="compact"
         >
           <VCol>
             <AFormTextarea

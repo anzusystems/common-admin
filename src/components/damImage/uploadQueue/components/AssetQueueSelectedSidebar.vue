@@ -162,7 +162,7 @@ onMounted(() => {
             <VExpansionPanelText>
               <VRow
                 v-if="keywordEnabled"
-                density="comfortable"
+                density="compact"
                 class="my-2"
               >
                 <VCol>
@@ -216,7 +216,7 @@ onMounted(() => {
               </VRow>
               <VRow
                 v-if="authorEnabled"
-                density="comfortable"
+                density="compact"
                 class="my-2"
               >
                 <VCol>

@@ -116,7 +116,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
           <template #after-pinned>
             <VRow
               v-if="keywordEnabled"
-              density="comfortable"
+              density="compact"
               class="my-2"
             >
               <VCol>
@@ -141,7 +141,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             </VRow>
             <VRow
               v-if="authorEnabled"
-              density="comfortable"
+              density="compact"
               class="my-2"
             >
               <VCol>
@@ -167,7 +167,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             </VRow>
             <VRow
               v-if="mainFileSingleUseEnabled"
-              density="comfortable"
+              density="compact"
               class="my-2"
             >
               <VCol>

@@ -12,7 +12,10 @@
       "import": "./dist/common-admin.js",
       "types": "./dist/common-admin.d.ts"
     },
-    "./styles": "./dist/common-admin.css",
+    "./styles": {
+      "types": "./dist/common-admin.css.d.ts",
+      "default": "./dist/common-admin.css"
+    },
     "./labs": {
       "import": "./dist/labs.js",
       "types": "./dist/labs.d.ts"

@@ -111,6 +111,7 @@ const paginationUpdateDefault = (found: DatatableOrderingOption) => {
       sortBy: null,
     }
     emit('sortByChange', found)
+    return
   }
   pagination.value.sortBy = found.sortBy
   emit('sortByChange', found)
