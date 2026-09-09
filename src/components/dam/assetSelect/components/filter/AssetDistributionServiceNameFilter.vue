@@ -4,6 +4,7 @@ import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOp
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -46,6 +47,8 @@ onMounted(async () => {
   }
   if (status.value !== 'error') status.value = 'ready'
 })
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -55,7 +58,9 @@ onMounted(async () => {
   >
     <VProgressCircular indeterminate />
   </div>
-  <div v-else-if="status === 'error'">Error loading distribution services.</div>
+  <div v-else-if="status === 'error'">
+    {{ t('common.assetSelect.error.loadingDistributionServices') }}
+  </div>
   <AFilterValueObjectOptionsSelect
     v-else
     :name="name"

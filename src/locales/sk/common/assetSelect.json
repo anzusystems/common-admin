@@ -58,6 +58,8 @@
     "document": "Dokument"
   },
   "error": {
-    "unallowedLicence": "Nemáte práva na licenciu v DAM"
+    "unallowedLicence": "Nemáte práva na licenciu v DAM",
+    "noSelectLicence": "Chyba, žiadna licencia na výber",
+    "loadingDistributionServices": "Chyba pri načítaní distribučných služieb"
   }
 }

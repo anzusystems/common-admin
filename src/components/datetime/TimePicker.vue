@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, ref, useTemplateRef, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits<{
   (e: 'onEnterKeyup'): void
@@ -165,6 +166,8 @@ watch([hours, minutes], ([newHours, newMinutes], [oldHours, oldMinutes]) => {
 defineExpose({
   focusHour,
 })
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -175,7 +178,7 @@ defineExpose({
         v-model="hoursComputed"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--hours"
         type="text"
-        aria-label="Hour"
+        :aria-label="t('$vuetify.timePicker.hour')"
         tabindex="1"
         min="0"
         max="23"
@@ -209,7 +212,7 @@ defineExpose({
         v-model="minutesComputed"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--minutes"
         type="text"
-        aria-label="Minute"
+        :aria-label="t('$vuetify.timePicker.minute')"
         tabindex="2"
         min="0"
         max="59"

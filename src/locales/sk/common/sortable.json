@@ -64,5 +64,7 @@
   "error": {
     "maxDeepExceed": "Nie je možné presunúť. Nová hĺbka prekročí maximálnu hĺbku.",
     "unableToAdd": "Nie je možné pridať položku."
-  }
+  },
+  "moreOptions": "Ďalšie možnosti",
+  "addNewAfter": "Pridať novú položku za túto"
 }

@@ -19,7 +19,7 @@
       "sortNone": "Bez zoradenia.",
       "activateNone": "Prestať radiť.",
       "activateDescending": "Aktivovať zostupné radenie.",
-      "activateAscending": "Aktivovať vzostupné radenie",
+      "activateAscending": "Aktivovať vzostupné radenie.",
       "selectRow": "Vybrať riadok",
       "selectAll": "Vybrať všetko",
       "selectGroup": "Vybrať skupinu"
@@ -92,8 +92,8 @@
   },
   "input": {
     "clear": "Vymazať {0}",
-    "prependAction": "{0} akcií pred",
-    "appendAction": "{0} nasledovných akcií",
+    "prependAction": "Akcia pred {0}",
+    "appendAction": "Akcia za {0}",
     "otp": "Zadajte verifikačný kód"
   },
   "fileInput": {

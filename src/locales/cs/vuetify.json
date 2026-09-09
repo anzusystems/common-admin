@@ -19,7 +19,7 @@
       "sortNone": "Bez řazení.",
       "activateNone": "Přestat řadit.",
       "activateDescending": "Aktivovat sestupné řazení.",
-      "activateAscending": "Aktivovat vzestupné řazení",
+      "activateAscending": "Aktivovat vzestupné řazení.",
       "selectRow": "Vybrat řádek",
       "selectAll": "Vybrat vše",
       "selectGroup": "Vybrat skupinu"
@@ -92,13 +92,13 @@
   },
   "input": {
     "clear": "Vymazat {0}",
-    "prependAction": "{0} akcí před",
-    "appendAction": "{0} následujících akcí",
+    "prependAction": "Akce před {0}",
+    "appendAction": "Akce za {0}",
     "otp": "Zadejte verifikační kód"
   },
   "fileInput": {
     "counter": "{0} souborů",
-    "counterSize": "{0} souborů ({1} spolu)"
+    "counterSize": "{0} souborů ({1} celkem)"
   },
   "fileUpload": {
     "title": "Přetáhněte soubory sem",

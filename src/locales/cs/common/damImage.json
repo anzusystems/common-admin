@@ -71,6 +71,7 @@
       "noTitle": "Bez titulku"
     },
     "detail": {
+      "sourceSystem": "DAM",
       "toggleInfo": "Info karta",
       "metadataToggle": {
         "show": "Zobrazit více detailů",
@@ -157,7 +158,7 @@
     "stopConfirmQuestion": "Chcete ukončit nahrávání?",
     "limits": {
       "uploadWarning": "Varování při nahrávání",
-      "onUploadLimit": "Dosáhli jste limitu nahrávání ({limit}). Dokončete nahrávání a zkuste to znovu",
+      "onUploadLimit": "Dosáhli jste limitu nahrávání ({limit}). Dokončete nahrávání a zkuste to znovu.",
       "addingOverLimit": "Pokoušíte se nahrát další soubory ({count}).",
       "countAlreadyInProgress": "{count} soubor(y) probíhají.",
       "onlyAllowedAtOnce": "Maximálně {count} souborů je možné nahrát současně",
@@ -213,5 +214,9 @@
     "idOrUrl": "ID obrázku nebo veřejná URL obrázku",
     "inputError": "Zadáno nesprávné ID",
     "imagePreview": "Náhled obrázku"
+  },
+  "error": {
+    "loadingConfig": "Chyba načtení konfigurace DAM",
+    "accessRights": "Chyba přístupových práv DAM"
   }
 }

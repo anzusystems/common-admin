@@ -51,7 +51,7 @@
     "displayTitle": "Original Name",
     "error": "Error",
     "copyAssetId": "Copy asset ID",
-    "stillUploadingOrProcessing": "Asset is still uploading or processing by server",
+    "stillUploadingOrProcessing": "Asset is still uploading or being processed by server",
     "removeFromQueue": "Remove item from queue?",
     "errorUnableToCopyToLicence": "Error, unable to copy assets to licence"
   },
@@ -71,6 +71,7 @@
       "noTitle": "No title"
     },
     "detail": {
+      "sourceSystem": "DAM",
       "toggleInfo": "Info card",
       "metadataToggle": {
         "show": "Show more details",
@@ -213,5 +214,9 @@
     "idOrUrl": "Image ID or public image URL",
     "inputError": "Incorrect ID provided",
     "imagePreview": "Image preview"
+  },
+  "error": {
+    "loadingConfig": "Loading DAM config error",
+    "accessRights": "DAM access rights error"
   }
 }

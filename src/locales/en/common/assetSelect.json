@@ -58,6 +58,8 @@
     "document": "Document"
   },
   "error": {
-    "unallowedLicence": "You do not have permission for this DAM licence"
+    "unallowedLicence": "You do not have permission for this DAM licence",
+    "noSelectLicence": "Error, no select licence.",
+    "loadingDistributionServices": "Error loading distribution services."
   }
 }

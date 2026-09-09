@@ -370,5 +370,5 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
-  <div v-else>Error, no select licence.</div>
+  <div v-else>{{ t('common.assetSelect.error.noSelectLicence') }}</div>
 </template>

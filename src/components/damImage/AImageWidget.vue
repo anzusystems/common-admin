@@ -16,6 +16,7 @@ import {
 } from '@/components/collab/types/Collab'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -124,6 +125,8 @@ const metadataConfirm = () => {
 defineExpose({
   metadataConfirm,
 })
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -145,13 +148,13 @@ defineExpose({
     v-else-if="status === 'error'"
     class="text-error"
   >
-    Loading DAM config error
+    {{ t('common.damImage.error.loadingConfig') }}
   </div>
   <div
     v-else-if="status === 'uploadNotAllowed'"
     class="text-error"
   >
-    DAM access rights error
+    {{ t('common.damImage.error.accessRights') }}
   </div>
   <VProgressCircular
     v-else

@@ -62,7 +62,9 @@
   "pendingChanges": "{count} pending change | {count} pending changes",
   "noPendingChanges": "No pending changes",
   "error": {
-    "maxDeepExceed": "Unable to move. New deep will exceed max deep.",
+    "maxDeepExceed": "Unable to move. New depth will exceed max depth.",
     "unableToAdd": "Unable to add item."
-  }
+  },
+  "moreOptions": "More options",
+  "addNewAfter": "Add new item after"
 }

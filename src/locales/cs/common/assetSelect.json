@@ -47,7 +47,7 @@
     "authorIds": "Autoři",
     "createdByIds": "Vytvořeno uživateli",
     "inPodcast": "Podcast",
-    "podcastIds": "Podcasts",
+    "podcastIds": "Podcasty",
     "distributedInServices": "Distribuováno ve službách",
     "createdAtFrom": "Vytvořeno od - do"
   },
@@ -58,6 +58,8 @@
     "document": "Dokument"
   },
   "error": {
-    "unallowedLicence": "Nemáte práva na licenci v DAM"
+    "unallowedLicence": "Nemáte práva na licenci v DAM",
+    "noSelectLicence": "Chyba, žádná licence pro výběr",
+    "loadingDistributionServices": "Chyba při načítání distribučních služeb"
   }
 }

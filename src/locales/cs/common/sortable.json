@@ -64,5 +64,7 @@
   "error": {
     "maxDeepExceed": "Nemožnost přesunu. Nová hloubka překročí maximální hloubku.",
     "unableToAdd": "Nelze přidat položku."
-  }
+  },
+  "moreOptions": "Další možnosti",
+  "addNewAfter": "Přidat novou položku za tuto"
 }

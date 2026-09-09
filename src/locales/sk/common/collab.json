@@ -5,7 +5,7 @@
     "approvedJoinRequest": "Vaša žiadosť o kolaboráciu bola úspešne schválená, môžete vstúpiť do editácie.",
     "rejectedJoinRequest": "Ľutujeme, ale vaša žiadosť o kolaboráciu bola zamietnutá.",
     "failedRequestToTakeModeration": "Ľutujeme, ale vaša žiadosť o prevzatie moderovania bola zamietnutá.",
-    "alreadyRequestedToTakeModeration": "Ľutujeme, ale v súčasnosti už existuje iná žiadosť o prevzatia moderovania. Skúste to neskôr.",
+    "alreadyRequestedToTakeModeration": "Ľutujeme, ale v súčasnosti už existuje iná žiadosť o prevzatie moderovania. Skúste to neskôr.",
     "approvedToTakeModeration": "Vaša žiadosť o prevzatie moderovania bola úspešne schválená.",
     "rejectedToTakeModeration": "Ľutujeme, ale vaša žiadosť o prevzatie moderovania bola zamietnutá.",
     "kickedFromRoom": "Boli ste vyhodený z kolaborácie.",

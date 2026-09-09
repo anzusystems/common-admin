@@ -313,7 +313,7 @@ defineExpose({
                     <VTooltip
                       anchor="bottom"
                       activator="parent"
-                      text="More options"
+                      :text="t('common.sortable.moreOptions')"
                     />
                     <VMenu activator="parent">
                       <VList density="compact">
@@ -321,7 +321,7 @@ defineExpose({
                           v-if="showAddAfterButton"
                           @click.stop="onAddAfterClick(item)"
                         >
-                          Add new item after
+                          {{ t('common.sortable.addNewAfter') }}
                         </VListItem>
                       </VList>
                     </VMenu>

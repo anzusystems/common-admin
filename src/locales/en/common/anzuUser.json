@@ -37,8 +37,8 @@
   },
   "copyPermissions": {
     "title": "Copy role and permissions",
-    "desc": "Potrebujete skopirovat rolu a opravnenia z uz existujuceho pouzivatela?",
-    "srcUser": "Zdrojovy uzivatel",
+    "desc": "Do you need to copy role and permissions from an existing user?",
+    "srcUser": "Source user",
     "copiedSettings": "All copied settings:"
   }
 }

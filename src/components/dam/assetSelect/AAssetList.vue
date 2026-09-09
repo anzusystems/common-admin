@@ -9,6 +9,7 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import AAssetListInner from '@/components/dam/assetSelect/AAssetListInner.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -67,6 +68,8 @@ onMounted(async () => {
     status.value = 'error'
   }
 })
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -107,7 +110,7 @@ onMounted(async () => {
     v-else-if="status === 'error'"
     class="text-error"
   >
-    Loading DAM config error
+    {{ t('common.damImage.error.loadingConfig') }}
   </div>
-  <div v-else>Error, no select licence.</div>
+  <div v-else>{{ t('common.assetSelect.error.noSelectLicence') }}</div>
 </template>
