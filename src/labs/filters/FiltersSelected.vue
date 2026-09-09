@@ -5,7 +5,7 @@ import {
   FilterDataKey,
   FilterSelectedKey,
 } from '@/labs/filters/filterInjectionKeys'
-import { isUndefined } from '@/utils/common'
+import { isArray, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
@@ -39,6 +39,19 @@ const selectedArray = computed(() => {
 
 const { clearOneFilterSelected, isClearable } = useFilterClearHelpers()
 
+/**
+ * Clearing means "back to the default", so on a field already holding its default there is
+ * nothing to clear and the close button would do nothing at all - it would drop the chip, write
+ * the same value back, and the chip would come straight back. Only fields with a non-null default
+ * can reach that state; an array is different, because closing one chip removes one option.
+ */
+const canClear = (name: string) => {
+  if (!isClearable(name, filterConfig)) return false
+  const value = filterData[name]
+  if (isArray(value)) return true
+  return value !== filterConfig.fields[name].default
+}
+
 const clickClose = (name: string, optionValue: number | string) => {
   clearOneFilterSelected(name, optionValue, filterData, filterConfig, filterSelected)
   filterConfig.touched = true
@@ -58,7 +71,7 @@ const clickClose = (name: string, optionValue: number | string) => {
       class="a-selected-filters__chips"
     >
       <VChip
-        v-if="isClearable(item.name, filterConfig)"
+        v-if="canClear(item.name)"
         closable
         size="small"
         class="a-selected-filters__chip"
