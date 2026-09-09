@@ -46,6 +46,7 @@ export const slovakPluralizationRule = (choice: number, choicesLength: number) =
 
 export const i18n = createI18n<[MessageSchema]>({
   globalInjection: false,
+  legacy: false,
   locale: REQUIRED_LOCALES[0],
   fallbackLocale: false,
   pluralRules: {

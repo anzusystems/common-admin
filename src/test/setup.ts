@@ -21,6 +21,7 @@ const vuetify = createVuetify({
 
 // Create i18n instance for testing with loaded messages
 const i18n = createI18n({
+  legacy: false,
   locale: 'en',
   fallbackLocale: 'en',
   messages: {
