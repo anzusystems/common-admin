@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { isDefined, isFunction, isNull, isUndefined } from '@/utils/common'
@@ -85,10 +85,14 @@ const isFocused = ref(false)
 const isOpened = ref(false)
 
 const onBlur = () => {
-  isFocused.value = false
-  emit('blur', isUndefined(props.modelValue) ? null : props.modelValue)
   props.v?.$touch()
-  if (isOpened.value === false) releaseFieldLock.value(props.modelValue)
+  // The picker commits a typed value in a watcher that runs after this event, so releasing the lock
+  // here would hand the room the previous value - and clearing `isFocused` would skip the change.
+  nextTick(() => {
+    isFocused.value = false
+    emit('blur', isUndefined(props.modelValue) ? null : props.modelValue)
+    if (isOpened.value === false) releaseFieldLock.value(props.modelValue)
+  })
 }
 
 const onFocus = () => {
@@ -103,7 +107,10 @@ const onOpen = () => {
 
 const onClose = () => {
   isOpened.value = false
-  releaseFieldLock.value(props.modelValue)
+  // The picker emits close before its watchers flush the picked value into the model.
+  nextTick(() => {
+    releaseFieldLock.value(props.modelValue)
+  })
 }
 
 const errorMessageComputed = computed(() => {

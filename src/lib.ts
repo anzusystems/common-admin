@@ -25,6 +25,7 @@ import APermissionValueChip from '@/components/permission/APermissionValueChip.v
 import Acl from '@/components/permission/Acl.vue'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
+import type { DatetimePickerType } from '@/utils/datetimePickerValue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
@@ -162,6 +163,8 @@ import {
   dateModifyMinutes,
   dateNow,
   datePretty,
+  dateUtcPretty,
+  dateUtcToday,
   DATETIME_MAX,
   DATETIME_MIN,
   dateTimeEndOfDay,
@@ -189,6 +192,7 @@ import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactor
 import type {
   DatetimeUTC,
   DatetimeUTCNullable,
+  DateUTC,
   DocId,
   DocIdNullable,
   EnableDisable,
@@ -837,6 +841,8 @@ export {
   type DocIdNullable,
   type DatetimeUTCNullable,
   type DatetimeUTC,
+  type DateUTC,
+  type DatetimePickerType,
   type AnzuUser,
   type BaseUser,
   type AnzuUserMinimal,
@@ -1059,6 +1065,8 @@ export {
   dateTimeToDate,
   yearNow,
   datePretty,
+  dateUtcPretty,
+  dateUtcToday,
   timePretty,
   dateDiff,
   // file

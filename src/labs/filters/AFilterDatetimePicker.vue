@@ -69,6 +69,10 @@ const { clearOne } = useFilterClearHelpers()
 const clearField = () => {
   clearOne(props.name, filterData, filterConfig)
   filterSelected.value.delete(props.name)
+  // `clearOne` writes the value the picker was about to emit, so its own emit is skipped as
+  // unchanged and the model setter below never runs - the bookkeeping has to happen here.
+  filterConfig.touched = true
+  emit('change')
 }
 
 const updateSelected = () => {
