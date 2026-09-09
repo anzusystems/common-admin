@@ -2,6 +2,11 @@
   "system": "System",
   "notSelected": "Not selected",
   "all": "All",
+  "link": "Link",
+  "text": "Text",
+  "url": "URL",
+  "external": "External link",
+  "nofollow": "Nofollow",
   "boolean": {
     "true": "Yes",
     "false": "No"

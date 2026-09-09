@@ -25,7 +25,9 @@
   "filter": {
     "id": "ID",
     "enabled": "Povolený",
-    "email": "E-mail"
+    "email": "E-mail",
+    "lastName": "Priezvisko",
+    "permissionGroups": "Skupiny oprávnení"
   },
   "table": {
     "grants": "Akcie",

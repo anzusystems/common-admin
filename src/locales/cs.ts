@@ -17,6 +17,12 @@ import subjectSelect from '@/locales/cs/common/subjectSelect.json'
 import time from '@/locales/cs/common/time.json'
 import sortable from '@/locales/cs/common/sortable.json'
 import damImage from '@/locales/cs/common/damImage.json'
+import customFormElement from '@/locales/cs/common/customFormElement.json'
+import customForm from '@/locales/cs/common/customForm.json'
+import confirmDialog from '@/locales/cs/common/confirmDialog.json'
+import linkDto from '@/locales/cs/common/linkDto.json'
+import listItemDto from '@/locales/cs/common/listItemDto.json'
+import dayOfWeek from '@/locales/cs/common/dayOfWeek.json'
 import collab from '@/locales/cs/common/collab.json'
 import filter from '@/locales/cs/common/filter.json'
 import apiTimedOut from '@/locales/cs/error/apiTimedOut.json'
@@ -37,6 +43,12 @@ export default {
     time,
     sortable,
     damImage,
+    customFormElement,
+    customForm,
+    confirmDialog,
+    linkDto,
+    listItemDto,
+    dayOfWeek,
     collab,
     filter,
   },

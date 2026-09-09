@@ -58,5 +58,8 @@
     "dropPossibility": "Nahrať alebo presunúť súbory",
     "dropHere": "Nahrať súbory"
   },
+  "upload": {
+    "incorrectFormatSize": "Nesprávny formát alebo veľkosť"
+  },
   "inputSuggestedMax": "{current} / max {max}"
 }

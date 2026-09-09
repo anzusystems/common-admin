@@ -6,23 +6,23 @@
         "source": "Zdroj"
       },
       "flags": {
-        "showSource": "Zobraziť zdroj"
+        "showSource": "Zobrazit zdroj"
       }
     },
     "meta": {
-      "edit": "Upraviť obrázok"
+      "edit": "Upravit obrázek"
     },
     "button": {
-      "options": "Upraviť obrázok",
-      "editAsset": "Upraviť v DAM",
-      "upload": "Nahrať obrázok",
-      "addFromDam": "Pridať z DAM",
-      "replaceFromDam": "Vymeniť z DAM",
-      "removeImage": "Odstrániť obrázok"
+      "options": "Upravit obrázek",
+      "editAsset": "Upravit v DAM",
+      "upload": "Nahrát obrázek",
+      "addFromDam": "Přidat z DAM",
+      "replaceFromDam": "Vyměnit z DAM",
+      "removeImage": "Odstranit obrázek"
     },
     "help": {
       "texts": {
-        "description": "Ak prepíšete popis na tomto mieste, nezmeníte ho v úložisku obrázkov."
+        "description": "Pokud popis přepíšete zde, nezměníte ho v úložišti obrázků."
       }
     }
   },
@@ -30,100 +30,101 @@
     "model": {
       "damMedia": {
         "assetId": "ID assetu",
-        "licenceId": "Licencia",
-        "title": "Titulok",
-        "authorNames": "Autori",
-        "episodeName": "Epizóda",
-        "episodeNumber": "Číslo epizódy",
+        "licenceId": "Licence",
+        "title": "Titulek",
+        "authorNames": "Autoři",
+        "episodeName": "Epizoda",
+        "episodeNumber": "Číslo epizody",
         "seriesName": "Podcast"
       }
     },
     "meta": {
-      "edit": "Upraviť médium",
-      "preview": "Náhľad",
-      "notPlayable": "Mediálny obsah sa zatiaľ neprehrá na webe. Skontrolujte distribúciu."
+      "edit": "Upravit médium",
+      "preview": "Náhled",
+      "notPlayable": "Mediální obsah se na webu zatím nepřehraje. Zkontrolujte distribuci."
     },
     "button": {
-      "remove": "Odstrániť médium",
-      "editInDam": "Upraviť v DAM"
+      "remove": "Odstranit médium"
     }
   },
   "queueItem": {
-    "edit": "Upraviť v DAM",
-    "displayTitle": "Meno originálu",
+    "displayTitle": "Název originálu",
     "error": "Chyba",
-    "copyAssetId": "Kopírovať asset ID",
-    "stillUploadingOrProcessing": "Asset sa stále nahráva alebo spracováva serverom",
-    "removeFromQueue": "Ostrániť z fronty nahrávania?",
-    "errorUnableToCopyToLicence": "Chyba, nie je možné kopírovať assety do licencie"
+    "copyAssetId": "Kopírovat asset ID",
+    "stillUploadingOrProcessing": "Asset se stále nahrává nebo zpracovává serverem",
+    "removeFromQueue": "Odstranit z fronty nahrávání?",
+    "errorUnableToCopyToLicence": "Chyba, není možné kopírovat assety do licence"
   },
   "asset": {
     "model": {
-      "authors": "Autori",
-      "keywords": "Kľúčové slová",
-      "mainFileSingleUse": "Jednorazová licencia"
+      "authors": "Autoři",
+      "keywords": "Klíčová slova",
+      "mainFileSingleUse": "Jednorázová licence"
     },
     "assetType": {
-      "image": "Obrázok",
+      "image": "Obrázek",
       "audio": "Audio",
       "video": "Video",
       "document": "Dokument"
     },
+    "list": {
+      "noTitle": "Bez titulku"
+    },
     "detail": {
       "toggleInfo": "Info karta",
       "metadataToggle": {
-        "show": "Skryť viac detailov",
-        "hide": "Zobraziť viac detailov"
+        "show": "Zobrazit více detailů",
+        "hide": "Skrýt více detailů"
       },
       "tabs": {
         "info": "Info",
-        "roi": "Fókus"
+        "roi": "Fokus"
       },
       "info": {
         "status": {
-          "duplicate": "Hlavný súbor je duplikát.",
-          "draft": "Neobsahuje žiaden súbor.",
-          "deleting": "Čoskoro bude zmazaný.",
-          "failed": "Spracovávanie súboru zlyhalo."
+          "duplicate": "Hlavní soubor je duplikát.",
+          "draft": "Neobsahuje žádný soubor.",
+          "deleting": "Bude brzy smazán.",
+          "failed": "Zpracování souboru selhalo."
         },
-        "metadata": "Metaúdaje",
-        "file": "Info o súbore",
+        "metadata": "Metadata",
+        "file": "Info o souboru",
         "field": {
           "id": "Asset ID",
-          "mainFileId": "ID hlavného súboru",
+          "mainFileId": "ID hlavního souboru",
           "type": "Typ",
           "mimeType": "Formát",
-          "size": "Veľkosť",
-          "dominantColor": "Farba",
-          "width": "Šírka",
+          "size": "Velikost",
+          "dominantColor": "Barva",
+          "width": "Šířka",
           "height": "Výška",
-          "ratio": "Pomer strán",
+          "ratio": "Poměr stran",
           "animated": "Animované"
         }
       },
       "roi": {
-        "title": "Náhľady",
-        "description": "Náhľady sú určené pre hlavný obrázok v článku, zoznamy článkov, titulky a rubriky. V tele článku sa zobrazuje formát bez orezania.",
-        "refresh": "Znovu načítať náhľady",
+        "title": "Náhledy",
+        "description": "Náhledy jsou určeny pro hlavní obrázek v článku, seznamy článků, titulky a rubriky. V těle článku se zobrazuje formát bez oříznutí.",
+        "refresh": "Znovu načíst náhledy",
         "rotate": {
-          "rotateMainFileImage": "Otočenie obrázku (hlavného súboru)",
-          "rotateClockwise": "Otočiť doprava",
-          "rotateCounterclockwise": "Otočiť doľava"
+          "rotateMainFileImage": "Otočení obrázku (hlavního souboru)",
+          "rotateClockwise": "Otočit doprava",
+          "rotateCounterclockwise": "Otočit doleva"
         }
       }
     },
     "massOperations": {
-      "title": "Hromadné operácie",
-      "description": "Hromadná úprava metaúdajov. Ak chcete upravovať metaúdaje po riadkoch, použite tlačidlo vedľa riadka. Ak chcete upraviť všetky riadky naraz, použite tlačidlá úplne dole.",
-      "fillOneEmpty": "Vyplňte prázdne pole",
-      "fillAllEmpty": "Vyplniť len prázdne",
-      "replaceOne": "Nahradiť všade",
-      "replaceAll": "Nahradiť všetko",
-      "clearForm": "Vyčistiť",
-      "general": "Hlavné"
+      "title": "Hromadné operace",
+      "description": "Hromadná úprava metadat. Chcete-li upravovat metadata po řádcích, použijte tlačítko vedle řádku. Chcete-li upravit všechny řádky najednou, použijte tlačítka úplně dole.",
+      "fillOneEmpty": "Vyplňte prázdné pole",
+      "fillAllEmpty": "Vyplnit jen prázdné",
+      "replaceOne": "Nahradit všude",
+      "replaceAll": "Nahradit vše",
+      "clearForm": "Vyčistit",
+      "general": "Hlavní"
     },
     "metaIcons": {
-      "low": "Nízka kvalita",
+      "low": "Nízká kvalita",
       "slots": "Sloty",
       "rss": "RSS",
       "fullHd": "FullHD",
@@ -133,52 +134,52 @@
       "8k": "8K"
     },
     "assetFileFailReason": {
-      "none": "Žiadny",
-      "unknown": "Neznámy",
-      "invalidChecksum": "Neplatný kontrolný súčet",
-      "invalidMimeType": "Neplatný typ súboru",
-      "downloadFailed": "Sťahovanie zlyhalo",
-      "invalidSize": "Neplatná veľkosť"
+      "none": "Žádný",
+      "unknown": "Neznámý",
+      "invalidChecksum": "Neplatný kontrolní součet",
+      "invalidMimeType": "Neplatný typ souboru",
+      "downloadFailed": "Stahování selhalo",
+      "invalidSize": "Neplatná velikost"
     }
   },
   "upload": {
-    "waiting": "Čakanie",
-    "processing": "Spracováva sa",
-    "uploading": "Nahrávanie",
+    "waiting": "Čekání",
+    "processing": "Zpracovává se",
+    "uploading": "Nahrávání",
     "done": "Hotovo",
-    "stop": "Zatvoriť",
-    "add": "Pridať do nahrávania",
-    "save": "Uložiť a pokračovať",
-    "saveAndApply": "Uložiť a použiť",
-    "apply": "Použiť",
-    "title": "Nahrávanie",
-    "titleDone": "Nahrávanie ukončené",
-    "stopConfirmQuestion": "Chcete ukončiť nahrávanie?",
+    "stop": "Zavřít",
+    "add": "Přidat do nahrávání",
+    "save": "Uložit a pokračovat",
+    "saveAndApply": "Uložit a použít",
+    "apply": "Použít",
+    "title": "Nahrávání",
+    "titleDone": "Nahrávání ukončeno",
+    "stopConfirmQuestion": "Chcete ukončit nahrávání?",
     "limits": {
-      "uploadWarning": "Varovanie pri nahrávaní",
-      "onUploadLimit": "Dosiahli ste limit nahrávania ({limit}). Dokončite nahrávanie a skúste znova",
-      "addingOverLimit": "Pokúšate sa nahrať ďalšie súbory ({count}).",
-      "countAlreadyInProgress": "{count} súbor(y) prebiehajú.",
-      "onlyAllowedAtOnce": "Maximálne {count} súborov je možné nahrať súčasne",
-      "cancelOrUploadFirst": "Chcete zrušiť alebo nahrať iba prvých {count} súborov?",
-      "actionAddFirstItems": "Pridať prvých {count} súborov"
+      "uploadWarning": "Varování při nahrávání",
+      "onUploadLimit": "Dosáhli jste limitu nahrávání ({limit}). Dokončete nahrávání a zkuste to znovu",
+      "addingOverLimit": "Pokoušíte se nahrát další soubory ({count}).",
+      "countAlreadyInProgress": "{count} soubor(y) probíhají.",
+      "onlyAllowedAtOnce": "Maximálně {count} souborů je možné nahrát současně",
+      "cancelOrUploadFirst": "Chcete zrušit nebo nahrát jen prvních {count} souborů?",
+      "actionAddFirstItems": "Přidat prvních {count} souborů"
     }
   },
   "keyword": {
     "model": {
-      "name": "Meno"
+      "name": "Název"
     },
     "button": {
-      "add": "Pridať kľúčové slovo"
+      "add": "Přidat klíčové slovo"
     },
     "meta": {
-      "create": "Vytvoriť kľúčové slovo"
+      "create": "Vytvořit klíčové slovo"
     },
-    "filterMinChars": "Zadajte minimálne 2 znaky"
+    "filterMinChars": "Zadejte minimálně 2 znaky"
   },
   "author": {
     "model": {
-      "name": "Meno",
+      "name": "Jméno",
       "identifier": "Identifikátor",
       "type": "Typ",
       "flags": {
@@ -186,31 +187,31 @@
       }
     },
     "authorType": {
-      "none": "Žiaden",
-      "internal": "Interný",
-      "external": "Externý",
-      "agency": "Agentúra"
+      "none": "Žádný",
+      "internal": "Interní",
+      "external": "Externí",
+      "agency": "Agentura"
     },
     "button": {
-      "add": "Pridať nového autora"
+      "add": "Přidat nového autora"
     },
     "meta": {
-      "create": "Vytvorenie autora"
+      "create": "Vytvoření autora"
     },
-    "conflicts": "Konflikt autorov",
-    "filterMinChars": "Zadajte minimálne 2 znaky"
+    "conflicts": "Konflikt autorů",
+    "filterMinChars": "Zadejte minimálně 2 znaky"
   },
   "uploadErrors": {
-    "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",
+    "unknownError": "Systémová chyba. Zkuste to později nebo kontaktujte administrátora.",
     "systemError": "Chyba",
-    "size": "Nesprávna veľkosť",
-    "offset": "Nesprávny offset",
-    "mimeType": "Nesprávny formát súboru"
+    "size": "Nesprávná velikost",
+    "offset": "Nesprávný offset",
+    "mimeType": "Nesprávný formát souboru"
   },
-  "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne.",
+  "notificationsNotConnected": "Notifikační služba má dočasný výpadek, některé funkce se nemusí chovat korektně.",
   "public": {
-    "idOrUrl": "Image ID or public image URL",
-    "inputError": "Incorrect ID provided",
-    "imagePreview": "Image preview"
+    "idOrUrl": "ID obrázku nebo veřejná URL obrázku",
+    "inputError": "Zadáno nesprávné ID",
+    "imagePreview": "Náhled obrázku"
   }
 }

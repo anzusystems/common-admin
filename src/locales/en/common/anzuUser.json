@@ -25,7 +25,9 @@
   "filter": {
     "id": "ID",
     "enabled": "Enabled",
-    "email": "Email"
+    "email": "Email",
+    "lastName": "Last Name",
+    "permissionGroups": "Permission Groups"
   },
   "table": {
     "grants": "Actions",
@@ -34,7 +36,7 @@
     "noPermissions": "No permissions set"
   },
   "copyPermissions": {
-    "title": "Kopirovat rolu a oprávnenia",
+    "title": "Copy role and permissions",
     "desc": "Potrebujete skopirovat rolu a opravnenia z uz existujuceho pouzivatela?",
     "srcUser": "Zdrojovy uzivatel",
     "copiedSettings": "All copied settings:"

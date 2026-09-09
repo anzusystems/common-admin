@@ -55,8 +55,11 @@
     "backButton": "Vrať mě k přihlášení"
   },
   "dropzone": {
-    "dropPossibility": "Nahrať alebo presunúť súbory",
-    "dropHere": "Nahrať súbory"
+    "dropPossibility": "Nahrát nebo přesunout soubory",
+    "dropHere": "Nahrát soubory"
+  },
+  "upload": {
+    "incorrectFormatSize": "Nesprávný formát nebo velikost"
   },
   "inputSuggestedMax": "{current} / max {max}"
 }

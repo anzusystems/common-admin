@@ -40,7 +40,9 @@ export function useFormatAndSizeCheck(
     if (incorrectFileNames.length && !disableAlert) {
       const { showWarning } = useAlerts()
       const { t } = i18n.global
-      showWarning(t('system.upload.incorrectFormatSize') + ':' + incorrectFileNames.join(', '))
+      showWarning(
+        t('common.system.upload.incorrectFormatSize') + ':' + incorrectFileNames.join(', '),
+      )
     }
 
     return validFiles

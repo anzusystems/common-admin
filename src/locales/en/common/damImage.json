@@ -67,11 +67,14 @@
       "video": "Video",
       "document": "Document"
     },
+    "list": {
+      "noTitle": "No title"
+    },
     "detail": {
       "toggleInfo": "Info card",
       "metadataToggle": {
-        "show": "Hide more details",
-        "hide": "Show more details"
+        "show": "Show more details",
+        "hide": "Hide more details"
       },
       "tabs": {
         "info": "Info",

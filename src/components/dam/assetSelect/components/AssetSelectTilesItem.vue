@@ -70,7 +70,7 @@ const { asset, assetType, assetStatus, imageProperties } = useAssetItemActions(i
       <div class="asset-list-tiles__item-text text-body-small px-2 py-1">
         <div class="d-flex align-center justify-space-between position-relative">
           <div class="line-clamp-1">
-            {{ asset.texts.displayTitle || t('commonCoreDam.asset.list.noTitle') }}
+            {{ asset.texts.displayTitle || t('common.damImage.asset.list.noTitle') }}
           </div>
         </div>
       </div>

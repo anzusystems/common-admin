@@ -1,6 +1,6 @@
 {
   "fulltext": "Search in texts",
-  "filterMinChars": "Zadajte minimálne {min} znaky",
+  "filterMinChars": "Enter at least {min} characters",
   "bookmark": {
     "title": "Bookmarks",
     "name": "Name",
