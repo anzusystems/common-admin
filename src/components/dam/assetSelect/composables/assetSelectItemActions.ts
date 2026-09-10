@@ -1,6 +1,7 @@
 import { computed, type Ref } from 'vue'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { AssetSelectListItem } from '@/services/stores/coreDam/assetSelectStore'
+import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
 
 const IMAGE_HEIGHT = 200
 const IMAGE_BG_COLOR_DEFAULT = '#ccc'
@@ -60,11 +61,25 @@ export function useAssetItemActions(item: Readonly<Ref<AssetSelectListItem>>) {
     }
   })
 
+  const { getCachedAssetLicence } = useDamCachedAssetLicences()
+
+  const licence = computed(() => getCachedAssetLicence(asset.value.licence))
+
+  const licenceBadge = computed(() => licence.value?.badge ?? '')
+
+  const singleUse = computed(() => asset.value.mainFile?.flags.singleUse ?? false)
+
+  const disabledReason = computed(() => item.value.disabledReason)
+
   return {
     asset,
     assetType,
     assetStatus,
     imageProperties,
     tableImageProperties,
+    licence,
+    licenceBadge,
+    singleUse,
+    disabledReason,
   }
 }

@@ -20,9 +20,13 @@ const props = withDefaults(
     assetType: DamAssetTypeType
     assetFileProperties: AssetFileProperties
     disableAbsolute?: boolean
+    licenceBadge?: string
+    singleUse?: boolean
   }>(),
   {
     disableAbsolute: false,
+    licenceBadge: '',
+    singleUse: false,
   },
 )
 
@@ -92,10 +96,25 @@ const data = computed(() => {
 
 <template>
   <div
-    v-show="data.icons.length > 0"
+    v-show="data.icons.length > 0 || licenceBadge.length > 0 || singleUse"
     class="asset-image__meta-icons"
     :class="{ 'asset-image__meta-icons-absolute': !disableAbsolute }"
   >
+    <span
+      v-if="licenceBadge.length > 0"
+      class="asset-image__licence-badge"
+      data-cy="asset-licence-badge"
+    >
+      {{ licenceBadge }}
+    </span>
+    <span
+      v-if="singleUse"
+      class="asset-image__licence-badge"
+      :title="t('common.damImage.asset.metaIcons.singleUse')"
+      data-cy="asset-single-use-badge"
+    >
+      1×
+    </span>
     <img
       v-for="(item, index) in data.icons"
       :key="item"
@@ -120,6 +139,22 @@ const data = computed(() => {
   img.img-svg {
     height: 30px;
     padding: 2px;
+  }
+
+  // Same look as the SVG meta icons (low.svg): half-transparent black circle with white bold letters.
+  .asset-image__licence-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin: 2px;
+    border-radius: 50%;
+    background-color: rgb(0 0 0 / 50%);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
   }
 }
 </style>

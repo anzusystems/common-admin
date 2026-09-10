@@ -32,12 +32,11 @@
       "title": "Select asset",
       "noItemsFound": "No matching assets found",
       "pickExactCount": "Select assets: {count}. Selected: {selected}.",
-      "pickRangeCount": "Select from {minCount} to {maxCount} assets. Selected: {selected}.",
-      "copyToLicence": "Copy to licence"
+      "pickRangeCount": "Select from {minCount} to {maxCount} assets. Selected: {selected}."
     }
   },
   "filter": {
-    "licence": "Licence",
+    "licence": "Licences",
     "text": "Text",
     "described": "Described",
     "visible": "Visible",
@@ -59,5 +58,19 @@
   },
   "error": {
     "unallowedLicence": "Nemáte práva na licenciu v DAM"
+  },
+  "preset": {
+    "all": "All licences",
+    "label": "Selection",
+    "modifiedTitle": "{title} (changed)",
+    "reset": "Reset selection",
+    "groupListViews": "Selections",
+    "groupLicences": "Licences"
+  },
+  "disabledReason": {
+    "singleUseNotAllowed": "A single-use image cannot be placed here",
+    "singleUseHeld": "The image is single-use and is already used elsewhere",
+    "directUseDisabledNotImage": "This licence can only be used for images",
+    "directUseDisabledNoUploadLicence": "The target licence for copying the image is missing"
   }
 }

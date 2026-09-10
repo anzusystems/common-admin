@@ -29,7 +29,7 @@ const { t } = useI18n()
       :index="index"
       :item="item"
       show-meta-icons
-      @item-click="onItemClick($event, extSystem)"
+      @item-click="onItemClick($event)"
     />
   </div>
   <div
@@ -108,6 +108,12 @@ $bg-color-actions-dark: #1a1a1a;
 
     &--pointer {
       cursor: pointer;
+    }
+
+    // Dimmed, not blocked: the tile stays clickable so the detail panel can explain why it cannot be
+    // used, so it must keep the pointer cursor.
+    &--disabled {
+      opacity: 0.5;
     }
   }
 

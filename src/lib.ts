@@ -479,7 +479,15 @@ import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/
 import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import { fetchDamCurrentUser } from '@/components/damImage/uploadQueue/api/damCurrentUserApi'
-import type { DamAssetLicence, DamAssetLicenceMinimal } from '@/types/coreDam/AssetLicence'
+import type {
+  DamAssetLicence,
+  DamAssetLicenceMinimal,
+  DamAssetLicenceCached,
+  DamAssetLicenceExtended,
+  DamAssetLicenceFlags,
+  DamAssetLicenceAutoDelete,
+} from '@/types/coreDam/AssetLicence'
+import type { DamAssetListViewResolved } from '@/types/coreDam/AssetListView'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 import { useCollabInit } from '@/components/collab/composables/collabInit'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
@@ -574,6 +582,7 @@ import {
   isCollabSuccessChangeRoomLockCallback,
 } from '@/components/collab/types/Collab'
 import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
+import DamAssetListViewRemoteAutocomplete from '@/components/dam/user/DamAssetListViewRemoteAutocomplete.vue'
 import DamAssetLicenceGroupRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceGroupRemoteAutocomplete.vue'
 import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRemoteAutocomplete.vue'
 import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
@@ -588,6 +597,14 @@ import {
   useFetchDamAssetLicenceList,
   fetchDamAssetLicenceList,
 } from '@/components/dam/user/assetLicenceApi'
+import {
+  fetchDamAssetListViewListByIds,
+  useFetchDamAssetListViewList,
+} from '@/components/dam/user/assetListViewApi'
+import { useDamAssetListViewInnerFilter } from '@/components/dam/user/AssetListViewFilter'
+import { useAssetListViewSelectActions } from '@/components/dam/user/assetListViewActions'
+import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
+import { useDamAssetAutoDelete } from '@/components/damImage/composables/damAssetAutoDelete'
 import {
   fetchDamAssetLicenceGroupListByIds,
   useFetchDamAssetLicenceGroupList,
@@ -754,6 +771,7 @@ export {
   DamExternalProviderAssetSelect,
   DamDistributionServiceSelect,
   DamAssetLicenceRemoteAutocomplete,
+  DamAssetListViewRemoteAutocomplete,
   DamAssetLicenceGroupRemoteAutocomplete,
   DamAuthorFilterRemoteAutocomplete,
   DamAuthorFilterRemoteAutocompleteLegacy,
@@ -805,6 +823,10 @@ export {
   useDamAuthorFactory,
   useDamAuthorType,
   useDamDistributionServiceType,
+  useDamAssetListViewInnerFilter,
+  useAssetListViewSelectActions,
+  useDamCachedAssetLicences,
+  useDamAssetAutoDelete,
   useDamAssetLicenceInnerFilter,
   useDamAssetLicenceFilter,
   useImageActions,
@@ -995,6 +1017,11 @@ export {
   type DamCurrentUserDto,
   type DamAssetLicence,
   type DamAssetLicenceMinimal,
+  type DamAssetLicenceCached,
+  type DamAssetLicenceExtended,
+  type DamAssetLicenceFlags,
+  type DamAssetLicenceAutoDelete,
+  type DamAssetListViewResolved,
   type DamAssetLicenceGroup,
   type DamUserUpdateDto,
   type DamUser,
@@ -1104,6 +1131,8 @@ export {
   useJobStatus,
   regionToCrop,
   cropToRegion,
+  fetchDamAssetListViewListByIds,
+  useFetchDamAssetListViewList,
   fetchDamAssetLicenceListByIds,
   useFetchDamAssetLicenceList,
   fetchDamAssetLicenceList,

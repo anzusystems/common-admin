@@ -3,6 +3,7 @@ import { computed, inject, onUnmounted, provide, ref, watch } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
 import { type AssetDetailItemDto, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import type { IntegerId } from '@/types/common'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -78,7 +79,7 @@ const {
   reset,
   resetAssetList,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useAssetSelectActions('default', props.onDetailLoadedCallback)
+} = useAssetSelectActions(props.configName, props.onDetailLoadedCallback)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { assetListEnabledFilters, endPointAsset } = useCommonAdminCoreDamOptions(props.configName)
@@ -89,7 +90,14 @@ const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElement
 const assetDetailStore = useAssetDetailStore()
 const { asset, dialog } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId } = storeToRefs(assetSelectStore)
+const { selectedLicenceIds } = storeToRefs(assetSelectStore)
+
+// This inner view keeps the historical single-licence dropdown (no preset UI) — one licence drives the
+// search at a time, same as before selectedLicenceIds became an array for the preset picker.
+const selectedLicenceId = computed<IntegerId>({
+  get: () => selectedLicenceIds.value[0] ?? 0,
+  set: (value) => assetSelectStore.setSelectedLicenceIds([value]),
+})
 
 const { sidebarRight, closeSidebarRight, closeSidebarLeft } = useSidebar()
 const { mdAndDown } = useDisplay()
@@ -126,6 +134,8 @@ const onInit = () => {
 
   reset()
   initStoreContext(selectConfigLocal, props.assetType, props.inPodcast, false, 0, 0)
+  // Keep the historical default: one licence (the first allowed), picked via the dropdown below.
+  assetSelectStore.setSelectedLicenceIds([selectConfigLocal[0].licence])
   fetchAssetListDebounced()
 }
 
@@ -150,11 +160,8 @@ const componentComputed = computed(() => {
 
 const extId = computed(() => {
   if (props.selectConfigs.length === 0) return undefined
-  if (selectedLicenceId.value > 0) {
-    const found = props.selectConfigs.find((config) => config.licence === selectedLicenceId.value)
-    if (found) return found.extSystem
-  }
-  return undefined
+  const found = props.selectConfigs.find((config) => config.licence === selectedLicenceId.value)
+  return found?.extSystem
 })
 
 const loadingSidebarRight = computed(() => {
