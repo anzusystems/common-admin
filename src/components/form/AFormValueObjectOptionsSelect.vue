@@ -49,13 +49,25 @@ const emit = defineEmits<{
   (e: 'focus', data: any): void
 }>()
 
+const hasNullOption = computed(() =>
+  (props.items ?? []).some((item) => isNull(item) || isNull(item?.value)),
+)
+
 const modelValue = computed({
   get() {
     return props.modelValue
   },
   set(newValue) {
-    // VAutocomplete drops the selection when its search text is emptied, emitting null even when not clearable
-    if (!props.clearable && !props.multiple && isNull(newValue) && !isNull(props.modelValue)) return
+    // VAutocomplete drops the selection when its search text is emptied, emitting null even when
+    // not clearable. A tri-state select lists null as a real option, so there null must pass through.
+    if (
+      !props.clearable &&
+      !props.multiple &&
+      !hasNullOption.value &&
+      isNull(newValue) &&
+      !isNull(props.modelValue)
+    )
+      return
     emit('update:modelValue', cloneDeep<any>(newValue))
   },
 })
