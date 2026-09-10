@@ -15,8 +15,11 @@ const props = withDefaults(
   defineProps<{
     name: string
     items: ValueObjectOption<string | number>[]
+    dataCy?: string
   }>(),
-  {},
+  {
+    dataCy: 'filter-value',
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -123,7 +126,7 @@ watch(
     :label="label"
     :multiple="filterConfigCurrent.multiple"
     :clearable="!filterConfigCurrent.mandatory"
-    data-cy="filter-value"
+    :data-cy="dataCy"
     hide-details
     autocomplete="off"
     @click:clear.stop="clearField"
