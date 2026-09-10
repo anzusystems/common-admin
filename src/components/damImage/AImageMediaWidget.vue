@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import type { IntegerId, IntegerIdNullable, DocId } from '@/types/common'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { AssetSelectOwner } from '@/types/coreDam/AssetSelect'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
@@ -27,8 +28,7 @@ const props = withDefaults(
     selectLicences: IntegerId[]
     listViews?: IntegerId[]
     singleUseAllowed?: boolean
-    ownerDocId?: DocId | null
-    ownerGalleryId?: IntegerId | null
+    owner?: AssetSelectOwner | null
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -50,18 +50,14 @@ const props = withDefaults(
   {
     listViews: () => [],
     singleUseAllowed: false,
-    ownerDocId: null,
-    ownerGalleryId: null,
+    owner: null,
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
     label: undefined,
     initialImage: undefined,
-    initialMedia: undefined,
     readonly: false,
     required: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     expandOptions: false,
     expandMetadata: false,

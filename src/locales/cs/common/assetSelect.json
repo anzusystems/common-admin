@@ -69,9 +69,13 @@
     "groupListViews": "Výběry",
     "groupLicences": "Licence"
   },
+  "holder": {
+    "articleKindStandard": "článek",
+    "gallery": "galerie"
+  },
   "disabledReason": {
     "singleUseNotAllowed": "Sem nelze vložit jednorázově použitelný obrázek",
-    "singleUseHeld": "Obrázek je jednorázový a už je použit jinde",
+    "singleUseHeld": "Obrázek je jednorázový a už je použit jinde ({holder})",
     "directUseDisabledNotImage": "Tuto licenci lze použít jen pro obrázky",
     "directUseDisabledNoUploadLicence": "Chybí cílová licence pro zkopírování obrázku"
   }

@@ -405,7 +405,8 @@ import type {
   CustomDataFormElementAttributes,
   CustomDataValue,
 } from '@/components/customDataForm/CustomDataForm'
-import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
+import type { AssetSelectOwner, AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
+import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type {
   SortableNested,
@@ -917,6 +918,8 @@ export {
   type RecordWasType,
   type UrlParams,
   type AssetSelectReturnData,
+  type AssetSelectOwner,
+  resolveHolderName,
   type SortablePropItem,
   type SortableItem,
   type SortableNestedItem,

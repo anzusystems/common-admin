@@ -5,7 +5,8 @@ import { ImageWidgetUploadConfig } from '@/components/damImage/composables/image
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
-import type { IntegerId, DocId } from '@/types/common'
+import type { IntegerId } from '@/types/common'
+import type { AssetSelectOwner } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { isUndefined } from '@/utils/common'
@@ -21,8 +22,7 @@ const props = withDefaults(
     selectLicences: IntegerId[]
     listViews?: IntegerId[]
     singleUseAllowed?: boolean
-    ownerDocId?: DocId | null
-    ownerGalleryId?: IntegerId | null
+    owner?: AssetSelectOwner | null
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -33,16 +33,11 @@ const props = withDefaults(
   {
     listViews: () => [],
     singleUseAllowed: false,
-    ownerDocId: null,
-    ownerGalleryId: null,
+    owner: null,
     configName: 'default',
     label: undefined,
-    image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
-    expandOptions: false,
     width: undefined,
     callDeleteApiOnRemove: false,
   },

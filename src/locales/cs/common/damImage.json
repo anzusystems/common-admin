@@ -73,6 +73,7 @@
       "authors": "Autoři",
       "keywords": "Klíčová slova",
       "mainFileSingleUse": "Jednorázová licence",
+      "usedBy": "Použito v",
       "directUseAllowed": "Přímé použití",
       "autoDelete": "Automatické smazání",
       "autoDeleteInDays": "za {days} dní"

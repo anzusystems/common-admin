@@ -28,3 +28,12 @@ interface AssetSelectReturnAsset {
   type: typeof AssetSelectReturnType.Asset
   value: Array<AssetSearchListItemDto>
 }
+
+/**
+ * The subject a single-use photo may already be held by without blocking this pick. Shaped exactly
+ * like the holder DAM reports in `mainFile.fileAttributes`, so the comparison is a plain equality.
+ */
+export interface AssetSelectOwner {
+  resourceName: string
+  resourceId: string
+}

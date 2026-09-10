@@ -43,6 +43,7 @@ import { useI18n } from 'vue-i18n'
 import type { VBtn } from 'vuetify/components'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import type { AssetSelectOwner } from '@/types/coreDam/AssetSelect'
 import {
   type CollabComponentConfig,
   type CollabFieldData,
@@ -82,8 +83,7 @@ const props = withDefaults(
     selectLicences: IntegerId[]
     listViews?: IntegerId[]
     singleUseAllowed?: boolean
-    ownerDocId?: DocId | null
-    ownerGalleryId?: IntegerId | null
+    owner?: AssetSelectOwner | null
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -105,18 +105,14 @@ const props = withDefaults(
   {
     listViews: () => [],
     singleUseAllowed: false,
-    ownerDocId: null,
-    ownerGalleryId: null,
+    owner: null,
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
     label: undefined,
     required: false,
     initialImage: undefined,
-    initialMedia: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     expandOptions: false,
     expandMetadata: false,
@@ -1055,8 +1051,7 @@ defineExpose({
     :upload-licence="uploadLicence"
     :list-views="listViews"
     :single-use-allowed="singleUseAllowed"
-    :owner-doc-id="ownerDocId"
-    :owner-gallery-id="ownerGalleryId"
+    :owner="owner"
     :min-count="1"
     :max-count="1"
     :config-name="configName"

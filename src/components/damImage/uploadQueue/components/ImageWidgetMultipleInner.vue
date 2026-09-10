@@ -38,6 +38,7 @@ import useVuelidate from '@vuelidate/core'
 import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import type { AssetSelectOwner } from '@/types/coreDam/AssetSelect'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
@@ -52,8 +53,7 @@ const props = withDefaults(
     selectLicences: IntegerId[]
     listViews?: IntegerId[]
     singleUseAllowed?: boolean
-    ownerDocId?: DocId | null
-    ownerGalleryId?: IntegerId | null
+    owner?: AssetSelectOwner | null
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -67,14 +67,10 @@ const props = withDefaults(
   {
     listViews: () => [],
     singleUseAllowed: false,
-    ownerDocId: null,
-    ownerGalleryId: null,
+    owner: null,
     configName: 'default',
     label: undefined,
-    image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     width: undefined,
     disableDraggable: false,
@@ -608,8 +604,7 @@ onMounted(() => {
       :upload-licence="uploadLicence"
       :list-views="listViews"
       :single-use-allowed="singleUseAllowed"
-      :owner-doc-id="ownerDocId"
-      :owner-gallery-id="ownerGalleryId"
+      :owner="owner"
       :min-count="1"
       :max-count="50"
       :asset-type="DamAssetType.Image"

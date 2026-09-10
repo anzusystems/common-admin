@@ -73,6 +73,7 @@
       "authors": "Authors",
       "keywords": "Keywords",
       "mainFileSingleUse": "Single-use license",
+      "usedBy": "Used in",
       "directUseAllowed": "Direct use",
       "autoDelete": "Automatic deletion",
       "autoDeleteInDays": "in {days} days"

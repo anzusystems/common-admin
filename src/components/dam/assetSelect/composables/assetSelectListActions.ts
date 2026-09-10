@@ -27,10 +27,8 @@ import { SORT_BY_SCORE_DATE } from '@/composables/system/datatableColumns'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { useDebounceFn } from '@vueuse/core'
 import { useDisplay } from 'vuetify'
-import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
 import { resolveDisabledReasons } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
-import type { AxiosInstance } from 'axios'
 
 const { pagination } = usePagination(SORT_BY_SCORE_DATE)
 const detailLoading = ref(false)
@@ -41,17 +39,8 @@ export function useAssetSelectActions(
 ) {
   const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
 
-  // T4.5 needs the CMS Image client only for the single-use-holders precheck - video/audio selects never
-  // configure it, so a missing config there is expected, not an error.
-  const getImageClientSafe = (): (() => AxiosInstance) | undefined => {
-    try {
-      return useCommonAdminImageOptions(configName).imageClient
-    } catch {
-      return undefined
-    }
-  }
-
-  const { getCachedAssetLicence } = useDamCachedAssetLicences()
+  const { getCachedAssetLicence, addToCachedAssetLicences, fetchCachedAssetLicences } =
+    useDamCachedAssetLicences()
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedCount, selectedHasDisabled, selectedAssets, assetListItems, loader } =
@@ -90,13 +79,13 @@ export function useAssetSelectActions(
   const applyDisabledReasons = async (items: AssetSelectListItem[]) => {
     const selectability = assetSelectStore.selectability
     if (isNull(selectability)) return
-    const reasons = await resolveDisabledReasons(
-      getImageClientSafe(),
-      items,
-      getCachedAssetLicence,
-      selectability,
+    // An uncached licence answers from a placeholder whose directUseAllowed is true, and the reasons are
+    // resolved once per page — an agency item would stay pickable until the picker is reopened.
+    addToCachedAssetLicences(items.map((item) => item.asset.licence))
+    await fetchCachedAssetLicences()
+    assetSelectStore.setDisabledReasons(
+      resolveDisabledReasons(items, getCachedAssetLicence, selectability),
     )
-    assetSelectStore.setDisabledReasons(reasons)
   }
 
   const fetchAssetList = async () => {
@@ -125,8 +114,7 @@ export function useAssetSelectActions(
     const { executeFetch } = useFetchAssetListByLicences(damClient, endPointAsset)
     try {
       assetSelectStore.showLoader()
-      // Only the freshly appended page: the earlier pages already carry their resolved reasons, and
-      // asking about the whole scrolled-through list again would grow the precheck without bound.
+      // Only the freshly appended page: the earlier pages already carry their resolved reasons.
       const appended = assetSelectStore.appendList(
         await executeFetch(pagination, filterData, filterConfig),
       )

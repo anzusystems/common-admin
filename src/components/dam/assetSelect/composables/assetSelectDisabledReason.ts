@@ -1,26 +1,27 @@
-import type { AxiosInstance } from 'axios'
 import { i18n } from '@/plugins/i18n'
 import { DamAssetType, type AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { DamAssetLicenceCached } from '@/types/coreDam/AssetLicence'
 import type { DocId, IntegerId } from '@/types/common'
-import { isUndefined } from '@/utils/common'
-import { useAlerts } from '@/composables/system/alerts'
-import {
-  fetchSingleUseHolders,
-  type SingleUseHolders,
-} from '@/components/dam/assetSelect/composables/assetSelectSingleUseHolders'
+import { isNull, isUndefined } from '@/utils/common'
 import type {
   AssetSelectabilityOptions,
   AssetSelectListItem,
 } from '@/services/stores/coreDam/assetSelectStore'
 
-const NO_HOLDERS: SingleUseHolders = { docIds: [], galleryIds: [] }
+/**
+ * Human name of a holder type, from `common.assetSelect.holder.<resourceName>`. A resource the
+ * locales do not know yet falls back to its raw value instead of showing an untranslated key.
+ */
+export const resolveHolderName = (resourceName: string): string => {
+  const { t, te } = i18n.global
+  const key = `common.assetSelect.holder.${resourceName}`
+  return te(key) ? t(key) : resourceName
+}
 
 export const resolveDisabledReason = (
   asset: AssetSearchListItemDto,
   licence: DamAssetLicenceCached | undefined,
   options: AssetSelectabilityOptions,
-  holders: SingleUseHolders,
 ): string | null => {
   const { t } = i18n.global
   const singleUse = asset.mainFile?.flags.singleUse ?? false
@@ -29,11 +30,20 @@ export const resolveDisabledReason = (
     return t('common.assetSelect.disabledReason.singleUseNotAllowed')
   }
 
+  const holderResourceName = asset.mainFile?.fileAttributes.usedByResourceName ?? ''
+  const holderResourceId = asset.mainFile?.fileAttributes.usedByResourceId ?? ''
+  // The holder only decides for a file that is single use right now: a licence that stops enforcing it
+  // leaves the last holder behind, and without this guard that stale value would block the file forever.
   const heldByOther =
-    holders.docIds.some((docId) => docId !== options.ownerDocId) ||
-    holders.galleryIds.some((galleryId) => galleryId !== options.ownerGalleryId)
-  if (singleUse && heldByOther) {
-    return t('common.assetSelect.disabledReason.singleUseHeld')
+    singleUse &&
+    holderResourceName !== '' &&
+    (isNull(options.owner) ||
+      options.owner.resourceName !== holderResourceName ||
+      options.owner.resourceId !== holderResourceId)
+  if (heldByOther) {
+    return t('common.assetSelect.disabledReason.singleUseHeld', {
+      holder: resolveHolderName(holderResourceName),
+    })
   }
 
   const directUseAllowed = licence?.flags.directUseAllowed ?? true
@@ -48,42 +58,22 @@ export const resolveDisabledReason = (
 }
 
 /**
- * Resolves the reasons for the given items only - callers pass one freshly fetched page, so an already
- * resolved page is never asked about again. The `single-use-holders` precheck for rule 2 (single use
- * already held by another docId) is batched inside fetchSingleUseHolders, never sent per item. A failed
- * precheck degrades to "no known holders" - the CMS save still enforces exclusivity server-side, so this
- * only affects the disabled hint in the dialog.
+ * Resolves the reasons for the given items only - callers pass one freshly fetched page, so an
+ * already resolved page is never asked about again. Everything the rules need (the holder included)
+ * arrives with the list item itself, so this is a pure synchronous mapping over the page.
  */
-export const resolveDisabledReasons = async (
-  imageClient: (() => AxiosInstance) | undefined,
+export const resolveDisabledReasons = (
   items: AssetSelectListItem[],
   getCachedAssetLicence: (id: IntegerId) => DamAssetLicenceCached | undefined,
   options: AssetSelectabilityOptions,
-): Promise<Map<DocId, string | null>> => {
+): Map<DocId, string | null> => {
   const reasons = new Map<DocId, string | null>()
-  const singleUseDamIds: DocId[] = []
 
   items.forEach((item) => {
-    if (!options.singleUseAllowed) return
-    if (!item.asset.mainFile?.flags.singleUse) return
-    singleUseDamIds.push(item.asset.mainFile.id)
-  })
-
-  let holdersByDamId = new Map<DocId, SingleUseHolders>()
-  if (singleUseDamIds.length > 0 && imageClient) {
-    try {
-      holdersByDamId = await fetchSingleUseHolders(imageClient, singleUseDamIds)
-    } catch (error) {
-      const { showErrorsDefault } = useAlerts()
-      showErrorsDefault(error)
-    }
-  }
-
-  items.forEach((item) => {
-    const licence = getCachedAssetLicence(item.asset.licence)
-    const damId = item.asset.mainFile?.id
-    const holders = (damId ? holdersByDamId.get(damId) : undefined) ?? NO_HOLDERS
-    reasons.set(item.asset.id, resolveDisabledReason(item.asset, licence, options, holders))
+    reasons.set(
+      item.asset.id,
+      resolveDisabledReason(item.asset, getCachedAssetLicence(item.asset.licence), options),
+    )
   })
 
   return reasons

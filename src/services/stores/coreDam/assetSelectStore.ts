@@ -4,6 +4,7 @@ import { DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
 import {
+  type AssetSelectOwner,
   type AssetSelectReturnData,
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
@@ -26,8 +27,7 @@ export interface AssetSelectListItem {
 export interface AssetSelectabilityOptions {
   singleUseAllowed: boolean
   uploadLicence: IntegerId | undefined
-  ownerDocId: DocId | null
-  ownerGalleryId: IntegerId | null
+  owner: AssetSelectOwner | null
 }
 
 export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
