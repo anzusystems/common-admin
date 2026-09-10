@@ -77,7 +77,8 @@
       "mainFileSingleUse": "Jednorazová licencia",
       "directUseAllowed": "Přímé použití",
       "autoDelete": "Automatické smazání",
-      "autoDeleteInDays": "za {days} dní"
+      "autoDeleteInDays": "za {days} dní",
+      "usedBy": "Použito v"
     },
     "assetType": {
       "image": "Obrázok",

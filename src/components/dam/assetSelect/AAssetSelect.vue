@@ -21,12 +21,13 @@ import {
 } from '@/types/coreDam/AssetSelect'
 import { filterAllowedImageWidgetSelectConfigs } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/composables/system/alerts'
-import type { DocId, IntegerId } from '@/types/common'
+import type { IntegerId } from '@/types/common'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { cloneDeep, isUndefined } from '@/utils/common'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import type { AssetSelectOwner } from '@/types/coreDam/AssetSelect'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
@@ -46,8 +47,7 @@ const props = withDefaults(
     onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
     listViews?: IntegerId[]
     singleUseAllowed?: boolean
-    ownerDocId?: DocId | null
-    ownerGalleryId?: IntegerId | null
+    owner?: AssetSelectOwner | null
   }>(),
   {
     inPodcast: null,
@@ -58,8 +58,7 @@ const props = withDefaults(
     onDetailLoadedCallback: undefined,
     listViews: () => [],
     singleUseAllowed: false,
-    ownerDocId: null,
-    ownerGalleryId: null,
+    owner: null,
   },
 )
 
@@ -122,8 +121,7 @@ const onOpen = () => {
   assetSelectStore.setSelectability({
     singleUseAllowed: props.singleUseAllowed,
     uploadLicence: props.uploadLicence,
-    ownerDocId: props.ownerDocId,
-    ownerGalleryId: props.ownerGalleryId,
+    owner: props.owner,
   })
   initStoreContext(
     selectConfigLocal,

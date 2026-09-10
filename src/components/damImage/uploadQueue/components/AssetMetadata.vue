@@ -25,6 +25,7 @@ import { useDamCachedAssetLicences } from '@/components/damImage/composables/cac
 import { useDamAssetAutoDelete } from '@/components/damImage/composables/damAssetAutoDelete'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import { isUndefined } from '@/utils/common'
 import type { IntegerIdNullable } from '@/types/common'
 
@@ -100,6 +101,12 @@ const singleUseEditable = computed(() => {
   if (!asset.value || asset.value.licence !== props.uploadLicence) return false
   const takenOverFromId = assetMainFile.value?.fileAttributes.takenOverFromId
   return isUndefined(takenOverFromId) || takenOverFromId === ''
+})
+
+// Empty string = held by nobody, which is also what an older payload without the field reads as.
+const usedByHolderName = computed(() => {
+  const resourceName = assetMainFile.value?.fileAttributes.usedByResourceName ?? ''
+  return resourceName === '' ? '' : resolveHolderName(resourceName)
 })
 
 const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence } =
@@ -235,6 +242,17 @@ const autoDeleteInDays = computed(() => {
                   v-model="mainFileSingleUse"
                   :label="t('common.damImage.asset.model.mainFileSingleUse')"
                 />
+              </VCol>
+            </VRow>
+            <VRow
+              v-if="usedByHolderName"
+              density="compact"
+              class="my-2"
+            >
+              <VCol>
+                <ARow :title="t('common.damImage.asset.model.usedBy')">
+                  {{ usedByHolderName }}
+                </ARow>
               </VCol>
             </VRow>
             <VRow

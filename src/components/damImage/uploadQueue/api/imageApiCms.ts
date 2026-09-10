@@ -48,8 +48,9 @@ export interface ImageSaveErrorInfo {
   code: KnownImageErrorCode
   reason?: string
   damId?: DocId
-  holderDocIds?: DocId[]
-  holderGalleryIds?: IntegerId[]
+  /** Empty when the holder cannot be named, which is the case for a gallery shared by two articles. */
+  holderResourceName?: string
+  holderResourceId?: string
 }
 
 /**
@@ -71,8 +72,9 @@ export const extractImageSaveErrorInfo = (error: unknown): ImageSaveErrorInfo | 
     code: data.error as KnownImageErrorCode,
     reason: typeof data.reason === 'string' ? data.reason : undefined,
     damId: typeof data.damId === 'string' ? data.damId : undefined,
-    holderDocIds: Array.isArray(data.holderDocIds) ? data.holderDocIds : undefined,
-    holderGalleryIds: Array.isArray(data.holderGalleryIds) ? data.holderGalleryIds : undefined,
+    holderResourceName:
+      typeof data.holderResourceName === 'string' ? data.holderResourceName : undefined,
+    holderResourceId: typeof data.holderResourceId === 'string' ? data.holderResourceId : undefined,
   }
 }
 
