@@ -4,7 +4,7 @@ import {
   useAssetDetailStore,
 } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
-import type { DocId, IntegerId } from '@/types/common'
+import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
 import type { DamAssetStatusType, DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { AssetFileFailReasonType, AssetFileProcessStatusType } from '@/types/coreDam/AssetFile'
 import { computed } from 'vue'
@@ -31,12 +31,14 @@ const props = withDefaults(
     assetMainFileStatus?: AssetFileProcessStatusType | undefined
     assetMainFileFailReason?: AssetFileFailReasonType | undefined
     configName?: string
+    uploadLicence?: IntegerIdNullable | undefined
   }>(),
   {
     assetMainFileStatus: undefined,
     assetMainFileFailReason: undefined,
     dataCy: undefined,
     configName: 'default',
+    uploadLicence: undefined,
   },
 )
 
@@ -91,6 +93,7 @@ const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage)
               :config-name="configName"
               :is-active="true"
               :asset-type="assetType"
+              :upload-licence="uploadLicence"
             />
           </div>
           <div class="py-2">
@@ -112,6 +115,7 @@ const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage)
               :config-name="configName"
               :is-active="activeTab === AssetDetailTabImageWithRoi.Info"
               :asset-type="assetType"
+              :upload-licence="uploadLicence"
             />
           </div>
           <div

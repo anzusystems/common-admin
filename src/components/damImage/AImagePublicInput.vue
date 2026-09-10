@@ -20,12 +20,15 @@ import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/u
 const props = withDefaults(
   defineProps<{
     selectLicences: IntegerId[]
+    uploadLicence: IntegerId
+    singleUseAllowed?: boolean
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     labelT?: string | undefined
     dataCy?: string | undefined
   }>(),
   {
+    singleUseAllowed: false,
     image: undefined,
     configName: 'default',
     labelT: 'common.damImage.public.idOrUrl',
@@ -60,7 +63,10 @@ const extractUUID = (url: string): string | undefined => {
 }
 
 const validateAssetData = (asset: AssetDetailItemDto, licences: IntegerId[]) => {
-  return licences.some((licence) => licence === asset.licence)
+  const allowedLicence =
+    licences.some((licence) => licence === asset.licence) || asset.licence === props.uploadLicence
+  if (!allowedLicence) return false
+  return props.singleUseAllowed || asset.mainFileSingleUse !== true
 }
 
 const validators = useValidate()
@@ -126,6 +132,7 @@ const submit = async () => {
         licenceId: asset.licence,
         regionPosition: 0,
         internal: asset.mainFileInternal ?? false,
+        uploadLicenceId: props.uploadLicence,
       },
       position: 0,
     }

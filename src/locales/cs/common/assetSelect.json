@@ -32,8 +32,7 @@
       "title": "Vyberte asset",
       "noItemsFound": "Žádné nalezené assety",
       "pickExactCount": "Vyberte assety: {count}. Zvoleno: {selected}.",
-      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetů. Zvolených: {selected}.",
-      "copyToLicence": "Kopírovat do licence"
+      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetů. Zvolených: {selected}."
     }
   },
   "filter": {
@@ -61,5 +60,19 @@
     "unallowedLicence": "Nemáte práva na licenci v DAM",
     "noSelectLicence": "Chyba, žádná licence pro výběr",
     "loadingDistributionServices": "Chyba při načítání distribučních služeb"
+  },
+  "preset": {
+    "all": "Všechny licence",
+    "label": "Výběr",
+    "modifiedTitle": "{title} (změněno)",
+    "reset": "Vrátit výběr",
+    "groupListViews": "Výběry",
+    "groupLicences": "Licence"
+  },
+  "disabledReason": {
+    "singleUseNotAllowed": "Sem nelze vložit jednorázově použitelný obrázek",
+    "singleUseHeld": "Obrázek je jednorázový a už je použit jinde",
+    "directUseDisabledNotImage": "Tuto licenci lze použít jen pro obrázky",
+    "directUseDisabledNoUploadLicence": "Chybí cílová licence pro zkopírování obrázku"
   }
 }

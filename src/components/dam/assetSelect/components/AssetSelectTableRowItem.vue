@@ -31,7 +31,15 @@ const IMAGE_WIDTH = 128
 
 const item = toRef(props, 'item')
 
-const { asset, tableImageProperties, assetType, assetStatus } = useAssetItemActions(item)
+const {
+  asset,
+  tableImageProperties,
+  assetType,
+  assetStatus,
+  licenceBadge,
+  singleUse,
+  disabledReason,
+} = useAssetItemActions(item)
 
 const onItemClick = () => {
   emit('itemClick', { assetId: asset.value.id, index: props.index })
@@ -41,7 +49,11 @@ const onItemClick = () => {
 <template>
   <tr
     class="a-datatable__row"
-    :class="{ 'a-datatable__row--selected': item.selected }"
+    :class="{
+      'a-datatable__row--selected': item.selected,
+      'a-datatable__row--disabled': disabledReason,
+    }"
+    :title="disabledReason ?? undefined"
     @click.stop.exact="onItemClick"
   >
     <td>
@@ -78,6 +90,8 @@ const onItemClick = () => {
       <AssetImageMetaIcons
         :asset-file-properties="item.asset.assetFileProperties"
         :asset-type="assetType"
+        :licence-badge="licenceBadge"
+        :single-use="singleUse"
         disable-absolute
       />
     </td>

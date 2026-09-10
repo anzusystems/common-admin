@@ -1,10 +1,8 @@
 <script lang="ts" setup>
-import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
-import { computed, onMounted, provide, watch } from 'vue'
+import { computed, onMounted, provide } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import { storeToRefs } from 'pinia'
 import AssetSelectFilterForm from '@/components/dam/assetSelect/components/filter/AssetSelectFilterForm.vue'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
@@ -12,13 +10,20 @@ import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubj
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
+import { useI18n } from 'vue-i18n'
+import type { IntegerId } from '@/types/common'
+import { useAssetSelectPresetControl } from '@/components/dam/assetSelect/composables/assetSelectPresetControl'
 
 const props = withDefaults(
   defineProps<{
     configName?: string
+    selectLicences?: IntegerId[]
+    listViews?: IntegerId[]
   }>(),
   {
     configName: 'default',
+    selectLicences: () => [],
+    listViews: () => [],
   },
 )
 
@@ -27,11 +32,22 @@ const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configNam
 
 const { t } = useI18n()
 const { mdAndDown } = useDisplay()
+
+// The selection control sits with the other filter fields; the chips above the list only show its result.
+// Host configuration, not expected to change after mount.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { selectLicences, listViews } = props
+
+const {
+  items: presetItems,
+  selectedPresetKey,
+  applyPreset,
+} = useAssetSelectPresetControl(selectLicences, listViews)
+const showPresetSelect = computed(() => selectLicences.length > 1 || listViews.length > 0)
 const { closeSidebarLeft } = useSidebar()
 const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()
 
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId, selectConfig } = storeToRefs(assetSelectStore)
 
 const { filterData, filterConfig } = useAssetListFilter()
 provide(FilterConfigKey, filterConfig)
@@ -59,11 +75,6 @@ const componentComputed = computed(() => {
   }
 })
 
-watch(selectedLicenceId, (newValue, oldValue) => {
-  if (newValue === oldValue) return
-  resetFilterAction()
-})
-
 onMounted(() => {
   fetchAssetListDebounced()
 })
@@ -77,15 +88,14 @@ onMounted(() => {
         @reset="resetFilterAction"
       >
         <template #detail>
-          <VRow v-if="selectConfig.length > 1">
+          <VRow v-if="showPresetSelect">
             <VCol :cols="12">
               <VSelect
-                v-model="selectedLicenceId"
-                :label="t('common.assetSelect.filter.licence')"
-                :items="selectConfig"
-                item-title="licenceName"
-                item-value="licence"
+                :model-value="selectedPresetKey"
+                :items="presetItems"
+                :label="t('common.assetSelect.preset.label')"
                 hide-details
+                @update:model-value="applyPreset"
               />
             </VCol>
           </VRow>
@@ -95,22 +105,6 @@ onMounted(() => {
             :config-name="configName"
           />
         </template>
-        <VRow v-if="selectConfig.length > 1">
-          <VCol :cols="12">
-            <VSelect
-              v-model="selectedLicenceId"
-              :label="t('common.assetSelect.filter.licence')"
-              :items="selectConfig"
-              item-title="licenceName"
-              item-value="licence"
-            />
-          </VCol>
-        </VRow>
-        <component
-          :is="componentComputed"
-          :enabled-filters="assetListEnabledFilters"
-          :config-name="configName"
-        />
       </AFilterWrapperSubjectSelect>
     </div>
   </div>

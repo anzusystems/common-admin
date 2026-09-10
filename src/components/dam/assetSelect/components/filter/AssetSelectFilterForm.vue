@@ -6,7 +6,6 @@ import { storeToRefs } from 'pinia'
 import AFilterBooleanSelect from '@/labs/filters/AFilterBooleanSelect.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
 import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
-import type { IntegerId } from '@/types/common'
 import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
 import AssetDistributionServiceNameFilter from '@/components/dam/assetSelect/components/filter/AssetDistributionServiceNameFilter.vue'
@@ -58,15 +57,12 @@ const colProps = (name: keyof typeof filterConfig.fields) => {
 }
 
 const assetSelectStore = useAssetSelectStore()
-const { selectConfig, selectedLicenceId, assetType } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig, assetType } = storeToRefs(assetSelectStore)
 
-const extSystem = computed<IntegerId | undefined>(() => {
-  const found = selectConfig.value.find((config) => config.licence === selectedLicenceId.value)
-  if (found) {
-    return found.extSystem
-  }
-  return undefined
-})
+// Every licence of one search shares an ext system (LicenceCollectionSingleExtSystem), so the currently
+// active configuration is representative of the whole selection for these ext-system-scoped filters.
+const extSystem = computed(() => selectedSelectConfig.value?.extSystem)
+const selectedLicenceId = computed(() => selectedSelectConfig.value?.licence)
 
 watch(extSystem, (newValue, oldValue) => {
   if (newValue !== oldValue) {
@@ -154,7 +150,7 @@ watch(extSystem, (newValue, oldValue) => {
     >
       <FilterPodcastRemoteAutocomplete
         :key="selectedLicenceId"
-        :licence-id="selectedLicenceId"
+        :licence-id="selectedLicenceId ?? 0"
         name="podcastIds"
       />
     </VCol>

@@ -14,7 +14,7 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { ADamAssetMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import type { IntegerId } from '@/types/common'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
@@ -24,10 +24,12 @@ const props = withDefaults(
     assetType: DamAssetTypeType
     extSystem: IntegerId
     configName?: string
+    uploadLicence?: IntegerIdNullable | undefined
   }>(),
   {
     dataCy: undefined,
     configName: 'default',
+    uploadLicence: undefined,
   },
 )
 
@@ -92,5 +94,6 @@ const onSave = async () => {
   <AssetMetadata
     :ext-system="extSystem"
     :config-name="configName"
+    :upload-licence="uploadLicence"
   />
 </template>

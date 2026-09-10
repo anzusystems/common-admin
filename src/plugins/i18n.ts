@@ -51,6 +51,9 @@ export const i18n = createI18n<[MessageSchema]>({
   fallbackLocale: false,
   pluralRules: {
     sk: slovakPluralizationRule,
+    // Czech splits plurals the same way Slovak does (1 / 2-4 / 5+), so it needs the same rule; the
+    // vue-i18n default would pick the second form for one item.
+    cs: slovakPluralizationRule,
   },
   missing: (locale: Locale, key: Path) => {
     if (REQUIRED_LOCALES.includes(locale) && !key.startsWith('system.subject.')) {

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { DamAssetType, DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import { type AssetFile, assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -20,8 +20,13 @@ import type { IntegerId } from '@/types/common'
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
 import ACachedUserChip from '@/components/ACachedUserChip.vue'
+import ACachedChip from '@/components/ACachedChip.vue'
+import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
+import { useDamAssetAutoDelete } from '@/components/damImage/composables/damAssetAutoDelete'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { isUndefined } from '@/utils/common'
+import type { IntegerIdNullable } from '@/types/common'
 
 const props = withDefaults(
   defineProps<{
@@ -29,11 +34,15 @@ const props = withDefaults(
     readonly?: boolean
     configName?: string
     showEditButton?: boolean
+    // Known only by callers that have the widget's site-group upload licence (the editable "edit
+    // asset" flow); when unset, single use keeps its previous editability instead of turning read-only.
+    uploadLicence?: IntegerIdNullable | undefined
   }>(),
   {
     readonly: false,
     configName: 'default',
     showEditButton: false,
+    uploadLicence: undefined,
   },
 )
 
@@ -82,6 +91,50 @@ const { cachedUsers } = useDamCachedUsers()
 
 const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
   useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
+
+// Editable only for a file the site group's own redaction uploaded into its own upload licence —
+// a take-over copy keeps the flag it arrived with, changing it would break the single-use exclusivity
+// it was copied for (Q15, §9).
+const singleUseEditable = computed(() => {
+  if (isUndefined(props.uploadLicence)) return true
+  if (!asset.value || asset.value.licence !== props.uploadLicence) return false
+  const takenOverFromId = assetMainFile.value?.fileAttributes.takenOverFromId
+  return isUndefined(takenOverFromId) || takenOverFromId === ''
+})
+
+const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence } =
+  useDamCachedAssetLicences()
+const { autoDeleteAt, remainingDays } = useDamAssetAutoDelete()
+
+watch(
+  () => asset.value?.licence,
+  (licence) => {
+    if (isUndefined(licence)) return
+    addToCachedAssetLicences(licence)
+    fetchCachedAssetLicences()
+  },
+  { immediate: true },
+)
+
+const assetLicence = computed(() => {
+  const licence = asset.value?.licence
+  return isUndefined(licence) ? undefined : getCachedAssetLicence(licence)
+})
+
+// The cache answers with a placeholder until the licence arrives, so the flags are only shown once the
+// real row is there — otherwise a licence that forbids direct use would read as if it allowed it.
+const licenceFlagsKnown = computed(() => (assetLicence.value?.name ?? '') !== '')
+
+const directUseAllowed = computed(() => assetLicence.value?.flags?.directUseAllowed ?? true)
+
+const autoDeleteInDays = computed(() => {
+  const licence = asset.value?.licence
+  const createdAt = asset.value?.createdAt
+  if (isUndefined(licence) || isUndefined(createdAt)) return null
+  const deleteAt = autoDeleteAt(licence, createdAt)
+
+  return deleteAt === null ? null : remainingDays(deleteAt)
+})
 </script>
 
 <template>
@@ -172,7 +225,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             >
               <VCol>
                 <ARow
-                  v-if="readonly"
+                  v-if="readonly || !singleUseEditable"
                   :title="t('common.damImage.asset.model.mainFileSingleUse')"
                 >
                   <ABooleanValue :value="mainFileSingleUse" />
@@ -182,6 +235,32 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
                   v-model="mainFileSingleUse"
                   :label="t('common.damImage.asset.model.mainFileSingleUse')"
                 />
+              </VCol>
+            </VRow>
+            <VRow
+              v-if="licenceFlagsKnown"
+              density="compact"
+              class="my-2"
+            >
+              <VCol>
+                <ARow :title="t('common.damImage.asset.model.directUseAllowed')">
+                  <ABooleanValue :value="directUseAllowed" />
+                </ARow>
+              </VCol>
+            </VRow>
+            <VRow
+              v-if="autoDeleteInDays !== null"
+              density="compact"
+              class="my-2"
+            >
+              <VCol>
+                <ARow :title="t('common.damImage.asset.model.autoDelete')">
+                  {{
+                    t('common.damImage.asset.model.autoDeleteInDays', {
+                      days: autoDeleteInDays,
+                    })
+                  }}
+                </ARow>
               </VCol>
             </VRow>
           </template>
@@ -213,6 +292,20 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
           </VCol>
           <VCol cols="9">
             {{ asset.attributes.assetType }}
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol cols="3">
+            {{ t('common.damImage.asset.detail.info.field.licence') }}
+          </VCol>
+          <VCol cols="9">
+            <ACachedChip
+              :id="asset.licence"
+              :get-cached-fn="getCachedAssetLicence"
+              display-text-path="name"
+              route=""
+              disable-click
+            />
           </VCol>
         </VRow>
         <VRow>

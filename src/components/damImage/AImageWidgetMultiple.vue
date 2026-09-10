@@ -5,7 +5,7 @@ import { ImageWidgetUploadConfig } from '@/components/damImage/composables/image
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
-import type { IntegerId } from '@/types/common'
+import type { IntegerId, DocId } from '@/types/common'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { isUndefined } from '@/utils/common'
@@ -19,6 +19,10 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
+    singleUseAllowed?: boolean
+    ownerDocId?: DocId | null
+    ownerGalleryId?: IntegerId | null
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -27,6 +31,10 @@ const props = withDefaults(
     callDeleteApiOnRemove?: boolean
   }>(),
   {
+    listViews: () => [],
+    singleUseAllowed: false,
+    ownerDocId: null,
+    ownerGalleryId: null,
     configName: 'default',
     label: undefined,
     image: undefined,

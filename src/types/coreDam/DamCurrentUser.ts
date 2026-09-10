@@ -1,5 +1,6 @@
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { AnzuUser } from '@/types/AnzuUser'
+import type { DamAssetListViewResolved } from '@/types/coreDam/AssetListView'
 
 export interface DamCurrentUserExtSystem {
   id: IntegerId
@@ -33,4 +34,6 @@ export interface DamCurrentUserDto extends AnzuUser {
   resolvedAssetLicences: DamCurrentUserAssetLicence[]
   allowedAssetExternalProviders: string[]
   allowedDistributionServices: string[]
+  listViews: DamAssetListViewResolved[]
+  selectedListView: IntegerIdNullable
 }

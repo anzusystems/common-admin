@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { IntegerId, IntegerIdNullable, DocId } from '@/types/common'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
@@ -25,6 +25,10 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
+    singleUseAllowed?: boolean
+    ownerDocId?: DocId | null
+    ownerGalleryId?: IntegerId | null
     initialImage?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -44,6 +48,10 @@ const props = withDefaults(
     damHeight?: undefined | number
   }>(),
   {
+    listViews: () => [],
+    singleUseAllowed: false,
+    ownerDocId: null,
+    ownerGalleryId: null,
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,

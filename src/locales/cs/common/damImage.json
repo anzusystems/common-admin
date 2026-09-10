@@ -7,6 +7,9 @@
       },
       "flags": {
         "showSource": "Zobrazit zdroj"
+      },
+      "dam": {
+        "takeOver": "Převzít obrázek do naší licence"
       }
     },
     "meta": {
@@ -18,12 +21,22 @@
       "upload": "Nahrát obrázek",
       "addFromDam": "Přidat z DAM",
       "replaceFromDam": "Vyměnit z DAM",
-      "removeImage": "Odstranit obrázek"
+      "removeImage": "Odstranit obrázek",
+      "preparingImage": "Připravuji obrázek…"
     },
     "help": {
       "texts": {
         "description": "Pokud popis přepíšete zde, nezměníte ho v úložišti obrázků."
       }
+    },
+    "error": {
+      "takeOverFailed": "Obrázek se nepodařilo převzít do licence. Zkuste to znovu nebo vyberte jiný obrázek.",
+      "singleUseViolation": "Tento obrázek je jednorázově použit v jiném článku, zde jej nelze použít."
+    },
+    "bulkSave": {
+      "partialFailure": "Některé obrázky se nepodařilo uložit.",
+      "unidentifiedFailure": "Další {count} obrázek šel ve stejném požadavku a také se neuložil. Opětovné uložení ho zkusí znovu. | Další {count} obrázky šly ve stejném požadavku a také se neuložily. Opětovné uložení je zkusí znovu. | Dalších {count} obrázků šlo ve stejném požadavku a také se neuložilo. Opětovné uložení je zkusí znovu.",
+      "saveWithoutFailed": "Uložit bez {count} obrázku | Uložit bez {count} obrázků | Uložit bez {count} obrázků"
     }
   },
   "media": {
@@ -59,7 +72,10 @@
     "model": {
       "authors": "Autoři",
       "keywords": "Klíčová slova",
-      "mainFileSingleUse": "Jednorázová licence"
+      "mainFileSingleUse": "Jednorázová licence",
+      "directUseAllowed": "Přímé použití",
+      "autoDelete": "Automatické smazání",
+      "autoDeleteInDays": "za {days} dní"
     },
     "assetType": {
       "image": "Obrázek",
@@ -100,7 +116,8 @@
           "width": "Šířka",
           "height": "Výška",
           "ratio": "Poměr stran",
-          "animated": "Animované"
+          "animated": "Animované",
+          "licence": "Licence"
         }
       },
       "roi": {
@@ -132,7 +149,8 @@
       "2k": "2K",
       "qhd": "QHD",
       "4k": "4K",
-      "8k": "8K"
+      "8k": "8K",
+      "singleUse": "Jednorázové použití"
     },
     "assetFileFailReason": {
       "none": "Žádný",

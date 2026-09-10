@@ -25,8 +25,10 @@ import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import ARow from '@/components/ARow.vue'
 import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
-import { isNull } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 import { DamMediaType } from '@/types/MediaAware'
+import type { IntegerId } from '@/types/common'
+import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
 
 const props = withDefaults(
   defineProps<{
@@ -38,6 +40,8 @@ const props = withDefaults(
     showSourceEnabled?: boolean
     sourceLabel?: string
     editAssetLabel?: string
+    savingLabel?: string | undefined
+    uploadLicence?: IntegerId | undefined
   }>(),
   {
     expand: false,
@@ -45,6 +49,8 @@ const props = withDefaults(
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
+    savingLabel: undefined,
+    uploadLicence: undefined,
   },
 )
 
@@ -75,6 +81,22 @@ const type = computed<DamAssetTypeType | null>(() => {
 
 const imageSourceRequired = computed(() => {
   return !props.showDamAuthors
+})
+
+const { getCachedAssetLicence, isLoadedCachedAssetLicence } = useDamCachedAssetLicences()
+
+// Manual override, only for a licence that already allows direct use and isn't the upload licence
+// itself (Q6) — otherwise the copy into the upload licence is mandatory and not user-controlled.
+const showTakeOverSwitch = computed(() => {
+  if (!isImageCreateUpdateAware(detail.value) || isUndefined(props.uploadLicence)) return false
+  const licenceId = detail.value.dam.licenceId
+  if (licenceId === props.uploadLicence || !isLoadedCachedAssetLicence(licenceId)) return false
+  return getCachedAssetLicence(licenceId)?.flags.directUseAllowed === true
+})
+
+const confirmButtonLabel = computed(() => {
+  if (props.saving && props.savingLabel) return props.savingLabel
+  return t('common.button.confirm')
 })
 
 const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
@@ -192,6 +214,16 @@ defineExpose({
           />
         </VCol>
       </VRow>
+      <VRow v-if="showTakeOverSwitch">
+        <VCol>
+          <VSwitch
+            v-model="detail.dam.takeOver"
+            :label="t('common.damImage.image.model.dam.takeOver')"
+            density="compact"
+            hide-details
+          />
+        </VCol>
+      </VRow>
     </template>
     <template v-else-if="isMediaAware(detail)">
       <div>
@@ -286,6 +318,16 @@ defineExpose({
               />
             </VCol>
           </VRow>
+          <VRow v-if="showTakeOverSwitch">
+            <VCol>
+              <VSwitch
+                v-model="detail.dam.takeOver"
+                :label="t('common.damImage.image.model.dam.takeOver')"
+                density="compact"
+                hide-details
+              />
+            </VCol>
+          </VRow>
         </div>
         <div
           v-else-if="isMediaAware(detail)"
@@ -352,7 +394,7 @@ defineExpose({
           :disabled="loading"
           @click.stop="onConfirm"
         >
-          {{ t('common.button.confirm') }}
+          {{ confirmButtonLabel }}
         </ABtnPrimary>
       </VCardActions>
     </VCard>

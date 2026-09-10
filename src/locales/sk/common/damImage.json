@@ -7,6 +7,9 @@
       },
       "flags": {
         "showSource": "Zobraziť zdroj"
+      },
+      "dam": {
+        "takeOver": "Prevziať obrázok do našej licencie"
       }
     },
     "meta": {
@@ -18,12 +21,22 @@
       "upload": "Nahrať obrázok",
       "addFromDam": "Pridať z DAM",
       "replaceFromDam": "Vymeniť z DAM",
-      "removeImage": "Odstrániť obrázok"
+      "removeImage": "Odstrániť obrázok",
+      "preparingImage": "Pripravujem obrázok…"
     },
     "help": {
       "texts": {
         "description": "Ak prepíšete popis na tomto mieste, nezmeníte ho v úložisku obrázkov."
       }
+    },
+    "error": {
+      "takeOverFailed": "Obrázok sa nepodarilo prevziať do licencie. Skúste to znova alebo vyberte iný obrázok.",
+      "singleUseViolation": "Tento obrázok je jednorazovo použitý v inom článku, tu ho nemožno použiť."
+    },
+    "bulkSave": {
+      "partialFailure": "Niektoré obrázky sa nepodarilo uložiť.",
+      "unidentifiedFailure": "Ďalší {count} obrázok šiel v tej istej požiadavke a tiež sa neuložil. Opätovné uloženie ho skúsi znova. | Ďalšie {count} obrázky šli v tej istej požiadavke a tiež sa neuložili. Opätovné uloženie ich skúsi znova. | Ďalších {count} obrázkov šlo v tej istej požiadavke a tiež sa neuložilo. Opätovné uloženie ich skúsi znova.",
+      "saveWithoutFailed": "Uložiť bez {count} obrázka | Uložiť bez {count} obrázkov | Uložiť bez {count} obrázkov"
     }
   },
   "media": {
@@ -59,7 +72,10 @@
     "model": {
       "authors": "Autori",
       "keywords": "Kľúčové slová",
-      "mainFileSingleUse": "Jednorazová licencia"
+      "mainFileSingleUse": "Jednorazová licencia",
+      "directUseAllowed": "Priame použitie",
+      "autoDelete": "Automatické zmazanie",
+      "autoDeleteInDays": "o {days} dní"
     },
     "assetType": {
       "image": "Obrázok",
@@ -100,7 +116,8 @@
           "width": "Šírka",
           "height": "Výška",
           "ratio": "Pomer strán",
-          "animated": "Animované"
+          "animated": "Animované",
+          "licence": "Licencia"
         }
       },
       "roi": {
@@ -132,7 +149,8 @@
       "2k": "2K",
       "qhd": "QHD",
       "4k": "4K",
-      "8k": "8K"
+      "8k": "8K",
+      "singleUse": "Jednorazové použitie"
     },
     "assetFileFailReason": {
       "none": "Žiadny",

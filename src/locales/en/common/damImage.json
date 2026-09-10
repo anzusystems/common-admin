@@ -7,6 +7,9 @@
       },
       "flags": {
         "showSource": "Show source"
+      },
+      "dam": {
+        "takeOver": "Take the image over into our licence"
       }
     },
     "meta": {
@@ -18,12 +21,22 @@
       "upload": "Upload image",
       "addFromDam": "Add from DAM",
       "replaceFromDam": "Replace from DAM",
-      "removeImage": "Remove image"
+      "removeImage": "Remove image",
+      "preparingImage": "Preparing the image…"
     },
     "help": {
       "texts": {
         "description": "If you overwrite the description here, it will not change in the image storage."
       }
+    },
+    "error": {
+      "takeOverFailed": "The image could not be taken over into the licence. Try again or pick another image.",
+      "singleUseViolation": "This image is single-use and already held by another article, it cannot be used here."
+    },
+    "bulkSave": {
+      "partialFailure": "Some images could not be saved.",
+      "unidentifiedFailure": "{count} more image was sent in the same request and was not saved either. Saving again will retry it. | {count} more images were sent in the same request and were not saved either. Saving again will retry them.",
+      "saveWithoutFailed": "Save without {count} image | Save without {count} images"
     }
   },
   "media": {
@@ -59,7 +72,10 @@
     "model": {
       "authors": "Authors",
       "keywords": "Keywords",
-      "mainFileSingleUse": "Single-use license"
+      "mainFileSingleUse": "Single-use license",
+      "directUseAllowed": "Direct use",
+      "autoDelete": "Automatic deletion",
+      "autoDeleteInDays": "in {days} days"
     },
     "assetType": {
       "image": "Image",
@@ -100,7 +116,8 @@
           "width": "Width",
           "height": "Height",
           "ratio": "Aspect ratio",
-          "animated": "Animated"
+          "animated": "Animated",
+          "licence": "Licence"
         }
       },
       "roi": {
@@ -132,7 +149,8 @@
       "2k": "2K",
       "qhd": "QHD",
       "4k": "4K",
-      "8k": "8K"
+      "8k": "8K",
+      "singleUse": "Single use"
     },
     "assetFileFailReason": {
       "none": "None",

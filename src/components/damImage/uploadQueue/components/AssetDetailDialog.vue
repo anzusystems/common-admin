@@ -14,7 +14,7 @@ import AssetDetailDialogSidebar from '@/components/damImage/uploadQueue/componen
 import { assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
-import type { IntegerId } from '@/types/common'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
@@ -22,9 +22,13 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     extSystem: IntegerId
     configName?: string
+    // Widget's site-group upload licence — only known where the dialog is opened from an editable
+    // widget flow; gates single-use editability in the sidebar (T4.8).
+    uploadLicence?: IntegerIdNullable | undefined
   }>(),
   {
     configName: 'default',
+    uploadLicence: undefined,
   },
 )
 
@@ -228,6 +232,7 @@ const assetMainFile = computed(() => {
               :is-document="isTypeDocument"
               :asset-status="assetStatus"
               :asset-type="assetType"
+              :upload-licence="uploadLicence"
               :asset-main-file-status="
                 assetMainFile ? assetMainFile.fileAttributes.status : undefined
               "
