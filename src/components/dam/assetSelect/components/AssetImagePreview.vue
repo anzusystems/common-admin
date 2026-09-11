@@ -26,6 +26,7 @@ const props = withDefaults(
     assetFileProperties?: AssetFileProperties | undefined
     licenceBadge?: string
     singleUse?: boolean
+    disabledReason?: string
   }>(),
   {
     assetType: DamAssetType.Image,
@@ -41,6 +42,7 @@ const props = withDefaults(
     assetFileProperties: undefined,
     licenceBadge: '',
     singleUse: false,
+    disabledReason: '',
   },
 )
 const emit = defineEmits<{
@@ -116,6 +118,7 @@ const showIconComputed = computed(() => {
       :asset-type="assetType"
       :licence-badge="licenceBadge"
       :single-use="singleUse"
+      :disabled-reason="disabledReason"
     />
   </div>
   <div
@@ -147,6 +150,7 @@ const showIconComputed = computed(() => {
       :asset-type="assetType"
       :licence-badge="licenceBadge"
       :single-use="singleUse"
+      :disabled-reason="disabledReason"
     />
   </div>
 </template>
