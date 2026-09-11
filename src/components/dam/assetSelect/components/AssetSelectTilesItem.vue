@@ -71,6 +71,7 @@ const onItemClick = () => {
         :show-meta-icons="showMetaIcons"
         :licence-badge="licenceBadge"
         :single-use="singleUse"
+        :disabled-reason="disabledReason ?? ''"
       />
       <div class="asset-list-tiles__item-text text-body-small px-2 py-1">
         <div class="d-flex align-center justify-space-between position-relative">

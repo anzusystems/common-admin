@@ -22,11 +22,13 @@ const props = withDefaults(
     disableAbsolute?: boolean
     licenceBadge?: string
     singleUse?: boolean
+    disabledReason?: string
   }>(),
   {
     disableAbsolute: false,
     licenceBadge: '',
     singleUse: false,
+    disabledReason: '',
   },
 )
 
@@ -96,10 +98,23 @@ const data = computed(() => {
 
 <template>
   <div
-    v-show="data.icons.length > 0 || licenceBadge.length > 0 || singleUse"
+    v-show="
+      data.icons.length > 0 || licenceBadge.length > 0 || singleUse || disabledReason.length > 0
+    "
     class="asset-image__meta-icons"
     :class="{ 'asset-image__meta-icons-absolute': !disableAbsolute }"
   >
+    <span
+      v-if="disabledReason.length > 0"
+      class="asset-image__licence-badge"
+      :title="disabledReason"
+      data-cy="asset-disabled-badge"
+    >
+      <VIcon
+        icon="mdi-lock"
+        size="14"
+      />
+    </span>
     <span
       v-if="licenceBadge.length > 0"
       class="asset-image__licence-badge"
