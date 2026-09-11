@@ -97,6 +97,15 @@ const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
 const { selectedSelectConfig, assetType } = storeToRefs(assetSelectStore)
 
+// The tile says a photo is blocked with a badge, but the editor clicks it precisely to see more — and the
+// detail would otherwise be silent about the one thing that matters. Null everywhere the picker is opened
+// without selectability rules, so nothing is rendered there.
+const openedAssetDisabledReason = computed(
+  () =>
+    assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id)
+      ?.disabledReason ?? null,
+)
+
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
 const { openSidebarLeft, sidebarLeft, sidebarRight } = useSidebar()
@@ -343,6 +352,14 @@ defineExpose({
               {{ t('common.assetSelect.meta.info.noAssetSelected') }}
             </div>
             <div v-else>
+              <div
+                v-if="openedAssetDisabledReason"
+                class="w-100 pa-2 text-body-small"
+              >
+                <VAlert type="warning">
+                  {{ openedAssetDisabledReason }}
+                </VAlert>
+              </div>
               <slot
                 name="sidebar-prepend"
                 :asset="asset"
