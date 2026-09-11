@@ -657,6 +657,11 @@ import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import {
+  extractImageSaveErrorInfo,
+  type ImageSaveErrorInfo,
+  type KnownImageErrorCode,
+} from '@/components/damImage/uploadQueue/api/imageApiCms'
+import {
   fetchAsset,
   fetchAssetAsCmsMedia,
   fetchAssetByFileId,
@@ -1304,6 +1309,9 @@ export {
   AnzuFatalError,
   isAnzuApiAxiosError,
   AnzuApiAxiosError,
+  extractImageSaveErrorInfo,
+  type ImageSaveErrorInfo,
+  type KnownImageErrorCode,
   type ValidationError,
   type AnzuApiValidationResponseData,
   isAnzuApiDependencyExistsError,
