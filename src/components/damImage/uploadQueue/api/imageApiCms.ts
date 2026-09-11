@@ -8,6 +8,7 @@ import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { isAnzuFatalError } from '@/model/error/AnzuFatalError'
+import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 
 const END_POINT = '/adm/v1/image'
 export const ENTITY = 'image'
@@ -59,11 +60,15 @@ export interface ImageSaveErrorInfo {
  * unwrapped from `cause` here rather than matched by the generic validation error class.
  */
 export const extractImageSaveErrorInfo = (error: unknown): ImageSaveErrorInfo | undefined => {
-  const axiosError = isAnzuFatalError(error)
-    ? error.cause
-    : axios.isAxiosError(error)
-      ? error
-      : undefined
+  // Two wrappers carry the same axios failure: the legacy `apiCreateOne`/`apiUpdateOne` helpers reject with
+  // `AnzuFatalError`, the labs `useApiRequest` with `AnzuApiAxiosError`. Both keep the original error in
+  // `cause`, so unwrapping either one leads to the same 422 body.
+  const axiosError =
+    isAnzuFatalError(error) || isAnzuApiAxiosError(error)
+      ? error.cause
+      : axios.isAxiosError(error)
+        ? error
+        : undefined
   if (!axios.isAxiosError(axiosError)) return undefined
   const data = axiosError.response?.data
   if (!data || typeof data.error !== 'string') return undefined
