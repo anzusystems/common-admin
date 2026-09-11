@@ -14,10 +14,10 @@
     },
     "button": {
       "options": "Edit image",
-      "editAsset": "Edit in DAM",
+      "editAsset": "Edit in Media Library",
       "upload": "Upload image",
-      "addFromDam": "Add from DAM",
-      "replaceFromDam": "Replace from DAM",
+      "addFromDam": "Add from Media Library",
+      "replaceFromDam": "Replace from Media Library",
       "removeImage": "Remove image"
     },
     "help": {
@@ -71,7 +71,7 @@
       "noTitle": "No title"
     },
     "detail": {
-      "sourceSystem": "DAM",
+      "sourceSystem": "Media Library",
       "toggleInfo": "Info card",
       "metadataToggle": {
         "show": "Show more details",
@@ -216,7 +216,7 @@
     "imagePreview": "Image preview"
   },
   "error": {
-    "loadingConfig": "Loading DAM config error",
-    "accessRights": "DAM access rights error"
+    "loadingConfig": "Loading Media Library config error",
+    "accessRights": "Media Library access rights error"
   }
 }
