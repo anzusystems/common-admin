@@ -522,6 +522,71 @@ describe('computeInstruction', () => {
     })
   })
 
+  describe('BUG-13: nested child dragged out to root lands beside its parent, not at index 0', () => {
+    // QA video tree: ED0 (single child ED1), then ED2, ED3, ED4 at root.
+    // Source = ED1. Dropping it at root depth just below ED0 must resolve to
+    // root index 1 (AFTER ED0) — whether the pointer expresses that via ED0's
+    // bottom-half or via ED2's top-half. (Index 0 / above ED0 is only correct
+    // when the pointer explicitly aims at ED0's TOP half — a distinct gesture.)
+    const viewItems = makeViewItems([
+      { key: 'ED0', depth: 0, parentKey: null, siblingIndex: 0, siblingCount: 4 },
+      { key: 'ED1', depth: 1, parentKey: 'ED0', siblingIndex: 0, siblingCount: 1 },
+      { key: 'ED2', depth: 0, parentKey: null, siblingIndex: 1, siblingCount: 4 },
+      { key: 'ED3', depth: 0, parentKey: null, siblingIndex: 2, siblingCount: 4 },
+      { key: 'ED4', depth: 0, parentKey: null, siblingIndex: 3, siblingCount: 4 },
+    ])
+
+    it("hovering the parent's bottom-half at root depth → root index 1 (after the parent)", () => {
+      const hoveredRow = makeHoveredRow(viewItems[0], 0) // ED0 at top, height 32
+      const result = asInsert(
+        computeInstruction(
+          defaultArgs({
+            pointer: { x: 0, y: 24 }, // bottom half of ED0, depth 0 (far left)
+            hoveredRow,
+            sourceKey: 'ED1',
+            viewItems,
+          }),
+        ),
+      )
+      expect(result.parentKey).toBe(null)
+      expect(result.index).toBe(1) // after ED0 — NOT 0 (above ED0)
+      expect(result.depth).toBe(0)
+      expect(result.levelRowKey).toBe('ED0')
+    })
+
+    it("hovering the following root row's top-half at root depth → also root index 1", () => {
+      const hoveredRow = makeHoveredRow(viewItems[2], 64) // ED2
+      const result = asInsert(
+        computeInstruction(
+          defaultArgs({
+            pointer: { x: 0, y: 66 }, // top half of ED2, depth 0
+            hoveredRow,
+            sourceKey: 'ED1',
+            viewItems,
+          }),
+        ),
+      )
+      expect(result.parentKey).toBe(null)
+      expect(result.index).toBe(1)
+    })
+
+    it("the root-top fallback (index 0) only fires when aiming at the parent's TOP half", () => {
+      const hoveredRow = makeHoveredRow(viewItems[0], 0)
+      const result = asInsert(
+        computeInstruction(
+          defaultArgs({
+            pointer: { x: 0, y: 4 }, // top half of ED0 → above the parent
+            hoveredRow,
+            sourceKey: 'ED1',
+            viewItems,
+          }),
+        ),
+      )
+      expect(result.parentKey).toBe(null)
+      expect(result.index).toBe(0) // explicitly above ED0 — the distinct gesture
+    })
+  })
+
   describe('blocked (maxDepth)', () => {
     it('wraps desired in blocked when desired.depth + sourceSubtreeDepth - 1 >= maxDepth', () => {
       const viewItems = makeViewItems([

@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+todo
 dist
 dist-ssr
 *.local
@@ -18,6 +19,7 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
@@ -27,8 +29,9 @@ dist-ssr
 *.sw?
 
 .playwright-cli
+.vitest
 .vitest-attachments
 todo
-
-# vitest-browser snapshot output — regenerated on every run, never check in.
-__screenshots__/
+# lint caches
+.eslintcache
+.stylelintcache

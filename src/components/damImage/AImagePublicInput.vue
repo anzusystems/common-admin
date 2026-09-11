@@ -258,6 +258,6 @@ defineExpose({
       v-if="resolvedSrc.length > 0"
       :src="resolvedSrc"
       alt=""
-    >
+    />
   </ARow>
 </template>

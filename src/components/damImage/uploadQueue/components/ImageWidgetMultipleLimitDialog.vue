@@ -112,7 +112,7 @@ defineExpose({
             })
           }}</span>
           {{ t('common.damImage.upload.limits.onlyAllowedAtOnce', { count: MAX_UPLOAD_ITEMS })
-          }}<br><br>
+          }}<br /><br />
           {{
             t('common.damImage.upload.limits.cancelOrUploadFirst', {
               count: MAX_UPLOAD_ITEMS - uploadQueueTotalCount,

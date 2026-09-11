@@ -1,5 +1,6 @@
-import { reactive, type Ref, toRaw } from 'vue'
-import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
+import { getCurrentInstance, provide, reactive, type Ref, toRaw } from 'vue'
+import { datatablePageKey, useDatatablePageStore } from '@/composables/system/datatablePageStore'
+import { DatatablePageStoreKey } from '@/labs/filters/filterInjectionKeys'
 import {
   cloneDeep,
   isArray,
@@ -21,9 +22,88 @@ import type { ValueObjectOption } from '@/types/ValueObject'
 export type FilterStoreIdentifier = { system: string; subject: string }
 
 const SORT_URL_PARAM = '_sort'
+const END_FILTER_MARKER = '~'
+
+// `URLSearchParams` percent-encodes characters a URL fragment accepts verbatim, and vue-router
+// then runs `encodeURI` over the hash, which escapes the `%` a second time — `_sort=id%2Cdesc`
+// arrives as `id%252Cdesc` and the sort is silently lost. Handing these back keeps a built hash
+// stable through `router.push({ hash })`. `~` stays encoded because the end marker relies on it
+// never occurring inside a value; `&`, `=` carry the structure, `+` reads back as a space.
+const RELAXED_IN_HASH: Record<string, string> = {
+  '%2C': ',',
+  '%3A': ':',
+  '%2F': '/',
+  '%40': '@',
+  '%24': '$',
+  '%21': '!',
+  '%27': "'",
+  '%28': '(',
+  '%29': ')',
+  '%3B': ';',
+  '%3F': '?',
+}
+const relaxHashEncoding = (value: string) =>
+  value.replace(/%(2C|3A|2F|40|24|21|27|28|29|3B|3F)/g, (match) => RELAXED_IN_HASH[match])
+
+// `structuredClone` gives every array default a fresh identity, so `!==` is always true for them
+// and an array default would be written into the url on every submit.
+const isSameFilterValue = (a: AllowedFilterValues, b: AllowedFilterValues): boolean => {
+  if (isArray(a) && isArray(b)) {
+    return a.length === b.length && a.every((item, index) => item === b[index])
+  }
+  return a === b
+}
+
+const encodeFilterHash = (
+  data: Record<string, AllowedFilterValues>,
+  sortBy?: DatatableSortBy,
+): string => {
+  const params = new URLSearchParams()
+  for (const key in data) {
+    const value = data[key]
+    if (isUndefined(value) || isNull(value)) continue
+    if (isArray(value) && isEmptyArray(value)) continue
+    if (isObject(value) && isEmptyObject(value)) continue
+    if (isString(value) && value.length === 0) continue
+    params.set(key, isArray(value) ? value.join(',') : String(value))
+  }
+  if (sortBy) {
+    params.set(SORT_URL_PARAM, `${sortBy.key},${sortBy.order}`)
+  }
+  if (params.size === 0) return ''
+  return relaxHashEncoding(params.toString()) + END_FILTER_MARKER
+}
+
+/**
+ * Hash for a filter link, with values equal to their default left out.
+ *
+ * Pair it with `router.push({ name, hash })`, which needs the leading `#` — without it vue-router
+ * glues the value onto the path instead. A hash still containing `%` (diacritics, `&`, `=`) does
+ * not survive that trip; check with `isRouterSafeHash` and fall back to assigning
+ * `window.location.hash` after navigating. Returns an empty string when nothing differs from
+ * the defaults.
+ */
+export function buildFilterHash<F extends readonly MakeFilterOption<string>[]>(
+  filterConfig: FilterConfig<F>,
+  filters: Partial<Record<keyof FilterData<F> & string, AllowedFilterValues>>,
+  sortBy?: DatatableSortBy,
+): string {
+  const data: Record<string, AllowedFilterValues> = {}
+  for (const [key, value] of Object.entries(filters) as [string, AllowedFilterValues][]) {
+    const field = filterConfig.fields[key as keyof FilterConfig<F>['fields']]
+    if (isUndefined(field) || isSameFilterValue(value, field.default)) continue
+    data[key] = value
+  }
+  const hash = encodeFilterHash(data, sortBy)
+  return hash.length === 0 ? hash : '#' + hash
+}
+
+/** Whether `router.push({ hash })` would leave the hash intact — see `buildFilterHash`. */
+export const isRouterSafeHash = (hash: string): boolean => !hash.includes('%')
 
 const defaultRenderOptions: FilerRenderOptions = {
   skip: false,
+  selected: true,
   xs: undefined,
   sm: undefined,
   md: undefined,
@@ -214,7 +294,6 @@ export function useFilterHelpers<
   moreOptions: Partial<FilterHelpersMoreOptions> = {},
 ) {
   const options = { ...FilterHelpersMoreOptionsDefault, ...moreOptions }
-  const END_FILTER_MARKER = '~'
 
   let storeKey: undefined | string = undefined
   if (isString(options.storeFiltersLocalStorage)) {
@@ -228,6 +307,19 @@ export function useFilterHelpers<
     storeKey = 'tableFilter_' + filterConfig.general.system + '_' + filterConfig.general.subject
   }
 
+  // Independent of `storeFiltersLocalStorage` being on: the remembered page is keyed even when
+  // filters are not persisted. A string override is what distinguishes tables sharing a subject.
+  const pageStoreKey = isString(options.storeFiltersLocalStorage)
+    ? options.storeFiltersLocalStorage
+    : datatablePageKey(filterConfig.general.system, filterConfig.general.subject)
+  // Called from a datatable's setup, so `ADatatablePagination` picks it up. Guarded because a
+  // composable may legitimately be called outside setup, and Vue would warn.
+  if (getCurrentInstance()) {
+    provide(DatatablePageStoreKey, pageStoreKey)
+  }
+
+  const { clearAll } = useFilterClearHelpers<F>()
+
   const getFilterDataForStoring = (): Record<string, AllowedFilterValues> => {
     const data: Record<string, AllowedFilterValues> = {}
     for (const filterName in filterData) {
@@ -238,7 +330,7 @@ export function useFilterHelpers<
           !isUndefined(value) &&
           !isNull(value) &&
           !isEmptyArray(value) &&
-          value !== filterConfig.fields[key].default
+          !isSameFilterValue(value, filterConfig.fields[key].default)
         ) {
           data[filterName] = value
         }
@@ -254,24 +346,7 @@ export function useFilterHelpers<
     pagination: Ref<Pagination>,
     includeSort: boolean,
   ): string => {
-    const params = new URLSearchParams()
-    for (const key in data) {
-      const value = data[key]
-      if (isUndefined(value) || isNull(value)) continue
-      if (isArray(value) && isEmptyArray(value)) continue
-      if (isObject(value) && isEmptyObject(value)) continue
-      if (isString(value) && value.length === 0) continue
-      if (isArray(value)) {
-        params.set(key, value.join(','))
-      } else {
-        params.set(key, String(value))
-      }
-    }
-    if (includeSort && pagination.value.sortBy) {
-      params.set(SORT_URL_PARAM, `${pagination.value.sortBy.key},${pagination.value.sortBy.order}`)
-    }
-    if (params.size === 0) return ''
-    return params.toString() + END_FILTER_MARKER
+    return encodeFilterHash(data, includeSort ? pagination.value.sortBy : undefined)
   }
 
   const deserializeFilters = (
@@ -280,16 +355,11 @@ export function useFilterHelpers<
     if (!hash) return null
     if (hash.startsWith('#')) hash = hash.substring(1)
 
-    if (!hash.endsWith(END_FILTER_MARKER)) {
-      const lastAmpersand = hash.lastIndexOf('&')
-      if (lastAmpersand !== -1) {
-        hash = hash.substring(0, lastAmpersand)
-      } else {
-        return null
-      }
-    } else {
-      hash = hash.slice(0, -1)
-    }
+    // URLSearchParams percent-encodes `~` in values, so the marker cannot occur inside our own
+    // data — a hash without it is foreign or truncated, and null lets localStorage take over.
+    const markerIndex = hash.indexOf(END_FILTER_MARKER)
+    if (markerIndex === -1) return null
+    hash = hash.slice(0, markerIndex)
 
     const params = new URLSearchParams(hash)
     const result: Record<string, AllowedFilterValues> = {}
@@ -322,6 +392,9 @@ export function useFilterHelpers<
         result[key] = value
       }
     }
+
+    // An empty result would still count as "found", shadowing localStorage.
+    if (isEmptyObject(result) && isNull(sortBy)) return null
 
     return { filters: result, sortBy }
   }
@@ -383,14 +456,29 @@ export function useFilterHelpers<
     }
     if (
       isNull(storedFromHash) ||
-      (isEmptyObject(storedFromHash.filters) && isEmptyObject(storedFromHash.sortBy))
+      (isEmptyObject(storedFromHash.filters) && isNull(storedFromHash.sortBy))
     ) {
-      const restoredPage = consumeStoredPage()
+      const restoredPage = consumeStoredPage(pageStoreKey)
       if (restoredPage !== null) {
         pagination.value = { ...pagination.value, page: restoredPage }
       }
       if (callback) callback()
       return false
+    }
+
+    // A hash naming at least one field is authoritative: it arrives from a link, or from stepping
+    // back to an older address, and in both cases it describes the whole view. Without this reset
+    // the fields it does not mention keep whatever the module-level filter store still holds from
+    // an earlier visit, so the same link lands differently depending on how the user got to it.
+    // On a fresh page load the store is already at its defaults and this is a no-op. Local storage
+    // keeps merging, because there the absent fields were left out as equal to their default.
+    //
+    // A hash carrying only `_sort` is excluded on purpose. Unknown keys are dropped before this
+    // point, so such a hash also results from a link meant for a different table sharing the page
+    // - it must not wipe this one's filter. Only `clearable` fields are reset, as everywhere else.
+    const hashDescribesThisView = source === 'hash' && !isEmptyObject(storedFromHash.filters)
+    if (hashDescribesThisView) {
+      clearAll(filterData, filterConfig)
     }
 
     for (const filterName in filterData) {
@@ -416,11 +504,24 @@ export function useFilterHelpers<
         updateLocationHash(stored)
       }
     }
-    const restoredPage = consumeStoredPage()
+    // Drained either way: the flag means "the next list I land on should restore its page", so
+    // leaving it set would hand the remembered page to whichever table comes after this one.
+    const restoredPage = consumeStoredPage(pageStoreKey)
     pagination.value = {
       ...pagination.value,
-      sortBy: storedFromHash.sortBy,
-      ...(restoredPage !== null ? { page: restoredPage } : {}),
+      // A link need not carry the sort. Taking `null` from it would drop `order[...]` from the
+      // query, and paging without ORDER BY can repeat or skip rows.
+      sortBy: storedFromHash.sortBy ?? pagination.value.sortBy,
+      // A hash replaces the view, so a link starts at the first page. A restored page still wins:
+      // the flag behind it is only ever set by the close button, which means "I am coming back to
+      // this list", and that address carries the list's own hash along with it.
+      page: restoredPage ?? (source === 'hash' ? 1 : pagination.value.page),
+    }
+    if (hashDescribesThisView) {
+      // Local storage mirrors the last applied state, so a link becomes the view the user returns
+      // to. Re-serialized rather than stored verbatim, to drop values equal to their default.
+      // A sort-only hash is not a link to this view, so it does not overwrite what is remembered.
+      storeFilterLocalStorage(serializeFilters(getFilterDataForStoring(), pagination, true))
     }
     if (callback) callback()
     return true
@@ -446,6 +547,9 @@ export interface GeneralFilterOptions {
 
 export interface FilerRenderOptions {
   skip: boolean
+  // Whether the field is shown as a selected-filter chip (FiltersSelected). Default true.
+  // Optional for backward compatibility (other admins may construct FilerRenderOptions).
+  selected?: boolean
   xs: number | undefined
   sm: number | undefined
   md: number | undefined

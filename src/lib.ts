@@ -25,6 +25,7 @@ import APermissionValueChip from '@/components/permission/APermissionValueChip.v
 import Acl from '@/components/permission/Acl.vue'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
+import type { DatetimePickerType } from '@/utils/datetimePickerValue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
@@ -162,6 +163,8 @@ import {
   dateModifyMinutes,
   dateNow,
   datePretty,
+  dateUtcPretty,
+  dateUtcToday,
   DATETIME_MAX,
   DATETIME_MIN,
   dateTimeEndOfDay,
@@ -189,6 +192,7 @@ import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactor
 import type {
   DatetimeUTC,
   DatetimeUTCNullable,
+  DateUTC,
   DocId,
   DocIdNullable,
   EnableDisable,
@@ -443,6 +447,7 @@ import { damFileTypeFix } from '@/components/file/composables/fileType'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
 import {
+  destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
 } from '@/components/damImage/uploadQueue/composables/damNotifications'
@@ -633,7 +638,11 @@ import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
-import { fetchAssetAsCmsMedia } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  fetchAsset,
+  fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -792,6 +801,7 @@ export {
   useDamUploadChunkSize,
   useDamAcceptTypeAndSizeHelper,
   useAssetSuggestions,
+  destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
   useDropzoneGlobalDragState,
@@ -831,6 +841,8 @@ export {
   type DocIdNullable,
   type DatetimeUTCNullable,
   type DatetimeUTC,
+  type DateUTC,
+  type DatetimePickerType,
   type AnzuUser,
   type BaseUser,
   type AnzuUserMinimal,
@@ -1053,6 +1065,8 @@ export {
   dateTimeToDate,
   yearNow,
   datePretty,
+  dateUtcPretty,
+  dateUtcToday,
   timePretty,
   dateDiff,
   // file
@@ -1113,7 +1127,9 @@ export {
   updateDamUser,
   fetchDamUser,
   fetchAssetAndCheckForSingleUseByFileIds,
+  fetchAsset,
   fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
 
   // TRANSLATIONS
   messagesCs,
@@ -1270,3 +1286,6 @@ export {
   localTimeShiftInSeconds,
   useSystemBar,
 }
+
+export { createCachedChip } from '@/components/createCachedChip'
+export type { CreateCachedChipOptions, CachedChipId } from '@/components/createCachedChip'

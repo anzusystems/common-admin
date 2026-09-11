@@ -41,8 +41,8 @@
     "create": "Create"
   },
   "login": {
-    "text": "Prosím, prihláste sa",
-    "button": "Prihlásiť sa"
+    "text": "Please sign in",
+    "button": "Sign in"
   },
   "notFound": {
     "title": "Oops, 404",
@@ -58,5 +58,9 @@
     "dropPossibility": "Upload or move files",
     "dropHere": "Upload files"
   },
-  "inputSuggestedMax": "{current} / max {max}"
+  "upload": {
+    "incorrectFormatSize": "Invalid format or size"
+  },
+  "inputSuggestedMax": "{current} / max {max}",
+  "notSet": "Not set"
 }

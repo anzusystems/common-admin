@@ -1,6 +1,6 @@
 {
   "version": "Verzia",
-  "newVersionText": "K dispozícii je nová verzia administrácie. Pre správne fungovanie je potrebné vykonať aktulizáciu.",
+  "newVersionText": "K dispozícii je nová verzia administrácie. Pre správne fungovanie je potrebné vykonať aktualizáciu.",
   "newVersionReload": "Načítať novú verziu.",
   "theme": {
     "light": "Svetlá",
@@ -58,5 +58,9 @@
     "dropPossibility": "Nahrať alebo presunúť súbory",
     "dropHere": "Nahrať súbory"
   },
-  "inputSuggestedMax": "{current} / max {max}"
+  "upload": {
+    "incorrectFormatSize": "Nesprávny formát alebo veľkosť"
+  },
+  "inputSuggestedMax": "{current} / max {max}",
+  "notSet": "Neuvedené"
 }

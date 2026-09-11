@@ -27,7 +27,7 @@ const { t } = useI18n()
           :src="logoUrl"
           class="logo pb-2"
           alt=""
-        >
+        />
         <h1
           v-if="title"
           class="text-headline-large my-3"

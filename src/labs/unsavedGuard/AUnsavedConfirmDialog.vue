@@ -6,6 +6,11 @@ export interface Props {
   body?: string
   stayLabel?: string
   discardLabel?: string
+  /**
+   * Names of the dirty sections (from the guard's `dirtyLabels`). When
+   * non-empty the dialog lists them instead of the generic body message.
+   */
+  dirtyLabels?: string[]
 }
 
 withDefaults(defineProps<Props>(), {
@@ -13,6 +18,7 @@ withDefaults(defineProps<Props>(), {
   body: undefined,
   stayLabel: undefined,
   discardLabel: undefined,
+  dirtyLabels: () => [],
 })
 
 const emit = defineEmits<{
@@ -43,7 +49,24 @@ const onDiscard = () => {
         {{ title ?? t('common.sortable.unsavedChanges.title') }}
       </VCardTitle>
       <VCardText>
-        {{ body ?? t('common.sortable.unsavedChanges.body') }}
+        <template v-if="body">
+          {{ body }}
+        </template>
+        <template v-else-if="dirtyLabels.length">
+          {{ t('common.sortable.unsavedChanges.sectionsIntro') }}
+          <ul class="a-unsaved-sections">
+            <li
+              v-for="(label, i) in dirtyLabels"
+              :key="i"
+            >
+              {{ label }}
+            </li>
+          </ul>
+          {{ t('common.sortable.unsavedChanges.leaveQuestion') }}
+        </template>
+        <template v-else>
+          {{ t('common.sortable.unsavedChanges.body') }}
+        </template>
       </VCardText>
       <VCardActions>
         <VSpacer />
@@ -55,7 +78,7 @@ const onDiscard = () => {
         </VBtn>
         <VBtn
           color="warning"
-          variant="elevated"
+          variant="flat"
           @click="onDiscard"
         >
           {{ discardLabel ?? t('common.sortable.unsavedChanges.discard') }}
@@ -64,3 +87,14 @@ const onDiscard = () => {
     </VCard>
   </VDialog>
 </template>
+
+<style scoped lang="scss">
+.a-unsaved-sections {
+  margin: 8px 0;
+  padding-left: 20px;
+
+  li {
+    font-weight: 500;
+  }
+}
+</style>

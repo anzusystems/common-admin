@@ -16,9 +16,7 @@ const alert = () => {
     <VCardText>
       <VRow>
         <VCol>
-          <VBtn @click.stop="alert">
-            Test
-          </VBtn>
+          <VBtn @click.stop="alert">Test</VBtn>
         </VCol>
       </VRow>
     </VCardText>

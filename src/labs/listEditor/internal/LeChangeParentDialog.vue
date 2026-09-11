@@ -108,9 +108,7 @@ const currentParentKey = computed<ListEditorKey | null | undefined>(() => {
 
 const candidates = computed<Candidate[]>(() => {
   const out: Candidate[] = []
-  const subtreeDepth = sourceNode.value
-    ? props.calculateSubtreeDepth(sourceNode.value)
-    : 1
+  const subtreeDepth = sourceNode.value ? props.calculateSubtreeDepth(sourceNode.value) : 1
 
   out.push({
     key: null,
@@ -159,7 +157,7 @@ const validCandidates = computed(() => candidates.value.filter((c) => !c.disallo
 const selectedCandidate = computed<Candidate | null>(() =>
   selectedKey.value === undefined
     ? null
-    : candidates.value.find((c) => c.key === selectedKey.value) ?? null,
+    : (candidates.value.find((c) => c.key === selectedKey.value) ?? null),
 )
 
 const showPlacementPicker = computed<boolean>(

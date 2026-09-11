@@ -5,6 +5,23 @@
   "categories": { "correctness": "error" },
   "rules": {
     "no-unused-vars": ["error", { "caughtErrors": "none", "argsIgnorePattern": "^_" }],
-    "no-unused-expressions": "off"
+    "no-unused-expressions": "off",
+
+    "no-var": "error",
+    "prefer-const": "error",
+    "prefer-rest-params": "error",
+    "prefer-spread": "error",
+    "typescript/no-array-constructor": "error",
+    "typescript/no-namespace": "error",
+    "typescript/no-require-imports": "error",
+    "typescript/no-unnecessary-type-constraint": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "vue/component-definition-name-casing": "error",
+    "vue/no-multiple-slot-args": "error",
+    "vue/no-required-prop-with-default": "error",
+    "vue/prop-name-casing": "error",
+    "vue/require-default-prop": "error",
+    "vue/require-prop-types": "error",
+    "vue/require-typed-ref": "error"
   }
 }

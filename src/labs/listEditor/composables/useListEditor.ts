@@ -5,6 +5,7 @@ import type {
   PositionHint,
   UseListEditorOptions,
 } from '@/labs/listEditor/types/listEditorTypes'
+import { renumberPositions } from '@/labs/listEditor/utils/positions'
 
 export interface ListEditorApi<TItem> {
   viewItems: ComputedRef<ListViewItem<TItem>[]>
@@ -33,21 +34,68 @@ export function useListEditor<TItem extends Record<string, any>>(
   const positionMultiplier = options.positionMultiplier ?? 1
   const updatePositionEnabled = options.updatePosition === true
 
-  const viewItems = computed<ListViewItem<TItem>[]>(() =>
-    model.value.map((raw, index) => ({
+  // Using the position field as the row key while `update-position` is on is
+  // self-defeating: every reorder renumbers positions, which changes the keys,
+  // so dirty/validity tracking flags the displaced rows as unsaved (QA 85050
+  // BUG-09). Point key-field at a stable identity field (e.g. "id").
+  if (updatePositionEnabled && keyField === positionField) {
+    console.warn(
+      `[list-editor] key-field === position-field ("${keyField}") with update-position enabled. ` +
+        'Reordering renumbers positions and thus changes row keys, breaking dirty/validity ' +
+        'tracking. Point key-field at a stable identity field (e.g. "id").',
+    )
+  }
+
+  // Surfaces row-key wiring bugs loudly: rows keyed `undefined` (item lacks the
+  // key-field) or two rows sharing one key silently break dirty tracking,
+  // validity rails and reorder targeting in ways that are hard to trace from
+  // symptoms (QA 85050 BUG-09 class). Deduplicated per signature so a stable
+  // bad state warns once, but a new offender warns again.
+  const warnedKeySignatures = new Set<string>()
+  const warnOnBadKeys = (items: ListViewItem<TItem>[]): void => {
+    const seen = new Set<ListEditorKey>()
+    const duplicates = new Set<string>()
+    let missing = 0
+    for (const vi of items) {
+      if (vi.key === undefined || vi.key === null) {
+        missing++
+        continue
+      }
+      if (seen.has(vi.key)) duplicates.add(String(vi.key))
+      seen.add(vi.key)
+    }
+    if (missing === 0 && duplicates.size === 0) return
+    const signature = `${missing}|${[...duplicates].sort().join(',')}`
+    if (warnedKeySignatures.has(signature)) return
+    warnedKeySignatures.add(signature)
+    if (missing > 0) {
+      console.warn(
+        `[list-editor] ${missing} row(s) resolve to an undefined key (key-field "${keyField}"). ` +
+          'Point key-field at a field every item has, or give new items unique temp ids ' +
+          '(see nextListEditorTempId).',
+      )
+    }
+    if (duplicates.size > 0) {
+      console.warn(
+        `[list-editor] duplicate row keys (key-field "${keyField}"): ${[...duplicates].join(', ')}. ` +
+          'Row keys must be unique — dirty tracking and validation rails target rows by key.',
+      )
+    }
+  }
+
+  const viewItems = computed<ListViewItem<TItem>[]>(() => {
+    const items = model.value.map((raw, index) => ({
       key: raw[keyField] as ListEditorKey,
       index,
       raw,
       position: raw[positionField] as number | undefined,
-    })),
-  )
+    }))
+    warnOnBadKeys(items)
+    return items
+  })
 
   const recalculatePositions = (items: TItem[]): TItem[] =>
-    items.map((item, idx) => {
-      const newPosition = (idx + 1) * positionMultiplier
-      if (item[positionField] === newPosition) return item
-      return { ...item, [positionField]: newPosition }
-    })
+    renumberPositions(items, { positionField, positionMultiplier })
 
   const finalize = (arr: TItem[]): TItem[] => {
     const result = updatePositionEnabled ? recalculatePositions(arr) : arr

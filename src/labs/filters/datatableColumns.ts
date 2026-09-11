@@ -80,7 +80,14 @@ export function createDatatableColumnsConfig(
     if (!storeKey || !localStorage) return
     const stored = localStorage.getItem(storeKey)
     if (!stored) return
-    const storedData = JSON.parse(stored) as StoredData
+    // A corrupted entry would otherwise throw inside onMounted and take the whole table with it.
+    let storedData: StoredData
+    try {
+      storedData = JSON.parse(stored) as StoredData
+    } catch {
+      localStorage.removeItem(storeKey)
+      return
+    }
     if (!isObject(storedData)) return
     if (!isArray(storedData.hidden)) return
     columnsHidden.value = storedData.hidden as string[]

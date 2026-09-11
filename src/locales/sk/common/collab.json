@@ -4,14 +4,14 @@
     "error": "Ľutujeme, ale pri inicializácii kolaborácie nastala neočakávaná chyba.",
     "approvedJoinRequest": "Vaša žiadosť o kolaboráciu bola úspešne schválená, môžete vstúpiť do editácie.",
     "rejectedJoinRequest": "Ľutujeme, ale vaša žiadosť o kolaboráciu bola zamietnutá.",
-    "failedRequestToTakeModeration": "Ľutujeme, ale vaša žiadosť o prevzatie moderovanie bola zamietnutá.",
-    "alreadyRequestedToTakeModeration": "Ľutujeme, ale v súčasnosti už existuje iná žiadosť o prevzatia moderovania. Skúste to neskôr.",
+    "failedRequestToTakeModeration": "Ľutujeme, ale vaša žiadosť o prevzatie moderovania bola zamietnutá.",
+    "alreadyRequestedToTakeModeration": "Ľutujeme, ale v súčasnosti už existuje iná žiadosť o prevzatie moderovania. Skúste to neskôr.",
     "approvedToTakeModeration": "Vaša žiadosť o prevzatie moderovania bola úspešne schválená.",
     "rejectedToTakeModeration": "Ľutujeme, ale vaša žiadosť o prevzatie moderovania bola zamietnutá.",
     "kickedFromRoom": "Boli ste vyhodený z kolaborácie.",
     "transferredModeration": "Stali ste sa moderátorom.",
     "alreadyRequestedToJoin": "Už ste o kolaboráciu požiadali, čaká sa na schválenie vašej žiadosti.",
-    "failedRequestedToJoin": "Ľutujeme, ale vašu žiadosť o pripojenie ku kolaborácii sa nepodarilo spracovať. Skúste to neskôr.."
+    "failedRequestedToJoin": "Ľutujeme, ale vašu žiadosť o pripojenie ku kolaborácii sa nepodarilo spracovať. Skúste to neskôr."
   },
   "occupiedEntityTitle": "Na článku sa práve pracuje",
   "occupiedEntityText": "Chcete požiadať o kolaboráciu?",

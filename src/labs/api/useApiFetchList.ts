@@ -79,7 +79,9 @@ export const useApiFetchList = <R>(params: UseApiFetchListParams): UseApiFetchLi
     silentConsoleError = false,
   } = params
 
-  let abortController: AbortController | null = null
+  // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
+  // leaving both unabortable.
+  const abortControllers = new Set<AbortController>()
 
   const executeFetch = async (
     pagination: Ref<Pagination>,
@@ -87,7 +89,8 @@ export const useApiFetchList = <R>(params: UseApiFetchListParams): UseApiFetchLi
     filterConfig: FilterConfig<any>,
     fetchParams: FetchListParams = {},
   ): Promise<R> => {
-    abortController = new AbortController()
+    const abortController = new AbortController()
+    abortControllers.add(abortController)
 
     const {
       urlTemplate: urlTemplateOverride,
@@ -175,14 +178,13 @@ export const useApiFetchList = <R>(params: UseApiFetchListParams): UseApiFetchLi
       if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
-      abortController = null
+      abortControllers.delete(abortController)
     }
   }
 
   const abortFetch = () => {
-    if (abortController) {
-      abortController.abort()
-    }
+    abortControllers.forEach((controller) => controller.abort())
+    abortControllers.clear()
   }
 
   return {

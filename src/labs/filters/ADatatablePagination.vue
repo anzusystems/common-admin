@@ -2,9 +2,13 @@
 import { computed, inject, watch } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
+import {
+  DatatablePageStoreKey,
+  DatatablePaginationKey,
+  FilterConfigKey,
+} from '@/labs/filters/filterInjectionKeys'
 import { useThrottleFn } from '@vueuse/core'
-import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
+import { datatablePageKey, useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
 withDefaults(
   defineProps<{
@@ -28,6 +32,17 @@ if (isUndefined(pagination)) {
 
 const { t } = useI18n()
 const { setStoredPage } = useDatatablePageStore()
+
+// `useFilterHelpers` provides the key, so tables sharing a system/subject stay apart. Both
+// fallbacks are optional on purpose: a datatable may provide pagination without either, and it
+// then keeps the shared bucket it had before the store was keyed.
+const providedPageKey = inject(DatatablePageStoreKey, undefined)
+const filterConfig = inject(FilterConfigKey, undefined)
+const pageStoreKey = computed(
+  () =>
+    providedPageKey ??
+    datatablePageKey(filterConfig?.general.system, filterConfig?.general.subject),
+)
 
 const lastPage = computed(() => {
   return Math.ceil(pagination.value.totalCount / pagination.value.rowsPerPage)
@@ -81,7 +96,7 @@ watch(
   () => pagination.value.page,
   (newValue, oldValue) => {
     if (newValue !== oldValue) {
-      setStoredPage(newValue)
+      setStoredPage(pageStoreKey.value, newValue)
       emit('change')
     }
   },

@@ -122,7 +122,8 @@ const onBlur = () => {
     @blur="onBlur"
   >
     <template #label>
-      {{ config.name }}<span
+      {{ config.name
+      }}<span
         v-if="config.attributes.required"
         class="required"
       />
@@ -140,7 +141,8 @@ const onBlur = () => {
     @blur="onBlur"
   >
     <template #label>
-      {{ config.name }}<span
+      {{ config.name
+      }}<span
         v-if="config.attributes.required"
         class="required"
       />
@@ -149,7 +151,7 @@ const onBlur = () => {
   <VCombobox
     v-else-if="
       config.attributes.type === CustomDataFormElementType.StringArray ||
-        config.attributes.type === CustomDataFormElementType.StringArrayLegacy
+      config.attributes.type === CustomDataFormElementType.StringArrayLegacy
     "
     :model-value="modelValueComputed"
     :label="config.name"
@@ -162,7 +164,8 @@ const onBlur = () => {
     @blur="onBlur"
   >
     <template #label>
-      {{ config.name }}<span
+      {{ config.name
+      }}<span
         v-if="config.attributes.required"
         class="required"
       />
@@ -171,7 +174,7 @@ const onBlur = () => {
   <VSwitch
     v-if="
       config.attributes.type === CustomDataFormElementType.Boolean &&
-        config.attributes.required === true
+      config.attributes.required === true
     "
     :label="config.name"
     :model-value="modelValueComputed"
@@ -182,7 +185,7 @@ const onBlur = () => {
   <ABooleanSelect
     v-if="
       config.attributes.type === CustomDataFormElementType.Boolean &&
-        config.attributes.required === false
+      config.attributes.required === false
     "
     :model-value="modelValueComputed"
     :label="config.name"

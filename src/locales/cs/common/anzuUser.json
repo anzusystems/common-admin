@@ -25,7 +25,9 @@
   "filter": {
     "id": "ID",
     "enabled": "Povolen",
-    "email": "E-mail"
+    "email": "E-mail",
+    "lastName": "Příjmení",
+    "permissionGroups": "Skupiny oprávnění"
   },
   "table": {
     "grants": "Akce",
@@ -34,9 +36,9 @@
     "noPermissions": "Žádná oprávnění"
   },
   "copyPermissions": {
-    "title": "Kopirovat rolu a oprávnenia",
-    "desc": "Potrebujete skopirovat rolu a opravnenia z uz existujuceho pouzivatela?",
-    "srcUser": "Zdrojovy uzivatel",
-    "copiedSettings": "Všetky skopírované nastavenia:"
+    "title": "Kopírovat roli a oprávnění",
+    "desc": "Potřebujete zkopírovat roli a oprávnění z již existujícího uživatele?",
+    "srcUser": "Zdrojový uživatel",
+    "copiedSettings": "Všechna zkopírovaná nastavení:"
   }
 }

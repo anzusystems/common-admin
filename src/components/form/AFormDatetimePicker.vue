@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { isDefined, isUndefined } from '@/utils/common'
@@ -11,10 +11,12 @@ import { useCollabField } from '@/components/collab/composables/collabField'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
+import type { DatetimePickerType } from '@/utils/datetimePickerValue'
 
 const props = withDefaults(
   defineProps<{
     modelValue: DatetimeUTCNullable | undefined
+    type?: DatetimePickerType
     label?: string
     errorMessage?: string
     required?: boolean
@@ -25,6 +27,7 @@ const props = withDefaults(
     disabled?: boolean
   }>(),
   {
+    type: 'datetime',
     label: undefined,
     errorMessage: undefined,
     required: undefined,
@@ -84,8 +87,11 @@ const onOpen = () => {
 }
 
 const onClose = () => {
-  releaseFieldLock.value(props.modelValue)
-  isOpened.value = true
+  isOpened.value = false
+  // The picker emits close before its watchers flush the picked value into the model.
+  nextTick(() => {
+    releaseFieldLock.value(props.modelValue)
+  })
 }
 
 const { t } = useI18n()
@@ -94,10 +100,14 @@ const system = inject<string | undefined>(SystemScopeSymbol, undefined)
 const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
 
 const onBlur = () => {
-  isFocused.value = false
-  emit('blur', isUndefined(props.modelValue) ? null : props.modelValue)
   props.v?.$touch()
-  if (isOpened.value === false) releaseFieldLock.value(props.modelValue)
+  // The picker commits a typed value in a watcher that runs after this event, so releasing the lock
+  // here would hand the room the previous value - and clearing `isFocused` would skip the change.
+  nextTick(() => {
+    isFocused.value = false
+    emit('blur', isUndefined(props.modelValue) ? null : props.modelValue)
+    if (isOpened.value === false) releaseFieldLock.value(props.modelValue)
+  })
 }
 
 const onFocus = () => {
@@ -142,6 +152,7 @@ watch(modelValueComputed, (newValue, oldValue) => {
 <template>
   <ADatetimePicker
     v-model="modelValueComputed"
+    :type="type"
     :data-cy="dataCy"
     :error-messages="errorMessageComputed"
     :required="requiredComputed"

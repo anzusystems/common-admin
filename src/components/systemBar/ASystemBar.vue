@@ -109,10 +109,14 @@ const { pause, resume } = useIntervalFn(() => {
 
 const { isWindowActive } = useUserActivity()
 
+// Only one retry is ever pending. Untracked, an unmount left it scheduled to start a fetch that
+// the unmount hook could no longer abort.
+let retryTimer: ReturnType<typeof setTimeout> | undefined = undefined
+
 const checkNewVersionWithRetry = (attempt = 1, maxAttempts = 3) => {
   const delay = Math.min(1000 * attempt, 3000) // 1000ms, 2000ms, 3000ms
 
-  setTimeout(async () => {
+  retryTimer = setTimeout(async () => {
     try {
       await checkNewVersion()
     } catch (error) {
@@ -149,6 +153,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  clearTimeout(retryTimer)
   if (abortController.value) {
     abortController.value.abort()
   }

@@ -18,6 +18,7 @@ import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamCon
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import ImageMediaWidgetInner from '@/components/damImage/uploadQueue/components/ImageMediaWidgetInner.vue'
 import type { MediaAware } from '@/types/MediaAware'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -127,6 +128,8 @@ const metadataConfirm = () => {
 defineExpose({
   metadataConfirm,
 })
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -155,13 +158,13 @@ defineExpose({
     v-else-if="status === 'error'"
     class="text-error"
   >
-    Loading DAM config error
+    {{ t('common.damImage.error.loadingConfig') }}
   </div>
   <div
     v-else-if="status === 'uploadNotAllowed'"
     class="text-error"
   >
-    DAM access rights error
+    {{ t('common.damImage.error.accessRights') }}
   </div>
   <VProgressCircular
     v-else

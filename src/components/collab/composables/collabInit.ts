@@ -130,7 +130,19 @@ export function useCollabInit() {
         },
       )
       collabSocket.value.on('connect', async () => {
+        /* Memberships from before a reconnect are stale; the server does not re-announce them.
+         *
+         * The write claims behind them are deliberately left alone. Socket.io drops the
+         * acknowledgement of a packet it already put on the wire (`_clearAcks`), so one emitted
+         * before the reconnect can no longer land here — but it keeps the acknowledgement of a
+         * packet still in `sendBuffer`, which it delivers on this connection. Resetting the claims
+         * would discard exactly those: a join emitted while the socket was still connecting is
+         * flushed just before this handler runs, and its acknowledgement arrives a round trip
+         * later to find its claim gone. */
         collabRoomInfoState.clear()
+        // Without the reset a transient network error burns the flag and a later JWT
+        // expiration never triggers a token refresh.
+        authorizationReconnectTriggered = false
         const connectedBefore = collabConnected.value
         collabConnected.value = collabSocket.value?.connected ?? false
         if (!connectedBefore) {
@@ -146,7 +158,12 @@ export function useCollabInit() {
           return
         }
         collabConnected.value = collabSocket.value?.connected ?? false
-        logError(error, { level: 'error', message: 'Collab connect_error' })
+        // active === true means socket.io will reconnect on its own; only a permanent
+        // rejection is worth reporting.
+        if (collabSocket.value?.active) {
+          return
+        }
+        logError(error, { level: 'error', tags: { collabPhase: 'connectRejected' } })
       })
       collabSocket.value.on('disconnect', async (reason) => {
         collabRoomInfoState.forEach(

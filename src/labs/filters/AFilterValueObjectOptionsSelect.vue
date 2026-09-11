@@ -8,15 +8,18 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
 } from '@/labs/filters/filterInjectionKeys'
-import { isArray, isBoolean, isUndefined } from '@/utils/common'
+import { isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { type AllowedFilterValues, useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
 const props = withDefaults(
   defineProps<{
     name: string
     items: ValueObjectOption<string | number>[]
+    dataCy?: string
   }>(),
-  {},
+  {
+    dataCy: 'filter-value',
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -78,7 +81,14 @@ const clearField = () => {
 }
 
 const updateSelected = (newValue: AllowedFilterValues) => {
-  if (isArray(newValue) && newValue.length === 0) return
+  // `null` reaches here when the filter is reset from outside - loading a hash clears every field
+  // before applying it, and the chip has to go with the value. Falling through to `items.find`
+  // would find nothing and leave the previous chip in place, naming a value the query no longer
+  // carries.
+  if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+    filterSelected.value.delete(props.name)
+    return
+  }
   if (isArray(newValue)) {
     filterSelected.value.set(
       props.name,
@@ -116,7 +126,7 @@ watch(
     :label="label"
     :multiple="filterConfigCurrent.multiple"
     :clearable="!filterConfigCurrent.mandatory"
-    data-cy="filter-value"
+    :data-cy="dataCy"
     hide-details
     autocomplete="off"
     @click:clear.stop="clearField"

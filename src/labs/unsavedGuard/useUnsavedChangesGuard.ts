@@ -1,5 +1,18 @@
-import { computed, getCurrentInstance, onBeforeUnmount, ref, watch, type ComputedRef, type Ref } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  onBeforeUnmount,
+  ref,
+  watch,
+  type ComputedRef,
+  type Ref,
+} from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
+import {
+  provideUnsavedSectionRegistry,
+  type UnsavedSectionDescriptor,
+  type UnsavedSectionSource,
+} from '@/labs/unsavedGuard/useUnsavedSection'
 
 type UnsavedSource = Ref<boolean | Set<unknown> | unknown[] | null | undefined>
 
@@ -25,10 +38,24 @@ export interface UseUnsavedChangesGuardOptions {
    * confirms via the confirm dialog or via `acknowledge()`.
    */
   guardDialogModel?: Ref<boolean>
+  /**
+   * Named sections owned by the guard host component itself. Descendants use
+   * `useUnsavedSection` instead — but a component can't `inject` its own
+   * `provide`, so when the host *is* the section owner (e.g. a dialog), pass
+   * the sections here.
+   */
+  ownSections?: UnsavedSectionSource
 }
 
 export interface UseUnsavedChangesGuardApi {
   hasUnsavedChanges: ComputedRef<boolean>
+  /**
+   * Labels of the dirty sections registered by descendants via
+   * `useUnsavedSection`. Bind to `AUnsavedConfirmDialog`'s `dirtyLabels` prop
+   * so the dialog names *which* parts are unsaved. Empty when no descendant
+   * registered a section (dialog falls back to the generic message).
+   */
+  dirtyLabels: ComputedRef<string[]>
   /**
    * v-model-bound to the confirm dialog. When the guard wants to ask the user
    * to confirm leaving, it sets this to true. The confirm dialog reads it.
@@ -44,9 +71,33 @@ export interface UseUnsavedChangesGuardApi {
    * route/dialog/unload attempt proceeds without prompting. Useful right
    * before a programmatic navigation that the consumer has already
    * confirmed.
+   *
+   * The acknowledgement AUTO-EXPIRES after a few seconds if nothing consumes it
+   * (see `ACKNOWLEDGE_TTL_MS`): a delete that acknowledges up-front but then FAILS
+   * (throws, never navigates) must not leave the guard silently disarmed for the
+   * next unrelated navigation. Consuming it (a real leave) clears the timer.
    */
   acknowledge: () => void
+  /**
+   * Releases what the guard registered imperatively — `beforeunload` listener, acknowledge timer,
+   * dialog watcher — and settles an open prompt as "stay". Idempotent, and called automatically on
+   * unmount; outside a component it is the only way to clean up. The route-leave guard is
+   * lifecycle-bound and unaffected.
+   */
+  stop: () => void
+  /**
+   * Cancel a pending `acknowledge()` (disarm). Call from a delete's failure path
+   * so a failed/aborted delete restores the guard immediately instead of waiting
+   * for the TTL. No-op if nothing is acknowledged.
+   */
+  unacknowledge: () => void
 }
+
+// An acknowledgement is meant for an IMMINENT navigation (a delete's router.push after its HTTP
+// round-trip — tens to hundreds of ms). If none arrives within this window the delete almost
+// certainly failed, so the one-shot expires rather than arming an unrelated later navigation.
+// Generously longer than any real delete request so a legitimate slow-success never false-prompts.
+const ACKNOWLEDGE_TTL_MS = 8000
 
 const isTruthySource = (value: unknown): boolean => {
   if (value === null || value === undefined) return false
@@ -65,17 +116,44 @@ const resolveBool = (v: boolean | Ref<boolean> | undefined, fallback: boolean): 
 export function useUnsavedChangesGuard(
   options: UseUnsavedChangesGuardOptions,
 ): UseUnsavedChangesGuardApi {
-  const hasUnsavedChanges = computed<boolean>(() =>
-    options.sources.some((s) => isTruthySource(s.value)),
+  // Provide a section registry so descendants can name their dirty sections
+  // via `useUnsavedSection`. The dialog reads `dirtyLabels` from this.
+  const sectionRegistry = provideUnsavedSectionRegistry()
+
+  // The host component can't inject its own provide, so register its own
+  // sections directly.
+  if (options.ownSections) {
+    const ownSections = options.ownSections
+    const id = Symbol('unsaved.section.own')
+    const normalized = computed<UnsavedSectionDescriptor[]>(() => {
+      const resolved = ownSections()
+      return Array.isArray(resolved) ? resolved : [resolved]
+    })
+    sectionRegistry.register(id, normalized)
+  }
+
+  const hasUnsavedChanges = computed<boolean>(
+    () =>
+      options.sources.some((s) => isTruthySource(s.value)) ||
+      sectionRegistry.dirtyLabels.value.length > 0,
   )
 
   const promptOpen = ref<boolean>(false)
   let pendingResolver: ((discard: boolean) => void) | null = null
   let acknowledgedOnce = false
+  let acknowledgeTimer: ReturnType<typeof setTimeout> | null = null
+
+  const clearAcknowledgeTimer = () => {
+    if (acknowledgeTimer !== null) {
+      clearTimeout(acknowledgeTimer)
+      acknowledgeTimer = null
+    }
+  }
 
   const askToLeave = (): Promise<boolean> => {
     if (acknowledgedOnce) {
       acknowledgedOnce = false
+      clearAcknowledgeTimer()
       return Promise.resolve(true)
     }
     return new Promise((resolve) => {
@@ -94,6 +172,18 @@ export function useUnsavedChangesGuard(
 
   const acknowledge = () => {
     acknowledgedOnce = true
+    // Auto-expire: if the imminent navigation never arrives (e.g. the delete threw), don't leave
+    // the guard armed for an unrelated later leave. A real consume (askToLeave) clears this first.
+    clearAcknowledgeTimer()
+    acknowledgeTimer = setTimeout(() => {
+      acknowledgedOnce = false
+      acknowledgeTimer = null
+    }, ACKNOWLEDGE_TTL_MS)
+  }
+
+  const unacknowledge = () => {
+    acknowledgedOnce = false
+    clearAcknowledgeTimer()
   }
 
   // Route guard — `onBeforeRouteLeave` only works inside a route component
@@ -112,6 +202,10 @@ export function useUnsavedChangesGuard(
 
   // beforeunload — modern browsers strip custom messages but still display a
   // generic confirm. Setting `returnValue` is the canonical way to opt in.
+  // Collected, not tied to onBeforeUnmount: outside a component that hook is a silent no-op.
+  const disposers: Array<() => void> = [clearAcknowledgeTimer]
+  let stopped = false
+
   if (resolveBool(options.guardWindowUnload, true)) {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!hasUnsavedChanges.value) return
@@ -120,9 +214,7 @@ export function useUnsavedChangesGuard(
     }
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', onBeforeUnload)
-      onBeforeUnmount(() => {
-        window.removeEventListener('beforeunload', onBeforeUnload)
-      })
+      disposers.push(() => window.removeEventListener('beforeunload', onBeforeUnload))
     }
   }
 
@@ -132,7 +224,7 @@ export function useUnsavedChangesGuard(
   if (options.guardDialogModel) {
     const dialogModel = options.guardDialogModel
     let suppressNext = false
-    watch(dialogModel, async (now, prev) => {
+    const stopDialogWatch = watch(dialogModel, async (now, prev) => {
       if (suppressNext) {
         suppressNext = false
         return
@@ -142,18 +234,36 @@ export function useUnsavedChangesGuard(
         suppressNext = true
         dialogModel.value = true
         const discard = await askToLeave()
+        // A teardown mid-prompt must not fall through and mutate the caller's dialog model.
+        if (stopped) return
         if (discard) {
           suppressNext = true
           dialogModel.value = false
         }
       }
     })
+    disposers.push(stopDialogWatch)
+  }
+
+  const stop = () => {
+    if (stopped) return
+    stopped = true
+    // An open prompt would leave whoever awaits askToLeave() pending forever; "stay" is safe.
+    resolvePrompt(false)
+    disposers.forEach((dispose) => dispose())
+  }
+
+  if (getCurrentInstance()) {
+    onBeforeUnmount(stop)
   }
 
   return {
     hasUnsavedChanges,
+    dirtyLabels: sectionRegistry.dirtyLabels,
     promptOpen,
     resolvePrompt,
     acknowledge,
+    unacknowledge,
+    stop,
   }
 }

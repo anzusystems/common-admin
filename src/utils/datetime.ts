@@ -4,7 +4,7 @@ import utc from 'dayjs/plugin/utc'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { isNull, isUndefined } from '@/utils/common'
 import { stringToInt } from '@/utils/string'
-import type { DatetimeUTC, DatetimeUTCNullable } from '@/types/common'
+import type { DateUTC, DatetimeUTC, DatetimeUTCNullable } from '@/types/common'
 
 dayjs.extend(utc)
 dayjs.extend(customParseFormat)
@@ -56,6 +56,14 @@ export const dateModifyMinutes = (minutes = 0, date: null | Date = null): Date =
   if (minutes > 0) return dayjs(date).add(minutes, 'minutes').toDate()
   if (minutes < 0) return dayjs(date).subtract(Math.abs(minutes), 'minutes').toDate()
   return date
+}
+
+/** Today as a calendar day: UTC midnight of the local date, the shape a `type: 'date'` picker emits. */
+export const dateUtcToday = (): DateUTC => {
+  const now = new Date()
+  return (
+    dayjs.utc(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())).format(FORMAT) + SUFFIX
+  )
 }
 
 export const dateToUtc = (date: dayjs.ConfigType, suffix = SUFFIX) => {
@@ -124,6 +132,22 @@ export const datePretty = (
   )
     return edgeDateValue
   return dayjs(isoDate).format('DD.MM.YYYY')
+}
+
+/** Counterpart of `datePretty` for calendar-day values: reads the day the API stores, in any timezone. */
+export const dateUtcPretty = (
+  isoDate: DatetimeUTC | DatetimeUTCNullable | string | null,
+  edgeDateValue = '',
+): string => {
+  if (
+    isoDate === DATETIME_MAX ||
+    isoDate === DATETIME_MIN ||
+    isoDate === '' ||
+    isNull(isoDate) ||
+    isUndefined(isoDate)
+  )
+    return edgeDateValue
+  return dayjs.utc(isoDate).format('DD.MM.YYYY')
 }
 
 export const timePretty = (

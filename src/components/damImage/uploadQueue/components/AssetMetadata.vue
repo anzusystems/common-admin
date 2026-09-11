@@ -116,7 +116,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
           <template #after-pinned>
             <VRow
               v-if="keywordEnabled"
-              density="comfortable"
+              density="compact"
               class="my-2"
             >
               <VCol>
@@ -141,7 +141,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             </VRow>
             <VRow
               v-if="authorEnabled"
-              density="comfortable"
+              density="compact"
               class="my-2"
             >
               <VCol>
@@ -167,7 +167,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             </VRow>
             <VRow
               v-if="mainFileSingleUseEnabled"
-              density="comfortable"
+              density="compact"
               class="my-2"
             >
               <VCol>
@@ -220,7 +220,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             {{ t('common.model.tracking.created') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.createdAt) }}<br>
+            {{ dateTimePretty(asset.createdAt) }}<br />
             <ACachedUserChip
               :id="asset.createdBy"
               :cached-users="cachedUsers"
@@ -232,7 +232,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             {{ t('common.model.tracking.modified') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.modifiedAt) }}<br>
+            {{ dateTimePretty(asset.modifiedAt) }}<br />
             <ACachedUserChip
               :id="asset.modifiedBy"
               :cached-users="cachedUsers"

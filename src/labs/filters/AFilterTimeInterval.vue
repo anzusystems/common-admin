@@ -101,9 +101,13 @@ const { clearOne } = useFilterClearHelpers()
 const { showValidationError } = useAlerts()
 
 const onClear = () => {
-  displayFromTo.value = false
-  modelInternal.value = null
   clearField()
+  // Clearing means "back to the default", which is not always "everything" - a pair with an
+  // absolute default keeps its window. Since the value then does not change, neither watcher runs,
+  // so the display and the chip are re-derived here. Showing "everything" while the query still
+  // carries the old window would make the control lie about what the list contains.
+  syncDisplayToValue(filterData[props.nameFrom])
+  updateSelected(filterData[props.nameFrom])
 }
 
 const onDialogConfirm = () => {
@@ -117,6 +121,8 @@ const onDialogConfirm = () => {
   filterData[props.nameUntil] = dialogData.value.until
   modelValue.value = dialogData.value.from
 }
+
+defineExpose({ onClear })
 
 const onDialogClose = () => {
   dialogCustom.value = false
@@ -164,29 +170,37 @@ const onEditInterval = (clear = false) => {
   dialogCustom.value = true
 }
 
-watch(
-  modelValue,
-  (newValue) => {
-    if (isArray(newValue) || isBoolean(newValue)) return
-    displayFromTo.value = false
-    if (isUndefined(newValue) || isNull(newValue)) {
-      modelInternal.value = null
-      return
-    }
-    const found = getTimeIntervalOption(modelValue.value as TimeIntervalToolsValue)
-    const filterDataUntil = filterData[props.nameUntil]
-    if (!found && isDatetimeUTC(modelValue.value) && isDatetimeUTC(filterDataUntil)) {
-      modelInternal.value = TimeIntervalSpecialOptions.Custom
-      dialogData.value.from = modelValue.value
-      dialogData.value.until = filterDataUntil
-      displayFromTo.value = true
-    }
-    if (found) {
-      modelInternal.value = found.value
-    }
-  },
-  { immediate: true },
-)
+/** What the control shows is derived from the value, never assumed. */
+const syncDisplayToValue = (newValue: AllowedFilterValues) => {
+  if (isArray(newValue) || isBoolean(newValue)) return
+  displayFromTo.value = false
+  if (isUndefined(newValue) || isNull(newValue)) {
+    modelInternal.value = null
+    return
+  }
+  const found = getTimeIntervalOption(newValue as TimeIntervalToolsValue)
+  const filterDataUntil = filterData[props.nameUntil]
+  if (!found && isDatetimeUTC(newValue) && isDatetimeUTC(filterDataUntil)) {
+    modelInternal.value = TimeIntervalSpecialOptions.Custom
+    dialogData.value.from = newValue
+    dialogData.value.until = filterDataUntil
+    displayFromTo.value = true
+  }
+  if (found) {
+    modelInternal.value = found.value
+  }
+}
+
+watch(modelValue, syncDisplayToValue, { immediate: true })
+
+// Reset clears every field back to its default and wipes the chips. For a pair whose default is
+// null that is the whole story, but an absolute default survives the reset - the value does not
+// change, so no watcher runs, and the control would keep showing a range with no chip beside it.
+// The wrapper bumps this counter after clearing, which is the one signal that a reset happened.
+watch(submitResetCounter, () => {
+  syncDisplayToValue(filterData[props.nameFrom])
+  updateSelected(filterData[props.nameFrom])
+})
 
 watch(
   [() => filterData[props.nameFrom], () => filterData[props.nameUntil]],

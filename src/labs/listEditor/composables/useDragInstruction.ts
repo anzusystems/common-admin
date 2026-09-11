@@ -104,8 +104,7 @@ const isInSourceSubtree = (
   viewItems: NestedViewItem<any>[],
   sourceKey: ListEditorKey,
   candidateKey: ListEditorKey,
-): boolean =>
-  candidateKey === sourceKey || isDescendantOf(viewItems, sourceKey, candidateKey)
+): boolean => candidateKey === sourceKey || isDescendantOf(viewItems, sourceKey, candidateKey)
 
 // Walk the flat view-items list in `dir` (±1) starting at `startIdx`, skipping
 // any row that belongs to the dragged subtree — those rows aren't visible drop
@@ -123,9 +122,7 @@ const findSiblingNotInSource = (
   return null
 }
 
-export const computeInstruction = (
-  args: ComputeInstructionArgs,
-): Instruction | null => {
+export const computeInstruction = (args: ComputeInstructionArgs): Instruction | null => {
   const {
     pointer,
     hoveredRow,

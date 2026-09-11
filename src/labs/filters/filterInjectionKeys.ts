@@ -25,3 +25,9 @@ export const DatatablePaginationKey: InjectionKey<Ref<Pagination>> = Symbol.for(
 export const SubjectSelectCloseSidebarKey: InjectionKey<() => void> = Symbol.for(
   'anzu:SubjectSelectCloseSidebarKey',
 )
+
+// The key a datatable stores its remembered page under. Provided by `useFilterHelpers` so that
+// `ADatatablePagination` writes under the same key `loadStoredFilters` reads — several tables can
+// share one system/subject (cms has seven for `cms/article`), and they tell themselves apart by
+// overriding `storeFiltersLocalStorage`.
+export const DatatablePageStoreKey: InjectionKey<string> = Symbol.for('anzu:DatatablePageStoreKey')

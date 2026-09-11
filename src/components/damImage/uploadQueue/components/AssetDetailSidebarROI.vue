@@ -164,7 +164,7 @@ onMounted(async () => {
         :width="item.width"
         :height="item.height"
         alt=""
-      >
+      />
     </div>
   </div>
   <AssetFileRotate

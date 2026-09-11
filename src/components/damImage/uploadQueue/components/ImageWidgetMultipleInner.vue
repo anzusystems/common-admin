@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
-import { computed, inject, nextTick, onMounted, ref, type ShallowRef, toRaw } from 'vue'
+import { computed, inject, onMounted, ref, type ShallowRef, toRaw } from 'vue'
 import { isNull, isString, isUndefined } from '@/utils/common'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
@@ -34,16 +34,8 @@ import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composabl
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import type { ImageStoreItem } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
-import {
-  CHOSEN_CLASS,
-  DRAG_CLASS,
-  GHOST_CLASS,
-  GROUP_CLASS,
-  HANDLE_CLASS,
-} from '@/components/sortable/sortableActions'
-import { useSortable, type UseSortableReturn } from '@vueuse/integrations/useSortable'
-import type { SortableEvent } from 'sortablejs'
-import { WIDGET_HTML_ID_PREFIX } from '@/components/sortable/sortableUtils'
+import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
+import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
@@ -107,7 +99,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
 const { imageClient, imageApi } = imageOptions
-const { showErrorsDefault, showValidationError, showErrorT } = useAlerts()
+const { showErrorsDefault, showValidationError, showErrorT, showUnknownError } = useAlerts()
 const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
@@ -118,6 +110,14 @@ const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
 const { t } = useI18n()
 
 const imagesLoading = ref(false)
+const imagesLoadFailed = ref(false)
+
+// Editor must not mount before the fetch lands: its dirty baseline is captured once, so rows
+// arriving later would read as "added". One-shot, like the fetch.
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const imagesReady = ref(props.modelValue.length === 0)
+
+const listEditor = ref<{ commit: (rows?: ImageStoreItem[]) => void } | null>(null)
 
 const imageStore = useImageStore()
 const { images, maxPosition } = storeToRefs(imageStore)
@@ -166,9 +166,11 @@ const fetchImagesOnLoad = async () => {
       images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[],
     )
   } catch (e) {
+    imagesLoadFailed.value = true
     showErrorsDefault(e)
   } finally {
     imagesLoading.value = false
+    imagesReady.value = true
   }
 }
 
@@ -423,6 +425,12 @@ const authorEnabled = computed(() => {
 })
 
 const saveImages = async () => {
+  // Empty store here means the fetch is pending or failed, not a user deletion — the empty
+  // path below would detach every image.
+  if (imagesLoading.value || imagesLoadFailed.value) {
+    showUnknownError()
+    return false
+  }
   v$.value.$touch()
   if (v$.value.$invalid) {
     showValidationError()
@@ -460,7 +468,12 @@ const saveImages = async () => {
         assetId: undefined,
       }
     })
-    if (imageStore.images.length === 0) return true
+    if (imageStore.images.length === 0) {
+      listEditor.value?.commit([])
+      // Emptying is a change too — without this the parent kept its old ids.
+      emit('update:modelValue', ids)
+      return true
+    }
 
     const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
       const matchedImage = imageStore.images.find(
@@ -479,9 +492,14 @@ const saveImages = async () => {
 
     const updatedItems = await Promise.all(items.map((item) => getUpdatedItem(item)))
     imageStore.setImages(updatedItems)
+    // Rows passed explicitly: setImages just replaced their keys, bare commit() would read the
+    // not-yet-rerendered prop.
+    listEditor.value?.commit(updatedItems)
     emit('update:modelValue', ids)
     return true
   } catch (e) {
+    // showErrorsDefault reports nothing for non-Anzu errors; its boolean return is for this fallback.
+    if (!showErrorsDefault(e)) showUnknownError()
     return false
   }
 }
@@ -505,24 +523,22 @@ const removeItem = async (index: number) => {
   imageStore.removeImageByIndex(index)
 }
 
-const widgetEl = ref<HTMLElement | null>(null)
-const randomUuid = ref<string>(generateUUIDv1())
-const sortableInstance = ref<UseSortableReturn | null>(null)
-const forceRerender = ref(0)
 const limitDialogComponent = ref<InstanceType<typeof ImageWidgetMultipleLimitDialog> | null>(null)
 
-const widgetHtmlId = computed(() => {
-  return isUndefined(props.widgetIdentifierId)
-    ? WIDGET_HTML_ID_PREFIX + randomUuid.value
-    : props.widgetIdentifierId
-})
+const editorMode = ref<'view' | 'reorder'>('view')
 
-const forceRerenderWidgetHtml = () => {
-  forceRerender.value++
-  nextTick(() => {
-    initSortable()
-  })
-}
+// Required by the editor, but never invoked here — adds happen through the
+// upload / asset-select flow, not the editor's add button (which is hidden).
+const createImageStoreItem = (): ImageStoreItem => ({
+  key: generateUUIDv1(),
+  texts: { description: '', source: '' },
+  dam: { damId: '', licenceId: 0, regionPosition: 0, internal: false },
+  flags: { showSource: true, internal: false, overrideInternal: false },
+  position: 0,
+  damAuthors: [],
+  showDamAuthors: false,
+  assetId: undefined,
+})
 
 const updateAllPositions = () => {
   let pos = 0
@@ -532,36 +548,10 @@ const updateAllPositions = () => {
   })
   imageStore.maxPosition = pos
 }
-const moveImagePositions = (from: number, to: number) => {
-  if (to >= 0 && to < images.value.length) {
-    const element = images.value.splice(from, 1)[0]
-    images.value.splice(to, 0, element)
-    updateAllPositions()
-    forceRerenderWidgetHtml()
-  }
-}
 
-const initSortable = () => {
-  if (props.disableDraggable) return
-  if (!widgetEl.value) return
-  const nestedSortable = widgetEl.value.querySelector<HTMLElement>('.' + GROUP_CLASS)
-  if (!nestedSortable) return
-  sortableInstance.value = useSortable(nestedSortable, [], {
-    handle: '.' + HANDLE_CLASS,
-    ghostClass: GHOST_CLASS,
-    dragClass: DRAG_CLASS,
-    chosenClass: CHOSEN_CLASS,
-    onEnd: async (event: SortableEvent) => {
-      if (isUndefined(event.oldIndex) || isUndefined(event.newIndex)) return
-      moveImagePositions(event.oldIndex, event.newIndex)
-    },
-  })
+const onReorderApplied = () => {
+  updateAllPositions()
 }
-
-nextTick(() => {
-  widgetEl.value = document.querySelector('#' + widgetHtmlId.value)
-  initSortable()
-})
 
 defineExpose({
   saveImages,
@@ -573,7 +563,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div :id="widgetHtmlId">
+  <div>
     <h4
       v-if="label"
       class="font-weight-bold text-label-large"
@@ -639,28 +629,59 @@ onMounted(() => {
       class="position-relative w-100"
       style="min-height: 140px"
     >
-      <div
-        :key="forceRerender"
-        :class="GROUP_CLASS"
-        class="asset-list-tiles asset-list-tiles--thumbnail"
+      <ASortableListEditor
+        v-if="imagesReady"
+        ref="listEditor"
+        v-model="images"
+        v-model:mode="editorMode"
+        :factory="createImageStoreItem"
+        get-key="key"
+        position="position"
+        :show-add-button="false"
+        :show-delete-button="false"
+        :show-edit-button="false"
+        :disable-drag="disableDraggable"
+        @reorder-applied="onReorderApplied"
       >
-        <ImageWidgetMultipleItem
-          v-for="(image, index) in images"
-          :key="image.key"
-          :index="index"
-          :total-count="images.length"
-          :disable-draggable="disableDraggable"
-          :show-source-enabled="showSourceEnabled"
-          :source-label="sourceLabel"
-          :edit-asset-label="editAssetLabel"
-          :author-enabled="authorEnabled"
-          @edit-asset="onEditAsset"
-          @remove-item="removeItem"
-          @move-up="(i) => moveImagePositions(i, i - 1)"
-          @move-down="(i) => moveImagePositions(i, i + 1)"
-        />
-      </div>
+        <template #view-body>
+          <div class="asset-list-tiles asset-list-tiles--thumbnail a-sortable-widget__group">
+            <ImageWidgetMultipleItem
+              v-for="(image, index) in images"
+              :key="image.key"
+              :index="index"
+              :show-source-enabled="showSourceEnabled"
+              :source-label="sourceLabel"
+              :edit-asset-label="editAssetLabel"
+              :author-enabled="authorEnabled"
+              @edit-asset="onEditAsset"
+              @remove-item="removeItem"
+            />
+          </div>
+        </template>
+        <template #item-compact="{ raw }">
+          <div class="image-widget-multiple-reorder">
+            <div class="image-widget-multiple-reorder__thumb">
+              <AImageWidgetSimple
+                :model-value="raw.id"
+                :image="raw"
+              />
+            </div>
+            <div class="image-widget-multiple-reorder__meta">
+              <div class="image-widget-multiple-reorder__title">
+                {{ raw.texts?.description?.trim() || '—' }}
+              </div>
+              <div
+                v-if="raw.texts?.source"
+                class="image-widget-multiple-reorder__source"
+              >
+                {{ raw.texts.source }}
+              </div>
+            </div>
+          </div>
+        </template>
+      </ASortableListEditor>
       <AImageDropzone
+        v-if="editorMode === 'view'"
         variant="fill"
         :hover-only="modelValue.length > 0 || images.length > 0"
         :accept="uploadAccept"
@@ -693,3 +714,67 @@ onMounted(() => {
     />
   </div>
 </template>
+
+<style lang="scss">
+.image-widget-multiple-reorder {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 100px;
+  padding: 4px 0;
+
+  &__thumb {
+    flex: 0 0 auto;
+    width: 200px;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  }
+
+  &__meta {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: rgb(var(--v-theme-on-surface));
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__source {
+    font-size: 0.82rem;
+    color: rgb(var(--v-theme-on-surface) / 70%);
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (width <= 600px) {
+    gap: 8px;
+    min-height: 72px;
+
+    &__thumb {
+      width: 80px;
+    }
+
+    &__source {
+      display: none;
+    }
+  }
+}
+</style>

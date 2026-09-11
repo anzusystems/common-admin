@@ -27,17 +27,13 @@ const { t } = useI18n()
     <VCol cols="3">
       {{ t('common.damImage.asset.detail.info.field.width') }}
     </VCol>
-    <VCol cols="9">
-      {{ file.imageAttributes.width }} px
-    </VCol>
+    <VCol cols="9">{{ file.imageAttributes.width }} px</VCol>
   </VRow>
   <VRow>
     <VCol cols="3">
       {{ t('common.damImage.asset.detail.info.field.height') }}
     </VCol>
-    <VCol cols="9">
-      {{ file.imageAttributes.height }} px
-    </VCol>
+    <VCol cols="9">{{ file.imageAttributes.height }} px</VCol>
   </VRow>
   <VRow>
     <VCol cols="3">

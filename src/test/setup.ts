@@ -21,6 +21,7 @@ const vuetify = createVuetify({
 
 // Create i18n instance for testing with loaded messages
 const i18n = createI18n({
+  legacy: false,
   locale: 'en',
   fallbackLocale: 'en',
   messages: {
@@ -34,11 +35,15 @@ const pinia = createPinia()
 // Configure Vue Test Utils global plugins
 config.global.plugins = [vuetify, i18n, pinia]
 
-// Mock window.matchMedia for Vuetify
+// Mock window.matchMedia for Vuetify.
+// `(any-pointer: fine)` answers TRUE: the default test environment stands in for a desktop with a
+// mouse, so list editors offer the drag handle. `useIsTouchDevice()` negates this query, and a blanket
+// `matches:false` would make every suite look like a touch-only device and silently disable drag.
+// Tests that want a touch-only device override `window.matchMedia` themselves before mounting.
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
+    matches: query.includes('any-pointer: fine'),
     media: query,
     onchange: null,
     addListener: vi.fn(), // deprecated

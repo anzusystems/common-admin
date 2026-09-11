@@ -256,7 +256,7 @@ const { remainingTimeShort } = useRemainingTime()
       alt=""
       :style="'background-color:' + backgroundColorComputed"
       @onerror="onError"
-    >
+    />
     <div
       v-if="showIconComputed"
       class="asset-image__icon-wrapper"

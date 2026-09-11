@@ -139,7 +139,7 @@ const assetMainFile = computed(() => {
           class="system-border-b pr-1"
         >
           <div class="text-label-large d-flex px-2">
-            <div>DAM: {{ toolbarTitle }}</div>
+            <div>{{ t('common.damImage.asset.detail.sourceSystem') }}: {{ toolbarTitle }}</div>
           </div>
           <VSpacer />
           <div class="pr-2">

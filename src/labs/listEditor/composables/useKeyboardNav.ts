@@ -56,9 +56,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
   const focusedKey = ref<ListEditorKey | null>(null)
   const grabbedKey = ref<ListEditorKey | null>(null)
 
-  const orderedKeys = computed<ListEditorKey[]>(() =>
-    options.viewItems.value.map((v) => v.key),
-  )
+  const orderedKeys = computed<ListEditorKey[]>(() => options.viewItems.value.map((v) => v.key))
 
   const isFocused = (key: ListEditorKey): boolean => focusedKey.value === key
   const isGrabbed = (key: ListEditorKey): boolean => grabbedKey.value === key
@@ -80,9 +78,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
   function focusRowElement(key: ListEditorKey | null) {
     if (key === null || typeof document === 'undefined') return
     void Promise.resolve().then(() => {
-      const el = document.querySelector<HTMLElement>(
-        `[data-id="${CSS.escape(String(key))}"]`,
-      )
+      const el = document.querySelector<HTMLElement>(`[data-id="${CSS.escape(String(key))}"]`)
       el?.focus()
     })
   }
@@ -99,28 +95,25 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
   // *was* — by the time the watcher fires, the key is already gone from `now`.
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   let prevOrderedKeys: ListEditorKey[] = [...orderedKeys.value]
-  watch(
-    orderedKeys,
-    (now) => {
-      if (focusedKey.value === null) {
-        prevOrderedKeys = [...now]
-        return
-      }
-      if (now.includes(focusedKey.value)) {
-        prevOrderedKeys = [...now]
-        return
-      }
-      if (now.length === 0) {
-        focusedKey.value = null
-        prevOrderedKeys = []
-        return
-      }
-      const oldIndex = prevOrderedKeys.indexOf(focusedKey.value)
-      const fallbackIndex = Math.min(Math.max(oldIndex, 0), now.length - 1)
-      setFocus(now[fallbackIndex])
+  watch(orderedKeys, (now) => {
+    if (focusedKey.value === null) {
       prevOrderedKeys = [...now]
-    },
-  )
+      return
+    }
+    if (now.includes(focusedKey.value)) {
+      prevOrderedKeys = [...now]
+      return
+    }
+    if (now.length === 0) {
+      focusedKey.value = null
+      prevOrderedKeys = []
+      return
+    }
+    const oldIndex = prevOrderedKeys.indexOf(focusedKey.value)
+    const fallbackIndex = Math.min(Math.max(oldIndex, 0), now.length - 1)
+    setFocus(now[fallbackIndex])
+    prevOrderedKeys = [...now]
+  })
 
   // Releasing a grab when the grabbed row is no longer in the list — keeps the
   // grab state consistent if the row gets removed externally.

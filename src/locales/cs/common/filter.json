@@ -1,17 +1,17 @@
 {
-  "fulltext": "Hľadať v textoch",
-  "filterMinChars": "Zadajte minimálne {min} znaky",
+  "fulltext": "Hledat v textech",
+  "filterMinChars": "Zadejte minimálně {min} znaky",
   "bookmark": {
     "title": "Záložky",
-    "name": "Názov",
-    "add": "Pridať záložku",
-    "manage": "Spravovať záložky",
-    "infoSave": "Aktuálne vybrané filtre budú uložené s touto záložkou.",
-    "errorMax": "Dosiahnutý maximálny počet záložiek. Môžete vymazať niektoré záložky a pridať nové.",
-    "storeTableColumns": "Uložiť aj stĺpce tabuľky",
-    "storeTableOrder": "Uložiť aj poradie tabuľky",
-    "saveBookmarkOrder": "Uložiť zoradenie",
-    "nameUniqueError": "Názov filtra musí byť unikátny"
+    "name": "Název",
+    "add": "Přidat záložku",
+    "manage": "Spravovat záložky",
+    "infoSave": "Aktuálně vybrané filtry budou uloženy s touto záložkou.",
+    "errorMax": "Dosažen maximální počet záložek. Můžete některé záložky smazat a přidat nové.",
+    "storeTableColumns": "Uložit i sloupce tabulky",
+    "storeTableOrder": "Uložit i pořadí tabulky",
+    "saveBookmarkOrder": "Uložit řazení",
+    "nameUniqueError": "Název filtru musí být unikátní"
   },
   "timeInterval": {
     "from": "Od",

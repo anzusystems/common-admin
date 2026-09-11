@@ -89,9 +89,7 @@ onMounted(async () => {
 
   <VCard>
     <VCardText>
-      <VSwitch v-model="showData">
-        Toggle data
-      </VSwitch>
+      <VSwitch v-model="showData">Toggle data</VSwitch>
       <VRow>
         <VCol cols="6">
           <p>list items count, search api: {{ itemsList1.length }}</p>

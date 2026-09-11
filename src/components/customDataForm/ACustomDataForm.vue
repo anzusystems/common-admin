@@ -49,8 +49,8 @@ const elementsOther = computed(() => {
 
 const showHideButtonText = computed(() => {
   return showAll.value
-    ? t('common.damImage.asset.detail.metadataToggle.show')
-    : t('common.damImage.asset.detail.metadataToggle.hide')
+    ? t('common.damImage.asset.detail.metadataToggle.hide')
+    : t('common.damImage.asset.detail.metadataToggle.show')
 })
 const showHideButtonIcon = computed(() => {
   return showAll.value ? 'mdi-minus' : 'mdi-plus'
@@ -78,7 +78,7 @@ defineExpose({
     <VRow
       v-for="element in elementsPinned"
       :key="element.id"
-      density="comfortable"
+      density="compact"
       class="mt-1"
     >
       <VCol>
@@ -106,7 +106,7 @@ defineExpose({
     <VRow
       v-for="element in elementsOther"
       :key="element.id"
-      density="comfortable"
+      density="compact"
       class="mt-1"
     >
       <VCol>

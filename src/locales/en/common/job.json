@@ -8,12 +8,21 @@
   "model": {
     "id": "Id",
     "_resourceName": "Type",
+    "priority": "Priority",
+    "scheduledAt": "Scheduled at",
     "status": "Status",
     "startedAt": "Started at",
     "finishedAt": "Finished at",
     "result": "Result",
     "targetUserId": "Target user id",
     "anonymizeUser": "Anonymize user"
+  },
+  "meta": {
+    "priority": {
+      "low": "Low",
+      "medium": "Normal",
+      "high": "High"
+    }
   },
   "jobResource": {
     "jobUserDataDelete": "User data delete"

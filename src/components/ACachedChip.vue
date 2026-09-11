@@ -84,9 +84,7 @@ const onClick = () => {
 <template>
   <div :class="containerClassComputed">
     <template v-if="isNull(id) || isUndefined(id)">
-      <slot name="empty">
-        -
-      </slot>
+      <slot name="empty">-</slot>
     </template>
     <div v-else-if="textOnly">
       {{ displayTitle }}

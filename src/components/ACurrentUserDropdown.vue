@@ -56,7 +56,7 @@ const logoutDialog = ref(false)
             </template>
             <VListItemTitle>{{ currentUser.person.fullName }}</VListItemTitle>
             <VListItemSubtitle>
-              {{ currentUser.email }}<br>
+              {{ currentUser.email }}<br />
               {{ currentUser.id }}
             </VListItemSubtitle>
           </VListItem>

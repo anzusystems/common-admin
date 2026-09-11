@@ -2,6 +2,11 @@
   "system": "System",
   "notSelected": "Not selected",
   "all": "All",
+  "link": "Link",
+  "text": "Text",
+  "url": "URL",
+  "external": "External link",
+  "nofollow": "Nofollow",
   "boolean": {
     "true": "Yes",
     "false": "No"
@@ -13,8 +18,8 @@
     "modified": "Modified"
   },
   "filterPlaceholder": {
-    "eq": "Presný výraz",
-    "contains": "Kdekolvek vo výraze",
-    "startsWith": "Začiatok výrazu"
+    "eq": "Exact match",
+    "contains": "Anywhere in the text",
+    "startsWith": "Starts with"
   }
 }

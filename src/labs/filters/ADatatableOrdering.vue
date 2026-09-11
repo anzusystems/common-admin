@@ -111,6 +111,7 @@ const paginationUpdateDefault = (found: DatatableOrderingOption) => {
       sortBy: null,
     }
     emit('sortByChange', found)
+    return
   }
   pagination.value.sortBy = found.sortBy
   emit('sortByChange', found)
@@ -157,9 +158,7 @@ watch(
 
 <template>
   <div class="d-flex align-center justify-center">
-    <div class="text-body-small mr-1">
-      {{ t('common.system.datatable.ordering.title') }}:
-    </div>
+    <div class="text-body-small mr-1">{{ t('common.system.datatable.ordering.title') }}:</div>
     <VBtn
       variant="text"
       rounded="xl"

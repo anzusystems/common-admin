@@ -33,6 +33,7 @@ describe('ASortableListEditor — embedded mode', () => {
             'onUpdate:modelValue': (v: Item[]) => {
               model.value = v
             },
+            factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             embedded: true,
           })
       },
@@ -57,6 +58,7 @@ describe('ASortableListEditor — embedded mode', () => {
             'onUpdate:mode': (m: 'view' | 'reorder') => {
               mode.value = m
             },
+            factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             embedded: true,
           })
       },
@@ -88,6 +90,7 @@ describe('ASortableListEditor — embedded mode', () => {
             'onUpdate:mode': (m: 'view' | 'reorder') => {
               mode.value = m
             },
+            factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             embedded: true,
           })
       },
@@ -109,13 +112,12 @@ describe('ASortableListEditor — embedded mode', () => {
     /* eslint-enable vue/no-ref-object-reactivity-loss */
   })
 
-  it('clears its movedKeys when external mode flips back to view', async () => {
-    // movedKeys is internal but observable via the unsaved-keys v-model:
-    // marking a moved key sets `unsaved`, the component syncs to its
-    // unsaved-keys model. After view transition the embedded editor should
-    // emit an empty set.
+  it('keeps its unsaved state empty across an external view→reorder→view round-trip', async () => {
+    // v2 has no `unsaved-keys` v-model; the controller's `hasUnsaved` is the
+    // observable. movedKeys requires a user gesture (drag, arrow click) to
+    // populate, so a pure mode round-trip with no gesture must leave the
+    // embedded editor's controller with no unsaved rows.
     const mode = ref<'view' | 'reorder'>('view')
-    const unsavedKeys = ref(new Set<number | string>())
     const model = ref<Item[]>(items())
     const Host = defineComponent({
       setup() {
@@ -129,26 +131,20 @@ describe('ASortableListEditor — embedded mode', () => {
             'onUpdate:mode': (m: 'view' | 'reorder') => {
               mode.value = m
             },
-            unsavedKeys: unsavedKeys.value,
-            'onUpdate:unsavedKeys': (s: Set<number | string>) => {
-              unsavedKeys.value = s
-            },
+            factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             embedded: true,
           })
       },
     })
-    /* eslint-disable vue/no-ref-object-reactivity-loss */
     mounted = mount(Host)
+    const editor = mounted.findComponent(ASortableListEditor) as unknown as {
+      vm: { $: { exposed: { hasUnsaved: { value: boolean } } } }
+    }
     mode.value = 'reorder'
     await nextTick()
-    // movedKeys requires a user gesture (drag, arrow click) to populate;
-    // here we just verify the round-trip view→reorder→view leaves the
-    // emitted unsaved-keys set empty (no stale state from the embedded
-    // editor's reorder session).
     mode.value = 'view'
     await nextTick()
-    expect(unsavedKeys.value.size).toBe(0)
-    /* eslint-enable vue/no-ref-object-reactivity-loss */
+    expect(editor.vm.$.exposed.hasUnsaved.value).toBe(false)
   })
 })
 
@@ -165,6 +161,7 @@ describe('ASortableListEditor — allowEditInReorder', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
               allowEditInReorder: true,
             },
             {
@@ -205,6 +202,7 @@ describe('ASortableListEditor — allowEditInReorder', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form body'),

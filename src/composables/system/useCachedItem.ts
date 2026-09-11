@@ -1,22 +1,15 @@
-import { type ShallowRef, nextTick, shallowRef, watch } from 'vue'
-import { isUndefined } from '@/utils/common'
+import { type ComputedRef, computed } from 'vue'
 
-export function useCachedItem<T extends { _loaded?: boolean }>(
+export function useCachedItem<T extends { _loaded?: boolean; _unresolved?: boolean }>(
   getter: () => T | undefined,
-): { cached: ShallowRef<T | undefined>; loaded: ShallowRef<boolean> } {
-  const cached = shallowRef<T | undefined>(undefined) as ShallowRef<T | undefined>
-  const loaded = shallowRef(false)
-
-  const stopWatch = watch(
-    getter,
-    (newValue) => {
-      if (isUndefined(newValue) || newValue._loaded === false) return
-      cached.value = newValue
-      loaded.value = true
-      nextTick(() => stopWatch())
-    },
-    { immediate: true },
-  )
+): { cached: ComputedRef<T | undefined>; loaded: ComputedRef<boolean> } {
+  const cached = computed<T | undefined>(() => {
+    const value = getter()
+    if (!value) return undefined
+    // `_unresolved` is terminal: return the placeholder so consumers stop showing a spinner.
+    return value._loaded !== false || value._unresolved === true ? value : undefined
+  })
+  const loaded = computed(() => cached.value !== undefined)
 
   return { cached, loaded }
 }

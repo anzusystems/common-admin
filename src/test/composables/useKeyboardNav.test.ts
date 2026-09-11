@@ -10,11 +10,7 @@ const buildOptions = (
   overrides: Partial<KeyboardNavOptions> = {},
 ): { options: KeyboardNavOptions; mocks: ReturnType<typeof buildMocks> } => {
   const mocks = buildMocks()
-  const items = ref<KeyboardNavViewItem[]>([
-    { key: 1 },
-    { key: 2 },
-    { key: 3 },
-  ])
+  const items = ref<KeyboardNavViewItem[]>([{ key: 1 }, { key: 2 }, { key: 3 }])
   const options: KeyboardNavOptions = {
     viewItems: computed(() => items.value),
     variant: 'sortable',
@@ -230,9 +226,7 @@ describe('useKeyboardNav', () => {
     })
 
     it('ArrowRight on a collapsed expandable row expands it (view mode)', () => {
-      const items = ref<KeyboardNavViewItem[]>([
-        { key: 1, expanded: false, canExpand: true },
-      ])
+      const items = ref<KeyboardNavViewItem[]>([{ key: 1, expanded: false, canExpand: true }])
       const { options, mocks } = buildOptions({
         variant: 'nested',
         viewItems: computed(() => items.value),
@@ -243,9 +237,7 @@ describe('useKeyboardNav', () => {
     })
 
     it('ArrowLeft on a leaf row is a no-op', () => {
-      const items = ref<KeyboardNavViewItem[]>([
-        { key: 1, expanded: false, canExpand: false },
-      ])
+      const items = ref<KeyboardNavViewItem[]>([{ key: 1, expanded: false, canExpand: false }])
       const { options, mocks } = buildOptions({
         variant: 'nested',
         viewItems: computed(() => items.value),
@@ -274,9 +266,7 @@ describe('useKeyboardNav', () => {
 
     it('ArrowLeft while grabbed in reorder mode calls onOutdent', () => {
       const isReorderMode = ref(true)
-      const items = ref<KeyboardNavViewItem[]>([
-        { key: 1, canIndent: true, canOutdent: true },
-      ])
+      const items = ref<KeyboardNavViewItem[]>([{ key: 1, canIndent: true, canOutdent: true }])
       const { options, mocks } = buildOptions({
         variant: 'nested',
         isReorderMode,
@@ -289,9 +279,7 @@ describe('useKeyboardNav', () => {
     })
 
     it('flat variant ignores ArrowLeft/ArrowRight', () => {
-      const items = ref<KeyboardNavViewItem[]>([
-        { key: 1, expanded: true, canExpand: true },
-      ])
+      const items = ref<KeyboardNavViewItem[]>([{ key: 1, expanded: true, canExpand: true }])
       const { options, mocks } = buildOptions({
         variant: 'flat',
         viewItems: computed(() => items.value),
@@ -358,11 +346,7 @@ describe('useKeyboardNav', () => {
     }
 
     it('falls focus to next sibling when the focused row is removed', async () => {
-      const { items, nav } = buildWithItems([
-        { key: 1 },
-        { key: 2 },
-        { key: 3 },
-      ])
+      const { items, nav } = buildWithItems([{ key: 1 }, { key: 2 }, { key: 3 }])
       nav.setFocus(2)
       await nextTick()
       // Remove row 2
@@ -372,11 +356,7 @@ describe('useKeyboardNav', () => {
     })
 
     it('falls focus to the new last row when the last row is removed', async () => {
-      const { items, nav } = buildWithItems([
-        { key: 1 },
-        { key: 2 },
-        { key: 3 },
-      ])
+      const { items, nav } = buildWithItems([{ key: 1 }, { key: 2 }, { key: 3 }])
       nav.setFocus(3)
       await nextTick()
       items.value = [{ key: 1 }, { key: 2 }]
@@ -394,11 +374,7 @@ describe('useKeyboardNav', () => {
     })
 
     it('does not change focus when a non-focused row is removed', async () => {
-      const { items, nav } = buildWithItems([
-        { key: 1 },
-        { key: 2 },
-        { key: 3 },
-      ])
+      const { items, nav } = buildWithItems([{ key: 1 }, { key: 2 }, { key: 3 }])
       nav.setFocus(2)
       await nextTick()
       items.value = [{ key: 2 }, { key: 3 }] // removed row 1
@@ -408,11 +384,7 @@ describe('useKeyboardNav', () => {
 
     it('releases grab when the grabbed row is removed externally', async () => {
       const isReorderMode = ref(true)
-      const items = ref<KeyboardNavViewItem[]>([
-        { key: 1 },
-        { key: 2 },
-        { key: 3 },
-      ])
+      const items = ref<KeyboardNavViewItem[]>([{ key: 1 }, { key: 2 }, { key: 3 }])
       const { options } = buildOptions({
         isReorderMode,
         viewItems: computed(() => items.value),

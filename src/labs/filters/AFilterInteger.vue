@@ -86,8 +86,10 @@ const updateSelected = () => {
     ])
     return
   }
-  if (!isString(modelValue.value)) return
-  if (isString(modelValue.value) && modelValue.value.length === 0) {
+  // `null` reaches here when the filter is reset from outside - loading a hash clears every field
+  // before applying it, and the chip has to go with the value. Falling through would leave the
+  // chip naming a value the query no longer carries.
+  if (!isString(modelValue.value) || modelValue.value.length === 0) {
     filterSelected.value.delete(props.name)
     return
   }

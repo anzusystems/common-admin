@@ -5,7 +5,7 @@ import {
   FilterDataKey,
   FilterSelectedKey,
 } from '@/labs/filters/filterInjectionKeys'
-import { isUndefined } from '@/utils/common'
+import { isArray, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
 import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
 
@@ -28,6 +28,7 @@ const getTitleFromConfig = (name: string) => {
 const selectedArray = computed(() => {
   const fieldOrder = Object.keys(filterConfig.fields)
   return Array.from(filterSelected.value)
+    .filter(([key]) => filterConfig.fields?.[key]?.render?.selected !== false)
     .map(([key, valueArray]) => ({
       name: key,
       title: getTitleFromConfig(key),
@@ -37,6 +38,27 @@ const selectedArray = computed(() => {
 })
 
 const { clearOneFilterSelected, isClearable } = useFilterClearHelpers()
+
+/**
+ * Clearing means "back to the default", so on a field already holding its default there is
+ * nothing to clear and the close button would do nothing at all - it would drop the chip, write
+ * the same value back, and the chip would come straight back. Only fields with a non-null default
+ * can reach that state; an array is different, because closing one chip removes one option.
+ */
+const canClear = (name: string) => {
+  if (!isClearable(name, filterConfig)) return false
+  const config = filterConfig.fields[name]
+  // A time interval is a pair sharing one chip, and clearing writes the default into both. Only
+  // `until` may differ - the custom dialog opens prefilled, so shortening just the upper bound
+  // leaves `from` at its default - and the button still has work to do then.
+  if (config.type === 'timeInterval' && config.related) {
+    const related = filterConfig.fields[config.related]
+    if (filterData[config.related] !== related.default) return true
+  }
+  const value = filterData[name]
+  if (isArray(value)) return true
+  return value !== config.default
+}
 
 const clickClose = (name: string, optionValue: number | string) => {
   clearOneFilterSelected(name, optionValue, filterData, filterConfig, filterSelected)
@@ -50,16 +72,14 @@ const clickClose = (name: string, optionValue: number | string) => {
     :key="item.name"
     class="a-selected-filters"
   >
-    <div class="a-selected-filters__label text-body-small">
-      {{ item.title }}:
-    </div>
+    <div class="a-selected-filters__label text-body-small">{{ item.title }}:</div>
     <div
       v-for="option in item.options"
       :key="option.value"
       class="a-selected-filters__chips"
     >
       <VChip
-        v-if="isClearable(item.name, filterConfig)"
+        v-if="canClear(item.name)"
         closable
         size="small"
         class="a-selected-filters__chip"
@@ -121,6 +141,16 @@ const clickClose = (name: string, optionValue: number | string) => {
   .v-chip__close {
     opacity: 0.3;
     transition: opacity 0.2s;
+  }
+}
+
+// Values above are hardcoded light, which renders white-on-white in dark theme.
+.v-theme--dark .a-selected-filters {
+  background: rgb(var(--v-theme-on-surface), 0.08);
+
+  .a-selected-filters__chip {
+    background: rgb(var(--v-theme-on-surface), 0.16);
+    color: rgb(var(--v-theme-on-surface));
   }
 }
 </style>

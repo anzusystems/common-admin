@@ -63,7 +63,7 @@ onMounted(async () => {
             <img
               :src="item.icon"
               :alt="item.title"
-            >
+            />
             <span class="a-admin-switcher__item-title">{{ item.title }}</span>
           </a>
         </div>

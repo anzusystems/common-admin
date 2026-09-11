@@ -44,9 +44,7 @@ const saveInsideDialog = () => {
             :model-value="imageId"
             label="Simple image view"
           >
-            <template #append="{ image }">
-              DAM ID: {{ image?.dam.damId }}
-            </template>
+            <template #append="{ image }">DAM ID: {{ image?.dam.damId }}</template>
           </AImageWidgetSimple>
         </VCol>
         <VCol cols="4">
@@ -67,9 +65,7 @@ const saveInsideDialog = () => {
             label="Lead image 2 with global validation test"
           />
           <div>isvalid (should be always true, use scope, always): {{ isValid }}</div>
-          <VBtn @click.stop="validate">
-            validate should not fire nested widget validation
-          </VBtn>
+          <VBtn @click.stop="validate">validate should not fire nested widget validation</VBtn>
         </VCol>
       </VRow>
       <VRow>
@@ -89,17 +85,13 @@ const saveInsideDialog = () => {
         </VCol>
         <VCol cols="4">
           Expanded actions & metadata - only one at once in dialogs like embed:
-          <VBtn @click.stop="dialog = true">
-            Open dialog
-          </VBtn>
+          <VBtn @click.stop="dialog = true">Open dialog</VBtn>
           <VDialog
             v-model="dialog"
             :max-width="500"
           >
             <VCard v-if="dialog">
-              <ADialogToolbar @on-cancel="dialog = false">
-                test
-              </ADialogToolbar>
+              <ADialogToolbar @on-cancel="dialog = false">test</ADialogToolbar>
               <VCardText>
                 <VRow>
                   <VCol>
@@ -118,9 +110,7 @@ const saveInsideDialog = () => {
               </VCardText>
               <VCardActions>
                 <VSpacer />
-                <ABtnPrimary @click.stop="saveInsideDialog">
-                  Confirm
-                </ABtnPrimary>
+                <ABtnPrimary @click.stop="saveInsideDialog">Confirm</ABtnPrimary>
               </VCardActions>
             </VCard>
           </VDialog>

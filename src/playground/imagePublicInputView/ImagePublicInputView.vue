@@ -29,9 +29,7 @@ const onDialogConfirm = async () => {
   <VCard>
     <VCardTitle>Image public input</VCardTitle>
     <VCardText>
-      <ABtnPrimary @click.stop="dialog = true">
-        Open
-      </ABtnPrimary>
+      <ABtnPrimary @click.stop="dialog = true">Open</ABtnPrimary>
       <VDialog
         v-model="dialog"
         :width="500"
@@ -52,9 +50,7 @@ const onDialogConfirm = async () => {
           </VCardText>
           <VCardActions>
             <VSpacer />
-            <ABtnTertiary @click.stop="dialog = false">
-              Cancel
-            </ABtnTertiary>
+            <ABtnTertiary @click.stop="dialog = false">Cancel</ABtnTertiary>
             <ABtnPrimary
               :loading="saving"
               @click.stop="onDialogConfirm"

@@ -3,7 +3,7 @@ import ADatetime from '@/components/datetime/ADatetime.vue'
 import type { DatetimeUTCNullable } from '@/types/common'
 import { ref } from 'vue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
-import { dateTimeNow } from '@/utils/datetime'
+import { datePretty, dateTimeNow, dateUtcPretty, dateUtcToday } from '@/utils/datetime'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
@@ -12,6 +12,8 @@ import ARow from '@/components/ARow.vue'
 
 const dateTime = ref<DatetimeUTCNullable>('2023-02-08T08:17:29.000000Z')
 const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)
+const day = ref<DatetimeUTCNullable>(dateUtcToday())
+const dayDefaultNull = ref<DatetimeUTCNullable>(null)
 
 const changeToNow = () => {
   dateTimeDefaultNull.value = dateTimeNow()
@@ -38,7 +40,7 @@ const datesCompareValidate = () => {
 
   <VCard>
     <VCardText>
-      dateTime: {{ dateTime }}<br>
+      dateTime: {{ dateTime }}<br />
       dateTimeDefaultNull: {{ dateTimeDefaultNull }}
     </VCardText>
     <VCardTitle>ADatetime component to display formatted datetime</VCardTitle>
@@ -92,6 +94,36 @@ const datesCompareValidate = () => {
   </VCard>
 
   <VCard>
+    <VCardTitle>type "date" - a calendar day, stored as UTC midnight</VCardTitle>
+    <VCardText>
+      <p class="mb-4">day: {{ day }}<br />dayDefaultNull: {{ dayDefaultNull }}</p>
+      <VRow>
+        <VCol>
+          <AFormDatetimePicker
+            v-model="day"
+            type="date"
+            label="date only"
+          />
+        </VCol>
+        <VCol>
+          <AFormDatetimePicker
+            v-model="dayDefaultNull"
+            type="date"
+            label="date only, init null, clearable"
+            clearable
+          />
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
+          Formatted with dateUtcPretty: {{ dateUtcPretty(day) }} / with datePretty (local):
+          {{ datePretty(day) }}
+        </VCol>
+      </VRow>
+    </VCardText>
+  </VCard>
+
+  <VCard>
     <VCardTitle>AFormDatetimePicker component reactivity test</VCardTitle>
     <VCardText>
       <VRow>
@@ -118,9 +150,7 @@ const datesCompareValidate = () => {
       </VRow>
       <VRow>
         <VCol>
-          <ABtnPrimary @click="changeToNow">
-            Change to now
-          </ABtnPrimary>
+          <ABtnPrimary @click="changeToNow">Change to now</ABtnPrimary>
         </VCol>
       </VRow>
     </VCardText>
@@ -171,9 +201,7 @@ const datesCompareValidate = () => {
           :v="v$.article.dates.publishedAt"
         />
       </ARow>
-      <VBtn @click.stop="datesCompareValidate">
-        Validate
-      </VBtn>
+      <VBtn @click.stop="datesCompareValidate">Validate</VBtn>
     </VCardText>
   </VCard>
 </template>

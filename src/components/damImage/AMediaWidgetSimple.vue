@@ -108,7 +108,7 @@ watch(
       :width="width"
       :height="height"
       :class="widgetClass"
-    >
+    />
     <VImg
       v-else
       :lazy-src="imagePlaceholderPath"

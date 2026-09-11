@@ -1,11 +1,19 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 
+/**
+ * `returnUrl` navigates the document instead of the router, for apps whose sticky module state
+ * would survive an in-app navigation and send the user straight back here.
+ */
 withDefaults(
   defineProps<{
-    returnRouteName: string
+    returnRouteName?: string
+    returnUrl?: string
   }>(),
-  {},
+  {
+    returnRouteName: undefined,
+    returnUrl: undefined,
+  },
 )
 
 const { t } = useI18n()
@@ -27,7 +35,8 @@ const { t } = useI18n()
       </p>
 
       <VBtn
-        :to="{ name: returnRouteName }"
+        v-if="returnUrl || returnRouteName"
+        v-bind="returnUrl ? { href: returnUrl } : { to: { name: returnRouteName } }"
         color="primary"
         size="large"
       >

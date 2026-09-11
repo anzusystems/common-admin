@@ -1,11 +1,16 @@
-import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import {
+  AnzuApiResponseCodeError,
+  isAnzuApiResponseCodeError,
+} from '@/model/error/AnzuApiResponseCodeError'
 import {
   AnzuApiValidationError,
   axiosErrorResponseHasValidationData,
 } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
-import type { AxiosInstance, AxiosRequestConfig } from 'axios'
+import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
+import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
+import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import {
   AnzuApiForbiddenError,
@@ -68,6 +73,10 @@ export const apiFetchByIds = <T, R = T>(
         return reject(new AnzuFatalError())
       })
       .catch((err) => {
+        // Rejected above, would otherwise be swallowed by the AnzuFatalError fallback.
+        if (isAnzuApiResponseCodeError(err)) {
+          return reject(err)
+        }
         if (axiosErrorResponseIsForbidden(err)) {
           return reject(new AnzuApiForbiddenError(err, err.config?.url))
         }
@@ -80,7 +89,12 @@ export const apiFetchByIds = <T, R = T>(
         if (axiosErrorResponseHasForbiddenOperationData(err)) {
           return reject(new AnzuApiForbiddenOperationError(err, err))
         }
-        // todo catch another axios errors, for example timeout
+        if (axiosErrorIsTimeout(err)) {
+          return reject(new AnzuApiTimeoutError(err))
+        }
+        if (axios.isAxiosError(err)) {
+          return reject(new AnzuApiAxiosError(err))
+        }
         return reject(new AnzuFatalError(err))
       })
   })

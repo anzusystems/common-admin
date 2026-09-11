@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'
 import { fileURLToPath, URL } from 'url'
 import vue from '@vitejs/plugin-vue'
@@ -86,10 +85,15 @@ export default defineConfig({
       'vuetify/components/VColorPicker',
       'vuetify/components/VSlider',
       'vuetify/components/VLabel',
+      'vuetify/components/VRadio',
+      'vuetify/components/VRadioGroup',
+      'vuetify/components/VBadge',
     ],
   },
   test: {
     globals: true,
+    // v5 default; pinned so it cannot silently flip.
+    clearMocks: true,
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 30000,
     hookTimeout: 30000,
@@ -102,6 +106,22 @@ export default defineConfig({
         {
           browser: 'chromium',
           headless: process.env.VITEST_HEADED ? false : true,
+          provider: playwright({ contextOptions: { timezoneId: 'Europe/Bratislava' } }),
+        },
+        // The two zones catch mirror halves and neither suffices alone: New York catches a
+        // local-time read of a stored day, Bratislava catches a local-time parse of a typed one.
+        // No retry here: the date-mode ordering tests should report a flake rather than hide it.
+        {
+          browser: 'chromium',
+          name: 'chromium-utc-minus',
+          headless: process.env.VITEST_HEADED ? false : true,
+          retry: 0,
+          include: [
+            'src/test/components/ADatetimePicker.test.ts',
+            'src/test/components/AFormDatetimePicker.test.ts',
+            'src/test/utils/datetimePickerValue.test.ts',
+          ],
+          provider: playwright({ contextOptions: { timezoneId: 'America/New_York' } }),
         },
       ],
     },

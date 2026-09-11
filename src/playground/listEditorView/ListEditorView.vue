@@ -3,8 +3,8 @@ import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
-import type { ListEditorApi } from '@/labs/listEditor/composables/useListEditor'
-import type { ListViewItem, PositionHint } from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
+import type { ListViewItem } from '@/labs/listEditor/types/listEditorTypes'
 
 interface FaqItem extends Record<string, any> {
   id: number
@@ -15,6 +15,14 @@ interface FaqItem extends Record<string, any> {
 }
 
 let nextId = 100
+
+// New-row factory — the editor manages add itself (no consumer push handler).
+const createFaqItem = (): FaqItem => ({
+  id: nextId++,
+  position: 0,
+  title: `New #${nextId}`,
+  status: 'Draft',
+})
 
 const statusColor = (status: string): string => {
   if (status === 'Active') return 'success'
@@ -65,6 +73,7 @@ interface Keyword extends Record<string, any> {
   label: string
 }
 let nextKeywordId = 100
+const createKeyword = (): Keyword => ({ id: nextKeywordId++, label: '' })
 const chipItems = ref<Keyword[]>([
   { id: 1, label: 'breaking-news' },
   { id: 2, label: 'sport' },
@@ -110,7 +119,7 @@ const twoRowsItems = ref<FaqItem[]>([
   },
 ])
 
-const editorRef = ref<ListEditorApi<FaqItem> | null>(null)
+const editorRef = ref<ListEditorHandle<FaqItem> | null>(null)
 
 const lastLog = ref<string>('')
 const log = (msg: string) => {
@@ -122,23 +131,6 @@ const onInlineItemSave = async (item: FaqItem) => {
   log(`saved item ${item.id}: ${item.title}`)
 }
 
-const onInlineAdd = (hint: PositionHint | undefined) => {
-  const fresh: FaqItem = {
-    id: nextId++,
-    position: 0,
-    title: `New #${nextId}`,
-    status: 'Draft',
-  }
-  const anchor = hint?.afterId
-    ? inlineItems.value.findIndex((i) => i.id === hint.afterId)
-    : -1
-  if (anchor >= 0) {
-    inlineItems.value.splice(anchor + 1, 0, fresh)
-  } else {
-    inlineItems.value.push(fresh)
-  }
-}
-
 const loadingKeys = ref<Set<number>>(new Set())
 const onLazyEdit = async (vi: ListViewItem<FaqItem>) => {
   if (vi.raw.answer !== undefined) return
@@ -146,22 +138,14 @@ const onLazyEdit = async (vi: ListViewItem<FaqItem>) => {
   await new Promise((r) => setTimeout(r, 900))
   const idx = lazyItems.value.findIndex((i) => i.id === vi.raw.id)
   if (idx !== -1) {
-    lazyItems.value[idx].answer = `Lazy-loaded answer for #${vi.raw.id} at ${new Date().toLocaleTimeString()}`
+    lazyItems.value[idx].answer =
+      `Lazy-loaded answer for #${vi.raw.id} at ${new Date().toLocaleTimeString()}`
   }
   loadingKeys.value.delete(vi.raw.id)
 }
 
-const onRefAdd = (hint: PositionHint | undefined) => {
-  if (!editorRef.value) return
-  editorRef.value.addItem(
-    {
-      id: nextId++,
-      position: 0,
-      title: `New question #${nextId}`,
-      status: 'Draft',
-    },
-    hint,
-  )
+const onRefAdd = () => {
+  editorRef.value?.addItem()
 }
 
 const onDeleteAsync = async (item: FaqItem) => {
@@ -183,15 +167,15 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — inline edit (title + status chip + Close vs Cancel distinction)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Click a row to activate. Close (X) keeps your changes.
-        Cancel rolls back to the snapshot taken when you opened the row. Save commits via
+        Click a row to activate. Close (X) keeps your changes. Cancel rolls back to the snapshot
+        taken when you opened the row. Save commits via
         <code>onItemSave</code>. Only one row can be edited at a time.
       </p>
       <AListEditor
         v-model="inlineItems"
         title="Časté otázky (FAQ)"
+        :factory="createFaqItem"
         :on-delete="onDeleteAsync"
-        @add="onInlineAdd"
       >
         <template #item-compact="{ raw }">
           <span class="faq-title">{{ raw.title }}</span>
@@ -225,13 +209,14 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — readonly with #item-readonly slot (click to expand detail view)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Component is <code>readonly</code>. Click a row to expand and see the detail in a
-        read-only form rendered via the <code>#item-readonly</code> slot. Close (X) collapses.
-        No Save / Cancel footer.
+        Component is <code>readonly</code>. Click a row to expand and see the detail in a read-only
+        form rendered via the <code>#item-readonly</code> slot. Close (X) collapses. No Save /
+        Cancel footer.
       </p>
       <AListEditor
         v-model="readonlyItems"
         title="FAQ — read only"
+        :factory="createFaqItem"
         readonly
       >
         <template #item-compact="{ raw }">
@@ -250,17 +235,13 @@ const onDeleteAsync = async (item: FaqItem) => {
         <template #item-readonly="{ raw }">
           <div class="d-flex flex-column ga-3">
             <div>
-              <div class="text-body-small text-medium-emphasis mb-1">
-                Title
-              </div>
+              <div class="text-body-small text-medium-emphasis mb-1">Title</div>
               <div class="text-body-medium">
                 {{ raw.title }}
               </div>
             </div>
             <div>
-              <div class="text-body-small text-medium-emphasis mb-1">
-                Answer
-              </div>
+              <div class="text-body-small text-medium-emphasis mb-1">Answer</div>
               <div class="text-body-medium">
                 {{ raw.answer }}
               </div>
@@ -273,12 +254,13 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — lazy-loaded detail (async fetch on edit)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Rows only have title + status initially. Clicking a row triggers an async fetch
-        (simulated 900 ms) to load the answer. Spinner shows while loading, then the form renders.
+        Rows only have title + status initially. Clicking a row triggers an async fetch (simulated
+        900 ms) to load the answer. Spinner shows while loading, then the form renders.
       </p>
       <AListEditor
         v-model="lazyItems"
         title="FAQ — lazy detail"
+        :factory="createFaqItem"
         :loading-keys="loadingKeys"
         :on-item-save="onInlineItemSave"
         @edit="onLazyEdit"
@@ -335,6 +317,7 @@ const onDeleteAsync = async (item: FaqItem) => {
       <AListEditor
         v-model="twoRowsItems"
         title="FAQ — two-rows layout"
+        :factory="createFaqItem"
         two-rows="always"
         :on-item-save="onInlineItemSave"
       >
@@ -366,18 +349,26 @@ const onDeleteAsync = async (item: FaqItem) => {
         </template>
       </AListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        AListEditor — imperative API via template ref
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">AListEditor — imperative API via template ref</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Caller calls <code>editorRef.addItem(data, hint)</code> on the component; add button at
-        the bottom triggers it.
+        Caller calls <code>editorRef.addItem()</code> on the exposed handle; the external button
+        below triggers it (built-in add button hidden).
       </p>
+      <div class="d-flex ga-2 mb-2">
+        <VBtn
+          color="primary"
+          variant="flat"
+          @click="onRefAdd"
+        >
+          Add via handle
+        </VBtn>
+      </div>
       <AListEditor
         ref="editorRef"
         v-model="refEditorItems"
         title="FAQ — imperative ref"
-        @add="onRefAdd"
+        :factory="createFaqItem"
+        :show-add-button="false"
       >
         <template #item-compact="{ raw }">
           <span class="faq-title">{{ raw.title }}</span>
@@ -398,9 +389,9 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — <code>chips</code> layout (flat, no drag)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Flat inline-flex chip pills. No drag (non-sortable variant). Each chip has a built-in
-        close X — no confirm dialog. Add via an external input above. Chips wrap to the next
-        line when the container is narrow.
+        Flat inline-flex chip pills. No drag (non-sortable variant). Each chip has a built-in close
+        X — no confirm dialog. Add via an external input above. Chips wrap to the next line when the
+        container is narrow.
       </p>
       <div class="d-flex ga-2 mb-2">
         <AFormTextField
@@ -421,6 +412,8 @@ const onDeleteAsync = async (item: FaqItem) => {
       <AListEditor
         v-model="chipItems"
         title="Keywords"
+        :factory="createKeyword"
+        :position="false"
         chips
         :show-add-button="false"
       >
@@ -433,12 +426,14 @@ const onDeleteAsync = async (item: FaqItem) => {
         AListEditor — <code>chips</code> readonly (no close X, display-only)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Passing <code>readonly</code> or <code>:show-delete-button="false"</code> suppresses
-        the close X on each chip.
+        Passing <code>readonly</code> or <code>:show-delete-button="false"</code> suppresses the
+        close X on each chip.
       </p>
       <AListEditor
         v-model="chipReadonlyItems"
         title="Tags (readonly)"
+        :factory="createKeyword"
+        :position="false"
         chips
         readonly
         :show-add-button="false"

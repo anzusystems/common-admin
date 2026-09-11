@@ -1,0 +1,24 @@
+{
+  "model": {
+    "id": "Id",
+    "property": "Vlastnost",
+    "name": "Název",
+    "position": "Pozice",
+    "attributes": {
+      "type": "Typ",
+      "minValue": "Min. hodnota",
+      "maxValue": "Max. hodnota",
+      "minCount": "Min. počet",
+      "maxCount": "Max. počet",
+      "required": "Povinné",
+      "searchable": "Hledat"
+    }
+  },
+  "type": {
+    "string": "Řetězec",
+    "integer": "Celé číslo",
+    "stringArray": "Pole řetězců",
+    "stringArrayLegacy": "Pole řetězců (staré)",
+    "boolean": "Boolean"
+  }
+}

@@ -39,7 +39,7 @@ const { t } = useI18n()
     <VAlert type="error">
       {{ t('common.damImage.asset.detail.info.status.failed') }}
       <div v-if="assetMainFileFailReason">
-        <br>
+        <br />
         <AssetFileFailReasonChip :reason="assetMainFileFailReason" />
       </div>
     </VAlert>

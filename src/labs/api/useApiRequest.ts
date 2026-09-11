@@ -59,10 +59,13 @@ export const useApiRequest = <R, T = R>(
     silentConsoleError = false,
   } = params
 
-  let abortController: AbortController | null = null
+  // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
+  // leaving both unabortable.
+  const abortControllers = new Set<AbortController>()
 
   const executeRequest = async (executeParams: ExecuteRequestParams<T> = {}): Promise<R> => {
-    abortController = new AbortController()
+    const abortController = new AbortController()
+    abortControllers.add(abortController)
 
     const urlTemplateOverride = executeParams.urlTemplate
     const urlParamsOverride = executeParams.urlParams
@@ -137,14 +140,13 @@ export const useApiRequest = <R, T = R>(
       if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
-      abortController = null
+      abortControllers.delete(abortController)
     }
   }
 
   const abortRequest = () => {
-    if (abortController) {
-      abortController.abort()
-    }
+    abortControllers.forEach((controller) => controller.abort())
+    abortControllers.clear()
   }
 
   return {

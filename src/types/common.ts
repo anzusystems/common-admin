@@ -4,6 +4,11 @@
 export type DatetimeUTC = string
 
 /**
+ * Calendar day carried as an RFC 3339 datetime pinned to UTC midnight.
+ */
+export type DateUTC = string
+
+/**
  * Datetime in RFC 3339 format as string + null.
  */
 export type DatetimeUTCNullable = string | null

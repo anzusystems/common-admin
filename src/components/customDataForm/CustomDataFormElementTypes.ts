@@ -26,7 +26,7 @@ export function useCustomDataFormElementType() {
     },
     {
       value: CustomDataFormElementType.StringArray,
-      title: t('common.customFormElement.type.C'),
+      title: t('common.customFormElement.type.stringArray'),
     },
     {
       value: CustomDataFormElementType.StringArrayLegacy,

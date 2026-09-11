@@ -183,7 +183,7 @@ onUnmounted(() => {
         :style="[{ 'max-width': '100%', opacity: loading ? 0 : 1 }, imgStyle]"
         :alt="alt"
         :src="src"
-      >
+      />
     </div>
   </div>
 </template>

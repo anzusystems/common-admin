@@ -28,7 +28,7 @@ const save = () => {
       </VRow>
       <VRow>
         <VCol>
-          Simple:<br>
+          Simple:<br />
           <AImageWidgetMultipleSimple
             v-model="imageIds"
             show-description
@@ -38,10 +38,8 @@ const save = () => {
       </VRow>
       <VRow>
         <VCol>
-          Editable<br>
-          <VBtn @click.stop="save">
-            Save editable
-          </VBtn>
+          Editable<br />
+          <VBtn @click.stop="save">Save editable</VBtn>
         </VCol>
       </VRow>
       <VRow>

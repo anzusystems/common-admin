@@ -34,21 +34,21 @@ export interface UseNestedUnsavedKeysApi {
  *     @update:unsaved-keys="(s) => childSets.setForParent(parent.id, s)"
  *   />
  *   // emit `childSets.merged.value` upward
+ *
+ * IMPORTANT: when the parent editor uses `manage-delete`, clear the removed
+ * parent's entry on its `@deleted` — `setForParent(deletedKey, new Set())` —
+ * otherwise the deleted row's stale child-unsaved keys keep `merged` non-empty
+ * and the unsaved-changes guard lingers after an add-then-delete.
  */
 export function useNestedUnsavedKeys(): UseNestedUnsavedKeysApi {
-  const byParent: Ref<Map<ListEditorKey, Set<ListEditorKey>>> = ref(
-    new Map(),
-  )
+  const byParent: Ref<Map<ListEditorKey, Set<ListEditorKey>>> = ref(new Map())
 
   const empty = new Set<ListEditorKey>()
 
   const getForParent = (parentKey: ListEditorKey): Set<ListEditorKey> =>
     byParent.value.get(parentKey) ?? empty
 
-  const setForParent = (
-    parentKey: ListEditorKey,
-    set: Set<ListEditorKey>,
-  ) => {
+  const setForParent = (parentKey: ListEditorKey, set: Set<ListEditorKey>) => {
     if (set.size === 0) {
       byParent.value.delete(parentKey)
     } else {
