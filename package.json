@@ -24,7 +24,7 @@
     "./oxlint": "./src/eslint/oxlint.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1788935854",
+  "version": "1.47.0-beta.dev-1788935855",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
