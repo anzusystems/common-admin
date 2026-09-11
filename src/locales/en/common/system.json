@@ -61,5 +61,6 @@
   "upload": {
     "incorrectFormatSize": "Invalid format or size"
   },
-  "inputSuggestedMax": "{current} / max {max}"
+  "inputSuggestedMax": "{current} / max {max}",
+  "notSet": "Not set"
 }
