@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { ref, type Ref } from 'vue'
 import { useNestedListEditor } from '@/labs/listEditor/composables/useNestedListEditor'
-import type {
-  ListEditorKey,
-  NestedTree,
-  NestedTreeNode,
-} from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorKey, NestedTree, NestedTreeNode } from '@/labs/listEditor/types/listEditorTypes'
 
 interface MenuItem {
   id: number
@@ -23,7 +19,7 @@ const node = (
   title: string,
   parent: number | null,
   position: number,
-  children?: NestedTreeNode<MenuItem>[],
+  children?: NestedTreeNode<MenuItem>[]
 ): NestedTreeNode<MenuItem> => ({
   data: { id, title, parent, position },
   children,
@@ -49,10 +45,7 @@ const makeTree = (): NestedTree<MenuItem> => ({
     node(1, 'Docs', null, 1, [
       node(2, 'Guides', 1, 1, [
         node(3, 'Vue', 2, 1, [
-          node(4, 'Advanced', 3, 1, [
-            node(5, 'Composition API', 4, 1, []),
-            node(6, 'Reactivity', 4, 2, []),
-          ]),
+          node(4, 'Advanced', 3, 1, [node(5, 'Composition API', 4, 1, []), node(6, 'Reactivity', 4, 2, [])]),
         ]),
       ]),
     ]),
@@ -71,8 +64,7 @@ const newItem = (id: number, title = `Item ${id}`): MenuItem => ({
 })
 
 /** Collect keys of a flat view-items list for quick order assertions. */
-const keys = <T extends { key: ListEditorKey }>(items: T[]): ListEditorKey[] =>
-  items.map((i) => i.key)
+const keys = <T extends { key: ListEditorKey }>(items: T[]): ListEditorKey[] => items.map((i) => i.key)
 
 /** Get sibling order under a given parent (or root if null) in a tree. */
 const siblingIds = (tree: NestedTree<MenuItem>, parentId: number | null): number[] => {

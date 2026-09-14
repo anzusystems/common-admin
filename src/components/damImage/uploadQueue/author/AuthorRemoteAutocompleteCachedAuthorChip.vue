@@ -26,7 +26,7 @@ const props = withDefaults(
     size: 'small',
     containerClass: 'd-inline-flex',
     forceReviewed: undefined,
-  },
+  }
 )
 
 const { getCachedAuthor } = useDamCachedAuthors()
@@ -45,10 +45,7 @@ const displayNewIcon = computed(() => {
 const displayTitle = computed(() => {
   if (props.title.length > 0) return props.title
   if (cached.value) {
-    return (
-      cached.value.name +
-      (cached.value.identifier?.length > 0 ? ` (${cached.value.identifier})` : '')
-    )
+    return cached.value.name + (cached.value.identifier?.length > 0 ? ` (${cached.value.identifier})` : '')
   }
   return ''
 })

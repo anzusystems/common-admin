@@ -69,7 +69,7 @@ export function useSentry(component = 'common-admin') {
   const logMessage = (
     message: string,
     level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info',
-    context?: SentryContext,
+    context?: SentryContext
   ): void => {
     switch (level) {
       case 'fatal':

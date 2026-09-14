@@ -1,8 +1,4 @@
-import {
-  type DatatableSortBy,
-  SortOrder,
-  type SortOrderType,
-} from '@/composables/system/datatableColumns'
+import { type DatatableSortBy, SortOrder, type SortOrderType } from '@/composables/system/datatableColumns'
 import { type Ref, ref } from 'vue'
 import { isNull, isString, isUndefined } from '@/utils/common'
 
@@ -30,7 +26,7 @@ export function usePagination(
   sortKey: string | null,
   sortOrder: SortOrderType = SortOrder.Desc,
   options: Partial<PaginationOptions> = {},
-  externalPaginationRef?: Ref<Pagination>,
+  externalPaginationRef?: Ref<Pagination>
 ): UsePaginationReturnType {
   const mergedOptions = { ...createDefaultPaginationOptions(), ...options }
 

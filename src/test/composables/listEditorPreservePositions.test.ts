@@ -33,10 +33,7 @@ interface Row {
   position: number
 }
 
-const setup = (
-  initial: Row[],
-  opts: Partial<Parameters<typeof useListEditorController<Row>>[0]> = {},
-) => {
+const setup = (initial: Row[], opts: Partial<Parameters<typeof useListEditorController<Row>>[0]> = {}) => {
   const store = ref<Row[]>(initial.map((r) => ({ ...r })))
   const h = useListEditorController<Row>({
     get: () => store.value,
@@ -57,7 +54,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 1, title: 'A', position: 10 },
         { id: 2, title: 'B', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100 } },
+      { position: { field: 'position', multiplier: 100 } }
     )
     h.moveItem(0, 1)
     // Unchanged behaviour for every existing consumer: values are rewritten from array order.
@@ -71,7 +68,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 1, title: 'A', position: 10 },
         { id: 2, title: 'B', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } }
     )
     h.moveItem(0, 1)
 
@@ -87,7 +84,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 2, title: 'B', position: 100 },
         { id: 3, title: 'C', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } }
     )
     h.moveItem(2, 0) // drag C to the top
 
@@ -102,7 +99,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 1, title: 'A', position: 10 },
         { id: 2, title: 'B', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } }
     )
     h.addItem(undefined, undefined)
 
@@ -121,7 +118,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 2, title: 'B', position: 100 },
         { id: 3, title: 'C', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } }
     )
     h.deleteItem(2) // drop B (by key)
 
@@ -141,7 +138,7 @@ describe('useListEditorController — position strategy', () => {
         { id: 2, title: 'B', position: 100 },
         { id: 3, title: 'C', position: 310 },
       ],
-      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } },
+      { position: { field: 'position', multiplier: 100, strategy: 'preserve-values' } }
     )
     h.deleteItem(1)
     expect(titles(store)).toEqual(['B', 'C'])
@@ -162,7 +159,7 @@ describe('useListEditorController — position strategy', () => {
       {
         position: { field: 'position', multiplier: 100, strategy: 'preserve-values' },
         factory: () => ({ id: -99, title: 'new' }) as unknown as Row, // no position
-      },
+      }
     )
     h.addItem()
     expect(store.value[2].position).toBeUndefined() // add did not invent one
@@ -200,7 +197,7 @@ describe('useListEditorController — strategyOverrides (per-action policy)', ()
         { id: 3, title: 'C', position: 300 },
         { id: 4, title: 'D', position: 400 },
       ],
-      { position: pageContents },
+      { position: pageContents }
     )
     h.deleteItem(3) // drop C (position 300)
 
@@ -216,7 +213,7 @@ describe('useListEditorController — strategyOverrides (per-action policy)', ()
         { id: 1, title: 'A', position: 10 },
         { id: 2, title: 'B', position: 310 },
       ],
-      { position: pageContents },
+      { position: pageContents }
     )
     h.moveItem(0, 1)
 
@@ -231,7 +228,7 @@ describe('useListEditorController — strategyOverrides (per-action policy)', ()
         { id: 1, title: 'A', position: 10 },
         { id: 2, title: 'B', position: 310 },
       ],
-      { position: pageContents },
+      { position: pageContents }
     )
     h.moveItem(0, 1) // preserved swap → store is [B:10, A:310]
 
@@ -250,7 +247,7 @@ describe('useListEditorController — strategyOverrides (per-action policy)', ()
       {
         position: pageContents,
         factory: () => ({ id: -99, title: 'new', position: 300 }) as Row,
-      },
+      }
     )
     h.addItem()
 
@@ -272,7 +269,7 @@ describe('useListEditorController — strategyOverrides (per-action policy)', ()
           strategy: 'renumber' as const,
           strategyOverrides: { move: 'preserve-values' as const },
         },
-      },
+      }
     )
     h.moveItem(0, 1)
 
@@ -295,7 +292,7 @@ describe('useListEditorController — strategyOverrides (per-action policy)', ()
           strategy: 'renumber' as const,
           strategyOverrides: { move: 'preserve-values' as const },
         },
-      },
+      }
     )
     h.deleteItem(2) // remove is NOT overridden → inherits base 'renumber'
 

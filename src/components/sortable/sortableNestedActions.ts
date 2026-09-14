@@ -1,9 +1,6 @@
 import { type InjectionKey, nextTick, type Ref, ref } from 'vue'
 import type { UseSortableReturn } from '@vueuse/integrations/useSortable'
-import type {
-  SortableItemNewPositions,
-  SortableItemWithParentDataAware,
-} from '@/components/sortable/sortableUtils'
+import type { SortableItemNewPositions, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
 import { useAlerts } from '@/composables/system/alerts'
 import { generateUUIDv1 } from '@/utils/generator'
 import { cloneDeep, isNull, isUndefined } from '@/utils/common'
@@ -50,7 +47,7 @@ export interface SortableNestedEmit {
 export function useSortableNestedActions(
   model: Readonly<Ref<SortableNested>>,
   initSortablesCallback: () => void,
-  emit: SortableNestedEmit,
+  emit: SortableNestedEmit
 ): {
   onRemoveDialogConfirm: () => void
   removeById: (id: DocId | IntegerId) => SortableItemNewPositions
@@ -60,18 +57,14 @@ export function useSortableNestedActions(
     children: Array<SortableNestedItem> | undefined | null,
     position: number | null,
     dirty?: boolean | null,
-    parent?: DocId | IntegerId | null | undefined,
+    parent?: DocId | IntegerId | null | undefined
   ) => void
   refresh: () => void
   destroy: () => void
   removeDialog: Ref<boolean>
   sortableInstances: Ref<Array<UseSortableReturn>>
   addChildToId: (targetId: DocId | IntegerId, data: any, childrenAllowed: boolean) => void
-  addAfterId: (
-    targetId: DocId | IntegerId | null,
-    data: any,
-    childrenAllowed: boolean,
-  ) => SortableItemNewPositions
+  addAfterId: (targetId: DocId | IntegerId | null, data: any, childrenAllowed: boolean) => SortableItemNewPositions
   forceRerender: Ref<number>
   dragging: Ref<boolean>
   widgetEl: Ref<HTMLElement | null>
@@ -82,7 +75,7 @@ export function useSortableNestedActions(
     targetId: DocId | IntegerId | null,
     newIndex: number,
     oldIndex: number,
-    maxDepth: number,
+    maxDepth: number
   ) => SortableItemNewPositions
 } {
   const { showWarningT } = useAlerts()
@@ -134,7 +127,7 @@ export function useSortableNestedActions(
     oldIndex: number,
     newIndex: number,
     clonedData: SortableNested,
-    updatedPositions: SortableItemNewPositions = [],
+    updatedPositions: SortableItemNewPositions = []
   ) => {
     const start = oldIndex > newIndex ? newIndex : oldIndex
     let position = start + 1
@@ -156,7 +149,7 @@ export function useSortableNestedActions(
     indexTarget: number,
     indexSource: number,
     clonedData: SortableNested,
-    updatedPositions: SortableItemNewPositions = [],
+    updatedPositions: SortableItemNewPositions = []
   ) => {
     if (itemsTarget.length > 0) {
       let position = indexTarget + 1
@@ -191,7 +184,7 @@ export function useSortableNestedActions(
   const calculateParentDepth = (
     parent: DocId | IntegerId | null,
     items: Array<SortableNestedItem>,
-    depth: number = 0,
+    depth: number = 0
   ): number => {
     if (parent === null) return depth
     const parentItem = items.find((item) => item.data.id === parent)
@@ -200,10 +193,7 @@ export function useSortableNestedActions(
     return calculateParentDepth(parentItem.data.parent, items, depth)
   }
 
-  const calculateChildDepth = (
-    children: Array<SortableNestedItem> | undefined,
-    depth: number = 0,
-  ): number => {
+  const calculateChildDepth = (children: Array<SortableNestedItem> | undefined, depth: number = 0): number => {
     let childDepth = depth
     if (children && children.length) {
       depth++
@@ -221,7 +211,7 @@ export function useSortableNestedActions(
   const calculateNodeMaxDepth = (
     item: SortableNestedItem,
     items: Array<SortableNestedItem>,
-    depth: number = 1,
+    depth: number = 1
   ): number => {
     const parentDepth = calculateParentDepth(item.data.parent, items)
     const childDepth = calculateChildDepth(item.children, depth)
@@ -231,7 +221,7 @@ export function useSortableNestedActions(
   const findItemById = (
     id: DocId | IntegerId,
     arr: SortableNestedItem[],
-    parent: SortableNestedItem | null = null,
+    parent: SortableNestedItem | null = null
   ): { itemFound: SortableNestedItem | null; parentItem: SortableNestedItem | null } => {
     for (const item of arr) {
       if (item.data.id === id) {
@@ -260,14 +250,11 @@ export function useSortableNestedActions(
     targetId: DocId | IntegerId | null,
     newIndex: number,
     oldIndex: number,
-    maxDepth: number,
+    maxDepth: number
   ): SortableItemNewPositions => {
     const clonedData: SortableNested = cloneDeep(model.value)
 
-    const { itemFound: itemToMove, parentItem: itemToMoveParentItem } = findItemById(
-      currentId,
-      clonedData.children,
-    )
+    const { itemFound: itemToMove, parentItem: itemToMoveParentItem } = findItemById(currentId, clonedData.children)
 
     if (!itemToMove) {
       console.error('ASortableNested error.')
@@ -308,7 +295,7 @@ export function useSortableNestedActions(
             newIndex,
             idx,
             clonedData,
-            returnData,
+            returnData
           )
           forceRerenderWidgetHtml(clonedData)
           return []
@@ -329,20 +316,12 @@ export function useSortableNestedActions(
       return []
     }
 
-    if (
-      !isNull(itemToMoveParentItem) &&
-      itemToMoveParentItem.data.id === targetItem.data.id &&
-      newIndex === oldIndex
-    ) {
+    if (!isNull(itemToMoveParentItem) && itemToMoveParentItem.data.id === targetItem.data.id && newIndex === oldIndex) {
       // moving item from/to same parent and same position, skip
       return []
     }
 
-    if (
-      itemToMoveParentItem &&
-      itemToMoveParentItem.children &&
-      targetItem.data.id === itemToMoveParentItem.data.id
-    ) {
+    if (itemToMoveParentItem && itemToMoveParentItem.children && targetItem.data.id === itemToMoveParentItem.data.id) {
       // moving item inside same parent
       const idx = itemToMoveParentItem.children.indexOf(itemToMove)
       if (idx !== -1) {
@@ -367,7 +346,7 @@ export function useSortableNestedActions(
           newIndex,
           idx,
           clonedData,
-          returnData,
+          returnData
         )
       }
     } else {
@@ -377,14 +356,7 @@ export function useSortableNestedActions(
         itemToMove.data.parent = targetItem.data.id
         const element = clonedData.children.splice(idx, 1)[0]
         targetItem.children.splice(newIndex, 0, element)
-        updatePositionsDifferentParent(
-          targetItem.children,
-          clonedData.children,
-          newIndex,
-          idx,
-          clonedData,
-          returnData,
-        )
+        updatePositionsDifferentParent(targetItem.children, clonedData.children, newIndex, idx, clonedData, returnData)
       }
     }
 
@@ -438,7 +410,7 @@ export function useSortableNestedActions(
     children: Array<SortableNestedItem> | undefined | null = null,
     position: number | null = null,
     dirty: null | boolean = null,
-    parent: DocId | IntegerId | null | undefined = undefined,
+    parent: DocId | IntegerId | null | undefined = undefined
   ) => {
     const clonedData: SortableNested = cloneDeep(model.value)
 
@@ -461,7 +433,7 @@ export function useSortableNestedActions(
   const addAfterId = (
     targetId: DocId | IntegerId | null,
     data: any,
-    childrenAllowed: boolean,
+    childrenAllowed: boolean
   ): SortableItemNewPositions => {
     const clonedData: SortableNested = cloneDeep(model.value)
 
@@ -479,10 +451,7 @@ export function useSortableNestedActions(
       return []
     }
 
-    const { itemFound: targetItem, parentItem: targetItemParentItem } = findItemById(
-      targetId,
-      clonedData.children,
-    )
+    const { itemFound: targetItem, parentItem: targetItemParentItem } = findItemById(targetId, clonedData.children)
 
     if (!targetItem) {
       showWarningT('common.sortable.error.unableToAdd')

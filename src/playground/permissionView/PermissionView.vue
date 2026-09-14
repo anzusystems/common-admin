@@ -40,9 +40,7 @@ const { can } = defineAuth<AclValue>('cms')
           <Acl permission="cms_entity_create">
             <ARow>Element denied and hidden by ACL (example 1)</ARow>
           </Acl>
-          <ARow v-if="can('cms_entity_create')">
-            Element denied and hidden by ACL (example 2)
-          </ARow>
+          <ARow v-if="can('cms_entity_create')"> Element denied and hidden by ACL (example 2) </ARow>
           <Acl permission="cms_entity_view">
             <ARow>Element allowed and showed by ACL (example 1)</ARow>
           </Acl>

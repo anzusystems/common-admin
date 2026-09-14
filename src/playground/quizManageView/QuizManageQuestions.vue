@@ -5,11 +5,7 @@ import ARow from '@/components/ARow.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import QuizManageQuestionAnswers from '@/playground/quizManageView/QuizManageQuestionAnswers.vue'
-import {
-  type Quiz,
-  type QuizQuestion,
-  createQuizQuestion,
-} from '@/playground/quizManageView/quizMock'
+import { type Quiz, type QuizQuestion, createQuizQuestion } from '@/playground/quizManageView/quizMock'
 
 type ReorderMode = 'view' | 'reorder'
 
@@ -82,9 +78,7 @@ onMounted(() => {
           required
         />
         <ARow>
-          <span class="text-body-small text-medium-emphasis">
-            (image widget omitted in playground)
-          </span>
+          <span class="text-body-small text-medium-emphasis"> (image widget omitted in playground) </span>
         </ARow>
         <VAlert
           v-if="raw.answers.length < 2"
@@ -105,9 +99,7 @@ onMounted(() => {
           class="mt-4"
         />
         <ARow>
-          <span class="text-body-small text-medium-emphasis">
-            (explanation image widget omitted in playground)
-          </span>
+          <span class="text-body-small text-medium-emphasis"> (explanation image widget omitted in playground) </span>
         </ARow>
       </ACard>
       <!-- Reorder mode: only show the embedded answers editor so the user

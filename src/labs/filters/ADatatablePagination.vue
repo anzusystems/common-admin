@@ -2,11 +2,7 @@
 import { computed, inject, watch } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import {
-  DatatablePageStoreKey,
-  DatatablePaginationKey,
-  FilterConfigKey,
-} from '@/labs/filters/filterInjectionKeys'
+import { DatatablePageStoreKey, DatatablePaginationKey, FilterConfigKey } from '@/labs/filters/filterInjectionKeys'
 import { useThrottleFn } from '@vueuse/core'
 import { datatablePageKey, useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
@@ -18,7 +14,7 @@ withDefaults(
   {
     itemsPerPageOptions: () => [10, 25, 50],
     hideRecordsPerPage: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -39,9 +35,7 @@ const { setStoredPage } = useDatatablePageStore()
 const providedPageKey = inject(DatatablePageStoreKey, undefined)
 const filterConfig = inject(FilterConfigKey, undefined)
 const pageStoreKey = computed(
-  () =>
-    providedPageKey ??
-    datatablePageKey(filterConfig?.general.system, filterConfig?.general.subject),
+  () => providedPageKey ?? datatablePageKey(filterConfig?.general.system, filterConfig?.general.subject)
 )
 
 const lastPage = computed(() => {
@@ -89,7 +83,7 @@ watch(
       pagination.value.page = 1
       emit('change')
     }
-  },
+  }
 )
 
 watch(
@@ -99,7 +93,7 @@ watch(
       setStoredPage(pageStoreKey.value, newValue)
       emit('change')
     }
-  },
+  }
 )
 
 const onClickFirst = useThrottleFn(() => {

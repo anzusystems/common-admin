@@ -18,9 +18,7 @@ export const axiosErrorResponseHasForbiddenOperationData = (error: Error) => {
   )
 }
 
-export const isAnzuApiForbiddenOperationError = (
-  error: any,
-): error is AnzuApiForbiddenOperationError => {
+export const isAnzuApiForbiddenOperationError = (error: any): error is AnzuApiForbiddenOperationError => {
   return error instanceof AnzuApiForbiddenOperationError
 }
 

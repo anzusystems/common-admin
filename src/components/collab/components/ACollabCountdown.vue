@@ -11,7 +11,7 @@ const props = withDefaults(
     label: '',
     seconds: 60,
     parentheses: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'done'): void
@@ -30,7 +30,7 @@ watch(
       emit('done')
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 onMounted(() => {

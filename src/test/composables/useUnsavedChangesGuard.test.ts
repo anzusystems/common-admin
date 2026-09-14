@@ -34,7 +34,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [a, b],
           guardRoute: false,
           guardWindowUnload: false,
-        }),
+        })
       )
       expect(api.hasUnsavedChanges.value).toBe(false)
     })
@@ -47,7 +47,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [a, b],
           guardRoute: false,
           guardWindowUnload: false,
-        }),
+        })
       )
       expect(api.hasUnsavedChanges.value).toBe(true)
     })
@@ -59,7 +59,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [a],
           guardRoute: false,
           guardWindowUnload: false,
-        }),
+        })
       )
       expect(api.hasUnsavedChanges.value).toBe(false)
       a.value = new Set([1])
@@ -74,7 +74,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [a],
           guardRoute: false,
           guardWindowUnload: false,
-        }),
+        })
       )
       expect(api.hasUnsavedChanges.value).toBe(false)
       a.value = [1, 2]
@@ -89,7 +89,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [ref(false)],
           guardRoute: false,
           guardWindowUnload: false,
-        }),
+        })
       )
       expect(api.promptOpen.value).toBe(false)
     })
@@ -100,7 +100,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [ref(true)],
           guardRoute: false,
           guardWindowUnload: false,
-        }),
+        })
       )
       api.promptOpen.value = true
       api.resolvePrompt(true)
@@ -126,7 +126,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [ref(true)],
           guardRoute: false,
           guardWindowUnload: true,
-        }),
+        })
       )
       expect(addSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
     })
@@ -137,7 +137,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [ref(true)],
           guardRoute: false,
           guardWindowUnload: false,
-        }),
+        })
       )
       expect(addSpy).not.toHaveBeenCalledWith('beforeunload', expect.any(Function))
     })
@@ -149,7 +149,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [dirty],
           guardRoute: false,
           guardWindowUnload: true,
-        }),
+        })
       )
       // Find the registered listener
       const call = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'beforeunload')
@@ -167,7 +167,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [dirty],
           guardRoute: false,
           guardWindowUnload: true,
-        }),
+        })
       )
       const call = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'beforeunload')
       const handler = call?.[1] as (e: BeforeUnloadEvent) => void
@@ -183,7 +183,7 @@ describe('useUnsavedChangesGuard', () => {
           sources: [ref(true)],
           guardRoute: false,
           guardWindowUnload: true,
-        }),
+        })
       )
       // Capture the exact handler that was added. `expect.any(Function)` would match a DIFFERENT
       // reference too — i.e. the classic leak where the removal silently detaches nothing.
@@ -210,7 +210,7 @@ describe('useUnsavedChangesGuard', () => {
           guardRoute: false,
           guardWindowUnload: false,
           guardDialogModel: dialogModel,
-        }),
+        })
       )
 
     it('lets a dirty dialog-close pass without prompting once acknowledged', async () => {

@@ -16,7 +16,7 @@ withDefaults(
   }>(),
   {
     formName: 'search',
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'submit'): void

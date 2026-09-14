@@ -27,7 +27,7 @@ const props = withDefaults(
     showSourceEnabled: true,
     sourceLabel: undefined,
     editAssetLabel: undefined,
-  },
+  }
 )
 
 const emit = defineEmits<{

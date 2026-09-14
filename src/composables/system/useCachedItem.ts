@@ -1,7 +1,7 @@
 import { type ComputedRef, computed } from 'vue'
 
 export function useCachedItem<T extends { _loaded?: boolean; _unresolved?: boolean }>(
-  getter: () => T | undefined,
+  getter: () => T | undefined
 ): { cached: ComputedRef<T | undefined>; loaded: ComputedRef<boolean> } {
   const cached = computed<T | undefined>(() => {
     const value = getter()

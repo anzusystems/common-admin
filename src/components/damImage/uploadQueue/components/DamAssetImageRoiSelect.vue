@@ -22,7 +22,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
-  },
+  }
 )
 
 const { showRecordWas, showErrorsDefault } = useAlerts()
@@ -45,11 +45,7 @@ const cropperInstance = useTemplateRef<ACropperjsExposed>('cropperInstance')
 
 const imageUrl = computed(() => {
   if (imageRoiStore.imageFile && imageRoiStore.imageFile.links?.image_detail) {
-    return (
-      imageRoiStore.imageFile.links.image_detail.url +
-      '?manipulated=' +
-      imageRoiStore.imageFile.manipulatedAt
-    )
+    return imageRoiStore.imageFile.links.image_detail.url + '?manipulated=' + imageRoiStore.imageFile.manipulatedAt
   }
   return ''
 })
@@ -73,7 +69,7 @@ const applyRegionOfInterest = () => {
       cropperInstance.value,
       imageRoiStore.roi,
       imageRoiStore.imageFile.imageAttributes.width,
-      imageRoiStore.imageFile.imageAttributes.height,
+      imageRoiStore.imageFile.imageAttributes.height
     )
     cropperInstance.value.setData(data)
     disableCropper()
@@ -92,7 +88,7 @@ const saveRoi = async () => {
       cropperInstance.value,
       imageRoiStore.roi,
       imageRoiStore.imageFile.imageAttributes.width,
-      imageRoiStore.imageFile.imageAttributes.height,
+      imageRoiStore.imageFile.imageAttributes.height
     )
     try {
       imageRoiStore.showLoader()

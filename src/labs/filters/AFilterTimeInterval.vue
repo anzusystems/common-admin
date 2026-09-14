@@ -35,7 +35,7 @@ const props = withDefaults(
     allowed: undefined,
     placeholder: undefined,
     dataCy: 'filter-time-interval',
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -208,7 +208,7 @@ watch(
     if (fromNewValue === fromOldValue && untilNewValue === untilOldValue) return
     updateSelected(fromNewValue)
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const onInternalItemChange = (item: ValueObjectOption<TimeIntervalToolsValue>) => {

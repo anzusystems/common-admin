@@ -8,27 +8,14 @@ import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useAlerts } from '@/composables/system/alerts'
-import {
-  DamAssetType,
-  type DamAssetTypeType,
-  type DamImageCopyToLicenceResponse,
-} from '@/types/coreDam/Asset'
+import { DamAssetType, type DamAssetTypeType, type DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
-import {
-  computed,
-  inject,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  type ShallowRef,
-  toRaw,
-  watch,
-} from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -69,12 +56,7 @@ import {
   isMediaAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import {
-  type DamMediaFromDam,
-  DamMediaType,
-  type DamMediaTypeType,
-  type MediaAware,
-} from '@/types/MediaAware'
+import { type DamMediaFromDam, DamMediaType, type DamMediaTypeType, type MediaAware } from '@/types/MediaAware'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/types/coreDam/AssetFile'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 
@@ -122,7 +104,7 @@ const props = withDefaults(
     callDeleteApiOnRemove: false,
     damWidth: undefined,
     damHeight: undefined,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -135,20 +117,14 @@ const mediaModel = defineModel<MediaAware | null>('media', { required: true })
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
 
-const releaseFieldLock = ref(
-  (_data: CollabFieldData, _options?: Partial<CollabFieldLockOptions>) => {},
-)
+const releaseFieldLock = ref((_data: CollabFieldData, _options?: Partial<CollabFieldLockOptions>) => {})
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const acquireFieldLock = ref((options?: Partial<CollabFieldLockOptions>) => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const {
-    releaseCollabFieldLock,
-    acquireCollabFieldLock,
-    addCollabFieldLockStatusListener,
-    lockedByUser,
-  } = useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, acquireCollabFieldLock, addCollabFieldLockStatusListener, lockedByUser } =
+    useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock
   watch(
@@ -156,28 +132,16 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true },
+    { immediate: true }
   )
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
-    if (
-      data.status === CollabFieldLockStatus.Success &&
-      data.type === CollabFieldLockType.Acquire
-    ) {
+    if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Acquire) {
       collabFieldLockReallyLocked.value = true
-    } else if (
-      data.status === CollabFieldLockStatus.Failure &&
-      data.type === CollabFieldLockType.Acquire
-    ) {
+    } else if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
       collabFieldLockReallyLocked.value = false
-    } else if (
-      data.status === CollabFieldLockStatus.Success &&
-      data.type === CollabFieldLockType.Release
-    ) {
+    } else if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Release) {
       collabFieldLockReallyLocked.value = false
-    } else if (
-      data.status === CollabFieldLockStatus.Failure &&
-      data.type === CollabFieldLockType.Release
-    ) {
+    } else if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Release) {
       collabFieldLockReallyLocked.value = true
     }
   })
@@ -194,14 +158,13 @@ const releaseFieldLockLocal = (value: IntegerIdNullable) => {
   lockedLocal.value = false
 }
 
-const imageWidgetUploadConfig = inject<
-  ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined
->(ImageWidgetUploadConfig, undefined)
+const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
+  ImageWidgetUploadConfig,
+  undefined
+)
 
 if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.value)) {
-  throw new Error(
-    "Fatal error, parent component doesn't provide necessary config ext system config.",
-  )
+  throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
 
 const { t } = useI18n()
@@ -269,11 +232,7 @@ onBeforeUnmount(() => {
 })
 
 const waitForFieldLockIsReallyAcquired = async () => {
-  if (
-    !collabOptions.value.enabled ||
-    isUndefined(props.collab) ||
-    props.collabStatus === CollabStatus.Inactive
-  ) {
+  if (!collabOptions.value.enabled || isUndefined(props.collab) || props.collabStatus === CollabStatus.Inactive) {
     return Promise.resolve(true)
   }
 
@@ -328,18 +287,10 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
   if (data[0].result === 'copy') {
-    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [
-      data[0].targetAsset,
-    ])
+    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
   } else if (data[0].result === 'exists') {
-    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [
-      data[0].targetAsset,
-    ])
-    uploadQueuesStore.queueItemDuplicate(
-      data[0].targetAsset,
-      data[0].targetMainFile,
-      DamAssetType.Image,
-    )
+    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
+    uploadQueuesStore.queueItemDuplicate(data[0].targetAsset, data[0].targetMainFile, DamAssetType.Image)
   } else {
     showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
     return
@@ -356,24 +307,20 @@ const onFileInput = (files: File[]) => {
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   DamAssetType.Image,
-  imageWidgetUploadConfig.value.extSystemConfig,
+  imageWidgetUploadConfig.value.extSystemConfig
 )
 
 const reloadImage = async (
   newImage: ImageCreateUpdateAware | undefined,
   newImageId: IntegerIdNullable,
-  force = false,
+  force = false
 ) => {
   resolvedSrc.value = imagePlaceholderPath
   if ((newImage && isNull(resImageMedia.value)) || (newImage && force)) {
     resImageMedia.value = cloneDeep(newImage)
     if (isImageCreateUpdateAware(resImageMedia.value)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = widgetImageToDamImageUrl(
-          toRaw(resImageMedia.value),
-          props.damWidth,
-          props.damHeight,
-        )
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value), props.damWidth, props.damHeight)
       } else {
         resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value))
       }
@@ -391,11 +338,7 @@ const reloadImage = async (
     }
     if (isImageCreateUpdateAware(resImageMedia.value)) {
       if (isNumber(props.damWidth) && isNumber(props.damHeight)) {
-        resolvedSrc.value = widgetImageToDamImageUrl(
-          toRaw(resImageMedia.value),
-          props.damWidth,
-          props.damHeight,
-        )
+        resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value), props.damWidth, props.damHeight)
       } else {
         resolvedSrc.value = widgetImageToDamImageUrl(toRaw(resImageMedia.value))
       }
@@ -417,7 +360,7 @@ const reloadMedia = (newMedia: MediaAware | null) => {
         resolvedSrc.value = damImageIdToDamImageUrl(
           resImageMedia.value.damMedia.imageFileId,
           props.damWidth,
-          props.damHeight,
+          props.damHeight
         )
       } else {
         resolvedSrc.value = damImageIdToDamImageUrl(resImageMedia.value.damMedia.imageFileId)
@@ -457,7 +400,7 @@ watch(
       reloadMedia(null)
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const assetSelectStore = useAssetSelectStore()
@@ -482,10 +425,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     showErrorsDefault(e)
   }
   if (!mediaDataFromDam) return
-  if (
-    selectedAsset.attributes.assetType === DamAssetType.Video &&
-    assetFileIsVideoFile(selectedAsset.mainFile)
-  ) {
+  if (selectedAsset.attributes.assetType === DamAssetType.Video && assetFileIsVideoFile(selectedAsset.mainFile)) {
     // video
     metadataDialog.value = true
     const mediaData: MediaAware = {
@@ -562,7 +502,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           assetSelectStore.selectedSelectConfig.extSystem,
-          assetRes.authors,
+          assetRes.authors
         )
         source = authorsRes.map((author) => author.name).join(', ')
       } else if (assetRes.authors.length === 0) {
@@ -667,15 +607,10 @@ const tryImageConfirm = async () => {
         const authorsRes = await fetchAuthorListByIds(
           damClient,
           assetSelectStore.selectedSelectConfig.extSystem,
-          asset.value.authors,
+          asset.value.authors
         )
         detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
-        await updateAssetAuthors(
-          damClient,
-          endPointAsset,
-          asset.value,
-          assetSelectStore.selectedSelectConfig.extSystem,
-        )
+        await updateAssetAuthors(damClient, endPointAsset, asset.value, assetSelectStore.selectedSelectConfig.extSystem)
         showDamAuthorsInCmsImage.value = false
       }
     }
@@ -748,9 +683,7 @@ const onDropzoneClick = () => {
   expandedUploadDialog.value?.activate()
 }
 
-const detailDialogMetadataComponent = ref<InstanceType<typeof ImageDetailDialogMetadata> | null>(
-  null,
-)
+const detailDialogMetadataComponent = ref<InstanceType<typeof ImageDetailDialogMetadata> | null>(null)
 
 const metadataConfirm = () => {
   detailDialogMetadataComponent.value?.confirm()
@@ -782,9 +715,7 @@ const preselectType = computed(() => {
 
 const type = computed<DamAssetTypeType | null>(() => {
   if (isMediaAware(resImageMedia.value)) {
-    return resImageMedia.value.damMedia.assetType === DamMediaType.Video
-      ? DamAssetType.Video
-      : DamAssetType.Audio
+    return resImageMedia.value.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
   } else if (isImageCreateUpdateAware(resImageMedia.value)) {
     return DamAssetType.Image
   }
@@ -797,7 +728,7 @@ watch(
     if (newValue === oldValue || newValue || anyWidgetDialogOpened.value) return
     releaseFieldLockLocal(imageModel.value)
   },
-  { immediate: false },
+  { immediate: false }
 )
 
 watch(
@@ -806,7 +737,7 @@ watch(
     if (newValue === oldValue || newValue) return
     releaseFieldLockLocal(imageModel.value)
   },
-  { immediate: false },
+  { immediate: false }
 )
 
 onMounted(() => {

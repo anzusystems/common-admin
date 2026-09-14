@@ -20,16 +20,15 @@ const sharedMode = ref<'view' | 'reorder'>('view')
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Mirrors the admin-cms quiz edit page. The outer editor lists
-        <strong>questions</strong>; clicking a question opens its inline form which renders an inner
-        editor of that question's <strong>answers</strong>. A
-        <strong>single Reorder button</strong> on the outer editor drives both — drag questions to
-        reorder questions, open a question and drag its answers to reorder answers, and Apply at the
+        <strong>questions</strong>; clicking a question opens its inline form which renders an inner editor of that
+        question's <strong>answers</strong>. A <strong>single Reorder button</strong> on the outer editor drives both —
+        drag questions to reorder questions, open a question and drag its answers to reorder answers, and Apply at the
         top commits everything.
       </p>
       <p class="text-body-medium text-medium-emphasis mb-6">
-        <strong>Try:</strong> click the Reorder button → open a question while in reorder mode →
-        drag answers; Apply commits, Cancel restores the original order of both questions and
-        answers. Clear an answer's title to see the red rail propagate up to the question row.
+        <strong>Try:</strong> click the Reorder button → open a question while in reorder mode → drag answers; Apply
+        commits, Cancel restores the original order of both questions and answers. Clear an answer's title to see the
+        red rail propagate up to the question row.
       </p>
 
       <VRow class="mb-6">

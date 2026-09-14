@@ -103,9 +103,7 @@ onMounted(() => {
           </VCol>
         </VRow>
         <ARow>
-          <span class="text-body-small text-medium-emphasis">
-            (image widget omitted in playground)
-          </span>
+          <span class="text-body-small text-medium-emphasis"> (image widget omitted in playground) </span>
         </ARow>
       </ACard>
     </template>

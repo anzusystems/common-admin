@@ -92,7 +92,7 @@ const buildHost = (model: Ref<Row[]>) =>
                 factory: (): Advert => ({ adSlotName: '', position: 0 }),
                 compactField: 'adSlotName',
               }),
-          },
+          }
         )
     },
   })

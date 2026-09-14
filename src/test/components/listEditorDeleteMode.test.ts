@@ -76,7 +76,7 @@ function mountEditor(extra: Record<string, unknown> = {}): MountResult {
             compactField: 'title',
             ...extra,
           },
-          { 'item-compact': ({ raw }: { raw: Row }) => h('span', raw.title) },
+          { 'item-compact': ({ raw }: { raw: Row }) => h('span', raw.title) }
         )
     },
   })
@@ -91,9 +91,7 @@ async function clickDelete(wrapper: VueWrapper, rowIndex = 0): Promise<void> {
 }
 
 const dialogText = (): string =>
-  (document.querySelector('.v-overlay__content .v-card-text')?.textContent ?? '')
-    .trim()
-    .toLowerCase()
+  (document.querySelector('.v-overlay__content .v-card-text')?.textContent ?? '').trim().toLowerCase()
 
 async function confirmDialog(): Promise<void> {
   const btns = Array.from(document.querySelectorAll<HTMLElement>('.v-overlay__content .v-btn'))

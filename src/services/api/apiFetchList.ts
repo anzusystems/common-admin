@@ -1,8 +1,5 @@
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import {
-  AnzuApiValidationError,
-  axiosErrorResponseHasValidationData,
-} from '@/model/error/AnzuApiValidationError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { FilterBag } from '@/types/Filter'
@@ -10,10 +7,7 @@ import type { Pagination } from '@/types/Pagination'
 import { isUndefined } from '@/utils/common'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
-import {
-  AnzuApiForbiddenError,
-  axiosErrorResponseIsForbidden,
-} from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
 import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
@@ -28,8 +22,7 @@ import {
 } from '@/model/error/AnzuApiDependencyExistsError'
 
 export const apiGenerateListQuery = (pagination: Pagination, filterBag: FilterBag): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } =
-    useApiQueryBuilder()
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
   querySetLimit(pagination.rowsPerPage)
   querySetOffset(pagination.page, pagination.rowsPerPage)
   querySetOrder(pagination.sortBy, pagination.descending)
@@ -48,16 +41,14 @@ export const apiFetchList = <R>(
   filterBag: FilterBag,
   system: string,
   entity: string,
-  options: AxiosRequestConfig = {},
+  options: AxiosRequestConfig = {}
 ): Promise<R> => {
   return new Promise((resolve, reject) => {
     const searchApi = isUndefined(filterBag._elastic) ? '' : '/search'
     client()
       .get(
-        replaceUrlParameters(urlTemplate, urlParams) +
-          searchApi +
-          apiGenerateListQuery(pagination, filterBag),
-        options,
+        replaceUrlParameters(urlTemplate, urlParams) + searchApi + apiGenerateListQuery(pagination, filterBag),
+        options
       )
       .then((res) => {
         if (!isValidHTTPStatus(res.status)) {

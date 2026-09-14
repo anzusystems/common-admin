@@ -64,8 +64,7 @@ const factory = (props: Record<string, unknown> = {}) => {
   return { wrapper, model, emitted }
 }
 
-const triStateFactory = (props: Record<string, unknown> = {}) =>
-  factory({ items: triStateItems, ...props })
+const triStateFactory = (props: Record<string, unknown> = {}) => factory({ items: triStateItems, ...props })
 
 const flush = async () => {
   await nextTick()
@@ -77,8 +76,7 @@ type Wrapper = ReturnType<typeof factory>['wrapper']
 
 // Vuetify 4.2 renders a hidden input carrying the value next to the text one, so the text input is
 // picked explicitly instead of by position.
-const inputOf = (wrapper: Wrapper) =>
-  wrapper.find('input:not([type="hidden"])').element as HTMLInputElement
+const inputOf = (wrapper: Wrapper) => wrapper.find('input:not([type="hidden"])').element as HTMLInputElement
 
 // Click the field, not the input: Vuetify's field overlay takes the hit at the input's centre, and
 // it is a sibling of the input, so a real click on the input never becomes actionable.
@@ -109,13 +107,13 @@ const openMenu = async (wrapper: Wrapper) => {
 
 const optionTitles = () =>
   Array.from(document.querySelectorAll<HTMLElement>('.v-overlay--active .v-list-item')).map(
-    (item) => item.textContent?.trim() ?? '',
+    (item) => item.textContent?.trim() ?? ''
   )
 
 const clickOption = async (title: string) => {
-  const option = Array.from(
-    document.querySelectorAll<HTMLElement>('.v-overlay--active .v-list-item'),
-  ).find((item) => item.textContent?.trim() === title)
+  const option = Array.from(document.querySelectorAll<HTMLElement>('.v-overlay--active .v-list-item')).find(
+    (item) => item.textContent?.trim() === title
+  )
   expect(option, `option "${title}" is offered in the menu`).toBeTruthy()
   option?.click()
   await flush()

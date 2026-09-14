@@ -5,7 +5,7 @@
 // the `#item-compact` slot for anything richer.
 export function resolveCompactText<TItem extends Record<string, any>>(
   raw: TItem,
-  options: { compactField?: string | null },
+  options: { compactField?: string | null }
 ): string {
   if (!options.compactField) return ''
   const v = raw[options.compactField]

@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     dataCy: 'filter-integer',
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: Filter): void

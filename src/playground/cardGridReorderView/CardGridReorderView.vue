@@ -73,15 +73,12 @@ const onReorderApplied = (items: MockImage[]) => {
 
   <VCard>
     <VCardText>
-      <h2 class="text-headline-medium mt-4 mb-2">
-        Card-grid + reorder mode pattern (#view-body slot)
-      </h2>
+      <h2 class="text-headline-medium mt-4 mb-2">Card-grid + reorder mode pattern (#view-body slot)</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         The editor's header hosts the Reorder / Apply / Cancel buttons; the
-        <code>#view-body</code> slot lets you put any content (here, a card grid with form fields)
-        in place of the editor's default vertical list while in view mode. Click
-        <strong>Reorder</strong> in the editor's header to switch to the bigger-thumbnail sortable
-        list.
+        <code>#view-body</code> slot lets you put any content (here, a card grid with form fields) in place of the
+        editor's default vertical list while in view mode. Click <strong>Reorder</strong> in the editor's header to
+        switch to the bigger-thumbnail sortable list.
       </p>
       <p class="text-body-medium text-medium-emphasis mb-4">
         This is the same pattern used by <code>AImageWidgetMultiple</code>.

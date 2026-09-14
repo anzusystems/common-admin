@@ -10,7 +10,7 @@ const props = withDefaults(
     modelValue: Filter
     items: ValueObjectOption<string | number>[]
   }>(),
-  {},
+  {}
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void

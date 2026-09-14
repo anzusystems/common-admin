@@ -11,7 +11,7 @@ export function useUserAdminConfigApi(
   client: () => AxiosInstance,
   system: string,
   entity: string = ENTITY,
-  endPoint: string = END_POINT,
+  endPoint: string = END_POINT
 ) {
   const useFetchUserAdminConfigList = () =>
     useApiFetchList<UserAdminConfig[]>({ client, system, entity, urlTemplate: END_POINT })

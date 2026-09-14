@@ -17,7 +17,7 @@ const props = withDefaults(
   }>(),
   {
     validationScope: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: { property: string; value: any }): void
@@ -46,8 +46,7 @@ const modelValueComputed = computed(() => {
   return value
 })
 
-const { maxLength, minLength, requiredIf, minValue, maxValue, stringArrayItemLength } =
-  useValidate()
+const { maxLength, minLength, requiredIf, minValue, maxValue, stringArrayItemLength } = useValidate()
 
 const rules = computed(() => {
   const dynamicRules: Record<string, any> = {
@@ -58,30 +57,30 @@ const rules = computed(() => {
   switch (props.config.attributes.type) {
     case CustomDataFormElementType.String:
       dynamicRules.modelValueComputed.minLength = minLength(
-        props.config.attributes.minValue ? props.config.attributes.minValue : 0,
+        props.config.attributes.minValue ? props.config.attributes.minValue : 0
       )
       dynamicRules.modelValueComputed.maxLength = maxLength(
-        props.config.attributes.maxValue ? props.config.attributes.maxValue : 256,
+        props.config.attributes.maxValue ? props.config.attributes.maxValue : 256
       )
       break
     case CustomDataFormElementType.Integer:
       dynamicRules.modelValueComputed.minValue = minValue(
-        props.config.attributes.minValue ? props.config.attributes.minValue : 0,
+        props.config.attributes.minValue ? props.config.attributes.minValue : 0
       )
       dynamicRules.modelValueComputed.maxValue = maxValue(
-        props.config.attributes.maxValue ? props.config.attributes.maxValue : 9999,
+        props.config.attributes.maxValue ? props.config.attributes.maxValue : 9999
       )
       break
     case CustomDataFormElementType.StringArray:
       dynamicRules.modelValueComputed.minLength = minLength(
-        props.config.attributes.minCount ? props.config.attributes.minCount : 0,
+        props.config.attributes.minCount ? props.config.attributes.minCount : 0
       )
       dynamicRules.modelValueComputed.maxLength = maxLength(
-        props.config.attributes.maxCount ? props.config.attributes.maxCount : 32,
+        props.config.attributes.maxCount ? props.config.attributes.maxCount : 32
       )
       dynamicRules.modelValueComputed.stringArrayItemLength = stringArrayItemLength(
         props.config.attributes.minValue ? props.config.attributes.minValue : 0,
-        props.config.attributes.maxValue ? props.config.attributes.maxValue : 256,
+        props.config.attributes.maxValue ? props.config.attributes.maxValue : 256
       )
       break
   }
@@ -93,8 +92,7 @@ const rules = computed(() => {
 const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validationScope })
 
 const errorMessageComputed = computed(() => {
-  if (v$.value.$errors.length)
-    return [v$.value.$errors.map((item: ErrorObject) => item.$message).join(' ')]
+  if (v$.value.$errors.length) return [v$.value.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []
 })
 
@@ -172,10 +170,7 @@ const onBlur = () => {
     </template>
   </VCombobox>
   <VSwitch
-    v-if="
-      config.attributes.type === CustomDataFormElementType.Boolean &&
-      config.attributes.required === true
-    "
+    v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === true"
     :label="config.name"
     :model-value="modelValueComputed"
     :readonly="config.attributes.readonly"
@@ -183,10 +178,7 @@ const onBlur = () => {
     @update:model-value="updateModelValue"
   />
   <ABooleanSelect
-    v-if="
-      config.attributes.type === CustomDataFormElementType.Boolean &&
-      config.attributes.required === false
-    "
+    v-if="config.attributes.type === CustomDataFormElementType.Boolean && config.attributes.required === false"
     :model-value="modelValueComputed"
     :label="config.name"
     :data-cy="'custom-field-' + config.property"

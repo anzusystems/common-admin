@@ -7,7 +7,7 @@ import {
 } from '@/labs/listEditor/composables/useKeyboardNav'
 
 const buildOptions = (
-  overrides: Partial<KeyboardNavOptions> = {},
+  overrides: Partial<KeyboardNavOptions> = {}
 ): { options: KeyboardNavOptions; mocks: ReturnType<typeof buildMocks> } => {
   const mocks = buildMocks()
   const items = ref<KeyboardNavViewItem[]>([{ key: 1 }, { key: 2 }, { key: 3 }])

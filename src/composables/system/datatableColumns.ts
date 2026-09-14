@@ -68,7 +68,7 @@ export function createDatatableColumnsConfig(
   customInitialPagination: Pagination | undefined = undefined,
   customI18n: undefined | any = undefined,
   showExpand: undefined | boolean = undefined,
-  storeId: string | undefined = undefined,
+  storeId: string | undefined = undefined
 ) {
   const localI18n = customI18n ?? i18n
   const { t } = localI18n.global || localI18n

@@ -45,8 +45,7 @@ export function useNestedUnsavedKeys(): UseNestedUnsavedKeysApi {
 
   const empty = new Set<ListEditorKey>()
 
-  const getForParent = (parentKey: ListEditorKey): Set<ListEditorKey> =>
-    byParent.value.get(parentKey) ?? empty
+  const getForParent = (parentKey: ListEditorKey): Set<ListEditorKey> => byParent.value.get(parentKey) ?? empty
 
   const setForParent = (parentKey: ListEditorKey, set: Set<ListEditorKey>) => {
     if (set.size === 0) {

@@ -2,10 +2,7 @@
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { computed, ref } from 'vue'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
-import type {
-  SortableNested,
-  SortableNestedItem,
-} from '@/components/sortable/sortableNestedActions'
+import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import { isNull } from '@/utils/common'
@@ -204,18 +201,14 @@ const onAddAfterClickNested = (item: SortableNestedItem) => {
         text: 'Lorem',
         position: 0,
       },
-      true,
+      true
     )
     console.log(needsRefresh)
   }
 }
 const onAddChildClickNested = (item: SortableNestedItem) => {
   if (nestedComponent.value) {
-    nestedComponent.value.addChildToId(
-      item.data.id,
-      { id: Date.now(), text: 'Lorem', position: 0 },
-      true,
-    )
+    nestedComponent.value.addChildToId(item.data.id, { id: Date.now(), text: 'Lorem', position: 0 }, true)
   }
 }
 const onAddLastClickNested = (item: SortableNestedItem | null) => {
@@ -223,7 +216,7 @@ const onAddLastClickNested = (item: SortableNestedItem | null) => {
     const needsRefresh = nestedComponent.value.addAfterId(
       isNull(item) ? null : item.data.id,
       { id: Date.now(), text: 'Lorem', position: 0 },
-      true,
+      true
     )
     console.log(needsRefresh)
   }
@@ -305,9 +298,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         <VBtn @click.stop="confirmDeleteNested">confirm remove</VBtn>
       </div>
       <pre class="my-5">{{ itemsNested }}</pre>
-      <h2 class="text-headline-medium mt-5 mb-2">
-        ASortable simple example without updating position
-      </h2>
+      <h2 class="text-headline-medium mt-5 mb-2">ASortable simple example without updating position</h2>
       <ASortable
         v-model="itemsBasic"
         show-add-last-button

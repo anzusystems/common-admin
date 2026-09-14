@@ -47,7 +47,7 @@ describe('AListEditor — slot actions.update', () => {
                 received.value = slotProps
                 return h('span', 'row')
               },
-            },
+            }
           )
       },
     })
@@ -71,17 +71,11 @@ describe('AListEditor — slot actions.update', () => {
               factory: makeItem,
             },
             {
-              'item-compact': ({
-                raw,
-                actions,
-              }: {
-                raw: Item
-                actions: { update: (data: Item) => void }
-              }) => {
+              'item-compact': ({ raw, actions }: { raw: Item; actions: { update: (data: Item) => void } }) => {
                 if (raw.id === 1) row1Update.value = actions.update
                 return h('span', String(raw.id))
               },
-            },
+            }
           )
       },
     })
@@ -112,17 +106,11 @@ describe('AListEditor — slot actions.update', () => {
               factory: makeItem,
             },
             {
-              'item-compact': ({
-                raw,
-                actions,
-              }: {
-                raw: Item
-                actions: { update: (data: Item) => void }
-              }) => {
+              'item-compact': ({ raw, actions }: { raw: Item; actions: { update: (data: Item) => void } }) => {
                 if (raw.id === 2) row2Update.value = actions.update
                 return h('span', String(raw.id))
               },
-            },
+            }
           )
       },
     })

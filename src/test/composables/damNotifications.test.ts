@@ -30,7 +30,7 @@ describe('damNotifications singleton', () => {
         send = vi.fn()
         addEventListener = vi.fn()
         removeEventListener = vi.fn()
-      },
+      }
     )
     setOptions('ws://localhost/notifications')
   })

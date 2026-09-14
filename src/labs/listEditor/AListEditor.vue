@@ -292,11 +292,8 @@ const controllerOptions: ListEditorStateBindings<TItem> = {
 // Precedence: an explicitly lifted `:editor` wins; then a `state-key`'d entry persisted in the
 // nearest ancestor editor's row-state scope (built from the options above, rebound to this instance
 // on every remount); else this component owns the controller — today's behaviour, unchanged.
-const stateEntry = props.editor
-  ? null
-  : useListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
-const controller =
-  props.editor ?? stateEntry?.handle ?? useListEditorController<TItem>(controllerOptions)
+const stateEntry = props.editor ? null : useListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
+const controller = props.editor ?? stateEntry?.handle ?? useListEditorController<TItem>(controllerOptions)
 
 // Mirror the controller's key resolution so rendered rows key the way it tracks them.
 const getKeyOpt = props.getKey ?? 'id'
@@ -307,13 +304,9 @@ const getKeyOpt = props.getKey ?? 'id'
 // editor is itself persisted, the scope comes from its own entry — so the chain holds at any depth.
 const rowStateScope = provideListEditorStateScope(stateEntry?.childScope ?? null)
 const keyOf = (item: TItem): ListEditorKey =>
-  typeof getKeyOpt === 'function'
-    ? getKeyOpt(item)
-    : (item[getKeyOpt as keyof TItem] as ListEditorKey)
+  typeof getKeyOpt === 'function' ? getKeyOpt(item) : (item[getKeyOpt as keyof TItem] as ListEditorKey)
 
-const keyFieldName = computed<string>(() =>
-  typeof getKeyOpt === 'function' ? '(fn)' : (getKeyOpt as string),
-)
+const keyFieldName = computed<string>(() => (typeof getKeyOpt === 'function' ? '(fn)' : (getKeyOpt as string)))
 
 // Managed position field name, mirroring the controller's resolution.
 const positionFieldName = computed<string>(() => {
@@ -331,7 +324,7 @@ const viewItems = computed<ListViewItem<TItem>[]>(() =>
     index,
     raw,
     position: raw[positionFieldName.value] as number | undefined,
-  })),
+  }))
 )
 
 // Surfaces row-key wiring bugs loudly: undefined or duplicate keys silently break
@@ -358,13 +351,13 @@ const warnOnBadKeys = (items: ListViewItem<TItem>[]): void => {
     console.warn(
       `[list-editor] ${missing} row(s) resolve to an undefined key (key-field "${keyFieldName.value}"). ` +
         'Point get-key at a field every item has, or give new items unique temp ids ' +
-        '(see nextListEditorTempId).',
+        '(see nextListEditorTempId).'
     )
   }
   if (duplicates.size > 0) {
     console.warn(
       `[list-editor] duplicate row keys (key-field "${keyFieldName.value}"): ${[...duplicates].join(', ')}. ` +
-        'Row keys must be unique — dirty tracking and validation rails target rows by key.',
+        'Row keys must be unique — dirty tracking and validation rails target rows by key.'
     )
   }
 }
@@ -375,7 +368,7 @@ watch(viewItems, (items) => warnOnBadKeys(items), { immediate: true })
 watch(
   () => viewItems.value.map((vi) => String(vi.key)).join('|'),
   () => rowStateScope.retainOwners(viewItems.value.map((vi) => vi.key)),
-  { flush: 'post' },
+  { flush: 'post' }
 )
 
 const expandedKeys = ref<Set<ListEditorKey>>(new Set())
@@ -385,42 +378,31 @@ const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 const isInlineEdit = computed(() => !props.chips && !!slots.item)
 const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'])
 
-const {
-  editingKeys,
-  editingSnapshots,
-  beginEdit,
-  cancelEdit,
-  commitEdit,
-  closeEdit,
-  requestAutoOpen,
-} = useInlineEditing<TItem, ListViewItem<TItem>>({
-  rowsContainer,
-  rowSelector: '.a-le-row',
-  isInlineEdit,
-  restoreSnapshot: (key, data) => controller.updateItem(key, data),
-  watchKeys: () => modelValue.value.map((it) => keyOf(it)),
-  findEntry: (key) => {
-    const hit = modelValue.value.find((it) => keyOf(it) === key)
-    return hit ? { data: hit } : null
-  },
-  afterAutoOpen: (key) => {
-    expandedKeys.value.delete(key)
-  },
-})
+const { editingKeys, editingSnapshots, beginEdit, cancelEdit, commitEdit, closeEdit, requestAutoOpen } =
+  useInlineEditing<TItem, ListViewItem<TItem>>({
+    rowsContainer,
+    rowSelector: '.a-le-row',
+    isInlineEdit,
+    restoreSnapshot: (key, data) => controller.updateItem(key, data),
+    watchKeys: () => modelValue.value.map((it) => keyOf(it)),
+    findEntry: (key) => {
+      const hit = modelValue.value.find((it) => keyOf(it) === key)
+      return hit ? { data: hit } : null
+    },
+    afterAutoOpen: (key) => {
+      expandedKeys.value.delete(key)
+    },
+  })
 
-const addLabelResolved = computed(() =>
-  props.addLabel ? t(props.addLabel) : t('common.sortable.add'),
-)
+const addLabelResolved = computed(() => (props.addLabel ? t(props.addLabel) : t('common.sortable.add')))
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
-const deleteConfirmTitleResolved = computed(
-  () => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'),
-)
+const deleteConfirmTitleResolved = computed(() => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'))
 const deleteConfirmTextResolved = computed(
   () =>
     props.deleteConfirmText ??
     (props.deleteMode === 'immediate'
       ? t('common.sortable.deleteConfirmText')
-      : t('common.sortable.deleteConfirmTextDeferred')),
+      : t('common.sortable.deleteConfirmTextDeferred'))
 )
 
 const canInteract = computed(() => !props.readonly && !props.disabled && !props.loading)
@@ -429,9 +411,7 @@ const canAdd = computed(() => canInteract.value && props.showAddButton)
 // Total unconfirmed-change count (added/edited/moved rows + deferred deletions). A delete lights this
 // up even though its row is gone. Shown as a header badge + exposed on the handle.
 const unsavedCount = controller.unsavedCount
-const unsavedCountVisible = computed(
-  () => !props.readonly && !props.disableUnsaved && unsavedCount.value > 0,
-)
+const unsavedCountVisible = computed(() => !props.readonly && !props.disableUnsaved && unsavedCount.value > 0)
 const headerVisible = computed(() => !!(props.title || slots.header) || unsavedCountVisible.value)
 
 // Per-row Save/Cancel footer only makes sense with a per-item persist callback;
@@ -512,8 +492,7 @@ const keyboardNav = useKeyboardNav({
   },
 })
 
-const resolveCompactText = (raw: TItem): string =>
-  resolveCompactTextUtil(raw, { compactField: props.compactField })
+const resolveCompactText = (raw: TItem): string => resolveCompactTextUtil(raw, { compactField: props.compactField })
 
 // Managed add: the controller inserts `factory()` and renumbers; the inline-editing
 // watch picks up the new key off the model change and auto-opens it.
@@ -686,7 +665,7 @@ watch(
     for (const key of actionsCache.keys()) {
       if (!liveKeys.has(key)) actionsCache.delete(key)
     }
-  },
+  }
 )
 
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
@@ -709,7 +688,7 @@ const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
 useUnsavedSection(() =>
   props.unsavedSectionLabel && !props.disableUnsaved
     ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value }
-    : [],
+    : []
 )
 
 // Opens invalid rows so a blocked save surfaces WHICH rows are wrong instead of a collapsed red

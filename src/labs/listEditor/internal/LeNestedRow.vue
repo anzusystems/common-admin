@@ -3,10 +3,7 @@ import { useI18n } from 'vue-i18n'
 import LeNestedRowSelf from './LeNestedRow.vue'
 import LeDragHandle from '@/labs/listEditor/internal/LeDragHandle.vue'
 import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
-import type {
-  ListEditorKey,
-  ListEditorValidationState,
-} from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorKey, ListEditorValidationState } from '@/labs/listEditor/types/listEditorTypes'
 
 // Self-recursive row. Interior uses `any` — strong typing lives on the public ANestedSortableListEditor wrapper.
 
@@ -160,11 +157,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
             v-bind="buildSlotProps()"
           >
             <span
-              v-if="
-                context.statusField &&
-                vi.raw[context.statusField] != null &&
-                vi.raw[context.statusField] !== ''
-              "
+              v-if="context.statusField && vi.raw[context.statusField] != null && vi.raw[context.statusField] !== ''"
               class="a-le-status-badge"
             >
               {{ vi.raw[context.statusField] }}
@@ -353,8 +346,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
               </VBtn>
               <VBtn
                 v-if="
-                  context.canInteract &&
-                  ((context.showAddChildButton && vi.canAddChild) || context.showAddAfterAction)
+                  context.canInteract && ((context.showAddChildButton && vi.canAddChild) || context.showAddAfterAction)
                 "
                 icon
                 size="small"
@@ -446,9 +438,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
       </template>
 
       <div
-        v-else-if="
-          $slots['item-readonly'] && (context.readonly || vi.expanded) && !context.reorderMode
-        "
+        v-else-if="$slots['item-readonly'] && (context.readonly || vi.expanded) && !context.reorderMode"
         class="a-le-row-body"
       >
         <div class="a-le-form">

@@ -37,7 +37,7 @@ const props = withDefaults(
     expandOptions: false,
     width: undefined,
     callDeleteApiOnRemove: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -77,9 +77,7 @@ onMounted(async () => {
     promises.push(loadDamPrvConfig())
   }
   promises.push(getOrLoadDamConfigExtSystemByLicences(props.selectLicences))
-  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(
-    uploadConfig.value.extSystem,
-  )
+  const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(uploadConfig.value.extSystem)
   if (isUndefined(configAssetCustomFormElements)) {
     promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }

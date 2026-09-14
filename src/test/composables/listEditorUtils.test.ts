@@ -134,7 +134,7 @@ describe('preservePositionValues', () => {
         id: string
         order?: number
       }>,
-      { positionField: 'order' },
+      { positionField: 'order' }
     )
     expect(String(warn.mock.calls[0][0])).toContain('`order`')
   })

@@ -47,8 +47,7 @@ const makeViewItem = (spec: FakeRowSpec, index: number): NestedViewItem<unknown>
   return base as unknown as NestedViewItem<unknown>
 }
 
-const makeViewItems = (specs: FakeRowSpec[]): NestedViewItem<unknown>[] =>
-  specs.map((s, i) => makeViewItem(s, i))
+const makeViewItems = (specs: FakeRowSpec[]): NestedViewItem<unknown>[] => specs.map((s, i) => makeViewItem(s, i))
 
 const makeRect = (top: number, height: number, left = 0, width = 300): DOMRect => {
   // jsdom / browser may or may not provide DOMRect; hand-roll a plain literal
@@ -112,7 +111,7 @@ describe('computeInstruction', () => {
           hoveredRow,
           sourceKey: 'a',
           viewItems,
-        }),
+        })
       )
 
       expect(result).toBeNull()
@@ -132,7 +131,7 @@ describe('computeInstruction', () => {
           hoveredRow,
           sourceKey: 'root',
           viewItems,
-        }),
+        })
       )
 
       expect(result).toBeNull()
@@ -155,8 +154,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result).toEqual({
@@ -186,8 +185,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result).toEqual({
@@ -218,8 +217,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result).toEqual({
@@ -253,8 +252,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result).toEqual({
@@ -288,8 +287,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       // Since clamp ceiling = prev.depth + 1 = 1, the huge X pins depth to 1
@@ -306,8 +305,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
       expect(leftResult.depth).toBe(0)
       expect(leftResult.makeChild).toBe(false)
@@ -334,8 +333,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
       expect(makeChildResult.depth).toBe(3)
       expect(makeChildResult.makeChild).toBe(true)
@@ -350,8 +349,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
       expect(floorResult.depth).toBe(0)
       expect(floorResult.makeChild).toBe(false)
@@ -376,8 +375,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.refEdge).toBe('top')
@@ -398,8 +397,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.refEdge).toBe('bottom')
@@ -425,8 +424,8 @@ describe('computeInstruction', () => {
             indentPx: 24,
             containerLeft: 0,
             containerPaddingLeft: 0,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.depth).toBe(0)
@@ -452,8 +451,8 @@ describe('computeInstruction', () => {
             indentPx: 24,
             containerLeft: 0,
             containerPaddingLeft: 0,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.depth).toBe(1)
@@ -480,8 +479,8 @@ describe('computeInstruction', () => {
             indentPx: 24,
             containerLeft: 100,
             containerPaddingLeft: 20,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.depth).toBe(1)
@@ -511,8 +510,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'S',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.depth).toBe(1)
@@ -545,8 +544,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'ED1',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
       expect(result.parentKey).toBe(null)
       expect(result.index).toBe(1) // after ED0 — NOT 0 (above ED0)
@@ -563,8 +562,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'ED1',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
       expect(result.parentKey).toBe(null)
       expect(result.index).toBe(1)
@@ -579,8 +578,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'ED1',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
       expect(result.parentKey).toBe(null)
       expect(result.index).toBe(0) // explicitly above ED0 — the distinct gesture
@@ -605,7 +604,7 @@ describe('computeInstruction', () => {
           sourceSubtreeDepth: 2,
           viewItems,
           maxDepth: 2,
-        }),
+        })
       )
 
       expect(result).not.toBeNull()
@@ -641,7 +640,7 @@ describe('computeInstruction', () => {
           sourceSubtreeDepth: 1,
           viewItems,
           maxDepth: 10,
-        }),
+        })
       )
 
       expect(result?.type).toBe('insert')

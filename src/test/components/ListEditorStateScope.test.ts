@@ -39,8 +39,7 @@ afterEach(() => {
 })
 
 const innerRows = (): Element[] => Array.from(document.querySelectorAll('.a-list-editor .a-le-row'))
-const innerUnsavedRows = (): Element[] =>
-  Array.from(document.querySelectorAll('.a-list-editor .a-le-row--unsaved'))
+const innerUnsavedRows = (): Element[] => Array.from(document.querySelectorAll('.a-list-editor .a-le-row--unsaved'))
 const innerInvalidRows = (): Element[] =>
   Array.from(document.querySelectorAll('.a-list-editor .a-le-row--validation-invalid'))
 const innerMounted = (): boolean => document.querySelectorAll('.a-list-editor').length > 0
@@ -50,8 +49,7 @@ const childValidate = (c: Child): boolean => c.title.length > 0
 
 /** Grab the LIVE inner editor's exposed handle (a new component instance after every remount). */
 const innerHandle = (wrapper: VueWrapper): ChildHandle =>
-  (wrapper.findComponent(AListEditor) as unknown as { vm: { $: { exposed: ChildHandle } } }).vm.$
-    .exposed
+  (wrapper.findComponent(AListEditor) as unknown as { vm: { $: { exposed: ChildHandle } } }).vm.$.exposed
 
 interface HostOptions {
   outer: ReturnType<typeof ref<Row[]>>
@@ -85,14 +83,11 @@ const buildHost = (opts: HostOptions) =>
                   },
                   factory: childFactory,
                   validate: childValidate,
-                  stateKey:
-                    opts.withStateKey === false
-                      ? undefined
-                      : `${slotProps.stateKeyPrefix}:children`,
+                  stateKey: opts.withStateKey === false ? undefined : `${slotProps.stateKeyPrefix}:children`,
                 },
-                { item: () => h('div', { class: 'inner-form' }, 'form') },
+                { item: () => h('div', { class: 'inner-form' }, 'form') }
               ),
-          },
+          }
         )
     },
   })
@@ -343,9 +338,9 @@ describe('list-editor state scope — the tree editor', () => {
                     compactField: 'title',
                     stateKey: `${slotProps.stateKeyPrefix}:tree`,
                   },
-                  { item: () => h('div', { class: 'nested-form' }, 'form') },
+                  { item: () => h('div', { class: 'nested-form' }, 'form') }
                 ),
-            },
+            }
           )
       },
     })
@@ -353,14 +348,13 @@ describe('list-editor state scope — the tree editor', () => {
     await nextTick()
     await toggleOuterRow(mounted)
 
-    const nestedRows = (): Element[] =>
-      Array.from(document.querySelectorAll('.a-nested-list-editor .a-le-row'))
+    const nestedRows = (): Element[] => Array.from(document.querySelectorAll('.a-nested-list-editor .a-le-row'))
     const nestedUnsaved = (): Element[] =>
       Array.from(document.querySelectorAll('.a-nested-list-editor .a-le-row--unsaved'))
     const nestedHandle = (): NodeHandle =>
       (
         mounted!.findComponent(
-          ANestedSortableListEditor as unknown as Parameters<VueWrapper['findComponent']>[0],
+          ANestedSortableListEditor as unknown as Parameters<VueWrapper['findComponent']>[0]
         ) as unknown as { vm: { $: { exposed: NodeHandle } } }
       ).vm.$.exposed
 
@@ -397,7 +391,7 @@ describe('createListEditorStateScope', () => {
         created++
         return { read: () => live.value.get() }
       },
-      101,
+      101
     )
     expect(created).toBe(1)
     expect(scope.size()).toBe(1)
@@ -411,7 +405,7 @@ describe('createListEditorStateScope', () => {
         created++
         return { read: () => live.value.get() }
       },
-      102,
+      102
     )
     expect(created).toBe(1)
     expect(again).toBe(handle)
@@ -454,14 +448,11 @@ describe('createListEditorStateScope', () => {
         written = v
       },
     }
-    const handle = scope.resolve<
-      ModelBindings,
-      { write: (v: number[]) => void; read: () => number[] }
-    >(
+    const handle = scope.resolve<ModelBindings, { write: (v: number[]) => void; read: () => number[] }>(
       'k',
       bindings,
       (live) => ({ write: (v) => live.value.set(v), read: () => live.value.get() }),
-      7,
+      7
     )
 
     handle.write([3])

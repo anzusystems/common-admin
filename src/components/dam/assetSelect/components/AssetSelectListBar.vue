@@ -34,7 +34,7 @@ const props = withDefaults(
     hideFilterToggle: false,
     preselectAssetType: undefined,
     preselectInPodcast: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'typeChange', data: { type: DamAssetTypeType; inPodcast: boolean | null }): void
@@ -54,7 +54,7 @@ watch(
       setGridView(AssetSelectGridViewDefault)
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = useSidebar()
 const assetSelectStore = useAssetSelectStore()

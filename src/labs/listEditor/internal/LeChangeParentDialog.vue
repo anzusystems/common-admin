@@ -1,11 +1,7 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type {
-  ListEditorKey,
-  NestedTree,
-  NestedTreeNode,
-} from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorKey, NestedTree, NestedTreeNode } from '@/labs/listEditor/types/listEditorTypes'
 
 export interface Props<TItem extends Record<string, any>> {
   tree: NestedTree<TItem>
@@ -90,10 +86,7 @@ const sourceNode = computed<NestedTreeNode<TItem> | null>(() => {
 // "change parent" operation (use Move-to-position instead).
 const currentParentKey = computed<ListEditorKey | null | undefined>(() => {
   if (props.sourceKey === null) return undefined
-  const find = (
-    nodes: NestedTreeNode<TItem>[],
-    parentKey: ListEditorKey | null,
-  ): ListEditorKey | null | undefined => {
+  const find = (nodes: NestedTreeNode<TItem>[], parentKey: ListEditorKey | null): ListEditorKey | null | undefined => {
     for (const n of nodes) {
       if ((n.data[props.keyField] as ListEditorKey) === props.sourceKey) return parentKey
       if (n.children?.length) {
@@ -155,14 +148,10 @@ const candidates = computed<Candidate[]>(() => {
 const validCandidates = computed(() => candidates.value.filter((c) => !c.disallowed))
 
 const selectedCandidate = computed<Candidate | null>(() =>
-  selectedKey.value === undefined
-    ? null
-    : (candidates.value.find((c) => c.key === selectedKey.value) ?? null),
+  selectedKey.value === undefined ? null : (candidates.value.find((c) => c.key === selectedKey.value) ?? null)
 )
 
-const showPlacementPicker = computed<boolean>(
-  () => !!selectedCandidate.value && selectedCandidate.value.hasChildren,
-)
+const showPlacementPicker = computed<boolean>(() => !!selectedCandidate.value && selectedCandidate.value.hasChildren)
 
 const onCandidateClick = (c: Candidate) => {
   if (c.disallowed) return

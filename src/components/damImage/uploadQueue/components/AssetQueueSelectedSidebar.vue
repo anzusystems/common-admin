@@ -16,7 +16,7 @@ const props = withDefaults(
     queueKey: string
     extSystem: IntegerId
   }>(),
-  {},
+  {}
 )
 
 const massOperationsData = ref({ image: {}, video: {}, audio: {}, document: {} })
@@ -33,18 +33,10 @@ const { replaceEmptyCustomDataValue, replaceEmptyAuthors, replaceEmptyKeywords }
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   useUploadQueueMassOperations(props.queueKey)
 
-const fillEmptyField = (data: {
-  assetType: DamAssetTypeType
-  elementProperty: string
-  value: any
-}) => {
+const fillEmptyField = (data: { assetType: DamAssetTypeType; elementProperty: string; value: any }) => {
   replaceEmptyCustomDataValue(data)
 }
-const replaceField = (data: {
-  assetType: DamAssetTypeType
-  elementProperty: string
-  value: any
-}) => {
+const replaceField = (data: { assetType: DamAssetTypeType; elementProperty: string; value: any }) => {
   replaceEmptyCustomDataValue(data, true)
 }
 const fillEmptyKeywords = () => {
@@ -67,7 +59,7 @@ const fillAll = (forceReplace = false) => {
         elementProperty,
         value,
       },
-      forceReplace,
+      forceReplace
     )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.video)) {
@@ -77,7 +69,7 @@ const fillAll = (forceReplace = false) => {
         elementProperty,
         value,
       },
-      forceReplace,
+      forceReplace
     )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.audio)) {
@@ -87,7 +79,7 @@ const fillAll = (forceReplace = false) => {
         elementProperty,
         value,
       },
-      forceReplace,
+      forceReplace
     )
   }
   for (const [elementProperty, value] of Object.entries(massOperationsData.value.document)) {
@@ -97,7 +89,7 @@ const fillAll = (forceReplace = false) => {
         elementProperty,
         value,
       },
-      forceReplace,
+      forceReplace
     )
   }
   if (authorEnabled.value) {

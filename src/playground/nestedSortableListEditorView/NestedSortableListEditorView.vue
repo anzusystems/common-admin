@@ -312,11 +312,7 @@ const onRefAddRootLast = () => {
     refApiTree.value.children.length > 0
       ? refApiTree.value.children[refApiTree.value.children.length - 1].data.id
       : null
-  api.addAfterId(
-    lastRootId,
-    { id, position: 0, parent: null, title: `Appended #${id}`, status: 'Draft' },
-    true,
-  )
+  api.addAfterId(lastRootId, { id, position: 0, parent: null, title: `Appended #${id}`, status: 'Draft' }, true)
   log(`addAfterId(last, ${id})`)
 }
 
@@ -324,11 +320,7 @@ const onRefAddChildToHome = () => {
   const api = refApiRef.value
   if (!api) return
   const id = nextId++
-  api.addChildToId(
-    1,
-    { id, position: 0, parent: 1, title: `Home child #${id}`, status: 'Draft' },
-    true,
-  )
+  api.addChildToId(1, { id, position: 0, parent: 1, title: `Home child #${id}`, status: 'Draft' }, true)
   log(`addChildToId(Home, ${id})`)
 }
 
@@ -367,11 +359,10 @@ const totalCount = computed(() => {
         ANestedSortableListEditor — site menu (drag-and-drop + arrows + indent/outdent)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        <strong>{{ totalCount }}</strong> items across 2 levels. On desktop: drag handle appears per
-        row in reorder mode; drag between groups to nest/un-nest (respects <code>maxDepth</code>).
-        Everywhere: arrows move up/down within the current sibling group; the kebab menu has
-        move-to-top / move-to-bottom / indent / outdent. Single orange "unsaved" state covers both
-        moved + edited rows.
+        <strong>{{ totalCount }}</strong> items across 2 levels. On desktop: drag handle appears per row in reorder
+        mode; drag between groups to nest/un-nest (respects <code>maxDepth</code>). Everywhere: arrows move up/down
+        within the current sibling group; the kebab menu has move-to-top / move-to-bottom / indent / outdent. Single
+        orange "unsaved" state covers both moved + edited rows.
       </p>
       <ANestedSortableListEditor
         ref="basicRef"
@@ -417,8 +408,8 @@ const totalCount = computed(() => {
 
       <h2 class="text-headline-medium mt-8 mb-2">ANestedSortableListEditor — readonly detail</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Readonly mode — no edit, delete, add, or reorder toggle. Rows are expandable to show a
-        read-only detail body via <code>#item-readonly</code>.
+        Readonly mode — no edit, delete, add, or reorder toggle. Rows are expandable to show a read-only detail body via
+        <code>#item-readonly</code>.
       </p>
       <ANestedSortableListEditor
         v-model="readonlyTree"
@@ -437,9 +428,7 @@ const totalCount = computed(() => {
         </template>
       </ANestedSortableListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        ANestedSortableListEditor — async <code>onReorderApply</code>
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">ANestedSortableListEditor — async <code>onReorderApply</code></h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Apply awaits a simulated 800 ms persist before exiting reorder mode.
       </p>
@@ -454,9 +443,7 @@ const totalCount = computed(() => {
         </template>
       </ANestedSortableListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        ANestedSortableListEditor — failing apply (stays in reorder mode)
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">ANestedSortableListEditor — failing apply (stays in reorder mode)</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Apply throws; the component keeps reorder mode open with the error in the toolbar.
       </p>
@@ -514,10 +501,9 @@ const totalCount = computed(() => {
         <code>ASortableNested</code>)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        These buttons call <code>addAfterId</code> / <code>addChildToId</code> /
-        <code>removeById</code> / <code>updateData</code> on the component ref — same method names
-        and signatures as the legacy component. After each call the internal dirty baseline is
-        re-captured automatically.
+        These buttons call <code>addAfterId</code> / <code>addChildToId</code> / <code>removeById</code> /
+        <code>updateData</code> on the component ref — same method names and signatures as the legacy component. After
+        each call the internal dirty baseline is re-captured automatically.
       </p>
       <div class="d-flex ga-2 mb-2 flex-wrap">
         <VBtn

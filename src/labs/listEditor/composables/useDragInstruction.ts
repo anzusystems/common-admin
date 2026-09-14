@@ -69,15 +69,13 @@ export interface ComputeInstructionArgs {
   containerPaddingLeft: number
 }
 
-const findByKey = (
-  viewItems: NestedViewItem<any>[],
-  key: ListEditorKey,
-): NestedViewItem<any> | null => viewItems.find((v) => v.key === key) ?? null
+const findByKey = (viewItems: NestedViewItem<any>[], key: ListEditorKey): NestedViewItem<any> | null =>
+  viewItems.find((v) => v.key === key) ?? null
 
 const isDescendantOf = (
   viewItems: NestedViewItem<any>[],
   ancestorKey: ListEditorKey,
-  candidateKey: ListEditorKey,
+  candidateKey: ListEditorKey
 ): boolean => {
   let current = findByKey(viewItems, candidateKey)
   while (current && current.parentKey !== null) {
@@ -90,7 +88,7 @@ const isDescendantOf = (
 const findAncestorAtDepth = (
   viewItems: NestedViewItem<any>[],
   startKey: ListEditorKey,
-  targetDepth: number,
+  targetDepth: number
 ): NestedViewItem<any> | null => {
   let current = findByKey(viewItems, startKey)
   while (current && current.depth > targetDepth) {
@@ -103,7 +101,7 @@ const findAncestorAtDepth = (
 const isInSourceSubtree = (
   viewItems: NestedViewItem<any>[],
   sourceKey: ListEditorKey,
-  candidateKey: ListEditorKey,
+  candidateKey: ListEditorKey
 ): boolean => candidateKey === sourceKey || isDescendantOf(viewItems, sourceKey, candidateKey)
 
 // Walk the flat view-items list in `dir` (±1) starting at `startIdx`, skipping
@@ -113,7 +111,7 @@ const findSiblingNotInSource = (
   viewItems: NestedViewItem<any>[],
   startIdx: number,
   dir: 1 | -1,
-  sourceKey: ListEditorKey,
+  sourceKey: ListEditorKey
 ): NestedViewItem<any> | null => {
   for (let i = startIdx; i >= 0 && i < viewItems.length; i += dir) {
     const vi = viewItems[i]

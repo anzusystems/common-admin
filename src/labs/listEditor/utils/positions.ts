@@ -23,7 +23,7 @@ export const sortByPosition = <TItem extends { position: number }>(items: TItem[
  */
 export const sortByPositionDeep = <TItem extends { position: number }>(
   items: TItem[],
-  childKeys: string[] = [],
+  childKeys: string[] = []
 ): TItem[] =>
   sortByPosition(items).map((item) => {
     let next = item
@@ -43,7 +43,7 @@ export const sortByPositionDeep = <TItem extends { position: number }>(
  */
 export const renumberPositions = <TItem extends Record<string, any>>(
   items: TItem[],
-  options: RenumberPositionsOptions = {},
+  options: RenumberPositionsOptions = {}
 ): TItem[] => {
   const positionField = options.positionField ?? 'position'
   const positionMultiplier = options.positionMultiplier ?? 1
@@ -67,7 +67,7 @@ export const renumberPositions = <TItem extends Record<string, any>>(
  */
 export const preservePositionValues = <TItem extends Record<string, any>>(
   items: TItem[],
-  options: RenumberPositionsOptions = {},
+  options: RenumberPositionsOptions = {}
 ): TItem[] => {
   const positionField = options.positionField ?? 'position'
   const values = items.map((i) => i[positionField])
@@ -77,7 +77,7 @@ export const preservePositionValues = <TItem extends Record<string, any>>(
       `[listEditor] position strategy "preserve-values" needs a finite numeric \`${positionField}\` ` +
         'on every row; found ' +
         JSON.stringify(values) +
-        ' — leaving positions untouched.',
+        ' — leaving positions untouched.'
     )
     return items
   }
@@ -85,11 +85,11 @@ export const preservePositionValues = <TItem extends Record<string, any>>(
     console.warn(
       `[listEditor] position strategy "preserve-values" found DUPLICATE \`${positionField}\` values ` +
         JSON.stringify(values) +
-        ' — the resulting order is not well defined relative to any interleaved collection.',
+        ' — the resulting order is not well defined relative to any interleaved collection.'
     )
   }
   const slots = [...(values as number[])].sort((a, b) => a - b)
   return items.map((item, idx) =>
-    item[positionField] === slots[idx] ? item : { ...item, [positionField]: slots[idx] },
+    item[positionField] === slots[idx] ? item : { ...item, [positionField]: slots[idx] }
   )
 }

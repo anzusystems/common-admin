@@ -2,11 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { reactive, ref } from 'vue'
 import FiltersSelected from '@/labs/filters/FiltersSelected.vue'
-import {
-  FilterConfigKey,
-  FilterDataKey,
-  FilterSelectedKey,
-} from '@/labs/filters/filterInjectionKeys'
+import { FilterConfigKey, FilterDataKey, FilterSelectedKey } from '@/labs/filters/filterInjectionKeys'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import type { ValueObjectOption } from '@/types/ValueObject'
 
@@ -50,9 +46,7 @@ function mountChips(value: unknown, defaultValue: unknown) {
     fields: { f: field('f', defaultValue) },
   }) as unknown as FilterConfig
   const filterSelected = ref(
-    new Map<string, ValueObjectOption<string | number>[]>([
-      ['f', [{ title: 'shown', value: 'shown' }]],
-    ]),
+    new Map<string, ValueObjectOption<string | number>[]>([['f', [{ title: 'shown', value: 'shown' }]]])
   )
   mounted = mount(FiltersSelected, {
     global: {
@@ -114,9 +108,7 @@ function mountPair(from: string, until: string, defaultFrom: string, defaultUnti
     },
   }) as unknown as FilterConfig
   const filterSelected = ref(
-    new Map<string, ValueObjectOption<string | number>[]>([
-      ['from', [{ title: 'range', value: from }]],
-    ]),
+    new Map<string, ValueObjectOption<string | number>[]>([['from', [{ title: 'range', value: from }]]])
   )
   mounted = mount(FiltersSelected, {
     global: {

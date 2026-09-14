@@ -11,14 +11,12 @@ export interface SharedReorderRegistry {
     id: symbol,
     movedCount: ComputedRef<number>,
     hasPendingChanges: ComputedRef<boolean>,
-    validateAll: () => boolean,
+    validateAll: () => boolean
   ) => void
   unregister: (id: symbol) => void
 }
 
-export const SharedReorderRegistryKey = Symbol(
-  'le.sharedReorderRegistry',
-) as InjectionKey<SharedReorderRegistry>
+export const SharedReorderRegistryKey = Symbol('le.sharedReorderRegistry') as InjectionKey<SharedReorderRegistry>
 
 export type ReorderModeValue = 'view' | 'reorder'
 
@@ -149,9 +147,7 @@ export function useReorderMode<T>(options: UseReorderModeOptions<T>): UseReorder
   const hasPendingChanges = computed(() => movedCount.value > 0)
 
   const clonePayload = (): T =>
-    options.clonePayload
-      ? options.clonePayload(options.modelValue.value)
-      : options.cloneModel(options.modelValue.value)
+    options.clonePayload ? options.clonePayload(options.modelValue.value) : options.cloneModel(options.modelValue.value)
 
   const isEmbedded = (): boolean => options.embedded?.value === true
 

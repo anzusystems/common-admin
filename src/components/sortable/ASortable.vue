@@ -3,11 +3,7 @@ import { useSortable } from '@vueuse/integrations/useSortable'
 import type { SortableEvent } from 'sortablejs'
 import { computed, nextTick, onBeforeUnmount, toRef, watch, withModifiers } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type {
-  SortableEmit,
-  SortableItem,
-  SortablePropItem,
-} from '@/components/sortable/sortableActions'
+import type { SortableEmit, SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import {
   CHOSEN_CLASS,
   DRAG_CLASS,
@@ -62,7 +58,7 @@ const props = withDefaults(
     chipSize: 'small',
     disableDeleteDialog: false,
     permanentButtons: false,
-  },
+  }
 )
 const emit = defineEmits<SortableEmit>()
 
@@ -96,9 +92,7 @@ const onAddLastClick = () => {
 }
 
 const widgetHtmlId = computed(() => {
-  return isUndefined(props.widgetIdentifierId)
-    ? WIDGET_HTML_ID_PREFIX + randomUuid.value
-    : props.widgetIdentifierId
+  return isUndefined(props.widgetIdentifierId) ? WIDGET_HTML_ID_PREFIX + randomUuid.value : props.widgetIdentifierId
 })
 
 const rootClassNameComputed = computed(() => {
@@ -116,8 +110,7 @@ const initSortable = () => {
     dragClass: DRAG_CLASS,
     chosenClass: CHOSEN_CLASS,
     onEnd: async (event: SortableEvent) => {
-      if (props.disableDefaultSort || isUndefined(event.oldIndex) || isUndefined(event.newIndex))
-        return
+      if (props.disableDefaultSort || isUndefined(event.oldIndex) || isUndefined(event.newIndex)) return
       const needsRefresh = moveArrayElement(event.oldIndex, event.newIndex)
       emit('onEnd', needsRefresh)
     },
@@ -162,14 +155,14 @@ watch(
   async (newValue) => {
     destroy()
     if (newValue === false) initSortable()
-  },
+  }
 )
 
 watch(
   () => props.dirty,
   (newValue) => {
     dirtyLocal.value = newValue
-  },
+  }
 )
 
 defineExpose({

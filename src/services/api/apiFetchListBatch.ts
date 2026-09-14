@@ -5,14 +5,8 @@ import { isDefined } from '@/utils/common'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { usePagination } from '@/composables/system/pagination'
-import {
-  AnzuApiForbiddenError,
-  axiosErrorResponseIsForbidden,
-} from '@/model/error/AnzuApiForbiddenError'
-import {
-  AnzuApiValidationError,
-  axiosErrorResponseHasValidationData,
-} from '@/model/error/AnzuApiValidationError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -32,12 +26,8 @@ import {
   axiosErrorResponseHasDependencyExistsData,
 } from '@/model/error/AnzuApiDependencyExistsError'
 
-const generateListApiQuery = (
-  pagination: Pagination,
-  filterBag: FilterBag | undefined = undefined,
-): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } =
-    useApiQueryBuilder()
+const generateListApiQuery = (pagination: Pagination, filterBag: FilterBag | undefined = undefined): string => {
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
   querySetLimit(pagination.rowsPerPage)
   querySetOffset(pagination.page, pagination.rowsPerPage)
   querySetOrder(pagination.sortBy, pagination.descending)
@@ -50,10 +40,9 @@ const generateListApiQueryWithoutPagination = (
   page: number,
   orderField: string,
   orderDesc: boolean,
-  filterBag: FilterBag | undefined = undefined,
+  filterBag: FilterBag | undefined = undefined
 ): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } =
-    useApiQueryBuilder()
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
   querySetLimit(rowsPerPage)
   querySetOffset(page, rowsPerPage)
   querySetOrder(orderField, orderDesc)
@@ -77,7 +66,7 @@ export const apiFetchListBatch = async <R>(
   system: string,
   entity: string,
   forceElastic = false,
-  options: AxiosRequestConfig = {},
+  options: AxiosRequestConfig = {}
 ): Promise<R> => {
   const searchApi = isDefined(filterBag?._elastic) || forceElastic ? '/search' : ''
   const pagination = usePagination(sortBy)
@@ -101,10 +90,7 @@ export const apiFetchListBatch = async <R>(
         if (pagination.hasNextPage) {
           while (pagination.hasNextPage) {
             pagination.page++
-            const nextPageResponse = await client().get(
-              urlPart + generateListApiQuery(pagination, filterBag),
-              options,
-            )
+            const nextPageResponse = await client().get(urlPart + generateListApiQuery(pagination, filterBag), options)
             const nextPageData = nextPageResponse.data
             // @ts-ignore
             results.push(...nextPageData.data)
@@ -127,10 +113,10 @@ export const apiFetchListBatch = async <R>(
                   i,
                   pagination.sortBy,
                   pagination.descending,
-                  filterBag,
+                  filterBag
                 ),
-              options,
-            ),
+              options
+            )
           )
         }
         const allResponses = await Promise.all(promises)

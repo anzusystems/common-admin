@@ -73,7 +73,7 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
             // auto-open into edit mode (otherwise auto-open is a no-op).
             opts.withItemSlot
               ? { item: ({ raw }: { raw: Item }) => h('span', { class: 'test-item' }, raw.title) }
-              : undefined,
+              : undefined
           )
       },
     })
@@ -87,9 +87,7 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
 
     const addBtn = mounted!
       .findAll('button')
-      .find(
-        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
-      )
+      .find((b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')))
     expect(addBtn).toBeTruthy()
     await addBtn!.trigger('click')
     await nextTick()
@@ -108,9 +106,7 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
 
     const addBtn = mounted!
       .findAll('button')
-      .find(
-        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
-      )
+      .find((b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')))
     await addBtn!.trigger('click')
     await nextTick()
     await nextTick()
@@ -150,7 +146,7 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
     // Array.from (ArrayLike overload) instead of a spread — NodeList iteration
     // needs the DOM.Iterable lib, which the build's test tsconfig doesn't load.
     const del = Array.from(row!.querySelectorAll('button')).find((b) =>
-      b.className.includes('--delete'),
+      b.className.includes('--delete')
     ) as HTMLButtonElement
     expect(del).toBeTruthy()
     del.click()
@@ -165,7 +161,7 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
     expect(
       exposed(mounted!)
         .getChanges()
-        .deleted.map((i) => i.id),
+        .deleted.map((i) => i.id)
     ).toEqual([1])
   })
 
@@ -179,9 +175,7 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
 
     const addBtn = mounted!
       .findAll('button')
-      .find(
-        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
-      )
+      .find((b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')))
     await addBtn!.trigger('click')
     await nextTick()
     await nextTick()
@@ -210,9 +204,7 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
 
     const addBtn = mounted!
       .findAll('button')
-      .find(
-        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
-      )
+      .find((b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')))
     await addBtn!.trigger('click')
     await nextTick()
     await nextTick()
@@ -228,9 +220,7 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
 
     const addBtn = mounted!
       .findAll('button')
-      .find(
-        (b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')),
-      )
+      .find((b) => b.text().toLowerCase().includes('add') || b.classes().some((c) => c.includes('add')))
     await addBtn!.trigger('click')
     await nextTick()
 

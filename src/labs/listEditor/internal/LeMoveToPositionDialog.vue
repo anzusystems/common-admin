@@ -32,10 +32,7 @@ watch(open, (now) => {
 
 const totalLabel = computed(() => Math.max(props.total, 1))
 const isInvalid = computed<boolean>(
-  () =>
-    !Number.isFinite(targetPosition.value) ||
-    targetPosition.value < 1 ||
-    targetPosition.value > totalLabel.value,
+  () => !Number.isFinite(targetPosition.value) || targetPosition.value < 1 || targetPosition.value > totalLabel.value
 )
 
 const onConfirm = () => {

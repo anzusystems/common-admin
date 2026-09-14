@@ -41,7 +41,7 @@ const props = withDefaults(
     collab: undefined,
     disabled: undefined,
     readonly: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
@@ -49,9 +49,7 @@ const emit = defineEmits<{
   (e: 'focus', data: any): void
 }>()
 
-const hasNullOption = computed(() =>
-  (props.items ?? []).some((item) => isNull(item) || isNull(item?.value)),
-)
+const hasNullOption = computed(() => (props.items ?? []).some((item) => isNull(item) || isNull(item?.value)))
 
 const modelValue = computed({
   get() {
@@ -60,13 +58,7 @@ const modelValue = computed({
   set(newValue) {
     // VAutocomplete drops the selection when its search text is emptied, emitting null even when
     // not clearable. A tri-state select lists null as a real option, so there null must pass through.
-    if (
-      !props.clearable &&
-      !props.multiple &&
-      !hasNullOption.value &&
-      isNull(newValue) &&
-      !isNull(props.modelValue)
-    )
+    if (!props.clearable && !props.multiple && !hasNullOption.value && isNull(newValue) && !isNull(props.modelValue))
       return
     emit('update:modelValue', cloneDeep<any>(newValue))
   },
@@ -82,8 +74,10 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } =
-    useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } = useCollabField(
+    props.collab.room,
+    props.collab.field
+  )
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -92,7 +86,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true },
+    { immediate: true }
   )
 }
 
@@ -153,7 +147,7 @@ watch(
       changeFieldData.value(newValue)
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 

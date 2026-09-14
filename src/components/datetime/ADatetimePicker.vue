@@ -53,7 +53,7 @@ const props = withDefaults(
     defaultValue: null,
     errorMessages: undefined,
     lastMinuteMoment: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -124,7 +124,7 @@ watch(
     if (newValue === oldValue) return
     datetimeInternal.value = parseModel(newValue, props.type, props.lastMinuteMoment)
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const watchDatePicker = (newValue: null | Date, internal: Dayjs) => {
@@ -167,16 +167,13 @@ watch(
     updateDateAndTimePickerOnlyWhenChanged(newValue)
     tryEmitNewValue(newUtcValue)
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 watch(pickerOpened, (newValue) => {
   if (newValue) {
     onTextFieldBlur()
-    if (
-      isNull(datetimeInternal.value) &&
-      (isNull(props.defaultValue) || isUndefined(props.defaultValue))
-    ) {
+    if (isNull(datetimeInternal.value) && (isNull(props.defaultValue) || isUndefined(props.defaultValue))) {
       datetimeInternal.value = todayValue(props.type, props.lastMinuteMoment)
     }
     emit('onOpen')

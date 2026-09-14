@@ -34,7 +34,7 @@ const props = withDefaults(
     readonly: false,
     configName: 'default',
     showEditButton: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -46,8 +46,7 @@ const { t } = useI18n()
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } =
-  storeToRefs(assetDetailStore)
+const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
 
 const assetType = computed(() => {
   return asset.value?.attributes.assetType || DamAssetTypeDefault
@@ -69,19 +68,18 @@ const onAnyMetadataChange = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 
 const { cachedUsers } = useDamCachedUsers()
 
-const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
-  useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
+const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
 </script>
 
 <template>

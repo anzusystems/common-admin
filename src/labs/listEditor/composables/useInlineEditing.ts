@@ -98,7 +98,7 @@ export function useInlineEditing<
     nextTick(() => {
       nextTick(() => {
         const el = options.rowsContainer.value?.querySelector<HTMLElement>(
-          `${options.rowSelector}[data-id="${CSS.escape(String(addedKey))}"]`,
+          `${options.rowSelector}[data-id="${CSS.escape(String(addedKey))}"]`
         )
         el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
       })

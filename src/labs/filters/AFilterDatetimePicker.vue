@@ -20,7 +20,7 @@ const props = withDefaults(
   }>(),
   {
     dataCy: 'filter-datepicker',
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -83,9 +83,7 @@ const updateSelected = () => {
   // watcher is not mechanical - it makes `clearField` recreate the chip for a non-empty default,
   // and starts showing datetime chips on eight lists that have none today.
   if (!isString(modelValue.value) || modelValue.value.length === 0) return
-  filterSelected.value.set(props.name, [
-    { title: dateTimePretty(modelValue.value), value: modelValue.value },
-  ])
+  filterSelected.value.set(props.name, [{ title: dateTimePretty(modelValue.value), value: modelValue.value }])
 }
 </script>
 

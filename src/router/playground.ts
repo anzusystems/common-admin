@@ -22,10 +22,7 @@ import ListEditorView from '@/playground/listEditorView/ListEditorView.vue'
 import SortableListEditorView from '@/playground/sortableListEditorView/SortableListEditorView.vue'
 import NestedSortableListEditorView from '@/playground/nestedSortableListEditorView/NestedSortableListEditorView.vue'
 import QuizManageView from '@/playground/quizManageView/QuizManageView.vue'
-import {
-  initLanguageMessagesLoaded,
-  initLoadLanguageMessages,
-} from '@/playground/system/loadLanguageMessages'
+import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
 import AlertView from '@/playground/alertView/AlertView.vue'
 import SubjectSelectView from '@/playground/subjectSelectView/SubjectSelectView.vue'
 import ImageMultipleView from '@/playground/imageMultipleView/ImageMultipleView.vue'
@@ -204,7 +201,7 @@ const { collabOptions } = useCommonAdminCollabOptions()
 
 const checkCollab = async (
   to: RouteLocationNormalized,
-  from: RouteLocationNormalized,
+  from: RouteLocationNormalized
 ): Promise<NavigationGuardReturn> => {
   const { showWarningT, showErrorT } = useAlerts()
 

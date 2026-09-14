@@ -15,11 +15,7 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-const mountDialog = (
-  total: number,
-  currentIndex: number,
-  itemLabel: string | undefined = undefined,
-) => {
+const mountDialog = (total: number, currentIndex: number, itemLabel: string | undefined = undefined) => {
   const open = ref(true)
   const onConfirm = vi.fn()
   const Host = defineComponent({
@@ -42,9 +38,7 @@ const mountDialog = (
 }
 
 const findByText = (text: string): HTMLElement | undefined =>
-  Array.from(document.querySelectorAll<HTMLElement>('button')).find((b) =>
-    b.textContent?.trim().includes(text),
-  )
+  Array.from(document.querySelectorAll<HTMLElement>('button')).find((b) => b.textContent?.trim().includes(text))
 
 describe('LeMoveToPositionDialog', () => {
   it('renders the title and a numeric input', async () => {

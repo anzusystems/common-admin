@@ -14,7 +14,7 @@ const props = withDefaults(
   {
     hideCreatedAt: false,
     hideModifiedAt: false,
-  },
+  }
 )
 
 const createdAt = computed(() => {

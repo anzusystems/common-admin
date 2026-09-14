@@ -276,8 +276,7 @@ describe('loadStoredFilters — a hash is authoritative', () => {
 })
 
 describe('buildFilterHash', () => {
-  const config = () =>
-    createFilter(fields, createFilterStore(fields), { system: 'sys', subject: 'subj' }).filterConfig
+  const config = () => createFilter(fields, createFilterStore(fields), { system: 'sys', subject: 'subj' }).filterConfig
 
   it('leaves out values equal to their default, arrays compared by content', () => {
     expect(buildFilterHash(config(), { name: '', ids: [] })).toBe('')
@@ -287,7 +286,7 @@ describe('buildFilterHash', () => {
     const hash = buildFilterHash(
       config(),
       { name: '2025-09-08T22:00:00.000000Z', ids: [1, 2, 3] },
-      { key: 'id', order: SortOrder.Desc },
+      { key: 'id', order: SortOrder.Desc }
     )
 
     expect(hash).toBe('#name=2025-09-08T22:00:00.000000Z&ids=1,2,3&_sort=id,desc~')

@@ -42,7 +42,7 @@ describe('ASortableListEditor — rail colors', () => {
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form'),
-            },
+            }
           )
       },
     })
@@ -79,7 +79,7 @@ describe('ASortableListEditor — rail colors', () => {
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form'),
-            },
+            }
           )
       },
     })
@@ -121,7 +121,7 @@ describe('ASortableListEditor — rail colors', () => {
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form'),
-            },
+            }
           )
       },
     })
@@ -186,9 +186,9 @@ describe('ASortableListEditor — rail colors', () => {
                   },
                   {
                     item: () => h('div', { class: 'inline-form' }, 'form'),
-                  },
+                  }
                 ),
-            },
+            }
           )
       },
     })
@@ -200,9 +200,7 @@ describe('ASortableListEditor — rail colors', () => {
     await nextTick()
 
     // Open the first inner row.
-    const innerRows = Array.from(
-      document.querySelectorAll<HTMLElement>('.a-sortable-list-editor--embedded .a-le-row'),
-    )
+    const innerRows = Array.from(document.querySelectorAll<HTMLElement>('.a-sortable-list-editor--embedded .a-le-row'))
     expect(innerRows.length).toBeGreaterThan(0)
     const innerHeader = innerRows[0].querySelector<HTMLElement>('.a-le-row-header')!
     innerHeader.click()
@@ -213,7 +211,7 @@ describe('ASortableListEditor — rail colors', () => {
     await nextTick()
 
     const innerRow = Array.from(
-      document.querySelectorAll<HTMLElement>('.a-sortable-list-editor--embedded .a-le-row'),
+      document.querySelectorAll<HTMLElement>('.a-sortable-list-editor--embedded .a-le-row')
     )[0]
     expect(innerRow.classList.contains('a-le-row--editing')).toBe(true)
     expect(innerRow.classList.contains('a-le-row--unsaved')).toBe(true)

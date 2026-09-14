@@ -26,12 +26,9 @@ afterEach(() => {
 
 // The PARENT row in the outer (non-embedded) editor.
 const parentRow = (): Element | null =>
-  document.querySelector(
-    '.a-sortable-list-editor:not(.a-sortable-list-editor--embedded) .a-le-row[data-id="1"]',
-  )
+  document.querySelector('.a-sortable-list-editor:not(.a-sortable-list-editor--embedded) .a-le-row[data-id="1"]')
 // The CHILD row in the embedded editor.
-const childRow = (): Element | null =>
-  document.querySelector('.a-sortable-list-editor--embedded .a-le-row')
+const childRow = (): Element | null => document.querySelector('.a-sortable-list-editor--embedded .a-le-row')
 
 const question = (): Question => ({
   id: 1,
@@ -68,10 +65,7 @@ describe('ASortableListEditor — dirtyExclude shields the parent from child edi
               // Inner embedded editor bound to THIS parent row's answers; updates
               // write back through the outer editor so the parent's `answers` field
               // actually mutates (the realistic shape that makes the exclude matter).
-              item: (slot: {
-                raw: Question
-                actions: { update: (next: Partial<Question>) => void }
-              }) =>
+              item: (slot: { raw: Question; actions: { update: (next: Partial<Question>) => void } }) =>
                 h(
                   ASortableListEditor<Answer>,
                   {
@@ -82,9 +76,9 @@ describe('ASortableListEditor — dirtyExclude shields the parent from child edi
                     factory: (): Answer => ({ id: -Date.now(), position: 0, title: '' }),
                     embedded: true,
                   },
-                  { item: () => h('div', { class: 'inline-form' }, 'form') },
+                  { item: () => h('div', { class: 'inline-form' }, 'form') }
                 ),
-            },
+            }
           )
       },
     })

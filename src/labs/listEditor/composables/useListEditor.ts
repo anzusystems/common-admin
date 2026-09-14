@@ -27,7 +27,7 @@ export interface ListEditorApi<TItem> {
  */
 export function useListEditor<TItem extends Record<string, any>>(
   model: Ref<TItem[]>,
-  options: UseListEditorOptions = {},
+  options: UseListEditorOptions = {}
 ): ListEditorApi<TItem> {
   const keyField = options.keyField ?? 'id'
   const positionField = options.positionField ?? 'position'
@@ -42,7 +42,7 @@ export function useListEditor<TItem extends Record<string, any>>(
     console.warn(
       `[list-editor] key-field === position-field ("${keyField}") with update-position enabled. ` +
         'Reordering renumbers positions and thus changes row keys, breaking dirty/validity ' +
-        'tracking. Point key-field at a stable identity field (e.g. "id").',
+        'tracking. Point key-field at a stable identity field (e.g. "id").'
     )
   }
 
@@ -72,13 +72,13 @@ export function useListEditor<TItem extends Record<string, any>>(
       console.warn(
         `[list-editor] ${missing} row(s) resolve to an undefined key (key-field "${keyField}"). ` +
           'Point key-field at a field every item has, or give new items unique temp ids ' +
-          '(see nextListEditorTempId).',
+          '(see nextListEditorTempId).'
       )
     }
     if (duplicates.size > 0) {
       console.warn(
         `[list-editor] duplicate row keys (key-field "${keyField}"): ${[...duplicates].join(', ')}. ` +
-          'Row keys must be unique — dirty tracking and validation rails target rows by key.',
+          'Row keys must be unique — dirty tracking and validation rails target rows by key.'
       )
     }
   }
@@ -103,11 +103,9 @@ export function useListEditor<TItem extends Record<string, any>>(
     return result
   }
 
-  const isItem = (value: ListEditorKey | TItem): value is TItem =>
-    value !== null && typeof value === 'object'
+  const isItem = (value: ListEditorKey | TItem): value is TItem => value !== null && typeof value === 'object'
 
-  const resolveIndexByKey = (items: TItem[], key: ListEditorKey): number =>
-    items.findIndex((x) => x[keyField] === key)
+  const resolveIndexByKey = (items: TItem[], key: ListEditorKey): number => items.findIndex((x) => x[keyField] === key)
 
   const resolveIndex = (items: TItem[], idOrItem: ListEditorKey | TItem): number => {
     const key = isItem(idOrItem) ? (idOrItem[keyField] as ListEditorKey) : idOrItem

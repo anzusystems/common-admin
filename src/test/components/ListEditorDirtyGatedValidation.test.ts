@@ -32,8 +32,7 @@ const row = (key: number): Element | null => {
   if (!el) return null
   return el.classList.contains('a-le-row') ? el : el.querySelector('.a-le-row')
 }
-const isRed = (key: number): boolean =>
-  row(key)?.classList.contains('a-le-row--validation-invalid') ?? false
+const isRed = (key: number): boolean => row(key)?.classList.contains('a-le-row--validation-invalid') ?? false
 const isAmber = (key: number): boolean => row(key)?.classList.contains('a-le-row--unsaved') ?? false
 const validateAll = (w: VueWrapper, comp: unknown): void => {
   const vm = w.findComponent(comp as Parameters<typeof w.findComponent>[0]).vm as unknown as {
@@ -143,7 +142,7 @@ describe('invalid rail is suppressed while the row is being edited', () => {
             {
               item: ({ raw }: { raw: Item }) => h('span', raw.title),
               'item-compact': ({ raw }: { raw: Item }) => h('span', raw.title),
-            },
+            }
           )
       },
     })
