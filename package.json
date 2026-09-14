@@ -53,8 +53,8 @@
     "lint:oxlint:fix": "oxlint . --fix",
     "lint:stylelint": "stylelint src/**/*.{scss,vue} --cache --cache-strategy content",
     "lint:stylelint:fix": "stylelint src/**/*.{scss,vue} --fix --cache --cache-strategy content",
-    "format": "oxfmt .",
-    "format:check": "oxfmt . --check",
+    "format": "oxfmt src vite.config.lib.mts vite.config.mts vitest.config.mts eslint.config.mjs",
+    "format:check": "oxfmt src vite.config.lib.mts vite.config.mts vitest.config.mts eslint.config.mjs --check",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"

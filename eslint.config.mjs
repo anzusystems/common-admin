@@ -74,12 +74,7 @@ export default defineConfigWithVueTs(
   },
   {
     name: 'app/test-files',
-    files: [
-      '**/*.test.{ts,js}',
-      '**/*.spec.{ts,js}',
-      '**/test/**/*.{ts,js}',
-      '**/tests/**/*.{ts,js}',
-    ],
+    files: ['**/*.test.{ts,js}', '**/*.spec.{ts,js}', '**/test/**/*.{ts,js}', '**/tests/**/*.{ts,js}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
@@ -113,5 +108,5 @@ export default defineConfigWithVueTs(
         },
       ],
     },
-  },
+  }
 )
