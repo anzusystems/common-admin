@@ -7,8 +7,11 @@
     "no-unused-vars": ["error", { "caughtErrors": "none", "argsIgnorePattern": "^_" }],
     "no-unused-expressions": "off",
 
+    // oxlint does not run prefer-const inside a .vue file at all, so handing it over
+    // would switch it off for every SFC. Left to eslint, which does both.
+    "prefer-const": "off",
+
     "no-var": "error",
-    "prefer-const": "error",
     "prefer-rest-params": "error",
     "prefer-spread": "error",
     "typescript/no-array-constructor": "error",

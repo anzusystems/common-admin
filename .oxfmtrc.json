@@ -1,7 +1,9 @@
 {
     "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "printWidth": 120,
     "semi": false,
     "singleQuote": true,
+    "trailingComma": "es5",
     "singleAttributePerLine": true,
-    "ignorePatterns": ["/*", "!/src"]
+    "ignorePatterns": ["/*", "!/src", "!/*.mts", "!/*.mjs"]
 }
