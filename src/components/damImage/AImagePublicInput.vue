@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { ImageAware, ImageCreateUpdateAware, ImageOwner } from '@/types/ImageAware'
+import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { cloneDeep, isDocId, isNull, isString } from '@/utils/common'
@@ -22,6 +23,8 @@ const props = withDefaults(
     selectLicences: IntegerId[]
     uploadLicence: IntegerId
     singleUseAllowed?: boolean
+    holder?: AssetSelectHolder | null
+    owner?: ImageOwner | null
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     labelT?: string | undefined
@@ -29,6 +32,8 @@ const props = withDefaults(
   }>(),
   {
     singleUseAllowed: false,
+    holder: null,
+    owner: null,
     image: undefined,
     configName: 'default',
     labelT: 'common.damImage.public.idOrUrl',
@@ -66,7 +71,15 @@ const validateAssetData = (asset: AssetDetailItemDto, licences: IntegerId[]) => 
   const allowedLicence =
     licences.some((licence) => licence === asset.licence) || asset.licence === props.uploadLicence
   if (!allowedLicence) return false
-  return props.singleUseAllowed || asset.mainFileSingleUse !== true
+  if (asset.mainFileSingleUse !== true) return true
+  if (!props.singleUseAllowed || isNull(props.holder)) return false
+  const holderResourceName = asset.mainFile?.fileAttributes.usedByHolderName ?? ''
+  const holderResourceId = asset.mainFile?.fileAttributes.usedByHolderId ?? ''
+  return (
+    holderResourceName === '' ||
+    (props.holder.resourceName === holderResourceName &&
+      props.holder.resourceId === holderResourceId)
+  )
 }
 
 const validators = useValidate()
@@ -135,6 +148,10 @@ const submit = async () => {
         uploadLicenceId: props.uploadLicence,
       },
       position: 0,
+    }
+    if (props.owner) {
+      data.ownerResourceName = props.owner.resourceName
+      data.ownerResourceId = props.owner.resourceId
     }
     if (resImage.value?.id) {
       data.id = resImage.value.id

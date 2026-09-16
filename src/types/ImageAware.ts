@@ -1,5 +1,15 @@
 import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
 
+/**
+ * The entity/version that will own this image once saved. Sent as `ownerResourceName/Id` in the
+ * create/update payload; the server derives site/siteGroup from it and, for a single-use photo, ties
+ * the claim to it. `null` = the entity has no id yet, so a single-use photo cannot be picked at all.
+ */
+export interface ImageOwner {
+  resourceName: string
+  resourceId: IntegerId
+}
+
 export interface ImageAware {
   id: IntegerId
   texts: {
@@ -14,9 +24,9 @@ export interface ImageAware {
     // Request-only: target site group licence for take-over; server ignores licenceId for that decision.
     uploadLicenceId?: IntegerId
     // Manual override shown only for a directUseAllowed licence that isn't the upload licence.
-    takeOver?: boolean
+    forceTakeOver?: boolean
     singleUse?: boolean
-    originDamId?: DocIdNullable
+    takenOverFromId?: DocIdNullable
   }
   flags: {
     showSource: boolean
@@ -28,6 +38,10 @@ export interface ImageAware {
 
 export interface ImageCreateUpdateAware extends Omit<ImageAware, 'id'> {
   id?: IntegerId
+  // Request-only: the entity claiming the photo. The server ignores it on update — the owner is set once,
+  // at create. Deliberately not on ImageAware: a response carries the stored owner, typed by each app.
+  ownerResourceName?: string
+  ownerResourceId?: IntegerId
 }
 
 export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {

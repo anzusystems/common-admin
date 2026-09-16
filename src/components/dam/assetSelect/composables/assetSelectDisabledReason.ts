@@ -7,6 +7,7 @@ import type {
   AssetSelectabilityOptions,
   AssetSelectListItem,
 } from '@/services/stores/coreDam/assetSelectStore'
+import { holdersEqual } from '@/types/coreDam/AssetSelect'
 
 /**
  * Human name of a holder type, from `common.assetSelect.holder.<resourceName>`. A resource the
@@ -26,20 +27,23 @@ export const resolveDisabledReason = (
   const { t } = i18n.global
   const singleUse = asset.mainFile?.flags.singleUse ?? false
 
-  if (!options.singleUseAllowed && singleUse) {
+  // Selectable only if I am the one using it: `!singleUseAllowed` disables it outright for this
+  // context, `holder === null` means the entity has no id yet (no owner to claim it with either).
+  if (singleUse && (!options.singleUseAllowed || isNull(options.holder))) {
     return t('common.assetSelect.disabledReason.singleUseNotAllowed')
   }
 
-  const holderResourceName = asset.mainFile?.fileAttributes.usedByResourceName ?? ''
-  const holderResourceId = asset.mainFile?.fileAttributes.usedByResourceId ?? ''
+  const holderResourceName = asset.mainFile?.fileAttributes.usedByHolderName ?? ''
+  const holderResourceId = asset.mainFile?.fileAttributes.usedByHolderId ?? ''
   // The holder only decides for a file that is single use right now: a licence that stops enforcing it
   // leaves the last holder behind, and without this guard that stale value would block the file forever.
   const heldByOther =
     singleUse &&
     holderResourceName !== '' &&
-    (isNull(options.owner) ||
-      options.owner.resourceName !== holderResourceName ||
-      options.owner.resourceId !== holderResourceId)
+    !holdersEqual(options.holder, {
+      resourceName: holderResourceName,
+      resourceId: holderResourceId,
+    })
   if (heldByOther) {
     return t('common.assetSelect.disabledReason.singleUseHeld', {
       holder: resolveHolderName(holderResourceName),

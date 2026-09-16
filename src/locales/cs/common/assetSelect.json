@@ -74,7 +74,7 @@
     "gallery": "galerie"
   },
   "disabledReason": {
-    "singleUseNotAllowed": "Sem nelze vložit jednorázově použitelný obrázek",
+    "singleUseNotAllowed": "Jednorázově použitelný obrázek lze sem vložit až po prvním uložení",
     "singleUseHeld": "Obrázek je jednorázový a už je použit jinde ({holder})",
     "directUseDisabledNotImage": "Tuto licenci lze použít jen pro obrázky",
     "directUseDisabledNoUploadLicence": "Chybí cílová licence pro zkopírování obrázku"

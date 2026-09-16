@@ -217,8 +217,8 @@ defineExpose({
       <VRow v-if="showTakeOverSwitch">
         <VCol>
           <VSwitch
-            v-model="detail.dam.takeOver"
-            :label="t('common.damImage.image.model.dam.takeOver')"
+            v-model="detail.dam.forceTakeOver"
+            :label="t('common.damImage.image.model.dam.forceTakeOver')"
             density="compact"
             hide-details
           />
@@ -321,8 +321,8 @@ defineExpose({
           <VRow v-if="showTakeOverSwitch">
             <VCol>
               <VSwitch
-                v-model="detail.dam.takeOver"
-                :label="t('common.damImage.image.model.dam.takeOver')"
+                v-model="detail.dam.forceTakeOver"
+                :label="t('common.damImage.image.model.dam.forceTakeOver')"
                 density="compact"
                 hide-details
               />

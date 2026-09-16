@@ -27,7 +27,7 @@ import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamCon
 import { cloneDeep, isUndefined } from '@/utils/common'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import type { AssetSelectOwner } from '@/types/coreDam/AssetSelect'
+import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
@@ -47,7 +47,7 @@ const props = withDefaults(
     onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
     listViews?: IntegerId[]
     singleUseAllowed?: boolean
-    owner?: AssetSelectOwner | null
+    holder?: AssetSelectHolder | null
   }>(),
   {
     inPodcast: null,
@@ -58,7 +58,7 @@ const props = withDefaults(
     onDetailLoadedCallback: undefined,
     listViews: () => [],
     singleUseAllowed: false,
-    owner: null,
+    holder: null,
   },
 )
 
@@ -130,7 +130,7 @@ const onOpen = () => {
   assetSelectStore.setSelectability({
     singleUseAllowed: props.singleUseAllowed,
     uploadLicence: props.uploadLicence,
-    owner: props.owner,
+    holder: props.holder,
   })
   initStoreContext(
     selectConfigLocal,

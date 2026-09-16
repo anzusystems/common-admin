@@ -74,7 +74,7 @@
     "gallery": "gallery"
   },
   "disabledReason": {
-    "singleUseNotAllowed": "A single-use image cannot be placed here",
+    "singleUseNotAllowed": "A single-use image can only be placed here after the first save",
     "singleUseHeld": "The image is single-use and is already used elsewhere ({holder})",
     "directUseDisabledNotImage": "This licence can only be used for images",
     "directUseDisabledNoUploadLicence": "The target licence for copying the image is missing"

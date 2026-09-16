@@ -42,7 +42,8 @@ import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/auth
 import { useI18n } from 'vue-i18n'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import type { AssetSelectOwner } from '@/types/coreDam/AssetSelect'
+import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
+import type { ImageOwner } from '@/types/ImageAware'
 import {
   type CollabComponentConfig,
   type CollabFieldData,
@@ -64,7 +65,7 @@ import {
   isImageCreateUpdateAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { extractImageSaveErrorInfo } from '@/components/damImage/uploadQueue/api/imageApiCms'
+import { useImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 
 const props = withDefaults(
   defineProps<{
@@ -73,7 +74,8 @@ const props = withDefaults(
     selectLicences: IntegerId[]
     listViews?: IntegerId[]
     singleUseAllowed?: boolean
-    owner?: AssetSelectOwner | null
+    holder?: AssetSelectHolder | null
+    owner?: ImageOwner | null
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -96,6 +98,7 @@ const props = withDefaults(
   {
     listViews: () => [],
     singleUseAllowed: false,
+    holder: null,
     owner: null,
     configName: 'default',
     collab: undefined,
@@ -203,7 +206,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 
 const { t } = useI18n()
 
-const { showErrorsDefault, showError, showErrorT } = useAlerts()
+const { showErrorsDefault, showError } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
@@ -508,18 +511,7 @@ const onMetadataDialogClose = () => {
   metadataDialog.value = false
 }
 
-const showImageSaveError = (e: unknown) => {
-  const errorInfo = extractImageSaveErrorInfo(e)
-  if (errorInfo?.code === 'image_take_over_failed') {
-    showErrorT('common.damImage.image.error.takeOverFailed')
-    return
-  }
-  if (errorInfo?.code === 'image_single_use_violation') {
-    showErrorT('common.damImage.image.error.singleUseViolation')
-    return
-  }
-  showErrorsDefault(e)
-}
+const { showImageSaveError } = useImageSaveErrorMessage()
 
 const onMetadataDialogConfirm = async () => {
   if (!isImageCreateUpdateAware(detail.value)) return
@@ -536,6 +528,10 @@ const onMetadataDialogConfirm = async () => {
         pendingAuthorIds,
       )
       detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
+    }
+    if (props.owner) {
+      detail.value.ownerResourceName = props.owner.resourceName
+      detail.value.ownerResourceId = props.owner.resourceId
     }
     const res = detail.value.id
       ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
@@ -873,7 +869,7 @@ defineExpose({
     :upload-licence="uploadLicence"
     :list-views="listViews"
     :single-use-allowed="singleUseAllowed"
-    :owner="owner"
+    :holder="holder"
     :min-count="1"
     :max-count="1"
     :asset-type="DamAssetType.Image"
