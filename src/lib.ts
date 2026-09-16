@@ -82,8 +82,22 @@ import AFileInput from '@/components/file/AFileInput.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import AAssetList from '@/components/dam/assetSelect/AAssetList.vue'
 import AAssetListInner from '@/components/dam/assetSelect/AAssetListInner.vue'
-import ASortable from '@/components/sortable/ASortable.vue'
-import ASortableNested from '@/components/sortable/ASortableNested.vue'
+import ASortableComponent from '@/components/sortable/ASortable.vue'
+import ASortableNestedComponent from '@/components/sortable/ASortableNested.vue'
+
+/**
+ * @deprecated Use `ASortableListEditor` from `@anzusystems/common-admin/labs`. It carries the same
+ * drag-and-drop reorder plus arrow controls for touch, an unsaved-changes baseline and row-level
+ * validation, none of which this component has.
+ *
+ * Aliased rather than exported straight from the SFC so this notice reaches the generated
+ * declarations -- a comment on the re-export is dropped there.
+ */
+const ASortable = ASortableComponent
+/**
+ * @deprecated Use `ASortableListEditor` from `@anzusystems/common-admin/labs` -- see `ASortable`.
+ */
+const ASortableNested = ASortableNestedComponent
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'

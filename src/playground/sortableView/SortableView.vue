@@ -250,6 +250,16 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
 
   <VCard>
     <VCardText>
+      <VAlert
+        type="warning"
+        variant="tonal"
+        class="mb-4"
+      >
+        <strong>ASortable and ASortableNested are deprecated.</strong> Use <code>ASortableListEditor</code> from
+        <code>@anzusystems/common-admin/labs</code> — it carries the same drag-and-drop reorder plus arrow controls for
+        touch, an unsaved-changes baseline and row-level validation. This view is kept for the components still on the
+        old API.
+      </VAlert>
       <h2 class="text-headline-medium mt-5 mb-2">
         ASortableNested <span class="text-body-small">dirty: {{ itemsNested.meta.dirty }}</span>
       </h2>
