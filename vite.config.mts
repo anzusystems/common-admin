@@ -15,7 +15,7 @@ export default defineConfig({
     }),
     VueI18nPlugin({
       globalSFCScope: true,
-      include: path.resolve(_dirname, './src/locales/**.json'),
+      include: path.resolve(_dirname, './src/locales/**/*.json'),
     }),
   ],
   resolve: {

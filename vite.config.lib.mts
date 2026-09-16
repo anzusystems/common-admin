@@ -43,7 +43,7 @@ export default defineConfig({
     VueI18nPlugin({
       globalSFCScope: true,
       runtimeOnly: false,
-      include: path.resolve(_dirname, 'src/locales/**.json'),
+      include: path.resolve(_dirname, 'src/locales/**/*.json'),
     }),
     dts({ bundleTypes: true, tsconfigPath: 'tsconfig.libdts.json' }),
   ],

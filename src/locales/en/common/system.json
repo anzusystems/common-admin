@@ -1,5 +1,5 @@
 {
-  "version": "version",
+  "version": "Version",
   "newVersionText": "New version of admin is available. For proper functioning, latest version is required.",
   "newVersionReload": "Reload new version",
   "theme": {
