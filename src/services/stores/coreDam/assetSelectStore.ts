@@ -4,7 +4,7 @@ import { DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
 import {
-  type AssetSelectOwner,
+  type AssetSelectHolder,
   type AssetSelectReturnData,
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
@@ -27,7 +27,7 @@ export interface AssetSelectListItem {
 export interface AssetSelectabilityOptions {
   singleUseAllowed: boolean
   uploadLicence: IntegerId | undefined
-  owner: AssetSelectOwner | null
+  holder: AssetSelectHolder | null
 }
 
 export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
@@ -129,7 +129,16 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     if (!assetListItems.value[index]) return
     // Deselecting stays possible: the reasons arrive after the page is fetched, so an already selected
     // item can turn out unusable and the user has to be able to drop it.
-    if (assetListItems.value[index].disabledReason && !assetListItems.value[index].selected) return
+    if (assetListItems.value[index].disabledReason && !assetListItems.value[index].selected) {
+      // A single pick click asks to replace the pick and the answer is no, so the previous one goes:
+      // the counter and the confirm button then say there is nothing to confirm, instead of staying
+      // ready for a photo the user no longer has on screen.
+      if (singleMode.value) {
+        unselectAllExcept(index)
+        clearSelected()
+      }
+      return
+    }
 
     if (!singleMode.value && isSelectedMax.value && !assetListItems.value[index].selected) {
       return

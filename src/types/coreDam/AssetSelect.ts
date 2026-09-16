@@ -1,5 +1,6 @@
 import type { DocId } from '@/types/common'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
+import { isNull } from '@/utils/common'
 
 export const AssetSelectReturnType = {
   MainFileId: 'mainFileId',
@@ -31,9 +32,19 @@ interface AssetSelectReturnAsset {
 
 /**
  * The subject a single-use photo may already be held by without blocking this pick. Shaped exactly
- * like the holder DAM reports in `mainFile.fileAttributes`, so the comparison is a plain equality.
+ * like the holder DAM reports in `mainFile.fileAttributes.usedByHolderName/Id`, so the comparison is
+ * a plain equality. `null` means the entity has no id yet — no single-use photo is selectable then.
  */
-export interface AssetSelectOwner {
+export interface AssetSelectHolder {
   resourceName: string
   resourceId: string
+}
+
+/**
+ * Whether two holders are the same subject. `null` never matches anything, including another `null` —
+ * no identity means there is nothing to claim a single-use photo with.
+ */
+export const holdersEqual = (a: AssetSelectHolder | null, b: AssetSelectHolder | null): boolean => {
+  if (isNull(a) || isNull(b)) return false
+  return a.resourceName === b.resourceName && a.resourceId === b.resourceId
 }

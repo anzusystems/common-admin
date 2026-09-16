@@ -28,7 +28,7 @@ import {
 } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageStoreItem } from '@/types/ImageAware'
+import type { ImageOwner, ImageStoreItem } from '@/types/ImageAware'
 import { generateUUIDv1 } from '@/utils/generator'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
@@ -38,12 +38,13 @@ import useVuelidate from '@vuelidate/core'
 import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import type { AssetSelectOwner } from '@/types/coreDam/AssetSelect'
+import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { BulkUpdateImageFailure } from '@/components/damImage/uploadQueue/api/imageApiCms'
+import { resolveImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 
 const props = withDefaults(
   defineProps<{
@@ -53,7 +54,8 @@ const props = withDefaults(
     selectLicences: IntegerId[]
     listViews?: IntegerId[]
     singleUseAllowed?: boolean
-    owner?: AssetSelectOwner | null
+    holder?: AssetSelectHolder | null
+    owner?: ImageOwner | null
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -67,6 +69,7 @@ const props = withDefaults(
   {
     listViews: () => [],
     singleUseAllowed: false,
+    holder: null,
     owner: null,
     configName: 'default',
     label: undefined,
@@ -409,6 +412,9 @@ const failedUnidentified = computed(() =>
   failedImages.value.filter((failure) => isUndefined(failure.errorInfo)),
 )
 
+const failureMessage = (failure: BulkUpdateImageFailure) =>
+  resolveImageSaveErrorMessage(failure.errorInfo, t)
+
 const saveImages = async () => {
   // Empty store here means the fetch is pending or failed, not a user deletion — the empty
   // path below would detach every image.
@@ -426,6 +432,10 @@ const saveImages = async () => {
     const assetUpdateItems: AssetAuthorsItems = []
     const imagesRaw = toRaw(images.value)
     for (const image of imagesRaw) {
+      if (props.owner) {
+        image.ownerResourceName = props.owner.resourceName
+        image.ownerResourceId = props.owner.resourceId
+      }
       if (authorEnabled.value && image.showDamAuthors && image.assetId) {
         assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
       }
@@ -604,7 +614,7 @@ onMounted(() => {
       :upload-licence="uploadLicence"
       :list-views="listViews"
       :single-use-allowed="singleUseAllowed"
-      :owner="owner"
+      :holder="holder"
       :min-count="1"
       :max-count="50"
       :asset-type="DamAssetType.Image"
@@ -650,12 +660,7 @@ onMounted(() => {
           :key="failure.item.dam.damId"
         >
           {{ failure.item.dam.damId }}
-          <template v-if="failure.errorInfo?.code === 'image_take_over_failed'">
-            — {{ t('common.damImage.image.error.takeOverFailed') }}
-          </template>
-          <template v-else-if="failure.errorInfo?.code === 'image_single_use_violation'">
-            — {{ t('common.damImage.image.error.singleUseViolation') }}
-          </template>
+          <template v-if="failureMessage(failure)"> — {{ failureMessage(failure) }} </template>
         </li>
       </ul>
       <div

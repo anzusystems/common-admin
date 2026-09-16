@@ -401,7 +401,11 @@ import type {
   CustomDataFormElementAttributes,
   CustomDataValue,
 } from '@/components/customDataForm/CustomDataForm'
-import type { AssetSelectOwner, AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
+import {
+  type AssetSelectHolder,
+  type AssetSelectReturnData,
+  holdersEqual,
+} from '@/types/coreDam/AssetSelect'
 import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type {
@@ -457,6 +461,7 @@ import type {
   ImageAware,
   ImageCreateUpdateAware,
   ImageCreateUpdateAwareKeyed,
+  ImageOwner,
 } from '@/types/ImageAware'
 import type {
   DamAuthor,
@@ -625,6 +630,10 @@ import {
   fetchDamUserList,
 } from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
+import {
+  resolveImageSaveErrorMessage,
+  useImageSaveErrorMessage,
+} from '@/components/damImage/composables/imageSaveErrors'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
 import {
@@ -836,6 +845,8 @@ export {
   useDamAssetLicenceInnerFilter,
   useDamAssetLicenceFilter,
   useImageActions,
+  resolveImageSaveErrorMessage,
+  useImageSaveErrorMessage,
   useCommonAdminImageOptions,
   defineAuth,
   defineBreadcrumbs,
@@ -917,7 +928,8 @@ export {
   type RecordWasType,
   type UrlParams,
   type AssetSelectReturnData,
-  type AssetSelectOwner,
+  type AssetSelectHolder,
+  holdersEqual,
   resolveHolderName,
   type SortablePropItem,
   type SortableItem,
@@ -1004,6 +1016,7 @@ export {
   type ImageAware,
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,
+  type ImageOwner,
   type UploadMetadataToImageMapFn,
   type UploadMetadataToImageMapItem,
   mapUploadMetadataToImages,

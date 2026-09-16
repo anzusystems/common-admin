@@ -105,7 +105,7 @@ const singleUseEditable = computed(() => {
 
 // Empty string = held by nobody, which is also what an older payload without the field reads as.
 const usedByHolderName = computed(() => {
-  const resourceName = assetMainFile.value?.fileAttributes.usedByResourceName ?? ''
+  const resourceName = assetMainFile.value?.fileAttributes.usedByHolderName ?? ''
   return resourceName === '' ? '' : resolveHolderName(resourceName)
 })
 

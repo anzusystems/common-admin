@@ -44,8 +44,8 @@ interface FileAttributes {
   firstUsedAt: DatetimeUTCNullable
   // Effective holder of a single-use file, empty string = held by nobody. The holder is clearable,
   // unlike firstUsedAt, and is what the picker compares against its own subject.
-  usedByResourceName: string
-  usedByResourceId: string
+  usedByHolderName: string
+  usedByHolderId: string
 }
 
 export const AssetFileLinkType = {

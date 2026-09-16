@@ -92,7 +92,6 @@ const onItemClick = () => {
         :asset-type="assetType"
         :licence-badge="licenceBadge"
         :single-use="singleUse"
-        :disabled-reason="disabledReason ?? ''"
         disable-absolute
       />
     </td>
