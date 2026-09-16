@@ -96,21 +96,41 @@ watch(
   }
 )
 
-const onClickFirst = useThrottleFn(() => {
-  pagination.value.page = 1
-}, 300)
+// Leading edge only: the throttle is a click-spam guard, not a rate limiter. VueUse 15 flipped
+// `trailing` to true by default, which replays the last click once the window closes -- stepping
+// prev/next a second time, and past `lastPage`, because the queued callback never re-reads the
+// disabled state.
+const onClickFirst = useThrottleFn(
+  () => {
+    pagination.value.page = 1
+  },
+  300,
+  false
+)
 
-const onClickLast = useThrottleFn(() => {
-  pagination.value.page = lastPage.value
-}, 300)
+const onClickLast = useThrottleFn(
+  () => {
+    pagination.value.page = lastPage.value
+  },
+  300,
+  false
+)
 
-const onClickPrev = useThrottleFn(() => {
-  pagination.value.page = pagination.value.page - 1
-}, 300)
+const onClickPrev = useThrottleFn(
+  () => {
+    pagination.value.page = pagination.value.page - 1
+  },
+  300,
+  false
+)
 
-const onClickNext = useThrottleFn(() => {
-  pagination.value.page = pagination.value.page + 1
-}, 300)
+const onClickNext = useThrottleFn(
+  () => {
+    pagination.value.page = pagination.value.page + 1
+  },
+  300,
+  false
+)
 </script>
 
 <template>
