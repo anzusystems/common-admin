@@ -41,6 +41,8 @@ import { defineAuth } from '@/composables/auth/defineAuth'
 import type { AclValue } from '@/types/Permission'
 import { cmsClient } from '@/playground/mock/cmsClient'
 import CopyTextView from '@/playground/copyTextView/CopyTextView.vue'
+import CropperView from '@/playground/cropperView/CropperView.vue'
+import RoiEditorView from '@/playground/cropperView/RoiEditorView.vue'
 import ImagePublicInputView from '@/playground/imagePublicInputView/ImagePublicInputView.vue'
 import RemoteAutocompleteView from '@/playground/remoteAutocompleteView/RemoteAutocompleteView.vue'
 import SubjectListView from '@/playground/filterView/SubjectListView.vue'
@@ -119,6 +121,16 @@ const router = createRouter({
       path: '/view/image',
       name: 'view-image',
       component: ImageView,
+    },
+    {
+      path: '/view/cropper',
+      name: 'view-cropper',
+      component: CropperView,
+    },
+    {
+      path: '/view/roi-editor',
+      name: 'view-roi-editor',
+      component: RoiEditorView,
     },
     {
       path: '/view/image-multiple',

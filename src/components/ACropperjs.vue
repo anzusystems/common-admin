@@ -1,4 +1,15 @@
 <script setup lang="ts" generic="T extends EventTarget = EventTarget">
+/**
+ * @deprecated Nothing in this organisation uses it.
+ *
+ * This component is built on cropper.js 1.6.3, which has had no release since and whose successor
+ * is a different library. The cropper that ships is the one behind `DamAssetImageRoiSelect`, under
+ * `components/damImage/uploadQueue/cropper/`; it is not exported, because nothing outside this
+ * library asks for a cropper. See `doc/changelog/unreleased/` for what the two do differently.
+ *
+ * cropper.js v1 is installed alongside v2 under the `cropperjs` name while this component lives;
+ * the new one imports `cropperjs2`. Both aliases go away when this file does.
+ */
 import Cropper from 'cropperjs'
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { isNull } from '@/utils/common'

@@ -1,80 +1,50 @@
 import type { RegionOfInterest } from '@/types/coreDam/Roi'
-import { stringToFloat, stringToInt } from '@/utils/string'
+import type { CropRect } from '@/components/damImage/uploadQueue/cropper/cropperTypes'
 
 const PRECISION = 3
 
-export interface ACropperjsExposed {
-  enable: () => void
-  disable: () => void
-  destroy: () => void
-  getImageData: () => Cropper.ImageData
-  getData: () => Cropper.Data
-  setData: (data: Cropper.SetDataOptions) => void
+const roundTo = (value: number, decimals: number) => {
+  const factor = 10 ** decimals
+  return Math.round(value * factor) / factor
 }
 
-export const regionToCrop = function (
-  cropper: ACropperjsExposed,
+const clampFraction = (value: number) => Math.min(Math.max(value, 0), 1)
+
+/**
+ * A stored region of interest as a crop rectangle, and back.
+ *
+ * Both are pure arithmetic on the source image's own dimensions — no cropper involved. The region
+ * already keeps its size as fractions, and its anchor is a fraction of the source in all but name,
+ * so nothing here needs to know how large the picture the cropper happens to be showing is. That
+ * used to matter: the conversion went through the displayed image's natural size, which cancelled
+ * out of every sum it appeared in and took a rounding correction of its own to patch up.
+ */
+export const regionToCrop = (
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
   originalImageHeight: number
-) {
-  const imageData = cropper.getImageData()
-  if (!imageData)
-    return {
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
-      rotate: 0,
-      scaleX: 1,
-      scaleY: 1,
-    }
-  const ratio = imageData.naturalHeight / originalImageHeight
-
+): CropRect => {
+  if (!(originalImageWidth > 0) || !(originalImageHeight > 0)) {
+    return { x: 0, y: 0, width: 1, height: 1 }
+  }
   return {
-    x: regionOfInterest.pointX * ratio,
-    y: regionOfInterest.pointY * ratio,
-    width: regionOfInterest.percentageWidth * imageData.naturalWidth,
-    height: regionOfInterest.percentageHeight * imageData.naturalHeight,
-    rotate: 0,
-    scaleX: 1,
-    scaleY: 1,
+    x: clampFraction(regionOfInterest.pointX / originalImageWidth),
+    y: clampFraction(regionOfInterest.pointY / originalImageHeight),
+    width: clampFraction(regionOfInterest.percentageWidth),
+    height: clampFraction(regionOfInterest.percentageHeight),
   }
 }
 
-export const cropToRegion = function (
-  cropper: ACropperjsExposed,
+export const cropToRegion = (
+  crop: CropRect,
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
   originalImageHeight: number
-) {
-  const imageData = cropper.getImageData()
-  const data = cropper.getData()
-  if (!imageData || !data) return regionOfInterest
-  const ratio = imageData.naturalHeight / originalImageHeight
-
-  let pointX = stringToInt((data.x / ratio).toFixed(PRECISION))
-  if (pointX < 0) pointX = 0
-
-  let pointY = stringToInt((data.y / ratio).toFixed(PRECISION))
-  if (pointY < 0) pointY = 0
-
-  let percentageWidth = stringToFloat((data.width / imageData.naturalWidth).toFixed(PRECISION))
-  const validateWidth = percentageWidth * originalImageWidth + pointX
-  if (validateWidth > originalImageWidth) {
-    percentageWidth = percentageWidth - ((validateWidth - originalImageWidth) * 100) / originalImageWidth
-  }
-
-  let percentageHeight = stringToFloat((data.height / imageData.naturalHeight).toFixed(PRECISION))
-  const validateHeight = percentageHeight * originalImageHeight + pointY
-  if (validateHeight > originalImageHeight) {
-    percentageHeight = percentageHeight - ((validateHeight - originalImageHeight) * 100) / originalImageHeight
-  }
-
-  regionOfInterest.pointX = pointX
-  regionOfInterest.pointY = pointY
-  regionOfInterest.percentageWidth = percentageWidth
-  regionOfInterest.percentageHeight = percentageHeight
+): RegionOfInterest => {
+  regionOfInterest.pointX = Math.max(0, Math.round(crop.x * originalImageWidth))
+  regionOfInterest.pointY = Math.max(0, Math.round(crop.y * originalImageHeight))
+  regionOfInterest.percentageWidth = roundTo(clampFraction(crop.width), PRECISION)
+  regionOfInterest.percentageHeight = roundTo(clampFraction(crop.height), PRECISION)
 
   return regionOfInterest
 }

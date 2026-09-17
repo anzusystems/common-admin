@@ -27,5 +27,5 @@ planned
 - Three upstream fixes land in paths this library uses, with no change needed here: `useWebSocket`
   now ignores messages from a superseded socket, which is the leak `damNotifications` guards its
   `open()` against; `useResizeObserver` guards `observe()` with an `instanceof Element` check, so a
-  `v-if` root that resolves to a comment node no longer throws in `ACropperjsV2` and
+  `v-if` root that resolves to a comment node no longer throws in the cropper and
   `FilterBookmarks`; and `useFetch` discards a stale success response once a newer request starts.

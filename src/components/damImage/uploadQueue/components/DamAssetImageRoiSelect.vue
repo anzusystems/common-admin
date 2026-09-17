@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { computed, onUnmounted, useTemplateRef } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useAlerts } from '@/composables/system/alerts'
 import { useImageRoiStore } from '@/components/damImage/uploadQueue/composables/imageRoiStore'
 import { updateRoi } from '@/components/damImage/uploadQueue/api/damImageRoiApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import {
-  cropToRegion,
-  regionToCrop,
-  type ACropperjsExposed,
-} from '@/components/damImage/uploadQueue/composables/cropperJsService'
-import ACropperjs from '@/components/ACropperjs.vue'
+import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import ACropper from '@/components/damImage/uploadQueue/cropper/ACropper.vue'
+import type { CropRect } from '@/components/damImage/uploadQueue/cropper/cropperTypes'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { DocId, IntegerId } from '@/types/common'
 import { isUndefined } from '@/utils/common'
@@ -28,6 +25,10 @@ const props = withDefaults(
 const { showRecordWas, showErrorsDefault } = useAlerts()
 
 const cropperContainerStyle = { overflow: 'hidden', maxHeight: 'calc(100vh - 160px)' }
+// What overriding `.cropper-modal` used to buy: the wash over everything outside the region is the
+// admin's own light grey rather than cropper.js' black. The v2 elements keep their styling inside a
+// shadow root, so it is passed in as a colour instead of reached for with a selector.
+const cropperShadeColor = 'rgba(241, 244, 246, 0.5)'
 
 const imageRoiStore = useImageRoiStore()
 
@@ -41,8 +42,6 @@ if (isUndefined(configExtSystem)) {
   throw new Error('DamAssetImageRoiSelect: Ext system must be initialised.')
 }
 
-const cropperInstance = useTemplateRef<ACropperjsExposed>('cropperInstance')
-
 const imageUrl = computed(() => {
   if (imageRoiStore.imageFile && imageRoiStore.imageFile.links?.image_detail) {
     return imageRoiStore.imageFile.links.image_detail.url + '?manipulated=' + imageRoiStore.imageFile.manipulatedAt
@@ -50,31 +49,16 @@ const imageUrl = computed(() => {
   return ''
 })
 
-const enableCropper = () => {
-  if (cropperInstance.value) {
-    cropperInstance.value.enable()
-  }
-}
+/** The stored region as the cropper wants it: fractions of the picture. */
+const crop = ref<CropRect | null>(null)
 
-const disableCropper = () => {
-  if (cropperInstance.value) {
-    cropperInstance.value.disable()
-  }
+const readStoredRegion = () => {
+  const { roi, imageFile } = imageRoiStore
+  crop.value =
+    roi && imageFile ? regionToCrop(roi, imageFile.imageAttributes.width, imageFile.imageAttributes.height) : null
 }
-
-const applyRegionOfInterest = () => {
-  if (cropperInstance.value && imageRoiStore.roi && imageRoiStore.imageFile) {
-    enableCropper()
-    const data = regionToCrop(
-      cropperInstance.value,
-      imageRoiStore.roi,
-      imageRoiStore.imageFile.imageAttributes.width,
-      imageRoiStore.imageFile.imageAttributes.height
-    )
-    cropperInstance.value.setData(data)
-    disableCropper()
-  }
-}
+readStoredRegion()
+watch(() => imageRoiStore.roi, readStoredRegion)
 
 const loadImageFile = async (id: DocId) => {
   const res = await fetchImageFile(damClient, endPointImage, id)
@@ -82,36 +66,23 @@ const loadImageFile = async (id: DocId) => {
   imageRoiStore.hideLoader()
 }
 
-const saveRoi = async () => {
-  if (cropperInstance.value && imageRoiStore.roi && imageRoiStore.imageFile) {
-    const roi = cropToRegion(
-      cropperInstance.value,
-      imageRoiStore.roi,
-      imageRoiStore.imageFile.imageAttributes.width,
-      imageRoiStore.imageFile.imageAttributes.height
-    )
-    try {
-      imageRoiStore.showLoader()
-      await updateRoi(damClient, endPointRoi, roi.id, roi)
-      showRecordWas('updated')
-      setTimeout(() => {
-        if (imageRoiStore.imageFile) {
-          loadImageFile(imageRoiStore.imageFile.id)
-        }
-      }, 2000)
-    } catch (error) {
-      showErrorsDefault(error)
-    }
+const saveRoi = async (committed: CropRect) => {
+  const { roi, imageFile } = imageRoiStore
+  if (!roi || !imageFile) return
+
+  const region = cropToRegion(committed, roi, imageFile.imageAttributes.width, imageFile.imageAttributes.height)
+  try {
+    imageRoiStore.showLoader()
+    await updateRoi(damClient, endPointRoi, region.id, region)
+    showRecordWas('updated')
+    setTimeout(() => {
+      if (imageRoiStore.imageFile) {
+        loadImageFile(imageRoiStore.imageFile.id)
+      }
+    }, 2000)
+  } catch (error) {
+    showErrorsDefault(error)
   }
-}
-
-const cropperReady = () => {
-  applyRegionOfInterest()
-  enableCropper()
-}
-
-const cropperEnd = () => {
-  saveRoi()
 }
 
 const showCropper = computed(() => {
@@ -122,9 +93,7 @@ const showCropper = computed(() => {
 })
 
 onUnmounted(() => {
-  if (cropperInstance.value) {
-    cropperInstance.value.destroy()
-  }
+  crop.value = null
 })
 </script>
 
@@ -135,25 +104,14 @@ onUnmounted(() => {
   >
     <VProgressCircular indeterminate />
   </div>
-  <ACropperjs
+  <ACropper
     v-if="showCropper && configExtSystem.image"
     :key="imageRoiStore.imageFile?.manipulatedAt || 0"
-    ref="cropperInstance"
+    v-model="crop"
     :aspect-ratio="configExtSystem.image.roiWidth / configExtSystem.image.roiHeight"
-    :background="false"
-    :check-cross-origin="false"
     :container-style="cropperContainerStyle"
-    :ready="cropperReady"
-    :cropend="cropperEnd"
+    :shade-color="cropperShadeColor"
     :src="imageUrl"
-    :view-mode="1"
-    :zoom-on-wheel="false"
-    responsive
+    @commit="saveRoi"
   />
 </template>
-
-<style lang="scss">
-.cropper-modal {
-  background-color: #f1f4f6;
-}
-</style>
