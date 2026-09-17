@@ -599,6 +599,7 @@ import {
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 import type { DamMedia, DamMediaFromDam, MediaAware } from '@/types/MediaAware'
 import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
+import { useDebugFeatures } from '@/composables/useDebugFeatures'
 import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
@@ -777,6 +778,7 @@ export {
   defineBreadcrumbs,
   useDamCachedUsers,
   useUnreleasedFeatures,
+  useDebugFeatures,
   useSentry,
   useUserActivity,
 

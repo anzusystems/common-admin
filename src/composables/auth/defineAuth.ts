@@ -139,6 +139,9 @@ export function defineAuth<TAclValue extends AclValue>(
     return {
       currentUser,
       setCurrentUser,
+      // `undefined` until something has tried to load this system, which is the one state
+      // `currentUser` alone cannot tell apart from "loaded, but there is no such user".
+      isCurrentUserLoaded,
       isSuperAdmin,
       isAnonymous,
       hasCurrentUser,
@@ -230,7 +233,8 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
   }
 }
 
-function getSystemFromAcl(acl: any) {
+/** An ACL value carries its system in front of the first underscore: `weather_location_ui`. */
+export function getSystemFromAcl(acl: any) {
   const parts = acl.split('_')
 
   return parts[0]
