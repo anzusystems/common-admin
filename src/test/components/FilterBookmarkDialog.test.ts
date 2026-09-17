@@ -91,7 +91,23 @@ const editorOf = (wrapper: VueWrapper) =>
     updateItem: (key: number, next: Partial<UserAdminConfig>) => void
     deleteItem: (key: number) => void
     moveItem: (from: number, to: number) => void
+    hasUnsaved: boolean | { value: boolean }
   }
+
+const unsaved = (wrapper: VueWrapper) => {
+  const raw = editorOf(wrapper).hasUnsaved
+  return typeof raw === 'boolean' ? raw : raw.value
+}
+
+// Through the row's own save button, the way a user reaches it -- calling `onItemSave` straight
+// would miss everything the editor does around it.
+const saveOpenRow = async (wrapper: VueWrapper) => {
+  const editor = wrapper.findComponent({ name: 'ASortableListEditor' })
+  await (editor.vm as unknown as { onSaveClick: (vi: unknown) => Promise<void> }).onSaveClick(
+    (editor.vm as unknown as { viewItemsDecorated: unknown[] }).viewItemsDecorated[1]
+  )
+  await flushPromises()
+}
 
 describe('filter bookmark manage tab', () => {
   it('lists the bookmarks it fetched', async () => {
@@ -104,35 +120,54 @@ describe('filter bookmark manage tab', () => {
     expect(rendered).toContain('Third')
   })
 
-  it('sends a rename to the single-config endpoint', async () => {
+  it('sends a rename, and the saved row does not stay marked unsaved', async () => {
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
-    const editor = editorOf(wrapper)
-    editor.updateItem(2, { customName: 'Renamed' })
+    editorOf(wrapper).updateItem(2, { customName: 'Renamed' })
     await nextTick()
+    // Guards the guard: the edit really did register, so the clean check below means something.
+    expect(unsaved(wrapper)).toBe(true)
 
-    // `onItemSave` is what the editor awaits when a row is confirmed.
-    const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
-    await (dialog.vm as unknown as { onItemSave: (i: UserAdminConfig) => Promise<void> }).onItemSave(
-      bookmark(2, 'Renamed')
-    )
+    listItems.value = [bookmark(1, 'First'), bookmark(2, 'Renamed'), bookmark(3, 'Third')]
+    await saveOpenRow(wrapper)
 
     expect(updateUserAdminConfig).toHaveBeenCalledTimes(1)
     expect(updateUserAdminConfig.mock.calls[0][0]).toBe(2)
     expect(deleteUserAdminConfig).not.toHaveBeenCalled()
     expect(updateUserAdminConfigPositions).not.toHaveBeenCalled()
+
+    // The editor's own commit only closes the row; without the reload the saved row would sit
+    // amber and the close guard would ask about a rename already persisted.
+    expect(unsaved(wrapper)).toBe(false)
+    expect(document.body.textContent ?? '').toContain('Renamed')
   })
 
-  it('sends a delete to the delete endpoint and reloads', async () => {
+  it('sends a delete through the editor, and reloads the list behind it', async () => {
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
-    const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
-    await (dialog.vm as unknown as { onDelete: (i: UserAdminConfig) => Promise<void> }).onDelete(bookmark(2, 'Second'))
+    listItems.value = [bookmark(1, 'First'), bookmark(3, 'Third')]
+    // The row's own delete button, so the dialog's `onDelete` is reached the way a user reaches it;
+    // `controller.deleteItem` would drop the row without ever calling the endpoint.
+    const deleteButtons = document.querySelectorAll<HTMLElement>('.a-le-action--delete')
+    expect(deleteButtons.length).toBeGreaterThan(1)
+    deleteButtons[1].click()
+    await flushPromises()
+    await nextTick()
+    // A confirmation stands between the click and the endpoint.
+    const confirm = [...document.querySelectorAll<HTMLElement>('button')].find((b) =>
+      /delete|zmaza|odstr/i.test(b.textContent ?? '')
+    )
+    confirm?.click()
+    await flushPromises()
+    await nextTick()
 
     expect(deleteUserAdminConfig).toHaveBeenCalledWith(2)
     expect(updateUserAdminConfig).not.toHaveBeenCalled()
+    // Reloaded, so the row is gone rather than merely hidden, and nothing is left marked.
+    expect(document.body.textContent ?? '').not.toContain('Second')
+    expect(unsaved(wrapper)).toBe(false)
   })
 
   it('sends the reordered ids, in the order on screen', async () => {

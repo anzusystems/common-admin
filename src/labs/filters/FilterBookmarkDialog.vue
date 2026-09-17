@@ -207,10 +207,22 @@ const onDelete = async (item: UserAdminConfig) => {
   }
 }
 
-// Persists one renamed row. The editor awaits it, then re-baselines that row; a rejection keeps the
-// row open with its error, which is what the bespoke confirm button could not do.
+// Persists one renamed row. The reload is not optional: the editor's `commitEdit` only closes the
+// row, it does not move the baseline, so without it the row would sit amber and the guard would ask
+// about a rename already saved -- and the bookmark store would keep handing the filter bar the old
+// name. Reloading swaps the editor out for the spinner and back, which re-baselines it on the
+// fetched data.
+//
+// The rethrow is what keeps the row open on failure; the editor skips `commitEdit` when this
+// rejects. Without the catch the rejection would leave the click handler unhandled.
 const onItemSave = async (item: UserAdminConfig) => {
-  await updateUserAdminConfig(item.id, cloneDeep(item))
+  try {
+    await updateUserAdminConfig(item.id, cloneDeep(item))
+  } catch (e) {
+    showErrorsDefault(e)
+    throw e
+  }
+  await reloadItems()
 }
 
 const reloadItems = async () => {
