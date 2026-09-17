@@ -13,10 +13,12 @@ const { addRoute, clearHistory, navigateBack, setBlacklistedRoutes } = useRouteH
 
 // `name` is deliberately optional here: vue-router route names are, and the nameless case is the
 // one the walk gets wrong if the current-route test is applied to its result instead of inside it.
-const visit = (name: string | undefined, fullPath: string) =>
-  (addRoute as (route: { name: string | undefined; fullPath: string }) => void)({ name, fullPath })
+type RouteName = string | symbol | undefined
 
-const routerOn = (name: string | undefined, fullPath = name ?? '/') => ({
+const visit = (name: RouteName, fullPath: string) =>
+  (addRoute as (route: { name: RouteName; fullPath: string }) => void)({ name, fullPath })
+
+const routerOn = (name: RouteName, fullPath = typeof name === 'string' ? name : '/') => ({
   push: vi.fn(),
   back: vi.fn(),
   currentRoute: { value: { name, fullPath } },
@@ -114,5 +116,21 @@ describe('a current route with no name', () => {
     navigateBack(router as never, { skipRouteNames: [], fallbackRouteName: '/records' })
 
     expect(router.push).toHaveBeenCalledWith('/plain-older')
+  })
+})
+
+describe('a current route named by a symbol', () => {
+  it('is recognised as the same route at a different url', () => {
+    // vue-router route names are `string | symbol | undefined`, so the current route is compared
+    // with `===` rather than by string membership. Another url of the SAME symbol-named route is
+    // another record of the same kind -- not somewhere to hand the user back to.
+    const record = Symbol('record')
+    visit('/records', '/records')
+    visit(record, '/records/1')
+
+    const router = routerOn(record, '/records/2')
+    navigateBack(router as never, { skipRouteNames: [], fallbackRouteName: '/records' })
+
+    expect(router.push).toHaveBeenCalledWith('/records')
   })
 })
