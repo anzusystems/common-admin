@@ -122,7 +122,6 @@ import ImageMassOperations from '@/components/damImage/uploadQueue/components/Im
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
 import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
-import type { ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ADatatable from '@/components/datatable/ADatatable.vue'
 import ABooleanSelect from '@/components/ABooleanSelect.vue'
@@ -704,7 +703,6 @@ export {
   ImageMassOperations,
   AImagePublicInput,
   ACropperjs,
-  type ACropperjsExposed,
   DamAssetImageRoiSelect,
   ACollabLockedByUser,
   ACollabCountdown,
