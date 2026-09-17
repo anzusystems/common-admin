@@ -6,13 +6,10 @@ import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
 const props = withDefaults(
   defineProps<{
-    /** Positional walk, used only when `skipRouteNames` is explicitly unset. Rarely what you want. */
-    stepsBack?: number
     /**
      * Route names that are not a destination -- the sibling views of the record being closed and
      * the create form it may have been reached from. The route the button sits on is skipped
-     * anyway, so it does not belong here. Defaults to an empty list, which still means "walk back
-     * by name", not "walk back by position".
+     * anyway, so it does not belong here.
      */
     skipRouteNames?: string[]
     fallbackRouteName?: string
@@ -22,7 +19,6 @@ const props = withDefaults(
     size?: number
   }>(),
   {
-    stepsBack: 1,
     skipRouteNames: () => [],
     fallbackRouteName: undefined,
     fallbackRouteParams: undefined,
@@ -40,7 +36,6 @@ const { setPreservePage } = useDatatablePageStore()
 const onClick = () => {
   setPreservePage()
   navigateBack(router, {
-    stepsBack: props.stepsBack,
     skipRouteNames: props.skipRouteNames,
     fallbackRouteName: props.fallbackRouteName,
     fallbackRouteParams: props.fallbackRouteParams,

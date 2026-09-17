@@ -66,15 +66,17 @@ describe('navigateBack', () => {
     expect(router.push).toHaveBeenCalledWith({ name: '/records', params: { a: 1 } })
   })
 
-  it('does not push the current route through the stepsBack branch either', () => {
-    // Without `skipRouteNames` the entry is taken by position, which is exactly where the silent
-    // no-op used to live: one cancelled navigation and `stepsBack: 1` is the route we never left.
+  it('walks by name even when the caller passes no options at all', () => {
+    // There is no longer a second, positional way through: `navigateBack` always asks what the
+    // entry IS, never where it sits. That branch had no user and was the shape the silent no-op
+    // lived in -- one cancelled navigation and `stepsBack: 1` was the route we never left.
+    visit('/records')
     visit('/records/[id]', '/records/1')
 
     const router = routerOn('/records/[id]', '/records/1')
-    navigateBack(router as never, { fallbackRouteName: '/records' })
+    navigateBack(router as never)
 
-    expect(router.push).toHaveBeenCalledWith({ name: '/records', params: undefined })
+    expect(router.push).toHaveBeenCalledWith('/records')
   })
 
   it('goes back through the router when there is no fallback and nothing to return to', () => {
@@ -88,15 +90,13 @@ describe('navigateBack', () => {
 
 describe('the close button contract', () => {
   it('walks back by name even when the caller names nothing', () => {
-    // `AActionCloseButtonHistory` defaults `skipRouteNames` to `[]` rather than leaving it unset,
-    // so a button that has nothing to skip beyond its own route still takes the name walk. Left
-    // undefined it would fall into the positional branch, which stops at the first entry whatever
-    // that entry is.
+    // `AActionCloseButtonHistory` passes `[]` for a button that has nothing to skip beyond its own
+    // route. Nothing about the walk changes -- there is only one walk.
     visit('/records')
     visit('/records/[id]', '/records/1')
 
     const router = routerOn('/records/new')
-    navigateBack(router as never, { stepsBack: 1, skipRouteNames: ['/records/[id]'], fallbackRouteName: '/records' })
+    navigateBack(router as never, { skipRouteNames: ['/records/[id]'], fallbackRouteName: '/records' })
 
     expect(router.push).toHaveBeenCalledWith('/records')
   })

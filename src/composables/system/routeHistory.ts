@@ -14,11 +14,6 @@ const MAX_HISTORY = 10
 
 export interface NavigateBackOptions {
   /**
-   * How many entries back to take when `skipRouteNames` is not given. Rarely what you want: it
-   * counts positions rather than asking what the entry is.
-   */
-  stepsBack?: number
-  /**
    * Route names that are not a destination -- typically the sibling views of the record being
    * closed and the create form it may have been reached from. The CURRENT route is always skipped
    * on top of these, so there is no need to name it here.
@@ -32,8 +27,6 @@ export interface NavigateBackOptions {
 export function useRouteHistory(): {
   history: DeepReadonly<Ref<RouteLocationNormalized[]>>
   addRoute: (route: RouteLocationNormalized) => void
-  getRouteBack: (steps?: number) => RouteLocationNormalized | undefined
-  getFirstRouteNotMatching: (routeNamesToSkip: string[]) => RouteLocationNormalized | undefined
   clearHistory: () => void
   setBlacklistedRoutes: (routeNames: string[]) => void
   addBlacklistedRoute: (routeName: string) => void
@@ -66,11 +59,9 @@ export function useRouteHistory(): {
     }
   }
 
-  const getRouteBack = (steps: number = 1): RouteLocationNormalized | undefined => {
-    const index = history.value.length - steps
-    return index >= 0 ? history.value[index] : undefined
-  }
-
+  // Internal on purpose. A caller reaching for it directly would get the walk WITHOUT the
+  // current-route exclusion `navigateBack` adds -- which is the whole trap `navigateBack` exists
+  // to close.
   const getFirstRouteNotMatching = (routeNamesToSkip: string[]): RouteLocationNormalized | undefined => {
     for (let i = history.value.length - 1; i >= 0; i--) {
       const route = history.value[i]
@@ -86,16 +77,17 @@ export function useRouteHistory(): {
   }
 
   const navigateBack = (router: Router, options: NavigateBackOptions = {}) => {
-    const { stepsBack = 1, skipRouteNames, fallbackRouteName, fallbackRouteParams } = options
+    const { skipRouteNames, fallbackRouteName, fallbackRouteParams } = options
 
-    // The route we are on is never a place to go back to, whichever way the entry was found.
-    // `addRoute` runs in `beforeEach`, so a navigation that a later guard cancels still records the
-    // route we never left -- and pushing that again is a silent no-op, which reads as the button
-    // doing nothing at all. Callers therefore do not name their own route in `skipRouteNames`.
+    // The route we are on is never a place to go back to. `addRoute` runs in `beforeEach`, so a
+    // navigation that a later guard cancels still records the route we never left -- and pushing
+    // that again is a silent no-op, which reads as the button doing nothing at all. Callers
+    // therefore do not name their own route in `skipRouteNames`.
     const currentName = router.currentRoute.value.name
     const skip = [...(skipRouteNames ?? []), ...(typeof currentName === 'string' ? [currentName] : [])]
 
-    const found = skipRouteNames ? getFirstRouteNotMatching(skip) : getRouteBack(stepsBack)
+    const found = getFirstRouteNotMatching(skip)
+    // A nameless route cannot be skipped by name; comparing the path closes that one hole.
     const route = found?.fullPath === router.currentRoute.value.fullPath ? undefined : found
 
     if (route) {
@@ -110,8 +102,6 @@ export function useRouteHistory(): {
   return {
     history: readonly(history),
     addRoute,
-    getRouteBack,
-    getFirstRouteNotMatching,
     clearHistory,
     setBlacklistedRoutes,
     addBlacklistedRoute,

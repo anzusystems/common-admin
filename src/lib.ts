@@ -49,7 +49,19 @@ import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByU
 import ACollabCountdown from '@/components/collab/components/ACollabCountdown.vue'
 import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
 import AUserAndTimeTrackingFields from '@/components/AUserAndTimeTrackingFields.vue'
-import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
+import AActionCloseButtonComponent from '@/components/buttons/action/AActionCloseButton.vue'
+
+/**
+ * Close button that always navigates to a fixed destination.
+ *
+ * Not superseded by `AActionCloseButtonHistory`, and not the same thing: that one returns the user
+ * to wherever they came from and only falls back to a fixed route when the history offers nothing.
+ * Reach for this one when closing must land somewhere specific no matter how the view was reached.
+ *
+ * Aliased rather than exported straight from the SFC so this notice reaches the generated
+ * declarations -- a comment on the re-export is dropped there.
+ */
+const AActionCloseButton = AActionCloseButtonComponent
 import AActionCloseButtonHistory from '@/components/buttons/action/AActionCloseButtonHistory.vue'
 import AActionCreateButton from '@/components/buttons/action/AActionCreateButton.vue'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
@@ -111,6 +123,7 @@ import AImageWidgetMultipleInner from '@/components/damImage/uploadQueue/compone
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
 import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
+/** @deprecated Superseded by `ACropper` in `@anzusystems/common-admin/labs`. */
 import ACropperjs from '@/components/ACropperjs.vue'
 import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
 import type { ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
