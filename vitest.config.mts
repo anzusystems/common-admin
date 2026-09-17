@@ -81,6 +81,7 @@ export default defineConfig({
       'rusha',
       'vuetify/components/VTabs',
       'cropperjs',
+      'cropperjs2',
       'vuetify/components/VCombobox',
       'vuetify/components/VColorPicker',
       'vuetify/components/VSlider',
