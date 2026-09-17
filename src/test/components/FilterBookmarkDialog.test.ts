@@ -94,19 +94,23 @@ const editorOf = (wrapper: VueWrapper) =>
     hasUnsaved: boolean | { value: boolean }
   }
 
+const settleEditor = async () => {
+  await nextTick()
+  await flushPromises()
+  await nextTick()
+}
+
 const unsaved = (wrapper: VueWrapper) => {
   const raw = editorOf(wrapper).hasUnsaved
   return typeof raw === 'boolean' ? raw : raw.value
 }
 
-// Through the row's own save button, the way a user reaches it -- calling `onItemSave` straight
-// would miss everything the editor does around it.
-const saveOpenRow = async (wrapper: VueWrapper) => {
-  const editor = wrapper.findComponent({ name: 'ASortableListEditor' })
-  await (editor.vm as unknown as { onSaveClick: (vi: unknown) => Promise<void> }).onSaveClick(
-    (editor.vm as unknown as { viewItemsDecorated: unknown[] }).viewItemsDecorated[1]
-  )
+// The dialog's own primary button, which is now the only thing that persists this tab.
+const confirmDialog = async (wrapper: VueWrapper) => {
+  const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
+  await (dialog.vm as unknown as { onConfirm: () => void }).onConfirm()
   await flushPromises()
+  await nextTick()
 }
 
 describe('filter bookmark manage tab', () => {
@@ -120,27 +124,42 @@ describe('filter bookmark manage tab', () => {
     expect(rendered).toContain('Third')
   })
 
-  it('sends a rename, and the saved row does not stay marked unsaved', async () => {
+  it('saves a rename and the order together, and nothing is left marked', async () => {
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
+    // A tick between them: each write goes out through `v-model` and comes back as a prop, so
+    // issuing both in one tick would have the second read the array from before the first.
     editorOf(wrapper).updateItem(2, { customName: 'Renamed' })
-    await nextTick()
-    // Guards the guard: the edit really did register, so the clean check below means something.
+    await settleEditor()
+    editorOf(wrapper).moveItem(0, 2)
+    await settleEditor()
+    // Guards the guard: both changes really registered, so the clean check below means something.
     expect(unsaved(wrapper)).toBe(true)
 
-    listItems.value = [bookmark(1, 'First'), bookmark(2, 'Renamed'), bookmark(3, 'Third')]
-    await saveOpenRow(wrapper)
+    listItems.value = [bookmark(2, 'Renamed'), bookmark(3, 'Third'), bookmark(1, 'First')]
+    await confirmDialog(wrapper)
 
     expect(updateUserAdminConfig).toHaveBeenCalledTimes(1)
     expect(updateUserAdminConfig.mock.calls[0][0]).toBe(2)
-    expect(deleteUserAdminConfig).not.toHaveBeenCalled()
-    expect(updateUserAdminConfigPositions).not.toHaveBeenCalled()
+    expect(updateUserAdminConfigPositions).toHaveBeenCalledTimes(1)
+    expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([2, 3, 1])
+  })
 
-    // The editor's own commit only closes the row; without the reload the saved row would sit
-    // amber and the close guard would ask about a rename already persisted.
-    expect(unsaved(wrapper)).toBe(false)
-    expect(document.body.textContent ?? '').toContain('Renamed')
+  it('does not lose a pending reorder when another row is edited', async () => {
+    // What the per-row save got wrong: re-baselining the saved row meant reloading the list, and
+    // the reload replaced the array the pending order lives in.
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+
+    editorOf(wrapper).moveItem(0, 2)
+    await settleEditor()
+    editorOf(wrapper).updateItem(2, { customName: 'Renamed' })
+    await settleEditor()
+
+    await confirmDialog(wrapper)
+
+    expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([2, 3, 1])
   })
 
   it('sends a delete through the editor, and reloads the list behind it', async () => {
@@ -176,13 +195,36 @@ describe('filter bookmark manage tab', () => {
 
     editorOf(wrapper).moveItem(0, 2)
     await nextTick()
-
-    const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
-    await (dialog.vm as unknown as { onConfirm: () => void }).onConfirm()
-    await flushPromises()
+    await confirmDialog(wrapper)
 
     expect(updateUserAdminConfigPositions).toHaveBeenCalledTimes(1)
     expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([2, 3, 1])
+    expect(updateUserAdminConfig).not.toHaveBeenCalled()
+  })
+
+  it('keeps asking on the way out after a glance at the other tab', async () => {
+    // The editor is the only thing registering this tab's pending work with the guard, so a `v-if`
+    // on the tab would unmount it and let the dialog close on a dragged order without a word.
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+    editorOf(wrapper).moveItem(0, 2)
+    await nextTick()
+
+    const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
+    const vm = dialog.vm as unknown as {
+      activeTab: string
+      requestClose: () => void
+      guard: { promptOpen: { value: boolean } }
+    }
+    vm.activeTab = 'add'
+    await nextTick()
+    await flushPromises()
+
+    vm.requestClose()
+    await flushPromises()
+
+    expect(vm.guard.promptOpen.value).toBe(true)
+    expect(dialog.emitted('onClose')).toBeFalsy()
   })
 })
 

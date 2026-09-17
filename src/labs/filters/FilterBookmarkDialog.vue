@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import { inject, ref, watch } from 'vue'
+import { inject, ref, useTemplateRef, watch } from 'vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import ARow from '@/components/ARow.vue'
 import AFormSwitch from '@/components/form/AFormSwitch.vue'
 import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
+import type { ExposedListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
 import { MAX_BOOKMARK_ITEMS, useFilterBookmarkStore } from '@/labs/filters/bookmarksStore'
@@ -116,17 +117,29 @@ const { t } = useI18n()
 const { showErrorsDefault, showValidationError, showWarningT } = useAlerts()
 const { createDefaultUserAdminConfig } = useUserAdminConfigFactory()
 
-const sortItems = async () => {
+const editor = useTemplateRef<ExposedListEditorHandle<UserAdminConfig>>('editor')
+
+// One save for the whole tab, which is how every other list editor in this codebase is used: the
+// editor holds the data and the form's button persists it. A per-row PUT looked tidier and was not
+// -- re-baselining the one saved row meant reloading the list, and the reload took the pending
+// reorder and any other open row's typed text with it.
+const saveManage = async () => {
+  if (!editor.value?.validateAll()) return
   saveButtonLoading.value = true
-  const items = itemsManage.value
-  const ids = items.map((item) => item.id)
   try {
-    await updateUserAdminConfigPositions(ids)
-    saveButtonLoading.value = false
+    const renamed = editor.value.getChanges().updated
+    for (const item of renamed) {
+      await updateUserAdminConfig(item.id, cloneDeep(item))
+    }
+    await updateUserAdminConfigPositions(itemsManage.value.map((item) => item.id))
+    // Refetched once, at the end: this is also what refreshes the store the filter bar reads its
+    // names from, and what the editor re-baselines against.
     await reloadItems()
+    editor.value?.commit()
     forceClose()
   } catch (e) {
     showErrorsDefault(e)
+  } finally {
     saveButtonLoading.value = false
   }
 }
@@ -191,7 +204,7 @@ const onConfirm = () => {
     }
     addBookmark()
   } else if (activeTab.value === 'manage' && itemsManage.value.length > 0) {
-    sortItems()
+    saveManage()
   }
 }
 
@@ -205,24 +218,6 @@ const onDelete = async (item: UserAdminConfig) => {
   } finally {
     listLoading.value = false
   }
-}
-
-// Persists one renamed row. The reload is not optional: the editor's `commitEdit` only closes the
-// row, it does not move the baseline, so without it the row would sit amber and the guard would ask
-// about a rename already saved -- and the bookmark store would keep handing the filter bar the old
-// name. Reloading swaps the editor out for the spinner and back, which re-baselines it on the
-// fetched data.
-//
-// The rethrow is what keeps the row open on failure; the editor skips `commitEdit` when this
-// rejects. Without the catch the rejection would leave the click handler unhandled.
-const onItemSave = async (item: UserAdminConfig) => {
-  try {
-    await updateUserAdminConfig(item.id, cloneDeep(item))
-  } catch (e) {
-    showErrorsDefault(e)
-    throw e
-  }
-  await reloadItems()
 }
 
 const reloadItems = async () => {
@@ -246,7 +241,9 @@ const reloadItems = async () => {
 
 watch(activeTab, () => {
   errorCount.value = false
-  if (activeTab.value === 'manage') {
+  // First entry only. Refetching on every switch would overwrite a pending reorder with the server
+  // order the moment the user glanced at the other tab.
+  if (activeTab.value === 'manage' && itemsManage.value.length === 0) {
     reloadItems()
   }
 })
@@ -304,30 +301,28 @@ watch(activeTab, () => {
             />
           </ARow>
         </div>
+        <!-- `v-show`, not `v-if`: the guard sees this tab's pending work only through the section
+             the editor registers, so unmounting it on a glance at the other tab would leave the
+             dialog able to close on a dragged order without asking. The spinner is the editor's own
+             `loading` for the same reason -- swapping it out on every reload would do the same. -->
         <div
-          v-else-if="activeTab === 'manage'"
+          v-show="activeTab === 'manage'"
           class="w-100 pt-4"
         >
-          <div
-            v-if="listLoading"
-            class="d-flex w-100 align-center justify-center"
-          >
-            <VProgressCircular indeterminate />
-          </div>
-          <!-- Only the order can pend here: a rename saves on the row's own confirm and a delete is
-               immediate, so both go clean straight away. A drag waits for the button below, which
-               is exactly what the guard asks about on the way out. -->
+          <!-- Mounted only once there is data: the editor takes its clean baseline from the model
+               the moment it is created, so rows arriving afterwards would read as unsaved additions. -->
           <ASortableListEditor
-            v-else
+            v-if="itemsManage.length > 0"
+            ref="editor"
             v-model="itemsManage"
             :position="false"
+            :loading="listLoading"
             compact-field="customName"
             :validate="validateBookmarkName"
             :show-add-button="false"
             :unsaved-section-label="t('common.filter.bookmark.unsavedSection')"
             delete-mode="immediate"
             :on-delete="onDelete"
-            :on-item-save="onItemSave"
           >
             <template #item="{ raw, actions }: { raw: UserAdminConfig; actions: RowUpdate }">
               <AFormTextField
