@@ -22,6 +22,8 @@ import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import AUnsavedConfirmDialog from '@/labs/unsavedGuard/AUnsavedConfirmDialog.vue'
 import { useUnsavedChangesGuard } from '@/labs/unsavedGuard/useUnsavedChangesGuard'
 import { hasAnzuApiValidationErrorSpecific, isAnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
+import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import { HTTP_STATUS_NOT_FOUND } from '@/composables/statusCodes'
 
 const props = withDefaults(
   defineProps<{
@@ -57,6 +59,7 @@ const isOpen = ref(true)
 // that it stays mounted whatever happens -- it is the only thing registering this tab's pending
 // work with the guard, and a reload that swapped it out would disarm the guard mid-edit.
 const manageLoaded = ref(false)
+const loadFailed = ref(false)
 
 const guard = useUnsavedChangesGuard({
   sources: [],
@@ -70,6 +73,10 @@ watch(isOpen, (open) => {
 })
 
 const requestClose = () => {
+  // Not while a write is out. The toolbar's X and the escape key reach this without going past
+  // anything the write phase disables, and closing here would ask the user whether to discard work
+  // that is already on its way to the server -- then write it anyway, whatever they answered.
+  if (saveButtonLoading.value) return
   isOpen.value = false
 }
 
@@ -119,7 +126,7 @@ const {
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   useUserAdminConfigApi(props.client, props.system)
 const { t } = useI18n()
-const { showErrorsDefault, showValidationError, showWarningT } = useAlerts()
+const { showErrorsDefault, showUnknownError, showValidationError, showWarningT } = useAlerts()
 const { createDefaultUserAdminConfig } = useUserAdminConfigFactory()
 
 const editor = useTemplateRef<ExposedListEditorHandle<UserAdminConfig>>('editor')
@@ -128,7 +135,16 @@ const editor = useTemplateRef<ExposedListEditorHandle<UserAdminConfig>>('editor'
 // editor holds the data and the form's button persists it. A per-row PUT looked tidier and was not
 // -- re-baselining the one saved row meant reloading the list, and the reload took the pending
 // reorder and any other open row's typed text with it.
+// A delete answered with "not found" says the row is already gone, which is what this was asking
+// for. That is how an attempt whose answer never made it back looks the second time around: without
+// reading it this way, every retry would stop on the same row and the dialog could never finish.
+const isAlreadyGone = (e: unknown) => isAnzuApiAxiosError(e) && e.cause.response?.status === HTTP_STATUS_NOT_FOUND
+
 const saveManage = async () => {
+  // Not while the list is being refreshed: the order this would send is the one on screen, and the
+  // answer already on its way is about to replace it. The button is disabled for the same reason --
+  // this is the half of it that does not depend on anyone looking at the button.
+  if (listLoading.value) return
   if (!editor.value?.validateAll()) return
   saveButtonLoading.value = true
   try {
@@ -136,22 +152,39 @@ const saveManage = async () => {
     // Deletes first, then renames, then the order -- which is taken from `itemsManage`, and the
     // deleted rows have already left it.
     for (const item of changes.deleted) {
-      await deleteUserAdminConfig(item.id)
+      try {
+        await deleteUserAdminConfig(item.id)
+      } catch (e) {
+        if (!isAlreadyGone(e)) throw e
+      }
+      // Out of the cache in the same breath: the filter bar is already on screen reading it, and a
+      // save that fails further down never gets to the refresh that would have done this.
+      filterBookmarkStore.removeOne(bookmarkCacheKey(), item.id)
+      // That row is gone for good. Dropping its pending deletion here is what makes a second press
+      // of the save button safe after a later call in this batch failed: the renames it resends are
+      // the same PUT with the same result, but a DELETE resent against a row that is already gone
+      // would fail and stop the batch at the same place every time.
+      editor.value.restoreDeleted(item.id)
     }
     for (const item of changes.updated) {
       await updateUserAdminConfig(item.id, cloneDeep(item))
     }
-    await updateUserAdminConfigPositions(itemsManage.value.map((item) => item.id))
+    // Deleting every row leaves nothing to order, and an empty list is not an order to send.
+    if (itemsManage.value.length > 0) {
+      await updateUserAdminConfigPositions(itemsManage.value.map((item) => item.id))
+    }
     // Once, at the end: this is also what refreshes the store the filter bar reads its names from,
     // and what the editor re-baselines against.
-    await reloadItems()
-    editor.value?.commit()
+    applyItems(await fetchItems())
     forceClose()
   } catch (e) {
     showErrorsDefault(e)
-    // A partial save -- some rows written, then a later call threw -- leaves the store holding
-    // names the server no longer has. The reload is the only thing that rewrites it.
-    await reloadItems()
+    // Nothing is refetched here and nothing is rolled back. What was written already looks the way
+    // it looks on the server -- a deleted row is gone from both, a renamed one carries the new name
+    // in both -- and what was not written is still the user's to correct and send again. Refetching
+    // would take that unsent work with it without asking, which is the one thing this dialog must
+    // not do. The store is told its copy is behind instead.
+    filterBookmarkStore.markStale(bookmarkCacheKey())
   } finally {
     saveButtonLoading.value = false
   }
@@ -160,6 +193,7 @@ const saveManage = async () => {
 const { serializeFilters } = useFilterHelpers(filterData, filterConfig)
 
 const systemResource = props.system + '_' + props.subject
+const bookmarkCacheKey = () => filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource)
 
 const addBookmark = async () => {
   saveButtonLoading.value = true
@@ -192,12 +226,14 @@ const addBookmark = async () => {
     }
     config.position = count + 1
     const res = await createUserAdminConfig(config)
-    filterBookmarkStore.addOne(filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource), res)
+    filterBookmarkStore.addOne(bookmarkCacheKey(), res)
     // Cleared because `requestClose` may not close: with work pending on the other tab the guard
     // asks, and "stay" would otherwise leave this bookmark's name in the field for a second click
     // to create it again. Empty, the `required` rule blocks that.
     customName.value = ''
     vCreate$.value.$reset()
+    // The write is done, and `requestClose` refuses while one is out. The `finally` sets it again.
+    saveButtonLoading.value = false
     // `requestClose`, not `forceClose`: adding a bookmark is a decision about THIS tab. It says
     // nothing about a reorder left pending on the other one, so the guard still gets to ask.
     requestClose()
@@ -223,15 +259,28 @@ const onConfirm = () => {
       return
     }
     addBookmark()
-  } else if (activeTab.value === 'manage' && itemsManage.value.length > 0) {
+  } else if (activeTab.value === 'manage') {
+    // Not gated on the list being non-empty: deleting every row empties it while leaving the
+    // deletions themselves pending, and this button is the only thing that sends them.
     saveManage()
   }
 }
 
-const reloadItems = async () => {
+// Entering the manage tab starts a fetch, and the tabs can be switched faster than one comes back,
+// so two can be in flight at once. Only the newest one is allowed to land: without this an older
+// answer could overtake a newer one and put the list back to what it was two switches ago.
+let fetchGeneration = 0
+let fetchesInFlight = 0
+
+const fetchItems = async (): Promise<UserAdminConfig[] | null> => {
+  const generation = ++fetchGeneration
+  // Counted, not a flag: an older fetch answering must not report the tab as settled while a newer
+  // one is still out, or the editor takes edits again in the gap between the two.
+  fetchesInFlight++
   listLoading.value = true
+  loadFailed.value = false
   try {
-    itemsManage.value = await filterBookmarkStore.getBookmarks(
+    const items = await filterBookmarkStore.getBookmarks(
       {
         user: props.user,
         layoutType: UserAdminConfigLayoutType.Desktop,
@@ -240,27 +289,60 @@ const reloadItems = async () => {
       useFetchUserAdminConfigList,
       true
     )
+    if (generation !== fetchGeneration) return null
+    // `null` is this request's own answer that it failed; the store's `error` flag is shared with
+    // every other fetch it serves, this dialog's bookmark count among them.
+    if (items === null) {
+      loadFailed.value = true
+      showUnknownError()
+      return null
+    }
+    return items
   } catch (e) {
+    // The same question as on the way out of the try: an answer that a newer one has overtaken does
+    // not get to put the tab into an error state or raise an alert over it.
+    if (generation !== fetchGeneration) return null
+    loadFailed.value = true
     showErrorsDefault(e)
+    return null
   } finally {
-    listLoading.value = false
-    manageLoaded.value = true
+    fetchesInFlight--
+    listLoading.value = fetchesInFlight > 0
   }
 }
 
-watch(activeTab, () => {
+// The fetched rows are handed to the editor rather than left to reach it through `v-model`: that
+// way round is a render away, and a commit that ran before the rows arrived would pin the baseline
+// to the list from before the fetch -- every difference the fetch brought would then read as the
+// user's own unsaved edit. The editor is still to mount on the first load; it takes its own
+// baseline from `itemsManage` when it does.
+const applyItems = (items: UserAdminConfig[] | null) => {
+  if (!items) return
+  itemsManage.value = items
+  manageLoaded.value = true
+  editor.value?.commit(items)
+}
+
+watch(activeTab, async () => {
   errorCount.value = false
-  // First entry only. Refetching on every switch would overwrite a pending reorder with the server
-  // order the moment the user glanced at the other tab.
-  if (activeTab.value === 'manage' && itemsManage.value.length === 0) {
-    reloadItems()
-  }
+  if (activeTab.value !== 'manage') return
+  // Entering the tab refreshes it -- a bookmark just added on the other tab is the near case -- but
+  // never over work the user has not saved: the fetched order would replace the dragged one.
+  if (editor.value?.hasUnsaved) return
+  const items = await fetchItems()
+  // Asked again on the way back: the fetch takes long enough for the user to have started dragging
+  // in the meantime, and applying it then would be the same loss, just later.
+  if (editor.value?.hasUnsaved) return
+  applyItems(items)
 })
 </script>
 
 <template>
+  <!-- `persistent` while a write is out: the escape key and a click outside go straight to the
+       model, past everything the write phase disables. -->
   <VDialog
     v-model="isOpen"
+    :persistent="saveButtonLoading"
     :width="500"
   >
     <VCard>
@@ -272,10 +354,16 @@ watch(activeTab, () => {
           v-model="activeTab"
           fixed-tabs
         >
-          <VTab value="add">
+          <VTab
+            value="add"
+            :disabled="saveButtonLoading"
+          >
             {{ t('common.filter.bookmark.add') }}
           </VTab>
-          <VTab value="manage">
+          <VTab
+            value="manage"
+            :disabled="saveButtonLoading"
+          >
             {{ t('common.filter.bookmark.manage') }}
           </VTab>
         </VTabs>
@@ -294,18 +382,21 @@ watch(activeTab, () => {
               v-model="customName"
               :label="t('common.filter.bookmark.name')"
               required
+              :disabled="saveButtonLoading"
               :v="vCreate$.customName"
             />
           </ARow>
           <ARow>
             <AFormSwitch
               v-model="storeDatatableHiddenColumns"
+              :disabled="saveButtonLoading"
               :label="t('common.filter.bookmark.storeTableColumns')"
             />
           </ARow>
           <ARow>
             <AFormSwitch
               v-model="storeDatatableOrder"
+              :disabled="saveButtonLoading"
               :label="t('common.filter.bookmark.storeTableOrder')"
             />
           </ARow>
@@ -319,11 +410,18 @@ watch(activeTab, () => {
           class="w-100 pt-4"
         >
           <div
-            v-if="!manageLoaded"
+            v-if="!manageLoaded && !loadFailed"
             class="d-flex w-100 align-center justify-center"
           >
             <VProgressCircular indeterminate />
           </div>
+          <!-- Nothing ever loaded: the editor's own empty state would claim there are no bookmarks,
+               which is not what a failed fetch found out. -->
+          <ARow
+            v-else-if="!manageLoaded"
+            class="text-error"
+            :title="t('common.alert.unknownError')"
+          />
           <!-- Mounted once the first fetch has settled -- empty or not, so an empty list gets the
                editor's own empty state rather than a blank tab -- and never unmounted after that. -->
           <ASortableListEditor
@@ -331,7 +429,7 @@ watch(activeTab, () => {
             ref="editor"
             v-model="itemsManage"
             :position="false"
-            :loading="listLoading"
+            :loading="listLoading || saveButtonLoading"
             compact-field="customName"
             :validate="validateBookmarkName"
             :show-add-button="false"
@@ -349,14 +447,21 @@ watch(activeTab, () => {
       </VCardText>
       <VCardActions>
         <VSpacer />
+        <!-- Nothing in here takes input while a write is out: the change set was read when the
+             button was pressed, so anything typed after that would not be in it, and the close that
+             follows a successful save would take it with it. -->
         <ABtnTertiary
           data-cy="button-cancel"
+          :disabled="saveButtonLoading"
           @click.stop="requestClose"
         >
           {{ t('common.button.cancel') }}
         </ABtnTertiary>
+        <!-- Not while the list is being refreshed: the order this would send is the one on screen,
+             which the answer on its way is about to replace. -->
         <ABtnPrimary
           data-cy="button-confirm"
+          :disabled="activeTab === 'manage' && listLoading"
           :loading="saveButtonLoading"
           @click.stop="onConfirm"
         >
