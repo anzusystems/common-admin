@@ -4,6 +4,7 @@ import { DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import type { DocId, IntegerId } from '@/types/common'
 import { computed, ref, toRaw } from 'vue'
 import {
+  type AssetSelectHolder,
   type AssetSelectReturnData,
   AssetSelectReturnType,
   type AssetSelectReturnTypeType,
@@ -15,12 +16,29 @@ export interface AssetSelectListItem {
   asset: AssetSearchListItemDto
   selected: boolean
   active: boolean
+  disabledReason: string | null
+}
+
+/**
+ * What the subject being picked for allows. Lives with the state that holds it, because the listing
+ * filter and the per-item disabled reasons are resolved by several components while only the picker
+ * root is given these options.
+ */
+export interface AssetSelectabilityOptions {
+  singleUseAllowed: boolean
+  uploadLicence: IntegerId | undefined
+  holder: AssetSelectHolder | null
 }
 
 export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectStore', () => {
   const assetListItems = ref<Array<AssetSelectListItem>>([])
   const loader = ref(false)
-  const selectedLicenceId = ref<IntegerId>(0)
+  const selectedLicenceIds = ref<IntegerId[]>([])
+  // Which selection (a list view, all licences, or a single one) filled selectedLicenceIds. Shared
+  // because the control lives in the filter sidebar while the chips showing the result live in the bar.
+  const selectedPresetKey = ref<string>('')
+  // `null` means a listing given no selectability rules (AAssetListInner), where nothing is dimmed.
+  const selectability = ref<AssetSelectabilityOptions | null>(null)
   const selectConfig = ref<DamConfigLicenceExtSystemReturnType[]>([])
   const assetType = ref<DamAssetTypeType>(DamAssetTypeDefault)
   const inPodcast = ref<boolean | null>(null)
@@ -40,11 +58,19 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
 
   function setSelectConfig(value: DamConfigLicenceExtSystemReturnType[]) {
     selectConfig.value = value
-    if (value.length === 0) {
-      selectedLicenceId.value = 0
-      return
-    }
-    selectedLicenceId.value = value[0].licence
+    selectedLicenceIds.value = value.map((config) => config.licence)
+  }
+
+  function setSelectedLicenceIds(ids: IntegerId[]) {
+    selectedLicenceIds.value = ids
+  }
+
+  function setSelectedPresetKey(key: string) {
+    selectedPresetKey.value = key
+  }
+
+  function setSelectability(value: AssetSelectabilityOptions) {
+    selectability.value = value
   }
 
   function setSingleMode(value: boolean) {
@@ -69,23 +95,50 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
         asset: item,
         selected: false,
         active: false,
+        disabledReason: null,
       }
     })
   }
 
-  function appendList(items: AssetSearchListItemDto[]) {
+  // Returns the appended items so the caller can resolve disabled reasons for the new page only,
+  // instead of recomputing them for every page scrolled so far.
+  function appendList(items: AssetSearchListItemDto[]): AssetSelectListItem[] {
     const assets = items.map((asset) => {
       return {
         asset: asset,
         selected: false,
         active: false,
+        disabledReason: null,
       }
     })
     assetListItems.value = assetListItems.value.concat(assets)
+    return assets
+  }
+
+  function setDisabledReasons(reasons: Map<DocId, string | null>) {
+    assetListItems.value.forEach((item) => {
+      const reason = reasons.get(item.asset.id)
+      // An item the map does not mention was not part of this computation (an earlier page) - its
+      // already resolved reason must survive, so a missing key is never applied as "no reason".
+      if (reason === undefined) return
+      item.disabledReason = reason
+    })
   }
 
   function toggleSelectedByIndex(index: number) {
     if (!assetListItems.value[index]) return
+    // Deselecting stays possible: the reasons arrive after the page is fetched, so an already selected
+    // item can turn out unusable and the user has to be able to drop it.
+    if (assetListItems.value[index].disabledReason && !assetListItems.value[index].selected) {
+      // A single pick click asks to replace the pick and the answer is no, so the previous one goes:
+      // the counter and the confirm button then say there is nothing to confirm, instead of staying
+      // ready for a photo the user no longer has on screen.
+      if (singleMode.value) {
+        unselectAllExcept(index)
+        clearSelected()
+      }
+      return
+    }
 
     if (!singleMode.value && isSelectedMax.value && !assetListItems.value[index].selected) {
       return
@@ -166,28 +219,22 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return assets
   }
 
-  function getSelectedData(
-    type: AssetSelectReturnTypeType,
-    copyToLicence: undefined | IntegerId
-  ): AssetSelectReturnData {
+  function getSelectedData(type: AssetSelectReturnTypeType): AssetSelectReturnData {
     switch (type) {
       case AssetSelectReturnType.AssetId:
         return {
           type: AssetSelectReturnType.AssetId,
-          copyToLicence,
           value: getSelectedAssetIds(),
         }
       case AssetSelectReturnType.Asset:
         return {
           type: AssetSelectReturnType.Asset,
-          copyToLicence,
           value: getSelectedAssets(),
         }
       case AssetSelectReturnType.MainFileId:
       default:
         return {
           type: AssetSelectReturnType.MainFileId,
-          copyToLicence,
           value: getSelectedMainFileIds(),
         }
     }
@@ -201,6 +248,22 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return selectedAssets.value.size
   })
 
+  const selectedHasDisabled = computed(() => {
+    for (const item of selectedAssets.value.values()) {
+      if (item.disabledReason) return true
+    }
+    return false
+  })
+
+  // Kept for the upload-queue widgets (single-asset flows): resolves the ext system of the licence
+  // the currently picked asset belongs to, defaulting to the first configured licence.
+  const selectedSelectConfig = computed(() => {
+    const primaryLicenceId = selectedLicenceIds.value[0]
+    const found = selectConfig.value.find((configItem) => configItem.licence === primaryLicenceId)
+    if (found) return found
+    return selectConfig.value[0]
+  })
+
   function reset(all: boolean) {
     assetListItems.value = []
     loader.value = false
@@ -212,16 +275,18 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     minCount.value = 0
     maxCount.value = 0
     activeItemIndex.value = null
+    // The store is shared by every picker on the page, so the whole context of the closing one has to
+    // go: a kept selectability would dim tiles in a listing that has no such rules, and a kept preset
+    // key would make the next picker show the previous selection's label as its own.
+    selectability.value = null
+    selectedPresetKey.value = ''
+    selectedLicenceIds.value = []
   }
 
-  const selectedSelectConfig = computed(() => {
-    const found = selectConfig.value.find((configItem) => configItem.licence === selectedLicenceId.value)
-    if (found) return found
-    return selectConfig.value[0]
-  })
-
   return {
-    selectedLicenceId,
+    selectedLicenceIds,
+    selectedPresetKey,
+    selectability,
     selectConfig,
     assetType,
     inPodcast,
@@ -229,6 +294,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     minCount,
     maxCount,
     selectedCount,
+    selectedHasDisabled,
     selectedAssets,
     loader,
     assetListItems,
@@ -236,6 +302,9 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     getSelectedData,
     setAssetType,
     setSelectConfig,
+    setSelectedLicenceIds,
+    setSelectedPresetKey,
+    setSelectability,
     setSingleMode,
     setMinCount,
     setMaxCount,
@@ -243,6 +312,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     hideLoader,
     setList,
     appendList,
+    setDisabledReasons,
     toggleSelectedByIndex,
     clearSelected,
     reset,

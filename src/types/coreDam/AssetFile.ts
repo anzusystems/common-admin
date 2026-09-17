@@ -1,4 +1,4 @@
-import type { DatetimeUTC, DocId, DocIdNullable } from '@/types/common'
+import type { DatetimeUTC, DatetimeUTCNullable, DocId, DocIdNullable } from '@/types/common'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 
 export const AssetFileProcessStatus = {
@@ -36,6 +36,14 @@ interface FileAttributes {
   originFileName: string
   originUrl: string
   failReason: AssetFileFailReasonType
+  // Empty string = not a take-over copy. Covers LIST and DETAIL (single getter on the backend).
+  takenOverFromId: DocId
+  // Write-once, never cleared: opens the licence window and drives retention.
+  firstUsedAt: DatetimeUTCNullable
+  // Effective holder of a single-use file, empty string = held by nobody. The holder is clearable,
+  // unlike firstUsedAt, and is what the picker compares against its own subject.
+  usedByHolderName: string
+  usedByHolderId: string
 }
 
 export const AssetFileLinkType = {

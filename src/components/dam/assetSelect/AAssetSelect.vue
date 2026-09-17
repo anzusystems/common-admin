@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
-import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import { type AssetDetailItemDto, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
@@ -24,9 +24,11 @@ import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamCon
 import { cloneDeep, isUndefined } from '@/utils/common'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import AssetSelectLicencePresetBar from '@/components/dam/assetSelect/components/AssetSelectLicencePresetBar.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -40,6 +42,9 @@ const props = withDefaults(
     configName?: string
     skipCurrentUserCheck?: boolean
     onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
+    listViews?: IntegerId[]
+    singleUseAllowed?: boolean
+    holder?: AssetSelectHolder | null
   }>(),
   {
     inPodcast: null,
@@ -48,6 +53,9 @@ const props = withDefaults(
     configName: 'default',
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
+    listViews: () => [],
+    singleUseAllowed: false,
+    holder: null,
   }
 )
 
@@ -60,23 +68,23 @@ const sortModel = defineModel<number>('sort', { default: 1, required: false })
 const ready = defineModel<boolean>('ready', { default: false, required: false })
 
 const loading = ref(false)
-const copyToLicence = ref(false)
 
 const { t } = useI18n()
 
 const {
   damClient,
   selectedCount,
+  selectedHasDisabled,
   loader,
   pagination,
   fetchNextPage,
+  fetchAssetListDebounced,
   getSelectedData,
   initStoreContext,
   detailLoading,
-  fetchAssetListDebounced,
   reset,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-} = useAssetSelectActions('default', props.onDetailLoadedCallback)
+} = useAssetSelectActions(props.configName, props.onDetailLoadedCallback)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 
@@ -84,7 +92,16 @@ const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
 const assetSelectStore = useAssetSelectStore()
-const { selectedLicenceId } = storeToRefs(assetSelectStore)
+const { selectedSelectConfig } = storeToRefs(assetSelectStore)
+
+// The tile says a photo is blocked with a badge, but the editor clicks it precisely to see more — and the
+// detail would otherwise be silent about the one thing that matters. Null everywhere the picker is opened
+// without selectability rules, so nothing is rendered there.
+const openedAssetDisabledReason = computed(
+  () =>
+    assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id)
+      ?.disabledReason ?? null,
+)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
@@ -104,6 +121,13 @@ const onOpen = () => {
   }
 
   reset()
+  // After the reset, which clears the shared store for the previously open picker, and before the
+  // listing is fetched by the filter: the dimming rules must already be there for the first page.
+  assetSelectStore.setSelectability({
+    singleUseAllowed: props.singleUseAllowed,
+    uploadLicence: props.uploadLicence,
+    holder: props.holder,
+  })
   initStoreContext(
     selectConfigLocal,
     props.assetType,
@@ -131,15 +155,8 @@ const onClose = () => {
   reset()
 }
 
-const getCopyToLicenceId = () => {
-  if (copyToLicence.value && props.uploadLicence) {
-    return props.uploadLicence
-  }
-  return undefined
-}
-
 const onConfirm = () => {
-  emit('onConfirm', getSelectedData(props.returnType, getCopyToLicenceId()))
+  emit('onConfirm', getSelectedData(props.returnType))
   onClose()
 }
 
@@ -151,14 +168,17 @@ const autoloadOnIntersect = (isIntersecting: boolean) => {
 
 const { gridView } = useGridView()
 
-const showCopyToLicence = computed(() => {
-  return (
-    props.assetType === DamAssetType.Image &&
-    selectedLicenceId.value > 0 &&
-    !isUndefined(props.uploadLicence) &&
-    selectedLicenceId.value !== props.uploadLicence
-  )
-})
+// One watcher for every way the licences can change: the selection control in the filter sidebar and the
+// licence chips above the list all write the same store field.
+watch(
+  () => assetSelectStore.selectedLicenceIds,
+  (value, oldValue) => {
+    if (value.length === oldValue?.length && value.every((id) => oldValue.includes(id))) return
+    pagination.value.page = 1
+    fetchAssetListDebounced()
+  },
+  { deep: true },
+)
 
 const componentComputed = computed(() => {
   switch (gridView.value) {
@@ -172,16 +192,15 @@ const componentComputed = computed(() => {
 })
 
 const disabledSubmit = computed(() => {
-  return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
+  return (
+    selectedCount.value < props.minCount ||
+    selectedCount.value > props.maxCount ||
+    selectedHasDisabled.value
+  )
 })
 
 const extId = computed(() => {
-  if (selectConfigs.value.length === 0) return undefined
-  if (selectedLicenceId.value > 0) {
-    const found = selectConfigs.value.find((config) => config.licence === selectedLicenceId.value)
-    if (found) return found.extSystem
-  }
-  return undefined
+  return selectedSelectConfig.value?.extSystem
 })
 
 const loadingSidebarRight = computed(() => {
@@ -269,6 +288,11 @@ defineExpose({
           v-model:sort="sortModel"
           @sort-by-change="sortByChange"
         />
+        <AssetSelectLicencePresetBar
+          v-if="selectLicences.length > 1 || listViews.length > 0"
+          :select-licences="selectLicences"
+          :list-views="listViews"
+        />
         <div
           class="subject-select__main"
           :class="{
@@ -277,7 +301,11 @@ defineExpose({
           }"
         >
           <div class="subject-select__sidebar system-border-r">
-            <AssetSelectFilter :config-name="configName" />
+            <AssetSelectFilter
+              :config-name="configName"
+              :select-licences="selectLicences"
+              :list-views="listViews"
+            />
           </div>
           <div class="subject-select__content">
             <component
@@ -316,6 +344,14 @@ defineExpose({
               v-else
               class="w-100"
             >
+              <div
+                v-if="openedAssetDisabledReason"
+                class="w-100 pa-2 text-body-small"
+              >
+                <VAlert type="warning">
+                  {{ openedAssetDisabledReason }}
+                </VAlert>
+              </div>
               <slot
                 name="sidebar-prepend"
                 :asset="asset"
@@ -347,13 +383,6 @@ defineExpose({
             }}
           </div>
           <VSpacer />
-          <VSwitch
-            v-if="showCopyToLicence"
-            v-model="copyToLicence"
-            :label="t('common.assetSelect.meta.texts.copyToLicence')"
-            hide-details
-            class="mr-2"
-          />
           <ABtnPrimary
             :disabled="disabledSubmit"
             @click.stop="onConfirm"

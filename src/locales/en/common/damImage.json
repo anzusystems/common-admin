@@ -7,6 +7,9 @@
       },
       "flags": {
         "showSource": "Show source"
+      },
+      "dam": {
+        "forceTakeOver": "Take the image over into our licence"
       }
     },
     "meta": {
@@ -18,12 +21,28 @@
       "upload": "Upload image",
       "addFromDam": "Add from Media Library",
       "replaceFromDam": "Replace from Media Library",
-      "removeImage": "Remove image"
+      "removeImage": "Remove image",
+      "preparingImage": "Preparing the image…"
     },
     "help": {
       "texts": {
         "description": "If you overwrite the description here, it will not change in the image storage."
       }
+    },
+    "error": {
+      "takeOverFailed": "The image could not be taken over into the licence. Try again or pick another image.",
+      "singleUseViolation": "This image is single-use and already held by another article, it cannot be used here.",
+      "exclusivityConflict": "The image was just claimed by someone else ({holder}). Pick another image.",
+      "exclusivityConflictUnknownHolder": "The image has been taken over by someone else in the meantime. Pick a different image.",
+      "sharedGallery": "The image cannot be added, the gallery is embedded in more than one article.",
+      "invalidOwner": "The image cannot be saved this way, the target record does not support single-use images.",
+      "ownerImmutable": "The image's holder can no longer be changed.",
+      "imageRemoved": "The image was released in the meantime, pick it again."
+    },
+    "bulkSave": {
+      "partialFailure": "Some images could not be saved.",
+      "unidentifiedFailure": "{count} more image was sent in the same request and was not saved either. Saving again will retry it. | {count} more images were sent in the same request and were not saved either. Saving again will retry them.",
+      "saveWithoutFailed": "Save without {count} image | Save without {count} images"
     }
   },
   "media": {
@@ -59,7 +78,11 @@
     "model": {
       "authors": "Authors",
       "keywords": "Keywords",
-      "mainFileSingleUse": "Single-use license"
+      "mainFileSingleUse": "Single-use license",
+      "usedBy": "Used in",
+      "directUseAllowed": "Direct use",
+      "autoDelete": "Automatic deletion",
+      "autoDeleteInDays": "in {days} days"
     },
     "assetType": {
       "image": "Image",
@@ -100,7 +123,8 @@
           "width": "Width",
           "height": "Height",
           "ratio": "Aspect ratio",
-          "animated": "Animated"
+          "animated": "Animated",
+          "licence": "Licence"
         }
       },
       "roi": {
@@ -132,7 +156,8 @@
       "2k": "2K",
       "qhd": "QHD",
       "4k": "4K",
-      "8k": "8K"
+      "8k": "8K",
+      "singleUse": "Single use"
     },
     "assetFileFailReason": {
       "none": "None",

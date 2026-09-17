@@ -44,6 +44,7 @@ const onDialogConfirm = async () => {
               ref="imagePublicInputComponent"
               v-model="image"
               :select-licences="[100000, 100001]"
+              :upload-licence="100000"
             />
           </VCardText>
           <VCardActions>

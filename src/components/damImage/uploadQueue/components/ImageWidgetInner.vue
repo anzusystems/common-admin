@@ -8,7 +8,8 @@ import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { cloneDeep, isDefined, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useAlerts } from '@/composables/system/alerts'
-import { DamAssetType, type DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
+import { DamAssetType } from '@/types/coreDam/Asset'
+import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
@@ -28,6 +29,8 @@ import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/auth
 import { useI18n } from 'vue-i18n'
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
+import type { ImageOwner } from '@/types/ImageAware'
 import {
   type CollabComponentConfig,
   type CollabFieldData,
@@ -49,13 +52,17 @@ import {
   isImageCreateUpdateAware,
   useImageMediaWidgetStore,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
+import { useImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
 
 const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
+    singleUseAllowed?: boolean
+    holder?: AssetSelectHolder | null
+    owner?: ImageOwner | null
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -76,6 +83,10 @@ const props = withDefaults(
     skipCurrentUserCheck?: boolean
   }>(),
   {
+    listViews: () => [],
+    singleUseAllowed: false,
+    holder: null,
+    owner: null,
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
@@ -83,8 +94,6 @@ const props = withDefaults(
     required: false,
     image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     expandOptions: false,
     expandMetadata: false,
@@ -165,7 +174,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 
 const { t } = useI18n()
 
-const { showErrorsDefault, showError, showErrorT } = useAlerts()
+const { showErrorsDefault, showError } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
@@ -279,22 +288,6 @@ const onDrop = async (files: File[]) => {
   }
 }
 
-const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
-  if (!data[0]) return
-  const config = imageWidgetUploadConfig.value!
-  cachedExtSystemId.value = config.extSystem
-  if (data[0].result === 'copy') {
-    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
-  } else if (data[0].result === 'exists') {
-    uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
-    uploadQueuesStore.queueItemDuplicate(data[0].targetAsset, data[0].targetMainFile, DamAssetType.Image)
-  } else {
-    showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
-    return
-  }
-  uploadQueueDialog.value = props.queueKey
-}
-
 const onFileInput = (files: File[]) => {
   const config = imageWidgetUploadConfig.value!
   cachedExtSystemId.value = config.extSystem
@@ -353,6 +346,8 @@ const reset = () => {
 
 const assetSelectStore = useAssetSelectStore()
 const { getDamConfigExtSystem } = useDamConfigState()
+const { addToCachedAssetLicences, fetchCachedAssetLicences, isLoadedCachedAssetLicence } =
+  useDamCachedAssetLicences()
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   metadataDialogLoading.value = true
@@ -362,20 +357,14 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   let source = ''
   if (data.type === 'asset') {
     if (!data.value[0] || !data.value[0].mainFile) return
-    if (!isUndefined(data.copyToLicence)) {
-      try {
-        const copyRes = await copyToLicence(damClient, endPointAsset, [
-          { asset: data.value[0].id, targetAssetLicence: data.copyToLicence },
-        ])
-        onCopyToLicence(copyRes)
-      } catch (e) {
-        showErrorsDefault(e)
-      } finally {
-        metadataDialogLoading.value = false
-      }
-      return
-    }
     metadataDialog.value = true
+    // The manual take-over switch decides its own visibility from the cached licence flags — fire
+    // the (debounced, fire-and-forget) fetch now so it is likely resolved by the time the dialog
+    // needs it; the switch appears reactively once the cache updates either way.
+    if (!isLoadedCachedAssetLicence(data.value[0].licence)) {
+      addToCachedAssetLicences([data.value[0].licence])
+      fetchCachedAssetLicences()
+    }
     try {
       const assetRes = await fetchAsset(damClient, endPointAsset, data.value[0].id)
       if (customAssetSelectMetadataToImageMap) {
@@ -419,6 +408,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
         regionPosition: 0,
         licenceId: data.value[0].licence,
         internal: data.value[0].mainFileInternal ?? false,
+        uploadLicenceId: props.uploadLicence,
       },
       position: 1,
     }
@@ -473,21 +463,27 @@ const onMetadataDialogClose = () => {
   metadataDialog.value = false
 }
 
+const { showImageSaveError } = useImageSaveErrorMessage()
+
 const onMetadataDialogConfirm = async () => {
   if (!isImageCreateUpdateAware(detail.value)) return
   metadataDialogSaving.value = true
+  const pendingAuthorIds =
+    showDamAuthorsInCmsImage.value && asset.value && asset.value.authors.length > 0
+      ? asset.value.authors
+      : undefined
   try {
-    if (showDamAuthorsInCmsImage.value && asset.value) {
-      if (asset.value.authors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(
-          damClient,
-          assetSelectStore.selectedSelectConfig.extSystem,
-          asset.value.authors
-        )
-        detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
-        await updateAssetAuthors(damClient, endPointAsset, asset.value, assetSelectStore.selectedSelectConfig.extSystem)
-        showDamAuthorsInCmsImage.value = false
-      }
+    if (pendingAuthorIds) {
+      const authorsRes = await fetchAuthorListByIds(
+        damClient,
+        assetSelectStore.selectedSelectConfig.extSystem,
+        pendingAuthorIds,
+      )
+      detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
+    }
+    if (props.owner) {
+      detail.value.ownerResourceName = props.owner.resourceName
+      detail.value.ownerResourceId = props.owner.resourceId
     }
     const res = detail.value.id
       ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
@@ -498,8 +494,27 @@ const onMetadataDialogConfirm = async () => {
     await reload(res, res.id, true)
     emit('afterMetadataSaveSuccess')
     releaseFieldLock.value(res.id)
+
+    // Authors are written to the DAM asset only once the image exists: on take-over, res.dam.damId
+    // is the copy's file id, not the source asset picked in the dialog (C8). A failed write here
+    // must not undo the image id already assigned above.
+    if (pendingAuthorIds) {
+      try {
+        const targetAsset = await fetchAssetByFileId(damClient, endPointAsset, res.dam.damId)
+        targetAsset.authors = pendingAuthorIds
+        await updateAssetAuthors(
+          damClient,
+          endPointAsset,
+          targetAsset,
+          assetSelectStore.selectedSelectConfig.extSystem,
+        )
+      } catch (authorError) {
+        showErrorsDefault(authorError)
+      }
+      showDamAuthorsInCmsImage.value = false
+    }
   } catch (e) {
-    showErrorsDefault(e)
+    showImageSaveError(e)
   } finally {
     metadataDialogSaving.value = false
   }
@@ -790,6 +805,8 @@ defineExpose({
       :expand="expandMetadata"
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"
+      :saving-label="t('common.damImage.image.button.preparingImage')"
+      :upload-licence="uploadLicence"
       :type="DamAssetType.Image"
       @edit-asset="onEditAsset"
       @on-confirm="onMetadataDialogConfirm"
@@ -800,6 +817,9 @@ defineExpose({
     v-model="assetSelectDialog"
     :select-licences="selectLicences"
     :upload-licence="uploadLicence"
+    :list-views="listViews"
+    :single-use-allowed="singleUseAllowed"
+    :holder="holder"
     :min-count="1"
     :max-count="1"
     :asset-type="DamAssetType.Image"
@@ -822,6 +842,7 @@ defineExpose({
     v-if="assetDialog === queueKey"
     :queue-key="queueKey"
     :ext-system="cachedExtSystemId"
+    :upload-licence="uploadLicence"
   />
   <UploadQueueDialogSingle
     v-if="uploadQueueDialog === queueKey && imageWidgetUploadConfig"

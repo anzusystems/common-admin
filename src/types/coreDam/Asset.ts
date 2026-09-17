@@ -96,21 +96,3 @@ export type AssetExternalProviderId = string | number
 export type AssetExternalProviderIdNullable = AssetExternalProviderId | null
 
 export type AssetExternalProviderMetadata = Record<string, string | number | number[] | string[] | boolean>
-
-export interface DamImageCopyToLicenceRequestItem {
-  asset: DocId
-  targetAssetLicence: IntegerId
-}
-
-export type DamImageCopyToLicenceRequest = Array<DamImageCopyToLicenceRequestItem>
-
-export interface DamImageCopyToLicenceResponseItem {
-  asset: DocId
-  targetAsset: DocId
-  targetMainFile: DocId
-  targetAssetLicence: IntegerId
-  result: 'exists' | 'copy' | 'notAllowed' | 'unassigned'
-  assetConflicts: DocId[]
-}
-
-export type DamImageCopyToLicenceResponse = Array<DamImageCopyToLicenceResponseItem>

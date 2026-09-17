@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
 import { onMounted, provide, ref, shallowRef } from 'vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import type { ImageAware } from '@/types/ImageAware'
+import type { ImageAware, ImageOwner } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import ImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -20,6 +21,10 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
+    singleUseAllowed?: boolean
+    holder?: AssetSelectHolder | null
+    owner?: ImageOwner | null
     image?: ImageAware | undefined // optional, if available, no need to fetch image data
     configName?: string
     collab?: CollabComponentConfig
@@ -39,6 +44,10 @@ const props = withDefaults(
     damHeight?: undefined | number
   }>(),
   {
+    listViews: () => [],
+    singleUseAllowed: false,
+    holder: null,
+    owner: null,
     configName: 'default',
     collab: undefined,
     collabStatus: CollabStatus.Inactive,
@@ -46,8 +55,6 @@ const props = withDefaults(
     image: undefined,
     readonly: false,
     required: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
     expandOptions: false,
     expandMetadata: false,

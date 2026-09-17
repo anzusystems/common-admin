@@ -14,6 +14,7 @@ import type {
   UploadMetadataToImageMapFn,
   AssetSelectMetadataToImageMapFn,
 } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
+import type { BulkUpdateImagesResult } from '@/components/damImage/uploadQueue/api/imageApiCms'
 
 export type PluginOptions = {
   languages: { available: LanguageCode[]; default: LanguageCode }
@@ -36,7 +37,7 @@ export interface CommonAdminImageConfig {
     updateImage: (client: () => AxiosInstance, id: IntegerId, data: ImageCreateUpdateAware) => Promise<ImageAware>
     deleteImage: (client: () => AxiosInstance, id: IntegerId) => Promise<void>
     fetchImageListByIds: (client: () => AxiosInstance, ids: IntegerId[]) => Promise<ImageAware[]>
-    bulkUpdateImages: (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => Promise<ImageAware[]>
+    bulkUpdateImages: (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => Promise<BulkUpdateImagesResult>
   }
 }
 

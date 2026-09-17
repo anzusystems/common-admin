@@ -6,6 +6,8 @@ import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/componen
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import type { IntegerId } from '@/types/common'
+import type { AssetSelectHolder } from '@/types/coreDam/AssetSelect'
+import type { ImageOwner } from '@/types/ImageAware'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { isUndefined } from '@/utils/common'
@@ -19,6 +21,10 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     uploadLicence: IntegerId
     selectLicences: IntegerId[]
+    listViews?: IntegerId[]
+    singleUseAllowed?: boolean
+    holder?: AssetSelectHolder | null
+    owner?: ImageOwner | null
     configName?: string
     label?: string | undefined
     readonly?: boolean
@@ -27,14 +33,14 @@ const props = withDefaults(
     callDeleteApiOnRemove?: boolean
   }>(),
   {
+    listViews: () => [],
+    singleUseAllowed: false,
+    holder: null,
+    owner: null,
     configName: 'default',
     label: undefined,
-    image: undefined,
     readonly: false,
-    lockable: false,
-    lockedById: undefined,
     dataCy: undefined,
-    expandOptions: false,
     width: undefined,
     callDeleteApiOnRemove: false,
   }
