@@ -155,8 +155,13 @@ export interface Props<TItem extends Record<string, any>> {
   loading?: boolean
   error?: string | null
 
+  /** Heading above the list. A ready translated string, like every text prop here. */
   title?: string | null
 
+  /**
+   * Field shown in a collapsed row when no `#item-compact` slot is given. A dotted path reads
+   * through nested objects (`texts.title`); a path that runs into nothing renders empty.
+   */
   compactField?: string | null
   statusField?: string | null
   twoRows?: 'never' | 'mobile' | 'always'
@@ -167,7 +172,9 @@ export interface Props<TItem extends Record<string, any>> {
   showEditButton?: boolean
   showAddAfterAction?: boolean
 
+  /** Label of the add button. A ready translated string; omit it for the library's own wording. */
   addLabel?: string | null
+  /** Heading of the empty state. A ready translated string. */
   emptyTitle?: string | null
 
   disableRowClick?: boolean
@@ -394,7 +401,7 @@ const { editingKeys, editingSnapshots, beginEdit, cancelEdit, commitEdit, closeE
     },
   })
 
-const addLabelResolved = computed(() => (props.addLabel ? t(props.addLabel) : t('common.sortable.add')))
+const addLabelResolved = computed(() => props.addLabel ?? t('common.sortable.add'))
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
 const deleteConfirmTitleResolved = computed(() => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'))
 const deleteConfirmTextResolved = computed(

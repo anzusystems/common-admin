@@ -20,4 +20,17 @@ describe('resolveCompactText', () => {
   it('coerces non-string field values to string', () => {
     expect(resolveCompactText({ id: 1, label: 42 }, { compactField: 'label' })).toBe('42')
   })
+
+  it('reads a dotted path through nested objects', () => {
+    // How most entities in these admins carry their label, which until now forced an
+    // `#item-compact` slot just to reach one field.
+    expect(resolveCompactText({ texts: { title: 'Prvý' } }, { compactField: 'texts.title' })).toBe('Prvý')
+    expect(resolveCompactText({ a: { b: { c: 7 } } }, { compactField: 'a.b.c' })).toBe('7')
+  })
+
+  it('returns empty string when a dotted path runs into nothing', () => {
+    expect(resolveCompactText({ texts: null }, { compactField: 'texts.title' })).toBe('')
+    expect(resolveCompactText({ texts: 'plain' }, { compactField: 'texts.title' })).toBe('')
+    expect(resolveCompactText({}, { compactField: 'a.b' })).toBe('')
+  })
 })

@@ -1,13 +1,30 @@
 import type { RouteLocationNormalized, Router } from 'vue-router'
 import { type DeepReadonly, readonly, type Ref, ref } from 'vue'
 
+// Module state, so the history is one list per document. A test that fills it has to clear it
+// again (`clearHistory`), or the next test in the file reads what the previous one left behind.
 const history = ref<RouteLocationNormalized[]>([])
 const blacklistedRouteNames = ref<string[]>([])
+/**
+ * How many routes back the history reaches. Note that `addRoute` drops only CONSECUTIVE duplicates,
+ * so a user bouncing A -> B -> A -> B fills four of these slots and can push the listing they want
+ * to return to out of the window. `fallbackRouteName` is what catches that.
+ */
 const MAX_HISTORY = 10
 
 export interface NavigateBackOptions {
+  /**
+   * How many entries back to take when `skipRouteNames` is not given. Rarely what you want: it
+   * counts positions rather than asking what the entry is.
+   */
   stepsBack?: number
+  /**
+   * Route names that are not a destination -- typically the sibling views of the record being
+   * closed and the create form it may have been reached from. The CURRENT route is always skipped
+   * on top of these, so there is no need to name it here.
+   */
   skipRouteNames?: string[]
+  /** Where to go when the walk finds nothing -- a tab opened straight on the record. */
   fallbackRouteName?: string
   fallbackRouteParams?: Record<string, any>
 }
@@ -38,6 +55,7 @@ export function useRouteHistory(): {
     }
   }
 
+  /** REPLACES the list. Two callers would overwrite each other -- to add one, use `addBlacklistedRoute`. */
   const setBlacklistedRoutes = (routeNames: string[]) => {
     blacklistedRouteNames.value = routeNames
   }
@@ -70,7 +88,15 @@ export function useRouteHistory(): {
   const navigateBack = (router: Router, options: NavigateBackOptions = {}) => {
     const { stepsBack = 1, skipRouteNames, fallbackRouteName, fallbackRouteParams } = options
 
-    const route = skipRouteNames ? getFirstRouteNotMatching(skipRouteNames) : getRouteBack(stepsBack)
+    // The route we are on is never a place to go back to, whichever way the entry was found.
+    // `addRoute` runs in `beforeEach`, so a navigation that a later guard cancels still records the
+    // route we never left -- and pushing that again is a silent no-op, which reads as the button
+    // doing nothing at all. Callers therefore do not name their own route in `skipRouteNames`.
+    const currentName = router.currentRoute.value.name
+    const skip = [...(skipRouteNames ?? []), ...(typeof currentName === 'string' ? [currentName] : [])]
+
+    const found = skipRouteNames ? getFirstRouteNotMatching(skip) : getRouteBack(stepsBack)
+    const route = found?.fullPath === router.currentRoute.value.fullPath ? undefined : found
 
     if (route) {
       router.push(route.fullPath)
