@@ -53,6 +53,11 @@ if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterDa
 // `forceClose` is for the paths that already are the confirmation.
 const isOpen = ref(true)
 
+// The editor takes its clean baseline when it is created, so it waits for the first fetch. After
+// that it stays mounted whatever happens -- it is the only thing registering this tab's pending
+// work with the guard, and a reload that swapped it out would disarm the guard mid-edit.
+const manageLoaded = ref(false)
+
 const guard = useUnsavedChangesGuard({
   sources: [],
   guardDialogModel: isOpen,
@@ -127,18 +132,26 @@ const saveManage = async () => {
   if (!editor.value?.validateAll()) return
   saveButtonLoading.value = true
   try {
-    const renamed = editor.value.getChanges().updated
-    for (const item of renamed) {
+    const changes = editor.value.getChanges()
+    // Deletes first, then renames, then the order -- which is taken from `itemsManage`, and the
+    // deleted rows have already left it.
+    for (const item of changes.deleted) {
+      await deleteUserAdminConfig(item.id)
+    }
+    for (const item of changes.updated) {
       await updateUserAdminConfig(item.id, cloneDeep(item))
     }
     await updateUserAdminConfigPositions(itemsManage.value.map((item) => item.id))
-    // Refetched once, at the end: this is also what refreshes the store the filter bar reads its
-    // names from, and what the editor re-baselines against.
+    // Once, at the end: this is also what refreshes the store the filter bar reads its names from,
+    // and what the editor re-baselines against.
     await reloadItems()
     editor.value?.commit()
     forceClose()
   } catch (e) {
     showErrorsDefault(e)
+    // A partial save -- some rows written, then a later call threw -- leaves the store holding
+    // names the server no longer has. The reload is the only thing that rewrites it.
+    await reloadItems()
   } finally {
     saveButtonLoading.value = false
   }
@@ -180,7 +193,14 @@ const addBookmark = async () => {
     config.position = count + 1
     const res = await createUserAdminConfig(config)
     filterBookmarkStore.addOne(filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource), res)
-    forceClose()
+    // Cleared because `requestClose` may not close: with work pending on the other tab the guard
+    // asks, and "stay" would otherwise leave this bookmark's name in the field for a second click
+    // to create it again. Empty, the `required` rule blocks that.
+    customName.value = ''
+    vCreate$.value.$reset()
+    // `requestClose`, not `forceClose`: adding a bookmark is a decision about THIS tab. It says
+    // nothing about a reorder left pending on the other one, so the guard still gets to ask.
+    requestClose()
   } catch (e) {
     if (
       isAnzuApiValidationError(e) &&
@@ -208,18 +228,6 @@ const onConfirm = () => {
   }
 }
 
-const onDelete = async (item: UserAdminConfig) => {
-  listLoading.value = true
-  try {
-    await deleteUserAdminConfig(item.id)
-    await reloadItems()
-  } catch (e) {
-    showErrorsDefault(e)
-  } finally {
-    listLoading.value = false
-  }
-}
-
 const reloadItems = async () => {
   listLoading.value = true
   try {
@@ -236,6 +244,7 @@ const reloadItems = async () => {
     showErrorsDefault(e)
   } finally {
     listLoading.value = false
+    manageLoaded.value = true
   }
 }
 
@@ -309,10 +318,16 @@ watch(activeTab, () => {
           v-show="activeTab === 'manage'"
           class="w-100 pt-4"
         >
-          <!-- Mounted only once there is data: the editor takes its clean baseline from the model
-               the moment it is created, so rows arriving afterwards would read as unsaved additions. -->
+          <div
+            v-if="!manageLoaded"
+            class="d-flex w-100 align-center justify-center"
+          >
+            <VProgressCircular indeterminate />
+          </div>
+          <!-- Mounted once the first fetch has settled -- empty or not, so an empty list gets the
+               editor's own empty state rather than a blank tab -- and never unmounted after that. -->
           <ASortableListEditor
-            v-if="itemsManage.length > 0"
+            v-else
             ref="editor"
             v-model="itemsManage"
             :position="false"
@@ -321,8 +336,6 @@ watch(activeTab, () => {
             :validate="validateBookmarkName"
             :show-add-button="false"
             :unsaved-section-label="t('common.filter.bookmark.unsavedSection')"
-            delete-mode="immediate"
-            :on-delete="onDelete"
           >
             <template #item="{ raw, actions }: { raw: UserAdminConfig; actions: RowUpdate }">
               <AFormTextField

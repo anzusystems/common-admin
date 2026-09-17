@@ -23,10 +23,16 @@ vi.mock('@/labs/filters/userAdminConfig', () => ({
   }),
 }))
 
+const getBookmarks = vi.fn(async () => {
+  if (holdFetch) await holdFetch
+  return listItems.value
+})
+let holdFetch: Promise<void> | null = null
+
 vi.mock('@/labs/filters/bookmarksStore', () => ({
   MAX_BOOKMARK_ITEMS: 10,
   useFilterBookmarkStore: () => ({
-    getBookmarks: async () => listItems.value,
+    getBookmarks,
     fetchBookmarksCount: async () => listItems.value.length,
     generateKey: () => 'key',
     addOne: vi.fn(),
@@ -40,6 +46,7 @@ let mounted: VueWrapper | null = null
 
 beforeEach(() => {
   vi.clearAllMocks()
+  holdFetch = null
   listItems.value = [bookmark(1, 'First'), bookmark(2, 'Second'), bookmark(3, 'Third')]
 })
 
@@ -91,6 +98,7 @@ const editorOf = (wrapper: VueWrapper) =>
     updateItem: (key: number, next: Partial<UserAdminConfig>) => void
     deleteItem: (key: number) => void
     moveItem: (from: number, to: number) => void
+    getChanges: () => { updated: UserAdminConfig[]; deleted: UserAdminConfig[] }
     hasUnsaved: boolean | { value: boolean }
   }
 
@@ -144,6 +152,9 @@ describe('filter bookmark manage tab', () => {
     expect(updateUserAdminConfig.mock.calls[0][0]).toBe(2)
     expect(updateUserAdminConfigPositions).toHaveBeenCalledTimes(1)
     expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([2, 3, 1])
+    // The other half of this test's name: the save re-baselines, so the guard has nothing left to
+    // ask about. Without the commit the editor would still read dirty against the fetched list.
+    expect(unsaved(wrapper)).toBe(false)
   })
 
   it('does not lose a pending reorder when another row is edited', async () => {
@@ -162,44 +173,54 @@ describe('filter bookmark manage tab', () => {
     expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([2, 3, 1])
   })
 
-  it('sends a delete through the editor, and reloads the list behind it', async () => {
+  it('holds a delete until the save, and sends it there', async () => {
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
-    listItems.value = [bookmark(1, 'First'), bookmark(3, 'Third')]
-    // The row's own delete button, so the dialog's `onDelete` is reached the way a user reaches it;
-    // `controller.deleteItem` would drop the row without ever calling the endpoint.
     const deleteButtons = document.querySelectorAll<HTMLElement>('.a-le-action--delete')
     expect(deleteButtons.length).toBeGreaterThan(1)
     deleteButtons[1].click()
-    await flushPromises()
-    await nextTick()
-    // A confirmation stands between the click and the endpoint.
-    const confirm = [...document.querySelectorAll<HTMLElement>('button')].find((b) =>
-      /delete|zmaza|odstr/i.test(b.textContent ?? '')
+    await settleEditor()
+    const confirm = [...document.querySelectorAll<HTMLElement>('button')].find((button) =>
+      /delete|zmaza|odstr/i.test(button.textContent ?? '')
     )
     confirm?.click()
-    await flushPromises()
-    await nextTick()
+    await settleEditor()
+
+    // Nothing has reached the server yet -- the row is a pending deletion, and it counts as
+    // unsaved work the guard will ask about.
+    expect(deleteUserAdminConfig).not.toHaveBeenCalled()
+    expect(unsaved(wrapper)).toBe(true)
+
+    listItems.value = [bookmark(1, 'First'), bookmark(3, 'Third')]
+    await confirmDialog(wrapper)
 
     expect(deleteUserAdminConfig).toHaveBeenCalledWith(2)
-    expect(updateUserAdminConfig).not.toHaveBeenCalled()
-    // Reloaded, so the row is gone rather than merely hidden, and nothing is left marked.
-    expect(document.body.textContent ?? '').not.toContain('Second')
-    expect(unsaved(wrapper)).toBe(false)
+    expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([1, 3])
   })
 
-  it('sends the reordered ids, in the order on screen', async () => {
+  it('does not lose a pending rename when another row is deleted', async () => {
+    // The delete path used to reload mid-edit, which replaced the array the typed text lives in.
     const wrapper = await mountDialog()
     await openManageTab(wrapper)
 
-    editorOf(wrapper).moveItem(0, 2)
-    await nextTick()
-    await confirmDialog(wrapper)
+    editorOf(wrapper).updateItem(1, { customName: 'Renamed' })
+    await settleEditor()
 
-    expect(updateUserAdminConfigPositions).toHaveBeenCalledTimes(1)
-    expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([2, 3, 1])
-    expect(updateUserAdminConfig).not.toHaveBeenCalled()
+    const deleteButtons = document.querySelectorAll<HTMLElement>('.a-le-action--delete')
+    deleteButtons[deleteButtons.length - 1].click()
+    await settleEditor()
+    const confirm = [...document.querySelectorAll<HTMLElement>('button')].find((button) =>
+      /delete|zmaza|odstr/i.test(button.textContent ?? '')
+    )
+    confirm?.click()
+    await settleEditor()
+
+    expect(
+      editorOf(wrapper)
+        .getChanges()
+        .updated.map((item) => item.customName)
+    ).toEqual(['Renamed'])
   })
 
   it('keeps asking on the way out after a glance at the other tab', async () => {
@@ -256,5 +277,98 @@ describe('leaving the manage tab with an unapplied order', () => {
 
     expect(secondVm.guard.promptOpen.value).toBe(true)
     expect(secondDialog.emitted('onClose')).toBeFalsy()
+  })
+})
+
+describe('adding a bookmark while the manage tab has pending work', () => {
+  it('does not close over it', async () => {
+    // Adding is a decision about the add tab; it says nothing about a reorder left pending on the
+    // other one, so the close it triggers still has to go through the guard.
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+    editorOf(wrapper).moveItem(0, 2)
+    await settleEditor()
+
+    const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
+    const vm = dialog.vm as unknown as {
+      activeTab: string
+      customName: string
+      onConfirm: () => void
+      guard: { promptOpen: { value: boolean } }
+    }
+    vm.activeTab = 'add'
+    vm.customName = 'A new bookmark'
+    await settleEditor()
+
+    vm.onConfirm()
+    await flushPromises()
+    await nextTick()
+
+    expect(vm.guard.promptOpen.value).toBe(true)
+    expect(dialog.emitted('onClose')).toBeFalsy()
+  })
+})
+
+describe('loading the manage tab', () => {
+  it('shows a spinner until the first fetch settles, then the editor whether or not it is empty', async () => {
+    let release = () => {}
+    holdFetch = new Promise<void>((resolve) => (release = () => resolve()))
+
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+
+    // The editor waits for data so its baseline is the fetched list; something has to stand in for
+    // it meanwhile, or the tab is blank for the whole first load.
+    expect(document.querySelectorAll('.v-progress-circular').length).toBeGreaterThan(0)
+    expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(false)
+
+    listItems.value = []
+    release()
+    await settleEditor()
+
+    // Empty is still mounted -- the editor has its own empty state, and staying mounted is what
+    // keeps the guard armed.
+    expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(true)
+  })
+
+  it('does not refetch over pending work when the other tab is visited', async () => {
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+    const fetchesAfterFirstEntry = getBookmarks.mock.calls.length
+
+    editorOf(wrapper).moveItem(0, 2)
+    await settleEditor()
+
+    const vm = wrapper.findComponent({ name: 'FilterBookmarkDialog' }).vm as unknown as { activeTab: string }
+    vm.activeTab = 'add'
+    await settleEditor()
+    vm.activeTab = 'manage'
+    await settleEditor()
+
+    expect(getBookmarks.mock.calls.length).toBe(fetchesAfterFirstEntry)
+    expect(editorOf(wrapper).getChanges().updated).toEqual([])
+    expect(unsaved(wrapper)).toBe(true)
+  })
+
+  it('tells the editor it is loading rather than swapping it out', async () => {
+    // The reload at the end of a save must not unmount the editor: it is the only thing holding
+    // this tab's registration with the guard, so an unmount mid-save disarms it.
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+    editorOf(wrapper).moveItem(0, 2)
+    await settleEditor()
+
+    let release = () => {}
+    holdFetch = new Promise<void>((resolve) => (release = () => resolve()))
+    const saving = confirmDialog(wrapper)
+    await nextTick()
+    await nextTick()
+
+    const editor = wrapper.findComponent({ name: 'ASortableListEditor' })
+    expect(editor.exists()).toBe(true)
+    expect(editor.props('loading')).toBe(true)
+
+    release()
+    await saving
   })
 })
