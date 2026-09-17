@@ -33,6 +33,7 @@
       "takeOverFailed": "Obrázek se nepodařilo převzít do licence. Zkuste to znovu nebo vyberte jiný obrázek.",
       "singleUseViolation": "Tento obrázek je jednorázově použit v jiném článku, zde jej nelze použít.",
       "exclusivityConflict": "Obrázek mezitím převzal někdo jiný ({holder}). Vyberte jiný obrázek.",
+      "exclusivityConflictUnknownHolder": "Obrázek mezitím převzal někdo jiný. Vyberte jiný obrázek.",
       "sharedGallery": "Obrázek nelze přidat, galerie je vložena ve více článcích.",
       "invalidOwner": "Obrázek takto nelze uložit, cílový záznam nepodporuje jednorázové obrázky.",
       "ownerImmutable": "Držitele obrázku už nelze změnit.",

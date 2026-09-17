@@ -20,13 +20,17 @@ export function resolveImageSaveErrorMessage(
   }
   if (errorInfo?.code === 'image_single_use_violation') {
     switch (errorInfo.reason) {
-      case 'exclusivity_conflict':
-        return t('common.damImage.image.error.exclusivityConflict', {
-          // Empty when the holder cannot be named, e.g. a gallery shared by two articles.
-          holder: errorInfo.holderResourceName
-            ? resolveHolderName(errorInfo.holderResourceName)
-            : errorInfo.holderResourceId,
-        })
+      case 'exclusivity_conflict': {
+        // The holder stays empty when it cannot be named — a gallery shared by two articles, or a lookup
+        // that failed in DAM — and the sentence then has to work without the parenthetical.
+        const holder = errorInfo.holderResourceName
+          ? resolveHolderName(errorInfo.holderResourceName)
+          : errorInfo.holderResourceId
+
+        return holder
+          ? t('common.damImage.image.error.exclusivityConflict', { holder })
+          : t('common.damImage.image.error.exclusivityConflictUnknownHolder')
+      }
       case 'shared_gallery':
         return t('common.damImage.image.error.sharedGallery')
       case 'invalid_owner':
