@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import { inject, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { inject, ref, watch } from 'vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import ARow from '@/components/ARow.vue'
 import AFormSwitch from '@/components/form/AFormSwitch.vue'
-import type { SortableItem } from '@/components/sortable/sortableActions'
-import ASortable from '@/components/sortable/ASortable.vue'
+import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
 import { MAX_BOOKMARK_ITEMS, useFilterBookmarkStore } from '@/labs/filters/bookmarksStore'
@@ -16,9 +15,11 @@ import { useUserAdminConfigFactory } from '@/model/factory/UserAdminConfigFactor
 import { type UserAdminConfig, UserAdminConfigLayoutType, UserAdminConfigType } from '@/types/UserAdminConfig'
 import useVuelidate from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
-import { cloneDeep, isNull, isUndefined } from '@/utils/common'
+import { cloneDeep, isUndefined } from '@/utils/common'
 import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
+import AUnsavedConfirmDialog from '@/labs/unsavedGuard/AUnsavedConfirmDialog.vue'
+import { useUnsavedChangesGuard } from '@/labs/unsavedGuard/useUnsavedChangesGuard'
 import { hasAnzuApiValidationErrorSpecific, isAnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
 
 const props = withDefaults(
@@ -46,6 +47,31 @@ if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterDa
   throw new Error('Incorrect provide/inject config.')
 }
 
+// The dialog is mounted behind the parent's `v-if`, so it had no model of its own -- and the guard
+// needs one to watch. Closing now runs through here: `requestClose` lets the guard ask first,
+// `forceClose` is for the paths that already are the confirmation.
+const isOpen = ref(true)
+
+const guard = useUnsavedChangesGuard({
+  sources: [],
+  guardDialogModel: isOpen,
+  guardRoute: false,
+  guardWindowUnload: false,
+})
+
+watch(isOpen, (open) => {
+  if (!open) emit('onClose')
+})
+
+const requestClose = () => {
+  isOpen.value = false
+}
+
+const forceClose = () => {
+  guard.acknowledge()
+  isOpen.value = false
+}
+
 const activeTab = ref<'add' | 'manage'>('add')
 const customName = ref('')
 const storeDatatableHiddenColumns = ref(false)
@@ -54,24 +80,27 @@ const saveButtonLoading = ref(false)
 const listLoading = ref(false)
 const errorCount = ref(false)
 const itemsManage = ref<Array<UserAdminConfig>>([])
-const itemEdit = ref<{ id: IntegerId; customName: string } | null>(null)
+
+interface RowUpdate {
+  update: (next: UserAdminConfig) => void
+}
+
+const MAX_BOOKMARK_NAME_LENGTH = 100
+
+// The editor owns opening a row, saving it and cancelling out of it, so the rename no longer needs
+// its own held copy, its own vuelidate instance or its own confirm/cancel buttons. What is left is
+// the rule itself, which drives the editor's red rail and blocks its save.
+const validateBookmarkName = (item: UserAdminConfig): boolean =>
+  !!item.customName && item.customName.length <= MAX_BOOKMARK_NAME_LENGTH
 
 const { required, maxLength } = useValidate()
 const rulesCreate = {
   customName: {
     required,
-    maxLength: maxLength(100),
+    maxLength: maxLength(MAX_BOOKMARK_NAME_LENGTH),
   },
 }
 const vCreate$ = useVuelidate(rulesCreate, { customName }, { $stopPropagation: true })
-const rulesEdit = {
-  itemEdit: {
-    required,
-    maxLength: maxLength(100),
-  },
-}
-const vEdit$ = useVuelidate(rulesEdit, { itemEdit }, { $stopPropagation: true })
-
 const filterBookmarkStore = useFilterBookmarkStore()
 
 const {
@@ -95,7 +124,7 @@ const sortItems = async () => {
     await updateUserAdminConfigPositions(ids)
     saveButtonLoading.value = false
     await reloadItems()
-    emit('onClose')
+    forceClose()
   } catch (e) {
     showErrorsDefault(e)
     saveButtonLoading.value = false
@@ -138,7 +167,7 @@ const addBookmark = async () => {
     config.position = count + 1
     const res = await createUserAdminConfig(config)
     filterBookmarkStore.addOne(filterBookmarkStore.generateKey(UserAdminConfigLayoutType.Desktop, systemResource), res)
-    emit('onClose')
+    forceClose()
   } catch (e) {
     if (
       isAnzuApiValidationError(e) &&
@@ -166,35 +195,10 @@ const onConfirm = () => {
   }
 }
 
-const onDelete = async (data: SortableItem<UserAdminConfig>) => {
+const onDelete = async (item: UserAdminConfig) => {
   listLoading.value = true
   try {
-    await deleteUserAdminConfig(data.raw.id)
-    await reloadItems()
-    onItemCancel()
-  } catch (e) {
-    showErrorsDefault(e)
-  } finally {
-    listLoading.value = false
-  }
-}
-
-const inputRef = useTemplateRef('inputRef')
-
-const onEdit = async (data: SortableItem<UserAdminConfig>) => {
-  itemEdit.value = { id: data.raw.id, customName: data.raw.customName }
-  await nextTick()
-  inputRef.value?.focus()
-}
-
-const onItemConfirm = async (data: SortableItem<UserAdminConfig>) => {
-  if (isNull(itemEdit.value)) return
-  listLoading.value = true
-  const modified = cloneDeep(data.raw)
-  modified.customName = itemEdit.value.customName
-  try {
-    onItemCancel()
-    await updateUserAdminConfig(modified.id, modified)
+    await deleteUserAdminConfig(item.id)
     await reloadItems()
   } catch (e) {
     showErrorsDefault(e)
@@ -203,8 +207,10 @@ const onItemConfirm = async (data: SortableItem<UserAdminConfig>) => {
   }
 }
 
-const onItemCancel = () => {
-  itemEdit.value = null
+// Persists one renamed row. The editor awaits it, then re-baselines that row; a rejection keeps the
+// row open with its error, which is what the bespoke confirm button could not do.
+const onItemSave = async (item: UserAdminConfig) => {
+  await updateUserAdminConfig(item.id, cloneDeep(item))
 }
 
 const reloadItems = async () => {
@@ -236,11 +242,11 @@ watch(activeTab, () => {
 
 <template>
   <VDialog
-    :model-value="true"
+    v-model="isOpen"
     :width="500"
   >
     <VCard>
-      <ADialogToolbar @on-cancel="emit('onClose')">
+      <ADialogToolbar @on-cancel="requestClose">
         {{ t('common.filter.bookmark.title') }}
       </ADialogToolbar>
       <VCardText class="pt-0">
@@ -296,73 +302,36 @@ watch(activeTab, () => {
           >
             <VProgressCircular indeterminate />
           </div>
-          <ASortable
+          <!-- Only the order can pend here: a rename saves on the row's own confirm and a delete is
+               immediate, so both go clean straight away. A drag waits for the button below, which
+               is exactly what the guard asks about on the way out. -->
+          <ASortableListEditor
             v-else
             v-model="itemsManage"
-            show-edit-button
-            show-delete-button
-            permanent-buttons
-            @on-delete="onDelete"
-            @on-edit="onEdit"
+            :position="false"
+            compact-field="customName"
+            :validate="validateBookmarkName"
+            :show-add-button="false"
+            :unsaved-section-label="t('common.filter.bookmark.unsavedSection')"
+            delete-mode="immediate"
+            :on-delete="onDelete"
+            :on-item-save="onItemSave"
           >
-            <template #item="{ item }: { item: SortableItem<UserAdminConfig> }">
+            <template #item="{ raw, actions }: { raw: UserAdminConfig; actions: RowUpdate }">
               <AFormTextField
-                v-if="itemEdit && itemEdit.id === item.raw.id"
-                ref="inputRef"
-                v-model="itemEdit.customName"
+                :model-value="raw.customName"
                 hide-details="auto"
-                :v="vEdit$"
+                @update:model-value="actions.update({ ...raw, customName: String($event ?? '') })"
               />
-              <div v-else>
-                {{ item.raw.customName }}
-              </div>
             </template>
-            <template
-              v-if="!isNull(itemEdit)"
-              #item-buttons="{ item }: { item: SortableItem<UserAdminConfig> }"
-            >
-              <div
-                v-if="itemEdit && itemEdit.id === item.raw.id"
-                class="d-flex align-center justify-end"
-              >
-                <VBtn
-                  icon
-                  size="x-small"
-                  variant="text"
-                  class="mx-1"
-                  @click.stop="onItemConfirm(item)"
-                >
-                  <VIcon icon="mdi-check" />
-                  <VTooltip
-                    anchor="bottom"
-                    activator="parent"
-                    :text="t('common.button.confirm')"
-                  />
-                </VBtn>
-                <VBtn
-                  icon
-                  size="x-small"
-                  variant="text"
-                  class="mx-1"
-                  @click.stop="onItemCancel()"
-                >
-                  <VIcon icon="mdi-close" />
-                  <VTooltip
-                    anchor="bottom"
-                    activator="parent"
-                    :text="t('common.button.cancel')"
-                  />
-                </VBtn>
-              </div>
-            </template>
-          </ASortable>
+          </ASortableListEditor>
         </div>
       </VCardText>
       <VCardActions>
         <VSpacer />
         <ABtnTertiary
           data-cy="button-cancel"
-          @click.stop="emit('onClose')"
+          @click.stop="requestClose"
         >
           {{ t('common.button.cancel') }}
         </ABtnTertiary>
@@ -376,4 +345,10 @@ watch(activeTab, () => {
       </VCardActions>
     </VCard>
   </VDialog>
+
+  <AUnsavedConfirmDialog
+    v-model="guard.promptOpen.value"
+    :dirty-labels="guard.dirtyLabels.value"
+    @resolve="guard.resolvePrompt"
+  />
 </template>

@@ -236,6 +236,12 @@ export interface Props<TItem extends Record<string, any>> {
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
+  /**
+   * Disable unsaved-state tracking — no dirty markers, never reads as unsaved. For a list that is a
+   * VIEW of data owned elsewhere (a display cache rebuilt from a parent's field, say): nothing in
+   * such a component can ever clear an amber row, so it must not raise one. Mirrors `AListEditor`.
+   */
+  disableUnsaved?: boolean
   deleteConfirmTitle?: string | null
   deleteConfirmText?: string | null
   /**
@@ -292,6 +298,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   emptyTitle: null,
   disableRowClick: false,
   disableDeleteConfirm: false,
+  disableUnsaved: false,
   deleteConfirmTitle: null,
   deleteConfirmText: null,
   deleteMode: 'deferred',
@@ -509,7 +516,9 @@ const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
     // Amber = controller dirty OR reorder-session moved. readonly suppresses it
     // (read-only views can't be unsaved; also dodges a mount-before-load baseline). (QA 85050 sweep)
     const dirty = props.readonly ? false : controller.isUnsaved(vi.key)
-    const unsaved = props.readonly ? false : dirty || moved
+    // `disableUnsaved` suppresses only the amber marker — the validation rail still shows, since
+    // hiding dirty state should not hide a real error.
+    const unsaved = props.disableUnsaved || props.readonly ? false : dirty || moved
     const cached = decoratorCache.get(vi.key)
     if (
       cached &&
@@ -1487,7 +1496,9 @@ const clearUnsavedState = () => {
 
 // Registers this editor as a named unsaved-changes section when a label is passed.
 useUnsavedSection(() =>
-  props.unsavedSectionLabel ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value } : []
+  props.unsavedSectionLabel && !props.disableUnsaved
+    ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value }
+    : []
 )
 
 // Expose the controller handle plus legacy aliases and reorder/expand controls.

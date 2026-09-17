@@ -11,7 +11,8 @@
     "storeTableColumns": "Save datatable columns also",
     "storeTableOrder": "Save datatable order also",
     "saveBookmarkOrder": "Save ordering",
-    "nameUniqueError": "Name of filter must be unique"
+    "nameUniqueError": "Name of filter must be unique",
+    "unsavedSection": "Bookmark order"
   },
   "timeInterval": {
     "from": "From",

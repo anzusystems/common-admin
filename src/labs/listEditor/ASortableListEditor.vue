@@ -237,6 +237,12 @@ export interface Props<TItem extends Record<string, any>> {
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
+  /**
+   * Disable unsaved-state tracking — no dirty markers, never reads as unsaved. For a list that is a
+   * VIEW of data owned elsewhere (a display cache rebuilt from a parent's field, say): nothing in
+   * such a component can ever clear an amber row, so it must not raise one. Mirrors `AListEditor`.
+   */
+  disableUnsaved?: boolean
   deleteConfirmTitle?: string | null
   deleteConfirmText?: string | null
   /**
@@ -305,6 +311,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   emptyTitle: null,
   disableRowClick: false,
   disableDeleteConfirm: false,
+  disableUnsaved: false,
   deleteConfirmTitle: null,
   deleteConfirmText: null,
   deleteMode: 'deferred',
@@ -653,7 +660,7 @@ const compactReorderButton = computed<boolean>((): boolean => !!props.title && i
 // up even though its row is gone. Shown as a view-mode header badge + on the handle; in reorder mode
 // the toolbar status shows the session count instead.
 const unsavedCount = controller.unsavedCount
-const unsavedCountVisible = computed(() => !props.readonly && unsavedCount.value > 0)
+const unsavedCountVisible = computed(() => !props.readonly && !props.disableUnsaved && unsavedCount.value > 0)
 const headerVisible = computed<boolean>(
   (): boolean =>
     !!(
@@ -700,7 +707,9 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
     const moved = movedKeys.value.has(vi.key)
     // readonly → no amber markers (can't have unsaved changes; also dodges a
     // mount-before-load empty baseline). (QA 85050 sweep)
-    const unsaved = props.readonly ? false : controller.isUnsaved(vi.key)
+    // `disableUnsaved` suppresses only the amber marker — the validation rail still shows, since
+    // hiding dirty state should not hide a real error.
+    const unsaved = props.disableUnsaved || props.readonly ? false : controller.isUnsaved(vi.key)
     const dirty = unsaved
     // `editing` → the controller reads amber (not red) while the row is being filled in. (QA 85050 b7)
     const validationState = controller.rowState(vi.raw, vi.key, editing)
@@ -1199,7 +1208,9 @@ const reorderToggleSlotProps = computed(() => ({
 
 // Registers a named unsaved-changes section when the consumer passes a label.
 useUnsavedSection(() =>
-  props.unsavedSectionLabel ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value } : []
+  props.unsavedSectionLabel && !props.disableUnsaved
+    ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value }
+    : []
 )
 
 // Expose the controller handle (validateAll/getPayload/commit/etc. via
