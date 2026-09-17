@@ -62,11 +62,12 @@ export function useRouteHistory(): {
   // Internal on purpose. A caller reaching for it directly would get the walk WITHOUT the
   // current-route exclusion `navigateBack` adds -- which is the whole trap `navigateBack` exists
   // to close.
-  const getFirstRouteNotMatching = (routeNamesToSkip: string[]): RouteLocationNormalized | undefined => {
+  const findRouteBack = (
+    isDestination: (route: RouteLocationNormalized) => boolean
+  ): RouteLocationNormalized | undefined => {
     for (let i = history.value.length - 1; i >= 0; i--) {
-      const route = history.value[i]
-      if (!routeNamesToSkip.includes(route.name as string)) {
-        return route
+      if (isDestination(history.value[i])) {
+        return history.value[i]
       }
     }
     return undefined
@@ -78,17 +79,23 @@ export function useRouteHistory(): {
 
   const navigateBack = (router: Router, options: NavigateBackOptions = {}) => {
     const { skipRouteNames, fallbackRouteName, fallbackRouteParams } = options
+    const current = router.currentRoute.value
+    const skip = skipRouteNames ?? []
 
     // The route we are on is never a place to go back to. `addRoute` runs in `beforeEach`, so a
     // navigation that a later guard cancels still records the route we never left -- and pushing
     // that again is a silent no-op, which reads as the button doing nothing at all. Callers
     // therefore do not name their own route in `skipRouteNames`.
-    const currentName = router.currentRoute.value.name
-    const skip = [...(skipRouteNames ?? []), ...(typeof currentName === 'string' ? [currentName] : [])]
+    //
+    // Both tests sit INSIDE the walk rather than filtering its result: a route name is optional in
+    // vue-router, and a nameless current route can only be recognised by its path -- rejecting the
+    // candidate afterwards would stop the walk at it instead of carrying on to the entry before.
+    // Names are compared with `===` so a symbol name counts too, but only when the current route
+    // has one: two different nameless routes are both `undefined` and are not the same place.
+    const isCurrent = (route: RouteLocationNormalized) =>
+      route.fullPath === current.fullPath || (current.name !== undefined && route.name === current.name)
 
-    const found = getFirstRouteNotMatching(skip)
-    // A nameless route cannot be skipped by name; comparing the path closes that one hole.
-    const route = found?.fullPath === router.currentRoute.value.fullPath ? undefined : found
+    const route = findRouteBack((entry) => !isCurrent(entry) && !skip.includes(entry.name as string))
 
     if (route) {
       router.push(route.fullPath)

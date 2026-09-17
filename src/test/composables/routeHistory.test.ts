@@ -11,10 +11,12 @@ import { useRouteHistory } from '@/composables/system/routeHistory'
 
 const { addRoute, clearHistory, navigateBack, setBlacklistedRoutes } = useRouteHistory()
 
-const visit = (name: string, fullPath = name) =>
-  (addRoute as (route: { name: string; fullPath: string }) => void)({ name, fullPath })
+// `name` is deliberately optional here: vue-router route names are, and the nameless case is the
+// one the walk gets wrong if the current-route test is applied to its result instead of inside it.
+const visit = (name: string | undefined, fullPath: string) =>
+  (addRoute as (route: { name: string | undefined; fullPath: string }) => void)({ name, fullPath })
 
-const routerOn = (name: string, fullPath = name) => ({
+const routerOn = (name: string | undefined, fullPath = name ?? '/') => ({
   push: vi.fn(),
   back: vi.fn(),
   currentRoute: { value: { name, fullPath } },
@@ -27,7 +29,7 @@ beforeEach(() => {
 
 describe('navigateBack', () => {
   it('walks past the route the caller is on without being told to', () => {
-    visit('/records')
+    visit('/records', '/records')
     visit('/records/[id]', '/records/1')
 
     const router = routerOn('/records/[id]', '/records/1')
@@ -38,7 +40,7 @@ describe('navigateBack', () => {
 
   it('walks past another record of the same kind', () => {
     // Two rows of the same listing share a route name, and closing one should not open the other.
-    visit('/records')
+    visit('/records', '/records')
     visit('/records/[id]', '/records/1')
 
     const router = routerOn('/records/[id]', '/records/2')
@@ -48,8 +50,8 @@ describe('navigateBack', () => {
   })
 
   it('still honours the names the caller does give', () => {
-    visit('/records')
-    visit('/records/new')
+    visit('/records', '/records')
+    visit('/records/new', '/records/new')
 
     const router = routerOn('/records/[id]', '/records/1')
     navigateBack(router as never, { skipRouteNames: ['/records/new'], fallbackRouteName: '/records' })
@@ -70,7 +72,7 @@ describe('navigateBack', () => {
     // There is no longer a second, positional way through: `navigateBack` always asks what the
     // entry IS, never where it sits. That branch had no user and was the shape the silent no-op
     // lived in -- one cancelled navigation and `stepsBack: 1` was the route we never left.
-    visit('/records')
+    visit('/records', '/records')
     visit('/records/[id]', '/records/1')
 
     const router = routerOn('/records/[id]', '/records/1')
@@ -88,16 +90,29 @@ describe('navigateBack', () => {
   })
 })
 
-describe('the close button contract', () => {
-  it('walks back by name even when the caller names nothing', () => {
-    // `AActionCloseButtonHistory` passes `[]` for a button that has nothing to skip beyond its own
-    // route. Nothing about the walk changes -- there is only one walk.
-    visit('/records')
-    visit('/records/[id]', '/records/1')
+describe('a current route with no name', () => {
+  it('is walked past, not stopped at', () => {
+    // A route name is optional in vue-router, so the only way to recognise a nameless current route
+    // is its path. Test that after the walk instead of inside it and the walk stops at the nameless
+    // entry, its result is discarded, and a perfectly good older destination one line up is never
+    // reached -- the user lands on the fallback for no reason.
+    visit('/records', '/records')
+    visit(undefined, '/plain-current')
 
-    const router = routerOn('/records/new')
-    navigateBack(router as never, { skipRouteNames: ['/records/[id]'], fallbackRouteName: '/records' })
+    const router = routerOn(undefined, '/plain-current')
+    navigateBack(router as never, { skipRouteNames: [], fallbackRouteName: '/records' })
 
     expect(router.push).toHaveBeenCalledWith('/records')
+  })
+
+  it('does not swallow a different nameless route', () => {
+    // Two nameless routes are both `undefined`; that is not a reason to treat them as one place.
+    visit('/records', '/records')
+    visit(undefined, '/plain-older')
+
+    const router = routerOn(undefined, '/plain-current')
+    navigateBack(router as never, { skipRouteNames: [], fallbackRouteName: '/records' })
+
+    expect(router.push).toHaveBeenCalledWith('/plain-older')
   })
 })

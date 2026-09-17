@@ -51,15 +51,12 @@ import ACollabManagement from '@/components/collab/components/ACollabManagement.
 import AUserAndTimeTrackingFields from '@/components/AUserAndTimeTrackingFields.vue'
 import AActionCloseButtonComponent from '@/components/buttons/action/AActionCloseButton.vue'
 
+// Aliased rather than exported straight from the SFC so the notice below reaches the generated
+// declarations -- a comment on the re-export is dropped there.
 /**
- * Close button that always navigates to a fixed destination.
- *
- * Not superseded by `AActionCloseButtonHistory`, and not the same thing: that one returns the user
- * to wherever they came from and only falls back to a fixed route when the history offers nothing.
- * Reach for this one when closing must land somewhere specific no matter how the view was reached.
- *
- * Aliased rather than exported straight from the SFC so this notice reaches the generated
- * declarations -- a comment on the re-export is dropped there.
+ * Close button for an explicitly configured destination. Use it when closing should navigate to the
+ * same route regardless of how the view was reached. Use `AActionCloseButtonHistory` when closing
+ * should return to the most recent eligible route.
  */
 const AActionCloseButton = AActionCloseButtonComponent
 import AActionCloseButtonHistory from '@/components/buttons/action/AActionCloseButtonHistory.vue'
@@ -123,10 +120,8 @@ import AImageWidgetMultipleInner from '@/components/damImage/uploadQueue/compone
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
 import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
-/** @deprecated Superseded by `ACropper` in `@anzusystems/common-admin/labs`. */
 import ACropperjs from '@/components/ACropperjs.vue'
 import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
-import type { ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ADatatable from '@/components/datatable/ADatatable.vue'
 import ABooleanSelect from '@/components/ABooleanSelect.vue'
@@ -708,7 +703,6 @@ export {
   ImageMassOperations,
   AImagePublicInput,
   ACropperjs,
-  type ACropperjsExposed,
   DamAssetImageRoiSelect,
   ACollabLockedByUser,
   ACollabCountdown,
