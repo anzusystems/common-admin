@@ -49,7 +49,7 @@ function mountHost(comp: Component, data: Ref<Row[]>, scope: symbol | undefined)
             validationScope: scope,
           },
           // An `item` slot makes rows real inline-edit (collapsible) rows.
-          { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) },
+          { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) }
         )
     },
   })
@@ -60,78 +60,75 @@ function mountHost(comp: Component, data: Ref<Row[]>, scope: symbol | undefined)
 describe.each([
   { name: 'AListEditor', comp: AListEditor as Component },
   { name: 'ASortableListEditor', comp: ASortableListEditor as Component },
-])(
-  'useListEditorScopeValidity — $name flows validity into the consumer scope collector',
-  ({ comp }) => {
-    it('a COLLAPSED invalid row makes the scope collector $invalid (blocks the save)', async () => {
-      const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // one invalid row (empty name)
-      const collector = mountHost(comp, data, SCOPE)
-      await nextTick()
-      await nextTick()
+])('useListEditorScopeValidity — $name flows validity into the consumer scope collector', ({ comp }) => {
+  it('a COLLAPSED invalid row makes the scope collector $invalid (blocks the save)', async () => {
+    const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // one invalid row (empty name)
+    const collector = mountHost(comp, data, SCOPE)
+    await nextTick()
+    await nextTick()
 
-      // Row renders collapsed (no #item form mounted) — the old bug: the collector wouldn't see it.
-      expect(document.querySelectorAll('.a-le-row-body').length).toBe(0)
-      // Oracle: the editor's aggregate validity is in the collector → the save gate blocks.
-      expect(collector.value.$invalid).toBe(true)
-    })
+    // Row renders collapsed (no #item form mounted) — the old bug: the collector wouldn't see it.
+    expect(document.querySelectorAll('.a-le-row-body').length).toBe(0)
+    // Oracle: the editor's aggregate validity is in the collector → the save gate blocks.
+    expect(collector.value.$invalid).toBe(true)
+  })
 
-    it('a collector $touch() reveals the offending row red (opens it, not just a collapsed rail)', async () => {
-      const data = ref<Row[]>([{ id: 1, name: '', position: 1 }])
-      const collector = mountHost(comp, data, SCOPE)
-      await nextTick()
-      await nextTick()
-      expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBe(0)
+  it('a collector $touch() reveals the offending row red (opens it, not just a collapsed rail)', async () => {
+    const data = ref<Row[]>([{ id: 1, name: '', position: 1 }])
+    const collector = mountHost(comp, data, SCOPE)
+    await nextTick()
+    await nextTick()
+    expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBe(0)
 
-      // The save flow's `v$.$touch()` propagates to the editor's scoped child → reveal-on-touch.
-      collector.value.$touch()
-      await nextTick()
-      await nextTick()
-      expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBeGreaterThan(0)
-    })
+    // The save flow's `v$.$touch()` propagates to the editor's scoped child → reveal-on-touch.
+    collector.value.$touch()
+    await nextTick()
+    await nextTick()
+    expect(document.querySelectorAll('.a-le-row--validation-invalid').length).toBeGreaterThan(0)
+  })
 
-    it('a valid row leaves the collector valid', async () => {
-      const data = ref<Row[]>([{ id: 1, name: 'ok', position: 1 }])
-      const collector = mountHost(comp, data, SCOPE)
-      await nextTick()
-      await nextTick()
-      expect(collector.value.$invalid).toBe(false)
-    })
+  it('a valid row leaves the collector valid', async () => {
+    const data = ref<Row[]>([{ id: 1, name: 'ok', position: 1 }])
+    const collector = mountHost(comp, data, SCOPE)
+    await nextTick()
+    await nextTick()
+    expect(collector.value.$invalid).toBe(false)
+  })
 
-    it('backward-compat: WITHOUT validation-scope the editor never touches the collector', async () => {
-      const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // invalid, but not wired
-      const collector = mountHost(comp, data, undefined)
-      await nextTick()
-      await nextTick()
-      // No registration under the scope → the collector is unaffected (identical legacy behavior).
-      expect(collector.value.$invalid).toBe(false)
-    })
+  it('backward-compat: WITHOUT validation-scope the editor never touches the collector', async () => {
+    const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // invalid, but not wired
+    const collector = mountHost(comp, data, undefined)
+    await nextTick()
+    await nextTick()
+    // No registration under the scope → the collector is unaffected (identical legacy behavior).
+    expect(collector.value.$invalid).toBe(false)
+  })
 
-    it('a collapsed invalid row FIXED in place clears the collector (dynamic transition)', async () => {
-      const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // invalid (empty name)
-      const collector = mountHost(comp, data, SCOPE)
-      await nextTick()
-      await nextTick()
-      expect(collector.value.$invalid).toBe(true)
-      // Fix the row while it stays collapsed — the aggregate validity must re-flow and clear the gate.
-      data.value[0].name = 'now valid'
-      await nextTick()
-      await nextTick()
-      expect(collector.value.$invalid).toBe(false)
-    })
+  it('a collapsed invalid row FIXED in place clears the collector (dynamic transition)', async () => {
+    const data = ref<Row[]>([{ id: 1, name: '', position: 1 }]) // invalid (empty name)
+    const collector = mountHost(comp, data, SCOPE)
+    await nextTick()
+    await nextTick()
+    expect(collector.value.$invalid).toBe(true)
+    // Fix the row while it stays collapsed — the aggregate validity must re-flow and clear the gate.
+    data.value[0].name = 'now valid'
+    await nextTick()
+    await nextTick()
+    expect(collector.value.$invalid).toBe(false)
+  })
 
-    it('a collapsed valid row that BECOMES invalid re-blocks the collector', async () => {
-      const data = ref<Row[]>([{ id: 1, name: 'ok', position: 1 }])
-      const collector = mountHost(comp, data, SCOPE)
-      await nextTick()
-      await nextTick()
-      expect(collector.value.$invalid).toBe(false)
-      data.value[0].name = '' // now invalid
-      await nextTick()
-      await nextTick()
-      expect(collector.value.$invalid).toBe(true)
-    })
-  },
-)
+  it('a collapsed valid row that BECOMES invalid re-blocks the collector', async () => {
+    const data = ref<Row[]>([{ id: 1, name: 'ok', position: 1 }])
+    const collector = mountHost(comp, data, SCOPE)
+    await nextTick()
+    await nextTick()
+    expect(collector.value.$invalid).toBe(false)
+    data.value[0].name = '' // now invalid
+    await nextTick()
+    await nextTick()
+    expect(collector.value.$invalid).toBe(true)
+  })
+})
 
 // The nested tree editor is separate: its aggregate validity walks the WHOLE tree (deep collapsed
 // children included) and its reveal must re-expand the offender's ANCESTOR chain, not just open a
@@ -151,9 +148,7 @@ describe('useListEditorScopeValidity — ANestedSortableListEditor flows deep tr
       {
         data: { id: 1, name: 'Parent', position: 1 },
         meta: { dirty: false },
-        children: [
-          { data: { id: 2, name: childName, position: 1 }, meta: { dirty: false }, children: [] },
-        ],
+        children: [{ data: { id: 2, name: childName, position: 1 }, meta: { dirty: false }, children: [] }],
       },
     ],
   })
@@ -162,7 +157,7 @@ describe('useListEditorScopeValidity — ANestedSortableListEditor flows deep tr
   // defineExpose'd component receives the exposed proxy — `.collapse` etc. — unlike VTU's `.vm`).
   function mountNestedHost(
     tree: Ref<NestedTree<TreeRow>>,
-    scope: symbol | undefined,
+    scope: symbol | undefined
   ): { collector: Collector; editor: () => { collapse: (id: ListEditorKey) => void } } {
     let collector: Collector | null = null
     let editorRef: { collapse: (id: ListEditorKey) => void } | null = null
@@ -184,7 +179,7 @@ describe('useListEditorScopeValidity — ANestedSortableListEditor flows deep tr
               validate: treeValidate,
               validationScope: scope,
             },
-            { item: ({ raw }: { raw: TreeRow }) => h('input', { value: raw.name }) },
+            { item: ({ raw }: { raw: TreeRow }) => h('input', { value: raw.name }) }
           )
       },
     })
@@ -265,7 +260,7 @@ describe('useListEditorScopeValidity — warns on :validation-scope without :val
               ...(withValidate ? { validate } : {}),
               validationScope: scope,
             },
-            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) },
+            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) }
           )
       },
     })
@@ -315,7 +310,7 @@ describe('useListEditorScopeValidity — warns on :validation-scope="true" (L2)'
               validate,
               validationScope: scopeVal,
             },
-            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) },
+            { item: ({ raw }: { raw: Row }) => h('input', { value: raw.name }) }
           )
       },
     })

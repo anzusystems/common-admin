@@ -24,7 +24,7 @@ const props = withDefaults(
     configName: 'default',
     selectLicences: () => [],
     listViews: () => [],
-  },
+  }
 )
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss

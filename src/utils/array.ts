@@ -7,8 +7,7 @@ export const arrayItemToggle = <T>(array: Array<T>, value: T) => {
   array.splice(index, 1)
 }
 
-export const arrayToString = (values: Array<string | number>, separator = ', ') =>
-  values.join(separator)
+export const arrayToString = (values: Array<string | number>, separator = ', ') => values.join(separator)
 
 export const arrayFromArgs = <T>(...args: [T[]]) => Array.from(...args)
 

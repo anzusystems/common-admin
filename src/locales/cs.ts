@@ -25,6 +25,7 @@ import listItemDto from '@/locales/cs/common/listItemDto.json'
 import dayOfWeek from '@/locales/cs/common/dayOfWeek.json'
 import collab from '@/locales/cs/common/collab.json'
 import filter from '@/locales/cs/common/filter.json'
+import routeSettings from '@/locales/cs/common/routeSettings.json'
 import apiTimedOut from '@/locales/cs/error/apiTimedOut.json'
 
 export default {
@@ -51,6 +52,7 @@ export default {
     dayOfWeek,
     collab,
     filter,
+    routeSettings,
   },
   $vuetify: vuetify,
   error: {

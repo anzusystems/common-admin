@@ -37,7 +37,7 @@ const props = withDefaults(
     approveRequestBlocked: false,
     addToCachedUsers: undefined,
     fetchCachedUsers: undefined,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -157,11 +157,7 @@ const showModeratorManagementButton = computed(() => {
 })
 
 const showJoinCollaborationDialog = computed(() => {
-  return (
-    !props.isEdit &&
-    alertedOccupiedRooms.value.has(props.collabRoom) &&
-    requestToJoinAccepted.value === null
-  )
+  return !props.isEdit && alertedOccupiedRooms.value.has(props.collabRoom) && requestToJoinAccepted.value === null
 })
 
 const collabUsers = computed(() => {
@@ -169,9 +165,7 @@ const collabUsers = computed(() => {
 })
 
 const requestToJoinCollabTimerDone = (userId: number) => {
-  approveRequestsToCollab.value = approveRequestsToCollab.value.filter(
-    (request) => request.userId !== userId,
-  )
+  approveRequestsToCollab.value = approveRequestsToCollab.value.filter((request) => request.userId !== userId)
   selectedIdsToCollab.value = selectedIdsToCollab.value.filter((id) => id !== userId)
 }
 
@@ -208,7 +202,7 @@ const approveRequestToCollaborate = () => {
     approveRequestToJoinCollabRoom(selectedId)
   })
   approveRequestsToCollab.value = approveRequestsToCollab.value.filter(
-    (request) => !selectedIdsToCollab.value.includes(request.userId),
+    (request) => !selectedIdsToCollab.value.includes(request.userId)
   )
   selectedIdsToCollab.value = []
   emit('approvedRequestToJoinCollabRoom')
@@ -219,7 +213,7 @@ const rejectRequestToCollaborate = () => {
     rejectRequestToJoinCollabRoom(selectedId)
   })
   approveRequestsToCollab.value = approveRequestsToCollab.value.filter(
-    (request) => !selectedIdsToCollab.value.includes(request.userId),
+    (request) => !selectedIdsToCollab.value.includes(request.userId)
   )
   selectedIdsToCollab.value = []
 }

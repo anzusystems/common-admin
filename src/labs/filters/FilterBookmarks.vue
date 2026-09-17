@@ -27,7 +27,7 @@ const props = withDefaults(
     system: string
     subject: string
   }>(),
-  {},
+  {}
 )
 
 const emit = defineEmits<{
@@ -44,12 +44,7 @@ const filterData = inject(FilterDataKey)
 const pagination = inject(DatatablePaginationKey)
 const filterSelected = inject(FilterSelectedKey)
 
-if (
-  isUndefined(pagination) ||
-  isUndefined(filterConfig) ||
-  isUndefined(filterData) ||
-  isUndefined(filterSelected)
-) {
+if (isUndefined(pagination) || isUndefined(filterConfig) || isUndefined(filterData) || isUndefined(filterSelected)) {
   throw new Error('Incorrect provide/inject config.')
 }
 
@@ -73,7 +68,7 @@ const loadBookmarks = async (force = false) => {
       systemResource: systemResource,
     },
     useFetchUserAdminConfigList,
-    force,
+    force
   )
   loading.value = false
 }
@@ -151,7 +146,7 @@ watchThrottled(
     if (newValue === oldValue) return
     calculateVisible(newValue)
   },
-  { throttle: 1000 },
+  { throttle: 1000 }
 )
 
 const items = computed(() => {

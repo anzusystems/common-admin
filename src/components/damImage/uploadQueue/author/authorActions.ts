@@ -1,10 +1,7 @@
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isUndefined } from '@/utils/common'
-import type {
-  DamAuthor,
-  DamAuthorMinimal,
-} from '@/components/damImage/uploadQueue/author/DamAuthor'
+import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import type { Pagination } from '@/labs/filters/pagination'
 import {
   fetchAuthorList,
@@ -50,19 +47,11 @@ export const useAuthorSelectActions = (extSystem: IntegerId) => {
 
   const { executeFetch } = useFetchAuthorList(damClient, extSystem)
 
-  const fetchItems = async (
-    pagination: Ref<Pagination>,
-    filterData: FilterData,
-    filterConfig: FilterConfig,
-  ) => {
+  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
   }
 
-  const fetchItemsMinimal = async (
-    pagination: Ref<Pagination>,
-    filterData: FilterData,
-    filterConfig: FilterConfig,
-  ) => {
+  const fetchItemsMinimal = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     return mapToMinimals(await executeFetch(pagination, filterData, filterConfig))
   }
 

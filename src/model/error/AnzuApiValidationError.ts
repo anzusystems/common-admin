@@ -42,7 +42,7 @@ export const isAnzuApiValidationError = (error: any): error is AnzuApiValidation
 export const hasAnzuApiValidationErrorSpecific = (
   error: AnzuApiValidationError,
   errorName: string,
-  fieldName: string,
+  fieldName: string
 ) => {
   return error.fields.some((field) => field.field === fieldName && field.errors.includes(errorName))
 }
@@ -65,8 +65,7 @@ export class AnzuApiValidationError extends Error {
   constructor(axiosError: AxiosError, system: string, entity: string, cause?: Error, message = '') {
     const fields = resolveResponseData(axiosError, system, entity)
     // Kept low-cardinality on purpose; field details would break Sentry grouping.
-    const resolvedMessage =
-      message || `Validation failed for ${system}.${entity} (${fields.length} fields)`
+    const resolvedMessage = message || `Validation failed for ${system}.${entity} (${fields.length} fields)`
     super(resolvedMessage)
     this.name = 'AnzuApiValidationError'
     this.cause = cause

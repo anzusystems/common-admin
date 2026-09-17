@@ -16,10 +16,7 @@ import type {
   NestedTree,
   NestedTreeNode,
 } from '@/labs/listEditor/types/listEditorTypes'
-import {
-  useNestedListEditor,
-  type NestedViewItem,
-} from '@/labs/listEditor/composables/useNestedListEditor'
+import { useNestedListEditor, type NestedViewItem } from '@/labs/listEditor/composables/useNestedListEditor'
 import type {
   GetKey,
   ListEditorValidationResult,
@@ -124,11 +121,7 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
   moveBottom: (key: ListEditorKey) => boolean
   indent: (key: ListEditorKey) => boolean
   outdent: (key: ListEditorKey) => boolean
-  moveTo: (
-    key: ListEditorKey,
-    targetParentKey: ListEditorKey | null,
-    targetIndex: number,
-  ) => boolean
+  moveTo: (key: ListEditorKey, targetParentKey: ListEditorKey | null, targetIndex: number) => boolean
   recalculatePositions: () => void
 
   /** Escape hatch: a row form (e.g. vuelidate) reports its own validity instead of `validate`. */
@@ -173,7 +166,7 @@ const flatten = <TItem extends Record<string, any>>(tree: NestedTree<TItem>): TI
 
 const walkNodes = <TItem extends Record<string, any>>(
   tree: NestedTree<TItem>,
-  visit: (node: NestedTreeNode<TItem>) => void,
+  visit: (node: NestedTreeNode<TItem>) => void
 ): void => {
   const walk = (nodes: NestedTreeNode<TItem>[]) => {
     for (const n of nodes) {
@@ -185,28 +178,19 @@ const walkNodes = <TItem extends Record<string, any>>(
 }
 
 export function useNestedListEditorController<TItem extends Record<string, any>>(
-  options: UseNestedListEditorControllerOptions<TItem>,
+  options: UseNestedListEditorControllerOptions<TItem>
 ): NestedListEditorHandle<TItem> {
-  const keyField = (typeof options.getKey === 'function' ? null : (options.getKey ?? 'id')) as
-    | keyof TItem
-    | null
+  const keyField = (typeof options.getKey === 'function' ? null : (options.getKey ?? 'id')) as keyof TItem | null
   const keyOf = (item: TItem): ListEditorKey =>
-    typeof options.getKey === 'function'
-      ? options.getKey(item)
-      : (item[keyField as keyof TItem] as ListEditorKey)
+    typeof options.getKey === 'function' ? options.getKey(item) : (item[keyField as keyof TItem] as ListEditorKey)
   const keyFieldName = (keyField ?? 'id') as string
 
   const positionOpt = options.position ?? 'position'
   const managedPosition = positionOpt !== false
   const positionField = (
-    typeof positionOpt === 'object'
-      ? positionOpt.field
-      : positionOpt === false
-        ? 'position'
-        : positionOpt
+    typeof positionOpt === 'object' ? positionOpt.field : positionOpt === false ? 'position' : positionOpt
   ) as string
-  const positionMultiplier =
-    typeof positionOpt === 'object' && positionOpt.multiplier ? positionOpt.multiplier : 1
+  const positionMultiplier = typeof positionOpt === 'object' && positionOpt.multiplier ? positionOpt.multiplier : 1
   const parentField = options.parentField ?? 'parent'
 
   // Two-way bridge to the consumer's tree: the composable's per-op
@@ -277,7 +261,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
       walkNodes(baselineTree.value, (n) => hashes.set(keyOf(n.data), normalize(n.data)))
       baselineHashes.value = hashes
     },
-    { flush: 'sync' },
+    { flush: 'sync' }
   )
 
   const submitted = ref(false)
@@ -290,11 +274,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   // parent-changed signal so a reparent registers even at an unchanged position
   // number. `getChanges().moved` reads meta.dirty, so displaced siblings' new
   // positions are still persisted; `hasPendingMove` (below) feeds the leave guard.
-  const isItemDirty = (
-    node: NestedTreeNode<TItem>,
-    key: ListEditorKey,
-    parentKey: ListEditorKey | null,
-  ): boolean => {
+  const isItemDirty = (node: NestedTreeNode<TItem>, key: ListEditorKey, parentKey: ListEditorKey | null): boolean => {
     if (options.isDirty) {
       const saved = baselineTreeRow(key)
       return options.isDirty(node.data, saved)
@@ -341,7 +321,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
       for (const key of deletedKeys.value) if (live.has(key)) revived.push(key)
       for (const key of revived) deletedKeys.value.delete(key)
     },
-    { immediate: true, deep: true },
+    { immediate: true, deep: true }
   )
 
   const isRowEdited = (key: ListEditorKey): boolean => editedKeys.value.has(key)
@@ -389,7 +369,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     return found
   })
   const hasUnsaved = computed<boolean>(
-    () => unsavedKeys.value.size > 0 || deletedKeys.value.size > 0 || hasPendingMove.value,
+    () => unsavedKeys.value.size > 0 || deletedKeys.value.size > 0 || hasPendingMove.value
   )
   // Distinct unconfirmed changes = union of live dirty keys (added/edited/moved/reparented) and
   // deferred-deletion tombstones. Drives the "N unconfirmed changes" indicator.
@@ -399,10 +379,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     return keys.size
   })
 
-  const resolveValidity = (
-    item: TItem,
-    key: ListEditorKey,
-  ): { invalid: boolean; warning: boolean } => {
+  const resolveValidity = (item: TItem, key: ListEditorKey): { invalid: boolean; warning: boolean } => {
     const registered = registeredValidity.get(key)
     if (registered) return { invalid: !registered(), warning: false }
     if (!options.validate) return { invalid: false, warning: false }
@@ -424,11 +401,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   // Red rail for an invalid row that has been edited, is unsaved (added), or after a save attempt —
   // mirrors the flat controller. The editor suppresses the red while the row is the one being edited,
   // so a still-being-filled row reads amber and only goes red once collapsed. (QA 85050 batch 7)
-  const rowState = (
-    item: TItem,
-    key: ListEditorKey,
-    editing = false,
-  ): ListEditorValidationState => {
+  const rowState = (item: TItem, key: ListEditorKey, editing = false): ListEditorValidationState => {
     const { invalid, warning } = resolveValidity(item, key)
     // See flat controller: red when edited/unsaved/submitted, amber while being filled, red once
     // collapsed; a save attempt (`submitted`) reds it even while open. (QA 85050 batch 7)
@@ -462,8 +435,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     return out
   }
 
-  const getPayload = (): TItem[] =>
-    options.payload ? options.payload(buildPayload()) : buildPayload()
+  const getPayload = (): TItem[] => (options.payload ? options.payload(buildPayload()) : buildPayload())
 
   const getChanges = (): NestedListEditorChanges<TItem> => {
     const added: TItem[] = []
@@ -579,11 +551,8 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   const moveBottom = (key: ListEditorKey): boolean => tree.moveBottom(key) !== null
   const indent = (key: ListEditorKey): boolean => tree.indent(key) !== null
   const outdent = (key: ListEditorKey): boolean => tree.outdent(key) !== null
-  const moveTo = (
-    key: ListEditorKey,
-    targetParentKey: ListEditorKey | null,
-    targetIndex: number,
-  ): boolean => tree.moveTo(key, targetParentKey, targetIndex) !== null
+  const moveTo = (key: ListEditorKey, targetParentKey: ListEditorKey | null, targetIndex: number): boolean =>
+    tree.moveTo(key, targetParentKey, targetIndex) !== null
   const recalculatePositions = (): void => {
     options.set(tree.recalculatePositions(options.get()))
   }

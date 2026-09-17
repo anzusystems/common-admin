@@ -7,20 +7,14 @@ import type { IntegerId } from '@/types/common'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
-import {
-  AssetSelectGridView,
-  useGridView,
-} from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import AssetSelectFilterForm from '@/components/dam/assetSelect/components/filter/AssetSelectFilterForm.vue'
 import { filterAllowedImageWidgetSelectConfigs } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/composables/system/alerts'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
-import type {
-  DamConfigLicenceExtSystemReturnType,
-  DamExtSystemConfig,
-} from '@/types/coreDam/DamConfig'
+import type { DamConfigLicenceExtSystemReturnType, DamExtSystemConfig } from '@/types/coreDam/DamConfig'
 import { cloneDeep, isDefined, isUndefined } from '@/utils/common'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
@@ -61,7 +55,7 @@ const props = withDefaults(
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
     variant: 'default',
-  },
+  }
 )
 
 const sortModel = defineModel<number>('sort', { default: 1, required: false })
@@ -84,8 +78,7 @@ const {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { assetListEnabledFilters, endPointAsset } = useCommonAdminCoreDamOptions(props.configName)
 
-const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } =
-  useDamConfigState(damClient)
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 
 const assetDetailStore = useAssetDetailStore()
 const { asset, dialog } = storeToRefs(assetDetailStore)
@@ -199,9 +192,7 @@ const onCloseEditDialog = async () => {
 }
 
 const imageWidgetUploadConfig = inject(ImageWidgetUploadConfig, undefined)
-const uploadEnabled = computed(
-  () => isDefined(imageWidgetUploadConfig) && isDefined(imageWidgetUploadConfig.value),
-)
+const uploadEnabled = computed(() => isDefined(imageWidgetUploadConfig) && isDefined(imageWidgetUploadConfig.value))
 
 const { uploadQueueDialog } = useUploadQueueDialog()
 const uploadQueuesStore = useUploadQueuesStore()
@@ -209,7 +200,7 @@ const uploadQueuesStore = useUploadQueuesStore()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   props.assetType,
-  (imageWidgetUploadConfig?.value?.extSystemConfig ?? {}) as DamExtSystemConfig,
+  (imageWidgetUploadConfig?.value?.extSystemConfig ?? {}) as DamExtSystemConfig
 )
 
 const uploadQueue = computed(() => {
@@ -247,7 +238,7 @@ watch(
       customFormConfigLoading.value = false
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 watch(selectedLicenceId, (newValue, oldValue) => {

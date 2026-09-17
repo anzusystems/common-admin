@@ -2,10 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, type ComputedRef } from 'vue'
-import {
-  useHasCoarsePointer,
-  useIsTouchDevice,
-} from '@/labs/listEditor/composables/useIsTouchDevice'
+import { useHasCoarsePointer, useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
 
 // QA 85050 U-03 — which reorder affordances a device gets.
 // The two queries are INDEPENDENT: `(any-pointer: fine)` decides the drag handle and
@@ -15,8 +12,7 @@ import {
 const makeMatchMedia = (hasFinePointer: boolean, hasCoarsePointer = false) =>
   vi.fn((q: string) => ({
     matches:
-      (hasFinePointer && q.includes('any-pointer: fine')) ||
-      (hasCoarsePointer && q.includes('any-pointer: coarse')),
+      (hasFinePointer && q.includes('any-pointer: fine')) || (hasCoarsePointer && q.includes('any-pointer: coarse')),
     media: q,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),

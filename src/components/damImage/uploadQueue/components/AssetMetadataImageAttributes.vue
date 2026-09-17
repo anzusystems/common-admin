@@ -8,7 +8,7 @@ withDefaults(
   defineProps<{
     file: AssetFileImage
   }>(),
-  {},
+  {}
 )
 
 const { t } = useI18n()
@@ -39,9 +39,7 @@ const { t } = useI18n()
     <VCol cols="3">
       {{ t('common.damImage.asset.detail.info.field.ratio') }}
     </VCol>
-    <VCol cols="9">
-      {{ file.imageAttributes.ratioWidth }} / {{ file.imageAttributes.ratioHeight }}
-    </VCol>
+    <VCol cols="9"> {{ file.imageAttributes.ratioWidth }} / {{ file.imageAttributes.ratioHeight }} </VCol>
   </VRow>
   <VRow>
     <VCol cols="3">

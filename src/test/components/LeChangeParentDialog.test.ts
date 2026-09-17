@@ -21,11 +21,7 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-const node = (
-  id: number,
-  title: string,
-  children: NestedTreeNode<Item>[] = [],
-): NestedTreeNode<Item> => ({
+const node = (id: number, title: string, children: NestedTreeNode<Item>[] = []): NestedTreeNode<Item> => ({
   data: { id, title },
   children,
   meta: { dirty: false },
@@ -71,9 +67,8 @@ const mountDialog = (sourceKey: number | null, maxDepth = 5, tree = buildTree())
 }
 
 const findItemByText = (text: string): HTMLElement | null =>
-  Array.from(document.querySelectorAll<HTMLElement>('.v-list-item')).find((el) =>
-    el.textContent?.includes(text),
-  ) ?? null
+  Array.from(document.querySelectorAll<HTMLElement>('.v-list-item')).find((el) => el.textContent?.includes(text)) ??
+  null
 
 const isDisabledItem = (text: string): boolean => {
   const el = findItemByText(text)
@@ -86,9 +81,7 @@ const isDisabledItem = (text: string): boolean => {
 }
 
 const findButton = (text: string): HTMLElement | null =>
-  Array.from(document.querySelectorAll<HTMLElement>('button')).find((b) =>
-    b.textContent?.trim().includes(text),
-  ) ?? null
+  Array.from(document.querySelectorAll<HTMLElement>('button')).find((b) => b.textContent?.trim().includes(text)) ?? null
 
 describe('LeChangeParentDialog', () => {
   it('renders the title and the candidate list', async () => {
@@ -165,9 +158,9 @@ describe('LeChangeParentDialog', () => {
     expect(document.body.textContent).toContain('At the end')
 
     // Pick "first"
-    const firstRadio = Array.from(
-      document.querySelectorAll<HTMLInputElement>('input[type="radio"]'),
-    ).find((r) => r.value === 'first')
+    const firstRadio = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="radio"]')).find(
+      (r) => r.value === 'first'
+    )
     firstRadio?.click()
     await nextTick()
 

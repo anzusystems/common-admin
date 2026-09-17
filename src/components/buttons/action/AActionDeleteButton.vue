@@ -42,7 +42,7 @@ const props = withDefaults(
     color: undefined,
     size: 36,
     guard: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'deleteRecord'): void

@@ -18,8 +18,7 @@ afterEach(() => {
   mounted = null
 })
 
-const innerRow = (): Element | null =>
-  document.querySelector('.a-sortable-list-editor--embedded .a-le-row')
+const innerRow = (): Element | null => document.querySelector('.a-sortable-list-editor--embedded .a-le-row')
 
 // A save runs the OUTER editor's validateAll(); it must cascade to embedded children so their
 // invalid rows also reveal red (the quiz bug: question turned red but its answers stayed amber).
@@ -57,9 +56,9 @@ describe('ASortableListEditor — validateAll cascades to embedded children', ()
                     embedded: true,
                     validate: titleRequired,
                   },
-                  { item: () => h('div', { class: 'inline-form' }, 'form') },
+                  { item: () => h('div', { class: 'inline-form' }, 'form') }
                 ),
-            },
+            }
           )
       },
     })
@@ -127,7 +126,7 @@ describe('ASortableListEditor — embedded child pending contributes to the pare
                       embedded: true,
                     })
                   : h('div', 'q2'),
-            },
+            }
           )
       },
     })
@@ -147,8 +146,7 @@ describe('ASortableListEditor — embedded child pending contributes to the pare
     await nextTick()
     await nextTick()
 
-    const applyBtn = () =>
-      mounted!.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))
+    const applyBtn = () => mounted!.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))
     // No pending yet → Apply disabled.
     expect(applyBtn()?.attributes('disabled')).toBeDefined()
 

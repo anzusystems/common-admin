@@ -38,9 +38,7 @@ const onDialogConfirm = async () => {
           v-if="dialog"
           data-cy="delete-panel"
         >
-          <ADialogToolbar @on-cancel="dialog = false">
-            Example dialog, like embed dialog
-          </ADialogToolbar>
+          <ADialogToolbar @on-cancel="dialog = false"> Example dialog, like embed dialog </ADialogToolbar>
           <VCardText>
             <AImagePublicInput
               ref="imagePublicInputComponent"

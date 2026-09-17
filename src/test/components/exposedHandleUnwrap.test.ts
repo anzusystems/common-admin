@@ -2,10 +2,7 @@ import { describe, it, expect, expectTypeOf } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h, nextTick, onMounted, ref, unref, useTemplateRef } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
-import type {
-  ExposedListEditorHandle,
-  ListEditorHandle,
-} from '@/labs/listEditor/composables/useListEditorController'
+import type { ExposedListEditorHandle, ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
 
 interface Row {
   id: number

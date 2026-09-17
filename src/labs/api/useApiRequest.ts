@@ -1,20 +1,11 @@
-import {
-  AnzuApiResponseCodeError,
-  isAnzuApiResponseCodeError,
-} from '@/model/error/AnzuApiResponseCodeError'
-import {
-  AnzuApiValidationError,
-  axiosErrorResponseHasValidationData,
-} from '@/model/error/AnzuApiValidationError'
+import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosRequestConfig, type Method } from 'axios'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
-import {
-  AnzuApiForbiddenError,
-  axiosErrorResponseIsForbidden,
-} from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -45,19 +36,8 @@ export type UseApiRequestParams = {
   silentConsoleError?: boolean
 }
 
-export const useApiRequest = <R, T = R>(
-  params: UseApiRequestParams,
-): UseApiAnyRequestReturnType<R, T> => {
-  const {
-    client,
-    method,
-    system,
-    entity,
-    urlTemplate,
-    urlParams,
-    options = {},
-    silentConsoleError = false,
-  } = params
+export const useApiRequest = <R, T = R>(params: UseApiRequestParams): UseApiAnyRequestReturnType<R, T> => {
+  const { client, method, system, entity, urlTemplate, urlParams, options = {}, silentConsoleError = false } = params
 
   // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
   // leaving both unabortable.
@@ -132,8 +112,7 @@ export const useApiRequest = <R, T = R>(
       }
 
       if (axios.isAxiosError(err)) {
-        if (!silentConsoleError)
-          console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
+        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 

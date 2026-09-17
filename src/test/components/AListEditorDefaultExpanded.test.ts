@@ -43,9 +43,8 @@ const mountEditor = (defaultExpanded: boolean, extra: Record<string, unknown> = 
             ...extra,
           },
           {
-            item: ({ raw }: { raw: Item }) =>
-              h('input', { class: 'edit-input', 'data-id': raw.id, value: raw.title }),
-          },
+            item: ({ raw }: { raw: Item }) => h('input', { class: 'edit-input', 'data-id': raw.id, value: raw.title }),
+          }
         )
     },
   })
@@ -137,7 +136,7 @@ describe('AListEditor — defaultExpanded', () => {
                 observedEditing.push(props.editing)
                 return h('div', 'form')
               },
-            },
+            }
           )
       },
     })

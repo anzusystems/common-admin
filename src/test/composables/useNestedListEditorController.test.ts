@@ -39,7 +39,7 @@ const tree = (): NestedTree<Row> => ({
 
 const setup = (
   initial: NestedTree<Row> = tree(),
-  opts: Partial<Parameters<typeof useNestedListEditorController<Row>>[0]> = {},
+  opts: Partial<Parameters<typeof useNestedListEditorController<Row>>[0]> = {}
 ) => {
   const store = ref<NestedTree<Row>>(JSON.parse(JSON.stringify(initial)) as NestedTree<Row>)
   const h = useNestedListEditorController<Row>({
@@ -166,9 +166,7 @@ describe('useNestedListEditorController', () => {
     // unsaved + appear in the change-set + carry the new parent in the payload.
     const t: NestedTree<Row> = {
       children: [
-        node({ id: 1, title: 'A', position: 1, parent: null }, [
-          node({ id: 11, title: 'B', position: 1, parent: 1 }),
-        ]),
+        node({ id: 1, title: 'A', position: 1, parent: null }, [node({ id: 11, title: 'B', position: 1, parent: 1 })]),
         node({ id: 2, title: 'C', position: 2, parent: null }),
       ],
       meta: { dirty: false },
@@ -195,7 +193,7 @@ describe('useNestedListEditorController', () => {
         children: [node({ id: 1, title: '', position: 1, parent: null })],
         meta: { dirty: false },
       },
-      { validate: (r) => r.title.length > 0 },
+      { validate: (r) => r.title.length > 0 }
     )
     expect(bad.h.hasErrors.value).toBe(true)
     expect(bad.h.invalidKeys.value.has(1)).toBe(true)
@@ -204,7 +202,7 @@ describe('useNestedListEditorController', () => {
         children: [node({ id: 1, title: 'x', position: 1, parent: null })],
         meta: { dirty: false },
       },
-      { validate: () => ({ valid: true, state: 'warning' }) },
+      { validate: () => ({ valid: true, state: 'warning' }) }
     )
     expect(warn.h.hasErrors.value).toBe(false)
   })
@@ -215,7 +213,7 @@ describe('useNestedListEditorController', () => {
         children: [node({ id: 1, title: '', position: 1, parent: null })],
         meta: { dirty: false },
       },
-      { validate: (r) => r.title.length > 0 },
+      { validate: (r) => r.title.length > 0 }
     )
     const row = { id: 1, title: '', position: 1, parent: null }
     expect(h.rowState(row, 1)).toBeNull() // invalid on load, but untouched → no red
@@ -231,7 +229,7 @@ describe('useNestedListEditorController', () => {
         children: [node({ id: 1, title: 'a', position: 1, parent: null })],
         meta: { dirty: false },
       },
-      { validate: (r) => r.title.length > 0 },
+      { validate: (r) => r.title.length > 0 }
     )
     const row = store.value.children[0].data
     expect(h.rowState(row, 1)).toBeNull() // clean + valid
@@ -246,7 +244,7 @@ describe('useNestedListEditorController', () => {
         children: [node({ id: 1, title: 'x', position: 1, parent: null })],
         meta: { dirty: false },
       },
-      { validate: () => ({ valid: true, state: 'warning' }) },
+      { validate: () => ({ valid: true, state: 'warning' }) }
     )
     const row = { id: 1, title: 'x', position: 1, parent: null }
     expect(h.rowState(row, 1)).toBe('warning') // clean, untouched, never submitted

@@ -5,10 +5,7 @@ import type {
   SortableItemNewPositions,
   SortableItemWithParentDataAware,
 } from '@/components/sortable/sortableUtils'
-import type {
-  SortableNested,
-  SortableNestedItem,
-} from '@/components/sortable/sortableNestedActions'
+import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 
 export type {
   SortableItemDataAware,

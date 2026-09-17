@@ -166,7 +166,7 @@ describe('ASortableListEditor — allowEditInReorder', () => {
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form body'),
-            },
+            }
           )
       },
     })
@@ -206,7 +206,7 @@ describe('ASortableListEditor — allowEditInReorder', () => {
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form body'),
-            },
+            }
           )
       },
     })

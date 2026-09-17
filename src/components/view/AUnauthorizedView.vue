@@ -13,7 +13,7 @@ withDefaults(
   {
     returnRouteName: undefined,
     returnUrl: undefined,
-  },
+  }
 )
 
 const { t } = useI18n()

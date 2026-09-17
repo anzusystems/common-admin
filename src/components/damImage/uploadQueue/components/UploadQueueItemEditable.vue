@@ -41,7 +41,7 @@ const props = withDefaults(
   {
     mainFileSingleUseEnabled: true,
     disableDoneAnimation: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -158,28 +158,22 @@ const refresh = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 
 watch(
   () => props.item.status,
   async (newValue) => {
-    if (
-      newValue === UploadQueueItemStatus.Uploading ||
-      newValue === UploadQueueItemStatus.Processing
-    ) {
+    if (newValue === UploadQueueItemStatus.Uploading || newValue === UploadQueueItemStatus.Processing) {
       clearTimeout(refreshTimer.value)
       refreshTimer.value = setTimeout(() => {
-        if (
-          newValue === UploadQueueItemStatus.Uploading ||
-          newValue === UploadQueueItemStatus.Processing
-        ) {
+        if (newValue === UploadQueueItemStatus.Uploading || newValue === UploadQueueItemStatus.Processing) {
           showRefresh.value = true
         }
       }, SHOW_REFRESH_AFTER_SECONDS * 1000)
@@ -189,7 +183,7 @@ watch(
       showRefresh.value = false
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 onUnmounted(() => {

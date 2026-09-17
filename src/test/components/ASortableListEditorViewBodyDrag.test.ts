@@ -36,7 +36,7 @@ const mountEditor = () => {
             position: 'position',
             compactField: 'title',
           },
-          { 'view-body': () => h('div', { class: 'tiles' }, 'tiles') },
+          { 'view-body': () => h('div', { class: 'tiles' }, 'tiles') }
         )
     },
   })

@@ -9,19 +9,13 @@ import {
   type Ref,
   type ShallowUnwrapRef,
 } from 'vue'
-import type {
-  ListEditorKey,
-  ListEditorValidationState,
-  PositionHint,
-} from '@/labs/listEditor/types/listEditorTypes'
+import type { ListEditorKey, ListEditorValidationState, PositionHint } from '@/labs/listEditor/types/listEditorTypes'
 import { preservePositionValues, renumberPositions } from '@/labs/listEditor/utils/positions'
 import { nextListEditorTempId } from '@/labs/listEditor/utils/tempId'
 import { cloneDeep } from '@/utils/common'
 
 /** Per-row validity. `true` (or `{ valid: true }`) = VALID. Only `valid: false` blocks save. */
-export type ListEditorValidationResult =
-  | boolean
-  | { valid: boolean; state?: 'invalid' | 'warning'; message?: string }
+export type ListEditorValidationResult = boolean | { valid: boolean; state?: 'invalid' | 'warning'; message?: string }
 
 export type GetKey<TItem> = keyof TItem | ((item: TItem) => ListEditorKey)
 /**
@@ -118,10 +112,7 @@ export interface ListEditorHandle<TItem extends Record<string, any>> {
   /** Discard unsaved edits back to the last committed baseline (or given items). */
   reset: (items?: TItem[]) => void
   addItem: (item?: TItem, hint?: PositionHint) => ListEditorKey | undefined
-  updateItem: (
-    key: ListEditorKey,
-    next: TItem | Partial<TItem> | ((current: TItem) => TItem),
-  ) => void
+  updateItem: (key: ListEditorKey, next: TItem | Partial<TItem> | ((current: TItem) => TItem)) => void
   /** Remove a row. `trackDeleted: false` (immediate mode) skips the deferred-deletion tombstone. */
   deleteItem: (key: ListEditorKey, opts?: { trackDeleted?: boolean }) => void
   /** Clear a deferred-deletion tombstone (the caller re-inserts the row, e.g. reorder Cancel). */
@@ -140,9 +131,7 @@ export interface ListEditorHandle<TItem extends Record<string, any>> {
  * never `handle.hasUnsaved.value` (that is `undefined`). Type your `useTemplateRef` / collected-ref
  * maps with this so a stray `.value` is a compile error instead of a silently-dead guard/save-gate.
  */
-export type ExposedListEditorHandle<TItem extends Record<string, any>> = ShallowUnwrapRef<
-  ListEditorHandle<TItem>
->
+export type ExposedListEditorHandle<TItem extends Record<string, any>> = ShallowUnwrapRef<ListEditorHandle<TItem>>
 
 /**
  * Component-owned state controller for the list editors (v2). Owns row keys,
@@ -152,29 +141,19 @@ export type ExposedListEditorHandle<TItem extends Record<string, any>> = Shallow
  * consumer via `useListEditor()` + `:editor` so the state survives unmount/remount.
  */
 export function useListEditorController<TItem extends Record<string, any>>(
-  options: UseListEditorControllerOptions<TItem>,
+  options: UseListEditorControllerOptions<TItem>
 ): ListEditorHandle<TItem> {
-  const keyField = (typeof options.getKey === 'function' ? null : (options.getKey ?? 'id')) as
-    | keyof TItem
-    | null
+  const keyField = (typeof options.getKey === 'function' ? null : (options.getKey ?? 'id')) as keyof TItem | null
   const keyOf = (item: TItem): ListEditorKey =>
-    typeof options.getKey === 'function'
-      ? options.getKey(item)
-      : (item[keyField as keyof TItem] as ListEditorKey)
+    typeof options.getKey === 'function' ? options.getKey(item) : (item[keyField as keyof TItem] as ListEditorKey)
 
   const positionOpt = options.position ?? 'position'
   const managedPosition = positionOpt !== false
   const positionField = (
-    typeof positionOpt === 'object'
-      ? positionOpt.field
-      : positionOpt === false
-        ? 'position'
-        : positionOpt
+    typeof positionOpt === 'object' ? positionOpt.field : positionOpt === false ? 'position' : positionOpt
   ) as string
-  const positionMultiplier =
-    typeof positionOpt === 'object' && positionOpt.multiplier ? positionOpt.multiplier : 1
-  const positionStrategy: PositionStrategy =
-    (typeof positionOpt === 'object' && positionOpt.strategy) || 'renumber'
+  const positionMultiplier = typeof positionOpt === 'object' && positionOpt.multiplier ? positionOpt.multiplier : 1
+  const positionStrategy: PositionStrategy = (typeof positionOpt === 'object' && positionOpt.strategy) || 'renumber'
   const positionOverrides: Partial<Record<PositionAction, PositionStrategy>> =
     (typeof positionOpt === 'object' && positionOpt.strategyOverrides) || {}
 
@@ -217,7 +196,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
       for (const r of baselineRows.value) map.set(keyOf(r), normalize(r))
       baselineHashes.value = map
     },
-    { flush: 'sync' },
+    { flush: 'sync' }
   )
   // Ensure every row has a resolvable, UNIQUE key before the first baseline
   // capture. Server rows lacking the key field (e.g. no `id` and no custom
@@ -297,7 +276,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
         deletedRows.value = deletedRows.value.filter((r) => !live.has(keyOf(r)))
       }
     },
-    { immediate: true, deep: true },
+    { immediate: true, deep: true }
   )
 
   const isRowEdited = (key: ListEditorKey): boolean => editedKeys.value.has(key)
@@ -312,9 +291,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
   })
 
   const isUnsaved = (key: ListEditorKey): boolean => unsavedKeys.value.has(key)
-  const hasUnsaved = computed<boolean>(
-    () => unsavedKeys.value.size > 0 || deletedRows.value.length > 0,
-  )
+  const hasUnsaved = computed<boolean>(() => unsavedKeys.value.size > 0 || deletedRows.value.length > 0)
 
   // Count of DISTINCT unconfirmed changes = union of live dirty keys (added / edited / moved) and
   // deferred-deletion tombstones. A key that is both live and tombstoned (delete-then-re-add) counts
@@ -326,10 +303,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     return keys.size
   })
 
-  const resolveValidity = (
-    item: TItem,
-    key: ListEditorKey,
-  ): { invalid: boolean; warning: boolean } => {
+  const resolveValidity = (item: TItem, key: ListEditorKey): { invalid: boolean; warning: boolean } => {
     const registered = registeredValidity.get(key)
     if (registered) return { invalid: !registered(), warning: false }
     if (!options.validate) return { invalid: false, warning: false }
@@ -352,11 +326,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
   // field's vuelidate `$dirty`) or an explicit validateAll() — so a freshly added still-untouched
   // row stays amber (not red) and a loaded-but-invalid row doesn't light up before interaction,
   // while a save attempt reveals every offender (mounted or collapsed).
-  const rowState = (
-    item: TItem,
-    key: ListEditorKey,
-    editing = false,
-  ): ListEditorValidationState => {
+  const rowState = (item: TItem, key: ListEditorKey, editing = false): ListEditorValidationState => {
     const { invalid, warning } = resolveValidity(item, key)
     // Red rail for an invalid row that is edited, unsaved (added), or after a save attempt. A row being
     // filled in reads amber (not red) and goes red once collapsed — but a save attempt (`submitted`,
@@ -414,7 +384,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
       const key = options.commitKey
         ? options.commitKey(
             item,
-            baselineRows.value.find((r) => keyOf(r) === keyOf(item)),
+            baselineRows.value.find((r) => keyOf(r) === keyOf(item))
           )
         : keyOf(item)
       if (key === undefined || key === null) {
@@ -440,8 +410,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     submitted.value = false
   }
 
-  const indexOfKey = (arr: TItem[], key: ListEditorKey): number =>
-    arr.findIndex((x) => keyOf(x) === key)
+  const indexOfKey = (arr: TItem[], key: ListEditorKey): number => arr.findIndex((x) => keyOf(x) === key)
 
   const addItem = (item?: TItem, hint?: PositionHint): ListEditorKey | undefined => {
     const row = item ?? options.factory?.()
@@ -459,10 +428,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     return keyOf(row)
   }
 
-  const updateItem = (
-    key: ListEditorKey,
-    next: TItem | Partial<TItem> | ((current: TItem) => TItem),
-  ): void => {
+  const updateItem = (key: ListEditorKey, next: TItem | Partial<TItem> | ((current: TItem) => TItem)): void => {
     const arr = [...options.get()]
     const i = indexOfKey(arr, key)
     if (i === -1) return

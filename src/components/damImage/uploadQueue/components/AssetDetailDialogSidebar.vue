@@ -39,7 +39,7 @@ const props = withDefaults(
     dataCy: undefined,
     configName: 'default',
     uploadLicence: undefined,
-  },
+  }
 )
 
 const { t } = useI18n()

@@ -24,16 +24,14 @@ const SERIALIZE_FORMAT = 'YYYY-MM-DDTHH:mm:ss'
 const DATE_TEXT_FORMAT = 'DD.MM.YYYY'
 const DATETIME_TEXT_FORMATS = ['DD.MM.YYYY HH:mm', DATE_TEXT_FORMAT]
 
-export const placeholderFor = (type: DatetimePickerType) =>
-  type === 'date' ? 'dd.mm.yyyy' : 'dd.mm.yyyy hh:mm'
+export const placeholderFor = (type: DatetimePickerType) => (type === 'date' ? 'dd.mm.yyyy' : 'dd.mm.yyyy hh:mm')
 
-export const displayFormatFor = (type: DatetimePickerType) =>
-  type === 'date' ? DATE_TEXT_FORMAT : 'DD.MM.YYYY HH:mm'
+export const displayFormatFor = (type: DatetimePickerType) => (type === 'date' ? DATE_TEXT_FORMAT : 'DD.MM.YYYY HH:mm')
 
 export const parseModel = (
   value: DatetimeUTC | null | undefined,
   type: DatetimePickerType,
-  lastMinuteMoment = false,
+  lastMinuteMoment = false
 ): dayjs.Dayjs | null => {
   // `dayjs.utc(undefined)` is now, not Invalid.
   if (isNull(value) || isUndefined(value) || value.length === 0) return null
@@ -49,11 +47,7 @@ export const parseModel = (
   return lastMinuteMoment ? instant.millisecond(999) : instant.millisecond(0)
 }
 
-export const parseTyped = (
-  text: string,
-  type: DatetimePickerType,
-  keepSeconds = 0,
-): dayjs.Dayjs | null => {
+export const parseTyped = (text: string, type: DatetimePickerType, keepSeconds = 0): dayjs.Dayjs | null => {
   if (type === 'date') {
     // The format has to stay a string. `dayjs.utc(text, [format])` takes the array branch of
     // customParseFormat, which calls the plain factory and drops UTC, so a typed day comes back
@@ -77,20 +71,13 @@ export const formatDisplay = (internal: dayjs.Dayjs, type: DatetimePickerType) =
 export const toCalendarDate = (internal: dayjs.Dayjs, type: DatetimePickerType): Date =>
   type === 'date' ? new Date(internal.year(), internal.month(), internal.date()) : internal.toDate()
 
-export const applyCalendarDate = (
-  internal: dayjs.Dayjs,
-  picked: Date,
-  type: DatetimePickerType,
-): dayjs.Dayjs => {
+export const applyCalendarDate = (internal: dayjs.Dayjs, picked: Date, type: DatetimePickerType): dayjs.Dayjs => {
   if (type === 'date') {
     return dayjs.utc(Date.UTC(picked.getFullYear(), picked.getMonth(), picked.getDate()))
   }
   // Year and month first: setting the day of an adjacent month onto a shorter month overflows
   // (8 Feb + day 31 lands on 3 Mar, which the following month set then carries into January).
-  return internal
-    .set('year', picked.getFullYear())
-    .set('month', picked.getMonth())
-    .set('date', picked.getDate())
+  return internal.set('year', picked.getFullYear()).set('month', picked.getMonth()).set('date', picked.getDate())
 }
 
 /** Today's calendar day, taken from the local clock - the UTC day is yesterday or tomorrow for a part of it. */
@@ -111,8 +98,5 @@ export const emptyBaseValue = (type: DatetimePickerType, lastMinuteMoment = fals
 }
 
 /** By second, as `lastMinuteMoment` holds ms at 999; by day where the time carries no meaning. */
-export const isSameValue = (
-  value: dayjs.Dayjs,
-  other: dayjs.Dayjs | null,
-  type: DatetimePickerType,
-): boolean => (isNull(other) ? false : value.isSame(other, type === 'date' ? 'day' : 'second'))
+export const isSameValue = (value: dayjs.Dayjs, other: dayjs.Dayjs | null, type: DatetimePickerType): boolean =>
+  isNull(other) ? false : value.isSame(other, type === 'date' ? 'day' : 'second')

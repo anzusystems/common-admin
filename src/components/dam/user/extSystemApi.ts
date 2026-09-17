@@ -27,17 +27,5 @@ export const useFetchDamExtSystemList = (client: () => AxiosInstance) =>
 /**
  * @deprecated
  */
-export const fetchDamExtSystemList = (
-  client: () => AxiosInstance,
-  pagination: Pagination,
-  filterBag: FilterBag,
-) =>
-  apiFetchList<DamExtSystem[]>(
-    client,
-    END_POINT,
-    {},
-    pagination,
-    filterBag,
-    SYSTEM_CORE_DAM,
-    ENTITY,
-  )
+export const fetchDamExtSystemList = (client: () => AxiosInstance, pagination: Pagination, filterBag: FilterBag) =>
+  apiFetchList<DamExtSystem[]>(client, END_POINT, {}, pagination, filterBag, SYSTEM_CORE_DAM, ENTITY)

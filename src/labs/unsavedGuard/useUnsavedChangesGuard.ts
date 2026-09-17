@@ -1,12 +1,4 @@
-import {
-  computed,
-  getCurrentInstance,
-  onBeforeUnmount,
-  ref,
-  watch,
-  type ComputedRef,
-  type Ref,
-} from 'vue'
+import { computed, getCurrentInstance, onBeforeUnmount, ref, watch, type ComputedRef, type Ref } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import {
   provideUnsavedSectionRegistry,
@@ -113,9 +105,7 @@ const resolveBool = (v: boolean | Ref<boolean> | undefined, fallback: boolean): 
   return v.value
 }
 
-export function useUnsavedChangesGuard(
-  options: UseUnsavedChangesGuardOptions,
-): UseUnsavedChangesGuardApi {
+export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions): UseUnsavedChangesGuardApi {
   // Provide a section registry so descendants can name their dirty sections
   // via `useUnsavedSection`. The dialog reads `dirtyLabels` from this.
   const sectionRegistry = provideUnsavedSectionRegistry()
@@ -133,9 +123,7 @@ export function useUnsavedChangesGuard(
   }
 
   const hasUnsavedChanges = computed<boolean>(
-    () =>
-      options.sources.some((s) => isTruthySource(s.value)) ||
-      sectionRegistry.dirtyLabels.value.length > 0,
+    () => options.sources.some((s) => isTruthySource(s.value)) || sectionRegistry.dirtyLabels.value.length > 0
   )
 
   const promptOpen = ref<boolean>(false)

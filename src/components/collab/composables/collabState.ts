@@ -14,17 +14,13 @@ import { useCollabGatheringBufferDataEventBus } from '@/components/collab/compos
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 
 const collabConnected = ref(true)
-const collabSocket: Ref<
-  Socket<CollabServerToClientEvents, CollabClientToServerEvents> | undefined
-> = ref()
+const collabSocket: Ref<Socket<CollabServerToClientEvents, CollabClientToServerEvents> | undefined> = ref()
 const collabRoomInfoState = reactive(new Map<CollabRoom, CollabRoomInfo>())
 // Plain, not reactive: bookkeeping for the map above, nothing renders from it.
 let collabRoomInfoWriteCounter = 0
 const collabRoomInfoWriteSeq = new Map<CollabRoom, number>()
 const collabFieldLocksState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldLock>>())
-const collabFieldDataBufferState = reactive(
-  new Map<CollabRoom, Map<CollabFieldName, CollabFieldData>>(),
-)
+const collabFieldDataBufferState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldData>>())
 
 export function useCollabState() {
   const { collabOptions } = useCommonAdminCollabOptions()

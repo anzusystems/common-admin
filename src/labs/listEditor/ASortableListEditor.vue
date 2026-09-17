@@ -15,10 +15,7 @@ import {
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
-import {
-  useHasCoarsePointer,
-  useIsTouchDevice,
-} from '@/labs/listEditor/composables/useIsTouchDevice'
+import { useHasCoarsePointer, useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
 import { useKeyboardNav } from '@/labs/listEditor/composables/useKeyboardNav'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import {
@@ -52,11 +49,7 @@ import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
 import LeStatus from '@/labs/listEditor/internal/LeStatus.vue'
 import LeUnsavedLabel from '@/labs/listEditor/internal/LeUnsavedLabel.vue'
 import LeDragHandle from '@/labs/listEditor/internal/LeDragHandle.vue'
-import {
-  DRAG_GHOST_CLASS,
-  DRAG_CHOSEN_CLASS,
-  DRAG_CLASS,
-} from '@/labs/listEditor/internal/constants'
+import { DRAG_GHOST_CLASS, DRAG_CHOSEN_CLASS, DRAG_CLASS } from '@/labs/listEditor/internal/constants'
 import { cloneDeep } from '@/utils/common'
 import { stringToInt } from '@/utils/string'
 import type {
@@ -220,8 +213,13 @@ export interface Props<TItem extends Record<string, any>> {
   loading?: boolean
   error?: string | null
 
+  /** Heading above the list. A ready translated string, like every text prop here. */
   title?: string | null
 
+  /**
+   * Field shown in a collapsed row when no `#item-compact` slot is given. A dotted path reads
+   * through nested objects (`texts.title`); a path that runs into nothing renders empty.
+   */
   compactField?: string | null
   statusField?: string | null
   twoRows?: 'never' | 'mobile' | 'always'
@@ -232,11 +230,19 @@ export interface Props<TItem extends Record<string, any>> {
   showEditButton?: boolean
   showAddAfterAction?: boolean
 
+  /** Label of the add button. A ready translated string; omit it for the library's own wording. */
   addLabel?: string | null
+  /** Heading of the empty state. A ready translated string. */
   emptyTitle?: string | null
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
+  /**
+   * Disable unsaved-state tracking — no dirty markers, never reads as unsaved. For a list that is a
+   * VIEW of data owned elsewhere (a display cache rebuilt from a parent's field, say): nothing in
+   * such a component can ever clear an amber row, so it must not raise one. Mirrors `AListEditor`.
+   */
+  disableUnsaved?: boolean
   deleteConfirmTitle?: string | null
   deleteConfirmText?: string | null
   /**
@@ -305,6 +311,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   emptyTitle: null,
   disableRowClick: false,
   disableDeleteConfirm: false,
+  disableUnsaved: false,
   deleteConfirmTitle: null,
   deleteConfirmText: null,
   deleteMode: 'deferred',
@@ -381,11 +388,8 @@ const controllerOptions: ListEditorStateBindings<TItem> = {
 // Precedence: an explicitly lifted `:editor` wins; then a `state-key`'d entry persisted in the
 // nearest ancestor editor's row-state scope (built from the options above, rebound to this instance
 // on every remount); else this component owns the controller — today's behaviour, unchanged.
-const stateEntry = props.editor
-  ? null
-  : useListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
-const controller =
-  props.editor ?? stateEntry?.handle ?? useListEditorController<TItem>(controllerOptions)
+const stateEntry = props.editor ? null : useListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
+const controller = props.editor ?? stateEntry?.handle ?? useListEditorController<TItem>(controllerOptions)
 
 // Local mirror of the controller's key resolution so rendered rows key the same
 // way the controller tracks them (v2 spec point 7).
@@ -397,9 +401,7 @@ const getKeyOpt = props.getKey ?? 'id'
 // editor is itself persisted, the scope comes from its own entry — so the chain holds at any depth.
 const rowStateScope = provideListEditorStateScope(stateEntry?.childScope ?? null)
 const keyOf = (item: TItem): ListEditorKey =>
-  typeof getKeyOpt === 'function'
-    ? getKeyOpt(item)
-    : (item[getKeyOpt as keyof TItem] as ListEditorKey)
+  typeof getKeyOpt === 'function' ? getKeyOpt(item) : (item[getKeyOpt as keyof TItem] as ListEditorKey)
 
 // Managed position field (for the row position view field + move-to-position
 // dialog). Mirrors the controller's resolution.
@@ -418,7 +420,7 @@ const viewItems = computed<ListViewItem<TItem>[]>(() =>
     index,
     raw,
     position: raw[positionFieldName.value] as number | undefined,
-  })),
+  }))
 )
 
 // Drop the persisted controllers of rows that no longer exist. `post` so the removed row's subtree
@@ -426,7 +428,7 @@ const viewItems = computed<ListViewItem<TItem>[]>(() =>
 watch(
   () => viewItems.value.map((vi) => String(vi.key)).join('|'),
   () => rowStateScope.retainOwners(viewItems.value.map((vi) => vi.key)),
-  { flush: 'post' },
+  { flush: 'post' }
 )
 
 const expandedKeys = ref<Set<ListEditorKey>>(new Set())
@@ -457,34 +459,24 @@ const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 const isInlineEdit = computed(() => !props.chips && !!slots.item)
 const hasReadonlyDetail = computed(() => !props.chips && !!slots['item-readonly'])
 
-const {
-  editingKeys,
-  editingSnapshots,
-  clearEditing,
-  beginEdit,
-  cancelEdit,
-  commitEdit,
-  closeEdit,
-  requestAutoOpen,
-} = useInlineEditing<TItem, ListViewItem<TItem>>({
-  rowsContainer,
-  rowSelector: '.a-le-row',
-  isInlineEdit,
-  restoreSnapshot: (key, data) => controller.updateItem(key, data),
-  watchKeys: () => modelValue.value.map((it) => keyOf(it)),
-  findEntry: (key) => {
-    const hit = modelValue.value.find((it) => keyOf(it) === key)
-    return hit ? { data: hit } : null
-  },
-  afterAutoOpen: (key) => {
-    expandedKeys.value.delete(key)
-  },
-})
+const { editingKeys, editingSnapshots, clearEditing, beginEdit, cancelEdit, commitEdit, closeEdit, requestAutoOpen } =
+  useInlineEditing<TItem, ListViewItem<TItem>>({
+    rowsContainer,
+    rowSelector: '.a-le-row',
+    isInlineEdit,
+    restoreSnapshot: (key, data) => controller.updateItem(key, data),
+    watchKeys: () => modelValue.value.map((it) => keyOf(it)),
+    findEntry: (key) => {
+      const hit = modelValue.value.find((it) => keyOf(it) === key)
+      return hit ? { data: hit } : null
+    },
+    afterAutoOpen: (key) => {
+      expandedKeys.value.delete(key)
+    },
+  })
 
 const canInteract = computed(() => !props.readonly && !props.disabled && !props.loading)
-const canEnterReorder = computed(
-  () => canInteract.value && !props.disableReorder && modelValue.value.length > 1,
-)
+const canEnterReorder = computed(() => canInteract.value && !props.disableReorder && modelValue.value.length > 1)
 
 const embeddedRef = computed(() => props.embedded)
 const allowEditInReorderRef = computed(() => props.allowEditInReorder)
@@ -535,8 +527,7 @@ const {
   // not resurrect or be re-created by a later save).
   onCancel: () => {
     for (const key of sessionDeferredDeletes.value) controller.restoreDeleted(key)
-    for (const key of sessionImmediateDeletes.value)
-      controller.deleteItem(key, { trackDeleted: false })
+    for (const key of sessionImmediateDeletes.value) controller.deleteItem(key, { trackDeleted: false })
     // Snapshot-restore already undid the reorder — drop the controller's "moved" flag for exactly the
     // rows moved this session (edits/adds keep their amber), so a cancelled reorder leaves no false unsaved.
     controller.clearMoved(sessionMovedKeys.value)
@@ -558,8 +549,7 @@ const {
   // it stays gone. On Apply it never came back, so `deleteItem` is a no-op. Deferred deletes need nothing:
   // the controller's re-add watch drops their tombstone when the restore brings the row back.
   onEmbeddedExit: () => {
-    for (const key of sessionImmediateDeletes.value)
-      controller.deleteItem(key, { trackDeleted: false })
+    for (const key of sessionImmediateDeletes.value) controller.deleteItem(key, { trackDeleted: false })
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
     sessionAddedKeys.value = new Set()
@@ -582,10 +572,7 @@ const {
 const childContributions = props.embedded
   ? null
   : shallowReactive(
-      new Map<
-        symbol,
-        { count: ComputedRef<number>; hasChanges: ComputedRef<boolean>; validateAll: () => boolean }
-      >(),
+      new Map<symbol, { count: ComputedRef<number>; hasChanges: ComputedRef<boolean>; validateAll: () => boolean }>()
     )
 
 if (childContributions) {
@@ -624,13 +611,10 @@ const totalHasPendingChanges = computed<boolean>(() => {
 // Reorder-toolbar pending indicator = session moves + deferred deletes made in the session, so
 // deleting a row in reorder mode no longer reads as "no pending changes" and Apply stays enabled.
 const totalPendingCount = computed<number>(
-  () => totalMovedCount.value + sessionDeferredDeletes.value.size + sessionAddedKeys.value.size,
+  () => totalMovedCount.value + sessionDeferredDeletes.value.size + sessionAddedKeys.value.size
 )
 const totalPendingChanges = computed<boolean>(
-  () =>
-    totalHasPendingChanges.value ||
-    sessionDeferredDeletes.value.size > 0 ||
-    sessionAddedKeys.value.size > 0,
+  () => totalHasPendingChanges.value || sessionDeferredDeletes.value.size > 0 || sessionAddedKeys.value.size > 0
 )
 
 // An embedded editor pushes its FULL pending contribution — moves AND deferred deletes — up to the
@@ -649,32 +633,23 @@ if (props.embedded) {
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
 // Chips mode keeps drag always-on (no mode toggle) on non-touch devices.
 const dragEnabled = computed(
-  () =>
-    canInteract.value && (reorderMode.value || props.chips) && !isTouch.value && !props.disableDrag,
+  () => canInteract.value && (reorderMode.value || props.chips) && !isTouch.value && !props.disableDrag
 )
 
-const addLabelResolved = computed(() =>
-  props.addLabel ? t(props.addLabel) : t('common.sortable.add'),
-)
+const addLabelResolved = computed(() => props.addLabel ?? t('common.sortable.add'))
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
-const deleteConfirmTitleResolved = computed(
-  () => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'),
-)
+const deleteConfirmTitleResolved = computed(() => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'))
 const deleteConfirmTextResolved = computed(
   () =>
     props.deleteConfirmText ??
     (props.deleteMode === 'immediate'
       ? t('common.sortable.deleteConfirmText')
-      : t('common.sortable.deleteConfirmTextDeferred')),
+      : t('common.sortable.deleteConfirmTextDeferred'))
 )
 
 const reorderToggleVisible = computed<boolean>(
   (): boolean =>
-    !props.chips &&
-    !props.embedded &&
-    props.showReorderToggle &&
-    !reorderMode.value &&
-    modelValue.value.length > 0,
+    !props.chips && !props.embedded && props.showReorderToggle && !reorderMode.value && modelValue.value.length > 0
 )
 
 // With a title and a narrow viewport, the reorder button shrinks to an icon-only
@@ -685,7 +660,7 @@ const compactReorderButton = computed<boolean>((): boolean => !!props.title && i
 // up even though its row is gone. Shown as a view-mode header badge + on the handle; in reorder mode
 // the toolbar status shows the session count instead.
 const unsavedCount = controller.unsavedCount
-const unsavedCountVisible = computed(() => !props.readonly && unsavedCount.value > 0)
+const unsavedCountVisible = computed(() => !props.readonly && !props.disableUnsaved && unsavedCount.value > 0)
 const headerVisible = computed<boolean>(
   (): boolean =>
     !!(
@@ -695,14 +670,14 @@ const headerVisible = computed<boolean>(
       reorderToggleVisible.value ||
       (reorderMode.value && !props.embedded) ||
       (!reorderMode.value && unsavedCountVisible.value)
-    ),
+    )
 )
 
 // True when the header has substantive content (title or custom header slot).
 // When false it still renders as a slim band right-aligning just the
 // reorder/apply controls, holding height across idle ↔ reorder so it doesn't jump.
 const headerHasContent = computed<boolean>(
-  (): boolean => !!(props.title || slots.header || slots['reorder-toggle'] || slots['view-body']),
+  (): boolean => !!(props.title || slots.header || slots['reorder-toggle'] || slots['view-body'])
 )
 
 // Per-row Save/Cancel footer only matters with a per-item persist callback;
@@ -732,7 +707,9 @@ const viewItemsDecorated = computed<DecoratedViewItem<TItem>[]>(() => {
     const moved = movedKeys.value.has(vi.key)
     // readonly → no amber markers (can't have unsaved changes; also dodges a
     // mount-before-load empty baseline). (QA 85050 sweep)
-    const unsaved = props.readonly ? false : controller.isUnsaved(vi.key)
+    // `disableUnsaved` suppresses only the amber marker — the validation rail still shows, since
+    // hiding dirty state should not hide a real error.
+    const unsaved = props.disableUnsaved || props.readonly ? false : controller.isUnsaved(vi.key)
     const dirty = unsaved
     // `editing` → the controller reads amber (not red) while the row is being filled in. (QA 85050 b7)
     const validationState = controller.rowState(vi.raw, vi.key, editing)
@@ -850,7 +827,7 @@ const keyboardNav = useKeyboardNav({
 const moveToPositionDialogOpen = ref<boolean>(false)
 const moveToPositionTarget = shallowRef<DecoratedViewItem<TItem> | null>(null)
 const moveToPositionLabel = computed<string>(() =>
-  moveToPositionTarget.value ? resolveCompactText(moveToPositionTarget.value.raw) : '',
+  moveToPositionTarget.value ? resolveCompactText(moveToPositionTarget.value.raw) : ''
 )
 const openMoveToPosition = (vi: DecoratedViewItem<TItem>) => {
   if (!props.showMoveToPosition) return
@@ -866,8 +843,7 @@ const onMoveToPositionConfirm = (newIndex: number) => {
   markMoved(target.key)
 }
 
-const resolveCompactText = (raw: TItem): string =>
-  resolveCompactTextUtil(raw, { compactField: props.compactField })
+const resolveCompactText = (raw: TItem): string => resolveCompactTextUtil(raw, { compactField: props.compactField })
 
 // Always instantiate SortableJS, seeded `disabled: !dragEnabled` and kept in sync
 // by the watch below. It used to be created only when `isTouch` was false at setup
@@ -942,7 +918,7 @@ watch(
     await nextTick()
     sortable.option('disabled', !dragEnabled.value)
   },
-  { flush: 'post' },
+  { flush: 'post' }
 )
 /* eslint-enable vue/no-ref-object-reactivity-loss */
 
@@ -1186,7 +1162,7 @@ watch(
     for (const key of actionsCache.keys()) {
       if (!liveKeys.has(key)) actionsCache.delete(key)
     }
-  },
+  }
 )
 
 const buildSlotProps = (vi: DecoratedViewItem<TItem>) => ({
@@ -1232,9 +1208,9 @@ const reorderToggleSlotProps = computed(() => ({
 
 // Registers a named unsaved-changes section when the consumer passes a label.
 useUnsavedSection(() =>
-  props.unsavedSectionLabel
+  props.unsavedSectionLabel && !props.disableUnsaved
     ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value }
-    : [],
+    : []
 )
 
 // Expose the controller handle (validateAll/getPayload/commit/etc. via
@@ -1295,8 +1271,7 @@ defineExpose<
         'a-sortable-list-editor--drag-enabled': dragEnabled,
         'a-sortable-list-editor--chips': chips,
         'a-sortable-list-editor--embedded': embedded,
-        'a-sortable-list-editor--header-floating':
-          !embedded && !chips && !headerHasContent && headerVisible,
+        'a-sortable-list-editor--header-floating': !embedded && !chips && !headerHasContent && headerVisible,
       },
     ]"
   >
@@ -1818,11 +1793,7 @@ defineExpose<
             </template>
 
             <div
-              v-else-if="
-                $slots['item-readonly'] &&
-                (readonly || vi.expanded) &&
-                (allowEditInReorder || !reorderMode)
-              "
+              v-else-if="$slots['item-readonly'] && (readonly || vi.expanded) && (allowEditInReorder || !reorderMode)"
               class="a-le-row-body"
             >
               <div class="a-le-form">

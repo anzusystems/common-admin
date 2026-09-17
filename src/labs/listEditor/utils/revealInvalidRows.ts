@@ -7,7 +7,7 @@ import type { ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
  */
 export function validateAllAndReveal(
   controller: { validateAll: () => boolean; invalidKeys: { value: Set<ListEditorKey> } },
-  reveal: (key: ListEditorKey) => void,
+  reveal: (key: ListEditorKey) => void
 ): boolean {
   const valid = controller.validateAll()
   if (!valid) {

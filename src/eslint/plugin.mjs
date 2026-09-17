@@ -228,7 +228,7 @@ const anzuPlugin = {
                 normalizedFilename.endsWith(rulePath + '.ts') ||
                 normalizedFilename.endsWith(rulePath + '.js') ||
                 normalizedFilename.endsWith(rulePath + '.vue') ||
-                normalizedFilename.endsWith(rulePath),
+                normalizedFilename.endsWith(rulePath)
             )
           return fileSkipped
         }
@@ -268,12 +268,7 @@ const anzuPlugin = {
         schema: [],
       },
       create(context) {
-        const TARGET_CALLEES = new Set([
-          'useApiRequest',
-          'useApiFetchList',
-          'useApiFetchByIds',
-          'useApiFetchListBatch',
-        ])
+        const TARGET_CALLEES = new Set(['useApiRequest', 'useApiFetchList', 'useApiFetchByIds', 'useApiFetchListBatch'])
 
         const PLACEHOLDER_RE = /:([a-zA-Z_][\w]*)/g
 
@@ -289,8 +284,7 @@ const anzuPlugin = {
           for (const prop of objectExpr.properties) {
             if (prop.type !== 'Property' || prop.computed) continue
             const key = prop.key
-            const keyName =
-              key.type === 'Identifier' ? key.name : key.type === 'Literal' ? key.value : null
+            const keyName = key.type === 'Identifier' ? key.name : key.type === 'Literal' ? key.value : null
             if (keyName === name) return prop
           }
           return null
@@ -388,9 +382,7 @@ const anzuPlugin = {
               if (!paramKeySet.has(placeholder)) {
                 context.report({
                   node: paramsProp,
-                  message:
-                    `urlParams is missing key '${placeholder}' required by urlTemplate ` +
-                    `'${resolved}'.`,
+                  message: `urlParams is missing key '${placeholder}' required by urlTemplate ` + `'${resolved}'.`,
                 })
               }
             }
@@ -400,8 +392,7 @@ const anzuPlugin = {
                 context.report({
                   node: paramsProp,
                   message:
-                    `urlParams key '${key}' has no matching ':${key}' placeholder in urlTemplate ` +
-                    `'${resolved}'.`,
+                    `urlParams key '${key}' has no matching ':${key}' placeholder in urlTemplate ` + `'${resolved}'.`,
                 })
               }
             }
@@ -435,21 +426,21 @@ const anzuPlugin = {
             parts.unshift(current)
 
             const hasFatalCheck = parts.some(
-              (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError',
+              (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError'
             )
             const hasInstanceofErrorCheck = parts.some(
               (part) =>
                 part.type === 'BinaryExpression' &&
                 part.operator === 'instanceof' &&
                 part.right.type === 'Identifier' &&
-                part.right.name === 'Error',
+                part.right.name === 'Error'
             )
             const hasAxiosCheck = parts.some(
               (part) =>
                 part.type === 'CallExpression' &&
                 part.callee.type === 'MemberExpression' &&
                 part.callee.object.name === 'axios' &&
-                part.callee.property.name === 'isAxiosError',
+                part.callee.property.name === 'isAxiosError'
             )
 
             if (hasAxiosCheck && (hasFatalCheck || hasInstanceofErrorCheck)) {

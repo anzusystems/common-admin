@@ -27,14 +27,10 @@ export function usePodcastInnerFilter() {
     },
   ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(
-    filterFieldsInner,
-    createFilterStore(filterFieldsInner),
-    {
-      system: SYSTEM_CORE_DAM,
-      subject: 'podcast',
-    },
-  )
+  const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
+    system: SYSTEM_CORE_DAM,
+    subject: 'podcast',
+  })
 
   return {
     filterConfig,
@@ -46,11 +42,7 @@ export const usePodcastSelectActions = (licenceId: IntegerId, configName = 'defa
   const { damClient } = useCommonAdminCoreDamOptions(configName)
   const { executeFetch } = useFetchDamPodcastList(damClient, licenceId)
 
-  const fetchItems = async (
-    pagination: Ref<Pagination>,
-    filterData: FilterData,
-    filterConfig: FilterConfig,
-  ) => {
+  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     const podcasts = await executeFetch(pagination, filterData, filterConfig)
 
     return <ValueObjectOption<DocId>[]>podcasts.map((podcast: DamPodcastAware) => ({

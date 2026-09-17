@@ -77,8 +77,7 @@ function mountPicker(initial: DatetimeUTCNullable = null, props: Record<string, 
 
 const textField = () => document.querySelector('.a-datetime-picker input') as HTMLInputElement
 
-const calendarIcon = () =>
-  document.querySelector<HTMLElement>('.a-datetime-picker__calendar-icon') ?? null
+const calendarIcon = () => document.querySelector<HTMLElement>('.a-datetime-picker__calendar-icon') ?? null
 
 const dayButton = (day: number) =>
   [...document.querySelectorAll(DAY_BTN)].find((el) => el.textContent?.trim() === String(day)) as
@@ -97,20 +96,16 @@ const nowShown = () => dayjs().format('DD.MM.YYYY HH:mm')
 const nowWindow = (before: string) => [before, nowShown()]
 
 const adjacentDayButton = (day: number) =>
-  [
-    ...document.querySelectorAll(
-      '.v-date-picker-month__day--adjacent .v-date-picker-month__day-btn',
-    ),
-  ].find((el) => el.textContent?.trim() === String(day)) as HTMLElement | undefined
+  [...document.querySelectorAll('.v-date-picker-month__day--adjacent .v-date-picker-month__day-btn')].find(
+    (el) => el.textContent?.trim() === String(day)
+  ) as HTMLElement | undefined
 
 const selectedDayButton = () =>
   document.querySelector('.v-date-picker-month__day--selected .v-date-picker-month__day-btn')
 
-const timeInput = (label: 'Hour' | 'Minute') =>
-  document.querySelector(`input[aria-label="${label}"]`)
+const timeInput = (label: 'Hour' | 'Minute') => document.querySelector(`input[aria-label="${label}"]`)
 
-const shownMonth = () =>
-  document.querySelector('.v-date-picker-controls')?.textContent?.replace(/\s+/g, ' ').trim()
+const shownMonth = () => document.querySelector('.v-date-picker-controls')?.textContent?.replace(/\s+/g, ' ').trim()
 
 const nextMonthButton = () => {
   const buttons = document.querySelectorAll<HTMLElement>('.v-date-picker-controls__month .v-btn')
@@ -200,9 +195,7 @@ describe('ADatetimePicker', () => {
       dayButton(target.date())!.click()
       await flushPromises()
 
-      expect(textField().value).toMatch(
-        new RegExp(`^${target.format('DD\\.MM\\.YYYY')} \\d{2}:\\d{2}$`),
-      )
+      expect(textField().value).toMatch(new RegExp(`^${target.format('DD\\.MM\\.YYYY')} \\d{2}:\\d{2}$`))
       expect(dayjs(model.value).format('DD.MM.YYYY')).toBe(target.format('DD.MM.YYYY'))
     })
 
@@ -441,9 +434,7 @@ describe('ADatetimePicker', () => {
 
       await typeIntoField('')
 
-      expect(dayjs(model.value).format('DD.MM.YYYY HH:mm')).toBe(
-        dayjs(defaultValue).format('DD.MM.YYYY HH:mm'),
-      )
+      expect(dayjs(model.value).format('DD.MM.YYYY HH:mm')).toBe(dayjs(defaultValue).format('DD.MM.YYYY HH:mm'))
     })
 
     it('resets to the default value from the clearable icon and hides the icon', async () => {

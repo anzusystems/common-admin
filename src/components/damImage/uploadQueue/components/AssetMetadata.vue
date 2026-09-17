@@ -44,7 +44,7 @@ const props = withDefaults(
     configName: 'default',
     showEditButton: false,
     uploadLicence: undefined,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -56,8 +56,7 @@ const { t } = useI18n()
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } =
-  storeToRefs(assetDetailStore)
+const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
 
 const assetType = computed(() => {
   return asset.value?.attributes.assetType || DamAssetTypeDefault
@@ -79,19 +78,18 @@ const onAnyMetadataChange = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 
 const { cachedUsers } = useDamCachedUsers()
 
-const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
-  useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
+const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
 
 // Editable only for a file the site group's own redaction uploaded into its own upload licence —
 // a take-over copy keeps the flag it arrived with, changing it would break the single-use exclusivity

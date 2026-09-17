@@ -1,3 +1,9 @@
+# Changelog
+
+Entries from the next release on live in `doc/changelog/`, one file per version, with the pending ones
+under `doc/changelog/unreleased/` — the same layout admin-dam uses. The next release is **2.0.0**.
+The history below predates that move.
+
 ## [1.46.0](https://github.com/anzusystems/common-admin/compare/1.45.0...1.46.0) (2024-01-22)
 
 ### Features

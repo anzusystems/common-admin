@@ -27,11 +27,9 @@ afterEach(() => {
   mounted = null
 })
 
-const findRow = (key: number): HTMLElement | null =>
-  document.querySelector<HTMLElement>(`[data-id="${key}"]`)
+const findRow = (key: number): HTMLElement | null => document.querySelector<HTMLElement>(`[data-id="${key}"]`)
 
-const isInvalid = (key: number): boolean =>
-  findRow(key)?.classList.contains('a-le-row--validation-invalid') ?? false
+const isInvalid = (key: number): boolean => findRow(key)?.classList.contains('a-le-row--validation-invalid') ?? false
 
 const findAListEditor = (w: VueWrapper): VueWrapper =>
   w.findComponent(AListEditor as unknown as Parameters<typeof w.findComponent>[0]) as VueWrapper
@@ -233,9 +231,7 @@ describe('AListEditor — validation (:validate + gated red rail)', () => {
               },
               factory: makeItem,
               validate: (item: Item) =>
-                item.title.length > 10
-                  ? { valid: true }
-                  : { valid: true, state: 'warning' as const },
+                item.title.length > 10 ? { valid: true } : { valid: true, state: 'warning' as const },
             })
         },
       })

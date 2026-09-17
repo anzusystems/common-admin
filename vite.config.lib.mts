@@ -14,7 +14,7 @@ export default defineConfig({
     lib: {
       entry: {
         'common-admin': path.resolve(_dirname, 'src/lib.ts'),
-        'labs': path.resolve(_dirname, 'src/labs.ts')
+        labs: path.resolve(_dirname, 'src/labs.ts'),
       },
       name: 'CommonAdmin',
       fileName: (format, entryName) => `${entryName}.js`,
@@ -43,7 +43,7 @@ export default defineConfig({
     VueI18nPlugin({
       globalSFCScope: true,
       runtimeOnly: false,
-      include: path.resolve(_dirname, 'src/locales/**.json'),
+      include: path.resolve(_dirname, 'src/locales/**/*.json'),
     }),
     dts({ bundleTypes: true, tsconfigPath: 'tsconfig.libdts.json' }),
   ],

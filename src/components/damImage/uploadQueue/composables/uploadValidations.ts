@@ -8,24 +8,18 @@ import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/comp
 import type { ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
-export const ADamAssetMetadataValidationScopeSymbol = Symbol.for(
-  'anzu:common:asset-metadata-validation-scope',
-)
+export const ADamAssetMetadataValidationScopeSymbol = Symbol.for('anzu:common:asset-metadata-validation-scope')
 
 export const AImageMetadataValidationScopeSymbol = Symbol.for('anzu:common:image-validation-scope')
 
-export const ADamKeywordCreateValidationScopeSymbol = Symbol.for(
-  'anzu:common:keyword-create-validation-scope',
-)
+export const ADamKeywordCreateValidationScopeSymbol = Symbol.for('anzu:common:keyword-create-validation-scope')
 
-export const ADamAuthorCreateValidationScopeSymbol = Symbol.for(
-  'anzu:common:author-create-validation-scope',
-)
+export const ADamAuthorCreateValidationScopeSymbol = Symbol.for('anzu:common:author-create-validation-scope')
 
 export function buildFieldRules(
   config: ImageFieldValidationConfig,
   validators: ReturnType<typeof useValidate>,
-  requiredOverride?: boolean,
+  requiredOverride?: boolean
 ) {
   const rules: Record<string, unknown> = {}
   const isRequired = requiredOverride ?? config.required
@@ -44,7 +38,7 @@ export function buildFieldRules(
 export function useImageValidation(
   image: Ref<ImageCreateUpdateAware | MediaAware | null>,
   sourceRequired: Ref<boolean>,
-  configName?: string,
+  configName?: string
 ) {
   const { descriptionValidation, sourceValidation } = useCommonAdminCoreDamOptions(configName)
   const validators = useValidate()
@@ -54,11 +48,7 @@ export function useImageValidation(
         image: {
           texts: {
             description: buildFieldRules(descriptionValidation, validators),
-            source: buildFieldRules(
-              sourceValidation,
-              validators,
-              sourceValidation.required && sourceRequired.value,
-            ),
+            source: buildFieldRules(sourceValidation, validators, sourceValidation.required && sourceRequired.value),
           },
         },
       }

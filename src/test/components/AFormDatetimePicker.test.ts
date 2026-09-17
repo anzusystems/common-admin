@@ -68,8 +68,7 @@ function mountForm(initial: DatetimeUTCNullable = null, props: Record<string, un
 
 const textField = () => document.querySelector('.a-datetime-picker input') as HTMLInputElement
 
-const calendarIcon = () =>
-  document.querySelector<HTMLElement>('.a-datetime-picker__calendar-icon') ?? null
+const calendarIcon = () => document.querySelector<HTMLElement>('.a-datetime-picker__calendar-icon') ?? null
 
 const dayButton = (day: number) =>
   [...document.querySelectorAll(DAY_BTN)].find((el) => el.textContent?.trim() === String(day)) as
@@ -192,9 +191,7 @@ describe('AFormDatetimePicker', () => {
       mountForm(FEBRUARY_2023, { v, label: 'Published' })
       await flushPromises()
 
-      expect(document.querySelector('.v-messages__message')?.textContent?.trim()).toBe(
-        'Must be set',
-      )
+      expect(document.querySelector('.v-messages__message')?.textContent?.trim()).toBe('Must be set')
       expect(document.querySelector('.a-datetime-picker .v-label .required')).not.toBeNull()
 
       textField().focus()

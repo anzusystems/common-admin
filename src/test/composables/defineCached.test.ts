@@ -22,7 +22,7 @@ const makeCache = (fetchCallback: (ids: number[]) => Promise<Row[]>, maxLimit = 
     mapIdToMinimal,
     fetchCallback,
     'id',
-    maxLimit,
+    maxLimit
   )
 
 describe('defineCached', () => {

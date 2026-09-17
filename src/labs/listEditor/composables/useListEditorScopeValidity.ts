@@ -50,7 +50,7 @@ export function useListEditorScopeValidity(options: UseListEditorScopeValidityOp
     console.warn(
       '[list-editor] `:validation-scope="true"` uses vuelidate’s GLOBAL scope. If your save gate ' +
         'collects a NAMED scope (useVuelidate({ $scope: someSymbol })), this editor’s validity is ' +
-        'NOT collected by it and the gate won’t block. Pass the SAME scope value your collector uses.',
+        'NOT collected by it and the gate won’t block. Pass the SAME scope value your collector uses.'
     )
   }
 
@@ -61,7 +61,7 @@ export function useListEditorScopeValidity(options: UseListEditorScopeValidityOp
       '[list-editor] `:validation-scope` is set but `:validate` is missing. The scope save-gate ' +
         'bridges the editor’s aggregate `hasErrors`, which is driven only by `:validate`; without ' +
         'it the gate never blocks (hasErrors stays false). Pass `:validate` so collapsed/invalid ' +
-        'rows block the consumer save, or drop `:validation-scope` if you gate validity yourself.',
+        'rows block the consumer save, or drop `:validation-scope` if you gate validity yourself.'
     )
   }
 
@@ -71,7 +71,7 @@ export function useListEditorScopeValidity(options: UseListEditorScopeValidityOp
   const v$ = useVuelidate(
     { listEditor: { valid: () => !hasErrors.value } },
     { listEditor: hasErrors },
-    { $scope: validationScope },
+    { $scope: validationScope }
   )
 
   // On save the consumer's collector `$touch()` propagates to this child (`$dirty` → true); mirror
@@ -80,6 +80,6 @@ export function useListEditorScopeValidity(options: UseListEditorScopeValidityOp
     () => v$.value.$dirty,
     (dirty) => {
       if (dirty && hasErrors.value) reveal()
-    },
+    }
   )
 }

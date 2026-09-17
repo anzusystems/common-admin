@@ -23,7 +23,7 @@ const props = withDefaults(
     textOnly: false,
     size: 'small',
     containerClass: 'd-inline-flex',
-  },
+  }
 )
 
 const { getCachedKeyword } = useDamCachedKeywords()

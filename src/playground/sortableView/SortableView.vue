@@ -2,10 +2,7 @@
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { computed, ref } from 'vue'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
-import type {
-  SortableNested,
-  SortableNestedItem,
-} from '@/components/sortable/sortableNestedActions'
+import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import { isNull } from '@/utils/common'
@@ -204,18 +201,14 @@ const onAddAfterClickNested = (item: SortableNestedItem) => {
         text: 'Lorem',
         position: 0,
       },
-      true,
+      true
     )
     console.log(needsRefresh)
   }
 }
 const onAddChildClickNested = (item: SortableNestedItem) => {
   if (nestedComponent.value) {
-    nestedComponent.value.addChildToId(
-      item.data.id,
-      { id: Date.now(), text: 'Lorem', position: 0 },
-      true,
-    )
+    nestedComponent.value.addChildToId(item.data.id, { id: Date.now(), text: 'Lorem', position: 0 }, true)
   }
 }
 const onAddLastClickNested = (item: SortableNestedItem | null) => {
@@ -223,7 +216,7 @@ const onAddLastClickNested = (item: SortableNestedItem | null) => {
     const needsRefresh = nestedComponent.value.addAfterId(
       isNull(item) ? null : item.data.id,
       { id: Date.now(), text: 'Lorem', position: 0 },
-      true,
+      true
     )
     console.log(needsRefresh)
   }
@@ -257,6 +250,16 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
 
   <VCard>
     <VCardText>
+      <VAlert
+        type="warning"
+        variant="tonal"
+        class="mb-4"
+      >
+        <strong>ASortable and ASortableNested are deprecated.</strong> Use <code>ASortableListEditor</code> from
+        <code>@anzusystems/common-admin/labs</code> — it carries the same drag-and-drop reorder plus arrow controls for
+        touch, an unsaved-changes baseline and row-level validation. This view is kept for the components still on the
+        old API.
+      </VAlert>
       <h2 class="text-headline-medium mt-5 mb-2">
         ASortableNested <span class="text-body-small">dirty: {{ itemsNested.meta.dirty }}</span>
       </h2>
@@ -305,9 +308,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         <VBtn @click.stop="confirmDeleteNested">confirm remove</VBtn>
       </div>
       <pre class="my-5">{{ itemsNested }}</pre>
-      <h2 class="text-headline-medium mt-5 mb-2">
-        ASortable simple example without updating position
-      </h2>
+      <h2 class="text-headline-medium mt-5 mb-2">ASortable simple example without updating position</h2>
       <ASortable
         v-model="itemsBasic"
         show-add-last-button

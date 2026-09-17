@@ -19,7 +19,7 @@ const props = withDefaults(
     modelValue: 1,
     variant: 'default',
     customOptions: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: number): void
@@ -109,7 +109,7 @@ watch(
     const found = options.value.find((item: any) => item.id === newValue)
     if (found) emit('sortByChange', found)
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 watch(
@@ -118,7 +118,7 @@ watch(
     if (isUndefined(oldValue) || newValue === oldValue) return
     active.value = newValue
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 

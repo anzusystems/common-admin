@@ -1,9 +1,5 @@
 import { DamAssetType } from '@/types/coreDam/Asset'
-import {
-  type DamUploadStartResponse,
-  type UploadQueueItem,
-  UploadQueueItemStatus,
-} from '@/types/coreDam/UploadQueue'
+import { type DamUploadStartResponse, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
 import {
   imageUploadChunk,
   imageUploadFinish,
@@ -21,12 +17,8 @@ const NOTIFICATION_FALLBACK_MAX_TRIES = 4
 export const damUploadStart: (
   client: () => AxiosInstance,
   endPoint: string,
-  item: UploadQueueItem,
-) => Promise<DamUploadStartResponse> = (
-  client: () => AxiosInstance,
-  endPoint: string,
-  item: UploadQueueItem,
-) => {
+  item: UploadQueueItem
+) => Promise<DamUploadStartResponse> = (client: () => AxiosInstance, endPoint: string, item: UploadQueueItem) => {
   return new Promise((resolve, reject) => {
     if (item.assetType !== DamAssetType.Image) {
       reject()
@@ -49,23 +41,14 @@ export const damUploadChunk = (
   buffer: Blob | File,
   size: number,
   offset: number,
-  onUploadProgressCallback: any,
+  onUploadProgressCallback: any
 ) => {
   return new Promise((resolve, reject) => {
     if (item.assetType !== DamAssetType.Image) {
       reject()
       return
     }
-    imageUploadChunk(
-      client,
-      endPoint,
-      item,
-      imageId,
-      buffer,
-      size,
-      offset,
-      onUploadProgressCallback,
-    )
+    imageUploadChunk(client, endPoint, item, imageId, buffer, size, offset, onUploadProgressCallback)
       .then((res) => {
         resolve(res)
       })
@@ -81,7 +64,7 @@ export const damUploadFinish = (
   endPointImage: string,
   item: UploadQueueItem,
   sha: string,
-  uploadStatusFallback: boolean,
+  uploadStatusFallback: boolean
 ) => {
   return new Promise((resolve, reject) => {
     if (item.assetType !== DamAssetType.Image) {
@@ -103,25 +86,15 @@ export const damUploadFinish = (
 }
 
 function calculateFallbackTime(item: UploadQueueItem) {
-  return (
-    NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS *
-    1000 *
-    item.notificationFallbackTry *
-    item.notificationFallbackTry
-  )
+  return NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS * 1000 * item.notificationFallbackTry * item.notificationFallbackTry
 }
 
-async function notificationFallbackCallback(
-  client: () => AxiosInstance,
-  endPoint: string,
-  item: UploadQueueItem,
-) {
+async function notificationFallbackCallback(client: () => AxiosInstance, endPoint: string, item: UploadQueueItem) {
   clearTimeout(item.notificationFallbackTimer)
   if (item.status === UploadQueueItemStatus.Uploaded) return
   if (item.notificationFallbackTry > NOTIFICATION_FALLBACK_MAX_TRIES) {
     item.error.hasError = true
-    item.error.message =
-      'Processing is taking too long. Use item refresh button or remove item and retry later.'
+    item.error.message = 'Processing is taking too long. Use item refresh button or remove item and retry later.'
     return
   }
   if (!item.assetId) return
@@ -132,11 +105,7 @@ async function notificationFallbackCallback(
       uploadQueuesStore.queueItemFullyProcessed(asset.id)
       return
     } else if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
-      uploadQueuesStore.queueItemDuplicate(
-        asset.id,
-        asset.mainFile.originAssetFile,
-        asset.attributes.assetType,
-      )
+      uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, asset.attributes.assetType)
       return
     } else if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Failed) {
       uploadQueuesStore.queueItemFailed(asset.id, asset.mainFile.fileAttributes.failReason)

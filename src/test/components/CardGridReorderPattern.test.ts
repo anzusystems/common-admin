@@ -53,16 +53,12 @@ const mountPattern = (initial: MockImage[] = buildImages()) => {
                 'div',
                 { class: 'card-grid', 'data-test': 'card-grid' },
                 model.value.map((image) =>
-                  h('div', { key: image.key, class: 'card' }, [
-                    h('div', { class: 'card__title' }, image.title),
-                  ]),
-                ),
+                  h('div', { key: image.key, class: 'card' }, [h('div', { class: 'card__title' }, image.title)])
+                )
               ),
             'item-compact': ({ raw }: { raw: MockImage }) =>
-              h('div', { class: 'reorder-row' }, [
-                h('div', { class: 'reorder-row__title' }, raw.title),
-              ]),
-          },
+              h('div', { class: 'reorder-row' }, [h('div', { class: 'reorder-row__title' }, raw.title)]),
+          }
         )
     },
   })
@@ -72,14 +68,10 @@ const mountPattern = (initial: MockImage[] = buildImages()) => {
 }
 
 const findEditor = (wrapper: VueWrapper) =>
-  wrapper.findComponent(
-    ASortableListEditor as unknown as Parameters<typeof wrapper.findComponent>[0],
-  ) as VueWrapper
+  wrapper.findComponent(ASortableListEditor as unknown as Parameters<typeof wrapper.findComponent>[0]) as VueWrapper
 
 const clickByText = async (wrapper: VueWrapper, fragment: string) => {
-  const btn = wrapper
-    .findAll('button')
-    .find((b) => b.text().toLowerCase().includes(fragment.toLowerCase()))
+  const btn = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes(fragment.toLowerCase()))
   if (!btn) throw new Error(`Could not find button containing "${fragment}"`)
   await btn.trigger('click')
 }

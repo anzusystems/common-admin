@@ -61,5 +61,6 @@
   "upload": {
     "incorrectFormatSize": "Nesprávný formát nebo velikost"
   },
-  "inputSuggestedMax": "{current} / max {max}"
+  "inputSuggestedMax": "{current} / max {max}",
+  "notSet": "Neuvedeno"
 }

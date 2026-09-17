@@ -13,7 +13,7 @@ const props = withDefaults(
   {
     dataCyTrue: 'filter-true',
     dataCyFalse: 'filter-false',
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void

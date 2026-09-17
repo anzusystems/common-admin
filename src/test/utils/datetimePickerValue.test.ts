@@ -58,11 +58,7 @@ describe('datetimePickerValue', () => {
     it('reads a value whose fraction is not six digits', () => {
       // `isDatetimeUTC` accepts three digits and an API can answer with none; blanking the field
       // would write the blank back.
-      for (const value of [
-        '2023-02-08T08:17:29.123Z',
-        '2023-02-08T08:17:29Z',
-        '2023-02-08T08:17:29+00:00',
-      ]) {
+      for (const value of ['2023-02-08T08:17:29.123Z', '2023-02-08T08:17:29Z', '2023-02-08T08:17:29+00:00']) {
         expect(serialize(parseModel(value, 'datetime')!, 'datetime')).toBe(FEBRUARY_2023)
       }
       expect(parseModel('nonsense', 'datetime')).toBeNull()
@@ -145,9 +141,7 @@ describe('datetimePickerValue', () => {
       const internal = parseModel(SEPTEMBER_DAY, 'date')!
       const picked = new Date(2026, 8, 21)
 
-      expect(serialize(applyCalendarDate(internal, picked, 'date'), 'date')).toBe(
-        '2026-09-21T00:00:00.000000Z',
-      )
+      expect(serialize(applyCalendarDate(internal, picked, 'date'), 'date')).toBe('2026-09-21T00:00:00.000000Z')
     })
 
     it('applies a day of an adjacent shorter month without overflowing', () => {
@@ -164,9 +158,7 @@ describe('datetimePickerValue', () => {
       const internal = parseModel('2023-02-08T00:00:00.000000Z', 'date')!
       const picked = new Date(2023, 0, 31)
 
-      expect(serialize(applyCalendarDate(internal, picked, 'date'), 'date')).toBe(
-        '2023-01-31T00:00:00.000000Z',
-      )
+      expect(serialize(applyCalendarDate(internal, picked, 'date'), 'date')).toBe('2023-01-31T00:00:00.000000Z')
     })
   })
 
@@ -208,9 +200,7 @@ describe('datetimePickerValue', () => {
       const sameDayLater = parseModel('2026-09-08T18:00:00.000000Z', 'date')!
 
       expect(isSameValue(day, sameDayLater, 'date')).toBe(true)
-      expect(isSameValue(day, parseModel('2026-09-09T00:00:00.000000Z', 'date'), 'date')).toBe(
-        false,
-      )
+      expect(isSameValue(day, parseModel('2026-09-09T00:00:00.000000Z', 'date'), 'date')).toBe(false)
       expect(isSameValue(day, null, 'date')).toBe(false)
     })
 

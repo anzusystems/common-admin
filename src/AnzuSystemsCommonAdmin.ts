@@ -34,17 +34,10 @@ export interface CommonAdminImageConfig {
   imageApi?: {
     fetchImage: (client: () => AxiosInstance, id: IntegerId) => Promise<ImageAware>
     createImage: (client: () => AxiosInstance, data: ImageCreateUpdateAware) => Promise<ImageAware>
-    updateImage: (
-      client: () => AxiosInstance,
-      id: IntegerId,
-      data: ImageCreateUpdateAware,
-    ) => Promise<ImageAware>
+    updateImage: (client: () => AxiosInstance, id: IntegerId, data: ImageCreateUpdateAware) => Promise<ImageAware>
     deleteImage: (client: () => AxiosInstance, id: IntegerId) => Promise<void>
     fetchImageListByIds: (client: () => AxiosInstance, ids: IntegerId[]) => Promise<ImageAware[]>
-    bulkUpdateImages: (
-      client: () => AxiosInstance,
-      items: ImageCreateUpdateAware[],
-    ) => Promise<BulkUpdateImagesResult>
+    bulkUpdateImages: (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => Promise<BulkUpdateImagesResult>
   }
 }
 

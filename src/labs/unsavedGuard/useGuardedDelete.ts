@@ -19,7 +19,7 @@ import type { UseUnsavedChangesGuardApi } from '@/labs/unsavedGuard/useUnsavedCh
  */
 export function useGuardedDelete<A extends unknown[], R>(
   guard: Pick<UseUnsavedChangesGuardApi, 'acknowledge' | 'unacknowledge'>,
-  onDelete: (...args: A) => R,
+  onDelete: (...args: A) => R
 ): (...args: A) => R | Promise<Awaited<R>> {
   return (...args: A): R | Promise<Awaited<R>> => {
     guard.acknowledge()

@@ -13,8 +13,7 @@ let mounted: VueWrapper | null = null
 let warnSpy: MockInstance
 
 // Only the editor's own warnings — other libraries may warn too.
-const editorWarnings = () =>
-  warnSpy.mock.calls.map((c) => String(c[0])).filter((m) => m.startsWith('[list-editor]'))
+const editorWarnings = () => warnSpy.mock.calls.map((c) => String(c[0])).filter((m) => m.startsWith('[list-editor]'))
 
 beforeEach(() => {
   warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})

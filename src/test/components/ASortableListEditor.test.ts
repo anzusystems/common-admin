@@ -12,8 +12,7 @@ import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
 const makeMatchMedia = (hasFinePointer: boolean) =>
   vi.fn((q: string) => ({
     matches:
-      (hasFinePointer && q.includes('any-pointer: fine')) ||
-      (!hasFinePointer && q.includes('any-pointer: coarse')),
+      (hasFinePointer && q.includes('any-pointer: fine')) || (!hasFinePointer && q.includes('any-pointer: coarse')),
     media: q,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
@@ -56,9 +55,7 @@ const items = (): FaqItem[] => [
 ]
 
 const findSortable = (w: VueWrapper): VueWrapper =>
-  w.findComponent(
-    ASortableListEditor as unknown as Parameters<typeof w.findComponent>[0],
-  ) as VueWrapper
+  w.findComponent(ASortableListEditor as unknown as Parameters<typeof w.findComponent>[0]) as VueWrapper
 
 const mountEditor = (data: FaqItem[] = items(), extra: Record<string, unknown> = {}) => {
   const model = ref<FaqItem[]>(data)
@@ -96,7 +93,7 @@ const clickToggle = (wrapper: VueWrapper) =>
     .find(
       (b) =>
         b.text().toLowerCase().includes('reorder') ||
-        (b.find('.mdi-sort').exists() && !b.classes().includes('v-btn--disabled')),
+        (b.find('.mdi-sort').exists() && !b.classes().includes('v-btn--disabled'))
     )!
     .trigger('click')
 
@@ -113,9 +110,7 @@ describe('ASortableListEditor', () => {
 
     it('renders the reorder toggle button by default when showReorderToggle=true', () => {
       const { wrapper } = mountEditor()
-      const toggle = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('reorder'))
+      const toggle = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))
       expect(toggle).toBeTruthy()
     })
 
@@ -127,9 +122,7 @@ describe('ASortableListEditor', () => {
 
     it('disables the toggle when the list has fewer than 2 items', () => {
       const { wrapper } = mountEditor([items()[0]])
-      const toggle = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('reorder'))
+      const toggle = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))
       // with single-item list reorder toggle should not show at all OR be disabled
       if (toggle) {
         expect(toggle.attributes('disabled')).toBeDefined()
@@ -157,9 +150,7 @@ describe('ASortableListEditor', () => {
       expect(model.value.map((i) => i.id)).toEqual([2, 1, 3, 4])
 
       // Click Cancel
-      const cancel = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('cancel'))!
+      const cancel = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancel.trigger('click')
       await flushPromises()
 
@@ -264,7 +255,7 @@ describe('ASortableListEditor', () => {
             button: 0,
             buttons: type === 'mouseup' || type === 'pointerup' ? 0 : 1,
             view: window,
-          }),
+          })
         )
       fire('pointerdown', startY, handle)
       fire('mousedown', startY, handle)
@@ -327,9 +318,7 @@ describe('ASortableListEditor', () => {
       // (The old assertion sorted the positions first, which threw away the row↔position
       // pairing the claim rests on, and then compared against [1,2,3,4] — the very series
       // renumbering emits. It passed whether or not the `position: false` opt-out worked.)
-      expect(model.value.map((i) => i.position)).toEqual(
-        model.value.map((i) => loadedPosition.get(i.id)),
-      )
+      expect(model.value.map((i) => i.position)).toEqual(model.value.map((i) => loadedPosition.get(i.id)))
       wrapper.unmount()
     })
 
@@ -459,9 +448,8 @@ describe('ASortableListEditor', () => {
                 compactField: 'title',
               },
               {
-                item: ({ raw }: { raw: FaqItem }) =>
-                  h('input', { class: 'edit-input', value: raw.title }),
-              },
+                item: ({ raw }: { raw: FaqItem }) => h('input', { class: 'edit-input', value: raw.title }),
+              }
             )
         },
       })
@@ -586,9 +574,8 @@ describe('ASortableListEditor', () => {
                 showAddButton: false,
               },
               {
-                'item-compact': ({ raw }: { raw: Tag }) =>
-                  h('span', { class: 'chip-x' }, raw.label),
-              },
+                'item-compact': ({ raw }: { raw: Tag }) => h('span', { class: 'chip-x' }, raw.label),
+              }
             )
         },
       })
@@ -598,9 +585,7 @@ describe('ASortableListEditor', () => {
     it('renders --chips root modifier and has no reorder toggle', () => {
       const { wrapper } = mountChips()
       expect(wrapper.find('.a-sortable-list-editor--chips').exists()).toBe(true)
-      const toggle = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('reorder'))
+      const toggle = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))
       expect(toggle).toBeUndefined()
     })
 
@@ -654,9 +639,8 @@ describe('ASortableListEditor', () => {
                 showAddButton: false,
               },
               {
-                'item-compact': ({ raw }: { raw: Tag }) =>
-                  h('span', { class: 'chip-x' }, raw.label),
-              },
+                'item-compact': ({ raw }: { raw: Tag }) => h('span', { class: 'chip-x' }, raw.label),
+              }
             )
         },
       })
@@ -684,7 +668,7 @@ describe('ASortableListEditor', () => {
             button: 0,
             buttons: type === 'mouseup' || type === 'pointerup' ? 0 : 1,
             view: window,
-          }),
+          })
         )
       fire('pointerdown', startX, handle)
       fire('mousedown', startX, handle)
@@ -858,9 +842,7 @@ describe('ASortableListEditor', () => {
       })
       const wrapper = mount(Host)
       const editor = findSortable(wrapper)
-      const exposed = (
-        editor.vm as unknown as { $: { exposed: { commit: (saved?: unknown[]) => void } } }
-      ).$.exposed
+      const exposed = (editor.vm as unknown as { $: { exposed: { commit: (saved?: unknown[]) => void } } }).$.exposed
 
       model.value = [{ ...model.value[0], title: 'A-changed' }]
       await nextTick()
@@ -887,9 +869,8 @@ describe('ASortableListEditor', () => {
                 factory: (): FaqItem => ({ id: -Date.now(), position: 0, title: '' }),
               },
               {
-                'item-compact': ({ raw }: { raw: FaqItem }) =>
-                  h('span', { class: 'my-compact' }, `X-${raw.id}`),
-              },
+                'item-compact': ({ raw }: { raw: FaqItem }) => h('span', { class: 'my-compact' }, `X-${raw.id}`),
+              }
             )
         },
       })
@@ -924,9 +905,7 @@ describe('ASortableListEditor', () => {
 
       // Cancel — leaves reorder mode, restores the original order, and clears the amber
       // with no consumer reset() call.
-      const cancel = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('cancel'))!
+      const cancel = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancel.trigger('click')
       await flushPromises()
       expect(model.value.map((i) => i.id)).toEqual([1, 2, 3, 4])
@@ -959,9 +938,7 @@ describe('ASortableListEditor', () => {
       await wrapper.findAll('.a-le-action--down')[2].trigger('click')
       await flushPromises()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(2)
-      const cancel = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('cancel'))!
+      const cancel = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancel.trigger('click')
       await flushPromises()
       // Session 2's move is undone (amber cleared); session 1's applied move stays amber.

@@ -2,7 +2,6 @@ import pluginVue from 'eslint-plugin-vue'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import vuetify from 'eslint-plugin-vuetify'
 import oxlintPlugin from 'eslint-plugin-oxlint'
-import skipFormatting from 'eslint-config-prettier/flat'
 import { recommended as anzuRecommended } from './src/eslint/plugin.mjs'
 
 const { buildFromOxlintConfigFile } = oxlintPlugin
@@ -75,12 +74,7 @@ export default defineConfigWithVueTs(
   },
   {
     name: 'app/test-files',
-    files: [
-      '**/*.test.{ts,js}',
-      '**/*.spec.{ts,js}',
-      '**/test/**/*.{ts,js}',
-      '**/tests/**/*.{ts,js}',
-    ],
+    files: ['**/*.test.{ts,js}', '**/*.spec.{ts,js}', '**/test/**/*.{ts,js}', '**/tests/**/*.{ts,js}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
@@ -91,8 +85,28 @@ export default defineConfigWithVueTs(
   // Derives the disabled-rule list from .oxlintrc.json, so enabling a rule in
   // oxlint automatically stops eslint from running it.
   ...(await buildFromOxlintConfigFile('.oxlintrc.json')),
-  // Turns off every eslint rule that would fight the formatter. oxfmt owns
-  // formatting; leaving these on defeats eslint --cache, because autofixed
-  // files are never written to the cache.
-  skipFormatting,
+  {
+    // The only eslint rules that fight oxfmt. Measured, not assumed: with this block
+    // removed, eslint reports 145 warnings here, and they fall on these same rules and no
+    // others. Leaving them on also defeats eslint --cache, because autofixed files are
+    // never written to the cache.
+    //
+    // html-self-closing is configured rather than switched off, because only its `void`
+    // half conflicts: oxfmt writes `<img />` where the rule's default demands `<img>`.
+    // With `void: 'any'` the formatter keeps that half and eslint keeps `<VBtn></VBtn>`.
+    name: 'app/owned-by-oxfmt',
+    rules: {
+      'vue/html-closing-bracket-newline': 'off',
+      'vue/html-indent': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/html-self-closing': [
+        'error',
+        {
+          html: { void: 'any', normal: 'always', component: 'always' },
+          svg: 'always',
+          math: 'always',
+        },
+      ],
+    },
+  }
 )

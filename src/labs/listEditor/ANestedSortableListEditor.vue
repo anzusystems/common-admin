@@ -1,15 +1,5 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  shallowRef,
-  useSlots,
-  useTemplateRef,
-  watch,
-} from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useSlots, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
 import { useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
@@ -58,11 +48,7 @@ import LeMoveToPositionDialog from '@/labs/listEditor/internal/LeMoveToPositionD
 import LeChangeParentDialog from '@/labs/listEditor/internal/LeChangeParentDialog.vue'
 import LeEmptyState from '@/labs/listEditor/internal/LeEmptyState.vue'
 import LeStatus from '@/labs/listEditor/internal/LeStatus.vue'
-import {
-  DRAG_GHOST_CLASS,
-  DRAG_CHOSEN_CLASS,
-  DRAG_CLASS,
-} from '@/labs/listEditor/internal/constants'
+import { DRAG_GHOST_CLASS, DRAG_CHOSEN_CLASS, DRAG_CLASS } from '@/labs/listEditor/internal/constants'
 
 export interface DecoratedNestedViewItem<T> extends NestedViewItem<T> {
   editing: boolean
@@ -224,8 +210,13 @@ export interface Props<TItem extends Record<string, any>> {
   loading?: boolean
   error?: string | null
 
+  /** Heading above the list. A ready translated string, like every text prop here. */
   title?: string | null
 
+  /**
+   * Field shown in a collapsed row when no `#item-compact` slot is given. A dotted path reads
+   * through nested objects (`texts.title`); a path that runs into nothing renders empty.
+   */
   compactField?: string | null
   statusField?: string | null
 
@@ -238,11 +229,19 @@ export interface Props<TItem extends Record<string, any>> {
   showChangeParent?: boolean
   showExpandToggle?: boolean
 
+  /** Label of the add button. A ready translated string; omit it for the library's own wording. */
   addLabel?: string | null
+  /** Heading of the empty state. A ready translated string. */
   emptyTitle?: string | null
 
   disableRowClick?: boolean
   disableDeleteConfirm?: boolean
+  /**
+   * Disable unsaved-state tracking — no dirty markers, never reads as unsaved. For a list that is a
+   * VIEW of data owned elsewhere (a display cache rebuilt from a parent's field, say): nothing in
+   * such a component can ever clear an amber row, so it must not raise one. Mirrors `AListEditor`.
+   */
+  disableUnsaved?: boolean
   deleteConfirmTitle?: string | null
   deleteConfirmText?: string | null
   /**
@@ -299,6 +298,7 @@ const props = withDefaults(defineProps<Props<TItem>>(), {
   emptyTitle: null,
   disableRowClick: false,
   disableDeleteConfirm: false,
+  disableUnsaved: false,
   deleteConfirmTitle: null,
   deleteConfirmText: null,
   deleteMode: 'deferred',
@@ -374,9 +374,7 @@ const detailExpandedKeys = ref<Set<ListEditorKey>>(new Set())
 const getKeyOpt = props.getKey ?? 'id'
 const keyFieldName = (typeof getKeyOpt === 'function' ? 'id' : getKeyOpt) as string
 const keyOf = (data: TItem): ListEditorKey =>
-  typeof getKeyOpt === 'function'
-    ? getKeyOpt(data)
-    : (data[getKeyOpt as keyof TItem] as ListEditorKey)
+  typeof getKeyOpt === 'function' ? getKeyOpt(data) : (data[getKeyOpt as keyof TItem] as ListEditorKey)
 
 // Managed position field (row position, move-to-position dialog, flatViewItems). Mirrors the controller.
 const positionFieldName = ((): string => {
@@ -417,11 +415,8 @@ const controllerOptions: NestedListEditorStateBindings<TItem> = {
 // Precedence: an explicitly lifted `:editor` wins; then a `state-key`'d entry persisted in the
 // nearest ancestor editor's row-state scope (rebound to this instance on every remount); else this
 // component owns the controller — today's behaviour, unchanged.
-const stateEntry = props.editor
-  ? null
-  : useNestedListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
-const controller =
-  props.editor ?? stateEntry?.handle ?? useNestedListEditorController<TItem>(controllerOptions)
+const stateEntry = props.editor ? null : useNestedListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
+const controller = props.editor ?? stateEntry?.handle ?? useNestedListEditorController<TItem>(controllerOptions)
 /* eslint-enable vue/no-setup-props-reactivity-loss */
 
 // Row-state scope for THIS editor's `#item` slot subtree — see ASortableListEditor.
@@ -434,11 +429,7 @@ const flatViewItems = computed<NestedViewItem<TItem>[]>(() => {
   const flat: NestedViewItem<TItem>[] = []
   let flatIndex = 0
   const maxDepth = props.maxDepth
-  const walk = (
-    nodes: NestedTreeNode<TItem>[],
-    depth: number,
-    parentNode: NestedTreeNode<TItem> | null,
-  ) => {
+  const walk = (nodes: NestedTreeNode<TItem>[], depth: number, parentNode: NestedTreeNode<TItem> | null) => {
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
       const key = keyOf(node.data)
@@ -478,7 +469,7 @@ const flatViewItems = computed<NestedViewItem<TItem>[]>(() => {
 watch(
   () => flatViewItems.value.map((vi) => String(vi.key)).join('|'),
   () => rowStateScope.retainOwners(flatViewItems.value.map((vi) => vi.key)),
-  { flush: 'post' },
+  { flush: 'post' }
 )
 
 // Snapshot for reorder-cancel restore only; dirty detection lives in the controller.
@@ -525,7 +516,9 @@ const viewItemsDecorated = computed<DecoratedNestedViewItem<TItem>[]>(() => {
     // Amber = controller dirty OR reorder-session moved. readonly suppresses it
     // (read-only views can't be unsaved; also dodges a mount-before-load baseline). (QA 85050 sweep)
     const dirty = props.readonly ? false : controller.isUnsaved(vi.key)
-    const unsaved = props.readonly ? false : dirty || moved
+    // `disableUnsaved` suppresses only the amber marker — the validation rail still shows, since
+    // hiding dirty state should not hide a real error.
+    const unsaved = props.disableUnsaved || props.readonly ? false : dirty || moved
     const cached = decoratorCache.get(vi.key)
     if (
       cached &&
@@ -573,52 +566,42 @@ const totalItemCount = computed(() => flatViewItems.value.length)
 const rowsContainer = useTemplateRef<HTMLElement>('rowsContainer')
 
 const canInteract = computed(() => !props.readonly && !props.disabled && !props.loading)
-const canEnterReorder = computed(
-  () => canInteract.value && !props.disableReorder && totalItemCount.value > 1,
-)
+const canEnterReorder = computed(() => canInteract.value && !props.disableReorder && totalItemCount.value > 1)
 
 const isInlineEdit = computed(() => !!(slots as Record<string, unknown>).item)
 const hasReadonlyDetail = computed(() => !!(slots as Record<string, unknown>)['item-readonly'])
 const showInlineSaveFooter = computed(() => !!props.onItemSave)
 
-const {
-  editingKeys,
-  editingSnapshots,
-  clearEditing,
-  beginEdit,
-  cancelEdit,
-  commitEdit,
-  closeEdit,
-  requestAutoOpen,
-} = useInlineEditing<TItem, NestedViewItem<TItem>>({
-  rowsContainer,
-  rowSelector: '.a-le-row-wrapper',
-  isInlineEdit,
-  // markDirty=false: restoring the pre-edit snapshot on cancel must not flag the
-  // node dirty (it would otherwise be resent by partial-multi saves).
-  restoreSnapshot: (key, data) => controller.updateItem(key, data, false),
-  watchKeys: () => {
-    const keys: ListEditorKey[] = []
-    const walk = (nodes: NestedTreeNode<TItem>[]) => {
-      for (const n of nodes) {
-        keys.push(keyOf(n.data))
-        if (n.children && n.children.length) walk(n.children)
+const { editingKeys, editingSnapshots, clearEditing, beginEdit, cancelEdit, commitEdit, closeEdit, requestAutoOpen } =
+  useInlineEditing<TItem, NestedViewItem<TItem>>({
+    rowsContainer,
+    rowSelector: '.a-le-row-wrapper',
+    isInlineEdit,
+    // markDirty=false: restoring the pre-edit snapshot on cancel must not flag the
+    // node dirty (it would otherwise be resent by partial-multi saves).
+    restoreSnapshot: (key, data) => controller.updateItem(key, data, false),
+    watchKeys: () => {
+      const keys: ListEditorKey[] = []
+      const walk = (nodes: NestedTreeNode<TItem>[]) => {
+        for (const n of nodes) {
+          keys.push(keyOf(n.data))
+          if (n.children && n.children.length) walk(n.children)
+        }
       }
-    }
-    walk(modelValue.value.children)
-    return keys
-  },
-  findEntry: (key) => {
-    const { node } = controller.findNode(key)
-    return node ? { data: node.data } : null
-  },
-  afterAutoOpen: (key) => {
-    const { parent } = controller.findNode(key)
-    if (parent) {
-      childrenExpandedKeys.value.add(keyOf(parent.data))
-    }
-  },
-})
+      walk(modelValue.value.children)
+      return keys
+    },
+    findEntry: (key) => {
+      const { node } = controller.findNode(key)
+      return node ? { data: node.data } : null
+    },
+    afterAutoOpen: (key) => {
+      const { parent } = controller.findNode(key)
+      if (parent) {
+        childrenExpandedKeys.value.add(keyOf(parent.data))
+      }
+    },
+  })
 
 const {
   applying,
@@ -659,8 +642,7 @@ const {
   // removed again — it is deleted on the backend and must not resurrect / be re-created by a save).
   onCancel: () => {
     for (const key of sessionDeferredDeletes.value) controller.restoreDeleted(key)
-    for (const key of sessionImmediateDeletes.value)
-      controller.deleteItem(key, { trackDeleted: false })
+    for (const key of sessionImmediateDeletes.value) controller.deleteItem(key, { trackDeleted: false })
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
     destroySortables()
@@ -682,34 +664,25 @@ const {
 
 // Reorder-toolbar pending indicator = session moves + deferred deletes made in the session, so a delete
 // in reorder mode no longer reads as "no pending changes" and Apply stays enabled.
-const nestedPendingCount = computed<number>(
-  () => movedCount.value + sessionDeferredDeletes.value.size,
-)
-const nestedPendingChanges = computed<boolean>(
-  () => hasPendingChanges.value || sessionDeferredDeletes.value.size > 0,
-)
+const nestedPendingCount = computed<number>(() => movedCount.value + sessionDeferredDeletes.value.size)
+const nestedPendingChanges = computed<boolean>(() => hasPendingChanges.value || sessionDeferredDeletes.value.size > 0)
 
 const canAdd = computed(() => canInteract.value && props.showAddButton && !reorderMode.value)
 const dragEnabled = computed(() => reorderMode.value && !isTouch.value && !props.disableDrag)
 
-const addLabelResolved = computed(() =>
-  props.addLabel ? t(props.addLabel) : t('common.sortable.add'),
-)
+const addLabelResolved = computed(() => props.addLabel ?? t('common.sortable.add'))
 const emptyTitleResolved = computed(() => props.emptyTitle ?? t('common.sortable.emptyTitle'))
-const deleteConfirmTitleResolved = computed(
-  () => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'),
-)
+const deleteConfirmTitleResolved = computed(() => props.deleteConfirmTitle ?? t('common.sortable.deleteConfirmTitle'))
 const deleteConfirmTextResolved = computed(
   () =>
     props.deleteConfirmText ??
     (props.deleteMode === 'immediate'
       ? t('common.sortable.deleteConfirmText')
-      : t('common.sortable.deleteConfirmTextDeferred')),
+      : t('common.sortable.deleteConfirmTextDeferred'))
 )
 
 const reorderToggleVisible = computed<boolean>(
-  (): boolean =>
-    !props.readonly && props.showReorderToggle && !reorderMode.value && totalItemCount.value > 0,
+  (): boolean => !props.readonly && props.showReorderToggle && !reorderMode.value && totalItemCount.value > 0
 )
 
 const compactReorderButton = computed<boolean>((): boolean => !!props.title && isNarrow.value)
@@ -730,14 +703,10 @@ const expandableKeys = computed<ListEditorKey[]>(() => {
 })
 
 const allExpanded = computed<boolean>(
-  () =>
-    expandableKeys.value.length > 0 &&
-    expandableKeys.value.every((k) => childrenExpandedKeys.value.has(k)),
+  () => expandableKeys.value.length > 0 && expandableKeys.value.every((k) => childrenExpandedKeys.value.has(k))
 )
 
-const expandAllVisible = computed<boolean>(
-  () => !reorderMode.value && expandableKeys.value.length > 0,
-)
+const expandAllVisible = computed<boolean>(() => !reorderMode.value && expandableKeys.value.length > 0)
 
 const toggleExpandAll = () => {
   if (allExpanded.value) {
@@ -756,14 +725,12 @@ const headerVisible = computed<boolean>(
       reorderToggleVisible.value ||
       expandAllVisible.value ||
       reorderMode.value
-    ),
+    )
 )
 
 // One Sortable instance per group so drag/drop moves items within/between groups;
 // SortableJS owns the pointer events, onEnd reconciles via editor.moveTo().
-const sortableInstances = ref<
-  Array<{ stop: () => void; option?: (k: string, v: unknown) => void }>
->([])
+const sortableInstances = ref<Array<{ stop: () => void; option?: (k: string, v: unknown) => void }>>([])
 const forceRerender = ref(0)
 
 const destroySortables = () => {
@@ -794,7 +761,7 @@ const ANCHOR_X = 22
 
 const hitTestRow = (
   clientX: number,
-  clientY: number,
+  clientY: number
 ): { el: HTMLElement; viewItem: DecoratedNestedViewItem<TItem> } | null => {
   const hit = document.elementFromPoint(clientX, clientY) as HTMLElement | null
   if (!hit) return null
@@ -936,14 +903,14 @@ watch(
   () => {
     if (dragEnabled.value) nextTick(() => initSortables())
     else destroySortables()
-  },
+  }
 )
 
 watch(
   () => forceRerender.value,
   () => {
     if (dragEnabled.value) nextTick(() => initSortables())
-  },
+  }
 )
 
 // Rebuild sortables when the tree shape changes during drag mode, else newly rendered groups aren't draggable.
@@ -951,7 +918,7 @@ watch(
   () => viewItemsDecorated.value.map((v) => v.key).join('|'),
   () => {
     if (dragEnabled.value) nextTick(() => initSortables())
-  },
+  }
 )
 
 onMounted(() => {
@@ -979,7 +946,7 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
   // Blocked drops render nothing — the silent empty space is the "not here" signal.
   if (inst.type === 'blocked') return null
   const refWrapper = rowsContainer.value.querySelector<HTMLElement>(
-    `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.refKey))}"]`,
+    `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.refKey))}"]`
   )
   if (!refWrapper) return null
   const rowEl = refWrapper.querySelector<HTMLElement>(':scope > .a-le-row')
@@ -987,14 +954,13 @@ const overlayVisual = computed<OverlayVisual | null>(() => {
   const rowRect = (rowEl ?? refWrapper).getBoundingClientRect()
 
   const lineLeft = ANCHOR_X + inst.depth * INDENT_PX
-  const lineTop =
-    inst.refEdge === 'top' ? rowRect.top - containerRect.top : rowRect.bottom - containerRect.top
+  const lineTop = inst.refEdge === 'top' ? rowRect.top - containerRect.top : rowRect.bottom - containerRect.top
   const line = { top: lineTop, left: lineLeft, right: 16 }
 
   let connector: OverlayVisual['connector'] = null
   if (inst.levelRowKey !== null) {
     const levelWrapper = rowsContainer.value.querySelector<HTMLElement>(
-      `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.levelRowKey))}"]`,
+      `.a-le-row-wrapper[data-id="${CSS.escape(String(inst.levelRowKey))}"]`
     )
     if (levelWrapper) {
       const levelRow = levelWrapper.querySelector<HTMLElement>(':scope > .a-le-row')
@@ -1171,8 +1137,7 @@ const doOutdent = (vi: NestedViewItem<TItem>) => {
   emit('outdent', vi)
 }
 
-const resolveCompactText = (raw: TItem): string =>
-  resolveCompactTextUtil(raw, { compactField: props.compactField })
+const resolveCompactText = (raw: TItem): string => resolveCompactTextUtil(raw, { compactField: props.compactField })
 
 // Row validation from the controller's gated `rowState` — red rail shows only
 // once the row is unsaved or `validateAll()` ran.
@@ -1267,7 +1232,7 @@ watch(
     for (const key of actionsCache.keys()) {
       if (!liveKeys.has(key)) actionsCache.delete(key)
     }
-  },
+  }
 )
 
 const buildSlotProps = (vi: DecoratedNestedViewItem<TItem>) => ({
@@ -1336,7 +1301,7 @@ const keyboardNav = useKeyboardNav({
       canExpand: expandableKeySet.value.has(vi.key),
       canIndent: true,
       canOutdent: true,
-    })),
+    }))
   ),
   variant: 'nested',
   isReorderMode: reorderMode,
@@ -1388,7 +1353,7 @@ const moveToPositionContext = computed<{
   }
 })
 const moveToPositionLabel = computed<string>(() =>
-  moveToPositionTarget.value ? resolveCompactText(moveToPositionTarget.value.raw) : '',
+  moveToPositionTarget.value ? resolveCompactText(moveToPositionTarget.value.raw) : ''
 )
 const openMoveToPosition = (vi: DecoratedNestedViewItem<TItem>) => {
   if (!props.showMoveToPosition) return
@@ -1512,7 +1477,7 @@ const updateData = (
   data: TItem,
   _children: unknown = null,
   _position: unknown = null,
-  _markUnsaved: unknown = null,
+  _markUnsaved: unknown = null
 ) => {
   controller.updateItem(id, data)
   nextTick(() => controller.commit())
@@ -1531,9 +1496,9 @@ const clearUnsavedState = () => {
 
 // Registers this editor as a named unsaved-changes section when a label is passed.
 useUnsavedSection(() =>
-  props.unsavedSectionLabel
+  props.unsavedSectionLabel && !props.disableUnsaved
     ? { label: props.unsavedSectionLabel, dirty: controller.hasUnsaved.value }
-    : [],
+    : []
 )
 
 // Expose the controller handle plus legacy aliases and reorder/expand controls.
@@ -1690,9 +1655,7 @@ defineExpose<
                 <VTooltip
                   activator="parent"
                   location="bottom"
-                  :text="
-                    allExpanded ? t('common.sortable.collapseAll') : t('common.sortable.expandAll')
-                  "
+                  :text="allExpanded ? t('common.sortable.collapseAll') : t('common.sortable.expandAll')"
                 />
               </VBtn>
               <VBtn
@@ -1700,14 +1663,10 @@ defineExpose<
                 variant="tonal"
                 color="primary"
                 size="small"
-                :prepend-icon="
-                  allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'
-                "
+                :prepend-icon="allExpanded ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'"
                 @click="toggleExpandAll"
               >
-                {{
-                  allExpanded ? t('common.sortable.collapseAll') : t('common.sortable.expandAll')
-                }}
+                {{ allExpanded ? t('common.sortable.collapseAll') : t('common.sortable.expandAll') }}
               </VBtn>
               <slot
                 v-if="reorderToggleVisible"
@@ -1970,8 +1929,7 @@ defineExpose<
 .a-nested-list-editor {
   // Depth-aware left padding — caret column + indent per depth level.
   .a-le-row-header {
-    padding: var(--le-row-pad-y) 12px var(--le-row-pad-y)
-      calc(16px + var(--nested-depth, 0) * var(--le-indent));
+    padding: var(--le-row-pad-y) 12px var(--le-row-pad-y) calc(16px + var(--nested-depth, 0) * var(--le-indent));
   }
 
   // Row wrappers + inter-row group layout.

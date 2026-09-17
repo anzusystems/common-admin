@@ -674,12 +674,7 @@
   .a-le-row--unsaved.a-le-row--editing .a-le-row-footer,
   .a-le-row--unsaved.a-le-row--expanded .a-le-row-footer {
     border-left-color: rgb(251 140 0 / 35%);
-    background: linear-gradient(
-      to right,
-      rgb(251 140 0 / 7%),
-      rgb(251 140 0 / 2%) 50%,
-      transparent 85%
-    );
+    background: linear-gradient(to right, rgb(251 140 0 / 7%), rgb(251 140 0 / 2%) 50%, transparent 85%);
   }
 }
 

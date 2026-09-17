@@ -3,10 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
-import {
-  useListEditorController,
-  type ListEditorHandle,
-} from '@/labs/listEditor/composables/useListEditorController'
+import { useListEditorController, type ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
 
 interface Item {
   id: number
@@ -115,9 +112,7 @@ describe('AListEditor — lifted controller survives unmount/remount (U-16)', ()
     await nextTick()
 
     // Drive the add through the editor's own exposed controller handle.
-    const editorVm = (
-      mounted.findComponent(AListEditor) as unknown as { vm: { $: { exposed: Handle } } }
-    ).vm
+    const editorVm = (mounted.findComponent(AListEditor) as unknown as { vm: { $: { exposed: Handle } } }).vm
     editorVm.$.exposed.addItem({ id: -1, position: 2, title: '' })
     await nextTick()
     editorVm.$.exposed.updateItem(-1, { title: 'new' })

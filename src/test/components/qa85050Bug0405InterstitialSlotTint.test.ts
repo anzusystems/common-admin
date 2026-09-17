@@ -60,7 +60,7 @@ describe('QA 85050 BUG-04/05 — interstitial slots do not inherit the row tint'
               },
               factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
-            slots,
+            slots
           )
       },
     })
@@ -93,7 +93,7 @@ describe('QA 85050 BUG-04/05 — interstitial slots do not inherit the row tint'
               },
               factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
-            slots,
+            slots
           )
       },
     })
@@ -132,7 +132,7 @@ describe('QA 85050 BUG-04/05 — wrapper preserves the row layout contracts', ()
               factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
               ...extraProps,
             },
-            { item: () => h('div', { class: 'inline-form' }, 'form') },
+            { item: () => h('div', { class: 'inline-form' }, 'form') }
           )
       },
     })

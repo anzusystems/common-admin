@@ -38,15 +38,7 @@ export type ListEditorStateBindings<TItem extends Record<string, any>> = Pick<
 
 export type NestedListEditorStateBindings<TItem extends Record<string, any>> = Pick<
   UseNestedListEditorControllerOptions<TItem>,
-  | 'get'
-  | 'set'
-  | 'factory'
-  | 'getKey'
-  | 'position'
-  | 'parentField'
-  | 'maxDepth'
-  | 'dirtyExclude'
-  | 'validate'
+  'get' | 'set' | 'factory' | 'getKey' | 'position' | 'parentField' | 'maxDepth' | 'dirtyExclude' | 'validate'
 >
 
 /** What a `state-key`'d editor gets back: its persisted handle + the scope to hand to ITS own rows. */
@@ -86,7 +78,7 @@ export interface ListEditorStateScope {
     key: string,
     bindings: TBindings,
     create: (live: ShallowRef<TBindings>) => THandle,
-    uid?: number | null,
+    uid?: number | null
   ): THandle
   /**
    * The editor bound to `key` is unmounting: park the entry — its model accessors are swapped for a
@@ -94,11 +86,7 @@ export interface ListEditorStateScope {
    * instance's `modelValue`/`emit`. No-op when another instance has already rebound (mount-before-
    * unmount ordering), which is why the caller passes its uid.
    */
-  release<TBindings extends object>(
-    key: string,
-    uid: number | null,
-    park: (bindings: TBindings) => TBindings,
-  ): void
+  release<TBindings extends object>(key: string, uid: number | null, park: (bindings: TBindings) => TBindings): void
   /** Child scope of a registered entry (created lazily inside the entry's effect scope). */
   childScope(key: string): ListEditorStateScope | null
   /** The state-key prefix for a row — hosts thread it down and suffix it per nested list. */
@@ -111,7 +99,7 @@ export interface ListEditorStateScope {
 }
 
 export const ListEditorStateScopeKey: InjectionKey<ListEditorStateScope> = Symbol(
-  'le.stateScope',
+  'le.stateScope'
 ) as InjectionKey<ListEditorStateScope>
 
 let scopeSeq = 0
@@ -139,7 +127,7 @@ export function createListEditorStateScope(): ListEditorStateScope {
       key: string,
       bindings: TBindings,
       create: (live: ShallowRef<TBindings>) => THandle,
-      uid: number | null = null,
+      uid: number | null = null
     ): THandle {
       const existing = entries.get(key)
       if (existing) {
@@ -147,7 +135,7 @@ export function createListEditorStateScope(): ListEditorStateScope {
           console.warn(
             `[list-editor] two editors are mounted under the same state-key "${key}". ` +
               'They would share one state controller — give each editor a unique state-key ' +
-              '(e.g. suffix the row prefix with the list name).',
+              '(e.g. suffix the row prefix with the list name).'
           )
         }
         existing.boundUid = uid
@@ -157,19 +145,13 @@ export function createListEditorStateScope(): ListEditorStateScope {
         existing.live.value = bindings
         return existing.handle as THandle
       }
-      const entryScope = root.active
-        ? (root.run(() => effectScope()) as EffectScope)
-        : effectScope()
+      const entryScope = root.active ? (root.run(() => effectScope()) as EffectScope) : effectScope()
       const live = shallowRef(bindings) as ShallowRef<TBindings>
       const handle = entryScope.run(() => create(live)) as THandle
       entries.set(key, { scope: entryScope, live, handle, children: null, boundUid: uid })
       return handle
     },
-    release<TBindings extends object>(
-      key: string,
-      uid: number | null,
-      park: (bindings: TBindings) => TBindings,
-    ): void {
+    release<TBindings extends object>(key: string, uid: number | null, park: (bindings: TBindings) => TBindings): void {
       const entry = entries.get(key)
       if (!entry || entry.boundUid !== uid) return
       entry.boundUid = null
@@ -222,16 +204,14 @@ export function createListEditorStateScope(): ListEditorStateScope {
  * the `childScope` of its own persisted entry (so the chain survives at any depth); a plain editor
  * creates a component-owned scope that dies with it.
  */
-export function provideListEditorStateScope(
-  inherited: ListEditorStateScope | null,
-): ListEditorStateScope {
+export function provideListEditorStateScope(inherited: ListEditorStateScope | null): ListEditorStateScope {
   const scope = inherited ?? createListEditorStateScope()
   provide(ListEditorStateScopeKey, scope)
   return scope
 }
 
 const parkBindings = <TBindings extends { get: () => any; set: (value: any) => void }>(
-  bindings: TBindings,
+  bindings: TBindings
 ): TBindings => {
   const parked = bindings.get()
   return { ...bindings, get: () => parked, set: () => undefined }
@@ -249,7 +229,7 @@ const parkBindings = <TBindings extends { get: () => any; set: (value: any) => v
  */
 export function useListEditorStateEntry<TItem extends Record<string, any>>(
   stateKey: string | undefined,
-  bindings: ListEditorStateBindings<TItem>,
+  bindings: ListEditorStateBindings<TItem>
 ): ListEditorStateEntry<ListEditorHandle<TItem>> | null {
   const scope = inject(ListEditorStateScopeKey, null)
   if (!stateKey || !scope) return null
@@ -269,12 +249,10 @@ export function useListEditorStateEntry<TItem extends Record<string, any>>(
         // `?? true` reproduces the "no validate" always-valid branch.
         validate: (item) => live.value.validate?.(item) ?? true,
       }),
-    uid,
+    uid
   )
   if (getCurrentInstance()) {
-    onBeforeUnmount(() =>
-      scope.release<ListEditorStateBindings<TItem>>(stateKey, uid, parkBindings),
-    )
+    onBeforeUnmount(() => scope.release<ListEditorStateBindings<TItem>>(stateKey, uid, parkBindings))
   }
   return { handle, childScope: scope.childScope(stateKey) }
 }
@@ -282,7 +260,7 @@ export function useListEditorStateEntry<TItem extends Record<string, any>>(
 /** Tree-shaped twin of `useListEditorStateEntry` for ANestedSortableListEditor. */
 export function useNestedListEditorStateEntry<TItem extends Record<string, any>>(
   stateKey: string | undefined,
-  bindings: NestedListEditorStateBindings<TItem>,
+  bindings: NestedListEditorStateBindings<TItem>
 ): ListEditorStateEntry<NestedListEditorHandle<TItem>> | null {
   const scope = inject(ListEditorStateScopeKey, null)
   if (!stateKey || !scope) return null
@@ -302,12 +280,10 @@ export function useNestedListEditorStateEntry<TItem extends Record<string, any>>
         dirtyExclude: () => toValue(live.value.dirtyExclude) ?? [],
         validate: (item) => live.value.validate?.(item) ?? true,
       }),
-    uid,
+    uid
   )
   if (getCurrentInstance()) {
-    onBeforeUnmount(() =>
-      scope.release<NestedListEditorStateBindings<TItem>>(stateKey, uid, parkBindings),
-    )
+    onBeforeUnmount(() => scope.release<NestedListEditorStateBindings<TItem>>(stateKey, uid, parkBindings))
   }
   return { handle, childScope: scope.childScope(stateKey) }
 }

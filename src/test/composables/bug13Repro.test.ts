@@ -1,15 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { ref } from 'vue'
 import { useNestedListEditorController } from '@/labs/listEditor/composables/useNestedListEditorController'
-import {
-  computeInstruction,
-  type HoveredRow,
-} from '@/labs/listEditor/composables/useDragInstruction'
-import type {
-  NestedTree,
-  NestedTreeNode,
-  ListEditorKey,
-} from '@/labs/listEditor/types/listEditorTypes'
+import { computeInstruction, type HoveredRow } from '@/labs/listEditor/composables/useDragInstruction'
+import type { NestedTree, NestedTreeNode, ListEditorKey } from '@/labs/listEditor/types/listEditorTypes'
 
 /**
  * BUG-13 exhaustive replication harness.
@@ -59,19 +52,12 @@ const trees: Record<string, () => NestedTree<Row>> = {
   }),
   // Two children so we exercise first-child AND last-child extraction.
   twoChildren: () => ({
-    children: [
-      node(r('A', null), [node(r('B', 'A')), node(r('C', 'A'))]),
-      node(r('D', null)),
-      node(r('E', null)),
-    ],
+    children: [node(r('A', null), [node(r('B', 'A')), node(r('C', 'A'))]), node(r('D', null)), node(r('E', null))],
     meta: { dirty: false },
   }),
   // Depth-2 chain A>B>C plus siblings, to exercise deep first/last extraction.
   deep: () => ({
-    children: [
-      node(r('A', null), [node(r('B', 'A'), [node(r('C', 'B'))]), node(r('B2', 'A'))]),
-      node(r('D', null)),
-    ],
+    children: [node(r('A', null), [node(r('B', 'A'), [node(r('C', 'B'))]), node(r('B2', 'A'))]), node(r('D', null))],
     meta: { dirty: false },
   }),
 }
@@ -90,7 +76,7 @@ const setup = (tree: NestedTree<Row>) => {
 // Resolve the live parentKey + ordered sibling keys of a node in a tree.
 const locate = (
   tree: NestedTree<Row>,
-  key: ListEditorKey,
+  key: ListEditorKey
 ): { parentKey: ListEditorKey | null; siblingKeys: ListEditorKey[]; index: number } | null => {
   let found: {
     parentKey: ListEditorKey | null
@@ -178,18 +164,17 @@ describe('BUG-13: drop instruction ↔ landing consistency (exhaustive)', () => 
               const loc = locate(store.value, source)!
               if (loc.parentKey !== inst.parentKey) {
                 mismatches.push(
-                  `${tag}: landed under ${String(loc.parentKey)}, line promised ${String(inst.parentKey)}`,
+                  `${tag}: landed under ${String(loc.parentKey)}, line promised ${String(inst.parentKey)}`
                 )
                 continue
               }
               if (inst.makeChild) {
-                if (loc.index !== 0)
-                  mismatches.push(`${tag}: make-child not first child (idx ${loc.index})`)
+                if (loc.index !== 0) mismatches.push(`${tag}: make-child not first child (idx ${loc.index})`)
               } else if (inst.levelRowKey !== null) {
                 const predecessor = loc.index > 0 ? loc.siblingKeys[loc.index - 1] : null
                 if (predecessor !== inst.levelRowKey) {
                   mismatches.push(
-                    `${tag}: landed after ${String(predecessor)}, line promised after ${String(inst.levelRowKey)}`,
+                    `${tag}: landed after ${String(predecessor)}, line promised after ${String(inst.levelRowKey)}`
                   )
                 }
               } else if (loc.parentKey !== null || loc.index !== 0) {

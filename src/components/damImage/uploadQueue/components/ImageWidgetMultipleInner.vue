@@ -80,7 +80,7 @@ const props = withDefaults(
     widgetIdentifierId: undefined,
     callDeleteApiOnRemove: false,
     skipCurrentUserCheck: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -89,14 +89,13 @@ const emit = defineEmits<{
 
 const assetSelectDialog = ref(false)
 
-const imageWidgetUploadConfig = inject<
-  ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined
->(ImageWidgetUploadConfig, undefined)
+const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
+  ImageWidgetUploadConfig,
+  undefined
+)
 
 if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.value)) {
-  throw new Error(
-    "Fatal error, parent component doesn't provide necessary config ext system config.",
-  )
+  throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
 }
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -108,7 +107,7 @@ const uploadButtonComponent = ref<InstanceType<any> | null>(null)
 
 const { uploadSizes, uploadAccept } = useDamAcceptTypeAndSizeHelper(
   DamAssetType.Image,
-  imageWidgetUploadConfig.value.extSystemConfig,
+  imageWidgetUploadConfig.value.extSystemConfig
 )
 
 const { t } = useI18n()
@@ -133,7 +132,7 @@ const fetchImagesOnLoad = async () => {
   try {
     imagesLoading.value = true
     const imagesRes = (await imageApi.fetchImageListByIds(imageClient, props.modelValue)).sort(
-      (a, b) => (a.position ?? 0) - (b.position ?? 0),
+      (a, b) => (a.position ?? 0) - (b.position ?? 0)
     )
     const groupedIds: IdsGroupedByLicences = new Map()
     imagesRes.forEach((image) => {
@@ -145,11 +144,7 @@ const fetchImagesOnLoad = async () => {
       }
     })
 
-    const assetsRes = await fetchAssetListByFileIdsMultipleLicences(
-      damClient,
-      endPointAsset,
-      groupedIds,
-    )
+    const assetsRes = await fetchAssetListByFileIdsMultipleLicences(damClient, endPointAsset, groupedIds)
 
     imageStore.setImages(
       imagesRes.map((imageRes) => {
@@ -163,12 +158,9 @@ const fetchImagesOnLoad = async () => {
           showDamAuthors: found ? found.authors.length === 0 : false,
           assetId: found ? found.id : undefined,
         }
-      }),
+      })
     )
-    emit(
-      'update:modelValue',
-      images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[],
-    )
+    emit('update:modelValue', images.value.map((image) => image.id).filter((id) => id !== undefined) as IntegerId[])
   } catch (e) {
     imagesLoadFailed.value = true
     showErrorsDefault(e)
@@ -208,9 +200,7 @@ const afterLimitDialogAdd = () => {
   uploadQueueDialog.value = props.queueKey
 }
 
-const assetSelectConfirmMap = async (
-  items: AssetSearchListItemDto[],
-): Promise<ImageStoreItem[]> => {
+const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<ImageStoreItem[]> => {
   const assetSelectStore = useAssetSelectStore()
   const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
   const authorIdsToFetch = new Set<DocId>()
@@ -258,11 +248,9 @@ const assetSelectConfirmMap = async (
       if (authorIdsToFetch.size > 0) {
         // One ext system for the whole selection is a picker invariant (licences of a mixed listing must
         // share it), so any selected licence resolves the same author namespace.
-        const authorsRes = await fetchAuthorListByIds(
-          damClient,
-          assetSelectStore.selectedSelectConfig.extSystem,
-          [...authorIdsToFetch],
-        )
+        const authorsRes = await fetchAuthorListByIds(damClient, assetSelectStore.selectedSelectConfig.extSystem, [
+          ...authorIdsToFetch,
+        ])
         authorsRes.forEach((author) => {
           authorsMap.set(author.id, author.name)
         })
@@ -381,7 +369,7 @@ const onAssetUploadConfirm = (items: ImageStoreItem[]) => {
         ...item,
         position: maxPosition.value,
       }
-    }),
+    })
   )
   uploadQueueDialog.value = null
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -440,11 +428,7 @@ const saveImages = async () => {
         assetUpdateItems.push({ id: image.assetId, authors: image.damAuthors })
       }
       if (authorEnabled.value && image.showDamAuthors && image.damAuthors.length > 0) {
-        const authorsRes = await fetchAuthorListByIds(
-          damClient,
-          cachedExtSystemId.value,
-          image.damAuthors,
-        )
+        const authorsRes = await fetchAuthorListByIds(damClient, cachedExtSystemId.value, image.damAuthors)
         image.texts.source = authorsRes.map((author) => author.name).join(', ')
       }
     }
@@ -479,16 +463,12 @@ const saveImages = async () => {
     }
 
     const getUpdatedItem = async (item: ImageStoreItem): Promise<ImageStoreItem> => {
-      const matchedImage = imageStore.images.find(
-        (storeItem) => storeItem.dam.damId === item.dam.damId,
-      )
+      const matchedImage = imageStore.images.find((storeItem) => storeItem.dam.damId === item.dam.damId)
 
       return {
         ...item,
         damAuthors: matchedImage ? matchedImage.damAuthors : item.damAuthors,
-        showDamAuthors: matchedImage
-          ? matchedImage.damAuthors.length === 0
-          : item.damAuthors.length === 0,
+        showDamAuthors: matchedImage ? matchedImage.damAuthors.length === 0 : item.damAuthors.length === 0,
         assetId: item.assetId,
       }
     }

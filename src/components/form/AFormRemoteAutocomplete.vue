@@ -30,10 +30,7 @@ const props = withDefaults(
     errorMessage?: string
     hideDetails?: boolean
     hideLabel?: boolean
-    fetchItems: (
-      pagination: Pagination,
-      filterBag: FilterBag,
-    ) => Promise<ValueObjectOption<string | number>[]>
+    fetchItems: (pagination: Pagination, filterBag: FilterBag) => Promise<ValueObjectOption<string | number>[]>
     fetchItemsByIds: fetchItemsByIdsType
     innerFilter: FilterBag
     filterByField?: string
@@ -64,7 +61,7 @@ const props = withDefaults(
     disabled: undefined,
     chips: false,
     autoSelectIfSingleAndEmptyOnInit: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'searchChange', data: string): void
@@ -80,16 +77,13 @@ const modelValue = defineModel<DocId | IntegerId | DocId[] | IntegerId[] | null 
   },
 })
 
-const modelValueSelected = defineModel<DocId | IntegerId | DocId[] | IntegerId[] | null | any>(
-  'selected',
-  {
-    required: false,
-    default: null,
-    set(newValue) {
-      return isArray(newValue) ? cloneDeep(newValue) : newValue
-    },
+const modelValueSelected = defineModel<DocId | IntegerId | DocId[] | IntegerId[] | null | any>('selected', {
+  required: false,
+  default: null,
+  set(newValue) {
+    return isArray(newValue) ? cloneDeep(newValue) : newValue
   },
-)
+})
 
 const modelValueAutocomplete = ref<DocId | IntegerId | DocId[] | IntegerId[] | null | any>(null)
 
@@ -105,8 +99,10 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } =
-    useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } = useCollabField(
+    props.collab.room,
+    props.collab.field
+  )
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -115,7 +111,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true },
+    { immediate: true }
   )
 }
 
@@ -202,9 +198,7 @@ const apiSearch = async (query: string, requestCounter: number) => {
 }
 
 const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
-  const found = allItems.value.filter((item: ValueObjectOption<string | number>) =>
-    values.includes(item.value),
-  )
+  const found = allItems.value.filter((item: ValueObjectOption<string | number>) => values.includes(item.value))
   return ([] as ValueObjectOption<string | number>[]).concat(found)
 }
 
@@ -283,7 +277,7 @@ watchDebounced(
       emit('searchChangeDebounced', newValue)
     }
   },
-  { debounce: 300 },
+  { debounce: 300 }
 )
 
 watch(search, (newValue, oldValue) => {
@@ -344,7 +338,7 @@ watch(
     modelValueAutocomplete.value = selectedNewValue
     loadingLocal.value = false
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const onAutocompleteModelUpdate = (newValue: any) => {

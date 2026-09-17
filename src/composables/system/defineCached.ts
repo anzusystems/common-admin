@@ -28,7 +28,7 @@ export function defineCached<
   mapIdToMinimal: (id: I) => M,
   fetchCallback: (ids: I[]) => Promise<T[]>,
   idProp = 'id',
-  maxLimit = 1000,
+  maxLimit = 1000
 ) {
   const cache: Ref<Map<I, CachedItem<M>>> = ref(new Map())
   const toFetch = ref(new Set()) as Ref<Set<I>>
@@ -162,7 +162,7 @@ export function defineCached<
       }
     },
     1500,
-    { maxWait: 5000 },
+    { maxWait: 5000 }
   )
 
   /**

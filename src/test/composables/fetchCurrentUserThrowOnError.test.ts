@@ -30,9 +30,7 @@ describe('fetchCurrentUser throwOnError', () => {
     const { useCurrentUser } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
 
-    await expect(
-      fetchCurrentUser(client, '/current', undefined, 'user', { throwOnError: true }),
-    ).rejects.toBe(original)
+    await expect(fetchCurrentUser(client, '/current', undefined, 'user', { throwOnError: true })).rejects.toBe(original)
   })
 
   it('marks the user as loaded even when it rethrows', async () => {
@@ -40,9 +38,7 @@ describe('fetchCurrentUser throwOnError', () => {
     const { useCurrentUser, can } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
 
-    await expect(
-      fetchCurrentUser(client, '/current', undefined, 'user', { throwOnError: true }),
-    ).rejects.toThrow()
+    await expect(fetchCurrentUser(client, '/current', undefined, 'user', { throwOnError: true })).rejects.toThrow()
 
     // Would throw "must try to load currentUser first" if the flag had been skipped.
     expect(() => can('cms_article_read' as never)).not.toThrow()

@@ -1,10 +1,6 @@
 <script lang="ts" setup>
 import type { Language, LanguageCode } from '@/composables/languageSettings'
-import {
-  ALL_LANGUAGES,
-  modifyLanguageSettings,
-  useLanguageSettings,
-} from '@/composables/languageSettings'
+import { ALL_LANGUAGES, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import { computed, inject } from 'vue'
 import { isUndefined } from '@/utils/common'
 import FlagCountry from '@/components/flags/FlagCountry.vue'
@@ -14,7 +10,7 @@ const props = withDefaults(
   defineProps<{
     isAdministrator: boolean
   }>(),
-  {},
+  {}
 )
 
 const emit = defineEmits<{
@@ -43,8 +39,7 @@ const currentLocale = computed(() => {
 const availableLocales = computed(() => {
   return ALL_LANGUAGES.filter(
     (item) =>
-      (configAvailableLanguages.includes(item.code) || item.code === 'xx') &&
-      (!item.adminOnly || props.isAdministrator),
+      (configAvailableLanguages.includes(item.code) || item.code === 'xx') && (!item.adminOnly || props.isAdministrator)
   )
 })
 </script>

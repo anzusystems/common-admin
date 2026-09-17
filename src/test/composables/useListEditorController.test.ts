@@ -8,10 +8,7 @@ interface Row {
   position: number
 }
 
-const setup = (
-  initial: Row[] = [],
-  opts: Partial<Parameters<typeof useListEditorController<Row>>[0]> = {},
-) => {
+const setup = (initial: Row[] = [], opts: Partial<Parameters<typeof useListEditorController<Row>>[0]> = {}) => {
   const store = ref<Row[]>(initial.map((r) => ({ ...r })))
   const h = useListEditorController<Row>({
     get: () => store.value,
@@ -145,7 +142,7 @@ describe('useListEditorController', () => {
         { id: 1, title: 'a', position: 5 },
         { id: 2, title: 'b', position: 9 },
       ],
-      { position: { field: 'position', multiplier: 10 } },
+      { position: { field: 'position', multiplier: 10 } }
     )
     expect(tenfold.h.getPayload().map((r) => r.position)).toEqual([10, 20])
 
@@ -253,10 +250,7 @@ describe('useListEditorController', () => {
   })
 
   it('position:false leaves positions alone and makes them count as row content', () => {
-    const store = ref([
-      { id: 1, title: 'a', position: 7 } as Row,
-      { id: 2, title: 'b', position: 3 } as Row,
-    ])
+    const store = ref([{ id: 1, title: 'a', position: 7 } as Row, { id: 2, title: 'b', position: 3 } as Row])
     const h = useListEditorController<Row>({
       get: () => store.value,
       set: (v) => (store.value = v),
@@ -377,7 +371,7 @@ describe('useListEditorController', () => {
         { id: 1, title: 'a', position: 1 },
         { id: 2, title: 'b', position: 2 },
       ],
-      { normalizeSaved: (rows) => [...rows].sort((a, b) => a.position - b.position) },
+      { normalizeSaved: (rows) => [...rows].sort((a, b) => a.position - b.position) }
     )
     // The server echoes the saved rows out of position order.
     h.commit([

@@ -12,7 +12,7 @@ const props = withDefaults(
     loading: undefined,
     title: undefined,
     blockInput: false,
-  },
+  }
 )
 
 const loadingComputed = computed(() => {

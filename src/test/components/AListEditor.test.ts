@@ -113,17 +113,14 @@ describe('AListEditor', () => {
                 factory: makeFaqItem,
               },
               {
-                item: ({ raw }: { raw: FaqItem }) =>
-                  h('div', { class: 'custom-editor' }, `editing ${raw.id}`),
-              },
+                item: ({ raw }: { raw: FaqItem }) => h('div', { class: 'custom-editor' }, `editing ${raw.id}`),
+              }
             )
         },
       })
       const wrapper = mount(ItemHost)
       // trigger edit on first row
-      const editBtn = wrapper
-        .findAll('button')
-        .find((b) => b.attributes('class')?.includes('a-le-action--edit'))
+      const editBtn = wrapper.findAll('button').find((b) => b.attributes('class')?.includes('a-le-action--edit'))
       expect(editBtn).toBeTruthy()
       await editBtn!.trigger('click')
       await nextTick()
@@ -248,15 +245,11 @@ describe('AListEditor', () => {
                 readonly: true,
               },
               {
-                'item-actions': ({
-                  actions,
-                }: {
-                  actions: { delete: () => Promise<void>; addAfter: () => void }
-                }) => [
+                'item-actions': ({ actions }: { actions: { delete: () => Promise<void>; addAfter: () => void } }) => [
                   h('button', { class: 'ro-delete', onClick: actions.delete }, 'delete'),
                   h('button', { class: 'ro-add-after', onClick: actions.addAfter }, 'add after'),
                 ],
-              },
+              }
             )
         },
       })
@@ -293,7 +286,7 @@ describe('AListEditor', () => {
               {
                 empty: ({ actions }: { actions: { add: () => void } }) =>
                   h('button', { class: 'ro-add', onClick: actions.add }, 'add'),
-              },
+              }
             )
         },
       })
@@ -330,7 +323,7 @@ describe('AListEditor', () => {
               {
                 'item-actions': ({ actions }: { actions: { addAfter: () => void } }) =>
                   h('button', { class: 'test-add-after', onClick: actions.addAfter }, 'add after'),
-              },
+              }
             )
         },
       })
@@ -420,9 +413,8 @@ describe('AListEditor', () => {
                 title: 'X',
               },
               {
-                header: ({ title }: { title: string }) =>
-                  h('div', { class: 'custom-header' }, `CUSTOM: ${title}`),
-              },
+                header: ({ title }: { title: string }) => h('div', { class: 'custom-header' }, `CUSTOM: ${title}`),
+              }
             )
         },
       })
@@ -460,9 +452,8 @@ describe('AListEditor', () => {
                 ...extra,
               },
               {
-                item: ({ raw }: { raw: FaqItem }) =>
-                  h('input', { class: 'edit-input', value: raw.title }),
-              },
+                item: ({ raw }: { raw: FaqItem }) => h('input', { class: 'edit-input', value: raw.title }),
+              }
             )
         },
       })
@@ -543,9 +534,8 @@ describe('AListEditor', () => {
                 onItemSave,
               },
               {
-                item: ({ raw }: { raw: FaqItem }) =>
-                  h('input', { class: 'edit-input', value: raw.title }),
-              },
+                item: ({ raw }: { raw: FaqItem }) => h('input', { class: 'edit-input', value: raw.title }),
+              }
             )
         },
       })
@@ -564,7 +554,7 @@ describe('AListEditor', () => {
       expect(footer.exists()).toBe(true)
       const buttons = footer.findAll('button')
       expect(buttons.map((b) => b.text().trim().toLowerCase())).toEqual(
-        expect.arrayContaining([expect.stringMatching(/cancel/), expect.stringMatching(/save/)]),
+        expect.arrayContaining([expect.stringMatching(/cancel/), expect.stringMatching(/save/)])
       )
     })
 
@@ -638,7 +628,7 @@ describe('AListEditor', () => {
               {
                 item: ({ raw }: { raw: FaqItem }) => h('div', `editing ${raw.id}`),
                 'item-footer': () => h('div', { class: 'custom-footer' }, 'custom footer'),
-              },
+              }
             )
         },
       })
@@ -736,7 +726,7 @@ describe('AListEditor', () => {
                 },
                 factory: makeFaqItem,
               },
-              { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) },
+              { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) }
             )
         },
       })
@@ -768,7 +758,7 @@ describe('AListEditor', () => {
                 factory: (): FaqItem => ({ id: 999, position: 0, title: 'New', status: 'Draft' }),
                 compactField: 'title',
               },
-              { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) },
+              { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) }
             )
         },
       })
@@ -797,7 +787,7 @@ describe('AListEditor', () => {
                 },
                 factory: makeFaqItem,
               },
-              { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) },
+              { item: ({ raw }: { raw: FaqItem }) => h('input', { value: raw.title }) }
             )
         },
       })
@@ -826,7 +816,7 @@ describe('AListEditor', () => {
                 },
                 factory: makeFaqItem,
               },
-              { empty: () => h('div', { class: 'my-empty' }, 'Nothing here yet') },
+              { empty: () => h('div', { class: 'my-empty' }, 'Nothing here yet') }
             )
         },
       })
@@ -852,7 +842,7 @@ describe('AListEditor', () => {
               {
                 'add-button': ({ actions }: { actions: { add: () => void } }) =>
                   h('button', { class: 'my-add', onClick: actions.add }, 'Custom add'),
-              },
+              }
             )
         },
       })
@@ -876,9 +866,8 @@ describe('AListEditor', () => {
                 factory: makeFaqItem,
               },
               {
-                'item-actions': ({ raw }: { raw: FaqItem }) =>
-                  h('span', { class: 'my-actions' }, `actions-${raw.id}`),
-              },
+                'item-actions': ({ raw }: { raw: FaqItem }) => h('span', { class: 'my-actions' }, `actions-${raw.id}`),
+              }
             )
         },
       })
@@ -893,8 +882,7 @@ describe('AListEditor', () => {
   describe('exposed imperative API (v2 controller handle)', () => {
     it('exposes the controller handle via defineExpose', () => {
       const { editor } = mountEditor()
-      const exposed = (editor().vm as unknown as { $: { exposed: Record<string, unknown> } }).$
-        .exposed
+      const exposed = (editor().vm as unknown as { $: { exposed: Record<string, unknown> } }).$.exposed
       expect(typeof exposed.commit).toBe('function')
       expect(typeof exposed.reset).toBe('function')
       expect(typeof exposed.validateAll).toBe('function')

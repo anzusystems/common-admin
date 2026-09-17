@@ -2,11 +2,7 @@
 import { computed, inject, watch } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import {
-  DatatablePageStoreKey,
-  DatatablePaginationKey,
-  FilterConfigKey,
-} from '@/labs/filters/filterInjectionKeys'
+import { DatatablePageStoreKey, DatatablePaginationKey, FilterConfigKey } from '@/labs/filters/filterInjectionKeys'
 import { useThrottleFn } from '@vueuse/core'
 import { datatablePageKey, useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
@@ -18,7 +14,7 @@ withDefaults(
   {
     itemsPerPageOptions: () => [10, 25, 50],
     hideRecordsPerPage: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -39,9 +35,7 @@ const { setStoredPage } = useDatatablePageStore()
 const providedPageKey = inject(DatatablePageStoreKey, undefined)
 const filterConfig = inject(FilterConfigKey, undefined)
 const pageStoreKey = computed(
-  () =>
-    providedPageKey ??
-    datatablePageKey(filterConfig?.general.system, filterConfig?.general.subject),
+  () => providedPageKey ?? datatablePageKey(filterConfig?.general.system, filterConfig?.general.subject)
 )
 
 const lastPage = computed(() => {
@@ -89,7 +83,7 @@ watch(
       pagination.value.page = 1
       emit('change')
     }
-  },
+  }
 )
 
 watch(
@@ -99,24 +93,44 @@ watch(
       setStoredPage(pageStoreKey.value, newValue)
       emit('change')
     }
-  },
+  }
 )
 
-const onClickFirst = useThrottleFn(() => {
-  pagination.value.page = 1
-}, 300)
+// Leading edge only: the throttle is a click-spam guard, not a rate limiter. VueUse 15 flipped
+// `trailing` to true by default, which replays the last click once the window closes -- stepping
+// prev/next a second time, and past `lastPage`, because the queued callback never re-reads the
+// disabled state.
+const onClickFirst = useThrottleFn(
+  () => {
+    pagination.value.page = 1
+  },
+  300,
+  false
+)
 
-const onClickLast = useThrottleFn(() => {
-  pagination.value.page = lastPage.value
-}, 300)
+const onClickLast = useThrottleFn(
+  () => {
+    pagination.value.page = lastPage.value
+  },
+  300,
+  false
+)
 
-const onClickPrev = useThrottleFn(() => {
-  pagination.value.page = pagination.value.page - 1
-}, 300)
+const onClickPrev = useThrottleFn(
+  () => {
+    pagination.value.page = pagination.value.page - 1
+  },
+  300,
+  false
+)
 
-const onClickNext = useThrottleFn(() => {
-  pagination.value.page = pagination.value.page + 1
-}, 300)
+const onClickNext = useThrottleFn(
+  () => {
+    pagination.value.page = pagination.value.page + 1
+  },
+  300,
+  false
+)
 </script>
 
 <template>

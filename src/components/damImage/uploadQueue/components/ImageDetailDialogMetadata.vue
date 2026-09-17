@@ -51,7 +51,7 @@ const props = withDefaults(
     editAssetLabel: undefined,
     savingLabel: undefined,
     uploadLicence: undefined,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -70,9 +70,7 @@ const { cachedExtSystemId } = useExtSystemIdForCached()
 
 const type = computed<DamAssetTypeType | null>(() => {
   if (isMediaAware(detail.value)) {
-    return detail.value.damMedia.assetType === DamMediaType.Video
-      ? DamAssetType.Video
-      : DamAssetType.Audio
+    return detail.value.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
   } else if (isImageCreateUpdateAware(detail.value)) {
     return DamAssetType.Image
   }
@@ -241,11 +239,7 @@ defineExpose({
   >
     <VCard v-if="modelValue">
       <ADialogToolbar @on-cancel="onDialogModelUpdate(false)">
-        {{
-          type === DamAssetType.Image
-            ? t('common.damImage.image.meta.edit')
-            : t('common.damImage.media.meta.edit')
-        }}
+        {{ type === DamAssetType.Image ? t('common.damImage.image.meta.edit') : t('common.damImage.media.meta.edit') }}
       </ADialogToolbar>
       <VCardText>
         <div
@@ -334,9 +328,7 @@ defineExpose({
           class="position-relative"
         >
           <div class="my-4">
-            <h4 class="font-weight-bold text-label-large">
-              {{ t('common.damImage.media.meta.preview') }}:
-            </h4>
+            <h4 class="font-weight-bold text-label-large">{{ t('common.damImage.media.meta.preview') }}:</h4>
             <slot
               name="preview"
               :image-media="detail"

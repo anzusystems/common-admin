@@ -41,7 +41,7 @@ const props = withDefaults(
     assetFileProperties: undefined,
     licenceBadge: '',
     singleUse: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'error'): void

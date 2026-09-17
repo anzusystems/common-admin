@@ -30,7 +30,7 @@ const props = withDefaults(
     dataCy: undefined,
     configName: 'default',
     uploadLicence: undefined,
-  },
+  }
 )
 
 const { t } = useI18n()
@@ -57,13 +57,7 @@ const onSave = async () => {
     return
   }
   try {
-    await updateAssetMetadata(
-      damClient,
-      endPointAsset,
-      asset.value,
-      props.extSystem,
-      mainFileSingleUse.value,
-    )
+    await updateAssetMetadata(damClient, endPointAsset, asset.value, props.extSystem, mainFileSingleUse.value)
     if (updateUploadStore.value && !isNull(asset.value)) {
       await uploadQueueStore.updateFromDetail(asset.value)
     }

@@ -45,7 +45,7 @@ export interface UseDirtyBaselineApi<TItem> {
  */
 export function useDirtyBaseline<TItem extends Record<string, any>>(
   getEntries: () => Array<{ key: ListEditorKey; data: TItem }>,
-  options: UseDirtyBaselineOptions<TItem> = {},
+  options: UseDirtyBaselineOptions<TItem> = {}
 ): UseDirtyBaselineApi<TItem> {
   const excludeFields = options.excludeFields ?? []
   const hasExcludes = excludeFields.length > 0
@@ -119,7 +119,7 @@ export function useDirtyBaseline<TItem extends Record<string, any>>(
       () => {
         captureDirtyBaseline()
       },
-      { deep: true },
+      { deep: true }
     )
   } else if (options.source) {
     const stopInitialFillWatch = watch(options.source, () => {

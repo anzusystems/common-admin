@@ -63,7 +63,7 @@ const props = withDefaults(
     hideIcon: false,
     showMetaIcons: false,
     assetFileProperties: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'load'): void
@@ -102,10 +102,7 @@ const uploadingPercentage = computed(() => {
 })
 
 const backgroundColorComputed = computed(() => {
-  const grayBackgroundStatuses: readonly DamAssetStatusType[] = [
-    DamAssetStatus.Deleting,
-    DamAssetStatus.Draft,
-  ]
+  const grayBackgroundStatuses: readonly DamAssetStatusType[] = [DamAssetStatus.Deleting, DamAssetStatus.Draft]
   return grayBackgroundStatuses.includes(props.assetStatus) ? '#ccc' : props.backgroundColor
 })
 

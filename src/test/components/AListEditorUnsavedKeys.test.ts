@@ -88,11 +88,7 @@ describe('AListEditor — controller unsaved tracking', () => {
   it('commit() re-baselines all rows (post-save)', async () => {
     const { wrapper, model, handle } = mountEditor()
     await nextTick()
-    model.value = [
-      { ...model.value[0], title: 'changed-A' },
-      { ...model.value[1], title: 'changed-B' },
-      model.value[2],
-    ]
+    model.value = [{ ...model.value[0], title: 'changed-A' }, { ...model.value[1], title: 'changed-B' }, model.value[2]]
     await nextTick()
     expect(wrapper.findAll('.a-le-row--unsaved')).toHaveLength(2)
 
@@ -121,11 +117,7 @@ describe('AListEditor — controller unsaved tracking', () => {
     const { model, handle } = mountEditor()
     await nextTick()
     expect(handle().hasUnsaved.value).toBe(false)
-    model.value = [
-      { ...model.value[0], title: 'a' },
-      { ...model.value[1], title: 'b' },
-      model.value[2],
-    ]
+    model.value = [{ ...model.value[0], title: 'a' }, { ...model.value[1], title: 'b' }, model.value[2]]
     await nextTick()
     expect(handle().hasUnsaved.value).toBe(true)
     expect(handle().invalidKeys.value.size).toBe(0)

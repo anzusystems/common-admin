@@ -25,8 +25,7 @@ interface Item {
 const makeMatchMedia = (hasFinePointer: boolean, hasCoarsePointer = false) =>
   vi.fn((q: string) => ({
     matches:
-      (hasFinePointer && q.includes('any-pointer: fine')) ||
-      (hasCoarsePointer && q.includes('any-pointer: coarse')),
+      (hasFinePointer && q.includes('any-pointer: fine')) || (hasCoarsePointer && q.includes('any-pointer: coarse')),
     media: q,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
@@ -70,7 +69,7 @@ const mountChipsEditor = (extraProps: Record<string, unknown> = {}) => {
           },
           {
             'item-compact': ({ raw }: { raw: Item }) => h('span', raw.title),
-          },
+          }
         )
     },
   })
@@ -93,9 +92,7 @@ describe('ASortableListEditor — touch drag (chips mode), QA 85050 U-03', () =>
     expect(downs.length).toBeGreaterThan(0)
 
     // Root carries the touch modifier.
-    expect(mounted.find('.a-sortable-list-editor').classes()).toContain(
-      'a-sortable-list-editor--touch',
-    )
+    expect(mounted.find('.a-sortable-list-editor').classes()).toContain('a-sortable-list-editor--touch')
   })
 
   it('a device with a fine pointer keeps the drag handle in chips mode (incl. a touchscreen PC + mouse)', async () => {
@@ -104,9 +101,7 @@ describe('ASortableListEditor — touch drag (chips mode), QA 85050 U-03', () =>
     await nextTick()
 
     expect(mounted.find('.a-le-drag-handle').exists()).toBe(true)
-    expect(mounted.find('.a-sortable-list-editor').classes()).not.toContain(
-      'a-sortable-list-editor--touch',
-    )
+    expect(mounted.find('.a-sortable-list-editor').classes()).not.toContain('a-sortable-list-editor--touch')
   })
 
   // THE RULE, per input-modality best practice: never detect a device in order to HIDE a way to act.
@@ -131,10 +126,7 @@ describe('ASortableListEditor — touch drag (chips mode), QA 85050 U-03', () =>
   ])(
     'offers every affordance the device can actually use: %s',
     async (_label, hasFinePointer, hasCoarsePointer, extraProps) => {
-      window.matchMedia = makeMatchMedia(
-        hasFinePointer,
-        hasCoarsePointer,
-      ) as unknown as typeof window.matchMedia
+      window.matchMedia = makeMatchMedia(hasFinePointer, hasCoarsePointer) as unknown as typeof window.matchMedia
       mounted = mountChipsEditor(extraProps as Record<string, unknown>)
       await nextTick()
 
@@ -144,15 +136,12 @@ describe('ASortableListEditor — touch drag (chips mode), QA 85050 U-03', () =>
       const dragPossible = hasFinePointer && !dragDisabled
 
       // Never neither — the row must always be movable.
-      expect(
-        canDrag || canArrow,
-        'neither a drag handle nor arrows — the row cannot be moved',
-      ).toBe(true)
+      expect(canDrag || canArrow, 'neither a drag handle nor arrows — the row cannot be moved').toBe(true)
       // The handle appears exactly when a precise drag is possible…
       expect(canDrag).toBe(dragPossible)
       // …and the arrows stay wherever a finger could be used, or wherever dragging cannot happen —
       // so a hybrid carries both at once.
       expect(canArrow).toBe(hasCoarsePointer || !dragPossible)
-    },
+    }
   )
 })

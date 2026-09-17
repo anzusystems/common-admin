@@ -3,10 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 import ASystemBarNewVersion from '@/components/systemBar/ASystemBarNewVersion.vue'
 import { isUndefined } from '@/utils/common'
-import {
-  AnzuNewVersionFetchError,
-  isAnzuNewVersionFetchError,
-} from '@/model/error/AnzuNewVersionFetchError'
+import { AnzuNewVersionFetchError, isAnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 
@@ -21,7 +18,7 @@ const props = withDefaults(
     checkInterval: 60000,
     jsonRelativePath: 'config.json',
     minInactiveTime: 5000,
-  },
+  }
 )
 
 const showSystemBar = ref<boolean>(false)
@@ -58,8 +55,7 @@ const checkNewVersion = async (): Promise<void> => {
       if (Object.keys(json).length < 1) {
         throw new AnzuNewVersionFetchError('Unable to load env config. Incorrect response body.')
       }
-      showSystemBar.value =
-        !isUndefined(json.appVersion) && json.appVersion !== props.currentVersion
+      showSystemBar.value = !isUndefined(json.appVersion) && json.appVersion !== props.currentVersion
       newVersion.value = showSystemBar.value
       consecutiveFailures = 0
       alertedForCurrentOutage = false
@@ -96,10 +92,7 @@ const { pause, resume } = useIntervalFn(() => {
       if (consecutiveFailures >= CONSECUTIVE_FAILURE_ALERT_THRESHOLD && !alertedForCurrentOutage) {
         alertedForCurrentOutage = true
         // One signal per outage — ops can alert on this; resets on the next successful poll.
-        console.error(
-          `[ASystemBar] Version check failed ${consecutiveFailures} consecutive times:`,
-          error,
-        )
+        console.error(`[ASystemBar] Version check failed ${consecutiveFailures} consecutive times:`, error)
       }
       return
     }
@@ -149,7 +142,7 @@ watch(
       pause()
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 onBeforeUnmount(() => {

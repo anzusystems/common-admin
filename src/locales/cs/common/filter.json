@@ -11,7 +11,8 @@
     "storeTableColumns": "Uložit i sloupce tabulky",
     "storeTableOrder": "Uložit i pořadí tabulky",
     "saveBookmarkOrder": "Uložit řazení",
-    "nameUniqueError": "Název filtru musí být unikátní"
+    "nameUniqueError": "Název filtru musí být unikátní",
+    "unsavedSection": "Pořadí záložek"
   },
   "timeInterval": {
     "from": "Od",

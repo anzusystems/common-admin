@@ -1,16 +1,10 @@
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import {
-  AnzuApiValidationError,
-  axiosErrorResponseHasValidationData,
-} from '@/model/error/AnzuApiValidationError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
-import {
-  AnzuApiForbiddenError,
-  axiosErrorResponseIsForbidden,
-} from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -30,7 +24,7 @@ export const apiFetchOne = <R>(
   urlParams: UrlParams = {},
   system: string,
   entity: string,
-  options: AxiosRequestConfig = {},
+  options: AxiosRequestConfig = {}
 ): Promise<R> => {
   return new Promise((resolve, reject) => {
     client()

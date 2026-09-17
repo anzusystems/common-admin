@@ -14,7 +14,7 @@ const props = withDefaults(
   }>(),
   {
     showMetaIcons: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
