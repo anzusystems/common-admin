@@ -50,30 +50,16 @@ export const filterFields = [
     render: { skip: true },
   },
   { name: 'headline' as const, default: null, type: 'string' },
-  {
-    name: 'linkedList' as const,
-    default: [],
-    apiName: 'linkedListIds',
-    render: { skip: true },
-  },
+  { name: 'linkedList' as const, default: [], apiName: 'linkedListIds', render: { skip: true } },
   { name: 'lockType' as const, default: null },
-  {
-    name: 'keywords' as const,
-    default: [],
-    apiName: 'keywordIds',
-    render: { skip: true },
-  },
+  { name: 'keywords' as const, default: [], apiName: 'keywordIds', render: { skip: true } },
   {
     name: 'enableAds' as const,
     default: null,
     type: 'boolean',
     apiName: 'flagsStandard.enableAds',
   },
-  {
-    name: 'discriminator' as const,
-    default: 'standard',
-    render: { skip: true },
-  },
+  { name: 'discriminator' as const, default: 'standard', render: { skip: true } },
 ] satisfies readonly MakeFilterOption[]
 
 const listFiltersStore = createFilterStore(filterFields)

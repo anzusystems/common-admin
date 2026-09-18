@@ -22,9 +22,9 @@ import { AnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 // Three of the eight are pinned below, the ones a list call reaches on its own; the remaining five
 // are pinned against `useApiRequest`, and a divergence in this copy alone would not be caught.
 //
-// Not pinned at all, here or anywhere in the repo: the translation of a filter into the query.
-// Every case below runs with a non-mandatory filter whose default is empty, so `getValue` answers
-// null and no `filter_*` is ever emitted. Both query builders are untested.
+// Not pinned here: the translation of a filter into the query. Every case below runs with a
+// non-mandatory filter whose default is empty, so `getValue` answers null and no `filter_*` is ever
+// emitted. That translation is pinned in `queryBuilderContract.test.ts`, against both builders.
 
 const fields = [{ name: 'name', default: '' }] as const satisfies readonly MakeFilterOption<string>[]
 

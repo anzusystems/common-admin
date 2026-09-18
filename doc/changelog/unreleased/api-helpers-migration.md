@@ -15,10 +15,17 @@ planned
   - a 204 answers `undefined` where the old one answered `null`, and a by-ids 204 answers `[]`
   - a 202 with no body **resolves** instead of rejecting as a fatal error
   - failures arrive as `AnzuApiAxiosError`, `AnzuApiTimeoutError` or `AnzuApiResponseCodeError`, not
-    always `AnzuFatalError`. Inside this repo nothing changes for the user: `showErrorsDefault`
-    tests `isAnzuApiAxiosError` before `isAnzuFatalError` and both answer with the same unknown-error
-    alert, and a timeout now gets its own message instead of that one. Code outside it that branches
-    on `isAnzuFatalError` does need revisiting -- no admin in the fleet does
+    always `AnzuFatalError`. Nothing branches on `isAnzuFatalError` and loses by it: the only test
+    of it anywhere is `showErrorsDefault`, which tries `isAnzuApiAxiosError` first and answers both
+    with the same unknown-error alert, and a timeout now reaches its own message instead of that one.
+
+    **The exposure runs the other way, and there is one live site.** Code that branches on
+    `isAnzuApiAxiosError` around a call that previously could not produce one now takes a branch it
+    never took. `admin-cms` `systemUserManageActions.ts:72` tests exactly that against a 404 from
+    `fetchDamUser`, to answer "this user does not exist". Under the old helper a 404 arrived as
+    `AnzuFatalError`, so that branch was dead for DAM and the page showed an error alert instead.
+    It now does what it was written to do. Check your own `isAnzuApiAxiosError` branches the same
+    way before raising the pin
   - an axios failure reaches the console unless you pass `silentConsoleError`
   - the type parameters swap sides: `apiCreateOne<Body, Response>` against
     `useApiRequest<Response, Body>`, and each defaults to the other, so the wrong order compiles

@@ -148,10 +148,7 @@ export function useCollabInit() {
         if (collabSocket.value?.active) {
           return
         }
-        logError(error, {
-          level: 'error',
-          tags: { collabPhase: 'connectRejected' },
-        })
+        logError(error, { level: 'error', tags: { collabPhase: 'connectRejected' } })
       })
       collabSocket.value.on('disconnect', async (reason) => {
         collabRoomInfoState.forEach((roomInfo: CollabRoomInfo) => (roomInfo.status = CollabStatus.Inactive))

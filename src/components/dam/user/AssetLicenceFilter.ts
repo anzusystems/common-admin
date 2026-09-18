@@ -7,12 +7,7 @@ import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 
 export function useDamAssetLicenceInnerFilter() {
   const filterFieldsInner = [
-    {
-      name: 'name' as const,
-      variant: 'startsWith',
-      default: null,
-      type: 'string',
-    },
+    { name: 'name' as const, variant: 'startsWith', default: null, type: 'string' },
     { name: 'extSystem' as const, default: null },
     { name: 'extId' as const, default: null },
   ] satisfies readonly MakeFilterOption[]

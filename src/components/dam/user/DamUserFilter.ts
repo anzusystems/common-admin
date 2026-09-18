@@ -10,18 +10,8 @@ export function useDamUserInnerFilter() {
     { name: 'id' as const, default: null },
     { name: 'email' as const, default: null, variant: 'startsWith' },
     { name: 'enabled' as const, default: null },
-    {
-      name: 'lastName' as const,
-      default: null,
-      variant: 'startsWith',
-      apiName: 'person.lastName',
-    },
-    {
-      name: 'permissionGroups' as const,
-      variant: 'custom',
-      default: [],
-      type: 'string',
-    },
+    { name: 'lastName' as const, default: null, variant: 'startsWith', apiName: 'person.lastName' },
+    { name: 'permissionGroups' as const, variant: 'custom', default: [], type: 'string' },
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {
@@ -47,19 +37,10 @@ const filter = reactive({
     ...makeFilter({ name: 'enabled' }),
   },
   lastName: {
-    ...makeFilter({
-      name: 'lastName',
-      variant: 'startsWith',
-      field: 'person.lastName',
-    }),
+    ...makeFilter({ name: 'lastName', variant: 'startsWith', field: 'person.lastName' }),
   },
   permissionGroups: {
-    ...makeFilter({
-      name: 'permissionGroups',
-      variant: 'custom',
-      multiple: true,
-      default: [],
-    }),
+    ...makeFilter({ name: 'permissionGroups', variant: 'custom', multiple: true, default: [] }),
   },
 })
 /**

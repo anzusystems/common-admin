@@ -19,9 +19,11 @@ import { reactive } from 'vue'
 // one, and asserts the WHOLE query string rather than `toContain` -- a `toContain` assertion is
 // why a missing segment passed unnoticed.
 //
-// Both builders are pure and exported, so there is no axios to mock. Each case builds the same
-// filter twice, once in each model, and compares the two strings to each other as well as to the
-// literal -- a divergence shows up as a failure on the side that moved.
+// Both builders are exported, so there is no axios to mock. Each case builds the same filter twice,
+// once in each model, and compares the two strings to each other as well as to the literal -- a
+// divergence shows up as a failure on the side that moved. Only the labs builder is pure: the
+// legacy one writes a mandatory default back into the bag it was handed, which is what case C pins,
+// so each case hands it a bag of its own.
 
 const legacyPagination = (over: Partial<PaginationLegacy> = {}): PaginationLegacy =>
   ({

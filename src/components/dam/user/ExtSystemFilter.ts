@@ -4,12 +4,7 @@ import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/f
 
 export function useExtSystemInnerFilter() {
   const filterFieldsInner = [
-    {
-      name: 'name' as const,
-      variant: 'startsWith',
-      default: null,
-      type: 'string',
-    },
+    { name: 'name' as const, variant: 'startsWith', default: null, type: 'string' },
   ] satisfies readonly MakeFilterOption[]
 
   const { filterConfig, filterData } = createFilter(filterFieldsInner, createFilterStore(filterFieldsInner), {

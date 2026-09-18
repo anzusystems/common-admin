@@ -141,10 +141,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         totalCount: 0,
         processedCount: 0,
         fileInputKey: 0,
-        suggestions: {
-          newKeywordNames: new Set<string>(),
-          newAuthorNames: new Set<string>(),
-        },
+        suggestions: { newKeywordNames: new Set<string>(), newAuthorNames: new Set<string>() },
       })
     }
   }
@@ -509,10 +506,7 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       totalCount: 0,
       processedCount: 0,
       fileInputKey: getQueueFileInputKey(queueKey) + 1,
-      suggestions: {
-        newKeywordNames: new Set<string>(),
-        newAuthorNames: new Set<string>(),
-      },
+      suggestions: { newKeywordNames: new Set<string>(), newAuthorNames: new Set<string>() },
     })
   }
 

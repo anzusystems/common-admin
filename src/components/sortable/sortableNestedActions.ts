@@ -222,10 +222,7 @@ export function useSortableNestedActions(
     id: DocId | IntegerId,
     arr: SortableNestedItem[],
     parent: SortableNestedItem | null = null
-  ): {
-    itemFound: SortableNestedItem | null
-    parentItem: SortableNestedItem | null
-  } => {
+  ): { itemFound: SortableNestedItem | null; parentItem: SortableNestedItem | null } => {
     for (const item of arr) {
       if (item.data.id === id) {
         return {

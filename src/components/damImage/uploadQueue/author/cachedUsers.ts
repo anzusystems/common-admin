@@ -6,12 +6,7 @@ import { fetchDamUserListByIds } from '@/components/dam/user/userApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const mapFullToMinimal = (source: DamUser): AnzuUserMinimal => {
-  return {
-    id: source.id,
-    email: source.email,
-    avatar: source.avatar,
-    person: source.person,
-  }
+  return { id: source.id, email: source.email, avatar: source.avatar, person: source.person }
 }
 
 const mapIdToMinimal = (id: IntegerId): AnzuUserMinimal => {

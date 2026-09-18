@@ -33,8 +33,10 @@ export const fetchConfiguration = (damClient: () => AxiosInstance) => {
   return executeRequest()
 }
 
-// The id goes through `urlParams`, not into the string: `anzu/url-params-match-template` only
-// reads static templates, so a concatenated url is a url the rule cannot check.
+// The id goes through `urlParams` rather than into the string, because that is the shape the rest
+// of the migrated calls use. It does not bring the call under `anzu/url-params-match-template`:
+// that rule wants `urlTemplate` and `urlParams` in one object literal, and every call here passes
+// `urlParams` to `executeRequest` instead, so the rule checks none of them either way.
 export const fetchExtSystemConfiguration = (extSystem: IntegerId, damClient: () => AxiosInstance) => {
   const { executeRequest } = useApiRequest<DamExtSystemConfig, null>({
     client: damClient,

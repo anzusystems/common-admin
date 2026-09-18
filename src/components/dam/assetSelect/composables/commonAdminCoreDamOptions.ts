@@ -10,11 +10,7 @@ const defaultDescriptionValidation: ImageFieldValidationConfig = {
   min: 0,
   max: 2000,
 }
-const defaultSourceValidation: ImageFieldValidationConfig = {
-  required: true,
-  min: 0,
-  max: 255,
-}
+const defaultSourceValidation: ImageFieldValidationConfig = { required: true, min: 0, max: 255 }
 
 const commonAdminCoreDamOptions = ref<CommonAdminCoreDamOptions | undefined>(undefined)
 
