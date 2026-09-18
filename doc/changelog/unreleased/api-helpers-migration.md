@@ -15,7 +15,10 @@ planned
   - a 204 answers `undefined` where the old one answered `null`, and a by-ids 204 answers `[]`
   - a 202 with no body **resolves** instead of rejecting as a fatal error
   - failures arrive as `AnzuApiAxiosError`, `AnzuApiTimeoutError` or `AnzuApiResponseCodeError`, not
-    always `AnzuFatalError` — catching by class needs revisiting
+    always `AnzuFatalError`. Inside this repo nothing changes for the user: `showErrorsDefault`
+    tests `isAnzuApiAxiosError` before `isAnzuFatalError` and both answer with the same unknown-error
+    alert, and a timeout now gets its own message instead of that one. Code outside it that branches
+    on `isAnzuFatalError` does need revisiting -- no admin in the fleet does
   - an axios failure reaches the console unless you pass `silentConsoleError`
   - the type parameters swap sides: `apiCreateOne<Body, Response>` against
     `useApiRequest<Response, Body>`, and each defaults to the other, so the wrong order compiles
