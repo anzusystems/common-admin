@@ -11,6 +11,12 @@ import { stringToKebabCase } from '@/utils/string'
 const END_POINT = '/adm/v1/job'
 export const ENTITY = 'job'
 
+/**
+ * @deprecated Use `useJobApi` from `@anzusystems/common-admin/labs`, which takes the labs filter and
+ * pagination model. This one is kept only because it is part of the published main entry; no admin
+ * in the fleet imports it. It is also invisible to `anzu/no-deprecated-imports`, which skips a file
+ * whose own name matches one of the rule paths -- so its four legacy calls are tracked by hand.
+ */
 export function useJobApi<JobType extends JobBase = JobBase>(client: () => AxiosInstance, system: string) {
   const fetchJobList = (pagination: Pagination, filterBag: FilterBag) =>
     apiFetchList<JobType[]>(client, END_POINT, {}, pagination, filterBag, system, ENTITY)
