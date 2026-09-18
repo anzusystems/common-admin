@@ -20,7 +20,7 @@ Vzniklo z otázky, či staré helpery vyhodiť najskôr a až potom na nových s
 | chyby | `apiFetchOne`/`CreateOne`/`UpdateOne`/`DeleteOne`/`AnyRequest`: 4 vetvy + `AnzuFatalError`.<br>**`apiFetchByIds`: už 8 vetiev** (`apiFetchByIds.ts:64-85`) | 8 vetiev |
 | url | pozičné argumenty | pri konštrukcii alebo per volanie, s overridom |
 | konzola | ticho | `console.error` pri axios chybe, vypnuteľné cez `silentConsoleError` |
-| testy | **0** | 9 súborov, 90 testov (z toho 2 kontraktové, 27 testov) |
+| testy | **0** | 10 súborov, 98 testov (z toho 3 kontraktové, 35 testov) |
 
 Prvá verzia písala „8 vetiev proti 5" plošne. **Pre `apiFetchByIds` to neplatí** — ten už timeout aj
 axios chybu rozlišuje, takže sa pri jeho migrácii mapovanie chýb **nemení vôbec**. (Nález Codexu
@@ -182,8 +182,9 @@ timeout a ROI — nie tvar volaní ani filtre.
 
 ## 6. Testy — čo je pripnuté a čo nie
 
-`src/test/labs/useApiRequestContract.test.ts` (17) a `useApiFetchListContract.test.ts` (10) — 27
-z celkových 90 testov v `src/test/labs/` (9 súborov). Zvyšné pokrývajú filtre a komponenty, nie api.
+`useApiRequestContract.test.ts`, `useApiFetchListContract.test.ts` a `queryBuilderContract.test.ts`
+— 35 z celkových 98 testov v `src/test/labs/` (10 súborov). Zvyšné pokrývajú filtre a komponenty,
+nie api.
 
 **Pripnuté:** všetkých osem vetiev mapovania chýb v `useApiRequest`, tri z nich v liste, návratové
 hodnoty (204/202 → `undefined`, telo, prázdne telo → fatal), `JSON.stringify` tela, override url,
@@ -441,9 +442,8 @@ v `lib.ts` (**nie zmazanie**, sú to verejné API), changelog, mazanie v ďalše
 Vynucovacím mechanizmom nie je JSDoc tag, ale eslint pravidlo
 `anzu/no-deprecated-imports` (`src/eslint/plugin.mjs`), severity `error`. Konzumentský zoznam už
 obsahuje všetkých sedem helperov plus `FilterBag`, `Filter`, `Pagination`, `usePagination`,
-`useApiQueryBuilder`, `makeFilterHelper`, `useJobApi`. Zostáva doplniť `apiFetchListBatch` (je na
-internom zozname a na konzumentskom chýba) a **konkrétne verejné wrappery z kroku 2** — bez nich
-je ich deprekácia len JSDoc komentár, ktorý nikoho nezastaví.
+`useApiQueryBuilder`, `makeFilterHelper`, `useJobApi`. `apiFetchListBatch` aj konkrétne verejné wrappery z kroku 2 sú na ňom **doplnené** — bez nich by
+ich deprekácia bola len JSDoc komentár, ktorý nikoho nezastaví.
 
 Playground ide s tým zhlukom, ktorý používa.
 

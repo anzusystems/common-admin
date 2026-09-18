@@ -12,6 +12,9 @@ export const fetchDamAssetLicence = (client: () => AxiosInstance, id: IntegerId)
     system: 'coreDam',
     entity: 'assetLicence',
     urlTemplate: END_POINT + '/:id',
+    // Its one caller already logs this failure itself (`damConfigState`), and the old helper was
+    // silent, so leaving this on would print the same error twice.
+    silentConsoleError: true,
   })
 
   return executeRequest({ urlParams: { id } })

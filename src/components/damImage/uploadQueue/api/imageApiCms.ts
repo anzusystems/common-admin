@@ -22,7 +22,7 @@ export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[
   return executeFetch(ids)
 }
 
-export const fetchImage = (client: () => AxiosInstance, id: IntegerId) => {
+export const fetchImage = async (client: () => AxiosInstance, id: IntegerId) => {
   const { executeRequest } = useApiRequest<ImageAware, null>({
     client,
     method: 'GET',
@@ -31,7 +31,10 @@ export const fetchImage = (client: () => AxiosInstance, id: IntegerId) => {
     urlTemplate: END_POINT + '/:id',
   })
 
-  return executeRequest({ urlParams: { id } })
+  // `null` for a body-less response, which is what the old helper answered and what every caller
+  // still guards with: `isNull` is a strict `=== null`, so an `undefined` would walk straight
+  // through the guard and be dereferenced.
+  return (await executeRequest({ urlParams: { id } })) ?? null
 }
 
 export const createImage = (client: () => AxiosInstance, data: ImageCreateUpdateAware) => {

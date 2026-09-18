@@ -11,10 +11,12 @@ export function useJobApi<JobType extends JobBase = JobBase>(client: () => Axios
   const useFetchJobList = () => useApiFetchList<JobType[]>({ client, system, entity: ENTITY, urlTemplate: END_POINT })
 
   // Each of these builds its own request rather than sharing one: `useApiRequest` keeps a set of
-  // abort controllers per instance, and this composable is called once per module in both admins
-  // that use it, so a shared instance would put every caller in one abort scope. They stay bound
-  // functions instead of being handed out as factories -- no caller anywhere in the fleet aborts a
-  // job request, and exposing the handle would move 27 call sites to pass around something unused.
+  // abort controllers per instance, so a shared instance would put every caller of that instance in
+  // one abort scope. It matters for the two `jobActions.ts` that call this at module scope and hold
+  // `fetchJob` across the whole app; the other 25 consumers are `<script setup>`, one instance each.
+  // They stay bound functions instead of being handed out as factories -- no caller anywhere in the
+  // fleet aborts a job request, and exposing the handle would move 27 call sites to pass around
+  // something unused.
   const fetchJob = (id: number) => {
     const { executeRequest } = useApiRequest<JobType, null>({
       client,

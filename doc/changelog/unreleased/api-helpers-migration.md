@@ -26,7 +26,9 @@ planned
     `AnzuFatalError`, so that branch was dead for DAM and the page showed an error alert instead.
     It now does what it was written to do. Check your own `isAnzuApiAxiosError` branches the same
     way before raising the pin
-  - an axios failure reaches the console unless you pass `silentConsoleError`
+  - an axios failure that maps to none of the named classes reaches the console unless you pass
+    `silentConsoleError`; a forbidden, validation, dependency, forbidden-operation or timeout failure
+    throws before that line
   - the type parameters swap sides: `apiCreateOne<Body, Response>` against
     `useApiRequest<Response, Body>`, and each defaults to the other, so the wrong order compiles
   - a call that passed `{}` as its body must keep passing it; the labs helper omits an undefined body
