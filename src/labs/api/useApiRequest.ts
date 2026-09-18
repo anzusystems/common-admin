@@ -1,28 +1,19 @@
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
-import axios, { type AxiosRequestConfig, type Method } from 'axios'
-import { AnzuFatalError } from '@/model/error/AnzuFatalError'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
-import {
-  AnzuApiForbiddenOperationError,
-  axiosErrorResponseHasForbiddenOperationData,
-} from '@/model/error/AnzuApiForbiddenOperationError'
-import { HTTP_STATUS_ACCEPTED, HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
-import {
-  AnzuApiDependencyExistsError,
-  axiosErrorResponseHasDependencyExistsData,
-} from '@/model/error/AnzuApiDependencyExistsError'
-import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
-import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import type { AxiosRequestConfig, Method } from 'axios'
+import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
 import type { AxiosClientFn } from '@/labs/api/client'
+import { mapApiError, report } from '@/labs/api/apiErrors'
+import { type Abortable, createAbortable, hasBody } from '@/labs/api/request'
 
-export type ExecuteRequestParams<T> = {
+export type ExecuteRequestParams<B> = {
   urlTemplate?: string
   urlParams?: UrlParams
-  object?: T
+  body?: B
+  /** Stops this one call, leaving the instance's other calls alone. */
+  signal?: AbortSignal
 }
 
 export type UseApiRequestParams = {
@@ -33,108 +24,91 @@ export type UseApiRequestParams = {
   urlTemplate?: string
   urlParams?: UrlParams
   options?: AxiosRequestConfig
-  silentConsoleError?: boolean
+  /** Each call supersedes the one before it -- the autocomplete shape. */
+  cancelPrevious?: boolean
 }
 
-export const useApiRequest = <R, T = R>(params: UseApiRequestParams): UseApiAnyRequestReturnType<R, T> => {
-  const { client, method, system, entity, urlTemplate, urlParams, options = {}, silentConsoleError = false } = params
+export type UseApiRequestReturnType<R, B> = {
+  execute: (params?: ExecuteRequestParams<B>) => Promise<R>
+  abort: () => void
+}
 
-  // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
-  // leaving both unabortable.
-  const abortControllers = new Set<AbortController>()
+type Interpret<R> = (res: { status: number; data: unknown }, url: string) => R
 
-  const executeRequest = async (executeParams: ExecuteRequestParams<T> = {}): Promise<R> => {
-    const abortController = new AbortController()
-    abortControllers.add(abortController)
+const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R>): UseApiRequestReturnType<R, B> => {
+  const { client, method, system, entity, urlTemplate, urlParams, options = {}, cancelPrevious = false } = params
+  const abortable: Abortable = createAbortable({ cancelPrevious })
 
-    const urlTemplateOverride = executeParams.urlTemplate
-    const urlParamsOverride = executeParams.urlParams
-    const object = executeParams.object
+  const execute = async (executeParams: ExecuteRequestParams<B> = {}): Promise<R> => {
+    const { urlTemplate: templateOverride, urlParams: paramsOverride, body, signal } = executeParams
+
+    const template = isDefined(templateOverride) ? templateOverride : urlTemplate
+    if (isUndefined(template)) throw new Error('Url template is undefined')
+    const resolvedParams = isDefined(paramsOverride) ? paramsOverride : urlParams
+    const url = template !== '' && isDefined(resolvedParams) ? replaceUrlParameters(template, resolvedParams) : template
 
     try {
-      const axiosConfig: AxiosRequestConfig = { method }
-      const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
-      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
-      if (isUndefined(template)) throw new Error('Url template is undefined')
-      axiosConfig.url = template
-      if (template !== '' && !isUndefined(resolvedParams)) {
-        axiosConfig.url = replaceUrlParameters(template, resolvedParams)
-      }
-      if (!isNull(object)) {
-        axiosConfig.data = JSON.stringify(object)
-      }
-      const res = await client().request({
-        ...options,
-        ...axiosConfig,
-        signal: abortController.signal,
-      })
+      const res = await abortable.run((abortSignal) => {
+        const axiosConfig: AxiosRequestConfig = { method, url }
+        // `null` omits the body, as it always has -- a caller that means to send JSON `null` wraps it.
+        if (!isNull(body) && !isUndefined(body)) axiosConfig.data = JSON.stringify(body)
 
-      if (!isValidHTTPStatus(res.status)) {
-        throw new AnzuApiResponseCodeError(res.status)
-      }
+        return client().request({ ...options, ...axiosConfig, signal: abortSignal })
+      }, signal)
 
-      if (res.data) {
-        return res.data as R
-      }
+      if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
 
-      if (res.status === HTTP_STATUS_NO_CONTENT || res.status === HTTP_STATUS_ACCEPTED) {
-        return undefined as R
-      }
-
-      throw new AnzuFatalError()
-    } catch (err: any) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        return [] as R
-      }
-
-      if (isAnzuApiResponseCodeError(err)) {
-        throw err
-      }
-
-      if (axiosErrorResponseIsForbidden(err)) {
-        throw new AnzuApiForbiddenError(err, err.config?.url)
-      }
-
-      if (axiosErrorResponseHasValidationData(err)) {
-        throw new AnzuApiValidationError(err, system, entity, err)
-      }
-
-      if (axiosErrorResponseHasDependencyExistsData(err)) {
-        throw new AnzuApiDependencyExistsError(err, system, entity, err)
-      }
-
-      if (axiosErrorResponseHasForbiddenOperationData(err)) {
-        throw new AnzuApiForbiddenOperationError(err, err)
-      }
-
-      if (axiosErrorIsTimeout(err)) {
-        throw new AnzuApiTimeoutError(err)
-      }
-
-      if (axios.isAxiosError(err)) {
-        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
-        throw new AnzuApiAxiosError(err)
-      }
-
-      if (!silentConsoleError) console.error('AnzuFatalError: ', err)
-      throw new AnzuFatalError(err)
-    } finally {
-      abortControllers.delete(abortController)
+      return interpret(res, url)
+    } catch (err: unknown) {
+      throw report(mapApiError(err, { system, entity, url }), { system, entity, url })
     }
   }
 
-  const abortRequest = () => {
-    abortControllers.forEach((controller) => controller.abort())
-    abortControllers.clear()
-  }
-
-  return {
-    executeRequest,
-    abortRequest,
-  }
+  return { execute, abort: abortable.abort }
 }
 
-export type UseApiAnyRequestReturnType<R, T = R> = {
-  executeRequest: (params?: ExecuteRequestParams<T>) => Promise<R>
-  abortRequest: () => void
+/**
+ * A request to an endpoint that always answers with a body.
+ *
+ * A response without one is the endpoint breaking its own contract, not an empty answer, so it fails
+ * like any other error rather than handing back a value the declared type does not admit. An
+ * endpoint that answers nothing is `useApiCommand`; one that may answer either is `allowEmpty`.
+ *
+ * `R` excludes `null`, `undefined` and `void` on purpose: those are ways of saying "no body", and a
+ * caller saying that has chosen the wrong helper. It is also what makes the migration visible --
+ * every `useApiCommand<…>` in the fleet stops compiling and names itself.
+ */
+export function useApiRequest<R extends NonNullable<unknown>, B = never>(
+  params: UseApiRequestParams & { allowEmpty?: false }
+): UseApiRequestReturnType<R, B>
+/**
+ * The same, for an endpoint where a body is optional and its absence is a legitimate answer. The
+ * caller narrows, which is the point -- use it only where the endpoint really is documented that way.
+ */
+export function useApiRequest<R extends NonNullable<unknown>, B = never>(
+  params: UseApiRequestParams & { allowEmpty: true }
+): UseApiRequestReturnType<R | undefined, B>
+export function useApiRequest<R extends NonNullable<unknown>, B = never>(
+  params: UseApiRequestParams & { allowEmpty?: boolean }
+): UseApiRequestReturnType<R | undefined, B> {
+  const allowEmpty = params.allowEmpty === true
+
+  return createRequest<R | undefined, B>(params, (res, url) => {
+    if (hasBody(res as never)) return res.data as R
+    if (allowEmpty) return undefined
+
+    // 204 decided by status alone -- it carries no body by definition. A 202 may carry one, so it
+    // reaches here only when it did not, and is treated like any other empty success.
+    if (res.status === HTTP_STATUS_NO_CONTENT) throw new AnzuApiResponseCodeError(res.status)
+
+    throw new AnzuApiResponseCodeError(res.status, undefined, 'Expected a response body, url: ' + url)
+  })
 }
+
+/**
+ * A request that asks the backend to do something and reads nothing back -- a delete, or a call that
+ * only starts work and answers 202. Any successful status resolves; a body, if one arrives, is
+ * ignored rather than typed.
+ */
+export const useApiCommand = <B = never>(params: UseApiRequestParams): UseApiRequestReturnType<void, B> =>
+  createRequest<void, B>(params, () => undefined)

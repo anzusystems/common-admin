@@ -14,14 +14,14 @@ const END_POINT = '/adm/v1/user'
 export const ENTITY = 'user'
 
 export const fetchDamUserListByIds = (client: () => AxiosInstance, ids: number[]) => {
-  const { executeFetch } = useApiFetchByIds<DamUser[]>({
+  const { execute } = useApiFetchByIds<DamUser>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: END_POINT,
   })
 
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 /**
@@ -31,7 +31,7 @@ export const fetchDamUserList = (client: () => AxiosInstance, pagination: Pagina
   apiFetchList<DamUser[]>(client, END_POINT, {}, pagination, filterBag, SYSTEM_CORE_DAM, ENTITY)
 
 export const useFetchDamUserList = (client: () => AxiosInstance) =>
-  useApiFetchList<DamUser[]>({
+  useApiFetchList<DamUser>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
@@ -39,7 +39,7 @@ export const useFetchDamUserList = (client: () => AxiosInstance) =>
   })
 
 export const updateDamUser = (client: () => AxiosInstance, id: number, data: DamUserUpdateDto) => {
-  const { executeRequest } = useApiRequest<DamUser, DamUserUpdateDto>({
+  const { execute } = useApiRequest<DamUser, DamUserUpdateDto>({
     client,
     method: 'PUT',
     system: SYSTEM_CORE_DAM,
@@ -47,11 +47,11 @@ export const updateDamUser = (client: () => AxiosInstance, id: number, data: Dam
     urlTemplate: END_POINT + '/:id',
   })
 
-  return executeRequest({ urlParams: { id }, object: data })
+  return execute({ urlParams: { id }, body: data })
 }
 
 export const fetchDamUser = (client: () => AxiosInstance, id: number) => {
-  const { executeRequest } = useApiRequest<DamUser, null>({
+  const { execute } = useApiRequest<DamUser, null>({
     client,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -59,5 +59,5 @@ export const fetchDamUser = (client: () => AxiosInstance, id: number) => {
     urlTemplate: END_POINT + '/:id',
   })
 
-  return executeRequest({ urlParams: { id } })
+  return execute({ urlParams: { id } })
 }

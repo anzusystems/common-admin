@@ -26,7 +26,7 @@ interface LogActionsParams {
  */
 export function useLogListActions(params: LogActionsParams) {
   const { showErrorsDefault } = useAlerts()
-  const { executeFetch, abortFetch } = useFetchLogList(params)
+  const { execute, abort } = useFetchLogList(params)
 
   const listItems = ref<Log[]>([])
   const listLoading = params.loading ?? ref(false)
@@ -46,12 +46,12 @@ export function useLogListActions(params: LogActionsParams) {
   ) => {
     const token = ++generation
     listLoading.value = true
-    // `executeFetch` writes the counts into the ref it is handed, inside the call -- before
+    // `execute` writes the counts into the ref it is handed, inside the call -- before
     // anything out here could decide to discard them. It gets a copy, and the counts are
     // committed to the real one only if this call is still the current one.
     const scratch = ref<Pagination>({ ...pagination.value })
     try {
-      const items = await executeFetch(scratch, filterData, filterConfig)
+      const items = await execute(scratch, filterData, filterConfig)
       if (!isCurrent(token)) return
       listItems.value = items
       // Reading the scratch ref is the whole point -- these are the counts the helper just wrote
@@ -77,7 +77,7 @@ export function useLogListActions(params: LogActionsParams) {
   /** Invalidates whatever is in flight, then cancels it. Order matters: the token first. */
   const cancel = () => {
     generation++
-    abortFetch()
+    abort()
   }
 
   return {
@@ -91,7 +91,7 @@ export function useLogListActions(params: LogActionsParams) {
 
 export function useLogDetailActions(params: LogActionsParams) {
   const { showErrorsDefault } = useAlerts()
-  const { executeRequest, abortRequest } = useFetchLog(params)
+  const { execute, abort } = useFetchLog(params)
 
   const log = ref<Log | null>(null)
   const detailLoading = params.loading ?? ref(false)
@@ -103,7 +103,7 @@ export function useLogDetailActions(params: LogActionsParams) {
     const token = ++generation
     detailLoading.value = true
     try {
-      const res = await executeRequest({ urlParams: { id } })
+      const res = await execute({ urlParams: { id } })
       if (!isCurrent(token)) return
       log.value = res
     } catch (error) {
@@ -117,7 +117,7 @@ export function useLogDetailActions(params: LogActionsParams) {
 
   const cancel = () => {
     generation++
-    abortRequest()
+    abort()
   }
 
   return {

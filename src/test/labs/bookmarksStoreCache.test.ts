@@ -17,7 +17,7 @@ const identifier = {
 const bookmark = (id: number, customName: string): UserAdminConfig =>
   ({ id, customName, position: id, data: {} }) as unknown as UserAdminConfig
 
-const fetcher = (executeFetch: () => Promise<UserAdminConfig[]>) => () => ({ executeFetch }) as never
+const fetcher = (execute: () => Promise<UserAdminConfig[]>) => () => ({ execute }) as never
 
 // Answers in the order the call asked for, the way the endpoint does, rather than in whatever order
 // the test happened to write the rows down. The store reads the highest position across all of them,
@@ -25,7 +25,7 @@ const fetcher = (executeFetch: () => Promise<UserAdminConfig[]>) => () => ({ exe
 // true if someone changes either side.
 const orderedFetcher = (rows: UserAdminConfig[]) => () =>
   ({
-    executeFetch: async (pagination: { value: { sortBy: { key: string; order: string } | null } }) => {
+    execute: async (pagination: { value: { sortBy: { key: string; order: string } | null } }) => {
       const ascending = [...rows].sort((a, b) => a.position - b.position)
       return pagination.value.sortBy?.order === 'desc' ? ascending.reverse() : ascending
     },

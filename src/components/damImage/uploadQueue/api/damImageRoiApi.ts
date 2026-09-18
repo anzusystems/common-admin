@@ -8,7 +8,7 @@ import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetA
 export const ENTITY = 'asset'
 
 export const fetchRoi = (client: () => AxiosInstance, endPointRoi: string, id: DocId) => {
-  const { executeRequest } = useApiRequest<RegionOfInterest, null>({
+  const { execute } = useApiRequest<RegionOfInterest, null>({
     client,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -16,11 +16,11 @@ export const fetchRoi = (client: () => AxiosInstance, endPointRoi: string, id: D
     urlTemplate: endPointRoi + '/:id',
   })
 
-  return executeRequest({ urlParams: { id } })
+  return execute({ urlParams: { id } })
 }
 
 export const updateRoi = (client: () => AxiosInstance, endPointRoi: string, id: DocId, data: RegionOfInterest) => {
-  const { executeRequest } = useApiRequest<RegionOfInterest, RegionOfInterest>({
+  const { execute } = useApiRequest<RegionOfInterest, RegionOfInterest>({
     client,
     method: 'PUT',
     system: SYSTEM_CORE_DAM,
@@ -28,11 +28,11 @@ export const updateRoi = (client: () => AxiosInstance, endPointRoi: string, id: 
     urlTemplate: endPointRoi + '/:id',
   })
 
-  return executeRequest({ urlParams: { id }, object: data })
+  return execute({ urlParams: { id }, body: data })
 }
 
 export const useFetchImageRoiList = (client: () => AxiosInstance, endPointImage: string, imageId: DocId) =>
-  useApiFetchList<any[]>({
+  useApiFetchList<any>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,

@@ -15,7 +15,7 @@ export const fetchAssetCustomFormElements = (
   extSystem: IntegerId,
   assetType: DamAssetTypeType
 ) => {
-  const { executeRequest } = useApiRequest<{ data: CustomDataFormElement[] }, null>({
+  const { execute } = useApiRequest<{ data: CustomDataFormElement[] }, null>({
     client: damClient,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -23,7 +23,7 @@ export const fetchAssetCustomFormElements = (
     urlTemplate: END_POINT + '/ext-system/:extSystem/type/:assetType/element?order[position]=asc&limit=100',
   })
 
-  return executeRequest({ urlParams: { extSystem, assetType } })
+  return execute({ urlParams: { extSystem, assetType } })
 }
 
 // todo limit set to 100 for now, add load for pagination?
@@ -31,7 +31,7 @@ export const fetchDistributionCustomFormElements = (
   damClient: () => AxiosInstance,
   distributionService: DamDistributionServiceName
 ) => {
-  const { executeRequest } = useApiRequest<{ data: CustomDataFormElement[] }, null>({
+  const { execute } = useApiRequest<{ data: CustomDataFormElement[] }, null>({
     client: damClient,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -39,5 +39,5 @@ export const fetchDistributionCustomFormElements = (
     urlTemplate: END_POINT + '/distribution-service/:distributionService/element?order[position]=asc&limit=100',
   })
 
-  return executeRequest({ urlParams: { distributionService } })
+  return execute({ urlParams: { distributionService } })
 }

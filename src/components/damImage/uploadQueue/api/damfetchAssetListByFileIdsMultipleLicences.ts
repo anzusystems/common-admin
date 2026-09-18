@@ -49,7 +49,7 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
       // Response first, body second -- the old helper took them the other way round, and because
       // each of its type parameters defaulted to the other, writing them in the old order here
       // would still compile.
-      const { executeRequest } = useApiRequest<{ data: AssetSearchListItemDto[] }, object>({
+      const { execute } = useApiRequest<{ data: AssetSearchListItemDto[] }, object>({
         client,
         method: 'GET',
         system: SYSTEM_CORE_DAM,
@@ -61,7 +61,7 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
       })
 
       // `{}` on purpose: the old call passed it explicitly, so the request carried an empty body.
-      return executeRequest({ urlParams: { licenceId }, object: {} })
+      return execute({ urlParams: { licenceId }, body: {} })
     })
   )
 

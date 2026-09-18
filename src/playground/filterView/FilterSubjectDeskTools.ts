@@ -33,7 +33,7 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
 const END_POINT = '/adm/desks'
 
 const useFetchDeskList = () =>
-  useApiFetchList<Desk[]>({
+  useApiFetchList<Desk>({
     client: cmsClient,
     system: 'cms',
     entity: 'desk',
@@ -41,18 +41,18 @@ const useFetchDeskList = () =>
   })
 
 const fetchDeskListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<Desk[]>({
+  const { execute } = useApiFetchByIds<Desk>({
     client: cmsClient,
     system: 'cms',
     entity: 'desk',
     urlTemplate: END_POINT,
   })
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
-  const { executeFetch } = useFetchDeskList()
-  const desks = await executeFetch(pagination, filterData, filterConfig)
+  const { execute } = useFetchDeskList()
+  const desks = await execute(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
     title: desk.name,

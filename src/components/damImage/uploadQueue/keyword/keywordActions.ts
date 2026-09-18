@@ -36,14 +36,14 @@ export const useKeywordSelectActions = (extSystem: IntegerId) => {
     return keywords.map((keyword: DamKeyword) => mapToMinimal(keyword))
   }
 
-  const { executeFetch } = useFetchKeywordList(damClient, extSystem)
+  const { execute } = useFetchKeywordList(damClient, extSystem)
 
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
-    return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
+    return mapToValueObjects(await execute(pagination, filterData, filterConfig))
   }
 
   const fetchItemsMinimal = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
-    return mapToMinimals(await executeFetch(pagination, filterData, filterConfig))
+    return mapToMinimals(await execute(pagination, filterData, filterConfig))
   }
 
   const fetchItemsByIds = async (ids: string[]) => {

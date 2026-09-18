@@ -55,7 +55,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
     },
-    useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>,
+    useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig>,
     forceFetch: boolean = false
   ): Promise<UserAdminConfig[] | null> {
     error.value = false
@@ -85,8 +85,8 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
 
     let items: UserAdminConfig[]
     try {
-      const { executeFetch } = useApiFetch()
-      items = await executeFetch(pagination, filterData, filterConfig)
+      const { execute } = useApiFetch()
+      items = await execute(pagination, filterData, filterConfig)
       if (fetchSequence.get(key) === sequence) {
         bookmarks.value.set(key, { lastUsed: now, items })
       }
@@ -132,7 +132,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
     },
-    useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>
+    useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig>
   ): Promise<{ count: number; maxPosition: number }> {
     error.value = false
     const { pagination } = usePagination('position', SortOrder.Asc, {
@@ -146,13 +146,13 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     filterData.user = identifier.user
 
     try {
-      const { executeFetch } = useApiFetch()
+      const { execute } = useApiFetch()
       // The page is capped one above the maximum a user may have, so a list long enough to hide the
       // real highest position is also one the count refuses to add to. Read across the rows rather
       // than off the last one: taking the last would tie this to the sort order asked for above,
       // and flipping that would quietly turn the highest position into the lowest -- with nothing
       // to show for it, since the order the bar draws comes from a different call.
-      const res = await executeFetch(pagination, filterData, filterConfig)
+      const res = await execute(pagination, filterData, filterConfig)
       return {
         count: res.length,
         maxPosition: res.length > 0 ? Math.max(...res.map((item) => item.position)) : 0,

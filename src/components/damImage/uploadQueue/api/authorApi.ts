@@ -11,7 +11,7 @@ const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
 export const ENTITY = 'author'
 
 export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: number, ids: string[]) => {
-  const { executeFetch } = useApiFetchByIds<DamAuthor[]>({
+  const { execute } = useApiFetchByIds<DamAuthor>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
@@ -20,11 +20,11 @@ export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: n
     isSearchApi: true,
   })
 
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: IntegerId) =>
-  useApiFetchList<DamAuthor[]>({
+  useApiFetchList<DamAuthor>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
@@ -33,7 +33,7 @@ export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: Int
   })
 
 export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) => {
-  const { executeRequest } = useApiRequest<DamAuthor, DamAuthor>({
+  const { execute } = useApiRequest<DamAuthor, DamAuthor>({
     client,
     method: 'POST',
     system: SYSTEM_CORE_DAM,
@@ -41,5 +41,5 @@ export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) => {
     urlTemplate: END_POINT,
   })
 
-  return executeRequest({ object: data })
+  return execute({ body: data })
 }

@@ -10,7 +10,7 @@ const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
 export const ENTITY = 'keyword'
 
 export const fetchKeywordListByIds = (client: () => AxiosInstance, extSystemId: number, ids: string[]) => {
-  const { executeFetch } = useApiFetchByIds<DamKeyword[]>({
+  const { execute } = useApiFetchByIds<DamKeyword>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
@@ -19,11 +19,11 @@ export const fetchKeywordListByIds = (client: () => AxiosInstance, extSystemId: 
     isSearchApi: true,
   })
 
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 export const useFetchKeywordList = (client: () => AxiosInstance, extSystemId: number) =>
-  useApiFetchList<DamKeyword[]>({
+  useApiFetchList<DamKeyword>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
@@ -32,7 +32,7 @@ export const useFetchKeywordList = (client: () => AxiosInstance, extSystemId: nu
   })
 
 export const createKeyword = (client: () => AxiosInstance, data: DamKeyword) => {
-  const { executeRequest } = useApiRequest<DamKeyword, DamKeyword>({
+  const { execute } = useApiRequest<DamKeyword, DamKeyword>({
     client,
     method: 'POST',
     system: SYSTEM_CORE_DAM,
@@ -40,5 +40,5 @@ export const createKeyword = (client: () => AxiosInstance, data: DamKeyword) => 
     urlTemplate: END_POINT,
   })
 
-  return executeRequest({ object: data })
+  return execute({ body: data })
 }

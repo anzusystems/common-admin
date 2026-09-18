@@ -1,30 +1,18 @@
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
-import { isDefined, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
-import axios, { type AxiosRequestConfig } from 'axios'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
-import { AnzuFatalError } from '@/model/error/AnzuFatalError'
-import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
-import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
-import {
-  AnzuApiForbiddenOperationError,
-  axiosErrorResponseHasForbiddenOperationData,
-} from '@/model/error/AnzuApiForbiddenOperationError'
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
-import {
-  AnzuApiDependencyExistsError,
-  axiosErrorResponseHasDependencyExistsData,
-} from '@/model/error/AnzuApiDependencyExistsError'
-import { generateListQuery } from '@/labs/api/useApiFetchList'
-import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
-import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
-import { ref } from 'vue'
-import { usePagination } from '@/labs/filters/pagination'
+import { type Ref, ref } from 'vue'
+import { isDefined, isUndefined } from '@/utils/common'
+import { type Pagination, usePagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
 import type { AxiosClientFn } from '@/labs/api/client'
+import { generateListQuery } from '@/labs/api/useApiFetchList'
+import { mapApiError, report } from '@/labs/api/apiErrors'
+import { createAbortable, hasBody } from '@/labs/api/request'
+import { readListBody } from '@/labs/api/listBody'
 
 export type UseApiFetchListBatchParams = {
   client: AxiosClientFn
@@ -33,10 +21,12 @@ export type UseApiFetchListBatchParams = {
   urlTemplate?: string
   urlParams?: UrlParams
   options?: AxiosRequestConfig
-  silentConsoleError?: boolean
+  cancelPrevious?: boolean
 }
 
 export type FetchListBatchParams = {
+  /** Stops this one call, leaving the instance's other calls alone. */
+  signal?: AbortSignal
   urlTemplate?: string
   urlParams?: UrlParams
   sortBy?: string
@@ -45,21 +35,15 @@ export type FetchListBatchParams = {
   forceElastic?: boolean
 }
 
-export const useApiFetchListBatch = <R>(params: UseApiFetchListBatchParams): UseApiFetchListBatchReturnType<R> => {
-  const { client, system, entity, urlTemplate, urlParams, options = {}, silentConsoleError = false } = params
+export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): UseApiFetchListBatchReturnType<T> => {
+  const { client, system, entity, urlTemplate, urlParams, options = {}, cancelPrevious = false } = params
+  const abortable = createAbortable({ cancelPrevious })
 
-  // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
-  // leaving both unabortable.
-  const abortControllers = new Set<AbortController>()
-
-  const executeFetch = async (
+  const execute = async (
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
     fetchParams: FetchListBatchParams = {}
-  ): Promise<R> => {
-    const abortController = new AbortController()
-    abortControllers.add(abortController)
-
+  ): Promise<T[]> => {
     const {
       urlTemplate: urlTemplateOverride,
       urlParams: urlParamsOverride,
@@ -67,144 +51,86 @@ export const useApiFetchListBatch = <R>(params: UseApiFetchListBatchParams): Use
       sortDesc = true,
       batchSize = 100,
       forceElastic = false,
+      signal,
     } = fetchParams
 
+    const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
+    const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+    const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
+    if (isUndefined(template)) throw new Error('Url template is undefined')
+    const url = (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) + searchApi
+
     try {
-      const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
-      const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
-      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
-      if (isUndefined(template)) throw new Error('Url template is undefined')
-      const { pagination } = usePagination(sortBy, sortDesc ? SortOrder.Desc : SortOrder.Asc, {
-        rowsPerPage: batchSize,
-      })
-      const url = (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) + searchApi
-      const results = [] as unknown as R
+      return await abortable.run(async (abortSignal) => {
+        const { pagination } = usePagination(sortBy, sortDesc ? SortOrder.Desc : SortOrder.Asc, {
+          rowsPerPage: batchSize,
+        })
 
-      // First page request
-      const res = await client().get(url + generateListQuery(pagination, filterData, filterConfig), {
-        ...options,
-        signal: abortController.signal,
-      })
+        const get = (page: Ref<Pagination>) =>
+          client().get(url + generateListQuery(page, filterData, filterConfig), { ...options, signal: abortSignal })
 
-      if (!isValidHTTPStatus(res.status)) {
-        throw new AnzuApiResponseCodeError(res.status)
-      }
-
-      if (res.data) {
-        const resData = res.data as unknown as ApiResponseList<R> | ApiInfiniteResponseList<R>
-        // @ts-ignore
-        results.push(...resData.data)
-
-        if (isApiInfiniteResponseList(resData)) {
-          pagination.value.hasNextPage = resData.hasNextPage
-
-          // Handle pagination for infinite lists
-          while (pagination.value.hasNextPage) {
-            pagination.value.page++
-            const nextPageResponse = await client().get(url + generateListQuery(pagination, filterData, filterConfig), {
-              ...options,
-              signal: abortController.signal,
-            })
-            const nextPageData = nextPageResponse.data
-            // @ts-ignore
-            results.push(...nextPageData.data)
-            pagination.value.hasNextPage = nextPageData.hasNextPage
+        // Every page is read the same way, the ones after the first included. A 204 has nothing more
+        // to give; a 2xx with no body at all has broken its contract, wherever in the sequence it
+        // sits -- a server that fails on page three is not "finished".
+        const readPage = (res: AxiosResponse) => {
+          if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
+          if (res.status === HTTP_STATUS_NO_CONTENT) {
+            return { items: [] as T[], totalCount: undefined, hasNextPage: false, empty: true }
           }
-        } else if (isApiResponseList(resData)) {
-          pagination.value.totalCount = resData.totalCount
-
-          if (pagination.value.totalCount <= pagination.value.rowsPerPage) {
-            return results as R
+          if (!hasBody(res)) {
+            throw new AnzuApiResponseCodeError(res.status, undefined, 'Expected a response body, url: ' + url)
           }
 
-          // Handle pagination for regular lists - fetch all remaining pages in parallel
-          const promises: Promise<any>[] = []
-          const numPages = Math.ceil(pagination.value.totalCount / pagination.value.rowsPerPage)
+          const body = readListBody<T>(res.data, res.status, url)
 
-          for (let i = 1; i < numPages; i++) {
-            // Start from 1 since we already fetched page 0
-            const pageCopy = { ...pagination.value, page: i + 1 }
-            const paginationRef = ref(pageCopy)
-            promises.push(
-              client().get(url + generateListQuery(paginationRef, filterData, filterConfig), {
-                ...options,
-                signal: abortController.signal,
-              })
-            )
+          return {
+            items: body.items,
+            totalCount: body.pagination.totalCount,
+            hasNextPage: body.pagination.hasNextPage === true,
+            empty: false,
           }
-
-          const allResponses = await Promise.all(promises)
-          allResponses.forEach((pageResponse) => {
-            // @ts-ignore
-            results.push(...pageResponse.data.data)
-          })
         }
 
-        return results as R
-      }
+        const first = readPage(await get(pagination))
+        const results: T[] = [...first.items]
+        if (first.empty) return results
 
-      if (res.status === HTTP_STATUS_NO_CONTENT) {
-        return [] as R
-      }
+        // Infinite lists walk page by page, because only the answer says whether another exists.
+        if (isUndefined(first.totalCount)) {
+          let hasNextPage = first.hasNextPage
+          while (hasNextPage) {
+            pagination.value.page++
+            const next = readPage(await get(pagination))
+            results.push(...next.items)
+            if (next.empty) break
+            hasNextPage = next.hasNextPage
+          }
 
-      throw new AnzuFatalError()
-    } catch (err: any) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        return [] as R
-      }
+          return results
+        }
 
-      if (isAnzuApiResponseCodeError(err)) {
-        throw err
-      }
+        // Counted lists know how many pages there are, so the rest go out together.
+        const pageCount = Math.ceil(first.totalCount / pagination.value.rowsPerPage)
+        if (pageCount <= 1) return results
 
-      if (axiosErrorResponseIsForbidden(err)) {
-        throw new AnzuApiForbiddenError(err, err.config?.url)
-      }
+        const rest = await Promise.all(
+          Array.from({ length: pageCount - 1 }, (_unused, index) => get(ref({ ...pagination.value, page: index + 2 })))
+        )
+        // A 204 among them contributes nothing and the others are kept -- there is no sequence to
+        // stop here, they all went out at once.
+        rest.forEach((res) => results.push(...readPage(res).items))
 
-      if (axiosErrorResponseHasValidationData(err)) {
-        throw new AnzuApiValidationError(err, system, entity, err)
-      }
-
-      if (axiosErrorResponseHasDependencyExistsData(err)) {
-        throw new AnzuApiDependencyExistsError(err, system, entity, err)
-      }
-
-      if (axiosErrorResponseHasForbiddenOperationData(err)) {
-        throw new AnzuApiForbiddenOperationError(err, err)
-      }
-
-      if (axiosErrorIsTimeout(err)) {
-        throw new AnzuApiTimeoutError(err)
-      }
-
-      if (axios.isAxiosError(err)) {
-        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
-        throw new AnzuApiAxiosError(err)
-      }
-
-      if (!silentConsoleError) console.error('AnzuFatalError: ', err)
-      throw new AnzuFatalError(err)
-    } finally {
-      abortControllers.delete(abortController)
+        return results
+      }, signal)
+    } catch (err: unknown) {
+      throw report(mapApiError(err, { system, entity, url }), { system, entity, url })
     }
   }
 
-  const abortFetch = () => {
-    abortControllers.forEach((controller) => controller.abort())
-    abortControllers.clear()
-  }
-
-  return {
-    executeFetch,
-    abortFetch,
-  }
+  return { execute, abort: abortable.abort }
 }
 
-export type UseApiFetchListBatchReturnType<R> = {
-  executeFetch: (
-    filterData: FilterData<any>,
-    filterConfig: FilterConfig<any>,
-    params?: FetchListBatchParams
-  ) => Promise<R>
-  abortFetch: () => void
+export type UseApiFetchListBatchReturnType<T> = {
+  execute: (filterData: FilterData<any>, filterConfig: FilterConfig<any>, params?: FetchListBatchParams) => Promise<T[]>
+  abort: () => void
 }

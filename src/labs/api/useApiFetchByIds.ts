@@ -1,25 +1,15 @@
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
-import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
+import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
-import axios, { type AxiosRequestConfig } from 'axios'
-import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
-import { AnzuFatalError } from '@/model/error/AnzuFatalError'
-import {
-  AnzuApiForbiddenOperationError,
-  axiosErrorResponseHasForbiddenOperationData,
-} from '@/model/error/AnzuApiForbiddenOperationError'
+import type { AxiosRequestConfig } from 'axios'
 import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
-import {
-  AnzuApiDependencyExistsError,
-  axiosErrorResponseHasDependencyExistsData,
-} from '@/model/error/AnzuApiDependencyExistsError'
 import type { DocId, IntegerId } from '@/types/common'
-import { AnzuApiTimeoutError, axiosErrorIsTimeout } from '@/model/error/AnzuApiTimeoutError'
-import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { isDefined, isUndefined } from '@/utils/common'
 import type { AxiosClientFn } from '@/labs/api/client'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
+import { mapApiError, report } from '@/labs/api/apiErrors'
+import { createAbortable, hasBody } from '@/labs/api/request'
+import { readListBody } from '@/labs/api/listBody'
 
 export type UseApiFetchByIdsParams = {
   client: AxiosClientFn
@@ -30,12 +20,14 @@ export type UseApiFetchByIdsParams = {
   options?: AxiosRequestConfig
   isSearchApi?: boolean
   field?: string
-  silentConsoleError?: boolean
+  cancelPrevious?: boolean
 }
 
 export type FetchByIdsParams = {
   urlTemplate?: string
   urlParams?: UrlParams
+  /** Stops this one call, leaving the instance's other calls alone. */
+  signal?: AbortSignal
 }
 
 /**
@@ -54,7 +46,7 @@ const generateByIdsApiQuery = (ids: IntegerId[] | DocId[], isSearchApi: boolean,
   return queryBuild()
 }
 
-export const useApiFetchByIds = <R>(params: UseApiFetchByIdsParams): UseApiFetchByIdsReturnType<R> => {
+export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetchByIdsReturnType<T> => {
   const {
     client,
     system,
@@ -64,98 +56,42 @@ export const useApiFetchByIds = <R>(params: UseApiFetchByIdsParams): UseApiFetch
     options = {},
     isSearchApi = false,
     field = 'id',
-    silentConsoleError = false,
+    cancelPrevious = false,
   } = params
+  const abortable = createAbortable({ cancelPrevious })
 
-  // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
-  // leaving both unabortable.
-  const abortControllers = new Set<AbortController>()
+  const execute = async (ids: DocId[] | IntegerId[], fetchParams: FetchByIdsParams = {}): Promise<T[]> => {
+    const { urlTemplate: urlTemplateOverride, urlParams: urlParamsOverride, signal } = fetchParams
 
-  const executeFetch = async (ids: DocId[] | IntegerId[], fetchParams: FetchByIdsParams = {}): Promise<R> => {
-    const abortController = new AbortController()
-    abortControllers.add(abortController)
-
-    const { urlTemplate: urlTemplateOverride, urlParams: urlParamsOverride } = fetchParams
+    const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
+    const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
+    if (isUndefined(template)) throw new Error('Url template is undefined')
+    const url =
+      (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) +
+      generateByIdsApiQuery(ids, isSearchApi, field)
 
     try {
-      const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
-      const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
-      if (isUndefined(template)) throw new Error('Url template is undefined')
-      const url =
-        (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) +
-        generateByIdsApiQuery(ids, isSearchApi, field)
+      const res = await abortable.run((abortSignal) => client().get(url, { ...options, signal: abortSignal }), signal)
 
-      const res = await client().get(url, {
-        ...options,
-        signal: abortController.signal,
-      })
+      if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
 
-      if (!isValidHTTPStatus(res.status)) {
-        throw new AnzuApiResponseCodeError(res.status)
+      // Nothing matched the ids -- an empty answer, not a broken one.
+      if (res.status === HTTP_STATUS_NO_CONTENT) return []
+
+      if (!hasBody(res)) {
+        throw new AnzuApiResponseCodeError(res.status, undefined, 'Expected a response body, url: ' + url)
       }
 
-      if (res.data?.data) {
-        return res.data.data as R
-      }
-
-      if (res.status === HTTP_STATUS_NO_CONTENT) {
-        return [] as R
-      }
-
-      throw new AnzuFatalError()
-    } catch (err: any) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        return [] as R
-      }
-
-      if (isAnzuApiResponseCodeError(err)) {
-        throw err
-      }
-
-      if (axiosErrorResponseIsForbidden(err)) {
-        throw new AnzuApiForbiddenError(err, err.config?.url)
-      }
-
-      if (axiosErrorResponseHasValidationData(err)) {
-        throw new AnzuApiValidationError(err, system, entity, err)
-      }
-
-      if (axiosErrorResponseHasDependencyExistsData(err)) {
-        throw new AnzuApiDependencyExistsError(err, system, entity, err)
-      }
-
-      if (axiosErrorResponseHasForbiddenOperationData(err)) {
-        throw new AnzuApiForbiddenOperationError(err, err)
-      }
-
-      if (axiosErrorIsTimeout(err)) {
-        throw new AnzuApiTimeoutError(err)
-      }
-
-      if (axios.isAxiosError(err)) {
-        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
-        throw new AnzuApiAxiosError(err)
-      }
-
-      if (!silentConsoleError) console.error('AnzuFatalError: ', err)
-      throw new AnzuFatalError(err)
-    } finally {
-      abortControllers.delete(abortController)
+      return readListBody<T>(res.data, res.status, url).items
+    } catch (err: unknown) {
+      throw report(mapApiError(err, { system, entity, url }), { system, entity, url })
     }
   }
 
-  const abortFetch = () => {
-    abortControllers.forEach((controller) => controller.abort())
-    abortControllers.clear()
-  }
-
-  return {
-    executeFetch,
-    abortFetch,
-  }
+  return { execute, abort: abortable.abort }
 }
 
-export type UseApiFetchByIdsReturnType<R> = {
-  executeFetch: (ids: DocId[] | IntegerId[], params?: FetchByIdsParams) => Promise<R>
-  abortFetch: () => void
+export type UseApiFetchByIdsReturnType<T> = {
+  execute: (ids: DocId[] | IntegerId[], params?: FetchByIdsParams) => Promise<T[]>
+  abort: () => void
 }

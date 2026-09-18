@@ -5,14 +5,14 @@ import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import { cmsClient } from '@/playground/mock/cmsClient'
 
 export const fetchUserListByIds = (ids: number[]) => {
-  const { executeFetch } = useApiFetchByIds<AnzuUser[]>({
+  const { execute } = useApiFetchByIds<AnzuUser>({
     client: cmsClient,
     system: 'cms',
     entity: 'user',
     urlTemplate: '/adm/v1/user',
   })
 
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 export const mapFullToMinimal = (source: AnzuUser): AnzuUserMinimal => {

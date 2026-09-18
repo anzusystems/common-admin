@@ -23,14 +23,14 @@ const { filterConfig, filterData } = createFilter(filterFieldsList, listFiltersS
 })
 
 const useFetchCustomFormListAll = () =>
-  useApiFetchListBatch<any[]>({
+  useApiFetchListBatch<any>({
     client: damClient,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: '/adm/v1/asset/licence/:licenceId',
     urlParams: { licenceId: 100000 },
   })
-const { executeFetch: fetchAssetListAll } = useFetchCustomFormListAll()
+const { execute: fetchAssetListAll } = useFetchCustomFormListAll()
 
 const { pagination } = usePagination('id')
 pagination.value.rowsPerPage = 100
@@ -43,24 +43,24 @@ const { pagination: pagination2 } = usePagination('id')
 pagination.value.rowsPerPage = 100
 
 const useFetchUserList = () =>
-  useApiFetchList<any[]>({
+  useApiFetchList<any>({
     client: damClient,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: '/adm/v1/user',
   })
-const { executeFetch: fetchUserList } = useFetchUserList()
+const { execute: fetchUserList } = useFetchUserList()
 
 const useFetchUserListAll = () =>
-  useApiFetchListBatch<any[]>({
+  useApiFetchListBatch<any>({
     client: damClient,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: '/adm/v1/user',
   })
-const { executeFetch: fetchUserListAll } = useFetchUserListAll()
+const { execute: fetchUserListAll } = useFetchUserListAll()
 
-const { executeFetch: fetchAssetList } = useFetchAssetList(damClient, '/adm/v1/asset', 100000)
+const { execute: fetchAssetList } = useFetchAssetList(damClient, '/adm/v1/asset', 100000)
 
 onMounted(async () => {
   itemsList1.value = await fetchAssetList(pagination, filterData, filterConfig, {

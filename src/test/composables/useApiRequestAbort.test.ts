@@ -39,10 +39,10 @@ const buildApi = (client: () => AxiosInstance) =>
 describe('useApiRequest abort with overlapping calls', () => {
   it('aborts every in-flight request, not just the last one', async () => {
     const { client, signals } = buildClient()
-    const { executeRequest, abortRequest } = buildApi(client)
+    const { execute, abortRequest } = buildApi(client)
 
-    void executeRequest().catch(() => undefined)
-    void executeRequest().catch(() => undefined)
+    void execute().catch(() => undefined)
+    void execute().catch(() => undefined)
     expect(signals).toHaveLength(2)
 
     abortRequest()
@@ -53,10 +53,10 @@ describe('useApiRequest abort with overlapping calls', () => {
 
   it('a settled request no longer gets aborted, so nothing accumulates', async () => {
     const { client, signals, pending } = buildClient()
-    const { executeRequest, abortRequest } = buildApi(client)
+    const { execute, abortRequest } = buildApi(client)
 
-    const first = executeRequest().catch(() => undefined)
-    void executeRequest().catch(() => undefined)
+    const first = execute().catch(() => undefined)
+    void execute().catch(() => undefined)
 
     pending[0].settle({ status: 200, data: {} })
     await first

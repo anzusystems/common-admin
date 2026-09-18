@@ -24,10 +24,10 @@ const selected = ref<any>([])
 
 const valueLicence = ref<IntegerId[]>([])
 
-const { executeFetch } = useFetchPollListDemo()
+const { execute } = useFetchPollListDemo()
 
 const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
-  const rubrics = await executeFetch(pagination, filterData, filterConfig)
+  const rubrics = await execute(pagination, filterData, filterConfig)
 
   return rubrics.map((poll: PollDemo) => ({
     title: poll.texts.title,

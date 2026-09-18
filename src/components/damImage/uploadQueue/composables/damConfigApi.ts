@@ -10,7 +10,7 @@ const PUB_END_POINT = PUB_END_POINT_PREFIX + '/v1/configuration'
 const ENTITY = 'settings'
 
 export const fetchPubConfiguration = (damClient: () => AxiosInstance) => {
-  const { executeRequest } = useApiRequest<DamPubConfig, null>({
+  const { execute } = useApiRequest<DamPubConfig, null>({
     client: damClient,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -18,11 +18,11 @@ export const fetchPubConfiguration = (damClient: () => AxiosInstance) => {
     urlTemplate: PUB_END_POINT,
   })
 
-  return executeRequest()
+  return execute()
 }
 
 export const fetchConfiguration = (damClient: () => AxiosInstance) => {
-  const { executeRequest } = useApiRequest<DamPrvConfig, null>({
+  const { execute } = useApiRequest<DamPrvConfig, null>({
     client: damClient,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -30,15 +30,15 @@ export const fetchConfiguration = (damClient: () => AxiosInstance) => {
     urlTemplate: END_POINT,
   })
 
-  return executeRequest()
+  return execute()
 }
 
 // The id goes through `urlParams` rather than into the string, because that is the shape the rest
 // of the migrated calls use. It does not bring the call under `anzu/url-params-match-template`:
 // that rule wants `urlTemplate` and `urlParams` in one object literal, and every call here passes
-// `urlParams` to `executeRequest` instead, so the rule checks none of them either way.
+// `urlParams` to `execute` instead, so the rule checks none of them either way.
 export const fetchExtSystemConfiguration = (extSystem: IntegerId, damClient: () => AxiosInstance) => {
-  const { executeRequest } = useApiRequest<DamExtSystemConfig, null>({
+  const { execute } = useApiRequest<DamExtSystemConfig, null>({
     client: damClient,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -46,5 +46,5 @@ export const fetchExtSystemConfiguration = (extSystem: IntegerId, damClient: () 
     urlTemplate: END_POINT + '/ext-system/:extSystem',
   })
 
-  return executeRequest({ urlParams: { extSystem } })
+  return execute({ urlParams: { extSystem } })
 }

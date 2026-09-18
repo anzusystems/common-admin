@@ -5,8 +5,8 @@ import { createPinia, setActivePinia } from 'pinia'
 // error it actually was -- `AnzuApiAxiosError`, `AnzuApiTimeoutError`, `AnzuApiForbiddenError` --
 // rather than flattened into one `AnzuFatalError`, and a caller passing `throwOnError` is asking
 // for exactly that distinction.
-const executeRequest = vi.fn()
-const useApiRequest = vi.fn(() => ({ executeRequest: (...args: unknown[]) => executeRequest(...args) }))
+const execute = vi.fn()
+const useApiRequest = vi.fn(() => ({ execute: (...args: unknown[]) => execute(...args) }))
 vi.mock('@/labs/api/useApiRequest', () => ({ useApiRequest }))
 
 const { defineAuth } = await import('@/composables/auth/defineAuth')
@@ -16,11 +16,11 @@ const client = (() => undefined) as never
 describe('fetchCurrentUser throwOnError', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    executeRequest.mockReset()
+    execute.mockReset()
   })
 
   it('answers undefined by default, without throwing', async () => {
-    executeRequest.mockRejectedValue(new Error('backend is down'))
+    execute.mockRejectedValue(new Error('backend is down'))
     const { useCurrentUser } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
 
@@ -29,7 +29,7 @@ describe('fetchCurrentUser throwOnError', () => {
 
   it('rethrows the original error when asked to', async () => {
     const original = new Error('backend is down')
-    executeRequest.mockRejectedValue(original)
+    execute.mockRejectedValue(original)
     const { useCurrentUser } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
 
@@ -37,7 +37,7 @@ describe('fetchCurrentUser throwOnError', () => {
   })
 
   it('marks the user as loaded even when it rethrows', async () => {
-    executeRequest.mockRejectedValue(new Error('backend is down'))
+    execute.mockRejectedValue(new Error('backend is down'))
     const { useCurrentUser, can } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
 
@@ -48,7 +48,7 @@ describe('fetchCurrentUser throwOnError', () => {
   })
 
   it('leaves the success path untouched', async () => {
-    executeRequest.mockResolvedValue({ id: 7, roles: [], permissions: {} })
+    execute.mockResolvedValue({ id: 7, roles: [], permissions: {} })
     const { useCurrentUser } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
 
@@ -61,20 +61,20 @@ describe('fetchCurrentUser throwOnError', () => {
   it('asks for the endpoint it was given', async () => {
     // The old helper took the url and params as positional arguments; the labs request takes them
     // per call. Swapped or dropped, every admin would fetch the wrong user -- or none.
-    executeRequest.mockResolvedValue({ id: 7, roles: [], permissions: {} })
+    execute.mockResolvedValue({ id: 7, roles: [], permissions: {} })
     const { useCurrentUser } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
 
     await fetchCurrentUser(client, '/adm/v1/user/current', { id: 3 })
 
-    expect(executeRequest).toHaveBeenCalledWith({ urlTemplate: '/adm/v1/user/current', urlParams: { id: 3 } })
+    expect(execute).toHaveBeenCalledWith({ urlTemplate: '/adm/v1/user/current', urlParams: { id: 3 } })
   })
 
   it('keeps the console out of it', async () => {
     // This path answers `undefined` for a failure unless the caller asks otherwise, so it has no
     // business writing to the console on the way -- the helper it replaced did not, and a line
     // nobody is meant to act on in every admin's start-up is not an improvement.
-    executeRequest.mockResolvedValue({ id: 7, roles: [], permissions: {} })
+    execute.mockResolvedValue({ id: 7, roles: [], permissions: {} })
     const { useCurrentUser } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
 

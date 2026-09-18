@@ -17,10 +17,10 @@ export const useDamUserSelectAction = (client: () => AxiosInstance) => {
     return users.map((user: DamUser) => mapToValueObject(user))
   }
 
-  const { executeFetch } = useFetchDamUserList(client)
+  const { execute } = useFetchDamUserList(client)
 
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
-    return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
+    return mapToValueObjects(await execute(pagination, filterData, filterConfig))
   }
 
   const fetchItemsByIds = async (ids: IntegerId[]) => {

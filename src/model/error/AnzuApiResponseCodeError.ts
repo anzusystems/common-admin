@@ -1,8 +1,9 @@
+import { AnzuError } from '@/model/error/AnzuError'
 export const isAnzuApiResponseCodeError = (error: any): error is AnzuApiResponseCodeError => {
   return error instanceof AnzuApiResponseCodeError
 }
 
-export class AnzuApiResponseCodeError extends Error {
+export class AnzuApiResponseCodeError extends AnzuError {
   code: number
 
   constructor(code: number, cause?: Error, message?: string) {

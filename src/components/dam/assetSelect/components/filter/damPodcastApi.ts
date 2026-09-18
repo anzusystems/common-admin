@@ -9,7 +9,7 @@ const END_POINT = '/adm/v1/podcast/licence/:licenceId'
 const ENTITY = 'podcast'
 
 export const fetchDamPodcastListByIds = (client: () => AxiosInstance, licenceId: IntegerId, ids: DocId[]) => {
-  const { executeFetch } = useApiFetchByIds<DamPodcastAware[]>({
+  const { execute } = useApiFetchByIds<DamPodcastAware>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
@@ -17,11 +17,11 @@ export const fetchDamPodcastListByIds = (client: () => AxiosInstance, licenceId:
     urlParams: { licenceId },
   })
 
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 export const useFetchDamPodcastList = (client: () => AxiosInstance, licenceId: IntegerId) =>
-  useApiFetchList<DamPodcastAware[]>({
+  useApiFetchList<DamPodcastAware>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,

@@ -14,7 +14,7 @@ export function useSubjectSelect<TItem>(
   datatableHiddenColumns: any,
   system: string,
   subject: string,
-  executeFetch: (
+  execute: (
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
@@ -63,7 +63,7 @@ export function useSubjectSelect<TItem>(
     loading.value = true
     incrementPage()
     try {
-      const res = (await executeFetch(pagination, filterData, filterConfig, fetchParams)) as TItem[]
+      const res = (await execute(pagination, filterData, filterConfig, fetchParams)) as TItem[]
       items.value.push(...res)
     } catch (e) {
       showErrorsDefault(e)
@@ -80,7 +80,7 @@ export function useSubjectSelect<TItem>(
   const getList = async () => {
     loading.value = true
     try {
-      items.value = (await executeFetch(pagination, filterData, filterConfig, fetchParams)) as TItem[]
+      items.value = (await execute(pagination, filterData, filterConfig, fetchParams)) as TItem[]
     } catch (e) {
       showErrorsDefault(e)
     } finally {

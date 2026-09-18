@@ -43,7 +43,7 @@ export interface AssetMetadataBulkItem {
 export declare type AssetCustomData = Record<string, any>
 
 export const useFetchAssetList = (client: () => AxiosInstance, endPoint: string, licenceId: IntegerId) =>
-  useApiFetchList<AssetSearchListItemDto[]>({
+  useApiFetchList<AssetSearchListItemDto>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
@@ -52,7 +52,7 @@ export const useFetchAssetList = (client: () => AxiosInstance, endPoint: string,
   })
 
 export const fetchAsset = (client: () => AxiosInstance, endPoint: string, id: DocId) => {
-  const { executeRequest } = useApiRequest<AssetDetailItemDto, null>({
+  const { execute } = useApiRequest<AssetDetailItemDto, null>({
     client,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -60,11 +60,11 @@ export const fetchAsset = (client: () => AxiosInstance, endPoint: string, id: Do
     urlTemplate: endPoint + '/:id',
   })
 
-  return executeRequest({ urlParams: { id } })
+  return execute({ urlParams: { id } })
 }
 
 export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(client: () => AxiosInstance, id: DocId) => {
-  const { executeRequest } = useApiRequest<T, null>({
+  const { execute } = useApiRequest<T, null>({
     client,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -72,11 +72,11 @@ export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(client: () => Ax
     urlTemplate: END_POINT_CMS_ASSET + ':id',
   })
 
-  return executeRequest({ urlParams: { id } })
+  return execute({ urlParams: { id } })
 }
 
 export const fetchAssetByFileId = (client: () => AxiosInstance, endPoint: string, assetFileId: DocId) => {
-  const { executeRequest } = useApiRequest<AssetDetailItemDto, null>({
+  const { execute } = useApiRequest<AssetDetailItemDto, null>({
     client,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -84,7 +84,7 @@ export const fetchAssetByFileId = (client: () => AxiosInstance, endPoint: string
     urlTemplate: endPoint + '/asset-file/:id',
   })
 
-  return executeRequest({ urlParams: { id: assetFileId } })
+  return execute({ urlParams: { id: assetFileId } })
 }
 
 export const bulkUpdateAssetsMetadata = (

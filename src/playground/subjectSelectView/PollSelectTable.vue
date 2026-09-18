@@ -28,7 +28,7 @@ const emit = defineEmits<{
 const { datatableHiddenColumns, filterConfig, filterData } = usePollSelectStore()
 provide(FilterConfigKey, filterConfig)
 provide(FilterDataKey, filterData)
-const { executeFetch } = useFetchPollListDemo()
+const { execute } = useFetchPollListDemo()
 
 const {
   items,
@@ -59,7 +59,7 @@ const {
   datatableHiddenColumns,
   'cms',
   'poll',
-  executeFetch,
+  execute,
   filterData,
   filterConfig
 )

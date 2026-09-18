@@ -57,10 +57,10 @@ export function useAssetSelectActions(
   const fetchAssetList = async () => {
     if (assetSelectStore.selectedLicenceId <= 0) return
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
+    const { execute } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
     try {
       assetSelectStore.showLoader()
-      assetSelectStore.setList(await executeFetch(pagination, filterData, filterConfig))
+      assetSelectStore.setList(await execute(pagination, filterData, filterConfig))
     } catch (error) {
       showErrorsDefault(error)
     } finally {
@@ -72,10 +72,10 @@ export function useAssetSelectActions(
     if (assetSelectStore.loader) return
     pagination.value.page = pagination.value.page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
-    const { executeFetch } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
+    const { execute } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
     try {
       assetSelectStore.showLoader()
-      assetSelectStore.appendList(await executeFetch(pagination, filterData, filterConfig))
+      assetSelectStore.appendList(await execute(pagination, filterData, filterConfig))
     } catch (error) {
       showErrorsDefault(error)
     } finally {

@@ -1,3 +1,4 @@
+import { AnzuError } from '@/model/error/AnzuError'
 import axios, { type AxiosError } from 'axios'
 import { HTTP_STATUS_UNPROCESSABLE_ENTITY } from '@/composables/statusCodes'
 
@@ -59,7 +60,7 @@ function resolveResponseData(axiosError: AxiosError, system: string, entity: str
   return items
 }
 
-export class AnzuApiValidationError extends Error {
+export class AnzuApiValidationError extends AnzuError {
   fields: ValidationError[]
 
   constructor(axiosError: AxiosError, system: string, entity: string, cause?: Error, message = '') {

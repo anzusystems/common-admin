@@ -40,14 +40,14 @@ const setup = (sortKey: string | null = 'id', elastic = false) => {
 
 const buildApi = (get: ReturnType<typeof vi.fn>, elastic = false) => {
   const { filterData, filterConfig, pagination } = setup('id', elastic)
-  const { executeFetch } = useApiFetchList<Array<{ id: number }>>({
+  const { execute } = useApiFetchList<Array<{ id: number }>>({
     client: () => ({ get }) as unknown as AxiosInstance,
     system: 'test',
     entity: 'test',
     urlTemplate: '/items',
     silentConsoleError: true,
   })
-  return { executeFetch, filterData, filterConfig, pagination }
+  return { execute, filterData, filterConfig, pagination }
 }
 
 const listResponse = (data: Array<{ id: number }>, over: Record<string, unknown> = {}) => ({
@@ -65,10 +65,10 @@ beforeEach(() => {
 describe('what the list fetch writes back', () => {
   it('replaces the pagination value rather than filling in the old one', async () => {
     const get = vi.fn().mockResolvedValue(listResponse([{ id: 1 }, { id: 2 }], { totalCount: 57 }))
-    const { executeFetch, filterData, filterConfig, pagination } = buildApi(get)
+    const { execute, filterData, filterConfig, pagination } = buildApi(get)
     const before = pagination.value
 
-    await executeFetch(pagination, filterData, filterConfig)
+    await execute(pagination, filterData, filterConfig)
 
     expect(pagination.value.totalCount).toBe(57)
     expect(pagination.value.currentViewCount).toBe(2)
@@ -80,9 +80,9 @@ describe('what the list fetch writes back', () => {
 
   it('carries hasNextPage instead of a count for an infinite list', async () => {
     const get = vi.fn().mockResolvedValue({ status: 200, data: { data: [{ id: 1 }], hasNextPage: true } })
-    const { executeFetch, filterData, filterConfig, pagination } = buildApi(get)
+    const { execute, filterData, filterConfig, pagination } = buildApi(get)
 
-    await executeFetch(pagination, filterData, filterConfig)
+    await execute(pagination, filterData, filterConfig)
 
     expect(pagination.value.hasNextPage).toBe(true)
     expect(pagination.value.currentViewCount).toBe(1)
@@ -90,16 +90,16 @@ describe('what the list fetch writes back', () => {
 
   it('answers with an empty list for a no-content response', async () => {
     const get = vi.fn().mockResolvedValue({ status: 204, data: undefined })
-    const { executeFetch, filterData, filterConfig, pagination } = buildApi(get)
+    const { execute, filterData, filterConfig, pagination } = buildApi(get)
 
-    await expect(executeFetch(pagination, filterData, filterConfig)).resolves.toEqual([])
+    await expect(execute(pagination, filterData, filterConfig)).resolves.toEqual([])
   })
 })
 
 describe('the url the list fetch asks for', () => {
   it('carries the limit, the offset and the order', async () => {
     const get = vi.fn().mockResolvedValue(listResponse([]))
-    const { executeFetch, filterData, filterConfig, pagination } = buildApi(get)
+    const { execute, filterData, filterConfig, pagination } = buildApi(get)
     pagination.value = {
       ...pagination.value,
       page: 3,
@@ -107,7 +107,7 @@ describe('the url the list fetch asks for', () => {
       sortBy: { key: 'title', order: SortOrder.Desc },
     }
 
-    await executeFetch(pagination, filterData, filterConfig)
+    await execute(pagination, filterData, filterConfig)
 
     const url = get.mock.calls[0][0] as string
     expect(url).toContain('limit=25')
@@ -118,11 +118,11 @@ describe('the url the list fetch asks for', () => {
   it('goes to the search endpoint only when the filter says so', async () => {
     const plainGet = vi.fn().mockResolvedValue(listResponse([]))
     const plain = buildApi(plainGet)
-    await plain.executeFetch(plain.pagination, plain.filterData, plain.filterConfig)
+    await plain.execute(plain.pagination, plain.filterData, plain.filterConfig)
 
     const elasticGet = vi.fn().mockResolvedValue(listResponse([]))
     const elastic = buildApi(elasticGet, true)
-    await elastic.executeFetch(elastic.pagination, elastic.filterData, elastic.filterConfig)
+    await elastic.execute(elastic.pagination, elastic.filterData, elastic.filterConfig)
 
     expect(String(plainGet.mock.calls[0][0]).startsWith('/items?')).toBe(true)
     expect(String(elasticGet.mock.calls[0][0]).startsWith('/items/search')).toBe(true)
@@ -130,18 +130,18 @@ describe('the url the list fetch asks for', () => {
 
   it('appends /search when a single call forces it', async () => {
     const get = vi.fn().mockResolvedValue(listResponse([]))
-    const { executeFetch, filterData, filterConfig, pagination } = buildApi(get)
+    const { execute, filterData, filterConfig, pagination } = buildApi(get)
 
-    await executeFetch(pagination, filterData, filterConfig, { forceElastic: true })
+    await execute(pagination, filterData, filterConfig, { forceElastic: true })
 
     expect(String(get.mock.calls[0][0]).startsWith('/items/search')).toBe(true)
   })
 
   it('lets a call override the url it was built with', async () => {
     const get = vi.fn().mockResolvedValue(listResponse([]))
-    const { executeFetch, filterData, filterConfig, pagination } = buildApi(get)
+    const { execute, filterData, filterConfig, pagination } = buildApi(get)
 
-    await executeFetch(pagination, filterData, filterConfig, { urlTemplate: '/other/:id', urlParams: { id: 4 } })
+    await execute(pagination, filterData, filterConfig, { urlTemplate: '/other/:id', urlParams: { id: 4 } })
 
     expect(String(get.mock.calls[0][0]).startsWith('/other/4')).toBe(true)
   })
@@ -149,8 +149,8 @@ describe('the url the list fetch asks for', () => {
 
 describe('what the list fetch throws', () => {
   const failing = (error: unknown) => {
-    const { executeFetch, filterData, filterConfig, pagination } = buildApi(vi.fn().mockRejectedValue(error))
-    return () => executeFetch(pagination, filterData, filterConfig)
+    const { execute, filterData, filterConfig, pagination } = buildApi(vi.fn().mockRejectedValue(error))
+    return () => execute(pagination, filterData, filterConfig)
   }
 
   it('tells a forbidden response from the rest', async () => {

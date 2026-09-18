@@ -13,7 +13,7 @@ import { useApiRequest } from '@/labs/api/useApiRequest'
 const CHUNK_UPLOAD_TIMEOUT = 420
 
 export const fetchImageFile = async (client: () => AxiosInstance, endPoint: string, id: DocId) => {
-  const { executeRequest } = useApiRequest<AssetFileImage, null>({
+  const { execute } = useApiRequest<AssetFileImage, null>({
     client,
     method: 'GET',
     system: SYSTEM_CORE_DAM,
@@ -22,7 +22,7 @@ export const fetchImageFile = async (client: () => AxiosInstance, endPoint: stri
   })
 
   // `null` for a body-less response -- see `fetchImage`; the callers guard with a strict `isNull`.
-  return (await executeRequest({ urlParams: { id } })) ?? null
+  return (await execute({ urlParams: { id } })) ?? null
 }
 
 export const imageUploadStart = (client: () => AxiosInstance, endPoint: string, item: UploadQueueItem) => {

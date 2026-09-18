@@ -8,7 +8,7 @@ const END_POINT = '/adm/v1/job'
 export const ENTITY = 'job'
 
 export function useJobApi<JobType extends JobBase = JobBase>(client: () => AxiosInstance, system: string) {
-  const useFetchJobList = () => useApiFetchList<JobType[]>({ client, system, entity: ENTITY, urlTemplate: END_POINT })
+  const useFetchJobList = () => useApiFetchList<JobType>({ client, system, entity: ENTITY, urlTemplate: END_POINT })
 
   // Each of these builds its own request rather than sharing one: `useApiRequest` keeps a set of
   // abort controllers per instance, so a shared instance would put every caller of that instance in
@@ -18,7 +18,7 @@ export function useJobApi<JobType extends JobBase = JobBase>(client: () => Axios
   // fleet aborts a job request, and exposing the handle would move 27 call sites to pass around
   // something unused.
   const fetchJob = (id: number) => {
-    const { executeRequest } = useApiRequest<JobType, null>({
+    const { execute } = useApiRequest<JobType, null>({
       client,
       method: 'GET',
       system,
@@ -26,7 +26,7 @@ export function useJobApi<JobType extends JobBase = JobBase>(client: () => Axios
       urlTemplate: END_POINT + '/:id',
     })
 
-    return executeRequest({ urlParams: { id } })
+    return execute({ urlParams: { id } })
   }
 
   const createJob = (data: JobType) => {
@@ -34,7 +34,7 @@ export function useJobApi<JobType extends JobBase = JobBase>(client: () => Axios
       .slice(4) // remove "job-" prefix
       .replace('-kind-', '-kind/') // replace "-kind-" with "-kind/" if the needle is found
 
-    const { executeRequest } = useApiRequest<JobType, JobType>({
+    const { execute } = useApiRequest<JobType, JobType>({
       client,
       method: 'POST',
       system,
@@ -42,11 +42,11 @@ export function useJobApi<JobType extends JobBase = JobBase>(client: () => Axios
       urlTemplate: END_POINT + '/:type',
     })
 
-    return executeRequest({ urlParams: { type }, object: data })
+    return execute({ urlParams: { type }, body: data })
   }
 
   const deleteJob = (id: number) => {
-    const { executeRequest } = useApiRequest<JobType, null>({
+    const { execute } = useApiRequest<JobType, null>({
       client,
       method: 'DELETE',
       system,
@@ -54,7 +54,7 @@ export function useJobApi<JobType extends JobBase = JobBase>(client: () => Axios
       urlTemplate: END_POINT + '/:id',
     })
 
-    return executeRequest({ urlParams: { id } })
+    return execute({ urlParams: { id } })
   }
 
   return {

@@ -12,18 +12,18 @@ export const SYSTEM_CMS = 'cms'
 const BULK_METADATA_LIMIT = 20
 
 export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<ImageAware[]>({
+  const { execute } = useApiFetchByIds<ImageAware>({
     client,
     system: SYSTEM_CMS,
     entity: ENTITY,
     urlTemplate: END_POINT,
   })
 
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 export const fetchImage = async (client: () => AxiosInstance, id: IntegerId) => {
-  const { executeRequest } = useApiRequest<ImageAware, null>({
+  const { execute } = useApiRequest<ImageAware, null>({
     client,
     method: 'GET',
     system: SYSTEM_CMS,
@@ -34,11 +34,11 @@ export const fetchImage = async (client: () => AxiosInstance, id: IntegerId) => 
   // `null` for a body-less response, which is what the old helper answered and what every caller
   // still guards with: `isNull` is a strict `=== null`, so an `undefined` would walk straight
   // through the guard and be dereferenced.
-  return (await executeRequest({ urlParams: { id } })) ?? null
+  return (await execute({ urlParams: { id } })) ?? null
 }
 
 export const createImage = (client: () => AxiosInstance, data: ImageCreateUpdateAware) => {
-  const { executeRequest } = useApiRequest<ImageAware, ImageCreateUpdateAware>({
+  const { execute } = useApiRequest<ImageAware, ImageCreateUpdateAware>({
     client,
     method: 'POST',
     system: SYSTEM_CMS,
@@ -46,11 +46,11 @@ export const createImage = (client: () => AxiosInstance, data: ImageCreateUpdate
     urlTemplate: END_POINT,
   })
 
-  return executeRequest({ object: data })
+  return execute({ body: data })
 }
 
 export const updateImage = (client: () => AxiosInstance, id: IntegerId, data: ImageCreateUpdateAware) => {
-  const { executeRequest } = useApiRequest<ImageAware, ImageCreateUpdateAware>({
+  const { execute } = useApiRequest<ImageAware, ImageCreateUpdateAware>({
     client,
     method: 'PUT',
     system: SYSTEM_CMS,
@@ -58,11 +58,11 @@ export const updateImage = (client: () => AxiosInstance, id: IntegerId, data: Im
     urlTemplate: END_POINT + '/:id',
   })
 
-  return executeRequest({ urlParams: { id }, object: data })
+  return execute({ urlParams: { id }, body: data })
 }
 
 export const deleteImage = (client: () => AxiosInstance, id: IntegerId) => {
-  const { executeRequest } = useApiRequest<ImageAware, null>({
+  const { execute } = useApiRequest<ImageAware, null>({
     client,
     method: 'DELETE',
     system: SYSTEM_CMS,
@@ -70,7 +70,7 @@ export const deleteImage = (client: () => AxiosInstance, id: IntegerId) => {
     urlTemplate: END_POINT + '/:id',
   })
 
-  return executeRequest({ urlParams: { id } })
+  return execute({ urlParams: { id } })
 }
 
 export const bulkUpdateImages = (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => {

@@ -8,10 +8,10 @@ import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 
 export const useExtSystemSelectActions = (client: () => AxiosInstance) => {
-  const { executeFetch } = useFetchDamExtSystemList(client)
+  const { execute } = useFetchDamExtSystemList(client)
 
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
-    const extSystems = await executeFetch(pagination, filterData, filterConfig)
+    const extSystems = await execute(pagination, filterData, filterConfig)
 
     return <ValueObjectOption<IntegerId>[]>extSystems.map((extSystem: DamExtSystem) => ({
       title: extSystem.slug,

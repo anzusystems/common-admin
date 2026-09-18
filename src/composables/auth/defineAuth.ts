@@ -128,18 +128,13 @@ export function defineAuth<TAclValue extends AclValue>(
         // error it actually was -- `AnzuApiAxiosError` with the response on its cause, or
         // `AnzuApiTimeoutError`. A caller passing `throwOnError` can only tell a dead session from
         // a dead backend if the error says which it was.
-        // Silent, because the older helper this replaced was: every caller but one lets a failure
-        // answer `undefined`, and the one that does not asks for `throwOnError` and reads the error
-        // itself. Logging here would put a line in the console of every admin on every start-up
-        // that happens to fail, with nobody meant to act on it.
-        const { executeRequest } = useApiRequest<TCurrentUser>({
+        const { execute } = useApiRequest<NonNullable<TCurrentUser>>({
           client,
           method: 'GET',
           system,
           entity,
-          silentConsoleError: true,
         })
-        const res = await executeRequest({ urlTemplate: endPoint, urlParams })
+        const res = await execute({ urlTemplate: endPoint, urlParams })
         setCurrentUser(res)
         authStore.currentUsersLoaded.value.set(system, true)
         storeAdminRoleBySystem()

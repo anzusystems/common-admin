@@ -63,17 +63,17 @@ interface Rubric extends AnzuUserAndTimeTrackingAware {
 const END_POINT = '/adm/v1/rubric'
 
 const fetchRubricListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<Rubric[]>({
+  const { execute } = useApiFetchByIds<Rubric>({
     client: cmsClient,
     system: 'cms',
     entity: 'rubric',
     urlTemplate: END_POINT,
   })
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 const useFetchRubricList = () =>
-  useApiFetchList<Rubric[]>({
+  useApiFetchList<Rubric>({
     client: cmsClient,
     system: 'cms',
     entity: 'rubric',
@@ -81,8 +81,8 @@ const useFetchRubricList = () =>
   })
 
 export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
-  const { executeFetch } = useFetchRubricList()
-  const rubrics = await executeFetch(pagination, filterData, filterConfig)
+  const { execute } = useFetchRubricList()
+  const rubrics = await execute(pagination, filterData, filterConfig)
 
   return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({
     title: rubric.texts.title,

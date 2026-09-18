@@ -5,7 +5,7 @@ import { useApiRequest } from '@/labs/api/useApiRequest'
 const END_POINT = '/adm/users/current'
 
 export const fetchDamCurrentUser = (client: () => AxiosInstance) => {
-  const { executeRequest } = useApiRequest<DamCurrentUserDto, null>({
+  const { execute } = useApiRequest<DamCurrentUserDto, null>({
     client,
     method: 'GET',
     system: 'coreDam',
@@ -13,5 +13,5 @@ export const fetchDamCurrentUser = (client: () => AxiosInstance) => {
     urlTemplate: END_POINT,
   })
 
-  return executeRequest()
+  return execute()
 }

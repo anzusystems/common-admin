@@ -19,7 +19,7 @@ interface LogApiParams {
  * abort controller set.
  */
 export const useFetchLogList = ({ client, system, logPaths, type }: LogApiParams) =>
-  useApiFetchList<Log[]>({
+  useApiFetchList<Log>({
     client,
     system,
     entity: LOG_ENTITY,

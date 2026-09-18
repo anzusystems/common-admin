@@ -13,14 +13,14 @@ const currentExtSystemId = ref(1)
 
 export const useAuthorListActions = () => {
   const { showErrorsDefault } = useAlerts()
-  const { executeFetch } = useFetchAuthorList(damClient, currentExtSystemId.value)
+  const { execute } = useFetchAuthorList(damClient, currentExtSystemId.value)
   const listItems = ref<DamAuthor[]>([])
 
   const fetchList = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     listLoading.value = true
     pagination.value.sortBy = filterData.text ? null : { key: SORT_BY_ID, order: SortOrder.Desc }
     try {
-      listItems.value = await executeFetch(pagination, filterData, filterConfig)
+      listItems.value = await execute(pagination, filterData, filterConfig)
     } catch (error) {
       showErrorsDefault(error)
     } finally {

@@ -51,8 +51,8 @@ const loadImageFile = async (id: DocId) => {
 const loadRois = async (forceReloadFile = false) => {
   imageRoiStore.showLoader()
   if (imageRoiStore.imageFile) {
-    const { executeFetch } = useFetchImageRoiList(damClient, endPointImage, imageRoiStore.imageFile.id)
-    const res = await executeFetch(pagination, filterData, filterConfig)
+    const { execute } = useFetchImageRoiList(damClient, endPointImage, imageRoiStore.imageFile.id)
+    const res = await execute(pagination, filterData, filterConfig)
     if (res.length > 0 && res[0].id) {
       const roi = await fetchRoi(damClient, endPointRoi, res[0].id)
       if (forceReloadFile) {

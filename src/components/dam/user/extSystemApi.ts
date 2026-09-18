@@ -14,18 +14,18 @@ const END_POINT = '/adm/v1/ext-system'
 export const ENTITY = 'extSystem'
 
 export const fetchDamExtSystemListByIds = (client: () => AxiosInstance, ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<DamExtSystem[]>({
+  const { execute } = useApiFetchByIds<DamExtSystem>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: END_POINT,
   })
 
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 export const useFetchDamExtSystemList = (client: () => AxiosInstance) =>
-  useApiFetchList<DamExtSystem[]>({
+  useApiFetchList<DamExtSystem>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
