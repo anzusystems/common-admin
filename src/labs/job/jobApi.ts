@@ -1,13 +1,8 @@
 import type { AxiosInstance } from 'axios'
 import type { JobBase } from '@/types/Job'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchOne } from '@/services/api/apiFetchOne'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiCreateOne } from '@/services/api/apiCreateOne'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiDeleteOne } from '@/services/api/apiDeleteOne'
 import { stringToKebabCase } from '@/utils/string'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { useApiRequest } from '@/labs/api/useApiRequest'
 
 const END_POINT = '/adm/v1/job'
 export const ENTITY = 'job'
@@ -15,17 +10,50 @@ export const ENTITY = 'job'
 export function useJobApi<JobType extends JobBase = JobBase>(client: () => AxiosInstance, system: string) {
   const useFetchJobList = () => useApiFetchList<JobType[]>({ client, system, entity: ENTITY, urlTemplate: END_POINT })
 
-  const fetchJob = (id: number) => apiFetchOne<JobType>(client, END_POINT + '/:id', { id }, system, ENTITY)
+  // Each of these builds its own request rather than sharing one: `useApiRequest` keeps a set of
+  // abort controllers per instance, and this composable is called once per module in both admins
+  // that use it, so a shared instance would put every caller in one abort scope. They stay bound
+  // functions instead of being handed out as factories -- no caller anywhere in the fleet aborts a
+  // job request, and exposing the handle would move 27 call sites to pass around something unused.
+  const fetchJob = (id: number) => {
+    const { executeRequest } = useApiRequest<JobType, null>({
+      client,
+      method: 'GET',
+      system,
+      entity: ENTITY,
+      urlTemplate: END_POINT + '/:id',
+    })
+
+    return executeRequest({ urlParams: { id } })
+  }
 
   const createJob = (data: JobType) => {
     const type = stringToKebabCase(data._resourceName)
       .slice(4) // remove "job-" prefix
       .replace('-kind-', '-kind/') // replace "-kind-" with "-kind/" if the needle is found
 
-    return apiCreateOne<JobType>(client, data, END_POINT + '/:type', { type }, system, ENTITY)
+    const { executeRequest } = useApiRequest<JobType, JobType>({
+      client,
+      method: 'POST',
+      system,
+      entity: ENTITY,
+      urlTemplate: END_POINT + '/:type',
+    })
+
+    return executeRequest({ urlParams: { type }, object: data })
   }
 
-  const deleteJob = (id: number) => apiDeleteOne<JobType>(client, END_POINT + '/:id', { id }, system, ENTITY)
+  const deleteJob = (id: number) => {
+    const { executeRequest } = useApiRequest<JobType, null>({
+      client,
+      method: 'DELETE',
+      system,
+      entity: ENTITY,
+      urlTemplate: END_POINT + '/:id',
+    })
+
+    return executeRequest({ urlParams: { id } })
+  }
 
   return {
     useFetchJobList,
