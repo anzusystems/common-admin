@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
+import AChipNoLink from '@/components/AChipNoLink.vue'
 import { type LogLevelType, useLogLevel } from '@/model/valueObject/LogLevel'
 
 const props = withDefaults(
@@ -16,12 +17,10 @@ const levelOption = computed(() => {
 </script>
 
 <template>
-  <VChip
+  <AChipNoLink
     v-if="levelOption"
     :color="levelOption.color"
-    label
-    size="small"
   >
     {{ levelOption.title }}
-  </VChip>
+  </AChipNoLink>
 </template>

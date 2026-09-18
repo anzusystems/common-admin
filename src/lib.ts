@@ -11,7 +11,6 @@ import ADatatablePagination from '@/components/ADatatablePagination.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
-import ALogData from '@/components/ALogData.vue'
 import ACreateDialog from '@/components/ACreateDialog.vue'
 import AAdminSwitcher from '@/components/AAdminSwitcher.vue'
 import AEmptyRouterView from '@/components/AEmptyRouterView.vue'
@@ -263,6 +262,7 @@ import {
 } from '@/model/error/AnzuApiDependencyExistsError'
 import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { AnzuApiAxiosError, isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import { AnzuApiTimeoutError, isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
@@ -652,7 +652,6 @@ export {
   ADatatableOrdering,
   ADialogToolbar,
   ACreateDialog,
-  ALogData,
   AJobStatusChip,
   ACachedChip,
   ACachedUserChip,
@@ -1232,6 +1231,8 @@ export {
   AnzuApiValidationError,
   isAnzuFatalError,
   AnzuFatalError,
+  isAnzuApiTimeoutError,
+  AnzuApiTimeoutError,
   isAnzuApiAxiosError,
   AnzuApiAxiosError,
   type ValidationError,

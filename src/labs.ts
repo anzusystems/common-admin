@@ -20,6 +20,21 @@ import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 import { generateListQuery, useApiFetchList } from '@/labs/api/useApiFetchList'
 import { useJobApi } from '@/labs/job/jobApi'
+import ALogListView from '@/labs/log/ALogListView.vue'
+import ALogDetailView from '@/labs/log/ALogDetailView.vue'
+import {
+  DEFAULT_LOG_PATHS,
+  isLogType,
+  LogType,
+  LogTypeDefault,
+  type LogPaths,
+  type LogTypeType,
+  useLogType,
+} from '@/labs/log/logType'
+import { applyLogTypeVisibility, useLogFilter, type LogFilter, type LogTimeWindow } from '@/labs/log/logFilter'
+import { useLogDetailActions, useLogListActions } from '@/labs/log/logActions'
+import { LOG_ENTITY, useFetchLog, useFetchLogList } from '@/labs/log/logApi'
+import { formatJson } from '@/utils/json'
 import {
   DatatablePaginationKey,
   FilterConfigKey,
@@ -246,4 +261,23 @@ export {
   type UserAdminConfigDataFilterBookmark,
   type UserAdminConfigDataPinnedWidgets,
   useUserAdminConfigFactory,
+  ALogListView,
+  ALogDetailView,
+  LogType,
+  LogTypeDefault,
+  type LogTypeType,
+  isLogType,
+  useLogType,
+  DEFAULT_LOG_PATHS,
+  type LogPaths,
+  useLogFilter,
+  applyLogTypeVisibility,
+  type LogFilter,
+  type LogTimeWindow,
+  useLogListActions,
+  useLogDetailActions,
+  useFetchLogList,
+  useFetchLog,
+  LOG_ENTITY,
+  formatJson,
 }
