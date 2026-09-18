@@ -142,6 +142,27 @@ describe('what useApiRequest sends', () => {
     expect(request.mock.calls[0][0].data).toBe(JSON.stringify({ title: 'a' }))
   })
 
+  // The trap the admins hit on the way over: the helper this replaces defaulted the body to `{}` for
+  // creates, so a call that passed nothing still sent `{}`. This one sends no body at all, which is
+  // why a migrated call that relied on the old default has to pass `{}` itself.
+  it('sends no body when the call omits one', async () => {
+    const request = vi.fn().mockResolvedValue({ status: 200, data: { ok: true } })
+    const { executeRequest } = buildApi(request)
+
+    await executeRequest()
+
+    expect(request.mock.calls[0][0].data).toBeUndefined()
+  })
+
+  it('sends an empty body when the call asks for one', async () => {
+    const request = vi.fn().mockResolvedValue({ status: 200, data: { ok: true } })
+    const { executeRequest } = buildApi(request)
+
+    await executeRequest({ object: {} })
+
+    expect(request.mock.calls[0][0].data).toBe('{}')
+  })
+
   it('lets a call override the url it was built with', async () => {
     const request = vi.fn().mockResolvedValue({ status: 200, data: { ok: true } })
     const { executeRequest } = buildApi(request)

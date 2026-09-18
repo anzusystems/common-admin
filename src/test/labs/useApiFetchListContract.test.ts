@@ -28,16 +28,18 @@ import { AnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 
 const fields = [{ name: 'name', default: '' }] as const satisfies readonly MakeFilterOption<string>[]
 
-const setup = (sortKey: string | null = 'id') => {
+// `elastic` goes in through `createFilter`, not onto the config afterwards: only `createFilter`
+// couples it to `simpleFilters`, so a config assembled by hand is one the app cannot produce and
+// would hide the difference between the search endpoint and the flat query format.
+const setup = (sortKey: string | null = 'id', elastic = false) => {
   const store = createFilterStore(fields)
-  const { filterData, filterConfig } = createFilter(fields, store, { system: 'sys', subject: 'subj' })
+  const { filterData, filterConfig } = createFilter(fields, store, { system: 'sys', subject: 'subj', elastic })
   const { pagination } = usePagination(sortKey)
   return { filterData, filterConfig, pagination }
 }
 
 const buildApi = (get: ReturnType<typeof vi.fn>, elastic = false) => {
-  const { filterData, filterConfig, pagination } = setup()
-  if (elastic) filterConfig.general.elastic = true
+  const { filterData, filterConfig, pagination } = setup('id', elastic)
   const { executeFetch } = useApiFetchList<Array<{ id: number }>>({
     client: () => ({ get }) as unknown as AxiosInstance,
     system: 'test',
