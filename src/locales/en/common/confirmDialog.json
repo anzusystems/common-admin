@@ -1,0 +1,8 @@
+{
+  "title": "Confirmation",
+  "message": "Do you really want to perform this action?",
+  "action": {
+    "cancel": "Cancel",
+    "confirm": "Yes, Confirm"
+  }
+}

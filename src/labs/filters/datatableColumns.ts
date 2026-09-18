@@ -34,7 +34,7 @@ export function createDatatableColumnsConfig(
   columnsHidden: Ref<Array<string>>,
   system: string,
   subject: string,
-  moreOptions: Partial<DatatableColumnsConfigMoreOptions> = {},
+  moreOptions: Partial<DatatableColumnsConfigMoreOptions> = {}
 ) {
   const options = { ...DatatableColumnsConfigMoreOptionsDefault, ...moreOptions }
   const localI18n = options.customI18n ?? i18n
@@ -43,10 +43,7 @@ export function createDatatableColumnsConfig(
   let storeKey: undefined | string = undefined
   if (isString(options.storeColumnsLocalStorage)) {
     storeKey = options.storeColumnsLocalStorage
-  } else if (
-    isBoolean(options.storeColumnsLocalStorage) &&
-    true === options.storeColumnsLocalStorage
-  ) {
+  } else if (isBoolean(options.storeColumnsLocalStorage) && true === options.storeColumnsLocalStorage) {
     storeKey = 'table_' + system + '_' + subject
   }
 
@@ -80,7 +77,14 @@ export function createDatatableColumnsConfig(
     if (!storeKey || !localStorage) return
     const stored = localStorage.getItem(storeKey)
     if (!stored) return
-    const storedData = JSON.parse(stored) as StoredData
+    // A corrupted entry would otherwise throw inside onMounted and take the whole table with it.
+    let storedData: StoredData
+    try {
+      storedData = JSON.parse(stored) as StoredData
+    } catch {
+      localStorage.removeItem(storeKey)
+      return
+    }
     if (!isObject(storedData)) return
     if (!isArray(storedData.hidden)) return
     columnsHidden.value = storedData.hidden as string[]

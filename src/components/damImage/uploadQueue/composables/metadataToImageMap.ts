@@ -17,7 +17,7 @@ export type UploadMetadataToImageMapFn = (
   bulkItems: AssetMetadataBulkItem[],
   damClient: () => AxiosInstance,
   extSystem: IntegerId,
-  licenceId: IntegerId,
+  licenceId: IntegerId
 ) => Promise<UploadMetadataToImageMapItem[]>
 
 export type AssetSelectMetadataToImageMapFn = (assetRes: AssetDetailItemDto) => {
@@ -30,19 +30,14 @@ export async function mapUploadMetadataToImages(
   bulkItems: AssetMetadataBulkItem[],
   damClient: () => AxiosInstance,
   extSystem: IntegerId,
-  licenceId: IntegerId,
+  licenceId: IntegerId
 ): Promise<UploadMetadataToImageMapItem[]> {
   // Build assetId -> { description, authorIds } map
-  const assetMetadataMap = new Map<
-    DocId,
-    { description: string; authorIds: DocId[]; mainFileInternal: boolean }
-  >()
+  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[]; mainFileInternal: boolean }>()
 
   bulkItems.forEach((bulkItem) => {
     assetMetadataMap.set(bulkItem.id, {
-      description: isString(bulkItem.customData?.description)
-        ? bulkItem.customData.description.trim()
-        : '',
+      description: isString(bulkItem.customData?.description) ? bulkItem.customData.description.trim() : '',
       authorIds: bulkItem.authors,
       mainFileInternal: bulkItem.mainFileInternal ?? false,
     })
@@ -65,9 +60,7 @@ export async function mapUploadMetadataToImages(
   }
 
   // Filter valid queue items and map to results
-  const validItems = queueItems.filter(
-    (queueItem) => !isNull(queueItem.assetId) && !isNull(queueItem.fileId),
-  )
+  const validItems = queueItems.filter((queueItem) => !isNull(queueItem.assetId) && !isNull(queueItem.fileId))
 
   return validItems.map((queueItem) => {
     const description = assetMetadataMap.get(queueItem.assetId!)?.description

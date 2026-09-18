@@ -9,7 +9,7 @@ import { isOwnerAware } from '@/types/OwnerAware'
 import { isCreatedByAware } from '@/types/CreatedByAware'
 import type { AnzuUser } from '@/types/AnzuUser'
 import type { UrlParams } from '@/services/api/apiHelper'
-import { apiFetchOne } from '@/services/api/apiFetchOne'
+import { useApiRequest } from '@/labs/api/useApiRequest'
 
 export type DefineAuthConfig = {
   adminRole: string | Array<{ system: string; adminRole: string }>
@@ -27,7 +27,7 @@ const defaultConfig: DefineAuthConfig = {
  */
 export function defineAuth<TAclValue extends AclValue>(
   mainCurrentUserSystem: string,
-  config: Partial<DefineAuthConfig> = {},
+  config: Partial<DefineAuthConfig> = {}
 ) {
   const mergedConfig = { ...defaultConfig, ...config }
   const authStore = useAuthStore()
@@ -111,20 +111,43 @@ export function defineAuth<TAclValue extends AclValue>(
       }
     }
 
+    /**
+     * Answers `undefined` for every failure by default, which loses the reason. `throwOnError`
+     * hands the original error back, for callers that must tell a lost session from a dead backend.
+     */
     const fetchCurrentUser = async (
       client: () => AxiosInstance,
       endPoint = '/adm/v1/users/current',
       urlParams: UrlParams | undefined = undefined,
       entity = 'user',
+      options: { throwOnError?: boolean } = {}
     ) => {
       try {
-        const res = await apiFetchOne<TCurrentUser>(client, endPoint, urlParams, system, entity)
+        // The labs request, not the older `apiFetchOne`: it is where the fleet is going, and it is
+        // the difference between a failure arriving as a bare `AnzuFatalError` and arriving as the
+        // error it actually was -- `AnzuApiAxiosError` with the response on its cause, or
+        // `AnzuApiTimeoutError`. A caller passing `throwOnError` can only tell a dead session from
+        // a dead backend if the error says which it was.
+        // Silent, because the older helper this replaced was: every caller but one lets a failure
+        // answer `undefined`, and the one that does not asks for `throwOnError` and reads the error
+        // itself. Logging here would put a line in the console of every admin on every start-up
+        // that happens to fail, with nobody meant to act on it.
+        const { executeRequest } = useApiRequest<TCurrentUser>({
+          client,
+          method: 'GET',
+          system,
+          entity,
+          silentConsoleError: true,
+        })
+        const res = await executeRequest({ urlTemplate: endPoint, urlParams })
         setCurrentUser(res)
         authStore.currentUsersLoaded.value.set(system, true)
         storeAdminRoleBySystem()
         return currentUser.value
       } catch (error) {
+        // Set before rethrowing too, or `can()` throws "must try to load currentUser first".
         authStore.currentUsersLoaded.value.set(system, true)
+        if (options.throwOnError) throw error
         return undefined
       }
     }
@@ -132,6 +155,9 @@ export function defineAuth<TAclValue extends AclValue>(
     return {
       currentUser,
       setCurrentUser,
+      // `undefined` until something has tried to load this system, which is the one state
+      // `currentUser` alone cannot tell apart from "loaded, but there is no such user".
+      isCurrentUserLoaded,
       isSuperAdmin,
       isAnonymous,
       hasCurrentUser,
@@ -158,9 +184,7 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
     const user = authStore.getCurrentUserBySystem(system)
     const userIsLoaded = authStore.isCurrentUserLoadedBySystem(system)
     if (isUndefined(userIsLoaded)) {
-      throw new Error(
-        'Composable defineAuth must try to load currentUser first to use can function.',
-      )
+      throw new Error('Composable defineAuth must try to load currentUser first to use can function.')
     }
     if (isUndefined(user) || isUndefined(user.id) || isNull(user.id) || user.id === 0) {
       return false
@@ -175,9 +199,7 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
         return false
       case Grant.AllowOwner:
         if (isUndefined(subject))
-          throw new Error(
-            `Required subject for acl "${acl}" to determine an ability to access the resource.`,
-          )
+          throw new Error(`Required subject for acl "${acl}" to determine an ability to access the resource.`)
         return canOwnerHelper(subject, system)
       default:
         return false
@@ -205,9 +227,7 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
     const user = authStore.getCurrentUserBySystem(system)
     const userIsLoaded = authStore.isCurrentUserLoadedBySystem(system)
     if (isUndefined(userIsLoaded)) {
-      throw new Error(
-        'Composable defineAuth must try to load currentUser first to use canOwner function.',
-      )
+      throw new Error('Composable defineAuth must try to load currentUser first to use canOwner function.')
     }
     if (isUndefined(user) || isUndefined(user.id) || isNull(user.id) || user.id === 0) {
       return false
@@ -229,7 +249,8 @@ export function useAuthHelpers<TAclValue extends AclValue>() {
   }
 }
 
-function getSystemFromAcl(acl: any) {
+/** An ACL value carries its system in front of the first underscore: `weather_location_ui`. */
+export function getSystemFromAcl(acl: any) {
   const parts = acl.split('_')
 
   return parts[0]

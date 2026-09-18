@@ -34,7 +34,7 @@ const props = withDefaults(
     readonly: false,
     configName: 'default',
     showEditButton: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -46,8 +46,7 @@ const { t } = useI18n()
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } =
-  storeToRefs(assetDetailStore)
+const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
 
 const assetType = computed(() => {
   return asset.value?.attributes.assetType || DamAssetTypeDefault
@@ -69,19 +68,18 @@ const onAnyMetadataChange = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 
 const { cachedUsers } = useDamCachedUsers()
 
-const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
-  useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
+const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
 </script>
 
 <template>
@@ -116,7 +114,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
           <template #after-pinned>
             <VRow
               v-if="keywordEnabled"
-              density="comfortable"
+              density="compact"
               class="my-2"
             >
               <VCol>
@@ -141,7 +139,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             </VRow>
             <VRow
               v-if="authorEnabled"
-              density="comfortable"
+              density="compact"
               class="my-2"
             >
               <VCol>
@@ -167,7 +165,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             </VRow>
             <VRow
               v-if="mainFileSingleUseEnabled"
-              density="comfortable"
+              density="compact"
               class="my-2"
             >
               <VCol>
@@ -220,7 +218,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             {{ t('common.model.tracking.created') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.createdAt) }}<br>
+            {{ dateTimePretty(asset.createdAt) }}<br />
             <ACachedUserChip
               :id="asset.createdBy"
               :cached-users="cachedUsers"
@@ -232,7 +230,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
             {{ t('common.model.tracking.modified') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.modifiedAt) }}<br>
+            {{ dateTimePretty(asset.modifiedAt) }}<br />
             <ACachedUserChip
               :id="asset.modifiedBy"
               :cached-users="cachedUsers"

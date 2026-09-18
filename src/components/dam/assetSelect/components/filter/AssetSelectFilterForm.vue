@@ -29,7 +29,7 @@ const props = withDefaults(
     hideTextSearch: false,
     enabledFilters: undefined,
     configName: 'default',
-  },
+  }
 )
 
 const { filterData, filterConfig } = useAssetSelectActions()
@@ -139,7 +139,7 @@ watch(extSystem, (newValue, oldValue) => {
     <VCol
       v-if="
         (assetType === DamAssetType.Audio || assetType === DamAssetType.Video) &&
-          isFilterEnabled('distributedInServices')
+        isFilterEnabled('distributedInServices')
       "
       v-bind="colProps('distributedInServices')"
     >

@@ -1,18 +1,9 @@
-import {
-  AnzuApiResponseCodeError,
-  isAnzuApiResponseCodeError,
-} from '@/model/error/AnzuApiResponseCodeError'
-import {
-  AnzuApiValidationError,
-  axiosErrorResponseHasValidationData,
-} from '@/model/error/AnzuApiValidationError'
+import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosRequestConfig } from 'axios'
-import {
-  AnzuApiForbiddenError,
-  axiosErrorResponseIsForbidden,
-} from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import {
   AnzuApiForbiddenOperationError,
@@ -51,13 +42,8 @@ export type FetchByIdsParams = {
  * @template T Type used for request payload, by default same as Response type
  * @template R Response type override, optional
  */
-const generateByIdsApiQuery = (
-  ids: IntegerId[] | DocId[],
-  isSearchApi: boolean,
-  field = 'id',
-): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } =
-    useApiQueryBuilder()
+const generateByIdsApiQuery = (ids: IntegerId[] | DocId[], isSearchApi: boolean, field = 'id'): string => {
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } = useApiQueryBuilder()
   const limit = ids.length // todo add batch fetch
   querySetLimit(limit)
   querySetOffset(1, limit)
@@ -68,9 +54,7 @@ const generateByIdsApiQuery = (
   return queryBuild()
 }
 
-export const useApiFetchByIds = <R>(
-  params: UseApiFetchByIdsParams,
-): UseApiFetchByIdsReturnType<R> => {
+export const useApiFetchByIds = <R>(params: UseApiFetchByIdsParams): UseApiFetchByIdsReturnType<R> => {
   const {
     client,
     system,
@@ -83,13 +67,13 @@ export const useApiFetchByIds = <R>(
     silentConsoleError = false,
   } = params
 
-  let abortController: AbortController | null = null
+  // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
+  // leaving both unabortable.
+  const abortControllers = new Set<AbortController>()
 
-  const executeFetch = async (
-    ids: DocId[] | IntegerId[],
-    fetchParams: FetchByIdsParams = {},
-  ): Promise<R> => {
-    abortController = new AbortController()
+  const executeFetch = async (ids: DocId[] | IntegerId[], fetchParams: FetchByIdsParams = {}): Promise<R> => {
+    const abortController = new AbortController()
+    abortControllers.add(abortController)
 
     const { urlTemplate: urlTemplateOverride, urlParams: urlParamsOverride } = fetchParams
 
@@ -149,22 +133,20 @@ export const useApiFetchByIds = <R>(
       }
 
       if (axios.isAxiosError(err)) {
-        if (!silentConsoleError)
-          console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
+        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 
       if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
-      abortController = null
+      abortControllers.delete(abortController)
     }
   }
 
   const abortFetch = () => {
-    if (abortController) {
-      abortController.abort()
-    }
+    abortControllers.forEach((controller) => controller.abort())
+    abortControllers.clear()
   }
 
   return {

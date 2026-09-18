@@ -1,19 +1,10 @@
-import {
-  AnzuApiResponseCodeError,
-  isAnzuApiResponseCodeError,
-} from '@/model/error/AnzuApiResponseCodeError'
-import {
-  AnzuApiValidationError,
-  axiosErrorResponseHasValidationData,
-} from '@/model/error/AnzuApiValidationError'
+import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isDefined, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosRequestConfig } from 'axios'
-import {
-  AnzuApiForbiddenError,
-  axiosErrorResponseIsForbidden,
-} from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
 import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
@@ -54,27 +45,20 @@ export type FetchListBatchParams = {
   forceElastic?: boolean
 }
 
-export const useApiFetchListBatch = <R>(
-  params: UseApiFetchListBatchParams,
-): UseApiFetchListBatchReturnType<R> => {
-  const {
-    client,
-    system,
-    entity,
-    urlTemplate,
-    urlParams,
-    options = {},
-    silentConsoleError = false,
-  } = params
+export const useApiFetchListBatch = <R>(params: UseApiFetchListBatchParams): UseApiFetchListBatchReturnType<R> => {
+  const { client, system, entity, urlTemplate, urlParams, options = {}, silentConsoleError = false } = params
 
-  let abortController: AbortController | null = null
+  // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
+  // leaving both unabortable.
+  const abortControllers = new Set<AbortController>()
 
   const executeFetch = async (
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    fetchParams: FetchListBatchParams = {},
+    fetchParams: FetchListBatchParams = {}
   ): Promise<R> => {
-    abortController = new AbortController()
+    const abortController = new AbortController()
+    abortControllers.add(abortController)
 
     const {
       urlTemplate: urlTemplateOverride,
@@ -93,19 +77,14 @@ export const useApiFetchListBatch = <R>(
       const { pagination } = usePagination(sortBy, sortDesc ? SortOrder.Desc : SortOrder.Asc, {
         rowsPerPage: batchSize,
       })
-      const url =
-        (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) +
-        searchApi
+      const url = (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) + searchApi
       const results = [] as unknown as R
 
       // First page request
-      const res = await client().get(
-        url + generateListQuery(pagination, filterData, filterConfig),
-        {
-          ...options,
-          signal: abortController.signal,
-        },
-      )
+      const res = await client().get(url + generateListQuery(pagination, filterData, filterConfig), {
+        ...options,
+        signal: abortController.signal,
+      })
 
       if (!isValidHTTPStatus(res.status)) {
         throw new AnzuApiResponseCodeError(res.status)
@@ -122,13 +101,10 @@ export const useApiFetchListBatch = <R>(
           // Handle pagination for infinite lists
           while (pagination.value.hasNextPage) {
             pagination.value.page++
-            const nextPageResponse = await client().get(
-              url + generateListQuery(pagination, filterData, filterConfig),
-              {
-                ...options,
-                signal: abortController.signal,
-              },
-            )
+            const nextPageResponse = await client().get(url + generateListQuery(pagination, filterData, filterConfig), {
+              ...options,
+              signal: abortController.signal,
+            })
             const nextPageData = nextPageResponse.data
             // @ts-ignore
             results.push(...nextPageData.data)
@@ -153,7 +129,7 @@ export const useApiFetchListBatch = <R>(
               client().get(url + generateListQuery(paginationRef, filterData, filterConfig), {
                 ...options,
                 signal: abortController.signal,
-              }),
+              })
             )
           }
 
@@ -202,22 +178,20 @@ export const useApiFetchListBatch = <R>(
       }
 
       if (axios.isAxiosError(err)) {
-        if (!silentConsoleError)
-          console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
+        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 
       if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
-      abortController = null
+      abortControllers.delete(abortController)
     }
   }
 
   const abortFetch = () => {
-    if (abortController) {
-      abortController.abort()
-    }
+    abortControllers.forEach((controller) => controller.abort())
+    abortControllers.clear()
   }
 
   return {
@@ -230,7 +204,7 @@ export type UseApiFetchListBatchReturnType<R> = {
   executeFetch: (
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    params?: FetchListBatchParams,
+    params?: FetchListBatchParams
   ) => Promise<R>
   abortFetch: () => void
 }

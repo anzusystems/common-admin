@@ -1,8 +1,38 @@
 /* eslint-disable vue/no-ref-object-reactivity-loss */
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
+
+// Drag is gated on `useIsTouchDevice()` (`!matchMedia('(any-pointer: fine)')` — only a device
+// with NO precise pointer cannot drag). Drive that input explicitly rather than tolerating
+// whatever the environment happens to report — `isTouch` is read at setup, so install before mount.
+const makeMatchMedia = (hasFinePointer: boolean) =>
+  vi.fn((q: string) => ({
+    matches:
+      (hasFinePointer && q.includes('any-pointer: fine')) || (!hasFinePointer && q.includes('any-pointer: coarse')),
+    media: q,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    onchange: null,
+    dispatchEvent: vi.fn(),
+  }))
+
+let restoreMatchMedia: (() => void) | null = null
+// `coarseOnly: true` = a touch-only device (no mouse/trackpad/pen) — the one case that cannot drag.
+const forcePointerKind = (coarseOnly: boolean) => {
+  const original = window.matchMedia
+  restoreMatchMedia = () => {
+    window.matchMedia = original
+  }
+  window.matchMedia = makeMatchMedia(!coarseOnly) as unknown as typeof window.matchMedia
+}
+afterEach(() => {
+  restoreMatchMedia?.()
+  restoreMatchMedia = null
+})
 import type { NestedTree } from '@/labs/listEditor/types/listEditorTypes'
 import type { NestedViewItem } from '@/labs/listEditor/composables/useNestedListEditor'
 
@@ -14,23 +44,26 @@ interface MenuItem {
   status?: string
 }
 
+// Positions are deliberately SPARSE. With `index + 1` positions (1,2,3) every position
+// assertion is degenerate — that is exactly what the controller's renumber emits, so
+// "untouched" and "renumbered" look identical and nothing can tell them apart.
 const tree = (): NestedTree<MenuItem> => ({
   children: [
     {
-      data: { id: 1, position: 1, parent: null, title: 'Home', status: 'Active' },
+      data: { id: 1, position: 10, parent: null, title: 'Home', status: 'Active' },
       children: [],
       meta: { dirty: false },
     },
     {
-      data: { id: 2, position: 2, parent: null, title: 'News', status: 'Active' },
+      data: { id: 2, position: 20, parent: null, title: 'News', status: 'Active' },
       children: [
         {
-          data: { id: 21, position: 1, parent: 2, title: 'Sport', status: 'Draft' },
+          data: { id: 21, position: 10, parent: 2, title: 'Sport', status: 'Draft' },
           children: [],
           meta: { dirty: false },
         },
         {
-          data: { id: 22, position: 2, parent: 2, title: 'Weather', status: 'Active' },
+          data: { id: 22, position: 20, parent: 2, title: 'Weather', status: 'Active' },
           children: [],
           meta: { dirty: false },
         },
@@ -38,7 +71,7 @@ const tree = (): NestedTree<MenuItem> => ({
       meta: { dirty: false },
     },
     {
-      data: { id: 3, position: 3, parent: null, title: 'About', status: 'Draft' },
+      data: { id: 3, position: 310, parent: null, title: 'About', status: 'Draft' },
       children: [],
       meta: { dirty: false },
     },
@@ -47,9 +80,7 @@ const tree = (): NestedTree<MenuItem> => ({
 })
 
 const findEditor = (w: VueWrapper): VueWrapper =>
-  w.findComponent(
-    ANestedSortableListEditor as unknown as Parameters<typeof w.findComponent>[0],
-  ) as VueWrapper
+  w.findComponent(ANestedSortableListEditor as unknown as Parameters<typeof w.findComponent>[0]) as VueWrapper
 
 const mountEditor = (data: NestedTree<MenuItem> = tree(), extra: Record<string, unknown> = {}) => {
   const model = ref<NestedTree<MenuItem>>(data)
@@ -85,8 +116,8 @@ const clickReorder = (wrapper: VueWrapper) =>
     .findAll('button')
     .find(
       (b) =>
-        b.text().toLowerCase().includes('reorder')
-        || (b.find('.mdi-sort').exists() && !b.classes().includes('v-btn--disabled')),
+        b.text().toLowerCase().includes('reorder') ||
+        (b.find('.mdi-sort').exists() && !b.classes().includes('v-btn--disabled'))
     )!
     .trigger('click')
 
@@ -151,10 +182,14 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      const ups = wrapper.findAll('.a-le-action--up')
-      const downs = wrapper.findAll('.a-le-action--down')
-      expect(ups[0].attributes('disabled')).toBeDefined() // Home (first root)
-      expect(downs[downs.length - 1].attributes('disabled')).toBeDefined() // About (last root)
+      const disabled = (sel: string) => wrapper.findAll(sel).map((b) => b.attributes('disabled') !== undefined)
+      // Flat DOM order: Home(root 0), News(root 1), Sport(child 0), Weather(child 1), About(root 2).
+      // "per group" is the whole point of the name, so the CHILD group must be checked too —
+      // asserting only ups[0] / downs[last] is satisfied by flat-index logic and would miss the
+      // classic tree bug where a child's first/last is computed against the flat list instead of
+      // its siblings (Sport would then not be up-disabled, Weather not down-disabled).
+      expect(disabled('.a-le-action--up')).toEqual([true, false, true, false, false])
+      expect(disabled('.a-le-action--down')).toEqual([false, false, false, true, true])
     })
 
     it('marks moved rows as unsaved', async () => {
@@ -176,9 +211,7 @@ describe('ANestedSortableListEditor', () => {
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       expect(model.value.children.map((n) => n.data.id)).toEqual([2, 1, 3])
 
-      const cancel = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('cancel'))!
+      const cancel = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancel.trigger('click')
       await flushPromises()
 
@@ -194,9 +227,7 @@ describe('ANestedSortableListEditor', () => {
       await flushPromises()
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
 
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -213,9 +244,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper, model, mode } = mountEditor(tree(), { onReorderApply: save })
       await clickReorder(wrapper)
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -229,9 +258,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper, mode, editor } = mountEditor(tree(), { onReorderApply: save })
       await clickReorder(wrapper)
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -250,7 +277,7 @@ describe('ANestedSortableListEditor', () => {
       expect(api.indent).toBeTypeOf('function')
       const res = api.indent(3) // indent About (id=3)
       await flushPromises()
-      expect(res).not.toBeNull()
+      expect(res).toBe(true)
       // About should now be a child of News (the prev sibling)
       const news = model.value.children.find((n) => n.data.id === 2)!
       expect(news.children!.map((c) => c.data.id)).toEqual([21, 22, 3])
@@ -291,7 +318,7 @@ describe('ANestedSortableListEditor', () => {
       const api = editorExposed(wrapper)
       // Try to indent B (id=20) under A — would make B's subtree depth 4 (A>B>B1>B1a), exceeds 3
       const res = api.indent(20)
-      expect(res).toBeNull()
+      expect(res).toBe(false)
       // Model unchanged
       expect(model.value.children.map((n) => n.data.id)).toEqual([10, 20])
     })
@@ -312,7 +339,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor()
       const api = editorExposed(wrapper)
       const res = api.outdent(1) // Home is already root
-      expect(res).toBeNull()
+      expect(res).toBe(false)
     })
   })
 
@@ -325,14 +352,24 @@ describe('ANestedSortableListEditor', () => {
       expect(model.value.children.map((n) => n.data.id)).toEqual([1, 99, 2, 3])
     })
 
-    it('addChildToId appends as child and auto-expands the parent', async () => {
+    it('addChildToId PREPENDS as first child and auto-expands the parent', async () => {
       const { wrapper, model } = mountEditor()
+      // Collapse News (id=2) first: auto-expand is unobservable on an already-expanded parent,
+      // and News — unlike Home — already HAS children, so prepend vs append is distinguishable.
+      // The old test targeted Home (no children) and named itself "appends", which the empty
+      // fixture could not contradict: this legacy API passes `asFirstChild: true`, i.e. PREPEND.
+      await wrapper.findAll('.a-nested-list-editor__tree-toggle')[1].trigger('click')
+      await nextTick()
+      expect(wrapper.findAll('.a-le-row').length).toBe(3)
+
       const api = editorExposed(wrapper)
-      // Home currently has no children. Add one.
-      api.addChildToId(1, { id: 101, position: 0, parent: 1, title: 'Sub' }, true)
+      api.addChildToId(2, { id: 101, position: 0, parent: 2, title: 'Sub' }, true)
       await flushPromises()
-      const home = model.value.children.find((n) => n.data.id === 1)!
-      expect(home.children!.map((c) => c.data.id)).toEqual([101])
+
+      const news = model.value.children.find((n) => n.data.id === 2)!
+      expect(news.children!.map((c) => c.data.id)).toEqual([101, 21, 22])
+      // Auto-expand — the other half of the name, previously never asserted.
+      expect(wrapper.findAll('.a-le-row').length).toBe(6)
     })
 
     it('removeById removes the node and recalculates sibling positions', async () => {
@@ -341,6 +378,10 @@ describe('ANestedSortableListEditor', () => {
       api.removeById(1)
       await flushPromises()
       expect(model.value.children.map((n) => n.data.id)).toEqual([2, 3])
+      // The "recalculates sibling positions" half of the name: no `expect` in this file
+      // touched `.position` at all, so the renumber-on-remove was entirely unpinned.
+      // Loaded sparse (10/20/310) → compacted to the 1-based series after the removal.
+      expect(model.value.children.map((n) => n.data.position)).toEqual([1, 2])
     })
 
     it('updateData replaces data of a node by id', async () => {
@@ -352,14 +393,17 @@ describe('ANestedSortableListEditor', () => {
     })
 
     it('resetDirtyBaseline clears the unsaved indicator after server-confirmed operation', async () => {
-      const { wrapper } = mountEditor()
+      const { wrapper, model } = mountEditor()
       const api = editorExposed(wrapper)
-      // Simulate external mutation — change title in-place (dirty)
-      await wrapper.vm.$nextTick()
-      // Re-capture baseline after the supposed save
+      // Actually dirty a row FIRST — edit a node's title in place — so a no-op reset can't pass.
+      const fresh = JSON.parse(JSON.stringify(model.value)) as NestedTree<MenuItem>
+      fresh.children[0].data.title = 'Home edited'
+      model.value = fresh
+      await nextTick()
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
+      // Re-capture baseline (as after a successful save) — the dirty marker must clear.
       api.resetDirtyBaseline()
       await flushPromises()
-      // No dirty rows in DOM
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
   })
@@ -367,16 +411,26 @@ describe('ANestedSortableListEditor', () => {
   describe('readonly mode', () => {
     it('hides edit/delete/add buttons and the reorder toggle', () => {
       const { wrapper } = mountEditor(tree(), { readonly: true })
-      // Reorder toggle should be absent (disabled) in readonly
-      const reorder = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('reorder'))
-      if (reorder) {
-        expect(reorder.attributes('disabled')).toBeDefined()
-      }
+      // `reorderToggleVisible` ANDs `!readonly`, so the toggle is not rendered at all. The old
+      // `if (reorder) { … }` body therefore never executed — the reorder-toggle half of the
+      // name was unasserted, and so was "add". Assert both unconditionally.
+      const reorder = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))
+      expect(reorder).toBeUndefined()
+      expect(wrapper.find('.a-le-row-add').exists()).toBe(false)
       // Edit + delete buttons should be 0 in readonly (canInteract === false)
       expect(wrapper.findAll('.a-le-action--edit').length).toBe(0)
       expect(wrapper.findAll('.a-le-action--delete').length).toBe(0)
+    })
+
+    it('renders the reorder toggle and add button when NOT readonly (control)', () => {
+      // Negative control: proves the assertions above are `readonly`'s doing, not the
+      // scaffold's — without it "no buttons found" could just mean "wrong selector".
+      const { wrapper } = mountEditor()
+      const reorder = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))
+      expect(reorder).toBeTruthy()
+      expect(wrapper.find('.a-le-row-add').exists()).toBe(true)
+      expect(wrapper.findAll('.a-le-action--edit').length).toBeGreaterThan(0)
+      expect(wrapper.findAll('.a-le-action--delete').length).toBeGreaterThan(0)
     })
   })
 
@@ -396,9 +450,8 @@ describe('ANestedSortableListEditor', () => {
                 maxDepth: 2,
               },
               {
-                'item-compact': ({ raw }: { raw: MenuItem }) =>
-                  h('span', { class: 'my-compact' }, `#${raw.id}`),
-              },
+                'item-compact': ({ raw }: { raw: MenuItem }) => h('span', { class: 'my-compact' }, `#${raw.id}`),
+              }
             )
         },
       })
@@ -445,13 +498,39 @@ describe('ANestedSortableListEditor', () => {
     })
 
     it('hides the add-child button for nodes whose children are undefined', () => {
-      const { wrapper } = mountEditor(mkLeafTree(), { showAddChildButton: true })
+      // maxDepth 3 — NOT the default 2 — is load-bearing. `canAddChild = childrenAllowed &&
+      // remainingDepth > 0`: at maxDepth 2 the depth-1 leaf is already at the cap, so the depth
+      // gate alone hid its menu and `childrenAllowed: false` was never the reason. At maxDepth 3
+      // the leaf has depth to spare, leaving `children: undefined` as the only cause.
+      const { wrapper } = mountEditor(mkLeafTree(), { showAddChildButton: true, maxDepth: 3 })
       // 2 rows total (Parent + PageChildren-style). Parent has children allowed, leaf does not.
-      // Add-child now lives inside the overflow (⋮) menu — so the menu button itself only
-      // renders on rows where add-child or add-after is available. With add-after disabled
-      // the menu button exists iff canAddChild is true, i.e. on the Parent row only.
+      // Add-child lives inside the overflow (⋮) menu — with add-after disabled the menu button
+      // exists iff canAddChild is true, i.e. on the Parent row only.
       const overflow = wrapper.findAll('.a-le-action--menu')
       expect(overflow.length).toBe(1)
+    })
+
+    it('shows add-child for a depth-equivalent node that DOES allow children (control)', () => {
+      // Same depth, same maxDepth — only `children: []` instead of `undefined`. Isolates
+      // childrenAllowed as the discriminator rather than anything about the tree's shape.
+      const allowed: NestedTree<MenuItem> = {
+        children: [
+          {
+            data: { id: 1, position: 10, parent: null, title: 'Parent' },
+            children: [
+              {
+                data: { id: 10, position: 10, parent: 1, title: 'Nestable child' },
+                children: [],
+                meta: { dirty: false },
+              },
+            ],
+            meta: { dirty: false },
+          },
+        ],
+        meta: { dirty: false },
+      }
+      const { wrapper } = mountEditor(allowed, { showAddChildButton: true, maxDepth: 3 })
+      expect(wrapper.findAll('.a-le-action--menu').length).toBe(2)
     })
 
     it('does not expand-toggle a leaf node with children: undefined', () => {
@@ -459,7 +538,7 @@ describe('ANestedSortableListEditor', () => {
       // Filter out spacer elements — those are invisible alignment stand-ins
       // rendered for `children: []` leaves to keep caret columns aligned.
       const toggles = wrapper.findAll(
-        '.a-nested-list-editor__tree-toggle:not(.a-nested-list-editor__tree-toggle--spacer)',
+        '.a-nested-list-editor__tree-toggle:not(.a-nested-list-editor__tree-toggle--spacer)'
       )
       // Only the Parent row gets a real chevron; the leaf has none at all.
       expect(toggles.length).toBe(1)
@@ -472,9 +551,11 @@ describe('ANestedSortableListEditor', () => {
       await clickReorder(wrapper)
       await flushPromises()
       const editor = findEditor(wrapper)
-      const exposed = (editor.vm as unknown as {
-        $: { exposed: { moveTop: (id: number) => unknown } }
-      }).$.exposed
+      const exposed = (
+        editor.vm as unknown as {
+          $: { exposed: { moveTop: (id: number) => unknown } }
+        }
+      ).$.exposed
       exposed.moveTop(3) // About is last root; move to top
       await flushPromises()
       expect(model.value.children.map((n) => n.data.id)).toEqual([3, 1, 2])
@@ -485,9 +566,11 @@ describe('ANestedSortableListEditor', () => {
       await clickReorder(wrapper)
       await flushPromises()
       const editor = findEditor(wrapper)
-      const exposed = (editor.vm as unknown as {
-        $: { exposed: { moveBottom: (id: number) => unknown } }
-      }).$.exposed
+      const exposed = (
+        editor.vm as unknown as {
+          $: { exposed: { moveBottom: (id: number) => unknown } }
+        }
+      ).$.exposed
       exposed.moveBottom(1) // Home is first root; move to bottom
       await flushPromises()
       expect(model.value.children.map((n) => n.data.id)).toEqual([2, 3, 1])
@@ -521,7 +604,7 @@ describe('ANestedSortableListEditor', () => {
   })
 
   describe('#item-readonly slot expansion', () => {
-    it('renders #item-readonly body when row is expanded in readonly mode', async () => {
+    const mountReadonly = (readonly: boolean) => {
       const model = ref<NestedTree<MenuItem>>(tree())
       const Host = defineComponent({
         setup() {
@@ -534,20 +617,32 @@ describe('ANestedSortableListEditor', () => {
                   model.value = v
                 },
                 maxDepth: 2,
-                readonly: true,
+                readonly,
               },
               {
-                'item-readonly': ({ raw }: { raw: MenuItem }) =>
-                  h('div', { class: 'my-readonly' }, `ro-${raw.id}`),
-              },
+                'item-readonly': ({ raw }: { raw: MenuItem }) => h('div', { class: 'my-readonly' }, `ro-${raw.id}`),
+              }
             )
         },
       })
-      const wrapper = mount(Host)
-      // Click first row header to expand
-      await wrapper.findAll('.a-le-row-header')[0].trigger('click')
-      await nextTick()
-      expect(wrapper.find('.my-readonly').exists()).toBe(true)
+      return mount(Host)
+    }
+
+    it('renders the #item-readonly body on every row in readonly mode, without expanding', () => {
+      // The gate is `$slots['item-readonly'] && (context.readonly || vi.expanded)`, so in
+      // readonly the body is present from the first render. The old test clicked a row header
+      // first and called itself "when expanded" — the click was a no-op that could not fail,
+      // because `readonly` had already short-circuited the condition.
+      const wrapper = mountReadonly(true)
+      expect(wrapper.findAll('.my-readonly').length).toBe(5)
+      expect(wrapper.find('.my-readonly').text()).toBe('ro-1')
+    })
+
+    it('does not render the #item-readonly body on an unexpanded row when NOT readonly', () => {
+      // The other side of the `readonly || vi.expanded` disjunction — without this the
+      // `readonly` term could be dropped and the test above would still pass.
+      const wrapper = mountReadonly(false)
+      expect(wrapper.find('.my-readonly').exists()).toBe(false)
     })
   })
 
@@ -568,7 +663,7 @@ describe('ANestedSortableListEditor', () => {
               },
               {
                 item: ({ raw }: { raw: MenuItem }) => h('input', { value: raw.title }),
-              },
+              }
             )
         },
       })
@@ -609,9 +704,11 @@ describe('ANestedSortableListEditor', () => {
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(1)
       // Reset baseline via exposed API
       const editor = findEditor(wrapper)
-      const exposed = (editor.vm as unknown as {
-        $: { exposed: { resetDirtyBaseline: () => void } }
-      }).$.exposed
+      const exposed = (
+        editor.vm as unknown as {
+          $: { exposed: { resetDirtyBaseline: () => void } }
+        }
+      ).$.exposed
       exposed.resetDirtyBaseline()
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
@@ -633,13 +730,25 @@ describe('ANestedSortableListEditor', () => {
 
   describe('drag-enabled state in reorder mode', () => {
     it('sets --drag-enabled root class on desktop-like environment in reorder mode', async () => {
+      // The old `expect(rootHasDragClass || arrowsCount > 0)` disjunction was satisfied by the
+      // arrows alone, which always render in reorder mode — so it never pinned drag state.
+      forcePointerKind(false)
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      // On a non-touch viewport the drag-enabled class is expected; on touch the arrows are used.
-      const rootHasDragClass = wrapper.find('.a-nested-list-editor--drag-enabled').exists()
-      const arrowsCount = wrapper.findAll('.a-le-action--up').length
-      expect(rootHasDragClass || arrowsCount > 0).toBe(true)
+      expect(wrapper.find('.a-nested-list-editor--drag-enabled').exists()).toBe(true)
+      expect(wrapper.findAll('.a-le-drag-handle').length).toBeGreaterThan(0)
+    })
+
+    it('withholds --drag-enabled in reorder mode on a coarse pointer', async () => {
+      forcePointerKind(true)
+      const { wrapper } = mountEditor()
+      await clickReorder(wrapper)
+      await flushPromises()
+      expect(wrapper.find('.a-nested-list-editor--drag-enabled').exists()).toBe(false)
+      expect(wrapper.find('.a-le-drag-handle').exists()).toBe(false)
+      // The arrows render either way — the reason they can't serve as the drag oracle.
+      expect(wrapper.findAll('.a-le-action--up').length).toBeGreaterThan(0)
     })
 
     it('hides drag handle when disableDrag=true even in reorder mode', async () => {
@@ -680,9 +789,7 @@ describe('ANestedSortableListEditor', () => {
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       expect(apply.attributes('disabled')).toBeDefined()
     })
 
@@ -692,15 +799,17 @@ describe('ANestedSortableListEditor', () => {
       await flushPromises()
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       expect(apply.attributes('disabled')).toBeUndefined()
     })
   })
 
   describe('movedKeys lifecycle', () => {
-    it('entering reorder mode clears any prior movedKeys', async () => {
+    it('cancelling a reorder session clears that session movedKeys', async () => {
+      // This is what the old "entering reorder mode clears any prior movedKeys" body actually
+      // exercised: Cancel already empties movedKeys, so the final re-enter assertion had
+      // nothing left to clear and could not fail. Named for what it checks; the real
+      // enter-clears-prior-markers claim is the test below.
       const { wrapper } = mountEditor()
       await clickReorder(wrapper)
       await flushPromises()
@@ -708,12 +817,25 @@ describe('ANestedSortableListEditor', () => {
       await flushPromises()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
 
-      const cancel = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('cancel'))!
+      const cancel = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('cancel'))!
       await cancel.trigger('click')
       await flushPromises()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
+    })
+
+    it('entering reorder mode clears movedKeys left over from a prior APPLIED session', async () => {
+      // Apply deliberately KEEPS movedKeys (the consumer must still persist), so an applied
+      // session is the only way to still have prior markers when the next session opens —
+      // i.e. the only setup in which "entering clears them" is falsifiable.
+      const { wrapper } = mountEditor()
+      await clickReorder(wrapper)
+      await flushPromises()
+      await wrapper.findAll('.a-le-action--down')[0].trigger('click')
+      await flushPromises()
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
+      await apply.trigger('click')
+      await flushPromises()
+      expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
 
       await clickReorder(wrapper)
       await flushPromises()
@@ -727,9 +849,7 @@ describe('ANestedSortableListEditor', () => {
       await wrapper.findAll('.a-le-action--down')[0].trigger('click')
       await flushPromises()
 
-      const apply = wrapper
-        .findAll('button')
-        .find((b) => b.text().toLowerCase().includes('apply'))!
+      const apply = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('apply'))!
       await apply.trigger('click')
       await flushPromises()
 
@@ -807,19 +927,15 @@ describe('ANestedSortableListEditor', () => {
         // portal children are fully mounted before we query.
         await new Promise((r) => setTimeout(r, 50))
 
-        const openItems = document.querySelectorAll(
-          '.v-overlay--active.v-menu .v-list-item',
-        )
+        const openItems = document.querySelectorAll('.v-overlay--active.v-menu .v-list-item')
         expect(openItems.length).toBeGreaterThanOrEqual(2)
         const titles = Array.from(openItems).map(
-          (el) => el.querySelector('.v-list-item-title')?.textContent?.trim() ?? '',
+          (el) => el.querySelector('.v-list-item-title')?.textContent?.trim() ?? ''
         )
         // "Add after this item" comes first, "Add inside" second.
         expect(titles[0]).toBe('Add after this item')
         expect(titles[1]).toBe('Add inside')
-        const icons = Array.from(openItems).map(
-          (el) => el.querySelector('.mdi')?.className ?? '',
-        )
+        const icons = Array.from(openItems).map((el) => el.querySelector('.mdi')?.className ?? '')
         expect(icons[0]).toContain('mdi-playlist-plus')
         expect(icons[1]).toContain('mdi-subdirectory-arrow-right')
       } finally {
@@ -860,14 +976,12 @@ describe('ANestedSortableListEditor', () => {
         await flushPromises()
         await new Promise((r) => setTimeout(r, 50))
 
-        const openMenuTitles = Array.from(
-          document.querySelectorAll('.v-overlay--active.v-menu .v-list-item-title'),
-        )
+        const openMenuTitles = Array.from(document.querySelectorAll('.v-overlay--active.v-menu .v-list-item-title'))
         const titleTexts = openMenuTitles.map((el) => el.textContent?.trim() ?? '')
         expect(titleTexts).toContain('Delete')
-        const deleteTitleEl = openMenuTitles.find(
-          (el) => el.textContent?.trim() === 'Delete',
-        ) as HTMLElement | undefined
+        const deleteTitleEl = openMenuTitles.find((el) => el.textContent?.trim() === 'Delete') as
+          | HTMLElement
+          | undefined
         expect(deleteTitleEl?.classList.contains('text-error')).toBe(true)
       } finally {
         wrapper.unmount()
@@ -883,20 +997,19 @@ describe('ANestedSortableListEditor', () => {
       // assert the new node lands at the end of the children array.
       const { wrapper, model } = mountEditor()
       const editor = findEditor(wrapper)
-      const exposed = (editor.vm as unknown as {
-        $: {
-          exposed: {
-            addItem: (data: MenuItem, hint?: { parentId?: number; childrenAllowed?: boolean }) => unknown
+      const exposed = (
+        editor.vm as unknown as {
+          $: {
+            exposed: {
+              addItem: (data: MenuItem, hint?: { parentId?: number; childrenAllowed?: boolean }) => unknown
+            }
           }
         }
-      }).$.exposed
+      ).$.exposed
       // News (id=2) already has children [21, 22]. Add inside should land as
       // the third and last child, NOT at index 0 (which was the old
       // `asFirstChild` semantic, still used by the imperative `addChildToId`).
-      exposed.addItem(
-        { id: 99, position: 0, parent: 2, title: 'New inside' },
-        { parentId: 2, childrenAllowed: true },
-      )
+      exposed.addItem({ id: 99, position: 0, parent: 2, title: 'New inside' }, { parentId: 2, childrenAllowed: true })
       await flushPromises()
       const news = model.value.children.find((n) => n.data.id === 2)!
       expect(news.children!.map((c) => c.data.id)).toEqual([21, 22, 99])
@@ -938,16 +1051,21 @@ describe('ANestedSortableListEditor', () => {
 // need to invoke tree mutations directly (kebab-menu targets are inside a
 // Vuetify VMenu popover and are not always stable in headless test DOM).
 interface EditorApi {
-  indent: (id: number) => unknown
-  outdent: (id: number) => unknown
+  indent: (id: number) => boolean
+  outdent: (id: number) => boolean
   addAfterId: (targetId: number | null, data: MenuItem, childrenAllowed: boolean) => unknown
   addChildToId: (targetId: number, data: MenuItem, childrenAllowed: boolean) => unknown
   removeById: (id: number) => void
   updateData: (id: number, data: MenuItem) => void
   resetDirtyBaseline: () => void
   addItem: (
-    data: MenuItem,
-    hint?: { parentId?: number; afterId?: number; asFirstChild?: boolean; childrenAllowed?: boolean },
+    data?: MenuItem,
+    hint?: {
+      parentId?: number
+      afterId?: number
+      asFirstChild?: boolean
+      childrenAllowed?: boolean
+    }
   ) => unknown
 }
 function editorExposed(wrapper: VueWrapper): EditorApi {

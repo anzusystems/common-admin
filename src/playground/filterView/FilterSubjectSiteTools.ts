@@ -94,11 +94,7 @@ const useFetchSiteList = () =>
     urlTemplate: END_POINT,
   })
 
-export const fetchItems = async (
-  pagination: Ref<Pagination>,
-  filterData: FilterData,
-  filterConfig: FilterConfig,
-) => {
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchSiteList()
   const sites = await executeFetch(pagination, filterData, filterConfig)
 

@@ -15,11 +15,7 @@ const END_POINT = '/adm/v1/author'
 const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
 export const ENTITY = 'author'
 
-export const fetchAuthorListByIds = (
-  client: () => AxiosInstance,
-  extSystemId: number,
-  ids: string[],
-) =>
+export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: number, ids: string[]) =>
   apiFetchByIds<DamAuthor[]>(
     client,
     ids,
@@ -30,7 +26,7 @@ export const fetchAuthorListByIds = (
     SYSTEM_CORE_DAM,
     ENTITY,
     {},
-    true,
+    true
   )
 
 export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: IntegerId) =>
@@ -46,7 +42,7 @@ export const fetchAuthorList = (
   client: () => AxiosInstance,
   extSystemId: number,
   pagination: Pagination,
-  filterBag: FilterBag,
+  filterBag: FilterBag
 ) =>
   apiFetchList<DamAuthor[]>(
     client,
@@ -57,7 +53,7 @@ export const fetchAuthorList = (
     pagination,
     filterBag,
     SYSTEM_CORE_DAM,
-    ENTITY,
+    ENTITY
   )
 
 export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) =>

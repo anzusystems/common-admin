@@ -16,15 +16,13 @@ const props = withDefaults(
   defineProps<{
     variant?: 'id' | 'createdAt' | 'most-relevant'
     customOptions?: undefined | DatatableOrderingOptions
-    paginationUpdateCustomCb?:
-      | ((option: DatatableOrderingOption, pagination: Ref<Pagination>) => void)
-      | undefined
+    paginationUpdateCustomCb?: ((option: DatatableOrderingOption, pagination: Ref<Pagination>) => void) | undefined
   }>(),
   {
     variant: 'id',
     customOptions: undefined,
     paginationUpdateCustomCb: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'sortByChange', data: DatatableOrderingOption): void
@@ -111,6 +109,7 @@ const paginationUpdateDefault = (found: DatatableOrderingOption) => {
       sortBy: null,
     }
     emit('sortByChange', found)
+    return
   }
   pagination.value.sortBy = found.sortBy
   emit('sortByChange', found)
@@ -134,32 +133,24 @@ watch(modelValue, (newValue, oldValue) => {
 watch(
   pagination,
   (newValue, oldValue) => {
-    if (
-      newValue.sortBy?.key === oldValue?.sortBy?.key &&
-      newValue.sortBy?.order === oldValue?.sortBy?.order
-    ) {
+    if (newValue.sortBy?.key === oldValue?.sortBy?.key && newValue.sortBy?.order === oldValue?.sortBy?.order) {
       return
     }
     const found = options.value.find((option) => {
-      return (
-        newValue.sortBy?.key === option.sortBy?.key &&
-        newValue.sortBy?.order === option.sortBy?.order
-      )
+      return newValue.sortBy?.key === option.sortBy?.key && newValue.sortBy?.order === option.sortBy?.order
     })
     if (isUndefined(found)) {
       return
     }
     modelValue.value = found.id
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 
 <template>
   <div class="d-flex align-center justify-center">
-    <div class="text-body-small mr-1">
-      {{ t('common.system.datatable.ordering.title') }}:
-    </div>
+    <div class="text-body-small mr-1">{{ t('common.system.datatable.ordering.title') }}:</div>
     <VBtn
       variant="text"
       rounded="xl"

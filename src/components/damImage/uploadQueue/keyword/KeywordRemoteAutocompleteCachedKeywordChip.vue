@@ -23,7 +23,7 @@ const props = withDefaults(
     textOnly: false,
     size: 'small',
     containerClass: 'd-inline-flex',
-  },
+  }
 )
 
 const { getCachedKeyword } = useDamCachedKeywords()
@@ -51,9 +51,7 @@ const displayTitle = computed(() => {
 <template>
   <div :class="containerClass">
     <template v-if="isNull(id) || isUndefined(id)">
-      <slot name="empty">
-        -
-      </slot>
+      <slot name="empty">-</slot>
     </template>
     <div v-else-if="textOnly">
       {{ displayTitle }}

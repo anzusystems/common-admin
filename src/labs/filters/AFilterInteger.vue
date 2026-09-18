@@ -19,7 +19,7 @@ const props = withDefaults(
   {
     placeholder: undefined,
     dataCy: 'filter-integer',
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -64,11 +64,9 @@ const label = computed(() => {
 
 const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
-  if (filterConfigCurrent.value.variant === 'startsWith')
-    return t('common.model.filterPlaceholder.startsWith')
+  if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
   if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (filterConfigCurrent.value.variant === 'search')
-    return t('common.model.filterPlaceholder.contains')
+  if (filterConfigCurrent.value.variant === 'search') return t('common.model.filterPlaceholder.contains')
   return ''
 })
 
@@ -81,13 +79,13 @@ const clearField = () => {
 
 const updateSelected = () => {
   if (isNumber(modelValue.value)) {
-    filterSelected.value.set(props.name, [
-      { title: modelValue.value + '', value: modelValue.value },
-    ])
+    filterSelected.value.set(props.name, [{ title: modelValue.value + '', value: modelValue.value }])
     return
   }
-  if (!isString(modelValue.value)) return
-  if (isString(modelValue.value) && modelValue.value.length === 0) {
+  // `null` reaches here when the filter is reset from outside - loading a hash clears every field
+  // before applying it, and the chip has to go with the value. Falling through would leave the
+  // chip naming a value the query no longer carries.
+  if (!isString(modelValue.value) || modelValue.value.length === 0) {
     filterSelected.value.delete(props.name)
     return
   }
@@ -100,7 +98,7 @@ watch(
     if (newValue === oldValue || isBoolean(newValue)) return
     updateSelected()
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 

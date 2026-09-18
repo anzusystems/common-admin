@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, ref, useTemplateRef, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits<{
   (e: 'onEnterKeyup'): void
@@ -12,11 +13,11 @@ const modelValue = defineModel<null | { hours: number; minutes: number }>('model
 
 const hours = ref<string | undefined>(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
-  modelValue.value ? String(modelValue.value.hours).padStart(2, '0') : '12',
+  modelValue.value ? String(modelValue.value.hours).padStart(2, '0') : '12'
 )
 const minutes = ref<string | undefined>(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
-  modelValue.value ? String(modelValue.value.minutes).padStart(2, '0') : '00',
+  modelValue.value ? String(modelValue.value.minutes).padStart(2, '0') : '00'
 )
 
 const hoursRefInput = useTemplateRef<HTMLInputElement>('hoursRefInput')
@@ -81,8 +82,7 @@ const onBlurHours = () => {
 
 const onBlurMinutes = () => {
   const parsedMinutes = parseInt(minutes.value || '0')
-  minutes.value =
-    parsedMinutes >= 0 && parsedMinutes <= 59 ? String(parsedMinutes).padStart(2, '0') : '00'
+  minutes.value = parsedMinutes >= 0 && parsedMinutes <= 59 ? String(parsedMinutes).padStart(2, '0') : '00'
 }
 
 const onEnterHoursKeyup = () => {
@@ -151,12 +151,8 @@ const focusHour = () => {
 
 watch([hours, minutes], ([newHours, newMinutes], [oldHours, oldMinutes]) => {
   if (newHours === oldHours && newMinutes === oldMinutes) return
-  const hoursInt = parseInt(
-    newHours ?? (modelValue.value ? modelValue.value.hours.toString() : '12'),
-  )
-  const minutesInt = parseInt(
-    newMinutes ?? (modelValue.value ? modelValue.value.minutes.toString() : '0'),
-  )
+  const hoursInt = parseInt(newHours ?? (modelValue.value ? modelValue.value.hours.toString() : '12'))
+  const minutesInt = parseInt(newMinutes ?? (modelValue.value ? modelValue.value.minutes.toString() : '0'))
   if (hoursInt >= 0 && hoursInt <= 23 && minutesInt >= 0 && minutesInt <= 59) {
     modelValue.value = { hours: hoursInt, minutes: minutesInt }
   }
@@ -165,6 +161,8 @@ watch([hours, minutes], ([newHours, newMinutes], [oldHours, oldMinutes]) => {
 defineExpose({
   focusHour,
 })
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -175,14 +173,14 @@ defineExpose({
         v-model="hoursComputed"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--hours"
         type="text"
-        aria-label="Hour"
+        :aria-label="t('$vuetify.timePicker.hour')"
         tabindex="1"
         min="0"
         max="23"
         @focus="selectContent"
         @blur="onBlurHours"
         @keyup.enter="onEnterHoursKeyup"
-      >
+      />
       <div class="a-datetime-picker-time__arrows">
         <VBtn
           tabindex="-1"
@@ -209,14 +207,14 @@ defineExpose({
         v-model="minutesComputed"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--minutes"
         type="text"
-        aria-label="Minute"
+        :aria-label="t('$vuetify.timePicker.minute')"
         tabindex="2"
         min="0"
         max="59"
         @focus="selectContent"
         @blur="onBlurMinutes"
         @keyup.enter="onEnterMinutesKeyup"
-      >
+      />
       <div class="a-datetime-picker-time__arrows">
         <VBtn
           tabindex="-1"

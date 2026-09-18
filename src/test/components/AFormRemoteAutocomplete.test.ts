@@ -54,6 +54,7 @@ describe('AFormRemoteAutocomplete', () => {
         related: undefined,
         render: {
           skip: false,
+          selected: true,
           xs: undefined,
           sm: undefined,
           md: undefined,
@@ -106,7 +107,6 @@ describe('AFormRemoteAutocomplete', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks()
     mockFetchItems.mockResolvedValue(mockItems)
     mockFetchItemsByIds.mockResolvedValue(mockItems)
   })
@@ -121,9 +121,24 @@ describe('AFormRemoteAutocomplete', () => {
     const wrapper = createWrapper({ label: testLabel })
 
     expect(wrapper.find('.v-autocomplete').exists()).toBe(true)
-    expect(wrapper.vm.label).toBe(testLabel)
+    // Assert the RENDERED label, not `wrapper.vm.label` — reading the prop back off the vm
+    // only proves Vue assigns props, and passed just as happily if the template rendered a
+    // constant or dropped the label entirely.
+    expect(wrapper.find('.v-autocomplete').text()).toContain(testLabel)
   })
 
+  // NOTE — the `handles …` tests below are prop ROUND-TRIPS: they pass a prop in and read the
+  // same prop back off `wrapper.vm`. That asserts Vue's prop system, not this component. Each
+  // would still pass if the template ignored the prop entirely (verified: rendering a constant
+  // in place of the bound value leaves them green). They are kept because they are harmless and
+  // cheap, but they should not be read as coverage. What is genuinely NOT covered here:
+  //   - modelValue → what the autocomplete actually renders/selects (only `vm.modelValue` is read)
+  //   - multiple    → chip/multi-select rendering and multi-value emit shape
+  //   - loading     → the loading indicator ever appearing
+  //   - disabled    → the control actually refusing interaction
+  //   - clearable   → the clear affordance rendering, and onClickClear's refetch
+  // Real behavioural coverage in this file lives in the prefetch (mounted/focus/hover),
+  // search-debounce, tryLoadModelValue and auto-single-select blocks below.
   it('handles single selection', async () => {
     const wrapper = createWrapper({ modelValue: null })
 
@@ -149,14 +164,35 @@ describe('AFormRemoteAutocomplete', () => {
   })
 
   it('calls fetchItems on search', async () => {
-    const wrapper = createWrapper()
+    // Previously this never searched — it only re-read the prop off the vm, as its own
+    // comment admitted ("the actual search functionality would be tested in integration
+    // tests"), so nothing pinned the behaviour the name promises.
+    const fetchItems = createMockFetchItems()
+    const wrapper = createWrapper({ fetchItems, prefetch: false })
+    await waitForAsync(100)
+    expect(fetchItems).not.toHaveBeenCalled() // prefetch:false → nothing on mount
 
-    // Test that the component has the fetchItems prop
-    expect(wrapper.vm.fetchItems).toBe(mockFetchItems)
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    await input.setValue('ab') // >= minSearchChars (2)
+    await waitForAsync(600) // > SEARCH_DEBOUNCE_MS (300)
 
-    // The actual search functionality would be tested in integration tests
-    // Here we just verify the prop is passed correctly
-    expect(typeof wrapper.vm.fetchItems).toBe('function')
+    expect(fetchItems).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not call fetchItems below minSearchChars', async () => {
+    // The other side of the gate — without it, "calls fetchItems on search" is satisfied by
+    // a component that fetches on every keystroke.
+    const fetchItems = createMockFetchItems()
+    const wrapper = createWrapper({ fetchItems, prefetch: false, minSearchChars: 3 })
+    await waitForAsync(100)
+
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    await input.setValue('ab') // 2 < 3
+    await waitForAsync(600)
+
+    expect(fetchItems).not.toHaveBeenCalled()
   })
 
   it('calls fetchItemsByIds when modelValue changes', async () => {

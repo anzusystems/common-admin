@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     queueId: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'addAuthor', data: DocId | null | undefined): void
@@ -34,10 +34,7 @@ const item = computed(() => {
 
 const displayTitle = computed(() => {
   if (cached.value) {
-    return (
-      cached.value.name +
-      (cached.value.identifier?.length > 0 ? ` (${cached.value.identifier})` : '')
-    )
+    return cached.value.name + (cached.value.identifier?.length > 0 ? ` (${cached.value.identifier})` : '')
   }
   return ''
 })
@@ -50,7 +47,7 @@ watch(
     cached.value = newValue
     loaded.value = true
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 

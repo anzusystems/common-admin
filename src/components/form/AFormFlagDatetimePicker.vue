@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { isDefined, isFunction, isNull, isUndefined } from '@/utils/common'
@@ -34,7 +34,7 @@ const props = withDefaults(
     defaultActivationValue: 'now',
     collab: undefined,
     disabled: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DatetimeUTCNullable | undefined): void
@@ -61,8 +61,10 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } =
-    useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } = useCollabField(
+    props.collab.room,
+    props.collab.field
+  )
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -71,7 +73,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true },
+    { immediate: true }
   )
 }
 
@@ -85,10 +87,14 @@ const isFocused = ref(false)
 const isOpened = ref(false)
 
 const onBlur = () => {
-  isFocused.value = false
-  emit('blur', isUndefined(props.modelValue) ? null : props.modelValue)
   props.v?.$touch()
-  if (isOpened.value === false) releaseFieldLock.value(props.modelValue)
+  // The picker commits a typed value in a watcher that runs after this event, so releasing the lock
+  // here would hand the room the previous value - and clearing `isFocused` would skip the change.
+  nextTick(() => {
+    isFocused.value = false
+    emit('blur', isUndefined(props.modelValue) ? null : props.modelValue)
+    if (isOpened.value === false) releaseFieldLock.value(props.modelValue)
+  })
 }
 
 const onFocus = () => {
@@ -103,13 +109,15 @@ const onOpen = () => {
 
 const onClose = () => {
   isOpened.value = false
-  releaseFieldLock.value(props.modelValue)
+  // The picker emits close before its watchers flush the picked value into the model.
+  nextTick(() => {
+    releaseFieldLock.value(props.modelValue)
+  })
 }
 
 const errorMessageComputed = computed(() => {
   if (!isUndefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length)
-    return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
+  if (props.v?.$errors?.length) return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []
 })
 
@@ -130,7 +138,7 @@ watch(
     }
     checkboxModel.value = true
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 /**

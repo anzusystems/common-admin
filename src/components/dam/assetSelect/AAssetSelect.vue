@@ -7,10 +7,7 @@ import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
-import {
-  AssetSelectGridView,
-  useGridView,
-} from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import AssetSelectFilter from '@/components/dam/assetSelect/components/filter/AssetSelectFilter.vue'
@@ -51,7 +48,7 @@ const props = withDefaults(
     configName: 'default',
     skipCurrentUserCheck: false,
     onDetailLoadedCallback: undefined,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -81,8 +78,7 @@ const {
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
 
-const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } =
-  useDamConfigState(damClient)
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 
 const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
@@ -114,7 +110,7 @@ const onOpen = () => {
     props.inPodcast,
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
-    props.maxCount,
+    props.maxCount
   )
   if (mdAndUp.value) openSidebarLeft()
   if (!mdAndUp.value) closeSidebarRight()
@@ -127,7 +123,7 @@ watch(
     if (newValue === oldValue || !newValue) return
     onOpen()
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const onClose = () => {
@@ -220,7 +216,7 @@ watch(
       customFormConfigLoading.value = false
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 onMounted(async () => {
@@ -370,7 +366,5 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
-  <div v-else>
-    Error, no select licence.
-  </div>
+  <div v-else>{{ t('common.assetSelect.error.noSelectLicence') }}</div>
 </template>

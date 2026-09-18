@@ -30,7 +30,7 @@ const props = withDefaults(
     configName: 'default',
     labelT: 'common.damImage.public.idOrUrl',
     dataCy: undefined,
-  },
+  }
 )
 const modelValue = defineModel<IntegerIdNullable>({ default: null, required: true })
 const inputField = ref('')
@@ -172,11 +172,7 @@ const onBlur = async () => {
   }
 }
 
-const reload = async (
-  newImage: ImageCreateUpdateAware | undefined,
-  newImageId: IntegerIdNullable,
-  force = false,
-) => {
+const reload = async (newImage: ImageCreateUpdateAware | undefined, newImageId: IntegerIdNullable, force = false) => {
   resolvedSrc.value = ''
   if ((newImage && isNull(resImage.value)) || (newImage && force)) {
     resImage.value = cloneDeep(newImage)
@@ -216,7 +212,7 @@ watch(
   async ([newImage, newImageId]) => {
     await reload(newImage, newImageId)
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 defineExpose({
@@ -258,6 +254,6 @@ defineExpose({
       v-if="resolvedSrc.length > 0"
       :src="resolvedSrc"
       alt=""
-    >
+    />
   </ARow>
 </template>

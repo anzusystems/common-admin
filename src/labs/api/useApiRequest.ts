@@ -1,20 +1,11 @@
-import {
-  AnzuApiResponseCodeError,
-  isAnzuApiResponseCodeError,
-} from '@/model/error/AnzuApiResponseCodeError'
-import {
-  AnzuApiValidationError,
-  axiosErrorResponseHasValidationData,
-} from '@/model/error/AnzuApiValidationError'
+import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
 import axios, { type AxiosRequestConfig, type Method } from 'axios'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
-import {
-  AnzuApiForbiddenError,
-  axiosErrorResponseIsForbidden,
-} from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -45,24 +36,16 @@ export type UseApiRequestParams = {
   silentConsoleError?: boolean
 }
 
-export const useApiRequest = <R, T = R>(
-  params: UseApiRequestParams,
-): UseApiAnyRequestReturnType<R, T> => {
-  const {
-    client,
-    method,
-    system,
-    entity,
-    urlTemplate,
-    urlParams,
-    options = {},
-    silentConsoleError = false,
-  } = params
+export const useApiRequest = <R, T = R>(params: UseApiRequestParams): UseApiAnyRequestReturnType<R, T> => {
+  const { client, method, system, entity, urlTemplate, urlParams, options = {}, silentConsoleError = false } = params
 
-  let abortController: AbortController | null = null
+  // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
+  // leaving both unabortable.
+  const abortControllers = new Set<AbortController>()
 
   const executeRequest = async (executeParams: ExecuteRequestParams<T> = {}): Promise<R> => {
-    abortController = new AbortController()
+    const abortController = new AbortController()
+    abortControllers.add(abortController)
 
     const urlTemplateOverride = executeParams.urlTemplate
     const urlParamsOverride = executeParams.urlParams
@@ -129,22 +112,20 @@ export const useApiRequest = <R, T = R>(
       }
 
       if (axios.isAxiosError(err)) {
-        if (!silentConsoleError)
-          console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
+        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 
       if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
-      abortController = null
+      abortControllers.delete(abortController)
     }
   }
 
   const abortRequest = () => {
-    if (abortController) {
-      abortController.abort()
-    }
+    abortControllers.forEach((controller) => controller.abort())
+    abortControllers.clear()
   }
 
   return {

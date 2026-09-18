@@ -46,7 +46,7 @@ const props = withDefaults(
     showAddChildButton: false,
     showDeleteButton: false,
     showEditButton: false,
-  },
+  }
 )
 const emit = defineEmits<SortableNestedEmit>()
 
@@ -80,9 +80,7 @@ const onAddLastClick = () => {
 const { t } = useI18n()
 
 const widgetHtmlId = computed(() => {
-  return isUndefined(props.widgetIdentifierId)
-    ? WIDGET_HTML_ID_PREFIX + randomUuid.value
-    : props.widgetIdentifierId
+  return isUndefined(props.widgetIdentifierId) ? WIDGET_HTML_ID_PREFIX + randomUuid.value : props.widgetIdentifierId
 })
 
 const widgetClass = computed(() => {
@@ -92,9 +90,7 @@ const widgetClass = computed(() => {
 const initSortables = () => {
   if (props.disableDraggable) return
   if (!widgetEl.value) return
-  const nestedSortables = Array.from(
-    widgetEl.value.querySelectorAll<HTMLElement>('.' + NESTED_GROUP_CLASS),
-  )
+  const nestedSortables = Array.from(widgetEl.value.querySelectorAll<HTMLElement>('.' + NESTED_GROUP_CLASS))
   sortableInstances.value = []
   for (let i = 0; i < nestedSortables.length; i++) {
     sortableInstances.value[i] = useSortable(nestedSortables[i], [], {
@@ -170,7 +166,7 @@ watch(
   async (newValue) => {
     destroy()
     if (newValue === false) initSortables()
-  },
+  }
 )
 
 defineExpose({

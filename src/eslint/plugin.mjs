@@ -203,41 +203,52 @@ const anzuPlugin = {
             return rule.path
           })
 
+        // Index rules by the module specifier they match, so one import is
+        // resolved by a single Map lookup instead of scanning every rule.
+        const rulesBySource = new Map()
+        for (const rule of deprecationRules) {
+          const matchPath = rule.path || rule.module
+          if (!matchPath) continue
+          const entry = { matchPath, imports: new Set(rule.imports) }
+          const existing = rulesBySource.get(matchPath)
+          if (existing) existing.push(entry)
+          else rulesBySource.set(matchPath, [entry])
+        }
+
+        // Skipping depends only on the file name, so resolve it once per file
+        // instead of once per import declaration.
+        let fileSkipped = null
+        const isFileSkipped = () => {
+          if (fileSkipped !== null) return fileSkipped
+          const normalizedFilename = context.filename.replace(/\\/g, '/')
+          fileSkipped =
+            skipFiles.some((skip) => normalizedFilename.endsWith(skip)) ||
+            ruleFilePaths.some(
+              (rulePath) =>
+                normalizedFilename.endsWith(rulePath + '.ts') ||
+                normalizedFilename.endsWith(rulePath + '.js') ||
+                normalizedFilename.endsWith(rulePath + '.vue') ||
+                normalizedFilename.endsWith(rulePath)
+            )
+          return fileSkipped
+        }
+
         return {
           ImportDeclaration(node) {
-            const filename = context.filename
-            const normalizedFilename = filename.replace(/\\/g, '/')
-
-            // Check manual skip list
-            if (skipFiles.some((skip) => normalizedFilename.endsWith(skip))) return
-
-            // Auto-skip source files of path-based rules
-            if (
-              ruleFilePaths.some(
-                (rulePath) =>
-                  normalizedFilename.endsWith(rulePath + '.ts') ||
-                  normalizedFilename.endsWith(rulePath + '.js') ||
-                  normalizedFilename.endsWith(rulePath + '.vue') ||
-                  normalizedFilename.endsWith(rulePath),
-              )
-            )
-              return
-
             const source = node.source.value
             if (typeof source !== 'string') return
 
-            for (const rule of deprecationRules) {
-              const matchPath = rule.path || rule.module
-              if (!matchPath || source !== matchPath) continue
+            const entries = rulesBySource.get(source)
+            if (!entries) return
+            if (isFileSkipped()) return
 
-              const deprecatedImports = node.specifiers
-                .filter((spec) => spec.type === 'ImportSpecifier')
-                .filter((spec) => rule.imports.includes(spec.imported.name))
-
-              for (const importSpec of deprecatedImports) {
+            for (const { matchPath, imports } of entries) {
+              for (const spec of node.specifiers) {
+                if (spec.type !== 'ImportSpecifier') continue
+                if (!imports.has(spec.imported.name)) continue
                 context.report({
-                  node: importSpec,
-                  message: `'${importSpec.imported.name}' from '${matchPath}' is deprecated`,
+                  node: spec,
+                  message: `'${spec.imported.name}' from '${matchPath}' is deprecated`,
                 })
               }
             }
@@ -257,12 +268,7 @@ const anzuPlugin = {
         schema: [],
       },
       create(context) {
-        const TARGET_CALLEES = new Set([
-          'useApiRequest',
-          'useApiFetchList',
-          'useApiFetchByIds',
-          'useApiFetchListBatch',
-        ])
+        const TARGET_CALLEES = new Set(['useApiRequest', 'useApiFetchList', 'useApiFetchByIds', 'useApiFetchListBatch'])
 
         const PLACEHOLDER_RE = /:([a-zA-Z_][\w]*)/g
 
@@ -278,8 +284,7 @@ const anzuPlugin = {
           for (const prop of objectExpr.properties) {
             if (prop.type !== 'Property' || prop.computed) continue
             const key = prop.key
-            const keyName =
-              key.type === 'Identifier' ? key.name : key.type === 'Literal' ? key.value : null
+            const keyName = key.type === 'Identifier' ? key.name : key.type === 'Literal' ? key.value : null
             if (keyName === name) return prop
           }
           return null
@@ -377,9 +382,7 @@ const anzuPlugin = {
               if (!paramKeySet.has(placeholder)) {
                 context.report({
                   node: paramsProp,
-                  message:
-                    `urlParams is missing key '${placeholder}' required by urlTemplate ` +
-                    `'${resolved}'.`,
+                  message: `urlParams is missing key '${placeholder}' required by urlTemplate ` + `'${resolved}'.`,
                 })
               }
             }
@@ -389,8 +392,7 @@ const anzuPlugin = {
                 context.report({
                   node: paramsProp,
                   message:
-                    `urlParams key '${key}' has no matching ':${key}' placeholder in urlTemplate ` +
-                    `'${resolved}'.`,
+                    `urlParams key '${key}' has no matching ':${key}' placeholder in urlTemplate ` + `'${resolved}'.`,
                 })
               }
             }
@@ -424,21 +426,21 @@ const anzuPlugin = {
             parts.unshift(current)
 
             const hasFatalCheck = parts.some(
-              (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError',
+              (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError'
             )
             const hasInstanceofErrorCheck = parts.some(
               (part) =>
                 part.type === 'BinaryExpression' &&
                 part.operator === 'instanceof' &&
                 part.right.type === 'Identifier' &&
-                part.right.name === 'Error',
+                part.right.name === 'Error'
             )
             const hasAxiosCheck = parts.some(
               (part) =>
                 part.type === 'CallExpression' &&
                 part.callee.type === 'MemberExpression' &&
                 part.callee.object.name === 'axios' &&
-                part.callee.property.name === 'isAxiosError',
+                part.callee.property.name === 'isAxiosError'
             )
 
             if (hasAxiosCheck && (hasFatalCheck || hasInstanceofErrorCheck)) {

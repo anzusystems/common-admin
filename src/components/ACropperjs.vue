@@ -1,4 +1,15 @@
 <script setup lang="ts" generic="T extends EventTarget = EventTarget">
+/**
+ * @deprecated Nothing in this organisation uses it.
+ *
+ * This component is built on cropper.js 1.6.3, which has had no release since and whose successor
+ * is a different library. The cropper that ships is the one behind `DamAssetImageRoiSelect`, under
+ * `components/damImage/uploadQueue/cropper/`; it is not exported, because nothing outside this
+ * library asks for a cropper. See `doc/changelog/unreleased/` for what the two do differently.
+ *
+ * cropper.js v1 is installed alongside v2 under the `cropperjs` name while this component lives;
+ * the new one imports `cropperjs2`. Both aliases go away when this file does.
+ */
 import Cropper from 'cropperjs'
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { isNull } from '@/utils/common'
@@ -97,7 +108,7 @@ const props = withDefaults(
     cropmove: null,
     cropstart: null,
     zoom: null,
-  },
+  }
 )
 
 const cropperInstance = ref<InstanceType<typeof Cropper> | null>(null)
@@ -143,10 +154,7 @@ onMounted(() => {
   const propsOptions = data as Record<string, any>
   const options: Record<string, any> = {}
   for (const key in data) {
-    if (
-      Object.prototype.hasOwnProperty.call(propsOptions, key) &&
-      propsOptions[key] !== undefined
-    ) {
+    if (Object.prototype.hasOwnProperty.call(propsOptions, key) && propsOptions[key] !== undefined) {
       options[key] = propsOptions[key]
     }
   }
@@ -183,7 +191,7 @@ onUnmounted(() => {
         :style="[{ 'max-width': '100%', opacity: loading ? 0 : 1 }, imgStyle]"
         :alt="alt"
         :src="src"
-      >
+      />
     </div>
   </div>
 </template>

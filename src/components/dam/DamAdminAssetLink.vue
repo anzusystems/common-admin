@@ -14,7 +14,7 @@ const props = withDefaults(
   {
     assetId: null,
     configName: 'default',
-  },
+  }
 )
 
 const { adminDomain } = useCommonAdminCoreDamOptionsGlobal()

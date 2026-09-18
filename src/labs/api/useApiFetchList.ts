@@ -1,20 +1,11 @@
-import {
-  AnzuApiResponseCodeError,
-  isAnzuApiResponseCodeError,
-} from '@/model/error/AnzuApiResponseCodeError'
-import {
-  AnzuApiValidationError,
-  axiosErrorResponseHasValidationData,
-} from '@/model/error/AnzuApiValidationError'
+import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/model/error/AnzuApiValidationError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
 import type { AxiosRequestConfig } from 'axios'
 import axios from 'axios'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
-import {
-  AnzuApiForbiddenError,
-  axiosErrorResponseIsForbidden,
-} from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import type { ApiInfiniteResponseList, ApiResponseList } from '@/types/ApiResponse'
 import { isApiInfiniteResponseList, isApiResponseList } from '@/types/ApiResponse'
@@ -55,10 +46,9 @@ export type FetchListParams = {
 export const generateListQuery = (
   pagination: Ref<Pagination>,
   filterData: FilterData<any>,
-  filterConfig: FilterConfig<any>,
+  filterConfig: FilterConfig<any>
 ): string => {
-  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } =
-    useApiQueryBuilder()
+  const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
   querySetLimit(pagination.value.rowsPerPage)
   querySetOffset(pagination.value.page, pagination.value.rowsPerPage)
   if (pagination.value.sortBy) {
@@ -69,31 +59,22 @@ export const generateListQuery = (
 }
 
 export const useApiFetchList = <R>(params: UseApiFetchListParams): UseApiFetchListReturnType<R> => {
-  const {
-    client,
-    system,
-    entity,
-    urlTemplate,
-    urlParams,
-    options = {},
-    silentConsoleError = false,
-  } = params
+  const { client, system, entity, urlTemplate, urlParams, options = {}, silentConsoleError = false } = params
 
-  let abortController: AbortController | null = null
+  // A Set, not one variable: overlapping calls overwrote it and the first `finally` nulled it,
+  // leaving both unabortable.
+  const abortControllers = new Set<AbortController>()
 
   const executeFetch = async (
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    fetchParams: FetchListParams = {},
+    fetchParams: FetchListParams = {}
   ): Promise<R> => {
-    abortController = new AbortController()
+    const abortController = new AbortController()
+    abortControllers.add(abortController)
 
-    const {
-      urlTemplate: urlTemplateOverride,
-      urlParams: urlParamsOverride,
-      forceElastic = false,
-    } = fetchParams
+    const { urlTemplate: urlTemplateOverride, urlParams: urlParamsOverride, forceElastic = false } = fetchParams
 
     try {
       const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
@@ -167,22 +148,20 @@ export const useApiFetchList = <R>(params: UseApiFetchListParams): UseApiFetchLi
       }
 
       if (axios.isAxiosError(err)) {
-        if (!silentConsoleError)
-          console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
+        if (!silentConsoleError) console.error('Axios error: ' + urlTemplate, ...(err.cause ? [err.cause] : []))
         throw new AnzuApiAxiosError(err)
       }
 
       if (!silentConsoleError) console.error('AnzuFatalError: ', err)
       throw new AnzuFatalError(err)
     } finally {
-      abortController = null
+      abortControllers.delete(abortController)
     }
   }
 
   const abortFetch = () => {
-    if (abortController) {
-      abortController.abort()
-    }
+    abortControllers.forEach((controller) => controller.abort())
+    abortControllers.clear()
   }
 
   return {
@@ -196,7 +175,7 @@ export type UseApiFetchListReturnType<R> = {
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    params?: FetchListParams,
+    params?: FetchListParams
   ) => Promise<R>
   abortFetch: () => void
 }

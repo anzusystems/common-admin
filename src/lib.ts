@@ -11,7 +11,6 @@ import ADatatablePagination from '@/components/ADatatablePagination.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
-import ALogData from '@/components/ALogData.vue'
 import ACreateDialog from '@/components/ACreateDialog.vue'
 import AAdminSwitcher from '@/components/AAdminSwitcher.vue'
 import AEmptyRouterView from '@/components/AEmptyRouterView.vue'
@@ -25,6 +24,7 @@ import APermissionValueChip from '@/components/permission/APermissionValueChip.v
 import Acl from '@/components/permission/Acl.vue'
 import ADatetime from '@/components/datetime/ADatetime.vue'
 import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
+import type { DatetimePickerType } from '@/utils/datetimePickerValue'
 import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
 import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
 import AFilterDatetimePicker from '@/components/filter/AFilterDatetimePicker.vue'
@@ -48,7 +48,16 @@ import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByU
 import ACollabCountdown from '@/components/collab/components/ACollabCountdown.vue'
 import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
 import AUserAndTimeTrackingFields from '@/components/AUserAndTimeTrackingFields.vue'
-import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
+import AActionCloseButtonComponent from '@/components/buttons/action/AActionCloseButton.vue'
+
+// Aliased rather than exported straight from the SFC so the notice below reaches the generated
+// declarations -- a comment on the re-export is dropped there.
+/**
+ * Close button for an explicitly configured destination. Use it when closing should navigate to the
+ * same route regardless of how the view was reached. Use `AActionCloseButtonHistory` when closing
+ * should return to the most recent eligible route.
+ */
+const AActionCloseButton = AActionCloseButtonComponent
 import AActionCloseButtonHistory from '@/components/buttons/action/AActionCloseButtonHistory.vue'
 import AActionCreateButton from '@/components/buttons/action/AActionCreateButton.vue'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
@@ -81,8 +90,22 @@ import AFileInput from '@/components/file/AFileInput.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
 import AAssetList from '@/components/dam/assetSelect/AAssetList.vue'
 import AAssetListInner from '@/components/dam/assetSelect/AAssetListInner.vue'
-import ASortable from '@/components/sortable/ASortable.vue'
-import ASortableNested from '@/components/sortable/ASortableNested.vue'
+import ASortableComponent from '@/components/sortable/ASortable.vue'
+import ASortableNestedComponent from '@/components/sortable/ASortableNested.vue'
+
+/**
+ * @deprecated Use `ASortableListEditor` from `@anzusystems/common-admin/labs`. It carries the same
+ * drag-and-drop reorder plus arrow controls for touch, an unsaved-changes baseline and row-level
+ * validation, none of which this component has.
+ *
+ * Aliased rather than exported straight from the SFC so this notice reaches the generated
+ * declarations -- a comment on the re-export is dropped there.
+ */
+const ASortable = ASortableComponent
+/**
+ * @deprecated Use `ASortableListEditor` from `@anzusystems/common-admin/labs` -- see `ASortable`.
+ */
+const ASortableNested = ASortableNestedComponent
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
@@ -96,13 +119,10 @@ import AImageWidgetMultipleInner from '@/components/damImage/uploadQueue/compone
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
 import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
+/** @deprecated The cropper that ships is the one `DamAssetImageRoiSelect` uses; this is its predecessor. */
 import ACropperjs from '@/components/ACropperjs.vue'
 import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
-import type { ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
-import {
-  cropToRegion,
-  regionToCrop,
-} from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ADatatable from '@/components/datatable/ADatatable.vue'
 import ABooleanSelect from '@/components/ABooleanSelect.vue'
 import ACachedUserChip from '@/components/ACachedUserChip.vue'
@@ -162,6 +182,8 @@ import {
   dateModifyMinutes,
   dateNow,
   datePretty,
+  dateUtcPretty,
+  dateUtcToday,
   DATETIME_MAX,
   DATETIME_MIN,
   dateTimeEndOfDay,
@@ -176,12 +198,7 @@ import {
   yearNow,
 } from '@/utils/datetime'
 import { Grant, GrantDefault, type GrantType, useGrant } from '@/model/valueObject/Grant'
-import {
-  GrantOrigin,
-  GrantOriginDefault,
-  type GrantOriginType,
-  useGrantOrigin,
-} from '@/model/valueObject/GrantOrigin'
+import { GrantOrigin, GrantOriginDefault, type GrantOriginType, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
 import { useAnzuUserFactory } from '@/model/factory/AnzuUserFactory'
 import { useBaseUserFactory } from '@/model/factory/BaseUserFactory'
 import { usePermissionConfigFactory } from '@/model/factory/PermissionConfigFactory'
@@ -189,6 +206,7 @@ import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactor
 import type {
   DatetimeUTC,
   DatetimeUTCNullable,
+  DateUTC,
   DocId,
   DocIdNullable,
   EnableDisable,
@@ -209,11 +227,7 @@ import type { VuetifyIconValue } from '@/types/Vuetify'
 import { usePagination, usePaginationAutoHide } from '@/composables/system/pagination'
 import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 import { useRouteHistory } from '@/composables/system/routeHistory'
-import {
-  makeFilterHelper,
-  type MakeFilterOptions,
-  useFilterHelpers,
-} from '@/composables/filter/filterHelpers'
+import { makeFilterHelper, type MakeFilterOptions, useFilterHelpers } from '@/composables/filter/filterHelpers'
 import {
   AvailableLanguagesSymbol,
   DefaultLanguageSymbol,
@@ -232,10 +246,7 @@ import {
   HTTP_STATUS_UNAUTHORIZED,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
 } from '@/composables/statusCodes'
-import {
-  AnzuApiResponseCodeError,
-  isAnzuApiResponseCodeError,
-} from '@/model/error/AnzuApiResponseCodeError'
+import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import {
   AnzuApiValidationError,
   type AnzuApiValidationResponseData,
@@ -251,6 +262,7 @@ import {
 } from '@/model/error/AnzuApiDependencyExistsError'
 import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { AnzuApiAxiosError, isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import { AnzuApiTimeoutError, isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
@@ -262,12 +274,7 @@ import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { NEW_LINE_MARK, type RecordWasType, useAlerts } from '@/composables/system/alerts'
 import { useErrors } from '@/composables/system/error'
-import {
-  JobStatus,
-  JobStatusDefault,
-  type JobStatusType,
-  useJobStatus,
-} from '@/model/valueObject/JobStatus'
+import { JobStatus, JobStatusDefault, type JobStatusType, useJobStatus } from '@/model/valueObject/JobStatus'
 import type { JobBase, JobUserDataDelete } from '@/types/Job'
 import { useJobApi } from '@/services/api/job/jobApi'
 import {
@@ -275,17 +282,10 @@ import {
   type JobBaseResource,
   useJobBaseResource,
 } from '@/model/valueObject/JobBaseResource'
-import AnzuSystemsCommonAdmin, {
-  type CurrentUserType,
-  type PluginOptions,
-} from '@/AnzuSystemsCommonAdmin'
+import AnzuSystemsCommonAdmin, { type CurrentUserType, type PluginOptions } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue, Permissions } from '@/types/Permission'
 import { Theme, useTheme } from '@/composables/themeSettings'
-import {
-  type LanguageCode,
-  modifyLanguageSettings,
-  useLanguageSettings,
-} from '@/composables/languageSettings'
+import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import {
   arrayFlatten,
   arrayFromArgs,
@@ -303,12 +303,7 @@ import messagesCs from '@/locales/cs'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
 import type { Log } from '@/types/Log'
-import {
-  LogLevel,
-  LogLevelDefault,
-  type LogLevelType,
-  useLogLevel,
-} from '@/model/valueObject/LogLevel'
+import { LogLevel, LogLevelDefault, type LogLevelType, useLogLevel } from '@/model/valueObject/LogLevel'
 import '@/styles/main.scss'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { useValidate } from '@/validators/vuelidate/useValidate'
@@ -403,14 +398,8 @@ import type {
 } from '@/components/customDataForm/CustomDataForm'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
-import type {
-  SortableNested,
-  SortableNestedItem,
-} from '@/components/sortable/sortableNestedActions'
-import type {
-  SortableItemDataAware,
-  SortableItemWithParentDataAware,
-} from '@/components/sortable/sortableUtils'
+import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
+import type { SortableItemDataAware, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import {
   type DamDistributionConfig,
@@ -443,6 +432,7 @@ import { damFileTypeFix } from '@/components/file/composables/fileType'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
 import {
+  destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
 } from '@/components/damImage/uploadQueue/composables/damNotifications'
@@ -451,23 +441,10 @@ import {
   DamNotificationName,
   type DamNotificationNameType,
 } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
-import type {
-  ImageAware,
-  ImageCreateUpdateAware,
-  ImageCreateUpdateAwareKeyed,
-} from '@/types/ImageAware'
-import type {
-  DamAuthor,
-  DamAuthorMinimal,
-} from '@/components/damImage/uploadQueue/author/DamAuthor'
-import type {
-  DamKeyword,
-  DamKeywordMinimal,
-} from '@/components/damImage/uploadQueue/keyword/DamKeyword'
-import type {
-  DamExtSystem,
-  DamExtSystemMinimal,
-} from '@/components/damImage/uploadQueue/composables/DamExtSystem'
+import type { ImageAware, ImageCreateUpdateAware, ImageCreateUpdateAwareKeyed } from '@/types/ImageAware'
+import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
+import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
+import type { DamExtSystem, DamExtSystemMinimal } from '@/components/damImage/uploadQueue/composables/DamExtSystem'
 import {
   DamAuthorType,
   DamAuthorTypeDefault,
@@ -578,10 +555,7 @@ import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRe
 import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
 import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
-import {
-  useDamAssetLicenceInnerFilter,
-  useDamAssetLicenceFilter,
-} from '@/components/dam/user/AssetLicenceFilter'
+import { useDamAssetLicenceInnerFilter, useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
 import {
   fetchDamAssetLicenceListByIds,
   useFetchDamAssetLicenceList,
@@ -608,11 +582,7 @@ import {
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
-import {
-  type BreadcrumbItem,
-  type Breadcrumbs,
-  defineBreadcrumbs,
-} from '@/composables/system/breadcrumbs'
+import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/composables/system/breadcrumbs'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
 import DamAuthorFilterRemoteAutocompleteLegacy from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocompleteLegacy.vue'
@@ -629,11 +599,12 @@ import {
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 import type { DamMedia, DamMediaFromDam, MediaAware } from '@/types/MediaAware'
 import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
+import { useDebugFeatures } from '@/composables/useDebugFeatures'
 import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
-import { fetchAssetAsCmsMedia } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAsset, fetchAssetAsCmsMedia, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
@@ -681,7 +652,6 @@ export {
   ADatatableOrdering,
   ADialogToolbar,
   ACreateDialog,
-  ALogData,
   AJobStatusChip,
   ACachedChip,
   ACachedUserChip,
@@ -734,7 +704,6 @@ export {
   ImageMassOperations,
   AImagePublicInput,
   ACropperjs,
-  type ACropperjsExposed,
   DamAssetImageRoiSelect,
   ACollabLockedByUser,
   ACollabCountdown,
@@ -792,6 +761,7 @@ export {
   useDamUploadChunkSize,
   useDamAcceptTypeAndSizeHelper,
   useAssetSuggestions,
+  destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
   useDropzoneGlobalDragState,
@@ -807,6 +777,7 @@ export {
   defineBreadcrumbs,
   useDamCachedUsers,
   useUnreleasedFeatures,
+  useDebugFeatures,
   useSentry,
   useUserActivity,
 
@@ -831,6 +802,8 @@ export {
   type DocIdNullable,
   type DatetimeUTCNullable,
   type DatetimeUTC,
+  type DateUTC,
+  type DatetimePickerType,
   type AnzuUser,
   type BaseUser,
   type AnzuUserMinimal,
@@ -1053,6 +1026,8 @@ export {
   dateTimeToDate,
   yearNow,
   datePretty,
+  dateUtcPretty,
+  dateUtcToday,
   timePretty,
   dateDiff,
   // file
@@ -1113,7 +1088,9 @@ export {
   updateDamUser,
   fetchDamUser,
   fetchAssetAndCheckForSingleUseByFileIds,
+  fetchAsset,
   fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
 
   // TRANSLATIONS
   messagesCs,
@@ -1254,6 +1231,8 @@ export {
   AnzuApiValidationError,
   isAnzuFatalError,
   AnzuFatalError,
+  isAnzuApiTimeoutError,
+  AnzuApiTimeoutError,
   isAnzuApiAxiosError,
   AnzuApiAxiosError,
   type ValidationError,
@@ -1270,3 +1249,6 @@ export {
   localTimeShiftInSeconds,
   useSystemBar,
 }
+
+export { createCachedChip } from '@/components/createCachedChip'
+export type { CreateCachedChipOptions, CachedChipId } from '@/components/createCachedChip'

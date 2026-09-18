@@ -18,9 +18,7 @@ export const axiosErrorResponseHasDependencyExistsData = (error: Error) => {
   )
 }
 
-export const isAnzuApiDependencyExistsError = (
-  error: any,
-): error is AnzuApiDependencyExistsError => {
+export const isAnzuApiDependencyExistsError = (error: any): error is AnzuApiDependencyExistsError => {
   return error instanceof AnzuApiDependencyExistsError
 }
 

@@ -35,7 +35,7 @@ const props = withDefaults(
     userId: undefined,
     client: undefined,
     store: true,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'submit'): void

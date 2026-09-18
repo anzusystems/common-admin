@@ -20,7 +20,7 @@ const props = withDefaults(
     routeName: undefined,
     externalUrlTemplate: undefined,
     cachedUsers: undefined,
-  },
+  }
 )
 
 const router = useRouter()
@@ -33,9 +33,7 @@ const { cached, loaded } = useCachedItem(() => {
 
 const text = computed(() => {
   if (cached.value) {
-    return cached.value.person.fullName.length
-      ? cached.value.person.fullName
-      : cached.value.email.split('@')[0]
+    return cached.value.person.fullName.length ? cached.value.person.fullName : cached.value.email.split('@')[0]
   }
   return ''
 })

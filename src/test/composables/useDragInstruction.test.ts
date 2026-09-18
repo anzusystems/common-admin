@@ -47,8 +47,7 @@ const makeViewItem = (spec: FakeRowSpec, index: number): NestedViewItem<unknown>
   return base as unknown as NestedViewItem<unknown>
 }
 
-const makeViewItems = (specs: FakeRowSpec[]): NestedViewItem<unknown>[] =>
-  specs.map((s, i) => makeViewItem(s, i))
+const makeViewItems = (specs: FakeRowSpec[]): NestedViewItem<unknown>[] => specs.map((s, i) => makeViewItem(s, i))
 
 const makeRect = (top: number, height: number, left = 0, width = 300): DOMRect => {
   // jsdom / browser may or may not provide DOMRect; hand-roll a plain literal
@@ -112,7 +111,7 @@ describe('computeInstruction', () => {
           hoveredRow,
           sourceKey: 'a',
           viewItems,
-        }),
+        })
       )
 
       expect(result).toBeNull()
@@ -132,7 +131,7 @@ describe('computeInstruction', () => {
           hoveredRow,
           sourceKey: 'root',
           viewItems,
-        }),
+        })
       )
 
       expect(result).toBeNull()
@@ -155,8 +154,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result).toEqual({
@@ -186,8 +185,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result).toEqual({
@@ -218,8 +217,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result).toEqual({
@@ -253,8 +252,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result).toEqual({
@@ -288,8 +287,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       // Since clamp ceiling = prev.depth + 1 = 1, the huge X pins depth to 1
@@ -306,8 +305,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
       expect(leftResult.depth).toBe(0)
       expect(leftResult.makeChild).toBe(false)
@@ -334,8 +333,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
       expect(makeChildResult.depth).toBe(3)
       expect(makeChildResult.makeChild).toBe(true)
@@ -350,8 +349,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
       expect(floorResult.depth).toBe(0)
       expect(floorResult.makeChild).toBe(false)
@@ -376,8 +375,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.refEdge).toBe('top')
@@ -398,8 +397,8 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'dragged',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.refEdge).toBe('bottom')
@@ -425,8 +424,8 @@ describe('computeInstruction', () => {
             indentPx: 24,
             containerLeft: 0,
             containerPaddingLeft: 0,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.depth).toBe(0)
@@ -452,8 +451,8 @@ describe('computeInstruction', () => {
             indentPx: 24,
             containerLeft: 0,
             containerPaddingLeft: 0,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.depth).toBe(1)
@@ -480,8 +479,8 @@ describe('computeInstruction', () => {
             indentPx: 24,
             containerLeft: 100,
             containerPaddingLeft: 20,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.depth).toBe(1)
@@ -511,14 +510,79 @@ describe('computeInstruction', () => {
             hoveredRow,
             sourceKey: 'S',
             viewItems,
-          }),
-        ),
+          })
+        )
       )
 
       expect(result.depth).toBe(1)
       expect(result.makeChild).toBe(true)
       expect(result.parentKey).toBe('A')
       expect(result.levelRowKey).toBe(null)
+    })
+  })
+
+  describe('BUG-13: nested child dragged out to root lands beside its parent, not at index 0', () => {
+    // QA video tree: ED0 (single child ED1), then ED2, ED3, ED4 at root.
+    // Source = ED1. Dropping it at root depth just below ED0 must resolve to
+    // root index 1 (AFTER ED0) — whether the pointer expresses that via ED0's
+    // bottom-half or via ED2's top-half. (Index 0 / above ED0 is only correct
+    // when the pointer explicitly aims at ED0's TOP half — a distinct gesture.)
+    const viewItems = makeViewItems([
+      { key: 'ED0', depth: 0, parentKey: null, siblingIndex: 0, siblingCount: 4 },
+      { key: 'ED1', depth: 1, parentKey: 'ED0', siblingIndex: 0, siblingCount: 1 },
+      { key: 'ED2', depth: 0, parentKey: null, siblingIndex: 1, siblingCount: 4 },
+      { key: 'ED3', depth: 0, parentKey: null, siblingIndex: 2, siblingCount: 4 },
+      { key: 'ED4', depth: 0, parentKey: null, siblingIndex: 3, siblingCount: 4 },
+    ])
+
+    it("hovering the parent's bottom-half at root depth → root index 1 (after the parent)", () => {
+      const hoveredRow = makeHoveredRow(viewItems[0], 0) // ED0 at top, height 32
+      const result = asInsert(
+        computeInstruction(
+          defaultArgs({
+            pointer: { x: 0, y: 24 }, // bottom half of ED0, depth 0 (far left)
+            hoveredRow,
+            sourceKey: 'ED1',
+            viewItems,
+          })
+        )
+      )
+      expect(result.parentKey).toBe(null)
+      expect(result.index).toBe(1) // after ED0 — NOT 0 (above ED0)
+      expect(result.depth).toBe(0)
+      expect(result.levelRowKey).toBe('ED0')
+    })
+
+    it("hovering the following root row's top-half at root depth → also root index 1", () => {
+      const hoveredRow = makeHoveredRow(viewItems[2], 64) // ED2
+      const result = asInsert(
+        computeInstruction(
+          defaultArgs({
+            pointer: { x: 0, y: 66 }, // top half of ED2, depth 0
+            hoveredRow,
+            sourceKey: 'ED1',
+            viewItems,
+          })
+        )
+      )
+      expect(result.parentKey).toBe(null)
+      expect(result.index).toBe(1)
+    })
+
+    it("the root-top fallback (index 0) only fires when aiming at the parent's TOP half", () => {
+      const hoveredRow = makeHoveredRow(viewItems[0], 0)
+      const result = asInsert(
+        computeInstruction(
+          defaultArgs({
+            pointer: { x: 0, y: 4 }, // top half of ED0 → above the parent
+            hoveredRow,
+            sourceKey: 'ED1',
+            viewItems,
+          })
+        )
+      )
+      expect(result.parentKey).toBe(null)
+      expect(result.index).toBe(0) // explicitly above ED0 — the distinct gesture
     })
   })
 
@@ -540,7 +604,7 @@ describe('computeInstruction', () => {
           sourceSubtreeDepth: 2,
           viewItems,
           maxDepth: 2,
-        }),
+        })
       )
 
       expect(result).not.toBeNull()
@@ -576,7 +640,7 @@ describe('computeInstruction', () => {
           sourceSubtreeDepth: 1,
           viewItems,
           maxDepth: 10,
-        }),
+        })
       )
 
       expect(result?.type).toBe('insert')

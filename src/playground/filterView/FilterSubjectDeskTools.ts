@@ -50,11 +50,7 @@ const fetchDeskListByIds = (ids: IntegerId[]) => {
   return executeFetch(ids)
 }
 
-export const fetchItems = async (
-  pagination: Ref<Pagination>,
-  filterData: FilterData,
-  filterConfig: FilterConfig,
-) => {
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
   const { executeFetch } = useFetchDeskList()
   const desks = await executeFetch(pagination, filterData, filterConfig)
 
