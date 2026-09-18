@@ -68,16 +68,22 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
       searchApi +
       generateListQuery(pagination, filterData, filterConfig)
 
-    // Captured before the request goes out: a call that is no longer the newest must not write to a
-    // pagination object the caller can see, even if its response arrives first.
-    const generation = abortable.generation()
+    // Handed over by `run`, not read before it: `run` is what opens a new generation, so a value
+    // taken beforehand belongs to the previous call and would never match.
+    let generation = 0
     const writePagination = (next: Partial<Pagination>) => {
+      // A call that is no longer the newest must not write to a pagination object the caller can
+      // see, even when its answer arrives first -- aborting does not stop a response already sent.
       if (abortable.generation() !== generation) return
       pagination.value = { ...pagination.value, ...next }
     }
 
     try {
-      const res = await abortable.run((abortSignal) => client().get(url, { ...options, signal: abortSignal }), signal)
+      const res = await abortable.run((abortSignal, currentGeneration) => {
+        generation = currentGeneration
+
+        return client().get(url, { ...options, signal: abortSignal })
+      }, signal)
 
       if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
 

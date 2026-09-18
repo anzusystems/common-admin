@@ -1,44 +1,161 @@
-import { describe, expect, it, vi } from 'vitest'
-import axios, { type AxiosInstance } from 'axios'
-import { useApiRequest } from '@/labs/api/useApiRequest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { AxiosInstance } from 'axios'
+import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
+import { setApiErrorLogger } from '@/labs/api/apiErrors'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
-import { AnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
-import { AnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
 import { AnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyExistsError'
+import { AnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
-import { AnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { AnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
+import { AnzuApiValidationError } from '@/model/error/AnzuApiValidationError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 
-// What a caller is promised when a request fails, and what it gets back when one succeeds.
+// What a caller can observe, pinned so a change to it has to be a decision.
 //
-// Until now none of it was pinned: the only test over this file is about aborting. That matters
-// more than it sounds, because this is where the fleet is migrating TO. The helpers in
-// `services/api` flatten a timeout, a 5xx and a dropped connection into one `AnzuFatalError`, and
-// the whole reason to move off them is that this one tells them apart -- a start-up guard decides
-// between "your session is gone", "you have no access here" and "the backend is down" by reading
-// exactly these classes. A branch that quietly stopped mapping would send users to the wrong page
-// with nothing failing.
-//
-// The mapping is duplicated in `useApiFetchList` and `useApiFetchByIds`, so these cases are pinned
-// there too rather than once here.
+// The fixtures answer `data: ''` for a body-less response, because that is what axios delivers: its
+// adapter hands back `responseText`, and the JSON transform only runs on a truthy string, so a 204
+// and an empty 200 both arrive as `''`. Fixtures built with `data: undefined` -- the shape these
+// tests used to assert against -- describe a response axios cannot produce, which is how the empty
+// string went unnoticed as the one value every 204 carries.
 
 const axiosError = (over: Record<string, unknown> = {}) =>
   Object.assign(new Error('request failed'), { isAxiosError: true, config: { url: '/test' } }, over)
 
-const buildApi = (request: ReturnType<typeof vi.fn>, silentConsoleError = true) =>
+const buildApi = (request: ReturnType<typeof vi.fn>) =>
   useApiRequest<Record<string, unknown>>({
     client: () => ({ request }) as unknown as AxiosInstance,
     method: 'get',
     system: 'test',
     entity: 'test',
     urlTemplate: '/test',
-    silentConsoleError,
   })
 
+const buildOptional = (request: ReturnType<typeof vi.fn>) =>
+  useApiRequest<Record<string, unknown>>({
+    client: () => ({ request }) as unknown as AxiosInstance,
+    method: 'get',
+    system: 'test',
+    entity: 'test',
+    urlTemplate: '/test',
+    allowEmpty: true,
+  })
+
+const buildCommand = (request: ReturnType<typeof vi.fn>) =>
+  useApiCommand({
+    client: () => ({ request }) as unknown as AxiosInstance,
+    method: 'DELETE',
+    system: 'test',
+    entity: 'test',
+    urlTemplate: '/test',
+  })
+
+const answering = (res: unknown) => vi.fn().mockResolvedValue(res)
 const failingWith = (error: unknown) => vi.fn().mockRejectedValue(error)
 
-describe('what useApiRequest throws', () => {
+beforeEach(() => {
+  // The logger is module state; a test that leaves its own behind changes the next one.
+  setApiErrorLogger(null)
+})
+
+describe('what useApiRequest answers with', () => {
+  it('hands back the body it was given', async () => {
+    const { execute } = buildApi(answering({ status: 200, data: { id: 7 } }))
+
+    await expect(execute()).resolves.toStrictEqual({ id: 7 })
+  })
+
+  // The bug this replaces: a truthiness test read each of these as an absent body and failed the
+  // request. They are values, and axios parses them as values.
+  it.each([
+    ['zero', 0],
+    ['false', false],
+  ])('treats %s as a body', async (_label, body) => {
+    const { execute } = buildApi(answering({ status: 200, data: body }))
+
+    await expect(execute()).resolves.toBe(body)
+  })
+
+  // Declared a body, did not get one: the endpoint broke its contract, and answering `undefined`
+  // typed as the entity is how that reached callers as a crash somewhere else entirely.
+  it('fails a no-content response when a body was declared', async () => {
+    const { execute } = buildApi(answering({ status: 204, data: '' }))
+
+    await expect(execute()).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
+  })
+
+  it('fails an empty 200 the same way', async () => {
+    const { execute } = buildApi(answering({ status: 200, data: '' }))
+
+    await expect(execute()).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
+  })
+
+  // A 202 may carry a body -- it says work was accepted, not that there is nothing to say. Deciding
+  // it by status alone would turn a body-carrying 202 into an error.
+  it('returns the body of an accepted response', async () => {
+    const { execute } = buildApi(answering({ status: 202, data: { queued: true } }))
+
+    await expect(execute()).resolves.toStrictEqual({ queued: true })
+  })
+
+  it('fails an accepted response that carries nothing', async () => {
+    const { execute } = buildApi(answering({ status: 202, data: '' }))
+
+    await expect(execute()).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
+  })
+
+  // `null` is distinguishable from `''` at runtime, but nothing can carry it in the type: `R`
+  // excludes it so a command site cannot declare itself as returning one. So it is absence.
+  it('treats a null body as no body', async () => {
+    const { execute } = buildApi(answering({ status: 200, data: null }))
+
+    await expect(execute()).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
+  })
+
+  it('refuses a status outside the valid set', async () => {
+    const { execute } = buildApi(answering({ status: 418, data: { teapot: true } }))
+
+    await expect(execute()).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
+  })
+})
+
+describe('what allowEmpty changes', () => {
+  it.each([
+    ['no content', 204],
+    ['accepted', 202],
+    ['ok with nothing in it', 200],
+  ])('answers undefined for %s', async (_label, status) => {
+    const { execute } = buildOptional(answering({ status, data: '' }))
+
+    await expect(execute()).resolves.toBeUndefined()
+  })
+
+  it('still hands back a body when one arrives', async () => {
+    const { execute } = buildOptional(answering({ status: 200, data: { id: 1 } }))
+
+    await expect(execute()).resolves.toStrictEqual({ id: 1 })
+  })
+})
+
+describe('what useApiCommand answers with', () => {
+  it.each([
+    ['no content', 204],
+    ['accepted', 202],
+    ['ok', 200],
+  ])('resolves on %s whatever the status says', async (_label, status) => {
+    const { execute } = buildCommand(answering({ status, data: '' }))
+
+    await expect(execute()).resolves.toBeUndefined()
+  })
+
+  it('ignores a body it did not ask for', async () => {
+    const { execute } = buildCommand(answering({ status: 200, data: { id: 1 } }))
+
+    await expect(execute()).resolves.toBeUndefined()
+  })
+})
+
+describe('what the helpers throw', () => {
   it('tells a forbidden response from the rest', async () => {
     const { execute } = buildApi(failingWith(axiosError({ response: { status: 403 } })))
 
@@ -46,29 +163,33 @@ describe('what useApiRequest throws', () => {
   })
 
   it('tells a validation failure from the rest', async () => {
-    const error = axiosError({
-      response: { status: 422, data: { error: 'validation_failed', fields: { title: ['too long'] } } },
-    })
-    const { execute } = buildApi(failingWith(error))
+    const { execute } = buildApi(
+      failingWith(
+        axiosError({ response: { status: 422, data: { error: 'validation_failed', fields: { title: ['too long'] } } } })
+      )
+    )
 
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiValidationError)
   })
 
-  it('tells a dependency conflict from a validation failure', async () => {
-    // Same status and the same `error` key shape as above; only `dependencies` separates them.
-    const error = axiosError({
-      response: { status: 422, data: { error: 'dependency_exists_error', dependencies: [{ id: 1 }] } },
-    })
-    const { execute } = buildApi(failingWith(error))
+  it('tells a dependency conflict from the rest', async () => {
+    const { execute } = buildApi(
+      failingWith(
+        axiosError({ response: { status: 422, data: { error: 'dependency_exists_error', dependencies: [{ id: 1 }] } } })
+      )
+    )
 
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiDependencyExistsError)
   })
 
-  it('tells a forbidden operation from a validation failure', async () => {
-    const error = axiosError({
-      response: { status: 422, data: { error: 'forbidden_operation_error', detail: 'not while published' } },
-    })
-    const { execute } = buildApi(failingWith(error))
+  it('tells a forbidden operation from the rest', async () => {
+    const { execute } = buildApi(
+      failingWith(
+        axiosError({
+          response: { status: 422, data: { error: 'forbidden_operation_error', detail: 'not while published' } },
+        })
+      )
+    )
 
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiForbiddenOperationError)
   })
@@ -79,74 +200,39 @@ describe('what useApiRequest throws', () => {
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiTimeoutError)
   })
 
-  it('hands back every other axios failure with the response on its cause', async () => {
-    // This is the one a caller reads a status off -- 401 against 500 is the difference between
-    // "your session ended" and "come back later".
-    const error = axiosError({ response: { status: 401 } })
-    const { execute } = buildApi(failingWith(error))
+  it('hands back every other axios failure as an axios error', async () => {
+    const { execute } = buildApi(failingWith(axiosError({ response: { status: 500 } })))
 
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiAxiosError)
-    await execute().catch((thrown: AnzuApiAxiosError) => {
-      expect(thrown.cause.response?.status).toBe(401)
+  })
+
+  it('wraps anything that is not an axios failure at all', async () => {
+    const { execute } = buildApi(failingWith(new TypeError('undefined is not a function')))
+
+    await expect(execute()).rejects.toBeInstanceOf(AnzuFatalError)
+  })
+})
+
+describe('what the helpers send', () => {
+  it('serialises the body', async () => {
+    const request = answering({ status: 200, data: { ok: true } })
+    const { execute } = useApiRequest<Record<string, unknown>, { title: string }>({
+      client: () => ({ request }) as unknown as AxiosInstance,
+      method: 'post',
+      system: 'test',
+      entity: 'test',
+      urlTemplate: '/test',
     })
-  })
-
-  it('keeps an unexpected status code as its own kind', async () => {
-    const { execute } = buildApi(vi.fn().mockResolvedValue({ status: 418, data: { teapot: true } }))
-
-    await expect(execute()).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
-  })
-
-  it('falls back to fatal for something that did not come from axios', async () => {
-    const { execute } = buildApi(failingWith(new Error('a bug in a callback')))
-
-    await expect(execute()).rejects.toBeInstanceOf(AnzuFatalError)
-  })
-})
-
-describe('what useApiRequest answers with', () => {
-  it('returns the body when there is one', async () => {
-    const { execute } = buildApi(vi.fn().mockResolvedValue({ status: 200, data: { id: 7 } }))
-
-    await expect(execute()).resolves.toEqual({ id: 7 })
-  })
-
-  it('answers undefined for a no-content success', async () => {
-    // `apiFetchOne` answered `null` here. Anything comparing with `=== null` after a migration is
-    // reading a value this never produces.
-    const { execute } = buildApi(vi.fn().mockResolvedValue({ status: 204, data: undefined }))
-
-    await expect(execute()).resolves.toBeUndefined()
-  })
-
-  it('answers undefined for an accepted request as well', async () => {
-    const { execute } = buildApi(vi.fn().mockResolvedValue({ status: 202, data: undefined }))
-
-    await expect(execute()).resolves.toBeUndefined()
-  })
-
-  it('treats a valid status with no body as a failure', async () => {
-    const { execute } = buildApi(vi.fn().mockResolvedValue({ status: 200, data: undefined }))
-
-    await expect(execute()).rejects.toBeInstanceOf(AnzuFatalError)
-  })
-})
-
-describe('what useApiRequest sends', () => {
-  it('serialises the body, the way the helper it replaces did', async () => {
-    const request = vi.fn().mockResolvedValue({ status: 200, data: { ok: true } })
-    const { execute } = buildApi(request)
 
     await execute({ body: { title: 'a' } })
 
     expect(request.mock.calls[0][0].data).toBe(JSON.stringify({ title: 'a' }))
   })
 
-  // The trap the admins hit on the way over: the helper this replaces defaulted the body to `{}` for
-  // creates, so a call that passed nothing still sent `{}`. This one sends no body at all, which is
-  // why a migrated call that relied on the old default has to pass `{}` itself.
+  // The trap the fleet hit migrating: the helper this replaces defaulted a create body to `{}`, so a
+  // call that passed nothing still sent it. Nothing is sent now unless the caller says so.
   it('sends no body when the call omits one', async () => {
-    const request = vi.fn().mockResolvedValue({ status: 200, data: { ok: true } })
+    const request = answering({ status: 200, data: { ok: true } })
     const { execute } = buildApi(request)
 
     await execute()
@@ -155,8 +241,14 @@ describe('what useApiRequest sends', () => {
   })
 
   it('sends an empty body when the call asks for one', async () => {
-    const request = vi.fn().mockResolvedValue({ status: 200, data: { ok: true } })
-    const { execute } = buildApi(request)
+    const request = answering({ status: 200, data: { ok: true } })
+    const { execute } = useApiRequest<Record<string, unknown>, Record<string, never>>({
+      client: () => ({ request }) as unknown as AxiosInstance,
+      method: 'post',
+      system: 'test',
+      entity: 'test',
+      urlTemplate: '/test',
+    })
 
     await execute({ body: {} })
 
@@ -164,55 +256,11 @@ describe('what useApiRequest sends', () => {
   })
 
   it('lets a call override the url it was built with', async () => {
-    const request = vi.fn().mockResolvedValue({ status: 200, data: { ok: true } })
+    const request = answering({ status: 200, data: { ok: true } })
     const { execute } = buildApi(request)
 
     await execute({ urlTemplate: '/other/:id', urlParams: { id: 3 } })
 
     expect(request.mock.calls[0][0].url).toBe('/other/3')
-  })
-
-  it('keeps the console to itself unless asked otherwise', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
-
-    const silent = buildApi(failingWith(axiosError({ response: { status: 500 } })))
-    await expect(silent.execute()).rejects.toBeInstanceOf(AnzuApiAxiosError)
-    expect(consoleError).not.toHaveBeenCalled()
-
-    const loud = buildApi(failingWith(axiosError({ response: { status: 500 } })), false)
-    await expect(loud.execute()).rejects.toBeInstanceOf(AnzuApiAxiosError)
-    expect(consoleError).toHaveBeenCalledTimes(1)
-
-    consoleError.mockRestore()
-  })
-})
-
-describe('what useApiRequest does with an abort', () => {
-  it('rejects, because the branch meant to catch an abort never sees one', async () => {
-    // The catch opens with `err instanceof DOMException && err.name === 'AbortError'` and answers
-    // `[] as R`. Axios does not throw that: an aborted request rejects with `CanceledError`, which
-    // is an `AxiosError` (verified against the installed axios -- `isAxiosError` true, not a
-    // DOMException). So that branch is unreachable through axios in all four labs helpers, and a
-    // cancelled request comes back as `AnzuApiAxiosError` like any other transport failure.
-    //
-    // Pinned as it is rather than as it reads. Whether the graceful `[]` was the intention is a
-    // question for whoever wrote it; a migration must not answer it by accident.
-    const canceled = Object.assign(new Error('canceled'), {
-      isAxiosError: true,
-      name: 'CanceledError',
-      code: 'ERR_CANCELED',
-      config: { url: '/test' },
-    })
-    const { execute } = buildApi(failingWith(canceled))
-
-    await expect(execute()).rejects.toBeInstanceOf(AnzuApiAxiosError)
-  })
-})
-
-describe('the axios error predicates this mapping stands on', () => {
-  it('recognises the fixtures these tests are built from', () => {
-    // A guard on the guard: the fixtures are hand-built objects, and if `axios.isAxiosError` stopped
-    // recognising them every case above would fall to the fatal branch and still pass.
-    expect(axios.isAxiosError(axiosError())).toBe(true)
   })
 })

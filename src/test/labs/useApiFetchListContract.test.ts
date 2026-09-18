@@ -40,12 +40,11 @@ const setup = (sortKey: string | null = 'id', elastic = false) => {
 
 const buildApi = (get: ReturnType<typeof vi.fn>, elastic = false) => {
   const { filterData, filterConfig, pagination } = setup('id', elastic)
-  const { execute } = useApiFetchList<Array<{ id: number }>>({
+  const { execute } = useApiFetchList<{ id: number }>({
     client: () => ({ get }) as unknown as AxiosInstance,
     system: 'test',
     entity: 'test',
     urlTemplate: '/items',
-    silentConsoleError: true,
   })
   return { execute, filterData, filterConfig, pagination }
 }

@@ -17,7 +17,7 @@ export const hasBody = (res: AxiosResponse): boolean => !isUndefined(res.data) &
 
 export type Abortable = {
   /** Runs one call with a signal of its own, registered so `abort()` can reach it. */
-  run: <T>(fn: (signal: AbortSignal) => Promise<T>, external?: AbortSignal) => Promise<T>
+  run: <T>(fn: (signal: AbortSignal, generation: number) => Promise<T>, external?: AbortSignal) => Promise<T>
   /** Stops every call this instance still has in flight. */
   abort: () => void
   /** The generation a call starts in; a stale one must not write to state the caller can see. */
@@ -42,7 +42,10 @@ export const createAbortable = (options: AbortableOptions = {}): Abortable => {
     controllers.clear()
   }
 
-  const run = async <T>(fn: (signal: AbortSignal) => Promise<T>, external?: AbortSignal): Promise<T> => {
+  const run = async <T>(
+    fn: (signal: AbortSignal, generation: number) => Promise<T>,
+    external?: AbortSignal
+  ): Promise<T> => {
     // Before the new controller is registered, or the abort would take the new call with it.
     if (cancelPrevious) abortAll()
 
@@ -59,7 +62,7 @@ export const createAbortable = (options: AbortableOptions = {}): Abortable => {
     }
 
     try {
-      return await fn(controller.signal)
+      return await fn(controller.signal, generation)
     } finally {
       external?.removeEventListener('abort', relay)
       controllers.delete(controller)

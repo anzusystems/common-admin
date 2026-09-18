@@ -12,7 +12,11 @@ export const isAnzuApiCancelledError = (error: unknown): error is AnzuApiCancell
  * `DOMException` an `AbortController`-shaped check would look for, which is why such a check never
  * fires.
  */
-export const axiosErrorIsCancelled = (error: unknown) => axios.isCancel(error)
+export const axiosErrorIsCancelled = (error: unknown) =>
+  // Both, because they answer for different things. `isCancel` reads an internal marker axios puts
+  // on the error it constructs; the code check catches a cancellation that arrived as a plain
+  // object -- rebuilt across a boundary, or handed over by a test.
+  axios.isCancel(error) || (axios.isAxiosError(error) && error.code === 'ERR_CANCELED')
 
 /**
  * A stopped request is an ordinary outcome -- another keystroke in an autocomplete, a route change

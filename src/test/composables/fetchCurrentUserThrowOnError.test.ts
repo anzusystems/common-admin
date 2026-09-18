@@ -70,16 +70,16 @@ describe('fetchCurrentUser throwOnError', () => {
     expect(execute).toHaveBeenCalledWith({ urlTemplate: '/adm/v1/user/current', urlParams: { id: 3 } })
   })
 
-  it('keeps the console out of it', async () => {
-    // This path answers `undefined` for a failure unless the caller asks otherwise, so it has no
-    // business writing to the console on the way -- the helper it replaced did not, and a line
-    // nobody is meant to act on in every admin's start-up is not an improvement.
+  it('leaves reporting to the application, not to this call site', async () => {
+    // It used to ask for silence per instance, which is why whether a failure was written down
+    // depended on which call made it. There is one switch for that now and it belongs to the
+    // application (`setApiErrorLogger`), so this path simply does not carry the question any more.
     execute.mockResolvedValue({ id: 7, roles: [], permissions: {} })
     const { useCurrentUser } = defineAuth('cms')
     const { fetchCurrentUser } = useCurrentUser('cms')
 
     await fetchCurrentUser(client, '/adm/v1/user/current')
 
-    expect(useApiRequest).toHaveBeenCalledWith(expect.objectContaining({ silentConsoleError: true }))
+    expect(useApiRequest).toHaveBeenCalledWith(expect.not.objectContaining({ silentConsoleError: expect.anything() }))
   })
 })

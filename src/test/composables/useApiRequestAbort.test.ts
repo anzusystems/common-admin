@@ -3,7 +3,7 @@ import type { AxiosInstance } from 'axios'
 import { useApiRequest } from '@/labs/api/useApiRequest'
 
 // The abort controller lived in a single variable, so overlapping calls overwrote it and
-// abortRequest() could end up cancelling nothing at all.
+// abort() could end up cancelling nothing at all.
 
 const deferred = () => {
   let settle: (value: unknown) => void = () => undefined
@@ -33,19 +33,18 @@ const buildApi = (client: () => AxiosInstance) =>
     system: 'test',
     entity: 'test',
     urlTemplate: '/test',
-    silentConsoleError: true,
   })
 
 describe('useApiRequest abort with overlapping calls', () => {
   it('aborts every in-flight request, not just the last one', async () => {
     const { client, signals } = buildClient()
-    const { execute, abortRequest } = buildApi(client)
+    const { execute, abort } = buildApi(client)
 
     void execute().catch(() => undefined)
     void execute().catch(() => undefined)
     expect(signals).toHaveLength(2)
 
-    abortRequest()
+    abort()
 
     expect(signals[0].aborted).toBe(true)
     expect(signals[1].aborted).toBe(true)
@@ -53,7 +52,7 @@ describe('useApiRequest abort with overlapping calls', () => {
 
   it('a settled request no longer gets aborted, so nothing accumulates', async () => {
     const { client, signals, pending } = buildClient()
-    const { execute, abortRequest } = buildApi(client)
+    const { execute, abort } = buildApi(client)
 
     const first = execute().catch(() => undefined)
     void execute().catch(() => undefined)
@@ -61,7 +60,7 @@ describe('useApiRequest abort with overlapping calls', () => {
     pending[0].settle({ status: 200, data: {} })
     await first
 
-    abortRequest()
+    abort()
 
     expect(signals[0].aborted).toBe(false)
     expect(signals[1].aborted).toBe(true)
