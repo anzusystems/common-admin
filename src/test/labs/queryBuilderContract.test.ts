@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { ref } from 'vue'
-// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiGenerateListQuery } from '@/services/api/apiFetchList'
 import { generateListQuery } from '@/labs/api/useApiFetchList'
 // eslint-disable-next-line anzu/no-deprecated-imports

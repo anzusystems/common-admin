@@ -1,4 +1,5 @@
 import type { AxiosInstance } from 'axios'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { IntegerId } from '@/types/common'

@@ -1,4 +1,5 @@
 import type { DamAssetLicence } from '@/types/coreDam/AssetLicence'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'

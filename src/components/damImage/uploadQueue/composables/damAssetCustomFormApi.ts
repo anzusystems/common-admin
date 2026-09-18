@@ -2,6 +2,7 @@ import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
 import type { DamAssetTypeType, DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'

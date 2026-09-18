@@ -1,6 +1,7 @@
 import type { AxiosInstance, AxiosResponse } from 'axios'
 import type { DocId, IntegerId } from '@/types/common'
 import type { AssetDetailItemDto, AssetSearchListItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'

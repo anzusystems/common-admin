@@ -5,6 +5,7 @@ import type { DocId } from '@/types/common'
 import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
 import type { AssetFileImage } from '@/types/coreDam/AssetFile'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'

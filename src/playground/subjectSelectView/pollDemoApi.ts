@@ -1,6 +1,7 @@
 import { cmsClient } from '@/playground/mock/cmsClient'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
 import type { DatetimeUTCNullable, IntegerId } from '@/types/common'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 

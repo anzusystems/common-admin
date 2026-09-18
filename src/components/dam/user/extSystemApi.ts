@@ -1,4 +1,5 @@
 import type { DamExtSystem } from '@/components/damImage/uploadQueue/composables/DamExtSystem'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import type { AxiosInstance } from 'axios'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'

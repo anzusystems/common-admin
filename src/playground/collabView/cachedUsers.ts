@@ -1,6 +1,7 @@
 import type { AnzuUser, AnzuUserMinimal } from '@/types/AnzuUser'
 import type { IntegerId } from '@/types/common'
 import { defineCached } from '@/composables/system/defineCached'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { cmsClient } from '@/playground/mock/cmsClient'
 

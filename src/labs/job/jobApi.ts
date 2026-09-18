@@ -1,7 +1,10 @@
 import type { AxiosInstance } from 'axios'
 import type { JobBase } from '@/types/Job'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchOne } from '@/services/api/apiFetchOne'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiCreateOne } from '@/services/api/apiCreateOne'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
 import { stringToKebabCase } from '@/utils/string'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'

@@ -41,6 +41,30 @@ const DEFAULT_INTERNAL_DEPRECATED_IMPORTS = [
     imports: ['apiFetchListBatch'],
   },
   {
+    path: '@/services/api/apiFetchOne',
+    imports: ['apiFetchOne'],
+  },
+  {
+    path: '@/services/api/apiCreateOne',
+    imports: ['apiCreateOne'],
+  },
+  {
+    path: '@/services/api/apiUpdateOne',
+    imports: ['apiUpdateOne'],
+  },
+  {
+    path: '@/services/api/apiDeleteOne',
+    imports: ['apiDeleteOne'],
+  },
+  {
+    path: '@/services/api/apiFetchByIds',
+    imports: ['apiFetchByIds'],
+  },
+  {
+    path: '@/services/api/apiAnyRequest',
+    imports: ['apiAnyRequest'],
+  },
+  {
     path: '@/composables/system/pagination',
     imports: ['usePagination', 'Pagination'],
   },

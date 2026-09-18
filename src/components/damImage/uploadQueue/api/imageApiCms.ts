@@ -1,10 +1,15 @@
 import type { AxiosInstance, AxiosResponse } from 'axios'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiCreateOne } from '@/services/api/apiCreateOne'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
 

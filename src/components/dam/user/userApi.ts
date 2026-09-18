@@ -1,8 +1,11 @@
 import type { AxiosInstance } from 'axios'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 // eslint-disable-next-line anzu/no-deprecated-imports

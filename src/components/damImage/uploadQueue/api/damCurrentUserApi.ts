@@ -1,4 +1,5 @@
 import type { AxiosInstance } from 'axios'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 

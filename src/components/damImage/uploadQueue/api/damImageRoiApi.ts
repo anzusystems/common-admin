@@ -1,7 +1,9 @@
 import type { RegionOfInterest } from '@/types/coreDam/Roi'
 import type { AxiosInstance } from 'axios'
 import type { DocId } from '@/types/common'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchOne } from '@/services/api/apiFetchOne'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'

@@ -1,7 +1,9 @@
 import type { AxiosInstance } from 'axios'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import type { Pagination } from '@/types/Pagination'
