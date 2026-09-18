@@ -21,6 +21,10 @@ import {
   axiosErrorResponseHasDependencyExistsData,
 } from '@/model/error/AnzuApiDependencyExistsError'
 
+/**
+ * @deprecated Use `generateListQuery` from `@/labs/api/useApiFetchList`. Kept while the query-builder
+ * contract test still compares the two builders against each other.
+ */
 export const apiGenerateListQuery = (pagination: Pagination, filterBag: FilterBag): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, querySetFilters } = useApiQueryBuilder()
   querySetLimit(pagination.rowsPerPage)

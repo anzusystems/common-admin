@@ -21,6 +21,13 @@ const DEFAULT_DEPRECATED_IMPORTS = [
   'Pagination',
   'makeFilterHelper',
   'apiFetchList',
+  'apiGenerateListQuery',
+  'apiFetchListBatch',
+  'usePaginationAutoHide',
+  'fetchDamUserList',
+  'fetchDamExtSystemList',
+  'fetchDamAssetLicenceList',
+  'fetchDamAssetLicenceGroupList',
   'FilterBag',
   'Filter',
   'apiFetchByIds',
@@ -34,7 +41,7 @@ const DEFAULT_DEPRECATED_IMPORTS = [
 const DEFAULT_INTERNAL_DEPRECATED_IMPORTS = [
   {
     path: '@/services/api/apiFetchList',
-    imports: ['apiFetchList'],
+    imports: ['apiFetchList', 'apiGenerateListQuery'],
   },
   {
     path: '@/services/api/apiFetchListBatch',
@@ -66,7 +73,7 @@ const DEFAULT_INTERNAL_DEPRECATED_IMPORTS = [
   },
   {
     path: '@/composables/system/pagination',
-    imports: ['usePagination', 'Pagination'],
+    imports: ['usePagination', 'Pagination', 'usePaginationAutoHide'],
   },
   {
     path: '@/composables/filter/filterHelpers',
