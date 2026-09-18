@@ -9,7 +9,7 @@ import { isOwnerAware } from '@/types/OwnerAware'
 import { isCreatedByAware } from '@/types/CreatedByAware'
 import type { AnzuUser } from '@/types/AnzuUser'
 import type { UrlParams } from '@/services/api/apiHelper'
-import { apiFetchOne } from '@/services/api/apiFetchOne'
+import { useApiRequest } from '@/labs/api/useApiRequest'
 
 export type DefineAuthConfig = {
   adminRole: string | Array<{ system: string; adminRole: string }>
@@ -123,7 +123,23 @@ export function defineAuth<TAclValue extends AclValue>(
       options: { throwOnError?: boolean } = {}
     ) => {
       try {
-        const res = await apiFetchOne<TCurrentUser>(client, endPoint, urlParams, system, entity)
+        // The labs request, not the older `apiFetchOne`: it is where the fleet is going, and it is
+        // the difference between a failure arriving as a bare `AnzuFatalError` and arriving as the
+        // error it actually was -- `AnzuApiAxiosError` with the response on its cause, or
+        // `AnzuApiTimeoutError`. A caller passing `throwOnError` can only tell a dead session from
+        // a dead backend if the error says which it was.
+        // Silent, because the older helper this replaced was: every caller but one lets a failure
+        // answer `undefined`, and the one that does not asks for `throwOnError` and reads the error
+        // itself. Logging here would put a line in the console of every admin on every start-up
+        // that happens to fail, with nobody meant to act on it.
+        const { executeRequest } = useApiRequest<TCurrentUser>({
+          client,
+          method: 'GET',
+          system,
+          entity,
+          silentConsoleError: true,
+        })
+        const res = await executeRequest({ urlTemplate: endPoint, urlParams })
         setCurrentUser(res)
         authStore.currentUsersLoaded.value.set(system, true)
         storeAdminRoleBySystem()
