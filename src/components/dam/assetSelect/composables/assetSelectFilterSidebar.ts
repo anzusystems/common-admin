@@ -1,32 +1,32 @@
-import { ref } from "vue";
+import { ref } from 'vue'
 
-const sidebarLeft = ref(false);
-const sidebarRight = ref(false);
+const sidebarLeft = ref(false)
+const sidebarRight = ref(false)
 
 export function useSidebar() {
   const toggleSidebarLeft = () => {
-    sidebarLeft.value ? closeSidebarLeft() : openSidebarLeft();
-  };
+    sidebarLeft.value ? closeSidebarLeft() : openSidebarLeft()
+  }
 
   const openSidebarLeft = () => {
-    sidebarLeft.value = true;
-  };
+    sidebarLeft.value = true
+  }
 
   const closeSidebarLeft = () => {
-    sidebarLeft.value = false;
-  };
+    sidebarLeft.value = false
+  }
 
   const toggleSidebarRight = () => {
-    sidebarRight.value ? closeSidebarRight() : openSidebarRight();
-  };
+    sidebarRight.value ? closeSidebarRight() : openSidebarRight()
+  }
 
   const openSidebarRight = () => {
-    sidebarRight.value = true;
-  };
+    sidebarRight.value = true
+  }
 
   const closeSidebarRight = () => {
-    sidebarRight.value = false;
-  };
+    sidebarRight.value = false
+  }
 
   return {
     sidebarLeft,
@@ -37,5 +37,5 @@ export function useSidebar() {
     toggleSidebarRight,
     openSidebarRight,
     closeSidebarRight,
-  };
+  }
 }

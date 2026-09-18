@@ -1,160 +1,141 @@
-import type { ValueObjectOption } from "@/types/ValueObject";
-import type { IntegerId, IntegerIdNullable } from "@/types/common";
-import type { AnzuUserAndTimeTrackingAware } from "@/types/AnzuUserAndTimeTrackingAware";
-import { cmsClient } from "@/playground/mock/cmsClient";
-import { useApiFetchByIds } from "@/labs/api/useApiFetchByIds";
-import { useApiFetchList } from "@/labs/api/useApiFetchList";
+import type { ValueObjectOption } from '@/types/ValueObject'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import { cmsClient } from '@/playground/mock/cmsClient'
+import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
+import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import {
   createFilter,
   createFilterStore,
   type FilterConfig,
   type FilterData,
   type MakeFilterOption,
-} from "@/labs/filters/filterFactory";
-import { type Ref } from "vue";
+} from '@/labs/filters/filterFactory'
+import { type Ref } from 'vue'
 
-import type { Pagination } from "@/labs/filters/pagination";
+import type { Pagination } from '@/labs/filters/pagination'
 
 const AuthorDiscriminator = {
-  Person: "person",
-  Source: "source",
-} as const;
+  Person: 'person',
+  Source: 'source',
+} as const
 
 interface AuthorKind extends AnzuUserAndTimeTrackingAware {
-  id: IntegerId;
-  site: IntegerIdNullable;
-  siteGroup: IntegerIdNullable;
-  discriminator: (typeof AuthorDiscriminator)[keyof typeof AuthorDiscriminator];
-  superAuthor: IntegerIdNullable;
-  slug: string;
-  descriptionShort: string;
-  notificationKey: string;
-  enabled: boolean;
+  id: IntegerId
+  site: IntegerIdNullable
+  siteGroup: IntegerIdNullable
+  discriminator: (typeof AuthorDiscriminator)[keyof typeof AuthorDiscriminator]
+  superAuthor: IntegerIdNullable
+  slug: string
+  descriptionShort: string
+  notificationKey: string
+  enabled: boolean
   settings: {
-    enabledFollow: boolean;
-    notificationFollowEnabled: boolean;
-    enabledArticleAssign: boolean;
-    enabledArticleShow: boolean;
-    enabledProfile: boolean;
-  };
-  publicLinks: any;
-  image: IntegerIdNullable;
-  _resourceName: string;
-  _system: "cms";
+    enabledFollow: boolean
+    notificationFollowEnabled: boolean
+    enabledArticleAssign: boolean
+    enabledArticleShow: boolean
+    enabledProfile: boolean
+  }
+  publicLinks: any
+  image: IntegerIdNullable
+  _resourceName: string
+  _system: 'cms'
 }
 
 interface AuthorKindPerson extends AuthorKind {
-  discriminator: typeof AuthorDiscriminator.Person;
-  description: any;
-  jobDescription: string;
+  discriminator: typeof AuthorDiscriminator.Person
+  description: any
+  jobDescription: string
   person: {
-    firstName: string;
-    lastName: string;
-    fullName: string;
-  };
-  _resourceName: "authorKindPerson";
+    firstName: string
+    lastName: string
+    fullName: string
+  }
+  _resourceName: 'authorKindPerson'
 }
 
 const isAuthorKindPerson = (author: AuthorKind): author is AuthorKindPerson => {
-  return (
-    author.discriminator === AuthorDiscriminator.Person &&
-    Object.hasOwn(author, "person")
-  );
-};
+  return author.discriminator === AuthorDiscriminator.Person && Object.hasOwn(author, 'person')
+}
 
 interface AuthorKindSource extends AuthorKind {
-  discriminator: typeof AuthorDiscriminator.Source;
-  title: string;
-  _resourceName: "authorKindSource";
+  discriminator: typeof AuthorDiscriminator.Source
+  title: string
+  _resourceName: 'authorKindSource'
 }
 
 const isAuthorKindSource = (author: AuthorKind): author is AuthorKindSource => {
-  return (
-    author.discriminator === AuthorDiscriminator.Source &&
-    Object.hasOwn(author, "title")
-  );
-};
+  return author.discriminator === AuthorDiscriminator.Source && Object.hasOwn(author, 'title')
+}
 
 const getAuthorDisplayName = (author: AuthorKind) => {
   return isAuthorKindPerson(author)
-    ? author.person.fullName +
-        (author.jobDescription.length > 0 ? ` (${author.jobDescription})` : "")
+    ? author.person.fullName + (author.jobDescription.length > 0 ? ` (${author.jobDescription})` : '')
     : isAuthorKindSource(author)
       ? author.title
-      : "";
-};
+      : ''
+}
 
 const mapToValueObject = (author: AuthorKind) => {
-  const title = getAuthorDisplayName(author);
+  const title = getAuthorDisplayName(author)
 
   return {
     title,
     value: author.id,
-  };
-};
+  }
+}
 
-const END_POINT = "/adm/v1/author-kind";
+const END_POINT = '/adm/v1/author-kind'
 
 const fetchAuthorListByIds = (ids: IntegerId[]) => {
   const { executeFetch } = useApiFetchByIds<AuthorKind[]>({
     client: cmsClient,
-    system: "cms",
-    entity: "authorKind",
-    urlTemplate: END_POINT + "/search",
+    system: 'cms',
+    entity: 'authorKind',
+    urlTemplate: END_POINT + '/search',
     isSearchApi: true,
-  });
-  return executeFetch(ids);
-};
+  })
+  return executeFetch(ids)
+}
 
 const useFetchAuthorList = () =>
   useApiFetchList<AuthorKind[]>({
     client: cmsClient,
-    system: "cms",
-    entity: "authorKind",
+    system: 'cms',
+    entity: 'authorKind',
     urlTemplate: END_POINT,
-  });
+  })
 
-export const fetchItems = async (
-  pagination: Ref<Pagination>,
-  filterData: FilterData,
-  filterConfig: FilterConfig,
-) => {
-  const { executeFetch } = useFetchAuthorList();
-  const authors = await executeFetch(pagination, filterData, filterConfig);
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const { executeFetch } = useFetchAuthorList()
+  const authors = await executeFetch(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>(
-    authors.map((author: AuthorKind) => mapToValueObject(author))
-  );
-};
+  return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
+}
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
-  const authors = await fetchAuthorListByIds(ids);
+  const authors = await fetchAuthorListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>(
-    authors.map((author: AuthorKind) => mapToValueObject(author))
-  );
-};
+  return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
+}
 
 export function useSubjectAuthorInnerFilter() {
   const filterFields = [
-    { name: "id" as const, default: null },
-    { name: "discriminator" as const, default: null },
-    { name: "siteGroup" as const, apiName: "siteGroupId", default: null },
-    { name: "text" as const, default: null },
-  ] satisfies readonly MakeFilterOption[];
+    { name: 'id' as const, default: null },
+    { name: 'discriminator' as const, default: null },
+    { name: 'siteGroup' as const, apiName: 'siteGroupId', default: null },
+    { name: 'text' as const, default: null },
+  ] satisfies readonly MakeFilterOption[]
 
-  const { filterConfig, filterData } = createFilter(
-    filterFields,
-    createFilterStore(filterFields),
-    {
-      elastic: true,
-      system: "cms",
-      subject: "authorKind",
-    },
-  );
+  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
+    elastic: true,
+    system: 'cms',
+    subject: 'authorKind',
+  })
 
   return {
     filterConfig,
     filterData,
-  };
+  }
 }

@@ -1,14 +1,14 @@
-import type { RegionOfInterest } from "@/types/coreDam/Roi";
-import type { CropRect } from "@/components/damImage/uploadQueue/cropper/cropperTypes";
+import type { RegionOfInterest } from '@/types/coreDam/Roi'
+import type { CropRect } from '@/components/damImage/uploadQueue/cropper/cropperTypes'
 
-const PRECISION = 3;
+const PRECISION = 3
 
 const roundTo = (value: number, decimals: number) => {
-  const factor = 10 ** decimals;
-  return Math.round(value * factor) / factor;
-};
+  const factor = 10 ** decimals
+  return Math.round(value * factor) / factor
+}
 
-const clampFraction = (value: number) => Math.min(Math.max(value, 0), 1);
+const clampFraction = (value: number) => Math.min(Math.max(value, 0), 1)
 
 /**
  * A stored region of interest as a crop rectangle, and back.
@@ -22,41 +22,29 @@ const clampFraction = (value: number) => Math.min(Math.max(value, 0), 1);
 export const regionToCrop = (
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
-  originalImageHeight: number,
+  originalImageHeight: number
 ): CropRect => {
   if (!(originalImageWidth > 0) || !(originalImageHeight > 0)) {
-    return { x: 0, y: 0, width: 1, height: 1 };
+    return { x: 0, y: 0, width: 1, height: 1 }
   }
   return {
     x: clampFraction(regionOfInterest.pointX / originalImageWidth),
     y: clampFraction(regionOfInterest.pointY / originalImageHeight),
     width: clampFraction(regionOfInterest.percentageWidth),
     height: clampFraction(regionOfInterest.percentageHeight),
-  };
-};
+  }
+}
 
 export const cropToRegion = (
   crop: CropRect,
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
-  originalImageHeight: number,
+  originalImageHeight: number
 ): RegionOfInterest => {
-  regionOfInterest.pointX = Math.max(
-    0,
-    Math.round(crop.x * originalImageWidth),
-  );
-  regionOfInterest.pointY = Math.max(
-    0,
-    Math.round(crop.y * originalImageHeight),
-  );
-  regionOfInterest.percentageWidth = roundTo(
-    clampFraction(crop.width),
-    PRECISION,
-  );
-  regionOfInterest.percentageHeight = roundTo(
-    clampFraction(crop.height),
-    PRECISION,
-  );
+  regionOfInterest.pointX = Math.max(0, Math.round(crop.x * originalImageWidth))
+  regionOfInterest.pointY = Math.max(0, Math.round(crop.y * originalImageHeight))
+  regionOfInterest.percentageWidth = roundTo(clampFraction(crop.width), PRECISION)
+  regionOfInterest.percentageHeight = roundTo(clampFraction(crop.height), PRECISION)
 
-  return regionOfInterest;
-};
+  return regionOfInterest
+}

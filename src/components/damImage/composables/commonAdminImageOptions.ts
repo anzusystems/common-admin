@@ -1,6 +1,6 @@
-import { ref } from "vue";
-import type { CommonAdminImageOptions } from "@/AnzuSystemsCommonAdmin";
-import { isUndefined } from "@/utils/common";
+import { ref } from 'vue'
+import type { CommonAdminImageOptions } from '@/AnzuSystemsCommonAdmin'
+import { isUndefined } from '@/utils/common'
 import {
   bulkUpdateImages as bulkUpdateImagesApi,
   createImage as createImageApi,
@@ -8,30 +8,27 @@ import {
   fetchImage as fetchImageApi,
   fetchImageListByIds as fetchImageListByIdsApi,
   updateImage as updateImageApi,
-} from "@/components/damImage/uploadQueue/api/imageApiCms";
+} from '@/components/damImage/uploadQueue/api/imageApiCms'
 
-const imageOptions = ref<CommonAdminImageOptions>(undefined);
+const imageOptions = ref<CommonAdminImageOptions>(undefined)
 
 export function initCommonAdminImageOptions(data: CommonAdminImageOptions) {
-  imageOptions.value = data;
+  imageOptions.value = data
 }
 
-export function useCommonAdminImageOptions(configName: string = "default") {
+export function useCommonAdminImageOptions(configName: string = 'default') {
   if (
     isUndefined(imageOptions.value) ||
     isUndefined(imageOptions.value.configs) ||
     isUndefined(imageOptions.value.configs[configName])
   ) {
-    throw new Error(
-      "Composable can't be used without properly configured common admin.",
-    );
+    throw new Error("Composable can't be used without properly configured common admin.")
   }
 
   return {
     imageClient: imageOptions.value.configs[configName].imageClient,
     previewDomain: imageOptions.value.configs[configName].previewDomain,
-    previewDomainOriginal:
-      imageOptions.value.configs[configName].previewDomainOriginal,
+    previewDomainOriginal: imageOptions.value.configs[configName].previewDomainOriginal,
     imageWidth: imageOptions.value.configs[configName].width,
     imageHeight: imageOptions.value.configs[configName].height,
     imageApi: imageOptions.value.configs[configName].imageApi
@@ -44,5 +41,5 @@ export function useCommonAdminImageOptions(configName: string = "default") {
           fetchImageListByIds: fetchImageListByIdsApi,
           bulkUpdateImages: bulkUpdateImagesApi,
         },
-  };
+  }
 }

@@ -1,45 +1,38 @@
 export interface VDatatableSelectableItem {
-  value: any;
-  selectable: boolean;
+  value: any
+  selectable: boolean
 }
 
 interface DataTableSelectStrategy {
-  showSelectAll: boolean;
+  showSelectAll: boolean
   allSelected: (data: {
-    allItems: VDatatableSelectableItem[];
-    currentPage: VDatatableSelectableItem[];
-  }) => VDatatableSelectableItem[];
-  select: (data: {
-    items: VDatatableSelectableItem[];
-    value: boolean;
-    selected: Set<unknown>;
-  }) => Set<unknown>;
+    allItems: VDatatableSelectableItem[]
+    currentPage: VDatatableSelectableItem[]
+  }) => VDatatableSelectableItem[]
+  select: (data: { items: VDatatableSelectableItem[]; value: boolean; selected: Set<unknown> }) => Set<unknown>
   selectAll: (data: {
-    value: boolean;
-    allItems: VDatatableSelectableItem[];
-    currentPage: VDatatableSelectableItem[];
-    selected: Set<unknown>;
-  }) => Set<unknown>;
+    value: boolean
+    allItems: VDatatableSelectableItem[]
+    currentPage: VDatatableSelectableItem[]
+    selected: Set<unknown>
+  }) => Set<unknown>
 }
 
-export const generateDatatableMinMaxSelectStrategy = (
-  min: number,
-  max: number,
-): DataTableSelectStrategy => {
+export const generateDatatableMinMaxSelectStrategy = (min: number, max: number): DataTableSelectStrategy => {
   return {
     showSelectAll: false,
     allSelected: () => [],
     select: ({ items, value, selected }) => {
       if (min === max && min === 1) {
-        return new Set(value ? [items[0]?.value] : []);
+        return new Set(value ? [items[0]?.value] : [])
       }
       for (const item of items) {
-        if (selected.size >= max && value) break;
-        else if (value) selected.add(item.value);
-        else selected.delete(item.value);
+        if (selected.size >= max && value) break
+        else if (value) selected.add(item.value)
+        else selected.delete(item.value)
       }
-      return selected;
+      return selected
     },
     selectAll: ({ selected }) => selected,
-  };
-};
+  }
+}

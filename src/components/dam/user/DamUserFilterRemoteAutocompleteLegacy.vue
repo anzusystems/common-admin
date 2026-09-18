@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 /**
  * Bridge for consumers still binding a legacy `Filter` inside a legacy filter bar. The labs
- * `AFilterRemoteAutocomplete` cannot live there -- it injects `FilterInnerConfigKey`/`FilterInnerDataKey`,
- * which only a labs filter bar provides. Delete this file once they migrate; the api layer under it
- * is already labs.
+ * `AFilterRemoteAutocomplete` cannot live there -- it injects `FilterConfigKey`, `FilterDataKey`,
+ * `FilterSelectedKey` and `FilterSubmitResetCounterKey`, and only a labs filter bar provides them.
+ * Delete this file once its consumers migrate; the api layer under it is already labs.
  */
 // eslint-disable-next-line anzu/no-deprecated-imports
 import type { Filter, FilterBag } from '@/types/Filter'
@@ -34,11 +34,17 @@ const { filterData, filterConfig } = useDamUserInnerFilter()
 // The host builds its own legacy pagination and never sorts this list.
 const { pagination } = usePagination(null)
 
-// The legacy host still calls with its own bag and pagination object; only the typed query and the
-// page size carry over, and the labs fetch reads everything else off the labs filter.
+// The legacy host still calls with its own bag and pagination object. Everything it can vary comes
+// across -- the typed query, the page size and the page. Its sort does not, because there is never
+// one to carry: the host builds its pagination from `filter-sort-by`, which this bridge pins to
+// `null` below, so the two sides are already agreed that this list is unsorted.
 const fetchItemsBridge = (legacyPagination: PaginationLegacy, legacyFilterBag: FilterBag) => {
   filterData.lastName = legacyFilterBag.lastName.model as string | null
-  pagination.value = { ...pagination.value, rowsPerPage: legacyPagination.rowsPerPage }
+  pagination.value = {
+    ...pagination.value,
+    rowsPerPage: legacyPagination.rowsPerPage,
+    page: legacyPagination.page,
+  }
   return fetchItems(pagination, filterData, filterConfig)
 }
 

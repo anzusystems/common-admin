@@ -7,8 +7,8 @@
  * a detail rendition is a scaled copy of the original, and the scale cancels out of every sum.
  */
 export interface CropRect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  x: number
+  y: number
+  width: number
+  height: number
 }

@@ -1,14 +1,7 @@
-import type {
-  UploadQueueItem,
-  UploadQueueItemStatusType,
-  UploadQueueItemTypeType,
-} from "@/types/coreDam/UploadQueue";
-import type { IntegerId } from "@/types/common";
-import {
-  DamAssetStatusDefault,
-  type DamAssetTypeType,
-} from "@/types/coreDam/Asset";
-import { AssetFileFailReasonDefault } from "@/types/coreDam/AssetFile";
+import type { UploadQueueItem, UploadQueueItemStatusType, UploadQueueItemTypeType } from '@/types/coreDam/UploadQueue'
+import type { IntegerId } from '@/types/common'
+import { DamAssetStatusDefault, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import { AssetFileFailReasonDefault } from '@/types/coreDam/AssetFile'
 
 export function useUploadQueueItemFactory() {
   const createDefault = (
@@ -17,7 +10,7 @@ export function useUploadQueueItemFactory() {
     status: UploadQueueItemStatusType,
     assetType: DamAssetTypeType,
     chunkSize: number,
-    licenceId: IntegerId,
+    licenceId: IntegerId
   ): UploadQueueItem => {
     return {
       key: key,
@@ -28,7 +21,7 @@ export function useUploadQueueItemFactory() {
       duplicateAssetId: null,
       assetType: assetType,
       assetStatus: DamAssetStatusDefault,
-      displayTitle: "",
+      displayTitle: '',
       assetId: null,
       fileId: null,
       externalProviderAssetId: null,
@@ -52,7 +45,7 @@ export function useUploadQueueItemFactory() {
       canEditMetadata: false,
       error: {
         hasError: false,
-        message: "",
+        message: '',
         assetFileFailReason: AssetFileFailReasonDefault,
       },
       notificationFallbackTimer: undefined,
@@ -61,10 +54,10 @@ export function useUploadQueueItemFactory() {
       image: undefined,
       mainFileSingleUse: null,
       mainFileInternal: null,
-    };
-  };
+    }
+  }
 
   return {
     createDefault,
-  };
+  }
 }

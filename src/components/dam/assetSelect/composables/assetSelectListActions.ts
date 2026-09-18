@@ -1,165 +1,135 @@
-import { useAssetListFilter } from "@/model/coreDam/filter/AssetFilter";
-import {
-  type AssetSelectListItem,
-  useAssetSelectStore,
-} from "@/services/stores/coreDam/assetSelectStore";
-import { storeToRefs } from "pinia";
-import type { Ref } from "vue";
-import { ref } from "vue";
-import {
-  type AssetDetailItemDto,
-  DamAssetType,
-  type DamAssetTypeType,
-} from "@/types/coreDam/Asset";
-import { usePagination } from "@/labs/filters/pagination";
-import { useAlerts } from "@/composables/system/alerts";
-import type { DocId, IntegerId } from "@/types/common";
-import { useCommonAdminCoreDamOptions } from "@/components/dam/assetSelect/composables/commonAdminCoreDamOptions";
-import {
-  fetchAsset,
-  useFetchAssetList,
-} from "@/components/damImage/uploadQueue/api/damAssetApi";
-import type { DamConfigLicenceExtSystemReturnType } from "@/types/coreDam/DamConfig";
-import { useAssetDetailStore } from "@/components/damImage/uploadQueue/composables/assetDetailStore";
-import { useDamCachedAuthors } from "@/components/damImage/uploadQueue/author/cachedAuthors";
-import { useDamCachedKeywords } from "@/components/damImage/uploadQueue/keyword/cachedKeywords";
-import { useExtSystemIdForCached } from "@/components/damImage/uploadQueue/composables/extSystemIdForCached";
-import { isUndefined } from "@/utils/common";
-import { useDamCachedUsers } from "@/components/damImage/uploadQueue/author/cachedUsers";
-import { useSidebar } from "@/components/dam/assetSelect/composables/assetSelectFilterSidebar";
-import { SORT_BY_SCORE_DATE } from "@/composables/system/datatableColumns";
-import { useFilterClearHelpers } from "@/labs/filters/filterFactory";
-import { useDebounceFn } from "@vueuse/core";
-import { useDisplay } from "vuetify";
+import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
+import { type AssetSelectListItem, useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import { storeToRefs } from 'pinia'
+import type { Ref } from 'vue'
+import { ref } from 'vue'
+import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import { usePagination } from '@/labs/filters/pagination'
+import { useAlerts } from '@/composables/system/alerts'
+import type { DocId, IntegerId } from '@/types/common'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { fetchAsset, useFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
+import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
+import { isUndefined } from '@/utils/common'
+import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
+import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
+import { SORT_BY_SCORE_DATE } from '@/composables/system/datatableColumns'
+import { useFilterClearHelpers } from '@/labs/filters/filterFactory'
+import { useDebounceFn } from '@vueuse/core'
+import { useDisplay } from 'vuetify'
 
-const { pagination } = usePagination(SORT_BY_SCORE_DATE);
-const detailLoading = ref(false);
+const { pagination } = usePagination(SORT_BY_SCORE_DATE)
+const detailLoading = ref(false)
 
 export function useAssetSelectActions(
-  configName = "default",
-  onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void,
+  configName = 'default',
+  onDetailLoadedCallback?: (asset: AssetDetailItemDto) => void
 ) {
-  const { damClient, endPointAsset, showFileInfoEnabled } =
-    useCommonAdminCoreDamOptions(configName);
+  const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
 
-  const assetSelectStore = useAssetSelectStore();
-  const { selectedCount, selectedAssets, assetListItems, loader } =
-    storeToRefs(assetSelectStore);
-  const assetDetailStore = useAssetDetailStore();
-  const { openSidebarRight } = useSidebar();
-  const { mdAndDown } = useDisplay();
+  const assetSelectStore = useAssetSelectStore()
+  const { selectedCount, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
+  const assetDetailStore = useAssetDetailStore()
+  const { openSidebarRight } = useSidebar()
+  const { mdAndDown } = useDisplay()
 
-  const { showErrorsDefault } = useAlerts();
-  const { filterData, filterConfig } = useAssetListFilter();
+  const { showErrorsDefault } = useAlerts()
+  const { filterData, filterConfig } = useAssetListFilter()
 
-  const resolveTypeFilter = (
-    assetType: DamAssetTypeType,
-    inPodcast: boolean | null,
-  ) => {
+  const resolveTypeFilter = (assetType: DamAssetTypeType, inPodcast: boolean | null) => {
     if (inPodcast === true) {
-      filterData.type = [DamAssetType.Audio];
-      filterData.inPodcast = true;
-      return;
+      filterData.type = [DamAssetType.Audio]
+      filterData.inPodcast = true
+      return
     }
-    filterData.type = [assetType];
-    filterData.inPodcast = null;
-  };
+    filterData.type = [assetType]
+    filterData.inPodcast = null
+  }
 
   const fetchAssetListDebounced = useDebounceFn(async () => {
-    await fetchAssetList();
-  });
+    await fetchAssetList()
+  })
 
   const fetchAssetList = async () => {
-    if (assetSelectStore.selectedLicenceId <= 0) return;
-    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast);
-    const { executeFetch } = useFetchAssetList(
-      damClient,
-      endPointAsset,
-      assetSelectStore.selectedLicenceId,
-    );
+    if (assetSelectStore.selectedLicenceId <= 0) return
+    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
+    const { executeFetch } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
     try {
-      assetSelectStore.showLoader();
-      assetSelectStore.setList(
-        await executeFetch(pagination, filterData, filterConfig),
-      );
+      assetSelectStore.showLoader()
+      assetSelectStore.setList(await executeFetch(pagination, filterData, filterConfig))
     } catch (error) {
-      showErrorsDefault(error);
+      showErrorsDefault(error)
     } finally {
-      assetSelectStore.hideLoader();
+      assetSelectStore.hideLoader()
     }
-  };
+  }
 
   const fetchNextPage = async () => {
-    if (assetSelectStore.loader) return;
-    pagination.value.page = pagination.value.page + 1;
-    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast);
-    const { executeFetch } = useFetchAssetList(
-      damClient,
-      endPointAsset,
-      assetSelectStore.selectedLicenceId,
-    );
+    if (assetSelectStore.loader) return
+    pagination.value.page = pagination.value.page + 1
+    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
+    const { executeFetch } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
     try {
-      assetSelectStore.showLoader();
-      assetSelectStore.appendList(
-        await executeFetch(pagination, filterData, filterConfig),
-      );
+      assetSelectStore.showLoader()
+      assetSelectStore.appendList(await executeFetch(pagination, filterData, filterConfig))
     } catch (error) {
-      showErrorsDefault(error);
+      showErrorsDefault(error)
     } finally {
-      assetSelectStore.hideLoader();
+      assetSelectStore.hideLoader()
     }
-  };
+  }
 
-  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors();
-  const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords();
-  const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers();
+  const { addToCachedAuthors, fetchCachedAuthors } = useDamCachedAuthors()
+  const { addToCachedKeywords, fetchCachedKeywords } = useDamCachedKeywords()
+  const { addToCachedUsers, fetchCachedUsers } = useDamCachedUsers()
 
-  const onItemClick = async (
-    data: { assetId: DocId; index: number },
-    extSystem: IntegerId,
-  ) => {
-    const { cachedExtSystemId } = useExtSystemIdForCached();
-    if (!mdAndDown.value) openSidebarRight();
-    assetSelectStore.toggleSelectedByIndex(data.index);
-    assetSelectStore.setActiveByIndex(data.index);
-    detailLoading.value = true;
+  const onItemClick = async (data: { assetId: DocId; index: number }, extSystem: IntegerId) => {
+    const { cachedExtSystemId } = useExtSystemIdForCached()
+    if (!mdAndDown.value) openSidebarRight()
+    assetSelectStore.toggleSelectedByIndex(data.index)
+    assetSelectStore.setActiveByIndex(data.index)
+    detailLoading.value = true
     try {
-      const asset = await fetchAsset(damClient, endPointAsset, data.assetId);
-      cachedExtSystemId.value = extSystem;
-      addToCachedAuthors(asset.authors);
-      addToCachedKeywords(asset.keywords);
+      const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
+      cachedExtSystemId.value = extSystem
+      addToCachedAuthors(asset.authors)
+      addToCachedKeywords(asset.keywords)
       if (showFileInfoEnabled) {
-        addToCachedUsers(asset.modifiedBy, asset.createdBy);
+        addToCachedUsers(asset.modifiedBy, asset.createdBy)
       }
-      fetchCachedAuthors();
-      fetchCachedKeywords();
+      fetchCachedAuthors()
+      fetchCachedKeywords()
       if (showFileInfoEnabled) {
-        fetchCachedUsers();
+        fetchCachedUsers()
       }
-      if (!isUndefined(onDetailLoadedCallback)) onDetailLoadedCallback(asset);
-      assetDetailStore.setAsset(asset);
+      if (!isUndefined(onDetailLoadedCallback)) onDetailLoadedCallback(asset)
+      assetDetailStore.setAsset(asset)
     } catch (e) {
-      showErrorsDefault(e);
+      showErrorsDefault(e)
     } finally {
-      detailLoading.value = false;
+      detailLoading.value = false
     }
-  };
+  }
 
-  const { clearAll } = useFilterClearHelpers();
+  const { clearAll } = useFilterClearHelpers()
 
   const resetAssetList = async () => {
-    clearAll(filterData, filterConfig);
-    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast);
-    pagination.value.page = 1;
-    await fetchAssetListDebounced();
-  };
+    clearAll(filterData, filterConfig)
+    resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
+    pagination.value.page = 1
+    await fetchAssetListDebounced()
+  }
 
   const reset = async () => {
-    clearAll(filterData, filterConfig);
-    pagination.value.page = 1;
-    assetSelectStore.reset(true);
-    assetDetailStore.reset();
-  };
+    clearAll(filterData, filterConfig)
+    pagination.value.page = 1
+    assetSelectStore.reset(true)
+    assetDetailStore.reset()
+  }
 
   const initStoreContext = (
     selectConfig: DamConfigLicenceExtSystemReturnType[],
@@ -167,16 +137,16 @@ export function useAssetSelectActions(
     inPodcast: boolean | null,
     singleMode: boolean,
     minCount: number,
-    maxCount: number,
+    maxCount: number
   ): void => {
-    assetSelectStore.clearSelected();
-    assetSelectStore.setAssetType(assetType);
-    assetSelectStore.setSelectConfig(selectConfig);
-    assetSelectStore.setSingleMode(singleMode);
-    assetSelectStore.setMinCount(minCount);
-    assetSelectStore.setMaxCount(maxCount);
-    assetSelectStore.inPodcast = inPodcast;
-  };
+    assetSelectStore.clearSelected()
+    assetSelectStore.setAssetType(assetType)
+    assetSelectStore.setSelectConfig(selectConfig)
+    assetSelectStore.setSingleMode(singleMode)
+    assetSelectStore.setMinCount(minCount)
+    assetSelectStore.setMaxCount(maxCount)
+    assetSelectStore.inPodcast = inPodcast
+  }
 
   return {
     damClient,
@@ -195,5 +165,5 @@ export function useAssetSelectActions(
     resetAssetList,
     reset,
     initStoreContext,
-  };
+  }
 }

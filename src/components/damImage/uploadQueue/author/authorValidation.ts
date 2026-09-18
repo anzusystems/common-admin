@@ -1,16 +1,13 @@
-import type { Ref } from "vue";
-import { computed } from "vue";
-import useVuelidate from "@vuelidate/core";
-import type { DamAuthor } from "@/components/damImage/uploadQueue/author/DamAuthor";
-import type { ValidationScope } from "@/types/Validation";
-import { useValidate } from "@/validators/vuelidate/useValidate";
+import type { Ref } from 'vue'
+import { computed } from 'vue'
+import useVuelidate from '@vuelidate/core'
+import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
+import type { ValidationScope } from '@/types/Validation'
+import { useValidate } from '@/validators/vuelidate/useValidate'
 
-const { required, minLength } = useValidate();
+const { required, minLength } = useValidate()
 
-export function useAuthorValidation(
-  author: Ref<DamAuthor>,
-  validationScope: ValidationScope = undefined,
-) {
+export function useAuthorValidation(author: Ref<DamAuthor>, validationScope: ValidationScope = undefined) {
   const rules = computed(() => ({
     author: {
       name: {
@@ -21,10 +18,10 @@ export function useAuthorValidation(
         minLength: minLength(3),
       },
     },
-  }));
-  const v$ = useVuelidate(rules, { author }, { $scope: validationScope });
+  }))
+  const v$ = useVuelidate(rules, { author }, { $scope: validationScope })
 
   return {
     v$,
-  };
+  }
 }

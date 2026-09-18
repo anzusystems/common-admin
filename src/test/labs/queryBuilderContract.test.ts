@@ -24,10 +24,29 @@ import { reactive } from 'vue'
 // literal -- a divergence shows up as a failure on the side that moved.
 
 const legacyPagination = (over: Partial<PaginationLegacy> = {}): PaginationLegacy =>
-  ({ sortBy: null, descending: false, page: 1, rowsPerPage: 25, rowsNumber: 0, hasNextPage: null, currentViewCount: 0, totalCount: 0, ...over }) as PaginationLegacy
+  ({
+    sortBy: null,
+    descending: false,
+    page: 1,
+    rowsPerPage: 25,
+    rowsNumber: 0,
+    hasNextPage: null,
+    currentViewCount: 0,
+    totalCount: 0,
+    ...over,
+  }) as PaginationLegacy
 
 const labsPagination = (over: Partial<Pagination> = {}) =>
-  ref<Pagination>({ sortBy: null, page: 1, rowsPerPage: 25, rowsNumber: 0, hasNextPage: null, currentViewCount: 0, totalCount: 0, ...over } as Pagination)
+  ref<Pagination>({
+    sortBy: null,
+    page: 1,
+    rowsPerPage: 25,
+    rowsNumber: 0,
+    hasNextPage: null,
+    currentViewCount: 0,
+    totalCount: 0,
+    ...over,
+  } as Pagination)
 
 const makeFilter = makeFilterHelper('sys', 'subj')
 
@@ -49,9 +68,9 @@ describe('filter to query, legacy and labs', () => {
 
     const fields = [
       { name: 'lastName', variant: 'startsWith', apiName: 'person.lastName', default: null },
-    ] as const satisfies readonly MakeFilterOption<string | null>[]
+    ] as const satisfies readonly MakeFilterOption[]
     const { filterData, filterConfig } = labsFilter(fields)
-    filterData.lastName = 'Nov'
+    ;(filterData as Record<string, unknown>).lastName = 'Nov'
 
     const expected = '?limit=25&offset=0&filter_startsWith[person.lastName]=Nov'
     expect(apiGenerateListQuery(legacyPagination(), bag)).toBe(expected)
@@ -69,9 +88,9 @@ describe('filter to query, legacy and labs', () => {
     }) as unknown as FilterBag
     bag.text.model = 'abc'
 
-    const fields = [{ name: 'text', variant: 'search', default: null }] as const satisfies readonly MakeFilterOption<string | null>[]
+    const fields = [{ name: 'text', variant: 'search', default: null }] as const satisfies readonly MakeFilterOption[]
     const { filterData, filterConfig } = labsFilter(fields, true)
-    filterData.text = 'abc'
+    ;(filterData as Record<string, unknown>).text = 'abc'
 
     const expected = '?limit=25&offset=0&text=abc'
     expect(apiGenerateListQuery(legacyPagination(), bag)).toBe(expected)
@@ -87,7 +106,9 @@ describe('filter to query, legacy and labs', () => {
     }) as unknown as FilterBag
     bag.status.model = null
 
-    const fields = [{ name: 'status', mandatory: true, default: 'active' }] as const satisfies readonly MakeFilterOption<string>[]
+    const fields = [
+      { name: 'status', mandatory: true, default: 'active' },
+    ] as const satisfies readonly MakeFilterOption[]
     const { filterData, filterConfig } = labsFilter(fields)
     ;(filterData as Record<string, unknown>).status = null
 
@@ -108,20 +129,24 @@ describe('filter to query, legacy and labs', () => {
     }) as unknown as FilterBag
     bag.tags.model = []
 
-    const fields = [{ name: 'tags', mandatory: true, default: ['a b', 'c'] }] as const satisfies readonly MakeFilterOption<string[]>[]
+    const fields = [
+      { name: 'tags', mandatory: true, default: ['a b', 'c'] },
+    ] as const satisfies readonly MakeFilterOption[]
     const { filterData, filterConfig } = labsFilter(fields)
     ;(filterData as Record<string, unknown>).tags = []
 
     expect(apiGenerateListQuery(legacyPagination(), bag)).toBe('?limit=25&offset=0&filter_eq[tags]=a b,c')
-    expect(generateListQuery(labsPagination(), filterData, filterConfig)).toBe('?limit=25&offset=0&filter_eq[tags]=a%20b,c')
+    expect(generateListQuery(labsPagination(), filterData, filterConfig)).toBe(
+      '?limit=25&offset=0&filter_eq[tags]=a%20b,c'
+    )
   })
 
   // A key in the data with no entry in the config is dropped without a word. The legacy builder had
   // no such notion -- it iterated the bag itself, so every key in the bag reached the query.
   it('D: labs drops a data key that has no config entry', () => {
-    const fields = [{ name: 'text', default: null }] as const satisfies readonly MakeFilterOption<string | null>[]
+    const fields = [{ name: 'text', default: null }] as const satisfies readonly MakeFilterOption[]
     const { filterData, filterConfig } = labsFilter(fields)
-    filterData.text = 'abc'
+    ;(filterData as Record<string, unknown>).text = 'abc'
     ;(filterData as Record<string, unknown>).ghost = 'x'
 
     expect(generateListQuery(labsPagination(), filterData, filterConfig)).toBe('?limit=25&offset=0&filter_eq[text]=abc')
@@ -130,10 +155,12 @@ describe('filter to query, legacy and labs', () => {
   // Page 1 is the first page in both models, but the legacy builder never clamped: a caller that
   // passes 0 gets a negative offset rather than the first page.
   it('E: only the labs builder clamps the offset', () => {
-    const fields = [] as const satisfies readonly MakeFilterOption<string>[]
+    const fields = [] as const satisfies readonly MakeFilterOption[]
     const { filterData, filterConfig } = labsFilter(fields)
 
-    expect(apiGenerateListQuery(legacyPagination({ page: 0 }), reactive({}) as unknown as FilterBag)).toBe('?limit=25&offset=-25')
+    expect(apiGenerateListQuery(legacyPagination({ page: 0 }), reactive({}) as unknown as FilterBag)).toBe(
+      '?limit=25&offset=-25'
+    )
     expect(generateListQuery(labsPagination({ page: 0 }), filterData, filterConfig)).toBe('?limit=25&offset=0')
   })
 })
