@@ -263,6 +263,8 @@ import {
 import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { AnzuApiAxiosError, isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { AnzuApiTimeoutError, isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
+import { AnzuApiCancelledError, isAnzuApiCancelledError } from '@/model/error/AnzuApiCancelledError'
+import { AnzuError, isAnzuError } from '@/model/error/AnzuError'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
@@ -1233,6 +1235,10 @@ export {
   AnzuFatalError,
   isAnzuApiTimeoutError,
   AnzuApiTimeoutError,
+  AnzuApiCancelledError,
+  isAnzuApiCancelledError,
+  AnzuError,
+  isAnzuError,
   isAnzuApiAxiosError,
   AnzuApiAxiosError,
   type ValidationError,

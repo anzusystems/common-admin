@@ -15,7 +15,8 @@ import FiltersSelected from '@/labs/filters/FiltersSelected.vue'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
-import { useApiRequest } from '@/labs/api/useApiRequest'
+import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
+import { setApiErrorLogger } from '@/labs/api/apiErrors'
 import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 import { generateListQuery, useApiFetchList } from '@/labs/api/useApiFetchList'
@@ -182,7 +183,9 @@ export {
   type Pagination,
   useApiFetchByIds,
   useApiFetchList,
+  useApiCommand,
   useApiRequest,
+  setApiErrorLogger,
   useApiFetchListBatch,
   useApiQueryBuilder,
   generateListQuery,

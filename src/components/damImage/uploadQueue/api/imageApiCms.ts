@@ -3,7 +3,7 @@ import type { IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
-import { useApiRequest } from '@/labs/api/useApiRequest'
+import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
 
 const END_POINT = '/adm/v1/image'
 export const ENTITY = 'image'
@@ -62,7 +62,7 @@ export const updateImage = (client: () => AxiosInstance, id: IntegerId, data: Im
 }
 
 export const deleteImage = (client: () => AxiosInstance, id: IntegerId) => {
-  const { execute } = useApiRequest<ImageAware, null>({
+  const { execute } = useApiCommand({
     client,
     method: 'DELETE',
     system: SYSTEM_CMS,

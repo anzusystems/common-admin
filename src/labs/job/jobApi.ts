@@ -2,7 +2,7 @@ import type { AxiosInstance } from 'axios'
 import type { JobBase } from '@/types/Job'
 import { stringToKebabCase } from '@/utils/string'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
-import { useApiRequest } from '@/labs/api/useApiRequest'
+import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
 
 const END_POINT = '/adm/v1/job'
 export const ENTITY = 'job'
@@ -46,7 +46,7 @@ export function useJobApi<JobType extends JobBase = JobBase>(client: () => Axios
   }
 
   const deleteJob = (id: number) => {
-    const { execute } = useApiRequest<JobType, null>({
+    const { execute } = useApiCommand({
       client,
       method: 'DELETE',
       system,

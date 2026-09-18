@@ -27,7 +27,7 @@ const buildClient = () => {
 }
 
 const buildApi = (client: () => AxiosInstance) =>
-  useApiRequest({
+  useApiRequest<Record<string, unknown>>({
     client,
     method: 'get',
     system: 'test',

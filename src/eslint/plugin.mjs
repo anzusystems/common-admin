@@ -288,6 +288,68 @@ const anzuPlugin = {
       },
     },
 
+    'prefer-api-command': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'A request that reads nothing back is `useApiCommand`. `useApiRequest` is for an endpoint ' +
+            'that always answers with a body, and refuses a response without one.',
+        },
+        schema: [],
+      },
+      create(context) {
+        const reportedMethods = new Set(['DELETE', 'delete'])
+
+        const firstTypeArgument = (node) => {
+          const args = node.typeArguments ?? node.typeParameters
+          return args?.params?.[0]
+        }
+
+        // `any` and `never` satisfy the response constraint without meaning anything, and a call
+        // with no type argument at all infers it -- so the type cannot speak for these three.
+        const unhelpfulTypeArgument = (node) => {
+          const first = firstTypeArgument(node)
+          if (!first) return true
+
+          return first.type === 'TSAnyKeyword' || first.type === 'TSNeverKeyword'
+        }
+
+        const methodLiteral = (node) => {
+          const arg = node.arguments[0]
+          if (!arg || arg.type !== 'ObjectExpression') return null
+          const property = arg.properties.find(
+            (candidate) =>
+              candidate.type === 'Property' &&
+              !candidate.computed &&
+              (candidate.key.name ?? candidate.key.value) === 'method'
+          )
+          if (!property || property.value.type !== 'Literal') return null
+
+          return property.value.value
+        }
+
+        return {
+          CallExpression(node) {
+            if (node.callee.type !== 'Identifier' || node.callee.name !== 'useApiRequest') return
+
+            const method = methodLiteral(node)
+            const isDelete = typeof method === 'string' && reportedMethods.has(method)
+            if (!isDelete && !unhelpfulTypeArgument(node)) return
+
+            context.report({
+              node,
+              message: isDelete
+                ? 'A delete usually reads nothing back: use `useApiCommand`. If this endpoint really answers ' +
+                  'with the deleted entity, disable this line and say so.'
+                : 'State what this answers with. `useApiRequest<Entity>` for a body, `useApiCommand` for none, ' +
+                  '`allowEmpty: true` for either.',
+            })
+          },
+        }
+      },
+    },
+
     'url-params-match-template': {
       meta: {
         type: 'problem',
@@ -512,6 +574,7 @@ export function recommended(options = {}) {
   const {
     noTsExtension = 'error',
     noFatalErrorAxiosCheck = 'error',
+    preferApiCommand = 'error',
     urlParamsMatchTemplate = 'error',
     deprecatedImports = 'error',
   } = options
@@ -528,6 +591,12 @@ export function recommended(options = {}) {
   const fatalSeverity = normalizeSeverity(noFatalErrorAxiosCheck)
   if (fatalSeverity) {
     rules['anzu/no-fatal-error-axios-check'] = fatalSeverity
+  }
+
+  // prefer-api-command
+  const preferApiCommandSeverity = normalizeSeverity(preferApiCommand)
+  if (preferApiCommandSeverity) {
+    rules['anzu/prefer-api-command'] = preferApiCommandSeverity
   }
 
   // url-params-match-template
