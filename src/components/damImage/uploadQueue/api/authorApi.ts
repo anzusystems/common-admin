@@ -7,10 +7,6 @@ import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetA
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import type { IntegerId } from '@/types/common'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchList } from '@/services/api/apiFetchList'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import type { FilterBag } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 
 const END_POINT = '/adm/v1/author'
@@ -39,24 +35,6 @@ export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: Int
     urlTemplate: END_POINT_LIST,
     urlParams: { extSystemId },
   })
-
-export const fetchAuthorList = (
-  client: () => AxiosInstance,
-  extSystemId: number,
-  pagination: Pagination,
-  filterBag: FilterBag
-) =>
-  apiFetchList<DamAuthor[]>(
-    client,
-    END_POINT_LIST,
-    {
-      extSystemId,
-    },
-    pagination,
-    filterBag,
-    SYSTEM_CORE_DAM,
-    ENTITY
-  )
 
 export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) =>
   apiCreateOne<DamAuthor>(client, data, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)

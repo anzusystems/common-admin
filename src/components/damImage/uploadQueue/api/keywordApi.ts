@@ -7,10 +7,6 @@ import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetA
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import type { Pagination } from '@/types/Pagination'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import type { FilterBag } from '@/types/Filter'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchList } from '@/services/api/apiFetchList'
 
 const END_POINT = '/adm/v1/keyword'
 const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
@@ -36,16 +32,6 @@ export const useFetchKeywordList = (client: () => AxiosInstance, extSystemId: nu
     urlTemplate: END_POINT_LIST,
     urlParams: { extSystemId },
   })
-
-/**
- * @deprecated
- */
-export const fetchKeywordList = (
-  client: () => AxiosInstance,
-  extSystemId: number,
-  pagination: Pagination,
-  filterBag: FilterBag
-) => apiFetchList<DamKeyword[]>(client, END_POINT_LIST, { extSystemId }, pagination, filterBag, SYSTEM_CORE_DAM, ENTITY)
 
 export const createKeyword = (client: () => AxiosInstance, data: DamKeyword) =>
   apiCreateOne<DamKeyword>(client, data, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
