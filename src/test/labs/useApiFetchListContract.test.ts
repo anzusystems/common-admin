@@ -88,7 +88,7 @@ describe('what the list fetch writes back', () => {
   })
 
   it('answers with an empty list for a no-content response', async () => {
-    const get = vi.fn().mockResolvedValue({ status: 204, data: undefined })
+    const get = vi.fn().mockResolvedValue({ status: 204, data: '' })
     const { execute, filterData, filterConfig, pagination } = buildApi(get)
 
     await expect(execute(pagination, filterData, filterConfig)).resolves.toEqual([])

@@ -4,6 +4,14 @@ import type { Pagination } from '@/labs/filters/pagination'
 
 export type ListBody<T> = {
   items: T[]
+  /**
+   * Which kind of list answered, read from the response rather than inferred from `pagination`.
+   *
+   * They are two different things and conflating them cost a bug: `pagination` is what to write, and
+   * for an infinite list that includes `totalCount: 0` to clear the counted mode's leftovers -- so a
+   * reader using `totalCount` to recognise the mode sees a counted list of zero items.
+   */
+  mode: 'counted' | 'infinite' | 'unknown'
   /** Only what the response actually said; a missing or malformed field is simply not written. */
   pagination: Partial<Pagination>
 }
@@ -27,12 +35,12 @@ export const readListBody = <T>(body: unknown, status: number, url: string): Lis
   const { data, totalCount, hasNextPage } = body as { data: T[]; totalCount?: unknown; hasNextPage?: unknown }
 
   if (isNumber(totalCount)) {
-    return { items: data, pagination: { totalCount, hasNextPage: false } }
+    return { items: data, mode: 'counted', pagination: { totalCount, hasNextPage: false } }
   }
 
   if (isBoolean(hasNextPage)) {
-    return { items: data, pagination: { hasNextPage, totalCount: 0 } }
+    return { items: data, mode: 'infinite', pagination: { hasNextPage, totalCount: 0 } }
   }
 
-  return { items: data, pagination: {} }
+  return { items: data, mode: 'unknown', pagination: {} }
 }

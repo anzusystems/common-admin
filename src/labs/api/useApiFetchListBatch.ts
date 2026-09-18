@@ -1,3 +1,4 @@
+import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
@@ -57,50 +58,68 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
     const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
     const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
     const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
-    if (isUndefined(template)) throw new Error('Url template is undefined')
-    const url = (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) + searchApi
+    const templateMissing = isUndefined(template)
+    const url =
+      (isUndefined(resolvedParams) ? (template ?? '') : replaceUrlParameters(template ?? '', resolvedParams)) +
+      searchApi
+
+    // The page the batch was on when it failed, so the report names it rather than the base url.
+    let failingUrl = url
 
     try {
+      // Inside the try, so a caller that forgot the template gets the same error class as every
+      // other failure rather than a bare `Error`.
+      if (templateMissing) throw new AnzuFatalError(new Error('Url template is undefined'))
+
       return await abortable.run(async (abortSignal) => {
         const { pagination } = usePagination(sortBy, sortDesc ? SortOrder.Desc : SortOrder.Asc, {
           rowsPerPage: batchSize,
         })
 
-        const get = (page: Ref<Pagination>) =>
-          client().get(url + generateListQuery(page, filterData, filterConfig), { ...options, signal: abortSignal })
+        // The page's own url travels with its response: a batch that failed on page three has to
+        // be able to say which page that was, and the base url cannot.
+        const get = async (page: Ref<Pagination>) => {
+          const pageUrl = url + generateListQuery(page, filterData, filterConfig)
+          failingUrl = pageUrl
+
+          return { res: await client().get(pageUrl, { ...options, signal: abortSignal }), pageUrl }
+        }
 
         // Every page is read the same way, the ones after the first included. A 204 has nothing more
         // to give; a 2xx with no body at all has broken its contract, wherever in the sequence it
         // sits -- a server that fails on page three is not "finished".
-        const readPage = (res: AxiosResponse) => {
+        const readPage = (res: AxiosResponse, pageUrl: string) => {
           if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
           if (res.status === HTTP_STATUS_NO_CONTENT) {
-            return { items: [] as T[], totalCount: undefined, hasNextPage: false, empty: true }
+            return { items: [] as T[], mode: 'unknown' as const, totalCount: 0, hasNextPage: false, empty: true }
           }
           if (!hasBody(res)) {
-            throw new AnzuApiResponseCodeError(res.status, undefined, 'Expected a response body, url: ' + url)
+            throw new AnzuApiResponseCodeError(res.status, undefined, 'Expected a response body, url: ' + pageUrl)
           }
 
-          const body = readListBody<T>(res.data, res.status, url)
+          const body = readListBody<T>(res.data, res.status, pageUrl)
 
           return {
             items: body.items,
-            totalCount: body.pagination.totalCount,
+            mode: body.mode,
+            totalCount: body.pagination.totalCount ?? 0,
             hasNextPage: body.pagination.hasNextPage === true,
             empty: false,
           }
         }
 
-        const first = readPage(await get(pagination))
+        const firstPage = await get(pagination)
+        const first = readPage(firstPage.res, firstPage.pageUrl)
         const results: T[] = [...first.items]
         if (first.empty) return results
 
         // Infinite lists walk page by page, because only the answer says whether another exists.
-        if (isUndefined(first.totalCount)) {
+        if (first.mode === 'infinite') {
           let hasNextPage = first.hasNextPage
           while (hasNextPage) {
             pagination.value.page++
-            const next = readPage(await get(pagination))
+            const nextPage = await get(pagination)
+            const next = readPage(nextPage.res, nextPage.pageUrl)
             results.push(...next.items)
             if (next.empty) break
             hasNextPage = next.hasNextPage
@@ -108,6 +127,10 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
 
           return results
         }
+
+        // A list that named neither mode has said nothing about further pages, so the first is all
+        // there is.
+        if (first.mode !== 'counted') return results
 
         // Counted lists know how many pages there are, so the rest go out together.
         const pageCount = Math.ceil(first.totalCount / pagination.value.rowsPerPage)
@@ -118,12 +141,12 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
         )
         // A 204 among them contributes nothing and the others are kept -- there is no sequence to
         // stop here, they all went out at once.
-        rest.forEach((res) => results.push(...readPage(res).items))
+        rest.forEach((page) => results.push(...readPage(page.res, page.pageUrl).items))
 
         return results
       }, signal)
     } catch (err: unknown) {
-      throw report(mapApiError(err, { system, entity, url }), { system, entity, url })
+      throw report(mapApiError(err, { system, entity, url: failingUrl }), { system, entity, url: failingUrl })
     }
   }
 

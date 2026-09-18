@@ -1,3 +1,4 @@
+import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
@@ -62,25 +63,33 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
     const searchApi = filterConfig.general.elastic || forceElastic ? '/search' : ''
     const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
     const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
-    if (isUndefined(template)) throw new Error('Url template is undefined')
+    const templateMissing = isUndefined(template)
     const url =
-      (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) +
+      (isUndefined(resolvedParams) ? (template ?? '') : replaceUrlParameters(template ?? '', resolvedParams)) +
       searchApi +
       generateListQuery(pagination, filterData, filterConfig)
 
     // Handed over by `run`, not read before it: `run` is what opens a new generation, so a value
     // taken beforehand belongs to the previous call and would never match.
     let generation = 0
+    let ownSignal: AbortSignal | undefined
     const writePagination = (next: Partial<Pagination>) => {
-      // A call that is no longer the newest must not write to a pagination object the caller can
-      // see, even when its answer arrives first -- aborting does not stop a response already sent.
+      // Two ways to stop being the call whose answer counts, and both have to be checked: a newer
+      // call opened a generation, or this one was cancelled through a signal of its own. Aborting
+      // does not stop a response already on its way, so either can still arrive and write.
       if (abortable.generation() !== generation) return
+      if (ownSignal?.aborted === true) return
       pagination.value = { ...pagination.value, ...next }
     }
 
     try {
+      // Inside the try, so a caller that forgot the template gets the same error class as every
+      // other failure rather than a bare `Error`.
+      if (templateMissing) throw new AnzuFatalError(new Error('Url template is undefined'))
+
       const res = await abortable.run((abortSignal, currentGeneration) => {
         generation = currentGeneration
+        ownSignal = abortSignal
 
         return client().get(url, { ...options, signal: abortSignal })
       }, signal)
@@ -99,7 +108,10 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
       }
 
       const list = readListBody<T>(res.data, res.status, url)
-      writePagination({ ...list.pagination, currentViewCount: list.items.length })
+      // Only when the response said something about paging at all: a body that named no mode has
+      // said nothing to write, and a count of what just arrived would be the one field left
+      // describing a query nobody asked about.
+      if (list.mode !== 'unknown') writePagination({ ...list.pagination, currentViewCount: list.items.length })
 
       return list.items
     } catch (err: unknown) {

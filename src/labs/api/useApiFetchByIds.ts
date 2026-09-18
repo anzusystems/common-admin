@@ -1,3 +1,4 @@
+import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isValidHTTPStatus } from '@/utils/response'
@@ -65,12 +66,16 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
 
     const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
     const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
-    if (isUndefined(template)) throw new Error('Url template is undefined')
+    const templateMissing = isUndefined(template)
     const url =
-      (isUndefined(resolvedParams) ? template : replaceUrlParameters(template, resolvedParams)) +
+      (isUndefined(resolvedParams) ? (template ?? '') : replaceUrlParameters(template ?? '', resolvedParams)) +
       generateByIdsApiQuery(ids, isSearchApi, field)
 
     try {
+      // Inside the try, so a caller that forgot the template gets the same error class as every
+      // other failure rather than a bare `Error`.
+      if (templateMissing) throw new AnzuFatalError(new Error('Url template is undefined'))
+
       const res = await abortable.run((abortSignal) => client().get(url, { ...options, signal: abortSignal }), signal)
 
       if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)

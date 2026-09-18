@@ -17,6 +17,7 @@ import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
 import { setApiErrorLogger } from '@/labs/api/apiErrors'
+import type { ApiErrorContext, ApiErrorLogger } from '@/labs/api/apiErrors'
 import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 import { generateListQuery, useApiFetchList } from '@/labs/api/useApiFetchList'
@@ -186,6 +187,8 @@ export {
   useApiCommand,
   useApiRequest,
   setApiErrorLogger,
+  type ApiErrorContext,
+  type ApiErrorLogger,
   useApiFetchListBatch,
   useApiQueryBuilder,
   generateListQuery,

@@ -1,4 +1,5 @@
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { replaceUrlParameters, type UrlParams } from '@/services/api/apiHelper'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import { isValidHTTPStatus } from '@/utils/response'
@@ -23,7 +24,8 @@ export type UseApiRequestParams = {
   entity: string
   urlTemplate?: string
   urlParams?: UrlParams
-  options?: AxiosRequestConfig
+  /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
+  options?: Omit<AxiosRequestConfig, 'method' | 'url' | 'data' | 'signal'>
   /** Each call supersedes the one before it -- the autocomplete shape. */
   cancelPrevious?: boolean
 }
@@ -43,16 +45,26 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
     const { urlTemplate: templateOverride, urlParams: paramsOverride, body, signal } = executeParams
 
     const template = isDefined(templateOverride) ? templateOverride : urlTemplate
-    if (isUndefined(template)) throw new Error('Url template is undefined')
     const resolvedParams = isDefined(paramsOverride) ? paramsOverride : urlParams
-    const url = template !== '' && isDefined(resolvedParams) ? replaceUrlParameters(template, resolvedParams) : template
+    const url = isUndefined(template)
+      ? ''
+      : template !== '' && isDefined(resolvedParams)
+        ? replaceUrlParameters(template, resolvedParams)
+        : template
 
     try {
+      // Inside the try, so a caller that forgot the template gets the same error class as every
+      // other failure rather than a bare `Error` nothing in the fleet is written to catch.
+      if (isUndefined(template)) throw new AnzuFatalError(new Error('Url template is undefined'))
+
       const res = await abortable.run((abortSignal) => {
         const axiosConfig: AxiosRequestConfig = { method, url }
         // `null` omits the body, as it always has -- a caller that means to send JSON `null` wraps it.
         if (!isNull(body) && !isUndefined(body)) axiosConfig.data = JSON.stringify(body)
 
+        // `options` first, then what this helper owns: a caller cannot reach in and set the method,
+        // the url, the body or the signal through it. The type says so too; this is for javascript
+        // callers and for anything typed loosely enough to slip past it.
         return client().request({ ...options, ...axiosConfig, signal: abortSignal })
       }, signal)
 
@@ -94,12 +106,17 @@ export function useApiRequest<R extends NonNullable<unknown>, B = never>(
   const allowEmpty = params.allowEmpty === true
 
   return createRequest<R | undefined, B>(params, (res, url) => {
+    // 204 is decided by status alone, before the body is looked at: it carries none by definition,
+    // so anything that arrived with one is not something to hand on. A 202 may legitimately carry a
+    // body, which is why it is not in here and falls through to `hasBody` like any other success.
+    if (res.status === HTTP_STATUS_NO_CONTENT) {
+      if (allowEmpty) return undefined
+
+      throw new AnzuApiResponseCodeError(res.status)
+    }
+
     if (hasBody(res as never)) return res.data as R
     if (allowEmpty) return undefined
-
-    // 204 decided by status alone -- it carries no body by definition. A 202 may carry one, so it
-    // reaches here only when it did not, and is treated like any other empty success.
-    if (res.status === HTTP_STATUS_NO_CONTENT) throw new AnzuApiResponseCodeError(res.status)
 
     throw new AnzuApiResponseCodeError(res.status, undefined, 'Expected a response body, url: ' + url)
   })
