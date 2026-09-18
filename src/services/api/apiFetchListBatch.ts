@@ -53,6 +53,11 @@ const generateListApiQueryWithoutPagination = (
 /**
  * Used to fetch all items from list api.
  *
+ * @deprecated Use `useApiFetchListBatch` from `@/labs/api/useApiFetchListBatch`. Not a like-for-like
+ * port: this one answers a different set of items. Its loop counts pages from 0 and feeds them to a
+ * 1-based offset, so the first request asks for a negative offset, the second re-fetches page one,
+ * and the last page is never requested at all. The labs version counts from 1 and clamps the offset.
+ *
  * @template R Response type override, optional
  */
 export const apiFetchListBatch = async <R>(
