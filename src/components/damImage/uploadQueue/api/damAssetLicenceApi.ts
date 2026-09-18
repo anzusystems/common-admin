@@ -1,10 +1,21 @@
-import type { DamAssetLicence } from '@/types/coreDam/AssetLicence'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchOne } from '@/services/api/apiFetchOne'
-import type { AxiosInstance } from 'axios'
-import type { IntegerId } from '@/types/common'
+import type { DamAssetLicence } from "@/types/coreDam/AssetLicence";
+import type { AxiosInstance } from "axios";
+import type { IntegerId } from "@/types/common";
+import { useApiRequest } from "@/labs/api/useApiRequest";
 
-const END_POINT = '/adm/v1/asset-licence'
+const END_POINT = "/adm/v1/asset-licence";
 
-export const fetchDamAssetLicence = (client: () => AxiosInstance, id: IntegerId) =>
-  apiFetchOne<DamAssetLicence>(client, END_POINT + '/:id', { id }, 'coreDam', 'assetLicence')
+export const fetchDamAssetLicence = (
+  client: () => AxiosInstance,
+  id: IntegerId,
+) => {
+  const { executeRequest } = useApiRequest<DamAssetLicence, null>({
+    client,
+    method: "GET",
+    system: "coreDam",
+    entity: "assetLicence",
+    urlTemplate: END_POINT + "/:id",
+  });
+
+  return executeRequest({ urlParams: { id } });
+};

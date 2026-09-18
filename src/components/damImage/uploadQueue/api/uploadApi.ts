@@ -1,37 +1,45 @@
-import { DamAssetType } from '@/types/coreDam/Asset'
-import { type DamUploadStartResponse, type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/UploadQueue'
+import { DamAssetType } from "@/types/coreDam/Asset";
+import {
+  type DamUploadStartResponse,
+  type UploadQueueItem,
+  UploadQueueItemStatus,
+} from "@/types/coreDam/UploadQueue";
 import {
   imageUploadChunk,
   imageUploadFinish,
   imageUploadStart,
-} from '@/components/damImage/uploadQueue/api/damImageApi'
-import type { AxiosInstance } from 'axios'
-import type { DocId } from '@/types/common'
-import { AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
-import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
+} from "@/components/damImage/uploadQueue/api/damImageApi";
+import type { AxiosInstance } from "axios";
+import type { DocId } from "@/types/common";
+import { AssetFileProcessStatus } from "@/types/coreDam/AssetFile";
+import { fetchAsset } from "@/components/damImage/uploadQueue/api/damAssetApi";
+import { useUploadQueuesStore } from "@/components/damImage/uploadQueue/composables/uploadQueuesStore";
 
-const NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS = 10
-const NOTIFICATION_FALLBACK_MAX_TRIES = 4
+const NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS = 10;
+const NOTIFICATION_FALLBACK_MAX_TRIES = 4;
 
 export const damUploadStart: (
   client: () => AxiosInstance,
   endPoint: string,
-  item: UploadQueueItem
-) => Promise<DamUploadStartResponse> = (client: () => AxiosInstance, endPoint: string, item: UploadQueueItem) => {
+  item: UploadQueueItem,
+) => Promise<DamUploadStartResponse> = (
+  client: () => AxiosInstance,
+  endPoint: string,
+  item: UploadQueueItem,
+) => {
   return new Promise((resolve, reject) => {
     if (item.assetType !== DamAssetType.Image) {
-      reject()
-      return
+      reject();
+      return;
     }
     imageUploadStart(client, endPoint, item)
       .then((res) => {
-        resolve(res as DamUploadStartResponse)
-        return
+        resolve(res as DamUploadStartResponse);
+        return;
       })
-      .catch((err) => reject(err))
-  })
-}
+      .catch((err) => reject(err));
+  });
+};
 
 export const damUploadChunk = (
   client: () => AxiosInstance,
@@ -41,22 +49,31 @@ export const damUploadChunk = (
   buffer: Blob | File,
   size: number,
   offset: number,
-  onUploadProgressCallback: any
+  onUploadProgressCallback: any,
 ) => {
   return new Promise((resolve, reject) => {
     if (item.assetType !== DamAssetType.Image) {
-      reject()
-      return
+      reject();
+      return;
     }
-    imageUploadChunk(client, endPoint, item, imageId, buffer, size, offset, onUploadProgressCallback)
+    imageUploadChunk(
+      client,
+      endPoint,
+      item,
+      imageId,
+      buffer,
+      size,
+      offset,
+      onUploadProgressCallback,
+    )
       .then((res) => {
-        resolve(res)
+        resolve(res);
       })
       .catch((err) => {
-        reject(err)
-      })
-  })
-}
+        reject(err);
+      });
+  });
+};
 
 export const damUploadFinish = (
   client: () => AxiosInstance,
@@ -64,56 +81,79 @@ export const damUploadFinish = (
   endPointImage: string,
   item: UploadQueueItem,
   sha: string,
-  uploadStatusFallback: boolean
+  uploadStatusFallback: boolean,
 ) => {
   return new Promise((resolve, reject) => {
     if (item.assetType !== DamAssetType.Image) {
-      reject()
-      return
+      reject();
+      return;
     }
     imageUploadFinish(client, endPointImage, item, sha)
       .then((res) => {
-        item.status = UploadQueueItemStatus.Processing
+        item.status = UploadQueueItemStatus.Processing;
         if (uploadStatusFallback) {
           item.notificationFallbackTimer = setTimeout(function () {
-            notificationFallbackCallback(client, endPointAsset, item)
-          }, calculateFallbackTime(item))
+            notificationFallbackCallback(client, endPointAsset, item);
+          }, calculateFallbackTime(item));
         }
-        resolve(res)
+        resolve(res);
       })
-      .catch((err) => reject(err))
-  })
-}
+      .catch((err) => reject(err));
+  });
+};
 
 function calculateFallbackTime(item: UploadQueueItem) {
-  return NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS * 1000 * item.notificationFallbackTry * item.notificationFallbackTry
+  return (
+    NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS *
+    1000 *
+    item.notificationFallbackTry *
+    item.notificationFallbackTry
+  );
 }
 
-async function notificationFallbackCallback(client: () => AxiosInstance, endPoint: string, item: UploadQueueItem) {
-  clearTimeout(item.notificationFallbackTimer)
-  if (item.status === UploadQueueItemStatus.Uploaded) return
+async function notificationFallbackCallback(
+  client: () => AxiosInstance,
+  endPoint: string,
+  item: UploadQueueItem,
+) {
+  clearTimeout(item.notificationFallbackTimer);
+  if (item.status === UploadQueueItemStatus.Uploaded) return;
   if (item.notificationFallbackTry > NOTIFICATION_FALLBACK_MAX_TRIES) {
-    item.error.hasError = true
-    item.error.message = 'Processing is taking too long. Use item refresh button or remove item and retry later.'
-    return
+    item.error.hasError = true;
+    item.error.message =
+      "Processing is taking too long. Use item refresh button or remove item and retry later.";
+    return;
   }
-  if (!item.assetId) return
-  const asset = await fetchAsset(client, endPoint, item.assetId)
+  if (!item.assetId) return;
+  const asset = await fetchAsset(client, endPoint, item.assetId);
   if (asset && asset.mainFile && asset.mainFile.fileAttributes) {
-    const uploadQueuesStore = useUploadQueuesStore()
-    if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Processed) {
-      uploadQueuesStore.queueItemFullyProcessed(asset.id)
-      return
-    } else if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
-      uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, asset.attributes.assetType)
-      return
-    } else if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Failed) {
-      uploadQueuesStore.queueItemFailed(asset.id, asset.mainFile.fileAttributes.failReason)
-      return
+    const uploadQueuesStore = useUploadQueuesStore();
+    if (
+      asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Processed
+    ) {
+      uploadQueuesStore.queueItemFullyProcessed(asset.id);
+      return;
+    } else if (
+      asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Duplicate
+    ) {
+      uploadQueuesStore.queueItemDuplicate(
+        asset.id,
+        asset.mainFile.originAssetFile,
+        asset.attributes.assetType,
+      );
+      return;
+    } else if (
+      asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Failed
+    ) {
+      uploadQueuesStore.queueItemFailed(
+        asset.id,
+        asset.mainFile.fileAttributes.failReason,
+      );
+      return;
     }
   }
-  item.notificationFallbackTry++
+  item.notificationFallbackTry++;
   item.notificationFallbackTimer = setTimeout(function () {
-    notificationFallbackCallback(client, endPoint, item)
-  }, calculateFallbackTime(item))
+    notificationFallbackCallback(client, endPoint, item);
+  }, calculateFallbackTime(item));
 }

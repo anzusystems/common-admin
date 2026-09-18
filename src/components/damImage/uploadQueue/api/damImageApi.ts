@@ -1,26 +1,52 @@
-import type { AxiosInstance } from 'axios'
-import axios from 'axios'
-import { type UploadQueueItem, UploadQueueItemType } from '@/types/coreDam/UploadQueue'
-import type { DocId } from '@/types/common'
-import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from '@/composables/statusCodes'
-import { damFileTypeFix } from '@/components/file/composables/fileType'
-import type { AssetFileImage } from '@/types/coreDam/AssetFile'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchOne } from '@/services/api/apiFetchOne'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
-import { useSentry } from '@/services/sentry'
+import type { AxiosInstance } from "axios";
+import axios from "axios";
+import {
+  type UploadQueueItem,
+  UploadQueueItemType,
+} from "@/types/coreDam/UploadQueue";
+import type { DocId } from "@/types/common";
+import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from "@/composables/statusCodes";
+import { damFileTypeFix } from "@/components/file/composables/fileType";
+import type { AssetFileImage } from "@/types/coreDam/AssetFile";
+import { SYSTEM_CORE_DAM } from "@/components/damImage/uploadQueue/api/damAssetApi";
+import type {
+  DamImageCopyToLicenceRequest,
+  DamImageCopyToLicenceResponse,
+} from "@/types/coreDam/Asset";
+import { useSentry } from "@/services/sentry";
+import { useApiRequest } from "@/labs/api/useApiRequest";
 
-const CHUNK_UPLOAD_TIMEOUT = 420
+const CHUNK_UPLOAD_TIMEOUT = 420;
 
-export const fetchImageFile = (client: () => AxiosInstance, endPoint: string, id: DocId) =>
-  apiFetchOne<AssetFileImage>(client, endPoint + '/:id', { id }, SYSTEM_CORE_DAM, 'asset')
+export const fetchImageFile = (
+  client: () => AxiosInstance,
+  endPoint: string,
+  id: DocId,
+) => {
+  const { executeRequest } = useApiRequest<AssetFileImage, null>({
+    client,
+    method: "GET",
+    system: SYSTEM_CORE_DAM,
+    entity: "asset",
+    urlTemplate: endPoint + "/:id",
+  });
 
-export const imageUploadStart = (client: () => AxiosInstance, endPoint: string, item: UploadQueueItem) => {
+  return executeRequest({ urlParams: { id } });
+};
+
+export const imageUploadStart = (
+  client: () => AxiosInstance,
+  endPoint: string,
+  item: UploadQueueItem,
+) => {
   return new Promise((resolve, reject) => {
-    let url = endPoint + '/licence/' + item.licenceId
-    if (item.type === UploadQueueItemType.SlotFile && item.slotName && item.assetId) {
-      url = endPoint + '/asset/' + item.assetId + '/slot-name/' + item.slotName
+    let url = endPoint + "/licence/" + item.licenceId;
+    if (
+      item.type === UploadQueueItemType.SlotFile &&
+      item.slotName &&
+      item.assetId
+    ) {
+      url = endPoint + "/asset/" + item.assetId + "/slot-name/" + item.slotName;
     }
     client()
       .post(
@@ -28,22 +54,22 @@ export const imageUploadStart = (client: () => AxiosInstance, endPoint: string, 
         JSON.stringify({
           mimeType: damFileTypeFix(item.file),
           size: item.file?.size,
-        })
+        }),
       )
       .then((res) => {
         if (res.status === HTTP_STATUS_CREATED) {
-          resolve(res.data)
+          resolve(res.data);
         } else {
           //
-          reject()
+          reject();
         }
       })
       .catch((err) => {
         //
-        reject(err)
-      })
-  })
-}
+        reject(err);
+      });
+  });
+};
 
 export const imageUploadChunk = (
   client: () => AxiosInstance,
@@ -53,16 +79,17 @@ export const imageUploadChunk = (
   buffer: Blob | File,
   size: number,
   offset: number,
-  onUploadProgressCallback: ((progressEvent: any) => void) | undefined = undefined
+  onUploadProgressCallback:
+    ((progressEvent: any) => void) | undefined = undefined,
 ) => {
   return new Promise((resolve, reject) => {
-    const { logMessage, logError } = useSentry()
+    const { logMessage, logError } = useSentry();
 
     // Validate buffer
     if (!(buffer instanceof Blob) || buffer.size === 0) {
-      logMessage('dam_upload_chunk_validation', 'error', {
+      logMessage("dam_upload_chunk_validation", "error", {
         tags: {
-          error_type: 'dam_upload_chunk_validation_buffer',
+          error_type: "dam_upload_chunk_validation_buffer",
         },
         extra: {
           type: item.assetType,
@@ -74,18 +101,18 @@ export const imageUploadChunk = (
           bufferType: typeof buffer,
           bufferInstanceOfBlob: buffer instanceof Blob,
           bufferInstanceOfFile: buffer instanceof File,
-          bufferSize: buffer instanceof Blob ? buffer.size : 'N/A',
+          bufferSize: buffer instanceof Blob ? buffer.size : "N/A",
         },
-      })
-      reject(new Error('Invalid buffer: must be a non-empty Blob or File'))
-      return
+      });
+      reject(new Error("Invalid buffer: must be a non-empty Blob or File"));
+      return;
     }
 
     // Validate size
-    if (typeof size !== 'number' || !Number.isInteger(size) || size <= 0) {
-      logMessage('dam_upload_chunk_validation', 'error', {
+    if (typeof size !== "number" || !Number.isInteger(size) || size <= 0) {
+      logMessage("dam_upload_chunk_validation", "error", {
         tags: {
-          error_type: 'dam_upload_chunk_validation_size',
+          error_type: "dam_upload_chunk_validation_size",
         },
         extra: {
           type: item.assetType,
@@ -97,16 +124,16 @@ export const imageUploadChunk = (
           sizeType: typeof size,
           isInteger: Number.isInteger(size),
         },
-      })
-      reject(new Error('Invalid size: must be a positive integer'))
-      return
+      });
+      reject(new Error("Invalid size: must be a positive integer"));
+      return;
     }
 
     // Validate offset
-    if (typeof offset !== 'number' || !Number.isInteger(offset) || offset < 0) {
-      logMessage('dam_upload_chunk_validation', 'error', {
+    if (typeof offset !== "number" || !Number.isInteger(offset) || offset < 0) {
+      logMessage("dam_upload_chunk_validation", "error", {
         tags: {
-          error_type: 'dam_upload_chunk_validation_offset',
+          error_type: "dam_upload_chunk_validation_offset",
         },
         extra: {
           type: item.assetType,
@@ -118,24 +145,24 @@ export const imageUploadChunk = (
           offsetType: typeof offset,
           isInteger: Number.isInteger(offset),
         },
-      })
-      reject(new Error('Invalid offset: must be a non-negative integer'))
-      return
+      });
+      reject(new Error("Invalid offset: must be a non-negative integer"));
+      return;
     }
 
-    const formData = new FormData()
-    const url = endPoint + '/' + imageId + '/chunk'
-    formData.append('file', buffer)
-    let chunkData = ''
+    const formData = new FormData();
+    const url = endPoint + "/" + imageId + "/chunk";
+    formData.append("file", buffer);
+    let chunkData = "";
     try {
       chunkData = JSON.stringify({
         offset: offset,
         size: size,
-      })
+      });
     } catch (error) {
       logError(error as any, {
         tags: {
-          error_type: 'dam_upload_chunk_stringify',
+          error_type: "dam_upload_chunk_stringify",
         },
         extra: {
           type: item.assetType,
@@ -149,28 +176,30 @@ export const imageUploadChunk = (
           sizeType: typeof size,
           sizeIsInteger: Number.isInteger(size),
         },
-      })
-      reject(error)
-      return
+      });
+      reject(error);
+      return;
     }
 
-    formData.append('chunk', chunkData)
+    formData.append("chunk", chunkData);
 
     client()
       .post(url, formData, {
         headers: {
-          'Content-Type': undefined, // Let Axios automatically set multipart/form-data with boundary
+          "Content-Type": undefined, // Let Axios automatically set multipart/form-data with boundary
         },
         timeout: CHUNK_UPLOAD_TIMEOUT * 1000,
-        cancelToken: item.latestChunkCancelToken ? item.latestChunkCancelToken.token : undefined,
+        cancelToken: item.latestChunkCancelToken
+          ? item.latestChunkCancelToken.token
+          : undefined,
         onUploadProgress: onUploadProgressCallback,
       })
       .then((res) => {
         if (res.status === HTTP_STATUS_CREATED) {
-          resolve(res.data)
+          resolve(res.data);
         } else {
           //
-          reject()
+          reject();
         }
       })
       .catch((err) => {
@@ -178,7 +207,7 @@ export const imageUploadChunk = (
         if (axios.isAxiosError(err) && err.response?.status === 400) {
           logError(err, {
             tags: {
-              error_type: 'dam_upload_chunk_400',
+              error_type: "dam_upload_chunk_400",
             },
             extra: {
               type: item.assetType,
@@ -192,96 +221,101 @@ export const imageUploadChunk = (
               responseStatusText: err.response.statusText,
               chunkData,
             },
-          })
+          });
         }
-        reject(err)
-      })
-  })
-}
+        reject(err);
+      });
+  });
+};
 
 export const imageUploadFinish = (
   client: () => AxiosInstance,
   endPoint: string,
   item: UploadQueueItem,
-  sha: string
+  sha: string,
 ) => {
   return new Promise((resolve, reject) => {
-    const url = endPoint + '/' + item.fileId + '/uploaded'
+    const url = endPoint + "/" + item.fileId + "/uploaded";
     client()
       .patch(
         url,
         JSON.stringify({
           checksum: sha,
-        })
+        }),
       )
       .then((res) => {
         if (res.status === HTTP_STATUS_OK) {
-          resolve(res.data)
+          resolve(res.data);
         } else {
           //
-          reject()
+          reject();
         }
       })
       .catch((err) => {
         //
-        reject(err)
-      })
-  })
-}
+        reject(err);
+      });
+  });
+};
 
-export const rotateImage = (client: () => AxiosInstance, endPoint: string, imageId: DocId, angle: 90 | 270) => {
+export const rotateImage = (
+  client: () => AxiosInstance,
+  endPoint: string,
+  imageId: DocId,
+  angle: 90 | 270,
+) => {
   return new Promise((resolve, reject) => {
-    const url = endPoint + '/' + imageId + '/rotate/' + angle
+    const url = endPoint + "/" + imageId + "/rotate/" + angle;
     client()
       .patch(url)
       .then((res) => {
         if (res.status === HTTP_STATUS_OK) {
-          resolve(res.data)
+          resolve(res.data);
         } else {
           //
-          reject()
+          reject();
         }
       })
       .catch((err) => {
         //
-        reject(err)
-      })
-  })
-}
+        reject(err);
+      });
+  });
+};
 
-const COPY_TO_LICENCE_MAX_LIMIT = 50
-const COPY_TO_LICENCE_API_LIMIT = 20
+const COPY_TO_LICENCE_MAX_LIMIT = 50;
+const COPY_TO_LICENCE_API_LIMIT = 20;
 
 export const copyToLicence = async (
   client: () => AxiosInstance,
   endPoint: string,
-  items: DamImageCopyToLicenceRequest
+  items: DamImageCopyToLicenceRequest,
 ): Promise<DamImageCopyToLicenceResponse> => {
   if (items.length > COPY_TO_LICENCE_MAX_LIMIT) {
-    return Promise.reject('Exceeded max limit')
+    return Promise.reject("Exceeded max limit");
   }
 
-  const url = endPoint + '/copy-to-licence'
+  const url = endPoint + "/copy-to-licence";
 
   const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
     return Array.from({ length: Math.ceil(arr.length / chunkSize) }, (_, i) =>
-      arr.slice(i * chunkSize, i * chunkSize + chunkSize)
-    )
-  }
+      arr.slice(i * chunkSize, i * chunkSize + chunkSize),
+    );
+  };
 
-  const itemChunks = chunkArray(items, COPY_TO_LICENCE_API_LIMIT)
+  const itemChunks = chunkArray(items, COPY_TO_LICENCE_API_LIMIT);
 
   try {
     const responses = await Promise.all(
       itemChunks.map((chunk) =>
         client()
           .patch(url, JSON.stringify(chunk))
-          .then((res) => (res.status === HTTP_STATUS_OK ? res.data : []))
-      )
-    )
+          .then((res) => (res.status === HTTP_STATUS_OK ? res.data : [])),
+      ),
+    );
 
-    return responses.flat()
+    return responses.flat();
   } catch (error) {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-}
+};

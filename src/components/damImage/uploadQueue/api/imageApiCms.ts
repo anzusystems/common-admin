@@ -1,76 +1,130 @@
-import type { AxiosInstance, AxiosResponse } from 'axios'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiCreateOne } from '@/services/api/apiCreateOne'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiUpdateOne } from '@/services/api/apiUpdateOne'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiDeleteOne } from '@/services/api/apiDeleteOne'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchOne } from '@/services/api/apiFetchOne'
-import type { IntegerId } from '@/types/common'
-import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchByIds } from '@/services/api/apiFetchByIds'
-import { HTTP_STATUS_OK } from '@/composables/statusCodes'
+import type { AxiosInstance, AxiosResponse } from "axios";
+import type { IntegerId } from "@/types/common";
+import type { ImageAware, ImageCreateUpdateAware } from "@/types/ImageAware";
+import { HTTP_STATUS_OK } from "@/composables/statusCodes";
+import { useApiFetchByIds } from "@/labs/api/useApiFetchByIds";
+import { useApiRequest } from "@/labs/api/useApiRequest";
 
-const END_POINT = '/adm/v1/image'
-export const ENTITY = 'image'
-export const SYSTEM_CMS = 'cms'
+const END_POINT = "/adm/v1/image";
+export const ENTITY = "image";
+export const SYSTEM_CMS = "cms";
 
-const BULK_METADATA_LIMIT = 20
+const BULK_METADATA_LIMIT = 20;
 
-export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[]) =>
-  apiFetchByIds<ImageAware[]>(client, ids, END_POINT, {}, SYSTEM_CMS, ENTITY)
+export const fetchImageListByIds = (
+  client: () => AxiosInstance,
+  ids: IntegerId[],
+) => {
+  const { executeFetch } = useApiFetchByIds<ImageAware[]>({
+    client,
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT,
+  });
 
-export const fetchImage = (client: () => AxiosInstance, id: IntegerId) =>
-  apiFetchOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
+  return executeFetch(ids);
+};
 
-export const createImage = (client: () => AxiosInstance, data: ImageCreateUpdateAware) =>
-  apiCreateOne<ImageCreateUpdateAware, ImageAware>(client, data, END_POINT, {}, SYSTEM_CMS, ENTITY)
+export const fetchImage = (client: () => AxiosInstance, id: IntegerId) => {
+  const { executeRequest } = useApiRequest<ImageAware, null>({
+    client,
+    method: "GET",
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT + "/:id",
+  });
 
-export const updateImage = (client: () => AxiosInstance, id: IntegerId, data: ImageCreateUpdateAware) =>
-  apiUpdateOne<ImageCreateUpdateAware, ImageAware>(client, data, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
+  return executeRequest({ urlParams: { id } });
+};
 
-export const deleteImage = (client: () => AxiosInstance, id: IntegerId) =>
-  apiDeleteOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
+export const createImage = (
+  client: () => AxiosInstance,
+  data: ImageCreateUpdateAware,
+) => {
+  const { executeRequest } = useApiRequest<ImageAware, ImageCreateUpdateAware>({
+    client,
+    method: "POST",
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT,
+  });
 
-export const bulkUpdateImages = (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => {
+  return executeRequest({ object: data });
+};
+
+export const updateImage = (
+  client: () => AxiosInstance,
+  id: IntegerId,
+  data: ImageCreateUpdateAware,
+) => {
+  const { executeRequest } = useApiRequest<ImageAware, ImageCreateUpdateAware>({
+    client,
+    method: "PUT",
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT + "/:id",
+  });
+
+  return executeRequest({ urlParams: { id }, object: data });
+};
+
+export const deleteImage = (client: () => AxiosInstance, id: IntegerId) => {
+  const { executeRequest } = useApiRequest<ImageAware, null>({
+    client,
+    method: "DELETE",
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT + "/:id",
+  });
+
+  return executeRequest({ urlParams: { id } });
+};
+
+export const bulkUpdateImages = (
+  client: () => AxiosInstance,
+  items: ImageCreateUpdateAware[],
+) => {
   return new Promise<ImageAware[]>((resolve, reject) => {
     updateImagesSequence(client, items)
       .then((responses) => {
         if (items.length === 0) {
-          return resolve([])
+          return resolve([]);
         } else if (responses.length === 0) {
-          return reject(responses)
+          return reject(responses);
         } else if (
           responses.every((res) => {
-            return res.status === HTTP_STATUS_OK
+            return res.status === HTTP_STATUS_OK;
           })
         ) {
-          const images: ImageAware[] = responses.flatMap((response) => response.data.images)
-          return resolve(images)
+          const images: ImageAware[] = responses.flatMap(
+            (response) => response.data.images,
+          );
+          return resolve(images);
         } else {
-          return reject(responses)
+          return reject(responses);
         }
       })
       .catch((err) => {
         //
-        return reject(err)
-      })
-  })
-}
+        return reject(err);
+      });
+  });
+};
 
-async function updateImagesSequence(client: () => AxiosInstance, items: ImageCreateUpdateAware[]) {
-  const totalCalls = Math.ceil(items.length / BULK_METADATA_LIMIT)
-  const responses: AxiosResponse[] = []
-  if (items.length === 0) return Promise.resolve([])
+async function updateImagesSequence(
+  client: () => AxiosInstance,
+  items: ImageCreateUpdateAware[],
+) {
+  const totalCalls = Math.ceil(items.length / BULK_METADATA_LIMIT);
+  const responses: AxiosResponse[] = [];
+  if (items.length === 0) return Promise.resolve([]);
 
   for (let i = 0; i < totalCalls; i++) {
-    const offset = i * BULK_METADATA_LIMIT
-    const reduced = items.slice(offset, offset + BULK_METADATA_LIMIT)
-    const reqData = { images: reduced }
-    const res = await client().put(END_POINT, JSON.stringify(reqData))
-    responses.push(res)
+    const offset = i * BULK_METADATA_LIMIT;
+    const reduced = items.slice(offset, offset + BULK_METADATA_LIMIT);
+    const reqData = { images: reduced };
+    const res = await client().put(END_POINT, JSON.stringify(reqData));
+    responses.push(res);
   }
-  return responses
+  return responses;
 }

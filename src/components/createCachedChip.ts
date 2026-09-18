@@ -1,8 +1,8 @@
-import { type Component, defineComponent, h, type PropType } from 'vue'
-import ACachedChip from '@/components/ACachedChip.vue'
-import type { DocId, IntegerId } from '@/types/common'
+import { type Component, defineComponent, h, type PropType } from "vue";
+import ACachedChip from "@/components/ACachedChip.vue";
+import type { DocId, IntegerId } from "@/types/common";
 
-export type CachedChipId = null | undefined | IntegerId | DocId
+export type CachedChipId = null | undefined | IntegerId | DocId;
 
 export interface CreateCachedChipOptions {
   /**
@@ -11,15 +11,15 @@ export interface CreateCachedChipOptions {
    * param is `any` to match `ACachedChip` and accept both numeric- and
    * doc-id getters regardless of their exact parameter type.
    */
-  useGetCachedFn: () => (id: any) => unknown
+  useGetCachedFn: () => (id: any) => unknown;
   /** Named route the chip links to (e.g. `'/(cms)/desks/[id]'`). */
-  route: string
+  route: string;
   /** Dot-path into the cached entity for the chip label (e.g. `'name'`). */
-  displayTextPath: string
+  displayTextPath: string;
   /** Static props baked onto every instance (e.g. a fixed `textOnly`). */
-  chipProps?: Record<string, unknown>
+  chipProps?: Record<string, unknown>;
   /** Component name for devtools / warnings. */
-  name?: string
+  name?: string;
 }
 
 /**
@@ -39,7 +39,7 @@ export interface CreateCachedChipOptions {
  */
 export function createCachedChip(options: CreateCachedChipOptions): Component {
   return defineComponent({
-    name: options.name ?? 'CachedChip',
+    name: options.name ?? "CachedChip",
     inheritAttrs: false,
     // Vue skips type validation for null/undefined on non-required props, so a
     // null id (the common "empty" case) won't warn despite the typed prop.
@@ -47,7 +47,7 @@ export function createCachedChip(options: CreateCachedChipOptions): Component {
       id: { type: [Number, String] as PropType<CachedChipId>, default: null },
     },
     setup(props, { attrs, slots }) {
-      const getCachedFn = options.useGetCachedFn()
+      const getCachedFn = options.useGetCachedFn();
       return () =>
         h(
           ACachedChip,
@@ -59,8 +59,8 @@ export function createCachedChip(options: CreateCachedChipOptions): Component {
             ...options.chipProps,
             ...attrs,
           },
-          slots
-        )
+          slots,
+        );
     },
-  })
+  });
 }

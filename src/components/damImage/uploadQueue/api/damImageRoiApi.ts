@@ -1,26 +1,54 @@
-import type { RegionOfInterest } from '@/types/coreDam/Roi'
-import type { AxiosInstance } from 'axios'
-import type { DocId } from '@/types/common'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchOne } from '@/services/api/apiFetchOne'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiUpdateOne } from '@/services/api/apiUpdateOne'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import type { RegionOfInterest } from "@/types/coreDam/Roi";
+import type { AxiosInstance } from "axios";
+import type { DocId } from "@/types/common";
+import { useApiFetchList } from "@/labs/api/useApiFetchList";
+import { useApiRequest } from "@/labs/api/useApiRequest";
+import { SYSTEM_CORE_DAM } from "@/components/damImage/uploadQueue/api/damAssetApi";
 
-export const ENTITY = 'asset'
+export const ENTITY = "asset";
 
-export const fetchRoi = (client: () => AxiosInstance, endPointRoi: string, id: DocId) =>
-  apiFetchOne<RegionOfInterest>(client, endPointRoi + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
+export const fetchRoi = (
+  client: () => AxiosInstance,
+  endPointRoi: string,
+  id: DocId,
+) => {
+  const { executeRequest } = useApiRequest<RegionOfInterest, null>({
+    client,
+    method: "GET",
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: endPointRoi + "/:id",
+  });
 
-export const updateRoi = (client: () => AxiosInstance, endPointRoi: string, id: DocId, data: RegionOfInterest) =>
-  apiUpdateOne<RegionOfInterest>(client, data, endPointRoi + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
+  return executeRequest({ urlParams: { id } });
+};
 
-export const useFetchImageRoiList = (client: () => AxiosInstance, endPointImage: string, imageId: DocId) =>
+export const updateRoi = (
+  client: () => AxiosInstance,
+  endPointRoi: string,
+  id: DocId,
+  data: RegionOfInterest,
+) => {
+  const { executeRequest } = useApiRequest<RegionOfInterest, RegionOfInterest>({
+    client,
+    method: "PUT",
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: endPointRoi + "/:id",
+  });
+
+  return executeRequest({ urlParams: { id }, object: data });
+};
+
+export const useFetchImageRoiList = (
+  client: () => AxiosInstance,
+  endPointImage: string,
+  imageId: DocId,
+) =>
   useApiFetchList<any[]>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
-    urlTemplate: endPointImage + '/:id/roi',
+    urlTemplate: endPointImage + "/:id/roi",
     urlParams: { id: imageId },
-  })
+  });

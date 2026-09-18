@@ -1,22 +1,22 @@
-import type { AxiosInstance } from 'axios'
-import { isNull } from '@/utils/common'
-import axios from 'axios'
+import type { AxiosInstance } from "axios";
+import { isNull } from "@/utils/common";
+import axios from "axios";
 
-let mainInstance: AxiosInstance | null = null
+let mainInstance: AxiosInstance | null = null;
 
 const cmsClient = function (): AxiosInstance {
   if (isNull(mainInstance)) {
     mainInstance = axios.create({
-      baseURL: 'http://core-cms.sme.localhost/api',
+      baseURL: "http://core-cms.sme.localhost/api",
       timeout: 15 * 1000,
       withCredentials: true,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-    })
+    });
   }
 
-  return mainInstance
-}
+  return mainInstance;
+};
 
-export { cmsClient }
+export { cmsClient };

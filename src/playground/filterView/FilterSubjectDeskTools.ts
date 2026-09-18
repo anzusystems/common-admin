@@ -1,88 +1,96 @@
-import type { ValueObjectOption } from '@/types/ValueObject'
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
-import { cmsClient } from '@/playground/mock/cmsClient'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
-import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
+import type { ValueObjectOption } from "@/types/ValueObject";
+import type { IntegerId, IntegerIdNullable } from "@/types/common";
+import type { AnzuUserAndTimeTrackingAware } from "@/types/AnzuUserAndTimeTrackingAware";
+import { cmsClient } from "@/playground/mock/cmsClient";
+import { useApiFetchList } from "@/labs/api/useApiFetchList";
+import { useApiFetchByIds } from "@/labs/api/useApiFetchByIds";
 import {
   createFilter,
   createFilterStore,
   type FilterConfig,
   type FilterData,
   type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
-import { type Ref } from 'vue'
+} from "@/labs/filters/filterFactory";
+import { type Ref } from "vue";
 
-import type { Pagination } from '@/labs/filters/pagination'
+import type { Pagination } from "@/labs/filters/pagination";
 
 export interface Desk extends AnzuUserAndTimeTrackingAware {
-  name: string
-  id: IntegerId
-  siteGroup: IntegerIdNullable
-  members: IntegerId[]
-  editors: IntegerId[]
-  followers: IntegerId[]
-  pages: IntegerId[]
-  externalLinks: any[]
-  rubrics: IntegerId[]
-  keywords: IntegerId[]
-  _resourceName: 'desk'
-  _system: 'cms'
+  name: string;
+  id: IntegerId;
+  siteGroup: IntegerIdNullable;
+  members: IntegerId[];
+  editors: IntegerId[];
+  followers: IntegerId[];
+  pages: IntegerId[];
+  externalLinks: any[];
+  rubrics: IntegerId[];
+  keywords: IntegerId[];
+  _resourceName: "desk";
+  _system: "cms";
 }
 
-const END_POINT = '/adm/desks'
+const END_POINT = "/adm/desks";
 
 const useFetchDeskList = () =>
   useApiFetchList<Desk[]>({
     client: cmsClient,
-    system: 'cms',
-    entity: 'desk',
+    system: "cms",
+    entity: "desk",
     urlTemplate: END_POINT,
-  })
+  });
 
 const fetchDeskListByIds = (ids: IntegerId[]) => {
   const { executeFetch } = useApiFetchByIds<Desk[]>({
     client: cmsClient,
-    system: 'cms',
-    entity: 'desk',
+    system: "cms",
+    entity: "desk",
     urlTemplate: END_POINT,
-  })
-  return executeFetch(ids)
-}
+  });
+  return executeFetch(ids);
+};
 
-export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
-  const { executeFetch } = useFetchDeskList()
-  const desks = await executeFetch(pagination, filterData, filterConfig)
+export const fetchItems = async (
+  pagination: Ref<Pagination>,
+  filterData: FilterData,
+  filterConfig: FilterConfig,
+) => {
+  const { executeFetch } = useFetchDeskList();
+  const desks = await executeFetch(pagination, filterData, filterConfig);
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
     title: desk.name,
     value: desk.id,
-  }))
-}
+  }));
+};
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
-  const desks = await fetchDeskListByIds(ids)
+  const desks = await fetchDeskListByIds(ids);
 
   return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
     title: desk.name,
     value: desk.id,
-  }))
-}
+  }));
+};
 
 export function useSubjectDeskInnerFilter() {
   const filterFields = [
-    { name: 'id', default: null },
-    { name: 'ids', variant: 'in', apiName: 'id', default: [] },
-    { name: 'name', variant: 'startsWith', default: null },
-  ] satisfies readonly MakeFilterOption[]
+    { name: "id", default: null },
+    { name: "ids", variant: "in", apiName: "id", default: [] },
+    { name: "name", variant: "startsWith", default: null },
+  ] satisfies readonly MakeFilterOption[];
 
-  const { filterConfig, filterData } = createFilter(filterFields, createFilterStore(filterFields), {
-    system: 'cms',
-    subject: 'desk',
-  })
+  const { filterConfig, filterData } = createFilter(
+    filterFields,
+    createFilterStore(filterFields),
+    {
+      system: "cms",
+      subject: "desk",
+    },
+  );
 
   return {
     filterConfig,
     filterData,
-  }
+  };
 }
