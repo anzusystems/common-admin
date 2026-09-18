@@ -1,10 +1,9 @@
 import type { AxiosInstance } from 'axios'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { DamAssetLicence } from '@/types/coreDam/AssetLicence'
 import type { IntegerId } from '@/types/common'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 // eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchList } from '@/services/api/apiFetchList'
 import type { Pagination } from '@/types/Pagination'
@@ -14,8 +13,16 @@ import type { FilterBag } from '@/types/Filter'
 const END_POINT = '/adm/v1/asset-licence'
 export const ENTITY = 'assetLicence'
 
-export const fetchDamAssetLicenceListByIds = (client: () => AxiosInstance, ids: IntegerId[]) =>
-  apiFetchByIds<DamAssetLicence[]>(client, ids, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
+export const fetchDamAssetLicenceListByIds = (client: () => AxiosInstance, ids: IntegerId[]) => {
+  const { executeFetch } = useApiFetchByIds<DamAssetLicence[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT,
+  })
+
+  return executeFetch(ids)
+}
 
 export const useFetchDamAssetLicenceList = (client: () => AxiosInstance) =>
   useApiFetchList<DamAssetLicence[]>({
