@@ -48,6 +48,7 @@ let holdFetch: Promise<void> | null = null
 let holdQueue: Promise<void>[] = []
 let failFetch = false
 let throwFetch = false
+let statsFail = false
 
 const markStale = vi.fn()
 const removeOne = vi.fn()
@@ -55,7 +56,15 @@ const removeOne = vi.fn()
 const bookmarkStore = {
   error: false,
   getBookmarks,
-  fetchBookmarksCount: async () => listItems.value.length,
+  // `Infinity` is what the real store answers when it could not count, and the cap check is what
+  // has to stop the add there -- nothing further down knows the count was never taken.
+  fetchBookmarkStats: async () =>
+    statsFail
+      ? { count: Infinity, maxPosition: 0 }
+      : {
+          count: listItems.value.length,
+          maxPosition: listItems.value[listItems.value.length - 1]?.position ?? 0,
+        },
   generateKey: () => 'key',
   addOne: vi.fn(),
   removeOne,
@@ -78,6 +87,7 @@ beforeEach(() => {
   holdQueue = []
   failFetch = false
   throwFetch = false
+  statsFail = false
   bookmarkStore.error = false
   listItems.value = [bookmark(1, 'First'), bookmark(2, 'Second'), bookmark(3, 'Third')]
 })
@@ -935,5 +945,68 @@ describe('a fetch that throws after a newer one has answered', () => {
     expect(names()).toEqual(['First', 'Renamed elsewhere', 'Third'])
     expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(true)
     expect(document.querySelectorAll('.text-error').length).toBe(0)
+  })
+})
+
+describe('where a new bookmark lands', () => {
+  it('goes after the highest position in use, not after the row count', async () => {
+    // The gap a save with a deletion leaves behind: three rows, highest position 4. Counting rows
+    // would create this one on 4 as well, and two rows on the same position have no order between
+    // them -- with two deletions the new one would sort ahead of a bookmark created before it.
+    listItems.value = [
+      { ...bookmark(1, 'First'), position: 1 },
+      { ...bookmark(3, 'Third'), position: 2 },
+      { ...bookmark(9, 'Created earlier'), position: 4 },
+    ] as UserAdminConfig[]
+
+    const wrapper = await mountDialog()
+    const vm = wrapper.findComponent({ name: 'FilterBookmarkDialog' }).vm as unknown as {
+      customName: string
+      onConfirm: () => void
+    }
+    vm.customName = 'A new bookmark'
+    await settleEditor()
+
+    vm.onConfirm()
+    await flushPromises()
+    await nextTick()
+
+    expect(createUserAdminConfig).toHaveBeenCalledTimes(1)
+    expect(createUserAdminConfig.mock.calls[0][0].position).toBe(5)
+  })
+})
+
+describe('when a bookmark cannot be created', () => {
+  const tryToAdd = async (wrapper: VueWrapper) => {
+    const vm = wrapper.findComponent({ name: 'FilterBookmarkDialog' }).vm as unknown as {
+      customName: string
+      onConfirm: () => void
+    }
+    vm.customName = 'A new bookmark'
+    await settleEditor()
+    vm.onConfirm()
+    await flushPromises()
+    await nextTick()
+  }
+
+  it('sends nothing when the count could not be taken', async () => {
+    statsFail = true
+    const wrapper = await mountDialog()
+
+    await tryToAdd(wrapper)
+
+    // Creating here would put a bookmark past a cap nobody was able to check.
+    expect(createUserAdminConfig).not.toHaveBeenCalled()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
+  })
+
+  it('sends nothing when the list is already full', async () => {
+    listItems.value = Array.from({ length: 10 }, (_, index) => bookmark(index + 1, `Bookmark ${index + 1}`))
+    const wrapper = await mountDialog()
+
+    await tryToAdd(wrapper)
+
+    expect(createUserAdminConfig).not.toHaveBeenCalled()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
   })
 })

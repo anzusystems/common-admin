@@ -19,6 +19,18 @@ const bookmark = (id: number, customName: string): UserAdminConfig =>
 
 const fetcher = (executeFetch: () => Promise<UserAdminConfig[]>) => () => ({ executeFetch }) as never
 
+// Answers in the order the call asked for, the way the endpoint does, rather than in whatever order
+// the test happened to write the rows down. The store reads the highest position across all of them,
+// so the order no longer changes the answer -- which is exactly what this double is here to keep
+// true if someone changes either side.
+const orderedFetcher = (rows: UserAdminConfig[]) => () =>
+  ({
+    executeFetch: async (pagination: { value: { sortBy: { key: string; order: string } | null } }) => {
+      const ascending = [...rows].sort((a, b) => a.position - b.position)
+      return pagination.value.sortBy?.order === 'desc' ? ascending.reverse() : ascending
+    },
+  }) as never
+
 describe('the bookmark cache', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -273,5 +285,49 @@ describe('the bookmark cache', () => {
     await refresh
 
     expect(store.bookmarks.get(key)?.items.map((item) => item.id)).toEqual([1])
+  })
+
+  it('reports the highest position in use, not how many rows there are', async () => {
+    const store = useFilterBookmarkStore()
+    // What a save that deleted a row leaves behind: the manage tab renumbers only the rows it
+    // sends, so the row created while another was pending deletion keeps the position it was
+    // given and the sequence has a gap.
+    const withGap = [
+      { ...bookmark(1, 'First'), position: 1 },
+      { ...bookmark(3, 'Third'), position: 2 },
+      { ...bookmark(9, 'Created earlier'), position: 4 },
+    ] as UserAdminConfig[]
+
+    const stats = await store.fetchBookmarkStats(identifier, orderedFetcher(withGap))
+
+    // Counting rows would hand the next bookmark position 4, which the last row already holds --
+    // and the list has no second key to order two rows on the same position by.
+    expect(stats).toEqual({ count: 3, maxPosition: 4 })
+  })
+
+  it('refuses the add when it cannot count', async () => {
+    const store = useFilterBookmarkStore()
+
+    const stats = await store.fetchBookmarkStats(
+      identifier,
+      fetcher(async () => {
+        throw new Error('backend is down')
+      })
+    )
+
+    // `Infinity` is what the cap is compared against, so a count that failed blocks the add rather
+    // than creating a bookmark past a limit nobody could check.
+    expect(stats.count).toBe(Infinity)
+    expect(store.error).toBe(true)
+  })
+
+  it('starts at one when there are no bookmarks yet', async () => {
+    const store = useFilterBookmarkStore()
+
+    const stats = await store.fetchBookmarkStats(identifier, orderedFetcher([]))
+
+    // The caller adds one to the highest position, so an empty list has to answer zero -- not
+    // `undefined`, which would make the first bookmark's position `NaN`.
+    expect(stats).toEqual({ count: 0, maxPosition: 0 })
   })
 })

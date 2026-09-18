@@ -211,7 +211,7 @@ const addBookmark = async () => {
     sortBy: storeDatatableOrder.value && pagination.value.sortBy ? pagination.value.sortBy : undefined,
   }
   try {
-    const count = await filterBookmarkStore.fetchBookmarksCount(
+    const { count, maxPosition } = await filterBookmarkStore.fetchBookmarkStats(
       {
         user: props.user,
         layoutType: UserAdminConfigLayoutType.Desktop,
@@ -224,7 +224,10 @@ const addBookmark = async () => {
       saveButtonLoading.value = false
       return
     }
-    config.position = count + 1
+    // After the highest position in use, not after the number of rows. The manage tab renumbers
+    // only the rows it sends, so a deletion saved there leaves a gap, and counting rows from then
+    // on would put this bookmark on a position another one already holds.
+    config.position = maxPosition + 1
     const res = await createUserAdminConfig(config)
     filterBookmarkStore.addOne(bookmarkCacheKey(), res)
     // Cleared because `requestClose` may not close: with work pending on the other tab the guard

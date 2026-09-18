@@ -115,14 +115,25 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     return [...items]
   }
 
-  async function fetchBookmarksCount(
+  /**
+   * What a new bookmark needs to know: how many there are, which is what the cap is checked
+   * against, and the highest position in use, which is what it has to sort after.
+   *
+   * The two are not the same number. Positions go dense only when the manage dialog saves an
+   * order -- it renumbers exactly the rows it sends -- so a row created while another was pending
+   * deletion leaves a gap behind, and from then on the count is lower than the highest position.
+   * Deriving a new position from the count would then hand it one already in use: two rows on the
+   * same position, which the list has no second key to order by, or with more than one deletion a
+   * position below a row created earlier.
+   */
+  async function fetchBookmarkStats(
     identifier: {
       user: IntegerId
       layoutType: UserAdminConfigLayoutTypeType
       systemResource: string
     },
     useApiFetch: () => UseApiFetchListReturnType<UserAdminConfig[]>
-  ): Promise<number> {
+  ): Promise<{ count: number; maxPosition: number }> {
     error.value = false
     const { pagination } = usePagination('position', SortOrder.Asc, {
       rowsPerPage: MAX_BOOKMARK_ITEMS + 1,
@@ -134,16 +145,24 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     filterData.systemResource = identifier.systemResource
     filterData.user = identifier.user
 
-    let length = Infinity
     try {
       const { executeFetch } = useApiFetch()
+      // The page is capped one above the maximum a user may have, so a list long enough to hide the
+      // real highest position is also one the count refuses to add to. Read across the rows rather
+      // than off the last one: taking the last would tie this to the sort order asked for above,
+      // and flipping that would quietly turn the highest position into the lowest -- with nothing
+      // to show for it, since the order the bar draws comes from a different call.
       const res = await executeFetch(pagination, filterData, filterConfig)
-      length = res.length
+      return {
+        count: res.length,
+        maxPosition: res.length > 0 ? Math.max(...res.map((item) => item.position)) : 0,
+      }
     } catch (e) {
       error.value = true
+      // `Infinity` keeps what a failed count has always done: refuse the add rather than create a
+      // bookmark past a cap nobody could check.
+      return { count: Infinity, maxPosition: 0 }
     }
-
-    return length
   }
 
   /**
@@ -196,7 +215,7 @@ export const useFilterBookmarkStore = defineStore('filterBookmarkStore', () => {
     addOne,
     removeOne,
     markStale,
-    fetchBookmarksCount,
+    fetchBookmarkStats,
   }
 })
 
