@@ -174,6 +174,31 @@ describe('which page a failure names', () => {
   })
 })
 
+describe('what happens to the pages still in flight when one fails', () => {
+  // The counted branch sends a page set at once. When one of them fails the rest are work nobody is
+  // waiting for, and the window to stop them is narrow: the call's controller leaves the instance's
+  // set as soon as the call settles, so a later `abort()` would have nothing left to reach them by.
+  it('stops the siblings rather than leaving them running', async () => {
+    const signals: AbortSignal[] = []
+    const get = vi.fn().mockImplementation((url: string, config: { signal: AbortSignal }) => {
+      signals.push(config.signal)
+      if (url.includes('offset=1')) {
+        return Promise.reject(
+          Object.assign(new Error('failed'), { isAxiosError: true, config: { url }, response: { status: 500 } })
+        )
+      }
+      if (url.includes('offset=0')) return Promise.resolve(counted([1], 5))
+
+      return new Promise(() => {})
+    })
+    const { execute, filterData, filterConfig } = setup(get)
+
+    await expect(execute(filterData, filterConfig, { batchSize: 1 })).rejects.toBeTruthy()
+
+    expect(signals.every((signal) => signal.aborted)).toBe(true)
+  })
+})
+
 describe('a page that breaks the contract', () => {
   it('fails on the first page', async () => {
     const get = vi.fn().mockResolvedValueOnce({ status: 200, data: '' })

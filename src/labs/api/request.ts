@@ -101,6 +101,13 @@ export const createAbortable = (options: AbortableOptions = {}): Abortable => {
 
     try {
       return await fn(controller.signal, generation)
+    } catch (err: unknown) {
+      // A call can have more than one request under its signal -- the batch sends a page set at
+      // once -- and when one of them fails the rest are work nobody is waiting for any more. Stop
+      // them here, while the controller is still reachable: the `finally` below drops it from the
+      // set, and after that a later `abort()` has nothing to abort them with.
+      controller.abort()
+      throw err
     } finally {
       external?.removeEventListener('abort', relay)
       controllers.delete(controller)
