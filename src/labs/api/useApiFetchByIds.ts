@@ -9,7 +9,7 @@ import { isDefined, isUndefined } from '@/utils/common'
 import type { AxiosClientFn } from '@/labs/api/client'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 import { mapApiError, report } from '@/labs/api/apiErrors'
-import { createAbortable, hasBody, ownedByHelper } from '@/labs/api/request'
+import { createAbortable, hasBody, ownedByHelper, requestedUrl } from '@/labs/api/request'
 import { readListBody } from '@/labs/api/listBody'
 
 export type UseApiFetchByIdsParams = {
@@ -97,7 +97,11 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
 
       return readListBody<T>(res.data, res.status, url).items
     } catch (err: unknown) {
-      throw report(mapApiError(err, { system, entity, url }), { system, entity, url })
+      throw report(mapApiError(err, { system, entity, url: requestedUrl(url, options.params) }), {
+        system,
+        entity,
+        url: requestedUrl(url, options.params),
+      })
     }
   }
 

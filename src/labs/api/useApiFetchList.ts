@@ -12,7 +12,7 @@ import type { Pagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
 import type { AxiosClientFn } from '@/labs/api/client'
 import { mapApiError, report } from '@/labs/api/apiErrors'
-import { createAbortable, hasBody, ownedByHelper } from '@/labs/api/request'
+import { createAbortable, hasBody, ownedByHelper, requestedUrl } from '@/labs/api/request'
 import { readListBody } from '@/labs/api/listBody'
 
 export type UseApiFetchListParams = {
@@ -120,7 +120,11 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
 
       return list.items
     } catch (err: unknown) {
-      throw report(mapApiError(err, { system, entity, url }), { system, entity, url })
+      throw report(mapApiError(err, { system, entity, url: requestedUrl(url, options.params) }), {
+        system,
+        entity,
+        url: requestedUrl(url, options.params),
+      })
     }
   }
 

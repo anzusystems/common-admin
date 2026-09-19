@@ -12,7 +12,7 @@ import { SortOrder } from '@/composables/system/datatableColumns'
 import type { AxiosClientFn } from '@/labs/api/client'
 import { generateListQuery } from '@/labs/api/useApiFetchList'
 import { mapApiError, report } from '@/labs/api/apiErrors'
-import { createAbortable, hasBody, ownedByHelper } from '@/labs/api/request'
+import { createAbortable, hasBody, ownedByHelper, requestedUrl } from '@/labs/api/request'
 import { readListBody } from '@/labs/api/listBody'
 
 export type UseApiFetchListBatchParams = {
@@ -175,7 +175,7 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
       }, signal)
     } catch (err: unknown) {
       const failed = err instanceof PageFailure ? err : null
-      const context = { system, entity, url: failed?.pageUrl ?? url }
+      const context = { system, entity, url: requestedUrl(failed?.pageUrl ?? url, options.params) }
 
       throw report(mapApiError(failed?.failure ?? err, context), context)
     }

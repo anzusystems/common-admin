@@ -1,5 +1,5 @@
 import type { AxiosResponse } from 'axios'
-import { isNull, isUndefined } from '@/utils/common'
+import { isNull, isObject, isUndefined } from '@/utils/common'
 
 /**
  * Whether the response carries a body at all.
@@ -29,6 +29,27 @@ export const ownedByHelper = <T extends object>(options: T): Omit<T, (typeof HEL
   for (const key of HELPER_OWNED) delete rest[key]
 
   return rest as Omit<T, (typeof HELPER_OWNED)[number]>
+}
+
+/**
+ * The url as it will actually be requested, `options.params` included.
+ *
+ * Axios appends those itself at send time, so a url recorded before the call is not the one that
+ * went out -- and a report naming a url the reader cannot find in the network tab is worse than no
+ * url at all.
+ */
+export const requestedUrl = (url: string, params: unknown): string => {
+  if (!isObject(params)) return url
+
+  const query = new URLSearchParams(
+    Object.entries(params as Record<string, unknown>)
+      .filter(([, value]) => !isUndefined(value) && !isNull(value))
+      .map(([key, value]) => [key, String(value)])
+  ).toString()
+
+  if (query === '') return url
+
+  return url + (url.includes('?') ? '&' : '?') + query
 }
 
 export type Abortable = {

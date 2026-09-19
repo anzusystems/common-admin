@@ -301,13 +301,32 @@ const anzuPlugin = {
       create(context) {
         const reportedMethods = new Set(['DELETE', 'delete'])
 
-        // Which local names actually mean the helper. Without this the rule fires on anyone's own
-        // function that happens to be called `useApiRequest`, and stays silent when the real one is
-        // imported under another name.
-        const helperNames = new Set()
         const isHelperSource = (source) =>
           typeof source === 'string' &&
           (source.includes('labs/api/useApiRequest') || source.endsWith('common-admin/labs'))
+
+        // Resolved through the scope rather than matched by name. Matching the name fires on anyone
+        // else's function called `useApiRequest` and on a parameter that shadows the import inside
+        // one function, and stays silent when the real helper is imported under another name.
+        const isHelperBinding = (node) => {
+          let scope = context.sourceCode.getScope(node)
+          while (scope !== null) {
+            const variable = scope.variables.find((candidate) => candidate.name === node.name)
+            if (variable) {
+              return variable.defs.some(
+                (def) =>
+                  def.type === 'ImportBinding' &&
+                  isHelperSource(def.parent?.source?.value) &&
+                  // The imported name, not the local one: an alias may call it anything, and a
+                  // different export from the same module is a different function.
+                  def.node?.imported?.name === 'useApiRequest'
+              )
+            }
+            scope = scope.upper
+          }
+
+          return false
+        }
 
         const firstTypeArgument = (node) => {
           const args = node.typeArguments ?? node.typeParameters
@@ -338,16 +357,8 @@ const anzuPlugin = {
         }
 
         return {
-          ImportDeclaration(node) {
-            if (!isHelperSource(node.source.value)) return
-            for (const specifier of node.specifiers) {
-              if (specifier.type === 'ImportSpecifier' && specifier.imported.name === 'useApiRequest') {
-                helperNames.add(specifier.local.name)
-              }
-            }
-          },
           CallExpression(node) {
-            if (node.callee.type !== 'Identifier' || !helperNames.has(node.callee.name)) return
+            if (node.callee.type !== 'Identifier' || !isHelperBinding(node.callee)) return
 
             const method = methodLiteral(node)
             const isDelete = typeof method === 'string' && reportedMethods.has(method)

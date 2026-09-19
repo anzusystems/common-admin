@@ -7,7 +7,7 @@ import type { AxiosRequestConfig, Method } from 'axios'
 import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
 import type { AxiosClientFn } from '@/labs/api/client'
 import { mapApiError, report } from '@/labs/api/apiErrors'
-import { type Abortable, createAbortable, hasBody, ownedByHelper } from '@/labs/api/request'
+import { type Abortable, createAbortable, hasBody, ownedByHelper, requestedUrl } from '@/labs/api/request'
 
 export type ExecuteRequestParams<B> = {
   urlTemplate?: string
@@ -72,7 +72,11 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
 
       return interpret(res, url)
     } catch (err: unknown) {
-      throw report(mapApiError(err, { system, entity, url }), { system, entity, url })
+      throw report(mapApiError(err, { system, entity, url: requestedUrl(url, options.params) }), {
+        system,
+        entity,
+        url: requestedUrl(url, options.params),
+      })
     }
   }
 

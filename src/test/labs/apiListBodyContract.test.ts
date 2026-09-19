@@ -149,6 +149,29 @@ describe('what reaches the log', () => {
     expect(logged).toHaveBeenCalledTimes(1)
   })
 
+  // Axios appends `options.params` itself when it sends, so a url recorded before the call is not
+  // the one that went out -- and a report naming a url nobody can find in the network tab is worse
+  // than no url.
+  it('names the url as it was actually requested, query and all', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const store = createFilterStore(fields)
+    const { filterData, filterConfig } = createFilter(fields, store, { system: 'sys', subject: 'subj' })
+    const { pagination } = usePagination('id')
+    const { execute } = useApiFetchList<{ id: number }>({
+      client: () =>
+        ({ get: vi.fn().mockRejectedValue(axiosError({ response: { status: 500 } })) }) as unknown as AxiosInstance,
+      system: 'test',
+      entity: 'test',
+      urlTemplate: '/items',
+      options: { params: { scope: 'archive' } },
+    })
+
+    await expect(execute(pagination, filterData, filterConfig)).rejects.toBeInstanceOf(AnzuApiAxiosError)
+
+    expect(logged.mock.calls[0][1].url).toContain('scope=archive')
+  })
+
   it('says nothing at all once reporting is turned off', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
