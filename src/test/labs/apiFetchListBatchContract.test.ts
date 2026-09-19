@@ -133,6 +133,47 @@ describe('a list that says nothing about its shape', () => {
   })
 })
 
+describe('which page a failure names', () => {
+  // The counted branch sends every page before any of them answers, so a single shared variable
+  // holding "the page we are on" settles on the last one and names the wrong page for the failure.
+  it('names the page that actually failed, not the last one dispatched', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const get = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('offset=1')) {
+        return Promise.reject(
+          Object.assign(new Error('failed'), { isAxiosError: true, config: { url }, response: { status: 500 } })
+        )
+      }
+
+      return Promise.resolve(counted([1], 5))
+    })
+    const { execute, filterData, filterConfig } = setup(get)
+
+    await expect(execute(filterData, filterConfig, { batchSize: 1 })).rejects.toBeTruthy()
+
+    expect(logged.mock.calls[0][1].url).toContain('offset=1')
+  })
+
+  it('names the failing page in the sequential branch too', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const get = vi
+      .fn()
+      .mockResolvedValueOnce(infinite([1], true))
+      .mockImplementationOnce((url: string) =>
+        Promise.reject(
+          Object.assign(new Error('failed'), { isAxiosError: true, config: { url }, response: { status: 500 } })
+        )
+      )
+    const { execute, filterData, filterConfig } = setup(get)
+
+    await expect(execute(filterData, filterConfig, { batchSize: 1 })).rejects.toBeTruthy()
+
+    expect(logged.mock.calls[0][1].url).toContain('offset=1')
+  })
+})
+
 describe('a page that breaks the contract', () => {
   it('fails on the first page', async () => {
     const get = vi.fn().mockResolvedValueOnce({ status: 200, data: '' })

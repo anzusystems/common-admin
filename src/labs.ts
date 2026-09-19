@@ -16,7 +16,7 @@ import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
-import { setApiErrorLogger } from '@/labs/api/apiErrors'
+import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
 import type { ApiErrorContext, ApiErrorLogger } from '@/labs/api/apiErrors'
 import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
@@ -186,6 +186,7 @@ export {
   useApiFetchList,
   useApiCommand,
   useApiRequest,
+  defaultApiErrorLogger,
   setApiErrorLogger,
   type ApiErrorContext,
   type ApiErrorLogger,

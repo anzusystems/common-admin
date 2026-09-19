@@ -55,7 +55,7 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
     try {
       // Inside the try, so a caller that forgot the template gets the same error class as every
       // other failure rather than a bare `Error` nothing in the fleet is written to catch.
-      if (isUndefined(template)) throw new AnzuFatalError(new Error('Url template is undefined'))
+      if (isUndefined(template)) throw new AnzuFatalError(undefined, 'Url template is undefined')
 
       const res = await abortable.run((abortSignal) => {
         const axiosConfig: AxiosRequestConfig = { method, url }

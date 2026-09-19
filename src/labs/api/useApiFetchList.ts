@@ -21,7 +21,8 @@ export type UseApiFetchListParams = {
   entity: string
   urlTemplate?: string
   urlParams?: UrlParams
-  options?: AxiosRequestConfig
+  /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
+  options?: Omit<AxiosRequestConfig, 'method' | 'url' | 'data' | 'signal'>
   cancelPrevious?: boolean
 }
 
@@ -64,10 +65,12 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
     const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
     const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
     const templateMissing = isUndefined(template)
-    const url =
+    const baseUrl =
       (isUndefined(resolvedParams) ? (template ?? '') : replaceUrlParameters(template ?? '', resolvedParams)) +
-      searchApi +
-      generateListQuery(pagination, filterData, filterConfig)
+      searchApi
+    // Built inside the try below, not here: `querySetFilters` walks the caller's filter config and a
+    // malformed one throws, which outside the try would escape unmapped like the template guard did.
+    let url = baseUrl
 
     // Handed over by `run`, not read before it: `run` is what opens a new generation, so a value
     // taken beforehand belongs to the previous call and would never match.
@@ -85,7 +88,9 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
     try {
       // Inside the try, so a caller that forgot the template gets the same error class as every
       // other failure rather than a bare `Error`.
-      if (templateMissing) throw new AnzuFatalError(new Error('Url template is undefined'))
+      if (templateMissing) throw new AnzuFatalError(undefined, 'Url template is undefined')
+
+      url = baseUrl + generateListQuery(pagination, filterData, filterConfig)
 
       const res = await abortable.run((abortSignal, currentGeneration) => {
         generation = currentGeneration

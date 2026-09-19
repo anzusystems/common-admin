@@ -18,7 +18,8 @@ export type UseApiFetchByIdsParams = {
   entity: string
   urlTemplate?: string
   urlParams?: UrlParams
-  options?: AxiosRequestConfig
+  /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
+  options?: Omit<AxiosRequestConfig, 'method' | 'url' | 'data' | 'signal'>
   isSearchApi?: boolean
   field?: string
   cancelPrevious?: boolean
@@ -67,14 +68,18 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
     const resolvedParams = isDefined(urlParamsOverride) ? urlParamsOverride : urlParams
     const template = isDefined(urlTemplateOverride) ? urlTemplateOverride : urlTemplate
     const templateMissing = isUndefined(template)
-    const url =
-      (isUndefined(resolvedParams) ? (template ?? '') : replaceUrlParameters(template ?? '', resolvedParams)) +
-      generateByIdsApiQuery(ids, isSearchApi, field)
+    const baseUrl = isUndefined(resolvedParams)
+      ? (template ?? '')
+      : replaceUrlParameters(template ?? '', resolvedParams)
+    // Built inside the try below: the query builder walks caller-supplied values and can throw.
+    let url = baseUrl
 
     try {
       // Inside the try, so a caller that forgot the template gets the same error class as every
       // other failure rather than a bare `Error`.
-      if (templateMissing) throw new AnzuFatalError(new Error('Url template is undefined'))
+      if (templateMissing) throw new AnzuFatalError(undefined, 'Url template is undefined')
+
+      url = baseUrl + generateByIdsApiQuery(ids, isSearchApi, field)
 
       const res = await abortable.run(
         (abortSignal) => client().get(url, { ...ownedByHelper(options), signal: abortSignal }),

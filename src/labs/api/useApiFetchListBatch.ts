@@ -21,7 +21,8 @@ export type UseApiFetchListBatchParams = {
   entity: string
   urlTemplate?: string
   urlParams?: UrlParams
-  options?: AxiosRequestConfig
+  /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
+  options?: Omit<AxiosRequestConfig, 'method' | 'url' | 'data' | 'signal'>
   cancelPrevious?: boolean
 }
 
@@ -34,6 +35,22 @@ export type FetchListBatchParams = {
   sortDesc?: boolean
   batchSize?: number
   forceElastic?: boolean
+}
+
+/**
+ * Carries the url of the page a failure happened on out to the catch that reports it.
+ *
+ * Nothing outside this file sees it: the catch unwraps it before mapping, so the caller gets the
+ * same classes it would get from any other helper.
+ */
+class PageFailure extends Error {
+  constructor(
+    readonly pageUrl: string,
+    readonly failure: unknown
+  ) {
+    super('Batch page failed')
+    this.name = 'PageFailure'
+  }
 }
 
 export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): UseApiFetchListBatchReturnType<T> => {
@@ -63,13 +80,10 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
       (isUndefined(resolvedParams) ? (template ?? '') : replaceUrlParameters(template ?? '', resolvedParams)) +
       searchApi
 
-    // The page the batch was on when it failed, so the report names it rather than the base url.
-    let failingUrl = url
-
     try {
       // Inside the try, so a caller that forgot the template gets the same error class as every
       // other failure rather than a bare `Error`.
-      if (templateMissing) throw new AnzuFatalError(new Error('Url template is undefined'))
+      if (templateMissing) throw new AnzuFatalError(undefined, 'Url template is undefined')
 
       return await abortable.run(async (abortSignal) => {
         const { pagination } = usePagination(sortBy, sortDesc ? SortOrder.Desc : SortOrder.Asc, {
@@ -80,24 +94,38 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
         // be able to say which page that was, and the base url cannot.
         const get = async (page: Ref<Pagination>) => {
           const pageUrl = url + generateListQuery(page, filterData, filterConfig)
-          failingUrl = pageUrl
 
-          return { res: await client().get(pageUrl, { ...ownedByHelper(options), signal: abortSignal }), pageUrl }
+          try {
+            return { res: await client().get(pageUrl, { ...ownedByHelper(options), signal: abortSignal }), pageUrl }
+          } catch (err: unknown) {
+            // Tagged here, where the page is still known. A shared variable cannot do this job: the
+            // counted branch dispatches every page before any of them answers, so it would always
+            // hold the last one and name the wrong page for the one that actually failed.
+            throw new PageFailure(pageUrl, err)
+          }
         }
 
         // Every page is read the same way, the ones after the first included. A 204 has nothing more
         // to give; a 2xx with no body at all has broken its contract, wherever in the sequence it
         // sits -- a server that fails on page three is not "finished".
         const readPage = (res: AxiosResponse, pageUrl: string) => {
-          if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
+          if (!isValidHTTPStatus(res.status)) throw new PageFailure(pageUrl, new AnzuApiResponseCodeError(res.status))
           if (res.status === HTTP_STATUS_NO_CONTENT) {
             return { items: [] as T[], mode: 'unknown' as const, totalCount: 0, hasNextPage: false, empty: true }
           }
           if (!hasBody(res)) {
-            throw new AnzuApiResponseCodeError(res.status, undefined, 'Expected a response body, url: ' + pageUrl)
+            throw new PageFailure(
+              pageUrl,
+              new AnzuApiResponseCodeError(res.status, undefined, 'Expected a response body, url: ' + pageUrl)
+            )
           }
 
-          const body = readListBody<T>(res.data, res.status, pageUrl)
+          let body
+          try {
+            body = readListBody<T>(res.data, res.status, pageUrl)
+          } catch (err: unknown) {
+            throw new PageFailure(pageUrl, err)
+          }
 
           return {
             items: body.items,
@@ -146,7 +174,10 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
         return results
       }, signal)
     } catch (err: unknown) {
-      throw report(mapApiError(err, { system, entity, url: failingUrl }), { system, entity, url: failingUrl })
+      const failed = err instanceof PageFailure ? err : null
+      const context = { system, entity, url: failed?.pageUrl ?? url }
+
+      throw report(mapApiError(failed?.failure ?? err, context), context)
     }
   }
 

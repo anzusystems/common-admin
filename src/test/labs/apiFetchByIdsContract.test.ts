@@ -3,6 +3,8 @@ import type { AxiosInstance } from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
+import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import { AnzuApiCancelledError } from '@/model/error/AnzuApiCancelledError'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 
 // The third copy of the response rules, and the one nothing was holding in place.
@@ -107,14 +109,35 @@ describe('what fetching by ids asks for', () => {
 })
 
 describe('stopping a by-ids fetch', () => {
-  it('reports a cancellation as one, and says which url it was', async () => {
+  it('reports a cancellation as one, and never writes it down', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
-    const { execute } = setup(answering({ status: 200, data: { data: [], totalCount: 0 } }))
+    const cancelled = Object.assign(new Error('canceled'), {
+      isAxiosError: true,
+      name: 'CanceledError',
+      code: 'ERR_CANCELED',
+      config: { url: '/items' },
+    })
+    const { execute } = setup(vi.fn().mockRejectedValue(cancelled))
 
-    await execute([1])
+    await expect(execute([1])).rejects.toBeInstanceOf(AnzuApiCancelledError)
 
     expect(logged).not.toHaveBeenCalled()
+  })
+
+  it('names the url it asked for when it does report a failure', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const failure = Object.assign(new Error('failed'), {
+      isAxiosError: true,
+      config: { url: '/items' },
+      response: { status: 500 },
+    })
+    const { execute } = setup(vi.fn().mockRejectedValue(failure))
+
+    await expect(execute([7])).rejects.toBeInstanceOf(AnzuApiAxiosError)
+
+    expect(logged.mock.calls[0][1].url).toContain('filter_in[id]=7')
   })
 
   it('aborts what it has in flight', async () => {
