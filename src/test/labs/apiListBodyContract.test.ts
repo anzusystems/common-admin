@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { AxiosInstance } from 'axios'
+import axios, { type AxiosInstance } from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
@@ -159,8 +159,13 @@ describe('what reaches the log', () => {
     const { filterData, filterConfig } = createFilter(fields, store, { system: 'sys', subject: 'subj' })
     const { pagination } = usePagination('id')
     const { execute } = useApiFetchList<{ id: number }>({
+      // `getUri` included: the helper asks axios to build the url it reports, so a double without
+      // it is not standing in for an axios instance.
       client: () =>
-        ({ get: vi.fn().mockRejectedValue(axiosError({ response: { status: 500 } })) }) as unknown as AxiosInstance,
+        ({
+          get: vi.fn().mockRejectedValue(axiosError({ response: { status: 500 } })),
+          getUri: (config: unknown) => axios.getUri(config as never),
+        }) as unknown as AxiosInstance,
       system: 'test',
       entity: 'test',
       urlTemplate: '/items',
@@ -170,6 +175,31 @@ describe('what reaches the log', () => {
     await expect(execute(pagination, filterData, filterConfig)).rejects.toBeInstanceOf(AnzuApiAxiosError)
 
     expect(logged.mock.calls[0][1].url).toContain('scope=archive')
+  })
+
+  // It runs inside the catch on every failure path, so an exception in it would replace the error
+  // the caller is waiting for with one about building a diagnostic string.
+  it('never lets url building replace the failure it was describing', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const store = createFilterStore(fields)
+    const { filterData, filterConfig } = createFilter(fields, store, { system: 'sys', subject: 'subj' })
+    const { pagination } = usePagination('id')
+    const { execute } = useApiFetchList<{ id: number }>({
+      client: () =>
+        ({
+          get: vi.fn().mockRejectedValue(axiosError({ response: { status: 500 } })),
+          getUri: () => {
+            throw new Error('url building is broken')
+          },
+        }) as unknown as AxiosInstance,
+      system: 'test',
+      entity: 'test',
+      urlTemplate: '/items',
+      options: { params: { scope: 'archive' } },
+    })
+
+    await expect(execute(pagination, filterData, filterConfig)).rejects.toBeInstanceOf(AnzuApiAxiosError)
   })
 
   it('says nothing at all once reporting is turned off', async () => {

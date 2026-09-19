@@ -1,5 +1,6 @@
+import type { AxiosClientFn } from '@/labs/api/client'
 import type { AxiosResponse } from 'axios'
-import { isNull, isObject, isUndefined } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 
 /**
  * Whether the response carries a body at all.
@@ -32,24 +33,24 @@ export const ownedByHelper = <T extends object>(options: T): Omit<T, (typeof HEL
 }
 
 /**
- * The url as it will actually be requested, `options.params` included.
+ * The url as axios will actually request it, `options.params` and a custom `paramsSerializer`
+ * included.
  *
- * Axios appends those itself at send time, so a url recorded before the call is not the one that
- * went out -- and a report naming a url the reader cannot find in the network tab is worse than no
- * url at all.
+ * Built by axios itself rather than approximated: a url recorded before the call is not the one
+ * that went out, and an approximation renders arrays, nested objects and dates differently from the
+ * wire -- which is worse than no url, because it looks findable and is not.
+ *
+ * Never throws. It runs on every failure path, inside the catch, so an exception here would replace
+ * the error the caller is waiting for with one about building a diagnostic string.
  */
-export const requestedUrl = (url: string, params: unknown): string => {
-  if (!isObject(params)) return url
+export const requestedUrl = (client: AxiosClientFn, url: string, params: unknown): string => {
+  if (isUndefined(params) || isNull(params)) return url
 
-  const query = new URLSearchParams(
-    Object.entries(params as Record<string, unknown>)
-      .filter(([, value]) => !isUndefined(value) && !isNull(value))
-      .map(([key, value]) => [key, String(value)])
-  ).toString()
-
-  if (query === '') return url
-
-  return url + (url.includes('?') ? '&' : '?') + query
+  try {
+    return client().getUri({ url, params })
+  } catch {
+    return url
+  }
 }
 
 export type Abortable = {

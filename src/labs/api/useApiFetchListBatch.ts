@@ -175,7 +175,7 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
       }, signal)
     } catch (err: unknown) {
       const failed = err instanceof PageFailure ? err : null
-      const context = { system, entity, url: requestedUrl(failed?.pageUrl ?? url, options.params) }
+      const context = { system, entity, url: requestedUrl(client, failed?.pageUrl ?? url, options.params) }
 
       throw report(mapApiError(failed?.failure ?? err, context), context)
     }

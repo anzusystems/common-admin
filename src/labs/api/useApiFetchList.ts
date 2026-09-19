@@ -120,11 +120,11 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
 
       return list.items
     } catch (err: unknown) {
-      throw report(mapApiError(err, { system, entity, url: requestedUrl(url, options.params) }), {
-        system,
-        entity,
-        url: requestedUrl(url, options.params),
-      })
+      // Built once and handed to both, the way the batch does it: half the work on the failure path,
+      // and one place that could go wrong instead of two.
+      const context = { system, entity, url: requestedUrl(client, url, options.params) }
+
+      throw report(mapApiError(err, context), context)
     }
   }
 
