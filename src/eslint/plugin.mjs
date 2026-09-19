@@ -301,6 +301,14 @@ const anzuPlugin = {
       create(context) {
         const reportedMethods = new Set(['DELETE', 'delete'])
 
+        // Which local names actually mean the helper. Without this the rule fires on anyone's own
+        // function that happens to be called `useApiRequest`, and stays silent when the real one is
+        // imported under another name.
+        const helperNames = new Set()
+        const isHelperSource = (source) =>
+          typeof source === 'string' &&
+          (source.includes('labs/api/useApiRequest') || source.endsWith('common-admin/labs'))
+
         const firstTypeArgument = (node) => {
           const args = node.typeArguments ?? node.typeParameters
           return args?.params?.[0]
@@ -330,8 +338,16 @@ const anzuPlugin = {
         }
 
         return {
+          ImportDeclaration(node) {
+            if (!isHelperSource(node.source.value)) return
+            for (const specifier of node.specifiers) {
+              if (specifier.type === 'ImportSpecifier' && specifier.imported.name === 'useApiRequest') {
+                helperNames.add(specifier.local.name)
+              }
+            }
+          },
           CallExpression(node) {
-            if (node.callee.type !== 'Identifier' || node.callee.name !== 'useApiRequest') return
+            if (node.callee.type !== 'Identifier' || !helperNames.has(node.callee.name)) return
 
             const method = methodLiteral(node)
             const isDelete = typeof method === 'string' && reportedMethods.has(method)

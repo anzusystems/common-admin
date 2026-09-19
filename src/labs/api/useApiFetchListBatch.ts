@@ -12,7 +12,7 @@ import { SortOrder } from '@/composables/system/datatableColumns'
 import type { AxiosClientFn } from '@/labs/api/client'
 import { generateListQuery } from '@/labs/api/useApiFetchList'
 import { mapApiError, report } from '@/labs/api/apiErrors'
-import { createAbortable, hasBody } from '@/labs/api/request'
+import { createAbortable, hasBody, ownedByHelper } from '@/labs/api/request'
 import { readListBody } from '@/labs/api/listBody'
 
 export type UseApiFetchListBatchParams = {
@@ -82,7 +82,7 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
           const pageUrl = url + generateListQuery(page, filterData, filterConfig)
           failingUrl = pageUrl
 
-          return { res: await client().get(pageUrl, { ...options, signal: abortSignal }), pageUrl }
+          return { res: await client().get(pageUrl, { ...ownedByHelper(options), signal: abortSignal }), pageUrl }
         }
 
         // Every page is read the same way, the ones after the first included. A 204 has nothing more

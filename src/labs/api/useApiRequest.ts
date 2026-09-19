@@ -7,7 +7,7 @@ import type { AxiosRequestConfig, Method } from 'axios'
 import { HTTP_STATUS_NO_CONTENT } from '@/composables/statusCodes'
 import type { AxiosClientFn } from '@/labs/api/client'
 import { mapApiError, report } from '@/labs/api/apiErrors'
-import { type Abortable, createAbortable, hasBody } from '@/labs/api/request'
+import { type Abortable, createAbortable, hasBody, ownedByHelper } from '@/labs/api/request'
 
 export type ExecuteRequestParams<B> = {
   urlTemplate?: string
@@ -65,7 +65,7 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
         // `options` first, then what this helper owns: a caller cannot reach in and set the method,
         // the url, the body or the signal through it. The type says so too; this is for javascript
         // callers and for anything typed loosely enough to slip past it.
-        return client().request({ ...options, ...axiosConfig, signal: abortSignal })
+        return client().request({ ...ownedByHelper(options), ...axiosConfig, signal: abortSignal })
       }, signal)
 
       if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)

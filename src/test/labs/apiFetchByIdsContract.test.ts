@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AxiosInstance } from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
-import { setApiErrorLogger } from '@/labs/api/apiErrors'
+import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 
 // The third copy of the response rules, and the one nothing was holding in place.
@@ -21,6 +21,12 @@ const answering = (res: unknown) => vi.fn().mockResolvedValue(res)
 beforeEach(() => {
   setActivePinia(createPinia())
   setApiErrorLogger(null)
+})
+
+afterEach(() => {
+  // Put it back. It is module state shared by every file this worker runs, so a test that leaves
+  // its own behind decides what the next file sees.
+  setApiErrorLogger(defaultApiErrorLogger)
 })
 
 describe('what fetching by ids answers with', () => {

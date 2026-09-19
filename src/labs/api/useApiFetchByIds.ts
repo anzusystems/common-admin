@@ -9,7 +9,7 @@ import { isDefined, isUndefined } from '@/utils/common'
 import type { AxiosClientFn } from '@/labs/api/client'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 import { mapApiError, report } from '@/labs/api/apiErrors'
-import { createAbortable, hasBody } from '@/labs/api/request'
+import { createAbortable, hasBody, ownedByHelper } from '@/labs/api/request'
 import { readListBody } from '@/labs/api/listBody'
 
 export type UseApiFetchByIdsParams = {
@@ -76,7 +76,10 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
       // other failure rather than a bare `Error`.
       if (templateMissing) throw new AnzuFatalError(new Error('Url template is undefined'))
 
-      const res = await abortable.run((abortSignal) => client().get(url, { ...options, signal: abortSignal }), signal)
+      const res = await abortable.run(
+        (abortSignal) => client().get(url, { ...ownedByHelper(options), signal: abortSignal }),
+        signal
+      )
 
       if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)
 

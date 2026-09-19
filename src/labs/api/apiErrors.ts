@@ -25,11 +25,12 @@ export type ApiErrorContext = {
 
 export type ApiErrorLogger = (error: Error, context: ApiErrorContext) => void
 
-const defaultLogger: ApiErrorLogger = (error, context) => {
+/** What reporting does until an application says otherwise; exported so a test can put it back. */
+export const defaultApiErrorLogger: ApiErrorLogger = (error, context) => {
   console.error('Api error: ' + (context.url ?? ''), error)
 }
 
-let logger: ApiErrorLogger | null = defaultLogger
+let logger: ApiErrorLogger | null = defaultApiErrorLogger
 
 /**
  * Replaces the logger the api helpers report unexpected failures through, or turns reporting off

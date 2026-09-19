@@ -12,7 +12,7 @@ import type { Pagination } from '@/labs/filters/pagination'
 import { SortOrder } from '@/composables/system/datatableColumns'
 import type { AxiosClientFn } from '@/labs/api/client'
 import { mapApiError, report } from '@/labs/api/apiErrors'
-import { createAbortable, hasBody } from '@/labs/api/request'
+import { createAbortable, hasBody, ownedByHelper } from '@/labs/api/request'
 import { readListBody } from '@/labs/api/listBody'
 
 export type UseApiFetchListParams = {
@@ -91,7 +91,7 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
         generation = currentGeneration
         ownSignal = abortSignal
 
-        return client().get(url, { ...options, signal: abortSignal })
+        return client().get(url, { ...ownedByHelper(options), signal: abortSignal })
       }, signal)
 
       if (!isValidHTTPStatus(res.status)) throw new AnzuApiResponseCodeError(res.status)

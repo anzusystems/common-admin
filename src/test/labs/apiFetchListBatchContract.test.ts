@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AxiosInstance } from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
-import { setApiErrorLogger } from '@/labs/api/apiErrors'
+import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
 
@@ -37,6 +37,12 @@ const infinite = (ids: number[], hasNextPage: boolean) => ({
 beforeEach(() => {
   setActivePinia(createPinia())
   setApiErrorLogger(null)
+})
+
+afterEach(() => {
+  // Put it back. It is module state shared by every file this worker runs, so a test that leaves
+  // its own behind decides what the next file sees.
+  setApiErrorLogger(defaultApiErrorLogger)
 })
 
 describe('an infinite list', () => {

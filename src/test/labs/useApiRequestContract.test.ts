@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AxiosInstance } from 'axios'
 import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
-import { setApiErrorLogger } from '@/labs/api/apiErrors'
+import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { AnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyExistsError'
 import { AnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
@@ -56,6 +56,12 @@ const failingWith = (error: unknown) => vi.fn().mockRejectedValue(error)
 beforeEach(() => {
   // The logger is module state; a test that leaves its own behind changes the next one.
   setApiErrorLogger(null)
+})
+
+afterEach(() => {
+  // Put it back. It is module state shared by every file this worker runs, so a test that leaves
+  // its own behind decides what the next file sees.
+  setApiErrorLogger(defaultApiErrorLogger)
 })
 
 describe('what useApiRequest answers with', () => {

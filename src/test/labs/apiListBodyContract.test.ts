@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AxiosInstance } from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
-import { setApiErrorLogger } from '@/labs/api/apiErrors'
+import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
@@ -34,6 +34,12 @@ const answering = (res: unknown) => vi.fn().mockResolvedValue(res)
 beforeEach(() => {
   setActivePinia(createPinia())
   setApiErrorLogger(null)
+})
+
+afterEach(() => {
+  // Put it back. It is module state shared by every file this worker runs, so a test that leaves
+  // its own behind decides what the next file sees.
+  setApiErrorLogger(defaultApiErrorLogger)
 })
 
 describe('what counts as a list body', () => {

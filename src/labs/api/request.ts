@@ -15,6 +15,22 @@ import { isNull, isUndefined } from '@/utils/common'
  */
 export const hasBody = (res: AxiosResponse): boolean => !isUndefined(res.data) && !isNull(res.data) && res.data !== ''
 
+/**
+ * Strips what the helper decides from whatever the caller passed as `options`.
+ *
+ * The type says these cannot be set, but a type says nothing at runtime: `data` in particular
+ * survived the spread whenever no body was passed, so a caller could put a body on a GET through
+ * the back door and skip the serialisation with it.
+ */
+const HELPER_OWNED = ['method', 'url', 'data', 'signal'] as const
+
+export const ownedByHelper = <T extends object>(options: T): Omit<T, (typeof HELPER_OWNED)[number]> => {
+  const rest = { ...options } as Record<string, unknown>
+  for (const key of HELPER_OWNED) delete rest[key]
+
+  return rest as Omit<T, (typeof HELPER_OWNED)[number]>
+}
+
 export type Abortable = {
   /** Runs one call with a signal of its own, registered so `abort()` can reach it. */
   run: <T>(fn: (signal: AbortSignal, generation: number) => Promise<T>, external?: AbortSignal) => Promise<T>
