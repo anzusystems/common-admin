@@ -45,7 +45,17 @@ export default defineConfig({
       runtimeOnly: false,
       include: path.resolve(_dirname, 'src/locales/**/*.json'),
     }),
-    dts({ bundleTypes: true, tsconfigPath: 'tsconfig.libdts.json' }),
+    dts({
+      bundleTypes: true,
+      tsconfigPath: 'tsconfig.libdts.json',
+      // `VueI18nPlugin` with `runtimeOnly: false` aliases `vue-i18n` to a file inside its dist, and
+      // the declaration step followed that alias: the emitted `.d.ts` imported its types from
+      // `../../vue-i18n/dist/vue-i18n.esm-bundler.js`, which from a consumer's
+      // `node_modules/@anzusystems/common-admin/dist/` resolves to nothing at all. Excluding it here
+      // leaves the specifier as the package name, which is what a consumer can resolve. The
+      // javascript never had the problem -- `vue-i18n` is external, so the bundle imports it by name.
+      aliasesExclude: [/^vue-i18n$/],
+    }),
   ],
   resolve: {
     alias: {
