@@ -44,7 +44,7 @@ export const slovakPluralizationRule = (choice: number, choicesLength: number) =
   return choice === 1 ? 0 : 1
 }
 
-export const i18n = createI18n<[MessageSchema]>({
+export const i18n = createI18n<[MessageSchema], string, false>({
   globalInjection: false,
   legacy: false,
   locale: REQUIRED_LOCALES[0],
