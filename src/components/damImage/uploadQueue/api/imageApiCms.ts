@@ -22,7 +22,7 @@ export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[
   return execute(ids)
 }
 
-// `allowEmpty`, because a body-less answer here is not a broken endpoint: the callers guard the
+// `optionalBody`, because a body-less answer here is not a broken endpoint: the callers guard the
 // result with a strict `isNull` and expect to be told there is no image, which is what the helper
 // this replaced did. Normalised to `null` so those guards keep working.
 export const fetchImage = async (client: () => AxiosInstance, id: IntegerId) => {
@@ -32,7 +32,7 @@ export const fetchImage = async (client: () => AxiosInstance, id: IntegerId) => 
     system: SYSTEM_CMS,
     entity: ENTITY,
     urlTemplate: END_POINT + '/:id',
-    allowEmpty: true,
+    optionalBody: true,
   })
 
   return (await execute({ urlParams: { id } })) ?? null

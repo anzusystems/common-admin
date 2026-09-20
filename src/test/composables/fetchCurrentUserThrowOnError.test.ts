@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 // The labs request, which is what `fetchCurrentUser` goes through: a failure there arrives as the
@@ -10,6 +10,9 @@ const useApiRequest = vi.fn(() => ({ execute: (...args: unknown[]) => execute(..
 vi.mock('@/labs/api/useApiRequest', () => ({ useApiRequest }))
 
 const { defineAuth } = await import('@/composables/auth/defineAuth')
+const { report, setApiErrorLogger, defaultApiErrorLogger } = await import('@/labs/api/apiErrors')
+const { AnzuApiAxiosError } = await import('@/model/error/AnzuApiAxiosError')
+const { AnzuApiResponseCodeError } = await import('@/model/error/AnzuApiResponseCodeError')
 
 const client = (() => undefined) as never
 
@@ -17,6 +20,12 @@ describe('fetchCurrentUser throwOnError', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     execute.mockReset()
+  })
+
+  afterEach(() => {
+    // Module state shared by every file this worker runs: a test that leaves its own logger behind
+    // decides what the next file sees.
+    setApiErrorLogger(defaultApiErrorLogger)
   })
 
   it('answers undefined by default, without throwing', async () => {
@@ -70,16 +79,45 @@ describe('fetchCurrentUser throwOnError', () => {
     expect(execute).toHaveBeenCalledWith({ urlTemplate: '/adm/v1/user/current', urlParams: { id: 3 } })
   })
 
-  it('leaves reporting to the application, not to this call site', async () => {
-    // It used to ask for silence per instance, which is why whether a failure was written down
-    // depended on which call made it. There is one switch for that now and it belongs to the
-    // application (`setApiErrorLogger`), so this path simply does not carry the question any more.
-    execute.mockResolvedValue({ id: 7, roles: [], permissions: {} })
-    const { useCurrentUser } = defineAuth('cms')
-    const { fetchCurrentUser } = useCurrentUser('cms')
+  // This call runs before anyone has logged in, so its 401 is the ordinary answer rather than a
+  // failure -- every admin branches on it and sends the user to the login page. It used to ask for
+  // silence per instance; the previous version of this test then asserted only that it no longer
+  // asks, which the type already forbids and which pins nothing. What has to hold is that the
+  // failure is not written down.
+  it('does not write down the 401 that an unauthenticated start answers with', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const unauthorized = new AnzuApiAxiosError({
+      isAxiosError: true,
+      response: { status: 401 },
+    } as never)
 
-    await fetchCurrentUser(client, '/adm/v1/user/current')
+    expect(report(unauthorized, { system: 'cms', entity: 'user', url: '/adm/v1/user/current' })).toBe(unauthorized)
+    expect(logged).not.toHaveBeenCalled()
+  })
 
-    expect(useApiRequest).toHaveBeenCalledWith(expect.not.objectContaining({ silentConsoleError: expect.anything() }))
+  // 403 too, and by status rather than by class: a rejected 403 is an `AnzuApiForbiddenError`, which
+  // is outside `LOGGED` anyway, but `options.validateStatus` lets one arrive fulfilled, and then it
+  // is an `AnzuApiResponseCodeError` -- inside it. The policy has to hold on both paths.
+  it('does not write down a forbidden answer that arrived as a fulfilled response', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const refused = new AnzuApiResponseCodeError(403)
+
+    expect(report(refused, { system: 'cms', entity: 'user' })).toBe(refused)
+    expect(logged).not.toHaveBeenCalled()
+  })
+
+  // And the statuses that are failures still reach the logger, with the status beside them so an
+  // application can decide for itself what it considers expected.
+  it('still writes down the statuses that are failures, and says which', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const failure = new AnzuApiAxiosError({ isAxiosError: true, response: { status: 500 } } as never)
+
+    report(failure, { system: 'cms', entity: 'user', url: '/adm/v1/user/current' })
+
+    expect(logged).toHaveBeenCalledTimes(1)
+    expect(logged.mock.calls[0][1].status).toBe(500)
   })
 })

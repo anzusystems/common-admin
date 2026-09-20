@@ -8,6 +8,7 @@ import { isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbidden
 import { isAnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyExistsError'
 import { isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
+import { isAnzuApiCancelledError } from '@/model/error/AnzuApiCancelledError'
 
 const DEFAULT_DURATION_SECONDS = 3
 
@@ -162,6 +163,11 @@ export function useAlerts() {
   }
 
   const showErrorsDefault = (error: any, duration = -1) => {
+    // A stopped request is not a failure to report: something newer asked for it to stop, or the
+    // view it belonged to is gone. It returns `true` -- handled, nothing to show -- because the
+    // callers that fall back on `if (!showErrorsDefault(e)) showUnknownError()` would otherwise toast
+    // "unknown error" every time a user typed one more character into an autocomplete.
+    if (isAnzuApiCancelledError(error)) return true
     if (isAnzuApiForbiddenError(error)) {
       showForbiddenError(duration)
       return true

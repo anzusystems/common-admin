@@ -6,6 +6,7 @@ import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { AnzuApiCancelledError } from '@/model/error/AnzuApiCancelledError'
+import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
 import { usePagination } from '@/labs/filters/pagination'
 
@@ -33,6 +34,22 @@ const listSetup = (get: ReturnType<typeof vi.fn>, cancelPrevious = false) => {
     system: 'test',
     entity: 'test',
     urlTemplate: '/items',
+    cancelPrevious,
+  })
+
+  return { ...api, pagination, filterData, filterConfig }
+}
+
+// The same instance, with no template of its own: a call that does not bring one throws while it is
+// building its url -- the ordinary shape of a call that fails before it dispatches.
+const listSetupNoTemplate = (get: ReturnType<typeof vi.fn>, cancelPrevious = false) => {
+  const store = createFilterStore(fields)
+  const { filterData, filterConfig } = createFilter(fields, store, { system: 'sys', subject: 'subj' })
+  const { pagination } = usePagination('id')
+  const api = useApiFetchList<{ id: number }>({
+    client: () => ({ get }) as unknown as AxiosInstance,
+    system: 'test',
+    entity: 'test',
     cancelPrevious,
   })
 
@@ -247,6 +264,77 @@ describe('what a superseded list call may still write', () => {
     abort()
     resolveFirst?.(listPage([{ id: 1 }], 77))
     await first
+
+    expect(pagination.value.totalCount).toBe(before)
+  })
+
+  // "A newer call has started" has to mean the moment `execute` was called, not the moment it
+  // reached the wire. Everything a call does before dispatching -- resolving the template, rendering
+  // the filters into a query -- can throw, and a call that dies there is still the caller saying the
+  // previous query is obsolete. With the derivation sitting above `run`, the failing call opened no
+  // generation, so the older one stayed current and wrote its pagination into a screen that had
+  // already asked for something else.
+  it('supersedes the earlier call even when the newer one fails before it dispatches', async () => {
+    let resolveFirst: ((value: unknown) => void) | undefined
+    const get = vi.fn().mockImplementation(() => new Promise((resolve) => (resolveFirst = resolve)))
+    const { execute, pagination, filterData, filterConfig } = listSetupNoTemplate(get)
+    const before = pagination.value.totalCount
+
+    const first = execute(pagination, filterData, filterConfig, { urlTemplate: '/items' })
+    // No template on the instance and none here either: it throws while building its url, before a
+    // request of its own goes out.
+    await expect(execute(pagination, filterData, filterConfig)).rejects.toBeInstanceOf(AnzuFatalError)
+
+    resolveFirst?.(listPage([{ id: 1 }], 77))
+    await first
+
+    expect(pagination.value.totalCount).toBe(before)
+  })
+
+  // The same moment, seen through `cancelPrevious`: the earlier request is not merely ignored, it is
+  // stopped -- there is nobody left to read it.
+  it('stops the earlier request when the newer one fails before it dispatches', async () => {
+    const signals: AbortSignal[] = []
+    const get = vi.fn().mockImplementation((_url: string, config: { signal: AbortSignal }) => {
+      signals.push(config.signal)
+      return new Promise(() => {})
+    })
+    const { execute, filterData, filterConfig, pagination } = listSetupNoTemplate(get, true)
+
+    void execute(pagination, filterData, filterConfig, { urlTemplate: '/items' })
+    await expect(execute(pagination, filterData, filterConfig)).rejects.toBeInstanceOf(AnzuFatalError)
+
+    expect(signals[0].aborted).toBe(true)
+  })
+
+  // The window between the response arriving and the pagination being written. `run` drops the relay
+  // it set up for the caller's signal as soon as it has the response, and the write happens after
+  // that -- so an abort landing in between never reaches the call's own signal, and the call the
+  // caller just stopped went on to write. The guard reads the caller's signal directly for this.
+  it('does not write pagination when the caller stops it after the response has arrived', async () => {
+    const own = new AbortController()
+    let seen: AbortSignal | undefined
+    let resolveGet: ((value: unknown) => void) | undefined
+    const get = vi.fn().mockImplementation((_url: string, config: { signal: AbortSignal }) => {
+      seen = config.signal
+
+      return new Promise((resolve) => (resolveGet = resolve))
+    })
+    const { execute, pagination, filterData, filterConfig } = listSetup(get)
+    const before = pagination.value.totalCount
+
+    const call = execute(pagination, filterData, filterConfig, { signal: own.signal })
+    resolveGet?.(listPage([{ id: 1 }], 99))
+    // One tick: `run` has the response and has already dropped the relay, and the write is queued
+    // behind this. Aborting here is what the relay would have caught a moment earlier.
+    await Promise.resolve()
+    own.abort()
+
+    // The evidence that this is the window and not the ordinary case: the call's own signal never
+    // learned about the abort.
+    expect(seen?.aborted).toBe(false)
+
+    await call
 
     expect(pagination.value.totalCount).toBe(before)
   })

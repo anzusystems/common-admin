@@ -15,12 +15,22 @@ import FiltersSelected from '@/labs/filters/FiltersSelected.vue'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
+import { useApiFetchItems } from '@/labs/api/useApiFetchItems'
+import type { FetchItemsParams, UseApiFetchItemsParams, UseApiFetchItemsReturnType } from '@/labs/api/useApiFetchItems'
+import type { FetchByIdsParams, UseApiFetchByIdsParams, UseApiFetchByIdsReturnType } from '@/labs/api/useApiFetchByIds'
 import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
+import type { ExecuteRequestParams, UseApiRequestParams, UseApiRequestReturnType } from '@/labs/api/useApiRequest'
 import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
 import type { ApiErrorContext, ApiErrorLogger } from '@/labs/api/apiErrors'
 import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
+import type {
+  FetchListBatchParams,
+  UseApiFetchListBatchParams,
+  UseApiFetchListBatchReturnType,
+} from '@/labs/api/useApiFetchListBatch'
 import { useApiQueryBuilder } from '@/labs/api/useApiQueryBuilder'
 import { generateListQuery, useApiFetchList } from '@/labs/api/useApiFetchList'
+import type { FetchListParams, UseApiFetchListParams, UseApiFetchListReturnType } from '@/labs/api/useApiFetchList'
 import { useJobApi } from '@/labs/job/jobApi'
 import ALogListView from '@/labs/log/ALogListView.vue'
 import ALogDetailView from '@/labs/log/ALogDetailView.vue'
@@ -183,9 +193,28 @@ export {
   type TimeIntervalToolsValue,
   type Pagination,
   useApiFetchByIds,
+  useApiFetchItems,
   useApiFetchList,
   useApiCommand,
   useApiRequest,
+  // A wrapper around a helper has to be able to name what it returns and what it takes. Without
+  // these the fleet can call the family but cannot write a function that hands one on, which is the
+  // shape the admins are being moved towards.
+  type UseApiRequestParams,
+  type ExecuteRequestParams,
+  type UseApiRequestReturnType,
+  type UseApiFetchListParams,
+  type FetchListParams,
+  type UseApiFetchListReturnType,
+  type UseApiFetchByIdsParams,
+  type FetchByIdsParams,
+  type UseApiFetchByIdsReturnType,
+  type UseApiFetchItemsParams,
+  type FetchItemsParams,
+  type UseApiFetchItemsReturnType,
+  type UseApiFetchListBatchParams,
+  type FetchListBatchParams,
+  type UseApiFetchListBatchReturnType,
   defaultApiErrorLogger,
   setApiErrorLogger,
   type ApiErrorContext,

@@ -19,9 +19,10 @@ import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 // tests used to assert against -- describe a response axios cannot produce, which is how the empty
 // string went unnoticed as the one value every 204 carries.
 
-const axiosError = (over: Record<string, unknown> = {}) =>
-  Object.assign(new Error('request failed'), { isAxiosError: true, config: { url: '/test' } }, over)
-
+// The url it was called with, the way an axios failure carries it: the report renders the config
+// axios kept, so a hard-coded one would have it describe a request that never happened.
+const axiosError = (over: Record<string, unknown> = {}, url = '/test') =>
+  Object.assign(new Error('request failed'), { isAxiosError: true, config: { url } }, over)
 const buildApi = (request: ReturnType<typeof vi.fn>) =>
   useApiRequest<Record<string, unknown>>({
     client: () => ({ request }) as unknown as AxiosInstance,
@@ -38,7 +39,7 @@ const buildOptional = (request: ReturnType<typeof vi.fn>) =>
     system: 'test',
     entity: 'test',
     urlTemplate: '/test',
-    allowEmpty: true,
+    optionalBody: true,
   })
 
 const buildCommand = (request: ReturnType<typeof vi.fn>) =>
@@ -51,7 +52,10 @@ const buildCommand = (request: ReturnType<typeof vi.fn>) =>
   })
 
 const answering = (res: unknown) => vi.fn().mockResolvedValue(res)
-const failingWith = (error: unknown) => vi.fn().mockRejectedValue(error)
+const failingWith = (over: Record<string, unknown> = {}) =>
+  vi.fn().mockImplementation((config: { url: string }) => Promise.reject(axiosError(over, config.url)))
+/** For a failure that is not axios's: it carries no config, so there is no url to build it from. */
+const rejecting = (error: unknown) => vi.fn().mockRejectedValue(error)
 
 beforeEach(() => {
   // The logger is module state; a test that leaves its own behind changes the next one.
@@ -62,6 +66,68 @@ afterEach(() => {
   // Put it back. It is module state shared by every file this worker runs, so a test that leaves
   // its own behind decides what the next file sees.
   setApiErrorLogger(defaultApiErrorLogger)
+})
+
+// Nothing is requested until axios is handed the config, and until then there is no url to report.
+// `url` used to be recorded before the body was serialised and before the client was asked for, so a
+// body that cannot be serialised was described as a request to an endpoint that was never called.
+// An empty template is a call whose url is the client root -- a real case, and the one place the
+// family distinguishes "" from "no url at all". Nothing pinned it.
+describe('a call whose url is the client root', () => {
+  it('asks for the empty url rather than substituting into it', async () => {
+    const request = vi.fn().mockResolvedValue({ status: 200, data: { id: 1 } })
+    const { execute } = useApiRequest<Record<string, unknown>>({
+      client: () => ({ request }) as unknown as AxiosInstance,
+      method: 'get',
+      system: 'test',
+      entity: 'test',
+      urlTemplate: '',
+    })
+
+    await execute({ urlParams: { id: 7 } })
+
+    expect(request.mock.calls[0][0].url).toBe('')
+  })
+})
+
+describe('a call that dies on its way to the wire', () => {
+  it('reports no url, because nothing was requested', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const request = vi.fn()
+    const { execute } = useApiRequest<Record<string, unknown>, Record<string, unknown>>({
+      client: () => ({ request }) as unknown as AxiosInstance,
+      method: 'post',
+      system: 'test',
+      entity: 'test',
+      urlTemplate: '/test',
+    })
+    const circular: Record<string, unknown> = {}
+    circular.self = circular
+
+    await expect(execute({ body: circular })).rejects.toBeInstanceOf(AnzuFatalError)
+
+    expect(request).not.toHaveBeenCalled()
+    expect(logged.mock.calls[0][1].url).toBeUndefined()
+  })
+
+  it('reports no url when the client itself cannot be had', async () => {
+    const logged = vi.fn()
+    setApiErrorLogger(logged)
+    const { execute } = useApiRequest<Record<string, unknown>>({
+      client: () => {
+        throw new Error('no client')
+      },
+      method: 'get',
+      system: 'test',
+      entity: 'test',
+      urlTemplate: '/test',
+    })
+
+    await expect(execute()).rejects.toBeInstanceOf(AnzuFatalError)
+
+    expect(logged.mock.calls[0][1].url).toBeUndefined()
+  })
 })
 
 describe('what useApiRequest answers with', () => {
@@ -125,7 +191,7 @@ describe('what useApiRequest answers with', () => {
   })
 })
 
-describe('what allowEmpty changes', () => {
+describe('what optionalBody changes', () => {
   it.each([
     ['no content', 204],
     ['accepted', 202],
@@ -163,7 +229,7 @@ describe('what useApiCommand answers with', () => {
 
 describe('what the helpers throw', () => {
   it('tells a forbidden response from the rest', async () => {
-    const { execute } = buildApi(failingWith(axiosError({ response: { status: 403 } })))
+    const { execute } = buildApi(failingWith({ response: { status: 403 } }))
 
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiForbiddenError)
   })
@@ -201,19 +267,19 @@ describe('what the helpers throw', () => {
   })
 
   it('tells a timeout from a backend that answered', async () => {
-    const { execute } = buildApi(failingWith(axiosError({ code: 'ECONNABORTED' })))
+    const { execute } = buildApi(failingWith({ code: 'ECONNABORTED' }))
 
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiTimeoutError)
   })
 
   it('hands back every other axios failure as an axios error', async () => {
-    const { execute } = buildApi(failingWith(axiosError({ response: { status: 500 } })))
+    const { execute } = buildApi(failingWith({ response: { status: 500 } }))
 
     await expect(execute()).rejects.toBeInstanceOf(AnzuApiAxiosError)
   })
 
   it('wraps anything that is not an axios failure at all', async () => {
-    const { execute } = buildApi(failingWith(new TypeError('undefined is not a function')))
+    const { execute } = buildApi(rejecting(new TypeError('undefined is not a function')))
 
     await expect(execute()).rejects.toBeInstanceOf(AnzuFatalError)
   })

@@ -12,7 +12,7 @@ import { useApiRequest } from '@/labs/api/useApiRequest'
 
 const CHUNK_UPLOAD_TIMEOUT = 420
 
-// `allowEmpty` for the same reason as `fetchImage`: the callers here read the result as "no file"
+// `optionalBody` for the same reason as `fetchImage`: the callers here read the result as "no file"
 // rather than as a failure, and normalising to `null` keeps their `isNull` guards honest.
 export const fetchImageFile = async (client: () => AxiosInstance, endPoint: string, id: DocId) => {
   const { execute } = useApiRequest<AssetFileImage, null>({
@@ -21,7 +21,7 @@ export const fetchImageFile = async (client: () => AxiosInstance, endPoint: stri
     system: SYSTEM_CORE_DAM,
     entity: 'asset',
     urlTemplate: endPoint + '/:id',
-    allowEmpty: true,
+    optionalBody: true,
   })
 
   return (await execute({ urlParams: { id } })) ?? null

@@ -17,10 +17,10 @@ import { AnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 // on reading a number that no longer changes, with nothing to fail. That is the trap in migrating
 // a list call, and it is the reason for the first block below.
 //
-// The error mapping is a third copy of the one in `useApiRequest` -- the same eight branches,
-// written out again here -- so it is pinned here rather than assumed to follow the other copy.
-// Three of the eight are pinned below, the ones a list call reaches on its own; the remaining five
-// are pinned against `useApiRequest`, and a divergence in this copy alone would not be caught.
+// The error mapping is one function now (`mapApiError`), shared by the whole family; this file used
+// to say it was a third hand-written copy and that is no longer true. What is pinned below is that a
+// list call reaches that mapping at all and gets the right class out of it -- three of the branches,
+// the ones a list call can reach on its own. The other five are pinned against `useApiRequest`.
 //
 // Not pinned here: the translation of a filter into the query. Every case below runs with a
 // non-mandatory filter whose default is empty, so `getValue` answers null and no `filter_*` is ever
@@ -54,8 +54,10 @@ const listResponse = (data: Array<{ id: number }>, over: Record<string, unknown>
   data: { data, totalCount: data.length, ...over },
 })
 
-const axiosError = (over: Record<string, unknown> = {}) =>
-  Object.assign(new Error('request failed'), { isAxiosError: true, config: { url: '/items' } }, over)
+// The url it was called with, the way an axios failure carries it: the report renders the config
+// axios kept, so a hard-coded one would have it describe a request that never happened.
+const axiosError = (over: Record<string, unknown> = {}, url = '/items') =>
+  Object.assign(new Error('request failed'), { isAxiosError: true, config: { url } }, over)
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -147,20 +149,21 @@ describe('the url the list fetch asks for', () => {
 })
 
 describe('what the list fetch throws', () => {
-  const failing = (error: unknown) => {
-    const { execute, filterData, filterConfig, pagination } = buildApi(vi.fn().mockRejectedValue(error))
+  const failing = (over: Record<string, unknown> = {}) => {
+    const get = vi.fn().mockImplementation((url: string) => Promise.reject(axiosError(over, url)))
+    const { execute, filterData, filterConfig, pagination } = buildApi(get)
     return () => execute(pagination, filterData, filterConfig)
   }
 
   it('tells a forbidden response from the rest', async () => {
-    await expect(failing(axiosError({ response: { status: 403 } }))()).rejects.toBeInstanceOf(AnzuApiForbiddenError)
+    await expect(failing({ response: { status: 403 } })()).rejects.toBeInstanceOf(AnzuApiForbiddenError)
   })
 
   it('tells a timeout from a backend that answered', async () => {
-    await expect(failing(axiosError({ code: 'ECONNABORTED' }))()).rejects.toBeInstanceOf(AnzuApiTimeoutError)
+    await expect(failing({ code: 'ECONNABORTED' })()).rejects.toBeInstanceOf(AnzuApiTimeoutError)
   })
 
   it('hands back every other axios failure with the response on its cause', async () => {
-    await expect(failing(axiosError({ response: { status: 500 } }))()).rejects.toBeInstanceOf(AnzuApiAxiosError)
+    await expect(failing({ response: { status: 500 } })()).rejects.toBeInstanceOf(AnzuApiAxiosError)
   })
 })

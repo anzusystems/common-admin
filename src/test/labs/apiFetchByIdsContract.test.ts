@@ -128,16 +128,57 @@ describe('stopping a by-ids fetch', () => {
   it('names the url it asked for when it does report a failure', async () => {
     const logged = vi.fn()
     setApiErrorLogger(logged)
-    const failure = Object.assign(new Error('failed'), {
-      isAxiosError: true,
-      config: { url: '/items' },
-      response: { status: 500 },
-    })
-    const { execute } = setup(vi.fn().mockRejectedValue(failure))
+    // The failure carries the url it was called with, the way an axios failure does. A fixture that
+    // names something else is claiming a request that was never made, and the report believes it.
+    const { execute } = setup(
+      vi
+        .fn()
+        .mockImplementation((url: string) =>
+          Promise.reject(
+            Object.assign(new Error('failed'), { isAxiosError: true, config: { url }, response: { status: 500 } })
+          )
+        )
+    )
 
     await expect(execute([7])).rejects.toBeInstanceOf(AnzuApiAxiosError)
 
     expect(logged.mock.calls[0][1].url).toContain('filter_in[id]=7')
+  })
+
+  // `cancelPrevious` and a per-call signal are part of the family's contract, not of one helper's:
+  // only `useApiRequest` and `useApiFetchList` pinned them, so a divergence here went unseen.
+  it('supersedes the earlier call when asked to', async () => {
+    const signals: AbortSignal[] = []
+    const get = vi.fn().mockImplementation((_url: string, config: { signal: AbortSignal }) => {
+      signals.push(config.signal)
+
+      return new Promise(() => {})
+    })
+    const { execute } = setup(get, { cancelPrevious: true })
+
+    void execute([1])
+    void execute([2])
+
+    expect(signals[0].aborted).toBe(true)
+    expect(signals[1].aborted).toBe(false)
+  })
+
+  it('stops one call through a signal of its own, leaving the others alone', async () => {
+    const own = new AbortController()
+    const signals: AbortSignal[] = []
+    const get = vi.fn().mockImplementation((_url: string, config: { signal: AbortSignal }) => {
+      signals.push(config.signal)
+
+      return new Promise(() => {})
+    })
+    const { execute } = setup(get)
+
+    void execute([1], { signal: own.signal })
+    void execute([2])
+    own.abort()
+
+    expect(signals[0].aborted).toBe(true)
+    expect(signals[1].aborted).toBe(false)
   })
 
   it('aborts what it has in flight', async () => {

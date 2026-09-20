@@ -1,6 +1,7 @@
 import type { AxiosClientFn } from '@/labs/api/client'
-import type { AxiosResponse } from 'axios'
-import { isNull, isUndefined } from '@/utils/common'
+import axios, { type AxiosRequestConfig } from 'axios'
+import { isNull, isString, isUndefined } from '@/utils/common'
+import { ref, type Ref } from 'vue'
 
 /**
  * Whether the response carries a body at all.
@@ -14,7 +15,8 @@ import { isNull, isUndefined } from '@/utils/common'
  * it in the type: the response type excludes `null` so that a command site cannot declare itself as
  * returning one.
  */
-export const hasBody = (res: AxiosResponse): boolean => !isUndefined(res.data) && !isNull(res.data) && res.data !== ''
+export const hasBody = (res: { data: unknown }): boolean =>
+  !isUndefined(res.data) && !isNull(res.data) && res.data !== ''
 
 /**
  * Strips what the helper decides from whatever the caller passed as `options`.
@@ -33,21 +35,60 @@ export const ownedByHelper = <T extends object>(options: T): Omit<T, (typeof HEL
 }
 
 /**
- * The url as axios will actually request it, `options.params` and a custom `paramsSerializer`
- * included.
+ * Renders a config axios kept, and nothing else. It has no `baseURL` and no `params` of its own, so
+ * what comes out is what the config carries.
+ */
+const renderer = axios.create()
+
+/**
+ * The url as axios will actually request it: the client's `baseURL` and default `params`, the
+ * request's own `params`, and whatever `paramsSerializer` renders them.
  *
  * Built by axios itself rather than approximated: a url recorded before the call is not the one
  * that went out, and an approximation renders arrays, nested objects and dates differently from the
- * wire -- which is worse than no url, because it looks findable and is not.
+ * wire -- which is worse than no url, because it looks findable and is not. It is handed the same
+ * config the request was given, minus what this helper owns, for the same reason: a call carrying
+ * its own `paramsSerializer` or `baseURL` is asking for a url that the defaults do not produce.
+ *
+ * `undefined` in, `undefined` out: a call that failed before it had a url has none to report, and
+ * asking axios for one would answer with the client's root -- a url that was never requested and
+ * that reads like an endpoint. An empty string is different: that is a call whose url really is the
+ * client root, and it gets rendered.
+ *
+ * Rendered from the config axios actually used whenever there is one: the one it keeps on its own
+ * error, or the one it keeps on the response it did return, which covers the failures the helper
+ * raises itself after reading that response. Both are the request as it went out -- merged, and past
+ * any request interceptor that rewrote the url or the params -- while anything rebuilt here is a
+ * reconstruction, and by the time a failure is described the factory may hand back a different
+ * instance or its defaults may have moved on.
+ *
+ * A config that axios kept is rendered through an instance with no defaults of its own, for that
+ * same reason: `getUri` merges the instance's defaults *under* the config it is given, so rendering
+ * it through the caller's client would let a default added since the request appear in a url that
+ * never carried it. The rebuild is the one case that does want those defaults -- there is no record
+ * of the request to read them from -- so it goes through the client.
  *
  * Never throws. It runs on every failure path, inside the catch, so an exception here would replace
- * the error the caller is waiting for with one about building a diagnostic string.
+ * the error the caller is waiting for with one about building a diagnostic string -- and a client
+ * without `getUri` (a hand-built stub, a mock) must not turn a mapped failure into a `TypeError`.
  */
-export const requestedUrl = (client: AxiosClientFn, url: string, params: unknown): string => {
-  if (isUndefined(params) || isNull(params)) return url
+export const requestedUrl = (
+  client: AxiosClientFn,
+  url: string | undefined,
+  options: AxiosRequestConfig = {},
+  failure?: unknown,
+  dispatched?: AxiosRequestConfig
+): string | undefined => {
+  if (isUndefined(url)) return undefined
 
   try {
-    return client().getUri({ url, params })
+    const sent = (axios.isAxiosError(failure) ? failure.config : undefined) ?? dispatched
+    const built: unknown = isUndefined(sent)
+      ? client().getUri({ ...ownedByHelper(options), url })
+      : renderer.getUri(sent)
+
+    // A stub can answer with anything. The declared type says string, so it has to be one.
+    return isString(built) ? built : url
   } catch {
     return url
   }
@@ -60,6 +101,8 @@ export type Abortable = {
   abort: () => void
   /** The generation a call starts in; a stale one must not write to state the caller can see. */
   generation: () => number
+  /** Whether this instance has anything in flight. */
+  loading: Ref<boolean>
 }
 
 export type AbortableOptions = {
@@ -74,6 +117,21 @@ export const createAbortable = (options: AbortableOptions = {}): Abortable => {
   const { cancelPrevious = false } = options
   const controllers = new Set<AbortController>()
   let generation = 0
+
+  /**
+   * True while this instance has a request in flight.
+   *
+   * It is derived from the set rather than counted, which is what makes it safe to turn
+   * `cancelPrevious` on. The pattern everywhere in the fleet is a `loading` ref the caller clears in
+   * a `finally`, and under `cancelPrevious` that `finally` belongs to the call that was just
+   * superseded -- so the spinner goes out while the call the user is waiting for is still running.
+   * Here the superseded call's controller leaves the set at the same moment the new one joins it, so
+   * the value never dips between the two.
+   */
+  const loading = ref(false)
+  const syncLoading = () => {
+    loading.value = controllers.size > 0
+  }
 
   const abortAll = () => {
     controllers.forEach((controller) => controller.abort())
@@ -90,6 +148,7 @@ export const createAbortable = (options: AbortableOptions = {}): Abortable => {
     generation += 1
     const controller = new AbortController()
     controllers.add(controller)
+    syncLoading()
 
     // The external signal is relayed rather than passed through: `abort()` has to keep working, and
     // it can only reach a controller this set owns.
@@ -111,6 +170,7 @@ export const createAbortable = (options: AbortableOptions = {}): Abortable => {
     } finally {
       external?.removeEventListener('abort', relay)
       controllers.delete(controller)
+      syncLoading()
     }
   }
 
@@ -120,7 +180,9 @@ export const createAbortable = (options: AbortableOptions = {}): Abortable => {
       // Bumped so a call already on its way back cannot write to the caller's state afterwards.
       generation += 1
       abortAll()
+      syncLoading()
     },
     generation: () => generation,
+    loading,
   }
 }
