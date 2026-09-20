@@ -1,5 +1,5 @@
 import type { AxiosClientFn } from '@/labs/api/client'
-import axios, { type AxiosRequestConfig } from 'axios'
+import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { isNull, isString, isUndefined } from '@/utils/common'
 import { ref, type Ref } from 'vue'
 
@@ -37,8 +37,14 @@ export const ownedByHelper = <T extends object>(options: T): Omit<T, (typeof HEL
 /**
  * Renders a config axios kept, and nothing else. It has no `baseURL` and no `params` of its own, so
  * what comes out is what the config carries.
+ *
+ * Built on first use rather than at module load: importing this library should not create an axios
+ * instance. A consumer that mocks axios and counts `create` calls would otherwise see one it never
+ * made -- which is exactly how this was found, in a fleet test asserting that its own client is
+ * built once.
  */
-const renderer = axios.create()
+let rendererInstance: AxiosInstance | undefined
+const renderer = (): AxiosInstance => (rendererInstance ??= axios.create())
 
 /**
  * The url as axios will actually request it: the client's `baseURL` and default `params`, the
@@ -85,7 +91,7 @@ export const requestedUrl = (
     const sent = (axios.isAxiosError(failure) ? failure.config : undefined) ?? dispatched
     const built: unknown = isUndefined(sent)
       ? client().getUri({ ...ownedByHelper(options), url })
-      : renderer.getUri(sent)
+      : renderer().getUri(sent)
 
     // A stub can answer with anything. The declared type says string, so it has to be one.
     return isString(built) ? built : url
