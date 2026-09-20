@@ -56,7 +56,9 @@
     "format": "oxfmt --disable-nested-config src vite.config.lib.mts vite.config.mts vitest.config.mts eslint.config.mjs",
     "format:check": "oxfmt --disable-nested-config src vite.config.lib.mts vite.config.mts vitest.config.mts eslint.config.mjs --check",
     "test": "vitest",
-    "test:run": "vitest run",
+    "test:browser": "vitest run",
+    "test:eslint": "vitest run --config vitest.config.node.mts",
+    "test:run": "run-s --print-name test:browser test:eslint",
     "test:ui": "vitest --ui"
   },
   "devDependencies": {

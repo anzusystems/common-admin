@@ -370,7 +370,7 @@ const anzuPlugin = {
                 ? 'A delete usually reads nothing back: use `useApiCommand`. If this endpoint really answers ' +
                   'with the deleted entity, disable this line and say so.'
                 : 'State what this answers with. `useApiRequest<Entity>` for a body, `useApiCommand` for none, ' +
-                  '`allowEmpty: true` for either.',
+                  '`optionalBody: true` for either.',
             })
           },
         }
@@ -383,14 +383,21 @@ const anzuPlugin = {
         docs: {
           description:
             'Ensure urlParams keys match the :placeholders declared in urlTemplate ' +
-            'for useApiRequest / useApiFetchList / useApiFetchByIds / useApiFetchListBatch calls.',
+            'for useApiRequest / useApiCommand / useApiFetchList / useApiFetchByIds / ' +
+            'useApiFetchItems / useApiFetchListBatch calls.',
         },
         schema: [],
       },
       create(context) {
-        const TARGET_CALLEES = new Set(['useApiRequest', 'useApiFetchList', 'useApiFetchByIds', 'useApiFetchListBatch'])
-
-        const PLACEHOLDER_RE = /:([a-zA-Z_][\w]*)/g
+        const TARGET_CALLEES = new Set([
+          'useApiRequest',
+          // The commands are where most of the fleet's `:id` templates are -- every delete is one.
+          'useApiCommand',
+          'useApiFetchList',
+          'useApiFetchByIds',
+          'useApiFetchItems',
+          'useApiFetchListBatch',
+        ])
 
         const getCalleeName = (callee) => {
           if (callee.type === 'Identifier') return callee.name
@@ -486,11 +493,27 @@ const anzuPlugin = {
             const resolved = resolveToString(templateProp.value)
             if (resolved === null) return
 
+            // The path only, because that is all `stringUrlTemplateReplace` substitutes into: it
+            // splits the template on `?` and rejoins the query untouched. Scanning the query too
+            // would fail CI on a perfectly good `...?locale=:locale`, and adding `locale` to
+            // `urlParams` to silence it would change nothing at runtime.
+            const [path] = resolved.split('?')
+
+            // Exactly what `stringUrlTemplateReplace` does, and nothing else: split the path on `/`,
+            // skip any part that does not START with `:`, and take everything after that colon as the
+            // key. Both halves matter and both were got wrong in turn. Hunting for `:name` anywhere
+            // matches inside `prefix-:id`, which the runtime leaves alone, so the rule demanded a key
+            // that is never filled in. Requiring the key to look like an identifier misses `:asset-id`,
+            // which the runtime substitutes happily, so the rule reported the caller's correct
+            // `urlParams` as having no placeholder to match.
             const placeholders = new Set()
-            let match
-            PLACEHOLDER_RE.lastIndex = 0
-            while ((match = PLACEHOLDER_RE.exec(resolved)) !== null) {
-              placeholders.add(match[1])
+            for (const segment of path.split('/')) {
+              if (!segment.startsWith(':')) continue
+              // No guard on the name, because the runtime has none: a bare `:` takes `''` as its key
+              // and fills the segment in from `params['']`. Nobody writes that on purpose, which is
+              // the point -- it is a typo, and the rule reporting a missing key is how it gets seen
+              // rather than shipped as a literal colon in the url.
+              placeholders.add(segment.slice(1))
             }
 
             const paramKeys = collectStaticKeys(paramsProp.value)
