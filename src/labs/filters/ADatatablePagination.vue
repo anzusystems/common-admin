@@ -58,13 +58,17 @@ const disabledFirstAndPrev = computed(() => {
   return pagination.value.page === 1
 })
 
+// `>=`, not `===`: an empty list has `totalCount: 0`, so `lastPage` is 0 while `page` is never below
+// 1, and the two can never meet. The page would then count as "not the last one" on a list with
+// nothing in it -- and the same holds before any request has been made, because that initial state is
+// the same numbers.
 const disabledLast = computed(() => {
-  return !isNull(pagination.value.hasNextPage) || pagination.value.page === lastPage.value
+  return !isNull(pagination.value.hasNextPage) || pagination.value.page >= lastPage.value
 })
 
 const disabledNext = computed(() => {
   return (
-    (isNull(pagination.value.hasNextPage) && pagination.value.page === lastPage.value) ||
+    (isNull(pagination.value.hasNextPage) && pagination.value.page >= lastPage.value) ||
     pagination.value.hasNextPage === false
   )
 })
