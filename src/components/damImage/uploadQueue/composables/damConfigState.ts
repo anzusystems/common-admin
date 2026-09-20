@@ -144,11 +144,11 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
       Promise.allSettled(promises)
         .then((results) => {
           const loadedTypes: DamAssetTypeType[] = []
-          const loadedResponses: Awaited<{ data: CustomDataFormElement[] }>[] = []
+          const loadedResponses: CustomDataFormElement[][] = []
           const failedTypes: DamAssetTypeType[] = []
 
           results.forEach((result, index) => {
-            if (result.status === 'fulfilled' && Object.keys(result.value).length > 0) {
+            if (result.status === 'fulfilled' && result.value.length > 0) {
               loadedTypes.push(types[index])
               loadedResponses.push(result.value)
               return
@@ -173,9 +173,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
   }
 
   function setDamConfigAssetCustomFormElements(
-    responses: Awaited<{
-      data: CustomDataFormElement[]
-    }>[],
+    responses: CustomDataFormElement[][],
     extSystemId: IntegerId,
     types: DamAssetTypeType[]
   ) {
@@ -190,7 +188,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
       const config = { ...existingConfig }
 
       types.forEach((type, index) => {
-        config[type] = responses[index].data
+        config[type] = responses[index]
       })
 
       damConfigStore.damConfigAssetCustomFormElements.set(extSystemId, config)
@@ -211,7 +209,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
       }
       fetchDistributionCustomFormElements(client, distributionServiceName)
         .then((res) => {
-          damConfigStore.damConfigDistributionCustomFormElements.set(distributionServiceName, res.data)
+          damConfigStore.damConfigDistributionCustomFormElements.set(distributionServiceName, res)
           resolve(true)
           return
         })

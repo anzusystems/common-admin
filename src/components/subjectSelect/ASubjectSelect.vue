@@ -1,4 +1,18 @@
+<!--
+  DEPRECATED. The `labs` copy is the one that is maintained: `@/labs/subjectSelect/ASubjectSelect.vue`,
+  exported from `labs.ts`. Nothing in the fleet imports this one any more.
+
+  It is kept so the `lib.ts` surface does not break for anyone outside the fleet. Fix bugs here only
+  to keep it level with the labs copy; new behaviour belongs there.
+-->
 <script lang="ts" setup generic="TItem">
+/**
+ * @deprecated Use `@/labs/subjectSelect/ASubjectSelect.vue` instead, exported from `labs.ts`.
+ *
+ * Nothing in the six admins imports this copy any more -- every one of the 222 imports comes
+ * from `labs`. It stays so the `lib.ts` surface does not break for anyone outside the fleet.
+ * Fix a bug here only to keep it level with the labs copy; new behaviour belongs there.
+ */
 import { computed, onMounted, ref, toRaw, withModifiers } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'

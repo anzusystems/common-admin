@@ -7,6 +7,7 @@ import ACardLoader from '@/components/ACardLoader.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
+/** @deprecated Use the `labs` export of the same name. */
 import ADatatablePagination from '@/components/ADatatablePagination.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
@@ -106,6 +107,7 @@ const ASortable = ASortableComponent
  * @deprecated Use `ASortableListEditor` from `@anzusystems/common-admin/labs` -- see `ASortable`.
  */
 const ASortableNested = ASortableNestedComponent
+/** @deprecated Use the `labs` export of the same name. */
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
@@ -649,7 +651,6 @@ export {
   AFilterDatetimePicker,
   ADatetime,
   ADatetimePicker,
-  ADatatablePagination,
   ADatatableConfigButton,
   ADatatableOrdering,
   ADialogToolbar,
@@ -692,7 +693,6 @@ export {
   AJobBaseCreateForm,
   ASortable,
   ASortableNested,
-  ASubjectSelect,
   ACustomDataForm,
   ACustomDataFormElement,
   AImageWidget,
@@ -1255,6 +1255,22 @@ export {
   localTimeShiftInSeconds,
   useSystemBar,
 }
+
+/**
+ * @deprecated Use the `ADatatablePagination` exported from `@anzusystems/common-admin/labs`.
+ *
+ * Kept so this entry point does not break; the labs copy is the one that is maintained.
+ */
+const ADatatablePaginationDeprecated = ADatatablePagination
+export { ADatatablePaginationDeprecated as ADatatablePagination }
+
+/**
+ * @deprecated Use the `ASubjectSelect` exported from `@anzusystems/common-admin/labs`.
+ *
+ * Kept so this entry point does not break; the labs copy is the one that is maintained.
+ */
+const ASubjectSelectDeprecated = ASubjectSelect
+export { ASubjectSelectDeprecated as ASubjectSelect }
 
 export { createCachedChip } from '@/components/createCachedChip'
 export type { CreateCachedChipOptions, CachedChipId } from '@/components/createCachedChip'

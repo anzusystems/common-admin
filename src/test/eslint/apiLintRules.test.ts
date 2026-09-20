@@ -202,3 +202,71 @@ describe('the hand-written types for the plugin', () => {
     ).toBe(true)
   })
 })
+
+describe('anzu/prefer-api-fetch-items', () => {
+  const IMPORT = "import { useApiRequest } from '@anzusystems/common-admin/labs'\n"
+  const call = (generic: string) => `${IMPORT}useApiRequest<${generic}>({ client, system: 's', entity: 'e' })`
+
+  it.each([
+    ['a bare array', 'Item[]'],
+    ['Array<>', 'Array<Item>, Body'],
+    ['an array of primitives', 'string[], null'],
+  ])('reports %s', (_label, generic) => {
+    const messages = lint(call(generic), 'prefer-api-fetch-items')
+
+    expect(messages).toHaveLength(1)
+    expect(messages[0].message).toContain("shape: 'array'")
+  })
+
+  it.each([['ApiResponseList<Item[]>'], ['ApiInfiniteResponseList<Item[]>'], ['{ data: Item[] }, null']])(
+    'reports the envelope %s',
+    (generic) => {
+      const messages = lint(call(generic), 'prefer-api-fetch-items')
+
+      expect(messages).toHaveLength(1)
+      expect(messages[0].message).toContain('list envelope')
+    }
+  )
+
+  // A false report is worse than a missed site: it teaches people to reach for the disable comment.
+  it.each([
+    ['not a list at all', 'Item'],
+    ['a literal with no data member', '{ count: number; hasMore: boolean }'],
+    ['an array member that is not called data', '{ userAdminConfigs: IntegerId[] }'],
+    ['a literal that declares it reads metadata', '{ data: Item[]; hasNextPage: boolean }'],
+    ['an array in the BODY slot', 'Item, Body[]'],
+    ['an envelope whose data is not a list', 'ApiResponseList<Item>'],
+    ['an unknown generic wrapper', 'Wrapper<Item[]>'],
+  ])('stays silent on %s', (_label, generic) => {
+    expect(lint(call(generic), 'prefer-api-fetch-items')).toHaveLength(0)
+  })
+
+  it('follows the import alias rather than the name', () => {
+    const messages = lint(
+      "import { useApiRequest as apiRequest } from '@anzusystems/common-admin/labs'\n" +
+        "apiRequest<Item[]>({ client, system: 's', entity: 'e' })",
+      'prefer-api-fetch-items'
+    )
+
+    expect(messages).toHaveLength(1)
+  })
+
+  it('leaves someone else `useApiRequest` alone', () => {
+    const messages = lint(
+      "import { useApiRequest } from './my-own-helpers'\nuseApiRequest<Item[]>({ client })",
+      'prefer-api-fetch-items'
+    )
+
+    expect(messages).toHaveLength(0)
+  })
+
+  it('leaves the other helpers alone', () => {
+    const messages = lint(
+      "import { useApiCommand, useApiFetchItems } from '@anzusystems/common-admin/labs'\n" +
+        'useApiCommand<Item[]>({ client })\nuseApiFetchItems<Item>({ client })',
+      'prefer-api-fetch-items'
+    )
+
+    expect(messages).toHaveLength(0)
+  })
+})

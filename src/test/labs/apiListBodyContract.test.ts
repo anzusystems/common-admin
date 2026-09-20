@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import axios, { type AxiosInstance } from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { readArrayBody } from '@/labs/api/listBody'
 import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
 import { AnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
@@ -480,5 +481,37 @@ describe('what reaches the log', () => {
     const { execute, pagination, filterData, filterConfig } = setup(failing({ response: { status: 500 } }))
 
     await expect(execute(pagination, filterData, filterConfig)).rejects.toBeInstanceOf(AnzuApiAxiosError)
+  })
+})
+
+// Tested directly, unlike `readListBody`, which this file drives through `useApiFetchList` because
+// it also pins what gets written to pagination. Nothing is written here.
+describe('what counts as an array body', () => {
+  it('hands back the array it was given, by reference', () => {
+    const rows = [{ id: 1 }]
+
+    expect(readArrayBody(rows, 200, '/x')).toBe(rows)
+  })
+
+  it('accepts an empty array', () => {
+    expect(readArrayBody([], 200, '/x')).toEqual([])
+  })
+
+  it('refuses an envelope, and names the url', () => {
+    let thrown: unknown
+
+    try {
+      readArrayBody({ data: [] }, 200, '/x')
+    } catch (err) {
+      thrown = err
+    }
+
+    expect(thrown).toBeInstanceOf(AnzuApiResponseCodeError)
+    expect((thrown as AnzuApiResponseCodeError).code).toBe(200)
+    expect((thrown as Error).message).toContain('/x')
+  })
+
+  it.each([[null], ['text'], [1], [undefined]])('refuses %p', (body) => {
+    expect(() => readArrayBody(body, 200, '/x')).toThrow(AnzuApiResponseCodeError)
   })
 })

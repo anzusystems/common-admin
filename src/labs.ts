@@ -16,7 +16,12 @@ import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import { useApiFetchItems } from '@/labs/api/useApiFetchItems'
-import type { FetchItemsParams, UseApiFetchItemsParams, UseApiFetchItemsReturnType } from '@/labs/api/useApiFetchItems'
+import type {
+  FetchItemsParams,
+  ItemsShape,
+  UseApiFetchItemsParams,
+  UseApiFetchItemsReturnType,
+} from '@/labs/api/useApiFetchItems'
 import type { FetchByIdsParams, UseApiFetchByIdsParams, UseApiFetchByIdsReturnType } from '@/labs/api/useApiFetchByIds'
 import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
 import type { ExecuteRequestParams, UseApiRequestParams, UseApiRequestReturnType } from '@/labs/api/useApiRequest'
@@ -211,6 +216,7 @@ export {
   type UseApiFetchByIdsReturnType,
   type UseApiFetchItemsParams,
   type FetchItemsParams,
+  type ItemsShape,
   type UseApiFetchItemsReturnType,
   type UseApiFetchListBatchParams,
   type FetchListBatchParams,

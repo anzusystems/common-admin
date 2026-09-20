@@ -85,3 +85,23 @@ export const readListBody = <T>(body: unknown, status: number, url: string | und
 
   return { items: data, mode: 'unknown', pagination: {}, countIsBound: false }
 }
+
+/**
+ * Reads a list that arrived as a bare array.
+ *
+ * The second of the two shapes a list comes in, and a separate reader rather than one that takes
+ * either: the caller declares which one this endpoint answers with and the reader refuses the
+ * other, the way `optionalBody` makes the caller declare a body. One reader accepting both shapes
+ * is a permissive reader, and a permissive reader is what let a malformed answer through in the
+ * first place.
+ *
+ * Returns `T[]` rather than `ListBody<T>`: `mode: 'unknown'` means the envelope named no mode, and
+ * here there was no envelope to name one.
+ */
+export const readArrayBody = <T>(body: unknown, status: number, url: string | undefined): T[] => {
+  if (!Array.isArray(body)) {
+    throw new AnzuApiResponseCodeError(status, undefined, 'Expected an array body, url: ' + url)
+  }
+
+  return body as T[]
+}

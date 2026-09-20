@@ -2,7 +2,7 @@ import type { AxiosInstance } from 'axios'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { IdsGroupedByLicences } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { ENTITY, fetchAssetListByIds, SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { useApiRequest } from '@/labs/api/useApiRequest'
+import { useApiFetchItems } from '@/labs/api/useApiFetchItems'
 
 const MAX_LIMIT = 20
 
@@ -46,12 +46,8 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
   const searchResults = await Promise.all(
     Array.from(groupedIds.entries()).map(([licenceId, docIds]) => {
       const singleUseParam = filterSingleUse ? '&mainFileSingleUse=1' : ''
-      // Response first, body second -- the old helper took them the other way round, and because
-      // each of its type parameters defaulted to the other, writing them in the old order here
-      // would still compile.
-      const { execute } = useApiRequest<{ data: AssetSearchListItemDto[] }, object>({
+      const { execute } = useApiFetchItems<AssetSearchListItemDto>({
         client,
-        method: 'GET',
         system: SYSTEM_CORE_DAM,
         entity: ENTITY,
         urlTemplate:
@@ -60,14 +56,13 @@ const fetchAssetListByFileIdsMultipleLicencesWithLimit = async (
           `${docIds.join(',')}&limit=${forceLimit !== undefined ? forceLimit : docIds.length}${singleUseParam}`,
       })
 
-      // `{}` on purpose: the old call passed it explicitly, so the request carried an empty body.
-      return execute({ urlParams: { licenceId }, body: {} })
+      return execute({ urlParams: { licenceId } })
     })
   )
 
   const groupedSearchResults: IdsGroupedByLicences = new Map()
   searchResults.forEach((res) => {
-    res.data.forEach((item) => {
+    res.forEach((item) => {
       if (!groupedSearchResults.has(item.licence)) {
         groupedSearchResults.set(item.licence, [])
       }

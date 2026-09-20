@@ -153,6 +153,39 @@ const DEFAULT_INTERNAL_DEPRECATED_IMPORTS = [
   },
 ]
 
+// Shared by `prefer-api-command` and `prefer-api-fetch-items`: both ask the same question -- is this
+// call the `useApiRequest` helper, and what did it say it answers with.
+const isHelperSource = (source) =>
+  typeof source === 'string' && (source.includes('labs/api/useApiRequest') || source.endsWith('common-admin/labs'))
+
+// Resolved through the scope rather than matched by name. Matching the name fires on anyone
+// else's function called `useApiRequest` and on a parameter that shadows the import inside
+// one function, and stays silent when the real helper is imported under another name.
+const isHelperBinding = (context, node) => {
+  let scope = context.sourceCode.getScope(node)
+  while (scope !== null) {
+    const variable = scope.variables.find((candidate) => candidate.name === node.name)
+    if (variable) {
+      return variable.defs.some(
+        (def) =>
+          def.type === 'ImportBinding' &&
+          isHelperSource(def.parent?.source?.value) &&
+          // The imported name, not the local one: an alias may call it anything, and a
+          // different export from the same module is a different function.
+          def.node?.imported?.name === 'useApiRequest'
+      )
+    }
+    scope = scope.upper
+  }
+
+  return false
+}
+
+const firstTypeArgument = (node) => {
+  const args = node.typeArguments ?? node.typeParameters
+  return args?.params?.[0]
+}
+
 const anzuPlugin = {
   rules: {
     'no-ts-extension': {
@@ -301,38 +334,6 @@ const anzuPlugin = {
       create(context) {
         const reportedMethods = new Set(['DELETE', 'delete'])
 
-        const isHelperSource = (source) =>
-          typeof source === 'string' &&
-          (source.includes('labs/api/useApiRequest') || source.endsWith('common-admin/labs'))
-
-        // Resolved through the scope rather than matched by name. Matching the name fires on anyone
-        // else's function called `useApiRequest` and on a parameter that shadows the import inside
-        // one function, and stays silent when the real helper is imported under another name.
-        const isHelperBinding = (node) => {
-          let scope = context.sourceCode.getScope(node)
-          while (scope !== null) {
-            const variable = scope.variables.find((candidate) => candidate.name === node.name)
-            if (variable) {
-              return variable.defs.some(
-                (def) =>
-                  def.type === 'ImportBinding' &&
-                  isHelperSource(def.parent?.source?.value) &&
-                  // The imported name, not the local one: an alias may call it anything, and a
-                  // different export from the same module is a different function.
-                  def.node?.imported?.name === 'useApiRequest'
-              )
-            }
-            scope = scope.upper
-          }
-
-          return false
-        }
-
-        const firstTypeArgument = (node) => {
-          const args = node.typeArguments ?? node.typeParameters
-          return args?.params?.[0]
-        }
-
         // `any` and `never` satisfy the response constraint without meaning anything, and a call
         // with no type argument at all infers it -- so the type cannot speak for these three.
         const unhelpfulTypeArgument = (node) => {
@@ -358,7 +359,7 @@ const anzuPlugin = {
 
         return {
           CallExpression(node) {
-            if (node.callee.type !== 'Identifier' || !isHelperBinding(node.callee)) return
+            if (node.callee.type !== 'Identifier' || !isHelperBinding(context, node.callee)) return
 
             const method = methodLiteral(node)
             const isDelete = typeof method === 'string' && reportedMethods.has(method)
@@ -372,6 +373,91 @@ const anzuPlugin = {
                 : 'State what this answers with. `useApiRequest<Entity>` for a body, `useApiCommand` for none, ' +
                   '`optionalBody: true` for either.',
             })
+          },
+        }
+      },
+    },
+
+    'prefer-api-fetch-items': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'A request whose answer is a list -- a bare array or a list envelope -- is ' +
+            '`useApiFetchItems`; `useApiRequest` checks nothing about the body it hands back.',
+        },
+        schema: [],
+      },
+      create(context) {
+        const isArrayType = (node) => {
+          if (!node) return false
+          if (node.type === 'TSArrayType') return true
+
+          return (
+            node.type === 'TSTypeReference' &&
+            node.typeName?.type === 'Identifier' &&
+            (node.typeName.name === 'Array' || node.typeName.name === 'ReadonlyArray') &&
+            (node.typeArguments ?? node.typeParameters)?.params?.length === 1
+          )
+        }
+
+        const envelopeGeneric = (node) => {
+          if (node.type !== 'TSTypeReference' || node.typeName?.type !== 'Identifier') return false
+          if (node.typeName.name !== 'ApiResponseList' && node.typeName.name !== 'ApiInfiniteResponseList') {
+            return false
+          }
+          const params = (node.typeArguments ?? node.typeParameters)?.params
+
+          // `ApiResponseList<T>` is `{ totalCount; data: T }`, so only an array in that slot makes
+          // `data` a list. `ApiResponseList<Item>` is something this helper would refuse.
+          return params?.length === 1 && isArrayType(params[0])
+        }
+
+        const envelopeLiteral = (node) => {
+          if (node.type !== 'TSTypeLiteral') return false
+
+          // Exactly one member, on purpose: a literal that also spells out `hasNextPage` or
+          // `totalCount` is an author saying they read the metadata, which is a reason to stay on
+          // `useApiRequest`. The generic form carries no such signal, so it is reported and the one
+          // legitimate reader takes a disable with a reason.
+          if (node.members.length !== 1) return false
+          const member = node.members[0]
+
+          return (
+            member.type === 'TSPropertySignature' &&
+            member.computed === false &&
+            (member.key?.name ?? member.key?.value) === 'data' &&
+            isArrayType(member.typeAnnotation?.typeAnnotation)
+          )
+        }
+
+        return {
+          CallExpression(node) {
+            if (node.callee.type !== 'Identifier' || !isHelperBinding(context, node.callee)) return
+
+            // No type argument at all is `prefer-api-command`'s case, not this one.
+            const first = firstTypeArgument(node)
+            if (!first) return
+
+            if (isArrayType(first)) {
+              context.report({
+                node,
+                message:
+                  "This answers with a bare array: use `useApiFetchItems` with `shape: 'array'`. If the " +
+                  'endpoint really answers with something that only looks like a list, disable this line and say so.',
+              })
+
+              return
+            }
+
+            if (envelopeGeneric(first) || envelopeLiteral(first)) {
+              context.report({
+                node,
+                message:
+                  'This answers with a list envelope: use `useApiFetchItems`, or `useApiFetchList` when the ' +
+                  "user drives the paging. If this call reads the envelope's metadata, disable this line and say so.",
+              })
+            }
           },
         }
       },
@@ -609,6 +695,8 @@ const anzuPlugin = {
  * @param {boolean|'error'|'warn'|'off'} [options.noTsExtension='error'] - Severity for no-ts-extension rule.
  * @param {boolean|'error'|'warn'|'off'} [options.noFatalErrorAxiosCheck='error']
  *   - Severity for no-fatal-error-axios-check rule.
+ * @param {boolean|'error'|'warn'|'off'} [options.preferApiFetchItems='error']
+ *   - Severity for prefer-api-fetch-items rule.
  * @param {boolean|'error'|'warn'|'off'|Object} [options.deprecatedImports='error'] - Severity or config object.
  * @param {string[]} [options.deprecatedImports.exclude] - Import names to remove from the default list.
  * @param {string[]} [options.deprecatedImports.include] - Additional import names to add to the default list.
@@ -625,6 +713,7 @@ export function recommended(options = {}) {
     noTsExtension = 'error',
     noFatalErrorAxiosCheck = 'error',
     preferApiCommand = 'error',
+    preferApiFetchItems = 'error',
     urlParamsMatchTemplate = 'error',
     deprecatedImports = 'error',
   } = options
@@ -647,6 +736,12 @@ export function recommended(options = {}) {
   const preferApiCommandSeverity = normalizeSeverity(preferApiCommand)
   if (preferApiCommandSeverity) {
     rules['anzu/prefer-api-command'] = preferApiCommandSeverity
+  }
+
+  // prefer-api-fetch-items
+  const preferApiFetchItemsSeverity = normalizeSeverity(preferApiFetchItems)
+  if (preferApiFetchItemsSeverity) {
+    rules['anzu/prefer-api-fetch-items'] = preferApiFetchItemsSeverity
   }
 
   // url-params-match-template

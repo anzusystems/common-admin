@@ -1,4 +1,21 @@
+<!--
+  DEPRECATED. The `labs` copy is the one that is maintained: `@/labs/filters/ADatatablePagination.vue`,
+  exported from `labs.ts`. Nothing in the fleet imports this one any more -- all 222 imports across the
+  six admins come from `labs` -- and inside this repository the only thing still reaching for it is the
+  deprecated `components/subjectSelect/ASubjectSelect.vue` beside it.
+
+  It is kept so the `lib.ts` surface does not break for anyone outside the fleet. Fix bugs here only
+  to keep it level with the labs copy; new behaviour belongs there. Having the same expression in two
+  places is how `page === lastPage` came to be wrong in four files at once.
+-->
 <script lang="ts" setup>
+/**
+ * @deprecated Use `@/labs/filters/ADatatablePagination.vue` instead, exported from `labs.ts`.
+ *
+ * Nothing in the six admins imports this copy any more -- every one of the 222 imports comes
+ * from `labs`. It stays so the `lib.ts` surface does not break for anyone outside the fleet.
+ * Fix a bug here only to keep it level with the labs copy; new behaviour belongs there.
+ */
 import { computed, watch } from 'vue'
 import { cloneDeep, isNull } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'

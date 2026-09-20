@@ -291,12 +291,27 @@ export type UseApiFetchListBatchReturnType<T> = {
   execute: (filterData: FilterData<any>, filterConfig: FilterConfig<any>, params?: FetchListBatchParams) => Promise<T[]>
   abort: () => void
   /**
-   * True while this instance has a request in flight, false once the last one settles.
+   * True while this instance is working, false once it stops.
    *
-   * It is here so a caller does not have to keep its own: the hand-rolled version is a ref cleared
-   * in a `finally`, and that `finally` belongs to whichever call ended -- including one that
+   * Here that is the whole walk, not one request: a batch reads every page, and the flag stays up
+   * across the gaps between them and across the reading of each answer.
+   *
+   * It is here so a caller does not have to keep its own: the hand-rolled version is a ref cleared in
+   * a `finally`, and that `finally` belongs to whichever call ended -- including one that
    * `cancelPrevious` just superseded, which turns the spinner off while the call the user is waiting
    * for is still running. This one never dips between a superseded call and the one that replaced it.
+   *
+   * Two things to know before replacing a hand-rolled flag with it.
+   *
+   * It covers what this helper does and nothing the caller does afterwards. A flag that also spans a
+   * follow-up cached fetch, a mapping pass or a second endpoint is not the same flag, and swapping it
+   * for this one turns the spinner off too early. Keep your own where it means more than "this helper
+   * is working".
+   *
+   * It belongs to the instance, so it is only reachable if you hold the instance. A factory that
+   * builds one per call and hands back the promise alone -- `const { execute } = useX()` inside the
+   * function that calls it -- cannot expose `loading`, `abort` or `cancelPrevious` at all. Hoist the
+   * instance to where the caller lives first.
    */
   loading: Ref<boolean>
 }

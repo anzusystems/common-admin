@@ -4,7 +4,7 @@ import type { DamAssetTypeType, DamDistributionServiceName } from '@/types/coreD
 import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { useApiRequest } from '@/labs/api/useApiRequest'
+import { useApiFetchItems } from '@/labs/api/useApiFetchItems'
 
 const END_POINT = '/adm/v1/asset-custom-form'
 const ENTITY = 'assetCustomForm'
@@ -15,9 +15,8 @@ export const fetchAssetCustomFormElements = (
   extSystem: IntegerId,
   assetType: DamAssetTypeType
 ) => {
-  const { execute } = useApiRequest<{ data: CustomDataFormElement[] }, null>({
+  const { execute } = useApiFetchItems<CustomDataFormElement>({
     client: damClient,
-    method: 'GET',
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: END_POINT + '/ext-system/:extSystem/type/:assetType/element?order[position]=asc&limit=100',
@@ -31,9 +30,8 @@ export const fetchDistributionCustomFormElements = (
   damClient: () => AxiosInstance,
   distributionService: DamDistributionServiceName
 ) => {
-  const { execute } = useApiRequest<{ data: CustomDataFormElement[] }, null>({
+  const { execute } = useApiFetchItems<CustomDataFormElement>({
     client: damClient,
-    method: 'GET',
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
     urlTemplate: END_POINT + '/distribution-service/:distributionService/element?order[position]=asc&limit=100',
