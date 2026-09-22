@@ -144,7 +144,7 @@ describe('AUserTabsShell', () => {
     // A system dropped out of the configuration since the link was sent. An error would help nobody.
     await mountShell({}, '?tab=elections')
 
-    expect(router.currentRoute.value.query.tab).toBe('cms')
+    await vi.waitFor(() => expect(router.currentRoute.value.query.tab).toBe('cms'))
   })
 
   it('lists exactly the systems that have no tab of their own', async () => {

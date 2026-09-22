@@ -80,6 +80,7 @@ export default defineConfig({
       'dayjs/plugin/duration',
       'rusha',
       'vuetify/components/VTabs',
+      'vuetify/components/VWindow',
       'cropperjs',
       'cropperjs2',
       'vuetify/components/VCombobox',
