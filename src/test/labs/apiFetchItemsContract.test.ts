@@ -307,7 +307,9 @@ describe('what the types allow', () => {
     const { execute } = useApiFetchItems<{ id: number }>({ client, system: 'test', entity: 'test' })
 
     // @ts-expect-error `B` defaults to `never`, so there is no body to pass
-    void execute({ body: {} })
+    // Awaited, not fired and forgotten: with no url template it rejects, and an unhandled rejection
+    // is reported against whichever test happens to be running when it lands.
+    void execute({ body: {} }).catch(() => {})
 
     expect(execute).toBeTypeOf('function')
   })

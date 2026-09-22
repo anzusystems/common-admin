@@ -40,5 +40,9 @@
     "desc": "Potřebujete zkopírovat roli a oprávnění z již existujícího uživatele?",
     "srcUser": "Zdrojový uživatel",
     "copiedSettings": "Všechna zkopírovaná nastavení:"
+  },
+  "hint": {
+    "derivedFromName": "Přepočítává se ze jména a příjmení.",
+    "idReadonlyOnEdit": "ID se po vytvoření nemění."
   }
 }

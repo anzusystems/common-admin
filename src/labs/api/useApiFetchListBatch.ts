@@ -19,6 +19,9 @@ export type UseApiFetchListBatchParams = {
   client: AxiosClientFn
   system: string
   entity: string
+  /** i18n scope for field-level validation failures; defaults to `system` / `entity`. */
+  validationSystem?: string
+  validationEntity?: string
   urlTemplate?: string
   urlParams?: UrlParams
   /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
@@ -59,7 +62,17 @@ class PageFailure extends Error {
 }
 
 export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): UseApiFetchListBatchReturnType<T> => {
-  const { client, system, entity, urlTemplate, urlParams, options = {}, cancelPrevious = false } = params
+  const {
+    client,
+    system,
+    entity,
+    validationSystem,
+    validationEntity,
+    urlTemplate,
+    urlParams,
+    options = {},
+    cancelPrevious = false,
+  } = params
   const abortable = createAbortable({ cancelPrevious })
 
   const execute = async (
@@ -277,6 +290,8 @@ export const useApiFetchListBatch = <T>(params: UseApiFetchListBatchParams): Use
       const context = {
         system,
         entity,
+        validationSystem,
+        validationEntity,
         url: requestedUrl(client, failed?.pageUrl, options, failed?.failure ?? err, failed?.dispatched),
       }
 

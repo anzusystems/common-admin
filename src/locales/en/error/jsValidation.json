@@ -9,6 +9,7 @@
   "url": "Incorrect url format.",
   "numeric": "Allowed only numbers.",
   "slug": "Allowed only characters a-z and numbers 0-9.",
+  "hexColor": "Colour must be in the #RRGGBB format.",
   "stringArrayItemLength": "Item length in list must have between {min} and {max} characters.",
   "datesCompare": {
     "laterThan": "Date must be later than \"{otherDateName}\"",

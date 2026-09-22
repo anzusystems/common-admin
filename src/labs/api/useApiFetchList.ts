@@ -19,6 +19,9 @@ export type UseApiFetchListParams = {
   client: AxiosClientFn
   system: string
   entity: string
+  /** i18n scope for field-level validation failures; defaults to `system` / `entity`. */
+  validationSystem?: string
+  validationEntity?: string
   urlTemplate?: string
   urlParams?: UrlParams
   /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
@@ -50,7 +53,17 @@ export const generateListQuery = (
 }
 
 export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchListReturnType<T> => {
-  const { client, system, entity, urlTemplate, urlParams, options = {}, cancelPrevious = false } = params
+  const {
+    client,
+    system,
+    entity,
+    validationSystem,
+    validationEntity,
+    urlTemplate,
+    urlParams,
+    options = {},
+    cancelPrevious = false,
+  } = params
   const abortable = createAbortable({ cancelPrevious })
 
   const execute = async (
@@ -158,7 +171,13 @@ export const useApiFetchList = <T>(params: UseApiFetchListParams): UseApiFetchLi
     } catch (err: unknown) {
       // Built once and handed to both, the way the batch does it: half the work on the failure path,
       // and one place that could go wrong instead of two.
-      const context = { system, entity, url: requestedUrl(client, url, options, err, dispatched) }
+      const context = {
+        system,
+        entity,
+        validationSystem,
+        validationEntity,
+        url: requestedUrl(client, url, options, err, dispatched),
+      }
 
       throw report(mapApiError(err, context), context)
     }

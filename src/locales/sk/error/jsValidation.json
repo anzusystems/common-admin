@@ -9,6 +9,7 @@
   "url": "Nesprávny formát URL.",
   "numeric": "Musia byť zadané iba čísla.",
   "slug": "Povolené znaky pre slug sú a-z a 0-9.",
+  "hexColor": "Farba musí byť v tvare #RRGGBB.",
   "stringArrayItemLength": "Dĺžka znakov každej položky musí byť medzi {min} a {max} znakov.",
   "datesCompare": {
     "laterThan": "Dátum musí byť vyšší ako \"{otherDateName}\"",

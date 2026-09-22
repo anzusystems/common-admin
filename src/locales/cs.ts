@@ -6,7 +6,9 @@ import anzuUser from '@/locales/cs/common/anzuUser.json'
 import job from '@/locales/cs/common/job.json'
 import log from '@/locales/cs/common/log.json'
 import permission from '@/locales/cs/common/permission.json'
+import permissionEditor from '@/locales/cs/common/permissionEditor.json'
 import permissionGroup from '@/locales/cs/common/permissionGroup.json'
+import userSystem from '@/locales/cs/common/userSystem.json'
 import vuetify from '@/locales/cs/vuetify.json'
 import apiValidation from '@/locales/cs/error/apiValidation.json'
 import apiForbiddenOperation from '@/locales/cs/error/apiForbiddenOperation.json'
@@ -38,7 +40,9 @@ export default {
     job,
     log,
     permission,
+    permissionEditor,
     permissionGroup,
+    userSystem,
     assetSelect,
     subjectSelect,
     time,

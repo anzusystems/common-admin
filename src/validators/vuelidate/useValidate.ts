@@ -1,5 +1,6 @@
 import { useValidateBetween } from '@/validators/vuelidate/common/useValidateBetween'
 import { useValidateEmail } from '@/validators/vuelidate/common/useValidateEmail'
+import { useValidateHexColor } from '@/validators/vuelidate/common/useValidateHexColor'
 import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
 import { useValidateMaxValue } from '@/validators/vuelidate/common/useValidateMaxValue'
 import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
@@ -22,6 +23,7 @@ export function useValidate() {
     maxValue: useValidateMaxValue(),
     between: useValidateBetween(),
     email: useValidateEmail(),
+    hexColor: useValidateHexColor(),
     numeric: useValidateNumeric(),
     slug: useValidateSlug(),
     url: useValidateUrl(),

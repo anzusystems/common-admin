@@ -23,6 +23,9 @@ export type UseApiRequestParams = {
   method: Method
   system: string
   entity: string
+  /** i18n scope for field-level validation failures; defaults to `system` / `entity`. */
+  validationSystem?: string
+  validationEntity?: string
   urlTemplate?: string
   urlParams?: UrlParams
   /** Anything axios takes except what this helper decides: the method, the url, the body and the signal. */
@@ -63,7 +66,18 @@ export type UseApiRequestReturnType<R, B> = {
 type Interpret<R> = (res: { status: number; data: unknown }, url: () => string | undefined) => R
 
 const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R>): UseApiRequestReturnType<R, B> => {
-  const { client, method, system, entity, urlTemplate, urlParams, options = {}, cancelPrevious = false } = params
+  const {
+    client,
+    method,
+    system,
+    entity,
+    validationSystem,
+    validationEntity,
+    urlTemplate,
+    urlParams,
+    options = {},
+    cancelPrevious = false,
+  } = params
   const abortable: Abortable = createAbortable({ cancelPrevious })
 
   const execute = async (executeParams: ExecuteRequestParams<B> = {}): Promise<R> => {
@@ -118,7 +132,13 @@ const createRequest = <R, B>(params: UseApiRequestParams, interpret: Interpret<R
     } catch (err: unknown) {
       // Built once and handed to both, the way the batch does it: half the work on the failure path,
       // and one place that could go wrong instead of two.
-      const context = { system, entity, url: requestedUrl(client, url, options, err, dispatched) }
+      const context = {
+        system,
+        entity,
+        validationSystem,
+        validationEntity,
+        url: requestedUrl(client, url, options, err, dispatched),
+      }
 
       throw report(mapApiError(err, context), context)
     }

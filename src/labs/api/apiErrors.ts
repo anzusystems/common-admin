@@ -37,6 +37,18 @@ export type ApiErrorContext = {
    * reaches the logger and is filtered here, on this field.
    */
   status?: number
+  /**
+   * The i18n scope a field-level validation failure is reported under, when it is not the same as
+   * the backend above.
+   *
+   * `AnzuApiValidationError` turns the server's field names into `<system>.<entity>.model.<field>`
+   * translation keys. For a component shared by nine backends those two are different questions:
+   * *which* backend failed -- which is what the report needs -- and *whose labels* name its fields,
+   * which for a shared form is always the library's own `common.*`. Left unset, the two stay one
+   * value, exactly as before.
+   */
+  validationSystem?: string
+  validationEntity?: string
 }
 
 export type ApiErrorLogger = (error: Error, context: ApiErrorContext) => void
@@ -123,6 +135,8 @@ export const report = <E>(error: E, context: ApiErrorContext): E => {
  */
 export const mapApiError = (err: unknown, context: ApiErrorContext): AnzuError => {
   const { system, entity } = context
+  const labelSystem = context.validationSystem ?? system
+  const labelEntity = context.validationEntity ?? entity
   // The predicates below are typed against `Error` / `AxiosError` and each begins by checking what
   // it was handed, so narrowing here only satisfies their signatures.
   const error = err as Error
@@ -140,11 +154,11 @@ export const mapApiError = (err: unknown, context: ApiErrorContext): AnzuError =
   if (axiosErrorResponseIsForbidden(axiosError)) return new AnzuApiForbiddenError(axiosError, context.url)
 
   if (axiosErrorResponseHasValidationData(axiosError)) {
-    return new AnzuApiValidationError(axiosError, system, entity, error)
+    return new AnzuApiValidationError(axiosError, labelSystem, labelEntity, error)
   }
 
   if (axiosErrorResponseHasDependencyExistsData(axiosError)) {
-    return new AnzuApiDependencyExistsError(axiosError, system, entity, error)
+    return new AnzuApiDependencyExistsError(axiosError, labelSystem, labelEntity, error)
   }
 
   if (axiosErrorResponseHasForbiddenOperationData(axiosError)) {

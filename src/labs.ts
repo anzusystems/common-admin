@@ -67,6 +67,7 @@ import {
   type FilterData,
   type FilterStore,
   isRouterSafeHash,
+  type FilterStoreIdentifier,
   type MakeFilterOption,
   useFilterHelpers,
 } from '@/labs/filters/filterFactory'
@@ -162,6 +163,146 @@ import {
   type UserAdminConfigTypeType,
 } from '@/types/UserAdminConfig'
 
+import APermissionEditor from '@/labs/permission/APermissionEditor.vue'
+import { usePermissionActions, type PermissionActionsParams } from '@/labs/permission/permissionActions'
+import {
+  PERMISSION_CONFIG_ENDPOINT,
+  PERMISSION_CONFIG_ENTITY,
+  usePermissionConfigApi,
+  type PermissionConfigApiParams,
+} from '@/labs/permissionConfig/permissionConfigApi'
+import {
+  usePermissionConfigActions,
+  type PermissionConfigActionsParams,
+} from '@/labs/permissionConfig/permissionConfigActions'
+import { usePermissionConfigStore, type PermissionConfigEntry } from '@/labs/permissionConfig/permissionConfigStore'
+import APermissionGroupDatatable from '@/labs/permissionGroup/APermissionGroupDatatable.vue'
+import APermissionGroupDetail from '@/labs/permissionGroup/APermissionGroupDetail.vue'
+import APermissionGroupFilter from '@/labs/permissionGroup/APermissionGroupFilter.vue'
+import APermissionGroupManage from '@/labs/permissionGroup/APermissionGroupManage.vue'
+import APermissionGroupRemoteAutocomplete from '@/labs/permissionGroup/APermissionGroupRemoteAutocomplete.vue'
+import {
+  PERMISSION_GROUP_ENDPOINT,
+  PERMISSION_GROUP_ENTITY,
+  usePermissionGroupApi,
+  type PermissionGroupApiParams,
+} from '@/labs/permissionGroup/permissionGroupApi'
+import {
+  usePermissionGroupActions,
+  type PermissionGroupActionsParams,
+} from '@/labs/permissionGroup/permissionGroupActions'
+import { usePermissionGroupOneStore } from '@/labs/permissionGroup/permissionGroupStore'
+import { usePermissionGroupValidation } from '@/labs/permissionGroup/permissionGroupValidations'
+import {
+  permissionGroupFilterStorageKey,
+  usePermissionGroupInnerFilter,
+  usePermissionGroupListFilter,
+} from '@/labs/permissionGroup/permissionGroupFilter'
+import {
+  useCachedPermissionGroups,
+  type CachedPermissionGroupsParams,
+} from '@/labs/permissionGroup/cachedPermissionGroups'
+
+import AAnzuUserDatatable from '@/labs/anzuUser/AAnzuUserDatatable.vue'
+import AAnzuUserFilter from '@/labs/anzuUser/AAnzuUserFilter.vue'
+import AAnzuUserForm from '@/labs/anzuUser/AAnzuUserForm.vue'
+import AAnzuUserRoleAutocomplete from '@/labs/anzuUser/AAnzuUserRoleAutocomplete.vue'
+import AUserCopyPermissionsDialog from '@/labs/anzuUser/AUserCopyPermissionsDialog.vue'
+import AUserEnabledSwitch from '@/labs/anzuUser/AUserEnabledSwitch.vue'
+import AUserMetadataForm from '@/labs/anzuUser/AUserMetadataForm.vue'
+import {
+  ANZU_USER_ENDPOINT,
+  ANZU_USER_ENTITY,
+  useAnzuUserApi,
+  type AnzuUserApiParams,
+} from '@/labs/anzuUser/anzuUserApi'
+import { useAnzuUserActions, type AnzuUserActionsParams } from '@/labs/anzuUser/anzuUserActions'
+import { useAnzuUserOneStore } from '@/labs/anzuUser/anzuUserStore'
+import {
+  anzuUserFilterStorageKey,
+  useAnzuUserEmailLookupFilter,
+  useAnzuUserListFilter,
+} from '@/labs/anzuUser/anzuUserFilter'
+import { useUserMetadataValidation, type UserMetadataValidationOptions } from '@/labs/anzuUser/anzuUserValidations'
+import {
+  defineUserSystemDescriptor,
+  resolveCreateEndpoint,
+  resolveEnabledWrite,
+  resolveMetadataWrite,
+  resolveProbeEndpoint,
+  type AnyUserSystemDescriptor,
+  type AnzuUserEndpointPair,
+  type BaseUserEndpointPair,
+  type UserSystemDescriptor,
+  type UserSystemEndpoints,
+  type UserSystemExtraState,
+  type UserSystemManageTarget,
+} from '@/labs/anzuUser/userSystemDescriptor'
+
+import AUserCreateInSystemButton from '@/labs/anzuUser/AUserCreateInSystemButton.vue'
+import AUserManageButton from '@/labs/anzuUser/AUserManageButton.vue'
+import AUserOtherSystemsTable from '@/labs/anzuUser/AUserOtherSystemsTable.vue'
+import AUserSystemPanel from '@/labs/anzuUser/AUserSystemPanel.vue'
+import AUserSystemStatusChip from '@/labs/anzuUser/AUserSystemStatusChip.vue'
+import AUserTabsShell from '@/labs/anzuUser/AUserTabsShell.vue'
+import { OTHER_SYSTEMS_TAB } from '@/labs/anzuUser/userTabs'
+import {
+  probeStatusFromError,
+  USER_PROBE_ENTITY,
+  useUserSystemProbe,
+  UserSystemRefreshHookKey,
+  type UserSystemProbeParams,
+  type UserSystemProbeResult,
+  type UserSystemRefreshHook,
+} from '@/labs/anzuUser/userSystemProbe'
+import {
+  classifyProbeStatus,
+  emptyUserSystemAxes,
+  isActionable,
+  isAuthoritativelyAbsent,
+  resolveUserSystemState,
+  UserSystemAccess,
+  UserSystemLoad,
+  UserSystemPresence,
+  UserSystemState,
+  type UserSystemAccessType,
+  type UserSystemAxes,
+  type UserSystemLoadType,
+  type UserSystemPresenceType,
+  type UserSystemStateType,
+} from '@/labs/anzuUser/userSystemState'
+
+import AUserBulkActionDialog from '@/labs/anzuUser/AUserBulkActionDialog.vue'
+import AUserMetadataRepairDialog from '@/labs/anzuUser/AUserMetadataRepairDialog.vue'
+import AUserSystemOverview from '@/labs/anzuUser/AUserSystemOverview.vue'
+import {
+  BulkAction,
+  BulkOutcome,
+  CrossSystemPhase,
+  useUserCrossSystemStore,
+  type BulkActionType,
+  type BulkLogEntry,
+  type BulkOutcomeType,
+  type CrossSystemPhaseType,
+  type UserSystemResult,
+} from '@/labs/anzuUser/userCrossSystemStore'
+import {
+  isEmailTerm,
+  useUserCrossSystemSearch,
+  type CrossSystemSearchParams,
+} from '@/labs/anzuUser/userCrossSystemSearch'
+import { classifyWriteStatus, useUserCrossSystemWrites, type WriteResult } from '@/labs/anzuUser/userCrossSystemWrites'
+import {
+  findMetadataDifferences,
+  pickPrefillSource,
+  readMetadataField,
+  systemsNeedingWrite,
+  USER_METADATA_FIELDS,
+  writeMetadataField,
+  type MetadataDifference,
+  type UserMetadataField,
+} from '@/labs/anzuUser/userMetadataDiff'
+
 export {
   // V2 FILTERS
   AFilterWrapper,
@@ -193,6 +334,7 @@ export {
   type FilterConfig,
   type FilterData,
   type FilterStore,
+  type FilterStoreIdentifier,
   type MakeFilterOption,
   TimeIntervalSpecialOptions,
   type TimeIntervalToolsValue,
@@ -321,5 +463,122 @@ export {
   useFetchLogList,
   useFetchLog,
   LOG_ENTITY,
+  // PERMISSIONS / PERMISSION GROUPS
+  APermissionEditor,
+  usePermissionActions,
+  type PermissionActionsParams,
+  usePermissionConfigApi,
+  type PermissionConfigApiParams,
+  usePermissionConfigActions,
+  type PermissionConfigActionsParams,
+  usePermissionConfigStore,
+  type PermissionConfigEntry,
+  PERMISSION_CONFIG_ENTITY,
+  PERMISSION_CONFIG_ENDPOINT,
+  APermissionGroupDatatable,
+  APermissionGroupDetail,
+  APermissionGroupFilter,
+  APermissionGroupManage,
+  APermissionGroupRemoteAutocomplete,
+  usePermissionGroupApi,
+  type PermissionGroupApiParams,
+  PERMISSION_GROUP_ENTITY,
+  PERMISSION_GROUP_ENDPOINT,
+  usePermissionGroupActions,
+  type PermissionGroupActionsParams,
+  usePermissionGroupOneStore,
+  usePermissionGroupValidation,
+  usePermissionGroupListFilter,
+  usePermissionGroupInnerFilter,
+  permissionGroupFilterStorageKey,
+  useCachedPermissionGroups,
+  type CachedPermissionGroupsParams,
+  // ANZU USER
+  AAnzuUserDatatable,
+  AAnzuUserFilter,
+  AAnzuUserForm,
+  AAnzuUserRoleAutocomplete,
+  AUserCopyPermissionsDialog,
+  AUserEnabledSwitch,
+  AUserMetadataForm,
+  useAnzuUserApi,
+  type AnzuUserApiParams,
+  ANZU_USER_ENTITY,
+  ANZU_USER_ENDPOINT,
+  useAnzuUserActions,
+  type AnzuUserActionsParams,
+  useAnzuUserOneStore,
+  useAnzuUserListFilter,
+  useAnzuUserEmailLookupFilter,
+  anzuUserFilterStorageKey,
+  useUserMetadataValidation,
+  type UserMetadataValidationOptions,
+  defineUserSystemDescriptor,
+  resolveProbeEndpoint,
+  resolveMetadataWrite,
+  resolveEnabledWrite,
+  resolveCreateEndpoint,
+  type UserSystemDescriptor,
+  type AnyUserSystemDescriptor,
+  type UserSystemEndpoints,
+  type AnzuUserEndpointPair,
+  type BaseUserEndpointPair,
+  type UserSystemExtraState,
+  type UserSystemManageTarget,
+  // CROSS-SYSTEM USER VIEW
+  AUserSystemStatusChip,
+  AUserSystemPanel,
+  AUserOtherSystemsTable,
+  AUserTabsShell,
+  OTHER_SYSTEMS_TAB,
+  AUserCreateInSystemButton,
+  AUserManageButton,
+  useUserSystemProbe,
+  probeStatusFromError,
+  USER_PROBE_ENTITY,
+  UserSystemRefreshHookKey,
+  type UserSystemRefreshHook,
+  type UserSystemProbeParams,
+  type UserSystemProbeResult,
+  resolveUserSystemState,
+  classifyProbeStatus,
+  emptyUserSystemAxes,
+  isAuthoritativelyAbsent,
+  isActionable,
+  UserSystemLoad,
+  UserSystemPresence,
+  UserSystemAccess,
+  UserSystemState,
+  type UserSystemAxes,
+  type UserSystemLoadType,
+  type UserSystemPresenceType,
+  type UserSystemAccessType,
+  type UserSystemStateType,
+  AUserSystemOverview,
+  AUserBulkActionDialog,
+  AUserMetadataRepairDialog,
+  useUserCrossSystemStore,
+  CrossSystemPhase,
+  BulkAction,
+  BulkOutcome,
+  type BulkActionType,
+  type BulkOutcomeType,
+  type BulkLogEntry,
+  type CrossSystemPhaseType,
+  type UserSystemResult,
+  useUserCrossSystemSearch,
+  isEmailTerm,
+  type CrossSystemSearchParams,
+  useUserCrossSystemWrites,
+  classifyWriteStatus,
+  type WriteResult,
+  findMetadataDifferences,
+  systemsNeedingWrite,
+  pickPrefillSource,
+  readMetadataField,
+  writeMetadataField,
+  USER_METADATA_FIELDS,
+  type UserMetadataField,
+  type MetadataDifference,
   formatJson,
 }

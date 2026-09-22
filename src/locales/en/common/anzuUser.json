@@ -40,5 +40,9 @@
     "desc": "Do you need to copy role and permissions from an existing user?",
     "srcUser": "Source user",
     "copiedSettings": "All copied settings:"
+  },
+  "hint": {
+    "derivedFromName": "Derived from the first and last name.",
+    "idReadonlyOnEdit": "The id does not change after creation."
   }
 }

@@ -55,6 +55,10 @@ watch(
   () => props.modelValue,
   (newValue, oldValue) => {
     if (newValue === oldValue) return
+    // A viewing screen must not write. Without this, one component serving both detail and edit
+    // (decision 27) reports unsaved changes the moment a user with no avatar colour is opened --
+    // the watcher is `immediate`, so it fires before anyone has touched anything.
+    if (props.readonly) return
     if (newValue.length === 7) return
     if (newValue.length !== 7 && props.randomColor) {
       if (generatedColor.value === '') {

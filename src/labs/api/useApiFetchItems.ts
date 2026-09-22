@@ -18,6 +18,9 @@ export type UseApiFetchItemsParams = {
   client: AxiosClientFn
   system: string
   entity: string
+  /** i18n scope for field-level validation failures; defaults to `system` / `entity`. */
+  validationSystem?: string
+  validationEntity?: string
   /**
    * The url, query and all: whatever built the query has already run by the time it gets here.
    *
@@ -87,6 +90,8 @@ export const useApiFetchItems = <T, B = never>(params: UseApiFetchItemsParams): 
     client,
     system,
     entity,
+    validationSystem,
+    validationEntity,
     urlTemplate,
     urlParams,
     options = {},
@@ -163,7 +168,13 @@ export const useApiFetchItems = <T, B = never>(params: UseApiFetchItemsParams): 
         ? readArrayBody<T>(res.data, res.status, asSent())
         : readListBody<T>(res.data, res.status, asSent()).items
     } catch (err: unknown) {
-      const context = { system, entity, url: requestedUrl(client, url, options, err, dispatched) }
+      const context = {
+        system,
+        entity,
+        validationSystem,
+        validationEntity,
+        url: requestedUrl(client, url, options, err, dispatched),
+      }
 
       throw report(mapApiError(err, context), context)
     }

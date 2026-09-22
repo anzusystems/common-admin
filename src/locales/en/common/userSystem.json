@@ -1,0 +1,93 @@
+{
+  "state": {
+    "loading": "Loading…",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "absent": "No account here",
+    "forbidden": "No access",
+    "unavailable": "System did not answer",
+    "configDisabled": "Disabled in configuration"
+  },
+  "button": {
+    "create": "Create",
+    "edit": "Edit",
+    "manageIn": "Manage in {system}",
+    "retry": "Try again"
+  },
+  "tab": {
+    "otherSystems": "Other systems"
+  },
+  "create": {
+    "title": "Create an account in {system}",
+    "note": "The account is created with no roles and no permissions. It cannot be deleted in the admin, only disabled.",
+    "willBeDisabled": "The account is created disabled; once enabled, this person can sign in.",
+    "willBeEnabled": "The account is created ready to use.",
+    "notAuthoritative": "These systems could not confirm whether the account exists: {systems}.",
+    "invalidId": "The id has to be a whole positive number.",
+    "sourceUnreadable": "The source account could not be read from {system}.",
+    "sourceChanged": "The source account changed in the meantime. Check the row and confirm again."
+  },
+  "manageMissingUrl": "The address of this admin is not set in the configuration.",
+  "table": {
+    "system": "System",
+    "state": "State",
+    "name": "Name",
+    "action": "Action"
+  },
+  "bulk": {
+    "enable": {
+      "title": "Enable the user",
+      "confirm": "Enable in {count} system | Enable in {count} systems"
+    },
+    "disable": {
+      "title": "Disable the user",
+      "confirm": "Disable in {count} system | Disable in {count} systems"
+    },
+    "metadata": {
+      "title": "Repair metadata everywhere",
+      "confirm": "Write to {count} system | Write to {count} systems"
+    },
+    "alreadyInState": "Already in the requested state",
+    "retryFailed": "Retry the failed ones",
+    "close": "Close",
+    "log": "Progress",
+    "concurrentChange": "Somebody changed it in the meantime ({fields}); your value was written.",
+    "openEnable": "Enable everywhere…",
+    "openDisable": "Disable everywhere…",
+    "openMetadata": "Repair metadata everywhere…",
+    "runningElsewhere": "Another bulk action is running.",
+    "outcome": {
+      "pending": "Waiting",
+      "running": "Running",
+      "done": "Done",
+      "forbidden": "You have no right to this operation",
+      "unauthenticated": "The account could not be verified",
+      "notFound": "This user does not exist here",
+      "invalid": "The account data failed validation — fix it by hand",
+      "unavailable": "The system did not answer"
+    }
+  },
+  "search": {
+    "label": "ID or e-mail",
+    "hint": "An exact match on the id or the e-mail.",
+    "submit": "Search",
+    "notFound": "No user found",
+    "createAnywhere": "Create an account…",
+    "phase": {
+      "matchingEmail": "Matching the e-mail…",
+      "verifyingById": "Verifying by id in every system…"
+    },
+    "identityConflict": "The same e-mail has different ids across systems. Bulk actions are stopped.",
+    "termRejected": "That is neither an id nor an e-mail. The search matches one of the two exactly."
+  },
+  "inconsistency": {
+    "title": "Differences between systems",
+    "field": "Field",
+    "values": "Values"
+  },
+  "repair": {
+    "title": "Repair metadata",
+    "source": "Source of the data",
+    "changes": "What will change"
+  }
+}
