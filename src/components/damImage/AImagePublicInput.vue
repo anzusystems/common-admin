@@ -123,48 +123,44 @@ const validateField = async () => {
 }
 
 const submit = async () => {
-  try {
-    const asset = await validateField()
-    v$.value.$touch()
-    if (v$.value.$invalid) {
-      showValidationError()
-      return Promise.reject('Invalid source or description')
-    }
-    const data: ImageCreateUpdateAware = {
-      texts: {
-        description: meta.value.description.trim(),
-        source: meta.value.source.trim(),
-      },
-      flags: {
-        showSource: true,
-        internal: false,
-        overrideInternal: false,
-      },
-      dam: {
-        damId: asset.mainFile!.id,
-        licenceId: asset.licence,
-        regionPosition: 0,
-        internal: asset.mainFileInternal ?? false,
-        uploadLicenceId: props.uploadLicence,
-      },
-      position: 0,
-    }
-    if (props.owner) {
-      data.ownerResourceName = props.owner.resourceName
-      data.ownerResourceId = props.owner.resourceId
-    }
-    if (resImage.value?.id) {
-      data.id = resImage.value.id
-    }
-    const imageRes = resImage.value?.id
-      ? await imageApi.updateImage(imageClient, resImage.value.id, data)
-      : await imageApi.createImage(imageClient, data)
-    resImage.value = imageRes
-    modelValue.value = imageRes.id
-    return Promise.resolve({ asset: asset, image: imageRes })
-  } catch (e) {
-    showErrorsDefault(e)
+  const asset = await validateField()
+  v$.value.$touch()
+  if (v$.value.$invalid) {
+    showValidationError()
+    return Promise.reject('Invalid source or description')
   }
+  const data: ImageCreateUpdateAware = {
+    texts: {
+      description: meta.value.description.trim(),
+      source: meta.value.source.trim(),
+    },
+    flags: {
+      showSource: true,
+      internal: false,
+      overrideInternal: false,
+    },
+    dam: {
+      damId: asset.mainFile!.id,
+      licenceId: asset.licence,
+      regionPosition: 0,
+      internal: asset.mainFileInternal ?? false,
+      uploadLicenceId: props.uploadLicence,
+    },
+    position: 0,
+  }
+  if (props.owner) {
+    data.ownerResourceName = props.owner.resourceName
+    data.ownerResourceId = props.owner.resourceId
+  }
+  if (resImage.value?.id) {
+    data.id = resImage.value.id
+  }
+  const imageRes = resImage.value?.id
+    ? await imageApi.updateImage(imageClient, resImage.value.id, data)
+    : await imageApi.createImage(imageClient, data)
+  resImage.value = imageRes
+  modelValue.value = imageRes.id
+  return Promise.resolve({ asset: asset, image: imageRes })
 }
 
 const updatePreviewAndTexts = () => {

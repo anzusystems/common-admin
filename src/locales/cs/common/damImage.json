@@ -30,14 +30,19 @@
       }
     },
     "error": {
-      "takeOverFailed": "Obrázek se nepodařilo převzít do licence. Zkuste to znovu nebo vyberte jiný obrázek.",
-      "singleUseViolation": "Tento obrázek je jednorázově použit v jiném článku, zde jej nelze použít.",
-      "exclusivityConflict": "Obrázek mezitím převzal někdo jiný ({holder}). Vyberte jiný obrázek.",
-      "exclusivityConflictUnknownHolder": "Obrázek mezitím převzal někdo jiný. Vyberte jiný obrázek.",
-      "sharedGallery": "Obrázek nelze přidat, galerie je vložena ve více článcích.",
-      "invalidOwner": "Obrázek takto nelze uložit, cílový záznam nepodporuje jednorázové obrázky.",
-      "ownerImmutable": "Držitele obrázku už nelze změnit.",
-      "imageRemoved": "Obrázek byl mezitím uvolněn, vyberte ho znovu."
+      "takeOverRejected": "Tento obrázek nelze převzít do naší licence. Vyberte jiný.",
+      "takeOverUnavailable": "Přebírání obrázků je momentálně nedostupné. Zkuste to za chvíli, jiný obrázek teď nepomůže. Pokud to trvá, kontaktujte správce.",
+      "singleUseViolation": "Obrázek {damId} je jednorázový a už je použit jinde ({holder}). Vyberte jiný obrázek nebo ho nejprve uvolněte.",
+      "singleUseViolationUnknownHolder": "Obrázek {damId} je jednorázový a už je použit jinde. Vyberte jiný obrázek nebo ho nejprve uvolněte.",
+      "singleUseViolationUnknownImage": "Jeden z vybraných obrázků je jednorázový a už je použit jinde ({holder}). Vyberte jiný obrázek nebo ho nejprve uvolněte.",
+      "singleUseViolationUnidentified": "Jeden z vybraných obrázků je jednorázový a už je použit jinde. Vyberte jiný obrázek nebo ho nejprve uvolněte.",
+      "singleUseCopy": "Obrázek {damId} drží {holder}, sem ho nelze zkopírovat.",
+      "sharedGallery": "Galerie obsahuje jednorázový obrázek, takže může být vložena jen na jednom místě. Odeberte ji z ostatních míst nebo z ní jednorázový obrázek vyjměte.",
+      "invalidOwner": "Jednorázový obrázek sem vložit nelze, cílový záznam jednorázové obrázky nepodporuje.",
+      "ownerImmutable": "Obrázek patří jinému záznamu a jeho držitele už nelze změnit.",
+      "ownerConflict": "Obrázek je už přiřazen jinému vlastníkovi.",
+      "imageRemoved": "Obrázek byl mezitím uvolněn, vyberte ho znovu.",
+      "multipleTargets": "Návrh s jednorázovým obrázkem lze navrhnout jen do jednoho feedu."
     },
     "bulkSave": {
       "partialFailure": "Některé obrázky se nepodařilo uložit.",

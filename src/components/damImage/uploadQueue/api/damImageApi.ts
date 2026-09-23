@@ -7,7 +7,6 @@ import { damFileTypeFix } from '@/components/file/composables/fileType'
 import type { AssetFileImage } from '@/types/coreDam/AssetFile'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import type {} from '@/types/coreDam/Asset'
 import { useSentry } from '@/services/sentry'
 
 const CHUNK_UPLOAD_TIMEOUT = 420

@@ -42,7 +42,11 @@ export const updateImage = (
 export const deleteImage = (client: () => AxiosInstance, id: IntegerId) =>
   apiDeleteOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
 
-const KNOWN_IMAGE_ERROR_CODES = ['image_take_over_failed', 'image_single_use_violation'] as const
+const KNOWN_IMAGE_ERROR_CODES = [
+  'image_take_over_failed',
+  'image_single_use_violation',
+  'image_owner_conflict',
+] as const
 export type KnownImageErrorCode = (typeof KNOWN_IMAGE_ERROR_CODES)[number]
 
 export interface ImageSaveErrorInfo {
