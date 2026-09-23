@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
+import useVuelidate from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import AUserMetadataForm from '@/labs/anzuUser/AUserMetadataForm.vue'
@@ -27,6 +28,11 @@ const open = defineModel<boolean>('open', { required: true })
 
 const { t } = useI18n()
 const store = useUserCrossSystemStore()
+
+// The form's own collector. Without it the strict rules only showed asterisks: nothing asked them
+// before writing, and a source with an empty name or colour -- blog's `person` is empty for most
+// accounts, cms never required a colour -- was written as blank into every ticked system.
+const v$ = useVuelidate()
 
 const records = computed(() => {
   const map = new Map<string, BaseUser>()
@@ -131,8 +137,10 @@ const noteFor = (system: string) => props.descriptors.find((item) => item.system
 
 const labelFor = (system: string) => props.descriptors.find((item) => item.system === system)?.label ?? system
 
-const confirm = () => {
+const confirm = async () => {
   if (target.value === null || store.identityConflict !== null || affected.value.length === 0) return
+  // Strict because it writes to up to nine places: only a value that passes in every system may go.
+  if (!(await v$.value.$validate())) return
   showingLog.value = true
   emit('confirm', { target: target.value, systems: affected.value })
 }

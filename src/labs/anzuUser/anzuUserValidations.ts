@@ -1,5 +1,5 @@
 import useVuelidate from '@vuelidate/core'
-import { computed, type Ref } from 'vue'
+import { computed, toValue, type MaybeRefOrGetter, type Ref } from 'vue'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import type { BaseUser } from '@/types/AnzuUser'
 
@@ -9,10 +9,10 @@ export interface UserMetadataValidationOptions {
    * e-mail; `true` also requires first name, last name, full name, avatar text and avatar colour.
    * It applies the same way to creating and to editing -- within a system it is one rule.
    */
-  required: boolean
+  required: MaybeRefOrGetter<boolean>
   /** Whether the id is a field at all. When it is, and this is a create, it is required. */
-  idInput: boolean
-  isEdit: boolean
+  idInput: MaybeRefOrGetter<boolean>
+  isEdit: MaybeRefOrGetter<boolean>
   /** Scope key, so an owning form can validate its own fields alongside the app's system fields. */
   scope?: string | symbol | false
 }
@@ -28,13 +28,16 @@ export function useUserMetadataValidation(user: Ref<BaseUser>, options: UserMeta
   const { email, hexColor, maxLength, minLength, required } = useValidate()
 
   const rules = computed(() => {
-    const requiredWhenProfileSays = options.required ? { required } : {}
+    // Read inside the computed, not once at setup: the "not found anywhere" dialog switches the
+    // target system under a mounted form, and a profile captured at mount would go on applying the
+    // first system's rules to all the others.
+    const requiredWhenProfileSays = toValue(options.required) ? { required } : {}
 
     return {
       user: {
         // Only on a create, and only where the id is typed at all: on an edit it is a primary key
         // being displayed, and in cms the backend resolves it from SSO.
-        id: options.idInput && !options.isEdit ? { required } : {},
+        id: toValue(options.idInput) && !toValue(options.isEdit) ? { required } : {},
         email: {
           required,
           email,

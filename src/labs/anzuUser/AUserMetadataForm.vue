@@ -59,9 +59,9 @@ const { t } = useI18n()
 
 /* eslint-disable vue/no-setup-props-reactivity-loss */
 const { v$ } = useUserMetadataValidation(user, {
-  required: props.required,
-  idInput: props.idInput,
-  isEdit: props.isEdit,
+  required: () => props.required,
+  idInput: () => props.idInput,
+  isEdit: () => props.isEdit,
   scope: props.validationScope,
 })
 /* eslint-enable vue/no-setup-props-reactivity-loss */

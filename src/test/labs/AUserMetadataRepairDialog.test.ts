@@ -171,6 +171,25 @@ describe('AUserMetadataRepairDialog', () => {
     expect(wrapper.emitted('confirm')).toBeUndefined()
   })
 
+  it('will not write a blank value from the source into the other systems', async () => {
+    // Plan lines 483-486: the repair is always strict, because a loose form could put an empty name
+    // into cms. The source is the first configured system with a record -- in inhouse that is cms,
+    // which never required a colour -- so its blanks would be written everywhere they differ.
+    seed({
+      cms: record({ person: { firstName: '', lastName: '', fullName: '' }, avatar: { color: '', text: '' } }),
+      blog: record(),
+    })
+    const wrapper = await mountDialog()
+
+    const confirm = document.querySelector('[data-cy="repair-confirm"]') as HTMLElement
+    confirm.click()
+    await flushPromises()
+
+    expect(wrapper.emitted('confirm')).toBeUndefined()
+    // Still on the form, not on the log of a run that never happened.
+    expect(document.querySelector('[data-cy="repair-log"]')).toBeNull()
+  })
+
   it('writes to nobody when every system already holds the value', async () => {
     seed({ cms: record(), weather: record() })
     const wrapper = await mountDialog()

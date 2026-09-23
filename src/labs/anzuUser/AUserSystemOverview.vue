@@ -175,7 +175,9 @@ const createFromSource = async (descriptor: AnyUserSystemDescriptor, metadata: B
     // switched on, taken from the search result. If the server no longer agrees, somebody changed
     // it in between, and in blog and forum the difference is a working public account.
     if (source.enabled !== sourceEnabled.value) {
-      store.setUser(sourceSystem.system, source)
+      // Re-read rather than patch the record: the chip draws from the probe's axes, and replacing
+      // only the user left it showing the old state next to a toggle already showing the new one.
+      await refreshSystem(sourceSystem.system)
       showError(t('common.userSystem.create.sourceChanged'))
       return
     }
@@ -270,8 +272,14 @@ const createAnywhereChecking = ref(false)
 const createAnywhereConflict = ref<string[]>([])
 const createAnywhereError = ref<string | null>(null)
 
+/** Set when the page goes away, so work that finishes afterwards does not refill it. */
+let left = false
+
 const openCreateAnywhere = () => {
-  createAnywhereSystem.value = props.descriptors[0]?.system ?? null
+  // The first system that is switched on, not the first one listed: a system disabled in the
+  // configuration is not among the options, and preselecting it would POST through a client with
+  // no base URL.
+  createAnywhereSystem.value = props.descriptors.find((item) => item.isEnabled())?.system ?? null
   createAnywhereUser.value = createAnzuUser(createAnywhereSystem.value ?? '')
   createAnywhereConflict.value = []
   createAnywhereError.value = null
@@ -308,6 +316,7 @@ const confirmCreateAnywhere = async () => {
       createAnywhereError.value = t('common.userSystem.create.invalidId')
       return
     }
+    if (left) return
     if (records.value.size > 0) {
       createAnywhereConflict.value = [...records.value.keys()]
       return
@@ -317,7 +326,7 @@ const confirmCreateAnywhere = async () => {
       return
     }
     const descriptor = props.descriptors.find((item) => item.system === system)
-    if (isUndefined(descriptor)) return
+    if (isUndefined(descriptor) || !descriptor.isEnabled()) return
     const body = createAnzuUser(system)
     body.id = id
     body.email = createAnywhereUser.value.email
@@ -328,6 +337,10 @@ const confirmCreateAnywhere = async () => {
     const result = await writes.createInSystem(descriptor, body)
     reportOutcome(labelFor(descriptor), result.outcome)
     if (result.outcome !== BulkOutcome.Done) return
+    // The dialog is not persistent: the operator can click outside it and use the menu while the
+    // POST is still out. The search after it takes a fresh generation that `cancel()` cannot stop,
+    // and would put the new person back into a store the unmount just emptied.
+    if (left) return
     createAnywhereOpen.value = false
     await search(String(id))
   } finally {
@@ -355,7 +368,14 @@ const createSystemOptions = computed(() =>
   props.descriptors.filter((item) => item.isEnabled()).map((item) => ({ value: item.system, title: labelFor(item) }))
 )
 
-onBeforeUnmount(cancel)
+// The store is there so a closed dialog does not take a running bulk action with it -- not to keep
+// a person on screen across navigation. Coming back through the menu showed the last one's rows and
+// live buttons under an empty search box.
+onBeforeUnmount(() => {
+  left = true
+  cancel()
+  store.reset()
+})
 
 defineExpose({
   search: async (value: string) => {

@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import useVuelidate from '@vuelidate/core'
+import { defineComponent, h, ref } from 'vue'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import AUserMetadataForm from '@/labs/anzuUser/AUserMetadataForm.vue'
@@ -179,5 +181,32 @@ describe('AUserMetadataForm note', () => {
     })
 
     expect(wrapper.text()).toContain('Blog has its own first and last name')
+  })
+})
+
+describe('AUserMetadataForm validation profile', () => {
+  it('follows the profile when it changes under a mounted form', async () => {
+    // The "not found anywhere" dialog switches the target system under a form that is already
+    // mounted. A profile read once at setup kept the first system's rules for all the others: with
+    // a strict cms preselected, choosing blog still demanded names, initials and a colour.
+    const required = ref(true)
+    let validate: () => Promise<boolean> = async () => false
+    const Host = defineComponent({
+      setup() {
+        const v$ = useVuelidate()
+        validate = () => v$.value.$validate()
+        const model = ref(user())
+        return () => h(AUserMetadataForm, { user: model.value, required: required.value, idInput: false })
+      },
+    })
+    mounted = mount(Host, { global: { plugins: [pinia] } })
+    await flushPromises()
+
+    expect(await validate()).toBe(false)
+
+    required.value = false
+    await flushPromises()
+
+    expect(await validate()).toBe(true)
   })
 })

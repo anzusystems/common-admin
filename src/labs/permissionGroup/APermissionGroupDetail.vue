@@ -10,8 +10,16 @@ import { usePermissionGroupOneStore } from '@/labs/permissionGroup/permissionGro
 defineProps<{
   client: AxiosClientFn
   system: string
-  entity?: string | undefined
-  endPoint?: string | undefined
+  /**
+   * Where the grants editor reads the permission config -- `GET /adm/v1/permissions/config` when
+   * left out, which every backend has.
+   *
+   * Named for what it is, and deliberately not `endPoint`: a page holding the permission-group
+   * endpoint passed it here as `endPoint`, the editor fetched the group list as its config and
+   * crashed -- and, the config store being keyed by system, left that system's user pages broken
+   * until reload. A stray `end-point` now falls through as an attribute and changes nothing.
+   */
+  permissionConfigEndPoint?: string | undefined
 }>()
 
 const { permissionGroup, loadingPermissionGroup } = storeToRefs(usePermissionGroupOneStore())
@@ -51,8 +59,7 @@ const { t } = useI18n()
             v-model="permissionGroup.permissions"
             :client="client"
             :system="system"
-            :entity="entity"
-            :end-point="endPoint"
+            :end-point="permissionConfigEndPoint"
             readonly
           />
         </VCol>

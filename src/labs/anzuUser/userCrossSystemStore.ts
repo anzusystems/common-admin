@@ -154,12 +154,17 @@ export const useUserCrossSystemStore = defineStore('labsUserCrossSystemStore', (
     bulkRunning.value = false
   }
 
+  /**
+   * What leaving the page does: nobody on screen for the next visit.
+   *
+   * `resetResults` already drops the log and which run it was for. The lock it deliberately leaves:
+   * a run still writing goes on after the page is gone -- `cancel()` stops the probes, not the
+   * writes -- and releasing it would let a second bulk action start against the same account while
+   * the first is unfinished (B13). The run releases it itself when it ends.
+   */
   function reset() {
     searchTerm.value = ''
     resetResults()
-    bulkRunning.value = false
-    bulkAction.value = null
-    bulkLog.value = []
   }
 
   return {

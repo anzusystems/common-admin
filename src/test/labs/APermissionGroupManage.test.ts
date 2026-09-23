@@ -13,7 +13,14 @@ const CONFIG = {
   translation: { subjects: {}, actions: {}, roles: {} },
 }
 
-const client = () => ({ request: vi.fn().mockResolvedValue({ status: 200, data: CONFIG }) }) as unknown as AxiosInstance
+// The config only where the config lives. Answering it to every URL is what let a page that sent
+// the editor to the group list pass here as if nothing were wrong.
+const request = vi.fn((config: { url?: string }) =>
+  config.url?.endsWith('/adm/v1/permissions/config')
+    ? Promise.resolve({ status: 200, data: CONFIG })
+    : Promise.resolve({ status: 200, data: { data: [], totalCount: 0 } })
+)
+const client = () => ({ request }) as unknown as AxiosInstance
 
 let mounted: VueWrapper | null = null
 // `src/test/setup.ts` installs one pinia into every mount through `config.global.plugins`, and
@@ -22,8 +29,11 @@ let mounted: VueWrapper | null = null
 // mount options are applied after the global ones, so this is the instance that wins.
 let pinia = createPinia()
 
-const mountManage = async () => {
-  mounted = mount(APermissionGroupManage, { global: { plugins: [pinia] }, props: { client, system: 'weather' } })
+const mountManage = async (props: Record<string, unknown> = {}) => {
+  mounted = mount(APermissionGroupManage, {
+    global: { plugins: [pinia] },
+    props: { client, system: 'weather', ...props },
+  })
   await flushPromises()
   return mounted
 }
@@ -39,6 +49,17 @@ afterEach(() => {
 })
 
 describe('APermissionGroupManage', () => {
+  it('reads the permission config, not the group list, whatever endpoint the page holds', async () => {
+    // Every page passed its permission-group endpoint here. The editor used it as the config URL,
+    // stored the list as that system's config and crashed on `Object.keys(config.config)`.
+    const wrapper = await mountManage({ endPoint: '/adm/v1/permission-group' })
+
+    const urls = request.mock.calls.map(([config]) => config.url)
+    expect(urls.some((url) => url?.endsWith('/adm/v1/permissions/config'))).toBe(true)
+    expect(urls.some((url) => url?.endsWith('/adm/v1/permission-group'))).toBe(false)
+    expect(wrapper.find('[data-cy="permission-allow-all-location"]').exists()).toBe(true)
+  })
+
   it('edits the group the store holds', async () => {
     const store = usePermissionGroupOneStore()
     store.setPermissionGroup({
