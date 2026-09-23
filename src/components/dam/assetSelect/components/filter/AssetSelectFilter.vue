@@ -38,11 +38,7 @@ const { mdAndDown } = useDisplay()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { selectLicences, listViews } = props
 
-const {
-  items: presetItems,
-  selectedPresetKey,
-  applyPreset,
-} = useAssetSelectPresetControl(selectLicences, listViews)
+const { items: presetItems, selectedPresetKey, applyPreset } = useAssetSelectPresetControl(selectLicences, listViews)
 const showPresetSelect = computed(() => selectLicences.length > 1 || listViews.length > 0)
 const { closeSidebarLeft } = useSidebar()
 const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()

@@ -98,12 +98,21 @@ const { selectedSelectConfig } = storeToRefs(assetSelectStore)
 // detail would otherwise be silent about the one thing that matters. Null everywhere the picker is opened
 // without selectability rules, so nothing is rendered there.
 const openedAssetDisabledReason = computed(
-  () =>
-    assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id)
-      ?.disabledReason ?? null,
+  () => assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id)?.disabledReason ?? null
 )
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
+
+// Presets and the filter's licence list must never offer a licence the picker itself would reject:
+// DAM refuses the whole search when even one requested licence is unreadable. Reactive on
+// `selectConfigs` (not on `onOpen`'s local variable) so a preset control created before the dialog's
+// first open still resolves to the filtered universe once the configs land.
+const allowedSelectLicences = computed<IntegerId[]>(() => {
+  const configs = props.skipCurrentUserCheck
+    ? selectConfigs.value
+    : filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
+  return configs.map((config) => config.licence)
+})
 
 const { mdAndUp } = useDisplay()
 const { openSidebarLeft, closeSidebarRight, sidebarLeft, sidebarRight } = useSidebar()
@@ -177,7 +186,7 @@ watch(
     pagination.value.page = 1
     fetchAssetListDebounced()
   },
-  { deep: true },
+  { deep: true }
 )
 
 const componentComputed = computed(() => {
@@ -192,11 +201,7 @@ const componentComputed = computed(() => {
 })
 
 const disabledSubmit = computed(() => {
-  return (
-    selectedCount.value < props.minCount ||
-    selectedCount.value > props.maxCount ||
-    selectedHasDisabled.value
-  )
+  return selectedCount.value < props.minCount || selectedCount.value > props.maxCount || selectedHasDisabled.value
 })
 
 const extId = computed(() => {
@@ -289,8 +294,8 @@ defineExpose({
           @sort-by-change="sortByChange"
         />
         <AssetSelectLicencePresetBar
-          v-if="selectLicences.length > 1 || listViews.length > 0"
-          :select-licences="selectLicences"
+          v-if="allowedSelectLicences.length > 1 || listViews.length > 0"
+          :select-licences="allowedSelectLicences"
           :list-views="listViews"
         />
         <div
@@ -303,7 +308,7 @@ defineExpose({
           <div class="subject-select__sidebar system-border-r">
             <AssetSelectFilter
               :config-name="configName"
-              :select-licences="selectLicences"
+              :select-licences="allowedSelectLicences"
               :list-views="listViews"
             />
           </div>

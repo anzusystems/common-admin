@@ -14,23 +14,14 @@ const { t } = useI18n()
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { selectLicences, listViews } = props
 
-const {
-  selectedLicenceIds,
-  isModified,
-  isClearable,
-  resetToPreset,
-  removeLicence,
-  licenceTitle,
-  licenceBadge,
-} = useAssetSelectPresetControl(selectLicences, listViews)
+const { selectedLicenceIds, isModified, isClearable, resetToPreset, removeLicence, licenceTitle, licenceBadge } =
+  useAssetSelectPresetControl(selectLicences, listViews)
 </script>
 
 <template>
   <div class="asset-select-preset-bar d-flex flex-wrap align-center system-border-b px-2 py-1">
     <div class="a-selected-filters my-1">
-      <div class="a-selected-filters__label text-body-small">
-        {{ t('common.assetSelect.filter.licence') }}:
-      </div>
+      <div class="a-selected-filters__label text-body-small">{{ t('common.assetSelect.filter.licence') }}:</div>
       <div class="a-selected-filters__chips">
         <VChip
           v-for="licenceId in selectedLicenceIds"

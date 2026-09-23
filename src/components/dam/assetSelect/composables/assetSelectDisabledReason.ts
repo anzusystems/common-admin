@@ -3,10 +3,7 @@ import { DamAssetType, type AssetSearchListItemDto } from '@/types/coreDam/Asset
 import type { DamAssetLicenceCached } from '@/types/coreDam/AssetLicence'
 import type { DocId, IntegerId } from '@/types/common'
 import { isNull, isUndefined } from '@/utils/common'
-import type {
-  AssetSelectabilityOptions,
-  AssetSelectListItem,
-} from '@/services/stores/coreDam/assetSelectStore'
+import type { AssetSelectabilityOptions, AssetSelectListItem } from '@/services/stores/coreDam/assetSelectStore'
 import { holdersEqual } from '@/types/coreDam/AssetSelect'
 
 /**
@@ -22,7 +19,7 @@ export const resolveHolderName = (resourceName: string): string => {
 export const resolveDisabledReason = (
   asset: AssetSearchListItemDto,
   licence: DamAssetLicenceCached | undefined,
-  options: AssetSelectabilityOptions,
+  options: AssetSelectabilityOptions
 ): string | null => {
   const { t } = i18n.global
   const singleUse = asset.mainFile?.flags.singleUse ?? false
@@ -69,15 +66,12 @@ export const resolveDisabledReason = (
 export const resolveDisabledReasons = (
   items: AssetSelectListItem[],
   getCachedAssetLicence: (id: IntegerId) => DamAssetLicenceCached | undefined,
-  options: AssetSelectabilityOptions,
+  options: AssetSelectabilityOptions
 ): Map<DocId, string | null> => {
   const reasons = new Map<DocId, string | null>()
 
   items.forEach((item) => {
-    reasons.set(
-      item.asset.id,
-      resolveDisabledReason(item.asset, getCachedAssetLicence(item.asset.licence), options),
-    )
+    reasons.set(item.asset.id, resolveDisabledReason(item.asset, getCachedAssetLicence(item.asset.licence), options))
   })
 
   return reasons

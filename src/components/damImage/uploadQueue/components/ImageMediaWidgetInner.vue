@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
-import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
+import { applyImageOwner, type ImageAware, type ImageCreateUpdateAware } from '@/types/ImageAware'
 import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
@@ -399,8 +399,7 @@ const assetSelectStore = useAssetSelectStore()
 const imageMediaWidgetStore = useImageMediaWidgetStore()
 const { detail } = storeToRefs(imageMediaWidgetStore)
 const { getDamConfigExtSystem } = useDamConfigState()
-const { addToCachedAssetLicences, fetchCachedAssetLicences, isLoadedCachedAssetLicence } =
-  useDamCachedAssetLicences()
+const { addToCachedAssetLicences, fetchCachedAssetLicences, isLoadedCachedAssetLicence } = useDamCachedAssetLicences()
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
   if (data.type !== 'asset' || !data.value[0]) return
@@ -593,22 +592,17 @@ const tryImageConfirm = async () => {
   if (!isImageCreateUpdateAware(detail.value)) return
   metadataDialogSaving.value = true
   const pendingAuthorIds =
-    showDamAuthorsInCmsImage.value && asset.value && asset.value.authors.length > 0
-      ? asset.value.authors
-      : undefined
+    showDamAuthorsInCmsImage.value && asset.value && asset.value.authors.length > 0 ? asset.value.authors : undefined
   try {
     if (pendingAuthorIds) {
       const authorsRes = await fetchAuthorListByIds(
         damClient,
         assetSelectStore.selectedSelectConfig.extSystem,
-        pendingAuthorIds,
+        pendingAuthorIds
       )
       detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
     }
-    if (props.owner) {
-      detail.value.ownerResourceName = props.owner.resourceName
-      detail.value.ownerResourceId = props.owner.resourceId
-    }
+    applyImageOwner(detail.value, props.owner)
     const res = detail.value.id
       ? await imageApi.updateImage(imageClient, detail.value.id, detail.value)
       : await imageApi.createImage(imageClient, detail.value)
@@ -627,12 +621,7 @@ const tryImageConfirm = async () => {
       try {
         const targetAsset = await fetchAssetByFileId(damClient, endPointAsset, res.dam.damId)
         targetAsset.authors = pendingAuthorIds
-        await updateAssetAuthors(
-          damClient,
-          endPointAsset,
-          targetAsset,
-          assetSelectStore.selectedSelectConfig.extSystem,
-        )
+        await updateAssetAuthors(damClient, endPointAsset, targetAsset, assetSelectStore.selectedSelectConfig.extSystem)
       } catch (authorError) {
         showErrorsDefault(authorError)
       }

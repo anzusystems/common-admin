@@ -48,6 +48,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId[]): void
+  (e: 'saveWithoutFailed'): void
 }>()
 
 const status = ref<'loading' | 'ready' | 'error' | 'uploadNotAllowed'>('loading')
@@ -117,6 +118,7 @@ const { t } = useI18n()
     ref="innerComponent"
     v-bind="props"
     @update:model-value="emit('update:modelValue', $event)"
+    @save-without-failed="emit('saveWithoutFailed')"
   />
   <div
     v-else-if="status === 'error'"

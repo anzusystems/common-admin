@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ComposerTranslation } from 'vue-i18n'
 import { resolveImageSaveErrorMessage } from '@/components/damImage/composables/imageSaveErrors'
-import type { ImageSaveErrorInfo } from '@/components/damImage/uploadQueue/api/imageApiCms'
+import type { ImageSaveErrorInfo, KnownReason } from '@/components/damImage/uploadQueue/api/imageApiCms'
 
 // Locale messages are not loaded here, so `t` echoes the key and its arguments; the branching is
 // this resolver's job, the rendered sentence is vue-i18n's.
@@ -38,7 +38,7 @@ describe('resolveImageSaveErrorMessage', () => {
     )
   })
 
-  it.each([
+  it.each<[KnownReason, string]>([
     ['shared_gallery', 'sharedGallery'],
     ['invalid_owner', 'invalidOwner'],
     ['owner_immutable', 'ownerImmutable'],

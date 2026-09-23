@@ -42,7 +42,9 @@
       "ownerImmutable": "Obrázek patří jinému záznamu a jeho držitele už nelze změnit.",
       "ownerConflict": "Obrázek je už přiřazen jinému vlastníkovi.",
       "imageRemoved": "Obrázek byl mezitím uvolněn, vyberte ho znovu.",
-      "multipleTargets": "Návrh s jednorázovým obrázkem lze navrhnout jen do jednoho feedu."
+      "multipleTargets": "Návrh s jednorázovým obrázkem lze navrhnout jen do jednoho feedu.",
+      "imageCopy": "Tento obrázek je jednorázový a nelze jej kopírovat.",
+      "galleryCopy": "Galerie obsahuje jednorázový obrázek a nelze ji kopírovat."
     },
     "bulkSave": {
       "partialFailure": "Některé obrázky se nepodařilo uložit.",

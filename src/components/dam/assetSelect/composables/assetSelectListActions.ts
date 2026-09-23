@@ -8,10 +8,7 @@ import { usePagination } from '@/labs/filters/pagination'
 import { useAlerts } from '@/composables/system/alerts'
 import type { DocId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import {
-  fetchAsset,
-  useFetchAssetListByLicences,
-} from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { fetchAsset, useFetchAssetListByLicences } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
@@ -36,12 +33,11 @@ export function useAssetSelectActions(
 ) {
   const { damClient, endPointAsset, showFileInfoEnabled } = useCommonAdminCoreDamOptions(configName)
 
-  const { getCachedAssetLicence, addToCachedAssetLicences, fetchCachedAssetLicences } =
+  const { getCachedAssetLicence, addToCachedAssetLicences, fetchCachedAssetLicencesImmediate } =
     useDamCachedAssetLicences()
 
   const assetSelectStore = useAssetSelectStore()
-  const { selectedCount, selectedHasDisabled, selectedAssets, assetListItems, loader } =
-    storeToRefs(assetSelectStore)
+  const { selectedCount, selectedHasDisabled, selectedAssets, assetListItems, loader } = storeToRefs(assetSelectStore)
   const assetDetailStore = useAssetDetailStore()
   const { openSidebarRight } = useSidebar()
   const { mdAndDown } = useDisplay()
@@ -79,10 +75,8 @@ export function useAssetSelectActions(
     // An uncached licence answers from a placeholder whose directUseAllowed is true, and the reasons are
     // resolved once per page — an agency item would stay pickable until the picker is reopened.
     addToCachedAssetLicences(items.map((item) => item.asset.licence))
-    await fetchCachedAssetLicences()
-    assetSelectStore.setDisabledReasons(
-      resolveDisabledReasons(items, getCachedAssetLicence, selectability),
-    )
+    await fetchCachedAssetLicencesImmediate()
+    assetSelectStore.setDisabledReasons(resolveDisabledReasons(items, getCachedAssetLicence, selectability))
   }
 
   const fetchAssetList = async () => {
@@ -112,9 +106,7 @@ export function useAssetSelectActions(
     try {
       assetSelectStore.showLoader()
       // Only the freshly appended page: the earlier pages already carry their resolved reasons.
-      const appended = assetSelectStore.appendList(
-        await executeFetch(pagination, filterData, filterConfig),
-      )
+      const appended = assetSelectStore.appendList(await executeFetch(pagination, filterData, filterConfig))
       await applyDisabledReasons(appended)
     } catch (error) {
       showErrorsDefault(error)
@@ -138,9 +130,7 @@ export function useAssetSelectActions(
       // Every licence in one search shares an ext system (LicenceCollectionSingleExtSystem), but resolve
       // it from the asset's own licence rather than the dialog-wide selection so this stays correct if
       // that backend constraint is ever relaxed.
-      const assetSelectConfig = assetSelectStore.selectConfig.find(
-        (config) => config.licence === asset.licence,
-      )
+      const assetSelectConfig = assetSelectStore.selectConfig.find((config) => config.licence === asset.licence)
       if (assetSelectConfig) {
         cachedExtSystemId.value = assetSelectConfig.extSystem
       }

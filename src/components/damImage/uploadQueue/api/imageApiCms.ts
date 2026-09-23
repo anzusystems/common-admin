@@ -38,9 +38,28 @@ const KNOWN_IMAGE_ERROR_CODES = [
 ] as const
 export type KnownImageErrorCode = (typeof KNOWN_IMAGE_ERROR_CODES)[number]
 
+// Mirrors core-cms SingleUseViolationException::REASON_* — a renamed reason on the backend must fall
+// back to the generic wording instead of silently matching nothing.
+export const KNOWN_SINGLE_USE_REASONS = [
+  'exclusivity_conflict',
+  'shared_gallery',
+  'invalid_owner',
+  'owner_immutable',
+  'image_removed',
+  'single_use_copy',
+  'multiple_targets',
+  'image_copy',
+  'gallery_copy',
+] as const
+export type KnownSingleUseReason = (typeof KNOWN_SINGLE_USE_REASONS)[number]
+
+// `image_take_over_failed` carries its reason from core-cms DamApiException, a different vocabulary.
+const KNOWN_REASONS = [...KNOWN_SINGLE_USE_REASONS, 'take_over_rejected', 'take_over_exception'] as const
+export type KnownReason = (typeof KNOWN_REASONS)[number]
+
 export interface ImageSaveErrorInfo {
   code: KnownImageErrorCode
-  reason?: string
+  reason?: KnownReason
   damId?: DocId
   /** Empty when the holder cannot be named, which is the case for a gallery shared by two articles. */
   holderResourceName?: string
@@ -57,21 +76,19 @@ export const extractImageSaveErrorInfo = (error: unknown): ImageSaveErrorInfo | 
   // `AnzuFatalError`, the labs `useApiRequest` with `AnzuApiAxiosError`. Both keep the original error in
   // `cause`, so unwrapping either one leads to the same 422 body.
   const axiosError =
-    isAnzuFatalError(error) || isAnzuApiAxiosError(error)
-      ? error.cause
-      : axios.isAxiosError(error)
-        ? error
-        : undefined
+    isAnzuFatalError(error) || isAnzuApiAxiosError(error) ? error.cause : axios.isAxiosError(error) ? error : undefined
   if (!axios.isAxiosError(axiosError)) return undefined
   const data = axiosError.response?.data
   if (!data || typeof data.error !== 'string') return undefined
   if (!(KNOWN_IMAGE_ERROR_CODES as readonly string[]).includes(data.error)) return undefined
   return {
     code: data.error as KnownImageErrorCode,
-    reason: typeof data.reason === 'string' ? data.reason : undefined,
+    reason:
+      typeof data.reason === 'string' && (KNOWN_REASONS as readonly string[]).includes(data.reason)
+        ? (data.reason as KnownReason)
+        : undefined,
     damId: typeof data.damId === 'string' ? data.damId : undefined,
-    holderResourceName:
-      typeof data.holderResourceName === 'string' ? data.holderResourceName : undefined,
+    holderResourceName: typeof data.holderResourceName === 'string' ? data.holderResourceName : undefined,
     holderResourceId: typeof data.holderResourceId === 'string' ? data.holderResourceId : undefined,
   }
 }
@@ -85,6 +102,12 @@ export interface BulkUpdateImageFailure {
 export interface BulkUpdateImagesResult {
   images: ImageAware[]
   failed: BulkUpdateImageFailure[]
+  /**
+   * Chunk-level errors that could not be pinned on any item in that chunk — no `damId` at all, or a
+   * `damId` the chunk doesn't contain. Dropping these silently told the editor "saving again will
+   * retry them", which fails the same way again; the caller must show them once instead.
+   */
+  batchErrors: ImageSaveErrorInfo[]
 }
 
 /**
@@ -97,11 +120,12 @@ export interface BulkUpdateImagesResult {
  */
 export const bulkUpdateImages = async (
   client: () => AxiosInstance,
-  items: ImageCreateUpdateAware[],
+  items: ImageCreateUpdateAware[]
 ): Promise<BulkUpdateImagesResult> => {
   const images: ImageAware[] = []
   const failed: BulkUpdateImageFailure[] = []
-  if (items.length === 0) return { images, failed }
+  const batchErrors: ImageSaveErrorInfo[] = []
+  if (items.length === 0) return { images, failed, batchErrors }
 
   const totalCalls = Math.ceil(items.length / BULK_METADATA_LIMIT)
   for (let i = 0; i < totalCalls; i++) {
@@ -116,6 +140,7 @@ export const bulkUpdateImages = async (
       images.push(...(res.data.images as ImageAware[]))
     } catch (e) {
       const errorInfo = extractImageSaveErrorInfo(e)
+      const matchesAnItem = errorInfo && reduced.some((item) => item.dam.damId === errorInfo.damId)
       reduced.forEach((item, j) => {
         failed.push({
           item,
@@ -123,7 +148,10 @@ export const bulkUpdateImages = async (
           errorInfo: errorInfo && item.dam.damId === errorInfo.damId ? errorInfo : undefined,
         })
       })
+      if (errorInfo && !matchesAnItem) {
+        batchErrors.push(errorInfo)
+      }
     }
   }
-  return { images, failed }
+  return { images, failed, batchErrors }
 }

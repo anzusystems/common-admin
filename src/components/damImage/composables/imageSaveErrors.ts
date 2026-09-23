@@ -1,15 +1,23 @@
 import { useAlerts } from '@/composables/system/alerts'
 import { i18n } from '@/plugins/i18n'
 import type { ComposerTranslation } from 'vue-i18n'
-import { extractImageSaveErrorInfo, type ImageSaveErrorInfo } from '@/components/damImage/uploadQueue/api/imageApiCms'
+import {
+  extractImageSaveErrorInfo,
+  type ImageSaveErrorInfo,
+  type KnownSingleUseReason,
+} from '@/components/damImage/uploadQueue/api/imageApiCms'
 import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 
-const SINGLE_USE_REASON_MESSAGE: Record<string, string> = {
+// Reasons resolved by a fixed sentence, no damId/holder involved. `exclusivity_conflict` and
+// `single_use_copy` are handled separately below, they need the damId/holder in the wording.
+const SINGLE_USE_REASON_MESSAGE: Partial<Record<KnownSingleUseReason, string>> = {
   shared_gallery: 'common.damImage.image.error.sharedGallery',
   invalid_owner: 'common.damImage.image.error.invalidOwner',
   owner_immutable: 'common.damImage.image.error.ownerImmutable',
   image_removed: 'common.damImage.image.error.imageRemoved',
   multiple_targets: 'common.damImage.image.error.multipleTargets',
+  image_copy: 'common.damImage.image.error.imageCopy',
+  gallery_copy: 'common.damImage.image.error.galleryCopy',
 }
 
 /**
@@ -40,7 +48,9 @@ export function resolveImageSaveErrorMessage(
     return undefined
   }
 
-  const fixedMessage = SINGLE_USE_REASON_MESSAGE[errorInfo.reason ?? '']
+  const fixedMessage = errorInfo.reason
+    ? SINGLE_USE_REASON_MESSAGE[errorInfo.reason as KnownSingleUseReason]
+    : undefined
   if (fixedMessage) {
     return t(fixedMessage)
   }

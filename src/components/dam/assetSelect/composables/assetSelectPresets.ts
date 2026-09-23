@@ -21,8 +21,7 @@ export interface AssetSelectPreset {
   group: AssetSelectPresetGroup
 }
 
-export const assetSelectSingleLicenceKey = (licenceId: IntegerId): AssetSelectPresetKey =>
-  `licence:${licenceId}`
+export const assetSelectSingleLicenceKey = (licenceId: IntegerId): AssetSelectPresetKey => `licence:${licenceId}`
 
 /**
  * Only the chosen selection is remembered, never an ad-hoc narrowing of its licences. Narrowing is a
@@ -47,7 +46,7 @@ export function useAssetSelectPresets(storageKey: string) {
   const buildPresets = (
     selectLicences: IntegerId[],
     listViews: IntegerId[],
-    licenceTitle: (licenceId: IntegerId) => string,
+    licenceTitle: (licenceId: IntegerId) => string
   ): AssetSelectPreset[] => {
     const selectLicencesSet = new Set(selectLicences)
     const allowedListViewIds = new Set(listViews)
@@ -109,10 +108,7 @@ export function useAssetSelectPresets(storageKey: string) {
  * Q29: the preset choice is remembered per host configuration, not per component instance. Common-admin has
  * no notion of "site group", so the sorted `selectLicences`/`listViews` ids stand in as a stable proxy for it.
  */
-export function useAssetSelectPresetStorageKey(
-  selectLicences: IntegerId[],
-  listViews: IntegerId[],
-): string {
+export function useAssetSelectPresetStorageKey(selectLicences: IntegerId[], listViews: IntegerId[]): string {
   const licencesPart = [...selectLicences].sort((a, b) => a - b).join('-')
   const listViewsPart = [...listViews].sort((a, b) => a - b).join('-')
   return `common.assetSelect.preset.${licencesPart}.${listViewsPart}`
