@@ -87,11 +87,17 @@ for target in "${TARGETS[@]}"; do
 
     cp -r "${COMMON_ADMIN_PROJECT}/dist/"* "${PACKAGE_DIR}/dist/"
 
+    # The eslint plugin ships from `src/eslint` (package.json "files"), not from dist. Without this the
+    # admins keep linting with the plugin of whatever version they installed, however old.
+    rm -rf "${PACKAGE_DIR}/src/eslint"
+    mkdir -p "${PACKAGE_DIR}/src/eslint"
+    cp -r "${COMMON_ADMIN_PROJECT}/src/eslint/"* "${PACKAGE_DIR}/src/eslint/"
+
     # Clear Vite's dependency pre-bundle cache so it picks up the new files
     rm -rf "${target}/node_modules/.vite/deps/"
 
     # Touch trigger file so Vite plugin detects the update and does a full-reload
     touch "${target}/.common-admin-updated"
 
-    echo "Successfully copied release from ${COMMON_ADMIN_PROJECT}/dist to ${PACKAGE_DIR}/dist"
+    echo "Successfully copied release from ${COMMON_ADMIN_PROJECT} (dist, src/eslint) to ${PACKAGE_DIR}"
 done
