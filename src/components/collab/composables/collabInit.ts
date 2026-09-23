@@ -6,7 +6,6 @@ import type {
   CollabRoomPlainData,
 } from '@/components/collab/types/Collab'
 import { CollabStatus } from '@/components/collab/types/Collab'
-import { io } from 'socket.io-client'
 import {
   useCollabApprovedJoinRequestEventBus,
   useCollabApprovedRequestToTakeModerationEventBus,
@@ -47,6 +46,11 @@ export function useCollabInit() {
     const kickedFromRoomEventBus = useCollabKickedFromRoomEventBus()
 
     if (collabSocket.value || !collabOptions.value.enabled) {
+      return
+    }
+    const io = collabOptions.value.io
+    if (!io) {
+      logError(new Error('Collab is enabled, but the plugin options pass no `io` from socket.io-client.'))
       return
     }
 

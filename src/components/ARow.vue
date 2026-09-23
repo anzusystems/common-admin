@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-// #region docs-props
 withDefaults(
   defineProps<{
     title?: string
@@ -14,7 +13,6 @@ withDefaults(
     titleClass: 'font-weight-bold text-label-large',
   }
 )
-// #endregion docs-props
 </script>
 
 <template>

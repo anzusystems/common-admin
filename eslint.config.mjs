@@ -19,7 +19,6 @@ export default defineConfigWithVueTs(
       '**/coverage/**',
       '.stylelintrc.cjs',
       '**/cypress/**',
-      '**/docs/**',
       '.playwright-cli/**',
     ],
   },

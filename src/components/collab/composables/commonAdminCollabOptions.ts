@@ -6,6 +6,7 @@ const collabOptions = ref<CommonAdminCollabOptions>({
   enabled: false,
   socketUrl: '',
   beforeReconnect: () => new Promise((resolve) => resolve()),
+  io: undefined,
 })
 
 export function initCommonAdminCollabOptions(data: CommonAdminCollabOptions | undefined) {

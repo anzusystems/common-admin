@@ -1,0 +1,72 @@
+# bulletList
+
+- see [tiptap docs](https://tiptap.dev/api/nodes/bullet-list)
+- related to [orderedList](ordered-list.md)
+
+## Features
+- user can toggle current node to bullet list, if possible (from paragraph or heading)
+
+## Child nodes
+- `listItem` - no attrs, content `paragraph block*`, see [tiptap docs](https://tiptap.dev/docs/editor/extensions/nodes/list-item)
+
+## Node schema
+
+```json
+{
+  "name": "bulletList",
+  "groups": [
+    "block list"
+  ]
+}
+```
+
+## Node JSON example
+
+```json
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "bulletList",
+      "content": [
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "rhoncus"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "anchor": null,
+                "textAlign": "left"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "neque"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```

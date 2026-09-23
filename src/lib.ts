@@ -290,7 +290,7 @@ import {
   type JobBaseResource,
   useJobBaseResource,
 } from '@/model/valueObject/JobBaseResource'
-import AnzuSystemsCommonAdmin, { type PluginOptions } from '@/AnzuSystemsCommonAdmin'
+import AnzuSystemsCommonAdmin, { type CommonAdminCollabOptions, type PluginOptions } from '@/AnzuSystemsCommonAdmin'
 // import { type CurrentUserType } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue, Permissions } from '@/types/Permission'
 import { Theme, useTheme } from '@/composables/themeSettings'
@@ -1162,6 +1162,7 @@ export {
   type AclValue,
   type Permissions,
   type PluginOptions,
+  type CommonAdminCollabOptions,
   type LanguageCode,
   type Immutable,
   type ResourceNameSystemAware,

@@ -1,3 +1,4 @@
+import type { io } from 'socket.io-client'
 import type { App, DeepReadonly, Ref, UnwrapRef } from 'vue'
 import type { AnzuUser } from '@/types/AnzuUser'
 import Acl from '@/components/permission/Acl.vue'
@@ -89,6 +90,10 @@ export type CommonAdminCollabOptions = {
   enabled: boolean
   socketUrl: string
   beforeReconnect: () => Promise<void>
+  /**
+   * `io` from `socket.io-client`. Passed in, so that only an admin with collaboration depends on the package.
+   */
+  io: typeof io | undefined
 }
 
 export default {

@@ -20,9 +20,17 @@ yarn test:run
 
 # Run tests with UI
 yarn test:ui
+
+# Run the eslint rule tests only
+yarn test:eslint
 ```
 
-All three run in Chromium; there is no separate happy-dom mode. Coverage is not configured.
+`yarn test:run` runs the browser suite (`test:browser`) and then the eslint rule tests (`test:eslint`, in node,
+`vitest.config.node.mts`). `yarn test` and `yarn test:ui` run only the browser suite, in Chromium; there is no
+separate happy-dom mode. Coverage is not configured.
+
+Chromium is installed once with `npx playwright install chromium --with-deps` (see
+[`README-DEV.md`](../../README-DEV.md#installation)).
 
 Since Vitest 5 the UI is token-authenticated. `yarn test:ui` opens the browser and carries the
 token; the cookie persists, so a bookmark works until you clear cookies.
@@ -32,7 +40,12 @@ token; the cookie persists, so a bookmark works until you clear cookies.
 - `src/test/setup.ts` - Global test setup with Vuetify, i18n, and Pinia configuration
 - `src/test/components/` - Component tests
 - `src/test/composables/` - Composable and utility tests
+- `src/test/labs/` - Tests of the former labs entry (filters, api helpers, users and permissions)
+- `src/test/utils/` - Util tests
+- `src/test/eslint/` - Eslint rule tests, run in node
+- `src/test/support/`, `src/test/fixtures/` - Cropper test harness and images
 - `vitest.config.mts` - Vitest configuration
+- `vitest.config.node.mts` - Vitest configuration of the eslint rule tests
 
 ## Writing Tests
 
@@ -93,7 +106,7 @@ The test setup includes:
 - i18n configured with the full English locale messages from `@/locales/en`
 - Pinia store setup
 - A `window.matchMedia` stub (see Mocking above)
-- `retry`: 1 locally, 2 in CI — a flaky test that passes on a later attempt still reports green
+- `retry`: 1 locally, 2 in CI (0 for `chromium-utc-minus`) — a flaky test that passes on a later attempt still reports green
 - 30 s `testTimeout` / `hookTimeout`, and `globals: true` (so `describe`/`it`/`expect` work unimported)
 
 Vitest 5 writes artifacts under `.vitest/` (failure screenshots in
@@ -101,8 +114,10 @@ Vitest 5 writes artifacts under `.vitest/` (failure screenshots in
 
 ## Browser Testing
 
-The whole suite runs in a real browser:
+The whole suite except the eslint rule tests runs in a real browser:
 
 - Uses Playwright with Chromium
 - Runs headless by default, everywhere
 - Set `VITEST_HEADED=1` to watch the browser instead of running headless
+- Runs in the `Europe/Bratislava` time zone; the datetime picker tests (`ADatetimePicker`, `AFormDatetimePicker`,
+  `datetimePickerValue`) run again in `America/New_York` (instance `chromium-utc-minus`, no retry)

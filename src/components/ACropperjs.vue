@@ -5,7 +5,8 @@
  * This component is built on cropper.js 1.6.3, which has had no release since and whose successor
  * is a different library. The cropper that ships is the one behind `DamAssetImageRoiSelect`, under
  * `components/damImage/uploadQueue/cropper/`; it is not exported, because nothing outside this
- * library asks for a cropper. See `doc/changelog/unreleased/` for what the two do differently.
+ * library asks for a cropper. What the two do differently:
+ * https://github.com/anzusystems/common-admin/blob/d3003146057240eea474ba7ff352690375a9033b/doc/changelog/unreleased/cropper-v2.md
  *
  * cropper.js v1 is installed alongside v2 under the `cropperjs` name while this component lives;
  * the new one imports `cropperjs2`. Both aliases go away when this file does.

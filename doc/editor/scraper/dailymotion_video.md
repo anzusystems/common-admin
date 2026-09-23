@@ -1,0 +1,38 @@
+# dailymotion_video: Dailymotion Video
+
+Shared types (`Screenshot`, `DatetimeUTC`): see [README](README.md#shared-types).
+
+## Supported codes
+
+### URL
+
+```
+https://dai.ly/x8iobh5
+```
+
+### Embed
+
+```html
+<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;"> <iframe style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden" frameborder="0" type="text/html" src="https://www.dailymotion.com/embed/video/x8iobh5?autoplay=1" width="100%" height="100%" allowfullscreen title="Dailymotion Video Player" allow="autoplay"> </iframe> </div>
+```
+
+## Params
+
+```ts
+interface Params {
+  id: string
+  width?: number
+  height?: number
+}
+```
+
+## Data
+
+```ts
+interface Data {
+  screenshots: Screenshot[]
+  scrapedAt: DatetimeUTC
+  url?: string
+  title?: string
+}
+```

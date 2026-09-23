@@ -1,3 +1,4 @@
+import { io } from 'socket.io-client'
 import { createApp } from 'vue'
 import App from '@/App.vue'
 import { vuetify } from '@/plugins/vuetify'
@@ -56,6 +57,7 @@ createApp(App)
       enabled: true,
       socketUrl: 'ws://collaboration.sme.localhost',
       beforeReconnect: () => new Promise((resolve) => resolve()),
+      io,
     },
   })
   .mount('#app')
