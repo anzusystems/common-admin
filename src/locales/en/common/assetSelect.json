@@ -71,7 +71,13 @@
   },
   "holder": {
     "articleKindStandard": "article",
-    "gallery": "gallery"
+    "gallery": "gallery",
+    "minutePost": "minute post",
+    "liveBlogPost": "live blog post",
+    "postSuggestion": "post suggestion",
+    "person": "person",
+    "organization": "organization",
+    "liveBlogFeed": "live blog"
   },
   "disabledReason": {
     "singleUseNotAllowed": "A single-use image can only be placed here after the first save",

@@ -38,8 +38,9 @@ export interface ImageAware {
 
 export interface ImageCreateUpdateAware extends Omit<ImageAware, 'id'> {
   id?: IntegerId
-  // Request-only: the entity claiming the photo. The server ignores it on update — the owner is set once,
-  // at create. Deliberately not on ImageAware: a response carries the stored owner, typed by each app.
+  // Request-only: the entity claiming the photo, set at create. On update an omitted pair keeps the stored
+  // owner and a different owner is rejected (owner_immutable). Deliberately not on ImageAware: a response
+  // carries the stored owner, typed by each app.
   ownerResourceName?: string
   ownerResourceId?: IntegerId
 }

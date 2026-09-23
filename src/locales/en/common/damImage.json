@@ -30,14 +30,19 @@
       }
     },
     "error": {
-      "takeOverFailed": "The image could not be taken over into the licence. Try again or pick another image.",
-      "singleUseViolation": "This image is single-use and already held by another article, it cannot be used here.",
-      "exclusivityConflict": "The image was just claimed by someone else ({holder}). Pick another image.",
-      "exclusivityConflictUnknownHolder": "The image has been taken over by someone else in the meantime. Pick a different image.",
-      "sharedGallery": "The image cannot be added, the gallery is embedded in more than one article.",
-      "invalidOwner": "The image cannot be saved this way, the target record does not support single-use images.",
-      "ownerImmutable": "The image's holder can no longer be changed.",
-      "imageRemoved": "The image was released in the meantime, pick it again."
+      "takeOverRejected": "This image cannot be taken over into our licence. Pick a different one.",
+      "takeOverUnavailable": "Taking images over is unavailable right now. Try again in a moment, a different image will not help either. Contact an administrator if it lasts.",
+      "singleUseViolation": "Image {damId} is single-use and is already used elsewhere ({holder}). Pick a different image or release it first.",
+      "singleUseViolationUnknownHolder": "Image {damId} is single-use and is already used elsewhere. Pick a different image or release it first.",
+      "singleUseViolationUnknownImage": "One of the selected images is single-use and is already used elsewhere ({holder}). Pick a different image or release it first.",
+      "singleUseViolationUnidentified": "One of the selected images is single-use and is already used elsewhere. Pick a different image or release it first.",
+      "singleUseCopy": "Image {damId} is held by {holder}, it cannot be copied here.",
+      "sharedGallery": "The gallery contains a single-use image, so it can be embedded in one place only. Remove it from the other places, or take the single-use image out of it.",
+      "invalidOwner": "A single-use image cannot be used here, the target record does not support single-use images.",
+      "ownerImmutable": "The image belongs to another record and its holder can no longer be changed.",
+      "ownerConflict": "The image is already assigned to another owner.",
+      "imageRemoved": "The image was released in the meantime, pick it again.",
+      "multipleTargets": "A suggestion with a single-use image can only be proposed to one feed."
     },
     "bulkSave": {
       "partialFailure": "Some images could not be saved.",

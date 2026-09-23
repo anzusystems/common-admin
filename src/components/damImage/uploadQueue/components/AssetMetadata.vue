@@ -107,7 +107,7 @@ const usedByHolderName = computed(() => {
   return resourceName === '' ? '' : resolveHolderName(resourceName)
 })
 
-const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence } =
+const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence, isLoadedCachedAssetLicence } =
   useDamCachedAssetLicences()
 const { autoDeleteAt, remainingDays } = useDamAssetAutoDelete()
 
@@ -128,7 +128,7 @@ const assetLicence = computed(() => {
 
 // The cache answers with a placeholder until the licence arrives, so the flags are only shown once the
 // real row is there — otherwise a licence that forbids direct use would read as if it allowed it.
-const licenceFlagsKnown = computed(() => (assetLicence.value?.name ?? '') !== '')
+const licenceFlagsKnown = computed(() => isLoadedCachedAssetLicence(asset.value?.licence))
 
 const directUseAllowed = computed(() => assetLicence.value?.flags?.directUseAllowed ?? true)
 

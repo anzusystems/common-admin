@@ -71,7 +71,13 @@
   },
   "holder": {
     "articleKindStandard": "článok",
-    "gallery": "galéria"
+    "gallery": "galéria",
+    "minutePost": "minútový príspevok",
+    "liveBlogPost": "príspevok live blogu",
+    "postSuggestion": "návrh príspevku",
+    "person": "osoba",
+    "organization": "organizácia",
+    "liveBlogFeed": "live blog"
   },
   "disabledReason": {
     "singleUseNotAllowed": "Jednorazovo použiteľný obrázok sem možno vložiť až po prvom uložení",
