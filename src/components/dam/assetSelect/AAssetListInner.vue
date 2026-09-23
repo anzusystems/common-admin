@@ -21,7 +21,7 @@ import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
-import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
@@ -73,6 +73,8 @@ const {
   resetAssetList,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
+// The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
+provide(DatatablePaginationKey, pagination)
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { assetListEnabledFilters, endPointAsset } = useCommonAdminCoreDamOptions(props.configName)

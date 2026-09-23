@@ -27,18 +27,7 @@ export default defineConfigWithVueTs(
   pluginVue.configs['flat/strongly-recommended'],
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,
-  anzuRecommended({
-    deprecatedImports: {
-      mode: 'internal',
-      skipFiles: [
-        'src/lib.ts',
-        'src/services/api/apiFetchByIds.ts',
-        'src/components/form/AFormRemoteAutocompleteWithCached.vue',
-        'src/components/filter/AFilterMixed.vue',
-        'src/components/dam/assetSelect/composables/assetSelectListActions.ts',
-      ],
-    },
-  }),
+  anzuRecommended(),
   {
     name: 'app/rules',
     rules: {

@@ -1,162 +1,7 @@
-const DEFAULT_DEPRECATED_IMPORTS = [
-  'AFilterWrapper',
-  'AFilterBooleanSelect',
-  'AFilterBooleanGroup',
-  'AFilterDatetimePicker',
-  'AFilterInteger',
-  'AFilterRemoteAutocomplete',
-  'AFilterRemoteAutocompleteWithMinimal',
-  'AFilterString',
-  'AFilterValueObjectOptionsSelect',
-  'ADatatableOrdering',
-  'ADatatablePagination',
-  'AFormRemoteAutocomplete',
-  'ASubjectSelect',
-  'usePagination',
-  'useFilterHelpers',
-  'createDatatableColumnsConfig',
-  'useSubjectSelect',
-  'useApiQueryBuilder',
-  'useJobApi',
-  'Pagination',
-  'makeFilterHelper',
-  'apiFetchList',
-  'apiGenerateListQuery',
-  'apiFetchListBatch',
-  'usePaginationAutoHide',
-  'fetchDamUserList',
-  'fetchDamExtSystemList',
-  'fetchDamAssetLicenceList',
-  'fetchDamAssetLicenceGroupList',
-  'FilterBag',
-  'Filter',
-  'apiFetchByIds',
-  'apiAnyRequest',
-  'apiCreateOne',
-  'apiDeleteOne',
-  'apiFetchOne',
-  'apiUpdateOne',
-]
-
-const DEFAULT_INTERNAL_DEPRECATED_IMPORTS = [
-  {
-    path: '@/services/api/apiFetchList',
-    imports: ['apiFetchList', 'apiGenerateListQuery'],
-  },
-  {
-    path: '@/services/api/apiFetchListBatch',
-    imports: ['apiFetchListBatch'],
-  },
-  {
-    path: '@/services/api/apiFetchOne',
-    imports: ['apiFetchOne'],
-  },
-  {
-    path: '@/services/api/apiCreateOne',
-    imports: ['apiCreateOne'],
-  },
-  {
-    path: '@/services/api/apiUpdateOne',
-    imports: ['apiUpdateOne'],
-  },
-  {
-    path: '@/services/api/apiDeleteOne',
-    imports: ['apiDeleteOne'],
-  },
-  {
-    path: '@/services/api/apiFetchByIds',
-    imports: ['apiFetchByIds'],
-  },
-  {
-    path: '@/services/api/apiAnyRequest',
-    imports: ['apiAnyRequest'],
-  },
-  {
-    path: '@/composables/system/pagination',
-    imports: ['usePagination', 'Pagination', 'usePaginationAutoHide'],
-  },
-  {
-    path: '@/composables/filter/filterHelpers',
-    imports: ['useFilterHelpers', 'makeFilterHelper'],
-  },
-  {
-    path: '@/composables/system/datatableColumns',
-    imports: ['createDatatableColumnsConfig'],
-  },
-  {
-    path: '@/components/subjectSelect/useSubjectSelect',
-    imports: ['useSubjectSelect'],
-  },
-  {
-    path: '@/services/api/queryBuilder',
-    imports: ['useApiQueryBuilder'],
-  },
-  {
-    path: '@/services/api/job/jobApi',
-    imports: ['useJobApi'],
-  },
-  {
-    path: '@/types/Filter',
-    imports: ['FilterBag', 'Filter'],
-  },
-  {
-    path: '@/components/filter/AFilterWrapper',
-    imports: ['AFilterWrapper'],
-  },
-  {
-    path: '@/components/filter/AFilterBooleanSelect',
-    imports: ['AFilterBooleanSelect'],
-  },
-  {
-    path: '@/components/filter/AFilterBooleanGroup',
-    imports: ['AFilterBooleanGroup'],
-  },
-  {
-    path: '@/components/filter/AFilterDatetimePicker',
-    imports: ['AFilterDatetimePicker'],
-  },
-  {
-    path: '@/components/filter/AFilterInteger',
-    imports: ['AFilterInteger'],
-  },
-  {
-    path: '@/components/filter/AFilterRemoteAutocomplete',
-    imports: ['AFilterRemoteAutocomplete'],
-  },
-  {
-    path: '@/components/filter/AFilterRemoteAutocompleteWithMinimal',
-    imports: ['AFilterRemoteAutocompleteWithMinimal'],
-  },
-  {
-    path: '@/components/filter/AFilterString',
-    imports: ['AFilterString'],
-  },
-  {
-    path: '@/components/filter/AFilterValueObjectOptionsSelect',
-    imports: ['AFilterValueObjectOptionsSelect'],
-  },
-  {
-    path: '@/components/ADatatableOrdering',
-    imports: ['ADatatableOrdering'],
-  },
-  {
-    path: '@/components/ADatatablePagination',
-    imports: ['ADatatablePagination'],
-  },
-  {
-    path: '@/components/form/AFormRemoteAutocomplete',
-    imports: ['AFormRemoteAutocomplete'],
-  },
-  {
-    path: '@/components/subjectSelect/ASubjectSelect',
-    imports: ['ASubjectSelect'],
-  },
-]
-
 // Shared by `prefer-api-command` and `prefer-api-fetch-items`: both ask the same question -- is this
 // call the `useApiRequest` helper, and what did it say it answers with.
 const isHelperSource = (source) =>
-  typeof source === 'string' && (source.includes('labs/api/useApiRequest') || source.endsWith('common-admin/labs'))
+  typeof source === 'string' && (source.includes('labs/api/useApiRequest') || source === '@anzusystems/common-admin')
 
 // Resolved through the scope rather than matched by name. Matching the name fires on anyone
 // else's function called `useApiRequest` and on a parameter that shadows the import inside
@@ -211,110 +56,6 @@ const anzuPlugin = {
                   return fixer.replaceText(node.source, newSource)
                 },
               })
-            }
-          },
-        }
-      },
-    },
-
-    'no-deprecated-imports': {
-      meta: {
-        type: 'problem',
-        docs: {
-          description: 'Disallow usage of deprecated imports',
-        },
-        schema: [
-          {
-            type: 'object',
-            properties: {
-              rules: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    path: { type: 'string' },
-                    module: { type: 'string' },
-                    imports: {
-                      type: 'array',
-                      items: { type: 'string' },
-                    },
-                  },
-                  required: ['imports'],
-                  additionalProperties: false,
-                },
-              },
-              skipFiles: {
-                type: 'array',
-                items: { type: 'string' },
-              },
-            },
-            additionalProperties: false,
-          },
-        ],
-      },
-      create(context) {
-        const options = context.options[0] || {}
-        const deprecationRules = options.rules || []
-        const skipFiles = options.skipFiles || []
-
-        // Collect source file paths from path-based rules for auto-skip
-        const ruleFilePaths = deprecationRules
-          .filter((rule) => rule.path)
-          .map((rule) => {
-            if (rule.path.startsWith('@/')) {
-              return rule.path.replace('@/', 'src/')
-            }
-            return rule.path
-          })
-
-        // Index rules by the module specifier they match, so one import is
-        // resolved by a single Map lookup instead of scanning every rule.
-        const rulesBySource = new Map()
-        for (const rule of deprecationRules) {
-          const matchPath = rule.path || rule.module
-          if (!matchPath) continue
-          const entry = { matchPath, imports: new Set(rule.imports) }
-          const existing = rulesBySource.get(matchPath)
-          if (existing) existing.push(entry)
-          else rulesBySource.set(matchPath, [entry])
-        }
-
-        // Skipping depends only on the file name, so resolve it once per file
-        // instead of once per import declaration.
-        let fileSkipped = null
-        const isFileSkipped = () => {
-          if (fileSkipped !== null) return fileSkipped
-          const normalizedFilename = context.filename.replace(/\\/g, '/')
-          fileSkipped =
-            skipFiles.some((skip) => normalizedFilename.endsWith(skip)) ||
-            ruleFilePaths.some(
-              (rulePath) =>
-                normalizedFilename.endsWith(rulePath + '.ts') ||
-                normalizedFilename.endsWith(rulePath + '.js') ||
-                normalizedFilename.endsWith(rulePath + '.vue') ||
-                normalizedFilename.endsWith(rulePath)
-            )
-          return fileSkipped
-        }
-
-        return {
-          ImportDeclaration(node) {
-            const source = node.source.value
-            if (typeof source !== 'string') return
-
-            const entries = rulesBySource.get(source)
-            if (!entries) return
-            if (isFileSkipped()) return
-
-            for (const { matchPath, imports } of entries) {
-              for (const spec of node.specifiers) {
-                if (spec.type !== 'ImportSpecifier') continue
-                if (!imports.has(spec.imported.name)) continue
-                context.report({
-                  node: spec,
-                  message: `'${spec.imported.name}' from '${matchPath}' is deprecated`,
-                })
-              }
             }
           },
         }
@@ -697,15 +438,6 @@ const anzuPlugin = {
  *   - Severity for no-fatal-error-axios-check rule.
  * @param {boolean|'error'|'warn'|'off'} [options.preferApiFetchItems='error']
  *   - Severity for prefer-api-fetch-items rule.
- * @param {boolean|'error'|'warn'|'off'|Object} [options.deprecatedImports='error'] - Severity or config object.
- * @param {string[]} [options.deprecatedImports.exclude] - Import names to remove from the default list.
- * @param {string[]} [options.deprecatedImports.include] - Additional import names to add to the default list.
- * @param {Array} [options.deprecatedImports.extraRules]
- *   - Additional rule entries ({ path, imports } or { module, imports }).
- * @param {string[]} [options.deprecatedImports.skipFiles] - Files to skip (matched by suffix).
- * @param {'error'|'warn'} [options.deprecatedImports.severity='error'] - Severity level.
- * @param {'consumer'|'internal'} [options.deprecatedImports.mode='consumer'] - 'consumer' uses module-based defaults,
- *   'internal' uses path-based defaults for common-admin development.
  * @returns {Object} ESLint flat config entry
  */
 export function recommended(options = {}) {
@@ -715,7 +447,6 @@ export function recommended(options = {}) {
     preferApiCommand = 'error',
     preferApiFetchItems = 'error',
     urlParamsMatchTemplate = 'error',
-    deprecatedImports = 'error',
   } = options
 
   const rules = {}
@@ -750,59 +481,6 @@ export function recommended(options = {}) {
     rules['anzu/url-params-match-template'] = urlParamsSeverity
   }
 
-  // no-deprecated-imports
-  if (deprecatedImports !== false && deprecatedImports !== 'off') {
-    let severity = 'error'
-    const ruleEntries = []
-    let skipFiles = []
-
-    if (typeof deprecatedImports === 'object') {
-      severity = deprecatedImports.severity || 'error'
-      const mode = deprecatedImports.mode || 'consumer'
-
-      if (mode === 'internal') {
-        // Internal mode: path-based rules for common-admin development
-        ruleEntries.push(...DEFAULT_INTERNAL_DEPRECATED_IMPORTS)
-      } else {
-        // Consumer mode: module-based rules for projects using common-admin
-        let importsList = [...DEFAULT_DEPRECATED_IMPORTS]
-        if (deprecatedImports.exclude) {
-          importsList = importsList.filter((name) => !deprecatedImports.exclude.includes(name))
-        }
-        if (deprecatedImports.include) {
-          importsList.push(...deprecatedImports.include)
-        }
-        ruleEntries.push({
-          module: '@anzusystems/common-admin',
-          imports: importsList,
-        })
-      }
-
-      if (deprecatedImports.extraRules) {
-        ruleEntries.push(...deprecatedImports.extraRules)
-      }
-      if (deprecatedImports.skipFiles) {
-        skipFiles = deprecatedImports.skipFiles
-      }
-    } else {
-      if (deprecatedImports === 'warn') {
-        severity = 'warn'
-      }
-      // Default consumer mode
-      ruleEntries.push({
-        module: '@anzusystems/common-admin',
-        imports: [...DEFAULT_DEPRECATED_IMPORTS],
-      })
-    }
-
-    const ruleConfig = { rules: ruleEntries }
-    if (skipFiles.length > 0) {
-      ruleConfig.skipFiles = skipFiles
-    }
-
-    rules['anzu/no-deprecated-imports'] = [severity, ruleConfig]
-  }
-
   return {
     plugins: {
       anzu: anzuPlugin,
@@ -818,4 +496,4 @@ function normalizeSeverity(value) {
   return 'error'
 }
 
-export { anzuPlugin, DEFAULT_DEPRECATED_IMPORTS, DEFAULT_INTERNAL_DEPRECATED_IMPORTS }
+export { anzuPlugin }

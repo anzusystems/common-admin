@@ -1,14 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { ref } from 'vue'
-// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiGenerateListQuery } from '@/services/api/apiFetchList'
 import { generateListQuery } from '@/labs/api/useApiFetchList'
-// eslint-disable-next-line anzu/no-deprecated-imports
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
 import type { Pagination as PaginationLegacy } from '@/types/Pagination'
 import type { Pagination } from '@/labs/filters/pagination'
-// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
 import { reactive } from 'vue'
 

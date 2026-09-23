@@ -14,8 +14,7 @@ import { anzuPlugin } from './plugin.mjs'
  *     "rules": {
  *       "anzu/no-ts-extension": "error",
  *       "anzu/no-fatal-error-axios-check": "error",
- *       "anzu/url-params-match-template": "error",
- *       "anzu/no-deprecated-imports": ["error", { "rules": [...] }]
+ *       "anzu/url-params-match-template": "error"
  *     }
  *   }
  *

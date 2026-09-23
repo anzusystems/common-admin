@@ -1,4 +1,5 @@
-import { createDatatableColumnsConfig, type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import { createDatatableColumnsConfig } from '@/composables/system/datatableColumnsLegacy'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 import type { Pagination } from '@/types/Pagination'

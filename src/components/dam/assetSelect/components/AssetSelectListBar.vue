@@ -6,12 +6,12 @@ import {
   useGridView,
 } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, type Ref, watch } from 'vue'
 import { useDisplay } from 'vuetify'
 import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
-import ADatatableOrdering from '@/components/ADatatableOrdering.vue'
+import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import {
   type DatatableOrderingOption,
   SORT_BY_SCORE_BEST,
@@ -19,6 +19,7 @@ import {
   SortOrder,
 } from '@/composables/system/datatableColumns'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
+import type { Pagination } from '@/labs/filters/pagination'
 
 const props = withDefaults(
   defineProps<{
@@ -110,6 +111,14 @@ const customSortOptions = [
     sortBy: { key: SORT_BY_SCORE_DATE, order: SortOrder.Asc },
   },
 ]
+
+// The pagination is shared by every asset select, so a dialog can open on a sort chosen in another one.
+// The ordering then adopts it, and that adoption must not reach the parent as a change -- it would fetch again.
+const onSortUpdate = (option: DatatableOrderingOption, pagination: Ref<Pagination>) => {
+  const current = pagination.value.sortBy
+  if (current?.key === option.sortBy?.key && current?.order === option.sortBy?.order) return
+  emit('sortByChange', option)
+}
 
 onMounted(() => {
   if (props.preselectAssetType === DamAssetType.Audio && props.preselectInPodcast) {
@@ -233,7 +242,7 @@ onMounted(() => {
               v-if="!disableSort"
               v-model="sortModel"
               :custom-options="customSortOptions"
-              @sort-by-change="emit('sortByChange', $event)"
+              :pagination-update-custom-cb="onSortUpdate"
             />
             <VBtn
               size="x-small"

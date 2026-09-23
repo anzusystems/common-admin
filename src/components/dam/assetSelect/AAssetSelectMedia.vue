@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
@@ -26,6 +26,7 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -77,6 +78,8 @@ const {
   reset,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
+// The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
+provide(DatatablePaginationKey, pagination)
 
 const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)

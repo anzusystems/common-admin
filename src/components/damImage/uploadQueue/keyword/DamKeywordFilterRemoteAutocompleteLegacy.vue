@@ -6,8 +6,8 @@
  * Delete this file once its consumers migrate; the api layer under it is already labs.
  */
 import { useKeywordSelectActions } from '@/components/damImage/uploadQueue/keyword/keywordActions'
-import { useKeywordInnerFilter, useKeywordListFilter } from '@/components/damImage/uploadQueue/keyword/KeywordFilter'
-// eslint-disable-next-line anzu/no-deprecated-imports
+import { useKeywordInnerFilter } from '@/components/damImage/uploadQueue/keyword/KeywordFilter'
+import { useKeywordListFilter } from '@/components/damImage/uploadQueue/keyword/KeywordFilterLegacy'
 import type { Filter, FilterBag } from '@/types/Filter'
 import type { Pagination as PaginationLegacy } from '@/types/Pagination'
 import AFilterRemoteAutocomplete from '@/components/filter/AFilterRemoteAutocomplete.vue'

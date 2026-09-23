@@ -7,12 +7,6 @@ import type { ESLint, Linter } from 'eslint'
  */
 export declare const anzuPlugin: ESLint.Plugin
 
-/** Names that are deprecated wherever they are imported from. */
-export declare const DEFAULT_DEPRECATED_IMPORTS: readonly string[]
-
-/** Deprecated names grouped by the module they come from, for use inside this library. */
-export declare const DEFAULT_INTERNAL_DEPRECATED_IMPORTS: readonly { path: string; imports: readonly string[] }[]
-
 /** One flat-config block: the plugin plus the rule severities the options ask for. */
 export declare function recommended(options?: Record<string, unknown>): {
   plugins: Record<string, ESLint.Plugin>

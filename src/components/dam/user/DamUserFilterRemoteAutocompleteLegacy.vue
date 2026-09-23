@@ -5,11 +5,11 @@
  * `FilterSelectedKey` and `FilterSubmitResetCounterKey`, and only a labs filter bar provides them.
  * Delete this file once its consumers migrate; the api layer under it is already labs.
  */
-// eslint-disable-next-line anzu/no-deprecated-imports
 import type { Filter, FilterBag } from '@/types/Filter'
 import type { Pagination as PaginationLegacy } from '@/types/Pagination'
 import { useDamUserSelectAction } from '@/components/dam/user/damUserSelectActions'
-import { useDamUserFilter, useDamUserInnerFilter } from '@/components/dam/user/DamUserFilter'
+import { useDamUserInnerFilter } from '@/components/dam/user/DamUserFilter'
+import { useDamUserFilter } from '@/components/dam/user/DamUserFilterLegacy'
 import AFilterRemoteAutocomplete from '@/components/filter/AFilterRemoteAutocomplete.vue'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { usePagination } from '@/labs/filters/pagination'

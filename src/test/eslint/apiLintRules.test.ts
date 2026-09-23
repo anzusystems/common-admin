@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Linter } from 'eslint'
 import tsParser from '@typescript-eslint/parser'
-import { anzuPlugin } from '@/eslint/plugin.mjs'
+import { anzuPlugin, recommended } from '@/eslint/plugin.mjs'
 
 // The two rules that carry the migration. They are what tells a call site it has not been moved
 // over, so a rule that does not look at a helper leaves every call of it unguarded -- which is how
@@ -127,7 +127,7 @@ describe('anzu/url-params-match-template', () => {
 describe('anzu/prefer-api-command', () => {
   it('names a request that reads nothing back', () => {
     const messages = lint(
-      `import { useApiRequest } from '@anzusystems/common-admin/labs'
+      `import { useApiRequest } from '@anzusystems/common-admin'
        const { execute } = useApiRequest<void>({ client, method: 'DELETE', system, entity })`,
       'prefer-api-command'
     )
@@ -137,7 +137,7 @@ describe('anzu/prefer-api-command', () => {
 
   it('leaves a request that reads something back alone', () => {
     const messages = lint(
-      `import { useApiRequest } from '@anzusystems/common-admin/labs'
+      `import { useApiRequest } from '@anzusystems/common-admin'
        const { execute } = useApiRequest<Item>({ client, method: 'GET', system, entity })`,
       'prefer-api-command'
     )
@@ -155,10 +155,7 @@ describe('anzu/prefer-api-command', () => {
     ['never', `useApiRequest<never>({ client, method: 'GET', system, entity })`],
     ['a lowercase delete', `useApiRequest<Item>({ client, method: 'delete', system, entity })`],
   ])('names %s', (_label, call) => {
-    const messages = lint(
-      `import { useApiRequest } from '@anzusystems/common-admin/labs'\n${call}`,
-      'prefer-api-command'
-    )
+    const messages = lint(`import { useApiRequest } from '@anzusystems/common-admin'\n${call}`, 'prefer-api-command')
 
     expect(messages).toHaveLength(1)
   })
@@ -167,7 +164,7 @@ describe('anzu/prefer-api-command', () => {
   // helper, and something else called `useApiRequest` is not.
   it('follows the helper when it is imported under another name', () => {
     const messages = lint(
-      `import { useApiRequest as apiRequest } from '@anzusystems/common-admin/labs'
+      `import { useApiRequest as apiRequest } from '@anzusystems/common-admin'
        const { execute } = apiRequest<void>({ client, method: 'DELETE', system, entity })`,
       'prefer-api-command'
     )
@@ -186,25 +183,21 @@ describe('anzu/prefer-api-command', () => {
   })
 })
 
-// The plugin is javascript and its types are written by hand, so nothing keeps them honest but this.
-// The first version of the declaration said `DEFAULT_INTERNAL_DEPRECATED_IMPORTS` was a list of
-// strings; it is a list of `{ path, imports }`, and a consumer would have been handed a false type.
-describe('the hand-written types for the plugin', () => {
-  it('describes the deprecated-import lists the way they actually are', async () => {
-    const { DEFAULT_DEPRECATED_IMPORTS, DEFAULT_INTERNAL_DEPRECATED_IMPORTS } = await import('@/eslint/plugin.mjs')
+// Every admin still calls `recommended({ deprecatedImports: 'error' })`. The rule is gone with the old
+// variants it guarded, so the option has to be ignored rather than turn into a rule nobody defines.
+describe('recommended()', () => {
+  it('names only rules the plugin defines, whatever options it is given', () => {
+    const { rules } = recommended({ deprecatedImports: 'error' })
 
-    expect(DEFAULT_DEPRECATED_IMPORTS.every((entry: unknown) => typeof entry === 'string')).toBe(true)
-    expect(
-      DEFAULT_INTERNAL_DEPRECATED_IMPORTS.every(
-        (entry: { path?: unknown; imports?: unknown }) =>
-          typeof entry?.path === 'string' && Array.isArray(entry?.imports)
-      )
-    ).toBe(true)
+    for (const name of Object.keys(rules)) {
+      expect(anzuPlugin.rules).toHaveProperty(name.replace(/^anzu\//, ''))
+    }
+    expect(rules).not.toHaveProperty('anzu/no-deprecated-imports')
   })
 })
 
 describe('anzu/prefer-api-fetch-items', () => {
-  const IMPORT = "import { useApiRequest } from '@anzusystems/common-admin/labs'\n"
+  const IMPORT = "import { useApiRequest } from '@anzusystems/common-admin'\n"
   const call = (generic: string) => `${IMPORT}useApiRequest<${generic}>({ client, system: 's', entity: 'e' })`
 
   it.each([
@@ -243,7 +236,7 @@ describe('anzu/prefer-api-fetch-items', () => {
 
   it('follows the import alias rather than the name', () => {
     const messages = lint(
-      "import { useApiRequest as apiRequest } from '@anzusystems/common-admin/labs'\n" +
+      "import { useApiRequest as apiRequest } from '@anzusystems/common-admin'\n" +
         "apiRequest<Item[]>({ client, system: 's', entity: 'e' })",
       'prefer-api-fetch-items'
     )
@@ -262,7 +255,7 @@ describe('anzu/prefer-api-fetch-items', () => {
 
   it('leaves the other helpers alone', () => {
     const messages = lint(
-      "import { useApiCommand, useApiFetchItems } from '@anzusystems/common-admin/labs'\n" +
+      "import { useApiCommand, useApiFetchItems } from '@anzusystems/common-admin'\n" +
         'useApiCommand<Item[]>({ client })\nuseApiFetchItems<Item>({ client })',
       'prefer-api-fetch-items'
     )

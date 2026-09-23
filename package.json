@@ -16,15 +16,11 @@
       "types": "./dist/common-admin.css.d.ts",
       "default": "./dist/common-admin.css"
     },
-    "./labs": {
-      "import": "./dist/labs.js",
-      "types": "./dist/labs.d.ts"
-    },
     "./eslint": "./src/eslint/plugin.mjs",
     "./oxlint": "./src/eslint/oxlint.mjs",
     "./*": "./*"
   },
-  "version": "1.47.0-beta.dev-1790143991",
+  "version": "1.47.0-beta.dev-1790167636",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

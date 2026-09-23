@@ -256,7 +256,7 @@ const onSortableBasicEnd = (data: SortableItemNewPositions) => {
         class="mb-4"
       >
         <strong>ASortable and ASortableNested are deprecated.</strong> Use <code>ASortableListEditor</code> from
-        <code>@anzusystems/common-admin/labs</code> — it carries the same drag-and-drop reorder plus arrow controls for
+        <code>@anzusystems/common-admin</code> — it carries the same drag-and-drop reorder plus arrow controls for
         touch, an unsaved-changes baseline and row-level validation. This view is kept for the components still on the
         old API.
       </VAlert>

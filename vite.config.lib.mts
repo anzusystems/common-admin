@@ -14,7 +14,6 @@ export default defineConfig({
     lib: {
       entry: {
         'common-admin': path.resolve(_dirname, 'src/lib.ts'),
-        labs: path.resolve(_dirname, 'src/labs.ts'),
       },
       name: 'CommonAdmin',
       fileName: (format, entryName) => `${entryName}.js`,
