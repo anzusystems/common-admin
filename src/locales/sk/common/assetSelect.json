@@ -17,7 +17,7 @@
       "advanced": "Pokročilé"
     },
     "grid": {
-      "masonry": "Mansonry",
+      "masonry": "Masonry",
       "thumbnail": "Náhľad",
       "table": "Zoznam"
     },
@@ -43,7 +43,7 @@
     "visible": "Viditeľné",
     "generatedBySystem": "Generované systémom",
     "assetAndMainFileIds": "Id",
-    "keywordIds": "Klúčové slová",
+    "keywordIds": "Kľúčové slová",
     "authorIds": "Autori",
     "createdByIds": "Založené používateľmi",
     "inPodcast": "Podcast",
@@ -58,6 +58,8 @@
     "document": "Dokument"
   },
   "error": {
-    "unallowedLicence": "Nemáte práva na licenciu v DAM"
+    "unallowedLicence": "Nemáte práva na licenciu v DAM",
+    "noSelectLicence": "Chyba, žiadna licencia na výber",
+    "loadingDistributionServices": "Chyba pri načítaní distribučných služieb"
   }
 }

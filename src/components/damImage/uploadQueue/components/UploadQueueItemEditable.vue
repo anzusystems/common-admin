@@ -41,7 +41,7 @@ const props = withDefaults(
   {
     mainFileSingleUseEnabled: true,
     disableDoneAnimation: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -158,28 +158,22 @@ const refresh = () => {
 const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
   assetType.value,
-  props.extSystem,
+  props.extSystem
 )
 
 watch(
   () => props.item.status,
   async (newValue) => {
-    if (
-      newValue === UploadQueueItemStatus.Uploading ||
-      newValue === UploadQueueItemStatus.Processing
-    ) {
+    if (newValue === UploadQueueItemStatus.Uploading || newValue === UploadQueueItemStatus.Processing) {
       clearTimeout(refreshTimer.value)
       refreshTimer.value = setTimeout(() => {
-        if (
-          newValue === UploadQueueItemStatus.Uploading ||
-          newValue === UploadQueueItemStatus.Processing
-        ) {
+        if (newValue === UploadQueueItemStatus.Uploading || newValue === UploadQueueItemStatus.Processing) {
           showRefresh.value = true
         }
       }, SHOW_REFRESH_AFTER_SECONDS * 1000)
@@ -189,7 +183,7 @@ watch(
       showRefresh.value = false
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 onUnmounted(() => {
@@ -228,7 +222,7 @@ onUnmounted(() => {
             v-if="item.error.hasError"
             :class="
               'dam-upload-queue__overlay dam-upload-queue__overlay--error ' +
-                'd-flex align-center justify-center flex-column'
+              'd-flex align-center justify-center flex-column'
             "
           >
             <VIcon
@@ -257,7 +251,7 @@ onUnmounted(() => {
           </div>
         </div>
         <VRow
-          density="comfortable"
+          density="compact"
           class="my-2"
         >
           <VCol>
@@ -324,7 +318,7 @@ onUnmounted(() => {
         </VRow>
         <VRow
           v-if="item.displayTitle"
-          density="comfortable"
+          density="compact"
           class="my-2 mb-3 mt-0 text-body-small"
         >
           <VCol class="pt-0">
@@ -350,7 +344,7 @@ onUnmounted(() => {
             <template #after-pinned>
               <VRow
                 v-if="keywordEnabled"
-                density="comfortable"
+                density="compact"
                 class="my-2"
               >
                 <VCol>
@@ -374,7 +368,7 @@ onUnmounted(() => {
               </VRow>
               <VRow
                 v-if="authorEnabled"
-                density="comfortable"
+                density="compact"
                 class="my-2"
               >
                 <VCol>
@@ -399,7 +393,7 @@ onUnmounted(() => {
               </VRow>
               <VRow
                 v-if="mainFileSingleUseEnabled"
-                density="comfortable"
+                density="compact"
                 class="my-2"
               >
                 <VCol>

@@ -1,3 +1,4 @@
+import { AnzuError } from '@/model/error/AnzuError'
 import axios, { type AxiosError } from 'axios'
 import { HTTP_STATUS_FORBIDDEN } from '@/composables/statusCodes'
 
@@ -9,7 +10,7 @@ export const isAnzuApiForbiddenError = (error: any): error is AnzuApiForbiddenEr
   return error instanceof AnzuApiForbiddenError
 }
 
-export class AnzuApiForbiddenError extends Error {
+export class AnzuApiForbiddenError extends AnzuError {
   constructor(cause?: Error, message = '') {
     super(message)
     this.name = 'AnzuApiForbiddenError'

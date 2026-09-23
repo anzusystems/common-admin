@@ -5,10 +5,7 @@ import type {
   SortableItemNewPositions,
   SortableItemWithParentDataAware,
 } from '@/components/sortable/sortableUtils'
-import type {
-  SortableNested,
-  SortableNestedItem,
-} from '@/components/sortable/sortableNestedActions'
+import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 
 export type {
   SortableItemDataAware,
@@ -22,6 +19,15 @@ export type {
 export type ListEditorKey = DocId | IntegerId | string
 
 export type ListEditorValidationState = 'valid' | 'invalid' | 'warning' | null
+
+/**
+ * A vuelidate `$scope` (the same value the consumer's `useVuelidate({ $scope })` collector uses).
+ * Passed to an editor via `validation-scope` to auto-register the editor's aggregate row validity
+ * into that collector — so a plain `v$.$invalid` save gate blocks even a collapsed invalid row.
+ * Mirrors the canonical `ValidationScope` set (a `ValidationScope`-typed consumer prop assigns without
+ * a cast); `false`/`undefined` opt out at runtime (the `true` case just joins the global collection).
+ */
+export type ListEditorValidationScope = string | number | boolean | symbol
 
 export interface ListViewItem<TItem> {
   key: ListEditorKey

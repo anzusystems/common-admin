@@ -2,7 +2,7 @@
 
 ## Supported codes
 
-Any whitelisted iframe embed.
+Any iframe embed whose `src` matches the allow-list regexp (env `IFRAME_BASIC_ALLOW_LIST_REGEXP`).
 
 ### Embed
 
@@ -14,7 +14,7 @@ Any whitelisted iframe embed.
 
 ```ts twoslash
 interface Params {
-  id: string
+  id: string // full iframe src URL
   width?: number
   height?: number
 }
@@ -44,6 +44,6 @@ type Screenshot = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
+  url: string // same as params.id
 }
 ```

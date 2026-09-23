@@ -27,20 +27,14 @@ import { objectSetValueByPath } from '@/utils/object'
 
 export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe = false) {
   const { collabOptions } = useCommonAdminCollabOptions()
-  const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } =
-    useCollabState()
+  const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } = useCollabState()
   const changeEventBus = useCollabRoomDataChangeEventBus()
   const fieldLockStatusEventBus = useCollabFieldLockStatusEventBus()
 
-  const anyChangeCallback = ref<
-    undefined | ((field: CollabFieldName, payload: CollabFieldDataEnvelope) => void)
-  >()
+  const anyChangeCallback = ref<undefined | ((field: CollabFieldName, payload: CollabFieldDataEnvelope) => void)>()
   const unsubscribeCollabAnyDataChangeListener = ref<undefined | Fn>()
 
-  const anyChangeEventBusListener = (
-    event: CollabRoomDataChangedEvent,
-    payload?: CollabFieldDataEnvelope,
-  ) => {
+  const anyChangeEventBusListener = (event: CollabRoomDataChangedEvent, payload?: CollabFieldDataEnvelope) => {
     if (event.room !== room || isUndefined(payload) || isUndefined(anyChangeCallback.value)) {
       return
     }
@@ -48,17 +42,13 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
   }
 
   const addCollabAnyDataChangeListener = (
-    callback: (field: CollabFieldName, data: CollabFieldDataEnvelope) => void,
+    callback: (field: CollabFieldName, data: CollabFieldDataEnvelope) => void
   ) => {
     anyChangeCallback.value = callback
     unsubscribeCollabAnyDataChangeListener.value = changeEventBus.on(anyChangeEventBusListener)
   }
 
-  const changeCollabAnyData = (
-    field: CollabFieldName,
-    data: CollabFieldData,
-    callback: Fn | undefined = undefined,
-  ) => {
+  const changeCollabAnyData = (field: CollabFieldName, data: CollabFieldData, callback: Fn | undefined = undefined) => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     const roomInfo = collabRoomInfoState.get(room)
     if (roomInfo && roomInfo.status === CollabStatus.Inactive) return
@@ -70,7 +60,7 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
   const objectSetDataByField = <T extends object>(
     field: CollabFieldName,
     data: CollabFieldDataEnvelope,
-    objectToUpdate: MaybeRef<T>,
+    objectToUpdate: MaybeRef<T>
   ) => {
     const object = unref(objectToUpdate)
     switch (data.type) {
@@ -92,56 +82,41 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
     }
   })
 
-  const acquireCollabAnyLock = (
-    field: CollabFieldName,
-    options: Partial<CollabFieldLockOptions> = {},
-  ) => {
+  const acquireCollabAnyLock = (field: CollabFieldName, options: Partial<CollabFieldLockOptions> = {}) => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     const roomInfo = collabRoomInfoState.get(room)
     if (roomInfo && roomInfo.status === CollabStatus.Inactive) return
     collabSocket.value
       ?.timeout(1000)
-      .emit(
-        'acquireFieldLock',
-        room,
-        field,
-        options,
-        (error, response: CollabChangeRoomLockCallbackTypes) => {
-          const statusEvent: CollabFieldLockStatusEvent = { field, room }
-          if (error || isCollabFailedChangeRoomLockCallback(response)) {
-            return void fieldLockStatusEventBus.emit(
-              statusEvent,
-              createFieldLockStatusPayload(
-                CollabFieldLockType.Acquire,
-                CollabFieldLockStatus.Failure,
-              ),
-            )
+      .emit('acquireFieldLock', room, field, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
+        const statusEvent: CollabFieldLockStatusEvent = { field, room }
+        if (error || isCollabFailedChangeRoomLockCallback(response)) {
+          return void fieldLockStatusEventBus.emit(
+            statusEvent,
+            createFieldLockStatusPayload(CollabFieldLockType.Acquire, CollabFieldLockStatus.Failure)
+          )
+        }
+        if (isCollabSuccessChangeRoomLockCallback(response)) {
+          if (!collabFieldLocksState.has(room)) {
+            collabFieldLocksState.set(room, new Map())
           }
-          if (isCollabSuccessChangeRoomLockCallback(response)) {
-            if (!collabFieldLocksState.has(room)) {
-              collabFieldLocksState.set(room, new Map())
-            }
-            const locks = new Map(response.locks ? Object.entries(response.locks) : [])
-            for (const [field, lock] of locks.entries()) {
-              collabFieldLocksState.get(room)?.set(field, lock)
-            }
+          const locks = new Map(response.locks ? Object.entries(response.locks) : [])
+          for (const [field, lock] of locks.entries()) {
+            collabFieldLocksState.get(room)?.set(field, lock)
+          }
 
-            return void fieldLockStatusEventBus.emit(
-              statusEvent,
-              createFieldLockStatusPayload(
-                CollabFieldLockType.Acquire,
-                CollabFieldLockStatus.Success,
-              ),
-            )
-          }
-        },
-      )
+          return void fieldLockStatusEventBus.emit(
+            statusEvent,
+            createFieldLockStatusPayload(CollabFieldLockType.Acquire, CollabFieldLockStatus.Success)
+          )
+        }
+      })
   }
 
   const releaseCollabAnyLock = (
     field: CollabFieldName,
     data: CollabFieldData,
-    options: Partial<CollabFieldLockOptions> = {},
+    options: Partial<CollabFieldLockOptions> = {}
   ) => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
     const roomInfo = collabRoomInfoState.get(room)
@@ -154,43 +129,30 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
     }
     collabSocket.value
       ?.timeout(1000)
-      .emit(
-        'releaseFieldLock',
-        room,
-        field,
-        data,
-        options,
-        (error, response: CollabChangeRoomLockCallbackTypes) => {
-          const statusEvent: CollabFieldLockStatusEvent = { field, room }
-          if (error || isCollabFailedChangeRoomLockCallback(response)) {
-            return void fieldLockStatusEventBus.emit(
-              statusEvent,
-              createFieldLockStatusPayload(
-                CollabFieldLockType.Release,
-                CollabFieldLockStatus.Failure,
-              ),
-            )
+      .emit('releaseFieldLock', room, field, data, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
+        const statusEvent: CollabFieldLockStatusEvent = { field, room }
+        if (error || isCollabFailedChangeRoomLockCallback(response)) {
+          return void fieldLockStatusEventBus.emit(
+            statusEvent,
+            createFieldLockStatusPayload(CollabFieldLockType.Release, CollabFieldLockStatus.Failure)
+          )
+        }
+        if (isCollabSuccessChangeRoomLockCallback(response)) {
+          if (!collabFieldLocksState.has(room)) {
+            collabFieldLocksState.set(room, new Map())
           }
-          if (isCollabSuccessChangeRoomLockCallback(response)) {
-            if (!collabFieldLocksState.has(room)) {
-              collabFieldLocksState.set(room, new Map())
+          if (response.locks) {
+            for (const field of Object.keys(response.locks)) {
+              collabFieldLocksState.get(room)?.delete(field)
             }
-            if (response.locks) {
-              for (const field of Object.keys(response.locks)) {
-                collabFieldLocksState.get(room)?.delete(field)
-              }
-            }
+          }
 
-            return void fieldLockStatusEventBus.emit(
-              statusEvent,
-              createFieldLockStatusPayload(
-                CollabFieldLockType.Release,
-                CollabFieldLockStatus.Success,
-              ),
-            )
-          }
-        },
-      )
+          return void fieldLockStatusEventBus.emit(
+            statusEvent,
+            createFieldLockStatusPayload(CollabFieldLockType.Release, CollabFieldLockStatus.Success)
+          )
+        }
+      })
   }
 
   return {

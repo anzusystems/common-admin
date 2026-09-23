@@ -37,7 +37,7 @@ const props = withDefaults(
     iconColor: '#505050',
     showMetaIcons: false,
     assetFileProperties: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'error'): void
@@ -88,7 +88,7 @@ const showIconComputed = computed(() => {
       loading="lazy"
       :style="'background-color:' + backgroundColor"
       @onerror="onError"
-    >
+    />
     <div
       v-if="showIconComputed"
       class="anzu-common-asset-image__icon-wrapper"

@@ -1,3 +1,4 @@
+import { AnzuError } from '@/model/error/AnzuError'
 import type { AxiosError } from 'axios'
 
 export const isAnzuApiAxiosError = (error: unknown): error is AnzuApiAxiosError => {
@@ -7,7 +8,7 @@ export const isAnzuApiAxiosError = (error: unknown): error is AnzuApiAxiosError 
 /**
  * Custom error class for Axios-related errors
  */
-export class AnzuApiAxiosError extends Error {
+export class AnzuApiAxiosError extends AnzuError {
   declare cause: AxiosError<any, any>
 
   constructor(cause: AxiosError<any, any>) {

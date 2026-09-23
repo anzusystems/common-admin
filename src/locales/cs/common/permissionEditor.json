@@ -1,0 +1,4 @@
+{
+  "allowAll": "Povolit vše",
+  "restrictiveGrantKept": "Ponechána byla {count} akce s výslovně nastaveným zamítnutím nebo přístupem pouze pro vlastníka | Ponechány byly {count} akce s výslovně nastaveným zamítnutím nebo přístupem pouze pro vlastníka | Ponecháno bylo {count} akcí s výslovně nastaveným zamítnutím nebo přístupem pouze pro vlastníka"
+}

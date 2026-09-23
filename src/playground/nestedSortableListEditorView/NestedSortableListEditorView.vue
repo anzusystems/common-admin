@@ -34,12 +34,26 @@ const makeTree = (): NestedTree<MenuItem> => ({
       data: { id: 2, position: 2, parent: null, title: 'News', status: 'Active', url: '/news' },
       children: [
         {
-          data: { id: 21, position: 1, parent: 2, title: 'Sport', status: 'Draft', url: '/news/sport' },
+          data: {
+            id: 21,
+            position: 1,
+            parent: 2,
+            title: 'Sport',
+            status: 'Draft',
+            url: '/news/sport',
+          },
           children: [],
           meta: { dirty: false },
         },
         {
-          data: { id: 22, position: 2, parent: 2, title: 'Weather', status: 'Active', url: '/news/weather' },
+          data: {
+            id: 22,
+            position: 2,
+            parent: 2,
+            title: 'Weather',
+            status: 'Active',
+            url: '/news/weather',
+          },
           children: [],
           meta: { dirty: false },
         },
@@ -50,7 +64,14 @@ const makeTree = (): NestedTree<MenuItem> => ({
       data: { id: 3, position: 3, parent: null, title: 'About', status: 'Draft', url: '/about' },
       children: [
         {
-          data: { id: 31, position: 1, parent: 3, title: 'Team', status: 'Active', url: '/about/team' },
+          data: {
+            id: 31,
+            position: 1,
+            parent: 3,
+            title: 'Team',
+            status: 'Active',
+            url: '/about/team',
+          },
           children: [],
           meta: { dirty: false },
         },
@@ -58,7 +79,14 @@ const makeTree = (): NestedTree<MenuItem> => ({
       meta: { dirty: false },
     },
     {
-      data: { id: 4, position: 4, parent: null, title: 'Contact', status: 'Active', url: '/contact' },
+      data: {
+        id: 4,
+        position: 4,
+        parent: null,
+        title: 'Contact',
+        status: 'Active',
+        url: '/contact',
+      },
       children: [],
       meta: { dirty: false },
     },
@@ -74,10 +102,24 @@ const makeDeepTree = (): NestedTree<MenuItem> => ({
       data: { id: 100, position: 1, parent: null, title: 'Docs', status: 'Active', url: '/docs' },
       children: [
         {
-          data: { id: 110, position: 1, parent: 100, title: 'Guides', status: 'Active', url: '/docs/guides' },
+          data: {
+            id: 110,
+            position: 1,
+            parent: 100,
+            title: 'Guides',
+            status: 'Active',
+            url: '/docs/guides',
+          },
           children: [
             {
-              data: { id: 111, position: 1, parent: 110, title: 'Vue', status: 'Active', url: '/docs/guides/vue' },
+              data: {
+                id: 111,
+                position: 1,
+                parent: 110,
+                title: 'Vue',
+                status: 'Active',
+                url: '/docs/guides/vue',
+              },
               children: [
                 {
                   data: {
@@ -132,7 +174,14 @@ const makeDeepTree = (): NestedTree<MenuItem> => ({
               meta: { dirty: false },
             },
             {
-              data: { id: 116, position: 2, parent: 110, title: 'React', status: 'Active', url: '/docs/guides/react' },
+              data: {
+                id: 116,
+                position: 2,
+                parent: 110,
+                title: 'React',
+                status: 'Active',
+                url: '/docs/guides/react',
+              },
               children: [],
               meta: { dirty: false },
             },
@@ -158,7 +207,14 @@ const makeDeepTree = (): NestedTree<MenuItem> => ({
       data: { id: 130, position: 2, parent: null, title: 'Blog', status: 'Active', url: '/blog' },
       children: [
         {
-          data: { id: 131, position: 1, parent: 130, title: '2026', status: 'Draft', url: '/blog/2026' },
+          data: {
+            id: 131,
+            position: 1,
+            parent: 130,
+            title: '2026',
+            status: 'Draft',
+            url: '/blog/2026',
+          },
           children: [],
           meta: { dirty: false },
         },
@@ -166,7 +222,14 @@ const makeDeepTree = (): NestedTree<MenuItem> => ({
       meta: { dirty: false },
     },
     {
-      data: { id: 140, position: 3, parent: null, title: 'Changelog', status: 'Active', url: '/changelog' },
+      data: {
+        id: 140,
+        position: 3,
+        parent: null,
+        title: 'Changelog',
+        status: 'Active',
+        url: '/changelog',
+      },
       children: [],
       meta: { dirty: false },
     },
@@ -185,10 +248,7 @@ const refApiTree = ref<NestedTree<MenuItem>>(makeTree())
 // Imperative ref to the first demo editor — lets @add handlers actually
 // insert the row (using the emit's hint) instead of just logging.
 interface NestedEditorApiLocal {
-  addItem: (
-    data: MenuItem,
-    hint?: NestedPositionHint,
-  ) => unknown
+  addItem: (data: MenuItem, hint?: NestedPositionHint) => unknown
   addAfterId: (targetId: number | null, data: MenuItem, childrenAllowed: boolean) => void
   addChildToId: (targetId: number, data: MenuItem, childrenAllowed: boolean) => void
   removeById: (id: number) => void
@@ -252,11 +312,7 @@ const onRefAddRootLast = () => {
     refApiTree.value.children.length > 0
       ? refApiTree.value.children[refApiTree.value.children.length - 1].data.id
       : null
-  api.addAfterId(
-    lastRootId,
-    { id, position: 0, parent: null, title: `Appended #${id}`, status: 'Draft' },
-    true,
-  )
+  api.addAfterId(lastRootId, { id, position: 0, parent: null, title: `Appended #${id}`, status: 'Draft' }, true)
   log(`addAfterId(last, ${id})`)
 }
 
@@ -303,12 +359,10 @@ const totalCount = computed(() => {
         ANestedSortableListEditor — site menu (drag-and-drop + arrows + indent/outdent)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        <strong>{{ totalCount }}</strong> items across 2 levels.
-        On desktop: drag handle appears per row in reorder mode; drag between groups to nest/un-nest
-        (respects <code>maxDepth</code>).
-        Everywhere: arrows move up/down within the current sibling group; the kebab menu has
-        move-to-top / move-to-bottom / indent / outdent.
-        Single orange "unsaved" state covers both moved + edited rows.
+        <strong>{{ totalCount }}</strong> items across 2 levels. On desktop: drag handle appears per row in reorder
+        mode; drag between groups to nest/un-nest (respects <code>maxDepth</code>). Everywhere: arrows move up/down
+        within the current sibling group; the kebab menu has move-to-top / move-to-bottom / indent / outdent. Single
+        orange "unsaved" state covers both moved + edited rows.
       </p>
       <ANestedSortableListEditor
         ref="basicRef"
@@ -352,12 +406,10 @@ const totalCount = computed(() => {
         </template>
       </ANestedSortableListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        ANestedSortableListEditor — readonly detail
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">ANestedSortableListEditor — readonly detail</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Readonly mode — no edit, delete, add, or reorder toggle. Rows are expandable to show a
-        read-only detail body via <code>#item-readonly</code>.
+        Readonly mode — no edit, delete, add, or reorder toggle. Rows are expandable to show a read-only detail body via
+        <code>#item-readonly</code>.
       </p>
       <ANestedSortableListEditor
         v-model="readonlyTree"
@@ -376,9 +428,7 @@ const totalCount = computed(() => {
         </template>
       </ANestedSortableListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        ANestedSortableListEditor — async <code>onReorderApply</code>
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">ANestedSortableListEditor — async <code>onReorderApply</code></h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Apply awaits a simulated 800 ms persist before exiting reorder mode.
       </p>
@@ -393,9 +443,7 @@ const totalCount = computed(() => {
         </template>
       </ANestedSortableListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        ANestedSortableListEditor — failing apply (stays in reorder mode)
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">ANestedSortableListEditor — failing apply (stays in reorder mode)</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
         Apply throws; the component keeps reorder mode open with the error in the toolbar.
       </p>
@@ -414,7 +462,8 @@ const totalCount = computed(() => {
         ANestedSortableListEditor — external mode control via <code>v-model:mode</code>
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        Parent controls mode. Current: <strong>{{ externalMode }}</strong>.
+        Parent controls mode. Current: <strong>{{ externalMode }}</strong
+        >.
       </p>
       <div class="d-flex ga-2 mb-2">
         <VBtn
@@ -452,10 +501,9 @@ const totalCount = computed(() => {
         <code>ASortableNested</code>)
       </h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        These buttons call <code>addAfterId</code> / <code>addChildToId</code> /
-        <code>removeById</code> / <code>updateData</code> on the component ref — same method
-        names and signatures as the legacy component. After each call the internal dirty
-        baseline is re-captured automatically.
+        These buttons call <code>addAfterId</code> / <code>addChildToId</code> / <code>removeById</code> /
+        <code>updateData</code> on the component ref — same method names and signatures as the legacy component. After
+        each call the internal dirty baseline is re-captured automatically.
       </p>
       <div class="d-flex ga-2 mb-2 flex-wrap">
         <VBtn
@@ -524,5 +572,4 @@ const totalCount = computed(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 </style>

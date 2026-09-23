@@ -10,8 +10,7 @@ export const CustomDataFormElementType = {
   Boolean: 'boolean',
 } as const
 export const CustomDataFormElementTypeDefault = CustomDataFormElementType.String
-export type CustomDataFormElementTypeType =
-  (typeof CustomDataFormElementType)[keyof typeof CustomDataFormElementType]
+export type CustomDataFormElementTypeType = (typeof CustomDataFormElementType)[keyof typeof CustomDataFormElementType]
 
 export function useCustomDataFormElementType() {
   const { t } = useI18n()
@@ -26,7 +25,7 @@ export function useCustomDataFormElementType() {
     },
     {
       value: CustomDataFormElementType.StringArray,
-      title: t('common.customFormElement.type.C'),
+      title: t('common.customFormElement.type.stringArray'),
     },
     {
       value: CustomDataFormElementType.StringArrayLegacy,

@@ -25,7 +25,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -82,11 +82,7 @@ const isTypeDocument = computed(() => {
 })
 
 const imageProperties = computed(() => {
-  if (
-    asset.value?.mainFile &&
-    asset.value.mainFile.links &&
-    asset.value.mainFile.links.image_detail
-  ) {
+  if (asset.value?.mainFile && asset.value.mainFile.links && asset.value.mainFile.links.image_detail) {
     return {
       url: asset.value.mainFile.links.image_detail.url,
       width: asset.value.mainFile.links.image_detail.width,
@@ -139,7 +135,7 @@ const assetMainFile = computed(() => {
           class="system-border-b pr-1"
         >
           <div class="text-label-large d-flex px-2">
-            <div>DAM: {{ toolbarTitle }}</div>
+            <div>{{ t('common.damImage.asset.detail.sourceSystem') }}: {{ toolbarTitle }}</div>
           </div>
           <VSpacer />
           <div class="pr-2">
@@ -228,12 +224,8 @@ const assetMainFile = computed(() => {
               :is-document="isTypeDocument"
               :asset-status="assetStatus"
               :asset-type="assetType"
-              :asset-main-file-status="
-                assetMainFile ? assetMainFile.fileAttributes.status : undefined
-              "
-              :asset-main-file-fail-reason="
-                assetMainFile ? assetMainFile.fileAttributes.failReason : undefined
-              "
+              :asset-main-file-status="assetMainFile ? assetMainFile.fileAttributes.status : undefined"
+              :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
             />
           </div>
         </div>

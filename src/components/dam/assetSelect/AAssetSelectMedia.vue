@@ -1,15 +1,12 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
-import {
-  AssetSelectGridView,
-  useGridView,
-} from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import AssetSelectFilter from '@/components/dam/assetSelect/components/filter/AssetSelectFilter.vue'
@@ -29,6 +26,7 @@ import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
+import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -51,7 +49,7 @@ const props = withDefaults(
     onDetailLoadedCallback: undefined,
     preselectAssetType: undefined,
     preselectInPodcast: undefined,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -80,9 +78,10 @@ const {
   reset,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useAssetSelectActions('default', props.onDetailLoadedCallback)
+// The ordering in the list bar reads this; without it the dialog would pick up the host page's pagination.
+provide(DatatablePaginationKey, pagination)
 
-const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } =
-  useDamConfigState(damClient)
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } = useDamConfigState(damClient)
 const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
 const assetDetailStore = useAssetDetailStore()
 const { asset } = storeToRefs(assetDetailStore)
@@ -112,7 +111,7 @@ const onOpen = () => {
     assetType.value === DamAssetType.Audio ? true : null,
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
-    props.maxCount,
+    props.maxCount
   )
   openSidebarLeft()
   modelValue.value = true
@@ -124,7 +123,7 @@ watch(
     if (newValue === oldValue || !newValue) return
     onOpen()
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const onClose = () => {
@@ -223,7 +222,7 @@ watch(
       customFormConfigLoading.value = false
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 onMounted(async () => {
@@ -370,7 +369,5 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
-  <div v-else>
-    Error, no select licence.
-  </div>
+  <div v-else>{{ t('common.assetSelect.error.noSelectLicence') }}</div>
 </template>

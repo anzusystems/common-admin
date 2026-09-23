@@ -1,40 +1,30 @@
 import type { AxiosInstance } from 'axios'
-import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
+import { useApiRequest } from '@/labs/api/useApiRequest'
 import type { IntegerId } from '@/types/common'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import { apiFetchList } from '@/services/api/apiFetchList'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import type { FilterBag } from '@/types/Filter'
-import type { Pagination } from '@/types/Pagination'
 
 const END_POINT = '/adm/v1/author'
 const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
 export const ENTITY = 'author'
 
-export const fetchAuthorListByIds = (
-  client: () => AxiosInstance,
-  extSystemId: number,
-  ids: string[],
-) =>
-  apiFetchByIds<DamAuthor[]>(
+export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: number, ids: string[]) => {
+  const { execute } = useApiFetchByIds<DamAuthor>({
     client,
-    ids,
-    END_POINT_LIST + '/search',
-    {
-      extSystemId,
-    },
-    SYSTEM_CORE_DAM,
-    ENTITY,
-    {},
-    true,
-  )
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT_LIST + '/search',
+    urlParams: { extSystemId },
+    isSearchApi: true,
+  })
+
+  return execute(ids)
+}
 
 export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: IntegerId) =>
-  useApiFetchList<DamAuthor[]>({
+  useApiFetchList<DamAuthor>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
@@ -42,23 +32,14 @@ export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: Int
     urlParams: { extSystemId },
   })
 
-export const fetchAuthorList = (
-  client: () => AxiosInstance,
-  extSystemId: number,
-  pagination: Pagination,
-  filterBag: FilterBag,
-) =>
-  apiFetchList<DamAuthor[]>(
+export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) => {
+  const { execute } = useApiRequest<DamAuthor, DamAuthor>({
     client,
-    END_POINT_LIST,
-    {
-      extSystemId,
-    },
-    pagination,
-    filterBag,
-    SYSTEM_CORE_DAM,
-    ENTITY,
-  )
+    method: 'POST',
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT,
+  })
 
-export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) =>
-  apiCreateOne<DamAuthor>(client, data, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
+  return execute({ body: data })
+}

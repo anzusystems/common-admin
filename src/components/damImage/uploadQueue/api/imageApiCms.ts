@@ -1,12 +1,9 @@
 import type { AxiosInstance, AxiosResponse } from 'axios'
-import { apiCreateOne } from '@/services/api/apiCreateOne'
-import { apiUpdateOne } from '@/services/api/apiUpdateOne'
-import { apiDeleteOne } from '@/services/api/apiDeleteOne'
-import { apiFetchOne } from '@/services/api/apiFetchOne'
 import type { IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
-import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
+import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
+import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
 
 const END_POINT = '/adm/v1/image'
 export const ENTITY = 'image'
@@ -14,31 +11,68 @@ export const SYSTEM_CMS = 'cms'
 
 const BULK_METADATA_LIMIT = 20
 
-export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[]) =>
-  apiFetchByIds<ImageAware[]>(client, ids, END_POINT, {}, SYSTEM_CMS, ENTITY)
-
-export const fetchImage = (client: () => AxiosInstance, id: IntegerId) =>
-  apiFetchOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
-
-export const createImage = (client: () => AxiosInstance, data: ImageCreateUpdateAware) =>
-  apiCreateOne<ImageCreateUpdateAware, ImageAware>(client, data, END_POINT, {}, SYSTEM_CMS, ENTITY)
-
-export const updateImage = (
-  client: () => AxiosInstance,
-  id: IntegerId,
-  data: ImageCreateUpdateAware,
-) =>
-  apiUpdateOne<ImageCreateUpdateAware, ImageAware>(
+export const fetchImageListByIds = (client: () => AxiosInstance, ids: IntegerId[]) => {
+  const { execute } = useApiFetchByIds<ImageAware>({
     client,
-    data,
-    END_POINT + '/:id',
-    { id },
-    SYSTEM_CMS,
-    ENTITY,
-  )
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT,
+  })
 
-export const deleteImage = (client: () => AxiosInstance, id: IntegerId) =>
-  apiDeleteOne<ImageAware>(client, END_POINT + '/:id', { id }, SYSTEM_CMS, ENTITY)
+  return execute(ids)
+}
+
+// `optionalBody`, because a body-less answer here is not a broken endpoint: the callers guard the
+// result with a strict `isNull` and expect to be told there is no image, which is what the helper
+// this replaced did. Normalised to `null` so those guards keep working.
+export const fetchImage = async (client: () => AxiosInstance, id: IntegerId) => {
+  const { execute } = useApiRequest<ImageAware, null>({
+    client,
+    method: 'GET',
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT + '/:id',
+    optionalBody: true,
+  })
+
+  return (await execute({ urlParams: { id } })) ?? null
+}
+
+export const createImage = (client: () => AxiosInstance, data: ImageCreateUpdateAware) => {
+  const { execute } = useApiRequest<ImageAware, ImageCreateUpdateAware>({
+    client,
+    method: 'POST',
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT,
+  })
+
+  return execute({ body: data })
+}
+
+export const updateImage = (client: () => AxiosInstance, id: IntegerId, data: ImageCreateUpdateAware) => {
+  const { execute } = useApiRequest<ImageAware, ImageCreateUpdateAware>({
+    client,
+    method: 'PUT',
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT + '/:id',
+  })
+
+  return execute({ urlParams: { id }, body: data })
+}
+
+export const deleteImage = (client: () => AxiosInstance, id: IntegerId) => {
+  const { execute } = useApiCommand({
+    client,
+    method: 'DELETE',
+    system: SYSTEM_CMS,
+    entity: ENTITY,
+    urlTemplate: END_POINT + '/:id',
+  })
+
+  return execute({ urlParams: { id } })
+}
 
 export const bulkUpdateImages = (client: () => AxiosInstance, items: ImageCreateUpdateAware[]) => {
   return new Promise<ImageAware[]>((resolve, reject) => {

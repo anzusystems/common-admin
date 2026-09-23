@@ -29,7 +29,7 @@ const props = withDefaults(
     dataCy: '',
     extSystemId: null,
     hideDetails: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId | null | IntegerId[] | any): void
@@ -64,7 +64,7 @@ watch(
     if (newValue === oldValue) return
     modelValueComputed.value = props.multiple ? [] : null
     filterData.extSystem = newValue
-  },
+  }
 )
 </script>
 

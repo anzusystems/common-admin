@@ -48,7 +48,7 @@ type Screenshot = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  title: string
+  url?: string
+  title?: string
 }
 ```

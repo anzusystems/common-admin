@@ -13,11 +13,7 @@ export function useCollabHelpers() {
     return (system + ':' + entity + ':' + id) as CollabRoom
   }
 
-  const createCollabFieldConfig = (
-    name: CollabFieldName,
-    room: CollabRoom,
-    cachedUsers: CollabCachedUsersMap,
-  ) => {
+  const createCollabFieldConfig = (name: CollabFieldName, room: CollabRoom, cachedUsers: CollabCachedUsersMap) => {
     return { room, field: name, cachedUsers }
   }
 

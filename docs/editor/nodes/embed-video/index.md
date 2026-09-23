@@ -13,7 +13,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -38,11 +38,10 @@
 
 ```ts
 interface EmbedVideoAware {
-  asset: DocId
-  licence: IntegerId
-  image: DocId
-  detail: {
-    // wip
+  id: DocId
+  media: Media
+  detail?: {
+    title: string
   }
 }
 ```

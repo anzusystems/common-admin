@@ -20,8 +20,6 @@ https://www.tiktok.com/@mandyj513/video/7179241045773815046?is_from_webapp=1&sen
 interface Params {
   id: string
   username: string
-  width?: number
-  height?: number
 }
 ```
 
@@ -46,9 +44,8 @@ type Screenshot = {
 }
 
 type Author = {
-  name: string
-  image: Image
-  url: string
+  username?: string
+  url?: string
 }
 
 /**
@@ -59,9 +56,9 @@ type Author = {
  * @property contentType - Content type of the image variant (e.g., image/jpeg).
  */
 type Image = {
-  variants: Array<{
+  variants?: Array<{
     url: string
-    damId: DocId
+    damId?: DocId
     width: number
     height: number
     contentType: string
@@ -72,9 +69,9 @@ type Image = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  text: string
+  url?: string
+  text?: string
   author: Author
-  images: Image[]
+  images?: Image[]
 }
 ```

@@ -19,7 +19,7 @@ Similar to [embedImage](/editor/nodes/embed-image/), but it's inline node.
   "inline": true,
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -73,6 +73,7 @@ interface EmbedImageInlineAware {
     external: boolean
     nofollow: boolean
     variant: string // enum: link | email | anchor
+    internal: { type: string, id: string } | null // see link mark
   }
   detail?: {
     image: {
@@ -81,11 +82,17 @@ interface EmbedImageInlineAware {
         description: string
         source: string
       }
+      flags: {
+        showSource: boolean
+        internal: boolean
+        overrideInternal: boolean
+      }
       dam: {
         damId: DocId
         licenceId: IntegerId
         regionPosition: number
         animation: boolean
+        internal: boolean
       }
     }
   }

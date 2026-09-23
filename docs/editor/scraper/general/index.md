@@ -5,14 +5,15 @@
 
 ## EmbedExternal
 - See [EmbedExternal](/editor/nodes/embed-external/)
-- `type` field is same enum as in scraper
+- `type` field is same enum as in scraper, the CMS enum also keeps legacy `facebook_gallery`, `facebook_photo`, `google_form`, `google_spreadsheet` (no scraper provider)
 - `params` field contains scraped params from embed code
 - `data` field contains scraped data from embed, it's async process, so it can take some time to fill these data by scraper
 - `scrapeStatus` field represent the status of scraping:
   - unassigned: default status, specially old content with non-scraped data
-  - pending: status after new embed is created and waiting for scrape process
+  - pending: status after new embed is created (or refreshed) and waiting for scrape process
   - error: error occurred in scraper
   - done: scraping done, data field is filled
+- pasting an iframe/script snippet or a YouTube, Facebook, X/Twitter, Instagram or Flourish URL into the editor creates embedExternal via scraper analyze (`pasteExternalEmbedSnippet` extension)
 
 ## Supported types:
 - [bluesky_post](/editor/scraper/bluesky_post/)
@@ -32,6 +33,7 @@
 - [instagram_reel](/editor/scraper/instagram_reel/)
 - [jw_video](/editor/scraper/jw_video/)
 - [knightlab_juxtapose](/editor/scraper/knightlab_juxtapose/)
+- [omny_clip](/editor/scraper/omny_clip/)
 - [pinterest_pin](/editor/scraper/pinterest_pin/)
 - [podbean_episode](/editor/scraper/podbean_episode/)
 - [scribd_document](/editor/scraper/scribd_document/)
@@ -42,6 +44,7 @@
 - [sofascore_standing](/editor/scraper/sofascore_standing/)
 - [sofascore_totw](/editor/scraper/sofascore_totw/)
 - [soundcloud_track](/editor/scraper/soundcloud_track/)
+- [sportnet_video](/editor/scraper/sportnet_video/)
 - [spotify_episode](/editor/scraper/spotify_episode/)
 - [ta3_video](/editor/scraper/ta3_video/)
 - [tableau_visual](/editor/scraper/tableau_visual/)

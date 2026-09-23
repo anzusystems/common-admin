@@ -1,4 +1,4 @@
-# embedExternalImage
+# embedExternalImageInline
 - inline node, so it can be inside of paragraph or heading nodes
 
 ## Features
@@ -14,12 +14,12 @@
 {
   "name": "embedExternalImageInline",
   "groups": [
-    "embed"
+    "inline"
   ],
   "inline": true,
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string

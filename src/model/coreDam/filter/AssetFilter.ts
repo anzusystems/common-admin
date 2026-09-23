@@ -1,8 +1,4 @@
-import {
-  createFilter,
-  createFilterStore,
-  type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
 import { ENTITY, SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
 export const filterFieldsList = [

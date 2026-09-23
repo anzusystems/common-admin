@@ -2,7 +2,7 @@
 import { computed, inject, ref, watch } from 'vue'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { ErrorObject } from '@vuelidate/core'
-import { cloneDeep, isDefined, isUndefined } from '@/utils/common'
+import { cloneDeep, isDefined, isNull, isUndefined } from '@/utils/common'
 import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
 import { useI18n } from 'vue-i18n'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
@@ -26,6 +26,7 @@ const props = withDefaults(
     dataCy?: string
     collab?: CollabComponentConfig
     disabled?: boolean
+    readonly?: boolean
   }>(),
   {
     label: undefined,
@@ -39,7 +40,8 @@ const props = withDefaults(
     dataCy: '',
     collab: undefined,
     disabled: undefined,
-  },
+    readonly: undefined,
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
@@ -47,11 +49,17 @@ const emit = defineEmits<{
   (e: 'focus', data: any): void
 }>()
 
+const hasNullOption = computed(() => (props.items ?? []).some((item) => isNull(item) || isNull(item?.value)))
+
 const modelValue = computed({
   get() {
     return props.modelValue
   },
   set(newValue) {
+    // VAutocomplete drops the selection when its search text is emptied, emitting null even when
+    // not clearable. A tri-state select lists null as a real option, so there null must pass through.
+    if (!props.clearable && !props.multiple && !hasNullOption.value && isNull(newValue) && !isNull(props.modelValue))
+      return
     emit('update:modelValue', cloneDeep<any>(newValue))
   },
 })
@@ -66,8 +74,10 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } =
-    useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } = useCollabField(
+    props.collab.room,
+    props.collab.field
+  )
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -76,7 +86,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true },
+    { immediate: true }
   )
 }
 
@@ -137,7 +147,7 @@ watch(
       changeFieldData.value(newValue)
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 
@@ -149,6 +159,7 @@ watch(
     item-value="value"
     :multiple="multipleComputedVuetifyTypeFix"
     :disabled="disabledComputed"
+    :readonly="readonly"
     :clearable="clearable"
     :error-messages="errorMessageComputed"
     :data-cy="dataCy"
@@ -157,9 +168,11 @@ watch(
     @focus="onFocus"
   >
     <template #label>
-      <span v-if="!hideLabel">{{ labelComputed }}<span
-        v-if="requiredComputed"
-        class="required"
+      <span v-if="!hideLabel"
+        >{{ labelComputed
+        }}<span
+          v-if="requiredComputed"
+          class="required"
       /></span>
     </template>
     <template

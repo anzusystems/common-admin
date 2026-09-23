@@ -146,17 +146,19 @@ export const useSubjectListActions = () => {
   const fetchArticleListVersionData = async (
     pagination: Ref<Pagination>,
     filterData: FilterData,
-    filterConfig: FilterConfig,
+    filterConfig: FilterConfig
   ) => {
     filterData.discriminator = 'standard'
-    const { executeRequest } = useApiRequest<any>({
+    // Named rather than `any`: this endpoint answers with a list and its versions beside it, which
+    // is a shape the list helpers do not cover.
+    const { execute } = useApiRequest<{ data: any[]; hasNextPage: boolean; versionsData: any }>({
       client: cmsClient,
       method: 'GET',
       system: 'cms',
       entity: 'subject',
       urlTemplate: END_POINT + '/search' + generateListQuery(pagination, filterData, filterConfig),
     })
-    const res = await executeRequest()
+    const res = await execute()
     pagination.value.hasNextPage = res.hasNextPage
     pagination.value.currentViewCount = res.data.length
 
@@ -165,11 +167,7 @@ export const useSubjectListActions = () => {
 
   const { showErrorsDefault } = useAlerts()
 
-  const fetchList = async (
-    pagination: Ref<Pagination>,
-    filterData: FilterData,
-    filterConfig: FilterConfig,
-  ) => {
+  const fetchList = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     listLoading.value = true
     try {
       const res = await fetchArticleListVersionData(pagination, filterData, filterConfig)

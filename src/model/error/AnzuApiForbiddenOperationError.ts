@@ -1,3 +1,4 @@
+import { AnzuError } from '@/model/error/AnzuError'
 import axios, { type AxiosError } from 'axios'
 import { HTTP_STATUS_UNPROCESSABLE_ENTITY } from '@/composables/statusCodes'
 
@@ -18,9 +19,7 @@ export const axiosErrorResponseHasForbiddenOperationData = (error: Error) => {
   )
 }
 
-export const isAnzuApiForbiddenOperationError = (
-  error: any,
-): error is AnzuApiForbiddenOperationError => {
+export const isAnzuApiForbiddenOperationError = (error: any): error is AnzuApiForbiddenOperationError => {
   return error instanceof AnzuApiForbiddenOperationError
 }
 
@@ -29,7 +28,7 @@ function resolveResponseData(axiosError: AxiosError) {
   return data.detail
 }
 
-export class AnzuApiForbiddenOperationError extends Error {
+export class AnzuApiForbiddenOperationError extends AnzuError {
   detail: string
 
   constructor(axiosError: AxiosError, cause?: Error, message = '') {

@@ -11,15 +11,15 @@ import { stringToKebabCase } from '@/utils/string'
 const END_POINT = '/adm/v1/job'
 export const ENTITY = 'job'
 
-export function useJobApi<JobType extends JobBase = JobBase>(
-  client: () => AxiosInstance,
-  system: string,
-) {
+/**
+ * @deprecated Use `useJobApi` from `@/labs/job/jobApi`, which takes the labs filter and pagination
+ * model and is the one `lib.ts` exports. No admin in the fleet imports this one.
+ */
+export function useJobApi<JobType extends JobBase = JobBase>(client: () => AxiosInstance, system: string) {
   const fetchJobList = (pagination: Pagination, filterBag: FilterBag) =>
     apiFetchList<JobType[]>(client, END_POINT, {}, pagination, filterBag, system, ENTITY)
 
-  const fetchJob = (id: number) =>
-    apiFetchOne<JobType>(client, END_POINT + '/:id', { id }, system, ENTITY)
+  const fetchJob = (id: number) => apiFetchOne<JobType>(client, END_POINT + '/:id', { id }, system, ENTITY)
 
   const createJob = (data: JobType) => {
     const type = stringToKebabCase(data._resourceName)
@@ -29,8 +29,7 @@ export function useJobApi<JobType extends JobBase = JobBase>(
     return apiCreateOne<JobType>(client, data, END_POINT + '/:type', { type }, system, ENTITY)
   }
 
-  const deleteJob = (id: number) =>
-    apiDeleteOne<JobType>(client, END_POINT + '/:id', { id }, system, ENTITY)
+  const deleteJob = (id: number) => apiDeleteOne<JobType>(client, END_POINT + '/:id', { id }, system, ENTITY)
 
   return {
     fetchJobList,

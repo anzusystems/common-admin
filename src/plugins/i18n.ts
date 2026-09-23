@@ -44,12 +44,16 @@ export const slovakPluralizationRule = (choice: number, choicesLength: number) =
   return choice === 1 ? 0 : 1
 }
 
-export const i18n = createI18n<[MessageSchema]>({
+export const i18n = createI18n<[MessageSchema], string, false>({
   globalInjection: false,
+  legacy: false,
   locale: REQUIRED_LOCALES[0],
   fallbackLocale: false,
   pluralRules: {
     sk: slovakPluralizationRule,
+    // Czech shares the Slovak plural categories (one / 2-4 / other), and without
+    // a rule the default would pick zero|one|other: "1 nepotvrzené změny".
+    cs: slovakPluralizationRule,
   },
   missing: (locale: Locale, key: Path) => {
     if (REQUIRED_LOCALES.includes(locale) && !key.startsWith('system.subject.')) {

@@ -45,9 +45,9 @@ type Screenshot = {
 }
 
 type Author = {
-  name: string
+  name?: string
   image: Image
-  url: string
+  url?: string
 }
 
 /**
@@ -58,9 +58,9 @@ type Author = {
  * @property contentType - Content type of the image variant (e.g., image/jpeg).
  */
 type Image = {
-  variants: Array<{
+  variants?: Array<{
     url: string
-    damId: DocId
+    damId?: DocId
     width: number
     height: number
     contentType: string
@@ -71,11 +71,11 @@ type Image = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  title: string
-  text: string
+  url?: string
+  title?: string
+  text?: string
   author: Author
-  publishedAt: DatetimeUTC
-  images: Image[]
+  publishedAt: DatetimeUTC // 0001-01-01T00:00:00Z when not scraped
+  images?: Image[]
 }
 ```

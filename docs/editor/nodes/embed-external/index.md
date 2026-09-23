@@ -4,7 +4,7 @@
 
 ## Features
 - user can open dialog, input supported code snippet inside textarea, and it will autodetect type of embed media and parse its content using scraper
-- if the media embed code is distributed in DAM and matches some licence restrictions, it's converted to embedAudio or embedVideo by anzutap
+- if the code is a youtube_video already distributed from DAM under the site group's video licences, embedVideo is inserted instead
 
 ## Node schema
 
@@ -16,7 +16,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -49,8 +49,9 @@ interface EmbedExternalAware {
   id: DocId
   type: string // enum, see Scraper docs
   scrapeStatus: string // enum: error | done | pending | unassigned
-  params: Record<string, any> // see Scraper docs
+  params: Record<string, string | number | boolean> // see Scraper docs
   data: Record<string, any> // see Scraper docs
+  liveRenderEnabled: boolean
 }
 ```
 

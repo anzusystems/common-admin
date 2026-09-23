@@ -1,4 +1,18 @@
+<!--
+  DEPRECATED. The `labs` copy is the one that is maintained: `@/labs/subjectSelect/ASubjectSelect.vue`,
+  exported from `lib.ts`. Nothing in the fleet imports this one any more.
+
+  It is kept so the `lib.ts` surface does not break for anyone outside the fleet. Fix bugs here only
+  to keep it level with the labs copy; new behaviour belongs there.
+-->
 <script lang="ts" setup generic="TItem">
+/**
+ * @deprecated Use `@/labs/subjectSelect/ASubjectSelect.vue` instead, exported from `lib.ts`.
+ *
+ * Nothing in the six admins imports this copy any more -- every one of the 222 imports comes
+ * from `labs`. It stays so the `lib.ts` surface does not break for anyone outside the fleet.
+ * Fix a bug here only to keep it level with the labs copy; new behaviour belongs there.
+ */
 import { computed, onMounted, ref, toRaw, withModifiers } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
@@ -30,7 +44,7 @@ const props = withDefaults(
     dialogTitleT: 'common.subjectSelect.texts.title',
     paginationMode: 'standard',
     autoOpen: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
@@ -105,7 +119,7 @@ const onClose = () => {
 const onConfirm = () => {
   emit(
     'onConfirm',
-    props.selectedItems.map((item) => toRaw(item)),
+    props.selectedItems.map((item) => toRaw(item))
   )
   onClose()
 }
@@ -122,10 +136,13 @@ const lastPage = computed(() => {
   return Math.ceil(paginationComputed.value.totalCount / paginationComputed.value.rowsPerPage)
 })
 
+// `>=`, not `===`: an empty list has `totalCount: 0`, so `lastPage` is 0 while `page` is never below
+// 1, and the two can never meet. The page would then count as "not the last one" on a list with
+// nothing in it -- and the same holds before any request has been made, because that initial state is
+// the same numbers.
 const hasNextPage = computed(() => {
   return !(
-    (isNull(paginationComputed.value.hasNextPage) &&
-      paginationComputed.value.page === lastPage.value) ||
+    (isNull(paginationComputed.value.hasNextPage) && paginationComputed.value.page >= lastPage.value) ||
     paginationComputed.value.hasNextPage === false
   )
 })

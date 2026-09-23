@@ -17,9 +17,16 @@ https://www.facebook.com/reel/986566783263294
 ## Params
 
 ```ts twoslash
+/**
+ * Time in seconds as integer.
+ */
+type Seconds = number
+
+// ---cut-before---
 interface Params {
   id: string
-  username: string
+  startTime?: Seconds
+  showText?: boolean
   width?: number
   height?: number
 }
@@ -46,10 +53,8 @@ type Screenshot = {
 }
 
 type Author = {
-  username: string
-  name: string
+  name?: string
   image: Image
-  url: string
 }
 
 /**
@@ -60,9 +65,9 @@ type Author = {
  * @property contentType - Content type of the image variant (e.g., image/jpeg).
  */
 type Image = {
-  variants: Array<{
+  variants?: Array<{
     url: string
-    damId: DocId
+    damId?: DocId
     width: number
     height: number
     contentType: string
@@ -71,13 +76,10 @@ type Image = {
 
 // ---cut-before---
 interface Data {
-  id: number
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  text: string
+  url?: string
   author: Author
-  publishedAt: DatetimeUTC
-  images: Image[]
+  images?: Image[]
 }
 ```

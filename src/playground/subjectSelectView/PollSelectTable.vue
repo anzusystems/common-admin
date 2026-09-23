@@ -9,11 +9,7 @@ import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
 import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
 import { provide } from 'vue'
-import {
-  DatatablePaginationKey,
-  FilterConfigKey,
-  FilterDataKey,
-} from '@/labs/filters/filterInjectionKeys'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 
 withDefaults(
   defineProps<{
@@ -23,7 +19,7 @@ withDefaults(
   {
     minCount: 1,
     maxCount: 1,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'onConfirm', data: Array<PollDemo>): void
@@ -32,7 +28,7 @@ const emit = defineEmits<{
 const { datatableHiddenColumns, filterConfig, filterData } = usePollSelectStore()
 provide(FilterConfigKey, filterConfig)
 provide(FilterDataKey, filterData)
-const { executeFetch } = useFetchPollListDemo()
+const { execute } = useFetchPollListDemo()
 
 const {
   items,
@@ -63,9 +59,9 @@ const {
   datatableHiddenColumns,
   'cms',
   'poll',
-  executeFetch,
+  execute,
   filterData,
-  filterConfig,
+  filterConfig
 )
 provide(DatatablePaginationKey, pagination)
 

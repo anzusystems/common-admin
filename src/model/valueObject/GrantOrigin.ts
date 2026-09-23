@@ -34,9 +34,7 @@ export function useGrantOrigin() {
   ])
 
   const getGrantOriginOption = (value: GrantOriginType): ValueObjectOption<GrantOriginType> => {
-    return grantOriginOptions.value.find(
-      (item) => item.value === value,
-    ) as ValueObjectOption<GrantOriginType>
+    return grantOriginOptions.value.find((item) => item.value === value) as ValueObjectOption<GrantOriginType>
   }
 
   return {

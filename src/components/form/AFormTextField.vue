@@ -12,11 +12,7 @@ import {
   type CollabFieldLockStatusPayload,
   CollabFieldLockType,
 } from '@/components/collab/composables/collabEventBus'
-import type {
-  CollabComponentConfig,
-  CollabFieldData,
-  CollabFieldLockOptions,
-} from '@/components/collab/types/Collab'
+import type { CollabComponentConfig, CollabFieldData, CollabFieldLockOptions } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import type { IntegerIdNullable } from '@/types/common'
 import type { VTextField } from 'vuetify/components/VTextField'
@@ -59,7 +55,7 @@ const props = withDefaults(
     placeholder: undefined,
     persistentPlaceholder: false,
     help: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: string | number | null | undefined): void
@@ -73,9 +69,7 @@ const textFieldRef = ref<InstanceType<typeof VTextField> | null>(null)
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
 
-const releaseFieldLock = ref(
-  (_data: CollabFieldData, _options?: Partial<CollabFieldLockOptions>) => {},
-)
+const releaseFieldLock = ref((_data: CollabFieldData, _options?: Partial<CollabFieldLockOptions>) => {})
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const acquireFieldLock = ref((options?: Partial<CollabFieldLockOptions>) => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
@@ -95,13 +89,10 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true },
+    { immediate: true }
   )
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
-    if (
-      data.status === CollabFieldLockStatus.Failure &&
-      data.type === CollabFieldLockType.Acquire
-    ) {
+    if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
       textFieldRef.value?.blur()
     }
   })
@@ -131,8 +122,7 @@ const onFocus = () => {
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length)
-    return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
+  if (props.v?.$errors?.length) return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []
 })
 
@@ -189,7 +179,8 @@ defineExpose({
       v-if="!hideLabel"
       #label
     >
-      {{ labelComputed }}<span
+      {{ labelComputed
+      }}<span
         v-if="requiredComputed"
         class="required"
       />

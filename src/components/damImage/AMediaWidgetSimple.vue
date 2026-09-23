@@ -38,7 +38,7 @@ const props = withDefaults(
     damHeight: undefined,
     useHtmlImg: false,
     widgetClass: undefined,
-  },
+  }
 )
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -68,9 +68,7 @@ const onDialogClose = () => {
 }
 
 const type = computed<DamAssetTypeType | null>(() => {
-  return resMedia.value?.damMedia.assetType === DamMediaType.Video
-    ? DamAssetType.Video
-    : DamAssetType.Audio
+  return resMedia.value?.damMedia.assetType === DamMediaType.Video ? DamAssetType.Video : DamAssetType.Audio
 })
 
 watch(
@@ -83,7 +81,7 @@ watch(
       resolvedSrc.value = getImageUrl(newMedia)
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 
@@ -108,7 +106,7 @@ watch(
       :width="width"
       :height="height"
       :class="widgetClass"
-    >
+    />
     <VImg
       v-else
       :lazy-src="imagePlaceholderPath"

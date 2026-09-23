@@ -4,6 +4,10 @@
 - user can set quote content directly in editor
 - user can set quote author directly in editor
 
+## Child nodes
+- `quoteContent` - content `text*`, no marks
+- `quoteAuthor` - content `text*`, no marks
+
 ## Node schema
 ```json
 {

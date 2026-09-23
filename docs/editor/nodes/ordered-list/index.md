@@ -7,6 +7,9 @@
 - user can toggle current node to ordered list, if possible (from paragraph or heading)
 
 
+## Child nodes
+- `listItem` - no attrs, content `paragraph block*`, see [tiptap docs](https://tiptap.dev/docs/editor/extensions/nodes/list-item)
+
 ## Node schema
 
 ```json
@@ -18,6 +21,9 @@
   "attrs": {
     "start": {
       "default": 1
+    },
+    "type": {
+      "default": null // string | null (html list type, e.g. "a", "I")
     }
   }
 }
@@ -32,7 +38,8 @@
     {
       "type": "orderedList",
       "attrs": {
-        "start": 1
+        "start": 1,
+        "type": null
       },
       "content": [
         {

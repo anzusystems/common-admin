@@ -1,3 +1,4 @@
+import { AnzuError } from '@/model/error/AnzuError'
 import axios from 'axios'
 
 export const isAnzuApiTimeoutError = (error: any): error is AnzuApiTimeoutError => {
@@ -16,10 +17,10 @@ export const axiosErrorIsTimeout = (error: Error) => {
 /**
  * Custom error class for timeout error
  */
-export class AnzuApiTimeoutError extends Error {
+export class AnzuApiTimeoutError extends AnzuError {
   constructor(cause: Error | undefined = undefined) {
     super('API request timed out')
-    this.name = 'AnzuApiAxiosError'
+    this.name = 'AnzuApiTimeoutError'
     this.cause = cause
   }
 }

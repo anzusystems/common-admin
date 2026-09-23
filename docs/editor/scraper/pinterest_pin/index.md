@@ -8,7 +8,7 @@
 https://pin.it/2hK5k3w 
 ```
 
-### URl
+### URL
 
 ```
 https://www.pinterest.com/pin/651192427391236681/sent/?invite_code=807bdfd7341b40899585b2ad53f881f8&sfo=1
@@ -51,9 +51,9 @@ type Screenshot = {
 }
 
 type Author = {
-  name: string
+  name?: string
   image: Image
-  url: string
+  url?: string
 }
 
 /**
@@ -64,9 +64,9 @@ type Author = {
  * @property contentType - Content type of the image variant (e.g., image/jpeg).
  */
 type Image = {
-  variants: Array<{
+  variants?: Array<{
     url: string
-    damId: DocId
+    damId?: DocId
     width: number
     height: number
     contentType: string
@@ -77,9 +77,9 @@ type Image = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  title: string
+  url?: string // board URL
+  title?: string // board name
   author: Author
-  images: Image[]
+  images?: Image[]
 }
 ```

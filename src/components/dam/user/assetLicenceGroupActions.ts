@@ -11,23 +11,17 @@ import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 
 export const useAssetLicenceGroupSelectActions = (client: () => AxiosInstance) => {
-  const { executeFetch } = useFetchDamAssetLicenceGroupList(client)
+  const { execute } = useFetchDamAssetLicenceGroupList(client)
 
-  const mapToValueObjectOption = (
-    assetLicenceGroups: DamAssetLicenceGroup[],
-  ): ValueObjectOption<IntegerId>[] => {
+  const mapToValueObjectOption = (assetLicenceGroups: DamAssetLicenceGroup[]): ValueObjectOption<IntegerId>[] => {
     return assetLicenceGroups.map((assetLicence: DamAssetLicenceGroup) => ({
       title: assetLicence.name,
       value: assetLicence.id,
     }))
   }
 
-  const fetchItems = async (
-    pagination: Ref<Pagination>,
-    filterData: FilterData,
-    filterConfig: FilterConfig,
-  ) => {
-    return mapToValueObjectOption(await executeFetch(pagination, filterData, filterConfig))
+  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToValueObjectOption(await execute(pagination, filterData, filterConfig))
   }
 
   const fetchItemsByIds = async (ids: number[]) => {

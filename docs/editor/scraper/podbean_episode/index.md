@@ -19,7 +19,6 @@ https://www.podbean.com/ew/pb-v47zv-1316d23
 ```ts twoslash
 interface Params {
   id: string
-  width?: number
   height?: number
 }
 ```
@@ -45,9 +44,9 @@ type Screenshot = {
 }
 
 type Author = {
-  name: string
+  name?: string
   image: Image
-  url: string
+  url?: string
 }
 
 /**
@@ -58,9 +57,9 @@ type Author = {
  * @property contentType - Content type of the image variant (e.g., image/jpeg).
  */
 type Image = {
-  variants: Array<{
+  variants?: Array<{
     url: string
-    damId: DocId
+    damId?: DocId
     width: number
     height: number
     contentType: string
@@ -71,8 +70,8 @@ type Image = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  title: string
+  title?: string
   author: Author
-  url: string
+  url?: string
 }
 ```

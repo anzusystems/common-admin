@@ -1,6 +1,6 @@
 {
   "version": "Verze",
-  "newVersionText": "K dispozici je nová verze administrace. Pro správné fungování je třeba provést aktulizaci.",
+  "newVersionText": "K dispozici je nová verze administrace. Pro správné fungování je třeba provést aktualizaci.",
   "newVersionReload": "Načíst novou verzi.",
   "theme": {
     "light": "Světlá",
@@ -55,8 +55,12 @@
     "backButton": "Vrať mě k přihlášení"
   },
   "dropzone": {
-    "dropPossibility": "Nahrať alebo presunúť súbory",
-    "dropHere": "Nahrať súbory"
+    "dropPossibility": "Nahrát nebo přesunout soubory",
+    "dropHere": "Nahrát soubory"
   },
-  "inputSuggestedMax": "{current} / max {max}"
+  "upload": {
+    "incorrectFormatSize": "Nesprávný formát nebo velikost"
+  },
+  "inputSuggestedMax": "{current} / max {max}",
+  "notSet": "Neuvedeno"
 }

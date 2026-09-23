@@ -19,7 +19,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
-  },
+  }
 )
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss

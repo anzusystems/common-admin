@@ -19,8 +19,7 @@ const texts = ref({ description: '', source: '', authors: [] })
 
 const imageStore = useImageStore()
 const { images } = storeToRefs(imageStore)
-const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } =
-  useImageMassOperations()
+const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } = useImageMassOperations()
 const { t } = useI18n()
 
 const fillAll = (forceReplace: boolean) => {
@@ -69,7 +68,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
 <template>
   <div class="w-100">
     <VRow
-      density="comfortable"
+      density="compact"
       class="mt-4"
     >
       <VCol>
@@ -113,7 +112,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
     </VRow>
     <VRow
       v-if="authorEnabled && showDamAuthorsAtLeastOne"
-      density="comfortable"
+      density="compact"
       class="mt-4"
     >
       <VCol>
@@ -167,7 +166,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
     </VRow>
     <VRow
       v-else
-      density="comfortable"
+      density="compact"
       class="mt-4"
     >
       <VCol>

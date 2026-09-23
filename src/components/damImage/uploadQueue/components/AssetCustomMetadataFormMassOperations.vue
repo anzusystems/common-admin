@@ -13,19 +13,13 @@ const props = withDefaults(
     extSystem: IntegerId
     modelValue: { [key: string]: any }
   }>(),
-  {},
+  {}
 )
 
 const emit = defineEmits<{
   (e: 'update:modelValue', data: any): void
-  (
-    e: 'fillEmptyField',
-    data: { assetType: DamAssetTypeType; elementProperty: string; value: any },
-  ): void
-  (
-    e: 'replaceField',
-    data: { assetType: DamAssetTypeType; elementProperty: string; value: any },
-  ): void
+  (e: 'fillEmptyField', data: { assetType: DamAssetTypeType; elementProperty: string; value: any }): void
+  (e: 'replaceField', data: { assetType: DamAssetTypeType; elementProperty: string; value: any }): void
 }>()
 
 const { t } = useI18n()
@@ -60,7 +54,7 @@ const elements = computed(() => {
     <VRow
       v-for="element in elements"
       :key="element.id"
-      density="comfortable"
+      density="compact"
       class="mt-1"
     >
       <VCol>

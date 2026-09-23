@@ -11,11 +11,7 @@ import { SORT_BY_ID } from '@/composables/system/datatableColumns'
 import { useAuthorListFilter } from '@/playground/tableView/authorFilter'
 import { useAuthorListActions } from '@/playground/tableView/authorActions'
 import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
-import {
-  DatatablePaginationKey,
-  FilterConfigKey,
-  FilterDataKey,
-} from '@/labs/filters/filterInjectionKeys'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
 import { usePagination } from '@/labs/filters/pagination'
 import { useFilterHelpers } from '@/labs/filters/filterFactory'
 import { useDebounceFn } from '@vueuse/core'
@@ -52,7 +48,7 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
   ],
   datatableHiddenColumns,
   'coreDam',
-  'author',
+  'author'
 )
 
 const sortByChange = () => {

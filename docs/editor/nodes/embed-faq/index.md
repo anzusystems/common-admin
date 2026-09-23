@@ -13,7 +13,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -44,7 +44,7 @@
 ```ts
 interface EmbedFaqAware {
   id: DocId
-  faq: IntegerId
+  faq: IntegerIdNullable
   detail?: {
     faq: {
       texts: FaqTexts

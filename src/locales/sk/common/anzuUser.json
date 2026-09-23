@@ -25,7 +25,9 @@
   "filter": {
     "id": "ID",
     "enabled": "Povolený",
-    "email": "E-mail"
+    "email": "E-mail",
+    "lastName": "Priezvisko",
+    "permissionGroups": "Skupiny oprávnení"
   },
   "table": {
     "grants": "Akcie",
@@ -38,5 +40,9 @@
     "desc": "Potrebujete skopírovať rolu a oprávnenia z už existujúceho používateľa?",
     "srcUser": "Zdrojový používateľ",
     "copiedSettings": "Všetky skopírované nastavenia:"
+  },
+  "hint": {
+    "derivedFromName": "Prepočítava sa z mena a priezviska.",
+    "idReadonlyOnEdit": "ID sa po vytvorení nemení."
   }
 }

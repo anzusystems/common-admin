@@ -1,7 +1,4 @@
-import {
-  type DatatableOrderingOption,
-  type DatatableSortBy,
-} from '@/composables/system/datatableColumns'
+import { type DatatableOrderingOption, type DatatableSortBy } from '@/composables/system/datatableColumns'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 import { useAlerts } from '@/composables/system/alerts'
@@ -17,17 +14,17 @@ export function useSubjectSelect<TItem>(
   datatableHiddenColumns: any,
   system: string,
   subject: string,
-  executeFetch: (
+  execute: (
     pagination: Ref<Pagination>,
     filterData: FilterData<any>,
     filterConfig: FilterConfig<any>,
-    params?: FetchListParams,
+    params?: FetchListParams
   ) => Promise<TItem[]>,
   filterData: FilterData<any>,
   filterConfig: FilterConfig<any>,
   filterSortBy: DatatableSortBy | null = null,
   fetchParams: FetchListParams | undefined = undefined,
-  enableActions: boolean = false,
+  enableActions: boolean = false
 ) {
   const filterTouched: Ref<boolean> = ref(false)
   const items: Ref<Array<TItem>> = ref([])
@@ -35,7 +32,7 @@ export function useSubjectSelect<TItem>(
   const loading = ref(false)
   const { pagination, setSortBy, incrementPage } = usePagination(
     isNull(filterSortBy) ? null : filterSortBy.key,
-    filterSortBy?.order,
+    filterSortBy?.order
   )
 
   const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, {
@@ -49,7 +46,7 @@ export function useSubjectSelect<TItem>(
     datatableHiddenColumns,
     system,
     subject,
-    { storeColumnsLocalStorage: false, disableActions: !enableActions },
+    { storeColumnsLocalStorage: false, disableActions: !enableActions }
   )
 
   const onOpen = () => {
@@ -66,7 +63,7 @@ export function useSubjectSelect<TItem>(
     loading.value = true
     incrementPage()
     try {
-      const res = (await executeFetch(pagination, filterData, filterConfig, fetchParams)) as TItem[]
+      const res = (await execute(pagination, filterData, filterConfig, fetchParams)) as TItem[]
       items.value.push(...res)
     } catch (e) {
       showErrorsDefault(e)
@@ -83,12 +80,7 @@ export function useSubjectSelect<TItem>(
   const getList = async () => {
     loading.value = true
     try {
-      items.value = (await executeFetch(
-        pagination,
-        filterData,
-        filterConfig,
-        fetchParams,
-      )) as TItem[]
+      items.value = (await execute(pagination, filterData, filterConfig, fetchParams)) as TItem[]
     } catch (e) {
       showErrorsDefault(e)
     } finally {
@@ -102,10 +94,7 @@ export function useSubjectSelect<TItem>(
 
   const onRowClick = (event: Event) => {
     const eventTarget = event.target as HTMLElement | null
-    if (
-      !eventTarget ||
-      (eventTarget.tagName === 'INPUT' && (eventTarget as HTMLInputElement).type === 'checkbox')
-    ) {
+    if (!eventTarget || (eventTarget.tagName === 'INPUT' && (eventTarget as HTMLInputElement).type === 'checkbox')) {
       return
     }
     const parent = eventTarget.closest('.v-data-table__tr')

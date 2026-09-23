@@ -1,14 +1,27 @@
 import type { AnzuUser, AnzuUserMinimal } from '@/types/AnzuUser'
 import type { IntegerId } from '@/types/common'
 import { defineCached } from '@/composables/system/defineCached'
-import { apiFetchByIds } from '@/services/api/apiFetchByIds'
+import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import { cmsClient } from '@/playground/mock/cmsClient'
 
-export const fetchUserListByIds = (ids: number[]) =>
-  apiFetchByIds<AnzuUser[]>(cmsClient, ids, '/adm/v1/user', {}, 'cms', 'user')
+export const fetchUserListByIds = (ids: number[]) => {
+  const { execute } = useApiFetchByIds<AnzuUser>({
+    client: cmsClient,
+    system: 'cms',
+    entity: 'user',
+    urlTemplate: '/adm/v1/user',
+  })
+
+  return execute(ids)
+}
 
 export const mapFullToMinimal = (source: AnzuUser): AnzuUserMinimal => {
-  return { id: source.id ?? 0, email: source.email, avatar: source.avatar, person: source.person }
+  return {
+    id: source.id ?? 0,
+    email: source.email,
+    avatar: source.avatar,
+    person: source.person,
+  }
 }
 
 const mapIdToMinimal = (id: IntegerId): AnzuUserMinimal => {

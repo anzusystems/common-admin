@@ -127,8 +127,7 @@ export const DamDistributionStatus = {
   Distributed: 'distributed',
   Failed: 'failed',
 } as const
-export type DamDistributionStatusType =
-  (typeof DamDistributionStatus)[keyof typeof DamDistributionStatus]
+export type DamDistributionStatusType = (typeof DamDistributionStatus)[keyof typeof DamDistributionStatus]
 export const DamDistributionStatusDefault = DamDistributionStatus.Waiting
 
 export interface DamPubConfig {

@@ -1,11 +1,6 @@
 import type { AxiosInstance, AxiosResponse } from 'axios'
 import type { DocId, IntegerId } from '@/types/common'
-import type {
-  AssetDetailItemDto,
-  AssetSearchListItemDto,
-  DamAssetTypeType,
-} from '@/types/coreDam/Asset'
-import { apiFetchOne } from '@/services/api/apiFetchOne'
+import type { AssetDetailItemDto, AssetSearchListItemDto, DamAssetTypeType } from '@/types/coreDam/Asset'
 import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
 import { HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { isNull, isUndefined } from '@/utils/common'
@@ -16,10 +11,7 @@ import {
   type ValidationError,
 } from '@/model/error/AnzuApiValidationError'
 import { useAlerts } from '@/composables/system/alerts'
-import {
-  AnzuApiForbiddenError,
-  axiosErrorResponseIsForbidden,
-} from '@/model/error/AnzuApiForbiddenError'
+import { AnzuApiForbiddenError, axiosErrorResponseIsForbidden } from '@/model/error/AnzuApiForbiddenError'
 import {
   AnzuApiForbiddenOperationError,
   axiosErrorResponseHasForbiddenOperationData,
@@ -27,6 +19,7 @@ import {
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { useApiRequest } from '@/labs/api/useApiRequest'
 import type { DamMediaFromDam } from '@/types/MediaAware'
 
 const END_POINT_CMS_ASSET = '/adm/v1/cms/asset/'
@@ -49,12 +42,8 @@ export interface AssetMetadataBulkItem {
 
 export declare type AssetCustomData = Record<string, any>
 
-export const useFetchAssetList = (
-  client: () => AxiosInstance,
-  endPoint: string,
-  licenceId: IntegerId,
-) =>
-  useApiFetchList<AssetSearchListItemDto[]>({
+export const useFetchAssetList = (client: () => AxiosInstance, endPoint: string, licenceId: IntegerId) =>
+  useApiFetchList<AssetSearchListItemDto>({
     client,
     system: SYSTEM_CORE_DAM,
     entity: ENTITY,
@@ -62,32 +51,47 @@ export const useFetchAssetList = (
     urlParams: { licenceId },
   })
 
-export const fetchAsset = (client: () => AxiosInstance, endPoint: string, id: DocId) =>
-  apiFetchOne<AssetDetailItemDto>(client, endPoint + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
-
-export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(
-  client: () => AxiosInstance,
-  id: DocId,
-) => apiFetchOne<T>(client, END_POINT_CMS_ASSET + ':id', { id }, SYSTEM_CORE_DAM, ENTITY)
-
-export const fetchAssetByFileId = (
-  client: () => AxiosInstance,
-  endPoint: string,
-  assetFileId: DocId,
-) =>
-  apiFetchOne<AssetDetailItemDto>(
+export const fetchAsset = (client: () => AxiosInstance, endPoint: string, id: DocId) => {
+  const { execute } = useApiRequest<AssetDetailItemDto, null>({
     client,
-    endPoint + '/asset-file/:id',
-    { id: assetFileId },
-    SYSTEM_CORE_DAM,
-    ENTITY,
-  )
+    method: 'GET',
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: endPoint + '/:id',
+  })
+
+  return execute({ urlParams: { id } })
+}
+
+export const fetchAssetAsCmsMedia = <T extends DamMediaFromDam>(client: () => AxiosInstance, id: DocId) => {
+  const { execute } = useApiRequest<T, null>({
+    client,
+    method: 'GET',
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT_CMS_ASSET + ':id',
+  })
+
+  return execute({ urlParams: { id } })
+}
+
+export const fetchAssetByFileId = (client: () => AxiosInstance, endPoint: string, assetFileId: DocId) => {
+  const { execute } = useApiRequest<AssetDetailItemDto, null>({
+    client,
+    method: 'GET',
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: endPoint + '/asset-file/:id',
+  })
+
+  return execute({ urlParams: { id: assetFileId } })
+}
 
 export const bulkUpdateAssetsMetadata = (
   client: () => AxiosInstance,
   endPoint: string,
   items: UploadQueueItem[],
-  mainFileSingleUseOverride: boolean | undefined = undefined,
+  mainFileSingleUseOverride: boolean | undefined = undefined
 ) => {
   return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
     const bulkItems = listItemsToMetadataBulkItems(items, mainFileSingleUseOverride)
@@ -102,9 +106,7 @@ export const bulkUpdateAssetsMetadata = (
             return res.status === HTTP_STATUS_OK
           })
         ) {
-          const bulkItemsRes: AssetMetadataBulkItem[] = responses.flatMap(
-            (response) => response.data,
-          )
+          const bulkItemsRes: AssetMetadataBulkItem[] = responses.flatMap((response) => response.data)
           return resolve(bulkItemsRes)
         } else {
           return reject(responses)
@@ -121,7 +123,7 @@ async function fetchAssetListByIdsSequence(
   client: () => AxiosInstance,
   endPoint: string,
   ids: DocId[],
-  licenceId: number,
+  licenceId: number
 ) {
   if (ids.length === 0) return Promise.resolve([])
   const totalCalls = Math.ceil(ids.length / FETCH_BY_IDS_MAX_LIMIT)
@@ -140,12 +142,12 @@ export const fetchAssetListByIds: (
   client: () => AxiosInstance,
   endPoint: string,
   ids: DocId[],
-  licenceId: number,
+  licenceId: number
 ) => Promise<AssetDetailItemDto[]> = (
   client: () => AxiosInstance,
   endPoint: string,
   ids: DocId[],
-  licenceId: number,
+  licenceId: number
 ) => {
   return new Promise((resolve, reject) => {
     fetchAssetListByIdsSequence(client, endPoint, ids, licenceId)
@@ -178,7 +180,7 @@ export const fetchAssetListByIds: (
 async function updateMetadataSequence(
   client: () => AxiosInstance,
   endPoint: string,
-  bulkItems: AssetMetadataBulkItem[],
+  bulkItems: AssetMetadataBulkItem[]
 ) {
   const totalCalls = Math.ceil(bulkItems.length / BULK_METADATA_LIMIT)
   const responses: AxiosResponse[] = []
@@ -195,7 +197,7 @@ async function updateMetadataSequence(
 
 function listItemsToMetadataBulkItems(
   items: UploadQueueItem[],
-  mainFileSingleUseOverride: boolean | undefined = undefined,
+  mainFileSingleUseOverride: boolean | undefined = undefined
 ) {
   const dtoItems: AssetMetadataBulkItem[] = []
   items.forEach((item) => {
@@ -206,9 +208,7 @@ function listItemsToMetadataBulkItems(
         authors: item.authors,
         described: true,
         customData: item.customData,
-        mainFileSingleUse: isUndefined(mainFileSingleUseOverride)
-          ? item.mainFileSingleUse
-          : mainFileSingleUseOverride,
+        mainFileSingleUse: isUndefined(mainFileSingleUseOverride) ? item.mainFileSingleUse : mainFileSingleUseOverride,
         mainFileInternal: false,
         mainFileOverrideInternal: false,
       })
@@ -220,11 +220,7 @@ function listItemsToMetadataBulkItems(
 
 const { showUnknownError, showApiValidationError } = useAlerts()
 
-const handleMetadataValidationError = (
-  error: any,
-  assetType: DamAssetTypeType,
-  extSystem: IntegerId,
-) => {
+const handleMetadataValidationError = (error: any, assetType: DamAssetTypeType, extSystem: IntegerId) => {
   const { getDamConfigAssetCustomFormElements } = useDamConfigState()
   const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(extSystem)
   if (isUndefined(configAssetCustomFormElements)) {
@@ -255,7 +251,7 @@ export const updateAssetMetadata = (
   endPoint: string,
   asset: AssetDetailItemDto,
   extSystem: IntegerId,
-  mainFileSingleUse: boolean | null,
+  mainFileSingleUse: boolean | null
 ) => {
   return new Promise((resolve, reject) => {
     const data: AssetMetadataBulkItem = {
@@ -298,7 +294,7 @@ export const updateAssetAuthors = (
   client: () => AxiosInstance,
   endPoint: string,
   asset: AssetDetailItemDto,
-  extSystem: IntegerId,
+  extSystem: IntegerId
 ) => {
   return new Promise((resolve, reject) => {
     const data: Partial<AssetMetadataBulkItem> = {
@@ -340,11 +336,7 @@ export interface AssetAuthorsItem {
   authors: DocId[]
 }
 
-async function updateAuthorsSequence(
-  client: () => AxiosInstance,
-  endPoint: string,
-  items: AssetAuthorsItems,
-) {
+async function updateAuthorsSequence(client: () => AxiosInstance, endPoint: string, items: AssetAuthorsItems) {
   const totalCalls = Math.ceil(items.length / BULK_METADATA_LIMIT)
   const responses: AxiosResponse[] = []
   if (items.length === 0) return Promise.resolve([])
@@ -358,11 +350,7 @@ async function updateAuthorsSequence(
   return responses
 }
 
-export const bulkUpdateAssetsAuthors = (
-  client: () => AxiosInstance,
-  endPoint: string,
-  items: AssetAuthorsItems,
-) => {
+export const bulkUpdateAssetsAuthors = (client: () => AxiosInstance, endPoint: string, items: AssetAuthorsItems) => {
   return new Promise<AssetMetadataBulkItem[]>((resolve, reject) => {
     updateAuthorsSequence(client, endPoint, items)
       .then((responses) => {
@@ -375,9 +363,7 @@ export const bulkUpdateAssetsAuthors = (
             return res.status === HTTP_STATUS_OK
           })
         ) {
-          const bulkItemsRes: AssetMetadataBulkItem[] = responses.flatMap(
-            (response) => response.data,
-          )
+          const bulkItemsRes: AssetMetadataBulkItem[] = responses.flatMap((response) => response.data)
           return resolve(bulkItemsRes)
         } else {
           return reject(responses)

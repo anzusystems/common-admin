@@ -1,23 +1,13 @@
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { isUndefined } from '@/utils/common'
-import type {
-  DamKeyword,
-  DamKeywordMinimal,
-} from '@/components/damImage/uploadQueue/keyword/DamKeyword'
+import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { Pagination } from '@/labs/filters/pagination'
-import type { Pagination as PaginationLegacy } from '@/types/Pagination'
-import {
-  fetchKeywordList,
-  fetchKeywordListByIds,
-  useFetchKeywordList,
-} from '@/components/damImage/uploadQueue/api/keywordApi'
+import { fetchKeywordListByIds, useFetchKeywordList } from '@/components/damImage/uploadQueue/api/keywordApi'
 import type { IntegerId } from '@/types/common'
 import type { Ref } from 'vue'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
-// eslint-disable-next-line anzu/no-deprecated-imports
-import type { FilterBag } from '@/types/Filter'
 
 export const useKeywordSelectActions = (extSystem: IntegerId) => {
   const { damClient } = useCommonAdminCoreDamOptions()
@@ -46,40 +36,18 @@ export const useKeywordSelectActions = (extSystem: IntegerId) => {
     return keywords.map((keyword: DamKeyword) => mapToMinimal(keyword))
   }
 
-  const { executeFetch } = useFetchKeywordList(damClient, extSystem)
+  const { execute } = useFetchKeywordList(damClient, extSystem)
 
-  const fetchItems = async (
-    pagination: Ref<Pagination>,
-    filterData: FilterData,
-    filterConfig: FilterConfig,
-  ) => {
-    return mapToValueObjects(await executeFetch(pagination, filterData, filterConfig))
+  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToValueObjects(await execute(pagination, filterData, filterConfig))
   }
 
-  const fetchItemsMinimal = async (
-    pagination: Ref<Pagination>,
-    filterData: FilterData,
-    filterConfig: FilterConfig,
-  ) => {
-    return mapToMinimals(await executeFetch(pagination, filterData, filterConfig))
+  const fetchItemsMinimal = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToMinimals(await execute(pagination, filterData, filterConfig))
   }
 
   const fetchItemsByIds = async (ids: string[]) => {
     return mapToValueObjects(await fetchKeywordListByIds(damClient, extSystem, ids))
-  }
-
-  /**
-   * @deprecated
-   */
-  const fetchItemsLegacy = async (pagination: PaginationLegacy, filterBag: FilterBag) => {
-    return mapToValueObjects(await fetchKeywordList(damClient, extSystem, pagination, filterBag))
-  }
-
-  /**
-   * @deprecated
-   */
-  const fetchItemsMinimalLegacy = async (pagination: PaginationLegacy, filterBag: FilterBag) => {
-    return mapToMinimals(await fetchKeywordList(damClient, extSystem, pagination, filterBag))
   }
 
   return {
@@ -87,7 +55,5 @@ export const useKeywordSelectActions = (extSystem: IntegerId) => {
     fetchItems,
     fetchItemsByIds,
     fetchItemsMinimal,
-    fetchItemsLegacy,
-    fetchItemsMinimalLegacy,
   }
 }

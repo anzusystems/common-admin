@@ -1,4 +1,21 @@
+<!--
+  DEPRECATED. The `labs` copy is the one that is maintained: `@/labs/filters/ADatatablePagination.vue`,
+  exported from `lib.ts`. Nothing in the fleet imports this one any more -- all 222 imports across the
+  six admins come from `labs` -- and inside this repository the only thing still reaching for it is the
+  deprecated `components/subjectSelect/ASubjectSelect.vue` beside it.
+
+  It is kept so the `lib.ts` surface does not break for anyone outside the fleet. Fix bugs here only
+  to keep it level with the labs copy; new behaviour belongs there. Having the same expression in two
+  places is how `page === lastPage` came to be wrong in four files at once.
+-->
 <script lang="ts" setup>
+/**
+ * @deprecated Use `@/labs/filters/ADatatablePagination.vue` instead, exported from `lib.ts`.
+ *
+ * Nothing in the six admins imports this copy any more -- every one of the 222 imports comes
+ * from `labs`. It stays so the `lib.ts` surface does not break for anyone outside the fleet.
+ * Fix a bug here only to keep it level with the labs copy; new behaviour belongs there.
+ */
 import { computed, watch } from 'vue'
 import { cloneDeep, isNull } from '@/utils/common'
 import type { Pagination } from '@/types/Pagination'
@@ -13,7 +30,7 @@ const props = withDefaults(
   {
     itemsPerPageOptions: () => [10, 25, 50],
     hideRecordsPerPage: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -36,11 +53,7 @@ const lastPage = computed(() => {
 })
 
 const displayedFrom = computed(() => {
-  return (
-    modelValueComputed.value.page * modelValueComputed.value.rowsPerPage -
-    modelValueComputed.value.rowsPerPage +
-    1
-  )
+  return modelValueComputed.value.page * modelValueComputed.value.rowsPerPage - modelValueComputed.value.rowsPerPage + 1
 })
 
 const displayedTo = computed(() => {
@@ -55,17 +68,17 @@ const disabledFirstAndPrev = computed(() => {
   return modelValueComputed.value.page === 1
 })
 
+// `>=`, not `===`: an empty list has `totalCount: 0`, so `lastPage` is 0 while `page` is never below
+// 1, and the two can never meet. The page would then count as "not the last one" on a list with
+// nothing in it -- and the same holds before any request has been made, because that initial state is
+// the same numbers.
 const disabledLast = computed(() => {
-  return (
-    !isNull(modelValueComputed.value.hasNextPage) ||
-    modelValueComputed.value.page === lastPage.value
-  )
+  return !isNull(modelValueComputed.value.hasNextPage) || modelValueComputed.value.page >= lastPage.value
 })
 
 const disabledNext = computed(() => {
   return (
-    (isNull(modelValueComputed.value.hasNextPage) &&
-      modelValueComputed.value.page === lastPage.value) ||
+    (isNull(modelValueComputed.value.hasNextPage) && modelValueComputed.value.page >= lastPage.value) ||
     modelValueComputed.value.hasNextPage === false
   )
 })

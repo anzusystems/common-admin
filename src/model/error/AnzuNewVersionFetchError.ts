@@ -1,8 +1,9 @@
+import { AnzuError } from '@/model/error/AnzuError'
 export const isAnzuNewVersionFetchError = (error: unknown): error is AnzuNewVersionFetchError => {
   return error instanceof AnzuNewVersionFetchError
 }
 
-export class AnzuNewVersionFetchError extends Error {
+export class AnzuNewVersionFetchError extends AnzuError {
   private originalError: Error | null
 
   constructor(message = '', originalError: Error | null = null) {

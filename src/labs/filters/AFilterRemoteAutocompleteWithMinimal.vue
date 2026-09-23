@@ -13,24 +13,18 @@ import {
   FilterSelectedKey,
   FilterSubmitResetCounterKey,
 } from '@/labs/filters/filterInjectionKeys'
-import {
-  type FilterConfig,
-  type FilterData,
-  useFilterClearHelpers,
-} from '@/labs/filters/filterFactory'
+import { type FilterConfig, type FilterData, useFilterClearHelpers } from '@/labs/filters/filterFactory'
 import { isOneOf } from '@/utils/enum'
 import type { DatatableSortBy } from '@/composables/system/datatableColumns'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
 import { useAlerts } from '@/composables/system/alerts'
 
-type FetchItemsMinimalByIdsType =
-  | ((ids: IntegerId[]) => Promise<any[]>)
-  | ((ids: DocId[]) => Promise<any[]>)
+type FetchItemsMinimalByIdsType = ((ids: IntegerId[]) => Promise<any[]>) | ((ids: DocId[]) => Promise<any[]>)
 
 type FetchItemsMinimalType = (
   pagination: Ref<Pagination>,
   filterData: FilterData,
-  filterConfig: FilterConfig,
+  filterConfig: FilterConfig
 ) => Promise<any[]>
 
 const props = withDefaults(
@@ -53,7 +47,7 @@ const props = withDefaults(
     searchMinChars: 2,
     itemTitle: 'name',
     itemValue: 'id',
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -87,7 +81,7 @@ if (
 ) {
   throw new Error(
     `[${componentName}] Incorrect filter config. ` +
-      `Name is '${props.name}' and available options are ${Object.keys(filterData).join(', ')}.`,
+      `Name is '${props.name}' and available options are ${Object.keys(filterData).join(', ')}.`
   )
 }
 
@@ -99,7 +93,7 @@ if (
 ) {
   throw new Error(
     `[${componentName}] Incorrect filter inner config. ` +
-      `FilterByField is '${props.filterByField}' and available options are ${Object.keys(filterInnerData).join(', ')}.`,
+      `FilterByField is '${props.filterByField}' and available options are ${Object.keys(filterInnerData).join(', ')}.`
   )
 }
 
@@ -126,7 +120,7 @@ const label = computed(() => {
 const { pagination } = usePagination(
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   isNull(props.filterSortBy) ? null : props.filterSortBy.key,
-  props.filterSortBy?.order,
+  props.filterSortBy?.order
 )
 const fetchedItems = ref<any[]>([])
 const selectedItemsCache = ref<any[]>([])
@@ -175,9 +169,7 @@ const apiSearch = async (query: string, requestCounter: number) => {
 }
 
 const findLocalDataByValues = (values: Array<DocId | IntegerId>) => {
-  const found = allItems.value.filter((item: ValueObjectOption<string | number>) =>
-    values.includes(item.value),
-  )
+  const found = allItems.value.filter((item: ValueObjectOption<string | number>) => values.includes(item.value))
   return ([] as ValueObjectOption<string | number>[]).concat(found)
 }
 
@@ -256,11 +248,7 @@ const onSelectedUpdate = (newValue: any) => {
 
 const onClickClear = async () => {
   try {
-    fetchedItems.value = await props.fetchItemsMinimal(
-      pagination,
-      filterInnerData,
-      filterInnerConfig,
-    )
+    fetchedItems.value = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
   } catch (e) {
     showErrorsDefault(e)
   }
@@ -269,11 +257,9 @@ const onClickClear = async () => {
 
 const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
-  if (filterConfigCurrent.value.variant === 'startsWith')
-    return t('common.model.filterPlaceholder.startsWith')
+  if (filterConfigCurrent.value.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
   if (filterConfigCurrent.value.variant === 'eq') return t('common.model.filterPlaceholder.eq')
-  if (filterConfigCurrent.value.variant === 'search')
-    return t('common.model.filterPlaceholder.contains')
+  if (filterConfigCurrent.value.variant === 'search') return t('common.model.filterPlaceholder.contains')
   return ''
 })
 
@@ -285,7 +271,7 @@ const clearField = () => {
 }
 
 const updateFilterSelected = (
-  newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null,
+  newValue: ValueObjectOption<string | number> | ValueObjectOption<string | number>[] | null
 ) => {
   filterSelected.value.delete(props.name)
   if ((isArray(newValue) && newValue.length === 0) || isNull(newValue)) {
@@ -295,7 +281,7 @@ const updateFilterSelected = (
   if (isArray(newValue)) {
     filterSelected.value.set(
       props.name,
-      newValue.map((item) => ({ title: item.title, value: item.value })),
+      newValue.map((item) => ({ title: item.title, value: item.value }))
     )
     return
   }
@@ -332,9 +318,7 @@ watch(
     if (isArray(newValue)) {
       loading.value = true
       try {
-        selectedItemsCache.value = await props.fetchItemsMinimalByIds(
-          newValue as Array<IntegerId & DocId>,
-        )
+        selectedItemsCache.value = await props.fetchItemsMinimalByIds(newValue as Array<IntegerId & DocId>)
         selected.value = selectedItemsCache.value.map((item) => ({
           title: item.title,
           value: item.value,
@@ -361,7 +345,7 @@ watch(
       loading.value = false
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 watchDebounced(
@@ -373,7 +357,7 @@ watchDebounced(
       apiSearch(newValue, apiRequestCounter.value)
     }
   },
-  { debounce: 300 },
+  { debounce: 300 }
 )
 </script>
 

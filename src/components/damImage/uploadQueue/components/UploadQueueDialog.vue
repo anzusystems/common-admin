@@ -9,10 +9,7 @@ import { useTheme } from '@/composables/themeSettings'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/composables/system/alerts'
-import {
-  bulkUpdateAssetsMetadata,
-  fetchAsset,
-} from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { bulkUpdateAssetsMetadata, fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
@@ -36,7 +33,7 @@ const props = withDefaults(
   }>(),
   {
     configName: 'default',
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -119,13 +116,7 @@ const onSaveAndApply = async () => {
   try {
     const res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
     const mappedItems = customUploadMetadataToImageMap
-      ? await customUploadMetadataToImageMap(
-          itemsRaw,
-          res,
-          damClient,
-          props.extSystem,
-          props.licenceId,
-        )
+      ? await customUploadMetadataToImageMap(itemsRaw, res, damClient, props.extSystem, props.licenceId)
       : await mapUploadMetadataToImages(itemsRaw, res, damClient, props.extSystem, props.licenceId)
     const storeItems: ImageStoreItem[] = mappedItems.map((item) => {
       maxPosition.value++
@@ -209,11 +200,7 @@ const showDetail = async (id: DocId) => {
                 width="2"
                 class="mr-1"
               />
-              <div>
-                {{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{
-                  queueTotalCount
-                }}
-              </div>
+              <div>{{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{ queueTotalCount }}</div>
             </div>
             <div class="d-flex align-center pr-3">
               <VDivider
@@ -230,11 +217,7 @@ const showDetail = async (id: DocId) => {
                 :disabled="saveButtonLoading"
                 @click.stop="onSaveAndApply"
               >
-                {{
-                  mdAndDown
-                    ? t('common.damImage.upload.apply')
-                    : t('common.damImage.upload.saveAndApply')
-                }}
+                {{ mdAndDown ? t('common.damImage.upload.apply') : t('common.damImage.upload.saveAndApply') }}
               </ABtnPrimary>
               <VBtn
                 variant="text"

@@ -13,6 +13,10 @@
   - all
 
 
+## Child nodes
+- `styledBoxTitle` - content `text*`, no marks; with `allowIcons` option `(text | icon)*` (article body: only for site group from `editorIcons.siteGroup` env config)
+- `styledBoxContent` - content `(paragraph | list)+`
+
 ## Node schema
 
 ```json

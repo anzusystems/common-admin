@@ -13,7 +13,7 @@
   ],
   "attrs": {
     "id": {
-      "default": ""
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": ""
@@ -44,8 +44,8 @@
 ```ts
 interface EmbedTimelineAware {
   id: DocId
-  timeline: IntegerId
-  detail: {
+  timeline: IntegerIdNullable
+  detail?: {
     timeline: {
       id: IntegerId
       enabled: boolean
@@ -72,6 +72,8 @@ interface TimelineEvent extends SortableItemDataAware {
   }
   url: string
   location: string
+  participationType: string // enum: online | offline | mixed
+  timeline: IntegerIdNullable
   position: number
 }
 ```

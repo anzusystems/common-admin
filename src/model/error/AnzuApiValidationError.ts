@@ -1,3 +1,4 @@
+import { AnzuError } from '@/model/error/AnzuError'
 import axios, { type AxiosError } from 'axios'
 import { HTTP_STATUS_UNPROCESSABLE_ENTITY } from '@/composables/statusCodes'
 
@@ -42,7 +43,7 @@ export const isAnzuApiValidationError = (error: any): error is AnzuApiValidation
 export const hasAnzuApiValidationErrorSpecific = (
   error: AnzuApiValidationError,
   errorName: string,
-  fieldName: string,
+  fieldName: string
 ) => {
   return error.fields.some((field) => field.field === fieldName && field.errors.includes(errorName))
 }
@@ -59,14 +60,17 @@ function resolveResponseData(axiosError: AxiosError, system: string, entity: str
   return items
 }
 
-export class AnzuApiValidationError extends Error {
+export class AnzuApiValidationError extends AnzuError {
   fields: ValidationError[]
 
   constructor(axiosError: AxiosError, system: string, entity: string, cause?: Error, message = '') {
-    super(message)
+    const fields = resolveResponseData(axiosError, system, entity)
+    // Kept low-cardinality on purpose; field details would break Sentry grouping.
+    const resolvedMessage = message || `Validation failed for ${system}.${entity} (${fields.length} fields)`
+    super(resolvedMessage)
     this.name = 'AnzuApiValidationError'
     this.cause = cause
-    this.message = message
-    this.fields = resolveResponseData(axiosError, system, entity)
+    this.message = resolvedMessage
+    this.fields = fields
   }
 }

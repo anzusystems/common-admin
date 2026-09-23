@@ -13,7 +13,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -44,8 +44,8 @@
 ```ts
 interface EmbedQuizAware {
   id: DocId
-  quiz: IntegerId
-  detail: {
+  quiz: IntegerIdNullable
+  detail?: {
     quiz: {
       id: IntegerId
       enabled: boolean

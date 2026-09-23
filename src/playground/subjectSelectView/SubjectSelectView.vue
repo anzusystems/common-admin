@@ -15,7 +15,7 @@ const onConfirm = (data: any) => {
   <VCard>
     <VCardText>
       <VRow>
-        <VCol> Open using activator: </VCol>
+        <VCol>Open using activator:</VCol>
       </VRow>
       <VRow>
         <VCol cols="10">

@@ -2,9 +2,9 @@
 import { computed, inject, watch } from 'vue'
 import { isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
-import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
+import { DatatablePageStoreKey, DatatablePaginationKey, FilterConfigKey } from '@/labs/filters/filterInjectionKeys'
 import { useThrottleFn } from '@vueuse/core'
-import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
+import { datatablePageKey, useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
 withDefaults(
   defineProps<{
@@ -14,7 +14,7 @@ withDefaults(
   {
     itemsPerPageOptions: () => [10, 25, 50],
     hideRecordsPerPage: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -28,6 +28,15 @@ if (isUndefined(pagination)) {
 
 const { t } = useI18n()
 const { setStoredPage } = useDatatablePageStore()
+
+// `useFilterHelpers` provides the key, so tables sharing a system/subject stay apart. Both
+// fallbacks are optional on purpose: a datatable may provide pagination without either, and it
+// then keeps the shared bucket it had before the store was keyed.
+const providedPageKey = inject(DatatablePageStoreKey, undefined)
+const filterConfig = inject(FilterConfigKey, undefined)
+const pageStoreKey = computed(
+  () => providedPageKey ?? datatablePageKey(filterConfig?.general.system, filterConfig?.general.subject)
+)
 
 const lastPage = computed(() => {
   return Math.ceil(pagination.value.totalCount / pagination.value.rowsPerPage)
@@ -49,13 +58,17 @@ const disabledFirstAndPrev = computed(() => {
   return pagination.value.page === 1
 })
 
+// `>=`, not `===`: an empty list has `totalCount: 0`, so `lastPage` is 0 while `page` is never below
+// 1, and the two can never meet. The page would then count as "not the last one" on a list with
+// nothing in it -- and the same holds before any request has been made, because that initial state is
+// the same numbers.
 const disabledLast = computed(() => {
-  return !isNull(pagination.value.hasNextPage) || pagination.value.page === lastPage.value
+  return !isNull(pagination.value.hasNextPage) || pagination.value.page >= lastPage.value
 })
 
 const disabledNext = computed(() => {
   return (
-    (isNull(pagination.value.hasNextPage) && pagination.value.page === lastPage.value) ||
+    (isNull(pagination.value.hasNextPage) && pagination.value.page >= lastPage.value) ||
     pagination.value.hasNextPage === false
   )
 })
@@ -74,34 +87,54 @@ watch(
       pagination.value.page = 1
       emit('change')
     }
-  },
+  }
 )
 
 watch(
   () => pagination.value.page,
   (newValue, oldValue) => {
     if (newValue !== oldValue) {
-      setStoredPage(newValue)
+      setStoredPage(pageStoreKey.value, newValue)
       emit('change')
     }
-  },
+  }
 )
 
-const onClickFirst = useThrottleFn(() => {
-  pagination.value.page = 1
-}, 300)
+// Leading edge only: the throttle is a click-spam guard, not a rate limiter. VueUse 15 flipped
+// `trailing` to true by default, which replays the last click once the window closes -- stepping
+// prev/next a second time, and past `lastPage`, because the queued callback never re-reads the
+// disabled state.
+const onClickFirst = useThrottleFn(
+  () => {
+    pagination.value.page = 1
+  },
+  300,
+  false
+)
 
-const onClickLast = useThrottleFn(() => {
-  pagination.value.page = lastPage.value
-}, 300)
+const onClickLast = useThrottleFn(
+  () => {
+    pagination.value.page = lastPage.value
+  },
+  300,
+  false
+)
 
-const onClickPrev = useThrottleFn(() => {
-  pagination.value.page = pagination.value.page - 1
-}, 300)
+const onClickPrev = useThrottleFn(
+  () => {
+    pagination.value.page = pagination.value.page - 1
+  },
+  300,
+  false
+)
 
-const onClickNext = useThrottleFn(() => {
-  pagination.value.page = pagination.value.page + 1
-}, 300)
+const onClickNext = useThrottleFn(
+  () => {
+    pagination.value.page = pagination.value.page + 1
+  },
+  300,
+  false
+)
 </script>
 
 <template>

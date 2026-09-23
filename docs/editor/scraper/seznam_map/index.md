@@ -12,6 +12,7 @@ https://sk.frame.mapy.cz/s/jojulaloru
 
 ```html
 <iframe style="border:none" src="https://sk.frame.mapy.cz/s/dopejakagu" width="400" height="280" frameborder="0"></iframe>
+<iframe style="border:none" src="https://mapy.com/s/dacozepeco" width="400" height="280" frameborder="0"></iframe>
 ```
 
 ## Params
@@ -21,6 +22,7 @@ interface Params {
   id: string
   width?: number
   height?: number
+  locale?: string // scrape request locale, added on scrape
 }
 ```
 
@@ -48,7 +50,7 @@ type Screenshot = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  description: string
+  url?: string
+  description?: string
 }
 ```

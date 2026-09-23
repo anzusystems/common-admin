@@ -28,7 +28,7 @@ const props = withDefaults(
     dialogTitleT: 'common.subjectSelect.texts.title',
     paginationMode: 'standard',
     autoOpen: false,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
@@ -94,7 +94,7 @@ const onClose = () => {
 const onConfirm = () => {
   emit(
     'onConfirm',
-    props.selectedItems.map((item) => toRaw(item)),
+    props.selectedItems.map((item) => toRaw(item))
   )
   onClose()
 }
@@ -111,10 +111,13 @@ const lastPage = computed(() => {
   return Math.ceil(paginationComputed.value.totalCount / paginationComputed.value.rowsPerPage)
 })
 
+// `>=`, not `===`: an empty list has `totalCount: 0`, so `lastPage` is 0 while `page` is never below
+// 1, and the two can never meet. The page would then count as "not the last one" on a list with
+// nothing in it -- and the same holds before any request has been made, because that initial state is
+// the same numbers.
 const hasNextPage = computed(() => {
   return !(
-    (isNull(paginationComputed.value.hasNextPage) &&
-      paginationComputed.value.page === lastPage.value) ||
+    (isNull(paginationComputed.value.hasNextPage) && paginationComputed.value.page >= lastPage.value) ||
     paginationComputed.value.hasNextPage === false
   )
 })

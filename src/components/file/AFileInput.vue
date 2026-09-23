@@ -28,7 +28,7 @@ const props = withDefaults(
     dropzoneVariant: 'default',
     onDropzoneClickCallback: undefined,
     hoverOnly: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -95,7 +95,7 @@ watch(
       return
     }
     fileInputKeyLocal.value = newValue
-  },
+  }
 )
 
 defineExpose({
@@ -125,5 +125,5 @@ defineExpose({
     tabindex="-1"
     type="file"
     @change="onInputFileChange"
-  >
+  />
 </template>

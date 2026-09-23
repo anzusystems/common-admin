@@ -5,24 +5,29 @@ import type { DocId } from '@/types/common'
 import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
 import type { AssetFileImage } from '@/types/coreDam/AssetFile'
-import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import type {
-  DamImageCopyToLicenceRequest,
-  DamImageCopyToLicenceResponse,
-} from '@/types/coreDam/Asset'
+import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
 import { useSentry } from '@/services/sentry'
+import { useApiRequest } from '@/labs/api/useApiRequest'
 
 const CHUNK_UPLOAD_TIMEOUT = 420
 
-export const fetchImageFile = (client: () => AxiosInstance, endPoint: string, id: DocId) =>
-  apiFetchOne<AssetFileImage>(client, endPoint + '/:id', { id }, SYSTEM_CORE_DAM, 'asset')
+// `optionalBody` for the same reason as `fetchImage`: the callers here read the result as "no file"
+// rather than as a failure, and normalising to `null` keeps their `isNull` guards honest.
+export const fetchImageFile = async (client: () => AxiosInstance, endPoint: string, id: DocId) => {
+  const { execute } = useApiRequest<AssetFileImage, null>({
+    client,
+    method: 'GET',
+    system: SYSTEM_CORE_DAM,
+    entity: 'asset',
+    urlTemplate: endPoint + '/:id',
+    optionalBody: true,
+  })
 
-export const imageUploadStart = (
-  client: () => AxiosInstance,
-  endPoint: string,
-  item: UploadQueueItem,
-) => {
+  return (await execute({ urlParams: { id } })) ?? null
+}
+
+export const imageUploadStart = (client: () => AxiosInstance, endPoint: string, item: UploadQueueItem) => {
   return new Promise((resolve, reject) => {
     let url = endPoint + '/licence/' + item.licenceId
     if (item.type === UploadQueueItemType.SlotFile && item.slotName && item.assetId) {
@@ -34,7 +39,7 @@ export const imageUploadStart = (
         JSON.stringify({
           mimeType: damFileTypeFix(item.file),
           size: item.file?.size,
-        }),
+        })
       )
       .then((res) => {
         if (res.status === HTTP_STATUS_CREATED) {
@@ -52,14 +57,14 @@ export const imageUploadStart = (
 }
 
 export const imageUploadChunk = (
-  client: (timeout?: number) => AxiosInstance,
+  client: () => AxiosInstance,
   endPoint: string,
   item: UploadQueueItem,
   imageId: DocId,
   buffer: Blob | File,
   size: number,
   offset: number,
-  onUploadProgressCallback: ((progressEvent: any) => void) | undefined = undefined,
+  onUploadProgressCallback: ((progressEvent: any) => void) | undefined = undefined
 ) => {
   return new Promise((resolve, reject) => {
     const { logMessage, logError } = useSentry()
@@ -162,11 +167,12 @@ export const imageUploadChunk = (
 
     formData.append('chunk', chunkData)
 
-    client(CHUNK_UPLOAD_TIMEOUT)
+    client()
       .post(url, formData, {
         headers: {
           'Content-Type': undefined, // Let Axios automatically set multipart/form-data with boundary
         },
+        timeout: CHUNK_UPLOAD_TIMEOUT * 1000,
         cancelToken: item.latestChunkCancelToken ? item.latestChunkCancelToken.token : undefined,
         onUploadProgress: onUploadProgressCallback,
       })
@@ -208,7 +214,7 @@ export const imageUploadFinish = (
   client: () => AxiosInstance,
   endPoint: string,
   item: UploadQueueItem,
-  sha: string,
+  sha: string
 ) => {
   return new Promise((resolve, reject) => {
     const url = endPoint + '/' + item.fileId + '/uploaded'
@@ -217,7 +223,7 @@ export const imageUploadFinish = (
         url,
         JSON.stringify({
           checksum: sha,
-        }),
+        })
       )
       .then((res) => {
         if (res.status === HTTP_STATUS_OK) {
@@ -234,12 +240,7 @@ export const imageUploadFinish = (
   })
 }
 
-export const rotateImage = (
-  client: () => AxiosInstance,
-  endPoint: string,
-  imageId: DocId,
-  angle: 90 | 270,
-) => {
+export const rotateImage = (client: () => AxiosInstance, endPoint: string, imageId: DocId, angle: 90 | 270) => {
   return new Promise((resolve, reject) => {
     const url = endPoint + '/' + imageId + '/rotate/' + angle
     client()
@@ -265,7 +266,7 @@ const COPY_TO_LICENCE_API_LIMIT = 20
 export const copyToLicence = async (
   client: () => AxiosInstance,
   endPoint: string,
-  items: DamImageCopyToLicenceRequest,
+  items: DamImageCopyToLicenceRequest
 ): Promise<DamImageCopyToLicenceResponse> => {
   if (items.length > COPY_TO_LICENCE_MAX_LIMIT) {
     return Promise.reject('Exceeded max limit')
@@ -275,7 +276,7 @@ export const copyToLicence = async (
 
   const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
     return Array.from({ length: Math.ceil(arr.length / chunkSize) }, (_, i) =>
-      arr.slice(i * chunkSize, i * chunkSize + chunkSize),
+      arr.slice(i * chunkSize, i * chunkSize + chunkSize)
     )
   }
 
@@ -286,8 +287,8 @@ export const copyToLicence = async (
       itemChunks.map((chunk) =>
         client()
           .patch(url, JSON.stringify(chunk))
-          .then((res) => (res.status === HTTP_STATUS_OK ? res.data : [])),
-      ),
+          .then((res) => (res.status === HTTP_STATUS_OK ? res.data : []))
+      )
     )
 
     return responses.flat()

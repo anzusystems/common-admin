@@ -13,24 +13,26 @@ import ViewsListDemo from "./ViewsDemoList.vue";
 - can contain create or other actions on toolbar
 
 #### Filter
+- use `AFilterWrapper` with filter components (`AFilterString`, `AFilterBooleanSelect`, etc.)
 - use one `underlined` design
 - always display above datatable on list
-- contains several filters, submit and reset button
+- contains main filters (`search` slot), chips of selected filters, submit and reset button; with `user-id` and `client` props also filter bookmarks
 - submit button is `text` version by default, when any filter is changed, it will display as `primary` button, on submit or reset it's changed to text version again
 - can also contain hidden filters, can be shown by show/hide button
+- in a sidebar (e.g. asset list) use `AFilterWrapperSidebar`
 
 #### Datatable
-- use vuetify datatable component
+- use vuetify datatable component (`VDataTableServer`)
 - should also contain above table:
-  - sort select
-  - column config to show/hide columns
+  - sort select (`ADatatableOrdering`)
+  - column config to show/hide columns (`ADatatableConfigButton`)
 - should contain below datatable:
-  - pagination
+  - pagination (`ADatatablePagination`)
 - datatable can have rows linkable and should lead to edit of item
 - on the right side of row should be always actions and should contain (order applied):
-  - copy id button - copy entity id to clipboard
-  - detail button - redirect to entity detail
-  - edit button - redirect to entity edit
+  - copy id button - copy entity id to clipboard (`ATableCopyIdButton`)
+  - detail button - redirect to entity detail (`ATableDetailButton`)
+  - edit button - redirect to entity edit (`ATableEditButton`)
 - note: some styling below can be broken for now - because of mix of vitepress + vuetify styles
 
 ::: raw

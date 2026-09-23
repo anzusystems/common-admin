@@ -1,126 +1,35 @@
-const DEFAULT_DEPRECATED_IMPORTS = [
-  'AFilterWrapper',
-  'AFilterBooleanSelect',
-  'AFilterBooleanGroup',
-  'AFilterDatetimePicker',
-  'AFilterInteger',
-  'AFilterRemoteAutocomplete',
-  'AFilterRemoteAutocompleteWithMinimal',
-  'AFilterString',
-  'AFilterValueObjectOptionsSelect',
-  'ADatatableOrdering',
-  'ADatatablePagination',
-  'AFormRemoteAutocomplete',
-  'ASubjectSelect',
-  'usePagination',
-  'useFilterHelpers',
-  'createDatatableColumnsConfig',
-  'useSubjectSelect',
-  'useApiQueryBuilder',
-  'useJobApi',
-  'Pagination',
-  'makeFilterHelper',
-  'apiFetchList',
-  'FilterBag',
-  'Filter',
-  'apiFetchByIds',
-  'apiAnyRequest',
-  'apiCreateOne',
-  'apiDeleteOne',
-  'apiFetchOne',
-  'apiUpdateOne',
-]
+// Shared by `prefer-api-command` and `prefer-api-fetch-items`: both ask the same question -- is this
+// call the `useApiRequest` helper, and what did it say it answers with.
+const isHelperSource = (source) =>
+  typeof source === 'string' && (source.includes('labs/api/useApiRequest') || source === '@anzusystems/common-admin')
 
-const DEFAULT_INTERNAL_DEPRECATED_IMPORTS = [
-  {
-    path: '@/services/api/apiFetchList',
-    imports: ['apiFetchList'],
-  },
-  {
-    path: '@/services/api/apiFetchListBatch',
-    imports: ['apiFetchListBatch'],
-  },
-  {
-    path: '@/composables/system/pagination',
-    imports: ['usePagination', 'Pagination'],
-  },
-  {
-    path: '@/composables/filter/filterHelpers',
-    imports: ['useFilterHelpers', 'makeFilterHelper'],
-  },
-  {
-    path: '@/composables/system/datatableColumns',
-    imports: ['createDatatableColumnsConfig'],
-  },
-  {
-    path: '@/components/subjectSelect/useSubjectSelect',
-    imports: ['useSubjectSelect'],
-  },
-  {
-    path: '@/services/api/queryBuilder',
-    imports: ['useApiQueryBuilder'],
-  },
-  {
-    path: '@/services/api/job/jobApi',
-    imports: ['useJobApi'],
-  },
-  {
-    path: '@/types/Filter',
-    imports: ['FilterBag', 'Filter'],
-  },
-  {
-    path: '@/components/filter/AFilterWrapper',
-    imports: ['AFilterWrapper'],
-  },
-  {
-    path: '@/components/filter/AFilterBooleanSelect',
-    imports: ['AFilterBooleanSelect'],
-  },
-  {
-    path: '@/components/filter/AFilterBooleanGroup',
-    imports: ['AFilterBooleanGroup'],
-  },
-  {
-    path: '@/components/filter/AFilterDatetimePicker',
-    imports: ['AFilterDatetimePicker'],
-  },
-  {
-    path: '@/components/filter/AFilterInteger',
-    imports: ['AFilterInteger'],
-  },
-  {
-    path: '@/components/filter/AFilterRemoteAutocomplete',
-    imports: ['AFilterRemoteAutocomplete'],
-  },
-  {
-    path: '@/components/filter/AFilterRemoteAutocompleteWithMinimal',
-    imports: ['AFilterRemoteAutocompleteWithMinimal'],
-  },
-  {
-    path: '@/components/filter/AFilterString',
-    imports: ['AFilterString'],
-  },
-  {
-    path: '@/components/filter/AFilterValueObjectOptionsSelect',
-    imports: ['AFilterValueObjectOptionsSelect'],
-  },
-  {
-    path: '@/components/ADatatableOrdering',
-    imports: ['ADatatableOrdering'],
-  },
-  {
-    path: '@/components/ADatatablePagination',
-    imports: ['ADatatablePagination'],
-  },
-  {
-    path: '@/components/form/AFormRemoteAutocomplete',
-    imports: ['AFormRemoteAutocomplete'],
-  },
-  {
-    path: '@/components/subjectSelect/ASubjectSelect',
-    imports: ['ASubjectSelect'],
-  },
-]
+// Resolved through the scope rather than matched by name. Matching the name fires on anyone
+// else's function called `useApiRequest` and on a parameter that shadows the import inside
+// one function, and stays silent when the real helper is imported under another name.
+const isHelperBinding = (context, node) => {
+  let scope = context.sourceCode.getScope(node)
+  while (scope !== null) {
+    const variable = scope.variables.find((candidate) => candidate.name === node.name)
+    if (variable) {
+      return variable.defs.some(
+        (def) =>
+          def.type === 'ImportBinding' &&
+          isHelperSource(def.parent?.source?.value) &&
+          // The imported name, not the local one: an alias may call it anything, and a
+          // different export from the same module is a different function.
+          def.node?.imported?.name === 'useApiRequest'
+      )
+    }
+    scope = scope.upper
+  }
+
+  return false
+}
+
+const firstTypeArgument = (node) => {
+  const args = node.typeArguments ?? node.typeParameters
+  return args?.params?.[0]
+}
 
 const anzuPlugin = {
   rules: {
@@ -153,93 +62,142 @@ const anzuPlugin = {
       },
     },
 
-    'no-deprecated-imports': {
+    'prefer-api-command': {
       meta: {
         type: 'problem',
         docs: {
-          description: 'Disallow usage of deprecated imports',
+          description:
+            'A request that reads nothing back is `useApiCommand`. `useApiRequest` is for an endpoint ' +
+            'that always answers with a body, and refuses a response without one.',
         },
-        schema: [
-          {
-            type: 'object',
-            properties: {
-              rules: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    path: { type: 'string' },
-                    module: { type: 'string' },
-                    imports: {
-                      type: 'array',
-                      items: { type: 'string' },
-                    },
-                  },
-                  required: ['imports'],
-                  additionalProperties: false,
-                },
-              },
-              skipFiles: {
-                type: 'array',
-                items: { type: 'string' },
-              },
-            },
-            additionalProperties: false,
-          },
-        ],
+        schema: [],
       },
       create(context) {
-        const options = context.options[0] || {}
-        const deprecationRules = options.rules || []
-        const skipFiles = options.skipFiles || []
+        const reportedMethods = new Set(['DELETE', 'delete'])
 
-        // Collect source file paths from path-based rules for auto-skip
-        const ruleFilePaths = deprecationRules
-          .filter((rule) => rule.path)
-          .map((rule) => {
-            if (rule.path.startsWith('@/')) {
-              return rule.path.replace('@/', 'src/')
-            }
-            return rule.path
-          })
+        // `any` and `never` satisfy the response constraint without meaning anything, and a call
+        // with no type argument at all infers it -- so the type cannot speak for these three.
+        const unhelpfulTypeArgument = (node) => {
+          const first = firstTypeArgument(node)
+          if (!first) return true
+
+          return first.type === 'TSAnyKeyword' || first.type === 'TSNeverKeyword'
+        }
+
+        const methodLiteral = (node) => {
+          const arg = node.arguments[0]
+          if (!arg || arg.type !== 'ObjectExpression') return null
+          const property = arg.properties.find(
+            (candidate) =>
+              candidate.type === 'Property' &&
+              !candidate.computed &&
+              (candidate.key.name ?? candidate.key.value) === 'method'
+          )
+          if (!property || property.value.type !== 'Literal') return null
+
+          return property.value.value
+        }
 
         return {
-          ImportDeclaration(node) {
-            const filename = context.filename
-            const normalizedFilename = filename.replace(/\\/g, '/')
+          CallExpression(node) {
+            if (node.callee.type !== 'Identifier' || !isHelperBinding(context, node.callee)) return
 
-            // Check manual skip list
-            if (skipFiles.some((skip) => normalizedFilename.endsWith(skip))) return
+            const method = methodLiteral(node)
+            const isDelete = typeof method === 'string' && reportedMethods.has(method)
+            if (!isDelete && !unhelpfulTypeArgument(node)) return
 
-            // Auto-skip source files of path-based rules
-            if (
-              ruleFilePaths.some(
-                (rulePath) =>
-                  normalizedFilename.endsWith(rulePath + '.ts') ||
-                  normalizedFilename.endsWith(rulePath + '.js') ||
-                  normalizedFilename.endsWith(rulePath + '.vue') ||
-                  normalizedFilename.endsWith(rulePath),
-              )
-            )
+            context.report({
+              node,
+              message: isDelete
+                ? 'A delete usually reads nothing back: use `useApiCommand`. If this endpoint really answers ' +
+                  'with the deleted entity, disable this line and say so.'
+                : 'State what this answers with. `useApiRequest<Entity>` for a body, `useApiCommand` for none, ' +
+                  '`optionalBody: true` for either.',
+            })
+          },
+        }
+      },
+    },
+
+    'prefer-api-fetch-items': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'A request whose answer is a list -- a bare array or a list envelope -- is ' +
+            '`useApiFetchItems`; `useApiRequest` checks nothing about the body it hands back.',
+        },
+        schema: [],
+      },
+      create(context) {
+        const isArrayType = (node) => {
+          if (!node) return false
+          if (node.type === 'TSArrayType') return true
+
+          return (
+            node.type === 'TSTypeReference' &&
+            node.typeName?.type === 'Identifier' &&
+            (node.typeName.name === 'Array' || node.typeName.name === 'ReadonlyArray') &&
+            (node.typeArguments ?? node.typeParameters)?.params?.length === 1
+          )
+        }
+
+        const envelopeGeneric = (node) => {
+          if (node.type !== 'TSTypeReference' || node.typeName?.type !== 'Identifier') return false
+          if (node.typeName.name !== 'ApiResponseList' && node.typeName.name !== 'ApiInfiniteResponseList') {
+            return false
+          }
+          const params = (node.typeArguments ?? node.typeParameters)?.params
+
+          // `ApiResponseList<T>` is `{ totalCount; data: T }`, so only an array in that slot makes
+          // `data` a list. `ApiResponseList<Item>` is something this helper would refuse.
+          return params?.length === 1 && isArrayType(params[0])
+        }
+
+        const envelopeLiteral = (node) => {
+          if (node.type !== 'TSTypeLiteral') return false
+
+          // Exactly one member, on purpose: a literal that also spells out `hasNextPage` or
+          // `totalCount` is an author saying they read the metadata, which is a reason to stay on
+          // `useApiRequest`. The generic form carries no such signal, so it is reported and the one
+          // legitimate reader takes a disable with a reason.
+          if (node.members.length !== 1) return false
+          const member = node.members[0]
+
+          return (
+            member.type === 'TSPropertySignature' &&
+            member.computed === false &&
+            (member.key?.name ?? member.key?.value) === 'data' &&
+            isArrayType(member.typeAnnotation?.typeAnnotation)
+          )
+        }
+
+        return {
+          CallExpression(node) {
+            if (node.callee.type !== 'Identifier' || !isHelperBinding(context, node.callee)) return
+
+            // No type argument at all is `prefer-api-command`'s case, not this one.
+            const first = firstTypeArgument(node)
+            if (!first) return
+
+            if (isArrayType(first)) {
+              context.report({
+                node,
+                message:
+                  "This answers with a bare array: use `useApiFetchItems` with `shape: 'array'`. If the " +
+                  'endpoint really answers with something that only looks like a list, disable this line and say so.',
+              })
+
               return
+            }
 
-            const source = node.source.value
-            if (typeof source !== 'string') return
-
-            for (const rule of deprecationRules) {
-              const matchPath = rule.path || rule.module
-              if (!matchPath || source !== matchPath) continue
-
-              const deprecatedImports = node.specifiers
-                .filter((spec) => spec.type === 'ImportSpecifier')
-                .filter((spec) => rule.imports.includes(spec.imported.name))
-
-              for (const importSpec of deprecatedImports) {
-                context.report({
-                  node: importSpec,
-                  message: `'${importSpec.imported.name}' from '${matchPath}' is deprecated`,
-                })
-              }
+            if (envelopeGeneric(first) || envelopeLiteral(first)) {
+              context.report({
+                node,
+                message:
+                  'This answers with a list envelope: use `useApiFetchItems`, or `useApiFetchList` when the ' +
+                  "user drives the paging. If this call reads the envelope's metadata, disable this line and say so.",
+              })
             }
           },
         }
@@ -252,19 +210,21 @@ const anzuPlugin = {
         docs: {
           description:
             'Ensure urlParams keys match the :placeholders declared in urlTemplate ' +
-            'for useApiRequest / useApiFetchList / useApiFetchByIds / useApiFetchListBatch calls.',
+            'for useApiRequest / useApiCommand / useApiFetchList / useApiFetchByIds / ' +
+            'useApiFetchItems / useApiFetchListBatch calls.',
         },
         schema: [],
       },
       create(context) {
         const TARGET_CALLEES = new Set([
           'useApiRequest',
+          // The commands are where most of the fleet's `:id` templates are -- every delete is one.
+          'useApiCommand',
           'useApiFetchList',
           'useApiFetchByIds',
+          'useApiFetchItems',
           'useApiFetchListBatch',
         ])
-
-        const PLACEHOLDER_RE = /:([a-zA-Z_][\w]*)/g
 
         const getCalleeName = (callee) => {
           if (callee.type === 'Identifier') return callee.name
@@ -278,8 +238,7 @@ const anzuPlugin = {
           for (const prop of objectExpr.properties) {
             if (prop.type !== 'Property' || prop.computed) continue
             const key = prop.key
-            const keyName =
-              key.type === 'Identifier' ? key.name : key.type === 'Literal' ? key.value : null
+            const keyName = key.type === 'Identifier' ? key.name : key.type === 'Literal' ? key.value : null
             if (keyName === name) return prop
           }
           return null
@@ -361,11 +320,27 @@ const anzuPlugin = {
             const resolved = resolveToString(templateProp.value)
             if (resolved === null) return
 
+            // The path only, because that is all `stringUrlTemplateReplace` substitutes into: it
+            // splits the template on `?` and rejoins the query untouched. Scanning the query too
+            // would fail CI on a perfectly good `...?locale=:locale`, and adding `locale` to
+            // `urlParams` to silence it would change nothing at runtime.
+            const [path] = resolved.split('?')
+
+            // Exactly what `stringUrlTemplateReplace` does, and nothing else: split the path on `/`,
+            // skip any part that does not START with `:`, and take everything after that colon as the
+            // key. Both halves matter and both were got wrong in turn. Hunting for `:name` anywhere
+            // matches inside `prefix-:id`, which the runtime leaves alone, so the rule demanded a key
+            // that is never filled in. Requiring the key to look like an identifier misses `:asset-id`,
+            // which the runtime substitutes happily, so the rule reported the caller's correct
+            // `urlParams` as having no placeholder to match.
             const placeholders = new Set()
-            let match
-            PLACEHOLDER_RE.lastIndex = 0
-            while ((match = PLACEHOLDER_RE.exec(resolved)) !== null) {
-              placeholders.add(match[1])
+            for (const segment of path.split('/')) {
+              if (!segment.startsWith(':')) continue
+              // No guard on the name, because the runtime has none: a bare `:` takes `''` as its key
+              // and fills the segment in from `params['']`. Nobody writes that on purpose, which is
+              // the point -- it is a typo, and the rule reporting a missing key is how it gets seen
+              // rather than shipped as a literal colon in the url.
+              placeholders.add(segment.slice(1))
             }
 
             const paramKeys = collectStaticKeys(paramsProp.value)
@@ -377,9 +352,7 @@ const anzuPlugin = {
               if (!paramKeySet.has(placeholder)) {
                 context.report({
                   node: paramsProp,
-                  message:
-                    `urlParams is missing key '${placeholder}' required by urlTemplate ` +
-                    `'${resolved}'.`,
+                  message: `urlParams is missing key '${placeholder}' required by urlTemplate ` + `'${resolved}'.`,
                 })
               }
             }
@@ -389,8 +362,7 @@ const anzuPlugin = {
                 context.report({
                   node: paramsProp,
                   message:
-                    `urlParams key '${key}' has no matching ':${key}' placeholder in urlTemplate ` +
-                    `'${resolved}'.`,
+                    `urlParams key '${key}' has no matching ':${key}' placeholder in urlTemplate ` + `'${resolved}'.`,
                 })
               }
             }
@@ -424,21 +396,21 @@ const anzuPlugin = {
             parts.unshift(current)
 
             const hasFatalCheck = parts.some(
-              (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError',
+              (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError'
             )
             const hasInstanceofErrorCheck = parts.some(
               (part) =>
                 part.type === 'BinaryExpression' &&
                 part.operator === 'instanceof' &&
                 part.right.type === 'Identifier' &&
-                part.right.name === 'Error',
+                part.right.name === 'Error'
             )
             const hasAxiosCheck = parts.some(
               (part) =>
                 part.type === 'CallExpression' &&
                 part.callee.type === 'MemberExpression' &&
                 part.callee.object.name === 'axios' &&
-                part.callee.property.name === 'isAxiosError',
+                part.callee.property.name === 'isAxiosError'
             )
 
             if (hasAxiosCheck && (hasFatalCheck || hasInstanceofErrorCheck)) {
@@ -464,23 +436,17 @@ const anzuPlugin = {
  * @param {boolean|'error'|'warn'|'off'} [options.noTsExtension='error'] - Severity for no-ts-extension rule.
  * @param {boolean|'error'|'warn'|'off'} [options.noFatalErrorAxiosCheck='error']
  *   - Severity for no-fatal-error-axios-check rule.
- * @param {boolean|'error'|'warn'|'off'|Object} [options.deprecatedImports='error'] - Severity or config object.
- * @param {string[]} [options.deprecatedImports.exclude] - Import names to remove from the default list.
- * @param {string[]} [options.deprecatedImports.include] - Additional import names to add to the default list.
- * @param {Array} [options.deprecatedImports.extraRules]
- *   - Additional rule entries ({ path, imports } or { module, imports }).
- * @param {string[]} [options.deprecatedImports.skipFiles] - Files to skip (matched by suffix).
- * @param {'error'|'warn'} [options.deprecatedImports.severity='error'] - Severity level.
- * @param {'consumer'|'internal'} [options.deprecatedImports.mode='consumer'] - 'consumer' uses module-based defaults,
- *   'internal' uses path-based defaults for common-admin development.
+ * @param {boolean|'error'|'warn'|'off'} [options.preferApiFetchItems='error']
+ *   - Severity for prefer-api-fetch-items rule.
  * @returns {Object} ESLint flat config entry
  */
 export function recommended(options = {}) {
   const {
     noTsExtension = 'error',
     noFatalErrorAxiosCheck = 'error',
+    preferApiCommand = 'error',
+    preferApiFetchItems = 'error',
     urlParamsMatchTemplate = 'error',
-    deprecatedImports = 'error',
   } = options
 
   const rules = {}
@@ -497,63 +463,22 @@ export function recommended(options = {}) {
     rules['anzu/no-fatal-error-axios-check'] = fatalSeverity
   }
 
+  // prefer-api-command
+  const preferApiCommandSeverity = normalizeSeverity(preferApiCommand)
+  if (preferApiCommandSeverity) {
+    rules['anzu/prefer-api-command'] = preferApiCommandSeverity
+  }
+
+  // prefer-api-fetch-items
+  const preferApiFetchItemsSeverity = normalizeSeverity(preferApiFetchItems)
+  if (preferApiFetchItemsSeverity) {
+    rules['anzu/prefer-api-fetch-items'] = preferApiFetchItemsSeverity
+  }
+
   // url-params-match-template
   const urlParamsSeverity = normalizeSeverity(urlParamsMatchTemplate)
   if (urlParamsSeverity) {
     rules['anzu/url-params-match-template'] = urlParamsSeverity
-  }
-
-  // no-deprecated-imports
-  if (deprecatedImports !== false && deprecatedImports !== 'off') {
-    let severity = 'error'
-    const ruleEntries = []
-    let skipFiles = []
-
-    if (typeof deprecatedImports === 'object') {
-      severity = deprecatedImports.severity || 'error'
-      const mode = deprecatedImports.mode || 'consumer'
-
-      if (mode === 'internal') {
-        // Internal mode: path-based rules for common-admin development
-        ruleEntries.push(...DEFAULT_INTERNAL_DEPRECATED_IMPORTS)
-      } else {
-        // Consumer mode: module-based rules for projects using common-admin
-        let importsList = [...DEFAULT_DEPRECATED_IMPORTS]
-        if (deprecatedImports.exclude) {
-          importsList = importsList.filter((name) => !deprecatedImports.exclude.includes(name))
-        }
-        if (deprecatedImports.include) {
-          importsList.push(...deprecatedImports.include)
-        }
-        ruleEntries.push({
-          module: '@anzusystems/common-admin',
-          imports: importsList,
-        })
-      }
-
-      if (deprecatedImports.extraRules) {
-        ruleEntries.push(...deprecatedImports.extraRules)
-      }
-      if (deprecatedImports.skipFiles) {
-        skipFiles = deprecatedImports.skipFiles
-      }
-    } else {
-      if (deprecatedImports === 'warn') {
-        severity = 'warn'
-      }
-      // Default consumer mode
-      ruleEntries.push({
-        module: '@anzusystems/common-admin',
-        imports: [...DEFAULT_DEPRECATED_IMPORTS],
-      })
-    }
-
-    const ruleConfig = { rules: ruleEntries }
-    if (skipFiles.length > 0) {
-      ruleConfig.skipFiles = skipFiles
-    }
-
-    rules['anzu/no-deprecated-imports'] = [severity, ruleConfig]
   }
 
   return {
@@ -571,4 +496,4 @@ function normalizeSeverity(value) {
   return 'error'
 }
 
-export { anzuPlugin, DEFAULT_DEPRECATED_IMPORTS, DEFAULT_INTERNAL_DEPRECATED_IMPORTS }
+export { anzuPlugin }

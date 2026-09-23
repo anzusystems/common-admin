@@ -28,10 +28,7 @@ import {
 import { dateTimeNow } from '@/utils/datetime'
 import AssetFileFailReasonChip from '@/components/damImage/uploadQueue/components/AssetFileFailReasonChip.vue'
 import { useAlerts } from '@/composables/system/alerts'
-import {
-  bulkUpdateAssetsMetadata,
-  fetchAsset,
-} from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { bulkUpdateAssetsMetadata, fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import UploadQueueDialogSingleSidebar from '@/components/damImage/uploadQueue/components/UploadQueueDialogSingleSidebar.vue'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
@@ -53,7 +50,7 @@ const props = withDefaults(
   {
     configName: 'default',
     disableDoneAnimation: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -214,9 +211,7 @@ const {
   simpleAssetSidebarEnabled,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 } = useCommonAdminCoreDamOptions(props.configName)
-const simpleMode = computed(
-  () => simpleAssetSidebarEnabled && isTypeImage.value && enableRoiTab.value,
-)
+const simpleMode = computed(() => simpleAssetSidebarEnabled && isTypeImage.value && enableRoiTab.value)
 
 const onStopConfirm = async () => {
   uploadQueuesStore.stopUpload(props.queueKey)
@@ -239,12 +234,7 @@ const isUploading = computed(() => {
 const onSave = async () => {
   if (items.value.length === 0) return
   try {
-    await bulkUpdateAssetsMetadata(
-      damClient,
-      endPointAsset,
-      items.value,
-      assetDetailStore.mainFileSingleUse,
-    )
+    await bulkUpdateAssetsMetadata(damClient, endPointAsset, items.value, assetDetailStore.mainFileSingleUse)
     showRecordWas('updated')
   } catch (error) {
     showErrorsDefault(error)
@@ -258,7 +248,7 @@ const onSaveAndApply = async () => {
       damClient,
       endPointAsset,
       items.value,
-      assetDetailStore.mainFileSingleUse,
+      assetDetailStore.mainFileSingleUse
     )
     if (!assetsMetadataRes[0]) {
       throw new Error('Fatal error updating asset metadata')
@@ -270,21 +260,15 @@ const onSaveAndApply = async () => {
           assetsMetadataRes,
           damClient,
           props.extSystem,
-          props.licenceId,
+          props.licenceId
         )
-      : await mapUploadMetadataToImages(
-          items.value,
-          assetsMetadataRes,
-          damClient,
-          props.extSystem,
-          props.licenceId,
-        )
+      : await mapUploadMetadataToImages(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
     emit(
       'onApply',
       mappedItems.map((item) => ({
         ...item,
         position: 1,
-      })),
+      }))
     )
     await onStopConfirm()
   } catch (error) {
@@ -304,7 +288,7 @@ watch(
       showErrorsDefault(e)
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 onMounted(() => {
@@ -420,7 +404,7 @@ onMounted(() => {
                   v-if="item && item.error.hasError"
                   :class="
                     'dam-upload-queue__overlay dam-upload-queue__overlay--error ' +
-                      'd-flex align-center justify-center flex-column'
+                    'd-flex align-center justify-center flex-column'
                   "
                 >
                   <VIcon
@@ -466,12 +450,8 @@ onMounted(() => {
               :is-document="isTypeDocument"
               :asset-status="assetStatus"
               :asset-type="assetType"
-              :asset-main-file-status="
-                assetMainFile ? assetMainFile.fileAttributes.status : undefined
-              "
-              :asset-main-file-fail-reason="
-                assetMainFile ? assetMainFile.fileAttributes.failReason : undefined
-              "
+              :asset-main-file-status="assetMainFile ? assetMainFile.fileAttributes.status : undefined"
+              :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
               @on-save="onSave"
               @on-save-and-apply="onSaveAndApply"
             >

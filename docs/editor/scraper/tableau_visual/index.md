@@ -45,16 +45,16 @@ type Screenshot = {
 }
 
 type Author = {
-  username: string
-  name: string
+  username?: string
+  name?: string
 }
 
 // ---cut-before---
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  title: string
+  url?: string
+  title?: string
   author: Author
 }
 ```

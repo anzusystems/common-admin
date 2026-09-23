@@ -1,8 +1,7 @@
 # embedCustom
 
-- todo: document customData
 - used for special custom features
-- same as other embeds that supports customData, but without its own fields
+- same as other embeds that supports customData, its only own fields are `name` and `showMobileUnsupportedEmbed`
 - field `name` is used to specify customData fields setup
 
 ## Features
@@ -18,7 +17,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -50,7 +49,8 @@
 interface EmbedCustomAware {
   id: DocId
   name: string
-  customData: Record<string, any>
+  showMobileUnsupportedEmbed: boolean
+  customData?: { [key: string]: boolean | string | number | string[] | number[] }
 }
 ```
 
@@ -71,7 +71,7 @@ interface EmbedCustomAware {
 ```json
 {
   "id": "ae0a44d6-4c9b-40f8-b44f-30d978cd93fb",
-  "name": "todo",
+  "name": "onlajnyEU",
   "customData": {
     "id": "43264"
   }

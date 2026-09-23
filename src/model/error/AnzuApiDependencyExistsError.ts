@@ -1,3 +1,4 @@
+import { AnzuError } from '@/model/error/AnzuError'
 import axios, { type AxiosError } from 'axios'
 import { HTTP_STATUS_UNPROCESSABLE_ENTITY } from '@/composables/statusCodes'
 
@@ -18,9 +19,7 @@ export const axiosErrorResponseHasDependencyExistsData = (error: Error) => {
   )
 }
 
-export const isAnzuApiDependencyExistsError = (
-  error: any,
-): error is AnzuApiDependencyExistsError => {
+export const isAnzuApiDependencyExistsError = (error: any): error is AnzuApiDependencyExistsError => {
   return error instanceof AnzuApiDependencyExistsError
 }
 
@@ -30,7 +29,7 @@ function resolveResponseData(axiosError: AxiosError) {
   return data.dependencies
 }
 
-export class AnzuApiDependencyExistsError extends Error {
+export class AnzuApiDependencyExistsError extends AnzuError {
   dependencies: string[]
 
   constructor(axiosError: AxiosError, system: string, entity: string, cause?: Error, message = '') {

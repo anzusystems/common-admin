@@ -6,7 +6,11 @@ import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
 const props = withDefaults(
   defineProps<{
-    stepsBack?: number
+    /**
+     * Route names that are not a destination -- the sibling views of the record being closed and
+     * the create form it may have been reached from. The route the button sits on is skipped
+     * anyway, so it does not belong here.
+     */
     skipRouteNames?: string[]
     fallbackRouteName?: string
     fallbackRouteParams?: Record<string, any>
@@ -15,14 +19,13 @@ const props = withDefaults(
     size?: number
   }>(),
   {
-    stepsBack: 1,
-    skipRouteNames: undefined,
+    skipRouteNames: () => [],
     fallbackRouteName: undefined,
     fallbackRouteParams: undefined,
     buttonClass: 'ml-2',
     dataCy: 'button-close',
     size: 36,
-  },
+  }
 )
 
 const { t } = useI18n()
@@ -33,7 +36,6 @@ const { setPreservePage } = useDatatablePageStore()
 const onClick = () => {
   setPreservePage()
   navigateBack(router, {
-    stepsBack: props.stepsBack,
     skipRouteNames: props.skipRouteNames,
     fallbackRouteName: props.fallbackRouteName,
     fallbackRouteParams: props.fallbackRouteParams,

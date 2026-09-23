@@ -7,7 +7,7 @@ import { useElementSize } from '@vueuse/core'
 // in `_shared.scss` and per-component narrow-container blocks.
 export function useContainerWidth(
   el: Ref<HTMLElement | null | undefined>,
-  threshold = 769,
+  threshold = 769
 ): { width: Ref<number>; isNarrow: ComputedRef<boolean> } {
   const { width } = useElementSize(el)
   const isNarrow = computed(() => width.value > 0 && width.value < threshold)

@@ -33,7 +33,7 @@ const props = withDefaults(
     fetchItems: (
       pagination: Ref<Pagination>,
       filterData: FilterData,
-      filterConfig: FilterConfig,
+      filterConfig: FilterConfig
     ) => Promise<ValueObjectOption<T>[]>
     fetchItemsByIds: (ids: T[]) => Promise<ValueObjectOption<T>[]>
     filterByField: string
@@ -68,7 +68,7 @@ const props = withDefaults(
     prefetch: false,
     minSearchChars: 2,
     minSearchText: undefined,
-  },
+  }
 )
 const emit = defineEmits<{
   (e: 'searchChange', data: string): void
@@ -93,13 +93,10 @@ const filterByFieldProp = props.filterByField
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const filterSortByProp = props.filterSortBy
 
-if (
-  isUndefined(filterInnerConfig.fields[filterByFieldProp]) ||
-  isUndefined(filterInnerData[filterByFieldProp])
-) {
+if (isUndefined(filterInnerConfig.fields[filterByFieldProp]) || isUndefined(filterInnerData[filterByFieldProp])) {
   throw new Error(
     `[${componentName}] Incorrect filter inner config. ` +
-      `FilterByField is '${filterByFieldProp}' and available options are ${Object.keys(filterInnerData).join(', ')}.`,
+      `FilterByField is '${filterByFieldProp}' and available options are ${Object.keys(filterInnerData).join(', ')}.`
   )
 }
 
@@ -110,16 +107,13 @@ const modelValue = defineModel<ModelValueType>({
   },
 })
 
-const modelValueSelected = defineModel<ValueObjectOption<T> | ValueObjectOption<T>[] | null>(
-  'selected',
-  {
-    required: false,
-    default: null,
-    set(newValue) {
-      return isArray(newValue) ? cloneDeep(newValue) : newValue
-    },
+const modelValueSelected = defineModel<ValueObjectOption<T> | ValueObjectOption<T>[] | null>('selected', {
+  required: false,
+  default: null,
+  set(newValue) {
+    return isArray(newValue) ? cloneDeep(newValue) : newValue
   },
-)
+})
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
@@ -131,8 +125,10 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } =
-    useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } = useCollabField(
+    props.collab.room,
+    props.collab.field
+  )
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -141,7 +137,7 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true },
+    { immediate: true }
   )
 }
 
@@ -185,10 +181,7 @@ const disabledComputed = computed(() => {
   return !!lockedByUserLocal.value
 })
 
-const { pagination } = usePagination(
-  isNull(filterSortByProp) ? null : filterSortByProp.key,
-  filterSortByProp?.order,
-)
+const { pagination } = usePagination(isNull(filterSortByProp) ? null : filterSortByProp.key, filterSortByProp?.order)
 const fetchedItems = ref<ValueObjectOption<T>[]>([])
 const selectedItemsCache = ref<ValueObjectOption<T>[]>([])
 const isFirstLoad = ref(true)
@@ -226,8 +219,7 @@ const resetToEmptyState = (value: ModelValueType) => {
 
 const updateSelected = (value: T[] | T) => {
   const findItem = (id: T): ValueObjectOption<T> =>
-    allItems.value.find((obj) => obj.value === id) ??
-    ({ title: `${id}`, value: id } as ValueObjectOption<T>)
+    allItems.value.find((obj) => obj.value === id) ?? ({ title: `${id}`, value: id } as ValueObjectOption<T>)
   return isArray(value) ? value.map(findItem) : findItem(value)
 }
 
@@ -241,6 +233,9 @@ const loadListItems = async (ids: T[] | T) => {
     modelValueSelected.value = selectedNewValue
     modelValueAutocomplete.value = selectedNewValue
     return selectedItemsCache.value
+  } catch (e) {
+    // Mirror tryLoadModelValue: don't let a failed by-ids resolve become a generic global toast (QA 85050).
+    showErrorsDefault(e)
   } finally {
     loadingLocal.value = false
   }
@@ -292,10 +287,7 @@ const apiSearch = async (query: string, requestCounter: number) => {
   }
 }
 
-const tryAutoFetch = async (
-  mode: 'focus' | 'hover' | 'mounted' | 'force',
-  newValue: ModelValueType,
-) => {
+const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted' | 'force', newValue: ModelValueType) => {
   if (loadingLocal.value) return
   if (mode !== 'force') {
     if (props.prefetch === false || props.prefetch !== mode || prefetchCompleted.value) return
@@ -316,6 +308,8 @@ const tryAutoFetch = async (
       }
     }
     prefetchCompleted.value = true
+  } catch (e) {
+    showErrorsDefault(e)
   } finally {
     loadingLocal.value = false
   }
@@ -381,7 +375,7 @@ watchDebounced(
     apiSearch(newValue, apiRequestCounter.value)
     emit('searchChangeDebounced', newValue)
   },
-  { debounce: SEARCH_DEBOUNCE_MS },
+  { debounce: SEARCH_DEBOUNCE_MS }
 )
 
 watch(search, (newValue, oldValue) => {
@@ -390,9 +384,7 @@ watch(search, (newValue, oldValue) => {
   }
 })
 
-const onAutocompleteModelUpdate = (
-  newValue: ValueObjectOption<T> | readonly ValueObjectOption<T>[] | null,
-) => {
+const onAutocompleteModelUpdate = (newValue: ValueObjectOption<T> | readonly ValueObjectOption<T>[] | null) => {
   const cloned = cloneDeep(newValue) as ValueObjectOption<T> | ValueObjectOption<T>[] | null
   modelValueSelected.value = cloned
   if (isNull(cloned) || isUndefined(cloned)) {
@@ -435,7 +427,7 @@ watch(
     }
     await loadListItems(newValue as T[] | T)
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 defineExpose({

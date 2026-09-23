@@ -21,10 +21,7 @@ export const defaultOptions: BreadcrumbOptions = {
   linkLastItem: false,
 }
 
-export function defineBreadcrumbs(
-  items: ComputedRef<Array<BreadcrumbItem>>,
-  options: Partial<BreadcrumbOptions> = {},
-) {
+export function defineBreadcrumbs(items: ComputedRef<Array<BreadcrumbItem>>, options: Partial<BreadcrumbOptions> = {}) {
   return {
     items,
     options: {

@@ -38,10 +38,11 @@ describe('ASortableListEditor — rail colors', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form'),
-            },
+            }
           )
       },
     })
@@ -74,10 +75,11 @@ describe('ASortableListEditor — rail colors', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form'),
-            },
+            }
           )
       },
     })
@@ -115,10 +117,11 @@ describe('ASortableListEditor — rail colors', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 model.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
             {
               item: () => h('div', { class: 'inline-form' }, 'form'),
-            },
+            }
           )
       },
     })
@@ -167,6 +170,7 @@ describe('ASortableListEditor — rail colors', () => {
               'onUpdate:modelValue': (v: Item[]) => {
                 outerModel.value = v
               },
+              factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
             },
             {
               item: () =>
@@ -177,13 +181,14 @@ describe('ASortableListEditor — rail colors', () => {
                     'onUpdate:modelValue': (v: Item[]) => {
                       innerModel.value = v
                     },
+                    factory: (): Item => ({ id: -Date.now(), position: 0, title: '' }),
                     embedded: true,
                   },
                   {
                     item: () => h('div', { class: 'inline-form' }, 'form'),
-                  },
+                  }
                 ),
-            },
+            }
           )
       },
     })
@@ -195,29 +200,18 @@ describe('ASortableListEditor — rail colors', () => {
     await nextTick()
 
     // Open the first inner row.
-    const innerRows = Array.from(
-      document.querySelectorAll<HTMLElement>(
-        '.a-sortable-list-editor--embedded .a-le-row',
-      ),
-    )
+    const innerRows = Array.from(document.querySelectorAll<HTMLElement>('.a-sortable-list-editor--embedded .a-le-row'))
     expect(innerRows.length).toBeGreaterThan(0)
-    const innerHeader = innerRows[0].querySelector<HTMLElement>(
-      '.a-le-row-header',
-    )!
+    const innerHeader = innerRows[0].querySelector<HTMLElement>('.a-le-row-header')!
     innerHeader.click()
     await nextTick()
 
     // Mutate the inner first item to make it dirty.
-    innerModel.value = [
-      { ...innerModel.value[0], title: 'Inner 1 — edited' },
-      innerModel.value[1],
-    ]
+    innerModel.value = [{ ...innerModel.value[0], title: 'Inner 1 — edited' }, innerModel.value[1]]
     await nextTick()
 
     const innerRow = Array.from(
-      document.querySelectorAll<HTMLElement>(
-        '.a-sortable-list-editor--embedded .a-le-row',
-      ),
+      document.querySelectorAll<HTMLElement>('.a-sortable-list-editor--embedded .a-le-row')
     )[0]
     expect(innerRow.classList.contains('a-le-row--editing')).toBe(true)
     expect(innerRow.classList.contains('a-le-row--unsaved')).toBe(true)
