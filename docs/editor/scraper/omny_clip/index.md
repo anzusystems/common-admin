@@ -1,39 +1,26 @@
-# facebook_video: Facebook Video
+# omny_clip: Omny Clip
 
 ## Supported codes
 
 ### URL
 
 ```
-https://www.facebook.com/JamesBond007AUS/videos/2427034044136560/ 
+https://omny.fm/shows/gertie-s-law/the-story-behind-gerties-law
 ```
 
 ### Embed
 
 ```html
-<iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Fkinolumiere%2Fvideos%2F677144637698465%2F&show_text=false&width=560&t=0" width="560" height="314" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
-```
-
-### Short URL
-
-```
-https://fb.watch/iYK51sf0ZR/ 
+<iframe src="https://omny.fm/shows/gertie-s-law/the-story-behind-gerties-law/embed?style=Cover" width="100%" height="180" allow="autoplay; clipboard-write" frameborder="0" title="The Story Behind Gertie's Law"></iframe>
 ```
 
 ## Params
 
 ```ts twoslash
-/**
- * Time in seconds as integer.
- */
-type Seconds = number
-
-// ---cut-before---
 interface Params {
   id: string
-  username: string
-  startTime?: Seconds
-  width?: number
+  slug: string
+  programSlug: string
   height?: number
 }
 ```
@@ -59,10 +46,7 @@ type Screenshot = {
 }
 
 type Author = {
-  username: string
   name: string
-  image: Image
-  url: string
 }
 
 /**
@@ -82,17 +66,8 @@ type Image = {
   }>
 }
 
-/**
- * @property url - URL of the video variant.
- * @property bitrate - bitrate of the video variant.
- * @property contentType - Content type of the video variant (e.g., video/mp4).
- */
-type Video = {
-  variants: Array<{
-    url: string
-    bitrate: number
-    contentType: string
-  }>
+type Program = {
+  title: string
 }
 
 // ---cut-before---
@@ -100,9 +75,11 @@ interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
   url: string
-  text: string
+  title: string
+  program: Program
+  description: string
   author: Author
+  publishedAt: DatetimeUTC
   images: Image[]
-  videos: Video[]
 }
 ```

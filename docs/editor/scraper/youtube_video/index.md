@@ -73,7 +73,7 @@ type Author = {
 type Image = {
   variants: Array<{
     url: string
-    damId: DocId
+    damId?: DocId
     width: number
     height: number
     contentType: string
@@ -86,6 +86,10 @@ interface Data {
   scrapedAt: DatetimeUTC
   url: string
   title: string
+  description: string
+  duration: number
+  uploadedAt: DatetimeUTC
+  embedUrl: string
   author: Author
 }
 ```
