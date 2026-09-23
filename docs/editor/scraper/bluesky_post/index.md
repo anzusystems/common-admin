@@ -19,9 +19,7 @@ https://bsky.app/profile/denniksme.bsky.social/post/3ltlpyyjwar2q
 ```ts twoslash
 interface Params {
   id: string
-  username: string
-  width?: number
-  height?: number
+  did: string
 }
 ```
 
@@ -46,10 +44,10 @@ type Screenshot = {
 }
 
 type Author = {
-  username: string
-  name: string
+  username?: string
+  name?: string
   image: Image
-  url: string
+  url?: string
 }
 
 /**
@@ -60,7 +58,7 @@ type Author = {
  * @property contentType - Content type of the image variant (e.g., image/jpeg).
  */
 type Image = {
-  variants: Array<{
+  variants?: Array<{
     url: string
     damId?: DocId
     width: number
@@ -71,12 +69,11 @@ type Image = {
 
 // ---cut-before---
 interface Data {
-  id: number
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  text: string
+  url?: string
+  text?: string
   author: Author
-  publishedAt: DatetimeUTC
+  publishedAt: DatetimeUTC // 0001-01-01T00:00:00Z when not scraped
 }
 ```

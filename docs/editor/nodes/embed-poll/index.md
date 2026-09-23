@@ -13,7 +13,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -44,8 +44,8 @@
 ```ts
 interface EmbedPollAware {
   id: DocId
-  poll: IntegerId
-  detail: {
+  poll: IntegerIdNullable
+  detail?: {
     poll: {
       id: IntegerId
       enabled: boolean
@@ -64,12 +64,10 @@ interface EmbedPollAware {
       options: Array<{
         id: IntegerId
         votes: number
-        votesCached: number
         position: number
         title: string
       }>
       votes: number
-      votesCached: number
     }
   }
 }

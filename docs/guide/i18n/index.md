@@ -5,16 +5,23 @@
 - if you need a new language to use in admin, you must also add this language to common admin if needed
 
 ## For developer
-- i18n instance is created and exported by common-admin
-- language translations are lazy loaded on app load or on language switch
+- admin creates its own vue-i18n instance (`createI18n` in `@/plugins/i18n`, with `slovakPluralizationRule` from common-admin)
+- common-admin exports its own `i18n` instance too, it's used outside of components (alerts, validators, vuetify locale adapter), so loaded messages are also copied into it
+- language translations are lazy loaded on app load
 
 ::: details Example - loading translation texts by using vue-router on first load
 ```ts
-import { type LanguageCode, modifyLanguageSettings } from '@anzusystems/common-admin'
-import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from '@/main'
+import { i18n as commonAdminI18n, type LanguageCode, modifyLanguageSettings } from '@anzusystems/common-admin'
+import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE, i18n } from '@/plugins/i18n'
 import { ref } from 'vue'
 
 export const initLanguageMessagesLoaded = ref(false)
+
+const { initializeLanguage, addMessages, currentLanguageCode } = modifyLanguageSettings(
+  AVAILABLE_LANGUAGES,
+  DEFAULT_LANGUAGE,
+  i18n
+)
 
 export const initLoadLanguageMessages = async () => {
   const loadMessages = async (code: LanguageCode | 'default') => {
@@ -22,6 +29,8 @@ export const initLoadLanguageMessages = async () => {
     try {
       const messages = await import(`./locales/${code}.ts`)
       addMessages(code, messages.default)
+      commonAdminI18n.global.setLocaleMessage(code, messages.default)
+      commonAdminI18n.global.locale.value = code
       initLanguageMessagesLoaded.value = true
       return true
     } catch (e) {
@@ -29,48 +38,34 @@ export const initLoadLanguageMessages = async () => {
       return false
     }
   }
-  const { initializeLanguage, addMessages, currentLanguageCode } = modifyLanguageSettings(
-    AVAILABLE_LANGUAGES,
-    DEFAULT_LANGUAGE
-  )
   initializeLanguage()
   await loadMessages(currentLanguageCode.value)
 }
 ```
 ```ts
-vueRouter.beforeEach(async (to, from, next) => {
+vueRouter.beforeEach(async () => {
   if (!initLanguageMessagesLoaded.value) await initLoadLanguageMessages()
 })
 ```
 :::
 
 ::: details Example - switching language
-```ts
-import {
-  AvailableLanguagesSymbol,
-  DefaultLanguageSymbol,
-  type LanguageCode,
-  modifyLanguageSettings,
-} from '@anzusystems/common-admin'
-import { inject } from 'vue'
+`ALanguageSelect` stores the selected language, emits `afterChange` and the admin reloads, so messages are loaded on app load again:
+```vue
+<script lang="ts" setup>
+import { ALanguageSelect } from '@anzusystems/common-admin'
 
-const configAvailableLanguages = inject<LanguageCode[]>(AvailableLanguagesSymbol, [])
-const configDefaultLanguage = inject<LanguageCode>(DefaultLanguageSymbol, 'sk')
-const { addMessages } = modifyLanguageSettings(configAvailableLanguages, configDefaultLanguage)
-
-const loadLanguageMessages = async (code: LanguageCode | 'default') => {
-  if (code === 'default' || code === 'xx') return
-  try {
-    const messages = await import(`./locales/${code}.ts`)
-    addMessages(code, messages.default)
-  } catch (e) {
-    console.error('Unable to load language translation messages.')
-  }
+const afterLanguageChange = () => {
+  window.location.reload()
 }
+</script>
 
-const afterLanguageChange = async (language: LanguageCode) => {
-  await loadLanguageMessages(language)
-}
+<template>
+  <ALanguageSelect
+    :is-administrator="isSuperAdmin"
+    @after-change="afterLanguageChange"
+  />
+</template>
 ```
 :::
 
@@ -95,18 +90,26 @@ export default {
     apiForbiddenOperation: {
       ...apiForbiddenOperation,
     },
+    apiDependencyExists: {
+      ...apiDependencyExists,
+    },
     jsValidation: {
       ...jsValidation,
+    },
+    apiTimedOut: {
+      ...apiTimedOut,
     },
   },
 }
 ```
 
 #### error
-- errors consist of `apiValidation`, `apiForbiddenOperation` and `jsValidation`
+- errors consist of `apiValidation`, `apiForbiddenOperation`, `apiDependencyExists`, `jsValidation` and `apiTimedOut`
 - `apiValidation`: anzu API can return validation error response with specific format containing keys that needs to be translated for user
 - `apiForbiddenOperation`: same as above but for forbidden error response
+- `apiDependencyExists`: message for dependency exists error response
 - `jsValidation`: custom validation texts used by vuelidate and js validation inside vue app
+- `apiTimedOut`: message for timed out API request
 
 #### $vuetify
 - custom modified translations for vuetify components
@@ -136,20 +139,19 @@ export default {
   sidebar,
   breadcrumb,
   system,
-  ...{
-    error: {
-      apiValidation: {
-        ...messagesSk.error.apiValidation,
-        ...apiValidation,
-      },
-      apiForbiddenOperation: {
-        ...messagesSk.error.apiForbiddenOperation,
-        ...apiForbiddenOperation,
-      },
-      jsValidation: {
-        ...messagesSk.error.jsValidation,
-        ...jsValidation,
-      },
+  error: {
+    ...messagesSk.error,
+    apiValidation: {
+      ...messagesSk.error.apiValidation,
+      ...apiValidation,
+    },
+    apiForbiddenOperation: {
+      ...messagesSk.error.apiForbiddenOperation,
+      ...apiForbiddenOperation,
+    },
+    jsValidation: {
+      ...messagesSk.error.jsValidation,
+      ...jsValidation,
     },
   },
 }

@@ -1,5 +1,5 @@
 # API
 
-List of all components, composables, utils, functions exported by common-admin.
+Docs for some of the components exported by common-admin, pick from sidebar.
 
-Pick from sidebar.
+Full reference is the typed exports of the package (`src/lib.ts`, `dist/common-admin.d.ts`).

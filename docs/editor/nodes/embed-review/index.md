@@ -13,7 +13,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -44,8 +44,8 @@
 ```ts
 interface EmbedReviewAware {
   id: DocId
-  review: IntegerId
-  detail: {
+  review: IntegerIdNullable
+  detail?: {
     review: {
       id: IntegerId
       title: string
@@ -59,6 +59,9 @@ interface EmbedReviewAware {
       price: string
       info: string
       links: LinkDto[]
+      rubric: IntegerIdNullable
+      site: IntegerIdNullable
+      siteGroup: IntegerIdNullable
     }
   }
 }

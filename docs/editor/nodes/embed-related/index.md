@@ -2,8 +2,8 @@
 
 ## Features
 - user can insert internal articles from CMS using filterable dialog to item
-- user can insert external url for item and specify title fot his item
-- user can override title
+- user can insert external url for item and specify headline for this item
+- user can override headline
 
 ## Note
 - model supports mixing both types but for now only one item can be inserted at once
@@ -18,7 +18,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -50,37 +50,47 @@
 interface EmbedRelatedAware {
   id: DocId
   title: string
-  items: RelatedItemKindArticle[] | RelatedItemKindLink[]
-  detail: {
+  items: Array<RelatedItemKindArticle | RelatedItemKindLink>
+  detail?: {
     items: Array<RelatedItemDetailKindArticle | RelatedItemDetailKindLink>
   }
 }
 
 interface RelatedItemKindArticle {
-  title: string
+  id?: DocId
+  overline: string
+  headline: string
+  perex: string
   articleDocId: DocId
   position: number
   discriminator: 'article'
 }
 
 interface RelatedItemKindLink {
-  title: string
-  src: string
+  id?: DocId
+  overline: string
+  headline: string
+  perex: string
+  url: string
   position: number
   external: boolean
   nofollow: boolean
+  image: IntegerIdNullable
+  publishedAt: DatetimeUTC
   discriminator: 'link'
 }
 
 interface RelatedItemDetailKindArticle {
   id: DocId
   position: number
-  title: string
+  overline: string
+  headline: string
+  perex: string
   article: {
     id: IntegerId
     docId: DocId
     url: string
-    status: string // enum: draft | ready | published
+    status: string // enum: draft | ready | publishing | published
     dates: {
       publishedAt: DatetimeUTCNullable
       firstPublishedAt: DatetimeUTCNullable
@@ -89,10 +99,11 @@ interface RelatedItemDetailKindArticle {
       publicUpdatedAt: DatetimeUTCNullable
     }
     texts: {
-      title: string
-      leadText: string
+      overline: string
+      headline: string
+      perex: string
     }
-    listingImage: IntegerIdNullable
+    image: ImageAware | IntegerIdNullable
   }
   discriminator: 'article'
 }
@@ -100,10 +111,13 @@ interface RelatedItemDetailKindArticle {
 interface RelatedItemDetailKindLink {
   id: DocId
   position: number
-  title: string
-  src: string
+  overline: string
+  headline: string
+  perex: string
+  url: string
   external: boolean
   nofollow: boolean
+  image?: ImageAware | null
   discriminator: 'link'
 }
 ```

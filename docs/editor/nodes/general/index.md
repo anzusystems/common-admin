@@ -14,7 +14,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string (uuid of last change made by user - needed for collaboration)
@@ -35,8 +35,4 @@
 ```
 - basically embeds are just placeholders where are they inserted in content
 - all other data for embed is provided by embed API
-- all embeds supports customData (todo: document it)
-
-## Notes
-
-- embedAudio, embedVideo are still WIP
+- all embeds support optional `customData`: `{ [key: string]: boolean | string | number | string[] | number[] }`, fields are defined by custom form config for the embed kind

@@ -6,6 +6,7 @@
 
 ```
 https://twitter.com/hsforeman/status/1618292100336070656 
+https://x.com/hsforeman/status/1618292100336070656
 ```
 
 ### Embed Post
@@ -19,7 +20,7 @@ https://twitter.com/hsforeman/status/1618292100336070656
 ```ts twoslash
 interface Params {
   id: string
-  username?: string
+  username: string
 }
 ```
 
@@ -44,10 +45,10 @@ type Screenshot = {
 }
 
 type Author = {
-  username: string
-  name: string
+  username?: string
+  name?: string
   image: Image
-  url: string
+  url?: string
 }
 
 /**
@@ -58,7 +59,7 @@ type Author = {
  * @property contentType - Content type of the image variant (e.g., image/jpeg).
  */
 type Image = {
-  variants: Array<{
+  variants?: Array<{
     url: string
     damId?: DocId
     width: number
@@ -75,7 +76,7 @@ type Image = {
 type Video = {
   variants: Array<{
     url: string
-    bitrate: number
+    bitrate?: number
     contentType: string
   }>
 }
@@ -84,10 +85,11 @@ type Video = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  text: string
+  url?: string
+  text?: string
   author: Author
-  publishedAt: DatetimeUTC
-  images: Image[]
-  videos: Video[]
+  publishedAt: DatetimeUTC // 0001-01-01T00:00:00Z when not scraped
+  images?: Image[]
+  videos?: Video[]
 }
 ```

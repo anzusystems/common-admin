@@ -5,12 +5,12 @@ import ARowDemo from './ARowDemo.vue'
 # ARow
 
 - mostly used to print data in detail view
-- it's shorthand to this code:
+- it's shorthand to this code (`titleClass` default: `font-weight-bold text-label-large`, title is rendered only when not empty):
 
 ```vue
 <VRow>
   <VCol>
-    <h4 class="text-subtitle-2">
+    <h4 v-if="title.length" :class="titleClass">
       {{ title }}
     </h4>
     <slot>

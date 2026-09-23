@@ -19,8 +19,6 @@ https://www.instagram.com/p/CpCyg4pokYs/
 ```ts twoslash
 interface Params {
   id: string
-  width?: number
-  height?: number
 }
 ```
 
@@ -45,10 +43,9 @@ type Screenshot = {
 }
 
 type Author = {
-  username: string
-  name: string
+  username?: string
   image: Image
-  url: string
+  url?: string
 }
 
 /**
@@ -59,7 +56,7 @@ type Author = {
  * @property contentType - Content type of the image variant (e.g., image/jpeg).
  */
 type Image = {
-  variants: Array<{
+  variants?: Array<{
     url: string
     damId?: DocId
     width: number
@@ -72,9 +69,9 @@ type Image = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  text: string
+  url?: string
+  text?: string
   author: Author
-  images: Image[]
+  images?: Image[]
 }
 ```

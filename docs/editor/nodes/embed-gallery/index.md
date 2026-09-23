@@ -13,7 +13,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -44,13 +44,13 @@
 ```ts
 interface EmbedGalleryAware {
   id: DocId
-  gallery: IntegerId
+  gallery: IntegerIdNullable
   layout: string // enum: thumb | whole
   texts: {
     title: string
     description: string
   }
-  detail: {
+  detail?: {
     gallery: {
       id: IntegerId
       enabled: boolean
@@ -82,11 +82,17 @@ interface EmbedGalleryAware {
           description: string
           source: string
         }
+        flags: {
+          showSource: boolean
+          internal: boolean
+          overrideInternal: boolean
+        }
         dam: {
           damId: DocId
           regionPosition: number
           animation: boolean
           licenceId: number
+          internal: boolean
         }
       }>
     }

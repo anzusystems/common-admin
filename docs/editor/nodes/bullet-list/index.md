@@ -6,6 +6,9 @@
 ## Features
 - user can toggle current node to bullet list, if possible (from paragraph or heading)
 
+## Child nodes
+- `listItem` - no attrs, content `paragraph block*`, see [tiptap docs](https://tiptap.dev/docs/editor/extensions/nodes/list-item)
+
 ## Node schema
 
 ```json

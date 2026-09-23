@@ -49,6 +49,6 @@ interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
   url: string
-  title: string
+  title?: string
 }
 ```

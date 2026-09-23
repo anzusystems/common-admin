@@ -6,6 +6,9 @@
 
 ```
 https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExa2M5bm9xbjZ6cXJneWF2c2Rkb2V4a2tneDIzcTFobjFjYzd5dHptNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/iibH5ymW6LFvSIVyUc/giphy.gif
+https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExamQybWtqaWlzZ2ZyOXRjNnAwYWF5NXo1enV6aHI3NjZycHU0amx0MCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/iibH5ymW6LFvSIVyUc/giphy-downsized.gif
+https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExamQybWtqaWlzZ2ZyOXRjNnAwYWF5NXo1enV6aHI3NjZycHU0amx0MCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/iibH5ymW6LFvSIVyUc/giphy.mp4
+https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExamQybWtqaWlzZ2ZyOXRjNnAwYWF5NXo1enV6aHI3NjZycHU0amx0MCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/iibH5ymW6LFvSIVyUc/giphy.webp
 ```
 
 ### Embed
@@ -48,7 +51,7 @@ type Screenshot = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  title: string
+  url?: string
+  title?: string
 }
 ```

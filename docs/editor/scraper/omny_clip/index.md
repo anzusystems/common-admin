@@ -21,6 +21,7 @@ interface Params {
   id: string
   slug: string
   programSlug: string
+  width?: number
   height?: number
 }
 ```
@@ -46,40 +47,22 @@ type Screenshot = {
 }
 
 type Author = {
-  name: string
-}
-
-/**
- * @property url - URL of the image variant.
- * @property damId - DocId of the DAM asset.
- * @property width - Width of the image variant.
- * @property height - Height of the image variant.
- * @property contentType - Content type of the image variant (e.g., image/jpeg).
- */
-type Image = {
-  variants: Array<{
-    url: string
-    damId?: DocId
-    width: number
-    height: number
-    contentType: string
-  }>
+  name?: string
 }
 
 type Program = {
-  title: string
+  title?: string
 }
 
 // ---cut-before---
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  title: string
+  url?: string
+  title?: string
   program: Program
-  description: string
+  description?: string
   author: Author
-  publishedAt: DatetimeUTC
-  images: Image[]
+  publishedAt: DatetimeUTC // 0001-01-01T00:00:00Z when not scraped
 }
 ```

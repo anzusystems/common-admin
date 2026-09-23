@@ -20,7 +20,7 @@
       "default": "left" // enum: left | right | center
     },
     "level": {
-      "default": 2
+      "default": 1
     }
   }
 }

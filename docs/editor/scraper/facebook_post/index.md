@@ -6,6 +6,7 @@
 
 ```
 https://www.facebook.com/sme.sk/posts/pfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8qw12e3RgRsstrXMg4dLKEBVwsGnQ2l 
+https://www.facebook.com/permalink.php?story_fbid=pfbid0KK3AacqAX2BvbAK9J91Kk4wEf8RR7C67jQiSkz9CG4RuvThBVuShrPzKWTfY5ybHl&id=100091773573563
 ```
 
 ### Embed
@@ -19,7 +20,7 @@ https://www.facebook.com/sme.sk/posts/pfbid0nHq4ynTLtKgghMAKzBmCpM3Zweqoycnnff8q
 ```ts twoslash
 interface Params {
   id: string
-  username: string
+  username?: string // absent for permalink.php URLs
   width?: number
   height?: number
 }
@@ -46,10 +47,10 @@ type Screenshot = {
 }
 
 type Author = {
-  username: string
-  name: string
+  username?: string
+  name?: string
   image: Image
-  url: string
+  url?: string
 }
 
 /**
@@ -60,7 +61,7 @@ type Author = {
  * @property contentType - Content type of the image variant (e.g., image/jpeg).
  */
 type Image = {
-  variants: Array<{
+  variants?: Array<{
     url: string
     damId?: DocId
     width: number
@@ -71,13 +72,13 @@ type Image = {
 
 // ---cut-before---
 interface Data {
-  id: number
+  id?: number
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  url: string
-  text: string
+  url?: string
+  text?: string
   author: Author
-  publishedAt: DatetimeUTC
-  images: Image[]
+  publishedAt: DatetimeUTC // 0001-01-01T00:00:00Z (or 1970-01-01T00:00:00Z) when not scraped
+  images?: Image[]
 }
 ```

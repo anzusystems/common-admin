@@ -7,10 +7,10 @@
 
 ```json
 {
-  "name": "bold",
+  "name": "comment",
   "attrs": {
     "id": {
-      "default": "" // string (uuid of comment)
+      "default": null // string | null (uuid of comment)
     }
   }
 }

@@ -2,6 +2,11 @@
 
 - see [tiptap docs](https://tiptap.dev/api/nodes/table)
 
+## Child nodes
+- `tableRow` - content `(tableCell | tableHeader)*`, see [tiptap docs](https://tiptap.dev/docs/editor/extensions/nodes/table-row)
+- `tableHeader` - attrs `colspan` (1), `rowspan` (1), `colwidth` (null), content `block+`, see [tiptap docs](https://tiptap.dev/docs/editor/extensions/nodes/table-header)
+- `tableCell` - same attrs as `tableHeader`, content `paragraph+`, see [tiptap docs](https://tiptap.dev/docs/editor/extensions/nodes/table-cell)
+
 ## Node schema
 
 ```json
@@ -12,7 +17,7 @@
   ],
   "attrs": {
     "variant": {
-      "default": ""  // enum: sportnetTvProgram | default
+      "default": "default" // enum: default | sportnetTvProgram
     },
     "caption": {
       "default": ""

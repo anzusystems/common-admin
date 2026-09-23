@@ -19,8 +19,6 @@ https://public.flourish.studio/story/2168631/
 ```ts twoslash
 interface Params {
   id: string
-  width?: number
-  height?: number
 }
 ```
 
@@ -48,7 +46,7 @@ type Screenshot = {
 interface Data {
   screenshots: Screenshot[]
   scrapedAt: DatetimeUTC
-  title: string
-  subtitle: string
+  title?: string
+  subtitle?: string
 }
 ```

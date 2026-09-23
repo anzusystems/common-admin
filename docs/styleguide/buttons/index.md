@@ -36,7 +36,7 @@ According rules above we have 4 types of buttons:
 
 #### Secondary button
 
-- most important and visible button
+- second most important button, less visible than primary
 - preferred only one in a block or row
 
 <DocsExample>
@@ -115,9 +115,9 @@ If you are not sure what type of button to use, consult it with product owner, U
 
 ```html
 <AActionSaveButton />
-<AActionEditButton variant="secondary" />
+<AActionEditButton variant="secondary" route-name="..." />
 <ABtnTertiary rounded>Other</ABtnTertiary>
-<AActionCloseButton />
+<AActionCloseButtonHistory />
 ```
 
 ## Split button
@@ -126,6 +126,7 @@ If you are not sure what type of button to use, consult it with product owner, U
 - can be used where you need to group several actions together
 - also can be used on mobile view to save horizontal space
 - variants: `primary`, `secondary`, `tertiary`
+- `button-t` takes a translation key, or use `button-content` slot
 - example:
 
 
@@ -134,16 +135,16 @@ If you are not sure what type of button to use, consult it with product owner, U
 </DocsExample>
 
 ```html
-<ABtnSplit rounded="pill" buttonT="t('common.button.save')">
+<ABtnSplit rounded="pill" button-t="common.button.save">
   <VListItem>save and close</VListItem>
 </ABtnSplit>
-<ABtnSplit buttonT="t('common.button.save')">
+<ABtnSplit button-t="common.button.save">
   <VListItem>save and close</VListItem>
 </ABtnSplit>
-<ABtnSplit variant="secondary" buttonT="t('common.button.save')">
+<ABtnSplit variant="secondary" button-t="common.button.save">
   <VListItem>save and close</VListItem>
 </ABtnSplit>
-<ABtnSplit variant="tertiary" buttonT="t('common.button.save')">
+<ABtnSplit variant="tertiary" button-t="common.button.save">
   <VListItem>save and close</VListItem>
 </ABtnSplit>
 ```

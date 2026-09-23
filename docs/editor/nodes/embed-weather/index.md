@@ -14,7 +14,7 @@
   ],
   "attrs": {
     "id": {
-      "default": "" // string (uuid of embed)
+      "default": null // string | null (uuid of embed)
     },
     "changeId": {
       "default": "" // string
@@ -45,7 +45,13 @@
 ```ts
 interface EmbedWeatherAware {
   id: DocId
-  locationId: IntegerId
-  variant: string // enum: day | week
+  locationId: IntegerIdNullable
+  title: string
+  locationUrl: string
+  locationSevenDaysUrl: string
+  locationNineDaysUrl: string
+  locationFifteenDaysUrl: string
+  language: string // language code, e.g. sk | cz | en
+  variant: string // enum: day | threeDay | week, default threeDay
 }
 ```

@@ -15,10 +15,16 @@
     "embed"
   ],
   "attrs": {
-    "nofollow": {
-      "default": false // boolean
+    "href": {
+      "default": null // string | null
     },
     "external": {
+      "default": true // boolean
+    },
+    "internal": {
+      "default": null // { type: string, id: string } | null, see link mark
+    },
+    "nofollow": {
       "default": false // boolean
     },
     "variant": {
@@ -42,6 +48,7 @@
       "attrs": {
         "href": "https://www.sme.sk",
         "external": false,
+        "internal": null,
         "nofollow": false,
         "variant": "link",
         "size": "large"

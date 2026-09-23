@@ -4,8 +4,10 @@ import ACardDemo from './ACardDemo.vue'
 
 # ACard
 
-- it's just a wrapper component for vuetify's `VCard`, so you can use all props as for `VCard`
-- there is only one difference: it uses `ACardLoader` component to create layer to prevent to click on any element inside, when `loading` prop is active
+- it's just a wrapper component for vuetify's `VCard` with `variant="flat"`, other attributes are passed to `VCard`
+- when `loading` prop is active, it shows `VCard` loading bar and a layer to prevent to click on any element inside
+- `title` is passed to `VCard` `title`
+- `blockInput` together with `loading` also sets `inert` on the card, so focus and keyboard input inside are blocked too
 
 ## Examples
 <DocsExample>
@@ -16,7 +18,12 @@ import ACardDemo from './ACardDemo.vue'
 
 ## Types
 #### Props
-Check [vuetify docs](https://vuetifyjs.com/en/api/v-card/#props)
+```ts
+loading?: boolean
+title?: string
+blockInput?: boolean // default: false
+```
+Other props: check [vuetify docs](https://vuetifyjs.com/en/api/v-card/#props)
 
 #### Slots
 - default

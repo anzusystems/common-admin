@@ -12,7 +12,7 @@ Based on [tiptap link](https://tiptap.dev/api/marks/link) with custom attrs.
   - `href` attr will contain value according to `variant`, examples:
     - `info@sme.sk` - a valid email address - email variant (without mailto)
     - `https://www.sme.sk` - a valid url - link variant 
-    - `pp-obsah` - slug (a-z charactars and -) - anchor variant (prefixed by `pp-`, max 15 characters, prefix can be customized)
+    - `pp-obsah` - slug (letters, digits and -) - anchor variant (prefixed by `pp-`, max 30 characters including prefix)
 
 
 ## Mark schema
@@ -25,7 +25,10 @@ Based on [tiptap link](https://tiptap.dev/api/marks/link) with custom attrs.
       "default": null // string | null
     },
     "external": {
-      "default": false // boolean
+      "default": true // boolean
+    },
+    "internal": {
+      "default": null // { type: string (route discriminator), id: string } | null
     },
     "nofollow": {
       "default": false // boolean
@@ -49,6 +52,7 @@ Based on [tiptap link](https://tiptap.dev/api/marks/link) with custom attrs.
       "attrs": {
         "href": "https://www.sme.sk",
         "external": true,
+        "internal": null,
         "nofollow": true,
         "variant": "link"
       }
@@ -63,10 +67,11 @@ Based on [tiptap link](https://tiptap.dev/api/marks/link) with custom attrs.
   "text": "Lorem",
   "marks": [
     {
-      "type": "email",
+      "type": "link",
       "attrs": {
         "href": "info@sme.sk",
         "external": false,
+        "internal": null,
         "nofollow": false,
         "variant": "email"
       }
@@ -81,10 +86,11 @@ Based on [tiptap link](https://tiptap.dev/api/marks/link) with custom attrs.
   "text": "Lorem",
   "marks": [
     {
-      "type": "email",
+      "type": "link",
       "attrs": {
         "href": "pp-obsah",
         "external": false,
+        "internal": null,
         "nofollow": false,
         "variant": "anchor"
       }

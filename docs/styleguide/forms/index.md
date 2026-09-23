@@ -7,7 +7,7 @@ import FormsDemoBoolean from './FormsDemoBoolean.vue';
 
 ## Boolean
 
-- to set boolean value, where value us mandatory, just use vuetify component `VSwitch`:
+- to set boolean value, where value is mandatory, just use vuetify component `VSwitch` (or `AFormSwitch` in forms, it also supports collab field lock):
 
 <DocsExample>
   <FormsDemoBoolean />
@@ -17,8 +17,11 @@ import FormsDemoBoolean from './FormsDemoBoolean.vue';
 <VSwitch label="Visible" />
 ```
 
-- to set optional boolean value (true/false/null), use dropdown:
-TODO: create a new component ABooleanSwitch and update docs
+- to set optional boolean value (true/false/null), use dropdown `ABooleanSelect`:
+
+```html
+<ABooleanSelect v-model="value" label="Visible" />
+```
 
 - in filters, we use `AFilterBooleanSelect`  component
 
