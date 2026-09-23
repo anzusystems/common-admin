@@ -49,6 +49,23 @@ export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {
   key: string
 }
 
+/**
+ * Sets the owner request fields from an `ImageOwner`, in place - the one place the `resourceName`/
+ * `resourceId` → `ownerResourceName`/`ownerResourceId` conversion happens, instead of every create/
+ * update call site repeating it. A `null`/`undefined` owner leaves the target untouched, keeping the
+ * stored owner on update (an omitted pair means "don't change it", not "clear it").
+ */
+export function applyImageOwner<T extends Pick<ImageCreateUpdateAware, 'ownerResourceName' | 'ownerResourceId'>>(
+  target: T,
+  owner: ImageOwner | null | undefined
+): T {
+  if (owner) {
+    target.ownerResourceName = owner.resourceName
+    target.ownerResourceId = owner.resourceId
+  }
+  return target
+}
+
 export interface ImageStoreItem extends ImageCreateUpdateAwareKeyed {
   damAuthors: DocId[]
   showDamAuthors: boolean

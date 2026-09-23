@@ -31,15 +31,8 @@ const IMAGE_WIDTH = 128
 
 const item = toRef(props, 'item')
 
-const {
-  asset,
-  tableImageProperties,
-  assetType,
-  assetStatus,
-  licenceBadge,
-  singleUse,
-  disabledReason,
-} = useAssetItemActions(item)
+const { asset, tableImageProperties, assetType, assetStatus, licenceBadge, singleUse, disabledReason } =
+  useAssetItemActions(item)
 
 const onItemClick = () => {
   emit('itemClick', { assetId: asset.value.id, index: props.index })

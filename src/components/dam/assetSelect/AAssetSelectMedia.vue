@@ -101,9 +101,7 @@ const { selectedSelectConfig, assetType } = storeToRefs(assetSelectStore)
 // detail would otherwise be silent about the one thing that matters. Null everywhere the picker is opened
 // without selectability rules, so nothing is rendered there.
 const openedAssetDisabledReason = computed(
-  () =>
-    assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id)
-      ?.disabledReason ?? null,
+  () => assetSelectStore.assetListItems.find((item) => item.asset.id === asset.value?.id)?.disabledReason ?? null
 )
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
@@ -178,7 +176,7 @@ watch(
     pagination.value.page = 1
     fetchAssetListDebounced()
   },
-  { deep: true },
+  { deep: true }
 )
 
 const componentComputed = computed(() => {
@@ -193,11 +191,7 @@ const componentComputed = computed(() => {
 })
 
 const disabledSubmit = computed(() => {
-  return (
-    selectedCount.value < props.minCount ||
-    selectedCount.value > props.maxCount ||
-    selectedHasDisabled.value
-  )
+  return selectedCount.value < props.minCount || selectedCount.value > props.maxCount || selectedHasDisabled.value
 })
 
 const extId = computed(() => {

@@ -20,8 +20,7 @@ export function useAssetSelectPresetControl(selectLicences: IntegerId[], listVie
   const { t } = useI18n()
   const storageKey = useAssetSelectPresetStorageKey(selectLicences, listViews)
   const { buildPresets, loadStoredState, storeState } = useAssetSelectPresets(storageKey)
-  const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence } =
-    useDamCachedAssetLicences()
+  const { addToCachedAssetLicences, fetchCachedAssetLicences, getCachedAssetLicence } = useDamCachedAssetLicences()
 
   const assetSelectStore = useAssetSelectStore()
   const { selectedLicenceIds, selectedPresetKey } = storeToRefs(assetSelectStore)
@@ -95,9 +94,7 @@ export function useAssetSelectPresetControl(selectLicences: IntegerId[], listVie
 
   const removeLicence = (licenceId: IntegerId) => {
     if (!isClearable.value) return
-    assetSelectStore.setSelectedLicenceIds(
-      selectedLicenceIds.value.filter((id) => id !== licenceId),
-    )
+    assetSelectStore.setSelectedLicenceIds(selectedLicenceIds.value.filter((id) => id !== licenceId))
   }
 
   // Both callers run this; adding and fetching an already cached licence is a no-op.
@@ -108,9 +105,7 @@ export function useAssetSelectPresetControl(selectLicences: IntegerId[], listVie
     if (selectedPresetKey.value !== '') return
 
     const stored = loadStoredState()
-    const storedPreset = stored
-      ? presets.value.find((item) => item.key === stored.presetKey)
-      : undefined
+    const storedPreset = stored ? presets.value.find((item) => item.key === stored.presetKey) : undefined
 
     applyPreset(storedPreset?.key ?? AssetSelectPresetAll)
   })

@@ -20,7 +20,7 @@ const mapIdToMinimal = (id: IntegerId): DamAssetLicenceCached => ({
   autoDelete: { active: false, olderThanDays: 0 },
 })
 
-const { cache, toFetch, fetch, add, addManual, has, get, isLoaded } = defineCached<
+const { cache, toFetch, fetch, immediateFetch, add, addManual, has, get, isLoaded } = defineCached<
   IntegerId,
   DamAssetLicenceExtended,
   DamAssetLicenceCached
@@ -35,6 +35,7 @@ export const useDamCachedAssetLicences = () => {
     addManualToCachedAssetLicences: addManual,
     addToCachedAssetLicences: add,
     fetchCachedAssetLicences: fetch,
+    fetchCachedAssetLicencesImmediate: immediateFetch,
     toFetchCachedAssetLicences: toFetch,
     cachedAssetLicences: cache,
     hasCachedAssetLicence: has,

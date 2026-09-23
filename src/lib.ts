@@ -401,11 +401,7 @@ import type {
   CustomDataFormElementAttributes,
   CustomDataValue,
 } from '@/components/customDataForm/CustomDataForm'
-import {
-  type AssetSelectHolder,
-  type AssetSelectReturnData,
-  holdersEqual,
-} from '@/types/coreDam/AssetSelect'
+import { type AssetSelectHolder, type AssetSelectReturnData, holdersEqual } from '@/types/coreDam/AssetSelect'
 import { resolveHolderName } from '@/components/dam/assetSelect/composables/assetSelectDisabledReason'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
 import type {
@@ -457,11 +453,12 @@ import {
   DamNotificationName,
   type DamNotificationNameType,
 } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
-import type {
-  ImageAware,
-  ImageCreateUpdateAware,
-  ImageCreateUpdateAwareKeyed,
-  ImageOwner,
+import {
+  applyImageOwner,
+  type ImageAware,
+  type ImageCreateUpdateAware,
+  type ImageCreateUpdateAwareKeyed,
+  type ImageOwner,
 } from '@/types/ImageAware'
 import type {
   DamAuthor,
@@ -603,10 +600,7 @@ import {
   useFetchDamAssetLicenceList,
   fetchDamAssetLicenceList,
 } from '@/components/dam/user/assetLicenceApi'
-import {
-  fetchDamAssetListViewListByIds,
-  useFetchDamAssetListViewList,
-} from '@/components/dam/user/assetListViewApi'
+import { fetchDamAssetListViewListByIds, useFetchDamAssetListViewList } from '@/components/dam/user/assetListViewApi'
 import { useDamAssetListViewInnerFilter } from '@/components/dam/user/AssetListViewFilter'
 import { useAssetListViewSelectActions } from '@/components/dam/user/assetListViewActions'
 import { useDamCachedAssetLicences } from '@/components/damImage/composables/cachedDamAssetLicences'
@@ -1017,6 +1011,7 @@ export {
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,
   type ImageOwner,
+  applyImageOwner,
   type UploadMetadataToImageMapFn,
   type UploadMetadataToImageMapItem,
   mapUploadMetadataToImages,

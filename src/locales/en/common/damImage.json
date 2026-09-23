@@ -42,7 +42,9 @@
       "ownerImmutable": "The image belongs to another record and its holder can no longer be changed.",
       "ownerConflict": "The image is already assigned to another owner.",
       "imageRemoved": "The image was released in the meantime, pick it again.",
-      "multipleTargets": "A suggestion with a single-use image can only be proposed to one feed."
+      "multipleTargets": "A suggestion with a single-use image can only be proposed to one feed.",
+      "imageCopy": "This image is single-use and cannot be copied.",
+      "galleryCopy": "The gallery contains a single-use image and cannot be copied."
     },
     "bulkSave": {
       "partialFailure": "Some images could not be saved.",
