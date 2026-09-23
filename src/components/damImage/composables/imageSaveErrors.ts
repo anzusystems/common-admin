@@ -16,7 +16,6 @@ const SINGLE_USE_REASON_MESSAGE: Partial<Record<KnownSingleUseReason, string>> =
   owner_immutable: 'common.damImage.image.error.ownerImmutable',
   image_removed: 'common.damImage.image.error.imageRemoved',
   multiple_targets: 'common.damImage.image.error.multipleTargets',
-  image_copy: 'common.damImage.image.error.imageCopy',
   gallery_copy: 'common.damImage.image.error.galleryCopy',
 }
 

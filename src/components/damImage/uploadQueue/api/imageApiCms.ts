@@ -48,7 +48,6 @@ export const KNOWN_SINGLE_USE_REASONS = [
   'image_removed',
   'single_use_copy',
   'multiple_targets',
-  'image_copy',
   'gallery_copy',
 ] as const
 export type KnownSingleUseReason = (typeof KNOWN_SINGLE_USE_REASONS)[number]
