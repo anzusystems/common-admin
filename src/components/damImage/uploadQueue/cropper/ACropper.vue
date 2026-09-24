@@ -66,6 +66,21 @@ const emit = defineEmits<{
   (event: 'ready'): void
 }>()
 
+// cropper.js registers its elements as a side effect of loading its entry, and this package's
+// `sideEffects` lets the consumer's bundler drop that module once only the classes are used. `$define`
+// is a no-op for an element that is already registered.
+for (const element of [
+  CropperCanvas,
+  CropperCrosshair,
+  CropperGrid,
+  CropperHandle,
+  CropperImage,
+  CropperSelection,
+  CropperShade,
+]) {
+  element.$define()
+}
+
 /**
  * Settings the one caller never varies, kept as constants rather than as props nobody passes.
  * Each of them is behaviour, not preference: no checkerboard behind a photograph, the wheel left to

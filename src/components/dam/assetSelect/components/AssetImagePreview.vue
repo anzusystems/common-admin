@@ -8,7 +8,7 @@ import {
   type DamAssetTypeType,
 } from '@/types/coreDam/Asset'
 import placeholder16x9 from '@/assets/image/placeholder16x9.svg'
-import { isUndefined } from '@/lib'
+import { isUndefined } from '@/utils/common'
 import AssetImageMetaIcons from '@/components/damImage/uploadQueue/components/AssetImageMetaIcons.vue'
 
 const props = withDefaults(

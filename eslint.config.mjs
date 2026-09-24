@@ -24,6 +24,27 @@ export default defineConfigWithVueTs(
       'scripts/codemods/explicit-imports/test/expected/**',
     ],
   },
+  {
+    // `@/lib` is the public entry. A module of the library that imports it back pulls every export into
+    // its own graph (a cycle through the entry), which per-module output then ships to each consumer
+    // of that module: import from the module that defines the name instead.
+    name: 'app/no-public-entry',
+    files: ['src/**/*.{ts,vue}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [{ name: '@/lib', message: 'Import from the module that defines it, not from the public entry.' }],
+          patterns: [
+            {
+              regex: '^(\\.\\.?/)+lib$',
+              message: 'Import from the module that defines it, not from the public entry.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   pluginVue.configs['flat/essential'],
   pluginVue.configs['flat/strongly-recommended'],
   pluginVue.configs['flat/recommended'],

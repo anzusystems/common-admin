@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { objectGetValueByPath } from '@/lib'
+import { objectGetValueByPath } from '@/utils/object'
 
 export const useJobPriority = () => {
   const { t } = useI18n()
