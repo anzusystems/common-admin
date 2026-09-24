@@ -42,8 +42,28 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      # node_modules/.cache holds only caches that follow what a result depends on: vue-tsc's build info. eslint and
+      # stylelint run without one: they reuse a file's result without tracking everything it depends on. A new entry per
+      # passing run, restored from the latest one for the same runner, Node version, yarn.lock and tsconfigs (vue-tsc's build
+      # info does not notice a vueCompilerOptions change).
+      - name: Restore tool caches
+        id: tool-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: node_modules/.cache
+          key: tool-cache-v1-${{ runner.os }}-${{ runner.arch }}-node${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}-${{ hashFiles('tsconfig*.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            tool-cache-v1-${{ runner.os }}-${{ runner.arch }}-node${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}-${{ hashFiles('tsconfig*.json') }}-
+
       - name: Run Yarn CI
         run: yarn ci
+
+      # Only after a passing yarn ci, and before the audit, which can fail the job on its own.
+      - name: Save tool caches
+        uses: actions/cache/save@v6
+        with:
+          path: node_modules/.cache
+          key: ${{ steps.tool-cache.outputs.cache-primary-key }}
 
       - name: Run Security check
         run: yarn npm audit

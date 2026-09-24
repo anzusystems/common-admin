@@ -99,8 +99,7 @@ export default defineConfigWithVueTs(
   {
     // The only eslint rules that fight oxfmt. Measured, not assumed: with this block
     // removed, eslint reports 145 warnings here, and they fall on these same rules and no
-    // others. Leaving them on also defeats eslint --cache, because autofixed files are
-    // never written to the cache.
+    // others.
     //
     // html-self-closing is configured rather than switched off, because only its `void`
     // half conflicts: oxfmt writes `<img />` where the rule's default demands `<img>`.
