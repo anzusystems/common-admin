@@ -47,13 +47,13 @@ $ yarn lib:build
 2. **common-admin**: run `yarn build` (`yarn build:dev` for an unminified build with source maps)
 3. **admin** optional: make sure you have the latest deps inside of node_modules (`bin/dev` and then stop the server, or `bin/bash` and `yarn install`)
 4. **admin**: run `bin/dev --no-install` (it will start dev server without node_modules update so copied build files of common admin are used)
-5. **common-admin** run `./copy.sh`
+5. **common-admin** run `./copy.sh` (the admins from `.env.local`), or `./copy.sh /path/to/admin-cms` for the admins given
 6. Optional, repeat 1, 2 and 5
 
 <details>
 <summary>More info</summary>
 
-[`copy.sh`](copy.sh) copies `dist`, `package.json` and `src/eslint` into `node_modules/@anzusystems/common-admin` of each admin, clears `node_modules/.vite/deps/` and touches `.common-admin-updated`. The `watchCommonAdmin` plugin in admin's `vite.config.mts` watches this file, invalidates common-admin modules and does a full reload of the page.
+[`copy.sh`](copy.sh) copies `dist`, `package.json`, `src/eslint` and `src/vite` into `node_modules/@anzusystems/common-admin` of each admin, clears `node_modules/.vite/deps/` and touches `.common-admin-updated`. The `watchCommonAdmin` plugin in admin's `vite.config.mts` watches this file, invalidates common-admin modules and does a full reload of the page.
 
 `bin/dev --no-install` command inside of admin project also runs `rm -rf node_modules/.vite/deps/` to clear vite deps cache.
 

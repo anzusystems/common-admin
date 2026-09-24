@@ -115,6 +115,19 @@ export default defineConfigWithVueTs(
 
 Enables `anzu/no-ts-extension`, `anzu/no-fatal-error-axios-check`, `anzu/prefer-api-command`, `anzu/prefer-api-fetch-items` and `anzu/url-params-match-template` as errors; each option takes `'warn'` or `'off'`, e.g. `anzuRecommended({ preferApiFetchItems: 'warn' })`. For oxlint: `"jsPlugins": ["@anzusystems/common-admin/oxlint"]` (alpha).
 
+### Sentry and source maps
+
+```ts
+// vite.config.mts
+import { anzuSentry } from '@anzusystems/common-admin/vite'
+
+export default defineConfig({
+  plugins: [...anzuSentry({ project: 'anzu-admin-cms' }), vue() /* ... */],
+})
+```
+
+Sentry is on when `APP_DEPLOY_ENV` and `SENTRY_URL` are set; it needs `SENTRY_AUTH_TOKEN` and takes the release name from `GITVAR_SHORTVERSION`. The build then emits `hidden` source maps, uploads them to the `petitpress` org (`org` option) and deletes them from `build.outDir`, so they never reach the deployed site. A missing token or a failed upload fails the build; to build without Sentry, leave `SENTRY_URL` unset. The library's own source maps are chained into the admin's, so frames from common-admin resolve to its `.vue` and `.ts` sources. Other options go to `sentryVitePlugin`, e.g. `release: { name: 'verify-1', finalize: false }` for a test upload. Install `@sentry/vite-plugin` as a devDependency; keep `anzuSentry` first in `plugins`.
+
 ### Auto-imports
 
 Admins auto-import the most used helpers and types (`isDefined`, `cloneDeep`, `useAlerts`, `useValidate`, `defineCached`, `IntegerId`, ...) with `unplugin-auto-import`. The list is in `autoImports.config.mts`, shared by `vite.config.mts` and `vitest.config.mts`; copy it from an existing admin. Components are not auto-imported: import them from `@anzusystems/common-admin` (only `Acl` and the `ABtn*` aliases are global).
