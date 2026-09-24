@@ -81,7 +81,6 @@ export default defineConfig({
       'rusha',
       'vuetify/components/VTabs',
       'vuetify/components/VWindow',
-      'cropperjs',
       'cropperjs2',
       'vuetify/components/VCombobox',
       'vuetify/components/VColorPicker',
@@ -96,7 +95,7 @@ export default defineConfig({
     globals: true,
     // The eslint rule tests run in node, under vitest.config.node.mts: `Linter` is node code and
     // reaches for `process`, which the browser does not have.
-    exclude: ['**/node_modules/**', 'src/test/eslint/**', 'src/test/vite/**'],
+    exclude: ['**/node_modules/**', 'src/test/eslint/**', 'src/test/vite/**', 'scripts/**'],
     // v5 default; pinned so it cannot silently flip.
     clearMocks: true,
     setupFiles: ['./src/test/setup.ts'],

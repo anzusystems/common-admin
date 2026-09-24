@@ -27,7 +27,6 @@ export const AssetFileRouteStatus = {
   Active: 'active',
 } as const
 export type AssetFileRouteStatusType = (typeof AssetFileRouteStatus)[keyof typeof AssetFileRouteStatus]
-export const AssetFileRouteStatusDefault = AssetFileRouteStatus.Disabled
 
 interface FileAttributes {
   status: AssetFileProcessStatusType
@@ -147,11 +146,6 @@ export const assetFileIsVideoFile = (value: any): value is AssetFileVideo => {
 export const assetFileIsAudioFile = (value: any): value is AssetFileAudio => {
   if (!value || !value._resourceName) return false
   return value._resourceName === 'audioFile'
-}
-
-export const assetFileIsDocumentFile = (value: any): value is AssetFileDocument => {
-  if (!value || !value._resourceName) return false
-  return value._resourceName === 'documentFile'
 }
 
 interface ImageAttributes {

@@ -36,7 +36,6 @@ __metadata:
     "@vueuse/core": "npm:15.0.0"
     "@vueuse/integrations": "npm:15.0.0"
     axios: "npm:1.20.0"
-    cropperjs: "npm:^1.6.3"
     cropperjs2: "npm:cropperjs@2.2.0"
     dayjs: "npm:1.11.23"
     eslint: "npm:^10.11.0"
@@ -3353,13 +3352,6 @@ __metadata:
     "@cropper/elements": "npm:^2.2.0"
     "@cropper/utils": "npm:^2.2.0"
   checksum: 10/a0f751093afce88fb52a730b9cf315ec5c79e4439f10955d2f4f91aed11f2c808c8947bf6d501de5c6b9c9239496afd9a474bbc61366046995c4e3416a323e1f
-  languageName: node
-  linkType: hard
-
-"cropperjs@npm:^1.6.3":
-  version: 1.6.3
-  resolution: "cropperjs@npm:1.6.3"
-  checksum: 10/eb6e4154fbe45cdd3fd730fc21dbae81597a2fbdac56d60d6b74fe62ef1eaaba1ca4fffd2a727bd728daff0f51178952dff423371c6e64348903a80450452447
   languageName: node
   linkType: hard
 

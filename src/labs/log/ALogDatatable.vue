@@ -97,7 +97,7 @@ const onRowClick = (_event: unknown, { item }: { item: DatatableItem }) => {
 
 onMounted(() => {
   // Reads nothing back -- both persistences are off -- but it is what restores the page a user
-  // was on when they close a detail, which `AActionCloseButton` flags for the next list.
+  // was on when they close a detail, which `AActionCloseButtonHistory` flags for the next list.
   loadStoredFilters(pagination, getList)
 })
 

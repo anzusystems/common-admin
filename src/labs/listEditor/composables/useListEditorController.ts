@@ -137,8 +137,8 @@ export type ExposedListEditorHandle<TItem extends Record<string, any>> = Shallow
  * Component-owned state controller for the list editors (v2). Owns row keys,
  * declared dirty tracking (no fragile whole-list JSON diff on volatile fields),
  * validation summary, position renumbering, and the save lifecycle — exposed as
- * a `ListEditorHandle`. Created internally by an editor (default) or lifted by a
- * consumer via `useListEditor()` + `:editor` so the state survives unmount/remount.
+ * a `ListEditorHandle`. Created internally by an editor (default) or by a consumer
+ * that passes it in as `:editor`, so the state survives unmount/remount.
  */
 export function useListEditorController<TItem extends Record<string, any>>(
   options: UseListEditorControllerOptions<TItem>

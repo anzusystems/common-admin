@@ -8,7 +8,6 @@ export const Grant = {
   Allow: 2,
 } as const
 export type GrantType = (typeof Grant)[keyof typeof Grant]
-export const GrantDefault = Grant.Deny
 
 export function useGrant() {
   const { t } = useI18n()

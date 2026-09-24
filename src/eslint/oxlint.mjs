@@ -13,7 +13,6 @@ import { anzuPlugin } from './plugin.mjs'
  *     "jsPlugins": ["@anzusystems/common-admin/oxlint"],
  *     "rules": {
  *       "anzu/no-ts-extension": "error",
- *       "anzu/no-fatal-error-axios-check": "error",
  *       "anzu/url-params-match-template": "error"
  *     }
  *   }

@@ -5,15 +5,27 @@ import type {
   SortableItemNewPositions,
   SortableItemWithParentDataAware,
 } from '@/components/sortable/sortableUtils'
-import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
 
 export type {
   SortableItemDataAware,
   SortableItemNewPosition,
   SortableItemNewPositions,
   SortableItemWithParentDataAware,
-  SortableNested,
-  SortableNestedItem,
+}
+
+export interface SortableNestedItem<TData extends SortableItemWithParentDataAware = any> {
+  data: TData
+  children?: Array<SortableNestedItem> | undefined // if undefined, no nested allowed
+  meta: {
+    dirty: boolean
+  }
+}
+
+export interface SortableNested<TData extends SortableItemWithParentDataAware = any> {
+  children: Array<SortableNestedItem<TData>>
+  meta: {
+    dirty: boolean
+  }
 }
 
 export type ListEditorKey = DocId | IntegerId | string
@@ -44,13 +56,6 @@ export interface PositionHint {
   afterId?: ListEditorKey
   afterIndex?: number
   index?: number
-}
-
-export interface UseListEditorOptions {
-  keyField?: string
-  positionField?: string
-  positionMultiplier?: number
-  updatePosition?: boolean
 }
 
 export interface NestedPositionHint {

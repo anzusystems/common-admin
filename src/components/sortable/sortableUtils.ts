@@ -1,7 +1,5 @@
 import type { DocId, IntegerId } from '@/types/common'
 
-export const WIDGET_HTML_ID_PREFIX = 'a-sortable-'
-
 export interface SortableItemDataAware {
   id?: DocId | IntegerId
   position: number

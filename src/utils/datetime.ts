@@ -3,7 +3,6 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { isNull, isUndefined } from '@/utils/common'
-import { stringToInt } from '@/utils/string'
 import type { DateUTC, DatetimeUTC, DatetimeUTCNullable } from '@/types/common'
 
 dayjs.extend(utc)
@@ -21,9 +20,6 @@ export const dateNow = (): Date => {
 
 export const dateTimeToDate = (isoDate: DatetimeUTC | DatetimeUTCNullable | string): Date => {
   return dayjs(isoDate).toDate()
-}
-export const timestampCurrent = (): number => {
-  return stringToInt(dayjs().utc().unix())
 }
 
 export const dateTimeNow = (ignoreFractionalSeconds = true, ignoreSeconds = false): string => {
@@ -63,10 +59,6 @@ export const dateUtcToday = (): DateUTC => {
 
 export const dateToUtc = (date: dayjs.ConfigType, suffix = SUFFIX) => {
   return dayjs(date).utc().format('YYYY-MM-DDTHH:mm:ss') + suffix
-}
-
-export const yearNow = () => {
-  return dayjs().utc().format('YYYY')
 }
 
 export const dateTimePretty = (

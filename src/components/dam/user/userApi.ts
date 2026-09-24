@@ -4,9 +4,6 @@ import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetA
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import { useApiRequest } from '@/labs/api/useApiRequest'
-// import { apiFetchList } from '@/services/api/apiFetchList'
-// import type { Pagination } from '@/types/Pagination'
-// import type { FilterBag } from '@/types/Filter'
 
 const END_POINT = '/adm/v1/user'
 export const ENTITY = 'user'
@@ -21,12 +18,6 @@ export const fetchDamUserListByIds = (client: () => AxiosInstance, ids: number[]
 
   return execute(ids)
 }
-
-// /**
-//  * @deprecated
-//  */
-// export const fetchDamUserList = (client: () => AxiosInstance, pagination: Pagination, filterBag: FilterBag) =>
-//   apiFetchList<DamUser[]>(client, END_POINT, {}, pagination, filterBag, SYSTEM_CORE_DAM, ENTITY)
 
 export const useFetchDamUserList = (client: () => AxiosInstance) =>
   useApiFetchList<DamUser>({

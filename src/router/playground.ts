@@ -17,7 +17,6 @@ import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
 import ApiFetchListBatchView from '@/playground/apiFetchListBatchView/ApiFetchListBatchView.vue'
 import ImageView from '@/playground/imageView/ImageView.vue'
 import FileView from '@/playground/fileView/FileView.vue'
-import SortableView from '@/playground/sortableView/SortableView.vue'
 import ListEditorView from '@/playground/listEditorView/ListEditorView.vue'
 import SortableListEditorView from '@/playground/sortableListEditorView/SortableListEditorView.vue'
 import NestedSortableListEditorView from '@/playground/nestedSortableListEditorView/NestedSortableListEditorView.vue'
@@ -151,11 +150,6 @@ const router = createRouter({
       path: '/view/file',
       name: 'view-file',
       component: FileView,
-    },
-    {
-      path: '/view/sortable',
-      name: 'view-sortable',
-      component: SortableView,
     },
     {
       path: '/view/list-editor',

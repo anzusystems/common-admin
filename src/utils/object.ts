@@ -11,10 +11,6 @@ export const objectDeepFreeze = <T>(obj: T) => {
   return Object.freeze(obj)
 }
 
-export const objectGetValues = <T>(obj: { [key: string]: T }): T[] => {
-  return Object.keys(obj).map((k) => obj[k])
-}
-
 export const objectGetValueByPath = <R = any>(obj: any, path: string, splitChar = '.') => {
   const a = path.split(splitChar)
   let o = obj

@@ -7,7 +7,6 @@ import { useCollabRoom } from '@/components/collab/composables/collabRoom'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { CollabConfig } from '@/components/collab/types/Collab'
 import { useCollabState } from '@/components/collab/composables/collabState'
-import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import AFormSwitch from '@/components/form/AFormSwitch.vue'
@@ -16,6 +15,7 @@ import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.v
 import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
 import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
 import AImageWidget from '@/components/damImage/AImageWidget.vue'
+import AActionCloseButtonHistory from '@/components/buttons/action/AActionCloseButtonHistory.vue'
 import { useCollabAnyDataChange } from '@/components/collab/composables/collabAnyDataChange'
 
 const model = ref({
@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
 <template>
   <ActionbarWrapper>
     <template #buttons>
-      <AActionCloseButton route-name="home" />
+      <AActionCloseButtonHistory fallback-route-name="home" />
     </template>
   </ActionbarWrapper>
 

@@ -1,6 +1,5 @@
 import type { io } from 'socket.io-client'
-import type { App, DeepReadonly, Ref, UnwrapRef } from 'vue'
-import type { AnzuUser } from '@/types/AnzuUser'
+import type { App } from 'vue'
 import Acl from '@/components/permission/Acl.vue'
 import Notification from '@kyvg/vue3-notification'
 import type { LanguageCode } from '@/composables/languageSettings'
@@ -22,8 +21,6 @@ export type PluginOptions = {
   image?: CommonAdminImageOptions
   collab?: CommonAdminCollabOptions
 }
-
-export type CurrentUserType = DeepReadonly<Ref<UnwrapRef<AnzuUser | undefined>>>
 
 export interface CommonAdminImageConfig {
   imageClient: () => AxiosInstance

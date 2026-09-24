@@ -370,62 +370,6 @@ const anzuPlugin = {
         }
       },
     },
-
-    'no-fatal-error-axios-check': {
-      meta: {
-        type: 'problem',
-        docs: {
-          description:
-            'Disallow isAnzuFatalError + axios.isAxiosError(error.cause) pattern.' +
-            ' Labs API throws AnzuApiAxiosError instead.',
-        },
-        schema: [],
-      },
-      create(context) {
-        return {
-          LogicalExpression(node) {
-            if (node.operator !== '&&') return
-            if (node.parent.type === 'LogicalExpression' && node.parent.operator === '&&') return
-
-            const parts = []
-            let current = node
-            while (current.type === 'LogicalExpression' && current.operator === '&&') {
-              parts.unshift(current.right)
-              current = current.left
-            }
-            parts.unshift(current)
-
-            const hasFatalCheck = parts.some(
-              (part) => part.type === 'CallExpression' && part.callee.name === 'isAnzuFatalError'
-            )
-            const hasInstanceofErrorCheck = parts.some(
-              (part) =>
-                part.type === 'BinaryExpression' &&
-                part.operator === 'instanceof' &&
-                part.right.type === 'Identifier' &&
-                part.right.name === 'Error'
-            )
-            const hasAxiosCheck = parts.some(
-              (part) =>
-                part.type === 'CallExpression' &&
-                part.callee.type === 'MemberExpression' &&
-                part.callee.object.name === 'axios' &&
-                part.callee.property.name === 'isAxiosError'
-            )
-
-            if (hasAxiosCheck && (hasFatalCheck || hasInstanceofErrorCheck)) {
-              context.report({
-                node,
-                message:
-                  'Replace error type check && axios.isAxiosError(error.cause)' +
-                  ' with isAnzuApiAxiosError(error).' +
-                  ' Labs API throws AnzuApiAxiosError with typed AxiosError cause.',
-              })
-            }
-          },
-        }
-      },
-    },
   },
 }
 
@@ -434,8 +378,6 @@ const anzuPlugin = {
  *
  * @param {Object} [options]
  * @param {boolean|'error'|'warn'|'off'} [options.noTsExtension='error'] - Severity for no-ts-extension rule.
- * @param {boolean|'error'|'warn'|'off'} [options.noFatalErrorAxiosCheck='error']
- *   - Severity for no-fatal-error-axios-check rule.
  * @param {boolean|'error'|'warn'|'off'} [options.preferApiFetchItems='error']
  *   - Severity for prefer-api-fetch-items rule.
  * @returns {Object} ESLint flat config entry
@@ -443,7 +385,6 @@ const anzuPlugin = {
 export function recommended(options = {}) {
   const {
     noTsExtension = 'error',
-    noFatalErrorAxiosCheck = 'error',
     preferApiCommand = 'error',
     preferApiFetchItems = 'error',
     urlParamsMatchTemplate = 'error',
@@ -455,12 +396,6 @@ export function recommended(options = {}) {
   const tsExtSeverity = normalizeSeverity(noTsExtension)
   if (tsExtSeverity) {
     rules['anzu/no-ts-extension'] = tsExtSeverity
-  }
-
-  // no-fatal-error-axios-check
-  const fatalSeverity = normalizeSeverity(noFatalErrorAxiosCheck)
-  if (fatalSeverity) {
-    rules['anzu/no-fatal-error-axios-check'] = fatalSeverity
   }
 
   // prefer-api-command

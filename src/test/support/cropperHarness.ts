@@ -1,23 +1,16 @@
 import { mount, type VueWrapper } from '@vue/test-utils'
 import type { Component } from 'vue'
-import ACropperjs from '@/components/ACropperjs.vue'
 import ACropper from '@/components/damImage/uploadQueue/cropper/ACropper.vue'
 import { LANDSCAPE_IMAGE, type CropperFixture } from '@/test/fixtures/cropperImages'
 
 /**
- * Shared harness for the two cropper components.
- *
- * `ACropperjs` (cropper.js v1) and `ACropper` (cropper.js v2) are built out of completely different
- * DOM — one a tree of divs with `cropper-*` classes, the other a set of custom elements — but they
- * are supposed to behave identically. The adapters below name the few places where the markup
- * differs, so one suite can drive both and any divergence shows up as a failing assertion rather
- * than as something a reviewer has to spot by eye.
+ * Shared harness for `ACropper` (cropper.js v2). The adapter names the selectors of its custom
+ * elements, so the suites read like the behaviour they pin rather than like the markup.
  */
 
 /**
- * A crop in source pixels. The two components no longer speak the same units — `ACropperjs` reports
- * source pixels, `ACropper` fractions — so the harness converts and every assertion downstream keeps
- * comparing the one number that means the same thing to both.
+ * A crop in source pixels. `ACropper` speaks fractions of the picture; the harness converts, so the
+ * assertions compare the numbers a reader can check against the fixture.
  */
 export interface CropperData {
   x: number
@@ -59,23 +52,6 @@ export interface CropperAdapter {
   cropBox: string
   /** True once the cropper has torn itself down. */
   isDestroyed: (host: HTMLElement) => boolean
-  /** `ACropper` no longer takes the v1 option props; only the old component is given them. */
-  legacy: boolean
-}
-
-export const V1_ADAPTER: CropperAdapter = {
-  name: 'ACropperjs (cropper.js v1)',
-  component: ACropperjs,
-  face: '.cropper-face',
-  seHandle: '.cropper-point.point-se',
-  nHandle: '.cropper-point.point-n',
-  wHandle: '.cropper-point.point-w',
-  neHandle: '.cropper-point.point-ne',
-  drawSurface: '.cropper-drag-box',
-  imageBox: '.cropper-canvas',
-  cropBox: '.cropper-crop-box',
-  isDestroyed: (host) => host.querySelector('.cropper-container') === null,
-  legacy: true,
 }
 
 export const V2_ADAPTER: CropperAdapter = {
@@ -90,10 +66,9 @@ export const V2_ADAPTER: CropperAdapter = {
   imageBox: 'cropper-image',
   cropBox: 'cropper-selection',
   isDestroyed: (host) => host.querySelector('cropper-canvas') === null,
-  legacy: false,
 }
 
-export const ADAPTERS = [V1_ADAPTER, V2_ADAPTER]
+export const ADAPTERS = [V2_ADAPTER]
 
 export interface MountOptions {
   adapter: CropperAdapter
@@ -143,11 +118,6 @@ export const mountCropper = async (options: MountOptions): Promise<MountedCroppe
     ;(props.cropend as (() => void) | undefined)?.()
   }
 
-  // The old component still wants its option props; the new one has none of them and would put an
-  // unknown prop straight onto the root element as an attribute.
-  const legacyProps = adapter.legacy
-    ? { checkCrossOrigin: false, background: false, responsive: true, zoomOnWheel: false, viewMode: 1 }
-    : {}
   const passThrough = { ...props }
   delete passThrough.ready
   delete passThrough.cropend
@@ -157,9 +127,9 @@ export const mountCropper = async (options: MountOptions): Promise<MountedCroppe
     props: {
       src: fixture.src,
       aspectRatio: 16 / 9,
-      ...legacyProps,
       ...passThrough,
-      ...(adapter.legacy ? { ready: onReady, cropend: onCommit } : { onReady, onCommit }),
+      onReady,
+      onCommit,
     },
   })
 
@@ -183,10 +153,6 @@ export const mountCropper = async (options: MountOptions): Promise<MountedCroppe
 
   /** Reads the crop off the page, in source pixels, for whichever component this is. */
   const getData = (): CropperData => {
-    if (adapter.legacy) {
-      const { x, y, width, height } = (wrapper.vm as unknown as { getData: () => CropperData }).getData()
-      return { x, y, width, height }
-    }
     const canvas = find('cropper-canvas').getBoundingClientRect()
     const picture = find('cropper-image').getBoundingClientRect()
     const selection = find('cropper-selection') as HTMLElement & {
@@ -206,11 +172,6 @@ export const mountCropper = async (options: MountOptions): Promise<MountedCroppe
   }
 
   const setData = async (data: Partial<CropperData>) => {
-    if (adapter.legacy) {
-      ;(wrapper.vm as unknown as { setData: (d: Partial<CropperData>) => void }).setData(data)
-      await nextFrame()
-      return
-    }
     const current = getData()
     await wrapper.setProps({
       modelValue: {

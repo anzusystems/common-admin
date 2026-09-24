@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mountCropper, nextFrame, V1_ADAPTER, V2_ADAPTER, wait } from '@/test/support/cropperHarness'
+import { mountCropper, nextFrame, V2_ADAPTER, wait } from '@/test/support/cropperHarness'
 import { LANDSCAPE_IMAGE, PORTRAIT_IMAGE, SMALL_IMAGE } from '@/test/fixtures/cropperImages'
 
 /**
@@ -23,19 +23,6 @@ describe('ACropper appearance', () => {
     expect(selection.hasAttribute('outlined')).toBe(true)
     expect(normaliseColor(themeColorOf(selection))).toBe('rgba(51,153,255,0.75)')
     cropper.destroy()
-  })
-
-  it('matches the v1 crop box outline colour exactly', async () => {
-    const v1 = await mountCropper({ adapter: V1_ADAPTER })
-    const viewBox = v1.find('.cropper-view-box')
-    const v1Color = normaliseColor(getComputedStyle(viewBox).outlineColor)
-    v1.destroy()
-
-    const v2 = await mountCropper({ adapter: V2_ADAPTER })
-    const v2Color = normaliseColor(themeColorOf(v2.find('cropper-selection')))
-    v2.destroy()
-
-    expect(v2Color).toBe(v1Color)
   })
 
   it('draws a rule-of-thirds grid inside the crop box', async () => {
@@ -165,17 +152,14 @@ describe('ACropper appearance', () => {
     cropper.destroy()
   })
 
-  it('displays the image at the same size cropper.js v1 did for a source wider than the container', async () => {
-    const v1 = await mountCropper({ adapter: V1_ADAPTER, hostWidth: 640, fixture: LANDSCAPE_IMAGE })
-    const v1Image = v1.api.displaySize()
-    v1.destroy()
+  it('displays the image at the size cropper.js v1 did for a source wider than the container', async () => {
+    const cropper = await mountCropper({ adapter: V2_ADAPTER, hostWidth: 640, fixture: LANDSCAPE_IMAGE })
+    const image = cropper.api.displaySize()
+    cropper.destroy()
 
-    const v2 = await mountCropper({ adapter: V2_ADAPTER, hostWidth: 640, fixture: LANDSCAPE_IMAGE })
-    const v2Image = v2.api.displaySize()
-    v2.destroy()
-
-    expect(v2Image.width).toBeCloseTo(v1Image.width, 0)
-    expect(v2Image.height).toBeCloseTo(v1Image.height, 0)
+    // 800x600 fitted to the 640px container, as the v1 component (viewMode 1) laid it out.
+    expect(image.width).toBeCloseTo(640, 0)
+    expect(image.height).toBeCloseTo(480, 0)
   })
 
   it('gives the centre marker the 7px cropper.js v1 drew, not one that follows the page font', async () => {

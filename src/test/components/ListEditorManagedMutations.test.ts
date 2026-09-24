@@ -2,8 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, provide, ref, type Ref } from 'vue'
 import AListEditor from '@/labs/listEditor/AListEditor.vue'
-import { useListEditor } from '@/labs/listEditor/composables/useListEditor'
-import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
+import { type ListEditorHandle, useListEditorController } from '@/labs/listEditor/composables/useListEditorController'
 import {
   createUnsavedSectionRegistry,
   UnsavedSectionKey,
@@ -228,19 +227,23 @@ describe('editor-managed mutations (v2 factory + managed delete)', () => {
   })
 })
 
-describe('useListEditor.addItem position hints (managed add-after path)', () => {
-  it('afterId inserts right after the row and renumbers', () => {
+describe('useListEditorController.addItem position hints (managed add-after path)', () => {
+  const setup = () => {
     const model = ref<Item[]>(items())
-    const editor = useListEditor<Item>(model, { updatePosition: true })
-    const result = editor.addItem({ id: -50, position: 0, title: 'new' }, { afterId: 1 })
-    expect(result.map((i) => i.id)).toEqual([1, -50, 2])
-    expect(result.map((i) => i.position)).toEqual([1, 2, 3])
+    const editor = useListEditorController<Item>({ get: () => model.value, set: (v) => (model.value = v) })
+    return { model, editor }
+  }
+
+  it('afterId inserts right after the row and renumbers', () => {
+    const { model, editor } = setup()
+    editor.addItem({ id: -50, position: 0, title: 'new' }, { afterId: 1 })
+    expect(read(model).map((i) => i.id)).toEqual([1, -50, 2])
+    expect(read(model).map((i) => i.position)).toEqual([1, 2, 3])
   })
 
   it('unknown afterId appends to the end', () => {
-    const model = ref<Item[]>(items())
-    const editor = useListEditor<Item>(model, { updatePosition: true })
-    const result = editor.addItem({ id: -51, position: 0, title: 'new' }, { afterId: 999 })
-    expect(result.map((i) => i.id)).toEqual([1, 2, -51])
+    const { model, editor } = setup()
+    editor.addItem({ id: -51, position: 0, title: 'new' }, { afterId: 999 })
+    expect(read(model).map((i) => i.id)).toEqual([1, 2, -51])
   })
 })

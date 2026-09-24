@@ -73,7 +73,7 @@ const props = withDefaults(
      */
     filterClient?: (() => AxiosInstance) | undefined
     filterUserId?: IntegerIdNullable | undefined
-    /** Where saved bookmarks are filed; see `AAnzuUserFilter`. */
+    /** Where the filter files its saved bookmarks. */
     filterStore?: FilterStoreIdentifier | undefined
   }>(),
   {

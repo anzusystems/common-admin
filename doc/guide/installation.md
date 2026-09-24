@@ -113,7 +113,7 @@ export default defineConfigWithVueTs(
 )
 ```
 
-Enables `anzu/no-ts-extension`, `anzu/no-fatal-error-axios-check`, `anzu/prefer-api-command`, `anzu/prefer-api-fetch-items` and `anzu/url-params-match-template` as errors; each option takes `'warn'` or `'off'`, e.g. `anzuRecommended({ preferApiFetchItems: 'warn' })`. For oxlint: `"jsPlugins": ["@anzusystems/common-admin/oxlint"]` (alpha).
+Enables `anzu/no-ts-extension`, `anzu/prefer-api-command`, `anzu/prefer-api-fetch-items` and `anzu/url-params-match-template` as errors; each option takes `'warn'` or `'off'`, e.g. `anzuRecommended({ preferApiFetchItems: 'warn' })`. For oxlint: `"jsPlugins": ["@anzusystems/common-admin/oxlint"]` (alpha).
 
 ### Sentry and source maps
 

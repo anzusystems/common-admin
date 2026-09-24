@@ -12,7 +12,6 @@ export const LogLevel = {
   Emergency: 'EMERGENCY',
 } as const
 export type LogLevelType = (typeof LogLevel)[keyof typeof LogLevel]
-export const LogLevelDefault = LogLevel.Info
 
 export function useLogLevel() {
   const logLevelOptions = ref<ValueObjectOption<LogLevelType>[]>([

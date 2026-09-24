@@ -100,7 +100,6 @@ export const DamDistributionRequirementStrategy = {
 } as const
 export type DamDistributionRequirementStrategyType =
   (typeof DamDistributionRequirementStrategy)[keyof typeof DamDistributionRequirementStrategy]
-export const DamDistributionRequirementStrategyDefault = DamDistributionRequirementStrategy.None
 
 export interface DamDistributionRequirementsCategorySelectConfig {
   enabled: boolean
@@ -128,7 +127,6 @@ export const DamDistributionStatus = {
   Failed: 'failed',
 } as const
 export type DamDistributionStatusType = (typeof DamDistributionStatus)[keyof typeof DamDistributionStatus]
-export const DamDistributionStatusDefault = DamDistributionStatus.Waiting
 
 export interface DamPubConfig {
   userAuthType: UserAuthTypeType
@@ -139,4 +137,3 @@ export const UserAuthType = {
   OAuth2: 'oauth2',
 } as const
 export type UserAuthTypeType = (typeof UserAuthType)[keyof typeof UserAuthType]
-export const UserAuthTypeDefault = UserAuthType.JsonCredentials

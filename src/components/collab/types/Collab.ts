@@ -1,4 +1,3 @@
-import type { RouteParams } from 'vue-router'
 import type { CollabCachedUsersMap } from '@/components/collab/composables/collabHelpers'
 
 export type CollabUserId = number
@@ -240,7 +239,6 @@ export interface CollabConfig extends CollabRoomOptions {
   occupiedOrKickedRedirectToRoute: string
   editors: CollabFieldName[]
 }
-export type CollabRouteMeta = (params: RouteParams) => CollabConfig
 
 export interface CollabDelayedRequest {
   userId: CollabUserId

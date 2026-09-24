@@ -32,5 +32,3 @@ export type DocId = string
  * UUID v4 as string + null.
  */
 export type DocIdNullable = string | null
-
-export type EnableDisable = 'enable' | 'disable'
