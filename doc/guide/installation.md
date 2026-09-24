@@ -128,9 +128,9 @@ export default defineConfig({
 
 Sentry is on when `APP_DEPLOY_ENV` and `SENTRY_URL` are set; it needs `SENTRY_AUTH_TOKEN` and takes the release name from `GITVAR_SHORTVERSION`. The build then emits `hidden` source maps, uploads them to the `petitpress` org (`org` option) and deletes them from `build.outDir`, so they never reach the deployed site. A missing token or a failed upload fails the build; to build without Sentry, leave `SENTRY_URL` unset. The library's own source maps are chained into the admin's, so frames from common-admin resolve to its `.vue` and `.ts` sources. Other options go to `sentryVitePlugin`, e.g. `release: { name: 'verify-1', finalize: false }` for a test upload. Install `@sentry/vite-plugin` as a devDependency; keep `anzuSentry` first in `plugins`.
 
-### Auto-imports
+### Imports
 
-Admins auto-import the most used helpers and types (`isDefined`, `cloneDeep`, `useAlerts`, `useValidate`, `defineCached`, `IntegerId`, ...) with `unplugin-auto-import`. The list is in `autoImports.config.mts`, shared by `vite.config.mts` and `vitest.config.mts`; copy it from an existing admin. Components are not auto-imported: import them from `@anzusystems/common-admin` (only `Acl` and the `ABtn*` aliases are global).
+Import what a module uses, helpers and types included (`import { isDefined, useAlerts } from '@anzusystems/common-admin'`, `import type { IntegerId } from '@anzusystems/common-admin'`); the admins do not auto-import. Only `Acl` and the `ABtn*` aliases are global components. oxfmt sorts the import statements (`sortImports`) and oxlint the names inside the braces; `scripts/codemods/explicit-imports` holds the scripts that moved the admins off `unplugin-auto-import` and sorted their imports.
 
 ## Component usage example
 
