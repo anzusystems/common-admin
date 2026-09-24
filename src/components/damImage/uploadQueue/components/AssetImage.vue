@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import placeholder16x9 from '@/assets/image/placeholder16x9.jpg'
+import placeholder16x9 from '@/assets/image/placeholder16x9.svg'
 import {
   type AssetFileProperties,
   DamAssetStatus,

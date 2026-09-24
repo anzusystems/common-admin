@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref, toRefs, watch } from 'vue'
-import imagePlaceholderPath from '@/assets/image/placeholder16x9.jpg'
+import imagePlaceholderPath from '@/assets/image/placeholder16x9.svg'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import { cloneDeep, isNumber } from '@/utils/common'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
