@@ -53,14 +53,14 @@ $ yarn lib:build
 <details>
 <summary>More info</summary>
 
-[`copy.sh`](copy.sh) copies `dist`, `package.json`, `src/eslint` and `src/vite` into `node_modules/@anzusystems/common-admin` of each admin, clears `node_modules/.vite/deps/` and touches `.common-admin-updated`. The `watchCommonAdmin` plugin in admin's `vite.config.mts` watches this file, invalidates common-admin modules and does a full reload of the page.
+[`copy.sh`](copy.sh) copies `dist`, `package.json`, `src/eslint` and `src/vite` into `node_modules/@anzusystems/common-admin` of each admin, clears `node_modules/.vite/deps/` and touches `.common-admin-updated`. The `watchCommonAdmin` plugin in admin's `vite.config.mts` watches this file and restarts the dev server, which bundles the new library again and reloads the page. A plain full reload is not enough with Vite 8: the page would keep running the previous build.
 
 `bin/dev --no-install` command inside of admin project also runs `rm -rf node_modules/.vite/deps/` to clear vite deps cache.
 
 </details>
 
 > [!TIP]
-> If admin still serves the previous build, restart it with `bin/dev --no-install` and disable cache in browser dev tools.
+> If the admin still serves the previous build (a branch with the older watcher, which only reloaded the page), restart it with `bin/dev --no-install`.
 
 ## Lint
 
