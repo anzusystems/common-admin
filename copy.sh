@@ -65,6 +65,15 @@ if [[ ! -d "${COMMON_ADMIN_PROJECT}/dist" ]]; then
     exit 1
 fi
 
+# A failed build can leave dist/ without its entry or declarations, and the copy below deletes each
+# admin's working copy before it writes the new one.
+for entry in common-admin.js common-admin.d.ts common-admin.css; do
+    if [[ ! -f "${COMMON_ADMIN_PROJECT}/dist/${entry}" ]]; then
+        echo "Error: dist/${entry} not found in ${COMMON_ADMIN_PROJECT}. The build did not finish; build it again."
+        exit 1
+    fi
+done
+
 if [[ ! -f "${COMMON_ADMIN_PROJECT}/package.json" ]]; then
     echo "Error: package.json not found in ${COMMON_ADMIN_PROJECT}."
     exit 1
@@ -105,10 +114,11 @@ for target in "${TARGETS[@]}"; do
         cp -r "${COMMON_ADMIN_PROJECT}/src/${dir}/"* "${PACKAGE_DIR}/src/${dir}/"
     done
 
-    # Clear Vite's dependency pre-bundle cache so it picks up the new files
-    rm -rf "${target}/node_modules/.vite/deps/"
+    # Clear Vite's dependency pre-bundle cache so it picks up the new files, and vue-tsc's build info: tsc --build
+    # does not look at node_modules, so it would call the admin up to date against the old declarations
+    rm -rf "${target}/node_modules/.vite/deps/" "${target}/node_modules/.cache/tsc/"
 
-    # Touch trigger file so Vite plugin detects the update and does a full-reload
+    # Touch the trigger file: the admin's Vite plugin restarts the dev server, which re-bundles the new files
     touch "${target}/.common-admin-updated"
 
     echo "Successfully copied release from ${COMMON_ADMIN_PROJECT} (dist, src/eslint, src/vite) to ${PACKAGE_DIR}"

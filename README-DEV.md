@@ -53,7 +53,7 @@ $ yarn lib:build
 <details>
 <summary>More info</summary>
 
-[`copy.sh`](copy.sh) copies `dist`, `package.json`, `src/eslint` and `src/vite` into `node_modules/@anzusystems/common-admin` of each admin, clears `node_modules/.vite/deps/` and touches `.common-admin-updated`. The `watchCommonAdmin` plugin in admin's `vite.config.mts` watches this file and restarts the dev server, which bundles the new library again and reloads the page. A plain full reload is not enough with Vite 8: the page would keep running the previous build.
+[`copy.sh`](copy.sh) refuses to run when `dist` lacks `common-admin.js`, `.d.ts` or `.css` (an unfinished build), then copies `dist`, `package.json`, `src/eslint` and `src/vite` into `node_modules/@anzusystems/common-admin` of each admin, clears `node_modules/.vite/deps/` and `node_modules/.cache/tsc/` (vue-tsc's build info, which would otherwise call the admin up to date against the old declarations) and touches `.common-admin-updated`. The `watchCommonAdmin` plugin in admin's `vite.config.mts` watches this file and restarts the dev server, which bundles the new library again and reloads the page. A plain full reload is not enough with Vite 8: the page would keep running the previous build.
 
 `bin/dev --no-install` command inside of admin project also runs `rm -rf node_modules/.vite/deps/` to clear vite deps cache.
 
