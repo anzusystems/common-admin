@@ -16,7 +16,7 @@ import {
 import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/components/AssetDetailDialogLoader.vue'
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
 import { AssetFileFailReason, assetFileIsImageFile } from '@/types/coreDam/AssetFile'
-import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
+import DamAssetImageRoiSelectLazy from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelectLazy.vue'
 import type { ImageCreateUpdateAware } from '@/types/ImageAware'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
@@ -373,7 +373,7 @@ onMounted(() => {
               v-if="(activeTab === AssetDetailTabImageWithRoi.ROI && enableRoiTab) || simpleMode"
               class="w-100 h-100 pa-2 d-flex align-center justify-center"
             >
-              <DamAssetImageRoiSelect
+              <DamAssetImageRoiSelectLazy
                 :ext-system="extSystem"
                 :config-name="configName"
               />

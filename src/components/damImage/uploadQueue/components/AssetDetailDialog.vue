@@ -12,7 +12,7 @@ import AssetDetailDialogLoader from '@/components/damImage/uploadQueue/component
 import AssetImage from '@/components/damImage/uploadQueue/components/AssetImage.vue'
 import AssetDetailDialogSidebar from '@/components/damImage/uploadQueue/components/AssetDetailDialogSidebar.vue'
 import { assetFileIsImageFile } from '@/types/coreDam/AssetFile'
-import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
+import DamAssetImageRoiSelectLazy from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelectLazy.vue'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { IntegerId } from '@/types/common'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
@@ -188,7 +188,7 @@ const assetMainFile = computed(() => {
               v-if="activeTab === AssetDetailTabImageWithRoi.ROI || simpleMode"
               class="w-100 h-100 pa-2 d-flex align-center justify-center"
             >
-              <DamAssetImageRoiSelect
+              <DamAssetImageRoiSelectLazy
                 :ext-system="extSystem"
                 :config-name="configName"
               />

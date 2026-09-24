@@ -15,13 +15,15 @@ import {
   useCommonAdminCoreDamOptions,
   useCommonAdminCoreDamOptionsGlobal,
 } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import rusha from 'rusha'
+import type Rusha from 'rusha'
+import { withTimeout } from '@/labs/filters/listEditorLoader'
 
 // const CHUNK_MAX_RETRY = 6
 const CHUNK_MAX_RETRY = 4
 const SPEED_CHECK_INTERVAL = 1000
 const CHUNK_RETRY_INTERVAL = 1000
 const CHUNK_RETRY_MULTIPLY = 3
+const HASH_LOAD_TIMEOUT = 15_000
 
 const failUpload = async (queueItem: UploadQueueItem, error: unknown = null) => {
   throw error
@@ -96,7 +98,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   let endTimestamp = 0
   let lastLoaded = 0
   let speedCheckTimerId: ReturnType<typeof setTimeout> | null = null
-  const sha = rusha.createHash()
+  let sha: ReturnType<typeof Rusha.createHash> | undefined
   const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize()
 
   const getCurrentTimestamp = () => {
@@ -144,7 +146,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     })
   }
 
-  const processAndUploadChunk = async (offset: number): Promise<File> => {
+  const processAndUploadChunk = async (offset: number, hash: ReturnType<typeof Rusha.createHash>): Promise<File> => {
     updateChunkSize(queueItem.progress.speed)
     let arrayBuffer: { data: ArrayBuffer; offset: number } = await readFile(
       offset,
@@ -165,7 +167,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       attempt++
       try {
         await uploadChunk(chunkFile, offset)
-        sha.update(arrayBuffer.data)
+        hash.update(arrayBuffer.data)
 
         return chunkFile
       } catch (error) {
@@ -225,6 +227,19 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   }
 
   const uploadInit = async () => {
+    // Taken before the first await, as it was before rusha loaded here: the queue starts every item it still
+    // sees waiting, and it looks again after each file it adds.
+    if (queueItem.file && queueItem.file.size > 0) queueItem.status = UploadQueueItemStatus.Uploading
+    // rusha is loaded when a file starts uploading, not with every page that shows the upload queue, and
+    // before the asset is created: a chunk that does not arrive fails the item without an empty asset.
+    const rusha = await withTimeout(
+      import('rusha'),
+      HASH_LOAD_TIMEOUT,
+      `rusha did not load within ${HASH_LOAD_TIMEOUT} ms.`
+    )
+    // Stop has no request to cancel while rusha loads, so it is checked once rusha is here.
+    if (queueItem.status === UploadQueueItemStatus.Stop) throw new Error('Upload stopped')
+    sha = rusha.default.createHash()
     return new Promise((resolve, reject) => {
       if (!queueItem.file || queueItem.file.size < 1) {
         failUpload(queueItem)
@@ -250,17 +265,20 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     }
 
     const filesize = queueItem.file?.size
-    if (isUndefined(filesize)) return Promise.reject()
+    const hash = sha
+    if (isUndefined(filesize) || isUndefined(hash)) return Promise.reject()
+    // A stop while the asset was being created had no chunk request to cancel either.
+    if (queueItem.status === UploadQueueItemStatus.Stop) return Promise.reject(new Error('Upload stopped'))
 
     let i = 0
     while (i < filesize) {
-      const uploadedChunk = await processAndUploadChunk(i)
+      const uploadedChunk = await processAndUploadChunk(i, hash)
       i += uploadedChunk.size
       progress.value = (i / filesize) * 100
     }
 
     endTimestamp = Date.now() / 1000
-    return await finishUpload(queueItem, sha.digest('hex'))
+    return await finishUpload(queueItem, hash.digest('hex'))
   }
 
   return {
