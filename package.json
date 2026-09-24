@@ -7,23 +7,29 @@
     "src/vite/**"
   ],
   "module": "./dist/common-admin.js",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "types": "./dist/common-admin.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/common-admin.js",
-      "types": "./dist/common-admin.d.ts"
+      "types": "./dist/common-admin.d.ts",
+      "import": "./dist/common-admin.js"
     },
     "./styles": {
       "types": "./dist/common-admin.css.d.ts",
       "default": "./dist/common-admin.css"
     },
-    "./eslint": "./src/eslint/plugin.mjs",
+    "./eslint": {
+      "types": "./src/eslint/plugin.d.mts",
+      "default": "./src/eslint/plugin.mjs"
+    },
     "./oxlint": "./src/eslint/oxlint.mjs",
     "./vite": {
       "types": "./src/vite/index.d.mts",
       "default": "./src/vite/index.mjs"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "version": "1.47.0-beta.dev-1790167636",
   "license": "Apache-2.0",
