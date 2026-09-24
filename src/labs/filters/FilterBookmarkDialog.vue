@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import { inject, ref, useTemplateRef, watch } from 'vue'
+import { type Component, inject, ref, shallowRef, useTemplateRef, watch } from 'vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import ARow from '@/components/ARow.vue'
 import AFormSwitch from '@/components/form/AFormSwitch.vue'
-import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
+import { loadListEditor } from '@/labs/filters/listEditorLoader'
 import type { ExposedListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
@@ -60,6 +60,25 @@ const isOpen = ref(true)
 // work with the guard, and a reload that swapped it out would disarm the guard mid-edit.
 const manageLoaded = ref(false)
 const loadFailed = ref(false)
+
+// The editor component itself arrives with the first visit to the manage tab (see `loadListEditor`),
+// on its own track: the bookmark fetch above can succeed while the chunk fails, and the other way round.
+const listEditor = shallowRef<Component>()
+const editorLoadFailed = ref(false)
+let editorLoading = false
+
+const loadEditor = async () => {
+  if (listEditor.value || editorLoading) return
+  editorLoading = true
+  editorLoadFailed.value = false
+  try {
+    listEditor.value = await loadListEditor()
+  } catch {
+    editorLoadFailed.value = true
+  } finally {
+    editorLoading = false
+  }
+}
 
 const guard = useUnsavedChangesGuard({
   sources: [],
@@ -329,6 +348,7 @@ const applyItems = (items: UserAdminConfig[] | null) => {
 watch(activeTab, async () => {
   errorCount.value = false
   if (activeTab.value !== 'manage') return
+  void loadEditor()
   // Entering the tab refreshes it -- a bookmark just added on the other tab is the near case -- but
   // never over work the user has not saved: the fetched order would replace the dragged one.
   if (editor.value?.hasUnsaved) return
@@ -425,9 +445,28 @@ watch(activeTab, async () => {
             class="text-error"
             :title="t('common.alert.unknownError')"
           />
+          <div
+            v-else-if="editorLoadFailed"
+            class="d-flex w-100 align-center justify-space-between"
+          >
+            <span class="text-error">{{ t('common.alert.unknownError') }}</span>
+            <ABtnTertiary
+              data-cy="button-retry-editor"
+              @click.stop="loadEditor"
+            >
+              {{ t('common.button.retry') }}
+            </ABtnTertiary>
+          </div>
+          <div
+            v-else-if="!listEditor"
+            class="d-flex w-100 align-center justify-center"
+          >
+            <VProgressCircular indeterminate />
+          </div>
           <!-- Mounted once the first fetch has settled -- empty or not, so an empty list gets the
                editor's own empty state rather than a blank tab -- and never unmounted after that. -->
-          <ASortableListEditor
+          <component
+            :is="listEditor"
             v-else
             ref="editor"
             v-model="itemsManage"
@@ -445,7 +484,7 @@ watch(activeTab, async () => {
                 @update:model-value="actions.update({ ...raw, customName: String($event ?? '') })"
               />
             </template>
-          </ASortableListEditor>
+          </component>
         </div>
       </VCardText>
       <VCardActions>
@@ -464,7 +503,7 @@ watch(activeTab, async () => {
              which the answer on its way is about to replace. -->
         <ABtnPrimary
           data-cy="button-confirm"
-          :disabled="activeTab === 'manage' && listLoading"
+          :disabled="activeTab === 'manage' && (listLoading || !listEditor)"
           :loading="saveButtonLoading"
           @click.stop="onConfirm"
         >

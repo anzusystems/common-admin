@@ -71,6 +71,14 @@ const bookmarkStore = {
   markStale,
 }
 
+// The real loader by default; a case that needs the chunk to fail says so with a one-off rejection.
+const loadListEditor = vi.hoisted(() => vi.fn())
+vi.mock('@/labs/filters/listEditorLoader', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/labs/filters/listEditorLoader')>()
+  loadListEditor.mockImplementation(actual.loadListEditor)
+  return { ...actual, loadListEditor }
+})
+
 vi.mock('@/labs/filters/bookmarksStore', () => ({
   MAX_BOOKMARK_ITEMS: 10,
   useFilterBookmarkStore: () => bookmarkStore,
@@ -83,6 +91,7 @@ let mounted: VueWrapper | null = null
 
 beforeEach(() => {
   vi.clearAllMocks()
+  loadListEditor.mockClear()
   holdFetch = null
   holdQueue = []
   failFetch = false
@@ -125,6 +134,17 @@ const mountDialog = async () => {
   return mounted
 }
 
+// The editor is loaded on the first visit to the manage tab; this waits until that has settled.
+const editorSettled = async (wrapper: VueWrapper) => {
+  await vi.waitFor(() => {
+    const vm = dialogVm(wrapper)
+    if (!vm.listEditor && !vm.editorLoadFailed) throw new Error('the list editor is still loading')
+  })
+  await nextTick()
+  await flushPromises()
+  await nextTick()
+}
+
 // The manage tab is behind a tab switch; the dialog's own instance holds the flag.
 const openManageTab = async (wrapper: VueWrapper) => {
   const dialog = wrapper.findComponent({ name: 'FilterBookmarkDialog' })
@@ -133,6 +153,7 @@ const openManageTab = async (wrapper: VueWrapper) => {
   await nextTick()
   await flushPromises()
   await nextTick()
+  await editorSettled(wrapper)
 }
 
 const dialogVm = (wrapper: VueWrapper) =>
@@ -140,6 +161,8 @@ const dialogVm = (wrapper: VueWrapper) =>
     activeTab: string
     itemsManage: UserAdminConfig[]
     loadFailed: boolean
+    listEditor: unknown
+    editorLoadFailed: boolean
   }
 
 const editorOf = (wrapper: VueWrapper) =>
@@ -1008,5 +1031,71 @@ describe('when a bookmark cannot be created', () => {
 
     expect(createUserAdminConfig).not.toHaveBeenCalled()
     expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
+  })
+})
+
+describe('loading the list editor', () => {
+  // The test setup registers no Vuetify aliases, so `ABtnPrimary` renders as a plain element that
+  // carries its props as attributes.
+  const confirmDisabled = (wrapper: VueWrapper) =>
+    wrapper
+      .findComponent({ name: 'FilterBookmarkDialog' })
+      .findComponent({ name: 'VCardActions' })
+      .element.querySelector('[data-cy="button-confirm"]')
+      ?.getAttribute('disabled')
+
+  const retryButton = (wrapper: VueWrapper) =>
+    wrapper
+      .findComponent({ name: 'FilterBookmarkDialog' })
+      .findComponent({ name: 'VCardText' })
+      .element.querySelector('[data-cy="button-retry-editor"]') as HTMLElement | null
+
+  it('loads it with the first visit to the manage tab, not with the dialog', async () => {
+    const wrapper = await mountDialog()
+    expect(loadListEditor).not.toHaveBeenCalled()
+
+    await openManageTab(wrapper)
+    expect(loadListEditor).toHaveBeenCalledTimes(1)
+    expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(true)
+  })
+
+  it('says so when it cannot be loaded, holds the save and loads it on retry', async () => {
+    loadListEditor.mockRejectedValueOnce(new Error('chunk failed'))
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+
+    expect(dialogVm(wrapper).editorLoadFailed).toBe(true)
+    expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(false)
+    expect(confirmDisabled(wrapper)).toBe('true')
+
+    retryButton(wrapper)?.click()
+    await editorSettled(wrapper)
+
+    expect(loadListEditor).toHaveBeenCalledTimes(2)
+    expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(true)
+    expect(confirmDisabled(wrapper)).toBe('false')
+  })
+
+  it('keeps the bookmark list it fetched while the editor failed to load', async () => {
+    loadListEditor.mockRejectedValueOnce(new Error('chunk failed'))
+    const wrapper = await mountDialog()
+    await openManageTab(wrapper)
+
+    expect(dialogVm(wrapper).itemsManage.map((item) => item.id)).toEqual([1, 2, 3])
+    retryButton(wrapper)?.click()
+    await editorSettled(wrapper)
+    expect(unsaved(wrapper)).toBe(false)
+  })
+
+  it('loads it again in a dialog opened after the first one closed', async () => {
+    const first = await mountDialog()
+    await openManageTab(first)
+    first.unmount()
+    mounted = null
+
+    const second = await mountDialog()
+    await openManageTab(second)
+    expect(loadListEditor).toHaveBeenCalledTimes(2)
+    expect(second.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(true)
   })
 })

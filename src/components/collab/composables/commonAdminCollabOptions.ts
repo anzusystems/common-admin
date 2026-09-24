@@ -1,18 +1,7 @@
-import { ref } from 'vue'
-import type { CommonAdminCollabOptions } from '@/AnzuSystemsCommonAdmin'
+import { collabOptions } from '@/plugins/pluginOptions'
 import { isUndefined } from '@/utils/common'
 
-const collabOptions = ref<CommonAdminCollabOptions>({
-  enabled: false,
-  socketUrl: '',
-  beforeReconnect: () => new Promise((resolve) => resolve()),
-  io: undefined,
-})
-
-export function initCommonAdminCollabOptions(data: CommonAdminCollabOptions | undefined) {
-  if (isUndefined(data)) return
-  collabOptions.value = data
-}
+export { initCommonAdminCollabOptions } from '@/plugins/pluginOptions'
 
 export function useCommonAdminCollabOptions() {
   if (isUndefined(collabOptions.value)) {

@@ -5,9 +5,11 @@ import Notification from '@kyvg/vue3-notification'
 import type { LanguageCode } from '@/composables/languageSettings'
 import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
 import type { AxiosInstance } from 'axios'
-import { initCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
-import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { initCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
+import {
+  initCommonAdminCollabOptions,
+  initCommonAdminCoreDamOptions,
+  initCommonAdminImageOptions,
+} from '@/plugins/pluginOptions'
 import type { IntegerId } from '@/types/common'
 import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
 import type {

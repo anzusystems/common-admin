@@ -1,5 +1,4 @@
-import { ref } from 'vue'
-import type { CommonAdminImageOptions } from '@/AnzuSystemsCommonAdmin'
+import { imageOptions } from '@/plugins/pluginOptions'
 import { isUndefined } from '@/utils/common'
 import {
   bulkUpdateImages as bulkUpdateImagesApi,
@@ -10,11 +9,7 @@ import {
   updateImage as updateImageApi,
 } from '@/components/damImage/uploadQueue/api/imageApiCms'
 
-const imageOptions = ref<CommonAdminImageOptions>(undefined)
-
-export function initCommonAdminImageOptions(data: CommonAdminImageOptions) {
-  imageOptions.value = data
-}
+export { initCommonAdminImageOptions } from '@/plugins/pluginOptions'
 
 export function useCommonAdminImageOptions(configName: string = 'default') {
   if (

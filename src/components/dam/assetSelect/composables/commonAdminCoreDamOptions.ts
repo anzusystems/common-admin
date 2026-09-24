@@ -1,5 +1,5 @@
-import { ref } from 'vue'
-import type { CommonAdminCoreDamOptions, ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
+import type { ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
+import { coreDamOptions as commonAdminCoreDamOptions } from '@/plugins/pluginOptions'
 import { isUndefined } from '@/utils/common'
 import { i18n } from '@/plugins/i18n'
 
@@ -12,11 +12,7 @@ const defaultDescriptionValidation: ImageFieldValidationConfig = {
 }
 const defaultSourceValidation: ImageFieldValidationConfig = { required: true, min: 0, max: 255 }
 
-const commonAdminCoreDamOptions = ref<CommonAdminCoreDamOptions | undefined>(undefined)
-
-export function initCommonAdminCoreDamOptions(data: CommonAdminCoreDamOptions) {
-  commonAdminCoreDamOptions.value = data
-}
+export { initCommonAdminCoreDamOptions } from '@/plugins/pluginOptions'
 
 export function useCommonAdminCoreDamOptions(configName: string = 'default') {
   if (
