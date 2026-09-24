@@ -8,7 +8,17 @@
  * `ok` has to pass with no violation; `problems` has to fail with exactly the violations expected.
  */
 import { execFileSync, spawnSync } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -29,6 +39,9 @@ for (const name of ['ok', 'problems']) {
   const work = mkdtempSync(join(tmpdir(), `explicit-imports-${name}-`))
   try {
     cpSync(join(testDir, 'fixtures', name), work, { recursive: true })
+    // Kept under another name in the repository: a `.d.ts` with `declare global` anywhere in the
+    // tree leaks into the declaration bundle of the library and renames its types (`Ref_2`).
+    renameSync(join(work, 'src/auto-imports.d.ts.fixture'), join(work, 'src/auto-imports.d.ts'))
     mkdirSync(join(work, 'scripts'), { recursive: true })
     const git = (...a) => execFileSync('git', ['-C', work, ...a], { stdio: 'ignore' })
     git('init', '-q')
