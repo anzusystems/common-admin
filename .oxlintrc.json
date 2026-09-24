@@ -2,6 +2,8 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue"],
   "env": { "browser": true },
+  // Inputs and outputs of the explicit-imports codemod tests: code written to trip it, not to pass lint.
+  "ignorePatterns": ["scripts/codemods/explicit-imports/test/fixtures", "scripts/codemods/explicit-imports/test/expected"],
   "categories": { "correctness": "error" },
   "rules": {
     "no-unused-vars": ["error", { "caughtErrors": "none", "argsIgnorePattern": "^_" }],

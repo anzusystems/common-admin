@@ -20,6 +20,8 @@ export default defineConfigWithVueTs(
       '.stylelintrc.cjs',
       '**/cypress/**',
       '.playwright-cli/**',
+      'scripts/codemods/explicit-imports/test/fixtures/**',
+      'scripts/codemods/explicit-imports/test/expected/**',
     ],
   },
   pluginVue.configs['flat/essential'],
