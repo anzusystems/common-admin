@@ -1,4 +1,4 @@
-planned
+{version} — unreleased
 ===
 
 ### Added

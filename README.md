@@ -48,3 +48,11 @@ A feature may be deprecated in any release when a better replacement exists. Dep
 ### Recommended version range
 
 To take only fixes automatically, use a range that locks the current minor (`~2.1.0`) and upgrade to a new minor by hand after reading its changelog. `^2.1.0` takes minor releases too.
+
+## Releasing
+
+Releases are made with [release-tools](https://github.com/anzusystems/release-tools) ([guide](https://github.com/anzusystems/release-tools/blob/main/docs/guide.md)), never by hand:
+
+- `yarn release:start` — starts a release (a branch and a folder of its own) or a hotfix of an older line.
+- `yarn release:publish` — publishes a prerelease (`alpha`, `beta`, `rc`), a dev build or the final. The tag is created by the command, CI checks, builds and publishes to npm, and the final is merged into `main`.
+- `yarn release:cleanup` — deletes old dev builds and tags that never became a release.

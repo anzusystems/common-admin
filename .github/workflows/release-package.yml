@@ -1,69 +1,44 @@
-name: Node.js Package Release
-
+# Created by release-tools init: releases are made with release:start and release:publish, never by hand.
+name: Release
 on:
-  release:
-    types: [created]
   push:
-    branches:
-      - beta
-
-permissions:
-  contents: read
-  id-token: write
-
+    tags: ['[0-9]*.[0-9]*.[0-9]*']
+concurrency:
+  group: release
+  cancel-in-progress: false
+  queue: max
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 jobs:
-  build-publish-pkg:
-    name: Build and push package on node 24
-    runs-on: 'ubuntu-latest'
-    environment: npmjs-publish
+  build:
+    if: ${{ !github.event.deleted }}
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read, pull-requests: read }
+    outputs:
+      release: ${{ steps.build.outputs.release }}
+      tag-object: ${{ steps.build.outputs.tag-object }}
+      tarball-sha512: ${{ steps.build.outputs.tarball-sha512 }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - id: build
+        uses: anzusystems/release-tools/publish@main
+        with: { mode: build }
+  publish:
+    needs: build
+    if: needs.build.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    environment: npmjs-publish
+    permissions: { contents: write, id-token: write }
+    outputs:
+      version: ${{ steps.publish.outputs.version }}
+      tag: ${{ steps.publish.outputs.tag }}
+      prerelease: ${{ steps.publish.outputs.prerelease }}
+      latest: ${{ steps.publish.outputs.latest }}
+      published: ${{ steps.publish.outputs.published }}
+      released-now: ${{ steps.publish.outputs.released-now }}
+    steps:
+      - id: publish
+        uses: anzusystems/release-tools/publish@main
         with:
-          ref: ${{ github.ref }}
-
-      - name: Check version change (beta only)
-        id: check
-        if: github.event_name == 'push'
-        uses: EndBug/version-check@v2
-        with:
-          diff-search: true
-
-      - name: Enable corepack
-        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
-        run: corepack enable
-
-      - name: Setup Node
-        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'yarn'
-          cache-dependency-path: 'yarn.lock'
-
-      - name: Install dependencies
-        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
-        run: yarn install --immutable
-        env:
-          SKIP_PLAYWRIGHT_INSTALL: true
-
-      - name: Run Yarn Build
-        if: github.event_name == 'release' || (steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta'))
-        run: yarn lib:build
-
-      - name: Publish package to npmjs
-        if: github.event_name == 'release'
-        run: |
-          if [ "${{ github.event.release.prerelease }}" = "true" ]; then
-            npm publish --access public --tag beta
-          else
-            npm publish --access public
-          fi
-
-      - name: Publish beta package to npmjs
-        if: github.event_name == 'push' && steps.check.outputs.changed == 'true' && contains(steps.check.outputs.version, 'beta')
-        run: |
-          npm publish --tag beta
+          mode: publish
+          tag-object: '${{ needs.build.outputs.tag-object }}'
+          tarball-sha512: '${{ needs.build.outputs.tarball-sha512 }}'
