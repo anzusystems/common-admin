@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef, watch } from 'vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import ACropper from '@/components/damImage/uploadQueue/cropper/ACropper.vue'
-import type { CropRect } from '@/components/damImage/uploadQueue/cropper/cropperTypes'
+import ACropper from '@/domains/dam/cropper/components/ACropper.vue'
+import type { CropRect } from '@/domains/dam/cropper/utils/cropperTypes'
 
 /**
  * The cropper on cropper.js v2 (`ACropper`), with its crop data shown live in source pixels.

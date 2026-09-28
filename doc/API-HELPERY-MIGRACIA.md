@@ -395,7 +395,7 @@ Vedome sa to líši od predlohy v tých troch adminoch, ktorá továreň vystavu
 (`useFetchJob()`). Ten tvar sprístupní `abortRequest`, ale prepíše 27 miest, aby si odovzdávali
 handle, ktorý nikto nevolá: naprieč všetkými siedmimi repami je **nula** volaní
 `abortFetch`/`abortRequest`, jediní volajúci vo flotile sú
-`common-admin/src/labs/log/logActions.ts:80,120`. Ak sa abort niekedy bude treba, prechod na
+`common-admin/src/domains/log/composables/logActions.ts:80,120`. Ak sa abort niekedy bude treba, prechod na
 továreň je potom samostatná a viditeľná zmena.
 
 **Pozor na generiká `createJob`.** `apiCreateOne` je `<T = telo, R = T>` (`apiCreateOne.ts:22`),

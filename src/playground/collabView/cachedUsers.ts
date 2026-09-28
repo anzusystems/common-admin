@@ -1,7 +1,7 @@
-import type { AnzuUser, AnzuUserMinimal } from '@/types/AnzuUser'
-import type { IntegerId } from '@/types/common'
-import { defineCached } from '@/composables/system/defineCached'
-import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
+import type { AnzuUser, AnzuUserMinimal } from '@/shared/types/AnzuUser'
+import type { IntegerId } from '@/shared/types/common'
+import { defineCached } from '@/domains/cached/composables/defineCached'
+import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
 import { cmsClient } from '@/playground/mock/cmsClient'
 
 export const fetchUserListByIds = (ids: number[]) => {

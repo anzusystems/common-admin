@@ -1,0 +1,273 @@
+<script lang="ts" setup>
+import { useI18n } from 'vue-i18n'
+import { computed, ref } from 'vue'
+import { DamAssetType, DamAssetTypeDefault } from '@/domains/dam/types/Asset'
+import { type AssetFile, assetFileIsImageFile } from '@/domains/dam/types/AssetFile'
+import { useAssetDetailStore } from '@/domains/dam/assetDetail/store/assetDetailStore'
+import { storeToRefs } from 'pinia'
+import AssetCustomMetadataForm from '@/domains/dam/assetDetail/components/AssetCustomMetadataForm.vue'
+import ACopyText from '@/domains/ui/components/ACopyText.vue'
+import { prettyBytes } from '@/shared/utils/file'
+import AssetMetadataImageAttributes from '@/domains/dam/assetDetail/components/AssetMetadataImageAttributes.vue'
+import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
+import { dateTimePretty } from '@/shared/utils/datetime'
+import { ADamAssetMetadataValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
+import AuthorRemoteAutocompleteWithCached from '@/domains/dam/author/components/AuthorRemoteAutocompleteWithCached.vue'
+import KeywordRemoteAutocompleteWithCached from '@/domains/dam/keyword/components/KeywordRemoteAutocompleteWithCached.vue'
+import { useDamKeywordAssetTypeConfig } from '@/domains/dam/keyword/composables/damKeywordConfig'
+import { useDamAuthorAssetTypeConfig } from '@/domains/dam/author/composables/damAuthorConfig'
+import type { IntegerId } from '@/shared/types/common'
+import ABooleanValue from '@/domains/ui/components/ABooleanValue.vue'
+import ARow from '@/domains/ui/components/ARow.vue'
+import ACachedUserChip from '@/domains/cached/components/ACachedUserChip.vue'
+import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+
+const props = withDefaults(
+  defineProps<{
+    extSystem: IntegerId
+    readonly?: boolean
+    configName?: string
+    showEditButton?: boolean
+  }>(),
+  {
+    readonly: false,
+    configName: 'default',
+    showEditButton: false,
+  }
+)
+
+const emit = defineEmits<{
+  (e: 'editInDam'): void
+}>()
+
+const { t } = useI18n()
+
+const panels = ref(['metadata', 'file'])
+
+const assetDetailStore = useAssetDetailStore()
+const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } = storeToRefs(assetDetailStore)
+
+const assetType = computed(() => {
+  return asset.value?.attributes.assetType || DamAssetTypeDefault
+})
+
+const isTypeImage = computed(() => {
+  return assetType.value === DamAssetType.Image
+})
+
+const assetMainFile = computed<null | AssetFile>(() => {
+  return asset.value && asset.value.mainFile ? (asset.value.mainFile as AssetFile) : null
+})
+
+const onAnyMetadataChange = () => {
+  metadataAreTouched.value = true
+}
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem
+)
+
+const { cachedUsers } = useDamCachedUsers()
+
+const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
+</script>
+
+<template>
+  <VBtn
+    v-if="showEditButton && asset"
+    size="small"
+    class="ma-2"
+    @click="emit('editInDam')"
+  >
+    {{ editAssetLabel }}
+  </VBtn>
+  <VExpansionPanels
+    v-if="asset"
+    v-model="panels"
+    multiple
+    class="v-expansion-panels--compact"
+  >
+    <VExpansionPanel
+      elevation="0"
+      :title="t('common.damImage.asset.detail.info.metadata')"
+      value="metadata"
+    >
+      <VExpansionPanelText>
+        <AssetCustomMetadataForm
+          v-if="asset"
+          v-model="asset.metadata.customData"
+          :ext-system="extSystem"
+          :asset-type="assetType"
+          :readonly="readonly"
+          @any-change="onAnyMetadataChange"
+        >
+          <template #after-pinned>
+            <VRow
+              v-if="keywordEnabled"
+              density="compact"
+              class="my-2"
+            >
+              <VCol>
+                <ASystemEntityScope
+                  subject="keyword"
+                  system="dam"
+                >
+                  <KeywordRemoteAutocompleteWithCached
+                    v-model="asset.keywords"
+                    :ext-system="extSystem"
+                    :label="t('common.damImage.asset.model.keywords')"
+                    data-cy="custom-field-keywords"
+                    clearable
+                    multiple
+                    :disabled="readonly"
+                    :required="keywordRequired"
+                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                    @update:model-value="onAnyMetadataChange"
+                  />
+                </ASystemEntityScope>
+              </VCol>
+            </VRow>
+            <VRow
+              v-if="authorEnabled"
+              density="compact"
+              class="my-2"
+            >
+              <VCol>
+                <ASystemEntityScope
+                  subject="author"
+                  system="dam"
+                >
+                  <AuthorRemoteAutocompleteWithCached
+                    v-model="asset.authors"
+                    :ext-system="extSystem"
+                    :label="t('common.damImage.asset.model.authors')"
+                    :author-conflicts="authorConflicts"
+                    data-cy="custom-field-authors"
+                    clearable
+                    multiple
+                    :disabled="readonly"
+                    :required="authorRequired"
+                    :validation-scope="ADamAssetMetadataValidationScopeSymbol"
+                    @update:model-value="onAnyMetadataChange"
+                  />
+                </ASystemEntityScope>
+              </VCol>
+            </VRow>
+            <VRow
+              v-if="mainFileSingleUseEnabled"
+              density="compact"
+              class="my-2"
+            >
+              <VCol>
+                <ARow
+                  v-if="readonly"
+                  :title="t('common.damImage.asset.model.mainFileSingleUse')"
+                >
+                  <ABooleanValue :value="mainFileSingleUse" />
+                </ARow>
+                <VSwitch
+                  v-else
+                  v-model="mainFileSingleUse"
+                  :label="t('common.damImage.asset.model.mainFileSingleUse')"
+                />
+              </VCol>
+            </VRow>
+          </template>
+        </AssetCustomMetadataForm>
+      </VExpansionPanelText>
+    </VExpansionPanel>
+    <VExpansionPanel
+      v-if="showFileInfoEnabled"
+      elevation="0"
+      :title="t('common.damImage.asset.detail.info.file')"
+      value="file"
+    >
+      <VExpansionPanelText
+        class="text-body-small"
+        style="overflow-wrap: normal"
+      >
+        <!-- all types -->
+        <VRow>
+          <VCol cols="3">
+            {{ t('common.damImage.asset.detail.info.field.id') }}
+          </VCol>
+          <VCol cols="9">
+            <ACopyText :value="asset.id" />
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol cols="3">
+            {{ t('common.damImage.asset.detail.info.field.type') }}
+          </VCol>
+          <VCol cols="9">
+            {{ asset.attributes.assetType }}
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol cols="3">
+            {{ t('common.model.tracking.created') }}
+          </VCol>
+          <VCol cols="9">
+            {{ dateTimePretty(asset.createdAt) }}<br />
+            <ACachedUserChip
+              :id="asset.createdBy"
+              :cached-users="cachedUsers"
+            />
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol cols="3">
+            {{ t('common.model.tracking.modified') }}
+          </VCol>
+          <VCol cols="9">
+            {{ dateTimePretty(asset.modifiedAt) }}<br />
+            <ACachedUserChip
+              :id="asset.modifiedBy"
+              :cached-users="cachedUsers"
+            />
+          </VCol>
+        </VRow>
+        <template v-if="assetMainFile">
+          <VRow>
+            <VCol cols="3">
+              {{ t('common.damImage.asset.detail.info.field.mainFileId') }}
+            </VCol>
+            <VCol cols="9">
+              <ACopyText :value="assetMainFile.id" />
+            </VCol>
+          </VRow>
+          <VRow>
+            <VCol cols="3">
+              {{ t('common.damImage.asset.detail.info.field.mimeType') }}
+            </VCol>
+            <VCol cols="9">
+              {{ assetMainFile.fileAttributes.mimeType }}
+            </VCol>
+          </VRow>
+          <VRow>
+            <VCol cols="3">
+              {{ t('common.damImage.asset.detail.info.field.size') }}
+            </VCol>
+            <VCol cols="9">
+              {{ prettyBytes(assetMainFile.fileAttributes.size) }}
+            </VCol>
+          </VRow>
+          <AssetMetadataImageAttributes
+            v-if="isTypeImage && assetFileIsImageFile(assetMainFile)"
+            :file="assetMainFile"
+          />
+        </template>
+      </VExpansionPanelText>
+    </VExpansionPanel>
+  </VExpansionPanels>
+</template>

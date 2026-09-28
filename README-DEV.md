@@ -21,7 +21,7 @@ $ npx playwright install chromium --with-deps
 ## Local development
 
 #### Local playground
-You can use `src/playground` as a playground to develop and test your features. Put playground code in a separate folder with all code. Do not use other folder structure for playground (except router in `src/router/playground.ts`).
+You can use `src/playground` as a playground to develop and test your features. Put playground code in a separate folder with all code. Do not use other folder structure for playground.
 
 There is a pinia and vue router available for you to use too. This is just a playground and will be not included inside final build.
 

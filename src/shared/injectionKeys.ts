@@ -1,0 +1,7 @@
+import type { InjectionKey } from 'vue'
+import type { LanguageCode } from '@/domains/system/composables/languageSettings'
+
+export const SystemScopeKey: InjectionKey<string | undefined> = Symbol.for('anzu:SystemScope')
+export const SubjectScopeKey: InjectionKey<string | undefined> = Symbol.for('anzu:SubjectScope')
+export const AvailableLanguagesSymbol: InjectionKey<LanguageCode[] | undefined> = Symbol.for('anzu:AvailableLanguages')
+export const DefaultLanguageSymbol: InjectionKey<LanguageCode | undefined> = Symbol.for('anzu:DefaultLanguage')

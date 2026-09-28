@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
+import AImagePublicInput from '@/domains/dam/imageWidget/components/AImagePublicInput.vue'
 import { ref } from 'vue'
-import type { IntegerIdNullable } from '@/types/common'
-import ADialogToolbar from '@/components/ADialogToolbar.vue'
+import type { IntegerIdNullable } from '@/shared/types/common'
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
 
 const dialog = ref(false)
 const saving = ref(false)

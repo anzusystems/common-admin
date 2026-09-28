@@ -4,16 +4,16 @@ import {
   type FilterConfig,
   type FilterData,
   type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
-import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import type { ValueObjectOption } from '@/types/ValueObject'
+} from '@/domains/filters/composables/filterFactory'
+import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
+import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
+import type { IntegerId, IntegerIdNullable } from '@/shared/types/common'
+import type { ValueObjectOption } from '@/shared/types/ValueObject'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { AnzuUserAndTimeTrackingAware } from '@/shared/types/AnzuUserAndTimeTrackingAware'
 import { type Ref } from 'vue'
 
-import type { Pagination } from '@/labs/filters/pagination'
+import type { Pagination } from '@/domains/api/composables/pagination'
 
 interface Rubric extends AnzuUserAndTimeTrackingAware {
   id: IntegerId

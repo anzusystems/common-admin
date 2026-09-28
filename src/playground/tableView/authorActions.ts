@@ -1,12 +1,12 @@
 import { type Ref, ref } from 'vue'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import type { Pagination } from '@/labs/filters/pagination'
-import { useAlerts } from '@/composables/system/alerts'
-import { useFetchAuthorList } from '@/components/damImage/uploadQueue/api/authorApi'
+import type { DamAuthor } from '@/domains/dam/author/types/DamAuthor'
+import type { Pagination } from '@/domains/api/composables/pagination'
+import { useAlerts } from '@/domains/system/composables/alerts'
+import { useFetchAuthorList } from '@/domains/dam/author/api/authorApi'
 import { damClient } from '@/playground/mock/coreDamClient'
-import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
-import { SORT_BY_ID } from '@/composables/system/datatableColumns'
-import { SortOrder } from '@/labs/api/SortOrder'
+import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
+import { SORT_BY_ID } from '@/domains/filters/datatable/utils/datatableColumns'
+import { SortOrder } from '@/domains/api/types/SortOrder'
 
 const datatableHiddenColumns = ref<Array<string>>(['id'])
 const listLoading = ref(false)

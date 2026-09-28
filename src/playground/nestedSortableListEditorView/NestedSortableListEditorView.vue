@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { computed, ref } from 'vue'
-import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEditor.vue'
-import AFormTextField from '@/components/form/AFormTextField.vue'
-import type { NestedPositionHint, NestedTree } from '@/labs/listEditor/types/listEditorTypes'
-import type { NestedViewItem } from '@/labs/listEditor/composables/useNestedListEditor'
-import type { ExposedNestedSortableListEditorHandle } from '@/labs/listEditor/composables/useNestedListEditorController'
+import ANestedSortableListEditor from '@/domains/listEditor/components/ANestedSortableListEditor.vue'
+import AFormTextField from '@/domains/form/components/AFormTextField.vue'
+import type { NestedPositionHint, NestedTree } from '@/domains/listEditor/types/listEditorTypes'
+import type { NestedViewItem } from '@/domains/listEditor/composables/useNestedListEditor'
+import type { ExposedNestedSortableListEditorHandle } from '@/domains/listEditor/composables/useNestedListEditorController'
 
 interface MenuItem extends Record<string, any> {
   id: number

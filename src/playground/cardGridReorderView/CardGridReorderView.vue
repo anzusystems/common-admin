@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
-import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
-import AFormTextarea from '@/components/form/AFormTextarea.vue'
+import ASortableListEditor from '@/domains/listEditor/components/ASortableListEditor.vue'
+import AFormTextarea from '@/domains/form/components/AFormTextarea.vue'
 
 interface MockImage extends Record<string, any> {
   id: number

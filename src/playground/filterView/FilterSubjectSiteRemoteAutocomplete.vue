@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
+import AFilterRemoteAutocomplete from '@/domains/remoteAutocomplete/components/AFilterRemoteAutocomplete.vue'
 import { fetchItems, fetchItemsByIds, useSubjectSiteInnerFilter } from '@/playground/filterView/FilterSubjectSiteTools'
 import { provide } from 'vue'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 
 withDefaults(
   defineProps<{

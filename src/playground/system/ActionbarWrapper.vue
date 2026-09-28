@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { type RouteParams, type RouteRecordName, type RouteRecordNormalized, useRoute } from 'vue-router'
 import { useActionbar } from '@/playground/system/actionbar'
-import { isString } from '@/utils/common'
+import { isString } from '@/shared/utils/common'
 
 const { canTeleport } = useActionbar()
 

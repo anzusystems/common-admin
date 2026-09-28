@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
-import type { DocId } from '@/types/common'
-import AChipNoLink from '@/components/AChipNoLink.vue'
-import { DamAssetType } from '@/types/coreDam/Asset'
+import AAssetSelect from '@/domains/dam/assetSelect/components/AAssetSelect.vue'
+import type { DocId } from '@/shared/types/common'
+import AChipNoLink from '@/domains/ui/components/AChipNoLink.vue'
+import { DamAssetType } from '@/domains/dam/types/Asset'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
+import type { AssetSelectReturnData } from '@/domains/dam/types/AssetSelect'
 
 const secondDialog = ref(false)
 const thirdAssetSelect = ref<InstanceType<typeof AAssetSelect> | null>(null)

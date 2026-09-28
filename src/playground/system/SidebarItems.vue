@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { type RouteRecordNormalized, useRouter } from 'vue-router'
 import { computed } from 'vue'
-import { isString } from '@/utils/common'
+import { isString } from '@/shared/utils/common'
 
 const router = useRouter()
 

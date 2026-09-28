@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import ADatetime from '@/components/datetime/ADatetime.vue'
+import ADatetime from '@/domains/ui/datetime/components/ADatetime.vue'
 import PollSelectFilter from '@/playground/subjectSelectView/PollSelectFilter.vue'
-import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
+import { generateDatatableMinMaxSelectStrategy } from '@/domains/subjectSelect/utils/selectStrategies'
 import { type PollDemo, useFetchPollListDemo } from '@/playground/subjectSelectView/pollDemoApi'
-import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
-import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
-import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
+import ASubjectSelect from '@/domains/subjectSelect/components/ASubjectSelect.vue'
+import ADatatableOrdering from '@/domains/filters/datatable/components/ADatatableOrdering.vue'
+import ADatatableConfigButton from '@/domains/filters/datatable/components/ADatatableConfigButton.vue'
 import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
-import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
+import { useSubjectSelect } from '@/domains/subjectSelect/composables/useSubjectSelect'
 import { provide } from 'vue'
-import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 
 withDefaults(
   defineProps<{

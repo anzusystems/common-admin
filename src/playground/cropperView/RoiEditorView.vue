@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef, triggerRef } from 'vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
-import { initCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
-import { useImageRoiStore } from '@/components/damImage/uploadQueue/composables/imageRoiStore'
+import DamAssetImageRoiSelect from '@/domains/dam/cropper/components/DamAssetImageRoiSelect.vue'
+import { initCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
+import { useImageRoiStore } from '@/domains/dam/cropper/store/imageRoiStore'
 import { damRoiClient, savedRegions, setMockImageFile } from '@/playground/mock/damRoiClient'
-import type { AssetFileImage } from '@/types/coreDam/AssetFile'
-import type { RegionOfInterest } from '@/types/coreDam/Roi'
+import type { AssetFileImage } from '@/domains/dam/types/AssetFile'
+import type { RegionOfInterest } from '@/domains/dam/types/Roi'
 
 /**
  * The region-of-interest editor exactly as the DAM ships it — the real `DamAssetImageRoiSelect`,

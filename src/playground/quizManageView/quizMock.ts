@@ -1,9 +1,9 @@
 import { type Ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import { helpers } from '@vuelidate/validators'
-import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
-import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
-import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
+import { useValidateRequired } from '@/shared/validators/vuelidate/common/useValidateRequired'
+import { useValidateMinLength } from '@/shared/validators/vuelidate/common/useValidateMinLength'
+import { useValidateMaxLength } from '@/shared/validators/vuelidate/common/useValidateMaxLength'
 
 export const QuizValidationSymbol = Symbol.for('playground:quiz-validation-scope')
 

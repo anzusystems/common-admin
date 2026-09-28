@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
-import AImageWidget from '@/components/damImage/AImageWidget.vue'
+import AImageWidgetSimple from '@/domains/dam/imageWidget/components/AImageWidgetSimple.vue'
+import AImageWidget from '@/domains/dam/imageWidget/components/AImageWidget.vue'
 import { ref } from 'vue'
-import type { IntegerIdNullable } from '@/types/common'
-import ADialogToolbar from '@/components/ADialogToolbar.vue'
+import type { IntegerIdNullable } from '@/shared/types/common'
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
 import useVuelidate from '@vuelidate/core'
-import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
-import { isImageCreateUpdateAware } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
-import type { MediaAware } from '@/types/MediaAware'
+import AImageMediaWidget from '@/domains/dam/imageWidget/components/AImageMediaWidget.vue'
+import { isImageCreateUpdateAware } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
+import type { MediaAware } from '@/domains/dam/types/MediaAware'
 
 const imageId = ref<IntegerIdNullable>(null)
 const imageId2 = ref<IntegerIdNullable>(null)

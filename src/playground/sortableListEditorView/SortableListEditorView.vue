@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
-import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
-import AFormTextField from '@/components/form/AFormTextField.vue'
-import type { ListViewItem } from '@/labs/listEditor/types/listEditorTypes'
+import ASortableListEditor from '@/domains/listEditor/components/ASortableListEditor.vue'
+import AFormTextField from '@/domains/form/components/AFormTextField.vue'
+import type { ListViewItem } from '@/domains/listEditor/types/listEditorTypes'
 
 interface FaqItem extends Record<string, any> {
   id: number

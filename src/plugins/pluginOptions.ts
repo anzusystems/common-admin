@@ -4,7 +4,7 @@ import type {
   CommonAdminCoreDamOptions,
   CommonAdminImageOptions,
 } from '@/AnzuSystemsCommonAdmin'
-import { isUndefined } from '@/utils/common'
+import { isUndefined } from '@/shared/utils/common'
 
 // What the plugin was installed with. It lives here, beside the plugin, so that installing it does
 // not load the DAM, image and collab modules that read it: they import from here, not the reverse.

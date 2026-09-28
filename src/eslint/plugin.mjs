@@ -3,7 +3,8 @@ import { validRouteName } from './validRouteName.mjs'
 // Shared by `prefer-api-command` and `prefer-api-fetch-items`: both ask the same question -- is this
 // call the `useApiRequest` helper, and what did it say it answers with.
 const isHelperSource = (source) =>
-  typeof source === 'string' && (source.includes('labs/api/useApiRequest') || source === '@anzusystems/common-admin')
+  typeof source === 'string' &&
+  (source.includes('domains/api/composables/useApiRequest') || source === '@anzusystems/common-admin')
 
 // Resolved through the scope rather than matched by name. Matching the name fires on anyone
 // else's function called `useApiRequest` and on a parameter that shadows the import inside

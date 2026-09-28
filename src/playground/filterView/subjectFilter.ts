@@ -4,7 +4,7 @@ import {
   type FilterConfig,
   type FilterData,
   type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
+} from '@/domains/filters/composables/filterFactory'
 
 export const filterFields = [
   {

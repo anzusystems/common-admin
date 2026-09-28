@@ -1,21 +1,21 @@
 import type { io } from 'socket.io-client'
 import type { App } from 'vue'
-import Acl from '@/components/permission/Acl.vue'
-import type { LanguageCode } from '@/composables/languageSettings'
+import Acl from '@/domains/auth/components/Acl.vue'
+import type { LanguageCode } from '@/domains/system/composables/languageSettings'
 import { type CommonAdminI18n, setCommonAdminI18n } from '@/plugins/i18n'
-import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
+import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/shared/injectionKeys'
 import type { AxiosInstance } from 'axios'
 import {
   initCommonAdminCollabOptions,
   initCommonAdminCoreDamOptions,
   initCommonAdminImageOptions,
 } from '@/plugins/pluginOptions'
-import type { IntegerId } from '@/types/common'
-import type { ImageAware, ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { IntegerId } from '@/shared/types/common'
+import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
 import type {
   UploadMetadataToImageMapFn,
   AssetSelectMetadataToImageMapFn,
-} from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
+} from '@/domains/dam/imageWidget/utils/metadataToImageMap'
 
 export type PluginOptions = {
   /**

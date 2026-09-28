@@ -1,8 +1,8 @@
 import { computed, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import useVuelidate from '@vuelidate/core'
-import type { DatetimeUTCNullable } from '@/types/common'
-import { useValidate } from '@/validators/vuelidate/useValidate'
+import type { DatetimeUTCNullable } from '@/shared/types/common'
+import { useValidate } from '@/shared/validators/vuelidate/useValidate'
 
 export interface DemoCompareDates {
   dates: {

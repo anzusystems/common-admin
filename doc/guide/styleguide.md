@@ -341,7 +341,7 @@ According rules above we have 4 types of buttons:
 - when `loading` prop is active, it shows `VCard` loading bar and a layer to prevent to click on any element inside
 - `title` is passed to `VCard` `title`
 - `blockInput` together with `loading` also sets `inert` on the card, so focus and keyboard input inside are blocked too
-- props and slots: [`src/components/ACard.vue`](../../src/components/ACard.vue), other props: [vuetify docs](https://vuetifyjs.com/en/api/v-card/#props)
+- props and slots: [`src/domains/ui/components/ACard.vue`](../../src/domains/ui/components/ACard.vue), other props: [vuetify docs](https://vuetifyjs.com/en/api/v-card/#props)
 
 ```vue
 <ACard loading>
@@ -367,7 +367,7 @@ According rules above we have 4 types of buttons:
 </VRow>
 ```
 
-- props and slots: [`src/components/ARow.vue`](../../src/components/ARow.vue)
+- props and slots: [`src/domains/ui/components/ARow.vue`](../../src/domains/ui/components/ARow.vue)
 
 ```vue
 <ARow title="My title">

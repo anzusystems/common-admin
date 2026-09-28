@@ -2,11 +2,11 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { page, userEvent } from 'vitest/browser'
 import { defineComponent, h, nextTick } from 'vue'
-import ADialogToolbar from '@/components/ADialogToolbar.vue'
-import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
-import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
-import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
-import { usePagination } from '@/labs/filters/pagination'
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
+import AActionDeleteButton from '@/domains/ui/buttons/action/components/AActionDeleteButton.vue'
+import ADatatablePagination from '@/domains/filters/datatable/components/ADatatablePagination.vue'
+import { DatatablePaginationKey } from '@/domains/filters/utils/filterInjectionKeys'
+import { usePagination } from '@/domains/api/composables/pagination'
 
 // Icon-only buttons are asserted by role and accessible name, the way a screen reader (and Playwright)
 // finds them: a tooltip gives `aria-describedby`, not a name, and is not rendered until hovered.

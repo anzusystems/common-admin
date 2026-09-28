@@ -6,7 +6,7 @@ import { createI18n } from 'vue-i18n'
 import { createPinia } from 'pinia'
 import { afterAll, beforeAll } from 'vitest'
 import en from '@/locales/en'
-import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
+import { useCommonVuetifyConfig } from '@/plugins/commonVuetifyConfig'
 
 /**
  * `setup.ts` builds Vuetify without the library's aliases and defaults, so `ABtnPrimary` and its

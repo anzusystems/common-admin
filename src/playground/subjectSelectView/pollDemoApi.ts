@@ -1,8 +1,8 @@
 import { cmsClient } from '@/playground/mock/cmsClient'
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
-import type { DatetimeUTCNullable, IntegerId } from '@/types/common'
-import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import type { AnzuUserAndTimeTrackingAware } from '@/shared/types/AnzuUserAndTimeTrackingAware'
+import type { DatetimeUTCNullable, IntegerId } from '@/shared/types/common'
+import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
+import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 
 // just a demo type
 export type PollDemo = AnzuUserAndTimeTrackingAware & {

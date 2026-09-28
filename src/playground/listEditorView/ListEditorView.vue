@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { ref } from 'vue'
-import AListEditor from '@/labs/listEditor/AListEditor.vue'
-import AFormTextField from '@/components/form/AFormTextField.vue'
-import type { ListEditorHandle } from '@/labs/listEditor/composables/useListEditorController'
-import type { ListViewItem } from '@/labs/listEditor/types/listEditorTypes'
+import AListEditor from '@/domains/listEditor/components/AListEditor.vue'
+import AFormTextField from '@/domains/form/components/AFormTextField.vue'
+import type { ListEditorHandle } from '@/domains/listEditor/composables/useListEditorController'
+import type { ListViewItem } from '@/domains/listEditor/types/listEditorTypes'
 
 interface FaqItem extends Record<string, any> {
   id: number

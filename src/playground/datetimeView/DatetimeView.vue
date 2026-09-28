@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import ADatetime from '@/components/datetime/ADatetime.vue'
-import type { DatetimeUTCNullable } from '@/types/common'
+import ADatetime from '@/domains/ui/datetime/components/ADatetime.vue'
+import type { DatetimeUTCNullable } from '@/shared/types/common'
 import { ref } from 'vue'
-import AFormDatetimePicker from '@/components/form/AFormDatetimePicker.vue'
-import { datePretty, dateTimeNow, dateUtcPretty, dateUtcToday } from '@/utils/datetime'
-import AFormFlagDatetimePicker from '@/components/form/AFormFlagDatetimePicker.vue'
+import AFormDatetimePicker from '@/domains/form/components/AFormDatetimePicker.vue'
+import { datePretty, dateTimeNow, dateUtcPretty, dateUtcToday } from '@/shared/utils/datetime'
+import AFormFlagDatetimePicker from '@/domains/form/components/AFormFlagDatetimePicker.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
+import ADatetimePicker from '@/domains/ui/datetime/components/ADatetimePicker.vue'
 import { type DemoCompareDates, useCompareValidators } from '@/playground/datetimeView/validators'
-import ARow from '@/components/ARow.vue'
+import ARow from '@/domains/ui/components/ARow.vue'
 
 const dateTime = ref<DatetimeUTCNullable>('2023-02-08T08:17:29.000000Z')
 const dateTimeDefaultNull = ref<DatetimeUTCNullable>(null)

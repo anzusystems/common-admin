@@ -1,0 +1,111 @@
+import {
+  type ColumnConfig,
+  type ColumnInternalValues,
+  DATETIME_AUTO_LABEL_TRACKING,
+  type StoredData,
+} from '@/domains/filters/datatable/utils/datatableColumns'
+import { computed, onMounted, type Ref, watch } from 'vue'
+import { commonI18n } from '@/plugins/i18n'
+import { isArray, isBoolean, isObject, isString, isUndefined } from '@/shared/utils/common'
+
+const defaultColumn: ColumnInternalValues = {
+  key: '',
+  title: undefined,
+  sortable: false,
+  fixed: false,
+}
+
+interface DatatableColumnsConfigMoreOptions {
+  storeColumnsLocalStorage: string | boolean // false to disable, string to override store key
+  disableActions: boolean
+  customI18n: any
+  showExpand: boolean
+}
+
+const DatatableColumnsConfigMoreOptionsDefault = {
+  storeColumnsLocalStorage: true,
+  disableActions: false,
+  customI18n: undefined,
+  showExpand: false,
+}
+
+export function createDatatableColumnsConfig(
+  config: ColumnConfig[],
+  columnsHidden: Ref<Array<string>>,
+  system: string,
+  subject: string,
+  moreOptions: Partial<DatatableColumnsConfigMoreOptions> = {}
+) {
+  const options = { ...DatatableColumnsConfigMoreOptionsDefault, ...moreOptions }
+  const localI18n = options.customI18n ?? commonI18n()
+  const { t } = localI18n.global || localI18n
+
+  let storeKey: undefined | string = undefined
+  if (isString(options.storeColumnsLocalStorage)) {
+    storeKey = options.storeColumnsLocalStorage
+  } else if (isBoolean(options.storeColumnsLocalStorage) && true === options.storeColumnsLocalStorage) {
+    storeKey = 'table_' + system + '_' + subject
+  }
+
+  const columnsAll = config.map((item) => {
+    const obj = { ...defaultColumn, ...item }
+    if (!isUndefined(obj.title)) {
+      // do not modify
+    } else if (isUndefined(obj.title) && DATETIME_AUTO_LABEL_TRACKING.includes(obj.key)) {
+      obj.title = t('common.model.tracking.' + obj.key)
+    } else if (isUndefined(obj.title) && system && subject) {
+      obj.title = t(system + '.' + subject + '.model.' + obj.key)
+    } else {
+      obj.title = ''
+    }
+    return obj
+  })
+
+  const columnsVisible = computed(() => {
+    const columns: any = []
+    if (options.showExpand) columns.push({ key: 'data-table-expand', sortable: false })
+    columnsAll.forEach((column) => {
+      if (!columnsHidden.value.includes(column.key)) {
+        columns.push(column)
+      }
+    })
+    if (!options.disableActions) columns.push({ key: 'actions', sortable: false, fixed: 'end' })
+    return columns
+  })
+
+  const loadStoredColumns = () => {
+    if (!storeKey || !localStorage) return
+    const stored = localStorage.getItem(storeKey)
+    if (!stored) return
+    // A corrupted entry would otherwise throw inside onMounted and take the whole table with it.
+    let storedData: StoredData
+    try {
+      storedData = JSON.parse(stored) as StoredData
+    } catch {
+      localStorage.removeItem(storeKey)
+      return
+    }
+    if (!isObject(storedData)) return
+    if (!isArray(storedData.hidden)) return
+    columnsHidden.value = storedData.hidden as string[]
+  }
+
+  const storeColumns = (columns: string[]) => {
+    if (!storeKey || !localStorage) return
+    localStorage.setItem(storeKey, JSON.stringify({ hidden: columns }))
+  }
+
+  onMounted(() => {
+    loadStoredColumns()
+  })
+
+  watch(columnsHidden, (newValue) => {
+    storeColumns(newValue)
+  })
+
+  return {
+    columnsAll,
+    columnsVisible,
+    columnsHidden,
+  }
+}

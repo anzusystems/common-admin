@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios'
-import { isNull } from '@/utils/common'
+import { isNull } from '@/shared/utils/common'
 import axios from 'axios'
 
 let mainInstance: AxiosInstance | null = null

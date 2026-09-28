@@ -1,19 +1,19 @@
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import type { ValueObjectOption } from '@/types/ValueObject'
-import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { IntegerId, IntegerIdNullable } from '@/shared/types/common'
+import type { ValueObjectOption } from '@/shared/types/ValueObject'
+import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
+import type { AnzuUserAndTimeTrackingAware } from '@/shared/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 import {
   createFilter,
   createFilterStore,
   type FilterConfig,
   type FilterData,
   type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
+} from '@/domains/filters/composables/filterFactory'
 import { type Ref } from 'vue'
 
-import type { Pagination } from '@/labs/filters/pagination'
+import type { Pagination } from '@/domains/api/composables/pagination'
 
 export interface SiteMinimal {
   id: IntegerId

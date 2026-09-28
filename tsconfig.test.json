@@ -3,6 +3,7 @@
   "include": [
     "src/vite-env.d.ts",
     "src/test/**/*",
+    "src/**/__tests__/**/*",
     "src/**/*.test.ts",
     "src/**/*.spec.ts"
   ],

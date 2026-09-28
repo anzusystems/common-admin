@@ -1,0 +1,329 @@
+<script lang="ts" setup>
+import { useI18n } from 'vue-i18n'
+import {
+  AssetSelectGridView,
+  AssetSelectGridViewDefault,
+  useGridView,
+} from '@/domains/dam/assetSelect/composables/assetSelectGridView'
+import { useSidebar } from '@/domains/dam/assetSelect/composables/assetSelectFilterSidebar'
+import { computed, onMounted, type Ref, watch } from 'vue'
+import { useDisplay } from 'vuetify'
+import { DamAssetType, type DamAssetTypeType } from '@/domains/dam/types/Asset'
+import { useAssetSelectStore } from '@/domains/dam/assetSelect/store/assetSelectStore'
+import { storeToRefs } from 'pinia'
+import ADatatableOrdering from '@/domains/filters/datatable/components/ADatatableOrdering.vue'
+import {
+  type DatatableOrderingOption,
+  SORT_BY_SCORE_BEST,
+  SORT_BY_SCORE_DATE,
+} from '@/domains/filters/datatable/utils/datatableColumns'
+import { SortOrder } from '@/domains/api/types/SortOrder'
+import { useAssetListFilter } from '@/domains/dam/assetSelect/filter/AssetFilter'
+import type { Pagination } from '@/domains/api/composables/pagination'
+
+const props = withDefaults(
+  defineProps<{
+    showTypes?: boolean
+    disableSort?: boolean
+    hideFilterToggle?: boolean
+    preselectAssetType?: DamAssetTypeType | undefined
+    preselectInPodcast?: boolean | null | undefined
+  }>(),
+  {
+    showTypes: false,
+    disableSort: false,
+    hideFilterToggle: false,
+    preselectAssetType: undefined,
+    preselectInPodcast: undefined,
+  }
+)
+const emit = defineEmits<{
+  (e: 'typeChange', data: { type: DamAssetTypeType; inPodcast: boolean | null }): void
+  (e: 'sortByChange', data: DatatableOrderingOption): void
+}>()
+
+const sortModel = defineModel<number>('sort', { default: 1, required: false })
+
+const { t } = useI18n()
+const { gridView, setGridView } = useGridView()
+const { mdAndDown } = useDisplay()
+
+watch(
+  mdAndDown,
+  (isMobile) => {
+    if (isMobile && gridView.value === AssetSelectGridView.Table) {
+      setGridView(AssetSelectGridViewDefault)
+    }
+  },
+  { immediate: true }
+)
+const { toggleSidebarLeft, sidebarLeft, toggleSidebarRight, sidebarRight } = useSidebar()
+const assetSelectStore = useAssetSelectStore()
+const { filterData } = useAssetListFilter()
+const { assetType, inPodcast } = storeToRefs(assetSelectStore)
+
+const isImageActive = computed(() => {
+  return assetType.value === DamAssetType.Image
+})
+
+const isVideoActive = computed(() => {
+  return assetType.value === DamAssetType.Video
+})
+
+const isPodcastActive = computed(() => {
+  return assetType.value === DamAssetType.Audio && inPodcast.value === true
+})
+
+const setFilterImage = () => {
+  assetType.value = DamAssetType.Image
+  inPodcast.value = null
+  filterData.podcastIds = []
+  emit('typeChange', { type: DamAssetType.Image, inPodcast: null })
+}
+
+const setFilterVideo = () => {
+  assetType.value = DamAssetType.Video
+  inPodcast.value = null
+  filterData.podcastIds = []
+  emit('typeChange', { type: DamAssetType.Video, inPodcast: null })
+}
+
+const setFilterPodcast = () => {
+  assetType.value = DamAssetType.Audio
+  inPodcast.value = true
+  emit('typeChange', { type: DamAssetType.Audio, inPodcast: true })
+}
+
+const customSortOptions = [
+  {
+    id: 3,
+    titleT: 'common.system.datatable.ordering.mostRelevant',
+    sortBy: { key: SORT_BY_SCORE_BEST, order: SortOrder.Desc },
+  },
+  {
+    id: 1,
+    titleT: 'common.system.datatable.ordering.mostRecent',
+    sortBy: { key: SORT_BY_SCORE_DATE, order: SortOrder.Desc },
+  },
+  {
+    id: 2,
+    titleT: 'common.system.datatable.ordering.oldest',
+    sortBy: { key: SORT_BY_SCORE_DATE, order: SortOrder.Asc },
+  },
+]
+
+// The pagination is shared by every asset select, so a dialog can open on a sort chosen in another one.
+// The ordering then adopts it, and that adoption must not reach the parent as a change -- it would fetch again.
+const onSortUpdate = (option: DatatableOrderingOption, pagination: Ref<Pagination>) => {
+  const current = pagination.value.sortBy
+  if (current?.key === option.sortBy?.key && current?.order === option.sortBy?.order) return
+  emit('sortByChange', option)
+}
+
+onMounted(() => {
+  if (props.preselectAssetType === DamAssetType.Audio && props.preselectInPodcast) {
+    setFilterPodcast()
+    return
+  }
+  if (props.preselectAssetType === DamAssetType.Video) {
+    setFilterVideo()
+  }
+})
+</script>
+
+<template>
+  <VToolbar
+    density="compact"
+    color="transparent"
+    :height="46"
+    elevation="0"
+    :class="hideFilterToggle ? '' : 'border-b'"
+    class="subject-select__second-bar"
+  >
+    <slot name="second-bar">
+      <div class="d-flex flex-column w-100 px-1 align-center">
+        <div class="d-flex justify-space-between w-100 align-center">
+          <div class="d-flex align-center">
+            <VBtn
+              v-if="!hideFilterToggle"
+              :aria-label="t('common.assetSelect.meta.filter.toggle')"
+              icon
+              :width="30"
+              :height="30"
+              :active="sidebarLeft"
+              @click="toggleSidebarLeft"
+            >
+              <VIcon
+                icon="mdi-tune"
+                :size="16"
+              />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.assetSelect.meta.filter.toggle') }}
+              </VTooltip>
+            </VBtn>
+            <template v-if="showTypes">
+              <VDivider
+                vertical
+                class="ml-1 mr-2 my-2"
+              />
+              <VBtn
+                :aria-label="t('common.assetSelect.assetType.image')"
+                icon
+                :width="30"
+                :height="30"
+                class="mr-1"
+                data-cy="button-image-types"
+                :active="isImageActive"
+                :color="isImageActive ? 'secondary' : ''"
+                :variant="isImageActive ? 'flat' : 'text'"
+                @click.stop="setFilterImage"
+              >
+                <VIcon
+                  icon="mdi-image"
+                  :size="16"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                >
+                  {{ t('common.assetSelect.assetType.image') }}
+                </VTooltip>
+              </VBtn>
+              <VBtn
+                :aria-label="t('common.assetSelect.assetType.video')"
+                icon
+                :width="30"
+                :height="30"
+                class="mr-1"
+                data-cy="button-video-types"
+                :active="isVideoActive"
+                :color="isVideoActive ? 'secondary' : ''"
+                :variant="isVideoActive ? 'flat' : 'text'"
+                @click.stop="setFilterVideo"
+              >
+                <VIcon
+                  icon="mdi-video"
+                  :size="16"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                >
+                  {{ t('common.assetSelect.assetType.video') }}
+                </VTooltip>
+              </VBtn>
+              <VBtn
+                :aria-label="t('common.assetSelect.filter.inPodcast')"
+                icon
+                :width="30"
+                :height="30"
+                data-cy="button-in-podcast-types"
+                :active="isPodcastActive"
+                :color="isPodcastActive ? 'secondary' : ''"
+                :variant="isPodcastActive ? 'flat' : 'text'"
+                @click.stop="setFilterPodcast"
+              >
+                <VIcon
+                  icon="mdi-podcast"
+                  :size="16"
+                />
+                <VTooltip
+                  activator="parent"
+                  location="bottom"
+                >
+                  {{ t('common.assetSelect.filter.inPodcast') }}
+                </VTooltip>
+              </VBtn>
+            </template>
+            <slot name="second-bar-left" />
+          </div>
+          <div class="d-flex align-center">
+            <slot name="second-bar-right" />
+            <ADatatableOrdering
+              v-if="!disableSort"
+              v-model="sortModel"
+              :custom-options="customSortOptions"
+              :pagination-update-custom-cb="onSortUpdate"
+            />
+            <VBtn
+              :aria-label="t('common.assetSelect.meta.grid.masonry')"
+              size="x-small"
+              icon
+              class="text-medium-emphasis"
+              variant="text"
+              @click.stop="setGridView(AssetSelectGridView.Masonry)"
+            >
+              <VIcon icon="mdi-view-compact" />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.assetSelect.meta.grid.masonry') }}
+              </VTooltip>
+            </VBtn>
+            <VBtn
+              :aria-label="t('common.assetSelect.meta.grid.thumbnail')"
+              icon
+              class="text-medium-emphasis"
+              size="x-small"
+              variant="text"
+              @click.stop="setGridView(AssetSelectGridView.Thumbnail)"
+            >
+              <VIcon icon="mdi-view-grid" />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.assetSelect.meta.grid.thumbnail') }}
+              </VTooltip>
+            </VBtn>
+            <VBtn
+              v-if="!mdAndDown"
+              :aria-label="t('common.assetSelect.meta.grid.table')"
+              size="x-small"
+              icon
+              class="text-medium-emphasis"
+              variant="text"
+              @click.stop="setGridView(AssetSelectGridView.Table)"
+            >
+              <VIcon icon="mdi-view-headline" />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.assetSelect.meta.grid.table') }}
+              </VTooltip>
+            </VBtn>
+            <VDivider
+              vertical
+              class="mx-1 my-2"
+            />
+            <VBtn
+              :aria-label="t('common.assetSelect.meta.info.toggle')"
+              icon
+              class="text-medium-emphasis"
+              :width="30"
+              :height="30"
+              :active="sidebarRight"
+              @click="toggleSidebarRight"
+            >
+              <VIcon
+                icon="mdi-information-outline"
+                :size="16"
+              />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.assetSelect.meta.info.toggle') }}
+              </VTooltip>
+            </VBtn>
+          </div>
+        </div>
+      </div>
+    </slot>
+  </VToolbar>
+</template>

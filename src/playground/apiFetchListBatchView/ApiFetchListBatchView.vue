@@ -2,12 +2,12 @@
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
 import { damClient } from '@/playground/mock/coreDamClient'
 import { onMounted, ref } from 'vue'
-import { usePagination } from '@/labs/filters/pagination'
-import { ENTITY, useFetchAssetList } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
-import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
-import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { usePagination } from '@/domains/api/composables/pagination'
+import { ENTITY, useFetchAssetList } from '@/domains/dam/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
+import { useApiFetchListBatch } from '@/domains/api/composables/useApiFetchListBatch'
+import { createFilter, createFilterStore, type MakeFilterOption } from '@/domains/filters/composables/filterFactory'
+import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
 
 const showData = ref(false)
 

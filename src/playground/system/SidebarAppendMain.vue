@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import AAdminSwitcher from '@/components/AAdminSwitcher.vue'
-import ACurrentUserDropdown from '@/components/ACurrentUserDropdown.vue'
+import AAdminSwitcher from '@/domains/system/components/AAdminSwitcher.vue'
+import ACurrentUserDropdown from '@/domains/ui/components/ACurrentUserDropdown.vue'
 import { currentUser } from '@/playground/system/currentUser'
 import { computed } from 'vue'
 import { mapFullToMinimal } from '@/playground/collabView/cachedUsers'
-import type { AnzuUser } from '@/types/AnzuUser'
+import type { AnzuUser } from '@/shared/types/AnzuUser'
 
 const userMinimal = computed(() => {
   return mapFullToMinimal(currentUser.value as AnzuUser)

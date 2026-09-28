@@ -38,13 +38,14 @@ token; the cookie persists, so a bookmark works until you clear cookies.
 ## Test Structure
 
 - `src/test/setup.ts` - Global test setup with Vuetify, i18n, and Pinia configuration
-- `src/test/components/` - Component tests
-- `src/test/composables/` - Composable and utility tests
-- `src/test/labs/` - Tests of the former labs entry (filters, api helpers, users and permissions)
-- `src/test/utils/` - Util tests
-- `src/test/eslint/` - Eslint rule tests, run in node
-- `src/test/support/`, `src/test/fixtures/` - Cropper test harness and images; `support/commonVuetify.ts` swaps
-  in a Vuetify built with the library's aliases and defaults, for suites that need `ABtnPrimary` & co. as real buttons
+- `__tests__/` next to the code a test is about: `src/domains/<domain>/[<entity>/]__tests__/`,
+  `src/shared/<kind>/__tests__/`, `src/plugins/__tests__/`, `src/testing/__tests__/`
+- `src/test/` - Tests of the library as a whole: public exports, import cycles, i18n keys, CSS, `a11y/`
+- `src/test/eslint/`, `src/test/vite/` - Eslint rule and `./vite` entry tests, run in node; kept out of
+  `src/eslint` and `src/vite`, which ship as source
+- `src/test/support/commonVuetify.ts` - swaps in a Vuetify built with the library's aliases and defaults, for
+  suites that need `ABtnPrimary` & co. as real buttons; the cropper test harness and images are in
+  `src/domains/dam/cropper/__tests__/support/`
 - `vitest.config.mts` - Vitest configuration
 - `vitest.config.node.mts` - Vitest configuration of the eslint rule tests
 

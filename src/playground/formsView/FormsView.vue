@@ -1,17 +1,17 @@
 <script lang="ts" setup>
-import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
-import ARow from '@/components/ARow.vue'
-import ATextField from '@/components/form/AFormTextField.vue'
-import ATextarea from '@/components/form/AFormTextarea.vue'
-import AValueObjectOptionsSelect from '@/components/form/AFormValueObjectOptionsSelect.vue'
+import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
+import ARow from '@/domains/ui/components/ARow.vue'
+import ATextField from '@/domains/form/components/AFormTextField.vue'
+import ATextarea from '@/domains/form/components/AFormTextarea.vue'
+import AValueObjectOptionsSelect from '@/domains/form/components/AFormValueObjectOptionsSelect.vue'
 import { computed, ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
-import { Grant, useGrant } from '@/model/valueObject/Grant'
-import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
-import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
-import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
+import { Grant, useGrant } from '@/domains/auth/valueObject/Grant'
+import { useValidateRequired } from '@/shared/validators/vuelidate/common/useValidateRequired'
+import { useValidateMinLength } from '@/shared/validators/vuelidate/common/useValidateMinLength'
+import { useValidateMaxLength } from '@/shared/validators/vuelidate/common/useValidateMaxLength'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import ADatetimePicker from '@/components/datetime/ADatetimePicker.vue'
+import ADatetimePicker from '@/domains/ui/datetime/components/ADatetimePicker.vue'
 
 const modelData = ref({
   shortText: 'text1',

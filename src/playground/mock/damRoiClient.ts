@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
-import type { AssetFileImage } from '@/types/coreDam/AssetFile'
-import type { RegionOfInterest } from '@/types/coreDam/Roi'
-import { isNull } from '@/utils/common'
+import type { AssetFileImage } from '@/domains/dam/types/AssetFile'
+import type { RegionOfInterest } from '@/domains/dam/types/Roi'
+import { isNull } from '@/shared/utils/common'
 
 /**
  * A DAM client with no DAM behind it.

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RouteRecordName } from 'vue-router'
-import { useRouteHistory } from '@/composables/system/routeHistory'
+import { useRouteHistory } from '@/domains/system/composables/routeHistory'
 import { parseTypedRouterDeclaration } from '@/testing/typedRouter'
 
 export interface DescribeRouteHistoryOptions {

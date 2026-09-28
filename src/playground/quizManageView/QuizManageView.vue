@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import AFormTextarea from '@/components/form/AFormTextarea.vue'
+import AFormTextarea from '@/domains/form/components/AFormTextarea.vue'
 import QuizManageQuestions from '@/playground/quizManageView/QuizManageQuestions.vue'
 import { QuizAnswerValueType, createQuiz } from '@/playground/quizManageView/quizMock'
 

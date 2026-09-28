@@ -1,23 +1,23 @@
 <script lang="ts" setup>
-import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
-import ARow from '@/components/ARow.vue'
+import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
+import ARow from '@/domains/ui/components/ARow.vue'
 import { provide, type Ref, ref } from 'vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
-import type { IntegerId } from '@/types/common'
-import type { ValueObjectOption } from '@/types/ValueObject'
+import type { IntegerId } from '@/shared/types/common'
+import type { ValueObjectOption } from '@/shared/types/ValueObject'
 import { fetchPollListByIds, type PollDemo, useFetchPollListDemo } from '@/playground/subjectSelectView/pollDemoApi'
-import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
+import DamAssetLicenceRemoteAutocomplete from '@/domains/dam/user/components/DamAssetLicenceRemoteAutocomplete.vue'
 import { damClient } from '@/playground/mock/coreDamClient'
-import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
+import AFormRemoteAutocomplete from '@/domains/remoteAutocomplete/components/AFormRemoteAutocomplete.vue'
 import {
   createFilter,
   createFilterStore,
   type FilterConfig,
   type FilterData,
   type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
-import type { Pagination } from '@/labs/filters/pagination'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
+} from '@/domains/filters/composables/filterFactory'
+import type { Pagination } from '@/domains/api/composables/pagination'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 
 const value = ref<any>([])
 const selected = ref<any>([])
