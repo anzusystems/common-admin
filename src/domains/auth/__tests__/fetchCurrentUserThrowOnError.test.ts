@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
-// The labs request, which is what `fetchCurrentUser` goes through: a failure there arrives as the
+// `useApiRequest`, which is what `fetchCurrentUser` goes through: a failure there arrives as the
 // error it actually was -- `AnzuApiAxiosError`, `AnzuApiTimeoutError`, `AnzuApiForbiddenError` --
 // rather than flattened into one `AnzuFatalError`, and a caller passing `throwOnError` is asking
 // for exactly that distinction.
@@ -68,7 +68,7 @@ describe('fetchCurrentUser throwOnError', () => {
   })
 
   it('asks for the endpoint it was given', async () => {
-    // The old helper took the url and params as positional arguments; the labs request takes them
+    // The old helper took the url and params as positional arguments; `useApiRequest` takes them
     // per call. Swapped or dropped, every admin would fetch the wrong user -- or none.
     execute.mockResolvedValue({ id: 7, roles: [], permissions: {} })
     const { useCurrentUser } = defineAuth('cms')

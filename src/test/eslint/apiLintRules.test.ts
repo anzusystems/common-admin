@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { Linter } from 'eslint'
 import tsParser from '@typescript-eslint/parser'
 import { anzuPlugin, recommended } from '@/eslint/plugin.mjs'
@@ -180,6 +182,21 @@ describe('anzu/prefer-api-command', () => {
     )
 
     expect(messages).toHaveLength(0)
+  })
+
+  // The library lints itself with these rules, and finds its own helper by path: a move of the file
+  // would silence both rules on the library without a report.
+  it("checks the library's own calls of the helper", () => {
+    expect(existsSync(fileURLToPath(new URL('../../domains/api/composables/useApiRequest.ts', import.meta.url)))).toBe(
+      true
+    )
+    const messages = lint(
+      `import { useApiRequest } from '@/domains/api/composables/useApiRequest'
+       const { execute } = useApiRequest<void>({ client, method: 'DELETE', system, entity })`,
+      'prefer-api-command'
+    )
+
+    expect(messages).toHaveLength(1)
   })
 })
 

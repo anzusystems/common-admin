@@ -62,7 +62,7 @@ export interface BulkLogEntry {
  * timeout must not lock the screen -- and state owned by the component would be thrown away with
  * it. The results stay on the page either way.
  */
-export const useUserCrossSystemStore = defineStore('labsUserCrossSystemStore', () => {
+export const useUserCrossSystemStore = defineStore('commonAdminUserCrossSystemStore', () => {
   const searchTerm = ref('')
   const resolvedId = ref<IntegerIdNullable>(null)
   const phase = ref<CrossSystemPhaseType>(CrossSystemPhase.Idle)

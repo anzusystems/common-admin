@@ -64,7 +64,7 @@ function mountFilter(initial: string | null, defaultValue: string | null) {
 
 const clearIcon = () => document.querySelector<HTMLElement>('.a-datetime-picker__clearable-icon')
 
-describe('labs AFilterDatetimePicker', () => {
+describe('AFilterDatetimePicker', () => {
   it('drops the selected chip and the value when cleared', async () => {
     const { filterData, filterConfig, filterSelected, changes } = mountFilter(FEBRUARY_2023, null)
 

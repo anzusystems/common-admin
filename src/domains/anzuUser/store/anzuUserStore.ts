@@ -8,7 +8,7 @@ import type { AnzuUser } from '@/shared/types/AnzuUser'
  * result per system and never a single "current" user -- so it stays a single record, the way the
  * admins have it.
  */
-export const useAnzuUserOneStore = defineStore('labsAnzuUserOneStore', () => {
+export const useAnzuUserOneStore = defineStore('commonAdminAnzuUserOneStore', () => {
   const { createAnzuUser } = useAnzuUserFactory()
 
   const anzuUser = ref<AnzuUser>(createAnzuUser())

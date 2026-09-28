@@ -127,7 +127,7 @@ export function defineAuth<TAclValue extends AclValue>(
       options: { throwOnError?: boolean } = {}
     ) => {
       try {
-        // The labs request, not the older `apiFetchOne`: it is where the fleet is going, and it is
+        // `useApiRequest`, not the older `apiFetchOne`: it is where the fleet is going, and it is
         // the difference between a failure arriving as a bare `AnzuFatalError` and arriving as the
         // error it actually was -- `AnzuApiAxiosError` with the response on its cause, or
         // `AnzuApiTimeoutError`. A caller passing `throwOnError` can only tell a dead session from

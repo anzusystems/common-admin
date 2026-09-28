@@ -62,7 +62,7 @@ function mountChips(value: unknown, defaultValue: unknown) {
 
 const closeButtons = () => mounted!.findAll('.mdi-close-circle')
 
-describe('labs FiltersSelected', () => {
+describe('FiltersSelected', () => {
   it('offers no close button on a value that already is the default', async () => {
     mountChips(FROM, FROM)
     await flushPromises()
@@ -122,7 +122,7 @@ function mountPair(from: string, until: string, defaultFrom: string, defaultUnti
   return { filterData, filterSelected }
 }
 
-describe('labs FiltersSelected - a time interval pair', () => {
+describe('FiltersSelected - a time interval pair', () => {
   it('offers no close button when both halves are at their default', async () => {
     mountPair(FROM, UNTIL, FROM, UNTIL)
     await flushPromises()

@@ -87,7 +87,7 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
   datatableHiddenColumns,
   'common',
   PERMISSION_GROUP_ENTITY,
-  { storeColumnsLocalStorage: `table_labs_permissionGroup_${props.system}` }
+  { storeColumnsLocalStorage: `table_common_permissionGroup_${props.system}` }
 )
 /* eslint-enable vue/no-setup-props-reactivity-loss */
 

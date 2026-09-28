@@ -28,7 +28,7 @@ const listStores = new Map<string, FilterData<ListFields>>()
  * per-admin views this replaces, which store under `tableFilter_common_permissionGroup`; while
  * both versions are on screen they must not share remembered filters (rule 8.0).
  */
-export const permissionGroupFilterStorageKey = (system: string) => `labsPermissionGroup_${system}`
+export const permissionGroupFilterStorageKey = (system: string) => `commonPermissionGroup_${system}`
 
 export function usePermissionGroupListFilter(system: string): {
   filterConfig: FilterConfig<ListFields>

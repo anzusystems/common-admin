@@ -31,7 +31,7 @@ describe('permission group list filter', () => {
   })
 
   it('names storage per system, and never under the key the per-admin views use', () => {
-    expect(permissionGroupFilterStorageKey('weather')).toBe('labsPermissionGroup_weather')
+    expect(permissionGroupFilterStorageKey('weather')).toBe('commonPermissionGroup_weather')
     expect(permissionGroupFilterStorageKey('brick')).not.toBe(permissionGroupFilterStorageKey('weather'))
     // What `useFilterHelpers` would derive on its own, and what the old views still store under
     // while both versions are on screen (rule 8.0).

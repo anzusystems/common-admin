@@ -65,7 +65,7 @@ function mountFilter(defaultFrom: string | null, defaultUntil: string | null) {
   return { filterData, filterSelected, submitResetCounter }
 }
 
-describe('labs AFilterTimeInterval', () => {
+describe('AFilterTimeInterval', () => {
   it('shows an absolute default as a range, not as "everything"', async () => {
     const { filterSelected } = mountFilter(FROM, UNTIL)
     await flushPromises()

@@ -11,7 +11,7 @@ import type { PermissionGroup } from '@/domains/permission/group/types/Permissio
  * nothing reads -- unlike the config store next door, which really is asked about several systems
  * at once by the cross-system user pages.
  */
-export const usePermissionGroupOneStore = defineStore('labsPermissionGroupOneStore', () => {
+export const usePermissionGroupOneStore = defineStore('commonAdminPermissionGroupOneStore', () => {
   const { createPermissionGroup } = usePermissionGroupFactory()
 
   const permissionGroup = ref<PermissionGroup>(createPermissionGroup())

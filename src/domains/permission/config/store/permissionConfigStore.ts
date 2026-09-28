@@ -15,7 +15,7 @@ export interface PermissionConfigEntry {
   initialized: boolean
 }
 
-export const usePermissionConfigStore = defineStore('labsPermissionConfigStore', () => {
+export const usePermissionConfigStore = defineStore('commonAdminPermissionConfigStore', () => {
   const { createPermissionConfig } = usePermissionConfigFactory()
 
   const entries = ref(new Map<string, PermissionConfigEntry>())

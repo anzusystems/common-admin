@@ -18,7 +18,7 @@ type ListFields = typeof anzuUserListFields
 /** One store per system; see the note in `permissionGroupFilter`. */
 const listStores = new Map<string, FilterData<readonly MakeFilterOption[]>>()
 
-export const anzuUserFilterStorageKey = (system: string) => `labsAnzuUser_${system}`
+export const anzuUserFilterStorageKey = (system: string) => `commonAnzuUser_${system}`
 
 /**
  * The three fields every system has, plus whatever that system adds.

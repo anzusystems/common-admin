@@ -11,7 +11,7 @@ import {
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 import type { ValueObjectOption } from '@/shared/types/ValueObject'
 
-// This was the only labs filter without a `dataCy` prop: every one of them rendered
+// This was the only filter without a `dataCy` prop: every one of them rendered
 // data-cy="filter-value", so a bar carrying two of them (a status and an external system, say) had
 // no way to tell them apart and an e2e locator resolved to both. The default has to stay
 // "filter-value" -- the admins already address dozens of these selects by it.
@@ -61,7 +61,7 @@ function mountSelect(props: Record<string, unknown> = {}) {
 
 const dataCyOf = (wrapper: VueWrapper) => wrapper.find('[data-cy]').attributes('data-cy')
 
-describe('labs AFilterValueObjectOptionsSelect', () => {
+describe('AFilterValueObjectOptionsSelect', () => {
   it('keeps rendering data-cy="filter-value" when nothing is passed', async () => {
     const wrapper = mountSelect()
     await flushPromises()

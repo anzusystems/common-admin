@@ -158,7 +158,7 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
   datatableHiddenColumns,
   'common',
   ANZU_USER_ENTITY,
-  { storeColumnsLocalStorage: `table_labs_anzuUser_${props.system}` }
+  { storeColumnsLocalStorage: `table_common_anzuUser_${props.system}` }
 )
 /* eslint-enable vue/no-setup-props-reactivity-loss */
 
