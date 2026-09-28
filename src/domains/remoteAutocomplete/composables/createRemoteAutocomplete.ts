@@ -117,9 +117,17 @@ export interface FilterRemoteAutocompleteProps {
   placeholder?: string | undefined
 }
 
+// Only `update:modelValue` is the component's own; the autocomplete's other events reach it as listeners in the
+// attributes, and these types say so.
 export type RemoteAutocompleteComponent<M, P = unknown> = DefineSetupFnComponent<
   RemoteAutocompleteProps<M> & P,
-  { 'update:modelValue': (value: M) => true }
+  {
+    'update:modelValue': (value: M) => true
+    blur: (value: M) => true
+    focus: (value: M) => true
+    searchChange: (text: string) => true
+    searchChangeDebounced: (text: string) => true
+  }
 >
 
 export type FilterRemoteAutocompleteComponent<P = unknown> = DefineSetupFnComponent<FilterRemoteAutocompleteProps & P>

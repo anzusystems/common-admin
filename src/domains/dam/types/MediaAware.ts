@@ -6,6 +6,12 @@ export interface MediaAware<T extends DamMedia = DamMedia> {
   extService: 'damVideo' | 'damPodcast'
 }
 
+/** What an image-or-media widget sends to a collab room: the image id or the media, the other one `null`. */
+export interface ImageMediaCollabValue {
+  image: IntegerIdNullable
+  media: MediaAware | null
+}
+
 export interface DamMedia {
   imageFileId: DocIdNullable
   assetId: DocIdNullable

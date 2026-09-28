@@ -10,7 +10,7 @@ export interface RouteHistoryEntry {
 // Module state, so the history is one list per document. A test that fills it has to clear it
 // again (`clearHistory`), or the next test in the file reads what the previous one left behind.
 const history = ref<RouteHistoryEntry[]>([])
-const blacklistedRouteNames = ref<string[]>([])
+const blacklistedRouteNames = ref<RouteRecordName[]>([])
 /**
  * How many routes back the history reaches. Note that `addRoute` drops only CONSECUTIVE duplicates,
  * so a user bouncing A -> B -> A -> B fills four of these slots and can push the listing they want
@@ -34,12 +34,13 @@ export function useRouteHistory(): {
   history: Readonly<Ref<readonly RouteHistoryEntry[]>>
   addRoute: (route: RouteLocationNormalized) => void
   clearHistory: () => void
-  setBlacklistedRoutes: (routeNames: string[]) => void
-  addBlacklistedRoute: (routeName: string) => void
+  // The admin's typed router narrows `RouteRecordName` to its route names: a misspelled one does not compile.
+  setBlacklistedRoutes: (routeNames: RouteRecordName[]) => void
+  addBlacklistedRoute: (routeName: RouteRecordName) => void
   navigateBack: (router: Router, options?: NavigateBackOptions) => void
 } {
   const addRoute = (route: RouteLocationNormalized) => {
-    if (blacklistedRouteNames.value.includes(route.name as string)) {
+    if (blacklistedRouteNames.value.includes(route.name as RouteRecordName)) {
       return
     }
 
@@ -62,11 +63,11 @@ export function useRouteHistory(): {
   }
 
   /** REPLACES the list. Two callers would overwrite each other -- to add one, use `addBlacklistedRoute`. */
-  const setBlacklistedRoutes = (routeNames: string[]) => {
+  const setBlacklistedRoutes = (routeNames: RouteRecordName[]) => {
     blacklistedRouteNames.value = routeNames
   }
 
-  const addBlacklistedRoute = (routeName: string) => {
+  const addBlacklistedRoute = (routeName: RouteRecordName) => {
     if (!blacklistedRouteNames.value.includes(routeName)) {
       blacklistedRouteNames.value.push(routeName)
     }

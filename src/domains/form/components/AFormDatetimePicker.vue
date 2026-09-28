@@ -25,6 +25,7 @@ const props = withDefaults(
     clearable?: boolean
     collab?: CollabComponentConfig
     disabled?: boolean
+    readonly?: boolean
   }>(),
   {
     type: 'datetime',
@@ -36,6 +37,7 @@ const props = withDefaults(
     clearable: false,
     collab: undefined,
     disabled: undefined,
+    readonly: undefined,
   }
 )
 const emit = defineEmits<{
@@ -158,6 +160,7 @@ watch(modelValueComputed, (newValue, oldValue) => {
     :error-messages="errorMessageComputed"
     :required="requiredComputed"
     :disabled="disabledComputed"
+    :readonly="readonly"
     :label="labelComputed"
     :clearable="clearable"
     v-bind="$attrs"

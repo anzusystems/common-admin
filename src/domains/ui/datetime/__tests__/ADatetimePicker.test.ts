@@ -160,6 +160,24 @@ async function setTimeInput(label: 'Hour' | 'Minute', value: string) {
 }
 
 describe('ADatetimePicker', () => {
+  describe('readonly', () => {
+    it('offers neither the calendar nor clearing', () => {
+      mountPicker(FEBRUARY_2023, { readonly: true, clearable: true })
+
+      expect(textField().readOnly).toBe(true)
+      expect(calendarIcon()).toBeNull()
+      expect(document.querySelector('.a-datetime-picker__clearable-icon')).toBeNull()
+    })
+
+    it('offers both when not readonly', () => {
+      mountPicker(FEBRUARY_2023, { clearable: true })
+
+      expect(textField().readOnly).toBe(false)
+      expect(calendarIcon()).not.toBeNull()
+      expect(document.querySelector('.a-datetime-picker__clearable-icon')).not.toBeNull()
+    })
+  })
+
   describe('value in, value out', () => {
     it('shows the model value in local time', () => {
       mountPicker(FEBRUARY_2023)

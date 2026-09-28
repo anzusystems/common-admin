@@ -204,6 +204,26 @@ describe('undeclaredImports', () => {
     ])
   })
 
+  // Under a strict layout the augmented module is not there, and with `skipLibCheck` nothing says so.
+  it('reads a module augmentation, and not a wildcard module declaration', () => {
+    const sources = {
+      '/src/plugins.d.ts': [
+        "import 'vue-router'",
+        "declare module '@vue/runtime-core' {",
+        '  interface GlobalComponents {}',
+        '}',
+        "declare module 'vue' {",
+        '  interface AllowedComponentProps {}',
+        '}',
+        "declare module '*.vue' {}",
+      ].join('\n'),
+    }
+    expect(undeclaredImports(sources, packageJson)).toEqual([
+      'src/plugins.d.ts: @vue/runtime-core',
+      'src/plugins.d.ts: vue-router',
+    ])
+  })
+
   it('reads neither comments nor a style partial next to the file as an import', () => {
     const sources = {
       '/src/a.ts':

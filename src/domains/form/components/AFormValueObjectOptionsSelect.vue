@@ -27,6 +27,7 @@ const props = withDefaults(
     collab?: CollabComponentConfig
     disabled?: boolean
     readonly?: boolean
+    help?: string | undefined
   }>(),
   {
     label: undefined,
@@ -41,6 +42,7 @@ const props = withDefaults(
     collab: undefined,
     disabled: undefined,
     readonly: undefined,
+    help: undefined,
   }
 )
 const emit = defineEmits<{
@@ -161,6 +163,7 @@ watch(
     :disabled="disabledComputed"
     :readonly="readonly"
     :clearable="clearable"
+    :hide-details="hideDetails"
     :error-messages="errorMessageComputed"
     :data-cy="dataCy"
     autocomplete="off"
@@ -189,6 +192,15 @@ watch(
           :users="collab.cachedUsers"
         />
       </slot>
+    </template>
+    <template
+      v-if="help"
+      #append
+    >
+      <VIcon
+        v-tooltip="help"
+        icon="mdi-help-circle-outline"
+      />
     </template>
   </VAutocomplete>
 </template>

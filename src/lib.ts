@@ -471,7 +471,7 @@ import ADamAdminAssetLink from '@/domains/dam/components/DamAdminAssetLink.vue'
 import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
 import { isImageCreateUpdateAware, isMediaAware } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
-import type { DamMediaFromDam, MediaAware } from '@/domains/dam/types/MediaAware'
+import type { DamMediaFromDam, ImageMediaCollabValue, MediaAware } from '@/domains/dam/types/MediaAware'
 import { type DamMedia, DamMediaType, type DamMediaTypeType } from '@/domains/dam/types/MediaAware'
 import { useUnreleasedFeatures } from '@/domains/system/composables/useUnreleasedFeatures'
 import { useDebugFeatures } from '@/domains/system/composables/useDebugFeatures'
@@ -988,6 +988,7 @@ export {
   type UploadMetadataToImageMapItem,
   type AssetSelectMetadataToImageMapFn,
   isImageCreateUpdateAware,
+  type ImageMediaCollabValue,
   type MediaAware,
   isMediaAware,
   type DamMediaFromDam,

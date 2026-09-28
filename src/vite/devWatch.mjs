@@ -45,6 +45,19 @@ const nestedDependencies = (root) => {
   return found
 }
 
+// TODO: remove once Vite ships https://github.com/vitejs/vite/pull/23499 (issue vitejs/vite#23493, not fixed in
+// 8.3.1). A restart hands the new server `previousEnvironments: server.environments`, and the new server keeps
+// that in its closure: every restart kept the previous server's environments, module graphs and all, +45-100 MB
+// a restart. The restart gets a copy, emptied once the new server stands; if the restart failed, the server
+// still runs on the copy and it stays.
+const restartReleasingPrevious = async (server, forceOptimize) => {
+  const handover = { ...server.environments }
+  server.environments = handover
+  await (forceOptimize ? server.restart(true) : server.restart())
+  if (server.environments === handover) return
+  for (const name of Object.keys(handover)) delete handover[name]
+}
+
 /**
  * Picks up a common-admin that `./copy.sh` or `yarn dev:admin` wrote into the admin's node_modules.
  * Both write `.common-admin-updated` in the admin's root (copy.sh empties it, `yarn dev:admin` lists
@@ -109,7 +122,7 @@ export function commonAdminDevWatch({ triggerFile = '.common-admin-updated', pre
         // so only a forced re-optimization picks the new build up.
         if (!excluded) {
           log('replaced, restarting the server...')
-          void server.restart(true)
+          void restartReleasingPrevious(server, true)
           return
         }
         // copy.sh (an empty file, and it deletes the optimized deps) or the watch's first copy (`*`):
@@ -118,7 +131,7 @@ export function commonAdminDevWatch({ triggerFile = '.common-admin-updated', pre
         // it discovered at runtime and cost a round of reloads.
         if (listed.length === 0 || listed.includes('*')) {
           log('replaced, restarting the server...')
-          void server.restart()
+          void restartReleasingPrevious(server)
           return
         }
         const packageDir = join(root, 'node_modules', PACKAGE)
@@ -131,7 +144,7 @@ export function commonAdminDevWatch({ triggerFile = '.common-admin-updated', pre
           .filter((id) => !known.has(id))
         if (added.length > 0) {
           log(`new import of ${[...new Set(added)].join(', ')}, restarting the server...`)
-          void server.restart()
+          void restartReleasingPrevious(server)
           return
         }
         const environment = server.environments.client

@@ -17,6 +17,7 @@ const props = withDefaults(
     collab?: CollabComponentConfig
     disabled?: boolean
     v?: AFormFieldValidation | null
+    readonly?: boolean
   }>(),
   {
     label: undefined,
@@ -25,6 +26,8 @@ const props = withDefaults(
     collab: undefined,
     disabled: undefined,
     v: null,
+    // Left to a `VForm` around it when not set.
+    readonly: undefined,
   }
 )
 const emit = defineEmits<{
@@ -93,6 +96,7 @@ const disabledComputed = computed(() => {
     :data-cy="dataCy"
     :model-value="modelValue"
     :disabled="disabledComputed"
+    :readonly="readonly"
     :error-messages="errorMessageComputed"
     @blur="onBlur"
     @focus="onFocus"

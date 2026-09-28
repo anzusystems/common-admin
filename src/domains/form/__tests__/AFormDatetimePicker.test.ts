@@ -120,6 +120,13 @@ function mountFlag(initial: DatetimeUTCNullable, props: Record<string, unknown> 
 }
 
 describe('AFormDatetimePicker', () => {
+  it('is readonly on request: no calendar to change it with', () => {
+    mountForm(FEBRUARY_2023, { readonly: true })
+
+    expect(textField().readOnly).toBe(true)
+    expect(calendarIcon()).toBeNull()
+  })
+
   describe('collab', () => {
     it('releases the lock with the picked day when a date calendar closes', async () => {
       mountForm(MARCH_DAY, { type: 'date', collab: COLLAB })

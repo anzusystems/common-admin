@@ -6,6 +6,7 @@ import { maxLength, minLength, required, requiredIf, helpers } from '@vuelidate/
 import AFormTextField from '@/domains/form/components/AFormTextField.vue'
 import AFormTextarea from '@/domains/form/components/AFormTextarea.vue'
 import { SubjectScopeKey, SystemScopeKey } from '@/shared/injectionKeys'
+import { VForm } from 'vuetify/components/VForm'
 
 // Both fields share their label, required-star and error logic, so each case runs on both.
 const FIELDS = [
@@ -144,6 +145,23 @@ describe.each(FIELDS)('%s', (_name, field, tag) => {
     expect((wrapper.find(tag).element as HTMLInputElement).disabled).toBe(true)
   })
 
+  it('is readonly on request', () => {
+    const { wrapper } = mountField({ field, props: { readonly: true } })
+    expect((wrapper.find(tag).element as HTMLInputElement).readOnly).toBe(true)
+  })
+
+  // Not set is not `false`: an explicit `false` would win over the form.
+  it('leaves readonly to a readonly VForm around it', () => {
+    const wrapper = mount(
+      defineComponent({
+        setup: () => () => h(VForm, { readonly: true }, () => h(field as never, { modelValue: 'x' })),
+      }),
+      { attachTo: document.body }
+    )
+    wrappers.push(wrapper)
+    expect((wrapper.find(tag).element as HTMLInputElement).readOnly).toBe(true)
+  })
+
   // No trimming (owner decision): the value is emitted as typed.
   it('emits the value untrimmed', async () => {
     const { wrapper, child } = mountField({ field })
@@ -164,6 +182,15 @@ describe('AFormTextField only', () => {
     expect(input.type).toBe('number')
     expect(input.maxLength).toBe(5)
     expect(input.placeholder).toBe('e.g. 3')
+  })
+
+  it('applies v-model.number and hands the modifiers on to VTextField', async () => {
+    const { wrapper, state, child } = mountField({ field: AFormTextField, props: { modelModifiers: { number: true } } })
+    const input = wrapper.find('input')
+    ;(input.element as HTMLInputElement).value = '12'
+    await input.trigger('input')
+    expect(state.value.article.title).toBe(12)
+    expect(child.findComponent({ name: 'VTextField' }).props('modelModifiers')).toEqual({ number: true })
   })
 
   it('exposes focus', async () => {

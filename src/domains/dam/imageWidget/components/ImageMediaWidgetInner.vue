@@ -55,6 +55,7 @@ import {
   type DamMediaFromDam,
   DamMediaType,
   type DamMediaTypeType,
+  type ImageMediaCollabValue,
   type MediaAware,
 } from '@/domains/dam/types/MediaAware'
 import { assetFileIsAudioFile, assetFileIsVideoFile } from '@/domains/dam/types/AssetFile'
@@ -146,15 +147,19 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     }
   })
 }
+// What the field holds, both halves: an image or a media, and the other editors have to know which. Read from the
+// models only where they already hold it: an assignment to a `v-model` model shows there after the parent renders,
+// so the paths that just assigned send what they assigned.
+const collabValue = (): ImageMediaCollabValue => ({ image: imageModel.value, media: mediaModel.value })
 const lockedLocal = ref(false)
 const acquireFieldLockLocal = () => {
   if (lockedLocal.value === true || props.collabStatus === CollabStatus.Inactive) return
   acquireFieldLock.value()
   lockedLocal.value = true
 }
-const releaseFieldLockLocal = (value: IntegerIdNullable) => {
+const releaseFieldLockLocal = () => {
   if (lockedLocal.value === false || props.collabStatus === CollabStatus.Inactive) return
-  releaseFieldLock.value(value)
+  releaseFieldLock.value(collabValue())
   lockedLocal.value = false
 }
 
@@ -384,7 +389,7 @@ const reset = () => {
   imageModel.value = null
   mediaModel.value = null
   imageMediaWidgetStore.reset()
-  releaseFieldLock.value(null)
+  releaseFieldLock.value({ image: null, media: null } satisfies ImageMediaCollabValue)
 }
 
 watch(
@@ -587,12 +592,13 @@ const tryMediaConfirm = async () => {
   metadataDialogSaving.value = true
   try {
     metadataDialog.value = false
-    mediaModel.value = detail.value
+    const media = detail.value
+    mediaModel.value = media
     imageModel.value = null
     imageMediaWidgetStore.setDetail(null)
     reloadMedia(mediaModel.value)
     emit('afterMetadataSaveSuccess')
-    releaseFieldLock.value(mediaModel.value.id)
+    releaseFieldLock.value({ image: null, media } satisfies ImageMediaCollabValue)
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -630,7 +636,7 @@ const tryImageConfirm = async () => {
     imageMediaWidgetStore.setDetail(null)
     await reloadImage(res, res.id, true)
     emit('afterMetadataSaveSuccess')
-    releaseFieldLock.value(res.id)
+    releaseFieldLock.value({ image: res.id, media: null } satisfies ImageMediaCollabValue)
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -733,7 +739,7 @@ watch(
   clickMenuOpened,
   (newValue, oldValue) => {
     if (newValue === oldValue || newValue || anyWidgetDialogOpened.value) return
-    releaseFieldLockLocal(imageModel.value)
+    releaseFieldLockLocal()
   },
   { immediate: false }
 )
@@ -742,7 +748,7 @@ watch(
   anyWidgetDialogOpened,
   (newValue, oldValue) => {
     if (newValue === oldValue || newValue) return
-    releaseFieldLockLocal(imageModel.value)
+    releaseFieldLockLocal()
   },
   { immediate: false }
 )

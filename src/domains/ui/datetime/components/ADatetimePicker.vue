@@ -38,6 +38,7 @@ const props = withDefaults(
     defaultValue?: DatetimeUTC | null | undefined
     errorMessages?: string[]
     lastMinuteMoment?: boolean
+    readonly?: boolean
   }>(),
   {
     type: 'datetime',
@@ -53,6 +54,8 @@ const props = withDefaults(
     defaultValue: null,
     errorMessages: undefined,
     lastMinuteMoment: false,
+    // Left to a `VForm` around it when not set.
+    readonly: undefined,
   }
 )
 
@@ -282,6 +285,7 @@ const now = () => {
     :hide-details="hideDetails ? true : 'auto'"
     :data-cy="dataCy.length ? dataCy : undefined"
     :disabled="disabled"
+    :readonly="readonly"
     autocomplete="off"
     @blur="onTextFieldBlur"
     @focus="onTextFieldFocus"
@@ -289,14 +293,14 @@ const now = () => {
   >
     <template #append-inner>
       <VIcon
-        v-if="clearable && defaultValue !== modelValue"
+        v-if="clearable && !readonly && defaultValue !== modelValue"
         class="a-datetime-picker__clearable-icon"
         icon="mdi-close-circle"
         :aria-label="t('common.button.clear')"
         @click.stop="onClear"
       />
       <VMenu
-        v-if="!disabled"
+        v-if="!disabled && !readonly"
         location="bottom end"
         origin="top end"
         :close-on-content-click="false"

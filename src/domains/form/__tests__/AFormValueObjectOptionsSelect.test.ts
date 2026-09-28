@@ -122,6 +122,17 @@ const clickOption = async (title: string) => {
 const selectionText = (wrapper: Wrapper) => wrapper.find('.v-field__input').text()
 
 describe('AFormValueObjectOptionsSelect', () => {
+  it('shows the help next to the field, as the text fields do', () => {
+    const { wrapper } = factory({ modelValue: 'none', help: 'How the text is embedded' })
+    expect(wrapper.find('.mdi-help-circle-outline').exists()).toBe(true)
+    expect(factory({ modelValue: 'none' }).wrapper.find('.mdi-help-circle-outline').exists()).toBe(false)
+  })
+
+  it('hides the details on request', () => {
+    expect(factory({ modelValue: 'none', hideDetails: true }).wrapper.find('.v-input__details').exists()).toBe(false)
+    expect(factory({ modelValue: 'none' }).wrapper.find('.v-input__details').exists()).toBe(true)
+  })
+
   afterEach(() => {
     mounted.splice(0).forEach((wrapper) => wrapper.unmount())
     document.querySelectorAll('.v-overlay-container').forEach((node) => node.remove())

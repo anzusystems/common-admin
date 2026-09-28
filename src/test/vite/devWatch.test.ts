@@ -273,3 +273,37 @@ describe('copy.sh', () => {
     expect(readFileSync(join(store, 'common-admin.js'), 'utf8')).toBe('published')
   })
 })
+
+// Vite's restart keeps the previous environments in the new server's closure (vitejs/vite#23493): every
+// restart kept the last server's module graphs. The restart is handed a copy, emptied once the new server stands.
+describe('commonAdminDevWatch restarts', () => {
+  it('leave the new server nothing of the previous environments', async () => {
+    const root = tempRoot()
+    const { server, trigger } = fakeServer(root, false)
+    const previous = server.environments
+    let handedOver: Record<string, unknown> | undefined
+    server.restart.mockImplementation(async function (this: typeof server) {
+      handedOver = server.environments
+      server.environments = { client: { ...previous.client } } as typeof previous
+    })
+    configureServer(commonAdminDevWatch(), server)
+    trigger('components/AFoo.js\n')
+    await vi.waitFor(() => expect(server.restart).toHaveBeenCalled())
+    await Promise.resolve()
+
+    expect(handedOver).not.toBe(previous)
+    expect(handedOver).toEqual({})
+  })
+
+  it('keep the environments when the restart fails', async () => {
+    const root = tempRoot()
+    const { server, trigger } = fakeServer(root, false)
+    server.restart.mockImplementation(async () => {})
+    configureServer(commonAdminDevWatch(), server)
+    trigger('components/AFoo.js\n')
+    await vi.waitFor(() => expect(server.restart).toHaveBeenCalled())
+    await Promise.resolve()
+
+    expect(Object.keys(server.environments)).toEqual(['client'])
+  })
+})

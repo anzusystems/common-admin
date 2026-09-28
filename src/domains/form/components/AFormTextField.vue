@@ -37,6 +37,10 @@ const props = withDefaults(
     placeholder?: undefined | string
     persistentPlaceholder?: boolean
     help?: string | undefined
+    readonly?: boolean
+    // `v-model.number` and `.trim`. Vue applies them to what this component emits; VTextField reads `trim` too, to keep
+    // the caret in place.
+    modelModifiers?: Partial<Record<'number' | 'trim' | 'lazy', true>>
   }>(),
   {
     label: undefined,
@@ -55,6 +59,9 @@ const props = withDefaults(
     placeholder: undefined,
     persistentPlaceholder: false,
     help: undefined,
+    // Left to a `VForm` around it when not set.
+    readonly: undefined,
+    modelModifiers: undefined,
   }
 )
 const emit = defineEmits<{
@@ -168,6 +175,8 @@ defineExpose({
     :disabled="disabledComputed"
     :placeholder="placeholder"
     :persistent-placeholder="persistentPlaceholder"
+    :readonly="readonly"
+    :model-modifiers="modelModifiers"
     autocomplete="off"
     @click:append="(event: any) => emit('click:append', event)"
     @blur="onBlur"

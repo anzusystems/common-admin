@@ -35,6 +35,7 @@ const props = withDefaults(
     disabled?: boolean | undefined
     help?: string | undefined
     suggestedLength?: number | undefined
+    readonly?: boolean
   }>(),
   {
     label: undefined,
@@ -50,6 +51,8 @@ const props = withDefaults(
     disabled: undefined,
     help: undefined,
     suggestedLength: undefined,
+    // Left to a `VForm` around it when not set.
+    readonly: undefined,
   }
 )
 
@@ -166,6 +169,7 @@ defineExpose({
     :model-value="modelValue"
     :required="requiredComputed"
     :disabled="disabledComputed"
+    :readonly="readonly"
     :rows="rows"
     auto-grow
     :append-icon="appendIcon"

@@ -23,6 +23,9 @@ export interface DescribeDeclaredDependenciesOptions {
 const SPECIFIER_RE =
   /(?:(@(?:use|forward|import)\s+)|\bfrom\s+|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|\bvi\.(?:mock|doMock|importActual)\s*(?:<[^>]*>)?\(\s*)(['"])([^'"\s]+)\2(?=\s*(?:[;),]|$|with\s*[({]|assert\s*\{|as\s+[\w*-]+\s*;|show\b|hide\b))/gm
 
+// A module augmentation (`declare module 'vue' {`) names a package too; a wildcard one (`'*.vue'`) names none.
+const DECLARE_MODULE_RE = /\bdeclare\s+module\s+(['"])([^'"\s*]+)\1\s*\{/g
+
 // Comments name modules in passing, so they go -- but only outside strings, template literals and regular
 // expressions: `'image/*'` or `/['"]/` read as the start of a comment or a string would hide the code after it.
 // A `/` starts a regular expression after an operator or a keyword. Taken for one where it divides (a member
@@ -170,12 +173,17 @@ export function undeclaredImports(
   const keys = new Set(Object.keys(sources))
   const found: string[] = []
   for (const [key, source] of Object.entries(sources)) {
-    for (const match of codeOf(key, source).matchAll(SPECIFIER_RE)) {
+    const code = codeOf(key, source)
+    for (const match of code.matchAll(SPECIFIER_RE)) {
       const specifier = match[3]!
       const name = packageOfSpecifier(specifier, aliases)
       if (name === null || declared.has(name)) continue
       if (match[1] && isStylePartial(key, specifier, keys)) continue
       found.push(`${globKeyToSrcPath(key)}: ${specifier}`)
+    }
+    for (const match of code.matchAll(DECLARE_MODULE_RE)) {
+      const name = packageOfSpecifier(match[2]!, aliases)
+      if (name !== null && !declared.has(name)) found.push(`${globKeyToSrcPath(key)}: ${match[2]}`)
     }
   }
   return [...new Set(found)].sort()
