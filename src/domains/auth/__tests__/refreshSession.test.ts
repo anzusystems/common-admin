@@ -49,6 +49,38 @@ describe('createRefreshSession', () => {
     await expect(plain.refreshSession()).resolves.toEqual({ type: 'session-expired' })
   })
 
+  // Two tabs refresh with the same token; the backend rotates it for one and answers the other 400. That 400
+  // can be read before the browser has stored the other tab's new cookie.
+  it('treats a 400 as refreshed by another tab when its cookie lands a moment later', async () => {
+    vi.useFakeTimers()
+    try {
+      const late = setup(async () => {
+        setTimeout(() => (late.cookies.jwtPayload = 'new'), 300)
+        throw failing(400)
+      })
+      const result = late.refreshSession()
+      await vi.advanceTimersByTimeAsync(400)
+      await expect(result).resolves.toEqual({ type: 'refreshed' })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('gives the other tab a second before a 400 counts as the session being gone', async () => {
+    vi.useFakeTimers()
+    try {
+      const plain = setup(async () => Promise.reject(failing(400)))
+      let settled = false
+      const result = plain.refreshSession().finally(() => (settled = true))
+      await vi.advanceTimersByTimeAsync(900)
+      expect(settled).toBe(false)
+      await vi.advanceTimersByTimeAsync(200)
+      await expect(result).resolves.toEqual({ type: 'session-expired' })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it.each([[403], [500], [503], [undefined]])('treats %s as the auth backend being unavailable', async (status) => {
     const { refreshSession } = setup(async () => Promise.reject(failing(status)))
     await expect(refreshSession()).resolves.toMatchObject({ type: 'auth-unavailable' })

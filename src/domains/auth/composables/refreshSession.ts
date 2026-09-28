@@ -7,6 +7,9 @@ import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
 
 const HTTP_BAD_REQUEST = 400
 const HTTP_UNAUTHORIZED = 401
+// How long a 400 waits for the cookie of the tab whose refresh won: its answer can come after this one's.
+const ROTATION_GRACE_MS = 1000
+const ROTATION_POLL_MS = 100
 
 export type RefreshResult =
   | { type: 'refreshed' }
@@ -35,7 +38,8 @@ const httpStatusInCauseChain = (error: unknown): number | undefined => {
  * starts; a finished result is never reused.
  *
  * Only a 401 means the session is gone. A 400 (`unable_to_refresh`) can equally mean another tab
- * rotated the token first -- the backend rotation is not atomic -- which a changed JWT cookie shows.
+ * rotated the token first -- the backend rotation is not atomic -- which a changed JWT cookie shows,
+ * up to a second later when that tab's answer arrives after this one's.
  * Everything else is the auth backend being unavailable, never a reason to log out.
  */
 export function createRefreshSession(options: {
@@ -45,6 +49,15 @@ export function createRefreshSession(options: {
   jwtPayload: () => string | null | undefined
 }): () => Promise<RefreshResult> {
   let inFlight: Promise<RefreshResult> | null = null
+
+  const rotatedMeanwhile = async (before: string | null | undefined): Promise<boolean> => {
+    for (let waited = 0; ; waited += ROTATION_POLL_MS) {
+      const now = options.jwtPayload()
+      if (isDefined(now) && !isNull(now) && now !== before) return true
+      if (waited >= ROTATION_GRACE_MS) return false
+      await new Promise((resolve) => setTimeout(resolve, ROTATION_POLL_MS))
+    }
+  }
 
   const run = async (): Promise<RefreshResult> => {
     // Before the request: with a refresh in flight the cookie is already there, so only a changed
@@ -57,10 +70,7 @@ export function createRefreshSession(options: {
       const status = httpStatusInCauseChain(error)
       if (status === HTTP_UNAUTHORIZED) return { type: 'session-expired' }
       if (status === HTTP_BAD_REQUEST) {
-        const jwtPayloadAfter = options.jwtPayload()
-        return isDefined(jwtPayloadAfter) && !isNull(jwtPayloadAfter) && jwtPayloadAfter !== jwtPayloadBefore
-          ? { type: 'refreshed' }
-          : { type: 'session-expired' }
+        return (await rotatedMeanwhile(jwtPayloadBefore)) ? { type: 'refreshed' } : { type: 'session-expired' }
       }
       return { type: 'auth-unavailable', error }
     }

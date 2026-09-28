@@ -12,11 +12,14 @@ import en from '@/locales/en'
 // Import Vuetify components and directives
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { useCommonVuetifyConfig } from '@/plugins/commonVuetifyConfig'
 
-// Create Vuetify instance for testing
+// Create Vuetify instance for testing. The library's aliases, so `ABtnPrimary` and its siblings are real
+// buttons; its defaults and theme only where a suite asks for them (`support/commonVuetify.ts`).
 const vuetify = createVuetify({
   components,
   directives,
+  aliases: useCommonVuetifyConfig().commonAliases(),
 })
 
 // Create i18n instance for testing with loaded messages

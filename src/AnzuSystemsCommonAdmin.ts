@@ -1,6 +1,7 @@
 import type { io } from 'socket.io-client'
 import type { App } from 'vue'
 import Acl from '@/domains/auth/components/Acl.vue'
+import AChipNoLink from '@/domains/ui/components/AChipNoLink.vue'
 import type { LanguageCode } from '@/domains/system/composables/languageSettings'
 import { type CommonAdminI18n, setCommonAdminI18n } from '@/plugins/i18n'
 import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/shared/injectionKeys'
@@ -113,6 +114,8 @@ export default {
     app.provide(AvailableLanguagesSymbol, options.languages.available)
     app.provide(DefaultLanguageSymbol, options.languages.default)
     app.component('Acl', Acl)
+    // The component, not a Vuetify alias of `VChip`: used without an import it still looks like the library's chip.
+    app.component('AChipNoLink', AChipNoLink)
     initCommonAdminImageOptions(options.image)
     initCommonAdminCoreDamOptions(options.coreDam)
     initCommonAdminCollabOptions(options.collab)

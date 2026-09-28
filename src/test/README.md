@@ -43,8 +43,9 @@ token; the cookie persists, so a bookmark works until you clear cookies.
 - `src/test/` - Tests of the library as a whole: public exports, import cycles, i18n keys, CSS, `a11y/`
 - `src/test/eslint/`, `src/test/vite/` - Eslint rule and `./vite` entry tests, run in node; kept out of
   `src/eslint` and `src/vite`, which ship as source
-- `src/test/support/commonVuetify.ts` - swaps in a Vuetify built with the library's aliases and defaults, for
-  suites that need `ABtnPrimary` & co. as real buttons; the cropper test harness and images are in
+- `src/test/setup.ts` builds Vuetify with the library's aliases (`ABtnPrimary` & co. are real buttons);
+  `src/test/support/commonVuetify.ts` swaps in one with its defaults and theme too, for suites that need the
+  buttons as the admins see them; the cropper test harness and images are in
   `src/domains/dam/cropper/__tests__/support/`
 - `vitest.config.mts` - Vitest configuration
 - `vitest.config.node.mts` - Vitest configuration of the eslint rule tests

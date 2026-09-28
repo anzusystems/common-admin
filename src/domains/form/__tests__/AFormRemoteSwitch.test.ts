@@ -32,6 +32,26 @@ describe.each([
     expect(wrapper.find('input').attributes('disabled')).toBeUndefined()
   })
 
+  // In a datatable column the label is hidden: the header says what the column is, a screen reader only
+  // "button" or "checkbox".
+  it('names the control with its label when the label is hidden', () => {
+    const wrapper = mount(Component as any, {
+      props: {
+        modelValue: false,
+        callbackToTrue: vi.fn(),
+        callbackToFalse: vi.fn(),
+        label: 'Political',
+        hideLabel: true,
+      },
+      attachTo: document.body,
+    })
+    wrappers.push(wrapper)
+    const control = _name === 'switch' ? wrapper.find('button') : wrapper.find('input')
+
+    expect(control.attributes('aria-label')).toBe('Political')
+    expect(wrapper.find('label.v-label').exists()).toBe(false)
+  })
+
   it('a click on the second label toggles the second control, not the first', async () => {
     const first = vi.fn(async () => true)
     const second = vi.fn(async () => true)

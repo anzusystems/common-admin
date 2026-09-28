@@ -1,6 +1,6 @@
 import { type I18n, useI18n } from 'vue-i18n'
 import { createVuetify, type VuetifyOptions } from 'vuetify'
-import { VBtn, VChip } from 'vuetify/components'
+import { VBtn } from 'vuetify/components'
 import { Intersect } from 'vuetify/directives'
 import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n'
 
@@ -142,7 +142,6 @@ export const useCommonVuetifyConfig = () => {
       ABtnSecondary: VBtn as any,
       ABtnTertiary: VBtn as any,
       ABtnIcon: VBtn as any,
-      AChipNoLink: VChip as any,
     }
   }
 

@@ -91,6 +91,7 @@ onMounted(() => {
       :ripple="false"
       :width="hideLabel ? 36 : undefined"
       :height="36"
+      :aria-label="hideLabel ? labelComputed || undefined : undefined"
       @click.stop="onClick"
     >
       <VSwitch

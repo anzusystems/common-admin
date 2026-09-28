@@ -1035,14 +1035,14 @@ describe('when a bookmark cannot be created', () => {
 })
 
 describe('loading the list editor', () => {
-  // The test setup registers no Vuetify aliases, so `ABtnPrimary` renders as a plain element that
-  // carries its props as attributes.
+  // The button's own `disabled`: with the library's aliases in the test setup, `ABtnPrimary` is a real button.
   const confirmDisabled = (wrapper: VueWrapper) =>
-    wrapper
-      .findComponent({ name: 'FilterBookmarkDialog' })
-      .findComponent({ name: 'VCardActions' })
-      .element.querySelector('[data-cy="button-confirm"]')
-      ?.getAttribute('disabled')
+    (
+      wrapper
+        .findComponent({ name: 'FilterBookmarkDialog' })
+        .findComponent({ name: 'VCardActions' })
+        .element.querySelector('[data-cy="button-confirm"]') as HTMLButtonElement | null
+    )?.disabled
 
   const retryButton = (wrapper: VueWrapper) =>
     wrapper
@@ -1066,14 +1066,14 @@ describe('loading the list editor', () => {
 
     expect(dialogVm(wrapper).editorLoadFailed).toBe(true)
     expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(false)
-    expect(confirmDisabled(wrapper)).toBe('true')
+    expect(confirmDisabled(wrapper)).toBe(true)
 
     retryButton(wrapper)?.click()
     await editorSettled(wrapper)
 
     expect(loadListEditor).toHaveBeenCalledTimes(2)
     expect(wrapper.findComponent({ name: 'ASortableListEditor' }).exists()).toBe(true)
-    expect(confirmDisabled(wrapper)).toBe('false')
+    expect(confirmDisabled(wrapper)).toBe(false)
   })
 
   it('keeps the bookmark list it fetched while the editor failed to load', async () => {

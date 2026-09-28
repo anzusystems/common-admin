@@ -87,6 +87,7 @@ onMounted(() => {
       :id="uniqueId"
       v-model="internalModelValue"
       :disabled="loading"
+      :aria-label="hideLabel ? labelComputed || undefined : undefined"
       @click.stop="onClick"
     />
     <label

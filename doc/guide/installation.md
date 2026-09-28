@@ -92,7 +92,7 @@ export const vuetify = createAnzuVuetify({ i18n })
 
 ### Global components
 
-The plugin registers `Acl` globally; it and the `ABtn*`/`AChipNoLink` aliases are declared by the package. Register the admin's ACL values once, so `<Acl :permission>` checks them:
+The plugin registers `Acl` and `AChipNoLink` globally; they and the `ABtn*` aliases are declared by the package. Register the admin's ACL values once, so `<Acl :permission>` checks them:
 
 ```ts
 // src/plugins.d.ts

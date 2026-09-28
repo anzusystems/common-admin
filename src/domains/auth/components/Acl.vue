@@ -4,6 +4,7 @@ import type { RegisteredAclValue } from '@/domains/auth/types/Permission'
 import { getSystemFromAcl, useAuthHelpers } from '@/domains/auth/composables/defineAuth'
 import { isArray, isUndefined } from '@/shared/utils/common'
 import { useAuthStore } from '@/domains/auth/store/authStore'
+import { warnOnceInDevelopment } from '@/shared/utils/development'
 
 const props = withDefaults(
   defineProps<{
@@ -61,7 +62,10 @@ const allowed = computed<boolean>(() => {
     return isArray(props.permission)
       ? canForAllHelper(props.permission, props.subject)
       : canHelper(props.permission, props.subject)
-  } catch {
+  } catch (error) {
+    // Hidden either way; without a word it looks exactly like a missing permission.
+    const key = String(props.permission)
+    warnOnceInDevelopment(`Acl:${key}`, `[Acl] the check of ${key} threw, so the content stays hidden:`, error)
     return false
   }
 })

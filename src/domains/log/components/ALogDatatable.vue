@@ -18,6 +18,7 @@ import { LOG_ENTITY } from '@/domains/log/api/logApi'
 import { LogType, type LogPaths, type LogTypeType } from '@/domains/log/composables/logType'
 import type { Log } from '@/domains/log/types/Log'
 import { isNull, isUndefined } from '@/shared/utils/common'
+import { isDevelopment } from '@/shared/utils/development'
 
 type DatatableItem = Log
 
@@ -106,7 +107,7 @@ onMounted(() => {
 // Everything above reads its props once, which is only correct while the page remounts this view
 // through a `:key`. Nothing would otherwise report a page that forgot: the table would keep
 // querying the old endpoint with the old columns under a new url, quietly.
-if (import.meta.env.DEV) {
+if (isDevelopment()) {
   watch(
     () => [props.system, props.type],
     () => {

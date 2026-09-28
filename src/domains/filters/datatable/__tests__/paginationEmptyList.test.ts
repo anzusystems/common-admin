@@ -95,8 +95,7 @@ const mountSubjectSelect = async (over: Partial<Pagination> = {}) => {
   })
   await new Promise((resolve) => setTimeout(resolve, 20))
 
-  // The control itself, not a `button` element: `ABtnSecondary` is not registered in this mount, so
-  // it stays an unresolved element -- which is where `v-show` puts its flag either way.
+  // The control's root element, where `v-show` puts its flag.
   return document.body.querySelector('.justify-center.pa-4 > *') as HTMLElement | null
 }
 

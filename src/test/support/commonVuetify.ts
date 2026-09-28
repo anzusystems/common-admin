@@ -9,10 +9,10 @@ import en from '@/locales/en'
 import { useCommonVuetifyConfig } from '@/plugins/commonVuetifyConfig'
 
 /**
- * `setup.ts` builds Vuetify without the library's aliases and defaults, so `ABtnPrimary` and its
- * siblings render as unknown elements there. A suite that needs them as real buttons calls this
- * at the top: it swaps the global plugins for a Vuetify built the way the admins build it, and
- * puts the original ones back after the file.
+ * `setup.ts` builds Vuetify with the library's aliases but without its defaults and theme. A suite that
+ * needs the buttons as the admins see them (`ABtnPrimary` flat and primary, …) calls this at the top: it
+ * swaps the global plugins for a Vuetify built the way the admins build it, and puts the original ones
+ * back after the file.
  */
 export const useCommonVuetifyPlugins = () => {
   let saved: typeof config.global.plugins

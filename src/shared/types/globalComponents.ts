@@ -1,10 +1,11 @@
 import type { RouterLink, RouterView } from 'vue-router'
-import type { VBtn, VChip } from 'vuetify/components'
+import type { VBtn } from 'vuetify/components'
 import type Acl from '@/domains/auth/components/Acl.vue'
+import type AChipNoLink from '@/domains/ui/components/AChipNoLink.vue'
 
 /**
  * What the library registers globally, typed for templates: the button aliases of its Vuetify config
- * (`useCommonVuetifyConfig().commonAliases`) and `Acl`, which the plugin registers. Their names are
+ * (`useCommonVuetifyConfig().commonAliases`), and `Acl` and `AChipNoLink`, which the plugin registers. Their names are
  * `globalComponentNames` in `@anzusystems/common-admin/eslint`.
  *
  * The augmentations below live in this module, which the public entry re-exports, so that an admin's
@@ -15,7 +16,7 @@ export interface CommonAdminGlobalComponents {
   ABtnSecondary: typeof VBtn
   ABtnTertiary: typeof VBtn
   ABtnIcon: typeof VBtn
-  AChipNoLink: typeof VChip
+  AChipNoLink: typeof AChipNoLink
   /** Its `permission` takes the values an admin puts in `AclRegistry`. */
   Acl: typeof Acl
 }
