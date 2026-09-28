@@ -7,6 +7,7 @@ import { describeCloseButtons } from '@/testing/closeButtons'
 import { describeGeneratedRoutes } from '@/testing/generatedRoutes'
 import { describeRouteHistory } from '@/testing/routeHistory'
 import { describeSortableLists, unregisteredListEditorTags } from '@/testing/sortableLists'
+import { packageOfSpecifier, undeclaredImports } from '@/testing/declaredDependencies'
 import { globKeyToSrcPath, parseTypedRouterDeclaration } from '@/testing/typedRouter'
 
 // A small admin in the shape vue-router generates: a listing, a record with an edit view, and the
@@ -165,4 +166,84 @@ describeCssLayerOrder({
   indexHtml:
     '<link rel="icon" href="/favicon.ico">\n<link rel="preload" as="font" href="/a.woff2">\n<!-- <style>.old {}</style> -->\n' +
     `<head>\n<style>\n  /* order */\n  ${CSS_LAYER_STATEMENTS.join(' ')}\n\n  @font-face { font-family: a; }\n</style>\n</head>\n<body><link rel="stylesheet" href="/late.css"></body>\n`,
+})
+
+describe('packageOfSpecifier', () => {
+  it('names the package of a bare specifier, scoped or not, with a subpath or a query', () => {
+    expect(packageOfSpecifier('vue')).toBe('vue')
+    expect(packageOfSpecifier('vuetify/components/VBtn')).toBe('vuetify')
+    expect(packageOfSpecifier('@tiptap/extension-list')).toBe('@tiptap/extension-list')
+    expect(packageOfSpecifier('@anzusystems/common-admin/testing')).toBe('@anzusystems/common-admin')
+    expect(packageOfSpecifier('vuetify/styles?inline')).toBe('vuetify')
+  })
+
+  it('leaves out paths, aliases, schemes and node builtins', () => {
+    for (const specifier of ['./a', '../b.vue', '/src/c', '@/d', '#e', 'node:fs', 'virtual:f', 'sass:math', 'fs']) {
+      expect(packageOfSpecifier(specifier)).toBeNull()
+    }
+    expect(packageOfSpecifier('~icons/mdi/home', ['~icons/'])).toBeNull()
+  })
+})
+
+describe('undeclaredImports', () => {
+  const packageJson = {
+    dependencies: { vue: '^3', '@tiptap/extension-list': '^3' },
+    devDependencies: { vitest: '^5', '@types/estree': '^1', '@types/babel__core': '^7' },
+  }
+
+  it('finds a package that comes only through another one', () => {
+    const sources = {
+      '/src/a.ts': "import { BulletList } from '@tiptap/extension-bullet-list'\nimport { ref } from 'vue'",
+      '/src/b.vue': '<script setup lang="ts">\nconst l = await import(\'linkifyjs\')\n</script>',
+      '/src/c.scss': "@use 'vuetify/settings' with ($x: 1);",
+    }
+    expect(undeclaredImports(sources, packageJson)).toEqual([
+      'src/a.ts: @tiptap/extension-bullet-list',
+      'src/b.vue: linkifyjs',
+      'src/c.scss: vuetify/settings',
+    ])
+  })
+
+  it('reads neither comments nor a style partial next to the file as an import', () => {
+    const sources = {
+      '/src/a.ts':
+        "// tells a 401 apart from 'a timeout'\n/* see from 'linkifyjs' */\nconst url = 'https://x.y/z' // from 'x'\n" +
+        'it(\'sets the time from "now"\', () => {})\nit(\'sets it from "now" with a moment\', () => {})',
+      '/src/styles/main.scss': "@use 'utils/forms';\n@use 'reset';\n@use 'vuetify/settings';",
+      '/src/styles/utils/_forms.scss': '',
+      '/src/styles/reset.scss': '',
+    }
+    expect(undeclaredImports(sources, packageJson)).toEqual(['src/styles/main.scss: vuetify/settings'])
+  })
+
+  // Each would once have hidden what follows it: a `/*` or a quote taken for the start of a comment or a string.
+  it('reads on past a glob in a comment, a quote in a regular expression and a URL in a template literal', () => {
+    const sources = {
+      '/src/a.vue': [
+        "<template><p>Don't import from 'nowhere'</p></template>",
+        '<script setup lang="ts">',
+        "// example: 'image/*,.jpg'",
+        // Each of these, taken for code, opens a comment that ends only at the doc comment below.
+        "const accept = 'image/*'",
+        'const path = `a/*${accept}`',
+        "const trimmed = path.replace(/\\/*$/, '')",
+        'const isRooted = (s: string) => { return /^\\/*x/.test(s) }',
+        'const quote = /[\'"]/',
+        'const url = `https://x.y/${1}`',
+        "const l = await import('linkifyjs')",
+        '/** a doc comment */',
+        '</script>',
+      ].join('\n'),
+      '/src/b.scss': "@forward 'vuetify/settings' show $color;",
+    }
+    expect(undeclaredImports(sources, packageJson)).toEqual(['src/a.vue: linkifyjs', 'src/b.scss: vuetify/settings'])
+  })
+
+  it('takes a dev dependency, and the package an @types package types', () => {
+    const sources = {
+      '/src/test/a.test.ts': "import { it } from 'vitest'\nvi.mock('vue')\nimport type { Node } from 'estree'",
+      '/src/d.ts': "import type { PluginObj } from '@babel/core'\nexport * from '@tiptap/extension-list'",
+    }
+    expect(undeclaredImports(sources, packageJson)).toEqual([])
+  })
 })

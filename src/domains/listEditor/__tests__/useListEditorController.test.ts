@@ -403,3 +403,19 @@ describe('useListEditorController', () => {
     expect(store.value[1].id! < 0).toBe(true)
   })
 })
+
+// Immediate mode: the backend has already deleted the row, so it is no longer part of what was saved.
+describe('useListEditorController reset after an immediate delete', () => {
+  it('does not bring the deleted row back', () => {
+    const { store, h } = setup([
+      { id: 1, title: 'a', position: 1 },
+      { id: 2, title: 'b', position: 2 },
+      { id: 3, title: 'c', position: 3 },
+    ])
+    h.deleteItem(2, { trackDeleted: false })
+    h.reset()
+
+    expect(store.value.map((r) => r.id)).toEqual([1, 3])
+    expect(h.hasUnsaved.value).toBe(false)
+  })
+})

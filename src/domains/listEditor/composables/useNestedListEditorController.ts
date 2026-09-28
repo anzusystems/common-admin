@@ -633,6 +633,32 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   const updateItem = (key: ListEditorKey, data: TItem, markDirty = true): void => {
     tree.updateItem(key, data, markDirty)
   }
+  // An immediate delete: the row is gone on the backend, and the editor removes it with its subtree, so
+  // neither is part of the saved tree `reset()` restores any more.
+  const dropFromBaseline = (key: ListEditorKey): void => {
+    if (!baselineTree.value) return
+    const base = cloneTree(baselineTree.value)
+    const detach = (nodes: NestedTreeNode<TItem>[]): NestedTreeNode<TItem> | undefined => {
+      for (let i = 0; i < nodes.length; i++) {
+        if (keyOf(nodes[i]!.data) === key) return nodes.splice(i, 1)[0]
+        const found = nodes[i]!.children?.length ? detach(nodes[i]!.children!) : undefined
+        if (found) return found
+      }
+      return undefined
+    }
+    const removed = detach(base.children)
+    if (!removed) return
+    const hashes = new Map(baselineHashes.value)
+    const parents = new Map(baselineParents.value)
+    walkNodes({ ...base, children: [removed] }, (n) => {
+      hashes.delete(keyOf(n.data))
+      parents.delete(keyOf(n.data))
+    })
+    baselineHashes.value = hashes
+    baselineParents.value = parents
+    baselineTree.value = base
+  }
+
   const deleteItem = (key: ListEditorKey, opts?: { trackDeleted?: boolean; renumber?: boolean }): void => {
     // A previously-saved row removed in deferred mode is tombstoned (counts as unsaved + reported in
     // getChanges().deleted). `trackDeleted: false` (immediate — already deleted on the backend) skips it.
@@ -642,6 +668,8 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     // would tombstone a baseline row that is already deleted, surfacing a bogus unconfirmed change.
     if (baselineHashes.value.has(key) && opts?.trackDeleted !== false && treeHasKey(key)) {
       deletedKeys.value.add(key)
+    } else if (baselineHashes.value.has(key) && treeHasKey(key)) {
+      dropFromBaseline(key)
     }
     tree.deleteItem(key, { renumber: opts?.renumber })
   }

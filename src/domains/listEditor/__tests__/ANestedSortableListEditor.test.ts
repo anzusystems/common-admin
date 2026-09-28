@@ -143,6 +143,20 @@ describe('ANestedSortableListEditor', () => {
       expect(rows.length).toBe(3)
     })
 
+    // It shows or hides the children: "Edit"/"Close" named it like the row's edit button next to it.
+    it('names the children toggle by what it does and says whether it is open', async () => {
+      const { wrapper } = mountEditor()
+      const news = wrapper.findAll('.a-nested-list-editor__tree-toggle')[1]!
+      expect(news.attributes('aria-label')).toBe('Collapse')
+      expect(news.attributes('aria-expanded')).toBe('true')
+
+      await news.trigger('click')
+      await nextTick()
+      const collapsed = wrapper.findAll('.a-nested-list-editor__tree-toggle')[1]!
+      expect(collapsed.attributes('aria-label')).toBe('Expand')
+      expect(collapsed.attributes('aria-expanded')).toBe('false')
+    })
+
     it('renders the reorder toggle by default', () => {
       const { wrapper } = mountEditor()
       const toggle = wrapper.findAll('button').find((b) => b.text().toLowerCase().includes('reorder'))

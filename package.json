@@ -83,6 +83,7 @@
     "@types/node": "^24.13.6",
     "@types/rusha": "^0.8.3",
     "@types/sortablejs": "^1.15.9",
+    "@typescript-eslint/parser": "^8.70.1",
     "@vitejs/plugin-vue": "^6.0.9",
     "@vitest/browser": "^5.0.1",
     "@vitest/browser-playwright": "^5.0.1",

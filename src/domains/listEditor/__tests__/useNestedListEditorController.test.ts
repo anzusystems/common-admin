@@ -526,3 +526,33 @@ describe('useNestedListEditorController', () => {
     expect(h.items.value).toHaveLength(5)
   })
 })
+
+// Immediate mode: the backend has already deleted the row (and does not renumber its siblings).
+describe('useNestedListEditorController reset after an immediate delete', () => {
+  const ids = (nodes: NestedTreeNode<Row>[]): unknown[] =>
+    nodes.map((n) => (n.children?.length ? [n.data.id, ids(n.children)] : n.data.id))
+
+  it('does not bring the deleted row back, nor a deleted child', () => {
+    const { store, h } = setup()
+    h.deleteItem(1, { trackDeleted: false, renumber: false })
+    h.deleteItem(21, { trackDeleted: false, renumber: false })
+    h.reset()
+
+    expect(ids(store.value.children)).toEqual([[2, [22]], 3])
+    expect(h.hasUnsaved.value).toBe(false)
+  })
+
+  // The backend deletes a row's saved children with it: a child moved out first is no longer saved anywhere,
+  // so the next save has to create it.
+  it('takes the saved children of a deleted row out of what was saved', () => {
+    const { store, h } = setup()
+    h.outdent(21)
+    h.deleteItem(2, { trackDeleted: false, renumber: false })
+
+    expect(ids(store.value.children)).toEqual([1, 21, 3])
+    expect(h.getChanges().added.map((row) => row.id)).toEqual([21])
+    expect(h.getChanges().reparented).toEqual([])
+    h.reset()
+    expect(ids(store.value.children)).toEqual([1, 3])
+  })
+})

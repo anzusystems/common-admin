@@ -452,6 +452,12 @@ export function useListEditorController<TItem extends Record<string, any>>(
     // unsaved. An unsaved temp row just vanishes either way.
     if (baselineHashes.value.has(key) && opts?.trackDeleted !== false) {
       deletedRows.value = [...deletedRows.value, removed]
+    } else if (baselineHashes.value.has(key)) {
+      // Deleted on the backend: no longer part of the saved rows `reset()` returns to.
+      const hashes = new Map(baselineHashes.value)
+      hashes.delete(key)
+      baselineHashes.value = hashes
+      baselineRows.value = baselineRows.value.filter((r) => keyOf(r) !== key)
     }
     movedKeys.value.delete(key)
     write(arr, 'remove')

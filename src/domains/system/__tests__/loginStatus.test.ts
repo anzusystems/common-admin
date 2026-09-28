@@ -16,6 +16,15 @@ describe('useLoginStatus', () => {
     expect(later.isStatusNotDefined()).toBe(true)
   })
 
+  // The start-up reads the verdict after its awaits; another navigation can pass the guard meanwhile.
+  it('keeps the verdict of its own navigation when a later one runs before it is read', () => {
+    const callback = useLoginStatus(route({ loginState: 'failure-unauthorized', timestamp: '1' }))
+    useLoginStatus(route())
+
+    expect(callback.isStatusUnauthorized()).toBe(true)
+    expect(callback.isStatusNotDefined()).toBe(false)
+  })
+
   it('measures the clock shift again on every login instead of keeping the largest one', () => {
     const now = Math.floor(Date.now() / 1000)
     useLoginStatus(route({ loginState: 'success', timestamp: String(now + 3600) }))

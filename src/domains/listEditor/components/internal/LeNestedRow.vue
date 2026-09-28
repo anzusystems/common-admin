@@ -108,7 +108,8 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
               'a-nested-list-editor__tree-toggle--open': vi.childrenExpanded,
             },
           ]"
-          :aria-label="vi.childrenExpanded ? t('common.sortable.close') : t('common.sortable.edit')"
+          :aria-label="vi.childrenExpanded ? t('common.sortable.collapse') : t('common.sortable.expand')"
+          :aria-expanded="vi.hasChildren ? vi.childrenExpanded : undefined"
           @click.stop="vi.hasChildren && callbacks.onChevronClick(vi)"
         >
           <span class="a-nested-list-editor__tree-toggle-caret" />

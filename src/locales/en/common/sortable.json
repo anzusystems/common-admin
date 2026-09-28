@@ -19,6 +19,8 @@
   "reorderModeLabel": "Reorder mode",
   "expandAll": "Expand all",
   "collapseAll": "Collapse all",
+  "expand": "Expand",
+  "collapse": "Collapse",
   "reorderApply": "Apply",
   "reorderCancel": "Cancel",
   "moveUp": "Move up",

@@ -6,6 +6,13 @@ export { type DescribeCloseButtonsOptions, describeCloseButtons } from '@/testin
 export { type DescribeRouteHistoryOptions, describeRouteHistory } from '@/testing/routeHistory'
 export { type DescribeSortableListsOptions, describeSortableLists } from '@/testing/sortableLists'
 export {
+  type DescribeDeclaredDependenciesOptions,
+  describeDeclaredDependencies,
+  type PackageJsonDependencies,
+  packageOfSpecifier,
+  undeclaredImports,
+} from '@/testing/declaredDependencies'
+export {
   CSS_LAYER_ORDER,
   CSS_LAYER_STATEMENTS,
   CSS_SUBLAYER_ORDER,

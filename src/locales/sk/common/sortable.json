@@ -19,6 +19,8 @@
   "reorderModeLabel": "Režim preskupovania",
   "expandAll": "Rozbaliť všetko",
   "collapseAll": "Zbaliť všetko",
+  "expand": "Rozbaliť",
+  "collapse": "Zbaliť",
   "reorderApply": "Použiť",
   "reorderCancel": "Zrušiť",
   "moveUp": "Posunúť hore",

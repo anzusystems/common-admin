@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createApp, isRef } from 'vue'
 import AnzuSystemsCommonAdmin, {
   type CommonAdminCoreDamOptions,
@@ -85,5 +85,26 @@ describe('plugin options', () => {
     expect(useCommonAdminCoreDamOptionsGlobal().adminDomain).toBe('https://dam2')
     initCommonAdminImageOptions(imageOptions)
     expect(useCommonAdminImageOptions().imageWidth).toBe(800)
+  })
+})
+
+// Without `i18n` the library translates through its own instance, which has no messages: every text
+// renders as its key, and the per-key "missing translation" warnings do not say why.
+describe('plugin without i18n', () => {
+  it('says the option is missing', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    createApp({}).use(AnzuSystemsCommonAdmin, {
+      languages: { available: ['sk'], default: 'sk' },
+    } as unknown as Parameters<typeof AnzuSystemsCommonAdmin.install>[1])
+
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0]![0])).toContain('i18n')
+  })
+
+  it('stays quiet with it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    createApp({}).use(AnzuSystemsCommonAdmin, { i18n, languages: { available: ['sk'], default: 'sk' } })
+
+    expect(warn).not.toHaveBeenCalled()
   })
 })

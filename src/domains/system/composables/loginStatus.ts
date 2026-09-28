@@ -34,11 +34,14 @@ export function useLoginStatus(to: RouteLocationNormalized) {
     serverTimestamp.value = null
   }
 
-  const isStatusNotDefined = () => isNull(status.value)
-  const isStatusLoginSuccess = () => status.value === LoginState.Success
-  const isStatusSsoCommunicationFailure = () => status.value === LoginState.FailureSsoCommunicationFailed
-  const isStatusInternalErrorFailure = () => status.value === LoginState.FailureInternalError
-  const isStatusUnauthorized = () => status.value === LoginState.FailureUnauthorized
+  // This navigation's verdict: the start-up reads it after its awaits, when another navigation may have
+  // passed the guard and reset `status`.
+  const current = status.value
+  const isStatusNotDefined = () => isNull(current)
+  const isStatusLoginSuccess = () => current === LoginState.Success
+  const isStatusSsoCommunicationFailure = () => current === LoginState.FailureSsoCommunicationFailed
+  const isStatusInternalErrorFailure = () => current === LoginState.FailureInternalError
+  const isStatusUnauthorized = () => current === LoginState.FailureUnauthorized
 
   return {
     status: readonly(status),

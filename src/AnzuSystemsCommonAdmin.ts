@@ -103,6 +103,12 @@ export type CommonAdminCollabOptions = {
 
 export default {
   install(app: App, options: PluginOptions): void {
+    if (!options.i18n) {
+      console.warn(
+        '[common-admin] installed without `i18n`: the library translates through an instance without messages, ' +
+          "so its texts render as keys. Pass the admin's instance: app.use(AnzuSystemsCommonAdmin, { i18n, … })."
+      )
+    }
     setCommonAdminI18n(options.i18n)
     app.provide(AvailableLanguagesSymbol, options.languages.available)
     app.provide(DefaultLanguageSymbol, options.languages.default)
