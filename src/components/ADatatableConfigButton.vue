@@ -48,6 +48,7 @@ const toggleVisibility = (key: string) => {
     icon
     size="x-small"
     variant="text"
+    :aria-label="t(buttonT)"
   >
     <VIcon icon="mdi-cog" />
     <VTooltip

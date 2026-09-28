@@ -164,7 +164,7 @@ export function useReorderMode<T>(options: UseReorderModeOptions<T>): UseReorder
   }
 
   const cancelReorderMode = () => {
-    if (!reorderMode.value) return
+    if (!reorderMode.value || applying.value) return
     if (!isEmbedded() && options.snapshot.value) {
       options.applyModel(options.snapshot.value as T)
     }
@@ -196,7 +196,7 @@ export function useReorderMode<T>(options: UseReorderModeOptions<T>): UseReorder
     }
     // Deliberately keep `movedKeys` populated — consumer still has to persist
     // the new order via their own API call before rows are truly "saved"; we
-    // let them clear the state manually via `resetDirtyBaseline` on success.
+    // let them clear the state via `commit()` on success.
     options.snapshot.value = null
     options.mode.value = 'view'
     options.onApplyEnd?.()
@@ -215,36 +215,41 @@ export function useReorderMode<T>(options: UseReorderModeOptions<T>): UseReorder
   //   - non-embedded cancel: snapshot is set → clear state here
   //   - non-embedded apply: applyReorder nulls snapshot BEFORE flipping
   //     mode, so the snapshot-guarded branch is skipped → movedKeys stays
-  //     populated until consumer calls resetDirtyBaseline (the contract)
+  //     populated until consumer calls commit() (the contract)
   //   - embedded: no snapshot ever, clear state on every view transition
   //     so the inner editor's movedKeys doesn't outlive a parent
   //     cancel/apply (otherwise rows would render as `unsaved` after the
   //     parent restores the original data)
-  watch(options.mode, (newMode, oldMode) => {
-    if (newMode === 'reorder' && oldMode !== 'reorder') {
-      if (!isEmbedded() && !options.snapshot.value) {
-        options.snapshot.value = options.cloneModel(options.modelValue.value)
-      }
-      options.movedKeys.value = new Set()
-      options.onExternalEnter?.()
-    }
-    if (newMode === 'view' && oldMode === 'reorder') {
-      if (options.snapshot.value) {
-        options.snapshot.value = null
+  // Immediate: an editor mounted with mode already `reorder` needs the same snapshot, or Cancel keeps the moves.
+  watch(
+    options.mode,
+    (newMode, oldMode) => {
+      if (newMode === 'reorder' && oldMode !== 'reorder') {
+        if (!isEmbedded() && !options.snapshot.value) {
+          options.snapshot.value = options.cloneModel(options.modelValue.value)
+        }
         options.movedKeys.value = new Set()
-        applyError.value = null
-        applying.value = false
-      } else if (isEmbedded()) {
-        options.movedKeys.value = new Set()
-        applyError.value = null
-        applying.value = false
-        // Reconcile session immediate (backend) deletes: the parent has already flushed both props, so
-        // the model reflects a Cancel's snapshot-restore (deleted row resurrected → re-remove) or an
-        // Apply (row stayed gone → the re-remove is a no-op). Deferred deletes need nothing here.
-        options.onEmbeddedExit?.()
+        options.onExternalEnter?.()
       }
-    }
-  })
+      if (newMode === 'view' && oldMode === 'reorder') {
+        if (options.snapshot.value) {
+          options.snapshot.value = null
+          options.movedKeys.value = new Set()
+          applyError.value = null
+          applying.value = false
+        } else if (isEmbedded()) {
+          options.movedKeys.value = new Set()
+          applyError.value = null
+          applying.value = false
+          // Reconcile session immediate (backend) deletes: the parent has already flushed both props, so
+          // the model reflects a Cancel's snapshot-restore (deleted row resurrected → re-remove) or an
+          // Apply (row stayed gone → the re-remove is a no-op). Deferred deletes need nothing here.
+          options.onEmbeddedExit?.()
+        }
+      }
+    },
+    { immediate: true }
+  )
 
   return {
     applying,

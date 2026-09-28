@@ -41,7 +41,7 @@ onMounted(async () => {
     promises.push(loadDamPrvConfig())
   }
   try {
-    await Promise.allSettled(promises)
+    await Promise.all(promises)
   } catch (e) {
     status.value = 'error'
   }

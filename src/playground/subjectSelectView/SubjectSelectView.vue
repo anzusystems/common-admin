@@ -26,7 +26,7 @@ const onConfirm = (data: any) => {
           <PollSelectTable
             :min-count="1"
             :max-count="maxCount"
-            @on-confirm="onConfirm"
+            @confirm="onConfirm"
           />
         </VCol>
       </VRow>

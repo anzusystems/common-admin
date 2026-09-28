@@ -17,6 +17,9 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "exactOptionalPropertyTypes": false
+    "exactOptionalPropertyTypes": false,
+    // The library code is checked with it (#119); in tests an index into what they just built would only
+    // gain a `!` (420 of them), the test failing the same way without it.
+    "noUncheckedIndexedAccess": false
   }
 }

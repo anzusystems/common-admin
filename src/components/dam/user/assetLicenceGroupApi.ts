@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import type { IntegerId } from '@/types/common'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'

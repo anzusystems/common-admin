@@ -30,35 +30,35 @@ export function useTimeIntervalOptions(allowed: TimeIntervalToolsValue[] | undef
       },
       {
         value: 60,
-        title: '1 hodina',
+        title: t('common.filter.timeInterval.options.hour1'),
       },
       {
         value: 1_440,
-        title: '1 deň',
+        title: t('common.filter.timeInterval.options.day1'),
       },
       {
         value: 10_080,
-        title: '7 dní',
+        title: t('common.filter.timeInterval.options.days7'),
       },
       {
         value: 40_320,
-        title: '28 dní',
+        title: t('common.filter.timeInterval.options.days28'),
       },
       {
         value: TimeIntervalSpecialOptions.CurrentMonth,
-        title: 'Prebiehajúci mesiac',
+        title: t('common.filter.timeInterval.options.currentMonth'),
       },
       {
         value: TimeIntervalSpecialOptions.LastMonth,
-        title: 'Minulý mesiac',
+        title: t('common.filter.timeInterval.options.lastMonth'),
       },
       {
         value: TimeIntervalSpecialOptions.Last3Months,
-        title: 'Posledné 3 mesiace',
+        title: t('common.filter.timeInterval.options.last3Months'),
       },
       {
         value: TimeIntervalSpecialOptions.Custom,
-        title: 'Vlastné',
+        title: t('common.filter.timeInterval.options.custom'),
       },
     ]
     if (isUndefined(allowed)) return values

@@ -13,9 +13,10 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { SORT_BY_ID } from '@/composables/system/datatableColumns'
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import { fetchImageFile } from '@/components/damImage/uploadQueue/api/damImageApi'
 import type { DocId } from '@/types/common'
+import { useAlerts } from '@/composables/system/alerts'
 
 const props = withDefaults(
   defineProps<{
@@ -29,6 +30,7 @@ const props = withDefaults(
 )
 
 const { t } = useI18n()
+const { showErrorsDefault } = useAlerts()
 
 const imageRoiStore = useImageRoiStore()
 const assetDetailStore = useAssetDetailStore()
@@ -50,24 +52,25 @@ const loadImageFile = async (id: DocId) => {
 
 const loadRois = async (forceReloadFile = false) => {
   imageRoiStore.showLoader()
-  if (imageRoiStore.imageFile) {
-    const { execute } = useFetchImageRoiList(damClient, endPointImage, imageRoiStore.imageFile.id)
-    const res = await execute(pagination, filterData, filterConfig)
-    if (res.length > 0 && res[0].id) {
-      const roi = await fetchRoi(damClient, endPointRoi, res[0].id)
-      if (forceReloadFile) {
-        await loadImageFile(imageRoiStore.imageFile.id)
+  try {
+    if (imageRoiStore.imageFile) {
+      const { execute } = useFetchImageRoiList(damClient, endPointImage, imageRoiStore.imageFile.id)
+      const res = await execute(pagination, filterData, filterConfig)
+      if (res.length > 0 && res[0].id) {
+        const roi = await fetchRoi(damClient, endPointRoi, res[0].id)
+        if (forceReloadFile) {
+          await loadImageFile(imageRoiStore.imageFile.id)
+        }
+        imageRoiStore.setRoi(roi)
+        return
       }
-      imageRoiStore.setRoi(roi)
-      imageRoiStore.hideLoader()
-      return
     }
     imageRoiStore.setRoi(null)
+  } catch (error) {
+    showErrorsDefault(error)
+  } finally {
     imageRoiStore.hideLoader()
-    return
   }
-  imageRoiStore.setRoi(null)
-  imageRoiStore.hideLoader()
 }
 
 const afterRotate = async () => {

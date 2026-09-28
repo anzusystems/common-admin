@@ -17,11 +17,13 @@ export interface UseUnsavedChangesGuardOptions {
   sources: UnsavedSource[]
   /**
    * Block route navigation via vue-router's onBeforeRouteLeave. Default true.
-   * When omitted/false, the route guard is not registered.
+   * Only a literal `false` skips registering the guard; a Ref is read when the navigation happens, so
+   * it can turn blocking on and off later.
    */
   guardRoute?: boolean | Ref<boolean>
   /**
-   * Block window/tab unload via beforeunload. Default true.
+   * Block window/tab unload via beforeunload. Default true. Like `guardRoute`: only a literal `false`
+   * skips the listener, a Ref is read when the unload happens.
    */
   guardWindowUnload?: boolean | Ref<boolean>
   /**
@@ -176,10 +178,11 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions): 
 
   // Route guard — `onBeforeRouteLeave` only works inside a route component
   // (it reads the current vm context). Outside a component it's a no-op.
-  if (resolveBool(options.guardRoute, true) && getCurrentInstance()) {
+  // A Ref option is read at event time (register whenever it is not a literal `false`).
+  if (options.guardRoute !== false && getCurrentInstance()) {
     try {
       onBeforeRouteLeave(async () => {
-        if (!hasUnsavedChanges.value) return true
+        if (!resolveBool(options.guardRoute, true) || !hasUnsavedChanges.value) return true
         const discard = await askToLeave()
         return discard
       })
@@ -194,9 +197,9 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions): 
   const disposers: Array<() => void> = [clearAcknowledgeTimer]
   let stopped = false
 
-  if (resolveBool(options.guardWindowUnload, true)) {
+  if (options.guardWindowUnload !== false) {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!hasUnsavedChanges.value) return
+      if (!resolveBool(options.guardWindowUnload, true) || !hasUnsavedChanges.value) return
       e.preventDefault()
       e.returnValue = ''
     }

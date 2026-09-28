@@ -39,9 +39,9 @@ import {
   useCollabRequestToTakeModerationEventBus,
   useCollabStartingEventBus,
 } from '@/components/collab/composables/collabEventBus'
-import type { Fn, Promisify } from '@vueuse/core'
+import type { Fn } from '@vueuse/core'
 import { tryOnBeforeUnmount } from '@vueuse/core'
-import { useCollabState } from '@/components/collab/composables/collabState'
+import { useCollabStateInternal } from '@/components/collab/composables/collabState'
 import { isDefined, isUndefined } from '@/utils/common'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import type { AddToCachedArgs } from '@/composables/system/defineCached'
@@ -53,11 +53,12 @@ export function useCollabRoom(
   room: CollabRoom,
   watchForNewUsers: boolean = false,
   addToCachedUsers: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined = undefined,
-  fetchCachedUsers: (() => Promisify<Promise<any>>) | undefined = undefined,
+  // Called fire-and-forget; any fetch fits, `defineCached().fetch` included.
+  fetchCachedUsers: (() => unknown) | undefined = undefined,
   disableAutoUnsubscribe = false
 ) {
   const { collabSocket, collabRoomInfoState, collabFieldDataBufferState, collabFieldLocksState, claimRoomInfoWrite } =
-    useCollabState()
+    useCollabStateInternal()
 
   const reconnectEventBus = useCollabReconnectEventBus()
   const unsubscribeCollabReconnectListener = ref<undefined | Fn>()
@@ -410,7 +411,7 @@ export function useCollabRoom(
       collabSocket.value?.timeout(500).emit('fetchRoomsInfo', [room], (error, response: CollabRoomsInfo) => {
         if (error) return void resolve(baseRoomInfo)
         const roomInfo = response[room]
-        if (isUndefined(roomInfo)) resolve(baseRoomInfo)
+        if (isUndefined(roomInfo)) return void resolve(baseRoomInfo)
         if (!isUndefined(addToCachedUsers)) addToCachedUsers(roomInfo.users)
         if (!isUndefined(fetchCachedUsers)) fetchCachedUsers()
 

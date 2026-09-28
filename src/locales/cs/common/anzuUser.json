@@ -33,7 +33,8 @@
     "grants": "Akce",
     "permissions": "Oprávnění",
     "resolvedPermissions": "Výsledné oprávnění",
-    "noPermissions": "Žádná oprávnění"
+    "noPermissions": "Žádná oprávnění",
+    "impersonate": "Přihlásit se jako tento uživatel"
   },
   "copyPermissions": {
     "title": "Kopírovat roli a oprávnění",

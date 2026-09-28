@@ -15,7 +15,7 @@ import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import ImageDetailDialogMetadata from '@/components/damImage/uploadQueue/components/ImageDetailDialogMetadata.vue'
-import { computed, inject, onBeforeUnmount, onMounted, ref, type ShallowRef, toRaw, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, type ShallowRef, toRaw, watch } from 'vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -49,7 +49,7 @@ import {
   type CollabFieldLockStatusPayload,
   CollabFieldLockType,
 } from '@/components/collab/composables/collabEventBus'
-import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetUploadConfigKey } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import AAssetSelectMedia from '@/components/dam/assetSelect/AAssetSelectMedia.vue'
 import {
   isImageCreateUpdateAware,
@@ -159,7 +159,7 @@ const releaseFieldLockLocal = (value: IntegerIdNullable) => {
 }
 
 const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
-  ImageWidgetUploadConfig,
+  ImageWidgetUploadConfigKey,
   undefined
 )
 
@@ -169,7 +169,7 @@ if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.
 
 const { t } = useI18n()
 
-const { showErrorsDefault, showError, showErrorT } = useAlerts()
+const { showErrorsDefault, showErrorT } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
@@ -177,6 +177,10 @@ const { imageClient, imageApi } = imageOptions
 const { widgetImageToDamImageUrl, damImageIdToDamImageUrl } = useImageActions(imageOptions)
 const uploadQueuesStore = useUploadQueuesStore()
 const { uploadQueueDialog } = useUploadQueueDialog()
+// Before the immediate watcher below: with expandMetadata it writes the detail while setup runs.
+const imageMediaWidgetStore = useImageMediaWidgetStore()
+imageMediaWidgetStore.reset()
+const { detail } = storeToRefs(imageMediaWidgetStore)
 
 const showDamAuthorsInCmsImage = ref(false)
 const resImageMedia = ref<null | ImageCreateUpdateAware | MediaAware>(null)
@@ -278,7 +282,7 @@ const onDrop = async (files: File[]) => {
     uploadQueueDialog.value = props.queueKey
   } catch (e) {
     if (disposed || e === LOCK_WAIT_CANCELLED) return
-    showError('Unable to lock image widget by current user.')
+    showErrorT('common.damImage.error.unableToLock')
   }
 }
 
@@ -292,7 +296,7 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
     uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [data[0].targetAsset])
     uploadQueuesStore.queueItemDuplicate(data[0].targetAsset, data[0].targetMainFile, DamAssetType.Image)
   } else {
-    showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
+    showErrorT('common.damImage.queueItem.errorUnableToCopyToLicence')
     return
   }
   uploadQueueDialog.value = props.queueKey
@@ -404,8 +408,6 @@ watch(
 )
 
 const assetSelectStore = useAssetSelectStore()
-const imageMediaWidgetStore = useImageMediaWidgetStore()
-const { detail } = storeToRefs(imageMediaWidgetStore)
 const { getDamConfigExtSystem } = useDamConfigState()
 
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
@@ -501,7 +503,7 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
       if (assetRes.authors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(
           damClient,
-          assetSelectStore.selectedSelectConfig.extSystem,
+          assetSelectStore.requireSelectedSelectConfig().extSystem,
           assetRes.authors
         )
         source = authorsRes.map((author) => author.name).join(', ')
@@ -606,11 +608,16 @@ const tryImageConfirm = async () => {
       if (asset.value.authors.length > 0) {
         const authorsRes = await fetchAuthorListByIds(
           damClient,
-          assetSelectStore.selectedSelectConfig.extSystem,
+          assetSelectStore.requireSelectedSelectConfig().extSystem,
           asset.value.authors
         )
         detail.value.texts.source = authorsRes.map((author) => author.name).join(', ')
-        await updateAssetAuthors(damClient, endPointAsset, asset.value, assetSelectStore.selectedSelectConfig.extSystem)
+        await updateAssetAuthors(
+          damClient,
+          endPointAsset,
+          asset.value,
+          assetSelectStore.requireSelectedSelectConfig().extSystem
+        )
         showDamAuthorsInCmsImage.value = false
       }
     }
@@ -740,10 +747,6 @@ watch(
   { immediate: false }
 )
 
-onMounted(() => {
-  imageMediaWidgetStore.reset()
-})
-
 defineExpose({
   metadataConfirm,
 })
@@ -766,7 +769,7 @@ defineExpose({
         {{ label
         }}<span
           v-if="required"
-          class="required-mark"
+          class="a-required-mark"
         />
       </h4>
       <div class="d-flex">
@@ -815,7 +818,7 @@ defineExpose({
             </AFileInputDialog>
             <span
               v-if="required"
-              class="required-mark ml-2"
+              class="a-required-mark ml-2"
             />
           </div>
           <VBtn
@@ -824,6 +827,7 @@ defineExpose({
             size="x-small"
             icon
             :disabled="isLocked"
+            :aria-label="t('common.damImage.image.button.options')"
             @click.stop="onOptionsButtonClick"
           >
             <VIcon icon="mdi-dots-horizontal" />
@@ -943,8 +947,8 @@ defineExpose({
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
         :hide-text="hideDropzoneText || isLocked"
-        @on-click="onDropzoneClick"
-        @on-drop="onDrop"
+        @click="onDropzoneClick"
+        @drop="onDrop"
       />
     </div>
     <slot
@@ -962,8 +966,8 @@ defineExpose({
       :saving="metadataDialogSaving"
       :loading="metadataDialogLoading"
       @edit-asset="onEditAsset"
-      @on-confirm="onMetadataDialogConfirm"
-      @on-close="onMetadataDialogClose"
+      @confirm="onMetadataDialogConfirm"
+      @close="onMetadataDialogClose"
     >
       <template #preview="{ imageMedia: appendMedia }">
         <slot
@@ -983,7 +987,7 @@ defineExpose({
     return-type="asset"
     :preselect-asset-type="preselectType"
     :preselect-in-podcast="preselectType === DamAssetType.Audio || null"
-    @on-confirm="onAssetSelectConfirm"
+    @confirm="onAssetSelectConfirm"
   />
   <AssetDetailDialog
     v-if="assetDialog === queueKey"
@@ -998,6 +1002,6 @@ defineExpose({
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
-    @on-apply="onAssetUploadConfirm"
+    @apply="onAssetUploadConfirm"
   />
 </template>

@@ -61,8 +61,8 @@ function mountPicker(initial: DatetimeUTCNullable = null, props: Record<string, 
             events.blurredWith.push(model.value)
           },
           onFocus: () => (events.focus += 1),
-          onOnOpen: () => (events.open += 1),
-          onOnClose: () => {
+          onOpen: () => (events.open += 1),
+          onClose: () => {
             events.close += 1
             events.closedWith.push(model.value)
           },

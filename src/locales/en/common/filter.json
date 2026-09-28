@@ -12,10 +12,21 @@
     "storeTableOrder": "Save datatable order also",
     "saveBookmarkOrder": "Save ordering",
     "nameUniqueError": "Name of filter must be unique",
-    "unsavedSection": "Bookmark order"
+    "unsavedSection": "Bookmark order",
+    "more": "More bookmarks"
   },
   "timeInterval": {
     "from": "From",
-    "until": "Until"
+    "until": "Until",
+    "options": {
+      "hour1": "1 hour",
+      "day1": "1 day",
+      "days7": "7 days",
+      "days28": "28 days",
+      "currentMonth": "Current month",
+      "lastMonth": "Last month",
+      "last3Months": "Last 3 months",
+      "custom": "Custom"
+    }
   }
 }

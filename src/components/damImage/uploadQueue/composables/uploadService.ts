@@ -1,7 +1,6 @@
 import { ref } from 'vue'
-import type { CancelTokenSource } from 'axios'
 import axios from 'axios'
-import { i18n } from '@/plugins/i18n'
+import { commonT } from '@/plugins/i18n'
 import {
   type AnzuApiValidationResponseData,
   axiosErrorResponseHasValidationData,
@@ -25,9 +24,8 @@ const CHUNK_RETRY_INTERVAL = 1000
 const CHUNK_RETRY_MULTIPLY = 3
 const HASH_LOAD_TIMEOUT = 15_000
 
-const failUpload = async (queueItem: UploadQueueItem, error: unknown = null) => {
-  throw error
-}
+// A call, not an inline comparison: TypeScript keeps a status narrowed across the awaits in between.
+const isStopped = (queueItem: UploadQueueItem) => queueItem.status === UploadQueueItemStatus.Stop
 
 const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
   const { damClient, endPointImage, endPointAsset } = useCommonAdminCoreDamOptions()
@@ -36,7 +34,7 @@ const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
 }
 
 const handleValidationErrorMessage = (error: Error | any) => {
-  const { t } = i18n.global
+  const t = commonT
   if (!error || !error.response || !error.response.data) {
     // @ts-ignore
     return t('common.damImage.uploadErrors.unknownError')
@@ -157,9 +155,10 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       type: queueItem.file!.type,
     })
 
+    // Stop between chunks has no request to cancel: the controller below would be a fresh one.
+    if (isStopped(queueItem)) return Promise.reject(new Error('Upload stopped'))
     queueItem.currentChunkIndex = offset
-    const cancelToken = axios.CancelToken
-    queueItem.latestChunkCancelToken = cancelToken.source()
+    queueItem.latestChunkAbortController = new AbortController()
 
     let sleepTime = CHUNK_RETRY_INTERVAL
     let attempt = 0
@@ -171,9 +170,10 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
         return chunkFile
       } catch (error) {
+        if (axios.isCancel(error) || isStopped(queueItem)) return Promise.reject(error)
         // Check for 400 Bad Request error on last attempt
         if (axios.isAxiosError(error) && error.response?.status === 400 && attempt >= CHUNK_MAX_RETRY) {
-          queueItem.error.message = 'Upload chunk validation failed. Please contact administrator.'
+          queueItem.error.message = commonT('common.damImage.uploadErrors.chunkValidationFailed')
           return Promise.reject(error)
         }
 
@@ -242,7 +242,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     sha = rusha.default.createHash()
     return new Promise((resolve, reject) => {
       if (!queueItem.file || queueItem.file.size < 1) {
-        failUpload(queueItem)
+        reject(new Error('Empty file'))
         return
       }
       fileSize.value = queueItem.file.size
@@ -278,6 +278,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     }
 
     endTimestamp = Date.now() / 1000
+    if (isStopped(queueItem)) return Promise.reject(new Error('Upload stopped'))
     return await finishUpload(queueItem, hash.digest('hex'))
   }
 
@@ -288,6 +289,6 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   }
 }
 
-export const uploadStop = (cancelTokenSource: CancelTokenSource) => {
-  cancelTokenSource.cancel('axios request cancelled')
+export const uploadStop = (abortController: AbortController) => {
+  abortController.abort()
 }

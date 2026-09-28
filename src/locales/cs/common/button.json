@@ -28,5 +28,12 @@
   "prev": "Zpět",
   "loadMore": "Načti další",
   "copy": "Kopírovat",
-  "advanced": "Pokročilé"
+  "advanced": "Pokročilé",
+  "clear": "Vymazat",
+  "moreOptions": "Další možnosti",
+  "chooseColor": "Vybrat barvu",
+  "increaseHours": "Přidat hodinu",
+  "decreaseHours": "Ubrat hodinu",
+  "increaseMinutes": "Přidat minutu",
+  "decreaseMinutes": "Ubrat minutu"
 }

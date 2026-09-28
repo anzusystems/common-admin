@@ -29,6 +29,7 @@ const { t } = useI18n()
 <template>
   <VBtn
     :class="buttonClass"
+    :aria-label="t(tooltipT)"
     :data-cy="dataCy"
     class="text-medium-emphasis px-2"
     min-width="36px"

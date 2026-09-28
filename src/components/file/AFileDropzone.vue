@@ -32,19 +32,21 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'onDrop', files: File[]): void
-  (e: 'onClick'): void
+  (e: 'drop', files: File[]): void
+  (e: 'click'): void
 }>()
 
 const dropZoneRef = ref<HTMLDivElement>()
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { checkFormatsAndSizes } = useFormatAndSizeCheck(props.accept, props.maxSizes)
+const { checkFormatsAndSizes } = useFormatAndSizeCheck(
+  () => props.accept,
+  () => props.maxSizes
+)
 
 function onDrop(files: File[] | null) {
   if (props.disabled) return
   if (isNull(files) || files.length === 0) return
-  emit('onDrop', checkFormatsAndSizes(files))
+  emit('drop', checkFormatsAndSizes(files))
 }
 
 const { isOverDropZone } = useDropZone(dropZoneRef, onDrop)
@@ -66,7 +68,7 @@ const { t } = useI18n()
       [`a-file-dropzone--hover-only`]: hoverOnly,
       [`a-file-dropzone--hide-text`]: hideText,
     }"
-    @click.stop="emit('onClick')"
+    @click.stop="emit('click')"
   >
     <div
       v-if="disabled"

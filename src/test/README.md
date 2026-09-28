@@ -43,7 +43,8 @@ token; the cookie persists, so a bookmark works until you clear cookies.
 - `src/test/labs/` - Tests of the former labs entry (filters, api helpers, users and permissions)
 - `src/test/utils/` - Util tests
 - `src/test/eslint/` - Eslint rule tests, run in node
-- `src/test/support/`, `src/test/fixtures/` - Cropper test harness and images
+- `src/test/support/`, `src/test/fixtures/` - Cropper test harness and images; `support/commonVuetify.ts` swaps
+  in a Vuetify built with the library's aliases and defaults, for suites that need `ABtnPrimary` & co. as real buttons
 - `vitest.config.mts` - Vitest configuration
 - `vitest.config.node.mts` - Vitest configuration of the eslint rule tests
 
@@ -120,4 +121,4 @@ The whole suite except the eslint rule tests runs in a real browser:
 - Runs headless by default, everywhere
 - Set `VITEST_HEADED=1` to watch the browser instead of running headless
 - Runs in the `Europe/Bratislava` time zone; the datetime picker tests (`ADatetimePicker`, `AFormDatetimePicker`,
-  `datetimePickerValue`) run again in `America/New_York` (instance `chromium-utc-minus`, no retry)
+  `datetimePickerValue`) and `utils/datetime` run again in `America/New_York` (instance `chromium-utc-minus`, no retry)

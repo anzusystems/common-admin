@@ -13,19 +13,19 @@ export const useExtSystemSelectActions = (client: () => AxiosInstance) => {
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     const extSystems = await execute(pagination, filterData, filterConfig)
 
-    return <ValueObjectOption<IntegerId>[]>extSystems.map((extSystem: DamExtSystem) => ({
+    return extSystems.map((extSystem: DamExtSystem) => ({
       title: extSystem.slug,
       value: extSystem.id,
-    }))
+    })) as ValueObjectOption<IntegerId>[]
   }
 
   const fetchItemsByIds = async (ids: IntegerId[]) => {
     const extSystems = await fetchDamExtSystemListByIds(client, ids)
 
-    return <ValueObjectOption<IntegerId>[]>extSystems.map((extSystem: DamExtSystem) => ({
+    return extSystems.map((extSystem: DamExtSystem) => ({
       title: extSystem.slug,
       value: extSystem.id,
-    }))
+    })) as ValueObjectOption<IntegerId>[]
   }
 
   return {

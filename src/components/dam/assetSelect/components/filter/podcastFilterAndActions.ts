@@ -5,7 +5,7 @@ import {
   type FilterData,
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import type { Ref } from 'vue'
 import type { Pagination } from '@/labs/filters/pagination'
 import type { ValueObjectOption } from '@/types/ValueObject'
@@ -45,19 +45,19 @@ export const usePodcastSelectActions = (licenceId: IntegerId, configName = 'defa
   const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
     const podcasts = await execute(pagination, filterData, filterConfig)
 
-    return <ValueObjectOption<DocId>[]>podcasts.map((podcast: DamPodcastAware) => ({
+    return podcasts.map((podcast: DamPodcastAware) => ({
       title: podcast.texts.title,
       value: podcast.id,
-    }))
+    })) as ValueObjectOption<DocId>[]
   }
 
   const fetchItemsByIds = async (ids: DocId[]) => {
     const podcasts = await fetchDamPodcastListByIds(damClient, licenceId, ids)
 
-    return <ValueObjectOption<DocId>[]>podcasts.map((podcast: DamPodcastAware) => ({
+    return podcasts.map((podcast: DamPodcastAware) => ({
       title: podcast.texts.title,
       value: podcast.id,
-    }))
+    })) as ValueObjectOption<DocId>[]
   }
 
   return {

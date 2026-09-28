@@ -172,6 +172,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
           >
             <template v-if="context.reorderMode">
               <VBtn
+                :aria-label="t('common.sortable.moveUp')"
                 icon
                 size="small"
                 variant="text"
@@ -191,6 +192,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
                 />
               </VBtn>
               <VBtn
+                :aria-label="t('common.sortable.moveDown')"
                 icon
                 size="small"
                 variant="text"
@@ -216,6 +218,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
                 density="comfortable"
                 :active="false"
                 class="mx-1 a-le-action a-le-action--menu"
+                :aria-label="t('common.sortable.more')"
               >
                 <VIcon
                   icon="mdi-dots-vertical"
@@ -307,6 +310,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
             <template v-else>
               <VBtn
                 v-if="context.showEditButton && context.canInteract"
+                :aria-label="t('common.sortable.edit')"
                 icon
                 size="small"
                 variant="tonal"
@@ -327,6 +331,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
               </VBtn>
               <VBtn
                 v-if="context.showDeleteButton && context.canInteract"
+                :aria-label="t('common.sortable.delete')"
                 icon
                 size="small"
                 variant="text"
@@ -354,6 +359,7 @@ const directChildren = (): any[] => props.viewItems.filter((v) => v.parentKey ==
                 density="comfortable"
                 :active="false"
                 class="mx-1 a-le-action a-le-action--menu"
+                :aria-label="t('common.sortable.more')"
               >
                 <VIcon
                   icon="mdi-dots-vertical"

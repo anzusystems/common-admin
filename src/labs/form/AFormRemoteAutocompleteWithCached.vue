@@ -1,13 +1,13 @@
 <script lang="ts" setup>
+import type { AFormFieldValidation } from '@/types/Validation'
 import { watchDebounced } from '@vueuse/core'
-import { computed, getCurrentInstance, inject, type Ref, ref, watch } from 'vue'
-import type { ErrorObject } from '@vuelidate/core'
+import { computed, getCurrentInstance, inject, type Ref, ref, watch, unref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Pagination } from '@/labs/filters/pagination'
 import { usePagination } from '@/labs/filters/pagination'
 import type { DocId, IntegerId } from '@/types/common'
 import { cloneDeep, isArray, isNull, isUndefined } from '@/utils/common'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
+import { SubjectScopeKey, SystemScopeKey } from '@/components/injectionKeys'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
@@ -34,7 +34,7 @@ const props = withDefaults(
     required?: boolean
     multiple?: boolean
     clearable?: boolean
-    v?: any
+    v?: AFormFieldValidation | null
     errorMessage?: string
     hideLabel?: boolean
     fetchItemsMinimal: FetchItemsMinimalType
@@ -124,8 +124,8 @@ const modelValue = computed({
 })
 
 const { t } = useI18n()
-const system = inject<string | undefined>(SystemScopeSymbol, undefined)
-const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
+const system = inject<string | undefined>(SystemScopeKey, undefined)
+const subject = inject<string | undefined>(SubjectScopeKey, undefined)
 
 const isFocused = ref(false)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -148,7 +148,7 @@ const onBlur = () => {
 
 const errorMessageComputed = computed(() => {
   if (!isUndefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length) return props.v.$errors.map((item: ErrorObject) => item.$message)
+  if (props.v?.$errors?.length) return props.v.$errors.map((item) => unref(item.$message))
   return []
 })
 
@@ -161,14 +161,18 @@ const labelComputed = computed(() => {
 
 const requiredComputed = computed(() => {
   if (!isUndefined(props.required)) return props.required
-  return props.v?.required && props.v?.required.$params.type === 'required'
+  return (props.v?.required as { $params?: { type?: string } } | undefined)?.$params?.type === 'required'
 })
 
 const { showErrorsDefault } = useAlerts()
 
+let searchCounter = 0
 const apiSearch = async (query: string | null) => {
+  const requestId = ++searchCounter
   if (isNull(query) || query.length < props.minSearchChars) {
     fetchedItemsMinimal.value.clear()
+    // The request in flight, if any, is stale now and leaves the loader alone.
+    loadingLocal.value = false
     return
   }
   loadingLocal.value = true
@@ -176,13 +180,14 @@ const apiSearch = async (query: string | null) => {
   fetchedItemsMinimal.value.clear()
   try {
     const res = await props.fetchItemsMinimal(pagination, filterInnerData, filterInnerConfig)
+    if (requestId !== searchCounter) return
     res.forEach((item: any) => {
       fetchedItemsMinimal.value.set(item[props.itemValue], item)
     })
   } catch (e) {
-    showErrorsDefault(e)
+    if (requestId === searchCounter) showErrorsDefault(e)
   } finally {
-    loadingLocal.value = false
+    if (requestId === searchCounter) loadingLocal.value = false
   }
 }
 
@@ -290,7 +295,7 @@ watch(
         {{ labelComputed }}
         <span
           v-if="requiredComputed"
-          class="required"
+          class="a-required-mark"
         />
       </span>
     </template>

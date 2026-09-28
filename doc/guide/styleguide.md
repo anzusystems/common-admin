@@ -111,7 +111,7 @@ See [views](#views)
 </ABtnPrimary>
 <VDialog :model-value="dialog">
   <VCard v-if="dialog">
-    <ADialogToolbar @on-cancel="dialog = false">
+    <ADialogToolbar @cancel="dialog = false">
       Title
     </ADialogToolbar>
     <VCardText>
@@ -377,5 +377,5 @@ According rules above we have 4 types of buttons:
 
 ## Other
 
-- always use `A` prefix for exported components (exceptions: `Acl`, DAM components with `Dam` prefix, `ImageMassOperations`, `FiltersSelected`)
+- always use `A` prefix for exported components (exception: `Acl`); components used only inside the library need not have it
 - in utils, always use prefix for exports like `object`, `array`, `string`, `date`, `dateTime`, etc. (exceptions: type guards `is*` like `isDefined`, `isString`, and `cloneDeep`, `prettyBytes`, `prettyDuration`, `generateUUIDv1`, `generateUUIDv4`)

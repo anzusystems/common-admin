@@ -15,7 +15,6 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
 import type { AddToCachedArgs } from '@/composables/system/defineCached'
 import type { IntegerId } from '@/types/common'
-import type { Promisify } from '@vueuse/core'
 import { isDefined } from '@/utils/common'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
@@ -29,7 +28,7 @@ const props = withDefaults(
     isAllowedToPurgeRoom?: boolean
     approveRequestBlocked?: boolean
     addToCachedUsers?: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined
-    fetchCachedUsers?: (() => Promisify<Promise<any>>) | undefined
+    fetchCachedUsers?: (() => unknown) | undefined
   }>(),
   {
     isEdit: false,
@@ -307,6 +306,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
     </VBtn>
     <ABtnIcon
       v-if="showModeratorManagementButton"
+      :aria-label="t('common.collab.moderatorManagement')"
       size="small"
       @click="showModeratorManagementDialogAction"
     >
@@ -382,7 +382,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
       width="auto"
     >
       <VCard>
-        <ADialogToolbar @on-cancel="moderatorManagementDialog = false">
+        <ADialogToolbar @cancel="moderatorManagementDialog = false">
           {{ t('common.collab.moderatorManagement') }}
         </ADialogToolbar>
         <VCardItem>
@@ -427,6 +427,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
     </VDialog>
     <ABtnIcon
       v-if="showRequestToTakeModerationButton"
+      :aria-label="t('common.collab.requestToTakeModeration')"
       size="small"
       @click="requestToTakeModerationAction"
     >
@@ -448,6 +449,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
       <template #activator="{ props: moreProps }">
         <VBtn
           v-tooltip="t('common.collab.button.more')"
+          :aria-label="t('common.collab.button.more')"
           variant="text"
           size="small"
           icon="mdi-dots-horizontal"
@@ -510,7 +512,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
       width="auto"
     >
       <VCard>
-        <ADialogToolbar @on-cancel="alertedOccupiedRooms.delete(props.collabRoom)">
+        <ADialogToolbar @cancel="alertedOccupiedRooms.delete(props.collabRoom)">
           {{ t('common.collab.occupiedEntityTitle') }}
         </ADialogToolbar>
         <VCardText>{{ t('common.collab.occupiedEntityText') }}</VCardText>

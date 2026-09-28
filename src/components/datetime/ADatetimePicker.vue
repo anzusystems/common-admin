@@ -60,8 +60,8 @@ const emit = defineEmits<{
   (e: 'blur'): void
   (e: 'focus'): void
   (e: 'update:modelValue', data: DatetimeUTC | null | undefined): void
-  (e: 'onOpen'): void
-  (e: 'onClose'): void
+  (e: 'open'): void
+  (e: 'close'): void
   (e: 'afterClear'): void
 }>()
 
@@ -176,10 +176,10 @@ watch(pickerOpened, (newValue) => {
     if (isNull(datetimeInternal.value) && (isNull(props.defaultValue) || isUndefined(props.defaultValue))) {
       datetimeInternal.value = todayValue(props.type, props.lastMinuteMoment)
     }
-    emit('onOpen')
+    emit('open')
     return
   }
-  emit('onClose')
+  emit('close')
 })
 
 const errorMessageComputed = computed(() => {
@@ -234,7 +234,7 @@ const close = () => {
   pickerOpened.value = false
   inputInstance.value?.focus()
   inputInstance.value?.blur()
-  emit('onClose')
+  emit('close')
   emit('blur')
 }
 
@@ -292,6 +292,7 @@ const now = () => {
         v-if="clearable && defaultValue !== modelValue"
         class="a-datetime-picker__clearable-icon"
         icon="mdi-close-circle"
+        :aria-label="t('common.button.clear')"
         @click.stop="onClear"
       />
       <VMenu
@@ -314,6 +315,7 @@ const now = () => {
         <VCard v-if="pickerOpened">
           <VBtn
             v-tooltip="t('common.button.close')"
+            :aria-label="t('common.button.close')"
             icon
             variant="text"
             :width="36"
@@ -340,7 +342,7 @@ const now = () => {
             ref="timePickerInstance"
             :key="timeKey"
             v-model="timePickerValue"
-            @on-enter-keyup="onTimePickerEnterKeyup"
+            @enter-keyup="onTimePickerEnterKeyup"
             @focus-confirm="onFocusConfirm"
           />
           <div class="d-flex">
@@ -377,7 +379,7 @@ const now = () => {
       {{ label
       }}<span
         v-if="required"
-        class="required"
+        class="a-required-mark"
       />
     </template>
   </VTextField>

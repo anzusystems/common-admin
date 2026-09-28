@@ -12,14 +12,14 @@ withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'onClose'): void
+  (e: 'close'): void
 }>()
 
 const { t } = useI18n()
 
 const onDialogModelUpdate = (newValue: boolean) => {
   if (newValue) return
-  emit('onClose')
+  emit('close')
 }
 </script>
 
@@ -31,7 +31,7 @@ const onDialogModelUpdate = (newValue: boolean) => {
     @update:model-value="onDialogModelUpdate"
   >
     <VCard v-if="modelValue">
-      <ADialogToolbar @on-cancel="onDialogModelUpdate(false)">
+      <ADialogToolbar @cancel="onDialogModelUpdate(false)">
         {{ t('common.damImage.media.meta.preview') }}
       </ADialogToolbar>
       <VCardText>

@@ -41,7 +41,7 @@ export function defineCached<
   }
 
   const add = (...args: AddToCachedArgs<I>) => {
-    const toAdd = <Set<I>>new Set()
+    const toAdd = new Set<I>()
     for (let i = 0; i < args.length; i++) {
       const arg = args[i]
       if (isNull(arg) || isUndefined(arg)) continue
@@ -110,25 +110,25 @@ export function defineCached<
 
   const updateMap = (data: T[]) => {
     prune()
-    for (let i = 0; i < data.length; i += 1) {
-      cache.value.set(data[i][idProp] as I, {
-        ...mapFullToMinimal(data[i]),
+    for (const item of data) {
+      cache.value.set(item[idProp] as I, {
+        ...mapFullToMinimal(item),
         _loaded: true,
       })
     }
   }
 
   const updateToFetch = (ids: Array<I>) => {
-    for (let i = 0; i < ids.length; i += 1) {
-      toFetch.value.delete(ids[i])
+    for (const id of ids) {
+      toFetch.value.delete(id)
     }
   }
 
   const markUnresolved = (ids: Array<I>) => {
-    for (let i = 0; i < ids.length; i += 1) {
-      const item = cache.value.get(ids[i])
+    for (const id of ids) {
+      const item = cache.value.get(id)
       if (isUndefined(item) || item._loaded) continue
-      cache.value.set(ids[i], { ...item, _unresolved: true })
+      cache.value.set(id, { ...item, _unresolved: true })
     }
   }
 

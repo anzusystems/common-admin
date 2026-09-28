@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { computed, inject, ref, watch } from 'vue'
+import type { AFormFieldValidation } from '@/types/Validation'
+import { computed, inject, ref, watch, unref } from 'vue'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import { isDefined, isUndefined } from '@/utils/common'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
+import { SubjectScopeKey, SystemScopeKey } from '@/components/injectionKeys'
 import type { VuetifyIconValue } from '@/types/Vuetify'
-import type { ErrorObject } from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import {
@@ -24,7 +24,7 @@ const props = withDefaults(
     label?: string
     errorMessage?: string
     required?: boolean
-    v?: any
+    v?: AFormFieldValidation | null
     prependIcon?: VuetifyIconValue
     appendIcon?: VuetifyIconValue
     dataCy?: string
@@ -103,8 +103,8 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
 
 const { t } = useI18n()
 
-const system = inject<string | undefined>(SystemScopeSymbol, undefined)
-const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
+const system = inject<string | undefined>(SystemScopeKey, undefined)
+const subject = inject<string | undefined>(SubjectScopeKey, undefined)
 
 const onUpdate = (newValue: string) => {
   emit('update:modelValue', newValue)
@@ -122,7 +122,7 @@ const onFocus = () => {
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length) return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
+  if (props.v?.$errors?.length) return [props.v.$errors.map((item) => unref(item.$message)).join(' ')]
   return []
 })
 
@@ -135,7 +135,7 @@ const labelComputed = computed(() => {
 
 const requiredComputed = computed(() => {
   if (isDefined(props.required)) return props.required
-  if (props.v?.required && props.v?.required.$params.type === 'required') return true
+  if ((props.v?.required as { $params?: { type?: string } } | undefined)?.$params?.type === 'required') return true
   return false
 })
 
@@ -168,7 +168,6 @@ defineExpose({
     :disabled="disabledComputed"
     :placeholder="placeholder"
     :persistent-placeholder="persistentPlaceholder"
-    trim
     autocomplete="off"
     @click:append="(event: any) => emit('click:append', event)"
     @blur="onBlur"
@@ -182,7 +181,7 @@ defineExpose({
       {{ labelComputed
       }}<span
         v-if="requiredComputed"
-        class="required"
+        class="a-required-mark"
       />
     </template>
     <template

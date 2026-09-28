@@ -1,7 +1,7 @@
 import { createI18nMessage, helpers } from '@vuelidate/validators'
-import { i18n } from '@/plugins/i18n'
+import { commonT } from '@/plugins/i18n'
 
-const { t } = i18n.global
+const t = commonT
 
 /**
  * `#RRGGBB`, which is what the backend's `CssColor(HEX_LONG)` accepts.

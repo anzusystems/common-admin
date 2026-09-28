@@ -24,12 +24,14 @@ export function useLoginStatus(to: RouteLocationNormalized) {
       const localTimeDiff = serverTimestamp.value - localTime
       /**
        * If the server time is ahead of the user’s local time by more than the one-minute grace period,
-       * we need to store that time shift so we can refresh the token sooner.
+       * we need to store that time shift so we can refresh the token sooner. Each login measures it
+       * anew: a shift kept from an earlier one makes a valid JWT look expired.
        */
-      if (localTimeDiff > 60) {
-        localTimeShiftInSeconds.value = localTimeDiff - 60
-      }
+      localTimeShiftInSeconds.value = Math.max(0, localTimeDiff - 60)
     }
+  } else {
+    status.value = null
+    serverTimestamp.value = null
   }
 
   const isStatusNotDefined = () => isNull(status.value)

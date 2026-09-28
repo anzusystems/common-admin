@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { computed, inject, onMounted, ref, watch } from 'vue'
+import type { AFormFieldValidation } from '@/types/Validation'
+import { computed, inject, onMounted, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
+import { SubjectScopeKey, SystemScopeKey } from '@/components/injectionKeys'
 import { isUndefined } from '@/utils/common'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 
@@ -13,7 +14,7 @@ const props = withDefaults(
     label?: string | undefined
     hideDetails?: boolean | undefined
     hideLabel?: boolean | undefined
-    v?: any
+    v?: AFormFieldValidation | null
   }>(),
   {
     label: undefined,
@@ -28,8 +29,8 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const system = inject<string | undefined>(SystemScopeSymbol, undefined)
-const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
+const system = inject<string | undefined>(SystemScopeKey, undefined)
+const subject = inject<string | undefined>(SubjectScopeKey, undefined)
 
 const labelComputed = computed(() => {
   if (!isUndefined(props.label)) return props.label
@@ -41,6 +42,7 @@ const labelComputed = computed(() => {
 const loading = ref(false)
 const hasError = ref(false)
 const uniqueId = ref('')
+const useIdValue = useId()
 
 const modelValueComputed = computed(() => {
   return props.modelValue
@@ -53,19 +55,18 @@ const onClick = async () => {
   if (loading.value) return
   loading.value = true
   hasError.value = false
-  if (internalModelValue.value === true) {
-    const success = await props.callbackToFalse()
-    emit('update:modelValue', !success)
-    internalModelValue.value = !success
+  const toFalse = internalModelValue.value === true
+  let success = false
+  // No catch: a throwing callback still reaches the app's error handler; `finally` puts the control back.
+  try {
+    success = toFalse ? await props.callbackToFalse() : await props.callbackToTrue()
+  } finally {
+    const value = toFalse ? !success : success
+    emit('update:modelValue', value)
+    internalModelValue.value = value
     if (!success) hasError.value = true
     loading.value = false
-    return
   }
-  const success = await props.callbackToTrue()
-  emit('update:modelValue', success)
-  internalModelValue.value = success
-  if (!success) hasError.value = true
-  loading.value = false
 }
 
 watch(modelValueComputed, (newValue, oldValue) => {
@@ -76,7 +77,7 @@ watch(modelValueComputed, (newValue, oldValue) => {
 })
 
 onMounted(() => {
-  uniqueId.value = 'remote-switch-' + Date.now()
+  uniqueId.value = 'remote-switch-' + useIdValue
 })
 </script>
 

@@ -16,7 +16,7 @@ export default defineConfig({
     }),
     VueI18nPlugin({
       globalSFCScope: true,
-      include: path.resolve(_dirname, './src/locales/**.json'),
+      include: path.resolve(_dirname, './src/locales/**/*.json'),
     }),
   ],
   resolve: {
@@ -34,13 +34,13 @@ export default defineConfig({
     include: [
       'vue-router',
       'vuetify/components/VApp',
+      'vuetify/components/VSnackbarQueue',
       'vuetify/components/VAppBar',
       'vuetify/components/VDivider',
       'vuetify/components/VGrid',
       'vuetify/components/VMain',
       'vuetify/components/VNavigationDrawer',
       'vuetify/locale/adapters/vue-i18n',
-      'webfontloader',
       'vuetify/components/VCard',
       'vuetify/components/VAlert',
       'vuetify/components/VIcon',
@@ -98,6 +98,8 @@ export default defineConfig({
     exclude: ['**/node_modules/**', 'src/test/eslint/**', 'src/test/vite/**', 'scripts/**'],
     // v5 default; pinned so it cannot silently flip.
     clearMocks: true,
+    // Console output of passing tests is noise (thousands of lines); a failing test still shows its own.
+    silent: 'passed-only',
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 30000,
     hookTimeout: 30000,
@@ -124,6 +126,7 @@ export default defineConfig({
             'src/test/components/ADatetimePicker.test.ts',
             'src/test/components/AFormDatetimePicker.test.ts',
             'src/test/utils/datetimePickerValue.test.ts',
+            'src/test/utils/datetime.test.ts',
           ],
           provider: playwright({ contextOptions: { timezoneId: 'America/New_York' } }),
         },

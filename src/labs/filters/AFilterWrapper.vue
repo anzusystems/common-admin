@@ -109,6 +109,7 @@ const touched = computed(() => {
   return filterConfig.touched
 })
 
+// Names of `filterConfig.fields` itself, so the template's lookups by them always hit.
 const renderedFieldNames = computed(() => {
   return Object.entries(filterConfig.fields)
     .filter(([, field]) => !field.render.skip)
@@ -199,22 +200,22 @@ defineExpose({
       <component :is="alwaysVisible ? 'div' : 'VSlideYTransition'">
         <div
           v-show="showDetail"
-          :class="{ 'mt-6 pa-4 system-border-a': !alwaysVisible }"
+          :class="{ 'mt-6 pa-4 border': !alwaysVisible }"
         >
           <slot name="detail">
             <VRow>
               <VCol
                 v-for="fieldName in renderedFieldNames"
                 :key="fieldName"
-                :cols="filterConfig.fields[fieldName].render.xs || 12"
-                :sm="filterConfig.fields[fieldName].render.sm || 6"
-                :md="filterConfig.fields[fieldName].render.md || 4"
-                :lg="filterConfig.fields[fieldName].render.lg || 3"
-                :xl="filterConfig.fields[fieldName].render.xl || 2"
+                :cols="filterConfig.fields[fieldName]!.render.xs || 12"
+                :sm="filterConfig.fields[fieldName]!.render.sm || 6"
+                :md="filterConfig.fields[fieldName]!.render.md || 4"
+                :lg="filterConfig.fields[fieldName]!.render.lg || 3"
+                :xl="filterConfig.fields[fieldName]!.render.xl || 2"
               >
                 <slot
                   :name="datatableSlotName(fieldName)"
-                  :item-config="filterConfig.fields[fieldName]"
+                  :item-config="filterConfig.fields[fieldName]!"
                 >
                   <FilterDetailItem :name="fieldName" />
                 </slot>

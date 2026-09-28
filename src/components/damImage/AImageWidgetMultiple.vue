@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
-import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetUploadConfigKey } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import ImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
@@ -82,7 +82,7 @@ onMounted(async () => {
     promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }
   try {
-    await Promise.allSettled(promises)
+    await Promise.all(promises)
   } catch (e) {
     status.value = 'error'
   }
@@ -96,7 +96,7 @@ const saveImages = async () => {
   return (await innerComponent.value.saveImages()) as boolean
 }
 
-provide(ImageWidgetUploadConfig, uploadConfig)
+provide(ImageWidgetUploadConfigKey, uploadConfig)
 
 defineExpose({
   saveImages,

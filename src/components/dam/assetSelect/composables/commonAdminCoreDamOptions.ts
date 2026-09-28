@@ -1,9 +1,9 @@
 import type { ImageFieldValidationConfig } from '@/AnzuSystemsCommonAdmin'
 import { coreDamOptions as commonAdminCoreDamOptions } from '@/plugins/pluginOptions'
 import { isUndefined } from '@/utils/common'
-import { i18n } from '@/plugins/i18n'
+import { commonT } from '@/plugins/i18n'
 
-const { t } = i18n.global
+const t = commonT
 
 const defaultDescriptionValidation: ImageFieldValidationConfig = {
   required: false,

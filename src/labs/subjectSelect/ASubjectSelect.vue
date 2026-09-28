@@ -33,10 +33,10 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void
   (e: 'update:pagination', data: Pagination): void
-  (e: 'onOpen'): void
-  (e: 'onPageChange'): void
-  (e: 'onConfirm', data: Array<TItem>): void
-  (e: 'onFetchNextPage'): void
+  (e: 'open'): void
+  (e: 'pageChange'): void
+  (e: 'confirm', data: Array<TItem>): void
+  (e: 'fetchNextPage'): void
 }>()
 
 const dialogLocal = ref(false)
@@ -78,7 +78,7 @@ const disabledSubmit = computed(() => {
 })
 
 const onOpen = () => {
-  emit('onOpen')
+  emit('open')
   sidebarLeft.value = !mdAndDown.value
   dialog.value = true
 }
@@ -93,18 +93,18 @@ const onClose = () => {
 
 const onConfirm = () => {
   emit(
-    'onConfirm',
+    'confirm',
     props.selectedItems.map((item) => toRaw(item))
   )
   onClose()
 }
 
 const fetchNextPage = () => {
-  emit('onFetchNextPage')
+  emit('fetchNextPage')
 }
 
 const onPageChange = () => {
-  emit('onPageChange')
+  emit('pageChange')
 }
 
 const lastPage = computed(() => {
@@ -157,8 +157,8 @@ defineExpose({
       class="subject-select__card"
     >
       <ADialogToolbar
-        class="subject-select__toolbar system-border-b"
-        @on-cancel="onClose"
+        class="subject-select__toolbar border-b"
+        @cancel="onClose"
       >
         <slot name="title">
           {{ t(dialogTitleT) }}
@@ -169,13 +169,14 @@ defineExpose({
         color="transparent"
         :height="46"
         elevation="0"
-        class="system-border-b subject-select__second-bar"
+        class="border-b subject-select__second-bar"
       >
         <slot name="second-bar">
           <div class="d-flex flex-column w-100 px-1 align-center">
             <div class="d-flex justify-space-between w-100 align-center">
               <div class="d-flex align-center">
                 <VBtn
+                  :aria-label="t('common.subjectSelect.filter.toggle')"
                   icon
                   :width="30"
                   :height="30"
@@ -205,7 +206,7 @@ defineExpose({
         class="subject-select__main"
         :class="{ 'subject-select__main--sidebar-active': sidebarLeft }"
       >
-        <div class="subject-select__sidebar system-border-r">
+        <div class="subject-select__sidebar border-e">
           <div class="subject-select-filter">
             <slot name="filter" />
           </div>
@@ -235,7 +236,7 @@ defineExpose({
           />
         </div>
       </div>
-      <div class="subject-select__actions system-border-t">
+      <div class="subject-select__actions border-t">
         <div v-if="minCount === maxCount">
           {{
             t('common.subjectSelect.texts.pickExactCount', {

@@ -207,7 +207,9 @@
     "systemError": "Chyba",
     "size": "Nesprávna veľkosť",
     "offset": "Nesprávny offset",
-    "mimeType": "Nesprávny formát súboru"
+    "mimeType": "Nesprávny formát súboru",
+    "chunkValidationFailed": "Kontrola časti nahrávaného súboru zlyhala. Kontaktujte administrátora.",
+    "processingTooLong": "Spracovanie trvá príliš dlho. Použite tlačidlo obnovenia položky alebo položku odstráňte a skúste to neskôr."
   },
   "notificationsNotConnected": "Notifikačná služba má dočasný výpadok, niektoré funkcie sa nemusia správať korektne.",
   "public": {
@@ -217,6 +219,7 @@
   },
   "error": {
     "loadingConfig": "Chyba načítania konfigurácie DAM",
-    "accessRights": "Chyba prístupových práv DAM"
+    "accessRights": "Chyba prístupových práv DAM",
+    "unableToLock": "Obrázkový widget nie je možné uzamknúť aktuálnym používateľom."
   }
 }

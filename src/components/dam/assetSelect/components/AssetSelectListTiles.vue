@@ -99,7 +99,7 @@ $bg-color-actions-dark: #1a1a1a;
     }
 
     &-text,
-    &-text .line-clamp-1 {
+    &-text .text-truncate {
       font-weight: 500;
       line-height: 30px;
       min-height: 38px;

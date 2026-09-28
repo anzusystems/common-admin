@@ -17,6 +17,7 @@ import {
   axiosErrorResponseHasForbiddenOperationData,
 } from '@/model/error/AnzuApiForbiddenOperationError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { useApiRequest } from '@/labs/api/useApiRequest'
@@ -25,8 +26,6 @@ import type { DamMediaFromDam } from '@/types/MediaAware'
 const END_POINT_CMS_ASSET = '/adm/v1/cms/asset/'
 const BULK_METADATA_LIMIT = 10
 export const ENTITY = 'asset'
-export const SYSTEM_CORE_DAM = 'coreDam'
-export const SYSTEM_DAM = 'dam'
 const FETCH_BY_IDS_MAX_LIMIT = 25
 
 export interface AssetMetadataBulkItem {
@@ -163,7 +162,7 @@ export const fetchAssetListByIds: (
         ) {
           const final = []
           for (let i = 0; i < responses.length; i++) {
-            final.push(...responses[i].data.data)
+            final.push(...responses[i]!.data.data)
           }
           resolve(final as AssetDetailItemDto[])
         } else {

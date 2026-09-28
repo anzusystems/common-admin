@@ -106,6 +106,7 @@ const touched = computed(() => {
   return filterConfig.touched
 })
 
+// Names of `filterConfig.fields` itself, so the template's lookups by them always hit.
 const renderedFieldNames = computed(() => {
   return Object.entries(filterConfig.fields)
     .filter(([, field]) => !field.render.skip)
@@ -146,11 +147,11 @@ defineExpose({
           <VCol
             v-for="fieldName in renderedFieldNames"
             :key="fieldName"
-            :cols="filterConfig.fields[fieldName].render.xs || 12"
-            :sm="filterConfig.fields[fieldName].render.sm || 12"
-            :md="filterConfig.fields[fieldName].render.md || 12"
-            :lg="filterConfig.fields[fieldName].render.lg || 12"
-            :xl="filterConfig.fields[fieldName].render.xl || 12"
+            :cols="filterConfig.fields[fieldName]!.render.xs || 12"
+            :sm="filterConfig.fields[fieldName]!.render.sm || 12"
+            :md="filterConfig.fields[fieldName]!.render.md || 12"
+            :lg="filterConfig.fields[fieldName]!.render.lg || 12"
+            :xl="filterConfig.fields[fieldName]!.render.xl || 12"
           >
             <slot
               :name="datatableSlotName(fieldName)"

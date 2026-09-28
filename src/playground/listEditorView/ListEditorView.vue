@@ -137,7 +137,7 @@ const onLazyEdit = async (vi: ListViewItem<FaqItem>) => {
   await new Promise((r) => setTimeout(r, 900))
   const idx = lazyItems.value.findIndex((i) => i.id === vi.raw.id)
   if (idx !== -1) {
-    lazyItems.value[idx].answer = `Lazy-loaded answer for #${vi.raw.id} at ${new Date().toLocaleTimeString()}`
+    lazyItems.value[idx]!.answer = `Lazy-loaded answer for #${vi.raw.id} at ${new Date().toLocaleTimeString()}`
   }
   loadingKeys.value.delete(vi.raw.id)
 }

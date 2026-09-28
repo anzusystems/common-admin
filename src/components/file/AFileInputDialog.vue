@@ -78,7 +78,7 @@ defineExpose({
       v-if="modelValue"
       data-cy="create-panel"
     >
-      <ADialogToolbar @on-cancel="onClose">
+      <ADialogToolbar @cancel="onClose">
         <slot name="title">
           {{ t(toolbarT) }}
         </slot>

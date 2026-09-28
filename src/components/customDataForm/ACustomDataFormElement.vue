@@ -123,7 +123,7 @@ const onBlur = () => {
       {{ config.name
       }}<span
         v-if="config.attributes.required"
-        class="required"
+        class="a-required-mark"
       />
     </template>
   </VTextarea>
@@ -142,7 +142,7 @@ const onBlur = () => {
       {{ config.name
       }}<span
         v-if="config.attributes.required"
-        class="required"
+        class="a-required-mark"
       />
     </template>
   </VTextField>
@@ -165,7 +165,7 @@ const onBlur = () => {
       {{ config.name
       }}<span
         v-if="config.attributes.required"
-        class="required"
+        class="a-required-mark"
       />
     </template>
   </VCombobox>

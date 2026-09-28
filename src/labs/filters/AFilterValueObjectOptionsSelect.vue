@@ -65,7 +65,8 @@ const modelValue = computed({
   },
 })
 
-const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
+// The setup above throws unless the field is configured.
+const filterConfigCurrent = computed(() => filterConfig.fields[props.name]!)
 
 const { t } = useI18n()
 

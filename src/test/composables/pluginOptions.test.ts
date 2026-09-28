@@ -14,6 +14,7 @@ import {
   useCommonAdminCoreDamOptionsGlobal,
 } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
+import { i18n } from '@/plugins/i18n'
 
 // The plugin writes its options into module state that the DAM, image and collab composables read
 // later, from other chunks. The module state lives as long as the file, so the cases run in order:
@@ -55,12 +56,13 @@ describe('plugin options', () => {
   })
 
   it('collab keeps its default when the plugin gets no collab options', () => {
-    createApp({}).use(AnzuSystemsCommonAdmin, { languages: { available: ['sk'], default: 'sk' } })
+    createApp({}).use(AnzuSystemsCommonAdmin, { i18n, languages: { available: ['sk'], default: 'sk' } })
     expect(useCommonAdminCollabOptions().collabOptions.value.enabled).toBe(false)
   })
 
   it('the options the plugin is installed with reach the composables', () => {
     createApp({}).use(AnzuSystemsCommonAdmin, {
+      i18n,
       languages: { available: ['sk'], default: 'sk' },
       image: imageOptions,
       coreDam: coreDamOptions,

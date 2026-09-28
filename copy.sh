@@ -100,7 +100,9 @@ for target in "${TARGETS[@]}"; do
     # Create directories before copying files
     mkdir -p "${PACKAGE_DIR}/dist"
 
-    # Copy package.json from COMMON_ADMIN_PROJECT to the target project
+    # Copy package.json from COMMON_ADMIN_PROJECT to the target project. Removed first: `cp` writes into an
+    # existing file, and under pnpm that file is a hard link into the global store.
+    rm -f "${PACKAGE_DIR}/package.json"
     cp "${COMMON_ADMIN_PROJECT}/package.json" "${PACKAGE_DIR}/"
 
     cp -r "${COMMON_ADMIN_PROJECT}/dist/"* "${PACKAGE_DIR}/dist/"
@@ -118,8 +120,10 @@ for target in "${TARGETS[@]}"; do
     # does not look at node_modules, so it would call the admin up to date against the old declarations
     rm -rf "${target}/node_modules/.vite/deps/" "${target}/node_modules/.cache/tsc/"
 
-    # Touch the trigger file: the admin's Vite plugin restarts the dev server, which re-bundles the new files
-    touch "${target}/.common-admin-updated"
+    # Empty the trigger file (creating it if needed): the admin's Vite plugin restarts the dev server,
+    # which re-bundles the new files. Emptied, not touched: `yarn dev:admin` lists the files it changed
+    # in it, and a stale list would make the plugin reload those few instead of taking everything.
+    : > "${target}/.common-admin-updated"
 
     echo "Successfully copied release from ${COMMON_ADMIN_PROJECT} (dist, src/eslint, src/vite) to ${PACKAGE_DIR}"
 done

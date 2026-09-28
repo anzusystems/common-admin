@@ -1,6 +1,11 @@
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
 import AAlerts from '@/components/AAlerts.vue'
+import AActionbar from '@/components/appShell/AActionbar.vue'
+import AActionbarTarget from '@/components/appShell/AActionbarTarget.vue'
+import ALayoutLoader from '@/components/appShell/ALayoutLoader.vue'
+import ALayoutSwitch from '@/components/appShell/ALayoutSwitch.vue'
+import { actionbarSlot, createTeleportSlot, type TeleportSlot } from '@/components/appShell/teleportSlot'
 import AProgress from '@/components/AProgress.vue'
 import ACard from '@/components/ACard.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
@@ -68,9 +73,9 @@ import AMediaWidgetSimple from '@/components/damImage/AMediaWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
 import AImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
-import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
+import AImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
-import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
+import ADamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
 import ABooleanSelect from '@/components/ABooleanSelect.vue'
 import {
   CustomDataFormElementType,
@@ -79,7 +84,7 @@ import {
   useCustomDataFormElementType,
 } from '@/components/customDataForm/CustomDataFormElementTypes'
 import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
-import { i18n, slovakPluralizationRule } from '@/plugins/i18n'
+import { type CommonAdminI18n, slovakPluralizationRule } from '@/plugins/i18n'
 import {
   type Immutable,
   objectDeepFreeze,
@@ -116,6 +121,7 @@ import { booleanToInteger } from '@/utils/boolean'
 import { isOneOf } from '@/utils/enum'
 import {
   dateDiff,
+  type DateDiffUnit,
   dateModifyMinutes,
   dateNow,
   datePretty,
@@ -153,8 +159,8 @@ import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTracki
 import type { PermissionGroup, PermissionGroupMinimal } from '@/types/PermissionGroup'
 import { type CreatedByAware } from '@/types/CreatedByAware'
 import type { VuetifyIconValue } from '@/types/Vuetify'
-import { useRouteHistory } from '@/composables/system/routeHistory'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
+import { type NavigateBackOptions, type RouteHistoryEntry, useRouteHistory } from '@/composables/system/routeHistory'
+import { SubjectScopeKey, SystemScopeKey } from '@/components/injectionKeys'
 import { prettyBytes, prettyDuration } from '@/utils/file'
 import {
   HTTP_STATUS_BAD_REQUEST,
@@ -195,16 +201,21 @@ import {
   type JobBaseResource,
   useJobBaseResource,
 } from '@/model/valueObject/JobBaseResource'
-import AnzuSystemsCommonAdmin, { type CommonAdminCollabOptions, type PluginOptions } from '@/AnzuSystemsCommonAdmin'
-import type { AclValue, Permissions } from '@/types/Permission'
-import { Theme, useTheme } from '@/composables/themeSettings'
+import AnzuSystemsCommonAdmin, {
+  type CommonAdminCollabOptions,
+  type CommonAdminCoreDamOptions,
+  type CommonAdminImageOptions,
+  type PluginOptions,
+} from '@/AnzuSystemsCommonAdmin'
+import type { AclRegistry, AclValue, AclValueOf, Permissions, RegisteredAclValue } from '@/types/Permission'
+import { Theme, type ThemeType, useTheme } from '@/composables/themeSettings'
 import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
 import { arrayFlatten, arrayFromArgs, arrayItemToggle, arraysHaveSameElements, type NestedArray } from '@/utils/array'
 import { browserHistoryReplaceUrlByRouter } from '@/utils/history'
 import { eventClickBlur } from '@/utils/event'
 import type { ResourceNameSystemAware } from '@/types/ResourceNameSystemAware'
-import type { ValidationScope } from '@/types/Validation'
-import { useI18n } from 'vue-i18n'
+import type { ACreateDialogValidation, AFormFieldValidation, ValidationScope } from '@/types/Validation'
+import type { CommonAdminGlobalComponents } from '@/types/globalComponents'
 import messagesCs from '@/locales/cs'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
@@ -220,10 +231,12 @@ import {
   type DatatableSortBy,
   SORT_BY_ID,
   SORT_BY_SCORE,
+  SORT_BY_SCORE_BEST,
+  SORT_BY_SCORE_DATE,
   SortOrder,
   type SortOrderType,
 } from '@/composables/system/datatableColumns'
-import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
+import { createAnzuVuetify, type CreateAnzuVuetifyOptions, useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { type CachedItem, defineCached } from '@/composables/system/defineCached'
 import type { ObjectLeaves, UniqueValues } from '@/types/utils'
 import { ensureUniqueValues } from '@/types/utils'
@@ -298,10 +311,12 @@ import type {
   CustomDataFormElementAttributes,
   CustomDataValue,
 } from '@/components/customDataForm/CustomDataForm'
-import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
-import type { SortableNested, SortableNestedItem } from '@/labs/listEditor/types/listEditorTypes'
+import {
+  type AssetSelectReturnData,
+  AssetSelectReturnType,
+  type AssetSelectReturnTypeType,
+} from '@/types/coreDam/AssetSelect'
 import type { SortableItemDataAware } from '@/components/sortable/sortableUtils'
-import type { SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import {
   type DamDistributionConfig,
@@ -377,52 +392,39 @@ import {
   useCollabReconnectEventBus,
 } from '@/components/collab/composables/collabEventBus'
 import {
-  type CollabAccessRoomCallbackTypes,
   CollabAccessRoomStatus,
   type CollabAccessRoomStatusType,
-  type CollabChangeRoomLockCallbackTypes,
   CollabChangeRoomLockStatus,
   type CollabChangeRoomLockStatusType,
-  type CollabClientToServerEvents,
   type CollabComponentConfig,
-  type CollabFailedAccessRoomCallback,
-  type CollabFailedChangeRoomLockCallback,
   type CollabFieldData,
   type CollabFieldDataEnvelope,
   type CollabFieldLock,
   type CollabFieldLockOptions,
   type CollabFieldName,
-  type CollabOccupiedAccessRoomCallback,
   CollabRequestToJoinStatus,
-  type CollabRequestToJoinStatusCallback,
   type CollabRequestToJoinStatusType,
   CollabRequestToTakeModerationStatus,
-  type CollabRequestToTakeModerationStatusCallback,
   type CollabRequestToTakeModerationStatusType,
   type CollabRoom,
   type CollabRoomData,
   type CollabRoomInfo,
-  type CollabRoomInfoCallback,
   CollabRoomJoinStrategy,
   type CollabRoomJoinStrategyType,
   type CollabRoomLocks,
-  type CollabRoomLocksInfoCallback,
   type CollabRoomOptions,
   type CollabRoomPlainData,
   type CollabRoomsInfo,
-  type CollabServerToClientEvents,
   CollabStatus,
   type CollabStatusType,
-  type CollabSuccessAccessRoomCallback,
-  type CollabSuccessChangeRoomLockCallback,
   type CollabUserId,
   type CollabUserIdNullable,
 } from '@/components/collab/types/Collab'
-import DamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
-import DamAssetLicenceGroupRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceGroupRemoteAutocomplete.vue'
-import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRemoteAutocomplete.vue'
-import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
-import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
+import ADamAssetLicenceRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceRemoteAutocomplete.vue'
+import ADamAssetLicenceGroupRemoteAutocomplete from '@/components/dam/user/DamAssetLicenceGroupRemoteAutocomplete.vue'
+import ADamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRemoteAutocomplete.vue'
+import ADamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
+import ADamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
 import { useDamAssetLicenceInnerFilter } from '@/components/dam/user/AssetLicenceFilter'
 import { fetchDamAssetLicenceListByIds, useFetchDamAssetLicenceList } from '@/components/dam/user/assetLicenceApi'
@@ -433,12 +435,21 @@ import { fetchDamUser, fetchDamUserListByIds, updateDamUser, useFetchDamUserList
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
+import {
+  AuthUnavailableError,
+  type AuthCookieState,
+  createRefreshRequestInterceptor,
+  createRefreshSession,
+  isInCauseChain,
+  type RefreshResult,
+  SessionExpiredError,
+} from '@/composables/auth/refreshSession'
 import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/composables/system/breadcrumbs'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
-import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
-import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
-import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
-import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
+import ADamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
+import ADamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
+import ADamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
+import ADamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
 import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import {
@@ -446,17 +457,22 @@ import {
   isMediaAware,
 } from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
 import type { DamMediaFromDam, MediaAware } from '@/types/MediaAware'
-import type { DamMedia } from '@/types/MediaAware'
+import { type DamMedia, DamMediaType, type DamMediaTypeType } from '@/types/MediaAware'
 import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
 import { useDebugFeatures } from '@/composables/useDebugFeatures'
 import { useSentry } from '@/services/sentry'
 import { useUserActivity } from '@/composables/useUserActivity'
 import { useSystemBar } from '@/components/systemBar/systemBar'
 import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
-import { fetchAsset, fetchAssetAsCmsMedia, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import {
+  fetchAsset,
+  fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
+  type IdsGroupedByLicences,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
-import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetUploadConfigKey } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import {
   type UploadMetadataToImageMapFn,
   type UploadMetadataToImageMapItem,
@@ -467,6 +483,18 @@ import AFilterBooleanSelect from '@/labs/filters/AFilterBooleanSelect.vue'
 import AFilterInteger from '@/labs/filters/AFilterInteger.vue'
 import AFilterRemoteAutocomplete from '@/labs/filters/AFilterRemoteAutocomplete.vue'
 import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
+import {
+  createFilterRemoteAutocomplete,
+  type CreateRemoteAutocompleteOptions,
+  type RemoteAutocompleteScope,
+  createRemoteAutocomplete,
+  type FilterRemoteAutocompleteComponent,
+  type FilterRemoteAutocompleteProps,
+  type RemoteAutocompleteComponent,
+  type RemoteAutocompleteProps,
+  type RemoteInnerFilter,
+  type RemoteSelectActions,
+} from '@/labs/form/createRemoteAutocomplete'
 import AFormRemoteAutocompleteWithCached from '@/labs/form/AFormRemoteAutocompleteWithCached.vue'
 import AFilterString from '@/labs/filters/AFilterString.vue'
 import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
@@ -474,7 +502,7 @@ import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOp
 import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
 import AFilterWrapperSidebar from '@/labs/filters/AFilterWrapperSidebar.vue'
 import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
-import FiltersSelected from '@/labs/filters/FiltersSelected.vue'
+import AFiltersSelected from '@/labs/filters/FiltersSelected.vue'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
@@ -487,8 +515,17 @@ import type {
 } from '@/labs/api/useApiFetchItems'
 import type { FetchByIdsParams, UseApiFetchByIdsParams, UseApiFetchByIdsReturnType } from '@/labs/api/useApiFetchByIds'
 import { useApiCommand, useApiRequest } from '@/labs/api/useApiRequest'
+import {
+  type ApiClientSetup,
+  type ApiClientRequestInterceptor,
+  type ApiClientResponseInterceptor,
+  defineApiClient,
+  skipUrlPrefixes,
+} from '@/labs/api/defineApiClient'
+import { startWithEnvConfig } from '@/utils/envConfig'
+import { checkForNewVersion, RELOAD_VETO_GRACE, requestAppReload } from '@/components/systemBar/appReload'
 import type { ExecuteRequestParams, UseApiRequestParams, UseApiRequestReturnType } from '@/labs/api/useApiRequest'
-import { defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
+import { apiErrorStatus, defaultApiErrorLogger, setApiErrorLogger } from '@/labs/api/apiErrors'
 import type { ApiErrorContext } from '@/labs/api/apiErrors'
 import type { ApiErrorLogger } from '@/labs/api/apiErrors'
 import { useApiFetchListBatch } from '@/labs/api/useApiFetchListBatch'
@@ -525,7 +562,6 @@ import {
   createFilterStore,
   type FilterConfig,
   type FilterData,
-  type FilterStore,
   isRouterSafeHash,
   type FilterStoreIdentifier,
   type MakeFilterOption,
@@ -535,7 +571,11 @@ import {
   type FilterType,
   type FilterVariant,
 } from '@/labs/filters/filterFactory'
-import { TimeIntervalSpecialOptions, type TimeIntervalToolsValue } from '@/labs/filters/filterTimeIntervalTools'
+import {
+  TimeIntervalSpecialOptions,
+  type TimeIntervalSpecialOptionsType,
+  type TimeIntervalToolsValue,
+} from '@/labs/filters/filterTimeIntervalTools'
 import { type Pagination, usePagination } from '@/labs/filters/pagination'
 import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
 import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
@@ -575,6 +615,8 @@ import {
   useNestedListEditorController,
   type NestedListEditorHandle,
   type ExposedNestedListEditorHandle,
+  type ExposedNestedSortableListEditorHandle,
+  type NestedSortableListEditorExtras,
   type UseNestedListEditorControllerOptions,
   type NestedListEditorChanges,
 } from '@/labs/listEditor/composables/useNestedListEditorController'
@@ -640,6 +682,13 @@ export {
   ARow,
   AChipNoLink,
   AAlerts,
+  AActionbar,
+  AActionbarTarget,
+  ALayoutLoader,
+  ALayoutSwitch,
+  actionbarSlot,
+  createTeleportSlot,
+  type TeleportSlot,
   ABooleanValue,
   ASystemEntityScope,
   AFormTextField,
@@ -692,24 +741,24 @@ export {
   AImageWidgetMultiple,
   AImageWidgetMultipleInner,
   AImageWidgetMultipleSimple,
-  ImageMassOperations,
+  AImageMassOperations,
   AImagePublicInput,
-  DamAssetImageRoiSelect,
+  ADamAssetImageRoiSelect,
   ACollabLockedByUser,
   ACollabManagement,
   AFileInput,
   AAssetSelect,
   AAssetListInner,
   ABooleanSelect,
-  DamExtSystemRemoteAutocomplete,
-  DamExternalProviderAssetSelect,
-  DamDistributionServiceSelect,
-  DamAssetLicenceRemoteAutocomplete,
-  DamAssetLicenceGroupRemoteAutocomplete,
-  DamAuthorFilterRemoteAutocomplete,
-  DamKeywordFilterRemoteAutocomplete,
-  DamUserFilterRemoteAutocomplete,
-  DamAdminAssetLink,
+  ADamExtSystemRemoteAutocomplete,
+  ADamExternalProviderAssetSelect,
+  ADamDistributionServiceSelect,
+  ADamAssetLicenceRemoteAutocomplete,
+  ADamAssetLicenceGroupRemoteAutocomplete,
+  ADamAuthorFilterRemoteAutocomplete,
+  ADamKeywordFilterRemoteAutocomplete,
+  ADamUserFilterRemoteAutocomplete,
+  ADamAdminAssetLink,
 
   // VIEWS
   ALoginView,
@@ -720,11 +769,14 @@ export {
 
   // COMPOSABLES
   useRouteHistory,
+  type NavigateBackOptions,
+  type RouteHistoryEntry,
   useRemainingTime,
   useAlerts,
   useTheme,
   defineCached,
   Theme,
+  type ThemeType,
   useLanguageSettings,
   modifyLanguageSettings,
   useLoginStatus,
@@ -746,6 +798,13 @@ export {
   useImageActions,
   useCommonAdminImageOptions,
   defineAuth,
+  AuthUnavailableError,
+  type AuthCookieState,
+  createRefreshRequestInterceptor,
+  createRefreshSession,
+  isInCauseChain,
+  type RefreshResult,
+  SessionExpiredError,
   defineBreadcrumbs,
   useDamCachedUsers,
   useUnreleasedFeatures,
@@ -793,13 +852,21 @@ export {
   type JobBaseResource,
   useCommonJobFactory,
   type AclValue,
+  type AclRegistry,
+  type AclValueOf,
+  type RegisteredAclValue,
   type Permissions,
   type PluginOptions,
+  type CommonAdminImageOptions,
+  type CommonAdminCoreDamOptions,
   type CommonAdminCollabOptions,
   type LanguageCode,
   type Immutable,
   type ResourceNameSystemAware,
   type ValidationScope,
+  type AFormFieldValidation,
+  type CommonAdminGlobalComponents,
+  type ACreateDialogValidation,
   type Log,
   type ApiInfiniteResponseList,
   type DatatableOrderingOption,
@@ -813,10 +880,9 @@ export {
   type RecordWasType,
   type UrlParams,
   type AssetSelectReturnData,
-  type SortableNestedItem,
-  type SortableNested,
+  AssetSelectReturnType,
+  type AssetSelectReturnTypeType,
   type SortableItemDataAware,
-  type SortableItemWithParentDataAware,
   type AssetFileProperties,
   type AssetSearchListItemDto,
   type AssetDetailItemDto,
@@ -899,6 +965,8 @@ export {
   isMediaAware,
   type DamMediaFromDam,
   type DamMedia,
+  DamMediaType,
+  type DamMediaTypeType,
   type DamAuthor,
   type DamAuthorMinimal,
   type DamKeyword,
@@ -969,6 +1037,7 @@ export {
   dateUtcToday,
   timePretty,
   dateDiff,
+  type DateDiffUnit,
   // file
   prettyBytes,
   prettyDuration,
@@ -1007,6 +1076,7 @@ export {
   fetchAsset,
   fetchAssetAsCmsMedia,
   fetchAssetByFileId,
+  type IdsGroupedByLicences,
 
   // TRANSLATIONS
   messagesCs,
@@ -1014,8 +1084,8 @@ export {
   messagesSk,
 
   // SYMBOLS, CONSTANTS
-  SystemScopeSymbol,
-  SubjectScopeSymbol,
+  SystemScopeKey,
+  SubjectScopeKey,
   HTTP_STATUS_OK,
   HTTP_STATUS_CREATED,
   HTTP_STATUS_NO_CONTENT,
@@ -1028,9 +1098,11 @@ export {
   NEW_LINE_MARK,
   COMMON_CONFIG,
   SORT_BY_SCORE,
+  SORT_BY_SCORE_BEST,
+  SORT_BY_SCORE_DATE,
   SORT_BY_ID,
   SortOrder,
-  ImageWidgetUploadConfig,
+  ImageWidgetUploadConfigKey,
 
   // VALIDATIONS
   useValidate,
@@ -1068,29 +1140,16 @@ export {
   type CollabRoomPlainData,
   CollabAccessRoomStatus,
   type CollabAccessRoomStatusType,
-  type CollabRoomInfoCallback,
-  type CollabSuccessAccessRoomCallback,
-  type CollabOccupiedAccessRoomCallback,
-  type CollabFailedAccessRoomCallback,
-  type CollabAccessRoomCallbackTypes,
   CollabChangeRoomLockStatus,
   type CollabChangeRoomLockStatusType,
-  type CollabRoomLocksInfoCallback,
-  type CollabSuccessChangeRoomLockCallback,
-  type CollabFailedChangeRoomLockCallback,
-  type CollabChangeRoomLockCallbackTypes,
   type CollabFieldLockOptions,
   CollabRoomJoinStrategy,
   type CollabRoomJoinStrategyType,
   type CollabRoomOptions,
   CollabRequestToTakeModerationStatus,
   type CollabRequestToTakeModerationStatusType,
-  type CollabRequestToTakeModerationStatusCallback,
   CollabRequestToJoinStatus,
   type CollabRequestToJoinStatusType,
-  type CollabRequestToJoinStatusCallback,
-  type CollabClientToServerEvents,
-  type CollabServerToClientEvents,
   type CollabCachedUsersMap,
   type CollabComponentConfig,
   COLLAB_FIELD_PREFIX_COMMENT,
@@ -1100,9 +1159,8 @@ export {
   useImageStore,
 
   // OTHER
-  i18n,
+  type CommonAdminI18n,
   slovakPluralizationRule,
-  useI18n,
   isAnzuApiForbiddenError,
   axiosErrorResponseIsForbidden,
   AnzuApiForbiddenError,
@@ -1132,6 +1190,8 @@ export {
   AnzuApiDependencyExistsError,
   AnzuSystemsCommonAdmin,
   useCommonVuetifyConfig,
+  createAnzuVuetify,
+  type CreateAnzuVuetifyOptions,
   loadCommonFonts,
   getAssetTypeByMimeType,
   damFileTypeFix,
@@ -1141,7 +1201,7 @@ export {
   AFilterWrapper,
   AFilterWrapperSidebar,
   AFilterWrapperSubjectSelect,
-  FiltersSelected,
+  AFiltersSelected,
   AFilterBooleanSelect,
   AFilterInteger,
   AFilterRemoteAutocomplete,
@@ -1156,6 +1216,16 @@ export {
   ADatatablePagination,
   DatatablePaginationKey,
   AFormRemoteAutocomplete,
+  createFilterRemoteAutocomplete,
+  createRemoteAutocomplete,
+  type CreateRemoteAutocompleteOptions,
+  type RemoteAutocompleteScope,
+  type FilterRemoteAutocompleteComponent,
+  type FilterRemoteAutocompleteProps,
+  type RemoteAutocompleteComponent,
+  type RemoteAutocompleteProps,
+  type RemoteInnerFilter,
+  type RemoteSelectActions,
   AFormRemoteAutocompleteWithCached,
   buildFilterHash,
   createFilter,
@@ -1164,7 +1234,6 @@ export {
   useFilterHelpers,
   type FilterConfig,
   type FilterData,
-  type FilterStore,
   type FilterStoreIdentifier,
   type MakeFilterOption,
   type AllowedFilterValues,
@@ -1173,12 +1242,22 @@ export {
   type FilterVariant,
   TimeIntervalSpecialOptions,
   type TimeIntervalToolsValue,
+  type TimeIntervalSpecialOptionsType,
   type Pagination,
   useApiFetchByIds,
   useApiFetchItems,
   useApiFetchList,
   useApiCommand,
   useApiRequest,
+  defineApiClient,
+  startWithEnvConfig,
+  checkForNewVersion,
+  requestAppReload,
+  RELOAD_VETO_GRACE,
+  skipUrlPrefixes,
+  type ApiClientSetup,
+  type ApiClientRequestInterceptor,
+  type ApiClientResponseInterceptor,
   // A wrapper around a helper has to be able to name what it returns and what it takes. Without
   // these the fleet can call the family but cannot write a function that hands one on, which is the
   // shape the admins are being moved towards.
@@ -1199,6 +1278,7 @@ export {
   type FetchListBatchParams,
   type UseApiFetchListBatchReturnType,
   defaultApiErrorLogger,
+  apiErrorStatus,
   setApiErrorLogger,
   type ApiErrorContext,
   type ApiErrorLogger,
@@ -1236,6 +1316,8 @@ export {
   useNestedListEditorController,
   type NestedListEditorHandle,
   type ExposedNestedListEditorHandle,
+  type ExposedNestedSortableListEditorHandle,
+  type NestedSortableListEditorExtras,
   type UseNestedListEditorControllerOptions,
   type NestedListEditorChanges,
   type ListEditorKey,

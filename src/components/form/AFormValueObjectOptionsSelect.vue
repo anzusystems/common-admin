@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { computed, inject, ref, watch } from 'vue'
+import type { AFormFieldValidation } from '@/types/Validation'
+import { computed, inject, ref, watch, unref } from 'vue'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
-import type { ErrorObject } from '@vuelidate/core'
 import { cloneDeep, isDefined, isNull, isUndefined } from '@/utils/common'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
+import { SubjectScopeKey, SystemScopeKey } from '@/components/injectionKeys'
 import { useI18n } from 'vue-i18n'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import { useCollabField } from '@/components/collab/composables/collabField'
@@ -18,7 +18,7 @@ const props = withDefaults(
     label?: string
     errorMessage?: string
     required?: boolean
-    v?: any
+    v?: AFormFieldValidation | null
     hideLabel?: boolean
     multiple?: boolean
     hideDetails?: boolean
@@ -90,8 +90,8 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   )
 }
 
-const system = inject<string | undefined>(SystemScopeSymbol, undefined)
-const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
+const system = inject<string | undefined>(SystemScopeKey, undefined)
+const subject = inject<string | undefined>(SubjectScopeKey, undefined)
 
 const { t } = useI18n()
 
@@ -112,7 +112,7 @@ const onFocus = () => {
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length) return props.v.$errors.map((item: ErrorObject) => item.$message)
+  if (props.v?.$errors?.length) return props.v.$errors.map((item) => unref(item.$message))
   return []
 })
 
@@ -125,7 +125,7 @@ const labelComputed = computed(() => {
 
 const requiredComputed = computed(() => {
   if (isDefined(props.required)) return props.required
-  if (props.v?.required && props.v?.required.$params.type === 'required') return true
+  if ((props.v?.required as { $params?: { type?: string } } | undefined)?.$params?.type === 'required') return true
   return false
 })
 
@@ -172,7 +172,7 @@ watch(
         >{{ labelComputed
         }}<span
           v-if="requiredComputed"
-          class="required"
+          class="a-required-mark"
       /></span>
     </template>
     <template

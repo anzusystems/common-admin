@@ -317,7 +317,7 @@ describe('filter bookmark manage tab', () => {
     await flushPromises()
 
     expect(vm.guard.promptOpen.value).toBe(true)
-    expect(dialog.emitted('onClose')).toBeFalsy()
+    expect(dialog.emitted('close')).toBeFalsy()
   })
 })
 
@@ -332,7 +332,7 @@ describe('leaving the manage tab with an unapplied order', () => {
     vm.requestClose()
     await flushPromises()
     expect(vm.guard.promptOpen.value).toBe(false)
-    expect(dialog.emitted('onClose')).toBeTruthy()
+    expect(dialog.emitted('close')).toBeTruthy()
 
     // A drag is the one thing here that waits for the save button.
     const second = await mountDialog()
@@ -348,7 +348,7 @@ describe('leaving the manage tab with an unapplied order', () => {
     await flushPromises()
 
     expect(secondVm.guard.promptOpen.value).toBe(true)
-    expect(secondDialog.emitted('onClose')).toBeFalsy()
+    expect(secondDialog.emitted('close')).toBeFalsy()
   })
 })
 
@@ -377,7 +377,7 @@ describe('adding a bookmark while the manage tab has pending work', () => {
     await nextTick()
 
     expect(vm.guard.promptOpen.value).toBe(true)
-    expect(dialog.emitted('onClose')).toBeFalsy()
+    expect(dialog.emitted('close')).toBeFalsy()
   })
 })
 
@@ -542,7 +542,7 @@ describe('saving the manage tab', () => {
 
     expect(updateUserAdminConfig).not.toHaveBeenCalled()
     expect(updateUserAdminConfigPositions).not.toHaveBeenCalled()
-    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeFalsy()
   })
 
   it('leaves the pending work alone when the first write is refused', async () => {
@@ -560,7 +560,7 @@ describe('saving the manage tab', () => {
     expect(getBookmarks.mock.calls.length).toBe(fetches)
     expect(unsaved(wrapper)).toBe(true)
     expect(editorOf(wrapper).getChanges().updated).toHaveLength(1)
-    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeFalsy()
   })
 
   it('keeps the unwritten half when one write lands and the next is refused', async () => {
@@ -584,7 +584,7 @@ describe('saving the manage tab', () => {
     expect(markStale).toHaveBeenCalled()
     expect(dialogVm(wrapper).itemsManage.map((item) => item.id)).toEqual([2, 3, 1])
     expect(unsaved(wrapper)).toBe(true)
-    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeFalsy()
   })
 
   it('does not send a delete twice when a later write failed and the user tries again', async () => {
@@ -619,7 +619,7 @@ describe('saving the manage tab', () => {
     expect(deleteUserAdminConfig).toHaveBeenCalledTimes(1)
     expect(updateUserAdminConfig).toHaveBeenCalledTimes(2)
     expect(unsaved(wrapper)).toBe(false)
-    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeTruthy()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeTruthy()
   })
 
   it('stops taking edits while the writes are going out', async () => {
@@ -753,7 +753,7 @@ describe('a delete whose answer never came back', () => {
     // Without this the dialog would stop on the same row on every retry and could never finish.
     expect(updateUserAdminConfigPositions.mock.calls[0][0]).toEqual([1, 3])
     expect(unsaved(wrapper)).toBe(false)
-    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeTruthy()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeTruthy()
   })
 
   it('still stops on a delete that failed for any other reason', async () => {
@@ -772,7 +772,7 @@ describe('a delete whose answer never came back', () => {
         .getChanges()
         .deleted.map((item) => item.id)
     ).toEqual([2])
-    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeFalsy()
   })
 })
 
@@ -826,7 +826,7 @@ describe('saving while the list is being refreshed', () => {
 
     // Saving now would send the order being replaced and undo whatever the refresh is bringing.
     expect(updateUserAdminConfigPositions).not.toHaveBeenCalled()
-    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeFalsy()
 
     release()
     await settleEditor()
@@ -889,7 +889,7 @@ describe('trying to close while a write is out', () => {
     await flushPromises()
 
     expect(vm.guard.promptOpen.value).toBe(false)
-    expect(dialog.emitted('onClose')).toBeFalsy()
+    expect(dialog.emitted('close')).toBeFalsy()
     // The escape key and a click outside go straight to the model, so they are held off there.
     expect(wrapper.findComponent({ name: 'VDialog' }).props('persistent')).toBe(true)
 
@@ -900,7 +900,7 @@ describe('trying to close while a write is out', () => {
     await settleEditor()
 
     // The save's own close still happens, once the write it was waiting for has landed.
-    expect(dialog.emitted('onClose')).toBeTruthy()
+    expect(dialog.emitted('close')).toBeTruthy()
   })
 
   it('still closes after a bookmark has been added', async () => {
@@ -916,7 +916,7 @@ describe('trying to close while a write is out', () => {
     await nextTick()
 
     expect(createUserAdminConfig).toHaveBeenCalledTimes(1)
-    expect(dialog.emitted('onClose')).toBeTruthy()
+    expect(dialog.emitted('close')).toBeTruthy()
   })
 })
 
@@ -1020,7 +1020,7 @@ describe('when a bookmark cannot be created', () => {
 
     // Creating here would put a bookmark past a cap nobody was able to check.
     expect(createUserAdminConfig).not.toHaveBeenCalled()
-    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeFalsy()
   })
 
   it('sends nothing when the list is already full', async () => {
@@ -1030,7 +1030,7 @@ describe('when a bookmark cannot be created', () => {
     await tryToAdd(wrapper)
 
     expect(createUserAdminConfig).not.toHaveBeenCalled()
-    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('onClose')).toBeFalsy()
+    expect(wrapper.findComponent({ name: 'FilterBookmarkDialog' }).emitted('close')).toBeFalsy()
   })
 })
 

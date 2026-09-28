@@ -207,7 +207,9 @@
     "systemError": "Error",
     "size": "Invalid size",
     "offset": "Invalid offset",
-    "mimeType": "Invalid file format"
+    "mimeType": "Invalid file format",
+    "chunkValidationFailed": "Upload chunk validation failed. Please contact the administrator.",
+    "processingTooLong": "Processing is taking too long. Use the item's refresh button, or remove the item and try again later."
   },
   "notificationsNotConnected": "The notification service is temporarily down, some features may not behave correctly.",
   "public": {
@@ -217,6 +219,7 @@
   },
   "error": {
     "loadingConfig": "Loading Media Library config error",
-    "accessRights": "Media Library access rights error"
+    "accessRights": "Media Library access rights error",
+    "unableToLock": "Unable to lock image widget by current user."
   }
 }

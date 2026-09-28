@@ -10,8 +10,8 @@ export function useDamAcceptTypeAndSizeHelper(
     const config = damConfigExtSystem[assetType]
     if (!config) return {}
     const sizes: Record<string, number> = {}
-    for (let i = 0; i < config.mimeTypes.length; i++) {
-      sizes[config.mimeTypes[i]] = config.sizeLimit
+    for (const mimeType of config.mimeTypes) {
+      sizes[mimeType] = config.sizeLimit
     }
     return sizes
   }

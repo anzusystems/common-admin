@@ -62,19 +62,19 @@ export const fetchItems = async (pagination: Ref<Pagination>, filterData: Filter
   const { execute } = useFetchUserList()
   const users = await execute(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>users.map((user: User) => ({
+  return users.map((user: User) => ({
     title: user.person.fullName,
     value: user.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
   const users = await fetchUserListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>users.map((user: User) => ({
+  return users.map((user: User) => ({
     title: user.person.fullName,
     value: user.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 const mapToMinimal = (user: User): UserMinimal => ({

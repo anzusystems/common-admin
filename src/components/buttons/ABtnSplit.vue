@@ -31,12 +31,12 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'onClick'): void
+  (e: 'click'): void
 }>()
 
 const onClick = (event: Event) => {
   eventClickBlur(event)
-  emit('onClick')
+  emit('click')
 }
 
 const variantComputed = computed(() => {
@@ -115,6 +115,7 @@ const { t } = useI18n()
       :rounded="rounded"
       :size="size"
       class="a-button-split__more"
+      :aria-label="t('common.button.moreOptions')"
     >
       <VIcon icon="mdi-chevron-down" />
       <VMenu

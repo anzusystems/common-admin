@@ -51,6 +51,7 @@ const variantComputed = computed(() => {
 <template>
   <VBtn
     v-if="variant === 'icon'"
+    :aria-label="t(buttonT)"
     :class="buttonClass"
     :data-cy="dataCy"
     icon

@@ -14,8 +14,6 @@ const props = withDefaults(
     dialogConfirmButtonT?: string
     dialogCancelButtonT?: string
     dialogConfirmColor?: string
-    dialogZIndex?: number
-    dialogMaxWidth?: number
     dataCy?: string
     disabled?: boolean
     disableCloseAfterConfirm?: boolean
@@ -34,8 +32,6 @@ const props = withDefaults(
     dialogConfirmButtonT: 'common.button.delete',
     dialogCancelButtonT: 'common.button.cancel',
     dialogConfirmColor: 'primary',
-    dialogZIndex: 200,
-    dialogMaxWidth: 300,
     dataCy: 'button-delete',
     disabled: false,
     disableCloseAfterConfirm: false,
@@ -90,6 +86,7 @@ const variantComputed = computed(() => {
 <template>
   <VBtn
     v-if="variant === 'icon'"
+    :aria-label="t(buttonT)"
     :class="buttonClass"
     :data-cy="dataCy"
     icon
@@ -116,6 +113,8 @@ const variantComputed = computed(() => {
     :data-cy="dataCy"
     :variant="variantComputed"
     :color="color"
+    :disabled="disabled"
+    :loading="loading"
     rounded="pill"
     :height="size"
     @click.stop="onClick"
@@ -127,12 +126,13 @@ const variantComputed = computed(() => {
     persistent
     :width="500"
     no-click-animation
+    @keydown.esc="onCancel"
   >
     <VCard
       v-if="dialog"
       data-cy="delete-panel"
     >
-      <ADialogToolbar @on-cancel="onCancel">
+      <ADialogToolbar @cancel="onCancel">
         {{ t(dialogMessageT) }}
       </ADialogToolbar>
       <VCardActions>

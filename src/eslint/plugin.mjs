@@ -1,3 +1,5 @@
+import { validRouteName } from './validRouteName.mjs'
+
 // Shared by `prefer-api-command` and `prefer-api-fetch-items`: both ask the same question -- is this
 // call the `useApiRequest` helper, and what did it say it answers with.
 const isHelperSource = (source) =>
@@ -33,6 +35,7 @@ const firstTypeArgument = (node) => {
 
 const anzuPlugin = {
   rules: {
+    'valid-route-name': validRouteName,
     'no-ts-extension': {
       meta: {
         type: 'problem',
@@ -431,4 +434,7 @@ function normalizeSeverity(value) {
   return 'error'
 }
 
+export { globalComponentNames } from './globalComponentNames.mjs'
+
 export { anzuPlugin }
+export { defineAnzuAdminConfig } from './adminConfig.mjs'

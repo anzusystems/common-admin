@@ -47,17 +47,20 @@ export type FetchListBatchParams = {
  * same classes it would get from any other helper.
  */
 class PageFailure extends Error {
-  constructor(
-    readonly pageUrl: string,
-    readonly failure: unknown,
-    /**
-     * The config axios used for this page, when the page answered and it was this helper that
-     * refused what came back. A page that failed in transport needs none: axios kept its own.
-     */
-    readonly dispatched?: AxiosRequestConfig
-  ) {
+  readonly pageUrl: string
+  readonly failure: unknown
+  /**
+   * The config axios used for this page, when the page answered and it was this helper that
+   * refused what came back. A page that failed in transport needs none: axios kept its own.
+   */
+  readonly dispatched?: AxiosRequestConfig
+
+  constructor(pageUrl: string, failure: unknown, dispatched?: AxiosRequestConfig) {
     super('Batch page failed')
     this.name = 'PageFailure'
+    this.pageUrl = pageUrl
+    this.failure = failure
+    this.dispatched = dispatched
   }
 }
 

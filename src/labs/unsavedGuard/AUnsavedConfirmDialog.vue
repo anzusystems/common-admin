@@ -43,6 +43,7 @@ const onDiscard = () => {
     v-model="open"
     max-width="480"
     persistent
+    @keydown.esc="onStay"
   >
     <VCard>
       <VCardTitle>

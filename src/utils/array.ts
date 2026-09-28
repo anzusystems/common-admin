@@ -12,11 +12,11 @@ export const arrayFromArgs = <T>(...args: [T[]]) => Array.from(...args)
 export type NestedArray<T> = Array<NestedArray<T> | T>
 
 export const arrayFlatten = <T>(input: NestedArray<T>, acc: T[] = []): T[] => {
-  return input.reduce((_: T[], current) => {
-    if (Array.isArray(current)) return arrayFlatten(current, acc)
-    acc.push(current)
-    return acc
-  }, [])
+  for (const current of input) {
+    if (Array.isArray(current)) arrayFlatten(current, acc)
+    else acc.push(current)
+  }
+  return acc
 }
 
 export const arraysHaveSameElements = <T>(array1: T[], array2: T[]): boolean => {

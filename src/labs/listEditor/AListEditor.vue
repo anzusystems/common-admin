@@ -593,9 +593,16 @@ const onDeleteClick = async (vi: ListViewItem<TItem>) => {
   await triggerDeleteClick(vi)
 }
 
+// In-flight guard: a second click while the consumer's save is pending must not send a duplicate.
+// A rejected save keeps the row open and still reaches the app's error handler, as before the guard.
+const savingKeys = ref<Set<ListEditorKey>>(new Set())
 const onSaveClick = async (vi: ListViewItem<TItem>) => {
-  if (props.onItemSave) {
-    await props.onItemSave(vi.raw)
+  if (savingKeys.value.has(vi.key)) return
+  savingKeys.value.add(vi.key)
+  try {
+    if (props.onItemSave) await props.onItemSave(vi.raw)
+  } finally {
+    savingKeys.value.delete(vi.key)
   }
   commitEdit(vi)
   emit('item-saved', vi)
@@ -635,7 +642,7 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
       },
       save: () => {
         const vi = findVi(key)
-        if (vi) return onSaveClick(vi)
+        return vi ? onSaveClick(vi) : undefined
       },
       cancel: () => {
         const vi = findVi(key)
@@ -888,6 +895,7 @@ defineExpose<ListEditorHandle<TItem>>({
                     density="compact"
                     :active="false"
                     class="a-le-action a-le-action--chip-close"
+                    :aria-label="t('common.sortable.delete')"
                     @click.stop="onDeleteClick(vi)"
                   >
                     <VIcon
@@ -898,6 +906,7 @@ defineExpose<ListEditorHandle<TItem>>({
                   <template v-else>
                     <VBtn
                       v-if="showEditButton && canInteract && !defaultExpanded"
+                      :aria-label="t('common.sortable.edit')"
                       icon
                       size="small"
                       variant="tonal"
@@ -918,6 +927,7 @@ defineExpose<ListEditorHandle<TItem>>({
                     </VBtn>
                     <VBtn
                       v-if="showDeleteButton && canInteract"
+                      :aria-label="t('common.sortable.delete')"
                       icon
                       size="small"
                       variant="text"
@@ -943,6 +953,7 @@ defineExpose<ListEditorHandle<TItem>>({
                       density="comfortable"
                       :active="false"
                       class="mx-1 a-le-action a-le-action--menu"
+                      :aria-label="t('common.sortable.more')"
                     >
                       <VIcon
                         icon="mdi-dots-vertical"

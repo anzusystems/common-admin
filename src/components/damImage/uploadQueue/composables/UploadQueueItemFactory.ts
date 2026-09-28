@@ -31,7 +31,7 @@ export function useUploadQueueItemFactory() {
       authors: [],
       authorConflicts: [],
       customData: {},
-      latestChunkCancelToken: null,
+      latestChunkAbortController: null,
       chunkSize: chunkSize,
       currentChunkIndex: 0,
       chunkTotalCount: 0,

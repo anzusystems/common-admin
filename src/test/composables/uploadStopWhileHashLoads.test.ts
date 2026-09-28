@@ -36,7 +36,7 @@ const queueItem = () =>
     status: UploadQueueItemStatus.Waiting,
     progress: { speed: null },
     error: { hasError: false, message: '' },
-    latestChunkCancelToken: null,
+    latestChunkAbortController: null,
   }) as unknown as UploadQueueItem
 
 describe('an upload stopped before its first chunk', () => {

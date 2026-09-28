@@ -7,12 +7,10 @@ import ADialogToolbar from '@/components/ADialogToolbar.vue'
 const props = withDefaults(
   defineProps<{
     isUploading: boolean
-    dialogMaxWidth?: number
     buttonSize?: number
     dataCy?: string
   }>(),
   {
-    dialogMaxWidth: 300,
     buttonSize: 26,
     dataCy: 'button-stop',
   }
@@ -45,6 +43,7 @@ const { t } = useI18n()
 
 <template>
   <VBtn
+    :aria-label="t('common.damImage.upload.stop')"
     variant="flat"
     :data-cy="dataCy"
     icon
@@ -63,12 +62,13 @@ const { t } = useI18n()
   <VDialog
     v-model="dialog"
     :width="500"
+    @keydown.esc="onCancel"
   >
     <VCard
       v-if="dialog"
       data-cy="delete-panel"
     >
-      <ADialogToolbar @on-cancel="onCancel">
+      <ADialogToolbar @cancel="onCancel">
         {{ t('common.damImage.upload.stopConfirmQuestion') }}
       </ADialogToolbar>
       <VCardActions>

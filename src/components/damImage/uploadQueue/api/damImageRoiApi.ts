@@ -3,7 +3,7 @@ import type { AxiosInstance } from 'axios'
 import type { DocId } from '@/types/common'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { useApiRequest } from '@/labs/api/useApiRequest'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 
 export const ENTITY = 'asset'
 

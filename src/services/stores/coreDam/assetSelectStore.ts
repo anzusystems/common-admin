@@ -9,7 +9,7 @@ import {
   type AssetSelectReturnTypeType,
 } from '@/types/coreDam/AssetSelect'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
-import { isNull } from '@/utils/common'
+import { isNull, isUndefined } from '@/utils/common'
 
 export interface AssetSelectListItem {
   asset: AssetSearchListItemDto
@@ -44,7 +44,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
       selectedLicenceId.value = 0
       return
     }
-    selectedLicenceId.value = value[0].licence
+    selectedLicenceId.value = value[0]!.licence
   }
 
   function setSingleMode(value: boolean) {
@@ -116,14 +116,14 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     activeItemIndex.value = index
     if (isNull(oldActiveIndex)) return
     if (!(oldActiveIndex in assetListItems.value)) return
-    assetListItems.value[oldActiveIndex].active = false
+    assetListItems.value[oldActiveIndex]!.active = false
   }
 
   function unselectAllExcept(ignoreIndex: number) {
     const items = assetListItems.value
     for (let i = 0; i < items.length; i++) {
-      if (items[i].selected && i !== ignoreIndex) {
-        items[i].selected = false
+      if (items[i]!.selected && i !== ignoreIndex) {
+        items[i]!.selected = false
       }
     }
   }
@@ -220,6 +220,19 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     return selectConfig.value[0]
   })
 
+  // For the image widgets once an asset was picked: the ext system of the licence it came from. The store
+  // gets a licence config only when there is one (`initStoreContext` callers return early on an empty
+  // list), the list fetch stops without a licence, and nothing empties the config afterwards, so a missing
+  // one here is a caller reading it outside that flow. A function rather than the computed throwing: Pinia's
+  // devtools read every getter without a try.
+  function requireSelectedSelectConfig() {
+    const config = selectedSelectConfig.value
+    if (isUndefined(config)) {
+      throw new Error('assetSelectStore: no licence config selected (the asset select dialog was not opened)')
+    }
+    return config
+  }
+
   return {
     selectedLicenceId,
     selectConfig,
@@ -247,6 +260,7 @@ export const useAssetSelectStore = defineStore('commonAdminCoreDamAssetSelectSto
     clearSelected,
     reset,
     selectedSelectConfig,
+    requireSelectedSelectConfig,
   }
 })
 

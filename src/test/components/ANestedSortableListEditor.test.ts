@@ -343,39 +343,46 @@ describe('ANestedSortableListEditor', () => {
     })
   })
 
-  describe('imperative ref API (migration parity with legacy ASortableNested)', () => {
-    it('addAfterId inserts after target in the same sibling group', async () => {
+  describe('imperative ref API (what LinkedListManage and other consumers call)', () => {
+    it('addItem with afterId inserts after target in the same sibling group', async () => {
       const { wrapper, model } = mountEditor()
       const api = editorExposed(wrapper)
-      api.addAfterId(1, { id: 99, position: 0, parent: null, title: 'Inserted' }, true)
+      api.acceptChanges(
+        () => api.addItem({ id: 99, position: 0, parent: null, title: 'Inserted' }, { afterId: 1 }),
+        [99]
+      )
       await flushPromises()
       expect(model.value.children.map((n) => n.data.id)).toEqual([1, 99, 2, 3])
     })
 
-    it('addChildToId PREPENDS as first child and auto-expands the parent', async () => {
+    it('addItem asFirstChild PREPENDS as first child, and expand() shows it', async () => {
       const { wrapper, model } = mountEditor()
       // Collapse News (id=2) first: auto-expand is unobservable on an already-expanded parent,
       // and News — unlike Home — already HAS children, so prepend vs append is distinguishable.
       // The old test targeted Home (no children) and named itself "appends", which the empty
-      // fixture could not contradict: this legacy API passes `asFirstChild: true`, i.e. PREPEND.
+      // fixture could not contradict: `asFirstChild: true` PREPENDS.
       await wrapper.findAll('.a-nested-list-editor__tree-toggle')[1].trigger('click')
       await nextTick()
       expect(wrapper.findAll('.a-le-row').length).toBe(3)
 
       const api = editorExposed(wrapper)
-      api.addChildToId(2, { id: 101, position: 0, parent: 2, title: 'Sub' }, true)
+      api.expand(2)
+      api.acceptChanges(
+        () => api.addItem({ id: 101, position: 0, parent: 2, title: 'Sub' }, { parentId: 2, asFirstChild: true }),
+        [101]
+      )
       await flushPromises()
 
       const news = model.value.children.find((n) => n.data.id === 2)!
       expect(news.children!.map((c) => c.data.id)).toEqual([101, 21, 22])
-      // Auto-expand — the other half of the name, previously never asserted.
+      // Expanded — the other half of the name.
       expect(wrapper.findAll('.a-le-row').length).toBe(6)
     })
 
-    it('removeById removes the node and recalculates sibling positions', async () => {
+    it('an accepted deleteItem removes the node and recalculates sibling positions', async () => {
       const { wrapper, model } = mountEditor()
       const api = editorExposed(wrapper)
-      api.removeById(1)
+      api.acceptChanges(() => api.deleteItem(1, { trackDeleted: false }), [1])
       await flushPromises()
       expect(model.value.children.map((n) => n.data.id)).toEqual([2, 3])
       // The "recalculates sibling positions" half of the name: no `expect` in this file
@@ -384,15 +391,15 @@ describe('ANestedSortableListEditor', () => {
       expect(model.value.children.map((n) => n.data.position)).toEqual([1, 2])
     })
 
-    it('updateData replaces data of a node by id', async () => {
+    it('updateItem replaces data of a node by id', async () => {
       const { wrapper, model } = mountEditor()
       const api = editorExposed(wrapper)
-      api.updateData(1, { id: 1, position: 1, parent: null, title: 'Home Renamed' })
+      api.updateItem(1, { id: 1, position: 1, parent: null, title: 'Home Renamed' })
       await flushPromises()
       expect(model.value.children[0].data.title).toBe('Home Renamed')
     })
 
-    it('resetDirtyBaseline clears the unsaved indicator after server-confirmed operation', async () => {
+    it('commit clears the unsaved indicator after server-confirmed operation', async () => {
       const { wrapper, model } = mountEditor()
       const api = editorExposed(wrapper)
       // Actually dirty a row FIRST — edit a node's title in place — so a no-op reset can't pass.
@@ -402,7 +409,7 @@ describe('ANestedSortableListEditor', () => {
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
       // Re-capture baseline (as after a successful save) — the dirty marker must clear.
-      api.resetDirtyBaseline()
+      api.commit()
       await flushPromises()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
@@ -677,7 +684,7 @@ describe('ANestedSortableListEditor', () => {
     })
   })
 
-  describe('resetDirtyBaseline DOM verification', () => {
+  describe('commit DOM verification', () => {
     it('row shown as unsaved after external mutation, clears after baseline reset', async () => {
       const model = ref<NestedTree<MenuItem>>(tree())
       const Host = defineComponent({
@@ -706,10 +713,10 @@ describe('ANestedSortableListEditor', () => {
       const editor = findEditor(wrapper)
       const exposed = (
         editor.vm as unknown as {
-          $: { exposed: { resetDirtyBaseline: () => void } }
+          $: { exposed: { commit: () => void } }
         }
       ).$.exposed
-      exposed.resetDirtyBaseline()
+      exposed.commit()
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
@@ -853,12 +860,12 @@ describe('ANestedSortableListEditor', () => {
       await apply.trigger('click')
       await flushPromises()
 
-      // Consumer still has to call resetDirtyBaseline — the markers stick
+      // Consumer still has to call commit() — the markers stick
       // around until they confirm the server save.
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBeGreaterThan(0)
 
       const api = editorExposed(wrapper)
-      api.resetDirtyBaseline()
+      api.commit()
       await nextTick()
       expect(wrapper.findAll('.a-le-row--unsaved').length).toBe(0)
     })
@@ -1008,7 +1015,7 @@ describe('ANestedSortableListEditor', () => {
       ).$.exposed
       // News (id=2) already has children [21, 22]. Add inside should land as
       // the third and last child, NOT at index 0 (which was the old
-      // `asFirstChild` semantic, still used by the imperative `addChildToId`).
+      // `asFirstChild` semantic, which a consumer still asks for explicitly).
       exposed.addItem({ id: 99, position: 0, parent: 2, title: 'New inside' }, { parentId: 2, childrenAllowed: true })
       await flushPromises()
       const news = model.value.children.find((n) => n.data.id === 2)!
@@ -1053,11 +1060,11 @@ describe('ANestedSortableListEditor', () => {
 interface EditorApi {
   indent: (id: number) => boolean
   outdent: (id: number) => boolean
-  addAfterId: (targetId: number | null, data: MenuItem, childrenAllowed: boolean) => unknown
-  addChildToId: (targetId: number, data: MenuItem, childrenAllowed: boolean) => unknown
-  removeById: (id: number) => void
-  updateData: (id: number, data: MenuItem) => void
-  resetDirtyBaseline: () => void
+  deleteItem: (id: number, opts?: { trackDeleted?: boolean }) => void
+  updateItem: (id: number, data: MenuItem) => void
+  commit: () => void
+  expand: (id: number) => void
+  acceptChanges: (op: () => void, keys?: number[]) => void
   addItem: (
     data?: MenuItem,
     hint?: {

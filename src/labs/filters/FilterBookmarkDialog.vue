@@ -39,7 +39,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'onClose'): void
+  (e: 'close'): void
 }>()
 
 const filterConfig = inject(FilterConfigKey)
@@ -88,7 +88,7 @@ const guard = useUnsavedChangesGuard({
 })
 
 watch(isOpen, (open) => {
-  if (!open) emit('onClose')
+  if (!open) emit('close')
 })
 
 const requestClose = () => {
@@ -369,7 +369,7 @@ watch(activeTab, async () => {
     :width="500"
   >
     <VCard>
-      <ADialogToolbar @on-cancel="requestClose">
+      <ADialogToolbar @cancel="requestClose">
         {{ t('common.filter.bookmark.title') }}
       </ADialogToolbar>
       <VCardText class="pt-0">

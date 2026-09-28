@@ -5,12 +5,6 @@ export interface SortableItemDataAware {
   position: number
 }
 
-export interface SortableItemWithParentDataAware {
-  id: DocId | IntegerId
-  position: number
-  parent: DocId | IntegerId | null // if null, no parent
-}
-
 export interface SortableItemNewPosition {
   id?: DocId | IntegerId
   position: number

@@ -1,6 +1,6 @@
 import { useWebSocket } from '@vueuse/core'
 import { type EffectScope, effectScope, ref } from 'vue'
-import { i18n } from '@/plugins/i18n'
+import { commonT } from '@/plugins/i18n'
 import {
   type DamNotification,
   useDamNotificationsEventBus,
@@ -8,7 +8,7 @@ import {
 import { useCommonAdminCoreDamOptionsGlobal } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { useAlerts } from '@/composables/system/alerts'
 
-const { t } = i18n.global
+const t = commonT
 
 const damNotificationsInitialized = ref(false)
 

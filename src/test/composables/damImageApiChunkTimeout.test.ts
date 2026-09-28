@@ -14,7 +14,7 @@ const buildClient = () => {
   return { factory, post }
 }
 
-const item = { latestChunkCancelToken: null } as unknown as UploadQueueItem
+const item = { latestChunkAbortController: null } as unknown as UploadQueueItem
 
 const uploadOneChunk = (factory: () => AxiosInstance) =>
   imageUploadChunk(factory, '/adm/v1/image', item, 'image-id', new Blob(['chunk-payload']), 13, 0)

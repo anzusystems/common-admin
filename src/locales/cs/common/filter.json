@@ -12,10 +12,21 @@
     "storeTableOrder": "Uložit i pořadí tabulky",
     "saveBookmarkOrder": "Uložit řazení",
     "nameUniqueError": "Název filtru musí být unikátní",
-    "unsavedSection": "Pořadí záložek"
+    "unsavedSection": "Pořadí záložek",
+    "more": "Další záložky"
   },
   "timeInterval": {
     "from": "Od",
-    "until": "Do"
+    "until": "Do",
+    "options": {
+      "hour1": "1 hodina",
+      "day1": "1 den",
+      "days7": "7 dní",
+      "days28": "28 dní",
+      "currentMonth": "Probíhající měsíc",
+      "lastMonth": "Minulý měsíc",
+      "last3Months": "Poslední 3 měsíce",
+      "custom": "Vlastní"
+    }
   }
 }

@@ -24,6 +24,9 @@ import { useDisplay } from 'vuetify'
 
 const { pagination } = usePagination(SORT_BY_SCORE_DATE)
 const detailLoading = ref(false)
+// Shared like the pagination: every asset select part asks through here, and only the last ask counts.
+let listController: AbortController | undefined
+let detailRequest = 0
 
 export function useAssetSelectActions(
   configName = 'default',
@@ -58,28 +61,42 @@ export function useAssetSelectActions(
     if (assetSelectStore.selectedLicenceId <= 0) return
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     const { execute } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
+    listController?.abort()
+    const controller = (listController = new AbortController())
     try {
       assetSelectStore.showLoader()
-      assetSelectStore.setList(await execute(pagination, filterData, filterConfig))
+      const items = await execute(pagination, filterData, filterConfig, { signal: controller.signal })
+      if (controller.signal.aborted) return
+      assetSelectStore.setList(items)
     } catch (error) {
-      showErrorsDefault(error)
+      if (!controller.signal.aborted) showErrorsDefault(error)
     } finally {
-      assetSelectStore.hideLoader()
+      if (listController === controller) assetSelectStore.hideLoader()
     }
   }
 
   const fetchNextPage = async () => {
     if (assetSelectStore.loader) return
-    pagination.value.page = pagination.value.page + 1
+    const page = pagination.value.page
+    pagination.value.page = page + 1
     resolveTypeFilter(assetSelectStore.assetType, assetSelectStore.inPodcast)
     const { execute } = useFetchAssetList(damClient, endPointAsset, assetSelectStore.selectedLicenceId)
+    // A new list (filter submit) aborts this page too: appended, it would be the old filter's page.
+    listController?.abort()
+    const controller = (listController = new AbortController())
     try {
       assetSelectStore.showLoader()
-      assetSelectStore.appendList(await execute(pagination, filterData, filterConfig))
+      const items = await execute(pagination, filterData, filterConfig, { signal: controller.signal })
+      if (controller.signal.aborted) return
+      assetSelectStore.appendList(items)
     } catch (error) {
+      if (controller.signal.aborted) return
+      // Not when something reset the page meanwhile (a filter submit waits out its debounce before it
+      // aborts this request): rolling back would overwrite that reset.
+      if (pagination.value.page === page + 1) pagination.value.page = page
       showErrorsDefault(error)
     } finally {
-      assetSelectStore.hideLoader()
+      if (listController === controller) assetSelectStore.hideLoader()
     }
   }
 
@@ -93,8 +110,10 @@ export function useAssetSelectActions(
     assetSelectStore.toggleSelectedByIndex(data.index)
     assetSelectStore.setActiveByIndex(data.index)
     detailLoading.value = true
+    const request = ++detailRequest
     try {
       const asset = await fetchAsset(damClient, endPointAsset, data.assetId)
+      if (request !== detailRequest) return
       cachedExtSystemId.value = extSystem
       addToCachedAuthors(asset.authors)
       addToCachedKeywords(asset.keywords)
@@ -109,9 +128,9 @@ export function useAssetSelectActions(
       if (!isUndefined(onDetailLoadedCallback)) onDetailLoadedCallback(asset)
       assetDetailStore.setAsset(asset)
     } catch (e) {
-      showErrorsDefault(e)
+      if (request === detailRequest) showErrorsDefault(e)
     } finally {
-      detailLoading.value = false
+      if (request === detailRequest) detailLoading.value = false
     }
   }
 

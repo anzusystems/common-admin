@@ -98,19 +98,19 @@ export const fetchItems = async (pagination: Ref<Pagination>, filterData: Filter
   const { execute } = useFetchSiteList()
   const sites = await execute(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>sites.map((site: Site) => ({
+  return sites.map((site: Site) => ({
     title: site.name,
     value: site.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
   const sites = await fetchSiteListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>sites.map((site: Site) => ({
+  return sites.map((site: Site) => ({
     title: site.name,
     value: site.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export function useSubjectSiteInnerFilter() {

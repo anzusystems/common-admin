@@ -61,6 +61,8 @@ if (
   isUndefined(filterSelected) ||
   isUndefined(filterData) ||
   isUndefined(filterConfig) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterConfig.fields[props.name]) ||
   isUndefined(filterInnerConfig) ||
   isUndefined(filterInnerData)
 ) {
@@ -79,7 +81,7 @@ if (isUndefined(filterInnerConfig.fields[filterByFieldProp]) || isUndefined(filt
   )
 }
 
-const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
+const filterConfigCurrent = computed(() => filterConfig.fields[props.name]!)
 
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -126,7 +128,9 @@ const allItems = computed<ValueObjectOption<T>[]>(() => {
 
 const loading = ref(false)
 
+let byIdsCounter = 0
 const resetToEmptyState = (value: ModelValueType) => {
+  byIdsCounter++
   selectedItemsCache.value = []
   selected.value = isArray(value) ? [] : null
   modelValueAutocomplete.value = isArray(value) ? [] : null
@@ -140,12 +144,15 @@ const updateSelected = (value: T[] | T) => {
 }
 
 const loadListItems = async (ids: T[] | T) => {
+  const requestId = ++byIdsCounter
   loading.value = true
 
   try {
     const idsArray = isArray(ids) ? ids : [ids]
     try {
-      selectedItemsCache.value = await props.fetchItemsByIds(idsArray)
+      const res = await props.fetchItemsByIds(idsArray)
+      if (requestId !== byIdsCounter) return selectedItemsCache.value
+      selectedItemsCache.value = res
       const selectedNewValue = updateSelected(ids)
       selected.value = selectedNewValue
       modelValueAutocomplete.value = selectedNewValue

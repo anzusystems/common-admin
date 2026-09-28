@@ -6,7 +6,7 @@ import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composab
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
 import { isUndefined } from '@/utils/common'
-import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetUploadConfigKey } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -27,7 +27,7 @@ const fileCache = ref<File[]>([])
 const { t } = useI18n()
 
 const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
-  ImageWidgetUploadConfig,
+  ImageWidgetUploadConfigKey,
   undefined
 )
 
@@ -91,12 +91,13 @@ defineExpose({
   <VDialog
     v-model="dialog"
     :width="500"
+    @keydown.esc="onDialogCancel"
   >
     <VCard
       v-if="dialog"
       data-cy="delete-panel"
     >
-      <ADialogToolbar @on-cancel="onDialogCancel">
+      <ADialogToolbar @cancel="onDialogCancel">
         {{ t('common.damImage.upload.limits.uploadWarning') }}
       </ADialogToolbar>
       <VCardText>

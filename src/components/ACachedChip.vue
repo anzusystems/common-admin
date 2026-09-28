@@ -47,7 +47,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'onClose', id: null | undefined | IntegerId | DocId): void
+  (e: 'close', id: null | undefined | IntegerId | DocId): void
 }>()
 
 const router = useRouter()
@@ -96,7 +96,7 @@ const onClick = () => {
       :size="size"
       :label="forceRounded ? undefined : true"
       :closable="closable"
-      @click:close="() => emit('onClose', id)"
+      @click:close="() => emit('close', id)"
     >
       {{ displayTitle }}
       <VProgressCircular
@@ -114,7 +114,7 @@ const onClick = () => {
       :label="forceRounded ? undefined : true"
       :closable="closable"
       @click.stop="onClick"
-      @click:close="() => emit('onClose', id)"
+      @click:close="() => emit('close', id)"
     >
       {{ displayTitle }}
       <VProgressCircular

@@ -111,13 +111,13 @@ export const fetchItems = async (pagination: Ref<Pagination>, filterData: Filter
   const { execute } = useFetchAuthorList()
   const authors = await execute(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
+  return authors.map((author: AuthorKind) => mapToValueObject(author)) as ValueObjectOption<IntegerId>[]
 }
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
   const authors = await fetchAuthorListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>authors.map((author: AuthorKind) => mapToValueObject(author))
+  return authors.map((author: AuthorKind) => mapToValueObject(author)) as ValueObjectOption<IntegerId>[]
 }
 
 export function useSubjectAuthorInnerFilter() {

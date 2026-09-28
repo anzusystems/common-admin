@@ -89,7 +89,8 @@ const displayFromTo = ref(false)
 
 const { v$ } = useFilterTimeIntervalValidators(dialogData)
 
-const filterConfigCurrent = computed(() => filterConfig.fields[props.nameFrom])
+// The setup above throws unless the field is configured.
+const filterConfigCurrent = computed(() => filterConfig.fields[props.nameFrom]!)
 
 const { t } = useI18n()
 
@@ -264,7 +265,7 @@ const onInternalItemChange = (item: ValueObjectOption<TimeIntervalToolsValue>) =
     :min-width="360"
   >
     <VCard>
-      <ADialogToolbar @on-cancel="onDialogClose">
+      <ADialogToolbar @cancel="onDialogClose">
         <slot name="title">
           {{ label }}
         </slot>

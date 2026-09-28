@@ -3,30 +3,9 @@ import type {
   SortableItemDataAware,
   SortableItemNewPosition,
   SortableItemNewPositions,
-  SortableItemWithParentDataAware,
 } from '@/components/sortable/sortableUtils'
 
-export type {
-  SortableItemDataAware,
-  SortableItemNewPosition,
-  SortableItemNewPositions,
-  SortableItemWithParentDataAware,
-}
-
-export interface SortableNestedItem<TData extends SortableItemWithParentDataAware = any> {
-  data: TData
-  children?: Array<SortableNestedItem> | undefined // if undefined, no nested allowed
-  meta: {
-    dirty: boolean
-  }
-}
-
-export interface SortableNested<TData extends SortableItemWithParentDataAware = any> {
-  children: Array<SortableNestedItem<TData>>
-  meta: {
-    dirty: boolean
-  }
-}
+export type { SortableItemDataAware, SortableItemNewPosition, SortableItemNewPositions }
 
 export type ListEditorKey = DocId | IntegerId | string
 
@@ -68,11 +47,8 @@ export interface NestedPositionHint {
 }
 
 /**
- * Shape-compatible with legacy SortableNestedItem but without the
- * `SortableItemWithParentDataAware` constraint — so the nested editor can
- * accept any record shape that has stable keys addressable via configurable
- * fields (keyField, positionField, parentField). Admin-cms data types like
- * `LinkedListItemKind` are assignable to this.
+ * A tree node of any record shape with stable keys addressable via configurable fields (keyField,
+ * positionField, parentField). Admin-cms data types like `LinkedListItemKind` are assignable to this.
  */
 export interface NestedTreeNode<TItem = any> {
   data: TItem

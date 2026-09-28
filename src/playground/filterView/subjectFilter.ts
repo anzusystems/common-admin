@@ -3,7 +3,6 @@ import {
   createFilterStore,
   type FilterConfig,
   type FilterData,
-  type FilterStore,
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
 
@@ -78,6 +77,5 @@ export function useSubjectListFilter() {
 }
 
 export type SubjectFilterFields = typeof filterFields
-export type SubjectFilterStore = FilterStore<SubjectFilterFields>
 export type SubjectFilterData = FilterData<SubjectFilterFields>
 export type SubjectFilterConfig = FilterConfig<SubjectFilterFields>

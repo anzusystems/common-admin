@@ -12,7 +12,7 @@ import { createAuthor } from '@/components/damImage/uploadQueue/api/authorApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import ARow from '@/components/ARow.vue'
@@ -44,7 +44,7 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'onSuccess', data: DamAuthor): void
+  (e: 'success', data: DamAuthor): void
 }>()
 
 const { damClient } = useCommonAdminCoreDamOptions()
@@ -90,7 +90,7 @@ const onConfirm = async () => {
       return
     }
     const res = await createAuthor(damClient, author.value)
-    emit('onSuccess', res)
+    emit('success', res)
     showRecordWas('created')
     dialog.value = false
     if (!isUndefined(res.id) && !props.disableRedirect) {
@@ -131,6 +131,7 @@ defineExpose({
   </ABtnPrimary>
   <VBtn
     v-else
+    :aria-label="t('common.damImage.author.button.add')"
     :class="buttonClass"
     :data-cy="dataCy"
     icon
@@ -154,7 +155,7 @@ defineExpose({
       class="mt-0 mr-auto ml-auto"
       data-cy="create-panel"
     >
-      <ADialogToolbar @on-cancel="onCancel">
+      <ADialogToolbar @cancel="onCancel">
         {{ t('common.damImage.author.meta.create') }}
       </ADialogToolbar>
       <VCardText>

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { computed, inject, nextTick, ref, watch } from 'vue'
+import type { AFormFieldValidation } from '@/types/Validation'
+import { computed, inject, nextTick, ref, watch, unref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
+import { SubjectScopeKey, SystemScopeKey } from '@/components/injectionKeys'
 import { isDefined, isUndefined } from '@/utils/common'
-import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { DatetimeUTCNullable, IntegerIdNullable } from '@/types/common'
 import type { CollabComponentConfig, CollabFieldData } from '@/components/collab/types/Collab'
@@ -20,7 +20,7 @@ const props = withDefaults(
     label?: string
     errorMessage?: string
     required?: boolean
-    v?: any
+    v?: AFormFieldValidation | null
     dataCy?: string
     clearable?: boolean
     collab?: CollabComponentConfig
@@ -98,8 +98,8 @@ const onClose = () => {
 
 const { t } = useI18n()
 
-const system = inject<string | undefined>(SystemScopeSymbol, undefined)
-const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
+const system = inject<string | undefined>(SystemScopeKey, undefined)
+const subject = inject<string | undefined>(SubjectScopeKey, undefined)
 
 const onBlur = () => {
   props.v?.$touch()
@@ -120,7 +120,7 @@ const onFocus = () => {
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length) return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
+  if (props.v?.$errors?.length) return [props.v.$errors.map((item) => unref(item.$message)).join(' ')]
   return []
 })
 
@@ -133,7 +133,7 @@ const labelComputed = computed(() => {
 
 const requiredComputed = computed(() => {
   if (isDefined(props.required)) return props.required
-  if (props.v?.required && props.v?.required.$params.type === 'required') return true
+  if ((props.v?.required as { $params?: { type?: string } } | undefined)?.$params?.type === 'required') return true
   return false
 })
 
@@ -163,8 +163,8 @@ watch(modelValueComputed, (newValue, oldValue) => {
     v-bind="$attrs"
     @blur="onBlur"
     @focus="onFocus"
-    @on-open="onOpen"
-    @on-close="onClose"
+    @open="onOpen"
+    @close="onClose"
   >
     <template #append-inner>
       <slot

@@ -3,7 +3,7 @@ import type { IntegerId } from '@/types/common'
 import type { DamAssetTypeType, DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { CustomDataFormElement } from '@/components/customDataForm/CustomDataForm'
 
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import { useApiFetchItems } from '@/labs/api/useApiFetchItems'
 
 const END_POINT = '/adm/v1/asset-custom-form'

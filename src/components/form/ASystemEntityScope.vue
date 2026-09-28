@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { provide } from 'vue'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
+import { SubjectScopeKey, SystemScopeKey } from '@/components/injectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -10,9 +10,9 @@ const props = withDefaults(
   {}
 )
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-provide<string>(SystemScopeSymbol, props.system)
+provide<string>(SystemScopeKey, props.system)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-provide<string>(SubjectScopeSymbol, props.subject)
+provide<string>(SubjectScopeKey, props.subject)
 </script>
 
 <template>

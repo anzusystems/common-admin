@@ -3,7 +3,7 @@ import { nextTick, ref, useTemplateRef, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits<{
-  (e: 'onEnterKeyup'): void
+  (e: 'enterKeyup'): void
   (e: 'focusConfirm'): void
 }>()
 
@@ -87,12 +87,12 @@ const onBlurMinutes = () => {
 
 const onEnterHoursKeyup = () => {
   onBlurHours()
-  emit('onEnterKeyup')
+  emit('enterKeyup')
 }
 
 const onEnterMinutesKeyup = () => {
   onBlurMinutes()
-  emit('onEnterKeyup')
+  emit('enterKeyup')
 }
 
 const increaseHours = () => {
@@ -186,6 +186,7 @@ const { t } = useI18n()
           tabindex="-1"
           variant="text"
           class="a-datetime-picker-time__arrow-up"
+          :aria-label="t('common.button.increaseHours')"
           @click="increaseHours"
         >
           <VIcon icon="mdi-chevron-up" />
@@ -194,6 +195,7 @@ const { t } = useI18n()
           tabindex="-1"
           variant="text"
           class="a-datetime-picker-time__arrow-down"
+          :aria-label="t('common.button.decreaseHours')"
           @click="decreaseHours"
         >
           <VIcon icon="mdi-chevron-down" />
@@ -220,6 +222,7 @@ const { t } = useI18n()
           tabindex="-1"
           variant="text"
           class="a-datetime-picker-time__arrow-up"
+          :aria-label="t('common.button.increaseMinutes')"
           @click="increaseMinutes"
         >
           <VIcon icon="mdi-chevron-up" />
@@ -228,6 +231,7 @@ const { t } = useI18n()
           tabindex="-1"
           variant="text"
           class="a-datetime-picker-time__arrow-down"
+          :aria-label="t('common.button.decreaseMinutes')"
           @click="decreaseMinutes"
         >
           <VIcon icon="mdi-chevron-down" />

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { computed, inject, ref, watch } from 'vue'
+import type { AFormFieldValidation } from '@/types/Validation'
+import { computed, inject, ref, watch, unref } from 'vue'
 import { useDisplay } from 'vuetify'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import { isDefined, isNumber, isUndefined } from '@/utils/common'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
+import { SubjectScopeKey, SystemScopeKey } from '@/components/injectionKeys'
 import type { VuetifyIconValue } from '@/types/Vuetify'
-import type { ErrorObject } from '@vuelidate/core'
 import { useI18n } from 'vue-i18n'
 import type { VTextField } from 'vuetify/components/VTextField'
 import type { CollabComponentConfig, CollabFieldData, CollabFieldLockOptions } from '@/components/collab/types/Collab'
@@ -25,7 +25,7 @@ const props = withDefaults(
     label?: string | undefined
     errorMessage?: string | undefined
     required?: boolean | undefined
-    v?: any
+    v?: AFormFieldValidation | null
     prependIcon?: VuetifyIconValue | undefined
     appendIcon?: VuetifyIconValue | undefined
     dataCy?: string | undefined
@@ -100,8 +100,8 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
 
 const { t } = useI18n()
 
-const system = inject<string | undefined>(SystemScopeSymbol, undefined)
-const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
+const system = inject<string | undefined>(SystemScopeKey, undefined)
+const subject = inject<string | undefined>(SubjectScopeKey, undefined)
 
 const onUpdate = (newValue: string) => {
   emit('update:modelValue', newValue)
@@ -119,7 +119,7 @@ const onFocus = () => {
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length) return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
+  if (props.v?.$errors?.length) return [props.v.$errors.map((item) => unref(item.$message)).join(' ')]
   return []
 })
 
@@ -132,7 +132,7 @@ const labelComputed = computed(() => {
 
 const requiredComputed = computed(() => {
   if (isDefined(props.required)) return props.required
-  if (props.v?.required && props.v?.required.$params.type === 'required') return true
+  if ((props.v?.required as { $params?: { type?: string } } | undefined)?.$params?.type === 'required') return true
   return false
 })
 
@@ -169,7 +169,6 @@ defineExpose({
     :rows="rows"
     auto-grow
     :append-icon="appendIcon"
-    trim
     @click:append="(event: any) => emit('click:append', event)"
     @blur="onBlur"
     @focus="onFocus"
@@ -182,7 +181,7 @@ defineExpose({
       {{ labelComputed
       }}<span
         v-if="requiredComputed"
-        class="required"
+        class="a-required-mark"
       />
     </template>
     <template

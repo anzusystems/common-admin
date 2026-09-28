@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useI18n } from 'vue-i18n'
 import { computed, inject, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useFilterBookmarkStore } from '@/labs/filters/bookmarksStore'
 import { useUserAdminConfigApi } from '@/labs/filters/userAdminConfig'
@@ -33,6 +34,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'submit'): void
 }>()
+
+const { t } = useI18n()
 
 const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
   default: undefined,
@@ -98,7 +101,8 @@ const onItemClick = (item: UserAdminConfig) => {
     }
     if (isString(value)) {
       const tryConvertNumber = stringToNumber(value)
-      if (!isNull(tryConvertNumber)) {
+      // Only a canonical number: '0905' or '007' are codes and stay strings, as in the url hash.
+      if (!isNull(tryConvertNumber) && String(tryConvertNumber) === value) {
         value = tryConvertNumber
       } else {
         // If not a number, try to convert to boolean
@@ -206,6 +210,7 @@ onMounted(() => {
         <template #activator="{ props: activatorProps }">
           <VBtn
             icon="mdi-menu-down"
+            :aria-label="t('common.filter.bookmark.more')"
             size="x-small"
             :width="28"
             :height="28"

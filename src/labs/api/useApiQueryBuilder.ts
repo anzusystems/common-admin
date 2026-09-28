@@ -42,6 +42,13 @@ export function useApiQueryBuilder() {
     q.value.push('filter_' + filterVariant + '[' + field + ']=' + formatValue(value))
   }
 
+  // `resolveTimeIntervalFilter` is returned, so any caller can pass any names: a missing one fails by name.
+  const fieldConfig = (filterConfig: FilterConfig<any>, name: string) => {
+    const field = filterConfig.fields[name]
+    if (isUndefined(field)) throw new Error(`useApiQueryBuilder: filter field "${name}" is not configured`)
+    return field
+  }
+
   const resolveTimeIntervalFilter = (
     fromName: string,
     untilName: string,
@@ -56,10 +63,10 @@ export function useApiQueryBuilder() {
     let fromValue = filterData[fromName] as TimeIntervalToolsValue
     let untilValue = filterData[untilName] as DatetimeUTCNullable
     if (isNull(fromValue) && mandatory && !exclude) {
-      fromValue = filterConfig.fields[fromName].default as TimeIntervalToolsValue
+      fromValue = fieldConfig(filterConfig, fromName).default as TimeIntervalToolsValue
     }
     if (isNull(untilValue) && mandatory && !exclude) {
-      untilValue = filterConfig.fields[fromName].default as DatetimeUTCNullable
+      untilValue = fieldConfig(filterConfig, untilName).default as DatetimeUTCNullable
     }
     if (isString(fromValue) && isString(untilValue)) {
       return {
@@ -152,7 +159,7 @@ export function useApiQueryBuilder() {
         if (isNull(data)) {
           continue
         }
-        const filterFieldConfigRelated = filterConfig.fields[filterFieldConfig.related]
+        const filterFieldConfigRelated = fieldConfig(filterConfig, filterFieldConfig.related)
         const nameRelated = filterFieldConfigRelated.apiName || filterFieldConfig.related
         if (isSimpleFilters) {
           queryAdd(name, data.from)

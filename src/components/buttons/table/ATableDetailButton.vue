@@ -34,6 +34,7 @@ const routerToComputed = computed(() => {
 <template>
   <VBtn
     :class="buttonClass"
+    :aria-label="t(buttonT)"
     :data-cy="dataCy"
     :to="routerToComputed"
     icon

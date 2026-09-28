@@ -1,5 +1,7 @@
 # Migrácia starých API helperov na labs API — analýza
 
+> **Historický dokument.** Migrácia je vykonaná: staré API helpery sú preč, je jeden `useJobApi` a mapovanie chýb je na jednom mieste. Dokument slúži už len ako záznam postupu a **pred vydaním 2.0.0 sa zmaže**.
+
 Stav k 18. 9. 2026, po review dvoch nezávislých agentov (Opus max effort, Codex).
 Vzniklo z otázky, či staré helpery vyhodiť najskôr a až potom na nových stavať.
 

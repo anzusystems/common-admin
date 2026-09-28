@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { ACreateDialogValidation } from '@/types/Validation'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -11,7 +12,7 @@ const props = withDefaults(
     buttonClass?: string
     maxWidth?: number | undefined
     dataCy?: string
-    v?: any
+    v?: ACreateDialogValidation
     callCreate: () => Promise<any>
     disableRedirect?: boolean
     redirectRouteName?: string | undefined
@@ -31,11 +32,11 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'onConfirm'): void
-  (e: 'onOpen'): void
-  (e: 'onClose'): void
-  (e: 'onError', data: any): void
-  (e: 'onSuccess', data: any): void
+  (e: 'confirm'): void
+  (e: 'open'): void
+  (e: 'close'): void
+  (e: 'error', data: any): void
+  (e: 'success', data: any): void
 }>()
 
 const modelValue = defineModel<boolean>({ default: false, required: false })
@@ -46,19 +47,19 @@ const buttonLoading = ref(false)
 
 const onOpen = () => {
   modelValue.value = true
-  emit('onOpen')
+  emit('open')
 }
 
 const onClose = () => {
   modelValue.value = false
-  emit('onClose')
+  emit('close')
 }
 
 const router = useRouter()
 const { showValidationError, showRecordWas, showErrorsDefault } = useAlerts()
 
 const onConfirm = async () => {
-  emit('onConfirm')
+  emit('confirm')
   try {
     buttonLoading.value = true
     props.v?.$touch()
@@ -68,7 +69,7 @@ const onConfirm = async () => {
       return
     }
     const res = await props.callCreate()
-    emit('onSuccess', res)
+    emit('success', res)
     showRecordWas('created')
     onClose()
     if (!isUndefined(res.id) && !props.disableRedirect && props.redirectRouteName) {
@@ -81,7 +82,7 @@ const onConfirm = async () => {
     if (!props.disableShowErrorsDefault) {
       showErrorsDefault(error)
     }
-    emit('onError', error)
+    emit('error', error)
   } finally {
     buttonLoading.value = false
   }
@@ -108,7 +109,7 @@ const onConfirm = async () => {
         v-if="modelValue"
         data-cy="create-panel"
       >
-        <ADialogToolbar @on-cancel="onClose">
+        <ADialogToolbar @cancel="onClose">
           <slot name="title">
             {{ t('common.button.create') }}
           </slot>

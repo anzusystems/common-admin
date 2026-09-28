@@ -28,5 +28,12 @@
   "prev": "Prev",
   "loadMore": "Load more",
   "copy": "Copy",
-  "advanced": "Advanced"
+  "advanced": "Advanced",
+  "clear": "Clear",
+  "moreOptions": "More options",
+  "chooseColor": "Choose color",
+  "increaseHours": "Increase hours",
+  "decreaseHours": "Decrease hours",
+  "increaseMinutes": "Increase minutes",
+  "decreaseMinutes": "Decrease minutes"
 }

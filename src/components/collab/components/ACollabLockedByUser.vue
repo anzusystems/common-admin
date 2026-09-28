@@ -47,9 +47,13 @@ const tooltip = computed(() => {
 
 watch(
   item,
-  async (newValue) => {
-    if (loaded.value) return
-    if (isUndefined(newValue) || !newValue._loaded) return
+  (newValue) => {
+    // Same user still loaded: keep it. A user the cache resolves later (after an `_unresolved` placeholder)
+    // arrives as a new, loaded object under the same id and replaces the placeholder.
+    if (loaded.value && cached.value?.id === newValue?.id && !newValue?._loaded) return
+    loaded.value = false
+    cached.value = undefined
+    if (isUndefined(newValue) || (!newValue._loaded && newValue._unresolved !== true)) return
     cached.value = newValue
     loaded.value = true
   },

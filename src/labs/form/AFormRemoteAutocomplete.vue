@@ -1,10 +1,10 @@
 <script lang="ts" setup generic="T extends string | number">
+import type { AFormFieldValidation } from '@/types/Validation'
 import { watchDebounced } from '@vueuse/core'
-import { computed, getCurrentInstance, inject, type Ref, ref, watch } from 'vue'
+import { computed, getCurrentInstance, inject, type Ref, ref, watch, unref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { cloneDeep, isArray, isDefined, isEmpty, isNull, isUndefined } from '@/utils/common'
-import { SubjectScopeSymbol, SystemScopeSymbol } from '@/components/injectionKeys'
-import type { ErrorObject } from '@vuelidate/core'
+import { SubjectScopeKey, SystemScopeKey } from '@/components/injectionKeys'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import { useI18n } from 'vue-i18n'
 import type { DocId, IntegerId, IntegerIdNullable } from '@/types/common'
@@ -26,7 +26,7 @@ const props = withDefaults(
     required?: boolean | undefined
     multiple?: boolean
     clearable?: boolean
-    v?: any
+    v?: AFormFieldValidation | null
     errorMessage?: string
     hideDetails?: boolean
     hideLabel?: boolean
@@ -148,8 +148,8 @@ const apiRequestCounter = ref(0)
 
 const { t } = useI18n()
 
-const system = inject<string | undefined>(SystemScopeSymbol, undefined)
-const subject = inject<string | undefined>(SubjectScopeSymbol, undefined)
+const system = inject<string | undefined>(SystemScopeKey, undefined)
+const subject = inject<string | undefined>(SubjectScopeKey, undefined)
 
 const onBlur = () => {
   isFocused.value = false
@@ -160,7 +160,7 @@ const onBlur = () => {
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length) return props.v.$errors.map((item: ErrorObject) => item.$message)
+  if (props.v?.$errors?.length) return props.v.$errors.map((item) => unref(item.$message))
   return []
 })
 
@@ -173,7 +173,7 @@ const labelComputed = computed(() => {
 
 const requiredComputed = computed(() => {
   if (isDefined(props.required)) return props.required
-  return props.v?.required && props.v?.required.$params.type === 'required'
+  return (props.v?.required as { $params?: { type?: string } } | undefined)?.$params?.type === 'required'
 })
 
 const disabledComputed = computed(() => {
@@ -212,6 +212,7 @@ const loadingComputed = computed(() => {
 })
 
 const resetToEmptyState = (value: ModelValueType) => {
+  byIdsCounter++
   selectedItemsCache.value = []
   modelValueSelected.value = isArray(value) ? [] : null
   modelValueAutocomplete.value = isArray(value) ? [] : null
@@ -223,12 +224,16 @@ const updateSelected = (value: T[] | T) => {
   return isArray(value) ? value.map(findItem) : findItem(value)
 }
 
+let byIdsCounter = 0
 const loadListItems = async (ids: T[] | T) => {
+  const requestId = ++byIdsCounter
   loadingLocal.value = true
 
   try {
     const idsArray = isArray(ids) ? ids : [ids]
-    selectedItemsCache.value = await props.fetchItemsByIds(idsArray)
+    const res = await props.fetchItemsByIds(idsArray)
+    if (requestId !== byIdsCounter) return selectedItemsCache.value
+    selectedItemsCache.value = res
     const selectedNewValue = updateSelected(ids)
     modelValueSelected.value = selectedNewValue
     modelValueAutocomplete.value = selectedNewValue
@@ -236,6 +241,7 @@ const loadListItems = async (ids: T[] | T) => {
   } catch (e) {
     // Mirror tryLoadModelValue: don't let a failed by-ids resolve become a generic global toast (QA 85050).
     showErrorsDefault(e)
+    return undefined
   } finally {
     loadingLocal.value = false
   }
@@ -249,26 +255,19 @@ const tryLoadModelValue = async (tryLoadValue: ModelValueType, prefetch = false)
     const fetchedData = await props.fetchItemsByIds(idsToFetch as Array<IntegerId & DocId>)
     if (isArray(fetchedData) && fetchedData.length > 0) {
       selectedItemsCache.value = fetchedData
-      if (props.multiple) {
-        const values = fetchedData.map((item) => item.value)
-        modelValue.value = values
-        if (prefetch) {
-          await tryAutoFetch('force', values)
-        }
-        loadingLocal.value = false
-        return true
-      }
-      modelValue.value = fetchedData[0].value
-      if (prefetch) {
-        await tryAutoFetch('force', fetchedData[0].value)
-      }
+      const value = props.multiple ? fetchedData.map((item) => item.value) : fetchedData[0]!.value
+      modelValue.value = value
+      // tryAutoFetch bails out while loading, so the flag has to drop before asking it to prefetch.
       loadingLocal.value = false
+      if (prefetch) await tryAutoFetch('force', value)
       return true
     }
-    loadingLocal.value = false
     return false
   } catch (e) {
     showErrorsDefault(e)
+    return false
+  } finally {
+    loadingLocal.value = false
   }
 }
 
@@ -304,7 +303,7 @@ const tryAutoFetch = async (mode: 'focus' | 'hover' | 'mounted' | 'force', newVa
         res.length === 1 &&
         (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0))
       ) {
-        modelValue.value = props.multiple ? [res[0].value] : res[0].value
+        modelValue.value = props.multiple ? [res[0]!.value] : res[0]!.value
       }
     }
     prefetchCompleted.value = true
@@ -492,7 +491,7 @@ defineExpose({
         {{ labelComputed }}
         <span
           v-if="requiredComputed"
-          class="required"
+          class="a-required-mark"
         />
       </span>
     </template>

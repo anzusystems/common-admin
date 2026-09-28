@@ -6,7 +6,7 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import type { ImageAware } from '@/types/ImageAware'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import ImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
-import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetUploadConfigKey } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { isUndefined } from '@/utils/common'
 import { isImageWidgetUploadConfigAllowed } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { type CollabComponentConfig, CollabStatus, type CollabStatusType } from '@/components/collab/types/Collab'
@@ -104,14 +104,14 @@ onMounted(async () => {
     promises.push(loadDamConfigAssetCustomFormElements(uploadConfig.value.extSystem))
   }
   try {
-    await Promise.allSettled(promises)
+    await Promise.all(promises)
   } catch (e) {
     status.value = 'error'
   }
   if (status.value !== 'error') status.value = 'ready'
 })
 
-provide(ImageWidgetUploadConfig, uploadConfig)
+provide(ImageWidgetUploadConfigKey, uploadConfig)
 
 const innerComponent = ref<InstanceType<typeof ImageWidgetInner> | null>(null)
 

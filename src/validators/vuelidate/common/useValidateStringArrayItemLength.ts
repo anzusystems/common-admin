@@ -1,8 +1,8 @@
 import { createI18nMessage, helpers } from '@vuelidate/validators'
 import { unref } from 'vue'
-import { i18n } from '@/plugins/i18n'
+import { commonT } from '@/plugins/i18n'
 
-const { t } = i18n.global
+const t = commonT
 
 export function useValidateStringArrayItemLength() {
   const withI18nMessage = createI18nMessage({ t })

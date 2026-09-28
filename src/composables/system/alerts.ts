@@ -1,5 +1,5 @@
-import { notify } from '@kyvg/vue3-notification'
-import { i18n } from '@/plugins/i18n'
+import { pushAlert } from '@/composables/system/alertsQueue'
+import { commonT, commonTe } from '@/plugins/i18n'
 import { isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
 import { isAnzuApiValidationError, type ValidationError } from '@/model/error/AnzuApiValidationError'
@@ -9,8 +9,12 @@ import { isAnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyE
 import { isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { isAnzuApiCancelledError } from '@/model/error/AnzuApiCancelledError'
+import { AuthUnavailableError, isInCauseChain, SessionExpiredError } from '@/composables/auth/refreshSession'
 
 const DEFAULT_DURATION_SECONDS = 3
+// One "sign-in server does not answer" per outage: a page's requests all fail at once.
+const AUTH_UNAVAILABLE_QUIET_MS = 30_000
+let authUnavailableShownAt = -Infinity
 
 export const NEW_LINE_MARK = '\n'
 
@@ -18,100 +22,71 @@ export type RecordWasType = 'created' | 'deleted' | 'updated' | 'published' | 'u
 
 export function useAlerts() {
   const showSuccess = (message: string, duration = DEFAULT_DURATION_SECONDS) => {
-    notify({
-      group: 'alerts',
-      text: message,
-      duration: duration * 1000,
-      type: 'success',
-    })
+    pushAlert('success', message, duration * 1000)
   }
 
   const showSuccessT = (translation: string, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = i18n.global
+    const t = commonT
     showSuccess(t(translation), duration)
   }
 
   const showError = (message: string, duration = DEFAULT_DURATION_SECONDS) => {
-    notify({
-      group: 'alerts',
-      text: message,
-      duration: duration * 1000,
-      type: 'error',
-    })
+    pushAlert('error', message, duration * 1000)
   }
 
   const showErrorT = (translation: string, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = i18n.global
+    const t = commonT
     showError(t(translation), duration)
   }
 
   const showInfo = (message: string, duration = DEFAULT_DURATION_SECONDS) => {
-    notify({
-      group: 'alerts',
-      text: message,
-      duration: duration * 1000,
-      type: 'info',
-    })
+    pushAlert('info', message, duration * 1000)
   }
 
   const showInfoT = (translation: string, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = i18n.global
+    const t = commonT
     showInfo(t(translation), duration)
   }
 
   const showWarning = (message: string, duration = DEFAULT_DURATION_SECONDS) => {
-    notify({
-      group: 'alerts',
-      text: message,
-      duration: duration * 1000,
-      type: 'warning',
-    })
+    pushAlert('warning', message, duration * 1000)
   }
 
   const showWarningT = (translation: string, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = i18n.global
+    const t = commonT
     showWarning(t(translation), duration)
   }
 
   const showValidationError = (duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = i18n.global
-    notify({
-      group: 'alerts',
-      text: t('common.alert.fixValidationErrors'),
-      duration: duration * 1000,
-      type: 'error',
-    })
+    const t = commonT
+    pushAlert('error', t('common.alert.fixValidationErrors'), duration * 1000)
   }
 
   const showRecordWas = (variant: RecordWasType, duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = i18n.global
-    notify({
-      group: 'alerts',
-      text: t('common.alert.recordWas.' + variant),
-      duration: duration * 1000,
-      type: 'success',
-    })
+    const t = commonT
+    pushAlert('success', t('common.alert.recordWas.' + variant), duration * 1000)
   }
 
   const showApiValidationError = (errors: ValidationError[], duration = -1, fieldIsTranslated = false) => {
-    const { t, te } = i18n.global
+    const t = commonT
+    const te = commonTe
     const texts = [t('common.alert.fixApiValidationErrors')]
 
-    for (let i = 0; i < errors.length; i++) {
+    for (const error of errors) {
       let fieldText = ''
       if (fieldIsTranslated) {
-        fieldText += errors[i].field
-      } else if (te(errors[i].field)) {
-        fieldText += t(errors[i].field)
-      } else if (errors[i].field.includes('[')) {
-        fieldText += resolveListErrors(errors[i].field)
+        fieldText += error.field
+      } else if (te(error.field)) {
+        fieldText += t(error.field)
+      } else if (error.field.includes('[')) {
+        fieldText += resolveListErrors(error.field)
       } else {
-        fieldText += errors[i].field.split('.').at(-1)
+        fieldText += error.field.split('.').at(-1)
       }
       const errorsTexts = new Set<string>()
-      for (let j = 0; j < errors[i].errors.length; j++) {
-        if (te('error.apiValidation.' + errors[i].errors[j])) {
-          errorsTexts.add(t('error.apiValidation.' + errors[i].errors[j]))
+      for (const code of error.errors) {
+        if (te('error.apiValidation.' + code)) {
+          errorsTexts.add(t('error.apiValidation.' + code))
           continue
         }
         errorsTexts.add(t('error.apiValidation.noTranslation'))
@@ -120,46 +95,34 @@ export function useAlerts() {
         texts.push(fieldText + ': ' + Array.from(errorsTexts).join(', '))
       }
     }
-    notify({
-      group: 'alerts',
-      text: texts.join(NEW_LINE_MARK),
-      duration: duration * 1000,
-      type: 'error',
-    })
+    pushAlert('error', texts.join(NEW_LINE_MARK), duration * 1000)
   }
 
   const showApiForbiddenOperationError = (detail: string, duration = -1) => {
-    const { t, te } = i18n.global
+    const t = commonT
+    const te = commonTe
     let text = t('error.apiForbiddenOperation.noTranslation')
     if (te('error.apiForbiddenOperation.' + detail)) {
       text = t('error.apiForbiddenOperation.' + detail)
     }
-    notify({
-      group: 'alerts',
-      text: text,
-      duration: duration * 1000,
-      type: 'error',
-    })
+    pushAlert('error', text, duration * 1000)
   }
 
   const showUnknownError = (duration = -1) => {
-    const { t } = i18n.global
-    notify({
-      group: 'alerts',
-      text: t('common.alert.unknownError'),
-      duration: duration * 1000,
-      type: 'error',
-    })
+    const t = commonT
+    pushAlert('error', t('common.alert.unknownError'), duration * 1000)
   }
 
   const showForbiddenError = (duration = DEFAULT_DURATION_SECONDS) => {
-    const { t } = i18n.global
-    notify({
-      group: 'alerts',
-      text: t('common.alert.forbiddenError'),
-      duration: duration * 1000,
-      type: 'error',
-    })
+    const t = commonT
+    pushAlert('error', t('common.alert.forbiddenError'), duration * 1000)
+  }
+
+  const showAuthUnavailable = (duration = -1) => {
+    const now = Date.now()
+    if (now - authUnavailableShownAt < AUTH_UNAVAILABLE_QUIET_MS) return
+    authUnavailableShownAt = now
+    pushAlert('error', commonT('common.alert.authUnavailable'), duration * 1000)
   }
 
   const showErrorsDefault = (error: any, duration = -1) => {
@@ -168,6 +131,13 @@ export function useAlerts() {
     // callers that fall back on `if (!showErrorsDefault(e)) showUnknownError()` would otherwise toast
     // "unknown error" every time a user typed one more character into an autocomplete.
     if (isAnzuApiCancelledError(error)) return true
+    // Stopped by the token refresh: the session is gone and the logout is already loading, or the
+    // sign-in server did not answer -- said once, not for every request it stopped at the same time.
+    if (isInCauseChain(error, (cause) => cause instanceof SessionExpiredError)) return true
+    if (isInCauseChain(error, (cause) => cause instanceof AuthUnavailableError)) {
+      showAuthUnavailable(duration)
+      return true
+    }
     if (isAnzuApiForbiddenError(error)) {
       showForbiddenError(duration)
       return true
@@ -204,10 +174,11 @@ export function useAlerts() {
   }
 
   const resolveListErrors = (error: string) => {
-    const { t } = i18n.global
+    const t = commonT
+    // Only called for a field that contains `[`, so the split has a second part.
     const parsedField = error.split('[')
-    const firstField = parsedField[0].trim()
-    const parsedSecond = parsedField[1].split(']')
+    const firstField = parsedField[0]!.trim()
+    const parsedSecond = parsedField[1]!.split(']')
     const indexNumber = parsedSecond[0]
     const secondField: string = parsedSecond[1] ?? ''
 

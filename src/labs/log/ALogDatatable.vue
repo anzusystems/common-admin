@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { inject, onMounted, onBeforeUnmount, provide, watch } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 import ACopyText from '@/components/ACopyText.vue'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
@@ -46,6 +47,7 @@ if (isUndefined(filterConfig) || isUndefined(filterData)) {
 // remounts the whole view through a `:key` when the system or the type changes, precisely because
 // `useApiFetchList` closes over its client and url, and reacting here could not undo that.
 /* eslint-disable vue/no-setup-props-reactivity-loss */
+const { t } = useI18n()
 const { fetchList, listItems, datatableHiddenColumns, cancel } = useLogListActions({
   client: props.client,
   system: props.system,
@@ -152,7 +154,7 @@ defineExpose({
         <ADatetime :date-time="item.datetime" />
       </template>
       <template #item.message="{ item }: { item: DatatableItem }">
-        <div class="line-clamp-2">
+        <div class="a-line-clamp-2">
           {{ item.message }}
         </div>
       </template>
@@ -179,6 +181,7 @@ defineExpose({
             :to="detailRoute(item)"
             class="ml-1"
             icon="mdi-information-outline"
+            :aria-label="t('common.button.detail')"
             size="x-small"
             variant="text"
           />

@@ -1,4 +1,7 @@
-import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import {
+  useCommonAdminCoreDamOptions,
+  useCommonAdminCoreDamOptionsGlobal,
+} from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import { fetchAsset, fetchAssetByFileId } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useDamCachedAuthors } from '@/components/damImage/uploadQueue/author/cachedAuthors'
 import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
@@ -8,6 +11,7 @@ import { useDamNotifications } from '@/components/damImage/uploadQueue/composabl
 import { DamNotificationName } from '@/components/damImage/uploadQueue/composables/damNotificationsEventBus'
 import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
 import { uploadStop, useUpload } from '@/components/damImage/uploadQueue/composables/uploadService'
+import { armNotificationFallback } from '@/components/damImage/uploadQueue/api/uploadApi'
 import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
 import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
@@ -98,6 +102,11 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       addQueueItem(queueKey, queueItem)
       recalculateQueueCounts(queueKey)
       processUpload(queueKey)
+      // Nothing is uploaded here, so without the socket only the fallback can settle the copy.
+      const added = getQueueItems(queueKey).at(-1)
+      if (added && useCommonAdminCoreDamOptionsGlobal().uploadStatusFallback) {
+        armNotificationFallback(damClient, endPointAsset, added)
+      }
     }
   }
 
@@ -168,12 +177,10 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
       return
     }
     const uploadingCount = getQueueItemsByStatus(queueKey, UploadQueueItemStatus.Uploading).length
-    if (uploadingCount === QUEUE_MAX_PARALLEL_UPLOADS) {
-      // wait for empty upload slot
-      return
-    }
-    for (let i = 0; i < QUEUE_MAX_PARALLEL_UPLOADS; i++) {
-      if (waitingItems[i]) queueItemUploadStart(waitingItems[i], queueKey)
+    const freeSlots = QUEUE_MAX_PARALLEL_UPLOADS - uploadingCount
+    for (let i = 0; i < freeSlots; i++) {
+      const item = waitingItems[i]
+      if (item) queueItemUploadStart(item, queueKey)
     }
   }
 
@@ -239,6 +246,8 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
             clearTimeout(item.notificationFallbackTimer)
             // status + image (from queueItemProcessed)
             item.status = UploadQueueItemStatus.Uploaded
+            // A copy to the licence knows only its asset, and the image is built from the file id.
+            if (isNull(item.fileId)) item.fileId = asset.mainFile.id
             item.assetStatus = asset.attributes.assetStatus
             if (asset.mainFile.links?.image_detail) {
               item.imagePreview = asset.mainFile.links.image_detail
@@ -279,7 +288,20 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     try {
       assetRes = await fetchAssetByFileId(damClient, endPointAsset, originAssetFile)
     } catch (e) {
-      throw new Error('Fatal error')
+      // Every caller fires and forgets, a notification listener among them: a throw here is unhandled
+      // and leaves the item processing for good.
+      queues.value.forEach((queue, queueKey) => {
+        queue.items.forEach((item) => {
+          // Only an item still waiting for this answer: another path (the notification or the fallback) may
+          // have settled it meanwhile, and a settled item must not be flipped back to failed.
+          if (item.assetId !== assetId || item.status !== UploadQueueItemStatus.Processing) return
+          clearTimeout(item.notificationFallbackTimer)
+          item.error.hasError = true
+          item.status = UploadQueueItemStatus.Failed
+        })
+        recalculateQueueCounts(queueKey)
+      })
+      return
     }
     queues.value.forEach((queue, queueKey) => {
       queue.items.forEach((item) => {
@@ -402,7 +424,16 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
         fetchCachedKeywords()
       })
     } catch (e) {
-      //
+      queues.value.forEach((queue, queueKey) => {
+        queue.items.forEach((item) => {
+          if (item.assetId !== assetId || item.status !== UploadQueueItemStatus.Processing) return
+          // The fallback poll would otherwise settle it later as uploaded, with the error still shown.
+          clearTimeout(item.notificationFallbackTimer)
+          item.error.hasError = true
+          item.status = UploadQueueItemStatus.Failed
+        })
+        recalculateQueueCounts(queueKey)
+      })
     }
   }
 
@@ -419,8 +450,8 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     const queue = queues.value.get(queueKey)
     if (!queue || queue.items.length === 0) return
     queueItem.status = UploadQueueItemStatus.Stop
-    if (queueItem.latestChunkCancelToken) {
-      uploadStop(queueItem.latestChunkCancelToken)
+    if (queueItem.latestChunkAbortController) {
+      uploadStop(queueItem.latestChunkAbortController)
     }
     removeByIndex(queueKey, index)
     processUpload(queueKey)
@@ -475,8 +506,8 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     })
     if (currentItems.length > 0) {
       currentItems.forEach((item) => {
-        if (item.latestChunkCancelToken) {
-          uploadStop(item.latestChunkCancelToken)
+        if (item.latestChunkAbortController) {
+          uploadStop(item.latestChunkAbortController)
         }
       })
     }
@@ -516,10 +547,10 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     if (!queue) return types
     if (queue.items.length > 0) {
       for (let i = 0; i < queue.items.length; i++) {
-        if (types.includes(queue.items[i].assetType)) {
+        if (types.includes(queue.items[i]!.assetType)) {
           continue
         }
-        types.push(queue.items[i].assetType)
+        types.push(queue.items[i]!.assetType)
       }
     }
     return types

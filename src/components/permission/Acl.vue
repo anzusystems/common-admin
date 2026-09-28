@@ -1,6 +1,6 @@
-<script lang="ts" setup generic="TAclValue extends AclValue">
+<script lang="ts" setup generic="TAclValue extends RegisteredAclValue">
 import { computed } from 'vue'
-import type { AclValue } from '@/types/Permission'
+import type { RegisteredAclValue } from '@/types/Permission'
 import { getSystemFromAcl, useAuthHelpers } from '@/composables/auth/defineAuth'
 import { isArray, isUndefined } from '@/utils/common'
 import { useAuthStore } from '@/composables/auth/authStore'
@@ -57,9 +57,13 @@ const allowed = computed<boolean>(() => {
     }
   }
 
-  return isArray(props.permission)
-    ? canForAllHelper(props.permission, props.subject)
-    : canHelper(props.permission, props.subject)
+  try {
+    return isArray(props.permission)
+      ? canForAllHelper(props.permission, props.subject)
+      : canHelper(props.permission, props.subject)
+  } catch {
+    return false
+  }
 })
 </script>
 

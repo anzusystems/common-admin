@@ -111,7 +111,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
     }
     const oldIndex = prevOrderedKeys.indexOf(focusedKey.value)
     const fallbackIndex = Math.min(Math.max(oldIndex, 0), now.length - 1)
-    setFocus(now[fallbackIndex])
+    setFocus(now[fallbackIndex]!)
     prevOrderedKeys = [...now]
   })
 
@@ -139,7 +139,8 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
     const i = ordered.indexOf(key)
     if (i < 0) return
 
-    const focusedItem = options.viewItems.value[i]
+    // `ordered` is these view items' keys, so `i` indexes them too.
+    const focusedItem = options.viewItems.value[i]!
     const inReorder = options.isReorderMode.value
     const isGrabbedNow = grabbedKey.value === key
     const grabbedSomewhere = grabbedKey.value !== null
@@ -155,7 +156,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         if (inReorder && isGrabbedNow) {
           options.onMoveUp?.(key)
         } else if (i > 0) {
-          setFocus(ordered[i - 1])
+          setFocus(ordered[i - 1]!)
         }
         return
 
@@ -165,7 +166,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         if (inReorder && isGrabbedNow) {
           options.onMoveDown?.(key)
         } else if (i < ordered.length - 1) {
-          setFocus(ordered[i + 1])
+          setFocus(ordered[i + 1]!)
         }
         return
 
@@ -175,7 +176,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         if (inReorder && isGrabbedNow) {
           options.onMoveTop?.(key)
         } else if (ordered.length > 0) {
-          setFocus(ordered[0])
+          setFocus(ordered[0]!)
         }
         return
 
@@ -185,7 +186,7 @@ export function useKeyboardNav(options: KeyboardNavOptions): KeyboardNavApi {
         if (inReorder && isGrabbedNow) {
           options.onMoveBottom?.(key)
         } else if (ordered.length > 0) {
-          setFocus(ordered[ordered.length - 1])
+          setFocus(ordered[ordered.length - 1]!)
         }
         return
 

@@ -160,7 +160,7 @@ watch(
   <MediaWidgetSimpleDialog
     v-model="dialog"
     :media="resMedia"
-    @on-close="onDialogClose"
+    @close="onDialogClose"
   >
     <template #preview="{ media: appendMedia }">
       <slot

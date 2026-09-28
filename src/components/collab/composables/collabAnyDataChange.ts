@@ -21,13 +21,14 @@ import {
 } from '@/components/collab/composables/collabEventBus'
 import { type Fn, tryOnBeforeUnmount } from '@vueuse/core'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
-import { useCollabState } from '@/components/collab/composables/collabState'
+import { useCollabStateInternal } from '@/components/collab/composables/collabState'
 import { cloneDeep, isDefined, isUndefined } from '@/utils/common'
 import { objectSetValueByPath } from '@/utils/object'
 
 export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe = false) {
   const { collabOptions } = useCommonAdminCollabOptions()
-  const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } = useCollabState()
+  const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } =
+    useCollabStateInternal()
   const changeEventBus = useCollabRoomDataChangeEventBus()
   const fieldLockStatusEventBus = useCollabFieldLockStatusEventBus()
 

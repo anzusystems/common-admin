@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { notify } from '@kyvg/vue3-notification'
+import { pushAlert } from '@/composables/system/alertsQueue'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import type { AxiosInstance } from 'axios'
@@ -10,7 +10,7 @@ import type { Permissions } from '@/types/Permission'
 // The warning is a parity row of its own: "allow all" silently widening a deliberate deny is the
 // one way this button could grant access nobody asked for, and the count is how the operator
 // learns it did not.
-vi.mock('@kyvg/vue3-notification', () => ({ notify: vi.fn() }))
+vi.mock('@/composables/system/alertsQueue', () => ({ pushAlert: vi.fn() }))
 
 const CONFIG = {
   roles: [],
@@ -91,8 +91,9 @@ describe('APermissionEditor', () => {
 
     await wrapper.get('[data-cy="permission-allow-all-weather_location"]').trigger('click')
 
-    expect(notify).toHaveBeenCalledOnce()
-    const payload = vi.mocked(notify).mock.calls[0][0] as { type: string; text: string }
+    expect(pushAlert).toHaveBeenCalledOnce()
+    const [type, text] = vi.mocked(pushAlert).mock.calls[0]!
+    const payload = { type, text }
     expect(payload.type).toBe('warning')
     expect(String(payload.text)).toContain('2')
   })
@@ -102,7 +103,7 @@ describe('APermissionEditor', () => {
 
     await wrapper.get('[data-cy="permission-allow-all-weather_location"]').trigger('click')
 
-    expect(notify).not.toHaveBeenCalled()
+    expect(pushAlert).not.toHaveBeenCalled()
   })
 
   it('has neither a grant column nor allow-all when readonly', async () => {

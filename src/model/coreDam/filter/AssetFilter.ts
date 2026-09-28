@@ -1,5 +1,6 @@
 import { createFilter, createFilterStore, type MakeFilterOption } from '@/labs/filters/filterFactory'
-import { ENTITY, SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { ENTITY } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 
 export const filterFieldsList = [
   {

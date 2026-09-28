@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { type RouteRecordName, useRouter } from 'vue-router'
 import { useRouteHistory } from '@/composables/system/routeHistory'
 import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 
@@ -11,8 +11,8 @@ const props = withDefaults(
      * the create form it may have been reached from. The route the button sits on is skipped
      * anyway, so it does not belong here.
      */
-    skipRouteNames?: string[]
-    fallbackRouteName?: string
+    skipRouteNames?: RouteRecordName[]
+    fallbackRouteName?: RouteRecordName
     fallbackRouteParams?: Record<string, any>
     buttonClass?: string
     dataCy?: string
@@ -46,6 +46,7 @@ const onClick = () => {
 <template>
   <VBtn
     :class="buttonClass"
+    :aria-label="t('common.button.close')"
     :data-cy="dataCy"
     icon
     size="small"

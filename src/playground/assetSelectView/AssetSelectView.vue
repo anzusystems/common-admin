@@ -39,7 +39,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
             :max-count="3"
             :select-licences="[100000, 100001]"
             :asset-type="DamAssetType.Image"
-            @on-confirm="onConfirm"
+            @confirm="onConfirm"
           >
             <template #activator="{ props }">
               <VBtn
@@ -69,7 +69,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Video"
-            @on-confirm="onConfirm"
+            @confirm="onConfirm"
           />
         </VCol>
       </VRow>
@@ -90,7 +90,7 @@ const onConfirm = (data: AssetSelectReturnData) => {
             :min-count="1"
             :max-count="1"
             :asset-type="DamAssetType.Audio"
-            @on-confirm="onConfirm"
+            @confirm="onConfirm"
           />
         </VCol>
       </VRow>

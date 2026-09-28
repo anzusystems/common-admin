@@ -8,11 +8,11 @@ import { useAlerts } from '@/composables/system/alerts'
 // `if (!showErrorsDefault(e)) showUnknownError()` -- one of them in this library -- turned every
 // superseded autocomplete request into an "unknown error" toast.
 
-vi.mock('@kyvg/vue3-notification', () => ({ notify: vi.fn() }))
+vi.mock('@/composables/system/alertsQueue', () => ({ pushAlert: vi.fn() }))
 
 describe('what the default error handling does with a stopped request', () => {
   it('treats it as handled, and shows nothing', async () => {
-    const { notify } = await import('@kyvg/vue3-notification')
+    const { pushAlert: notify } = await import('@/composables/system/alertsQueue')
     const { showErrorsDefault } = useAlerts()
 
     expect(showErrorsDefault(new AnzuApiCancelledError(new Error('canceled')))).toBe(true)
@@ -21,7 +21,7 @@ describe('what the default error handling does with a stopped request', () => {
 
   // The branch has to be narrow: everything else still has to reach its own message.
   it('still shows the failures that are failures', async () => {
-    const { notify } = await import('@kyvg/vue3-notification')
+    const { pushAlert: notify } = await import('@/composables/system/alertsQueue')
     const { showErrorsDefault } = useAlerts()
 
     expect(showErrorsDefault(new AnzuApiResponseCodeError(500))).toBe(true)

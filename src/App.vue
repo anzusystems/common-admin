@@ -79,7 +79,7 @@ onMounted(async () => {
     <VAppBar
       density="compact"
       elevation="0"
-      class="system-border-b"
+      class="border-b"
       :order="-1"
     >
       <div class="d-flex pr-2 w-100 justify-space-between full-width align-center">

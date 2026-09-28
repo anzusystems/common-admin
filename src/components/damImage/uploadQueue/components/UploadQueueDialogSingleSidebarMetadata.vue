@@ -25,8 +25,8 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'onSave'): void
-  (e: 'onSaveAndApply'): void
+  (e: 'save'): void
+  (e: 'saveAndApply'): void
 }>()
 
 const { t } = useI18n()
@@ -48,7 +48,7 @@ const onSave = async () => {
     showValidationError()
     return
   }
-  emit('onSave')
+  emit('save')
 }
 
 const onSaveAndApply = async () => {
@@ -57,7 +57,7 @@ const onSaveAndApply = async () => {
     showValidationError()
     return
   }
-  emit('onSaveAndApply')
+  emit('saveAndApply')
 }
 </script>
 

@@ -1,9 +1,15 @@
-import type { RouteLocationNormalized, Router } from 'vue-router'
-import { type DeepReadonly, readonly, type Ref, ref } from 'vue'
+import type { RouteLocationNormalized, RouteRecordName, RouteRecordNameGeneric, Router } from 'vue-router'
+import { readonly, type Ref, ref } from 'vue'
+
+/** A visited route, as far as going back to it needs. */
+export interface RouteHistoryEntry {
+  name: RouteRecordNameGeneric
+  fullPath: string
+}
 
 // Module state, so the history is one list per document. A test that fills it has to clear it
 // again (`clearHistory`), or the next test in the file reads what the previous one left behind.
-const history = ref<RouteLocationNormalized[]>([])
+const history = ref<RouteHistoryEntry[]>([])
 const blacklistedRouteNames = ref<string[]>([])
 /**
  * How many routes back the history reaches. Note that `addRoute` drops only CONSECUTIVE duplicates,
@@ -18,14 +24,14 @@ export interface NavigateBackOptions {
    * closed and the create form it may have been reached from. The CURRENT route is always skipped
    * on top of these, so there is no need to name it here.
    */
-  skipRouteNames?: string[]
+  skipRouteNames?: RouteRecordName[]
   /** Where to go when the walk finds nothing -- a tab opened straight on the record. */
-  fallbackRouteName?: string
+  fallbackRouteName?: RouteRecordName
   fallbackRouteParams?: Record<string, any>
 }
 
 export function useRouteHistory(): {
-  history: DeepReadonly<Ref<RouteLocationNormalized[]>>
+  history: Readonly<Ref<readonly RouteHistoryEntry[]>>
   addRoute: (route: RouteLocationNormalized) => void
   clearHistory: () => void
   setBlacklistedRoutes: (routeNames: string[]) => void
@@ -37,12 +43,19 @@ export function useRouteHistory(): {
       return
     }
 
+    // A list filter rewrites its hash with `history.replaceState`, which the router never sees. On a
+    // push the address bar still shows the route being left, so its hash is the one to come back to.
+    const [pathAndQuery] = route.fullPath.split('#')
+    if (pathAndQuery === window.location.pathname + window.location.search && route.hash !== window.location.hash) {
+      route = { ...route, hash: window.location.hash, fullPath: pathAndQuery + window.location.hash }
+    }
+
     const lastRoute = history.value[history.value.length - 1]
     if (lastRoute && lastRoute.fullPath === route.fullPath) {
       return
     }
 
-    history.value.push(route)
+    history.value.push({ name: route.name, fullPath: route.fullPath })
     if (history.value.length > MAX_HISTORY) {
       history.value.shift()
     }
@@ -62,11 +75,9 @@ export function useRouteHistory(): {
   // Internal on purpose. A caller reaching for it directly would get the walk WITHOUT the
   // current-route exclusion `navigateBack` adds -- which is the whole trap `navigateBack` exists
   // to close.
-  const findRouteBack = (
-    isDestination: (route: RouteLocationNormalized) => boolean
-  ): RouteLocationNormalized | undefined => {
+  const findRouteBack = (isDestination: (route: RouteHistoryEntry) => boolean): RouteHistoryEntry | undefined => {
     for (let i = history.value.length - 1; i >= 0; i--) {
-      if (isDestination(history.value[i])) {
+      if (isDestination(history.value[i]!)) {
         return history.value[i]
       }
     }
@@ -80,7 +91,7 @@ export function useRouteHistory(): {
   const navigateBack = (router: Router, options: NavigateBackOptions = {}) => {
     const { skipRouteNames, fallbackRouteName, fallbackRouteParams } = options
     const current = router.currentRoute.value
-    const skip = skipRouteNames ?? []
+    const skip: readonly RouteRecordNameGeneric[] = skipRouteNames ?? []
 
     // The route we are on is never a place to go back to. `addRoute` runs in `beforeEach`, so a
     // navigation that a later guard cancels still records the route we never left -- and pushing
@@ -92,10 +103,10 @@ export function useRouteHistory(): {
     // candidate afterwards would stop the walk at it instead of carrying on to the entry before.
     // Names are compared with `===` so a symbol name counts too, but only when the current route
     // has one: two different nameless routes are both `undefined` and are not the same place.
-    const isCurrent = (route: RouteLocationNormalized) =>
+    const isCurrent = (route: RouteHistoryEntry) =>
       route.fullPath === current.fullPath || (current.name !== undefined && route.name === current.name)
 
-    const route = findRouteBack((entry) => !isCurrent(entry) && !skip.includes(entry.name as string))
+    const route = findRouteBack((entry) => !isCurrent(entry) && !skip.includes(entry.name))
 
     if (route) {
       router.push(route.fullPath)

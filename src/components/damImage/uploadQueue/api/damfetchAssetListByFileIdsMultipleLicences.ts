@@ -1,7 +1,8 @@
 import type { AxiosInstance } from 'axios'
 import type { AssetSearchListItemDto } from '@/types/coreDam/Asset'
 import type { IdsGroupedByLicences } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { ENTITY, fetchAssetListByIds, SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { ENTITY, fetchAssetListByIds } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import { useApiFetchItems } from '@/labs/api/useApiFetchItems'
 
 const MAX_LIMIT = 20

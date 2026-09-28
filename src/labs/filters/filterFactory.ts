@@ -43,7 +43,7 @@ const RELAXED_IN_HASH: Record<string, string> = {
   '%3F': '?',
 }
 const relaxHashEncoding = (value: string) =>
-  value.replace(/%(2C|3A|2F|40|24|21|27|28|29|3B|3F)/g, (match) => RELAXED_IN_HASH[match])
+  value.replace(/%(2C|3A|2F|40|24|21|27|28|29|3B|3F)/g, (match) => RELAXED_IN_HASH[match]!)
 
 // `structuredClone` gives every array default a fresh identity, so `!==` is always true for them
 // and an array default would be written into the url on every submit.
@@ -158,6 +158,15 @@ export function createFilter<F extends readonly MakeFilterOption<string>[]>(
     {} as FilterConfig<F>['fields']
   )
 
+  // A time interval names the field that holds its upper bound. The query builder and the selected chips
+  // read that field's config without a check, so a name that is not configured fails here, by name,
+  // instead of as a TypeError on the first query.
+  for (const field of Object.values(config) as FilterField[]) {
+    if (field.related && !(field.related in config)) {
+      throw new Error(`createFilter: "${field.name}" names related field "${field.related}", which is not configured`)
+    }
+  }
+
   const defaultGlobalOptions: GeneralFilterOptions = {
     elastic: false,
     system: undefined,
@@ -214,7 +223,7 @@ export function useFilterClearHelpers<
       filterSelected.value.delete(name)
     } else if (selectedFound) {
       const foundIndex = selectedFound.findIndex((item) => item.value === optionValue)
-      selectedFound.splice(foundIndex, 1)
+      if (foundIndex !== -1) selectedFound.splice(foundIndex, 1)
     }
     // update data
     if (config.type === 'timeInterval' && config.related) {
@@ -225,10 +234,14 @@ export function useFilterClearHelpers<
       isArray(filterData[name as keyof FilterData<F>]) &&
       (filterData[name as keyof FilterData<F>] as any[]).length > 0
     ) {
-      const foundIndex = (filterData[name as keyof FilterData<F>] as any[]).findIndex((item) => item === optionValue)
-      const newArray = [...toRaw(filterData[name as keyof FilterData<F>] as any[])]
-      newArray.splice(foundIndex, 1)
-      filterData[name as keyof FilterData<F>] = newArray as AllowedFilterValues
+      const foundIndex = (filterData[name as keyof FilterData<F>] as any[]).findIndex(
+        (item) => String(item) === String(optionValue)
+      )
+      if (foundIndex !== -1) {
+        const newArray = [...toRaw(filterData[name as keyof FilterData<F>] as any[])]
+        newArray.splice(foundIndex, 1)
+        filterData[name as keyof FilterData<F>] = newArray as AllowedFilterValues
+      }
     } else if (isString(filterData[name as keyof FilterData<F>]) || isNumber(filterData[name as keyof FilterData<F>])) {
       filterData[name as keyof FilterData<F>] = config.default
     } else if (isBoolean(filterData[name as keyof FilterData<F>])) {
@@ -369,7 +382,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       if (isMultiple) {
         const items = value.split(',')
 
-        const allNumeric = items.every((item) => !isNaN(Number(item)))
+        const allNumeric = items.every((item) => item !== '' && String(Number(item)) === item)
 
         result[key] = allNumeric ? items.map(Number) : items
       } else {
@@ -383,14 +396,27 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
     return { filters: result, sortBy }
   }
 
+  // A submit is not a place to step back to, so it replaces the entry. `replaceState` fires no
+  // popstate, so vue-router does not run a navigation (and its guards) per submit; its `current` is
+  // patched so the router's next push, which rewrites this entry from it, keeps the hash.
+  const replaceHash = (hash: string) => {
+    const url = window.location.pathname + window.location.search + hash
+    const state = window.history.state
+    const patched =
+      isObject(state) && isString((state as { current?: unknown }).current)
+        ? { ...state, current: ((state as { current: string }).current.split('#')[0] ?? '') + hash }
+        : state
+    window.history.replaceState(patched, '', url)
+  }
+
   const updateLocationHash = (serialized: string) => {
     if (options.populateUrlParams === false) return
-    window.location.hash = serialized
+    replaceHash('#' + serialized)
   }
 
   const resetLocationHash = () => {
     if (options.populateUrlParams === false) return
-    window.location.hash = ''
+    replaceHash('')
   }
 
   const parseLocationHash = () => {
@@ -468,7 +494,7 @@ export function useFilterHelpers<F extends readonly MakeFilterOption<string>[] =
       if (isUndefined(value)) continue
       if (isString(value)) {
         const tryConvertNumber = stringToNumber(value)
-        if (!isNull(tryConvertNumber)) {
+        if (!isNull(tryConvertNumber) && String(tryConvertNumber) === value) {
           value = tryConvertNumber
         } else {
           const tryConvertBoolean = stringToBooleanExact(value)
@@ -596,8 +622,4 @@ export type FilterConfig<F extends readonly MakeFilterOption<string>[] = readonl
 
 export type FilterData<F extends readonly MakeFilterOption<string>[] = readonly MakeFilterOption<string>[]> = {
   [P in F[number]['name']]: AllowedFilterValues
-}
-
-export type FilterStore<T extends readonly { name: string }[]> = {
-  [K in T[number]['name']]: AllowedFilterValues
 }

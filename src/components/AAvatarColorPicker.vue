@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -24,6 +25,8 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: string): void
 }>()
 
+const { t } = useI18n()
+
 const swatches = [
   ['#F44336', '#E91E63', '#9C27B0', '#673AB7'],
   ['#2196F3', '#03A9F4', '#00BCD4', '#009688'],
@@ -35,7 +38,8 @@ const generatedColor = ref('')
 
 const generateRandomColor = () => {
   const randomRow = Math.floor(Math.random() * swatches.length)
-  generatedColor.value = swatches[randomRow][Math.floor(Math.random() * swatches[randomRow].length)]
+  const row = swatches[randomRow]!
+  generatedColor.value = row[Math.floor(Math.random() * row.length)]!
   return generatedColor.value
 }
 
@@ -81,13 +85,14 @@ watch(
       {{ label }}
       <span
         v-if="required"
-        class="required"
+        class="a-required-mark"
       />
     </label>
     <VBtn
       :variant="variantComputed"
       icon
       :color="buttonColorComputed"
+      :aria-label="t('common.button.chooseColor')"
     >
       <VMenu
         v-if="!readonly"

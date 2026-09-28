@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same branch or PR makes the running checks moot; every commit on main keeps its result.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -24,6 +29,7 @@ jobs:
 
     name: Lint
     runs-on: ${{ matrix.platform }}
+    timeout-minutes: 20
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     steps:
       - name: Checkout
@@ -78,6 +84,7 @@ jobs:
 
     name: Test
     runs-on: ${{ matrix.platform }}
+    timeout-minutes: 30
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     steps:
       - name: Checkout
@@ -111,7 +118,57 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install chromium --with-deps
 
+      # The cache holds the browser only; the system libraries it needs are not in it.
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
       - name: Run tests
         run: yarn test:run
         env:
           CI: true
+
+  # The release workflow is the only other place the library is built: a build that breaks (the
+  # declarations included) would otherwise surface only when a release is cut.
+  build:
+    strategy:
+      matrix:
+        node-version:
+          - '24'
+        platform:
+          - ubuntu-latest
+
+    name: Build
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 20
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build
+        run: yarn build
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: The build imports only declared packages
+        run: node scripts/check-dist-imports.mjs
+
+      - name: The published declarations type-check
+        run: node scripts/check-dist-types.mjs
+
+      - name: The stylesheet keeps its cascade layers
+        run: node scripts/check-dist-css.mjs

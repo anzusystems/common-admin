@@ -61,9 +61,13 @@ readStoredRegion()
 watch(() => imageRoiStore.roi, readStoredRegion)
 
 const loadImageFile = async (id: DocId) => {
-  const res = await fetchImageFile(damClient, endPointImage, id)
-  imageRoiStore.setImageFile(res)
-  imageRoiStore.hideLoader()
+  try {
+    imageRoiStore.setImageFile(await fetchImageFile(damClient, endPointImage, id))
+  } catch (error) {
+    showErrorsDefault(error)
+  } finally {
+    imageRoiStore.hideLoader()
+  }
 }
 
 const saveRoi = async (committed: CropRect) => {
@@ -81,6 +85,7 @@ const saveRoi = async (committed: CropRect) => {
       }
     }, 2000)
   } catch (error) {
+    imageRoiStore.hideLoader()
     showErrorsDefault(error)
   }
 }

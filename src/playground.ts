@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client'
 import { createApp } from 'vue'
 import App from '@/App.vue'
-import { vuetify } from '@/plugins/vuetify'
+import { vuetify } from '@/playground/system/vuetify'
 import { i18n } from '@/plugins/i18n'
 import { createPinia } from 'pinia'
 import router from '@/router/playground'
@@ -24,6 +24,7 @@ createApp(App)
   .use(i18n)
   .use(vuetify)
   .use<PluginOptions>(AnzuSystemsCommonAdmin, {
+    i18n,
     languages: {
       available: ['en', 'sk'],
       default: 'sk',

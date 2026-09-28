@@ -33,7 +33,8 @@
     "grants": "Actions",
     "permissions": "Permissions",
     "resolvedPermissions": "Resolved Permission",
-    "noPermissions": "No permissions set"
+    "noPermissions": "No permissions set",
+    "impersonate": "Log in as this user"
   },
   "copyPermissions": {
     "title": "Copy role and permissions",

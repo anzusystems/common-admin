@@ -1,5 +1,6 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
 import {
+  customRef,
   nextTick,
   computed,
   inject,
@@ -360,7 +361,34 @@ defineSlots<{
   'after-item'?: (props: RowSlotProps<TItem>) => unknown
 }>()
 
-const modelValue = defineModel<TItem[]>({ required: true })
+const modelProp = defineModel<TItem[]>({ required: true })
+// The v-model prop lags an emitted write until the parent re-renders; reads in the same tick must see
+// the write, or a second write (or the reorder-Cancel reconciliation) clobbers the first.
+let pendingWrite: TItem[] | null = null
+let wroteDuringLoad = false
+watch(modelProp, () => (pendingWrite = null), { flush: 'sync' })
+const modelValue = customRef<TItem[]>((track, trigger) => ({
+  get: () => {
+    track()
+    // Read the prop every time, pending write or not: a computed evaluated while a write is pending must
+    // still subscribe to it.
+    const current = modelProp.value
+    return pendingWrite ?? current
+  },
+  set: (v) => {
+    wroteDuringLoad = true
+    pendingWrite = v
+    modelProp.value = v
+    trigger()
+    // Only this write's own clear: a newer pending write stays. The trigger lets readers see the prop
+    // again, e.g. when the parent ignored the update.
+    nextTick(() => {
+      if (pendingWrite !== v) return
+      pendingWrite = null
+      trigger()
+    })
+  },
+}))
 const mode = defineModel<ReorderMode>('mode', { default: 'view' })
 
 const { t } = useI18n()
@@ -390,6 +418,19 @@ const controllerOptions: ListEditorStateBindings<TItem> = {
 // on every remount); else this component owns the controller — today's behaviour, unchanged.
 const stateEntry = props.editor ? null : useListEditorStateEntry<TItem>(props.stateKey, controllerOptions)
 const controller = props.editor ?? stateEntry?.handle ?? useListEditorController<TItem>(controllerOptions)
+// Rows that arrive while `loading` are the loaded state, not user adds — but only when the editor was
+// clean when loading began (`loading` also covers a save of pending work, which must stay pending).
+// A controller passed in (`:editor`, `state-key`) can hold pending edits across a remount: not clean then.
+let cleanAtLoadStart = props.loading && !controller.hasUnsaved.value
+watch(
+  () => props.loading,
+  (now) => {
+    if (now) {
+      cleanAtLoadStart = !controller.hasUnsaved.value
+      wroteDuringLoad = false
+    } else if (cleanAtLoadStart && !wroteDuringLoad) controller.commit(modelValue.value)
+  }
+)
 
 // Local mirror of the controller's key resolution so rendered rows key the same
 // way the controller tracks them (v2 spec point 7).
@@ -1033,9 +1074,16 @@ const onDeleteClick = async (vi: ListViewItem<TItem>) => {
   await triggerDeleteClick(vi)
 }
 
+// In-flight guard: a second click while the consumer's save is pending must not send a duplicate.
+// A rejected save keeps the row open and still reaches the app's error handler, as before the guard.
+const savingKeys = ref<Set<ListEditorKey>>(new Set())
 const onSaveClick = async (vi: ListViewItem<TItem>) => {
-  if (props.onItemSave) {
-    await props.onItemSave(vi.raw)
+  if (savingKeys.value.has(vi.key)) return
+  savingKeys.value.add(vi.key)
+  try {
+    if (props.onItemSave) await props.onItemSave(vi.raw)
+  } finally {
+    savingKeys.value.delete(vi.key)
   }
   commitEdit(vi)
   emit('item-saved', vi)
@@ -1110,7 +1158,7 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
       },
       save: () => {
         const vi = findVi(key)
-        if (vi) return onSaveClick(vi)
+        return vi ? onSaveClick(vi) : undefined
       },
       cancel: () => {
         const vi = findVi(key)
@@ -1340,6 +1388,7 @@ defineExpose<
             >
               <VBtn
                 v-if="compactReorderButton"
+                :aria-label="t('common.sortable.reorder')"
                 variant="tonal"
                 color="primary"
                 icon
@@ -1521,6 +1570,7 @@ defineExpose<
                         density="compact"
                         :active="false"
                         :disabled="!vi.canMoveUp"
+                        :aria-label="t('common.sortable.moveUp')"
                         class="a-le-action a-le-action--up"
                         @click.stop="moveUp(vi.index)"
                       >
@@ -1536,6 +1586,7 @@ defineExpose<
                         density="compact"
                         :active="false"
                         :disabled="!vi.canMoveDown"
+                        :aria-label="t('common.sortable.moveDown')"
                         class="a-le-action a-le-action--down"
                         @click.stop="moveDown(vi.index)"
                       >
@@ -1553,6 +1604,7 @@ defineExpose<
                       density="compact"
                       :active="false"
                       class="a-le-action a-le-action--chip-close"
+                      :aria-label="t('common.sortable.delete')"
                       @click.stop="onDeleteClick(vi)"
                     >
                       <VIcon
@@ -1563,6 +1615,7 @@ defineExpose<
                   </template>
                   <template v-else-if="reorderMode">
                     <VBtn
+                      :aria-label="t('common.sortable.moveUp')"
                       icon
                       size="small"
                       variant="text"
@@ -1582,6 +1635,7 @@ defineExpose<
                       />
                     </VBtn>
                     <VBtn
+                      :aria-label="t('common.sortable.moveDown')"
                       icon
                       size="small"
                       variant="text"
@@ -1607,6 +1661,7 @@ defineExpose<
                       density="comfortable"
                       :active="false"
                       class="mx-1 a-le-action a-le-action--menu"
+                      :aria-label="t('common.sortable.more')"
                     >
                       <VIcon
                         icon="mdi-dots-vertical"
@@ -1681,6 +1736,7 @@ defineExpose<
                   <template v-else>
                     <VBtn
                       v-if="showEditButton && canInteract"
+                      :aria-label="t('common.sortable.edit')"
                       icon
                       size="small"
                       variant="tonal"
@@ -1701,6 +1757,7 @@ defineExpose<
                     </VBtn>
                     <VBtn
                       v-if="showDeleteButton && canInteract"
+                      :aria-label="t('common.sortable.delete')"
                       icon
                       size="small"
                       variant="text"
@@ -1726,6 +1783,7 @@ defineExpose<
                       density="comfortable"
                       :active="false"
                       class="mx-1 a-le-action a-le-action--menu"
+                      :aria-label="t('common.sortable.more')"
                     >
                       <VIcon
                         icon="mdi-dots-vertical"

@@ -5,7 +5,7 @@ import type { DocId } from '@/types/common'
 import { HTTP_STATUS_CREATED, HTTP_STATUS_OK } from '@/composables/statusCodes'
 import { damFileTypeFix } from '@/components/file/composables/fileType'
 import type { AssetFileImage } from '@/types/coreDam/AssetFile'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import type { DamImageCopyToLicenceRequest, DamImageCopyToLicenceResponse } from '@/types/coreDam/Asset'
 import { useSentry } from '@/services/sentry'
 import { useApiRequest } from '@/labs/api/useApiRequest'
@@ -173,7 +173,7 @@ export const imageUploadChunk = (
           'Content-Type': undefined, // Let Axios automatically set multipart/form-data with boundary
         },
         timeout: CHUNK_UPLOAD_TIMEOUT * 1000,
-        cancelToken: item.latestChunkCancelToken ? item.latestChunkCancelToken.token : undefined,
+        signal: item.latestChunkAbortController?.signal,
         onUploadProgress: onUploadProgressCallback,
       })
       .then((res) => {

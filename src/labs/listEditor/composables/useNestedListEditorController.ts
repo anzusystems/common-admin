@@ -105,6 +105,8 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
   getChanges: () => NestedListEditorChanges<TItem>
   /** Adopt the saved tree as the new baseline; backfill keys; clear dirty/submitted. */
   commit: (saved?: NestedTree<TItem>) => void
+  /** Adopt only these rows as saved (a server-confirmed single-row op); other pending work stays. */
+  acceptRows: (keys: ListEditorKey[]) => void
   /** Discard unsaved edits back to the last committed baseline (or a given tree). */
   reset: (tree?: NestedTree<TItem>) => void
 
@@ -113,7 +115,7 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
   addAfter: (afterKey: ListEditorKey, item?: TItem, childrenAllowed?: boolean) => void
   addChild: (parentKey: ListEditorKey, item?: TItem, childrenAllowed?: boolean) => void
   updateItem: (key: ListEditorKey, data: TItem, markDirty?: boolean) => void
-  deleteItem: (key: ListEditorKey, opts?: { trackDeleted?: boolean }) => void
+  deleteItem: (key: ListEditorKey, opts?: { trackDeleted?: boolean; renumber?: boolean }) => void
   restoreDeleted: (key: ListEditorKey) => void
   moveUp: (key: ListEditorKey) => boolean
   moveDown: (key: ListEditorKey) => boolean
@@ -140,17 +142,33 @@ export interface NestedListEditorHandle<TItem extends Record<string, any>> {
  * Consumer-facing shape of a nested-list-editor handle read through a template/function ref — Vue's
  * `expose` proxy unwraps the exposed refs, so read `handle.hasUnsaved` (a boolean), not
  * `handle.hasUnsaved.value`. See {@link ExposedListEditorHandle}.
- *
- * The `ANestedSortableListEditor` component also exposes `hasUnsavedChanges` (a legacy alias of
- * `hasUnsaved`, likewise a ComputedRef → unwrapped to a boolean here) — included so it can't be
- * `.value`-read by accident. Its imperative-only extras (addAfterId / resetDirtyBaseline / expand /
- * reorder / …) are not refs and carry no unwrap hazard; intersect them in the consumer if you call them.
  */
 export type ExposedNestedListEditorHandle<TItem extends Record<string, any>> = ShallowUnwrapRef<
   NestedListEditorHandle<TItem>
-> & {
-  hasUnsavedChanges: boolean
+>
+
+/** What `ANestedSortableListEditor` exposes on top of the controller handle. */
+export interface NestedSortableListEditorExtras {
+  /**
+   * Runs a tree mutation the server has already made (a row created through a dialog) and adopts as
+   * saved only the rows it added or edited, plus `keys`. Siblings it only renumbered and other pending
+   * work stay unsaved (the server may not have renumbered them), and so does the position of a created
+   * row the op renumbered. `commit()` would adopt the whole tree instead.
+   */
+  acceptChanges: (op: () => void, keys?: ListEditorKey[]) => void
+  enterReorderMode: () => void
+  cancelReorderMode: () => void
+  applyReorder: () => Promise<void>
+  expand: (id: ListEditorKey) => void
+  collapse: (id: ListEditorKey) => void
+  toggleExpand: (id: ListEditorKey) => void
+  expandDetail: (id: ListEditorKey) => void
+  collapseDetail: (id: ListEditorKey) => void
 }
+
+/** `ANestedSortableListEditor` read through a template ref: the unwrapped handle and its extras. */
+export type ExposedNestedSortableListEditorHandle<TItem extends Record<string, any>> =
+  ExposedNestedListEditorHandle<TItem> & NestedSortableListEditorExtras
 
 const flatten = <TItem extends Record<string, any>>(tree: NestedTree<TItem>): TItem[] => {
   const out: TItem[] = []
@@ -208,6 +226,10 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     positionField,
     parentField,
     positionMultiplier,
+    managedPosition,
+    positionStrategyFor: (action) =>
+      (typeof positionOpt === 'object' && (positionOpt.strategyOverrides?.[action] ?? positionOpt.strategy)) ||
+      'renumber',
     maxDepth: options.maxDepth,
   })
 
@@ -500,6 +522,88 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     submitted.value = false
   }
 
+  // Adopt ONLY the given rows as saved (server-confirmed single-row ops); other pending work stays.
+  // The saved tree follows along — reset() and getChanges().deleted read it: an accepted row takes its
+  // current data and place there, an accepted key no longer in the tree leaves it.
+  const acceptRows = (keys: ListEditorKey[]): void => {
+    if (keys.length === 0) return
+    const wanted = new Set(keys)
+    const next = cloneTree(options.get())
+    const hashes = new Map(baselineHashes.value)
+    const parents = new Map(baselineParents.value)
+    const base: NestedTree<TItem> = baselineTree.value ? cloneTree(baselineTree.value) : { ...next, children: [] }
+    type Detached = { node: NestedTreeNode<TItem>; siblings: NestedTreeNode<TItem>[]; index: number }
+    const detach = (nodes: NestedTreeNode<TItem>[], key: ListEditorKey): Detached | undefined => {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i]!
+        if (keyOf(node.data) === key) return { node: nodes.splice(i, 1)[0]!, siblings: nodes, index: i }
+        const found = node.children?.length ? detach(node.children, key) : undefined
+        if (found) return found
+      }
+      return undefined
+    }
+    const baseSiblings = (parentKey: ListEditorKey | null): NestedTreeNode<TItem>[] | undefined => {
+      if (parentKey === null) return base.children
+      let hit: NestedTreeNode<TItem> | undefined
+      walkNodes(base, (n) => {
+        if (hit === undefined && keyOf(n.data) === parentKey) hit = n
+      })
+      if (!hit) return undefined
+      if (!hit.children) hit.children = []
+      return hit.children
+    }
+    const live = new Set<ListEditorKey>()
+    const walk = (nodes: NestedTreeNode<TItem>[], parentKey: ListEditorKey | null) => {
+      nodes.forEach((n, index) => {
+        const key = keyOf(n.data)
+        live.add(key)
+        if (wanted.has(key)) {
+          hashes.set(key, normalize(n.data))
+          parents.set(key, parentKey)
+          n.meta.dirty = false
+          addedBaseline.value.delete(key)
+          editedKeys.value.delete(key)
+          const previous = detach(base.children, key)
+          const saved = cloneDeep(n)
+          // A row added without children allowed stays without them; a saved row keeps its saved children.
+          saved.children = previous ? previous.node.children : n.children ? [] : undefined
+          saved.meta = { ...saved.meta, dirty: false }
+          const siblings = baseSiblings(parentKey)
+          if (!siblings) {
+            // The new parent is not in the saved tree (e.g. it was this row's own saved child, detached
+            // with it): keep the row where it was saved rather than drop it and its children.
+            if (previous) previous.siblings.splice(previous.index, 0, saved)
+          } else {
+            // After the nearest preceding sibling the saved tree knows, so pending rows don't skew it.
+            let at = 0
+            for (let i = index - 1; i >= 0; i--) {
+              const seen = siblings.findIndex((s) => keyOf(s.data) === keyOf(nodes[i]!.data))
+              if (seen !== -1) {
+                at = seen + 1
+                break
+              }
+            }
+            siblings.splice(at, 0, saved)
+          }
+        }
+        if (n.children && n.children.length) walk(n.children, key)
+      })
+    }
+    walk(next.children, null)
+    for (const key of wanted) {
+      if (live.has(key)) continue
+      hashes.delete(key)
+      parents.delete(key)
+      // Gone from the backend: no longer a pending deletion either.
+      deletedKeys.value.delete(key)
+      detach(base.children, key)
+    }
+    baselineHashes.value = hashes
+    baselineParents.value = parents
+    baselineTree.value = base
+    options.set(next)
+  }
+
   const reset = (t?: NestedTree<TItem>): void => {
     const restore = t ?? (baselineTree.value ? cloneTree(baselineTree.value) : options.get())
     options.set(restore)
@@ -529,17 +633,17 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
   const updateItem = (key: ListEditorKey, data: TItem, markDirty = true): void => {
     tree.updateItem(key, data, markDirty)
   }
-  const deleteItem = (key: ListEditorKey, opts?: { trackDeleted?: boolean }): void => {
+  const deleteItem = (key: ListEditorKey, opts?: { trackDeleted?: boolean; renumber?: boolean }): void => {
     // A previously-saved row removed in deferred mode is tombstoned (counts as unsaved + reported in
     // getChanges().deleted). `trackDeleted: false` (immediate — already deleted on the backend) skips it.
     // `treeHasKey` guards against a phantom tombstone: an immediate delete removes the row in the
-    // component's own handler (trackDeleted:false), then the consumer's removeById re-calls deleteItem
-    // for the now-gone key — without the guard that second call would tombstone a baseline row that is
-    // already deleted, surfacing a bogus unconfirmed change.
+    // component's own handler (trackDeleted:false), then a consumer removing it again (acceptChanges
+    // around deleteItem) re-calls deleteItem for the now-gone key — without the guard that second call
+    // would tombstone a baseline row that is already deleted, surfacing a bogus unconfirmed change.
     if (baselineHashes.value.has(key) && opts?.trackDeleted !== false && treeHasKey(key)) {
       deletedKeys.value.add(key)
     }
-    tree.deleteItem(key)
+    tree.deleteItem(key, { renumber: opts?.renumber })
   }
 
   const restoreDeleted = (key: ListEditorKey): void => {
@@ -575,6 +679,7 @@ export function useNestedListEditorController<TItem extends Record<string, any>>
     getPayload,
     getChanges,
     commit,
+    acceptRows,
     reset,
     addItem,
     addAfter,

@@ -1,7 +1,7 @@
 import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
 import { dateTimeNow } from '@/utils/datetime'
 import { ENTITY } from '@/components/damImage/uploadQueue/api/keywordApi'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 
 export function useDamKeywordFactory() {
   const createDefault = (extSystemId: number, reviewed?: boolean): DamKeyword => {

@@ -28,7 +28,7 @@ const buildImages = (): MockImage[] =>
     id: i + 1,
     key: `img-${i + 1}`,
     position: i + 1,
-    src: makeSvgThumb(String(i + 1), palette[i % palette.length]),
+    src: makeSvgThumb(String(i + 1), palette[i % palette.length]!),
     title: `Image ${i + 1}`,
     description: `Description for image ${i + 1}`,
   }))
@@ -43,7 +43,7 @@ const createImage = (): MockImage => {
     id,
     key: `img-${id}`,
     position: 0,
-    src: makeSvgThumb(String(id), palette[id % palette.length]),
+    src: makeSvgThumb(String(id), palette[id % palette.length]!),
     title: `Image ${id}`,
     description: '',
   }

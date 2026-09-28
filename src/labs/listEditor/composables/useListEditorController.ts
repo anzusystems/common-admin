@@ -432,7 +432,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     const arr = [...options.get()]
     const i = indexOfKey(arr, key)
     if (i === -1) return
-    const current = arr[i]
+    const current = arr[i]!
     const resolved =
       typeof next === 'function'
         ? (next as (c: TItem) => TItem)(current)
@@ -445,7 +445,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     const arr = [...options.get()]
     const i = indexOfKey(arr, key)
     if (i === -1) return
-    const [removed] = arr.splice(i, 1)
+    const removed = arr.splice(i, 1)[0]!
     // A previously-saved row that's removed is a DEFERRED deletion: reported in the change-set and
     // counted as one unconfirmed change (`unsavedCount`) until save. `trackDeleted: false` (immediate
     // mode — the row is already deleted on the backend) skips the tombstone so it does NOT read as
@@ -468,7 +468,7 @@ export function useListEditorController<TItem extends Record<string, any>>(
     const arr = [...options.get()]
     if (fromIndex < 0 || fromIndex >= arr.length || toIndex < 0 || toIndex >= arr.length) return
     if (fromIndex === toIndex) return
-    const [el] = arr.splice(fromIndex, 1)
+    const el = arr.splice(fromIndex, 1)[0]!
     arr.splice(toIndex, 0, el)
     movedKeys.value.add(keyOf(el))
     write(arr, 'move')

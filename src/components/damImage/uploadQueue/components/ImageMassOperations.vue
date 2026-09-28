@@ -14,6 +14,7 @@ import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/compo
 import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import { DamAssetType } from '@/types/coreDam/Asset'
+import { useAlerts } from '@/composables/system/alerts'
 
 const texts = ref({ description: '', source: '', authors: [] })
 
@@ -21,11 +22,21 @@ const imageStore = useImageStore()
 const { images } = storeToRefs(imageStore)
 const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } = useImageMassOperations()
 const { t } = useI18n()
+const { showErrorsDefault } = useAlerts()
+
+// The authors' names are looked up first, and nothing is filled when that fails.
+const fillAuthors = async (forceReplace: boolean) => {
+  try {
+    await replaceEmptyAuthors(texts.value.authors, forceReplace)
+  } catch (error) {
+    showErrorsDefault(error)
+  }
+}
 
 const fillAll = (forceReplace: boolean) => {
   replaceEmptyDescription(texts.value.description, forceReplace)
   if (authorEnabled.value && showDamAuthorsAtLeastOne.value) {
-    replaceEmptyAuthors(texts.value.authors, forceReplace)
+    fillAuthors(forceReplace)
   } else {
     replaceEmptySource(texts.value.source, forceReplace)
   }
@@ -79,6 +90,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
             :label="t('common.damImage.image.model.texts.description')"
           />
           <VBtn
+            :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
             icon
             size="small"
             variant="text"
@@ -94,6 +106,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
             </VTooltip>
           </VBtn>
           <VBtn
+            :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
             icon
             size="small"
             variant="text"
@@ -132,11 +145,12 @@ const showDamAuthorsAtLeastOne = computed(() => {
               />
             </div>
             <VBtn
+              :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
               icon
               size="small"
               variant="text"
               class="mr-1"
-              @click.stop="replaceEmptyAuthors(texts.authors, false)"
+              @click.stop="fillAuthors(false)"
             >
               <VIcon icon="mdi-file-arrow-left-right-outline" />
               <VTooltip
@@ -147,10 +161,11 @@ const showDamAuthorsAtLeastOne = computed(() => {
               </VTooltip>
             </VBtn>
             <VBtn
+              :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
               icon
               size="small"
               variant="text"
-              @click.stop="replaceEmptyAuthors(texts.authors, true)"
+              @click.stop="fillAuthors(true)"
             >
               <VIcon icon="mdi-file-replace-outline" />
               <VTooltip
@@ -176,6 +191,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
             :label="sourceLabel"
           />
           <VBtn
+            :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
             icon
             size="small"
             variant="text"
@@ -191,6 +207,7 @@ const showDamAuthorsAtLeastOne = computed(() => {
             </VTooltip>
           </VBtn>
           <VBtn
+            :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
             icon
             size="small"
             variant="text"

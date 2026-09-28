@@ -1,9 +1,9 @@
 import { createI18nMessage } from '@vuelidate/validators'
 import { type ComputedRef, type Ref, type ShallowRef, unref, type WritableComputedRef } from 'vue'
-import { i18n } from '@/plugins/i18n'
+import { commonT } from '@/plugins/i18n'
 import type { DatetimeUTCNullable } from '@/types/common'
 
-const { t } = i18n.global
+const t = commonT
 
 type OtherDateType =
   | Ref<DatetimeUTCNullable>

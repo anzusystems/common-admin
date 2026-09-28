@@ -140,6 +140,7 @@ const submit = async () => {
     return Promise.resolve({ asset: asset, image: imageRes })
   } catch (e) {
     showErrorsDefault(e)
+    return undefined
   }
 }
 

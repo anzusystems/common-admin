@@ -39,6 +39,7 @@ const variantComputed = computed(() => {
 <template>
   <VBtn
     v-if="variant === 'icon'"
+    :aria-label="t(buttonT)"
     :class="buttonClass"
     :data-cy="dataCy"
     icon
@@ -48,7 +49,7 @@ const variantComputed = computed(() => {
     :width="size"
     :height="size"
   >
-    <VIcon icon="mdi-content-save" />
+    <VIcon icon="mdi-plus" />
     <VTooltip
       activator="parent"
       location="bottom"

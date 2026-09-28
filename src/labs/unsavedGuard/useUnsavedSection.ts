@@ -36,14 +36,16 @@ export const UnsavedSectionKey = Symbol('unsaved.sections') as InjectionKey<Unsa
 export function createUnsavedSectionRegistry(): UnsavedSectionRegistry {
   const sources = reactive(new Map<symbol, ComputedRef<UnsavedSectionDescriptor[]>>())
 
+  // Each label once: two open rows of a list editor can each hold the same nested list, and the leave
+  // dialog names what is unsaved, not how many times.
   const dirtyLabels = computed<string[]>(() => {
-    const out: string[] = []
+    const out = new Set<string>()
     for (const source of sources.values()) {
       for (const descriptor of source.value) {
-        if (descriptor.dirty) out.push(descriptor.label)
+        if (descriptor.dirty) out.add(descriptor.label)
       }
     }
-    return out
+    return [...out]
   })
 
   return {

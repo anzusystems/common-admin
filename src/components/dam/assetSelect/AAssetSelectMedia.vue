@@ -53,7 +53,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'onConfirm', data: AssetSelectReturnData): void
+  (e: 'confirm', data: AssetSelectReturnData): void
 }>()
 
 const modelValue = defineModel<boolean>({ default: false, required: false })
@@ -139,7 +139,7 @@ const getCopyToLicenceId = () => {
 }
 
 const onConfirm = () => {
-  emit('onConfirm', getSelectedData(props.returnType, getCopyToLicenceId()))
+  emit('confirm', getSelectedData(props.returnType, getCopyToLicenceId()))
   onClose()
 }
 
@@ -264,8 +264,8 @@ defineExpose({
         class="subject-select__card"
       >
         <ADialogToolbar
-          class="subject-select__toolbar system-border-b"
-          @on-cancel="onClose"
+          class="subject-select__toolbar border-b"
+          @cancel="onClose"
         >
           <slot name="title">
             {{ t('common.assetSelect.meta.texts.title') }}
@@ -286,7 +286,7 @@ defineExpose({
             'subject-select__main--sidebar-right-active': sidebarRight,
           }"
         >
-          <div class="subject-select__sidebar system-border-r">
+          <div class="subject-select__sidebar border-e">
             <AssetSelectFilter :config-name="configName" />
           </div>
           <div class="subject-select__content">
@@ -309,7 +309,7 @@ defineExpose({
               </ABtnSecondary>
             </div>
           </div>
-          <div class="subject-select__sidebar-right system-border-l">
+          <div class="subject-select__sidebar-right border-s">
             <div
               v-if="loadingSidebarRight"
               class="d-flex w-100 align-center justify-center"
@@ -331,7 +331,7 @@ defineExpose({
             </div>
           </div>
         </div>
-        <div class="subject-select__actions system-border-t">
+        <div class="subject-select__actions border-t">
           <div v-if="props.minCount === props.maxCount">
             {{
               t('common.assetSelect.meta.texts.pickExactCount', {

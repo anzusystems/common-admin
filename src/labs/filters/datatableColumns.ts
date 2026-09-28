@@ -5,7 +5,7 @@ import {
   type StoredData,
 } from '@/composables/system/datatableColumns'
 import { computed, onMounted, type Ref, watch } from 'vue'
-import { i18n } from '@/plugins/i18n'
+import { commonI18n } from '@/plugins/i18n'
 import { isArray, isBoolean, isObject, isString, isUndefined } from '@/utils/common'
 
 const defaultColumn: ColumnInternalValues = {
@@ -37,7 +37,7 @@ export function createDatatableColumnsConfig(
   moreOptions: Partial<DatatableColumnsConfigMoreOptions> = {}
 ) {
   const options = { ...DatatableColumnsConfigMoreOptionsDefault, ...moreOptions }
-  const localI18n = options.customI18n ?? i18n
+  const localI18n = options.customI18n ?? commonI18n()
   const { t } = localI18n.global || localI18n
 
   let storeKey: undefined | string = undefined

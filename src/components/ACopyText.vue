@@ -27,7 +27,7 @@ const { t } = useI18n()
 
 const onClick = (event: Event) => {
   eventClickBlur(event)
-  if (!isSupported) return
+  if (!isSupported.value) return
   if (isNumber(props.value)) {
     copy(numberToString(props.value)).then(() => {
       showSuccess(t(props.notifyT))

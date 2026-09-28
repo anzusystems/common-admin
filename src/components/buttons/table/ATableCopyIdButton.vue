@@ -49,6 +49,7 @@ const onClick = (event: Event) => {
   <VBtn
     v-if="isSupported"
     :class="buttonClass"
+    :aria-label="t(buttonT)"
     :data-cy="dataCy"
     icon
     :size="size"

@@ -53,11 +53,27 @@ export const stringToBooleanExact = (value: string): boolean | null => {
 
 export const stringSplitOnFirstOccurrence = (value: string, delimiter = '') => {
   const index = value.indexOf(delimiter)
+  // `end` stays the whole value, which the form fields read as the label path of a top-level rule.
+  if (index === -1) return { start: value, end: value }
 
   return {
     start: value.slice(0, index),
     end: value.slice(index + delimiter.length),
   }
+}
+
+// Letters NFD does not decompose into a base letter and a mark.
+const SLUG_TRANSLITERATION: Record<string, string> = {
+  ł: 'l',
+  ß: 'ss',
+  đ: 'd',
+  ð: 'd',
+  ø: 'o',
+  æ: 'ae',
+  œ: 'oe',
+  þ: 'th',
+  ħ: 'h',
+  ı: 'i',
 }
 
 export const stringToSlug = (value: string) => {
@@ -67,7 +83,8 @@ export const stringToSlug = (value: string) => {
     .trim()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, '-')
+    .replace(/[łßđðøæœþħı]/g, (letter) => SLUG_TRANSLITERATION[letter]!)
+    .replace(/[\s_]+/g, '-')
     .replace(/&/g, '-')
     .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-')
@@ -92,18 +109,18 @@ export const stringUrlTemplateReplace = (template: string, params: UrlParams) =>
   if (template.indexOf(':') === -1) return template
   const newParts: string[] = []
   const [path, queryString] = template.split('?')
-  const parts = path.split('/')
+  const parts = path!.split('/')
   parts.forEach((part, index) => {
     newParts[index] = part
     if (!part.startsWith(':')) return
     const key = part.substring(1)
-    if (!isUndefined(params[key])) newParts[index] = params[part.substring(1)] + ''
+    if (!isUndefined(params[key])) newParts[index] = encodeURIComponent(params[key] + '')
   })
 
   return newParts.join('/') + (queryString ? `?${queryString}` : '')
 }
 
 export const stringIsValidEmail = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$/
+  const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$/
   return emailRegex.test(email)
 }

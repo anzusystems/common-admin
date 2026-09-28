@@ -77,7 +77,7 @@ const confirmDialog = async () => {
       :max-width="900"
     >
       <VCard>
-        <ADialogToolbar @on-cancel="dialog = false">
+        <ADialogToolbar @cancel="dialog = false">
           {{ t('common.anzuUser.copyPermissions.title') }}
         </ADialogToolbar>
         <VCardText>

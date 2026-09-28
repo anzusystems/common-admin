@@ -40,7 +40,8 @@ const { t } = useI18n()
 
 const { cachedExtSystemId } = useExtSystemIdForCached()
 const authorConflicts = ref<DocId[]>([])
-const image = computed(() => imageStore.images[props.index])
+// `index` comes from the parent's v-for over these same images.
+const image = computed(() => imageStore.images[props.index]!)
 
 const imageSourceRequired = computed(() => {
   if (isNull(image.value) || isUndefined(image.value)) return true

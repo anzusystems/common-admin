@@ -30,6 +30,11 @@ export interface AnzuUserActionsParams {
   validationScope?: string | symbol
 }
 
+// The record store is one for every page and every system, and a request is not aborted when its page
+// goes: only the latest fetch may write the record, or reset it on failure. A store reset (a page's
+// teardown, a create page's mount) counts as newer too.
+let fetchGeneration = 0
+
 /**
  * Per instance, like every other actions composable here. The admins' versions kept their loading
  * flags at module scope.
@@ -99,19 +104,28 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
   const isDirty = computed(() => pristine.value !== '' && pristine.value !== JSON.stringify(anzuUser.value))
 
   const fetchAnzuUser = async (id: IntegerId) => {
+    const generation = ++fetchGeneration
+    const isLatest = () => fetchGeneration === generation
     anzuUserOneStore.setLoadingAnzuUser(true)
     try {
       const { execute } = useFetchAnzuUser()
-      anzuUserOneStore.setAnzuUser(await execute({ urlParams: { id } }))
+      const res = await execute({ urlParams: { id } })
+      if (!isLatest()) return
+      anzuUserOneStore.setAnzuUser(res)
       // After the form has settled, not before it. The derived fields recompute in a watcher, and
       // a baseline taken ahead of that would make an account whose stored full name is empty read
       // as edited the instant it opens -- an unsaved dot and a leave prompt before anyone typed.
       await nextTick()
       snapshot()
     } catch (error) {
+      // A newer fetch owns the record now, possibly another page's: leave it alone.
+      if (!isLatest()) return
+      // Not the previous record: Save would PUT it back to its own id from a page opened for another.
+      anzuUserOneStore.reset(system)
+      pristine.value = ''
       showErrorsDefault(error)
     } finally {
-      anzuUserOneStore.setLoadingAnzuUser(false)
+      if (isLatest()) anzuUserOneStore.setLoadingAnzuUser(false)
     }
   }
 
@@ -200,6 +214,9 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
     updateAnzuUser,
     loadingCreateAnzuUser,
     loadingUpdateAnzuUser,
-    resetAnzuUserStore: anzuUserOneStore.reset,
+    resetAnzuUserStore: (...args: Parameters<typeof anzuUserOneStore.reset>) => {
+      fetchGeneration++
+      anzuUserOneStore.reset(...args)
+    },
   }
 }

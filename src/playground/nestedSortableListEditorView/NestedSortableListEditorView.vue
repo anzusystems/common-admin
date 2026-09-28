@@ -5,6 +5,7 @@ import ANestedSortableListEditor from '@/labs/listEditor/ANestedSortableListEdit
 import AFormTextField from '@/components/form/AFormTextField.vue'
 import type { NestedPositionHint, NestedTree } from '@/labs/listEditor/types/listEditorTypes'
 import type { NestedViewItem } from '@/labs/listEditor/composables/useNestedListEditor'
+import type { ExposedNestedSortableListEditorHandle } from '@/labs/listEditor/composables/useNestedListEditorController'
 
 interface MenuItem extends Record<string, any> {
   id: number
@@ -247,15 +248,7 @@ const refApiTree = ref<NestedTree<MenuItem>>(makeTree())
 
 // Imperative ref to the first demo editor — lets @add handlers actually
 // insert the row (using the emit's hint) instead of just logging.
-interface NestedEditorApiLocal {
-  addItem: (data: MenuItem, hint?: NestedPositionHint) => unknown
-  addAfterId: (targetId: number | null, data: MenuItem, childrenAllowed: boolean) => void
-  addChildToId: (targetId: number, data: MenuItem, childrenAllowed: boolean) => void
-  removeById: (id: number) => void
-  updateData: (id: number, data: MenuItem) => void
-  resetDirtyBaseline: () => void
-}
-const basicRef = ref<NestedEditorApiLocal | null>(null)
+const basicRef = ref<ExposedNestedSortableListEditorHandle<MenuItem> | null>(null)
 
 const lastLog = ref<string>('')
 const log = (msg: string) => {
@@ -292,16 +285,9 @@ const failingApply = async (_tree: NestedTree<MenuItem>): Promise<void> => {
   throw new Error('Server rejected the new tree')
 }
 
-// --- imperative ref API demo (mirrors the LinkedListManage migration pattern) ---
+// --- imperative ref API demo (the LinkedListManage pattern: rows the server already saved) ---
 
-interface NestedEditorApi {
-  addAfterId: (targetId: number | null, data: MenuItem, childrenAllowed: boolean) => void
-  addChildToId: (targetId: number, data: MenuItem, childrenAllowed: boolean) => void
-  removeById: (id: number) => void
-  updateData: (id: number, data: MenuItem) => void
-  resetDirtyBaseline: () => void
-}
-const refApiRef = ref<NestedEditorApi | null>(null)
+const refApiRef = ref<ExposedNestedSortableListEditorHandle<MenuItem> | null>(null)
 
 const onRefAddRootLast = () => {
   const api = refApiRef.value
@@ -310,18 +296,21 @@ const onRefAddRootLast = () => {
   // Insert after the last root sibling (or as first root if tree is empty).
   const lastRootId =
     refApiTree.value.children.length > 0
-      ? refApiTree.value.children[refApiTree.value.children.length - 1].data.id
+      ? refApiTree.value.children[refApiTree.value.children.length - 1]!.data.id
       : null
-  api.addAfterId(lastRootId, { id, position: 0, parent: null, title: `Appended #${id}`, status: 'Draft' }, true)
-  log(`addAfterId(last, ${id})`)
+  const row: MenuItem = { id, position: 0, parent: null, title: `Appended #${id}`, status: 'Draft' }
+  api.acceptChanges(() => api.addItem(row, { afterId: lastRootId ?? undefined }), [id])
+  log(`acceptChanges(addItem after last, ${id})`)
 }
 
 const onRefAddChildToHome = () => {
   const api = refApiRef.value
   if (!api) return
   const id = nextId++
-  api.addChildToId(1, { id, position: 0, parent: 1, title: `Home child #${id}`, status: 'Draft' }, true)
-  log(`addChildToId(Home, ${id})`)
+  const row: MenuItem = { id, position: 0, parent: 1, title: `Home child #${id}`, status: 'Draft' }
+  api.expand(1)
+  api.acceptChanges(() => api.addItem(row, { parentId: 1, asFirstChild: true }), [id])
+  log(`acceptChanges(addItem first child of Home, ${id})`)
 }
 
 const onRefDeleteFirst = () => {
@@ -329,8 +318,8 @@ const onRefDeleteFirst = () => {
   if (!api) return
   const first = refApiTree.value.children[0]
   if (!first) return
-  api.removeById(first.data.id)
-  log(`removeById(${first.data.id})`)
+  api.acceptChanges(() => api.deleteItem(first.data.id, { trackDeleted: false }), [first.data.id])
+  log(`acceptChanges(deleteItem ${first.data.id})`)
 }
 
 const onRefRenameFirst = () => {
@@ -339,8 +328,8 @@ const onRefRenameFirst = () => {
   const first = refApiTree.value.children[0]
   if (!first) return
   const newTitle = `${first.data.title} (renamed ${new Date().toLocaleTimeString()})`
-  api.updateData(first.data.id, { ...first.data, title: newTitle })
-  log(`updateData(${first.data.id})`)
+  api.acceptChanges(() => api.updateItem(first.data.id, { ...first.data, title: newTitle }), [first.data.id])
+  log(`acceptChanges(updateItem ${first.data.id})`)
 }
 
 const totalCount = computed(() => {
@@ -496,14 +485,11 @@ const totalCount = computed(() => {
         </template>
       </ANestedSortableListEditor>
 
-      <h2 class="text-headline-medium mt-8 mb-2">
-        ANestedSortableListEditor — imperative ref API (migration parity with legacy
-        <code>ASortableNested</code>)
-      </h2>
+      <h2 class="text-headline-medium mt-8 mb-2">ANestedSortableListEditor — imperative ref API</h2>
       <p class="text-body-medium text-medium-emphasis mb-2">
-        These buttons call <code>addAfterId</code> / <code>addChildToId</code> / <code>removeById</code> /
-        <code>updateData</code> on the component ref — same method names and signatures as the legacy component. After
-        each call the internal dirty baseline is re-captured automatically.
+        These buttons change rows as if the server had already saved them: <code>acceptChanges</code> around
+        <code>addItem</code> / <code>updateItem</code> / <code>deleteItem</code>. Only what each call changed is adopted
+        as saved; other pending edits stay unsaved.
       </p>
       <div class="d-flex ga-2 mb-2 flex-wrap">
         <VBtn
@@ -513,7 +499,7 @@ const totalCount = computed(() => {
           prepend-icon="mdi-plus"
           @click="onRefAddRootLast"
         >
-          addAfterId(last)
+          add after last
         </VBtn>
         <VBtn
           color="primary"
@@ -522,7 +508,7 @@ const totalCount = computed(() => {
           prepend-icon="mdi-plus-box-outline"
           @click="onRefAddChildToHome"
         >
-          addChildToId(Home)
+          add first child of Home
         </VBtn>
         <VBtn
           variant="tonal"
@@ -530,7 +516,7 @@ const totalCount = computed(() => {
           prepend-icon="mdi-pencil"
           @click="onRefRenameFirst"
         >
-          updateData(first root)
+          update first root
         </VBtn>
         <VBtn
           color="error"
@@ -539,7 +525,7 @@ const totalCount = computed(() => {
           prepend-icon="mdi-delete"
           @click="onRefDeleteFirst"
         >
-          removeById(first root)
+          delete first root
         </VBtn>
       </div>
       <ANestedSortableListEditor

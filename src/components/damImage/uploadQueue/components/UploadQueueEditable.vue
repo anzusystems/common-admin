@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
     </div>
     <div
       v-if="list.length > 0"
-      class="asset-queue-editable__sidebar system-border-l"
+      class="asset-queue-editable__sidebar border-s"
     >
       <AssetQueueSelectedSidebar
         :queue-key="queueKey"

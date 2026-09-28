@@ -54,12 +54,14 @@ const clickInput = () => {
   }, BLOCK_DOUBLE_CLICK_MS)
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { checkFormatsAndSizes } = useFormatAndSizeCheck(props.accept, props.maxSizes)
+const { checkFormatsAndSizes } = useFormatAndSizeCheck(
+  () => props.accept,
+  () => props.maxSizes
+)
 
 const validateData = (files: File[]) => {
   if (!props.multiple && files.length > 0) {
-    const checked = checkFormatsAndSizes([files[0]])
+    const checked = checkFormatsAndSizes([files[0]!])
     emit('filesInput', checked)
     return
   }
@@ -108,8 +110,8 @@ defineExpose({
     v-if="useDropzone"
     :variant="dropzoneVariant"
     :hover-only="hoverOnly"
-    @on-click="onFileDropzoneClick"
-    @on-drop="onDropzoneDrop"
+    @click="onFileDropzoneClick"
+    @drop="onDropzoneDrop"
   />
   <slot
     v-else

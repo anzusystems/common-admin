@@ -15,6 +15,12 @@ import { usePermissionGroupOneStore } from '@/labs/permissionGroup/permissionGro
 import type { IntegerId } from '@/types/common'
 import type { PermissionGroup } from '@/types/PermissionGroup'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import { AnzuFatalError } from '@/model/error/AnzuFatalError'
+
+// The record store is shared by every page, and a request is not aborted when its page goes: only the
+// latest fetch may write the record, or reset it on failure. A store reset (a page's teardown, a create
+// page's mount) counts as newer too.
+let fetchGeneration = 0
 
 export interface PermissionGroupActionsParams {
   client: AxiosClientFn
@@ -98,14 +104,21 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
   const { permissionGroup, loadingPermissionGroup } = storeToRefs(permissionGroupOneStore)
 
   const fetchPermissionGroup = async (id: IntegerId) => {
+    const generation = ++fetchGeneration
     permissionGroupOneStore.setLoadingPermissionGroup(true)
     try {
       const { execute } = useFetchPermissionGroup()
-      permissionGroupOneStore.setPermissionGroup(await execute({ urlParams: { id } }))
+      const res = await execute({ urlParams: { id } })
+      if (generation !== fetchGeneration) return
+      permissionGroupOneStore.setPermissionGroup(res)
     } catch (error) {
+      // A newer fetch owns the record now, possibly another page's: leave it alone.
+      if (generation !== fetchGeneration) return
+      // Not the previous record: Save would PUT it back to its own id from a page opened for another.
+      permissionGroupOneStore.reset()
       showErrorsDefault(error)
     } finally {
-      permissionGroupOneStore.setLoadingPermissionGroup(false)
+      if (generation === fetchGeneration) permissionGroupOneStore.setLoadingPermissionGroup(false)
     }
   }
 
@@ -136,6 +149,11 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
       if (v$.value.$invalid) {
         showValidationError()
         return false
+      }
+      const id = permissionGroupOneStore.permissionGroup.id
+      // The factory's blank record has id 0: after a failed fetch there is nothing to update.
+      if (!id) {
+        throw new AnzuFatalError(undefined, '[usePermissionGroupActions] update called on a record with no id.')
       }
       const { execute } = useUpdatePermissionGroup()
       await execute({
@@ -211,6 +229,9 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
     loadingDeletePermissionGroup,
     fetchPermissionGroupOptions,
     fetchPermissionGroupOptionsByIds,
-    resetPermissionGroupStore: permissionGroupOneStore.reset,
+    resetPermissionGroupStore: () => {
+      fetchGeneration++
+      permissionGroupOneStore.reset()
+    },
   }
 }

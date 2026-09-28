@@ -1,4 +1,8 @@
+import { type I18n, useI18n } from 'vue-i18n'
+import { createVuetify, type VuetifyOptions } from 'vuetify'
 import { VBtn, VChip } from 'vuetify/components'
+import { Intersect } from 'vuetify/directives'
+import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n'
 
 export const useCommonVuetifyConfig = () => {
   const commonTheme = () => {
@@ -58,8 +62,12 @@ export const useCommonVuetifyConfig = () => {
   }
 
   const commonDefaults = () => {
+    // No input can hover (a touch screen): a tap emulates the hover and focus a tooltip opens on, and nothing
+    // ever ends them, so the tooltip stayed open. There it opens neither way.
+    const touchOnly = typeof window !== 'undefined' && !!window.matchMedia?.('(any-hover: none)').matches
     return {
       global: {},
+      VTooltip: touchOnly ? { openOnHover: false, openOnFocus: false } : {},
       VTextField: {
         variant: 'underlined',
         density: 'compact',
@@ -143,4 +151,29 @@ export const useCommonVuetifyConfig = () => {
     commonDefaults,
     commonTheme,
   }
+}
+
+export interface CreateAnzuVuetifyOptions {
+  /** The admin's vue-i18n instance, in composition mode: Vuetify's own texts are translated through it. */
+  i18n: I18n<any, any, any, string, false>
+  /** Merged over the common defaults per component, the way admin-ugc sets `VDataTableServer`. */
+  defaults?: VuetifyOptions['defaults']
+}
+
+/**
+ * The Vuetify instance every admin created in its own `vuetify.ts`, identical in all six: the common
+ * aliases, theme and defaults, texts through the admin's i18n, the `Intersect` directive. The stylesheets
+ * (`vuetify/styles`, the icon font) stay imported by the admin, where their order is decided.
+ */
+export function createAnzuVuetify({ i18n, defaults }: CreateAnzuVuetifyOptions) {
+  const { commonTheme, commonAliases, commonDefaults } = useCommonVuetifyConfig()
+  return createVuetify({
+    aliases: commonAliases(),
+    locale: {
+      adapter: createVueI18nAdapter({ i18n, useI18n }),
+    },
+    directives: { Intersect },
+    theme: commonTheme(),
+    defaults: { ...commonDefaults(), ...defaults },
+  })
 }

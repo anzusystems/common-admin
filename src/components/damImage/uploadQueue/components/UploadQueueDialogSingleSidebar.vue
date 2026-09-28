@@ -40,8 +40,8 @@ const props = withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'onSave'): void
-  (e: 'onSaveAndApply'): void
+  (e: 'save'): void
+  (e: 'saveAndApply'): void
 }>()
 
 const { t } = useI18n()
@@ -91,8 +91,8 @@ const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && 
               :config-name="configName"
               :is-active="true"
               :asset-type="assetType"
-              @on-save="emit('onSave')"
-              @on-save-and-apply="emit('onSaveAndApply')"
+              @save="emit('save')"
+              @save-and-apply="emit('saveAndApply')"
             />
           </div>
           <div class="py-2">
@@ -114,8 +114,8 @@ const simpleMode = computed(() => simpleAssetSidebarEnabled && props.isImage && 
               :config-name="configName"
               :is-active="activeTab === AssetDetailTabImageWithRoi.Info"
               :asset-type="assetType"
-              @on-save="emit('onSave')"
-              @on-save-and-apply="emit('onSaveAndApply')"
+              @save="emit('save')"
+              @save-and-apply="emit('saveAndApply')"
             />
           </div>
           <div

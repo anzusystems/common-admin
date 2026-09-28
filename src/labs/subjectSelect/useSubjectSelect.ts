@@ -51,21 +51,25 @@ export function useSubjectSelect<TItem>(
 
   const onOpen = () => {
     resetState()
+    pagination.value = { ...pagination.value, page: 1 }
     getListDebounced()
   }
 
   const sortByChange = (option: DatatableOrderingOption) => {
     setSortBy(option.sortBy)
+    pagination.value = { ...pagination.value, page: 1 }
     getListDebounced()
   }
 
   const onFetchNextPage = async () => {
     loading.value = true
-    incrementPage()
+    const page = incrementPage()
     try {
       const res = (await execute(pagination, filterData, filterConfig, fetchParams)) as TItem[]
       items.value.push(...res)
     } catch (e) {
+      // Not when a reopen, sort change or filter submit reset the page meanwhile: that reset stands.
+      if (pagination.value.page === page) pagination.value = { ...pagination.value, page: page - 1 }
       showErrorsDefault(e)
     } finally {
       loading.value = false

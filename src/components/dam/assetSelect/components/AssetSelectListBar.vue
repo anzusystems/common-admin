@@ -137,7 +137,7 @@ onMounted(() => {
     color="transparent"
     :height="46"
     elevation="0"
-    :class="hideFilterToggle ? '' : 'system-border-b'"
+    :class="hideFilterToggle ? '' : 'border-b'"
     class="subject-select__second-bar"
   >
     <slot name="second-bar">
@@ -146,6 +146,7 @@ onMounted(() => {
           <div class="d-flex align-center">
             <VBtn
               v-if="!hideFilterToggle"
+              :aria-label="t('common.assetSelect.meta.filter.toggle')"
               icon
               :width="30"
               :height="30"
@@ -169,6 +170,7 @@ onMounted(() => {
                 class="ml-1 mr-2 my-2"
               />
               <VBtn
+                :aria-label="t('common.assetSelect.assetType.image')"
                 icon
                 :width="30"
                 :height="30"
@@ -191,6 +193,7 @@ onMounted(() => {
                 </VTooltip>
               </VBtn>
               <VBtn
+                :aria-label="t('common.assetSelect.assetType.video')"
                 icon
                 :width="30"
                 :height="30"
@@ -213,6 +216,7 @@ onMounted(() => {
                 </VTooltip>
               </VBtn>
               <VBtn
+                :aria-label="t('common.assetSelect.filter.inPodcast')"
                 icon
                 :width="30"
                 :height="30"
@@ -245,6 +249,7 @@ onMounted(() => {
               :pagination-update-custom-cb="onSortUpdate"
             />
             <VBtn
+              :aria-label="t('common.assetSelect.meta.grid.masonry')"
               size="x-small"
               icon
               class="text-medium-emphasis"
@@ -260,6 +265,7 @@ onMounted(() => {
               </VTooltip>
             </VBtn>
             <VBtn
+              :aria-label="t('common.assetSelect.meta.grid.thumbnail')"
               icon
               class="text-medium-emphasis"
               size="x-small"
@@ -276,6 +282,7 @@ onMounted(() => {
             </VBtn>
             <VBtn
               v-if="!mdAndDown"
+              :aria-label="t('common.assetSelect.meta.grid.table')"
               size="x-small"
               icon
               class="text-medium-emphasis"
@@ -295,6 +302,7 @@ onMounted(() => {
               class="mx-1 my-2"
             />
             <VBtn
+              :aria-label="t('common.assetSelect.meta.info.toggle')"
               icon
               class="text-medium-emphasis"
               :width="30"

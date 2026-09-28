@@ -25,6 +25,10 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "erasableSyntaxOnly": true
   }
 }

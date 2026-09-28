@@ -172,6 +172,7 @@ const onClickNext = useThrottleFn(
       <VBtn
         :disabled="disabledFirstAndPrev"
         icon="mdi-page-first"
+        :aria-label="t('$vuetify.pagination.ariaLabel.first')"
         size="small"
         variant="text"
         @click.stop="onClickFirst"
@@ -179,6 +180,7 @@ const onClickNext = useThrottleFn(
       <VBtn
         :disabled="disabledFirstAndPrev"
         icon="mdi-chevron-left"
+        :aria-label="t('$vuetify.pagination.ariaLabel.previous')"
         size="small"
         variant="text"
         @click.stop="onClickPrev"
@@ -191,6 +193,7 @@ const onClickNext = useThrottleFn(
       <VBtn
         :disabled="disabledNext"
         icon="mdi-chevron-right"
+        :aria-label="t('$vuetify.pagination.ariaLabel.next')"
         size="small"
         variant="text"
         @click.stop="onClickNext"
@@ -198,6 +201,7 @@ const onClickNext = useThrottleFn(
       <VBtn
         :disabled="disabledLast"
         icon="mdi-page-last"
+        :aria-label="t('$vuetify.pagination.ariaLabel.last')"
         size="small"
         variant="text"
         @click.stop="onClickLast"

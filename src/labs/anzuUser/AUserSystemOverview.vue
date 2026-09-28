@@ -640,7 +640,7 @@ defineExpose({
       :max-width="720"
     >
       <VCard>
-        <ADialogToolbar @on-cancel="createAnywhereOpen = false">
+        <ADialogToolbar @cancel="createAnywhereOpen = false">
           {{ t('common.userSystem.search.createAnywhere') }}
         </ADialogToolbar>
         <VCardText>

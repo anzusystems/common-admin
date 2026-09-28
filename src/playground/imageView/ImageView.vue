@@ -91,7 +91,7 @@ const saveInsideDialog = () => {
             :max-width="500"
           >
             <VCard v-if="dialog">
-              <ADialogToolbar @on-cancel="dialog = false">test</ADialogToolbar>
+              <ADialogToolbar @cancel="dialog = false">test</ADialogToolbar>
               <VCardText>
                 <VRow>
                   <VCol>

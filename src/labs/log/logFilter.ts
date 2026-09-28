@@ -100,7 +100,18 @@ const registry = new Map<string, LogFilter>()
 
 export function useLogFilter(system: string, window: LogTimeWindow | undefined): LogFilter {
   const existing = registry.get(system)
-  if (existing) return existing
+  if (existing) {
+    if (window) {
+      const { fields } = existing.filterConfig
+      // A value still at the old default was never chosen by the user, so it moves with the window.
+      if (existing.filterData.datetimeFrom === fields.datetimeFrom.default)
+        existing.filterData.datetimeFrom = window.from
+      if (existing.filterData.datetimeTo === fields.datetimeTo.default) existing.filterData.datetimeTo = window.to
+      fields.datetimeFrom.default = window.from
+      fields.datetimeTo.default = window.to
+    }
+    return existing
+  }
 
   const fields = logFilterFields(window)
   const created = createFilter(fields, createFilterStore(fields), {

@@ -14,5 +14,6 @@
     "disabled": "Record was disabled"
   },
   "idWasCopied": "ID was copied to clipboard",
-  "textWasCopied": "Text was copied to clipboard"
+  "textWasCopied": "Text was copied to clipboard",
+  "authUnavailable": "The sign-in server is not responding. Try again in a moment."
 }

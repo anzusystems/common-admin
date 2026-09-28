@@ -43,12 +43,14 @@ const { clearOneFilterSelected, isClearable } = useFilterClearHelpers()
  */
 const canClear = (name: string) => {
   if (!isClearable(name, filterConfig)) return false
-  const config = filterConfig.fields[name]
+  // `isClearable` has just read this same config, so it is there.
+  const config = filterConfig.fields[name]!
   // A time interval is a pair sharing one chip, and clearing writes the default into both. Only
   // `until` may differ - the custom dialog opens prefilled, so shortening just the upper bound
   // leaves `from` at its default - and the button still has work to do then.
   if (config.type === 'timeInterval' && config.related) {
-    const related = filterConfig.fields[config.related]
+    // `createFilter` checked that the related field is configured.
+    const related = filterConfig.fields[config.related]!
     if (filterData[config.related] !== related.default) return true
   }
   const value = filterData[name]

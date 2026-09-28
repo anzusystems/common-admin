@@ -10,5 +10,5 @@ export const parseBoolean = (x: unknown): boolean => {
   if (!isString(x) && !isNumber(x)) return false
   const str = `${x}`.toUpperCase().trim()
 
-  return !['FALSE', 'NO', '0'].includes(str)
+  return !['FALSE', 'NO', '0', ''].includes(str)
 }

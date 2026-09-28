@@ -1,4 +1,3 @@
-import type { OpUnitType, QUnitType } from 'dayjs'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
@@ -25,8 +24,9 @@ export const dateTimeToDate = (isoDate: DatetimeUTC | DatetimeUTCNullable | stri
 export const dateTimeNow = (ignoreFractionalSeconds = true, ignoreSeconds = false): string => {
   if (ignoreFractionalSeconds && !ignoreSeconds) return dayjs().utc().format('YYYY-MM-DDTHH:mm:ss') + SUFFIX
   if (ignoreFractionalSeconds && ignoreSeconds) return dayjs().utc().format('YYYY-MM-DDTHH:mm:00') + SUFFIX
-  if (!ignoreFractionalSeconds && ignoreSeconds) return dayjs().utc().format('YYYY-MM-DDTHH:mm:00.SSSSSS') + 'Z'
-  return dayjs().utc().format('YYYY-MM-DDTHH:mm:ss.SSSSSS') + 'Z'
+  // dayjs has no microsecond token: `SSSSSS` is `SSS` twice.
+  if (!ignoreFractionalSeconds && ignoreSeconds) return dayjs().utc().format('YYYY-MM-DDTHH:mm:00.SSS') + '000Z'
+  return dayjs().utc().format('YYYY-MM-DDTHH:mm:ss.SSS') + '000Z'
 }
 
 export const dateTimeStartOfDay = (days = 0) => {
@@ -57,7 +57,7 @@ export const dateUtcToday = (): DateUTC => {
   return dayjs.utc(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())).format(FORMAT) + SUFFIX
 }
 
-export const dateToUtc = (date: dayjs.ConfigType, suffix = SUFFIX) => {
+export const dateToUtc = (date: Date | string | number, suffix = SUFFIX) => {
   return dayjs(date).utc().format('YYYY-MM-DDTHH:mm:ss') + suffix
 }
 
@@ -122,7 +122,37 @@ export const timePretty = (isoDate: DatetimeUTC | DatetimeUTCNullable | string |
   return dayjs(isoDate).format('HH:mm')
 }
 
-export const dateDiff = (date1: Date, date2: Date, unit: QUnitType | OpUnitType = 'ms') => {
+/** A unit `dateDiff` counts in: singular, plural or short, as dayjs names them. */
+export type DateDiffUnit =
+  | 'millisecond'
+  | 'milliseconds'
+  | 'ms'
+  | 'second'
+  | 'seconds'
+  | 's'
+  | 'minute'
+  | 'minutes'
+  | 'm'
+  | 'hour'
+  | 'hours'
+  | 'h'
+  | 'day'
+  | 'days'
+  | 'd'
+  | 'week'
+  | 'weeks'
+  | 'w'
+  | 'month'
+  | 'months'
+  | 'M'
+  | 'quarter'
+  | 'quarters'
+  | 'Q'
+  | 'year'
+  | 'years'
+  | 'y'
+
+export const dateDiff = (date1: Date, date2: Date, unit: DateDiffUnit = 'ms') => {
   const date1dayjs = dayjs(date1)
   const date2dayjs = dayjs(date2)
   return date1dayjs.diff(date2dayjs, unit)
@@ -145,8 +175,9 @@ const _getMonthInterval = (
   expandToCurrentMonth: boolean = false
 ): MonthIntervalUTC | MonthIntervalDate => {
   const from = new Date(nowDate)
-  from.setMonth(from.getMonth() + monthOffset)
-  from.setDate(1)
+  // Day and month together: on the 31st, moving the month first lands on a missing day and rolls
+  // over into the month after, before the day is reset.
+  from.setMonth(from.getMonth() + monthOffset, 1)
   from.setHours(0, 0, 0, 0)
   const until = new Date(nowDate)
   if (expandToCurrentMonth) {

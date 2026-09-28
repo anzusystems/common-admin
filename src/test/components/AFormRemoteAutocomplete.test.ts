@@ -5,7 +5,7 @@ import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
-import { SystemScopeSymbol, SubjectScopeSymbol } from '@/components/injectionKeys'
+import { SystemScopeKey, SubjectScopeKey } from '@/components/injectionKeys'
 
 // Mock the composables
 vi.mock('@/components/collab/composables/commonAdminCollabOptions', () => ({
@@ -98,8 +98,8 @@ describe('AFormRemoteAutocomplete', () => {
         provide: {
           [FilterInnerDataKey as symbol]: mockFilterData,
           [FilterInnerConfigKey as symbol]: mockFilterConfig,
-          [SystemScopeSymbol as symbol]: 'test',
-          [SubjectScopeSymbol as symbol]: 'testSubject',
+          [SystemScopeKey as symbol]: 'test',
+          [SubjectScopeKey as symbol]: 'testSubject',
           ...provide,
         },
       },

@@ -36,6 +36,10 @@ export interface UseNestedListEditorOptions {
   positionField?: string
   parentField?: string
   positionMultiplier?: number
+  /** `false` = the position field is not managed: tree ops never write it. */
+  managedPosition?: boolean
+  /** Per-action policy (mirrors the flat controller); default 'renumber'. */
+  positionStrategyFor?: (action: 'add' | 'remove' | 'move') => 'renumber' | 'preserve-values'
   maxDepth: number
   expandedKeys?: Ref<Set<ListEditorKey>>
 }
@@ -54,7 +58,7 @@ export interface NestedListEditorApi<TItem extends Record<string, any>> {
       childrenAllowed?: boolean
     }
   ) => NestedTree<TItem>
-  deleteItem: (id: ListEditorKey) => NestedTree<TItem>
+  deleteItem: (id: ListEditorKey, opts?: { renumber?: boolean }) => NestedTree<TItem>
   updateItem: (id: ListEditorKey, data: TItem, markDirty?: boolean) => NestedTree<TItem>
   moveUp: (id: ListEditorKey) => NestedTree<TItem> | null
   moveDown: (id: ListEditorKey) => NestedTree<TItem> | null
@@ -73,9 +77,8 @@ const DEFAULT_PARENT_FIELD = 'parent'
 
 /**
  * Nested list editor core. Pure data behavior shared by ANestedSortableListEditor.
- * Works on a tree of `{ data, children, meta }` nodes — shape-compatible with the
- * legacy `SortableNested` wrapper so migration can pass existing data through
- * unchanged. Mutators return a cloned tree and also assign it to `model.value`.
+ * Works on a tree of `{ data, children, meta }` nodes. Mutators return a cloned tree and also
+ * assign it to `model.value`.
  */
 export function useNestedListEditor<TItem extends Record<string, any>>(
   model: Ref<NestedTree<TItem>>,
@@ -115,7 +118,32 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     return { node: null, parent: null }
   }
 
-  const recalculateSiblings = (siblings: NestedTreeNode<TItem>[]) => {
+  const recalculateSiblings = (siblings: NestedTreeNode<TItem>[], action: 'add' | 'remove' | 'move' = 'move') => {
+    if (options.managedPosition === false) return
+    const strategy = options.positionStrategyFor?.(action) ?? 'renumber'
+    if (strategy === 'preserve-values') {
+      if (action !== 'move') return
+      const values = siblings.map((s) => s.data[positionField])
+      // As in the flat editor: without a finite number on every row there is no slot set to move
+      // through, and inventing one would write a wrong payload.
+      if (!values.every((v) => typeof v === 'number' && Number.isFinite(v))) {
+        console.warn(
+          `[listEditor] position strategy "preserve-values" needs a finite numeric \`${positionField}\` ` +
+            'on every row; found ' +
+            JSON.stringify(values) +
+            ' — leaving positions untouched.'
+        )
+        return
+      }
+      const slots = (values as number[]).slice().sort((a, b) => a - b)
+      siblings.forEach((sibling, i) => {
+        if (sibling.data[positionField] !== slots[i]) {
+          ;(sibling.data as any)[positionField] = slots[i]
+          sibling.meta.dirty = true
+        }
+      })
+      return
+    }
     let pos = 1 * positionMultiplier
     for (const sibling of siblings) {
       if (sibling.data[positionField] !== pos) {
@@ -148,7 +176,7 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     let flatIndex = 0
     const walk = (nodes: NestedTreeNode<TItem>[], depth: number, parentNode: NestedTreeNode<TItem> | null) => {
       for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i]
+        const node = nodes[i]!
         const key = getKey(node.data)
         const childrenAllowed = !isUndefined(node.children)
         const hasChildren = childrenAllowed && (node.children?.length ?? 0) > 0
@@ -244,7 +272,7 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
         if (idx !== -1) {
           insertAfter(siblings, idx, newNode)
           ;(newNode.data as any)[parentField] = afterParent ? getKey(afterParent.data) : null
-          recalculateSiblings(siblings)
+          recalculateSiblings(siblings, 'add')
           model.value = cloned
           return cloned
         }
@@ -254,12 +282,14 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     const insertIdx = hint?.asFirstChild ? 0 : resolveInsertIndex(targetSiblings, hint)
     targetSiblings.splice(insertIdx, 0, newNode)
     ;(newNode.data as any)[parentField] = parentNode ? getKey(parentNode.data) : null
-    recalculateSiblings(targetSiblings)
+    recalculateSiblings(targetSiblings, 'add')
     model.value = cloned
     return cloned
   }
 
-  const deleteItem = (id: ListEditorKey): NestedTree<TItem> => {
+  // `renumber: false` leaves the siblings' positions as they are: a row already deleted on the backend,
+  // which does not renumber either, so the gap the server has stays in the editor too.
+  const deleteItem = (id: ListEditorKey, opts?: { renumber?: boolean }): NestedTree<TItem> => {
     const cloned = cloneDeep(model.value) as NestedTree<TItem>
     const { node, parent } = findNode(id, cloned.children)
     if (!node) return cloned
@@ -267,7 +297,7 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     const idx = siblings.indexOf(node)
     if (idx === -1) return cloned
     siblings.splice(idx, 1)
-    recalculateSiblings(siblings)
+    if (opts?.renumber !== false) recalculateSiblings(siblings, 'remove')
     model.value = cloned
     return cloned
   }
@@ -296,8 +326,9 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     if (idx === -1) return null
     const target = getTargetIndex(siblings, idx)
     if (target === null || target === idx) return null
-    const [removed] = siblings.splice(idx, 1)
+    const removed = siblings.splice(idx, 1)[0]!
     siblings.splice(target, 0, removed)
+    if (options.managedPosition === false) removed.meta.dirty = true
     recalculateSiblings(siblings)
     return cloned
   }
@@ -342,7 +373,7 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     const siblings = parent ? (parent.children as NestedTreeNode<TItem>[]) : cloned.children
     const idx = siblings.indexOf(node)
     if (idx <= 0) return null
-    const prev = siblings[idx - 1]
+    const prev = siblings[idx - 1]!
     if (isUndefined(prev.children)) return null
     const subtreeDepth = calculateSubtreeDepth(node)
     const prevDepth = calculateParentDepth(cloned, getKey(prev.data))
@@ -449,7 +480,7 @@ export function useNestedListEditor<TItem extends Record<string, any>>(
     if (sourceIdx === -1) return null
 
     const samelist = sourceSiblings === targetSiblings
-    const [removed] = sourceSiblings.splice(sourceIdx, 1)
+    const removed = sourceSiblings.splice(sourceIdx, 1)[0]!
     let insertAt = targetIndex
     if (samelist && sourceIdx < targetIndex) insertAt = targetIndex - 1
     insertAt = Math.max(0, Math.min(insertAt, targetSiblings.length))

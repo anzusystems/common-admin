@@ -1,7 +1,7 @@
 import type { DamExtSystemConfig, DamPrvConfig, DamPubConfig } from '@/types/coreDam/DamConfig'
 import type { AxiosInstance } from 'axios'
 import type { IntegerId } from '@/types/common'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import { useApiRequest } from '@/labs/api/useApiRequest'
 
 const END_POINT = '/adm/v1/configuration'

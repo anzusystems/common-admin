@@ -50,8 +50,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'editAsset', data: DocId): void
-  (e: 'onConfirm'): void
-  (e: 'onClose'): void
+  (e: 'confirm'): void
+  (e: 'close'): void
 }>()
 
 const { t } = useI18n()
@@ -107,12 +107,12 @@ const onConfirm = () => {
     showValidationError()
     return
   }
-  emit('onConfirm')
+  emit('confirm')
 }
 
 const onDialogModelUpdate = (newValue: boolean) => {
   if (newValue) return
-  emit('onClose')
+  emit('close')
 }
 
 const onEditAsset = () => {
@@ -206,7 +206,7 @@ defineExpose({
     @update:model-value="onDialogModelUpdate"
   >
     <VCard v-if="modelValue">
-      <ADialogToolbar @on-cancel="onDialogModelUpdate(false)">
+      <ADialogToolbar @cancel="onDialogModelUpdate(false)">
         {{ type === DamAssetType.Image ? t('common.damImage.image.meta.edit') : t('common.damImage.media.meta.edit') }}
       </ADialogToolbar>
       <VCardText>

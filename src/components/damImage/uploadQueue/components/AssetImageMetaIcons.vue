@@ -34,13 +34,10 @@ const checkDimensions = (icons: string[], titles: string[]) => {
     return
   }
   if (props.assetType !== DamAssetType.Video) return
-  for (let i = 0; i < DIMENSIONS_CONFIG.length; i++) {
-    if (
-      props.assetFileProperties.width === DIMENSIONS_CONFIG[i].width &&
-      props.assetFileProperties.height === DIMENSIONS_CONFIG[i].height
-    ) {
-      icons.push(DIMENSIONS_CONFIG[i].svgSrc)
-      titles.push(t(DIMENSIONS_CONFIG[i].titleT))
+  for (const dimension of DIMENSIONS_CONFIG) {
+    if (props.assetFileProperties.width === dimension.width && props.assetFileProperties.height === dimension.height) {
+      icons.push(dimension.svgSrc)
+      titles.push(t(dimension.titleT))
       break
     }
   }
@@ -48,14 +45,12 @@ const checkDimensions = (icons: string[], titles: string[]) => {
 
 const checkDistributions = (icons: string[], titles: string[]) => {
   const damConfigStore = useDamConfigStore()
-  for (let i = 0; i < props.assetFileProperties.distributesInServices.length; i++) {
-    const iconPath =
-      damConfigStore.damPrvConfig.distributionServices[props.assetFileProperties.distributesInServices[i]]?.iconPath
-    if (iconPath && iconPath.length > 0 && !icons.includes(iconPath)) {
+  for (const serviceName of props.assetFileProperties.distributesInServices) {
+    const service = damConfigStore.damPrvConfig.distributionServices[serviceName]
+    const iconPath = service?.iconPath
+    if (service && iconPath && iconPath.length > 0 && !icons.includes(iconPath)) {
       icons.push(iconPath)
-      titles.push(
-        damConfigStore.damPrvConfig.distributionServices[props.assetFileProperties.distributesInServices[i]].title
-      )
+      titles.push(service.title)
     }
   }
 }

@@ -23,7 +23,7 @@ import {
   useCollabRoomDataChangeEventBus,
 } from '@/components/collab/composables/collabEventBus'
 import { type Fn, tryOnBeforeUnmount } from '@vueuse/core'
-import { useCollabState } from '@/components/collab/composables/collabState'
+import { useCollabStateInternal } from '@/components/collab/composables/collabState'
 import { isDefined, isUndefined } from '@/utils/common'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useCollabCurrentUserId } from '@/components/collab/composables/collabCurrentUserId'
@@ -31,7 +31,8 @@ import { useCollabCurrentUserId } from '@/components/collab/composables/collabCu
 export function useCollabField(room: CollabRoom, field: CollabFieldName, disableAutoUnsubscribe = false) {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { currentUserId } = useCollabCurrentUserId()
-  const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } = useCollabState()
+  const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } =
+    useCollabStateInternal()
 
   const changeEventBus = useCollabRoomDataChangeEventBus()
   const unsubscribeCollabFieldDataChangeListener = ref<undefined | Fn>()

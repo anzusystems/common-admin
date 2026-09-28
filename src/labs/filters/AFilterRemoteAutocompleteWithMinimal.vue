@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { watchDebounced } from '@vueuse/core'
-import { computed, getCurrentInstance, inject, type Ref, ref, watch } from 'vue'
+import { computed, getCurrentInstance, inject, onBeforeUnmount, type Ref, ref, watch } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { cloneDeep, isArray, isBoolean, isNull, isUndefined } from '@/utils/common'
 import { useI18n } from 'vue-i18n'
@@ -106,7 +106,8 @@ const apiRequestCounter = ref(0)
 
 const { t } = useI18n()
 
-const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
+// The setup above throws unless the field is configured.
+const filterConfigCurrent = computed(() => filterConfig.fields[props.name]!)
 
 const onBlur = () => {
   isFocused.value = false
@@ -192,6 +193,8 @@ const clearAutoFetchTimer = () => {
   clearTimeout(autoFetchTimer.value)
   autoFetchTimer.value = undefined
 }
+
+onBeforeUnmount(clearAutoFetchTimer)
 
 const autoFetch = async () => {
   clearAutoFetchTimer()
@@ -301,6 +304,8 @@ watch(
       }
       updateFilterSelected(selected.value)
       if (autoFetched.value === true || isOneOf(props.prefetch, ['hover', 'focus', false])) return
+      // One pending auto-fetch at a time: a second empty value would otherwise orphan the first timer.
+      clearAutoFetchTimer()
       autoFetchTimer.value = setTimeout(() => {
         autoFetch()
       }, 3000)

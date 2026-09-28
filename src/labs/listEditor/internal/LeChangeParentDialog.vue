@@ -181,6 +181,7 @@ const reasonLabel = (reason: Candidate['reason']): string => {
     v-model="open"
     max-width="540"
     persistent
+    @keydown.esc="onCancel"
   >
     <VCard>
       <VCardTitle>

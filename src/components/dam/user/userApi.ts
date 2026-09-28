@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
 import { useApiRequest } from '@/labs/api/useApiRequest'

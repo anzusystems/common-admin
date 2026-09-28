@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { onBeforeUnmount, onMounted, provide } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
 import ADatetime from '@/components/datetime/ADatetime.vue'
@@ -49,6 +50,7 @@ const emit = defineEmits<{
 }>()
 
 /* eslint-disable vue/no-setup-props-reactivity-loss */
+const { t } = useI18n()
 const { filterConfig, filterData } = usePermissionGroupListFilter(props.system)
 provide(FilterConfigKey, filterConfig)
 provide(FilterDataKey, filterData)
@@ -183,6 +185,7 @@ defineExpose({
               :to="detailRoute(item)"
               class="ml-1"
               icon="mdi-information-outline"
+              :aria-label="t('common.button.detail')"
               size="x-small"
               variant="text"
             />
@@ -191,6 +194,7 @@ defineExpose({
               :to="editRoute(item)"
               class="ml-1"
               icon="mdi-pencil"
+              :aria-label="t('common.button.edit')"
               size="x-small"
               variant="text"
             />

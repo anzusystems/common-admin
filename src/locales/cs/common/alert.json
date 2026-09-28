@@ -14,5 +14,6 @@
     "disabled": "Záznam byl zakázán."
   },
   "idWasCopied": "ID bylo zkopírováno do schránky.",
-  "textWasCopied": "Text byl zkopírován do schránky"
+  "textWasCopied": "Text byl zkopírován do schránky",
+  "authUnavailable": "Přihlašovací server momentálně neodpovídá. Zkuste to za chvíli znovu."
 }

@@ -5,6 +5,7 @@ import { AnzuApiCancelledError } from '@/model/error/AnzuApiCancelledError'
 import { AnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
 import { AnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { HTTP_STATUS_FORBIDDEN, HTTP_STATUS_UNAUTHORIZED } from '@/composables/statusCodes'
+import { USER_PROBE_ENTITY } from '@/labs/api/apiErrors'
 import { useApiRequest } from '@/labs/api/useApiRequest'
 import { type AnyUserSystemDescriptor, resolveProbeEndpoint } from '@/labs/anzuUser/userSystemDescriptor'
 import {
@@ -21,25 +22,17 @@ import type { IntegerId } from '@/types/common'
 /**
  * How an app refreshes a session for one system, and retries.
  *
- * The library cannot do this itself: a first 401 is ambiguous -- expired session or no account --
- * and the only way to tell them apart is to refresh and ask again. Every admin has its own
- * mechanism (`refreshSession.ts` in inhouse, an interceptor in cms, `requestRefreshToken.ts` in
- * blog) and none of them lives in `common-admin`. Without this hook a panel would show an expired
- * token as "no account here", which is exactly the confusion decision 16 forbids.
+ * The probe cannot do this itself: a first 401 is ambiguous -- expired session or no account --
+ * and the only way to tell them apart is to refresh and ask again, with the session this admin
+ * refreshes (its `createRefreshSession`, shared with its refresh interceptor). Without this hook a
+ * panel would show an expired token as "no account here", which is exactly the confusion decision
+ * 16 forbids.
  *
  * Returns true when the refresh succeeded and the call is worth repeating.
  */
 export type UserSystemRefreshHook = (system: string) => Promise<boolean>
 
-/**
- * What the probe calls itself in the error context.
- *
- * A 404 here is an answer, not a failure -- it is how a system says "no account of yours". It still
- * reaches the api error logger like any other, so an app filters on this together with the status
- * rather than on the url, which would also silence a real detail read of the same path. The
- * validation scope stays the user's, so a field error would still name a real label.
- */
-export const USER_PROBE_ENTITY = 'anzuUserProbe'
+export { USER_PROBE_ENTITY }
 
 export const UserSystemRefreshHookKey: InjectionKey<UserSystemRefreshHook> = Symbol('UserSystemRefreshHook')
 
@@ -86,9 +79,9 @@ export interface UserSystemProbeParams {
  * the operator, because `/adm/v1/anzu-user/{id}` has no gating there while `/adm/users/{id}` sits
  * behind `DAM_USER_READ` -- only the second can ever render "you have no access".
  *
- * Note for the app: a probe answering 404 is an expected result here, not a failure, but it still
- * reaches the api error logger. Filter on `status === 404 && entity === USER_PROBE_ENTITY`, or
- * every absent account writes a line into the log.
+ * Note for the app: a probe answering 404 is an expected result here, not a failure. The default
+ * api error logger skips it; a logger of the app's own still receives it and should filter on
+ * `status === 404 && entity === USER_PROBE_ENTITY`, or every absent account writes a line into the log.
  */
 export const useUserSystemProbe = (params: UserSystemProbeParams): UserSystemProbeResult => {
   const { descriptor, refreshHook } = params

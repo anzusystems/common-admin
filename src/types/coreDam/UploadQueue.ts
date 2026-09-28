@@ -1,4 +1,3 @@
-import type { CancelTokenSource } from 'axios'
 import type { DocId, DocIdNullable, IntegerId } from '@/types/common'
 import type {
   AssetExternalProviderIdNullable,
@@ -57,7 +56,8 @@ export interface UploadQueueItem {
   externalProviderAssetId: AssetExternalProviderIdNullable
   externalProviderName: string | null
   externalProviderMetadata: AssetExternalProviderMetadata
-  latestChunkCancelToken: CancelTokenSource | null
+  /** Aborts the chunk request in flight (Stop); a new one per chunk. */
+  latestChunkAbortController: AbortController | null
   chunkSize: number
   currentChunkIndex: number
   chunkTotalCount: number

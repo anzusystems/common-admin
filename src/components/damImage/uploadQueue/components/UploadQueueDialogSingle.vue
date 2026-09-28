@@ -54,7 +54,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'onApply', items: ImageCreateUpdateAware[]): void
+  (e: 'apply', items: ImageCreateUpdateAware[]): void
 }>()
 
 const { showErrorsDefault, showRecordWas } = useAlerts()
@@ -264,7 +264,7 @@ const onSaveAndApply = async () => {
         )
       : await mapUploadMetadataToImages(items.value, assetsMetadataRes, damClient, props.extSystem, props.licenceId)
     emit(
-      'onApply',
+      'apply',
       mappedItems.map((item) => ({
         ...item,
         position: 1,
@@ -316,7 +316,7 @@ onMounted(() => {
           :color="toolbarColor"
           density="compact"
           :height="64"
-          class="system-border-b pr-1"
+          class="border-b pr-1"
         >
           <div class="text-label-large d-flex px-2">
             <div
@@ -335,6 +335,7 @@ onMounted(() => {
           <VSpacer />
           <div class="pr-3">
             <VBtn
+              :aria-label="t('common.damImage.asset.detail.toggleInfo')"
               :active="sidebar"
               :variant="sidebar ? 'flat' : 'text'"
               :color="sidebar ? 'secondary' : ''"
@@ -434,7 +435,7 @@ onMounted(() => {
               </div>
             </div>
           </div>
-          <div class="h-100 d-flex dam-image-detail__sidebar system-border-l">
+          <div class="h-100 d-flex dam-image-detail__sidebar border-s">
             <UploadQueueDialogSingleSidebar
               v-if="asset"
               :key="asset.id"
@@ -452,8 +453,8 @@ onMounted(() => {
               :asset-type="assetType"
               :asset-main-file-status="assetMainFile ? assetMainFile.fileAttributes.status : undefined"
               :asset-main-file-fail-reason="assetMainFile ? assetMainFile.fileAttributes.failReason : undefined"
-              @on-save="onSave"
-              @on-save-and-apply="onSaveAndApply"
+              @save="onSave"
+              @save-and-apply="onSaveAndApply"
             >
               <template #prepend-sidebar>
                 <div

@@ -22,7 +22,11 @@ const collabRoomInfoWriteSeq = new Map<CollabRoom, number>()
 const collabFieldLocksState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldLock>>())
 const collabFieldDataBufferState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldData>>())
 
-export function useCollabState() {
+/**
+ * Everything the collaboration modules share, the socket included. Internal: an admin reads
+ * `useCollabState()`.
+ */
+export function useCollabStateInternal() {
   const { collabOptions } = useCommonAdminCollabOptions()
 
   const collabReconnecting = computed(() => collabOptions.value.enabled && !collabConnected.value)
@@ -66,4 +70,16 @@ export function useCollabState() {
     collabFieldDataBufferState,
     gatherBufferData,
   }
+}
+
+/**
+ * What an admin reads from the collaboration state: whether the connection is being re-established,
+ * the rooms' info, and the buffered field data of a room (`gatherBufferData` collects and clears it).
+ * The socket and the lock bookkeeping stay inside the library.
+ */
+export function useCollabState() {
+  const { collabReconnecting, collabRoomInfoState, collabFieldDataBufferState, gatherBufferData } =
+    useCollabStateInternal()
+
+  return { collabReconnecting, collabRoomInfoState, collabFieldDataBufferState, gatherBufferData }
 }

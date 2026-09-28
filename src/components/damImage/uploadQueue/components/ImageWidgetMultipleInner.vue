@@ -39,7 +39,7 @@ import { AImageMetadataValidationScopeSymbol } from '@/components/damImage/uploa
 import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
 import ImageWidgetMultipleLimitDialog from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleLimitDialog.vue'
-import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetUploadConfigKey } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { fetchAssetListByFileIdsMultipleLicences } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
 import { copyToLicence } from '@/components/damImage/uploadQueue/api/damImageApi'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
@@ -83,7 +83,7 @@ const emit = defineEmits<{
 const assetSelectDialog = ref(false)
 
 const imageWidgetUploadConfig = inject<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined>(
-  ImageWidgetUploadConfig,
+  ImageWidgetUploadConfigKey,
   undefined
 )
 
@@ -115,6 +115,8 @@ const imagesReady = ref(props.modelValue.length === 0)
 const listEditor = ref<{ commit: (rows?: ImageStoreItem[]) => void } | null>(null)
 
 const imageStore = useImageStore()
+// One store for every widget: whatever the previous one left is not this entity's.
+imageStore.reset()
 const { images, maxPosition } = storeToRefs(imageStore)
 
 const fetchImagesOnLoad = async () => {
@@ -193,6 +195,7 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
   const config = imageWidgetUploadConfig.value
   if (isUndefined(config)) return
   cachedExtSystemId.value = config.extSystem
+  let refused = 0
   data.forEach((item) => {
     if (item.result === 'copy') {
       uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
@@ -200,10 +203,11 @@ const onCopyToLicence = (data: DamImageCopyToLicenceResponse) => {
       uploadQueuesStore.addByCopyToLicence(props.queueKey, config.extSystem, config.licence, [item.targetAsset])
       uploadQueuesStore.queueItemDuplicate(item.targetAsset, item.targetMainFile, DamAssetType.Image)
     } else {
-      showErrorT('damImage.queueItem.errorUnableToCopyToLicence')
-      return
+      refused++
     }
   })
+  if (refused > 0) showErrorT('common.damImage.queueItem.errorUnableToCopyToLicence')
+  if (refused === data.length) return
   uploadQueueDialog.value = props.queueKey
 }
 
@@ -243,9 +247,11 @@ const assetSelectConfirmMap = async (items: AssetSearchListItemDto[]): Promise<I
         })
       })
       if (authorIdsToFetch.size > 0) {
-        const authorsRes = await fetchAuthorListByIds(damClient, assetSelectStore.selectedSelectConfig.extSystem, [
-          ...authorIdsToFetch,
-        ])
+        const authorsRes = await fetchAuthorListByIds(
+          damClient,
+          assetSelectStore.requireSelectedSelectConfig().extSystem,
+          [...authorIdsToFetch]
+        )
         authorsRes.forEach((author) => {
           authorsMap.set(author.id, author.name)
         })
@@ -567,7 +573,7 @@ onMounted(() => {
       :skip-current-user-check="skipCurrentUserCheck"
       :config-name="configName"
       return-type="asset"
-      @on-confirm="onAssetSelectConfirm"
+      @confirm="onAssetSelectConfirm"
     >
       <template
         v-if="$slots['asset-select-sidebar-prepend']"
@@ -649,8 +655,8 @@ onMounted(() => {
         :hover-only="modelValue.length > 0 || images.length > 0"
         :accept="uploadAccept"
         :max-sizes="uploadSizes"
-        @on-drop="onDrop"
-        @on-click="uploadButtonComponent?.$el.click()"
+        @drop="onDrop"
+        @click="uploadButtonComponent?.$el.click()"
       />
     </div>
     <UploadQueueDialog
@@ -662,8 +668,8 @@ onMounted(() => {
       :accept="uploadAccept"
       :max-sizes="uploadSizes"
       multiple
-      @on-apply="onAssetUploadConfirm"
-      @on-files-input="onFileInput"
+      @apply="onAssetUploadConfirm"
+      @files-input="onFileInput"
     />
     <AssetDetailDialog
       v-if="assetDialog === queueKey"

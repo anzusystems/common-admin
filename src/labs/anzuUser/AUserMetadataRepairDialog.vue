@@ -159,7 +159,7 @@ const retryFailed = () => {
     data-cy="user-metadata-repair-dialog"
   >
     <VCard>
-      <ADialogToolbar @on-cancel="open = false">
+      <ADialogToolbar @cancel="open = false">
         {{ t('common.userSystem.repair.title') }}
       </ADialogToolbar>
       <VCardText v-if="target && !showingLog">

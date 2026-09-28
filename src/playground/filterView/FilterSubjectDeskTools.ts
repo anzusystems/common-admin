@@ -54,19 +54,19 @@ export const fetchItems = async (pagination: Ref<Pagination>, filterData: Filter
   const { execute } = useFetchDeskList()
   const desks = await execute(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
+  return desks.map((desk: Desk) => ({
     title: desk.name,
     value: desk.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
   const desks = await fetchDeskListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
+  return desks.map((desk: Desk) => ({
     title: desk.name,
     value: desk.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export function useSubjectDeskInnerFilter() {

@@ -2,7 +2,7 @@ import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuth
 import { DamAuthorTypeDefault } from '@/components/damImage/uploadQueue/author/DamAuthorType'
 import { dateTimeNow } from '@/utils/datetime'
 import { ENTITY } from '@/components/damImage/uploadQueue/api/authorApi'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 
 export function useDamAuthorFactory() {
   const createDefault = (extSystemId: number, reviewed?: boolean): DamAuthor => {

@@ -114,7 +114,7 @@ const findSiblingNotInSource = (
   sourceKey: ListEditorKey
 ): NestedViewItem<any> | null => {
   for (let i = startIdx; i >= 0 && i < viewItems.length; i += dir) {
-    const vi = viewItems[i]
+    const vi = viewItems[i]!
     if (!isInSourceSubtree(viewItems, sourceKey, vi.key)) return vi
   }
   return null

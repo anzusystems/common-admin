@@ -20,7 +20,7 @@ const QUERY = '(prefers-color-scheme: dark)'
 
 const settings = ref<ThemeSettingsType>(
   Object.values(ThemeSettings).some((val) => val === storedSettings.value)
-    ? <ThemeSettingsType>storedSettings.value
+    ? (storedSettings.value as ThemeSettingsType)
     : ThemeSettings.Light
 )
 const theme = ref<ThemeType>(Theme.Light)

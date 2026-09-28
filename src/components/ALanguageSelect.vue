@@ -31,7 +31,7 @@ const onLanguageChange = (code: LanguageCode) => {
 const currentLocale = computed(() => {
   const found = ALL_LANGUAGES.find((item) => item.code === currentLanguageCode.value)
   if (isUndefined(found)) {
-    return ALL_LANGUAGES[0]
+    return ALL_LANGUAGES[0]!
   }
   return found as Language
 })

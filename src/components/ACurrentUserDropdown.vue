@@ -38,13 +38,11 @@ const logoutDialog = ref(false)
     >
       {{ t('common.system.currentUser.button') }}
     </VTooltip>
-    <VMenu
-      v-if="currentUser"
-      activator="parent"
-    >
+    <VMenu activator="parent">
       <VCard>
         <VList class="pb-0">
           <VListItem
+            v-if="currentUser"
             class="pb-6"
             lines="two"
           >
@@ -60,7 +58,7 @@ const logoutDialog = ref(false)
               {{ currentUser.id }}
             </VListItemSubtitle>
           </VListItem>
-          <VDivider />
+          <VDivider v-if="currentUser" />
           <VListItem
             :active="false"
             prepend-icon="mdi-cog"
@@ -78,6 +76,7 @@ const logoutDialog = ref(false)
             <VDialog
               v-model="logoutDialog"
               width="auto"
+              @keydown.esc="logoutDialog = false"
             >
               <VCard v-if="logoutDialog">
                 <VToolbar
@@ -91,6 +90,7 @@ const logoutDialog = ref(false)
                   <VBtn
                     class="ml-2"
                     icon="mdi-close"
+                    :aria-label="t('common.button.close')"
                     size="small"
                     variant="text"
                     data-cy="button-close"

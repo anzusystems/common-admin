@@ -22,7 +22,7 @@ withDefaults(
   }
 )
 const emit = defineEmits<{
-  (e: 'onConfirm', data: Array<PollDemo>): void
+  (e: 'confirm', data: Array<PollDemo>): void
 }>()
 
 const { datatableHiddenColumns, filterConfig, filterData } = usePollSelectStore()
@@ -66,7 +66,7 @@ const {
 provide(DatatablePaginationKey, pagination)
 
 const onConfirm = (items: Array<PollDemo>) => {
-  emit('onConfirm', items)
+  emit('confirm', items)
 }
 </script>
 
@@ -79,10 +79,10 @@ const onConfirm = (items: Array<PollDemo>) => {
     :submit-filter="submitFilter"
     :reset-filter="resetFilter"
     :loading="loading"
-    @on-open="onOpen"
-    @on-fetch-next-page="onFetchNextPage"
-    @on-page-change="getList"
-    @on-confirm="onConfirm"
+    @open="onOpen"
+    @fetch-next-page="onFetchNextPage"
+    @page-change="getList"
+    @confirm="onConfirm"
   >
     <template #activator="{ props: activatorProps }">
       <VBtn

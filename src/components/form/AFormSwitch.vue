@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
+import type { AFormFieldValidation } from '@/types/Validation'
+import { computed, ref, watch, unref } from 'vue'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import { isDefined } from '@/utils/common'
 import type { CollabComponentConfig, CollabFieldData } from '@/components/collab/types/Collab'
@@ -15,6 +16,7 @@ const props = withDefaults(
     hideLabel?: boolean
     collab?: CollabComponentConfig
     disabled?: boolean
+    v?: AFormFieldValidation | null
   }>(),
   {
     label: undefined,
@@ -22,6 +24,7 @@ const props = withDefaults(
     hideLabel: false,
     collab: undefined,
     disabled: undefined,
+    v: null,
   }
 )
 const emit = defineEmits<{
@@ -65,6 +68,7 @@ const onUpdate = (newValue: boolean) => {
 }
 const onBlur = () => {
   emit('blur', props.modelValue)
+  props.v?.$touch()
   releaseFieldLock.value(props.modelValue)
 }
 
@@ -72,6 +76,11 @@ const onFocus = () => {
   emit('focus', props.modelValue)
   acquireFieldLock.value()
 }
+
+const errorMessageComputed = computed(() => {
+  if (props.v?.$errors?.length) return [props.v.$errors.map((item) => unref(item.$message)).join(' ')]
+  return []
+})
 
 const disabledComputed = computed(() => {
   if (isDefined(props.disabled)) return props.disabled
@@ -84,6 +93,7 @@ const disabledComputed = computed(() => {
     :data-cy="dataCy"
     :model-value="modelValue"
     :disabled="disabledComputed"
+    :error-messages="errorMessageComputed"
     @blur="onBlur"
     @focus="onFocus"
     @update:model-value="onUpdate($event as unknown as boolean)"

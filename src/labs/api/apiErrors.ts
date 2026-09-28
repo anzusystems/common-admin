@@ -16,6 +16,7 @@ import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/m
 import { AnzuError, isAnzuError } from '@/model/error/AnzuError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { HTTP_STATUS_FORBIDDEN, HTTP_STATUS_UNAUTHORIZED } from '@/composables/statusCodes'
+import { isInCauseChain, SessionExpiredError } from '@/composables/auth/refreshSession'
 
 export type ApiErrorContext = {
   system: string
@@ -53,8 +54,20 @@ export type ApiErrorContext = {
 
 export type ApiErrorLogger = (error: Error, context: ApiErrorContext) => void
 
+/**
+ * What the user probe calls itself in the error context.
+ *
+ * A 404 here is an answer, not a failure -- it is how a system says "no account of yours". The
+ * default logger skips it; an app's own logger still receives it, so it filters on this together
+ * with the status rather than on the url, which would also silence a real detail read of the same
+ * path. The validation scope stays the user's, so a field error would still name a real label.
+ * Defined here, not beside the probe, so the default logger can know it without an import cycle.
+ */
+export const USER_PROBE_ENTITY = 'anzuUserProbe'
+
 /** What reporting does until an application says otherwise; exported so a test can put it back. */
 export const defaultApiErrorLogger: ApiErrorLogger = (error, context) => {
+  if (context.status === 404 && context.entity === USER_PROBE_ENTITY) return
   console.error('Api error: ' + (context.url ?? ''), error)
 }
 
@@ -81,22 +94,26 @@ export const setApiErrorLogger = (fn: ApiErrorLogger | null): void => {
 const LOGGED = [AnzuApiAxiosError, AnzuFatalError, AnzuApiResponseCodeError]
 
 /**
- * Reports an error once, after it has been mapped, and hands it back so the caller can throw it.
- *
- * After, not during: an error the helper raised itself -- a body that never arrived, a status it
- * refuses -- is already an `Anzu*` class by the time it reaches the mapping, so a logger placed
- * inside the mapping would never see the two cases it exists for.
+ * The HTTP status the backend answered with, read off whichever class carries it: the axios response
+ * of an `AnzuApiAxiosError`, or the `code` of an `AnzuApiResponseCodeError` (a response axios let
+ * through). `undefined` when nothing answered -- a timeout, a network failure, a cancel.
  */
-/** The status the backend answered with, read off whichever class carries it. */
-const answeredStatus = (error: unknown): number | undefined => {
+export const apiErrorStatus = (error: unknown): number | undefined => {
   if (error instanceof AnzuApiResponseCodeError) return error.code
   if (error instanceof AnzuApiAxiosError) return error.cause.response?.status
 
   return undefined
 }
 
+/**
+ * Reports an error once, after it has been mapped, and hands it back so the caller can throw it.
+ *
+ * After, not during: an error the helper raised itself -- a body that never arrived, a status it
+ * refuses -- is already an `Anzu*` class by the time it reaches the mapping, so a logger placed
+ * inside the mapping would never see the two cases it exists for.
+ */
 export const report = <E>(error: E, context: ApiErrorContext): E => {
-  const status = answeredStatus(error)
+  const status = apiErrorStatus(error)
   // Neither of these is an unplanned failure. A 401 is "nobody is logged in", which every admin
   // branches on before sending the user to the login page -- writing it down would mean an "Api
   // error" for every unauthenticated start of the app. A 403 is "this user may not", which the
@@ -112,6 +129,8 @@ export const report = <E>(error: E, context: ApiErrorContext): E => {
   // an app that wanted its own unauthenticated starts in the log would be asking for noise it cannot
   // act on, while an app that wants 404 or 409 filtered has the field to do it with.
   if (status === HTTP_STATUS_UNAUTHORIZED || status === HTTP_STATUS_FORBIDDEN) return error
+  // The same as a 401, stopped before it went out: the refresh found the session gone.
+  if (isInCauseChain(error, (cause) => cause instanceof SessionExpiredError)) return error
 
   if (logger !== null && LOGGED.some((cls) => error instanceof cls)) {
     try {

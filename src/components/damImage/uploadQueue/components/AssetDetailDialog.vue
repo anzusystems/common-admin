@@ -132,7 +132,7 @@ const assetMainFile = computed(() => {
           :color="toolbarColor"
           density="compact"
           :height="64"
-          class="system-border-b pr-1"
+          class="border-b pr-1"
         >
           <div class="text-label-large d-flex px-2">
             <div>{{ t('common.damImage.asset.detail.sourceSystem') }}: {{ toolbarTitle }}</div>
@@ -140,6 +140,7 @@ const assetMainFile = computed(() => {
           <VSpacer />
           <div class="pr-2">
             <VBtn
+              :aria-label="t('common.damImage.asset.detail.toggleInfo')"
               :active="sidebar"
               :variant="sidebar ? 'flat' : 'text'"
               :color="sidebar ? 'secondary' : ''"
@@ -165,6 +166,7 @@ const assetMainFile = computed(() => {
               </VTooltip>
             </VBtn>
             <VBtn
+              :aria-label="t('common.button.close')"
               icon
               variant="text"
               :width="36"
@@ -210,7 +212,7 @@ const assetMainFile = computed(() => {
               />
             </div>
           </div>
-          <div class="h-100 d-flex dam-image-detail__sidebar system-border-l">
+          <div class="h-100 d-flex dam-image-detail__sidebar border-s">
             <AssetDetailDialogSidebar
               v-if="asset"
               :key="asset.id"

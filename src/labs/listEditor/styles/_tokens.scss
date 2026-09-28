@@ -42,3 +42,17 @@
   --le-row-font: 13px;
   --le-indent: 24px;
 }
+
+// Dark theme: the black-based tokens and the dark badge text disappear on a dark surface (WCAG ratios
+// down to 1.03:1). The light theme keeps its values untouched.
+.v-theme--dark {
+  .a-list-editor,
+  .a-sortable-list-editor,
+  .a-nested-list-editor {
+    --le-border: rgb(255 255 255 / 12%);
+    --le-surface-container: rgb(255 255 255 / 4%);
+    --le-success-fg: #81c784;
+    --le-warning-fg: #ffb74d;
+    --le-error-fg: #ff8a9f;
+  }
+}

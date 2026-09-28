@@ -30,7 +30,7 @@ import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import AssetDetailDialog from '@/components/damImage/uploadQueue/components/AssetDetailDialog.vue'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
-import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import { ImageWidgetUploadConfigKey } from '@/components/damImage/composables/imageWidgetInkectionKeys'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useUploadQueueDialog } from '@/components/damImage/uploadQueue/composables/uploadQueueDialog'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
@@ -186,7 +186,7 @@ const onCloseEditDialog = async () => {
   }
 }
 
-const imageWidgetUploadConfig = inject(ImageWidgetUploadConfig, undefined)
+const imageWidgetUploadConfig = inject(ImageWidgetUploadConfigKey, undefined)
 const uploadEnabled = computed(() => isDefined(imageWidgetUploadConfig) && isDefined(imageWidgetUploadConfig.value))
 
 const { uploadQueueDialog } = useUploadQueueDialog()
@@ -337,7 +337,7 @@ onUnmounted(() => {
       </div>
       <div
         v-if="!mdAndDown"
-        class="subject-select__sidebar-right system-border-l"
+        class="subject-select__sidebar-right border-s"
       >
         <div
           v-if="loadingSidebarRight"
@@ -380,7 +380,7 @@ onUnmounted(() => {
       "
     >
       <VCard>
-        <ADialogToolbar @on-cancel="closeSidebarRight">
+        <ADialogToolbar @cancel="closeSidebarRight">
           {{ t('common.assetSelect.meta.info.toggle') }}
         </ADialogToolbar>
         <VCardText>
@@ -430,7 +430,7 @@ onUnmounted(() => {
     :file-input-key="uploadQueue?.fileInputKey ?? -1"
     :accept="uploadAccept"
     :max-sizes="uploadSizes"
-    @on-apply="onUploadApply"
-    @on-files-input="onFileInput"
+    @apply="onUploadApply"
+    @files-input="onFileInput"
   />
 </template>

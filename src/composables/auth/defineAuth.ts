@@ -114,6 +114,10 @@ export function defineAuth<TAclValue extends AclValue>(
     /**
      * Answers `undefined` for every failure by default, which loses the reason. `throwOnError`
      * hands the original error back, for callers that must tell a lost session from a dead backend.
+     *
+     * A failure leaves `currentUser` as it was: unset before the first successful load, the previous
+     * user on a later call, whose permissions `can()` then keeps answering from. The system still
+     * counts as loaded either way, so `can()` does not throw for a system that was never loaded.
      */
     const fetchCurrentUser = async (
       client: () => AxiosInstance,

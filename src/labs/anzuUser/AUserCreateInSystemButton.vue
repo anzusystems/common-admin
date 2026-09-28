@@ -97,7 +97,7 @@ const confirm = async () => {
       :max-width="640"
     >
       <VCard>
-        <ADialogToolbar @on-cancel="dialog = false">
+        <ADialogToolbar @cancel="dialog = false">
           {{ t('common.userSystem.create.title', { system: systemLabel }) }}
         </ADialogToolbar>
         <VCardText>

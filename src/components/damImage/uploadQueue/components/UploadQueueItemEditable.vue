@@ -276,6 +276,7 @@ onUnmounted(() => {
                 />
                 <VBtn
                   v-if="showRefresh"
+                  :aria-label="t('common.button.refresh')"
                   icon
                   size="small"
                   variant="text"
@@ -292,6 +293,7 @@ onUnmounted(() => {
                 </VBtn>
                 <VBtn
                   v-if="showCancel"
+                  :aria-label="t('common.button.cancel')"
                   icon
                   size="small"
                   variant="text"

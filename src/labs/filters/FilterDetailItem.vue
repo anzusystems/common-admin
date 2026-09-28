@@ -25,7 +25,8 @@ if (
   throw new Error('Incorrect provide/inject config.')
 }
 
-const filterConfigCurrent = computed(() => filterConfig.fields[props.name])
+// The setup above throws unless the field is configured.
+const filterConfigCurrent = computed(() => filterConfig.fields[props.name]!)
 
 const componentComputed = computed(() => {
   if (filterConfigCurrent.value.render.skip) return AFilterEmpty

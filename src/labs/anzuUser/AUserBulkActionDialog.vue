@@ -131,7 +131,7 @@ const labelFor = (descriptor: AnyUserSystemDescriptor) => descriptor.label ?? de
   >
     <VCard>
       <!-- Closing while the calls are still going is allowed; the run lives in the store. -->
-      <ADialogToolbar @on-cancel="open = false">
+      <ADialogToolbar @cancel="open = false">
         {{ t(titleKey) }}
       </ADialogToolbar>
       <VCardText v-if="!showingLog">

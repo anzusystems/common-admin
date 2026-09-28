@@ -266,7 +266,8 @@ const showAdd = computed(() => {
 .a-keywords-append-item {
   position: sticky;
   bottom: 0;
-  background-color: white;
+  // The menu's own surface: a white bar sat in the dark theme's menu.
+  background-color: rgb(var(--v-theme-surface));
   transform: translateY(8px);
 }
 </style>

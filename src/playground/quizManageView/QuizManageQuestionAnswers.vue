@@ -52,7 +52,7 @@ const selectCorrectAnswer = (answerIndex: number) => {
     answer.points = 0
   })
   if (answerIndex > -1) {
-    answers[answerIndex].points = 1
+    answers[answerIndex]!.points = 1
   }
   selectedValue.value.answers = answers
 }

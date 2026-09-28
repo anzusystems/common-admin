@@ -12,7 +12,7 @@ export function useUploadQueueMassOperations(queueKey: UploadQueueKey) {
   ) => {
     const items = uploadQueuesStore.getQueueItems(queueKey)
     for (let i = 0; i < items.length; i++) {
-      const item = items[i]
+      const item = items[i]!
       if (item.assetType !== data.assetType) continue
       if (
         forceReplace ||
@@ -27,7 +27,7 @@ export function useUploadQueueMassOperations(queueKey: UploadQueueKey) {
   const replaceEmptyKeywords = (value: any, forceReplace = false) => {
     const items = uploadQueuesStore.getQueueItems(queueKey)
     for (let i = 0; i < items.length; i++) {
-      const item = items[i]
+      const item = items[i]!
       if (forceReplace || isUndefined(item.keywords) || item.keywords.length === 0) {
         item.keywords = value
       }
@@ -37,7 +37,7 @@ export function useUploadQueueMassOperations(queueKey: UploadQueueKey) {
   const replaceEmptyAuthors = (value: any, forceReplace = false) => {
     const items = uploadQueuesStore.getQueueItems(queueKey)
     for (let i = 0; i < items.length; i++) {
-      const item = items[i]
+      const item = items[i]!
       if (forceReplace || isUndefined(item.authors) || item.authors.length === 0) {
         item.authors = value
       }

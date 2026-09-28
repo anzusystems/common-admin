@@ -3,7 +3,7 @@ import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamCon
 import { defineAuth } from '@/composables/auth/defineAuth'
 import type { AclValue } from '@/types/Permission'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
-import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 
 export function filterAllowedImageWidgetSelectConfigs(values: DamConfigLicenceExtSystemReturnType[]) {
   const { useCurrentUser } = defineAuth<AclValue>(SYSTEM_DAM)
@@ -29,7 +29,7 @@ export function filterAllowedImageWidgetSelectConfigs(values: DamConfigLicenceEx
   return allowed
 }
 
-export function isImageWidgetUploadConfigAllowed(value: DamConfigLicenceExtSystemReturnType) {
+export function isImageWidgetUploadConfigAllowed(value: DamConfigLicenceExtSystemReturnType): boolean {
   const { useCurrentUser } = defineAuth<AclValue>(SYSTEM_DAM)
   const { currentUser: damCurrentUser, isSuperAdmin: damCurrentUserIsSuperAdmin } =
     useCurrentUser<DamCurrentUserDto>(SYSTEM_DAM)
@@ -37,7 +37,7 @@ export function isImageWidgetUploadConfigAllowed(value: DamConfigLicenceExtSyste
   if (damCurrentUserIsSuperAdmin.value) return true
 
   const currentUser = damCurrentUser.value
-  if (isUndefined(currentUser)) return []
+  if (isUndefined(currentUser)) return false
 
   const adminToExtSystems = currentUser.adminToExtSystems
   if (adminToExtSystems.includes(value.extSystem)) {

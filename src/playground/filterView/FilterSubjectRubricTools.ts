@@ -84,19 +84,19 @@ export const fetchItems = async (pagination: Ref<Pagination>, filterData: Filter
   const { execute } = useFetchRubricList()
   const rubrics = await execute(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({
+  return rubrics.map((rubric: Rubric) => ({
     title: rubric.texts.title,
     value: rubric.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
   const rubrics = await fetchRubricListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({
+  return rubrics.map((rubric: Rubric) => ({
     title: rubric.texts.title,
     value: rubric.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export function useSubjectRubricInnerFilter() {

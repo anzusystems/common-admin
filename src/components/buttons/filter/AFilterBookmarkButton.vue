@@ -40,6 +40,7 @@ const { t } = useI18n()
 <template>
   <VBtn
     :class="buttonClass"
+    :aria-label="t(tooltipT)"
     :data-cy="dataCy"
     class="text-medium-emphasis px-2"
     min-width="36px"
@@ -64,6 +65,6 @@ const { t } = useI18n()
     :user="user"
     :subject="subject"
     :datatable-hidden-columns="datatableHiddenColumns"
-    @on-close="dialog = false"
+    @close="dialog = false"
   />
 </template>

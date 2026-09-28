@@ -26,6 +26,7 @@ export const useImageStore = defineStore('commonImageStore', () => {
 
   function reset() {
     images.value = []
+    maxPosition.value = 0
   }
 
   return {

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { useTheme } from '@/composables/themeSettings'
+import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits<{
   (e: 'closeDialog'): void
 }>()
+
+const { t } = useI18n()
 
 const { toolbarColor } = useTheme()
 
@@ -19,13 +22,14 @@ const closeDialog = () => {
         :color="toolbarColor"
         density="compact"
         :height="64"
-        class="system-border-b"
+        class="border-b"
       >
         <div class="text-label-large d-flex" />
         <VSpacer />
         <div>
           <VBtn
             icon
+            :aria-label="t('common.button.close')"
             variant="text"
             :width="36"
             :height="36"

@@ -1,7 +1,7 @@
 import { createI18nMessage, maxValue } from '@vuelidate/validators'
-import { i18n } from '@/plugins/i18n'
+import { commonT } from '@/plugins/i18n'
 
-const { t } = i18n.global
+const t = commonT
 
 export function useValidateMaxValue() {
   const withI18nMessage = createI18nMessage({ t })

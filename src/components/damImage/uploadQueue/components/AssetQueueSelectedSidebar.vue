@@ -174,6 +174,7 @@ onMounted(() => {
                         />
                       </div>
                       <VBtn
+                        :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
                         icon
                         size="small"
                         variant="text"
@@ -189,6 +190,7 @@ onMounted(() => {
                         </VTooltip>
                       </VBtn>
                       <VBtn
+                        :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
                         icon
                         size="small"
                         variant="text"
@@ -228,6 +230,7 @@ onMounted(() => {
                         />
                       </div>
                       <VBtn
+                        :aria-label="t('common.damImage.asset.massOperations.fillOneEmpty')"
                         icon
                         size="small"
                         variant="text"
@@ -243,6 +246,7 @@ onMounted(() => {
                         </VTooltip>
                       </VBtn>
                       <VBtn
+                        :aria-label="t('common.damImage.asset.massOperations.replaceOne')"
                         icon
                         size="small"
                         variant="text"

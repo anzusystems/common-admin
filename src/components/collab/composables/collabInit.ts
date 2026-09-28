@@ -18,7 +18,7 @@ import {
   useCollabRoomDataChangeEventBus,
   useCollabStartingEventBus,
 } from '@/components/collab/composables/collabEventBus'
-import { useCollabState } from '@/components/collab/composables/collabState'
+import { useCollabStateInternal } from '@/components/collab/composables/collabState'
 import { useAlerts } from '@/composables/system/alerts'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useSentry } from '@/services/sentry'
@@ -27,11 +27,19 @@ import { isNull } from '@/utils/common'
 export function useCollabInit() {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { showWarningT, showSuccessT } = useAlerts()
-  const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState } = useCollabState()
+  const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState } = useCollabStateInternal()
 
   const { logError } = useSentry()
 
   let authorizationReconnectTriggered = false
+
+  const runBeforeReconnect = async () => {
+    try {
+      await collabOptions.value.beforeReconnect()
+    } catch (error) {
+      logError(error as Error, { level: 'warning', tags: { collabPhase: 'beforeReconnect' } })
+    }
+  }
 
   const initCollab = () => {
     const changeEventBus = useCollabRoomDataChangeEventBus()
@@ -135,14 +143,14 @@ export function useCollabInit() {
         const connectedBefore = collabConnected.value
         collabConnected.value = collabSocket.value?.connected ?? false
         if (!connectedBefore) {
-          await collabOptions.value.beforeReconnect()
+          await runBeforeReconnect()
           reconnectEventBus.emit('reconnect')
         }
       })
       collabSocket.value.on('connect_error', async (error) => {
         if (!authorizationReconnectTriggered) {
           authorizationReconnectTriggered = true
-          await collabOptions.value.beforeReconnect()
+          await runBeforeReconnect()
           collabSocket.value?.connect()
           return
         }
@@ -158,12 +166,13 @@ export function useCollabInit() {
         collabRoomInfoState.forEach((roomInfo: CollabRoomInfo) => (roomInfo.status = CollabStatus.Inactive))
         collabConnected.value = collabSocket.value?.connected ?? false
         if (reason === 'io server disconnect') {
-          await collabOptions.value.beforeReconnect()
+          await runBeforeReconnect()
           collabSocket.value?.connect()
         }
       })
     } catch (error) {
-      logError(error as any, { level: 'error', message: 'Collab init error' })
+      // Not `message`: with `level` beside it Sentry reads the object as scope data and drops the key.
+      logError(error as Error, { level: 'error', tags: { collabPhase: 'init' } })
     }
   }
 

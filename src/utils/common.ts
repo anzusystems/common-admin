@@ -1,5 +1,5 @@
 import type { DocId } from '@/types/common'
-import { isProxy, isRef, toRaw, unref } from 'vue'
+import { isRef, toRaw, unref } from 'vue'
 
 export const isUndefined = (value: unknown): value is undefined => {
   return typeof value === 'undefined'
@@ -44,7 +44,7 @@ export const isDocId = (value: unknown): value is DocId => {
 export const isInt = (value: any): value is number => {
   const x = parseFloat(value)
 
-  return !isNaN(value) && (x | 0) === x
+  return !isNaN(value) && Number.isInteger(x)
 }
 
 export const isObject = (value: unknown): value is object => {
@@ -67,6 +67,25 @@ export const isEmpty = (value: unknown): boolean => {
     isNull(value) || isUndefined(value) || value === '' || value === 0 || isEmptyArray(value) || isEmptyObject(value)
   )
 }
+const toRawDeep = (value: unknown, seen = new WeakMap<object, unknown>()): unknown => {
+  const raw = toRaw(isRef(value) ? unref(value) : value)
+  if (raw === null || typeof raw !== 'object') return raw
+  if (seen.has(raw)) return seen.get(raw)
+  if (Array.isArray(raw)) {
+    // Sized up front: forEach skips holes, and a sparse array keeps its length as structuredClone keeps it.
+    const out: unknown[] = []
+    out.length = raw.length
+    seen.set(raw, out)
+    raw.forEach((item, i) => (out[i] = toRawDeep(item, seen)))
+    return out
+  }
+  if (Object.getPrototypeOf(raw) !== Object.prototype && Object.getPrototypeOf(raw) !== null) return raw
+  const out: Record<string, unknown> = {}
+  seen.set(raw, out)
+  for (const key of Object.keys(raw)) out[key] = toRawDeep((raw as Record<string, unknown>)[key], seen)
+  return out
+}
+
 /**
  * Use only for objects with some primitives like:
  * number, string, boolean, null. Not supported: function, undefined, symbol, ...
@@ -74,15 +93,9 @@ export const isEmpty = (value: unknown): boolean => {
 export const cloneDeep = <T>(object: T) => {
   if (typeof structuredClone === 'function') {
     try {
-      if (isProxy(object)) {
-        return structuredClone(toRaw(object)) as T
-      }
-      if (isRef(object)) {
-        return structuredClone(unref(object)) as T
-      }
-      return structuredClone(object) as T
+      return structuredClone(toRawDeep(object)) as T
     } catch (error) {
-      return JSON.parse(JSON.stringify(object)) as T
+      return JSON.parse(JSON.stringify(toRawDeep(object))) as T
     }
   }
   return JSON.parse(JSON.stringify(object)) as T

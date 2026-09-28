@@ -61,7 +61,6 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
 
   function loadDamPrvConfig() {
     return new Promise((resolve, reject) => {
-      damConfigStore.initialized.damPubConfig = false
       if (isUndefined(client)) {
         reject(false)
         return
@@ -149,11 +148,11 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
 
           results.forEach((result, index) => {
             if (result.status === 'fulfilled' && result.value.length > 0) {
-              loadedTypes.push(types[index])
+              loadedTypes.push(types[index]!)
               loadedResponses.push(result.value)
               return
             }
-            failedTypes.push(types[index])
+            failedTypes.push(types[index]!)
           })
 
           if (loadedTypes.length === 0 && types.length > 0) {
@@ -188,7 +187,7 @@ export function useDamConfigState(client: undefined | (() => AxiosInstance) = un
       const config = { ...existingConfig }
 
       types.forEach((type, index) => {
-        config[type] = responses[index]
+        config[type] = responses[index]!
       })
 
       damConfigStore.damConfigAssetCustomFormElements.set(extSystemId, config)

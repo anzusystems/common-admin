@@ -34,6 +34,7 @@ const { t } = useI18n()
 <template>
   <VBtn
     :class="buttonClass"
+    :aria-label="t(buttonT)"
     :data-cy="dataCy"
     :loading="loading"
     :disabled="disabled"

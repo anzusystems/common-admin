@@ -95,9 +95,10 @@ const isExplicitRestrictiveGrant = (subject: string, action: string) => {
  * reported. Silently widening those is the one way this button could grant access nobody asked
  * for.
  */
+// Called with a subject from the template's own loop over `permissionConfig.config`.
 const allowAllActions = (subject: string) => {
   let keptRestrictiveGrantCount = 0
-  for (const action of Object.keys(permissionConfig.value.config[subject])) {
+  for (const action of Object.keys(permissionConfig.value.config[subject]!)) {
     if (!getAvailableGrants(subject, action).includes(Grant.Allow)) continue
     if (isExplicitRestrictiveGrant(subject, action)) {
       keptRestrictiveGrantCount++
@@ -177,7 +178,7 @@ const getGrantOrigin = (subject: string, action: string) => {
               </td>
             </tr>
             <tr
-              v-for="permissionAction in Object.keys(permissionConfig.config[permissionSubject])"
+              v-for="permissionAction in Object.keys(permissionConfig.config[permissionSubject]!)"
               :key="permissionAction"
             >
               <td>

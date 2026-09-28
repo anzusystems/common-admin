@@ -10,6 +10,7 @@ import type { DocId } from '@/types/common'
 import { AssetFileProcessStatus } from '@/types/coreDam/AssetFile'
 import { fetchAsset } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
+import { commonT } from '@/plugins/i18n'
 
 const NOTIFICATION_FALLBACK_TIMER_CHECK_SECONDS = 10
 const NOTIFICATION_FALLBACK_MAX_TRIES = 4
@@ -74,15 +75,18 @@ export const damUploadFinish = (
     imageUploadFinish(client, endPointImage, item, sha)
       .then((res) => {
         item.status = UploadQueueItemStatus.Processing
-        if (uploadStatusFallback) {
-          item.notificationFallbackTimer = setTimeout(function () {
-            notificationFallbackCallback(client, endPointAsset, item)
-          }, calculateFallbackTime(item))
-        }
+        if (uploadStatusFallback) armNotificationFallback(client, endPointAsset, item)
         resolve(res)
       })
       .catch((err) => reject(err))
   })
+}
+
+export const armNotificationFallback = (client: () => AxiosInstance, endPointAsset: string, item: UploadQueueItem) => {
+  clearTimeout(item.notificationFallbackTimer)
+  item.notificationFallbackTimer = setTimeout(function () {
+    notificationFallbackCallback(client, endPointAsset, item)
+  }, calculateFallbackTime(item))
 }
 
 function calculateFallbackTime(item: UploadQueueItem) {
@@ -94,26 +98,29 @@ async function notificationFallbackCallback(client: () => AxiosInstance, endPoin
   if (item.status === UploadQueueItemStatus.Uploaded) return
   if (item.notificationFallbackTry > NOTIFICATION_FALLBACK_MAX_TRIES) {
     item.error.hasError = true
-    item.error.message = 'Processing is taking too long. Use item refresh button or remove item and retry later.'
+    item.error.message = commonT('common.damImage.uploadErrors.processingTooLong')
     return
   }
   if (!item.assetId) return
-  const asset = await fetchAsset(client, endPoint, item.assetId)
+  let asset: Awaited<ReturnType<typeof fetchAsset>> | undefined = undefined
+  try {
+    asset = await fetchAsset(client, endPoint, item.assetId)
+  } catch {
+    // One failed request must not end the polling: the next attempt is scheduled below.
+  }
+  // Awaited: these fetch the asset again and swallow a failure, which leaves the item processing.
   if (asset && asset.mainFile && asset.mainFile.fileAttributes) {
     const uploadQueuesStore = useUploadQueuesStore()
     if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Processed) {
-      uploadQueuesStore.queueItemFullyProcessed(asset.id)
-      return
+      await uploadQueuesStore.queueItemFullyProcessed(asset.id)
     } else if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Duplicate) {
-      uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, asset.attributes.assetType)
-      return
+      await uploadQueuesStore.queueItemDuplicate(asset.id, asset.mainFile.originAssetFile, asset.attributes.assetType)
     } else if (asset.mainFile.fileAttributes.status === AssetFileProcessStatus.Failed) {
-      uploadQueuesStore.queueItemFailed(asset.id, asset.mainFile.fileAttributes.failReason)
-      return
+      await uploadQueuesStore.queueItemFailed(asset.id, asset.mainFile.fileAttributes.failReason)
     }
   }
+  // Settled by the above, by the notification meanwhile, or stopped: nothing left to poll for.
+  if (item.status !== UploadQueueItemStatus.Processing) return
   item.notificationFallbackTry++
-  item.notificationFallbackTimer = setTimeout(function () {
-    notificationFallbackCallback(client, endPoint, item)
-  }, calculateFallbackTime(item))
+  armNotificationFallback(client, endPoint, item)
 }

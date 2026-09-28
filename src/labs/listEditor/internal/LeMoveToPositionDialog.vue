@@ -52,6 +52,7 @@ const onCancel = () => {
     v-model="open"
     max-width="420"
     persistent
+    @keydown.esc="onCancel"
   >
     <VCard>
       <VCardTitle>

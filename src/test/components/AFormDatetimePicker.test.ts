@@ -192,7 +192,7 @@ describe('AFormDatetimePicker', () => {
       await flushPromises()
 
       expect(document.querySelector('.v-messages__message')?.textContent?.trim()).toBe('Must be set')
-      expect(document.querySelector('.a-datetime-picker .v-label .required')).not.toBeNull()
+      expect(document.querySelector('.a-datetime-picker .v-label .a-required-mark')).not.toBeNull()
 
       textField().focus()
       textField().blur()

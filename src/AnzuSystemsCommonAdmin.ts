@@ -1,8 +1,8 @@
 import type { io } from 'socket.io-client'
 import type { App } from 'vue'
 import Acl from '@/components/permission/Acl.vue'
-import Notification from '@kyvg/vue3-notification'
 import type { LanguageCode } from '@/composables/languageSettings'
+import { type CommonAdminI18n, setCommonAdminI18n } from '@/plugins/i18n'
 import { AvailableLanguagesSymbol, DefaultLanguageSymbol } from '@/components/injectionKeys'
 import type { AxiosInstance } from 'axios'
 import {
@@ -18,6 +18,12 @@ import type {
 } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 
 export type PluginOptions = {
+  /**
+   * The admin's vue-i18n instance, in composition mode (`legacy: false`). The library translates
+   * through it -- components, validators, alerts -- so its messages have to include the library's
+   * (`common`, `error`, `$vuetify` from `messagesSk`/`messagesEn`/`messagesCs`).
+   */
+  i18n: CommonAdminI18n
   languages: { available: LanguageCode[]; default: LanguageCode }
   coreDam?: CommonAdminCoreDamOptions
   image?: CommonAdminImageOptions
@@ -97,10 +103,10 @@ export type CommonAdminCollabOptions = {
 
 export default {
   install(app: App, options: PluginOptions): void {
+    setCommonAdminI18n(options.i18n)
     app.provide(AvailableLanguagesSymbol, options.languages.available)
     app.provide(DefaultLanguageSymbol, options.languages.default)
     app.component('Acl', Acl)
-    app.use(Notification, { componentName: 'Notifications' })
     initCommonAdminImageOptions(options.image)
     initCommonAdminCoreDamOptions(options.coreDam)
     initCommonAdminCollabOptions(options.collab)

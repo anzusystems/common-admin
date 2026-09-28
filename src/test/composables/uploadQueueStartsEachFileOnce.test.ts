@@ -32,6 +32,7 @@ vi.mock('@/components/damImage/uploadQueue/api/uploadApi', () => ({
   damUploadStart: (...args: unknown[]) => damUploadStart(...(args as [unknown, unknown, { file: File }])),
   damUploadChunk: (...args: unknown[]) => damUploadChunk(...(args as [])),
   damUploadFinish: (...args: unknown[]) => damUploadFinish(...(args as [])),
+  armNotificationFallback: vi.fn(),
 }))
 
 vi.mock('@/components/dam/assetSelect/composables/commonAdminCoreDamOptions', () => ({

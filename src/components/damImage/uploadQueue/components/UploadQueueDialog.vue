@@ -37,9 +37,9 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'onDrop', files: File[]): void
-  (e: 'onFilesInput', files: File[]): void
-  (e: 'onApply', items: ImageStoreItem[]): void
+  (e: 'drop', files: File[]): void
+  (e: 'filesInput', files: File[]): void
+  (e: 'apply', items: ImageStoreItem[]): void
 }>()
 
 const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
@@ -129,7 +129,7 @@ const onSaveAndApply = async () => {
         assetId: item.assetId ?? undefined,
       }
     })
-    emit('onApply', storeItems)
+    emit('apply', storeItems)
   } catch (error) {
     showErrorsDefault(error)
   } finally {
@@ -166,7 +166,7 @@ const showDetail = async (id: DocId) => {
       <div class="asset-footer__upload asset-footer--full asset-footer__upload--full pa-0">
         <div class="d-flex w-100 h-100 flex-column">
           <VToolbar
-            class="w-100 system-border-b pr-1"
+            class="w-100 border-b pr-1"
             :color="toolbarColor"
             density="compact"
             :height="64"
@@ -220,6 +220,7 @@ const showDetail = async (id: DocId) => {
                 {{ mdAndDown ? t('common.damImage.upload.apply') : t('common.damImage.upload.saveAndApply') }}
               </ABtnPrimary>
               <VBtn
+                :aria-label="t('common.damImage.upload.save')"
                 variant="text"
                 :height="36"
                 :width="36"
@@ -242,10 +243,11 @@ const showDetail = async (id: DocId) => {
                 :accept="accept"
                 :max-sizes="maxSizes"
                 multiple
-                @files-input="emit('onFilesInput', $event)"
+                @files-input="emit('filesInput', $event)"
               >
                 <template #activator="{ props: fileInputProps }">
                   <VBtn
+                    :aria-label="t('common.damImage.upload.add')"
                     tabindex="-1"
                     icon
                     variant="text"
@@ -269,6 +271,7 @@ const showDetail = async (id: DocId) => {
                 class="mx-4 my-2"
               />
               <VBtn
+                :aria-label="t('common.damImage.asset.massOperations.title')"
                 :height="36"
                 :width="36"
                 :active="uploadQueueSidebar"
@@ -308,7 +311,7 @@ const showDetail = async (id: DocId) => {
           hover-only
           :accept="accept"
           :max-sizes="maxSizes"
-          @on-drop="emit('onDrop', $event)"
+          @drop="emit('drop', $event)"
         />
       </div>
     </VCard>

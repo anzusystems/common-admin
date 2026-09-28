@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useRouteHistory } from '@/composables/system/routeHistory'
+import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
+import type { RouteRecordName } from 'vue-router'
+import { type NavigateBackOptions, type RouteHistoryEntry, useRouteHistory } from '@/composables/system/routeHistory'
 
 // `navigateBack` never hands back the route the user is already on.
 //
@@ -9,7 +10,7 @@ import { useRouteHistory } from '@/composables/system/routeHistory'
 // no error, no log, a close button that visibly does not work. Callers used to have to name their
 // own route in `skipRouteNames` to avoid it; now they do not.
 
-const { addRoute, clearHistory, navigateBack, setBlacklistedRoutes } = useRouteHistory()
+const { addRoute, clearHistory, history, navigateBack, setBlacklistedRoutes } = useRouteHistory()
 
 // `name` is deliberately optional here: vue-router route names are, and the nameless case is the
 // one the walk gets wrong if the current-route test is applied to its result instead of inside it.
@@ -132,5 +133,21 @@ describe('a current route named by a symbol', () => {
     navigateBack(router as never, { skipRouteNames: [], fallbackRouteName: '/records' })
 
     expect(router.push).toHaveBeenCalledWith('/records')
+  })
+})
+
+// Route names are vue-router's `RouteRecordName`, which a typed router narrows to its own names, so a
+// stale name in `skipRouteNames` or `fallbackRouteName` is a type error in the admin. The history keeps
+// only what going back needs; the full route objects made reading it hit TS2589.
+describe('types', () => {
+  it('takes route names as vue-router types them', () => {
+    expectTypeOf<NavigateBackOptions['skipRouteNames']>().toEqualTypeOf<RouteRecordName[] | undefined>()
+    expectTypeOf<NavigateBackOptions['fallbackRouteName']>().toEqualTypeOf<RouteRecordName | undefined>()
+  })
+
+  it('records the name and the full path of a route', () => {
+    ;(addRoute as (route: object) => void)({ name: 'list', fullPath: '/list?page=2', params: {}, meta: {} })
+    expect(history.value).toEqual([{ name: 'list', fullPath: '/list?page=2' }])
+    expectTypeOf(history.value).toEqualTypeOf<readonly RouteHistoryEntry[]>()
   })
 })

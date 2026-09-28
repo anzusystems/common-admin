@@ -19,5 +19,6 @@ export const prettyBytes = (bytes: number, decimals = 2) => {
 export const prettyDuration = (seconds: number): string => {
   const duration = dayjs.duration(seconds * 1000)
 
-  return duration.format('HH:mm:ss')
+  // `HH` is the hours component, which wraps at a day.
+  return String(Math.floor(duration.asHours())).padStart(2, '0') + duration.format(':mm:ss')
 }

@@ -1,5 +1,16 @@
 <script setup lang="ts" generic="TItem extends Record<string, any>">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useSlots, useTemplateRef, watch } from 'vue'
+import {
+  computed,
+  customRef,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  useSlots,
+  useTemplateRef,
+  watch,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useContainerWidth } from '@/labs/listEditor/composables/useContainerWidth'
 import { useIsTouchDevice } from '@/labs/listEditor/composables/useIsTouchDevice'
@@ -11,6 +22,7 @@ import {
   type GetKey,
   type ListEditorValidationResult,
   type NestedListEditorHandle,
+  type NestedSortableListEditorExtras,
   type PositionOption,
   type PositionStrategy,
 } from '@/labs/listEditor/composables/useNestedListEditorController'
@@ -330,7 +342,31 @@ const emit = defineEmits<{
   outdent: [item: NestedViewItem<TItem>]
 }>()
 
-const modelValue = defineModel<NestedTree<TItem>>({ required: true })
+const modelProp = defineModel<NestedTree<TItem>>({ required: true })
+// Same-tick reads must see an emitted write (the prop lags it until the parent re-renders).
+let pendingWrite: NestedTree<TItem> | null = null
+watch(modelProp, () => (pendingWrite = null), { flush: 'sync' })
+const modelValue = customRef<NestedTree<TItem>>((track, trigger) => ({
+  get: () => {
+    track()
+    // Read the prop every time, pending write or not: a computed evaluated while a write is pending must
+    // still subscribe to it.
+    const current = modelProp.value
+    return pendingWrite ?? current
+  },
+  set: (v) => {
+    pendingWrite = v
+    modelProp.value = v
+    trigger()
+    // Only this write's own clear: a newer pending write stays. The trigger lets readers see the prop
+    // again, e.g. when the parent ignored the update.
+    nextTick(() => {
+      if (pendingWrite !== v) return
+      pendingWrite = null
+      trigger()
+    })
+  },
+}))
 const mode = defineModel<ReorderMode>('mode', { default: 'view' })
 
 defineSlots<{
@@ -431,7 +467,7 @@ const flatViewItems = computed<NestedViewItem<TItem>[]>(() => {
   const maxDepth = props.maxDepth
   const walk = (nodes: NestedTreeNode<TItem>[], depth: number, parentNode: NestedTreeNode<TItem> | null) => {
     for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i]
+      const node = nodes[i]!
       const key = keyOf(node.data)
       const childrenAllowed = node.children !== undefined
       const hasChildren = childrenAllowed && (node.children?.length ?? 0) > 0
@@ -483,9 +519,9 @@ const movedKeys = ref<Set<ListEditorKey>>(new Set())
 const sessionDeferredDeletes = ref<Set<ListEditorKey>>(new Set())
 const sessionImmediateDeletes = ref<Set<ListEditorKey>>(new Set())
 
-// Re-baseline current tree as saved. Legacy name kept; maps onto `controller.commit()`.
-const resetDirtyBaseline = () => {
-  controller.commit()
+// The exposed `commit`: the controller's, plus the moved markers, which are this component's view state.
+const commit = (saved?: NestedTree<TItem>) => {
+  controller.commit(saved)
   movedKeys.value = new Set()
 }
 // Mark row + every descendant moved — a moved parent visually carries its subtree.
@@ -642,7 +678,8 @@ const {
   // removed again — it is deleted on the backend and must not resurrect / be re-created by a save).
   onCancel: () => {
     for (const key of sessionDeferredDeletes.value) controller.restoreDeleted(key)
-    for (const key of sessionImmediateDeletes.value) controller.deleteItem(key, { trackDeleted: false })
+    for (const key of sessionImmediateDeletes.value)
+      controller.deleteItem(key, { trackDeleted: false, renumber: false })
     sessionDeferredDeletes.value = new Set()
     sessionImmediateDeletes.value = new Set()
     destroySortables()
@@ -867,7 +904,7 @@ const initSortables = () => {
           } else if ('touches' in orig) {
             const tev = orig as TouchEvent
             if (tev.touches.length > 0) {
-              recomputeInstruction(tev.touches[0].clientX, tev.touches[0].clientY)
+              recomputeInstruction(tev.touches[0]!.clientX, tev.touches[0]!.clientY)
             }
           }
         }
@@ -1085,7 +1122,10 @@ const {
     // Controller owns removal (mirrors the flat editors): a deferred saved-row delete is tombstoned
     // (counts as unsaved); immediate skips it (already deleted on the backend). Runs before the
     // `deleted` emit so a consumer's handler still receives `vi.raw`.
-    controller.deleteItem(vi.key, { trackDeleted: deferred })
+    // Immediate: the backend already dropped the row and does not renumber the siblings, so neither does
+    // the editor — their positions keep matching the server's and nothing reads as unsaved.
+    if (deferred) controller.deleteItem(vi.key, { trackDeleted: true })
+    else controller.deleteItem(vi.key, { trackDeleted: false, renumber: false })
     emit('deleted', vi)
   },
   disableDeleteConfirm: () => props.disableDeleteConfirm,
@@ -1096,8 +1136,17 @@ const onDeleteClick = async (vi: NestedViewItem<TItem>) => {
   await triggerDeleteClick(vi)
 }
 
+// In-flight guard: a second click while the consumer's save is pending must not send a duplicate.
+// A rejected save keeps the row open and still reaches the app's error handler, as before the guard.
+const savingKeys = ref<Set<ListEditorKey>>(new Set())
 const onSaveClick = async (vi: NestedViewItem<TItem>) => {
-  if (props.onItemSave) await props.onItemSave(vi.raw)
+  if (savingKeys.value.has(vi.key)) return
+  savingKeys.value.add(vi.key)
+  try {
+    if (props.onItemSave) await props.onItemSave(vi.raw)
+  } finally {
+    savingKeys.value.delete(vi.key)
+  }
   commitEdit(vi)
   emit('item-saved', vi)
 }
@@ -1176,7 +1225,7 @@ const getActions = (key: ListEditorKey): ActionsBundle => {
       },
       save: () => {
         const vi = findVi(key)
-        if (vi) return onSaveClick(vi)
+        return vi ? onSaveClick(vi) : undefined
       },
       cancel: () => {
         const vi = findVi(key)
@@ -1366,7 +1415,8 @@ const onMoveToPositionConfirm = (newIndex: number) => {
   moveToPositionTarget.value = null
   if (!ctx || !target) return
   if (newIndex === ctx.currentIndex) return
-  if (controller.moveTo(target.key, ctx.parentId, newIndex)) {
+  const slot = newIndex > ctx.currentIndex ? newIndex + 1 : newIndex
+  if (controller.moveTo(target.key, ctx.parentId, slot)) {
     markMoved(target.key)
   }
 }
@@ -1443,55 +1493,44 @@ const rowCallbacks = {
 
 const rootViewItems = computed(() => viewItemsDecorated.value.filter((v) => v.parentKey === null))
 
-// Imperative aliases mirroring the legacy ASortableNested signatures so existing
-// consumers keep working. They assume the caller persists server-side, so they
-// re-baseline via `controller.commit()` (rows don't render "unsaved" after the
-// call) and return the live model. New consumers should use the controller handle directly.
-
-/** @deprecated Use `addItem(data, { afterId, childrenAllowed })` on the handle. */
-const addAfterId = (targetId: ListEditorKey | null, data: TItem, childrenAllowed: boolean) => {
-  controller.addItem(data, { afterId: targetId ?? undefined, childrenAllowed })
-  nextTick(() => controller.commit())
-  return modelValue.value
+// `acceptChanges` re-baselines ONLY what its own op changed, not the whole tree: other pending
+// edits/moves must survive and keep arming the leave guard. Siblings the op merely renumbered stay
+// pending (`meta.dirty`) -- the server may not have renumbered them, so the page's save still has to
+// send theirs.
+const nodesByKey = (): Map<ListEditorKey, NestedTreeNode<TItem>> => {
+  const out = new Map<ListEditorKey, NestedTreeNode<TItem>>()
+  const walk = (nodes: NestedTreeNode<TItem>[]) => {
+    for (const n of nodes) {
+      out.set(keyOf(n.data), n)
+      if (n.children?.length) walk(n.children)
+    }
+  }
+  walk(modelValue.value.children)
+  return out
 }
-/** @deprecated Use `addChild(parentKey, data, childrenAllowed)` on the handle. */
-const addChildToId = (targetId: ListEditorKey, data: TItem, childrenAllowed: boolean) => {
-  childrenExpandedKeys.value.add(targetId)
-  // Legacy "prepend as first child" semantic (canonical `addChild` appends to the end).
-  controller.addItem(data, { parentId: targetId, asFirstChild: true, childrenAllowed })
-  nextTick(() => controller.commit())
-  return modelValue.value
-}
-/** @deprecated Use `deleteItem(id)` on the handle. */
-const removeById = (id: ListEditorKey) => {
-  controller.deleteItem(id)
-  editingKeys.value.delete(id)
-  editingSnapshots.value.delete(id)
-  detailExpandedKeys.value.delete(id)
-  childrenExpandedKeys.value.delete(id)
-  nextTick(() => controller.commit())
-}
-/** @deprecated Use `updateItem(id, data)` on the handle. */
-const updateData = (
-  id: ListEditorKey,
-  data: TItem,
-  _children: unknown = null,
-  _position: unknown = null,
-  _markUnsaved: unknown = null
-) => {
-  controller.updateItem(id, data)
-  nextTick(() => controller.commit())
-}
-
-// Total distinct unconfirmed changes (added/edited/moved/reparented rows + deferred deletions) — a
-// delete counts even though its row is gone. Drives the unsaved-section label + the exposed handle.
-const unsavedCount = controller.unsavedCount
-
-// Re-baseline as saved, clear the moved set, close open edits. Legacy name kept.
-const clearUnsavedState = () => {
-  controller.commit()
-  movedKeys.value = new Set()
-  clearEditing()
+const pendingKeys = (): Set<ListEditorKey> => new Set([...nodesByKey().keys()].filter((k) => controller.isUnsaved(k)))
+/**
+ * Runs a tree mutation the server has already made -- a row created or saved through a dialog -- and
+ * adopts as saved only the rows it added or edited, plus `keys` (pass the row's key; a deleted one is
+ * no longer in the tree to be found). Siblings it only renumbered and other pending work stay unsaved.
+ */
+const acceptChanges = (op: () => void, keys: ListEditorKey[] = []) => {
+  const existing = new Set(nodesByKey().keys())
+  const before = pendingKeys()
+  op()
+  nextTick(() => {
+    const nodes = nodesByKey()
+    const accepted = [...new Set([...keys, ...[...pendingKeys()].filter((k) => !before.has(k))])]
+    // A created row the op renumbered -- into a gap an immediate delete left -- sits where the server
+    // did not store it: adopted as saved, but its position stays pending for the page's save.
+    const renumbered = accepted.filter((k) => !existing.has(k) && nodes.get(k)?.meta.dirty)
+    controller.acceptRows(accepted)
+    const adopted = nodesByKey()
+    for (const k of renumbered) {
+      const node = adopted.get(k)
+      if (node) controller.updateItem(k, node.data, true)
+    }
+  })
 }
 
 // Registers this editor as a named unsaved-changes section when a label is passed.
@@ -1501,9 +1540,9 @@ useUnsavedSection(() =>
     : []
 )
 
-// Expose the controller handle plus legacy aliases and reorder/expand controls.
-// Entries after the spread override controller methods where the historic name or
-// return shape differs (e.g. `viewItems` is this component's expand-aware list).
+// Expose the controller handle plus acceptChanges and reorder/expand controls. Entries after the
+// spread override controller methods where the component adds to them (`commit` also clears the moved
+// markers, `viewItems` is this component's expand-aware list).
 // Reveal for a blocked save: open invalid rows AND expand the offender's ancestor chain so a
 // collapsed nested row becomes visible. Shared by the exposed validateAll + scope reveal-on-touch.
 const revealNestedInvalid = (): boolean =>
@@ -1527,37 +1566,11 @@ useListEditorScopeValidity({
   reveal: revealNestedInvalid,
 })
 
-defineExpose<
-  NestedListEditorHandle<TItem> & {
-    addAfterId: typeof addAfterId
-    addChildToId: typeof addChildToId
-    removeById: typeof removeById
-    updateData: typeof updateData
-    resetDirtyBaseline: () => void
-    hasUnsavedChanges: typeof controller.hasUnsaved
-    unsavedCount: typeof unsavedCount
-    clearUnsavedState: () => void
-    enterReorderMode: () => void
-    cancelReorderMode: () => void
-    applyReorder: () => Promise<void>
-    expand: (id: ListEditorKey) => void
-    collapse: (id: ListEditorKey) => void
-    toggleExpand: (id: ListEditorKey) => void
-    expandDetail: (id: ListEditorKey) => void
-    collapseDetail: (id: ListEditorKey) => void
-  }
->({
+defineExpose<NestedSortableListEditorExtras & NestedListEditorHandle<TItem>>({
   ...controller,
   validateAll: revealNestedInvalid,
-  // Legacy aliases (pre-v2 ASortableNested API).
-  addAfterId,
-  addChildToId,
-  removeById,
-  updateData,
-  resetDirtyBaseline,
-  hasUnsavedChanges: controller.hasUnsaved,
-  unsavedCount,
-  clearUnsavedState,
+  commit,
+  acceptChanges,
   // Expand-aware flattened view (controller's own `viewItems` ignores collapse state).
   viewItems: flatViewItems,
   enterReorderMode,
@@ -1642,6 +1655,7 @@ defineExpose<
             <template v-else>
               <VBtn
                 v-if="expandAllVisible && compactReorderButton"
+                :aria-label="allExpanded ? t('common.sortable.collapseAll') : t('common.sortable.expandAll')"
                 variant="tonal"
                 color="primary"
                 icon
@@ -1675,6 +1689,7 @@ defineExpose<
               >
                 <VBtn
                   v-if="compactReorderButton"
+                  :aria-label="t('common.sortable.reorder')"
                   variant="tonal"
                   color="primary"
                   icon
@@ -2010,6 +2025,20 @@ defineExpose<
     &:focus-visible {
       outline: none;
       background: rgb(0 0 0 / 8%);
+    }
+
+    // Black at 54% is invisible on a dark surface (1.12:1). `:where` adds no specificity, so the primary
+    // tint of an editing / expanded row above still wins.
+    :where(.v-theme--dark) & {
+      color: rgb(255 255 255 / 70%);
+
+      &:hover {
+        background: rgb(255 255 255 / 8%);
+      }
+
+      &:focus-visible {
+        background: rgb(255 255 255 / 12%);
+      }
     }
   }
 

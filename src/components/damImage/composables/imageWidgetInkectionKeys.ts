@@ -6,5 +6,5 @@ export const ImageWidgetExtSystemConfigs: InjectionKey<ShallowRef<Map<IntegerId,
   'anzu:ImageWidgetExtSystemConfigs'
 )
 
-export const ImageWidgetUploadConfig: InjectionKey<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined>> =
+export const ImageWidgetUploadConfigKey: InjectionKey<ShallowRef<DamConfigLicenceExtSystemReturnType | undefined>> =
   Symbol.for('anzu:ImageWidgetUploadConfig')

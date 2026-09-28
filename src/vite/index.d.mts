@@ -18,3 +18,22 @@ export declare function anzuSentry(options: AnzuSentryOptions): PluginOption[]
 
 /** Chains the source maps common-admin publishes into the admin's build (only when it emits maps). */
 export declare function commonAdminSourcemaps(): Plugin
+
+export interface CommonAdminDevWatchOptions {
+  /** Relative to the admin's root. Defaults to `.common-admin-updated`, which `copy.sh` and `yarn dev:admin` write. */
+  triggerFile?: string
+  /**
+   * `false`: common-admin is left out of the dependency pre-bundling (its files are served one by one:
+   * a dozen with `yarn dev:admin`, which builds one bundle, ~800 after `./copy.sh`; the library's own
+   * dependencies are pre-bundled for it, except what the admin excludes itself), so an update from
+   * `yarn dev:admin` invalidates the changed files and reloads the page instead of restarting the server. Defaults to
+   * `true` (pre-bundled; an update restarts the server with a forced re-optimization).
+   */
+  prebundle?: boolean
+}
+
+/**
+ * Local development against a common-admin copied into node_modules (`copy.sh`, `yarn dev:admin`):
+ * reacts to `.common-admin-updated`. Does nothing in a build.
+ */
+export declare function commonAdminDevWatch(options?: CommonAdminDevWatchOptions): Plugin

@@ -1,6 +1,6 @@
 import type { DamExtSystem } from '@/components/damImage/uploadQueue/composables/DamExtSystem'
 import type { AxiosInstance } from 'axios'
-import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damConstants'
 import type { IntegerId } from '@/types/common'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'

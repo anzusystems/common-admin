@@ -27,7 +27,8 @@ onMounted(async () => {
   if (props.configUrl && props.configUrl.length > 0) {
     try {
       const { data } = await useFetch<AdminConfigItem[]>(props.configUrl).get().json()
-      config.value = data.value
+      // useFetch does not throw on an HTTP error: the body is null then, and the template reads its length.
+      config.value = Array.isArray(data.value) ? data.value : []
     } catch (e) {
       //
     }
@@ -41,6 +42,7 @@ onMounted(async () => {
     variant="text"
     size="small"
     icon
+    :aria-label="t('common.system.adminSwitcher.button')"
   >
     <VIcon icon="mdi-dots-grid" />
     <VTooltip
