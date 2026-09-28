@@ -235,8 +235,13 @@ describe('undeclaredImports', () => {
         '</script>',
       ].join('\n'),
       '/src/b.scss': "@forward 'vuetify/settings' show $color;",
+      '/src/c.ts': "export default /^\\/*y/\nconst l = import('left-pad')\n/** a doc comment */",
     }
-    expect(undeclaredImports(sources, packageJson)).toEqual(['src/a.vue: linkifyjs', 'src/b.scss: vuetify/settings'])
+    expect(undeclaredImports(sources, packageJson)).toEqual([
+      'src/a.vue: linkifyjs',
+      'src/b.scss: vuetify/settings',
+      'src/c.ts: left-pad',
+    ])
   })
 
   it('takes a dev dependency, and the package an @types package types', () => {

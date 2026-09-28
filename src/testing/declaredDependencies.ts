@@ -25,10 +25,10 @@ const SPECIFIER_RE =
 
 // Comments name modules in passing, so they go -- but only outside strings, template literals and regular
 // expressions: `'image/*'` or `/['"]/` read as the start of a comment or a string would hide the code after it.
-// A `/` starts a regular expression after an operator or a keyword; taken for one where it divides, the scan
-// copies to the next `/` on that line and drops nothing.
+// A `/` starts a regular expression after an operator or a keyword. Taken for one where it divides (a member
+// named like a keyword: `obj.in / 2`), the scan copies to the next `/` on that line and reads on from there.
 const REGEX_AFTER_KEYWORD =
-  /(?:^|[^\w$])(?:return|typeof|instanceof|in|of|new|delete|void|throw|case|do|else|await|yield)$/
+  /(?:^|[^\w$])(?:return|typeof|instanceof|in|of|new|delete|void|throw|case|default|do|else|await|yield)$/
 const REGEX_CAN_FOLLOW = new Set([
   '',
   '(',
