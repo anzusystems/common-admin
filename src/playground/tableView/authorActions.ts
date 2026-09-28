@@ -5,7 +5,8 @@ import { useAlerts } from '@/composables/system/alerts'
 import { useFetchAuthorList } from '@/components/damImage/uploadQueue/api/authorApi'
 import { damClient } from '@/playground/mock/coreDamClient'
 import type { FilterConfig, FilterData } from '@/labs/filters/filterFactory'
-import { SORT_BY_ID, SortOrder } from '@/composables/system/datatableColumns'
+import { SORT_BY_ID } from '@/composables/system/datatableColumns'
+import { SortOrder } from '@/labs/api/SortOrder'
 
 const datatableHiddenColumns = ref<Array<string>>(['id'])
 const listLoading = ref(false)

@@ -9,7 +9,9 @@ import { isAnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyE
 import { isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
 import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { isAnzuApiCancelledError } from '@/model/error/AnzuApiCancelledError'
-import { AuthUnavailableError, isInCauseChain, SessionExpiredError } from '@/composables/auth/refreshSession'
+import { AuthUnavailableError } from '@/model/error/AuthUnavailableError'
+import { SessionExpiredError } from '@/model/error/SessionExpiredError'
+import { isInCauseChain } from '@/model/error/isInCauseChain'
 
 const DEFAULT_DURATION_SECONDS = 3
 // One "sign-in server does not answer" per outage: a page's requests all fail at once.

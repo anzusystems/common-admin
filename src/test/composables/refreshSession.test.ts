@@ -1,12 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios'
-import {
-  AuthUnavailableError,
-  createRefreshRequestInterceptor,
-  createRefreshSession,
-  isInCauseChain,
-  SessionExpiredError,
-} from '@/composables/auth/refreshSession'
+import { createRefreshRequestInterceptor, createRefreshSession } from '@/composables/auth/refreshSession'
+import { AuthUnavailableError } from '@/model/error/AuthUnavailableError'
+import { SessionExpiredError } from '@/model/error/SessionExpiredError'
+import { isInCauseChain } from '@/model/error/isInCauseChain'
 
 const failing = (status?: number) => {
   const error = new AxiosError('request failed')

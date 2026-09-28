@@ -7,7 +7,7 @@ import {
   useFilterHelpers,
   type MakeFilterOption,
 } from '@/labs/filters/filterFactory'
-import { SortOrder } from '@/composables/system/datatableColumns'
+import { SortOrder } from '@/labs/api/SortOrder'
 import { usePagination } from '@/labs/filters/pagination'
 import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
 

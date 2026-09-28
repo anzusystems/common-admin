@@ -16,7 +16,8 @@ import { AnzuApiValidationError, axiosErrorResponseHasValidationData } from '@/m
 import { AnzuError, isAnzuError } from '@/model/error/AnzuError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { HTTP_STATUS_FORBIDDEN, HTTP_STATUS_UNAUTHORIZED } from '@/composables/statusCodes'
-import { isInCauseChain, SessionExpiredError } from '@/composables/auth/refreshSession'
+import { SessionExpiredError } from '@/model/error/SessionExpiredError'
+import { isInCauseChain } from '@/model/error/isInCauseChain'
 
 export type ApiErrorContext = {
   system: string

@@ -10,7 +10,7 @@ import type {
 import type { DatetimeUTCNullable } from '@/types/common'
 import { TimeIntervalSpecialOptions, type TimeIntervalToolsValue } from '@/labs/filters/filterTimeIntervalTools'
 import { dateModifyMinutes, dateTimeNow, dateTimeToDate, dateToUtc, getMonthInterval } from '@/utils/datetime'
-import { SortOrder } from '@/composables/system/datatableColumns'
+import { SortOrder } from '@/labs/api/SortOrder'
 
 /**
  * Docs: /doc/Admin-Cms-Doc/Filters.md

@@ -15,7 +15,8 @@ import {
 } from '@/utils/common'
 import type { AnyFn } from '@vueuse/core'
 import type { Pagination } from '@/labs/filters/pagination'
-import { type DatatableSortBy, SortOrder } from '@/composables/system/datatableColumns'
+import { type DatatableSortBy } from '@/composables/system/datatableColumns'
+import { SortOrder } from '@/labs/api/SortOrder'
 import { stringToBooleanExact, stringToNumber } from '@/utils/string'
 import type { ValueObjectOption } from '@/types/ValueObject'
 

@@ -16,8 +16,8 @@ import {
   type DatatableOrderingOption,
   SORT_BY_SCORE_BEST,
   SORT_BY_SCORE_DATE,
-  SortOrder,
 } from '@/composables/system/datatableColumns'
+import { SortOrder } from '@/labs/api/SortOrder'
 import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
 import type { Pagination } from '@/labs/filters/pagination'
 

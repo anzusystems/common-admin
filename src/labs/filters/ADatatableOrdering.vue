@@ -5,8 +5,8 @@ import {
   type DatatableOrderingOption,
   type DatatableOrderingOptions,
   SORT_BY_SCORE,
-  SortOrder,
 } from '@/composables/system/datatableColumns'
+import { SortOrder } from '@/labs/api/SortOrder'
 import { isUndefined } from '@/utils/common'
 import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
 

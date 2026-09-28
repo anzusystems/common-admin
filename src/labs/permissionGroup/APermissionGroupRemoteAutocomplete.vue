@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { provide } from 'vue'
-import { SortOrder } from '@/composables/system/datatableColumns'
+import { SortOrder } from '@/labs/api/SortOrder'
 import type { AxiosClientFn } from '@/labs/api/client'
 import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
 import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'

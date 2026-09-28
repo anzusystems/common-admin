@@ -5,7 +5,8 @@ import { defineUserSystemDescriptor } from '@/labs/anzuUser/userSystemDescriptor
 import { useUserSystemProbe } from '@/labs/anzuUser/userSystemProbe'
 import { UserSystemPresence } from '@/labs/anzuUser/userSystemState'
 import { defaultApiErrorLogger, mapApiError, report, setApiErrorLogger } from '@/labs/api/apiErrors'
-import { AuthUnavailableError, SessionExpiredError } from '@/composables/auth/refreshSession'
+import { AuthUnavailableError } from '@/model/error/AuthUnavailableError'
+import { SessionExpiredError } from '@/model/error/SessionExpiredError'
 
 const notFound = () =>
   Object.assign(new Error('failed'), {

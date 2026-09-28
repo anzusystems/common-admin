@@ -4,12 +4,8 @@ import { nextTick } from 'vue'
 import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
 import { DatatablePaginationKey } from '@/labs/filters/filterInjectionKeys'
 import { usePagination } from '@/labs/filters/pagination'
-import {
-  SORT_BY_SCORE,
-  SortOrder,
-  type DatatableOrderingOptions,
-  type SortOrderType,
-} from '@/composables/system/datatableColumns'
+import { SORT_BY_SCORE, type DatatableOrderingOptions } from '@/composables/system/datatableColumns'
+import { SortOrder, type SortOrderType } from '@/labs/api/SortOrder'
 
 const wrappers: VueWrapper[] = []
 afterEach(() => {

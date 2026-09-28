@@ -5,7 +5,7 @@ import { type UserAdminConfig, type UserAdminConfigLayoutTypeType, UserAdminConf
 import type { IntegerId } from '@/types/common'
 import type { UseApiFetchListReturnType } from '@/labs/api/useApiFetchList'
 import { usePagination } from '@/labs/filters/pagination'
-import { SortOrder } from '@/composables/system/datatableColumns'
+import { SortOrder } from '@/labs/api/SortOrder'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 
 interface CacheItem<T = UserAdminConfig> {

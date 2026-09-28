@@ -233,9 +233,8 @@ import {
   SORT_BY_SCORE,
   SORT_BY_SCORE_BEST,
   SORT_BY_SCORE_DATE,
-  SortOrder,
-  type SortOrderType,
 } from '@/composables/system/datatableColumns'
+import { SortOrder, type SortOrderType } from '@/labs/api/SortOrder'
 import { createAnzuVuetify, type CreateAnzuVuetifyOptions, useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { type CachedItem, defineCached } from '@/composables/system/defineCached'
 import type { ObjectLeaves, UniqueValues } from '@/types/utils'
@@ -436,14 +435,14 @@ import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
 import {
-  AuthUnavailableError,
   type AuthCookieState,
   createRefreshRequestInterceptor,
   createRefreshSession,
-  isInCauseChain,
   type RefreshResult,
-  SessionExpiredError,
 } from '@/composables/auth/refreshSession'
+import { AuthUnavailableError } from '@/model/error/AuthUnavailableError'
+import { SessionExpiredError } from '@/model/error/SessionExpiredError'
+import { isInCauseChain } from '@/model/error/isInCauseChain'
 import { type BreadcrumbItem, type Breadcrumbs, defineBreadcrumbs } from '@/composables/system/breadcrumbs'
 import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
 import ADamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'

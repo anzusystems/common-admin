@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useApiFetchList } from '@/labs/api/useApiFetchList'
 import { usePagination } from '@/labs/filters/pagination'
-import { SortOrder } from '@/composables/system/datatableColumns'
+import { SortOrder } from '@/labs/api/SortOrder'
 import { useAnzuUserEmailLookupFilter } from '@/labs/anzuUser/anzuUserFilter'
 import { CrossSystemPhase, useUserCrossSystemStore, type UserSystemResult } from '@/labs/anzuUser/userCrossSystemStore'
 import type { AnyUserSystemDescriptor } from '@/labs/anzuUser/userSystemDescriptor'

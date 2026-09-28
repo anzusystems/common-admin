@@ -1,4 +1,5 @@
-import { type DatatableSortBy, SortOrder, type SortOrderType } from '@/composables/system/datatableColumns'
+import { type DatatableSortBy } from '@/composables/system/datatableColumns'
+import { SortOrder, type SortOrderType } from '@/labs/api/SortOrder'
 import { type Ref, ref } from 'vue'
 import { isNull, isString, isUndefined } from '@/utils/common'
 

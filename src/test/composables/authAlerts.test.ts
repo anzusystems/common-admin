@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthUnavailableError, SessionExpiredError } from '@/composables/auth/refreshSession'
+import { AuthUnavailableError } from '@/model/error/AuthUnavailableError'
+import { SessionExpiredError } from '@/model/error/SessionExpiredError'
 import { AnzuFatalError } from '@/model/error/AnzuFatalError'
 import { useAlerts } from '@/composables/system/alerts'
 import { commonT } from '@/plugins/i18n'

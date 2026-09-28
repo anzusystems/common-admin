@@ -1,29 +1,12 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { isDefined, isNull } from '@/utils/common'
 import { skipUrlPrefixes } from '@/labs/api/defineApiClient'
+import { AuthUnavailableError } from '@/model/error/AuthUnavailableError'
+import { isInCauseChain } from '@/model/error/isInCauseChain'
+import { SessionExpiredError } from '@/model/error/SessionExpiredError'
 
 const HTTP_BAD_REQUEST = 400
 const HTTP_UNAUTHORIZED = 401
-
-/**
- * The auth backend could not answer the refresh (403, 5xx, timeout, network), as opposed to "the
- * session is gone". A request stopped by it rejects with this, so a caller can tell it from a 403 of
- * the request itself -- anywhere in the `.cause` chain, since the api helpers wrap what they catch.
- */
-export class AuthUnavailableError extends Error {
-  constructor(cause: unknown) {
-    super('Auth backend unavailable', { cause })
-    this.name = 'AuthUnavailableError'
-  }
-}
-
-/** The session is gone: no cookie left to refresh with, or the refresh was refused. */
-export class SessionExpiredError extends Error {
-  constructor() {
-    super('Session expired')
-    this.name = 'SessionExpiredError'
-  }
-}
 
 export type RefreshResult =
   | { type: 'refreshed' }
@@ -34,21 +17,6 @@ export type RefreshResult =
 export interface AuthCookieState {
   refreshTokenExists: unknown
   jwtPayload: string | null | undefined
-}
-
-/**
- * Walks an error's `.cause` chain (tolerant: a cause is not always an `Error`, and a chain could loop)
- * and answers whether any value in it matches.
- */
-export const isInCauseChain = (error: unknown, predicate: (value: unknown) => boolean): boolean => {
-  const seen = new Set<unknown>()
-  let current: unknown = error
-  while (isDefined(current) && !isNull(current) && !seen.has(current)) {
-    seen.add(current)
-    if (predicate(current)) return true
-    current = (current as { cause?: unknown }).cause
-  }
-  return false
 }
 
 // `undefined`: no response anywhere in the chain -- a timeout or a network failure.
