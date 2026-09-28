@@ -1,0 +1,150 @@
+import { afterEach, describe, expect, it } from 'vitest'
+import { mount, type VueWrapper } from '@vue/test-utils'
+import { defineComponent, h, nextTick, ref, type Ref } from 'vue'
+import AListEditor from '@/labs/listEditor/AListEditor.vue'
+import ASortableListEditor from '@/labs/listEditor/ASortableListEditor.vue'
+
+/**
+ * QA 85050 Batch 10 BUG-02 — "merely OPENING an unchanged row turns it amber and
+ * raises '1 nepotvrdená zmena'".
+ *
+ * A NESTED editor only mounts when its parent row is EXPANDED. At construction the
+ * controller runs `ensureKeys` and, for rows the server returns WITHOUT an `id`
+ * (embedded value-object DTOs like `{ adSlotName, position }`), mints a NEGATIVE temp
+ * id and WRITES IT BACK into the shared model (`useListEditorController.ts:200-205`).
+ *
+ * The parent baselined earlier, from the pristine server rows. Its dirty hash is
+ * `JSON.stringify` of the WHOLE row — nested array included — so the child's mount-time
+ * write retroactively invalidates the parent's baseline. Expanding a row to READ it
+ * marks it unsaved, with no edit ever made. Verified live: the only field that changed
+ * was the added `id: -1`.
+ *
+ * Invariant violated: a controller must never mutate the model as a side effect of
+ * MOUNTING. A mount-time write is invisible to the writer (it baselines the already
+ * seeded rows) but visible to every ancestor.
+ *
+ * FAILS today (expanding flips the parent amber). Passes once temp ids are excluded
+ * from the content hash, so seeding a key is not mistaken for a content change.
+ */
+
+interface Advert {
+  id?: number
+  adSlotName: string
+  position: number
+}
+interface Row {
+  id: number
+  position: number
+  title: string
+  adverts: Advert[]
+}
+
+let mounted: VueWrapper | null = null
+afterEach(() => {
+  mounted?.unmount()
+  mounted = null
+})
+
+// `.a-le-row` and `.a-le-row-add` match BOTH editors — the nested one renders inside the
+// parent row's body, and each editor's add button renders after its own rows (so a flat
+// `findAll('.a-le-row-add')` yields [inner, outer], and the LAST entry is the OUTER one).
+// Everything below therefore addresses the two editors explicitly.
+// Read a ref out of the scope that created it, so asserting on the model doesn't trip
+// vue/no-ref-object-reactivity-loss.
+const read = (list: Ref<Row[]>): Row[] => list.value
+const nestedEditor = (w: VueWrapper) => w.find('.a-list-editor')
+const parentRows = (w: VueWrapper): HTMLElement[] => {
+  const nestedRoots = w.findAll('.a-list-editor').map((e) => e.element)
+  return w
+    .findAll('.a-sortable-list-editor .a-le-row')
+    .map((e) => e.element as HTMLElement)
+    .filter((row) => !nestedRoots.some((nested) => nested.contains(row)))
+}
+
+// Server shape: the nested adverts carry NO `id` — exactly what the API returns for
+// these embedded DTOs, and what makes `ensureKeys` mint one on mount.
+const serverRows = (): Row[] => [
+  { id: 1, position: 1, title: 'Content item', adverts: [{ adSlotName: 'slot_a', position: 1 }] },
+]
+
+const buildHost = (model: Ref<Row[]>) =>
+  defineComponent({
+    setup() {
+      return () =>
+        h(
+          ASortableListEditor<Row>,
+          {
+            modelValue: model.value,
+            'onUpdate:modelValue': (v: Row[]) => {
+              model.value = v
+            },
+            factory: (): Row => ({ id: -1, position: 0, title: '', adverts: [] }),
+            compactField: 'title',
+          },
+          {
+            // The nested editor over the id-less rows — mounts only once the parent row expands.
+            item: ({ raw }: { raw: Row }) =>
+              h(AListEditor<Advert>, {
+                modelValue: raw.adverts,
+                'onUpdate:modelValue': (v: Advert[]) => {
+                  raw.adverts = v
+                },
+                factory: (): Advert => ({ adSlotName: '', position: 0 }),
+                compactField: 'adSlotName',
+              }),
+          },
+        )
+    },
+  })
+
+describe('QA 85050 B10 BUG-02 — expanding a row must not mark it unsaved', () => {
+  it('a mount-time key seed in a nested editor does not flip the parent row amber', async () => {
+    const model = ref<Row[]>(serverRows())
+    mounted = mount(buildHost(model), {
+      attachTo: document.body,
+      attrs: { style: 'width: 1000px;' },
+    })
+    await nextTick()
+
+    // Pre-condition: freshly loaded, collapsed, nothing pending.
+    expect(mounted.findAll('.a-le-row--unsaved')).toHaveLength(0)
+
+    // Expand the parent row — READ ONLY. No edit of any kind.
+    await mounted.findAll('.a-le-row-header')[0].trigger('click')
+    await nextTick()
+    await nextTick()
+
+    // ORACLE (fails today): reading a row is not a change, so nothing may be unsaved.
+    expect(mounted.findAll('.a-le-row--unsaved')).toHaveLength(0)
+  })
+
+  it('a genuinely added nested row STILL bubbles unsaved up to the parent', async () => {
+    // Guards the fix against over-reach: excluding temp ids from the hash must not
+    // silence a real nested addition (the array content itself still differs).
+    const model = ref<Row[]>(serverRows())
+    mounted = mount(buildHost(model), {
+      attachTo: document.body,
+      attrs: { style: 'width: 1000px;' },
+    })
+    await nextTick()
+    await mounted.findAll('.a-le-row-header')[0].trigger('click')
+    await nextTick()
+
+    // Add a nested advert row through the NESTED editor's own add button.
+    await nestedEditor(mounted).find('.a-le-row-add').trigger('click')
+    await nextTick()
+    await nextTick()
+
+    // Pre-condition for the oracle below: a nested row was really added. Without this the
+    // test can silently degrade into "the outer editor grew a row", which is amber by
+    // construction (no baseline entry) and would pass no matter what the hash excludes.
+    expect(read(model)).toHaveLength(1)
+    expect(read(model)[0].adverts).toHaveLength(2)
+
+    // ORACLE: the PARENT row itself must read unsaved — its content genuinely differs from
+    // the baseline now, so excluding temp ids from the hash must not silence it.
+    const rows = parentRows(mounted)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].classList.contains('a-le-row--unsaved')).toBe(true)
+  })
+})

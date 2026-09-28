@@ -28,21 +28,27 @@ const isOpen = ref(false)
             class="mr-1"
             icon="mdi-brightness-auto"
             :size="32"
-          />{{ t('common.system.theme.auto') }}
+          />{{
+            t('common.system.theme.auto')
+          }}
         </div>
         <div v-else-if="settings === ThemeSettings.Light">
           <VIcon
             class="mr-1"
             icon="mdi-brightness-7"
             :size="32"
-          />{{ t('common.system.theme.light') }}
+          />{{
+            t('common.system.theme.light')
+          }}
         </div>
         <div v-else-if="settings === ThemeSettings.Dark">
           <VIcon
             class="mr-1"
             icon="mdi-brightness-4"
             :size="32"
-          />{{ t('common.system.theme.dark') }}
+          />{{
+            t('common.system.theme.dark')
+          }}
         </div>
       </VBtn>
     </template>

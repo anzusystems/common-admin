@@ -36,6 +36,7 @@
   "copyPermissions": {
     "title": "Kopírovať rolu a oprávnenia",
     "desc": "Potrebujete skopírovať rolu a oprávnenia z už existujúceho používateľa?",
-    "srcUser": "Zdrojový používateľ"
+    "srcUser": "Zdrojový používateľ",
+    "copiedSettings": "Všetky skopírované nastavenia:"
   }
 }

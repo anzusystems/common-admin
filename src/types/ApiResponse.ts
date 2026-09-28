@@ -14,6 +14,8 @@ export const isApiResponseList = <T>(value: unknown): value is ApiResponseList<T
   return isObject(value) && Object.hasOwn(value, 'totalCount')
 }
 
-export const isApiInfiniteResponseList = <T>(value: unknown): value is ApiInfiniteResponseList<T> => {
+export const isApiInfiniteResponseList = <T>(
+  value: unknown,
+): value is ApiInfiniteResponseList<T> => {
   return isObject(value) && Object.hasOwn(value, 'hasNextPage')
 }

@@ -1,17 +1,18 @@
 <script lang="ts" setup>
-import { computed, watch } from 'vue'
+import { computed, provide, watch } from 'vue'
 import type { IntegerId } from '@/types/common'
 import { cloneDeep } from '@/utils/common'
-import AFormRemoteAutocomplete from '@/components/form/AFormRemoteAutocomplete.vue'
-import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
+import AFormRemoteAutocomplete from '@/labs/form/AFormRemoteAutocomplete.vue'
+import { useDamAssetLicenceInnerFilter } from '@/components/dam/user/AssetLicenceFilter'
 import { useAssetLicenceSelectActions } from '@/components/dam/user/assetLicenceActions'
 import type { AxiosInstance } from 'axios'
 import type { ValueObjectOption } from '@/types/ValueObject'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
     modelValue: IntegerId | null | IntegerId[] | any
-    client: () => AxiosInstance,
+    client: () => AxiosInstance
     label?: string | undefined
     required?: boolean | undefined
     multiple?: boolean
@@ -19,7 +20,6 @@ const props = withDefaults(
     dataCy?: string
     extSystemId?: IntegerId | null
     hideDetails?: boolean
-    disableInitFetch?: boolean
   }>(),
   {
     label: undefined,
@@ -29,8 +29,7 @@ const props = withDefaults(
     dataCy: '',
     extSystemId: null,
     hideDetails: undefined,
-    disableInitFetch: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: IntegerId | null | IntegerId[] | any): void
@@ -45,47 +44,44 @@ const modelValueComputed = computed({
   },
 })
 
-const selected = defineModel<ValueObjectOption<IntegerId>[]>('selected', { required: false, default: () => [] })
+const selected = defineModel<ValueObjectOption<IntegerId>[]>('selected', {
+  required: false,
+  default: () => [],
+})
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItems, fetchItemsByIds } = useAssetLicenceSelectActions(props.client)
 
-const innerFilter = useDamAssetLicenceFilter()
-
-const selectedExtSystemId = computed(() => {
-  return props.extSystemId
-})
+const { filterData, filterConfig } = useDamAssetLicenceInnerFilter()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+filterData.extSystem = props.extSystemId
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
 
 watch(
-  selectedExtSystemId,
+  () => props.extSystemId,
   (newValue, oldValue) => {
     if (newValue === oldValue) return
-    modelValueComputed.value = null
-    if (newValue) {
-      innerFilter.extSystem.model = newValue
-      return
-    }
-    innerFilter.extSystem.model = null
+    modelValueComputed.value = props.multiple ? [] : null
+    filterData.extSystem = newValue
   },
-  { immediate: true }
 )
 </script>
 
 <template>
   <AFormRemoteAutocomplete
-    :key="selectedExtSystemId + ''"
+    :key="extSystemId + ''"
     v-model="modelValueComputed"
     v-model:selected="selected"
     :required="required"
     :label="label"
     :fetch-items="fetchItems"
     :fetch-items-by-ids="fetchItemsByIds"
-    :inner-filter="innerFilter"
     :multiple="multiple"
     :clearable="clearable"
     filter-by-field="name"
     :data-cy="dataCy"
     :hide-details="hideDetails"
-    :disable-init-fetch="disableInitFetch"
+    prefetch="hover"
   />
 </template>

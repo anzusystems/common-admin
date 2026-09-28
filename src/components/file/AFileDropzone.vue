@@ -29,7 +29,7 @@ const props = withDefaults(
     size: 'default',
     hoverOnly: false,
     hideText: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'onDrop', files: File[]): void
@@ -106,11 +106,6 @@ $class-name-root: 'a-file-dropzone';
     border-radius: 5px;
   }
 
-  &--fill {
-    position: absolute !important;
-    inset: 0;
-  }
-
   &--bg {
     width: 100%;
   }
@@ -123,6 +118,12 @@ $class-name-root: 'a-file-dropzone';
 
   &--small {
     min-height: 70px;
+
+    .text {
+      font-size: 0.75rem;
+      line-height: 1.2;
+      padding: 4px;
+    }
   }
 
   &--default {
@@ -131,6 +132,12 @@ $class-name-root: 'a-file-dropzone';
 
   &--large {
     min-height: 210px;
+  }
+
+  &--fill {
+    position: absolute !important;
+    inset: 0;
+    min-height: 40px;
   }
 
   &--hover-only {
@@ -149,7 +156,7 @@ $class-name-root: 'a-file-dropzone';
 .v-theme--light {
   .#{$class-name-root} {
     .text {
-      background-color: rgba(212 212 212 / 50%);
+      background-color: rgb(212 212 212 / 50%);
     }
 
     &--bg {
@@ -171,7 +178,7 @@ $class-name-root: 'a-file-dropzone';
 .v-theme--dark {
   .#{$class-name-root} {
     .text {
-      background-color: rgba(57 57 57 / 50%);
+      background-color: rgb(57 57 57 / 50%);
     }
 
     &--bg {

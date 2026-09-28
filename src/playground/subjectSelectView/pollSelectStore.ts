@@ -1,39 +1,55 @@
-import { reactive, ref } from 'vue'
-import { makeFilterHelper } from '@/composables/filter/filterHelpers'
+import { ref } from 'vue'
+import {
+  createFilter,
+  createFilterStore,
+  type MakeFilterOption,
+} from '@/labs/filters/filterFactory'
 
 const datatableHiddenColumns = ref([])
 
-const makeFilter = makeFilterHelper('cms', 'poll')
+export const filterFields = [
+  {
+    name: 'title' as const,
+    apiName: 'texts.title',
+    default: [],
+    variant: 'startsWith',
+    type: 'string',
+  },
+  { name: 'id' as const, default: null, render: { skip: true } },
+  {
+    name: 'displayType' as const,
+    default: null,
+    variant: 'in',
+    apiName: 'attributes.displayType',
+    render: { skip: true },
+  },
+  {
+    name: 'startOfVotingFrom' as const,
+    apiName: 'dates.startOfVoting',
+    default: null,
+    variant: 'gte',
+    render: { skip: true },
+  },
+  {
+    name: 'startOfVotingTo' as const,
+    apiName: 'dates.startOfVoting',
+    default: null,
+    variant: 'lte',
+    render: { skip: true },
+  },
+] satisfies readonly MakeFilterOption[]
 
-const filter = reactive({
-  id: {
-    ...makeFilter({ name: 'id' }),
-  },
-  title: {
-    ...makeFilter({ name: 'title', variant: 'startsWith', field: 'texts.title' }),
-  },
-  startOfVotingFrom: {
-    ...makeFilter({
-      name: 'startOfVotingFrom',
-      variant: 'gte',
-      field: 'dates.startOfVoting',
-    }),
-  },
-  startOfVotingTo: {
-    ...makeFilter({
-      name: 'startOfVotingTo',
-      variant: 'lte',
-      field: 'dates.startOfVoting',
-    }),
-  },
-  displayType: {
-    ...makeFilter({ name: 'displayType', variant: 'in', field: 'attributes.displayType' }),
-  },
-})
+const listFiltersStore = createFilterStore(filterFields)
 
 export function usePollSelectStore() {
+  const { filterConfig, filterData } = createFilter(filterFields, listFiltersStore, {
+    system: 'cms',
+    subject: 'poll',
+  })
+
   return {
-    filter,
+    filterConfig,
+    filterData,
     datatableHiddenColumns,
   }
 }

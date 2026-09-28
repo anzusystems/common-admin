@@ -1,6 +1,11 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { type RouteParams, type RouteRecordName, type RouteRecordNormalized, useRoute } from 'vue-router'
+import {
+  type RouteParams,
+  type RouteRecordName,
+  type RouteRecordNormalized,
+  useRoute,
+} from 'vue-router'
 import { useActionbar } from '@/playground/system/actionbar'
 import { isString } from '@/utils/common'
 
@@ -21,7 +26,11 @@ const breadcrumbs = computed(() => {
   const final: any[] = []
   route.matched.forEach((value) => {
     if (value.path.length === 0) return
-    const to: { path: string; name: string | undefined | RouteRecordName; params: RouteParams | undefined } = {
+    const to: {
+      path: string
+      name: string | undefined | RouteRecordName
+      params: RouteParams | undefined
+    } = {
       path: value.path,
       name: value.name ?? undefined,
       params: { ...route.params },

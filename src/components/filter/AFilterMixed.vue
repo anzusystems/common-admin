@@ -24,7 +24,7 @@ const props = withDefaults(
     filterOverrides: undefined,
     placeholder: undefined,
     dataCy: 'filter-mixed',
-  }
+  },
 )
 const model = ref('')
 const { filterId, filterText, filterDocId, filterUrl, filterOverrides } = toRefs(props)
@@ -142,7 +142,8 @@ watch(currentFilterModel, (newModel) => {
 
 const placeholderComputed = computed(() => {
   if (!isUndefined(props.placeholder)) return props.placeholder
-  if (currentFilter.value?.variant === 'startsWith') return t('common.model.filterPlaceholder.startsWith')
+  if (currentFilter.value?.variant === 'startsWith')
+    return t('common.model.filterPlaceholder.startsWith')
   if (currentFilter.value?.variant === 'eq') return t('common.model.filterPlaceholder.eq')
   if (currentFilter.value?.variant === 'contains' || currentFilter.value?.variant === 'search')
     return t('common.model.filterPlaceholder.contains')

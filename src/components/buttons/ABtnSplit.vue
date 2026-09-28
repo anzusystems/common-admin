@@ -28,7 +28,7 @@ const props = withDefaults(
     variant: 'primary',
     rounded: undefined,
     color: 'primary',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'onClick'): void

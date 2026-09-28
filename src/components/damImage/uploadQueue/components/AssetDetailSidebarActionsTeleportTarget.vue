@@ -7,8 +7,7 @@ const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
   }>(),
-  {
-  }
+  {},
 )
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -25,5 +24,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div :class="divClassName" />
+  <div
+    :class="[divClassName, 'd-flex', 'flex-row-reverse', 'justify-start', 'align-center', 'w-100']"
+  />
 </template>

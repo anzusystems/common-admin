@@ -18,7 +18,7 @@ const props = withDefaults(
     buttonT: 'common.button.detail',
     buttonClass: 'ml-1',
     dataCy: 'table-detail',
-  }
+  },
 )
 
 const { t } = useI18n()
@@ -37,6 +37,7 @@ const routerToComputed = computed(() => {
     :data-cy="dataCy"
     :to="routerToComputed"
     icon
+    :active="false"
     size="x-small"
     variant="text"
     @click.stop="() => {}"

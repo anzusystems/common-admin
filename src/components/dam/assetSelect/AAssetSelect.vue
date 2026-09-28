@@ -1,67 +1,71 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, shallowRef, watch, withModifiers } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch, withModifiers } from 'vue'
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
+import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
-import type { DamAssetType, DamAssetTypeValues } from '@/types/coreDam/Asset'
-import { damAssetTypeValueToEnum } from '@/types/coreDam/Asset'
+import { type AssetDetailItemDto, DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import AssetSelectListTable from '@/components/dam/assetSelect/components/AssetSelectListTable.vue'
 import AssetSelectListBar from '@/components/dam/assetSelect/components/AssetSelectListBar.vue'
-import { AssetSelectGridView, useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
+import {
+  AssetSelectGridView,
+  useGridView,
+} from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import AssetSelectListTiles from '@/components/dam/assetSelect/components/AssetSelectListTiles.vue'
 import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
 import AssetSelectFilter from '@/components/dam/assetSelect/components/filter/AssetSelectFilter.vue'
-import { isUndefined } from '@/utils/common'
-import type {
-  AssetSelectReturnData,
+import {
+  type AssetSelectReturnData,
   AssetSelectReturnType,
-  AssetSelectReturnTypeValues,
+  type AssetSelectReturnTypeType,
 } from '@/types/coreDam/AssetSelect'
-import { assetSelectReturnTypeValuesToEnum } from '@/types/coreDam/AssetSelect'
 import { filterAllowedImageWidgetSelectConfigs } from '@/components/damImage/composables/damFilterUserAllowedUploadConfigs'
 import { useAlerts } from '@/composables/system/alerts'
 import type { IntegerId } from '@/types/common'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { cloneDeep, isUndefined } from '@/utils/common'
+import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
+import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
+import { storeToRefs } from 'pinia'
+import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
+import { type DatatableOrderingOption } from '@/composables/system/datatableColumns'
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: boolean | undefined
-    assetType: DamAssetType | DamAssetTypeValues
+    assetType: DamAssetTypeType
+    inPodcast?: boolean | null
     minCount: number
     maxCount: number
     selectLicences: IntegerId[]
-    returnType?: AssetSelectReturnType | AssetSelectReturnTypeValues
+    uploadLicence?: IntegerId | undefined
+    returnType?: AssetSelectReturnTypeType
     configName?: string
     skipCurrentUserCheck?: boolean
+    onDetailLoadedCallback?: ((asset: AssetDetailItemDto) => void) | undefined
   }>(),
   {
-    modelValue: undefined,
-    returnType: 'mainFileId',
+    inPodcast: null,
+    uploadLicence: undefined,
+    returnType: AssetSelectReturnType.MainFileId,
     configName: 'default',
     skipCurrentUserCheck: false,
-  }
+    onDetailLoadedCallback: undefined,
+  },
 )
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', data: boolean): void
   (e: 'onConfirm', data: AssetSelectReturnData): void
 }>()
 
-const { t } = useI18n()
+const modelValue = defineModel<boolean>({ default: false, required: false })
+const sortModel = defineModel<number>('sort', { default: 1, required: false })
+const ready = defineModel<boolean>('ready', { default: false, required: false })
 
-const dialogLocal = ref(false)
 const loading = ref(false)
-const dialog = computed({
-  get() {
-    if (isUndefined(props.modelValue)) return dialogLocal.value
-    return props.modelValue
-  },
-  set(newValue: boolean) {
-    dialogLocal.value = newValue
-    emit('update:modelValue', newValue)
-  },
-})
+const copyToLicence = ref(false)
+
+const { t } = useI18n()
 
 const {
   damClient,
@@ -69,20 +73,32 @@ const {
   loader,
   pagination,
   fetchNextPage,
-  resetAssetList,
   getSelectedData,
   initStoreContext,
-} = useAssetSelectActions()
+  detailLoading,
+  fetchAssetListDebounced,
+  reset,
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+} = useAssetSelectActions('default', props.onDetailLoadedCallback)
+
+const { loadDamConfigAssetCustomFormElements, getDamConfigAssetCustomFormElements } =
+  useDamConfigState(damClient)
 
 const { getOrLoadDamConfigExtSystemByLicences } = useDamConfigState(damClient)
+const assetDetailStore = useAssetDetailStore()
+const { asset } = storeToRefs(assetDetailStore)
+const assetSelectStore = useAssetSelectStore()
+const { selectedLicenceId } = storeToRefs(assetSelectStore)
 
 const selectConfigs = shallowRef<DamConfigLicenceExtSystemReturnType[]>([])
 
-const { openSidebar, sidebarLeft } = useSidebar()
+const { mdAndUp } = useDisplay()
+const { openSidebarLeft, closeSidebarRight, sidebarLeft, sidebarRight } = useSidebar()
 const { showErrorT } = useAlerts()
 
 const onOpen = () => {
-  let selectConfigLocal = selectConfigs.value
+  if (!ready.value) return
+  let selectConfigLocal = cloneDeep(selectConfigs.value)
   if (!props.skipCurrentUserCheck) {
     selectConfigLocal = filterAllowedImageWidgetSelectConfigs(selectConfigs.value)
   }
@@ -91,43 +107,62 @@ const onOpen = () => {
     return
   }
 
+  reset()
   initStoreContext(
     selectConfigLocal,
-    damAssetTypeValueToEnum(props.assetType),
+    props.assetType,
+    props.inPodcast,
     1 === props.minCount && props.minCount === props.maxCount,
     props.minCount,
-    props.maxCount
+    props.maxCount,
   )
-  resetAssetList()
-  openSidebar()
-  dialog.value = true
+  if (mdAndUp.value) openSidebarLeft()
+  if (!mdAndUp.value) closeSidebarRight()
+  modelValue.value = true
 }
 
 watch(
-  dialog,
+  modelValue,
   async (newValue, oldValue) => {
     if (newValue === oldValue || !newValue) return
     onOpen()
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const onClose = () => {
-  dialog.value = false
+  modelValue.value = false
+  reset()
+}
+
+const getCopyToLicenceId = () => {
+  if (copyToLicence.value && props.uploadLicence) {
+    return props.uploadLicence
+  }
+  return undefined
 }
 
 const onConfirm = () => {
-  emit('onConfirm', getSelectedData(assetSelectReturnTypeValuesToEnum(props.returnType)))
+  emit('onConfirm', getSelectedData(props.returnType, getCopyToLicenceId()))
   onClose()
 }
 
 const autoloadOnIntersect = (isIntersecting: boolean) => {
-  if (isIntersecting && pagination.hasNextPage === true) {
+  if (isIntersecting && pagination.value.hasNextPage === true) {
     fetchNextPage()
   }
 }
 
 const { gridView } = useGridView()
+
+const showCopyToLicence = computed(() => {
+  return (
+    props.assetType === DamAssetType.Image &&
+    selectedLicenceId.value > 0 &&
+    !isUndefined(props.uploadLicence) &&
+    selectedLicenceId.value !== props.uploadLicence
+  )
+})
 
 const componentComputed = computed(() => {
   switch (gridView.value) {
@@ -144,10 +179,60 @@ const disabledSubmit = computed(() => {
   return selectedCount.value < props.minCount || selectedCount.value > props.maxCount
 })
 
+const extId = computed(() => {
+  if (selectConfigs.value.length === 0) return undefined
+  if (selectedLicenceId.value > 0) {
+    const found = selectConfigs.value.find((config) => config.licence === selectedLicenceId.value)
+    if (found) return found.extSystem
+  }
+  return undefined
+})
+
+const loadingSidebarRight = computed(() => {
+  return customFormConfigLoading.value || detailLoading.value
+})
+
+const { showErrorsDefault } = useAlerts()
+const customFormConfigLoading = ref(true)
+
+const sortByChange = (option: DatatableOrderingOption) => {
+  pagination.value.sortBy = null
+  if (option.sortBy) {
+    pagination.value.sortBy = { key: option.sortBy.key, order: option.sortBy.order }
+  }
+  fetchAssetListDebounced()
+}
+
+watch(
+  extId,
+  async (newValue) => {
+    if (isUndefined(newValue)) return
+    customFormConfigLoading.value = true
+    const configAssetCustomFormElements = getDamConfigAssetCustomFormElements(newValue)
+    if (isUndefined(configAssetCustomFormElements)) {
+      try {
+        await loadDamConfigAssetCustomFormElements(newValue)
+        customFormConfigLoading.value = false
+      } catch (e) {
+        showErrorsDefault(e)
+      }
+    } else {
+      customFormConfigLoading.value = false
+    }
+  },
+  { immediate: true },
+)
+
 onMounted(async () => {
+  ready.value = false
   loading.value = true
   selectConfigs.value = await getOrLoadDamConfigExtSystemByLicences(props.selectLicences)
   loading.value = false
+  ready.value = true
+})
+
+onUnmounted(() => {
+  selectConfigs.value = []
 })
 
 defineExpose({
@@ -162,19 +247,18 @@ defineExpose({
   >
     <VProgressCircular indeterminate />
   </div>
-  <template v-else>
+  <template v-else-if="ready && selectConfigs.length > 0">
     <slot
       name="activator"
       :props="{ onClick: withModifiers(() => onOpen(), ['stop']) }"
     />
     <VDialog
-      :model-value="dialog"
+      v-model="modelValue"
       fullscreen
       class="subject-select"
-      @update:model-value="emit('update:modelValue', $event)"
     >
       <VCard
-        v-if="dialog"
+        v-if="modelValue"
         class="subject-select__card"
       >
         <ADialogToolbar
@@ -185,16 +269,26 @@ defineExpose({
             {{ t('common.assetSelect.meta.texts.title') }}
           </slot>
         </ADialogToolbar>
-        <AssetSelectListBar />
+        <AssetSelectListBar
+          v-model:sort="sortModel"
+          @sort-by-change="sortByChange"
+        />
         <div
           class="subject-select__main"
-          :class="{ 'subject-select__main--sidebar-active': sidebarLeft }"
+          :class="{
+            'subject-select__main--sidebar-active': sidebarLeft,
+            'subject-select__main--sidebar-right-active': sidebarRight,
+          }"
         >
           <div class="subject-select__sidebar system-border-r">
-            <AssetSelectFilter />
+            <AssetSelectFilter :config-name="configName" />
           </div>
           <div class="subject-select__content">
-            <component :is="componentComputed" />
+            <component
+              :is="componentComputed"
+              v-if="extId"
+              :ext-system="extId"
+            />
             <div class="d-flex w-100 align-center justify-center pa-4">
               <ABtnSecondary
                 v-show="pagination.hasNextPage || loader"
@@ -209,10 +303,43 @@ defineExpose({
               </ABtnSecondary>
             </div>
           </div>
+          <div class="subject-select__sidebar-right system-border-l">
+            <div
+              v-if="loadingSidebarRight"
+              class="d-flex w-100 align-center justify-center"
+            >
+              <VProgressCircular indeterminate />
+            </div>
+            <div
+              v-else-if="!asset"
+              class="d-flex w-100 align-center justify-center text-body-large"
+            >
+              {{ t('common.assetSelect.meta.info.noAssetSelected') }}
+            </div>
+            <div
+              v-else
+              class="w-100"
+            >
+              <slot
+                name="sidebar-prepend"
+                :asset="asset"
+              />
+              <AssetMetadata
+                v-if="extId && !customFormConfigLoading"
+                :ext-system="extId"
+                readonly
+              />
+            </div>
+          </div>
         </div>
         <div class="subject-select__actions system-border-t">
           <div v-if="props.minCount === props.maxCount">
-            {{ t('common.assetSelect.meta.texts.pickExactCount', { count: props.minCount, selected: selectedCount }) }}
+            {{
+              t('common.assetSelect.meta.texts.pickExactCount', {
+                count: props.minCount,
+                selected: selectedCount,
+              })
+            }}
           </div>
           <div v-else>
             {{
@@ -224,6 +351,13 @@ defineExpose({
             }}
           </div>
           <VSpacer />
+          <VSwitch
+            v-if="showCopyToLicence"
+            v-model="copyToLicence"
+            :label="t('common.assetSelect.meta.texts.copyToLicence')"
+            hide-details
+            class="mr-2"
+          />
           <ABtnPrimary
             :disabled="disabledSubmit"
             @click.stop="onConfirm"
@@ -236,4 +370,7 @@ defineExpose({
       </VCard>
     </VDialog>
   </template>
+  <div v-else>
+    Error, no select licence.
+  </div>
 </template>

@@ -1,9 +1,9 @@
 import {
   createRouter,
   createWebHistory,
-  type NavigationGuardNext,
+  type NavigationGuardReturn,
   type RouteLocationNormalized,
-  type RouteParams
+  type RouteParams,
 } from 'vue-router'
 import HomepageView from '@/playground/HomepageView.vue'
 import SettingsView from '@/playground/SettingsView.vue'
@@ -11,17 +11,25 @@ import BooleanValueView from '@/playground/booleanValueView/BooleanValueView.vue
 import PermissionView from '@/playground/permissionView/PermissionView.vue'
 import DatetimeView from '@/playground/datetimeView/DatetimeView.vue'
 import FormsView from '@/playground/formsView/FormsView.vue'
-import FilterView from '@/playground/filterView/FilterView.vue'
+import TableView from '@/playground/tableView/TableView.vue'
 import BtnSplitView from '@/playground/btnSplitView/BtnSplitView.vue'
 import AssetSelectView from '@/playground/assetSelectView/AssetSelectView.vue'
 import ApiFetchListBatchView from '@/playground/apiFetchListBatchView/ApiFetchListBatchView.vue'
 import ImageView from '@/playground/imageView/ImageView.vue'
 import FileView from '@/playground/fileView/FileView.vue'
 import SortableView from '@/playground/sortableView/SortableView.vue'
-import { initLanguageMessagesLoaded, initLoadLanguageMessages } from '@/playground/system/loadLanguageMessages'
+import ListEditorView from '@/playground/listEditorView/ListEditorView.vue'
+import SortableListEditorView from '@/playground/sortableListEditorView/SortableListEditorView.vue'
+import NestedSortableListEditorView from '@/playground/nestedSortableListEditorView/NestedSortableListEditorView.vue'
+import QuizManageView from '@/playground/quizManageView/QuizManageView.vue'
+import {
+  initLanguageMessagesLoaded,
+  initLoadLanguageMessages,
+} from '@/playground/system/loadLanguageMessages'
 import AlertView from '@/playground/alertView/AlertView.vue'
 import SubjectSelectView from '@/playground/subjectSelectView/SubjectSelectView.vue'
 import ImageMultipleView from '@/playground/imageMultipleView/ImageMultipleView.vue'
+import CardGridReorderView from '@/playground/cardGridReorderView/CardGridReorderView.vue'
 import CollabDetailView from '@/playground/collabView/CollabDetailView.vue'
 import CollabEditView from '@/playground/collabView/CollabEditView.vue'
 import { useCollabHelpers } from '@/components/collab/composables/collabHelpers'
@@ -32,10 +40,13 @@ import { useCollabInit } from '@/components/collab/composables/collabInit'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
 import { useAlerts } from '@/composables/system/alerts'
 import { useCollabRoom } from '@/components/collab/composables/collabRoom'
-import { updateCurrentUser, useCurrentUser } from '@/playground/collabView/currentUser'
+import { defineAuth } from '@/composables/auth/defineAuth'
+import type { AclValue } from '@/types/Permission'
+import { cmsClient } from '@/playground/mock/cmsClient'
 import CopyTextView from '@/playground/copyTextView/CopyTextView.vue'
 import ImagePublicInputView from '@/playground/imagePublicInputView/ImagePublicInputView.vue'
 import RemoteAutocompleteView from '@/playground/remoteAutocompleteView/RemoteAutocompleteView.vue'
+import SubjectListView from '@/playground/filterView/SubjectListView.vue'
 
 const { createCollabRoom } = useCollabHelpers()
 
@@ -85,7 +96,12 @@ const router = createRouter({
     {
       path: '/view/filters',
       name: 'view-filters',
-      component: FilterView,
+      component: SubjectListView,
+    },
+    {
+      path: '/view/table',
+      name: 'view-table',
+      component: TableView,
     },
     {
       path: '/view/split-buttons',
@@ -113,6 +129,11 @@ const router = createRouter({
       component: ImageMultipleView,
     },
     {
+      path: '/view/card-grid-reorder',
+      name: 'view-card-grid-reorder',
+      component: CardGridReorderView,
+    },
+    {
       path: '/view/image-public-input',
       name: 'view-image-public-input',
       component: ImagePublicInputView,
@@ -126,6 +147,26 @@ const router = createRouter({
       path: '/view/sortable',
       name: 'view-sortable',
       component: SortableView,
+    },
+    {
+      path: '/view/list-editor',
+      name: 'view-list-editor',
+      component: ListEditorView,
+    },
+    {
+      path: '/view/sortable-list-editor',
+      name: 'view-sortable-list-editor',
+      component: SortableListEditorView,
+    },
+    {
+      path: '/view/nested-sortable-list-editor',
+      name: 'view-nested-sortable-list-editor',
+      component: NestedSortableListEditorView,
+    },
+    {
+      path: '/view/quiz-manage',
+      name: 'view-quiz-manage',
+      component: QuizManageView,
     },
     {
       path: '/view/alert',
@@ -161,10 +202,13 @@ const router = createRouter({
 const initialized = ref(false)
 const { collabOptions } = useCommonAdminCollabOptions()
 
-const checkCollab = async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+const checkCollab = async (
+  to: RouteLocationNormalized,
+  from: RouteLocationNormalized,
+): Promise<NavigationGuardReturn> => {
   const { showWarningT, showErrorT } = useAlerts()
 
-  if (!collabOptions.value.enabled) return next()
+  if (!collabOptions.value.enabled) return
 
   if (from.meta.collab) {
     // @ts-ignore
@@ -182,7 +226,7 @@ const checkCollab = async (to: RouteLocationNormalized, from: RouteLocationNorma
     } catch (error) {
       if (error instanceof Error && error.message === CollabAccessRoomStatus.Failed) {
         showErrorT('common.collab.alert.error')
-        return next(from)
+        return from
       }
       showWarningT('common.collab.alert.occupied')
       alertedOccupiedRooms.value.add(collab.room)
@@ -193,25 +237,25 @@ const checkCollab = async (to: RouteLocationNormalized, from: RouteLocationNorma
         params.id = to.params.id
       }
 
-      return next({ name: redirectToRoute, params })
+      return { name: redirectToRoute, params }
     }
   }
-
-  next()
 }
 
-router.beforeEach(async (to, from, next) => {
-  const { currentUser } = useCurrentUser()
+router.beforeEach(async (to, from): Promise<NavigationGuardReturn> => {
   if (!initLanguageMessagesLoaded.value) await initLoadLanguageMessages()
   if (!initialized.value) {
-    await updateCurrentUser()
+    const { useCurrentUser } = defineAuth<AclValue>('cms')
+    const { fetchCurrentUser, currentUser } = useCurrentUser('cms')
+    await fetchCurrentUser(cmsClient, '/adm/v1/user/current')
     // init what needed
     const { setCollabUserCurrentId } = useCollabCurrentUserId()
     setCollabUserCurrentId(currentUser.value?.id ?? null)
     const { initCollab } = useCollabInit()
     initCollab()
+    initialized.value = true
   }
-  await checkCollab(to, from, next)
+  await checkCollab(to, from)
 })
 
 export default router

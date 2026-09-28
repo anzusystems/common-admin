@@ -6,7 +6,7 @@ import { isDefined, isUndefined } from '@/utils/common'
 import type { ErrorObject } from '@vuelidate/core'
 import { stringSplitOnFirstOccurrence } from '@/utils/string'
 import type { DatetimeUTCNullable, IntegerIdNullable } from '@/types/common'
-import type { CollabComponentConfig, CollabFieldData, CollabFieldDataEnvelope } from '@/components/collab/types/Collab'
+import type { CollabComponentConfig, CollabFieldData } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
 import ACollabLockedByUser from '@/components/collab/components/ACollabLockedByUser.vue'
 import { useCommonAdminCollabOptions } from '@/components/collab/composables/commonAdminCollabOptions'
@@ -33,7 +33,7 @@ const props = withDefaults(
     clearable: false,
     collab: undefined,
     disabled: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DatetimeUTCNullable | undefined): void
@@ -61,14 +61,8 @@ const acquireFieldLock = ref(() => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 if (collabOptions.value.enabled && isDefined(props.collab)) {
-  const {
-    releaseCollabFieldLock,
-    changeCollabFieldData,
-    acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
-    lockedByUser,
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-  } = useCollabField(props.collab.room, props.collab.field)
+  const { releaseCollabFieldLock, changeCollabFieldData, acquireCollabFieldLock, lockedByUser } =
+    useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   changeFieldData.value = changeCollabFieldData
   acquireFieldLock.value = acquireCollabFieldLock
@@ -77,13 +71,8 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true }
+    { immediate: true },
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      emit('update:modelValue', data.value as DatetimeUTCNullable | undefined)
-    })
-  }
 }
 
 const isOpened = ref(false)
@@ -119,7 +108,8 @@ const onFocus = () => {
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length) return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
+  if (props.v?.$errors?.length)
+    return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []
 })
 
@@ -158,6 +148,7 @@ watch(modelValueComputed, (newValue, oldValue) => {
     :disabled="disabledComputed"
     :label="labelComputed"
     :clearable="clearable"
+    v-bind="$attrs"
     @blur="onBlur"
     @focus="onFocus"
     @on-open="onOpen"

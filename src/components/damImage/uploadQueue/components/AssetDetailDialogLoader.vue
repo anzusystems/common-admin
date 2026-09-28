@@ -21,7 +21,7 @@ const closeDialog = () => {
         :height="64"
         class="system-border-b"
       >
-        <div class="text-subtitle-2 d-flex" />
+        <div class="text-label-large d-flex" />
         <VSpacer />
         <div>
           <VBtn

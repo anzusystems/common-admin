@@ -10,7 +10,7 @@ const props = withDefaults(
   }>(),
   {
     edgeDateValue: 'n/a',
-  }
+  },
 )
 
 const pretty = computed(() => {

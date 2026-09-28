@@ -4,7 +4,6 @@ import type { ImageAware } from '@/types/ImageAware'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import { ref, toRefs, watch } from 'vue'
 import { cloneDeep } from '@/utils/common'
-import { fetchImageListByIds } from '@/components/damImage/uploadQueue/api/imageApi'
 import { useAlerts } from '@/composables/system/alerts'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
 
@@ -30,7 +29,7 @@ const props = withDefaults(
     aspectRatio: 1.777, // 16/9
     showDescription: false,
     showSource: false,
-  }
+  },
 )
 
 const { images, modelValue } = toRefs(props)
@@ -41,25 +40,27 @@ const { showErrorsDefault } = useAlerts()
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const imageOptions = useCommonAdminImageOptions(props.configName)
-const { imageClient } = imageOptions
+const { imageClient, imageApi } = imageOptions
 
 watch(
   [images, modelValue],
   async ([newImages, newImageIds]) => {
     resImages.value = []
     if (newImages && newImages.length > 0) {
-      resImages.value = cloneDeep(newImages)
+      resImages.value = cloneDeep(newImages).sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
       return
     }
     if (newImageIds && newImageIds.length > 0) {
       try {
-        resImages.value = await fetchImageListByIds(imageClient, newImageIds)
+        resImages.value = (await imageApi.fetchImageListByIds(imageClient, newImageIds)).sort(
+          (a, b) => (a.position ?? 0) - (b.position ?? 0),
+        )
       } catch (error) {
         showErrorsDefault(error)
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

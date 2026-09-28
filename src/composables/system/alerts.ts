@@ -2,15 +2,28 @@ import { notify } from '@kyvg/vue3-notification'
 import { i18n } from '@/plugins/i18n'
 import { isAnzuFatalError } from '@/model/error/AnzuFatalError'
 import { isAnzuApiForbiddenError } from '@/model/error/AnzuApiForbiddenError'
-import { isAnzuApiValidationError, type ValidationError } from '@/model/error/AnzuApiValidationError'
+import {
+  isAnzuApiValidationError,
+  type ValidationError,
+} from '@/model/error/AnzuApiValidationError'
 import { isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
 import { isAnzuApiForbiddenOperationError } from '@/model/error/AnzuApiForbiddenOperationError'
+import { isAnzuApiDependencyExistsError } from '@/model/error/AnzuApiDependencyExistsError'
+import { isAnzuApiTimeoutError } from '@/model/error/AnzuApiTimeoutError'
+import { isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 
 const DEFAULT_DURATION_SECONDS = 3
 
 export const NEW_LINE_MARK = '\n'
 
-export type RecordWasType = 'created' | 'deleted' | 'updated' | 'published' | 'unpublished' | 'enabled' | 'disabled'
+export type RecordWasType =
+  | 'created'
+  | 'deleted'
+  | 'updated'
+  | 'published'
+  | 'unpublished'
+  | 'enabled'
+  | 'disabled'
 
 export function useAlerts() {
   const showSuccess = (message: string, duration = DEFAULT_DURATION_SECONDS) => {
@@ -89,7 +102,11 @@ export function useAlerts() {
     })
   }
 
-  const showApiValidationError = (errors: ValidationError[], duration = -1, fieldIsTranslated = false) => {
+  const showApiValidationError = (
+    errors: ValidationError[],
+    duration = -1,
+    fieldIsTranslated = false,
+  ) => {
     const { t, te } = i18n.global
     const texts = [t('common.alert.fixApiValidationErrors')]
 
@@ -99,6 +116,10 @@ export function useAlerts() {
         fieldText += errors[i].field
       } else if (te(errors[i].field)) {
         fieldText += t(errors[i].field)
+      } else if (errors[i].field.includes('[')) {
+        fieldText += resolveListErrors(errors[i].field)
+      } else {
+        fieldText += errors[i].field.split('.').at(-1)
       }
       const errorsTexts = new Set<string>()
       for (let j = 0; j < errors[i].errors.length; j++) {
@@ -154,28 +175,51 @@ export function useAlerts() {
     })
   }
 
-  const showErrorsDefault = (error: any) => {
+  const showErrorsDefault = (error: any, duration = -1) => {
     if (isAnzuApiForbiddenError(error)) {
-      showForbiddenError()
+      showForbiddenError(duration)
       return true
     }
     if (isAnzuApiValidationError(error)) {
-      showApiValidationError(error.fields)
+      showApiValidationError(error.fields, duration)
+      return true
+    }
+    if (isAnzuApiDependencyExistsError(error)) {
+      showErrorT('error.apiDependencyExists.message', duration)
       return true
     }
     if (isAnzuApiForbiddenOperationError(error)) {
-      showApiForbiddenOperationError(error.detail)
+      showApiForbiddenOperationError(error.detail, duration)
+      return true
+    }
+    if (isAnzuApiTimeoutError(error)) {
+      showErrorT('error.apiTimedOut.message', duration)
+      return true
+    }
+    if (isAnzuApiAxiosError(error)) {
+      showUnknownError(duration)
       return true
     }
     if (isAnzuFatalError(error)) {
-      showUnknownError()
+      showUnknownError(duration)
       return true
     }
     if (isAnzuApiResponseCodeError(error)) {
-      showUnknownError()
+      showUnknownError(duration)
       return true
     }
     return false
+  }
+
+  const resolveListErrors = (error: string) => {
+    const { t } = i18n.global
+    const parsedField = error.split('[')
+    const firstField = parsedField[0].trim()
+    const parsedSecond = parsedField[1].split(']')
+    const indexNumber = parsedSecond[0]
+    const secondField: string = parsedSecond[1] ?? ''
+
+    return t(firstField) + '[' + indexNumber + ']: ' + t(firstField.slice(0, -1) + secondField)
   }
 
   return {

@@ -1,18 +1,21 @@
 #app {
   .v-layout--full-height {
-    min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
 .v-overlay-container,
 #app {
-  .v-image__image {
+  .v-img__img {
     &--preload {
       filter: none;
     }
   }
 
-  .v-overlay__content.v-autocomplete__content .v-list-item .v-list-item__prepend input[type="checkbox"] {
+  .v-overlay__content.v-autocomplete__content
+    .v-list-item
+    .v-list-item__prepend
+    input[type='checkbox'] {
     pointer-events: none; // fix for autocomplete checkboxes
   }
 
@@ -20,7 +23,6 @@
     font-stretch: normal;
     font-weight: 500;
     letter-spacing: 0.8px;
-    text-transform: none;
   }
 
   .v-text-field.v-text-field--pill {

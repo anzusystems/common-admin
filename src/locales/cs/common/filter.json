@@ -1,0 +1,20 @@
+{
+  "fulltext": "Hľadať v textoch",
+  "filterMinChars": "Zadajte minimálne {min} znaky",
+  "bookmark": {
+    "title": "Záložky",
+    "name": "Názov",
+    "add": "Pridať záložku",
+    "manage": "Spravovať záložky",
+    "infoSave": "Aktuálne vybrané filtre budú uložené s touto záložkou.",
+    "errorMax": "Dosiahnutý maximálny počet záložiek. Môžete vymazať niektoré záložky a pridať nové.",
+    "storeTableColumns": "Uložiť aj stĺpce tabuľky",
+    "storeTableOrder": "Uložiť aj poradie tabuľky",
+    "saveBookmarkOrder": "Uložiť zoradenie",
+    "nameUniqueError": "Názov filtra musí byť unikátny"
+  },
+  "timeInterval": {
+    "from": "Od",
+    "until": "Do"
+  }
+}

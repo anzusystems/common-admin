@@ -20,7 +20,7 @@ export const initLoadLanguageMessages = async () => {
   }
   const { initializeLanguage, addMessages, currentLanguageCode } = modifyLanguageSettings(
     AVAILABLE_LANGUAGES,
-    DEFAULT_LANGUAGE
+    DEFAULT_LANGUAGE,
   )
   initializeLanguage()
   await loadMessages(currentLanguageCode.value)

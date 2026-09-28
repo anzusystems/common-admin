@@ -3,12 +3,12 @@ import { Grant } from '@/model/valueObject/Grant'
 import { GrantOrigin } from '@/model/valueObject/GrantOrigin'
 import PermissionValueChip from '@/components/permission/APermissionValueChip.vue'
 import PermissionGrantEditor from '@/components/permission/APermissionGrantEditor.vue'
-import { useAcl } from '@/composables/system/ability'
-import type { CustomAclValue } from '@/playground'
 import ARow from '@/components/ARow.vue'
 import ActionbarWrapper from '@/playground/system/ActionbarWrapper.vue'
+import { defineAuth } from '@/composables/auth/defineAuth'
+import type { AclValue } from '@/types/Permission'
 
-const { can } = useAcl<CustomAclValue>()
+const { can } = defineAuth<AclValue>('cms')
 </script>
 
 <template>
@@ -37,16 +37,16 @@ const { can } = useAcl<CustomAclValue>()
           cols="12"
           md="8"
         >
-          <Acl permission="anzu_entity_create">
+          <Acl permission="cms_entity_create">
             <ARow>Element denied and hidden by ACL (example 1)</ARow>
           </Acl>
-          <ARow v-if="can('anzu_entity_create')">
+          <ARow v-if="can('cms_entity_create')">
             Element denied and hidden by ACL (example 2)
           </ARow>
-          <Acl permission="anzu_entity_view">
+          <Acl permission="cms_entity_view">
             <ARow>Element allowed and showed by ACL (example 1)</ARow>
           </Acl>
-          <ARow v-if="can('anzu_entity_view')">
+          <ARow v-if="can('cms_entity_view')">
             Element allowed and showed by ACL (example 2)
           </ARow>
         </VCol>

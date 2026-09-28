@@ -13,7 +13,9 @@ const userMinimal = computed(() => {
 
 <template>
   <div class="align-center justify-space-evenly py-1">
-    <AAdminSwitcher config-url="https://web-static-common.smedata.sk/1.10.0/admin-switcher/config.localhost.json" />
+    <AAdminSwitcher
+      config-url="https://web-static-common.smedata.sk/1.10.0/admin-switcher/config.localhost.json"
+    />
     <ACurrentUserDropdown
       :current-user="userMinimal"
       settings-route-name="settings"

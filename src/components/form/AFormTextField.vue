@@ -15,7 +15,6 @@ import {
 import type {
   CollabComponentConfig,
   CollabFieldData,
-  CollabFieldDataEnvelope,
   CollabFieldLockOptions,
 } from '@/components/collab/types/Collab'
 import { useCollabField } from '@/components/collab/composables/collabField'
@@ -41,6 +40,7 @@ const props = withDefaults(
     disabled?: boolean
     placeholder?: undefined | string
     persistentPlaceholder?: boolean
+    help?: string | undefined
   }>(),
   {
     label: undefined,
@@ -58,7 +58,8 @@ const props = withDefaults(
     disabled: undefined,
     placeholder: undefined,
     persistentPlaceholder: false,
-  }
+    help: undefined,
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: string | number | null | undefined): void
@@ -71,8 +72,10 @@ const textFieldRef = ref<InstanceType<typeof VTextField> | null>(null)
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const releaseFieldLock = ref((data: CollabFieldData, options?: Partial<CollabFieldLockOptions>) => {})
+
+const releaseFieldLock = ref(
+  (_data: CollabFieldData, _options?: Partial<CollabFieldLockOptions>) => {},
+)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const acquireFieldLock = ref((options?: Partial<CollabFieldLockOptions>) => {})
 const lockedByUserLocal = ref<IntegerIdNullable>(null)
@@ -81,11 +84,9 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   const {
     releaseCollabFieldLock,
     acquireCollabFieldLock,
-    addCollabFieldDataChangeListener,
     addCollabFieldLockStatusListener,
     addCollabGatheringBufferDataListener,
     lockedByUser,
-    // eslint-disable-next-line vue/no-setup-props-reactivity-loss
   } = useCollabField(props.collab.room, props.collab.field)
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock
@@ -94,15 +95,13 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     (newValue) => {
       lockedByUserLocal.value = newValue
     },
-    { immediate: true }
+    { immediate: true },
   )
-  if (!collabOptions.value.disableCollabFieldDataChangeListener) {
-    addCollabFieldDataChangeListener((data: CollabFieldDataEnvelope) => {
-      emit('update:modelValue', data.value as string | number | null | undefined)
-    })
-  }
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
-    if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
+    if (
+      data.status === CollabFieldLockStatus.Failure &&
+      data.type === CollabFieldLockType.Acquire
+    ) {
       textFieldRef.value?.blur()
     }
   })
@@ -132,7 +131,8 @@ const onFocus = () => {
 
 const errorMessageComputed = computed(() => {
   if (isDefined(props.errorMessage)) return [props.errorMessage]
-  if (props.v?.$errors?.length) return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
+  if (props.v?.$errors?.length)
+    return [props.v.$errors.map((item: ErrorObject) => item.$message).join(' ')]
   return []
 })
 
@@ -153,6 +153,14 @@ const disabledComputed = computed(() => {
   if (isDefined(props.disabled)) return props.disabled
   return !!lockedByUserLocal.value
 })
+
+const focus = () => {
+  textFieldRef.value?.focus()
+}
+
+defineExpose({
+  focus,
+})
 </script>
 
 <template>
@@ -171,6 +179,7 @@ const disabledComputed = computed(() => {
     :placeholder="placeholder"
     :persistent-placeholder="persistentPlaceholder"
     trim
+    autocomplete="off"
     @click:append="(event: any) => emit('click:append', event)"
     @blur="onBlur"
     @focus="onFocus"
@@ -180,8 +189,7 @@ const disabledComputed = computed(() => {
       v-if="!hideLabel"
       #label
     >
-      {{ labelComputed
-      }}<span
+      {{ labelComputed }}<span
         v-if="requiredComputed"
         class="required"
       />
@@ -200,6 +208,21 @@ const disabledComputed = computed(() => {
           :users="collab.cachedUsers"
         />
       </slot>
+    </template>
+    <template
+      v-if="$slots.prepend"
+      #prepend
+    >
+      <slot name="prepend" />
+    </template>
+    <template
+      v-if="help"
+      #append
+    >
+      <VIcon
+        v-tooltip="help"
+        icon="mdi-help-circle-outline"
+      />
     </template>
   </VTextField>
 </template>

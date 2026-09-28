@@ -1,12 +1,12 @@
 import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
-import { AssetFileFailReason } from '@/types/coreDam/AssetFile'
+import { AssetFileFailReason, type AssetFileFailReasonType } from '@/types/coreDam/AssetFile'
 
 export function useAssetFileFailReason() {
   const { t } = useI18n()
 
-  const assetFileFailReasonOptions = ref<ValueObjectOption<AssetFileFailReason>[]>([
+  const assetFileFailReasonOptions = ref<ValueObjectOption<AssetFileFailReasonType>[]>([
     {
       value: AssetFileFailReason.None,
       title: t('common.damImage.asset.assetFileFailReason.none'),
@@ -33,7 +33,7 @@ export function useAssetFileFailReason() {
     },
   ])
 
-  const getAssetFileFailReasonOption = (value: AssetFileFailReason) => {
+  const getAssetFileFailReasonOption = (value: AssetFileFailReasonType) => {
     return assetFileFailReasonOptions.value.find((item) => item.value === value)
   }
 

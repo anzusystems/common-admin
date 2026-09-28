@@ -7,6 +7,8 @@ export const damFileTypeFix = (file: File | null | undefined) => {
   switch (extension) {
     case 'mov':
       return 'video/quicktime'
+    case 'icc':
+      return 'application/vnd.iccprofile'
     default:
       return ''
   }

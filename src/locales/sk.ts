@@ -10,6 +10,7 @@ import permissionGroup from '@/locales/sk/common/permissionGroup.json'
 import vuetify from '@/locales/sk/vuetify.json'
 import apiValidation from '@/locales/sk/error/apiValidation.json'
 import apiForbiddenOperation from '@/locales/sk/error/apiForbiddenOperation.json'
+import apiDependencyExists from '@/locales/sk/error/apiDependencyExists.json'
 import jsValidation from '@/locales/sk/error/jsValidation.json'
 import assetSelect from '@/locales/sk/common/assetSelect.json'
 import subjectSelect from '@/locales/sk/common/subjectSelect.json'
@@ -17,6 +18,8 @@ import time from '@/locales/sk/common/time.json'
 import sortable from '@/locales/sk/common/sortable.json'
 import damImage from '@/locales/sk/common/damImage.json'
 import collab from '@/locales/sk/common/collab.json'
+import filter from '@/locales/sk/common/filter.json'
+import apiTimedOut from '@/locales/sk/error/apiTimedOut.json'
 
 export default {
   common: {
@@ -35,6 +38,7 @@ export default {
     sortable,
     damImage,
     collab,
+    filter,
   },
   $vuetify: vuetify,
   error: {
@@ -44,8 +48,14 @@ export default {
     apiForbiddenOperation: {
       ...apiForbiddenOperation,
     },
+    apiDependencyExists: {
+      ...apiDependencyExists,
+    },
     jsValidation: {
       ...jsValidation,
+    },
+    apiTimedOut: {
+      ...apiTimedOut,
     },
   },
 }

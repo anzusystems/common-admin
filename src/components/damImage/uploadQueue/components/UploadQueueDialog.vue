@@ -4,24 +4,22 @@ import { useI18n } from 'vue-i18n'
 import UploadQueueEditable from '@/components/damImage/uploadQueue/components/UploadQueueEditable.vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import { computed, ref, toRaw } from 'vue'
+import { useDisplay } from 'vuetify'
 import { useTheme } from '@/composables/themeSettings'
 import UploadQueueButtonStop from '@/components/damImage/uploadQueue/components/UploadQueueButtonStop.vue'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/composables/system/alerts'
 import {
-  type AssetMetadataBulkItem,
   bulkUpdateAssetsMetadata,
   fetchAsset,
 } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 import AFileInput from '@/components/file/AFileInput.vue'
 import AImageDropzone from '@/components/file/AFileDropzone.vue'
-import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import type { ImageStoreItem } from '@/types/ImageAware'
 import type { DocId, IntegerId } from '@/types/common'
-import { isNull, isString, isUndefined } from '@/utils/common'
-import { fetchAuthorListByIds } from '@/components/damImage/uploadQueue/api/authorApi'
 import { generateUUIDv1 } from '@/utils/generator'
-import type { UploadQueueItem } from '@/types/coreDam/UploadQueue'
+import { mapUploadMetadataToImages } from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { storeToRefs } from 'pinia'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
@@ -34,14 +32,17 @@ const props = withDefaults(
     extSystem: IntegerId
     accept: string | undefined
     maxSizes: Record<string, number> | undefined
+    configName?: string
   }>(),
-  {}
+  {
+    configName: 'default',
+  },
 )
 
 const emit = defineEmits<{
   (e: 'onDrop', files: File[]): void
   (e: 'onFilesInput', files: File[]): void
-  (e: 'onApply', items: ImageCreateUpdateAware[]): void
+  (e: 'onApply', items: ImageStoreItem[]): void
 }>()
 
 const { uploadQueueDialog, uploadQueueSidebar, toggleUploadQueueSidebar } = useUploadQueueDialog()
@@ -71,9 +72,10 @@ const isFinished = computed(() => {
 
 const { t } = useI18n()
 const { toolbarColor } = useTheme()
-const v$ = useVuelidate()
+const { mdAndDown } = useDisplay()
+const v$ = useVuelidate({ $stopPropagation: true })
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset, customUploadMetadataToImageMap } = useCommonAdminCoreDamOptions()
 
 const saveButtonLoading = ref(false)
 const saveAndCloseButtonLoading = ref(false)
@@ -94,7 +96,7 @@ const onSave = async () => {
     return
   }
   try {
-    await bulkUpdateAssetsMetadata(damClient, itemsRaw)
+    await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
     showRecordWas('updated')
   } catch (error) {
     console.error(error)
@@ -102,62 +104,6 @@ const onSave = async () => {
   } finally {
     saveButtonLoading.value = false
   }
-}
-
-const metadataMap = async (queueItems: UploadQueueItem[], bulkItems: AssetMetadataBulkItem[]) => {
-  const assetMetadataMap = new Map<DocId, { description: string; authorIds: DocId[] }>()
-  const authorIdsToFetch = new Set<DocId>()
-  const authorsMap = new Map<DocId, string>()
-  try {
-    bulkItems.forEach((bulkItem) => {
-      assetMetadataMap.set(bulkItem.id, {
-        description: isString(bulkItem.customData?.description) ? bulkItem.customData.description.trim() : '',
-        authorIds: bulkItem.authors,
-      })
-    })
-    assetMetadataMap.forEach((assetMeta) => {
-      assetMeta.authorIds.forEach((authorId) => {
-        authorIdsToFetch.add(authorId)
-      })
-    })
-    if (authorIdsToFetch.size > 0) {
-      const authorsRes = await fetchAuthorListByIds(damClient, props.extSystem, [...authorIdsToFetch])
-      authorsRes.forEach((author) => {
-        authorsMap.set(author.id, author.name)
-      })
-    }
-  } catch (e) {
-    showErrorsDefault(e)
-  }
-
-  const queueItemsWithAssetId = queueItems.filter(
-    (queueItem) => !isNull(queueItem.assetId) && !isNull(queueItem.fileId)
-  )
-
-  return queueItemsWithAssetId.map((queueItem) => {
-    maxPosition.value++
-    const description = assetMetadataMap.get(queueItem.assetId!)?.description
-    const authorNames: string[] = []
-    assetMetadataMap.get(queueItem.assetId!)?.authorIds.forEach((authorId) => {
-      const name = authorsMap.get(authorId)
-      if (!isUndefined(name) && name.trim().length > 0) {
-        authorNames.push(name)
-      }
-    })
-    return {
-      key: generateUUIDv1(),
-      texts: {
-        description: description ?? '',
-        source: authorNames.join(', '),
-      },
-      dam: {
-        damId: queueItem.fileId as DocId,
-        regionPosition: 0,
-        licenceId: props.licenceId,
-      },
-      position: maxPosition.value,
-    }
-  })
 }
 
 const onSaveAndApply = async () => {
@@ -171,9 +117,28 @@ const onSaveAndApply = async () => {
     return
   }
   try {
-    const res = await bulkUpdateAssetsMetadata(damClient, itemsRaw)
-    const mapped = await metadataMap(itemsRaw, res)
-    emit('onApply', mapped)
+    const res = await bulkUpdateAssetsMetadata(damClient, endPointAsset, itemsRaw)
+    const mappedItems = customUploadMetadataToImageMap
+      ? await customUploadMetadataToImageMap(
+          itemsRaw,
+          res,
+          damClient,
+          props.extSystem,
+          props.licenceId,
+        )
+      : await mapUploadMetadataToImages(itemsRaw, res, damClient, props.extSystem, props.licenceId)
+    const storeItems: ImageStoreItem[] = mappedItems.map((item) => {
+      maxPosition.value++
+      return {
+        key: generateUUIDv1(),
+        ...item,
+        position: maxPosition.value,
+        damAuthors: item.authorIds ?? [],
+        showDamAuthors: (item.authorIds ?? []).length === 0,
+        assetId: item.assetId ?? undefined,
+      }
+    })
+    emit('onApply', storeItems)
   } catch (error) {
     showErrorsDefault(error)
   } finally {
@@ -190,7 +155,7 @@ const showDetail = async (id: DocId) => {
     loading.value = true
     dialog.value = props.queueKey
     updateUploadStore.value = true
-    assetDetailStore.setAsset(await fetchAsset(damClient, id))
+    assetDetailStore.setAsset(await fetchAsset(damClient, endPointAsset, id))
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -203,6 +168,7 @@ const showDetail = async (id: DocId) => {
   <VDialog
     :model-value="true"
     fullscreen
+    scrollable
     class="overlay--sidebar"
   >
     <VCard>
@@ -213,18 +179,19 @@ const showDetail = async (id: DocId) => {
             :color="toolbarColor"
             density="compact"
             :height="64"
+            style="overflow-x: auto"
           >
             <div class="d-flex align-center px-2">
               <div>
                 <div
                   v-if="isUploading"
-                  class="text-subtitle-2 d-flex align-center"
+                  class="text-label-large d-flex align-center"
                 >
                   {{ t('common.damImage.upload.title') }}
                 </div>
                 <div
                   v-else
-                  class="text-subtitle-2 d-flex align-center text-green-darken-3 font-weight-bold"
+                  class="text-label-large d-flex align-center text-green-darken-3 font-weight-bold"
                 >
                   {{ t('common.damImage.upload.titleDone') }}
                 </div>
@@ -233,7 +200,7 @@ const showDetail = async (id: DocId) => {
             <VSpacer />
             <div
               v-if="isUploading"
-              class="text-caption d-flex align-center"
+              class="text-body-small d-flex align-center"
             >
               <VProgressCircular
                 indeterminate
@@ -242,7 +209,11 @@ const showDetail = async (id: DocId) => {
                 width="2"
                 class="mr-1"
               />
-              <div>{{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{ queueTotalCount }}</div>
+              <div>
+                {{ t('common.damImage.upload.uploading') }} {{ queueProcessedCount + 1 }}/{{
+                  queueTotalCount
+                }}
+              </div>
             </div>
             <div class="d-flex align-center pr-3">
               <VDivider
@@ -259,13 +230,17 @@ const showDetail = async (id: DocId) => {
                 :disabled="saveButtonLoading"
                 @click.stop="onSaveAndApply"
               >
-                {{ t('common.damImage.upload.saveAndApply') }}
+                {{
+                  mdAndDown
+                    ? t('common.damImage.upload.apply')
+                    : t('common.damImage.upload.saveAndApply')
+                }}
               </ABtnPrimary>
               <VBtn
                 variant="text"
                 :height="36"
                 :width="36"
-                class="mr-2"
+                class="mr-2 text-medium-emphasis"
                 icon
                 :loading="saveButtonLoading"
                 :disabled="saveAndCloseButtonLoading"
@@ -283,6 +258,7 @@ const showDetail = async (id: DocId) => {
                 :file-input-key="fileInputKey"
                 :accept="accept"
                 :max-sizes="maxSizes"
+                multiple
                 @files-input="emit('onFilesInput', $event)"
               >
                 <template #activator="{ props: fileInputProps }">
@@ -292,6 +268,7 @@ const showDetail = async (id: DocId) => {
                     variant="text"
                     :height="34"
                     :width="34"
+                    class="text-medium-emphasis"
                     v-bind="fileInputProps"
                   >
                     <VIcon icon="mdi-plus" />
@@ -314,7 +291,7 @@ const showDetail = async (id: DocId) => {
                 :active="uploadQueueSidebar"
                 :variant="uploadQueueSidebar ? 'flat' : 'text'"
                 :color="uploadQueueSidebar ? 'secondary' : ''"
-                class="mr-2"
+                class="mr-2 text-medium-emphasis"
                 icon
                 @click.stop="toggleUploadQueueSidebar"
               >
@@ -337,6 +314,7 @@ const showDetail = async (id: DocId) => {
           <UploadQueueEditable
             :queue-key="queueKey"
             :ext-system="extSystem"
+            :config-name="configName"
             :mass-operations="uploadQueueSidebar"
             @show-detail="showDetail"
           />

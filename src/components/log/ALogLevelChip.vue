@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { type LogLevel, useLogLevel } from '@/model/valueObject/LogLevel'
+import { type LogLevelType, useLogLevel } from '@/model/valueObject/LogLevel'
 
 const props = withDefaults(
   defineProps<{
-    level: LogLevel
+    level: LogLevelType
   }>(),
-  {}
+  {},
 )
 
 const { getLogLevelOption } = useLogLevel()

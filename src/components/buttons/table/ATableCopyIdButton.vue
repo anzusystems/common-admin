@@ -24,7 +24,7 @@ const props = withDefaults(
     notifyT: 'common.alert.idWasCopied',
     dataCy: 'table-copy',
     size: 'x-small',
-  }
+  },
 )
 
 const { t } = useI18n()

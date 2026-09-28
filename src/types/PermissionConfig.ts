@@ -1,12 +1,12 @@
-import type { Grant } from '@/model/valueObject/Grant'
+import type { GrantType } from '@/model/valueObject/Grant'
 
 export interface PermissionConfig {
   roles: string[]
-  defaultGrants: Grant[]
+  defaultGrants: GrantType[]
   config: {
     [subject: string]: {
       [action: string]: {
-        grants?: Grant[]
+        grants?: GrantType[]
       }
     }
   }

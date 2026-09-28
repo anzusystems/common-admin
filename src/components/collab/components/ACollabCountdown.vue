@@ -11,7 +11,7 @@ const props = withDefaults(
     label: '',
     seconds: 60,
     parentheses: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'done'): void
@@ -30,7 +30,7 @@ watch(
       emit('done')
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 onMounted(() => {
@@ -49,8 +49,7 @@ onUnmounted(() => {
     <span
       v-if="label"
       class="font-weight-bold mr-1"
-    >{{ label }}
-    </span>
+    >{{ label }} </span>
     <span>{{ countdown }}</span>
     <span v-if="parentheses">)</span>
   </span>

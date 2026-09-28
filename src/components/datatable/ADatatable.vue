@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     itemKey: 'id',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'click:row', data: any): void

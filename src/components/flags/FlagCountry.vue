@@ -15,7 +15,7 @@ const props = withDefaults(
   {
     code: 'xx',
     dataCy: 'flag-country',
-  }
+  },
 )
 
 const currentFlagComponent = computed(() => {

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
 import AFilterAdvancedButton from '@/components/buttons/filter/AFilterAdvancedButton.vue'
 import AFilterSubmitButton from '@/components/buttons/filter/AFilterSubmitButton.vue'
 import AFilterResetButton from '@/components/buttons/filter/AFilterResetButton.vue'
@@ -16,36 +15,36 @@ withDefaults(
     enableTop: false,
     hideButtons: false,
     touched: true,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'resetFilter'): void
 }>()
 
+const showAdvanced = defineModel<boolean>('showAdvanced', { default: false, required: false })
+
 const resetFilter = () => {
   emit('resetFilter')
 }
 
-const advancedFilter = ref(false)
-
 const toggleAdvancedFilter = () => {
-  advancedFilter.value = !advancedFilter.value
+  showAdvanced.value = !showAdvanced.value
 }
 </script>
 
 <template>
   <VRow
     v-if="enableTop"
-    dense
+    density="comfortable"
   >
     <VCol class="">
       <slot name="top" />
     </VCol>
   </VRow>
   <VRow
-    dense
+    density="comfortable"
     class="a-filter-advanced"
-    :class="{'a-filter-advanced--active': advancedFilter }"
+    :class="{ 'a-filter-advanced--active': showAdvanced }"
   >
     <VCol
       v-if="enableAdvanced"
@@ -53,14 +52,14 @@ const toggleAdvancedFilter = () => {
       cols="auto"
     >
       <AFilterAdvancedButton
-        :button-active="advancedFilter"
+        :button-active="showAdvanced"
         @advanced-filter="toggleAdvancedFilter"
       />
     </VCol>
     <VCol class="">
       <slot name="default" />
       <div
-        v-show="advancedFilter"
+        v-show="showAdvanced"
         class="a-filter-advanced__content"
       >
         <slot name="advanced" />

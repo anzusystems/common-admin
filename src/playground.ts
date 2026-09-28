@@ -4,15 +4,13 @@ import { vuetify } from '@/plugins/vuetify'
 import { i18n } from '@/plugins/i18n'
 import { createPinia } from 'pinia'
 import router from '@/router/playground'
-import AnzuSystemsCommonAdmin from '@/AnzuSystemsCommonAdmin'
+import AnzuSystemsCommonAdmin, { type PluginOptions } from '@/AnzuSystemsCommonAdmin'
 import { damClient } from '@/playground/mock/coreDamClient'
-import '@/styles/main.scss'
-import { currentUser } from '@/playground/system/currentUser'
 import type { LanguageCode } from '@/composables/languageSettings'
 import { loadCommonFonts } from '@/plugins/webfontloader'
 import { cmsClient } from '@/playground/mock/cmsClient'
-
-export type CustomAclValue = 'anzu_entity_create' | 'anzu_entity_view'
+import 'vuetify/styles'
+import '@/styles/main.scss'
 
 export const DEFAULT_LANGUAGE: LanguageCode = 'sk'
 export const AVAILABLE_LANGUAGES: Array<LanguageCode> = ['sk', 'en']
@@ -24,8 +22,7 @@ createApp(App)
   .use(router)
   .use(i18n)
   .use(vuetify)
-  .use(AnzuSystemsCommonAdmin, {
-    currentUser,
+  .use<PluginOptions>(AnzuSystemsCommonAdmin, {
     languages: {
       available: ['en', 'sk'],
       default: 'sk',
@@ -37,7 +34,8 @@ createApp(App)
         },
       },
       apiTimeout: 30,
-      uploadStatusFallback: false,
+      uploadStatusFallback: true,
+      adminDomain: 'http://admin-dam.sme.localhost:8150',
       notification: {
         enabled: true,
         webSocketUrl: 'ws://notification-server.sme.localhost/ws',
@@ -48,6 +46,7 @@ createApp(App)
         default: {
           imageClient: cmsClient,
           previewDomain: 'http://admin-image.smedata.localhost',
+          previewDomainOriginal: 'http://image.smedata.localhost',
           width: 500,
           height: 281,
         },
@@ -55,8 +54,8 @@ createApp(App)
     },
     collab: {
       enabled: true,
-      disableCollabFieldDataChangeListener: false,
       socketUrl: 'ws://collaboration.sme.localhost',
+      beforeReconnect: () => new Promise((resolve) => resolve()),
     },
   })
   .mount('#app')

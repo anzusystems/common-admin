@@ -1,18 +1,26 @@
 <script lang="ts" setup>
 import type { DocId, IntegerId } from '@/types/common'
 import type { ValidationScope } from '@/types/Validation'
-import { computed, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import { useValidate } from '@/validators/vuelidate/useValidate'
 import useVuelidate from '@vuelidate/core'
 import { useKeywordSelectActions } from '@/components/damImage/uploadQueue/keyword/keywordActions'
-import { useKeywordFilter } from '@/components/damImage/uploadQueue/keyword/KeywordFilter'
-import { useDamCachedKeywords } from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
+import {
+  useCachedKeywordsForRemoteAutocomplete,
+  useDamCachedKeywords,
+} from '@/components/damImage/uploadQueue/keyword/cachedKeywords'
 import type { DamKeyword } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
-import { isArray } from '@/utils/common'
-import AFormRemoteAutocompleteWithCached from '@/components/form/AFormRemoteAutocompleteWithCached.vue'
-import { useDamCachedAuthorsForRemoteAutocomplete } from '@/components/damImage/uploadQueue/author/cachedAuthors'
+import { isArray, isUndefined } from '@/utils/common'
+import AFormRemoteAutocompleteWithCached from '@/labs/form/AFormRemoteAutocompleteWithCached.vue'
 import KeywordRemoteAutocompleteCachedKeywordChip from '@/components/damImage/uploadQueue/keyword/KeywordRemoteAutocompleteCachedKeywordChip.vue'
-import KeywordCreateButton from '@/components/damImage/uploadQueue/keyword/KeywordCreateButton.vue'
+import { createKeyword } from '@/components/damImage/uploadQueue/api/keywordApi'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useAlerts } from '@/composables/system/alerts'
+import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import ARow from '@/components/ARow.vue'
+import { useKeywordInnerFilter } from '@/components/damImage/uploadQueue/keyword/KeywordFilter'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -36,7 +44,7 @@ const props = withDefaults(
     clearable: false,
     dataCy: undefined,
     validationScope: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: DocId | null | DocId[]): void
@@ -51,6 +59,10 @@ const modelValueComputed = computed({
   },
 })
 
+const search = ref<string>('')
+const loadingLocal = ref(false)
+const fetchedItemsMinimal = ref<Map<IntegerId | DocId, any>>(new Map())
+
 const requiredComputed = computed(() => !!props.required)
 
 const { requiredIf } = useValidate()
@@ -64,15 +76,25 @@ const rules = {
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const v$ = useVuelidate(rules, { modelValueComputed }, { $scope: props.validationScope })
 
+const { damClient } = useCommonAdminCoreDamOptions()
+const { getDamConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configExtSystem = getDamConfigExtSystem(props.extSystem)
+if (isUndefined(configExtSystem)) {
+  throw new Error('KeywordRemoteAutocompleteWithCached: Ext system must be initialised.')
+}
+
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const { fetchItemsMinimal } = useKeywordSelectActions(props.extSystem)
 
-const innerFilter = useKeywordFilter()
+const { filterData, filterConfig } = useKeywordInnerFilter()
+provide(FilterInnerConfigKey, filterConfig)
+provide(FilterInnerDataKey, filterData)
 
 const addNewKeywordText = ref('')
 
 const searchChange = (newValue: string) => {
-  if (newValue.length > 0) addNewKeywordText.value = newValue
+  if (newValue.length > 0) addNewKeywordText.value = removeLastComma(newValue)
 }
 
 const { addManualToCachedKeywords } = useDamCachedKeywords()
@@ -81,9 +103,11 @@ const afterCreate = (keyword: DamKeyword) => {
   addManualToCachedKeywords(keyword)
   if (isArray(modelValueComputed.value)) {
     modelValueComputed.value = [...modelValueComputed.value, keyword.id]
+    search.value = ''
     return
   }
   modelValueComputed.value = keyword.id
+  search.value = ''
 }
 
 const itemSlotIsSelected = (item: DocId) => {
@@ -94,18 +118,84 @@ const itemSlotIsSelected = (item: DocId) => {
   }
   return false
 }
+
+const { showErrorsDefault } = useAlerts()
+const { createDefault } = useDamKeywordFactory()
+
+const createOrSelectKeyword = async (name: string) => {
+  const keywordCreate = createDefault(props.extSystem, true)
+  keywordCreate.name = removeLastComma(name)
+  if (keywordCreate.name.length < 2) return
+  try {
+    const keywordRes = await createKeyword(damClient, keywordCreate)
+    afterCreate(keywordRes)
+  } catch (error) {
+    showErrorsDefault(error)
+  }
+}
+
+const removeLastComma = (value: string) => {
+  if (value.endsWith(',')) return value.slice(0, -1)
+  return value
+}
+
+const onEnterKeyup = () => {
+  const value = removeLastComma(search.value)
+  createOrSelectKeyword(value)
+}
+
+const onCommaKeyup = () => {
+  const value = removeLastComma(search.value)
+  createOrSelectKeyword(value)
+}
+
+const showAdd = computed(() => {
+  if (loadingLocal.value) return false
+  if (search.value.length < 2 || search.value.length > 255) return false
+  if (fetchedItemsMinimal.value.size === 0) return true
+  return ![...fetchedItemsMinimal.value.values()].some(
+    (item) => item.name?.toLowerCase() === search.value!.toLowerCase(),
+  )
+})
 </script>
 
 <template>
   <div class="d-flex">
+    <ARow
+      v-if="disabled && multiple"
+      :title="label"
+    >
+      <KeywordRemoteAutocompleteCachedKeywordChip
+        v-for="id in modelValueComputed"
+        :id="id"
+        :key="id"
+        :queue-id="queueId"
+        force-rounded
+        class="mr-1 mb-1"
+      />
+    </ARow>
+    <ARow
+      v-else-if="disabled && !multiple"
+      :title="label"
+    >
+      <KeywordRemoteAutocompleteCachedKeywordChip
+        :id="modelValueComputed"
+        :key="modelValueComputed"
+        :queue-id="queueId"
+        force-rounded
+      />
+    </ARow>
     <AFormRemoteAutocompleteWithCached
+      v-else
       v-model="modelValueComputed"
-      :use-cached="useDamCachedAuthorsForRemoteAutocomplete"
+      v-model:search="search"
+      v-model:loading-local="loadingLocal"
+      v-model:fetched-items-minimal="fetchedItemsMinimal"
+      :use-cached="useCachedKeywordsForRemoteAutocomplete"
       :v="v$"
       :required="requiredComputed"
       :label="label"
       :fetch-items-minimal="fetchItemsMinimal"
-      :inner-filter="innerFilter"
       :multiple="multiple"
       :clearable="clearable"
       filter-by-field="text"
@@ -113,10 +203,15 @@ const itemSlotIsSelected = (item: DocId) => {
       item-title="name"
       item-value="id"
       :data-cy="dataCy"
+      :min-search-chars="2"
+      min-search-text="common.damImage.keyword.filterMinChars"
       @search-change="searchChange"
+      @keyup.enter="onEnterKeyup"
+      @keyup.,="onCommaKeyup"
     >
       <template #item="{ props: itemSlotProps, item: itemSlotItem }">
         <VListItem
+          v-if="itemSlotItem"
           v-bind="itemSlotProps"
           @click.prevent=""
         >
@@ -142,6 +237,7 @@ const itemSlotIsSelected = (item: DocId) => {
       </template>
       <template #chip="{ item: chipSlotItem }">
         <KeywordRemoteAutocompleteCachedKeywordChip
+          v-if="chipSlotItem"
           :id="chipSlotItem.value"
           :key="chipSlotItem.value"
           :queue-id="queueId"
@@ -149,17 +245,28 @@ const itemSlotIsSelected = (item: DocId) => {
           force-rounded
         />
       </template>
+      <template #append-item>
+        <VListItem
+          v-if="showAdd"
+          class="a-keywords-append-item"
+        >
+          <ABtnSecondary
+            size="small"
+            :text="addNewKeywordText"
+            prepend-icon="mdi-plus-circle"
+            @click.stop="onCommaKeyup"
+          />
+        </VListItem>
+      </template>
     </AFormRemoteAutocompleteWithCached>
-    <div>
-      <KeywordCreateButton
-        variant="icon"
-        data-cy="add-keyword"
-        :ext-system="extSystem"
-        :initial-value="addNewKeywordText"
-        disable-redirect
-        :disabled="disabled"
-        @on-success="afterCreate"
-      />
-    </div>
   </div>
 </template>
+
+<style lang="scss" scoped>
+.a-keywords-append-item {
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  transform: translateY(8px);
+}
+</style>

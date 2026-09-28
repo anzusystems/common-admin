@@ -4,8 +4,8 @@ import { isUndefined } from '@/utils/common'
 
 const collabOptions = ref<CommonAdminCollabOptions>({
   enabled: false,
-  disableCollabFieldDataChangeListener: false,
   socketUrl: '',
+  beforeReconnect: () => new Promise((resolve) => resolve()),
 })
 
 export function initCommonAdminCollabOptions(data: CommonAdminCollabOptions | undefined) {

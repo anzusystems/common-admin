@@ -1,21 +1,72 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, ref, useTemplateRef, watch, computed } from 'vue'
 
-// eslint-disable-next-line vue/no-ref-object-reactivity-loss
+const emit = defineEmits<{
+  (e: 'onEnterKeyup'): void
+  (e: 'focusConfirm'): void
+}>()
+
 const modelValue = defineModel<null | { hours: number; minutes: number }>('modelValue', {
   required: true,
 })
 
 const hours = ref<string | undefined>(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
-  modelValue.value ? String(modelValue.value.hours).padStart(2, '0') : '12'
+  modelValue.value ? String(modelValue.value.hours).padStart(2, '0') : '12',
 )
 const minutes = ref<string | undefined>(
   // eslint-disable-next-line vue/no-ref-object-reactivity-loss
-  modelValue.value ? String(modelValue.value.minutes).padStart(2, '0') : '00'
+  modelValue.value ? String(modelValue.value.minutes).padStart(2, '0') : '00',
 )
 
-const hoursRef = ref<HTMLInputElement | null>(null)
+const hoursRefInput = useTemplateRef<HTMLInputElement>('hoursRefInput')
+const minutesRefInput = useTemplateRef<HTMLInputElement>('minutesRefInput')
+
+const hoursComputed = computed({
+  get: () => hours.value,
+  set: (value: string | number) => {
+    let cleanValue = String(value).replace(/[^0-9]/g, '')
+
+    if (cleanValue && parseInt(cleanValue) > 23) {
+      hours.value = '23'
+      nextTick(() => minutesRefInput.value?.focus())
+      return
+    }
+
+    if (cleanValue.length > 2) {
+      cleanValue = cleanValue.slice(0, 2)
+    }
+
+    hours.value = cleanValue
+
+    if (cleanValue.length === 2) {
+      nextTick(() => minutesRefInput.value?.focus())
+    }
+  },
+})
+
+const minutesComputed = computed({
+  get: () => minutes.value,
+  set: (value: string | number) => {
+    let cleanValue = String(value).replace(/[^0-9]/g, '')
+
+    if (cleanValue && parseInt(cleanValue) > 59) {
+      minutes.value = '59'
+      emit('focusConfirm')
+      return
+    }
+
+    if (cleanValue.length > 2) {
+      cleanValue = cleanValue.slice(0, 2)
+    }
+
+    minutes.value = cleanValue
+
+    if (cleanValue.length === 2) {
+      emit('focusConfirm')
+    }
+  },
+})
 
 const selectContent = async (event: FocusEvent) => {
   const target = event.target as HTMLInputElement | null
@@ -30,7 +81,18 @@ const onBlurHours = () => {
 
 const onBlurMinutes = () => {
   const parsedMinutes = parseInt(minutes.value || '0')
-  minutes.value = parsedMinutes >= 0 && parsedMinutes <= 59 ? String(parsedMinutes).padStart(2, '0') : '00'
+  minutes.value =
+    parsedMinutes >= 0 && parsedMinutes <= 59 ? String(parsedMinutes).padStart(2, '0') : '00'
+}
+
+const onEnterHoursKeyup = () => {
+  onBlurHours()
+  emit('onEnterKeyup')
+}
+
+const onEnterMinutesKeyup = () => {
+  onBlurMinutes()
+  emit('onEnterKeyup')
 }
 
 const increaseHours = () => {
@@ -47,31 +109,61 @@ const decreaseHours = () => {
 
 const increaseMinutes = () => {
   const parsedMinutes = parseInt(minutes.value || '0')
-  const newMinutes = isNaN(parsedMinutes) ? 1 : (parsedMinutes + 1) % 60
-  minutes.value = String(newMinutes).padStart(2, '0')
+  const parsedHours = parseInt(hours.value || '0')
+
+  if (isNaN(parsedMinutes)) {
+    minutes.value = '01'
+    return
+  }
+
+  if (parsedMinutes === 59) {
+    minutes.value = '00'
+    const newHours = isNaN(parsedHours) ? 1 : (parsedHours + 1) % 24
+    hours.value = String(newHours).padStart(2, '0')
+  } else {
+    const newMinutes = parsedMinutes + 1
+    minutes.value = String(newMinutes).padStart(2, '0')
+  }
 }
 
 const decreaseMinutes = () => {
   const parsedMinutes = parseInt(minutes.value || '0')
-  const newMinutes = isNaN(parsedMinutes) ? 59 : (parsedMinutes - 1 + 60) % 60
-  minutes.value = String(newMinutes).padStart(2, '0')
+  const parsedHours = parseInt(hours.value || '0')
+
+  if (isNaN(parsedMinutes)) {
+    minutes.value = '59'
+    return
+  }
+
+  if (parsedMinutes === 0) {
+    minutes.value = '59'
+    const newHours = isNaN(parsedHours) ? 23 : (parsedHours - 1 + 24) % 24
+    hours.value = String(newHours).padStart(2, '0')
+  } else {
+    const newMinutes = parsedMinutes - 1
+    minutes.value = String(newMinutes).padStart(2, '0')
+  }
 }
 
-const focus = () => {
-  hoursRef.value?.focus()
+const focusHour = () => {
+  hoursRefInput.value?.focus()
 }
 
 watch([hours, minutes], ([newHours, newMinutes], [oldHours, oldMinutes]) => {
   if (newHours === oldHours && newMinutes === oldMinutes) return
-  const hoursInt = parseInt(newHours ?? (modelValue.value ? modelValue.value.hours.toString() : '12'))
-  const minutesInt = parseInt(newMinutes ?? (modelValue.value ? modelValue.value.minutes.toString() : '0'))
+  const hoursInt = parseInt(
+    newHours ?? (modelValue.value ? modelValue.value.hours.toString() : '12'),
+  )
+  const minutesInt = parseInt(
+    newMinutes ?? (modelValue.value ? modelValue.value.minutes.toString() : '0'),
+  )
   if (hoursInt >= 0 && hoursInt <= 23 && minutesInt >= 0 && minutesInt <= 59) {
     modelValue.value = { hours: hoursInt, minutes: minutesInt }
   }
 })
 
 defineExpose({
-  focus,
+  focusHour,
 })
 </script>
 
@@ -79,65 +171,76 @@ defineExpose({
   <div class="a-datetime-picker-time">
     <div class="a-datetime-picker-time__item a-datetime-picker-time__item">
       <input
-        ref="hoursRef"
-        v-model="hours"
+        ref="hoursRefInput"
+        v-model="hoursComputed"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--hours"
-        type="number"
+        type="text"
         aria-label="Hour"
-        tabindex="-1"
-        step="1"
+        tabindex="1"
         min="0"
         max="23"
-        maxlength="2"
         @focus="selectContent"
         @blur="onBlurHours"
+        @keyup.enter="onEnterHoursKeyup"
       >
       <div class="a-datetime-picker-time__arrows">
-        <VIcon
-          icon="mdi-chevron-up"
+        <VBtn
+          tabindex="-1"
+          variant="text"
           class="a-datetime-picker-time__arrow-up"
           @click="increaseHours"
-        />
-        <VIcon
-          icon="mdi-chevron-down"
+        >
+          <VIcon icon="mdi-chevron-up" />
+        </VBtn>
+        <VBtn
+          tabindex="-1"
+          variant="text"
           class="a-datetime-picker-time__arrow-down"
           @click="decreaseHours"
-        />
+        >
+          <VIcon icon="mdi-chevron-down" />
+        </VBtn>
       </div>
     </div>
     <span class="a-datetime-picker-time__separator">:</span>
     <div class="a-datetime-picker-time__item">
       <input
-        v-model="minutes"
+        ref="minutesRefInput"
+        v-model="minutesComputed"
         class="a-datetime-picker-time__input a-datetime-picker-time__input--minutes"
-        type="number"
+        type="text"
         aria-label="Minute"
-        tabindex="-1"
-        step="1"
+        tabindex="2"
         min="0"
         max="59"
-        maxlength="2"
         @focus="selectContent"
         @blur="onBlurMinutes"
+        @keyup.enter="onEnterMinutesKeyup"
       >
       <div class="a-datetime-picker-time__arrows">
-        <VIcon
-          icon="mdi-chevron-up"
+        <VBtn
+          tabindex="-1"
+          variant="text"
           class="a-datetime-picker-time__arrow-up"
           @click="increaseMinutes"
-        />
-        <VIcon
-          icon="mdi-chevron-down"
+        >
+          <VIcon icon="mdi-chevron-up" />
+        </VBtn>
+        <VBtn
+          tabindex="-1"
+          variant="text"
           class="a-datetime-picker-time__arrow-down"
           @click="decreaseMinutes"
-        />
+        >
+          <VIcon icon="mdi-chevron-down" />
+        </VBtn>
       </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-$hover-bg-color: rgba(0 0 0 / 5%);
+$hover-bg-color: rgb(0 0 0 / 5%);
 
 .a-datetime-picker-time {
   display: flex;
@@ -168,23 +271,25 @@ $hover-bg-color: rgba(0 0 0 / 5%);
   &__arrows {
     display: flex;
     flex-direction: column;
-    visibility: hidden;
+    opacity: 0;
 
-    .a-datetime-picker-time__item:hover & {
-      visibility: visible;
+    .v-btn {
+      padding: 0 !important;
+      min-width: 28px !important;
+      width: 28px !important;
+      height: 28px !important;
     }
 
-    .v-icon {
-      cursor: pointer;
-
-      &:hover {
-        background-color: $hover-bg-color;
-      }
+    .a-datetime-picker-time__item:hover &,
+    .a-datetime-picker-time__input:focus + &,
+    &:focus-within {
+      opacity: 1;
     }
   }
 
   &__input {
     width: 100%;
+    max-width: 128px;
     height: 100%;
     display: inline-block;
     background: transparent;

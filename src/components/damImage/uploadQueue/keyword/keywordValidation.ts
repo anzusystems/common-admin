@@ -7,12 +7,15 @@ import type { ValidationScope } from '@/types/Validation'
 
 const { required, minLength } = useValidate()
 
-export function useKeywordValidation(keyword: Ref<DamKeyword>, validationScope: ValidationScope = undefined) {
+export function useKeywordValidation(
+  keyword: Ref<DamKeyword>,
+  validationScope: ValidationScope = undefined,
+) {
   const rules = computed(() => ({
     keyword: {
       name: {
         required,
-        minLength: minLength(3),
+        minLength: minLength(2),
       },
     },
   }))

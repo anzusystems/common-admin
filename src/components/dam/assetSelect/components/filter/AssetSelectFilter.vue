@@ -1,56 +1,100 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
-import { computed, watch } from 'vue'
+import { computed, onMounted, provide, watch } from 'vue'
 import { useAssetSelectStore } from '@/services/stores/coreDam/assetSelectStore'
-import { DamAssetType as AssetTypeValue } from '@/types/coreDam/Asset'
-import AssetSelectFilterFormImage from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormImage.vue'
-import AssetSelectFilterFormDefault from '@/components/dam/assetSelect/components/filter/AssetSelectFilterFormDefault.vue'
 import { storeToRefs } from 'pinia'
+import AssetSelectFilterForm from '@/components/dam/assetSelect/components/filter/AssetSelectFilterForm.vue'
+import { useAssetListFilter } from '@/model/coreDam/filter/AssetFilter'
+import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import AFilterWrapperSubjectSelect from '@/labs/subjectSelect/AFilterWrapperSubjectSelect.vue'
+import { useFilterHelpers } from '@/labs/filters/filterFactory'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { useSidebar } from '@/components/dam/assetSelect/composables/assetSelectFilterSidebar'
+
+const props = withDefaults(
+  defineProps<{
+    configName?: string
+  }>(),
+  {
+    configName: 'default',
+  },
+)
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { assetListEnabledFilters } = useCommonAdminCoreDamOptions(props.configName)
 
 const { t } = useI18n()
-const { fetchAssetList, resetAssetList, filterUnTouch, filterIsTouched } = useAssetSelectActions()
+const { mdAndDown } = useDisplay()
+const { closeSidebarLeft } = useSidebar()
+const { fetchAssetListDebounced, resetAssetList, pagination } = useAssetSelectActions()
 
 const assetSelectStore = useAssetSelectStore()
 const { selectedLicenceId, selectConfig } = storeToRefs(assetSelectStore)
 
-const submitFilter = () => {
-  filterUnTouch()
-  fetchAssetList()
+const { filterData, filterConfig } = useAssetListFilter()
+provide(FilterConfigKey, filterConfig)
+provide(FilterDataKey, filterData)
+
+const { resetFilter, submitFilter } = useFilterHelpers(filterData, filterConfig, {
+  populateUrlParams: false,
+  storeFiltersLocalStorage: false,
+})
+
+const submitFilterAction = () => {
+  submitFilter(pagination, fetchAssetListDebounced)
+  if (mdAndDown.value) closeSidebarLeft()
 }
 
-const resetFilter = () => {
-  resetAssetList()
-  filterUnTouch()
+const resetFilterAction = () => {
+  resetFilter(pagination, resetAssetList)
+  if (mdAndDown.value) closeSidebarLeft()
 }
 
 const componentComputed = computed(() => {
   switch (assetSelectStore.assetType) {
-    case AssetTypeValue.Image:
-      return AssetSelectFilterFormImage
     default:
-      return AssetSelectFilterFormDefault
+      return AssetSelectFilterForm
   }
 })
 
-watch(
-  selectedLicenceId,
-  (newValue, oldValue) => {
-    if (newValue === oldValue) return
-    submitFilter()
-  },
-  { immediate: false }
-)
+watch(selectedLicenceId, (newValue, oldValue) => {
+  if (newValue === oldValue) return
+  resetFilterAction()
+})
+
+onMounted(() => {
+  fetchAssetListDebounced()
+})
 </script>
 
 <template>
   <div class="subject-select-filter">
     <div class="subject-select-filter__content">
-      <VForm
-        name="search2"
-        class="px-2 pt-4"
-        @submit.prevent="submitFilter"
+      <AFilterWrapperSubjectSelect
+        @submit="submitFilterAction"
+        @reset="resetFilterAction"
       >
+        <template #detail>
+          <VRow v-if="selectConfig.length > 1">
+            <VCol :cols="12">
+              <VSelect
+                v-model="selectedLicenceId"
+                :label="t('common.assetSelect.filter.licence')"
+                :items="selectConfig"
+                item-title="licenceName"
+                item-value="licence"
+                hide-details
+              />
+            </VCol>
+          </VRow>
+          <component
+            :is="componentComputed"
+            :enabled-filters="assetListEnabledFilters"
+            :config-name="configName"
+          />
+        </template>
         <VRow v-if="selectConfig.length > 1">
           <VCol :cols="12">
             <VSelect
@@ -62,35 +106,12 @@ watch(
             />
           </VCol>
         </VRow>
-        <Component :is="componentComputed" />
-      </VForm>
-    </div>
-    <div class="subject-select-filter__actions">
-      <VBtn
-        color="primary"
-        class="mx-2"
-        :variant="filterIsTouched ? 'flat' : 'text'"
-        size="small"
-        @click.stop="submitFilter"
-      >
-        {{ t('common.button.submitFilter') }}
-      </VBtn>
-      <VBtn
-        class="px-2"
-        color="light"
-        min-width="36px"
-        variant="flat"
-        size="small"
-        @click.stop="resetFilter"
-      >
-        <VIcon icon="mdi-filter-remove-outline" />
-        <VTooltip
-          activator="parent"
-          location="bottom"
-        >
-          {{ t('common.button.resetFilter') }}
-        </VTooltip>
-      </VBtn>
+        <component
+          :is="componentComputed"
+          :enabled-filters="assetListEnabledFilters"
+          :config-name="configName"
+        />
+      </AFilterWrapperSubjectSelect>
     </div>
   </div>
 </template>

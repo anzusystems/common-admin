@@ -6,7 +6,7 @@ import ATextarea from '@/components/form/AFormTextarea.vue'
 import AValueObjectOptionsSelect from '@/components/form/AFormValueObjectOptionsSelect.vue'
 import { computed, ref } from 'vue'
 import useVuelidate from '@vuelidate/core'
-import { Grant, useGrant } from '@/model/valueObject/Grant'
+import { GrantDefault, useGrant } from '@/model/valueObject/Grant'
 import { useValidateRequired } from '@/validators/vuelidate/common/useValidateRequired'
 import { useValidateMinLength } from '@/validators/vuelidate/common/useValidateMinLength'
 import { useValidateMaxLength } from '@/validators/vuelidate/common/useValidateMaxLength'
@@ -17,7 +17,7 @@ const modelData = ref({
   shortText: 'text1',
   longText: 'text2',
   isActive: false,
-  grant: Grant.Default,
+  grant: GrantDefault,
   publishedAt: null,
 })
 

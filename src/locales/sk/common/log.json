@@ -14,7 +14,9 @@
     "datetimeFrom": "Dátum od",
     "datetimeTo": "Dátum do",
     "message": "Správa",
-    "appVersion": "Verzia"
+    "appVersion": "Verzia",
+    "resourceName": "Názov entity",
+    "resourceIds": "ID entity"
   },
   "model": {
     "id": "ID",
@@ -30,7 +32,9 @@
       "content": "Obsah požiadavky",
       "response": "Obsah odpovede",
       "path": "URL",
-      "httpStatus": "Kód stavu"
+      "httpStatus": "Kód stavu",
+      "resourceName": "Názov entity",
+      "resourceIds": "ID entity"
     }
   }
 }

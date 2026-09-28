@@ -2,7 +2,7 @@ import path from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
-import dts from 'vite-plugin-dts'
+import dts from 'unplugin-dts/vite'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { fileURLToPath, URL } from 'url'
 
@@ -10,9 +10,12 @@ export default defineConfig({
   build: {
     sourcemap: true,
     lib: {
-      entry: path.resolve(__dirname, 'src/lib.ts'),
+      entry: {
+        'common-admin': path.resolve(__dirname, 'src/lib.ts'),
+        'labs': path.resolve(__dirname, 'src/labs.ts')
+      },
       name: 'CommonAdmin',
-      fileName: (format) => `common-admin.${format}.js`,
+      fileName: (format, entryName) => `${entryName}.js`,
       formats: ['es'],
     },
     rollupOptions: {
@@ -39,7 +42,7 @@ export default defineConfig({
       runtimeOnly: false,
       include: path.resolve(__dirname, 'src/locales/**.json'),
     }),
-    dts({ rollupTypes: true, tsconfigPath: 'tsconfig.libdts.json' }),
+    dts({ bundleTypes: true, tsconfigPath: 'tsconfig.libdts.json' }),
   ],
   resolve: {
     alias: {

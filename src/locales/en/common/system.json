@@ -30,10 +30,10 @@
   },
   "currentUser": {
     "button": "Account",
-    "logout" : "Logout",
-    "logoutText" : "Are you sure you want to log out?",
-    "logoutConfirm" : "Logout",
-    "settings" : "Settings"
+    "logout": "Logout",
+    "logoutText": "Are you sure you want to log out?",
+    "logoutConfirm": "Logout",
+    "settings": "Settings"
   },
   "breadcrumb": {
     "detail": "Detail",
@@ -53,5 +53,10 @@
     "title": "Oops, 401",
     "text": "You don't have access to this page",
     "backButton": "Return to login"
-  }
+  },
+  "dropzone": {
+    "dropPossibility": "Upload or move files",
+    "dropHere": "Upload files"
+  },
+  "inputSuggestedMax": "{current} / max {max}"
 }

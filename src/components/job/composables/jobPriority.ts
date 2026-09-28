@@ -12,16 +12,20 @@ export const useJobPriority = () => {
     }
   })
 
-  const getPriorityColor = (priority: Number): string => {
+  const getPriorityColor = (priority: number): string => {
     switch (priority) {
-      case 0: return 'amber'
-      case 1: return 'primary'
-      case 2: return 'red'
-      default: return 'default'
+      case 0:
+        return 'amber'
+      case 1:
+        return 'primary'
+      case 2:
+        return 'red'
+      default:
+        return 'default'
     }
   }
 
-  const getPriorityLabel = (priority: Number): string => {
+  const getPriorityLabel = (priority: number): string => {
     return objectGetValueByPath(priorityLabels.value, priority.toString()) ?? priority.toString()
   }
 

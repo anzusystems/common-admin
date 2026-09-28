@@ -2,6 +2,14 @@
 import { useI18n } from 'vue-i18n'
 import AssetSelectTableRowItem from '@/components/dam/assetSelect/components/AssetSelectTableRowItem.vue'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
+import type { IntegerId } from '@/types/common'
+
+withDefaults(
+  defineProps<{
+    extSystem: IntegerId
+  }>(),
+  {},
+)
 
 const { t } = useI18n()
 
@@ -26,6 +34,9 @@ const { onItemClick, assetListItems, loader } = useAssetSelectActions()
           {{ t('common.model.tracking.created') }}
         </th>
         <th class="text-left">
+          {{ t('common.assetSelect.meta.table.advanced') }}
+        </th>
+        <th class="text-left">
           {{ t('common.assetSelect.model.mainFile.fileAttributes.mimeType') }}
         </th>
         <th class="text-left">
@@ -39,7 +50,8 @@ const { onItemClick, assetListItems, loader } = useAssetSelectActions()
         :key="item.asset.id"
         :index="index"
         :item="item"
-        @item-click="onItemClick"
+        show-meta-icons
+        @item-click="onItemClick($event, extSystem)"
       />
       <tr v-if="!loader && assetListItems.length === 0">
         <td

@@ -10,12 +10,15 @@ on:
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   lint:
     strategy:
       matrix:
         node-version:
-          - '20'
+          - '24'
         platform:
           - ubuntu-latest
 
@@ -44,3 +47,51 @@ jobs:
 
       - name: Run Security check
         run: yarn npm audit
+
+  test:
+    strategy:
+      matrix:
+        node-version:
+          - '24'
+        platform:
+          - ubuntu-latest
+
+    name: Test
+    runs-on: ${{ matrix.platform }}
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-${{ hashFiles('yarn.lock') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium --with-deps
+
+      - name: Run tests
+        run: yarn test:run
+        env:
+          CI: true

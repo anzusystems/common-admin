@@ -1,11 +1,11 @@
-import type { LogLevel } from '@/model/valueObject/LogLevel'
+import type { LogLevelType } from '@/model/valueObject/LogLevel'
 import type { DatetimeUTC, IntegerIdNullable } from '@/types/common'
 
 export interface Log {
   id: string
   message: string
   datetime: DatetimeUTC
-  levelName: LogLevel
+  levelName: LogLevelType
   context: {
     appVersion: string
     appSystem: string
@@ -14,6 +14,8 @@ export interface Log {
     method: string
     contextId: string
     userId: IntegerIdNullable
+    resourceName: string
+    resourceIds: string[]
     ip: string
     response: string
     content?: string

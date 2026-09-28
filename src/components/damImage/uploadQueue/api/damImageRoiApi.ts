@@ -3,30 +3,38 @@ import type { AxiosInstance } from 'axios'
 import type { DocId } from '@/types/common'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
-import { apiFetchList } from '@/services/api/apiFetchList'
-import type { Pagination } from '@/types/Pagination'
-import type { FilterBag } from '@/types/Filter'
+import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 
-// export interface AssetMetadataBulkItem {
-//   id: DocId
-//   title: string
-//   description: string
-//   described: boolean
-// }
-
-const END_POINT = '/adm/v1/roi'
-const END_POINT_IMAGE_ROI = '/adm/v1/image/:id/roi'
 export const ENTITY = 'asset'
 
-export const fetchRoi = (client: () => AxiosInstance, id: DocId) =>
-  apiFetchOne<RegionOfInterest>(client, END_POINT + '/:id', { id }, 'coreDam', ENTITY)
+export const fetchRoi = (client: () => AxiosInstance, endPointRoi: string, id: DocId) =>
+  apiFetchOne<RegionOfInterest>(client, endPointRoi + '/:id', { id }, SYSTEM_CORE_DAM, ENTITY)
 
-export const updateRoi = (client: () => AxiosInstance, id: DocId, data: RegionOfInterest) =>
-  apiUpdateOne<RegionOfInterest>(client, data, END_POINT + '/:id', { id }, 'coreDam', ENTITY)
-
-export const fetchImageRoiList = (
+export const updateRoi = (
   client: () => AxiosInstance,
+  endPointRoi: string,
+  id: DocId,
+  data: RegionOfInterest,
+) =>
+  apiUpdateOne<RegionOfInterest>(
+    client,
+    data,
+    endPointRoi + '/:id',
+    { id },
+    SYSTEM_CORE_DAM,
+    ENTITY,
+  )
+
+export const useFetchImageRoiList = (
+  client: () => AxiosInstance,
+  endPointImage: string,
   imageId: DocId,
-  pagination: Pagination,
-  filterBag: FilterBag
-) => apiFetchList<any[]>(client, END_POINT_IMAGE_ROI, { id: imageId }, pagination, filterBag, 'coreDam', ENTITY)
+) =>
+  useApiFetchList<any[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: endPointImage + '/:id/roi',
+    urlParams: { id: imageId },
+  })

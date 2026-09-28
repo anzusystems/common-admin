@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
-import { computed, inject, ref } from 'vue'
+import { computed, inject, ref, type ShallowRef } from 'vue'
 import { useUploadQueuesStore } from '@/components/damImage/uploadQueue/composables/uploadQueuesStore'
 import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
 import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
@@ -12,7 +12,7 @@ const props = withDefaults(
   defineProps<{
     queueKey: UploadQueueKey
   }>(),
-  {}
+  {},
 )
 
 const emit = defineEmits<{
@@ -26,13 +26,14 @@ const fileCache = ref<File[]>([])
 
 const { t } = useI18n()
 
-const imageWidgetUploadConfig = inject<DamConfigLicenceExtSystemReturnType | undefined>(
-  ImageWidgetUploadConfig,
-  undefined
-)
+const imageWidgetUploadConfig = inject<
+  ShallowRef<DamConfigLicenceExtSystemReturnType | undefined> | undefined
+>(ImageWidgetUploadConfig, undefined)
 
-if (isUndefined(imageWidgetUploadConfig)) {
-  throw new Error("Fatal error, parent component doesn't provide necessary config ext system config.")
+if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.value)) {
+  throw new Error(
+    "Fatal error, parent component doesn't provide necessary config ext system config.",
+  )
 }
 
 const uploadQueuesStore = useUploadQueuesStore()
@@ -50,13 +51,16 @@ const openDialog = () => {
 }
 
 const onDialogConfirm = async () => {
+  if (isUndefined(imageWidgetUploadConfig) || isUndefined(imageWidgetUploadConfig.value)) {
+    return
+  }
   uploadDialogLoader.value = true
   const files = fileCache.value.slice(0, MAX_UPLOAD_ITEMS - uploadQueueTotalCount.value)
   await uploadQueuesStore.addByFiles(
     props.queueKey,
-    imageWidgetUploadConfig.extSystem,
-    imageWidgetUploadConfig.licence,
-    files
+    imageWidgetUploadConfig.value.extSystem,
+    imageWidgetUploadConfig.value.licence,
+    files,
   )
   fileCache.value = []
   uploadDialogLoader.value = false
@@ -103,11 +107,16 @@ defineExpose({
         <p v-else>
           {{ t('common.damImage.upload.limits.addingOverLimit', { count: fileCache.length }) }}
           <span v-if="uploadQueueTotalCount > 0">{{
-            t('common.damImage.upload.limits.countAlreadyInProgress', { count: uploadQueueTotalCount })
+            t('common.damImage.upload.limits.countAlreadyInProgress', {
+              count: uploadQueueTotalCount,
+            })
           }}</span>
-          {{ t('common.damImage.upload.limits.onlyAllowedAtOnce', { count: MAX_UPLOAD_ITEMS }) }}<br><br>
+          {{ t('common.damImage.upload.limits.onlyAllowedAtOnce', { count: MAX_UPLOAD_ITEMS })
+          }}<br><br>
           {{
-            t('common.damImage.upload.limits.cancelOrUploadFirst', { count: MAX_UPLOAD_ITEMS - uploadQueueTotalCount })
+            t('common.damImage.upload.limits.cancelOrUploadFirst', {
+              count: MAX_UPLOAD_ITEMS - uploadQueueTotalCount,
+            })
           }}
         </p>
       </VCardText>
@@ -122,7 +131,9 @@ defineExpose({
           @click.stop="onDialogConfirm"
         >
           {{
-            t('common.damImage.upload.limits.actionAddFirstItems', { count: MAX_UPLOAD_ITEMS - uploadQueueTotalCount })
+            t('common.damImage.upload.limits.actionAddFirstItems', {
+              count: MAX_UPLOAD_ITEMS - uploadQueueTotalCount,
+            })
           }}
         </ABtnPrimary>
       </VCardActions>

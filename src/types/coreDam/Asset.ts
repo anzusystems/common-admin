@@ -9,41 +9,26 @@ interface Texts {
 
 export type DamDistributionServiceName = string
 
-export enum DamAssetStatus {
-  Draft = 'draft',
-  WithFile = 'with_file',
-  Deleting = 'deleting',
-  Default = Draft,
-}
+export const DamAssetStatus = {
+  Draft: 'draft',
+  WithFile: 'with_file',
+  Deleting: 'deleting',
+} as const
+export type DamAssetStatusType = (typeof DamAssetStatus)[keyof typeof DamAssetStatus]
+export const DamAssetStatusDefault = DamAssetStatus.Draft
 
-export enum DamAssetType {
-  Image = 'image',
-  Audio = 'audio',
-  Video = 'video',
-  Document = 'document',
-  Default = Image,
-}
-
-export type DamAssetTypeValues = `${DamAssetType}`
-
-export const damAssetTypeValueToEnum = (value: DamAssetTypeValues) => {
-  switch (value) {
-    case 'image':
-      return DamAssetType.Image
-    case 'audio':
-      return DamAssetType.Audio
-    case 'video':
-      return DamAssetType.Video
-    case 'document':
-      return DamAssetType.Document
-    default:
-      return DamAssetType.Default
-  }
-}
+export const DamAssetType = {
+  Image: 'image',
+  Audio: 'audio',
+  Video: 'video',
+  Document: 'document',
+} as const
+export type DamAssetTypeType = (typeof DamAssetType)[keyof typeof DamAssetType]
+export const DamAssetTypeDefault = DamAssetType.Image
 
 interface Attributes {
-  assetType: DamAssetType
-  assetStatus: DamAssetStatus
+  assetType: DamAssetTypeType
+  assetStatus: DamAssetStatusType
 }
 
 export interface AssetFileProperties {
@@ -69,17 +54,19 @@ interface Metadata {
   customData: any
 }
 
-export interface AssetSearchListItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
+export interface AssetSearchListItemDto
+  extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
   id: DocId
   texts: Texts
   attributes: Attributes
   flags: Flags
   licence: IntegerId
   mainFile: null | AssetFile
-  keywords: DocId[]
-  authors: DocId[]
   podcasts: DocId[]
   assetFileProperties: AssetFileProperties
+  mainFileSingleUse: Readonly<boolean | null>
+  mainFileInternal: Readonly<boolean | null>
+  mainFileOverrideInternal: Readonly<boolean | null>
 }
 
 export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware {
@@ -93,11 +80,16 @@ export interface AssetDetailItemDto extends AnzuUserAndTimeTrackingAware, Resour
   authors: DocId[]
   podcasts: DocId[]
   metadata: Metadata
+  siblingToAsset: DocIdNullable
   distributionCategory: DocIdNullable
   assetFileProperties: AssetFileProperties
+  mainFileSingleUse: Readonly<boolean | null>
+  mainFileInternal: Readonly<boolean | null>
+  mainFileOverrideInternal: Readonly<boolean | null>
 }
 
-export interface AssetMetadataDto extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware, Metadata {
+export interface AssetMetadataDto
+  extends AnzuUserAndTimeTrackingAware, ResourceNameSystemAware, Metadata {
   id: DocId
   customData: AssetCustomData
 }
@@ -105,4 +97,25 @@ export interface AssetMetadataDto extends AnzuUserAndTimeTrackingAware, Resource
 export type AssetExternalProviderId = string | number
 export type AssetExternalProviderIdNullable = AssetExternalProviderId | null
 
-export type AssetExternalProviderMetadata = Record<string, string | number | number[] | string[] | boolean>
+export type AssetExternalProviderMetadata = Record<
+  string,
+  string | number | number[] | string[] | boolean
+>
+
+export interface DamImageCopyToLicenceRequestItem {
+  asset: DocId
+  targetAssetLicence: IntegerId
+}
+
+export type DamImageCopyToLicenceRequest = Array<DamImageCopyToLicenceRequestItem>
+
+export interface DamImageCopyToLicenceResponseItem {
+  asset: DocId
+  targetAsset: DocId
+  targetMainFile: DocId
+  targetAssetLicence: IntegerId
+  result: 'exists' | 'copy' | 'notAllowed' | 'unassigned'
+  assetConflicts: DocId[]
+}
+
+export type DamImageCopyToLicenceResponse = Array<DamImageCopyToLicenceResponseItem>

@@ -16,7 +16,7 @@ const props = withDefaults(
     showDeleteButton?: boolean
     showEditButton?: boolean
   }>(),
-  {}
+  {},
 )
 const emit = defineEmits<{
   (e: 'onAddAfter', item: SortableNestedItem): void

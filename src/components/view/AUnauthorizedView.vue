@@ -5,7 +5,7 @@ withDefaults(
   defineProps<{
     returnRouteName: string
   }>(),
-  {}
+  {},
 )
 
 const { t } = useI18n()

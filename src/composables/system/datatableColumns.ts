@@ -1,20 +1,35 @@
-import { computed, type Ref } from 'vue'
+import { computed, onMounted, type Ref, watch } from 'vue'
 import { i18n } from '@/plugins/i18n'
 import type { Pagination } from '@/types/Pagination'
 import { usePagination } from '@/composables/system/pagination'
-import { isUndefined } from '@/utils/common'
+import { isArray, isObject, isUndefined } from '@/utils/common'
 
 export const DATETIME_AUTO_LABEL_TRACKING = ['createdAt', 'modifiedAt']
+
+export const SORT_BY_SCORE = '_score'
+export const SORT_BY_ID = 'id'
+export const SORT_BY_SCORE_DATE = 'score_date'
+export const SORT_BY_SCORE_BEST = 'score_best'
+export const SortOrder = {
+  Asc: 'asc',
+  Desc: 'desc',
+} as const
+export type SortOrderType = (typeof SortOrder)[keyof typeof SortOrder]
 
 export type DatatableSortBy =
   | {
       key: string
-      order: 'asc' | 'desc'
+      order: SortOrderType
     }
   | null
   | undefined
 
-export type DatatableOrderingOption = { id: number; titleT: string; sortBy?: DatatableSortBy; customData?: any }
+export type DatatableOrderingOption = {
+  id: number
+  titleT: string
+  sortBy?: DatatableSortBy
+  customData?: any
+}
 
 export type DatatableOrderingOptions = Array<DatatableOrderingOption>
 
@@ -23,6 +38,7 @@ export type ColumnConfig = {
   title?: string
   sortable?: boolean
   fixed?: boolean
+  maxWidth?: number
 }
 
 export type ColumnInternalValues = {
@@ -30,6 +46,10 @@ export type ColumnInternalValues = {
   title?: string
   sortable: boolean
   fixed: boolean
+}
+
+export type StoredData = {
+  hidden?: string[]
 }
 
 const defaultColumn: ColumnInternalValues = {
@@ -45,17 +65,19 @@ export function createDatatableColumnsConfig(
   system: string | undefined = undefined,
   subject: string | undefined = undefined,
   disableActions: boolean = false,
-  customPagination: Pagination | undefined = undefined,
-  customI18n: undefined | any = undefined
+  customInitialPagination: Pagination | undefined = undefined,
+  customI18n: undefined | any = undefined,
+  showExpand: undefined | boolean = undefined,
+  storeId: string | undefined = undefined,
 ) {
   const localI18n = customI18n ?? i18n
   const { t } = localI18n.global || localI18n
   const pagination: Pagination = usePagination()
-  if (customPagination) {
+  if (customInitialPagination) {
     for (const prop of Object.keys(pagination)) {
-      if (prop in customPagination) {
+      if (prop in customInitialPagination) {
         // @ts-ignore
-        pagination[prop] = customPagination[prop]
+        pagination[prop] = customInitialPagination[prop]
       }
     }
   }
@@ -76,6 +98,7 @@ export function createDatatableColumnsConfig(
 
   const columnsVisible = computed(() => {
     const columns: any = []
+    if (showExpand) columns.push({ key: 'data-table-expand', sortable: false })
     columnsAll.forEach((column) => {
       if (!columnsHidden.value.includes(column.key)) {
         columns.push(column)
@@ -85,14 +108,37 @@ export function createDatatableColumnsConfig(
     return columns
   })
 
-  const updateSortBy = (sortBy: any) => {
-    if (sortBy) {
-      pagination.sortBy = sortBy.key
-      pagination.descending = sortBy.order === 'desc' ? true : false
+  const updateSortBy = (sortBy: { key: string; order: SortOrderType } | undefined | null) => {
+    if (!sortBy) {
+      pagination.sortBy = null
       return
     }
-    pagination.sortBy = null
+    pagination.sortBy = sortBy.key
+    pagination.descending = sortBy.order === SortOrder.Desc ? true : false
   }
+
+  const loadStoredColumns = () => {
+    if (!storeId || !localStorage) return
+    const stored = localStorage.getItem(storeId)
+    if (!stored) return
+    const storedData = JSON.parse(stored) as StoredData
+    if (!isObject(storedData)) return
+    if (!isArray(storedData.hidden)) return
+    columnsHidden.value = storedData.hidden as string[]
+  }
+
+  const storeColumns = (columns: string[]) => {
+    if (!storeId || !localStorage) return
+    localStorage.setItem(storeId, JSON.stringify({ hidden: columns }))
+  }
+
+  onMounted(() => {
+    loadStoredColumns()
+  })
+
+  watch(columnsHidden, (newValue) => {
+    storeColumns(newValue)
+  })
 
   return {
     columnsAll,

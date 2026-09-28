@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { isArray, isBoolean, isNull, isNumber, isString, isUndefined } from '@/utils/common'
 import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
+import { SortOrder } from '@/composables/system/datatableColumns'
 
 /**
  * Docs: /doc/Admin-Cms-Doc/Filters.md
@@ -17,7 +18,8 @@ export function useApiQueryBuilder() {
   }
 
   const querySetOrder = (field: string | null, desc: boolean): void => {
-    if (!isNull(field) && field.length > 0) queryAdd('order[' + field + ']', desc ? 'desc' : 'asc')
+    if (!isNull(field) && field.length > 0)
+      queryAdd('order[' + field + ']', desc ? SortOrder.Desc : SortOrder.Asc)
   }
 
   const formatValue = (value: string | number | boolean): string | number => {
@@ -27,7 +29,11 @@ export function useApiQueryBuilder() {
     return value
   }
 
-  const queryAddFilter = (filterVariant: FilterVariant, field: string, value: string | number | boolean): void => {
+  const queryAddFilter = (
+    filterVariant: FilterVariant,
+    field: string,
+    value: string | number | boolean,
+  ): void => {
     if (isString(value) && value.length === 0) return
     q.value.push('filter_' + filterVariant + '[' + field + ']=' + formatValue(value))
   }

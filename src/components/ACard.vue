@@ -10,7 +10,7 @@ const props = withDefaults(
   {
     loading: undefined,
     title: undefined,
-  }
+  },
 )
 
 const loadingComputed = computed(() => {

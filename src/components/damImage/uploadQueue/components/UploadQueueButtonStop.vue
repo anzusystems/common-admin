@@ -15,7 +15,7 @@ const props = withDefaults(
     dialogMaxWidth: 300,
     buttonSize: 26,
     dataCy: 'button-stop',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'confirm'): void

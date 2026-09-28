@@ -18,7 +18,7 @@ const props = withDefaults(
     buttonT: 'common.button.edit',
     buttonClass: 'ml-1',
     dataCy: 'table-edit',
-  }
+  },
 )
 
 const { t } = useI18n()
@@ -39,6 +39,7 @@ const routerToComputed = computed(() => {
     icon
     size="x-small"
     variant="text"
+    :active="false"
     @click.stop="() => {}"
   >
     <VIcon icon="mdi-pencil" />

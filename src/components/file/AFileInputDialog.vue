@@ -16,13 +16,15 @@ withDefaults(
     accept?: string | undefined
     maxSizes?: Record<string, number> | undefined
     multiple?: boolean
+    toolbarT?: string
   }>(),
   {
     fileInputKey: undefined,
     accept: undefined,
     maxSizes: undefined,
-    multiple: true,
-  }
+    multiple: false,
+    toolbarT: 'common.button.upload',
+  },
 )
 
 const emit = defineEmits<{
@@ -78,7 +80,7 @@ defineExpose({
     >
       <ADialogToolbar @on-cancel="onClose">
         <slot name="title">
-          {{ t('common.button.upload') }}
+          {{ t(toolbarT) }}
         </slot>
       </ADialogToolbar>
       <VCardText>

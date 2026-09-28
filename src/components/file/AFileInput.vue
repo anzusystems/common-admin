@@ -17,16 +17,18 @@ const props = withDefaults(
     useDropzone?: boolean
     dropzoneVariant?: 'fill' | 'default' | 'fullscreen'
     onDropzoneClickCallback?: (() => void) | undefined | false // false for disable, undefined for browse files, otherwise custom callback is used
+    hoverOnly?: boolean
   }>(),
   {
     fileInputKey: undefined,
     accept: undefined,
     maxSizes: undefined,
-    multiple: true,
+    multiple: false,
     useDropzone: false,
     dropzoneVariant: 'default',
     onDropzoneClickCallback: undefined,
-  }
+    hoverOnly: false,
+  },
 )
 
 const emit = defineEmits<{
@@ -93,7 +95,7 @@ watch(
       return
     }
     fileInputKeyLocal.value = newValue
-  }
+  },
 )
 
 defineExpose({
@@ -105,6 +107,7 @@ defineExpose({
   <AFileDropzone
     v-if="useDropzone"
     :variant="dropzoneVariant"
+    :hover-only="hoverOnly"
     @on-click="onFileDropzoneClick"
     @on-drop="onDropzoneDrop"
   />

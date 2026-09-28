@@ -10,6 +10,7 @@ import { useValidateRequiredIf } from '@/validators/vuelidate/common/useValidate
 import { useValidateSlug } from '@/validators/vuelidate/common/useValidateSlug'
 import { useValidateStringArrayItemLength } from '@/validators/vuelidate/common/useValidateStringArrayItemLength'
 import { useValidateUrl } from '@/validators/vuelidate/common/useValidateUrl'
+import { useValidateCompareDates } from '@/validators/vuelidate/common/useValidateCompareDates'
 
 export function useValidate() {
   return {
@@ -25,5 +26,6 @@ export function useValidate() {
     slug: useValidateSlug(),
     url: useValidateUrl(),
     stringArrayItemLength: useValidateStringArrayItemLength(),
+    datesCompare: useValidateCompareDates(),
   }
 }

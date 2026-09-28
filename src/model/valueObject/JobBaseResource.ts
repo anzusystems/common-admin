@@ -7,7 +7,7 @@ export const JOB_RESOURCE_USER_DATA_DELETE = 'jobUserDataDelete'
 export type JobBaseResource = typeof JOB_RESOURCE_USER_DATA_DELETE | `job${string}`
 
 export function useJobBaseResource<T extends JobBaseResource = JobBaseResource>(
-  customJobs: ValueObjectOption<T>[] = []
+  customJobs: ValueObjectOption<T>[] = [],
 ) {
   const { t } = useI18n()
 

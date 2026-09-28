@@ -10,7 +10,11 @@ import { type UploadQueueItem, UploadQueueItemStatus } from '@/types/coreDam/Upl
 import { NEW_LINE_MARK } from '@/composables/system/alerts'
 import { isUndefined } from '@/utils/common'
 import { useDamUploadChunkSize } from '@/components/damImage/uploadQueue/composables/damUploadChunkSize'
-import { damUploadChunk, damUploadFinish, damUploadStart } from '@/components/damImage/uploadQueue/api/uploadApi'
+import {
+  damUploadChunk,
+  damUploadFinish,
+  damUploadStart,
+} from '@/components/damImage/uploadQueue/api/uploadApi'
 import {
   useCommonAdminCoreDamOptions,
   useCommonAdminCoreDamOptionsGlobal,
@@ -28,13 +32,20 @@ const failUpload = async (queueItem: UploadQueueItem, error: unknown = null) => 
 }
 
 const finishUpload = async (queueItem: UploadQueueItem, sha: string) => {
-  const { damClient } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointImage, endPointAsset } = useCommonAdminCoreDamOptions()
   const { uploadStatusFallback } = useCommonAdminCoreDamOptionsGlobal()
-  return await damUploadFinish(damClient, queueItem, sha, uploadStatusFallback)
+  return await damUploadFinish(
+    damClient,
+    endPointAsset,
+    endPointImage,
+    queueItem,
+    sha,
+    uploadStatusFallback,
+  )
 }
 
 const handleValidationErrorMessage = (error: Error | any) => {
-  const { t } = i18n.global || i18n
+  const { t } = i18n.global
   if (!error || !error.response || !error.response.data) {
     // @ts-ignore
     return t('common.damImage.uploadErrors.unknownError')
@@ -54,19 +65,32 @@ const handleValidationErrorMessage = (error: Error | any) => {
         break
       default:
         // @ts-ignore
-        errorMessages.push(t('common.damImage.uploadErrors.systemError') + ': ' + key + ' - ' + values.join(','))
+        errorMessages.push(
+          t('common.damImage.uploadErrors.systemError') + ': ' + key + ' - ' + values.join(','),
+        )
     }
   }
-  return errorMessages.length > 0 ? errorMessages.join(NEW_LINE_MARK) : t('common.damImage.uploadErrors.unknownError')
+  return errorMessages.length > 0
+    ? errorMessages.join(NEW_LINE_MARK)
+    : t('common.damImage.uploadErrors.unknownError')
 }
 
-const readFile = async (offset: number, size: number, file: File): Promise<{ data: string; offset: number }> => {
+const readFile = async (
+  offset: number,
+  size: number,
+  file: File,
+): Promise<{ data: ArrayBuffer; offset: number }> => {
   return new Promise((resolve, reject) => {
     const partial = file.slice(offset, offset + size)
     const reader = new FileReader()
     reader.onload = function (e) {
       if (e.target?.readyState === FileReader.DONE) {
-        resolve({ data: e.target.result as string, offset: offset })
+        const result = e.target.result
+        if (result instanceof ArrayBuffer) {
+          resolve({ data: result, offset: offset })
+        } else {
+          reject(new Error('FileReader result is not an ArrayBuffer'))
+        }
       }
     }
     reader.onerror = function (e) {
@@ -81,7 +105,7 @@ const sleep = (ms: number) => {
 }
 
 export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = undefined) {
-  const { damClient } = useCommonAdminCoreDamOptions()
+  const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
   const fileSize = ref(0)
 
   const progress = ref(0)
@@ -90,6 +114,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   let lastTimestamp = 0
   let endTimestamp = 0
   let lastLoaded = 0
+  let speedCheckTimerId: ReturnType<typeof setTimeout> | null = null
   const sha = rusha.createHash()
   const { updateChunkSize, lastChunkSize } = useDamUploadChunkSize()
 
@@ -121,12 +146,13 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       }
       damUploadChunk(
         damClient,
+        endPointImage,
         queueItem,
         queueItem.fileId,
-        chunkFile as unknown as string, // todo check
+        chunkFile,
         chunkFile.size,
         offset,
-        progressCallback
+        progressCallback,
       )
         .then((result) => {
           resolve(result)
@@ -139,8 +165,14 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
   const processAndUploadChunk = async (offset: number): Promise<File> => {
     updateChunkSize(queueItem.progress.speed)
-    let arrayBuffer: { data: string; offset: number } = await readFile(offset, lastChunkSize.value, queueItem.file!)
-    let chunkFile = new File([arrayBuffer.data], queueItem.file!.name)
+    let arrayBuffer: { data: ArrayBuffer; offset: number } = await readFile(
+      offset,
+      lastChunkSize.value,
+      queueItem.file!,
+    )
+    let chunkFile = new File([arrayBuffer.data], queueItem.file!.name, {
+      type: queueItem.file!.type,
+    })
 
     queueItem.currentChunkIndex = offset
     const cancelToken = axios.CancelToken
@@ -156,6 +188,16 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
         return chunkFile
       } catch (error) {
+        // Check for 400 Bad Request error on last attempt
+        if (
+          axios.isAxiosError(error) &&
+          error.response?.status === 400 &&
+          attempt >= CHUNK_MAX_RETRY
+        ) {
+          queueItem.error.message = 'Upload chunk validation failed. Please contact administrator.'
+          return Promise.reject(error)
+        }
+
         // in error recompute
         if (axiosErrorResponseHasValidationData(error as Error)) {
           attempt = CHUNK_MAX_RETRY
@@ -165,7 +207,9 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
 
         if (updateChunkSize(queueItem.progress.speed)) {
           arrayBuffer = await readFile(offset, lastChunkSize.value, queueItem.file!)
-          chunkFile = new File([arrayBuffer.data], queueItem.file!.name)
+          chunkFile = new File([arrayBuffer.data], queueItem.file!.name, {
+            type: queueItem.file!.type,
+          })
         }
 
         await sleep(sleepTime)
@@ -179,20 +223,30 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
     function speedCheckRun() {
       speedStack = speedStack.slice(-15)
       if (speedStack.length > 0) {
-        const avgSpeed = Math.ceil(speedStack.reduce((sum, current) => sum + current) / speedStack.length)
+        const avgSpeed = Math.ceil(
+          speedStack.reduce((sum, current) => sum + current) / speedStack.length,
+        )
         const remainingBytes = Math.ceil(fileSize.value * ((100 - progress.value) / 100))
 
         uploadCallback(progress.value, avgSpeed, Math.ceil(remainingBytes / avgSpeed))
       }
 
       if (endTimestamp === 0) {
-        setTimeout(function () {
+        speedCheckTimerId = setTimeout(function () {
           speedCheckRun()
         }, SPEED_CHECK_INTERVAL)
       }
     }
 
     speedCheckRun()
+  }
+
+  const stopSpeedCheck = () => {
+    if (speedCheckTimerId !== null) {
+      clearTimeout(speedCheckTimerId)
+      speedCheckTimerId = null
+    }
+    endTimestamp = Date.now() / 1000
   }
 
   const uploadInit = async () => {
@@ -203,7 +257,7 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
       }
       fileSize.value = queueItem.file.size
       queueItem.status = UploadQueueItemStatus.Uploading
-      damUploadStart(damClient, queueItem)
+      damUploadStart(damClient, endPointImage, queueItem)
         .then((res) => {
           queueItem.assetId = res.asset
           queueItem.fileId = res.id
@@ -237,10 +291,10 @@ export function useUpload(queueItem: UploadQueueItem, uploadCallback: any = unde
   return {
     uploadInit,
     upload,
+    stopSpeedCheck,
   }
 }
 
 export const uploadStop = (cancelTokenSource: CancelTokenSource) => {
-  // todo stop speed check
   cancelTokenSource.cancel('axios request cancelled')
 }

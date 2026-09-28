@@ -9,7 +9,7 @@ const props = withDefaults(
     item: any
     column: any
   }>(),
-  {}
+  {},
 )
 
 const value = computed(() => {

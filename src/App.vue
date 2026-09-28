@@ -14,7 +14,7 @@ import logoNoText from '@/assets/logo-ca-no-text.svg'
 import { initLanguageMessagesLoaded } from '@/playground/system/loadLanguageMessages'
 import { useDropzoneGlobalDragState } from '@/components/file/composables/dropzone'
 import { initDamNotifications } from '@/components/damImage/uploadQueue/composables/damNotifications'
-import { updateDamCurrentUser } from '@/components/damImage/composables/damCurrentUser'
+import { defineAuth } from '@/composables/auth/defineAuth'
 import { damClient } from '@/playground/mock/coreDamClient'
 
 const route = useRoute()
@@ -44,7 +44,10 @@ const { openConnection } = initDamNotifications()
 onMounted(async () => {
   openConnection()
   initGlobalDragState()
-  await updateDamCurrentUser(damClient)
+
+  const { useCurrentUser } = defineAuth('dam')
+  const { fetchCurrentUser } = useCurrentUser('dam')
+  await fetchCurrentUser(damClient, '/adm/users/current')
   ready.value = true
 })
 </script>

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DatetimeUTC } from '@/types/common'
-import { computed, nextTick, ref, toRaw, watch } from 'vue'
+import { computed, nextTick, ref, toRaw, useTemplateRef, watch } from 'vue'
 import { isDefined, isNull, isUndefined } from '@/utils/common'
 import useVuelidate, { type ErrorObject } from '@vuelidate/core'
 import { useValidate } from '@/validators/vuelidate/useValidate'
@@ -10,6 +10,7 @@ import utc from 'dayjs/plugin/utc'
 import { SUFFIX } from '@/utils/datetime'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { useI18n } from 'vue-i18n'
+import type { VTextField } from 'vuetify/components/VTextField'
 
 const props = withDefaults(
   defineProps<{
@@ -26,6 +27,7 @@ const props = withDefaults(
     dataCy?: string
     defaultValue?: DatetimeUTC | null | undefined
     errorMessages?: string[]
+    lastMinuteMoment?: boolean
   }>(),
   {
     type: 'datetime',
@@ -40,7 +42,8 @@ const props = withDefaults(
     dataCy: '',
     defaultValue: null,
     errorMessages: undefined,
-  }
+    lastMinuteMoment: false,
+  },
 )
 
 const emit = defineEmits<{
@@ -49,17 +52,18 @@ const emit = defineEmits<{
   (e: 'update:modelValue', data: DatetimeUTC | null | undefined): void
   (e: 'onOpen'): void
   (e: 'onClose'): void
+  (e: 'afterClear'): void
 }>()
 
 dayjs.extend(utc)
 dayjs.extend(customParseFormat)
 
-type TextFieldRef = null | { $el: HTMLElement }
-
 const pickerOpened = ref(false)
 const pickerKey = ref(0)
 const timeKey = ref(0)
-const textFieldRef = ref<TextFieldRef>(null)
+const timePickerInstance = useTemplateRef<InstanceType<typeof TimePicker>>('timePickerInstance')
+const inputInstance = useTemplateRef<InstanceType<typeof VTextField>>('inputInstance')
+const confirmRefButton = useTemplateRef<HTMLButtonElement>('confirmRefButton')
 const textFieldValue = ref('')
 
 const datePickerValue = ref<null | Date>(null)
@@ -85,6 +89,11 @@ const v$ = useVuelidate(rules, { textFieldValue })
 const displayFormat = computed(() => {
   return props.type === 'datetime' ? 'DD.MM.YYYY HH:mm' : 'DD.MM.YYYY'
 })
+
+const tryEmitNewValue = (newValue: DatetimeUTC | null | undefined) => {
+  if (newValue === props.modelValue) return
+  emit('update:modelValue', newValue)
+}
 
 const updateDateAndTimePickerOnlyWhenChanged = (newValue: dayjs.Dayjs | null) => {
   if (isNull(newValue)) return
@@ -113,17 +122,27 @@ watch(
       datetimeInternal.value = null
       return
     }
-    datetimeInternal.value = dayjs(newValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ').millisecond(0)
+    if (props.lastMinuteMoment) {
+      datetimeInternal.value = dayjs(newValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ').millisecond(999)
+    } else {
+      datetimeInternal.value = dayjs(newValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ').millisecond(0)
+    }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const watchDatePicker = (newValue: null | Date, internal: dayjs.Dayjs) => {
   if (isNull(newValue)) return internal
-  return internal.set('date', newValue.getDate()).set('month', newValue.getMonth()).set('year', newValue.getFullYear())
+  return internal
+    .set('date', newValue.getDate())
+    .set('month', newValue.getMonth())
+    .set('year', newValue.getFullYear())
 }
 
-const watchTimePicker = (newValue: null | { hours: number; minutes: number }, internal: dayjs.Dayjs) => {
+const watchTimePicker = (
+  newValue: null | { hours: number; minutes: number },
+  internal: dayjs.Dayjs,
+) => {
   if (isNull(newValue)) return internal
   return internal.set('hour', newValue.hours).set('minute', newValue.minutes)
 }
@@ -136,7 +155,11 @@ watch([timePickerValue, datePickerValue], ([newTimePickerValue, newDatePickerVal
   } else if (!isNull(props.modelValue)) {
     newDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
   } else {
-    newDate = dayjs().hour(12).minute(0).second(0).millisecond(0)
+    if (props.lastMinuteMoment) {
+      newDate = dayjs().hour(0).minute(0).second(59).millisecond(999)
+    } else {
+      newDate = dayjs().hour(0).minute(0).second(0).millisecond(0)
+    }
   }
 
   newDate = watchTimePicker(newTimePickerValue, newDate!)
@@ -150,21 +173,30 @@ watch(
   (newValue) => {
     if (isNull(newValue)) {
       textFieldValue.value = ''
-      emit('update:modelValue', null)
+      tryEmitNewValue(null)
       return
     }
     const newUtcValue = newValue.utc().format('YYYY-MM-DDTHH:mm:ss') + SUFFIX
     textFieldValue.value = newValue.format(displayFormat.value)
     updateDateAndTimePickerOnlyWhenChanged(newValue)
-    if (newUtcValue === props.modelValue) return
-    emit('update:modelValue', newUtcValue)
+    tryEmitNewValue(newUtcValue)
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 watch(pickerOpened, (newValue) => {
   if (newValue) {
     onTextFieldBlur()
+    if (
+      isNull(datetimeInternal.value) &&
+      (isNull(props.defaultValue) || isUndefined(props.defaultValue))
+    ) {
+      if (props.lastMinuteMoment) {
+        datetimeInternal.value = dayjs().second(59).millisecond(999)
+      } else {
+        datetimeInternal.value = dayjs().second(0).millisecond(0)
+      }
+    }
     nextTick(() => {
       pickerKey.value++
     })
@@ -184,7 +216,11 @@ const errorMessageComputed = computed(() => {
 const onTextFieldBlur = () => {
   const filtered = textFieldValue.value.replace(/[^\s\d.:]/g, '').trim()
   if (filtered.length === 0 && !props.required) {
-    datetimeInternal.value = null
+    if (!isNull(props.defaultValue) && !isUndefined(props.defaultValue)) {
+      datetimeInternal.value = dayjs(props.defaultValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
+    } else {
+      datetimeInternal.value = null
+    }
     emit('blur')
     return
   }
@@ -192,11 +228,18 @@ const onTextFieldBlur = () => {
   if (parsed.isValid()) {
     // keep seconds from original model
     let seconds = 0
-    if(!isNull(props.modelValue)) {
+    if (!isNull(props.modelValue)) {
       const modelDate = dayjs(props.modelValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
       if (modelDate.isValid()) seconds = modelDate.second()
     }
-    datetimeInternal.value = parsed.second(seconds)
+    const reparsed = parsed.second(seconds)
+    // A day click blurs this field before the picker emits, so re-assigning an unchanged datetime
+    // would push the stale date back into it. By second, as `lastMinuteMoment` holds ms at 999.
+    if (reparsed.isSame(toRaw(datetimeInternal.value), 'second')) {
+      textFieldValue.value = reparsed.format(displayFormat.value)
+    } else {
+      datetimeInternal.value = reparsed
+    }
     v$.value.textFieldValue.$touch()
     emit('blur')
     return
@@ -213,17 +256,43 @@ const onClear = () => {
     datetimeInternal.value = null
     datePickerValue.value = null
     timePickerValue.value = null
+    emit('afterClear')
     return
   }
   datetimeInternal.value = dayjs(props.defaultValue, 'YYYY-MM-DDTHH:mm:ss.SSSSSSZ')
+  emit('afterClear')
+}
+
+const close = () => {
+  pickerOpened.value = false
+  inputInstance.value?.focus()
+  inputInstance.value?.blur()
+  emit('onClose')
+  emit('blur')
 }
 
 const onTextFieldFocus = () => {
   emit('focus')
 }
 
+const onTimePickerEnterKeyup = () => {
+  pickerOpened.value = false
+}
+
+const onFocusConfirm = () => {
+  confirmRefButton.value?.focus()
+}
+
+const onDatePickerUpdate = () => {
+  timePickerInstance.value?.focusHour()
+}
+
 const now = () => {
-  datetimeInternal.value = dayjs().second(0).millisecond(0)
+  if (props.lastMinuteMoment) {
+    datetimeInternal.value = dayjs().second(59).millisecond(999)
+  } else {
+    datetimeInternal.value = dayjs().second(0).millisecond(0)
+  }
   nextTick(() => {
     pickerKey.value++
     timeKey.value++
@@ -233,13 +302,15 @@ const now = () => {
 
 <template>
   <VTextField
-    ref="textFieldRef"
+    ref="inputInstance"
     v-model="textFieldValue"
     :error-messages="errorMessageComputed"
     :persistent-placeholder="true"
     :placeholder="placeholderComputed"
     class="a-datetime-picker"
+    hide-details="auto"
     :disabled="disabled"
+    autocomplete="off"
     @blur="onTextFieldBlur"
     @focus="onTextFieldFocus"
     @keyup.enter="onTextFieldBlur"
@@ -256,7 +327,8 @@ const now = () => {
         location="bottom end"
         origin="top end"
         :close-on-content-click="false"
-        @update:model-value="(value) => (pickerOpened = value)"
+        :model-value="pickerOpened"
+        @update:model-value="(value: boolean) => (pickerOpened = value)"
       >
         <template #activator="{ props: menuProps }">
           <VIcon
@@ -268,25 +340,55 @@ const now = () => {
         </template>
 
         <VCard v-if="pickerOpened">
+          <VBtn
+            v-tooltip="t('common.button.close')"
+            icon
+            variant="text"
+            :width="36"
+            :height="36"
+            class="position-absolute top-0 right-0"
+            @click.stop="close"
+          >
+            <VIcon
+              icon="mdi-close"
+              color="white"
+            />
+          </VBtn>
           <VDatePicker
             :key="pickerKey"
             v-model="datePickerValue"
             class="a-datetime-picker-calendar"
             color="primary"
             show-adjacent-months
+            v-bind="$attrs"
+            @update:model-value="onDatePickerUpdate"
           />
           <TimePicker
+            ref="timePickerInstance"
             :key="timeKey"
             v-model="timePickerValue"
+            @on-enter-keyup="onTimePickerEnterKeyup"
+            @focus-confirm="onFocusConfirm"
           />
-          <button
-            type="button"
-            class="a-datetime-picker__now-button"
-            tabindex="-1"
-            @click="now"
-          >
-            {{ t('common.time.now') }}
-          </button>
+          <div class="d-flex">
+            <button
+              type="button"
+              class="a-datetime-picker__bottom-button"
+              tabindex="8"
+              @click="now"
+            >
+              {{ t('common.time.now') }}
+            </button>
+            <button
+              ref="confirmRefButton"
+              type="button"
+              class="a-datetime-picker__bottom-button"
+              tabindex="7"
+              @click.stop="close"
+            >
+              {{ t('common.button.confirm') }}
+            </button>
+          </div>
         </VCard>
       </VMenu>
 
@@ -298,8 +400,7 @@ const now = () => {
       v-if="!hideLabel"
       #label
     >
-      {{ label
-      }}<span
+      {{ label }}<span
         v-if="required"
         class="required"
       />
@@ -328,7 +429,7 @@ const now = () => {
     }
   }
 
-  &__now-button {
+  &__bottom-button {
     width: 100%;
     text-align: center;
     font-size: 0.86rem;
@@ -338,7 +439,7 @@ const now = () => {
     padding: 6px 0;
 
     &:hover {
-      background-color: rgba(0 0 0 / 5%);
+      background-color: rgb(0 0 0 / 5%);
     }
   }
 }

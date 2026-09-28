@@ -1,0 +1,237 @@
+<script lang="ts" setup>
+import { useI18n } from 'vue-i18n'
+import { useImageMassOperations } from '@/components/damImage/uploadQueue/composables/imageMassOperations'
+import AFormTextarea from '@/components/form/AFormTextarea.vue'
+import { computed, ref } from 'vue'
+import useVuelidate from '@vuelidate/core'
+import { useValidate } from '@/validators/vuelidate/useValidate'
+import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
+import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
+import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
+import { storeToRefs } from 'pinia'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
+import { buildFieldRules } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
+import { DamAssetType } from '@/types/coreDam/Asset'
+
+const texts = ref({ description: '', source: '', authors: [] })
+
+const imageStore = useImageStore()
+const { images } = storeToRefs(imageStore)
+const { replaceEmptyDescription, replaceEmptySource, replaceEmptyAuthors } =
+  useImageMassOperations()
+const { t } = useI18n()
+
+const fillAll = (forceReplace: boolean) => {
+  replaceEmptyDescription(texts.value.description, forceReplace)
+  if (authorEnabled.value && showDamAuthorsAtLeastOne.value) {
+    replaceEmptyAuthors(texts.value.authors, forceReplace)
+  } else {
+    replaceEmptySource(texts.value.source, forceReplace)
+  }
+}
+
+const clearForm = () => {
+  texts.value.description = ''
+  if (authorEnabled.value && showDamAuthorsAtLeastOne.value) {
+    texts.value.authors = []
+  } else {
+    texts.value.source = ''
+  }
+}
+
+const { cachedExtSystemId } = useExtSystemIdForCached()
+
+const { getDamConfigExtSystem } = useDamConfigState()
+
+const authorEnabled = computed(() => {
+  return !!getDamConfigExtSystem(cachedExtSystemId.value)?.[DamAssetType.Image]?.authors?.enabled
+})
+
+const { descriptionValidation, sourceValidation, sourceLabel } = useCommonAdminCoreDamOptions()
+const validators = useValidate()
+
+const rules = computed(() => ({
+  texts: {
+    description: buildFieldRules(descriptionValidation, validators),
+    source: buildFieldRules(sourceValidation, validators),
+  },
+}))
+const v$ = useVuelidate(rules, { texts }, { $scope: false })
+
+const showDamAuthorsAtLeastOne = computed(() => {
+  if (images.value.length === 0) return false
+  return images.value.length && images.value.some((item) => item?.showDamAuthors)
+})
+</script>
+
+<template>
+  <div class="w-100">
+    <VRow
+      density="comfortable"
+      class="mt-4"
+    >
+      <VCol>
+        <div class="d-flex">
+          <AFormTextarea
+            v-model="texts.description"
+            :v="v$"
+            :label="t('common.damImage.image.model.texts.description')"
+          />
+          <VBtn
+            icon
+            size="small"
+            variant="text"
+            class="mr-1"
+            @click.stop="replaceEmptyDescription(texts.description, false)"
+          >
+            <VIcon icon="mdi-file-arrow-left-right-outline" />
+            <VTooltip
+              activator="parent"
+              location="bottom"
+            >
+              {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
+            </VTooltip>
+          </VBtn>
+          <VBtn
+            icon
+            size="small"
+            variant="text"
+            @click.stop="replaceEmptyDescription(texts.description, true)"
+          >
+            <VIcon icon="mdi-file-replace-outline" />
+            <VTooltip
+              activator="parent"
+              location="bottom"
+            >
+              {{ t('common.damImage.asset.massOperations.replaceOne') }}
+            </VTooltip>
+          </VBtn>
+        </div>
+      </VCol>
+    </VRow>
+    <VRow
+      v-if="authorEnabled && showDamAuthorsAtLeastOne"
+      density="comfortable"
+      class="mt-4"
+    >
+      <VCol>
+        <ASystemEntityScope
+          subject="keyword"
+          system="dam"
+        >
+          <div class="d-flex">
+            <div style="flex-grow: 1">
+              <AuthorRemoteAutocompleteWithCached
+                v-model="texts.authors"
+                :ext-system="cachedExtSystemId"
+                :label="t('common.damImage.asset.model.authors')"
+                clearable
+                multiple
+                :validation-scope="false"
+              />
+            </div>
+            <VBtn
+              icon
+              size="small"
+              variant="text"
+              class="mr-1"
+              @click.stop="replaceEmptyAuthors(texts.authors, false)"
+            >
+              <VIcon icon="mdi-file-arrow-left-right-outline" />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
+              </VTooltip>
+            </VBtn>
+            <VBtn
+              icon
+              size="small"
+              variant="text"
+              @click.stop="replaceEmptyAuthors(texts.authors, true)"
+            >
+              <VIcon icon="mdi-file-replace-outline" />
+              <VTooltip
+                activator="parent"
+                location="bottom"
+              >
+                {{ t('common.damImage.asset.massOperations.replaceOne') }}
+              </VTooltip>
+            </VBtn>
+          </div>
+        </ASystemEntityScope>
+      </VCol>
+    </VRow>
+    <VRow
+      v-else
+      density="comfortable"
+      class="mt-4"
+    >
+      <VCol>
+        <div class="d-flex">
+          <AFormTextarea
+            v-model="texts.source"
+            :label="sourceLabel"
+          />
+          <VBtn
+            icon
+            size="small"
+            variant="text"
+            class="mr-1"
+            @click.stop="replaceEmptySource(texts.source, false)"
+          >
+            <VIcon icon="mdi-file-arrow-left-right-outline" />
+            <VTooltip
+              activator="parent"
+              location="bottom"
+            >
+              {{ t('common.damImage.asset.massOperations.fillOneEmpty') }}
+            </VTooltip>
+          </VBtn>
+          <VBtn
+            icon
+            size="small"
+            variant="text"
+            @click.stop="replaceEmptySource(texts.source, true)"
+          >
+            <VIcon icon="mdi-file-replace-outline" />
+            <VTooltip
+              activator="parent"
+              location="bottom"
+            >
+              {{ t('common.damImage.asset.massOperations.replaceOne') }}
+            </VTooltip>
+          </VBtn>
+        </div>
+      </VCol>
+    </VRow>
+    <div class="sidebar-info__actions pa-2 d-flex align-center justify-center">
+      <VBtn
+        class="mr-2"
+        variant="text"
+        size="small"
+        @click.stop="fillAll(false)"
+      >
+        {{ t('common.damImage.asset.massOperations.fillAllEmpty') }}
+      </VBtn>
+      <VBtn
+        class="mr-2"
+        variant="text"
+        size="small"
+        @click.stop="fillAll(true)"
+      >
+        {{ t('common.damImage.asset.massOperations.replaceAll') }}
+      </VBtn>
+      <VBtn
+        variant="text"
+        size="small"
+        @click.stop="clearForm"
+      >
+        {{ t('common.damImage.asset.massOperations.clearForm') }}
+      </VBtn>
+    </div>
+  </div>
+</template>

@@ -9,6 +9,7 @@
   "submitFilter": "Hľadať",
   "resetFilter": "Zrušiť filter",
   "advancedFilters": "Viac filtrov",
+  "bookmarkFilter": "Záložky filtrov",
   "cancel": "Zrušiť",
   "delete": "Zmazať",
   "id": "ID",
@@ -23,5 +24,7 @@
   "backwards": "Dozadu",
   "next": "Pokračovať",
   "prev": "Späť",
-  "loadMore": "Načítaj ďalšie"
+  "loadMore": "Načítaj ďalšie",
+  "copy": "Kopírovať",
+  "advanced": "Pokročilé"
 }

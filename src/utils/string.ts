@@ -31,6 +31,26 @@ export const stringToFloat = (value: any, fallbackValue = 0): number => {
   return check
 }
 
+export const stringToNumber = (value: string, fallbackValue?: number): number | null => {
+  const trimmedValue = value.trim()
+  if (trimmedValue === '') {
+    return fallbackValue !== undefined ? fallbackValue : null
+  }
+  const numericValue = Number(trimmedValue)
+  if (!Number.isNaN(numericValue) && Number.isFinite(numericValue)) {
+    return numericValue
+  }
+
+  return fallbackValue !== undefined ? fallbackValue : null
+}
+
+export const stringToBooleanExact = (value: string): boolean | null => {
+  const trimmedValue = value.trim()
+  if (trimmedValue === 'true') return true
+  if (trimmedValue === 'false') return false
+  return null
+}
+
 export const stringSplitOnFirstOccurrence = (value: string, delimiter = '') => {
   const index = value.indexOf(delimiter)
 

@@ -10,9 +10,14 @@ export interface ImageAware {
     damId: DocId
     licenceId: IntegerId
     regionPosition: number
+    internal: boolean
+  }
+  flags: {
+    showSource: boolean
+    internal: boolean
+    overrideInternal: boolean
   }
   position?: number
-  // licences: ImageWidgetImageLicence[]
 }
 
 export interface ImageCreateUpdateAware extends Omit<ImageAware, 'id'> {
@@ -21,4 +26,10 @@ export interface ImageCreateUpdateAware extends Omit<ImageAware, 'id'> {
 
 export interface ImageCreateUpdateAwareKeyed extends ImageCreateUpdateAware {
   key: string
+}
+
+export interface ImageStoreItem extends ImageCreateUpdateAwareKeyed {
+  damAuthors: DocId[]
+  showDamAuthors: boolean
+  assetId: undefined | DocId
 }

@@ -2,17 +2,18 @@ import { ref } from 'vue'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import { useI18n } from 'vue-i18n'
 
-export enum Grant {
-  Deny = 0,
-  AllowOwner = 1,
-  Allow = 2,
-  Default = Deny,
-}
+export const Grant = {
+  Deny: 0,
+  AllowOwner: 1,
+  Allow: 2,
+} as const
+export type GrantType = (typeof Grant)[keyof typeof Grant]
+export const GrantDefault = Grant.Deny
 
 export function useGrant() {
   const { t } = useI18n()
 
-  const grantOptions = ref<ValueObjectOption<Grant>[]>([
+  const grantOptions = ref<ValueObjectOption<GrantType>[]>([
     {
       value: Grant.Deny,
       title: t('common.permission.grant.deny'),
@@ -30,8 +31,8 @@ export function useGrant() {
     },
   ])
 
-  const getGrantOption = (value: Grant): ValueObjectOption<Grant> => {
-    return grantOptions.value.find((item) => item.value === value) as ValueObjectOption<Grant>
+  const getGrantOption = (value: GrantType): ValueObjectOption<GrantType> => {
+    return grantOptions.value.find((item) => item.value === value) as ValueObjectOption<GrantType>
   }
 
   return {

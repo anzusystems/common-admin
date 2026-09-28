@@ -20,7 +20,7 @@ const props = withDefaults(
     hideDetails: undefined,
     hideLabel: undefined,
     v: null,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: boolean): void

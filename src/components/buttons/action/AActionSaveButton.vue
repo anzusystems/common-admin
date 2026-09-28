@@ -22,7 +22,7 @@ const props = withDefaults(
     disabled: undefined,
     size: 36,
     variant: 'primary',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'saveRecord'): void

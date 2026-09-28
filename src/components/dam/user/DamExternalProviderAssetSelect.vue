@@ -16,7 +16,7 @@ const props = withDefaults(
     multiple: false,
     label: undefined,
     dataCy: '',
-  }
+  },
 )
 
 const emit = defineEmits<{
@@ -37,8 +37,7 @@ const onBlur = () => {
   emit('blur', modelValueComputed.value)
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { allExternalProviderAssetTypeOptions } = useDamExternalProviderAssetType(props.client)
+const { allExternalProviderAssetTypeOptions } = useDamExternalProviderAssetType()
 </script>
 
 <template>

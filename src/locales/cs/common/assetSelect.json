@@ -13,7 +13,8 @@
   },
   "meta": {
     "table": {
-      "image": "Náhled"
+      "image": "Náhled",
+      "advanced": "Pokročilé"
     },
     "grid": {
       "masonry": "Mansonry",
@@ -23,11 +24,16 @@
     "filter": {
       "toggle": "Filtr"
     },
+    "info": {
+      "toggle": "Info karta",
+      "noAssetSelected": "Žiadne vybrané assety"
+    },
     "texts": {
       "title": "Vyberte asset",
       "noItemsFound": "Žádné nalezené assety",
-      "pickExactCount": "Vyberte assety: {count}. Zvolených: {selected}." ,
-      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetů. Zvolených: {selected}."
+      "pickExactCount": "Vyberte assety: {count}. Zvolených: {selected}.",
+      "pickRangeCount": "Vyberte od {minCount} do {maxCount} assetů. Zvolených: {selected}.",
+      "copyToLicence": "Kopírovat do licence"
     }
   },
   "filter": {
@@ -35,7 +41,21 @@
     "text": "Text",
     "described": "Popsáno",
     "visible": "Viditelné",
-    "generatedBySystem": "Generováno systémem"
+    "generatedBySystem": "Generováno systémem",
+    "assetAndMainFileIds": "Id",
+    "keywordIds": "Klúčové slová",
+    "authorIds": "Autori",
+    "createdByIds": "Založené používateľmi",
+    "inPodcast": "Podcast",
+    "podcastIds": "Podcasts",
+    "distributedInServices": "Distribuované v službách",
+    "createdAtFrom": "Vytvořeno od - do"
+  },
+  "assetType": {
+    "image": "Obrázok",
+    "audio": "Audio",
+    "video": "Video",
+    "document": "Dokument"
   },
   "error": {
     "unallowedLicence": "Nemáte práva na licenciu v DAM"

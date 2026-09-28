@@ -1,5 +1,5 @@
 import type { JobBase, JobUserDataDelete } from '@/types/Job'
-import { JobStatus } from '@/model/valueObject/JobStatus'
+import { JobStatusDefault } from '@/model/valueObject/JobStatus'
 import { dateTimeNow } from '@/utils/datetime'
 import type { JobBaseResource } from '@/model/valueObject/JobBaseResource'
 
@@ -9,7 +9,7 @@ export function useCommonJobFactory() {
       id: 0,
       scheduledAt: dateTimeNow(),
       priority: 1,
-      status: JobStatus.Default,
+      status: JobStatusDefault,
       result: '',
       batchProcessedIterationCount: 0,
       finishedAt: null,
@@ -27,10 +27,8 @@ export function useCommonJobFactory() {
   const createUserDataDelete = (system: string): JobUserDataDelete => {
     return {
       ...createBase('jobUserDataDelete', system),
-      ...{
-        targetUserId: null,
-        anonymizeUser: false,
-      },
+      targetUserId: null,
+      anonymizeUser: false,
     }
   }
 

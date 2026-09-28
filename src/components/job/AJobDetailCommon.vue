@@ -13,7 +13,7 @@ withDefaults(
   }>(),
   {
     loading: false,
-  }
+  },
 )
 
 const { t } = useI18n()

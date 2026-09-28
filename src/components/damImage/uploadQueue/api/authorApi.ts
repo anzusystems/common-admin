@@ -3,15 +3,23 @@ import { apiFetchByIds } from '@/services/api/apiFetchByIds'
 import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
 import { SYSTEM_CORE_DAM } from '@/components/damImage/uploadQueue/api/damAssetApi'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
+import { useApiFetchList } from '@/labs/api/useApiFetchList'
+import type { IntegerId } from '@/types/common'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import { apiFetchList } from '@/services/api/apiFetchList'
-import type { Pagination } from '@/types/Pagination'
+// eslint-disable-next-line anzu/no-deprecated-imports
 import type { FilterBag } from '@/types/Filter'
+import type { Pagination } from '@/types/Pagination'
 
 const END_POINT = '/adm/v1/author'
 const END_POINT_LIST = END_POINT + '/ext-system/:extSystemId'
 export const ENTITY = 'author'
 
-export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: number, ids: string[]) =>
+export const fetchAuthorListByIds = (
+  client: () => AxiosInstance,
+  extSystemId: number,
+  ids: string[],
+) =>
   apiFetchByIds<DamAuthor[]>(
     client,
     ids,
@@ -22,14 +30,23 @@ export const fetchAuthorListByIds = (client: () => AxiosInstance, extSystemId: n
     SYSTEM_CORE_DAM,
     ENTITY,
     {},
-    true
+    true,
   )
+
+export const useFetchAuthorList = (client: () => AxiosInstance, extSystemId: IntegerId) =>
+  useApiFetchList<DamAuthor[]>({
+    client,
+    system: SYSTEM_CORE_DAM,
+    entity: ENTITY,
+    urlTemplate: END_POINT_LIST,
+    urlParams: { extSystemId },
+  })
 
 export const fetchAuthorList = (
   client: () => AxiosInstance,
   extSystemId: number,
   pagination: Pagination,
-  filterBag: FilterBag
+  filterBag: FilterBag,
 ) =>
   apiFetchList<DamAuthor[]>(
     client,
@@ -40,9 +57,8 @@ export const fetchAuthorList = (
     pagination,
     filterBag,
     SYSTEM_CORE_DAM,
-    ENTITY
+    ENTITY,
   )
 
 export const createAuthor = (client: () => AxiosInstance, data: DamAuthor) =>
   apiCreateOne<DamAuthor>(client, data, END_POINT, {}, SYSTEM_CORE_DAM, ENTITY)
-

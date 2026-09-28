@@ -3,23 +3,49 @@ import ADialogToolbar from '@/components/ADialogToolbar.vue'
 import { useI18n } from 'vue-i18n'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
 import AFormTextarea from '@/components/form/AFormTextarea.vue'
-import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
 import { storeToRefs } from 'pinia'
 import type { DocId } from '@/types/common'
-import { isNull } from '@/utils/common'
-import { useImageValidation } from '@/components/damImage/uploadQueue/composables/uploadValidations'
+import {
+  AImageMetadataValidationScopeSymbol,
+  useImageValidation,
+} from '@/components/damImage/uploadQueue/composables/uploadValidations'
 import { useAlerts } from '@/composables/system/alerts'
+import AuthorRemoteAutocompleteWithCached from '@/components/damImage/uploadQueue/author/AuthorRemoteAutocompleteWithCached.vue'
+import ASystemEntityScope from '@/components/form/ASystemEntityScope.vue'
+import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
+import { useExtSystemIdForCached } from '@/components/damImage/uploadQueue/composables/extSystemIdForCached'
+import { computed } from 'vue'
+import { useDisplay } from 'vuetify'
+import {
+  isImageCreateUpdateAware,
+  isMediaAware,
+  useImageMediaWidgetStore,
+} from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
+import { DamAssetType, type DamAssetTypeType } from '@/types/coreDam/Asset'
+import type { ImageCreateUpdateAware } from '@/types/ImageAware'
+import ARow from '@/components/ARow.vue'
+import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
+import { isNull } from '@/utils/common'
+import { DamMediaType } from '@/types/MediaAware'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue: boolean
     saving: boolean
     loading: boolean
     expand?: boolean
+    showDamAuthors?: boolean
+    showSourceEnabled?: boolean
+    sourceLabel?: string
+    editAssetLabel?: string
   }>(),
   {
     expand: false,
-  }
+    showDamAuthors: false,
+    showSourceEnabled: true,
+    sourceLabel: undefined,
+    editAssetLabel: undefined,
+  },
 )
 
 const emit = defineEmits<{
@@ -29,10 +55,51 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const imageStore = useImageStore()
-const { imageDetail } = storeToRefs(imageStore)
+const { mdAndDown } = useDisplay()
+const imageMediaWidgetStore = useImageMediaWidgetStore()
+const { detail } = storeToRefs(imageMediaWidgetStore)
+const assetDetailStore = useAssetDetailStore()
+const { asset, authorConflicts } = storeToRefs(assetDetailStore)
+const { cachedExtSystemId } = useExtSystemIdForCached()
 
-const { v$ } = useImageValidation(imageDetail)
+const type = computed<DamAssetTypeType | null>(() => {
+  if (isMediaAware(detail.value)) {
+    return detail.value.damMedia.assetType === DamMediaType.Video
+      ? DamAssetType.Video
+      : DamAssetType.Audio
+  } else if (isImageCreateUpdateAware(detail.value)) {
+    return DamAssetType.Image
+  }
+  return null
+})
+
+const imageSourceRequired = computed(() => {
+  return !props.showDamAuthors
+})
+
+const imageMedia = computed<ImageCreateUpdateAware | undefined>(() => {
+  if (!isMediaAware(detail.value) || isNull(detail.value.damMedia.imageFileId)) return undefined
+
+  return {
+    texts: {
+      description: '',
+      source: '',
+    },
+    dam: {
+      damId: detail.value.damMedia.imageFileId,
+      licenceId: detail.value.damMedia.licenceId!,
+      regionPosition: 0,
+      internal: false,
+    },
+    flags: {
+      showSource: false,
+      internal: false,
+      overrideInternal: false,
+    },
+  }
+})
+
+const { v$ } = useImageValidation(detail, imageSourceRequired)
 
 const { showValidationError } = useAlerts()
 
@@ -51,8 +118,8 @@ const onDialogModelUpdate = (newValue: boolean) => {
 }
 
 const onEditAsset = () => {
-  if (isNull(imageDetail.value)) return
-  emit('editAsset', imageDetail.value.dam.damId)
+  if (!isImageCreateUpdateAware(detail.value)) return
+  emit('editAsset', detail.value.dam.damId)
 }
 
 defineExpose({
@@ -69,40 +136,84 @@ defineExpose({
         </div>
       </VCol>
     </VRow>
-    <VRow v-if="imageDetail">
-      <VCol>
-        <VBtn @click.stop="onEditAsset">
-          {{ t('common.damImage.image.button.editAsset') }}
-        </VBtn>
-      </VCol>
-    </VRow>
-    <VRow v-if="imageDetail">
-      <VCol>
-        <AFormTextarea
-          v-model="imageDetail.texts.description"
-          :label="t('common.damImage.image.model.texts.description')"
-        />
-      </VCol>
-    </VRow>
-    <VRow v-if="imageDetail">
-      <VCol>
-        <AFormTextarea
-          v-model="imageDetail.texts.source"
-          :label="t('common.damImage.image.model.texts.source')"
-          :v="v$.image.texts.source"
-        />
-      </VCol>
-    </VRow>
+    <template v-if="isImageCreateUpdateAware(detail)">
+      <VRow>
+        <VCol>
+          <VBtn @click.stop="onEditAsset">
+            {{ editAssetLabel }}
+          </VBtn>
+        </VCol>
+      </VRow>
+      <VRow>
+        <VCol>
+          <AFormTextarea
+            v-model="detail.texts.description"
+            :label="t('common.damImage.image.model.texts.description')"
+            :help="t('common.damImage.image.help.texts.description')"
+            :v="v$.image?.texts.description"
+          />
+        </VCol>
+      </VRow>
+      <VRow v-if="showDamAuthors && asset">
+        <VCol>
+          <ASystemEntityScope
+            subject="author"
+            system="dam"
+          >
+            <AuthorRemoteAutocompleteWithCached
+              v-model="asset.authors"
+              :ext-system="cachedExtSystemId"
+              :label="t('common.damImage.asset.model.authors')"
+              :author-conflicts="authorConflicts"
+              data-cy="custom-field-authors"
+              clearable
+              multiple
+              :validation-scope="AImageMetadataValidationScopeSymbol"
+            />
+          </ASystemEntityScope>
+        </VCol>
+      </VRow>
+      <VRow v-else>
+        <VCol>
+          <AFormTextarea
+            v-model="detail.texts.source"
+            :label="sourceLabel"
+            :v="v$.image?.texts.source"
+          />
+        </VCol>
+      </VRow>
+      <VRow v-if="showSourceEnabled">
+        <VCol>
+          <VSwitch
+            v-model="detail.flags.showSource"
+            :label="t('common.damImage.image.model.flags.showSource')"
+            density="compact"
+            hide-details
+          />
+        </VCol>
+      </VRow>
+    </template>
+    <template v-else-if="isMediaAware(detail)">
+      <div>
+        {{ detail.damMedia }}
+      </div>
+    </template>
   </div>
   <VDialog
     v-else
     :model-value="modelValue"
     :max-width="500"
+    :fullscreen="mdAndDown"
+    eager
     @update:model-value="onDialogModelUpdate"
   >
     <VCard v-if="modelValue">
       <ADialogToolbar @on-cancel="onDialogModelUpdate(false)">
-        {{ t('common.damImage.image.meta.edit') }}
+        {{
+          type === DamAssetType.Image
+            ? t('common.damImage.image.meta.edit')
+            : t('common.damImage.media.meta.edit')
+        }}
       </ADialogToolbar>
       <VCardText>
         <div
@@ -112,39 +223,128 @@ defineExpose({
           <VProgressCircular indeterminate />
         </div>
         <div
-          v-else-if="imageDetail"
+          v-else-if="isImageCreateUpdateAware(detail)"
           class="position-relative"
         >
           <div class="my-4">
             <AImageWidgetSimple
-              :model-value="imageDetail.id"
-              :image="imageDetail"
+              :model-value="detail.id"
+              :image="detail"
             />
           </div>
           <VRow>
             <VCol>
               <VBtn @click.stop="onEditAsset">
-                {{ t('common.damImage.image.button.editAsset') }}
+                {{ editAssetLabel }}
               </VBtn>
             </VCol>
           </VRow>
           <VRow>
             <VCol>
               <AFormTextarea
-                v-model="imageDetail.texts.description"
+                v-model="detail.texts.description"
                 :label="t('common.damImage.image.model.texts.description')"
+                :help="t('common.damImage.image.help.texts.description')"
               />
             </VCol>
           </VRow>
-          <VRow>
+          <VRow v-if="showDamAuthors && asset">
+            <VCol>
+              <ASystemEntityScope
+                subject="author"
+                system="dam"
+              >
+                <AuthorRemoteAutocompleteWithCached
+                  v-model="asset.authors"
+                  :ext-system="cachedExtSystemId"
+                  :label="t('common.damImage.asset.model.authors')"
+                  :author-conflicts="authorConflicts"
+                  data-cy="custom-field-authors"
+                  clearable
+                  multiple
+                  :validation-scope="AImageMetadataValidationScopeSymbol"
+                />
+              </ASystemEntityScope>
+            </VCol>
+          </VRow>
+          <VRow v-else>
             <VCol>
               <AFormTextarea
-                v-model="imageDetail.texts.source"
-                :label="t('common.damImage.image.model.texts.source')"
-                :v="v$.image.texts.source"
+                v-model="detail.texts.source"
+                :label="sourceLabel"
+                :v="v$.image?.texts.source"
               />
             </VCol>
           </VRow>
+          <VRow v-if="showSourceEnabled">
+            <VCol>
+              <VSwitch
+                v-model="detail.flags.showSource"
+                :label="t('common.damImage.image.model.flags.showSource')"
+                density="compact"
+                hide-details
+              />
+            </VCol>
+          </VRow>
+        </div>
+        <div
+          v-else-if="isMediaAware(detail)"
+          class="position-relative"
+        >
+          <div class="my-4">
+            <h4 class="font-weight-bold text-label-large">
+              {{ t('common.damImage.media.meta.preview') }}:
+            </h4>
+            <slot
+              name="preview"
+              :image-media="detail"
+            />
+            <AImageWidgetSimple
+              v-if="!detail.damMedia.playable"
+              :model-value="null"
+              :image="imageMedia"
+            />
+          </div>
+          <VRow>
+            <VCol>
+              <DamAdminAssetLink :asset-id="detail.damMedia.assetId" />
+            </VCol>
+          </VRow>
+          <div
+            v-if="!detail.damMedia.playable"
+            class="my-2 text-warning text-body-small"
+          >
+            <VIcon
+              icon="mdi-movie-off-outline"
+              class="mr-1"
+              size="small"
+            />{{
+              t('common.damImage.media.meta.notPlayable')
+            }}
+          </div>
+          <ARow :title="t('common.damImage.media.model.damMedia.title')">
+            {{ detail.damMedia.title }}
+          </ARow>
+          <ARow :title="t('common.damImage.media.model.damMedia.authorNames')">
+            {{ detail.damMedia.authorNames.join(', ') }}
+          </ARow>
+          <template v-if="detail.damMedia.assetType === 'audio'">
+            <ARow :title="t('common.damImage.media.model.damMedia.seriesName')">
+              {{ detail.damMedia.seriesName }}
+            </ARow>
+            <ARow :title="t('common.damImage.media.model.damMedia.episodeName')">
+              {{ detail.damMedia.episodeName }}
+            </ARow>
+            <ARow :title="t('common.damImage.media.model.damMedia.episodeNumber')">
+              {{ detail.damMedia.episodeNumber }}
+            </ARow>
+          </template>
+          <ARow :title="t('common.damImage.media.model.damMedia.assetId')">
+            {{ detail.damMedia.assetId }}
+          </ARow>
+          <ARow :title="t('common.damImage.media.model.damMedia.licenceId')">
+            {{ detail.damMedia.licenceId }}
+          </ARow>
         </div>
       </VCardText>
       <VCardActions>

@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     dataCy: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'afterRotate'): void
@@ -23,12 +23,12 @@ const { showRecordWas, showErrorsDefault } = useAlerts()
 
 const loading = ref(false)
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointImage } = useCommonAdminCoreDamOptions()
 
 const rotate = async (angle: 90 | 270) => {
   try {
     loading.value = true
-    await rotateImage(damClient, props.imageId, angle)
+    await rotateImage(damClient, endPointImage, props.imageId, angle)
     showRecordWas('updated')
     emit('afterRotate')
   } catch (e) {
@@ -42,7 +42,7 @@ const { t } = useI18n()
 
 <template>
   <div>
-    <div class="text-caption">
+    <div class="text-body-small">
       {{ t('common.damImage.asset.detail.roi.rotate.rotateMainFileImage') }}
     </div>
     <div

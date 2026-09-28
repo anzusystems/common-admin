@@ -1,16 +1,34 @@
 import type { RegionOfInterest } from '@/types/coreDam/Roi'
-import type Cropper from 'cropperjs'
 import { stringToFloat, stringToInt } from '@/utils/string'
 
 const PRECISION = 3
 
+export interface ACropperjsExposed {
+  enable: () => void
+  disable: () => void
+  destroy: () => void
+  getImageData: () => Cropper.ImageData
+  getData: () => Cropper.Data
+  setData: (data: Cropper.SetDataOptions) => void
+}
+
 export const regionToCrop = function (
-  cropper: Cropper,
+  cropper: ACropperjsExposed,
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
-  originalImageHeight: number
+  originalImageHeight: number,
 ) {
   const imageData = cropper.getImageData()
+  if (!imageData)
+    return {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      rotate: 0,
+      scaleX: 1,
+      scaleY: 1,
+    }
   const ratio = imageData.naturalHeight / originalImageHeight
 
   return {
@@ -25,13 +43,14 @@ export const regionToCrop = function (
 }
 
 export const cropToRegion = function (
-  cropper: Cropper,
+  cropper: ACropperjsExposed,
   regionOfInterest: RegionOfInterest,
   originalImageWidth: number,
-  originalImageHeight: number
+  originalImageHeight: number,
 ) {
   const imageData = cropper.getImageData()
   const data = cropper.getData()
+  if (!imageData || !data) return regionOfInterest
   const ratio = imageData.naturalHeight / originalImageHeight
 
   let pointX = stringToInt((data.x / ratio).toFixed(PRECISION))
@@ -43,13 +62,15 @@ export const cropToRegion = function (
   let percentageWidth = stringToFloat((data.width / imageData.naturalWidth).toFixed(PRECISION))
   const validateWidth = percentageWidth * originalImageWidth + pointX
   if (validateWidth > originalImageWidth) {
-    percentageWidth = percentageWidth - ((validateWidth - originalImageWidth) * 100) / originalImageWidth
+    percentageWidth =
+      percentageWidth - ((validateWidth - originalImageWidth) * 100) / originalImageWidth
   }
 
   let percentageHeight = stringToFloat((data.height / imageData.naturalHeight).toFixed(PRECISION))
   const validateHeight = percentageHeight * originalImageHeight + pointY
   if (validateHeight > originalImageHeight) {
-    percentageHeight = percentageHeight - ((validateHeight - originalImageHeight) * 100) / originalImageHeight
+    percentageHeight =
+      percentageHeight - ((validateHeight - originalImageHeight) * 100) / originalImageHeight
   }
 
   regionOfInterest.pointX = pointX

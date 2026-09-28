@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
 import { useAlerts } from '@/composables/system/alerts'
 import useVuelidate from '@vuelidate/core'
-import type { DamAssetType } from '@/types/coreDam/Asset'
+import type { DamAssetTypeType } from '@/types/coreDam/Asset'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
 import AssetMetadata from '@/components/damImage/uploadQueue/components/AssetMetadata.vue'
@@ -21,27 +21,29 @@ const props = withDefaults(
     queueKey: UploadQueueKey
     isActive: boolean
     dataCy?: string
-    assetType: DamAssetType
+    assetType: DamAssetTypeType
     extSystem: IntegerId
+    configName?: string
   }>(),
   {
     dataCy: undefined,
-  }
+    configName: 'default',
+  },
 )
 
 const { t } = useI18n()
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, updateUploadStore } = storeToRefs(assetDetailStore)
+const { asset, updateUploadStore, mainFileSingleUse } = storeToRefs(assetDetailStore)
 const uploadQueueStore = useUploadQueuesStore()
 
 const saveButtonLoading = ref(false)
 
 const { showRecordWas, showValidationError, showErrorsDefault } = useAlerts()
 
-const v$ = useVuelidate({}, {}, { $scope: ADamAssetMetadataValidationScopeSymbol })
+const v$ = useVuelidate({ $scope: ADamAssetMetadataValidationScopeSymbol, $stopPropagation: true })
 
-const { damClient } = useCommonAdminCoreDamOptions()
+const { damClient, endPointAsset } = useCommonAdminCoreDamOptions()
 
 const onSave = async () => {
   if (isNull(asset.value)) return
@@ -53,7 +55,13 @@ const onSave = async () => {
     return
   }
   try {
-    await updateAssetMetadata(damClient, asset.value, props.extSystem)
+    await updateAssetMetadata(
+      damClient,
+      endPointAsset,
+      asset.value,
+      props.extSystem,
+      mainFileSingleUse.value,
+    )
     if (updateUploadStore.value && !isNull(asset.value)) {
       await uploadQueueStore.updateFromDetail(asset.value)
     }
@@ -81,5 +89,8 @@ const onSave = async () => {
       {{ t('common.button.save') }}
     </ABtnPrimary>
   </AssetDetailSidebarActionsWrapper>
-  <AssetMetadata :ext-system="extSystem" />
+  <AssetMetadata
+    :ext-system="extSystem"
+    :config-name="configName"
+  />
 </template>

@@ -1,12 +1,13 @@
 import type { AnzuUser } from '@/types/AnzuUser'
-import { ROLE_SUPER_ADMIN } from '@/composables/system/ability'
 import { Grant } from '@/model/valueObject/Grant'
 import { readonly, ref } from 'vue'
+import { ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
 
 const currentUserObject: AnzuUser = {
   id: 1,
   email: 'common@admin.com',
   enabled: false,
+  locale: null,
   roles: [ROLE_SUPER_ADMIN],
   person: {
     firstName: 'Common',

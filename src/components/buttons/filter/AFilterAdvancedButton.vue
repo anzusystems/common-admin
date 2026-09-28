@@ -13,7 +13,7 @@ withDefaults(
     tooltipT: 'common.button.advancedFilters',
     buttonClass: 'mt-1',
     dataCy: 'filter-advanced',
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'advancedFilter'): void

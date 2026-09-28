@@ -31,6 +31,22 @@ export const isAnzuApiValidationError = (error: any): error is AnzuApiValidation
   return error instanceof AnzuApiValidationError
 }
 
+/**
+ * Check if AnzuApiValidationError error contain a specific error for a specific field
+ *
+ * @param error
+ * @param errorName - Name of the error to check for (e.g., 'error_field_not_unique')
+ * @param fieldName - Name of the field to check (e.g., 'cms.userAdminConfig.model.systemResource')
+ */
+
+export const hasAnzuApiValidationErrorSpecific = (
+  error: AnzuApiValidationError,
+  errorName: string,
+  fieldName: string,
+) => {
+  return error.fields.some((field) => field.field === fieldName && field.errors.includes(errorName))
+}
+
 function resolveResponseData(axiosError: AxiosError, system: string, entity: string) {
   const data = axiosError.response?.data as AnzuApiValidationResponseData
   const items = [] as ValidationError[]
@@ -47,10 +63,14 @@ export class AnzuApiValidationError extends Error {
   fields: ValidationError[]
 
   constructor(axiosError: AxiosError, system: string, entity: string, cause?: Error, message = '') {
-    super(message)
+    const fields = resolveResponseData(axiosError, system, entity)
+    // Kept low-cardinality on purpose; field details would break Sentry grouping.
+    const resolvedMessage =
+      message || `Validation failed for ${system}.${entity} (${fields.length} fields)`
+    super(resolvedMessage)
     this.name = 'AnzuApiValidationError'
     this.cause = cause
-    this.message = message
-    this.fields = resolveResponseData(axiosError, system, entity)
+    this.message = resolvedMessage
+    this.fields = fields
   }
 }

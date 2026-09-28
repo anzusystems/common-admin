@@ -13,7 +13,7 @@ const props = withDefaults(
   {
     itemsPerPageOptions: () => [10, 25, 50],
     hideRecordsPerPage: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'change'): void
@@ -36,7 +36,11 @@ const lastPage = computed(() => {
 })
 
 const displayedFrom = computed(() => {
-  return modelValueComputed.value.page * modelValueComputed.value.rowsPerPage - modelValueComputed.value.rowsPerPage + 1
+  return (
+    modelValueComputed.value.page * modelValueComputed.value.rowsPerPage -
+    modelValueComputed.value.rowsPerPage +
+    1
+  )
 })
 
 const displayedTo = computed(() => {
@@ -52,12 +56,16 @@ const disabledFirstAndPrev = computed(() => {
 })
 
 const disabledLast = computed(() => {
-  return !isNull(modelValueComputed.value.hasNextPage) || modelValueComputed.value.page === lastPage.value
+  return (
+    !isNull(modelValueComputed.value.hasNextPage) ||
+    modelValueComputed.value.page === lastPage.value
+  )
 })
 
 const disabledNext = computed(() => {
   return (
-    (isNull(modelValueComputed.value.hasNextPage) && modelValueComputed.value.page === lastPage.value) ||
+    (isNull(modelValueComputed.value.hasNextPage) &&
+      modelValueComputed.value.page === lastPage.value) ||
     modelValueComputed.value.hasNextPage === false
   )
 })
@@ -132,7 +140,8 @@ const onClickNext = () => {
       </VBtnToggle>
     </div>
     <div class="anzu-data-footer__pagination">
-      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.system.datatable.from') }} {{ computedTotalCountText }}
+      {{ displayedFrom }} - {{ displayedTo }} {{ t('common.system.datatable.from') }}
+      {{ computedTotalCountText }}
     </div>
     <div class="anzu-data-footer__icons-before">
       <VBtn

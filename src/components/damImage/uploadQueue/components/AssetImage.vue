@@ -2,7 +2,13 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import placeholder16x9 from '@/assets/image/placeholder16x9.jpg'
-import { type AssetFileProperties, DamAssetStatus, DamAssetType } from '@/types/coreDam/Asset'
+import {
+  type AssetFileProperties,
+  DamAssetStatus,
+  type DamAssetStatusType,
+  DamAssetType,
+  type DamAssetTypeType,
+} from '@/types/coreDam/Asset'
 import { isUndefined } from '@/utils/common'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import AssetImageMetaIcons from '@/components/damImage/uploadQueue/components/AssetImageMetaIcons.vue'
@@ -10,8 +16,8 @@ import AssetImageMetaIcons from '@/components/damImage/uploadQueue/components/As
 const props = withDefaults(
   defineProps<{
     src?: string
-    assetType?: DamAssetType
-    assetStatus?: DamAssetStatus
+    assetType?: DamAssetTypeType
+    assetStatus?: DamAssetStatusType
     backgroundColor?: string
     width?: number
     height?: number
@@ -31,7 +37,7 @@ const props = withDefaults(
     remainingTime?: number | null
     hideIcon?: boolean
     showMetaIcons?: boolean
-    assetFileProperties?: AssetFileProperties
+    assetFileProperties?: AssetFileProperties | undefined
   }>(),
   {
     assetType: DamAssetType.Image,
@@ -57,7 +63,7 @@ const props = withDefaults(
     hideIcon: false,
     showMetaIcons: false,
     assetFileProperties: undefined,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'load'): void
@@ -96,7 +102,11 @@ const uploadingPercentage = computed(() => {
 })
 
 const backgroundColorComputed = computed(() => {
-  return [DamAssetStatus.Deleting, DamAssetStatus.Draft].includes(props.assetStatus) ? '#ccc' : props.backgroundColor
+  const grayBackgroundStatuses: readonly DamAssetStatusType[] = [
+    DamAssetStatus.Deleting,
+    DamAssetStatus.Draft,
+  ]
+  return grayBackgroundStatuses.includes(props.assetStatus) ? '#ccc' : props.backgroundColor
 })
 
 const iconColor = computed(() => {
@@ -139,7 +149,7 @@ const { remainingTimeShort } = useRemainingTime()
           :size="iconSize"
           :width="iconSize / 10"
         />
-        <div class="text-caption text-center">
+        <div class="text-body-small text-center">
           {{ t('common.damImage.upload.waiting') }}
         </div>
       </div>
@@ -156,7 +166,7 @@ const { remainingTimeShort } = useRemainingTime()
         />
         <div
           v-if="!disableProcessingText"
-          class="text-caption text-center"
+          class="text-body-small text-center"
         >
           {{ t('common.damImage.upload.processing') }}
         </div>
@@ -174,7 +184,7 @@ const { remainingTimeShort } = useRemainingTime()
         >
           {{ uploadingPercentage }}
         </VProgressCircular>
-        <div class="text-caption text-center">
+        <div class="text-body-small text-center">
           {{ t('common.damImage.upload.uploading') }}
           <span
             v-if="remainingTime"
@@ -224,7 +234,7 @@ const { remainingTimeShort } = useRemainingTime()
           color="success"
           :size="iconSize"
         />
-        <div class="text-caption text-center">
+        <div class="text-body-small text-center">
           {{ t('common.damImage.upload.done') }}
         </div>
       </div>
@@ -272,7 +282,11 @@ const { remainingTimeShort } = useRemainingTime()
   </div>
   <div
     v-else
-    :style="{ height: fallbackHeight + 'px', backgroundColor: backgroundColorComputed, width: width + 'px' }"
+    :style="{
+      height: fallbackHeight + 'px',
+      backgroundColor: backgroundColorComputed,
+      width: width + 'px',
+    }"
     class="asset-image asset-image--placeholder d-flex align-center justify-center"
   >
     <div
@@ -301,7 +315,7 @@ const { remainingTimeShort } = useRemainingTime()
         color="success"
         :size="iconSize"
       />
-      <div class="text-caption text-center">
+      <div class="text-body-small text-center">
         {{ t('common.damImage.upload.done') }}
       </div>
     </div>

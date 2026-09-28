@@ -1,27 +1,54 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 import ASystemBarNewVersion from '@/components/systemBar/ASystemBarNewVersion.vue'
 import { isUndefined } from '@/utils/common'
-import { AnzuNewVersionFetchError } from '@/model/error/AnzuNewVersionFetchError'
+import {
+  AnzuNewVersionFetchError,
+  isAnzuNewVersionFetchError,
+} from '@/model/error/AnzuNewVersionFetchError'
+import { useUserActivity } from '@/composables/useUserActivity'
+import { useSystemBar } from '@/components/systemBar/systemBar'
 
 const props = withDefaults(
   defineProps<{
     currentVersion: string
     checkInterval?: number
     jsonRelativePath?: string
+    minInactiveTime?: number
   }>(),
   {
     checkInterval: 60000,
     jsonRelativePath: 'config.json',
-  }
+    minInactiveTime: 5000,
+  },
 )
 
-const showSystemBar = ref(false)
+const showSystemBar = ref<boolean>(false)
+const abortController = ref<AbortController | null>(null)
+const lastInactiveTime = ref<number>(0)
 
-const checkNewVersion = async () => {
+const CONSECUTIVE_FAILURE_ALERT_THRESHOLD = 5
+let consecutiveFailures = 0
+let alertedForCurrentOutage = false
+
+const { newVersion } = useSystemBar()
+
+const checkNewVersion = async (): Promise<void> => {
+  if (abortController.value) {
+    abortController.value.abort()
+  }
+
+  abortController.value = new AbortController()
+
+  const isAbortError = (error: unknown): error is Error => {
+    return error instanceof Error && error.name === 'AbortError'
+  }
+
   try {
-    const res = await fetch(`/${props.jsonRelativePath}?random=${Date.now()}`)
+    const res = await fetch(`/${props.jsonRelativePath}?random=${Date.now()}`, {
+      signal: abortController.value.signal,
+    })
     if (res.ok) {
       const contentType = res.headers.get('content-type')
       if (!contentType || !contentType.includes('application/json')) {
@@ -31,21 +58,29 @@ const checkNewVersion = async () => {
       if (Object.keys(json).length < 1) {
         throw new AnzuNewVersionFetchError('Unable to load env config. Incorrect response body.')
       }
-      showSystemBar.value = !isUndefined(json.appVersion) && json.appVersion !== props.currentVersion
+      showSystemBar.value =
+        !isUndefined(json.appVersion) && json.appVersion !== props.currentVersion
+      newVersion.value = showSystemBar.value
+      consecutiveFailures = 0
+      alertedForCurrentOutage = false
 
       return
     }
     throw new AnzuNewVersionFetchError('Unable to load env config. Incorrect response code.')
   } catch (error) {
-    if (error instanceof AnzuNewVersionFetchError) {
-      console.log(error.message)
+    if (isAbortError(error)) {
       return
+    }
+    if (isAnzuNewVersionFetchError(error)) {
+      throw error
     }
     if (error instanceof SyntaxError) {
-      console.log('There was a SyntaxError', error)
-      return
+      throw new AnzuNewVersionFetchError('Unable to load env config. Syntax error.', error)
     }
-    console.log('There was an error in new version fetch', error)
+    if (error instanceof Error) {
+      throw new AnzuNewVersionFetchError('Unable to load env config. ' + error.message, error)
+    }
+    throw new AnzuNewVersionFetchError('Unable to load env config. Unknown error.', error as any)
   }
 }
 
@@ -54,24 +89,81 @@ const systemBarComponent = computed(() => {
 })
 
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const { pause } = useIntervalFn(() => {
-  checkNewVersion()
+const { pause, resume } = useIntervalFn(() => {
+  checkNewVersion().catch((error) => {
+    if (isAnzuNewVersionFetchError(error)) {
+      consecutiveFailures++
+      if (consecutiveFailures >= CONSECUTIVE_FAILURE_ALERT_THRESHOLD && !alertedForCurrentOutage) {
+        alertedForCurrentOutage = true
+        // One signal per outage — ops can alert on this; resets on the next successful poll.
+        console.error(
+          `[ASystemBar] Version check failed ${consecutiveFailures} consecutive times:`,
+          error,
+        )
+      }
+      return
+    }
+    console.warn(error)
+  })
 }, props.checkInterval)
 
+const { isWindowActive } = useUserActivity()
+
+const checkNewVersionWithRetry = (attempt = 1, maxAttempts = 3) => {
+  const delay = Math.min(1000 * attempt, 3000) // 1000ms, 2000ms, 3000ms
+
+  setTimeout(async () => {
+    try {
+      await checkNewVersion()
+    } catch (error) {
+      if (
+        error instanceof AnzuNewVersionFetchError &&
+        (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) &&
+        attempt < maxAttempts
+      ) {
+        checkNewVersionWithRetry(attempt + 1, maxAttempts)
+      } else {
+        console.error('Version check failed:', error)
+      }
+    }
+  }, delay)
+}
+
+watch(
+  isWindowActive,
+  (newValue: boolean) => {
+    const now: number = Date.now()
+
+    if (newValue) {
+      const inactiveDuration: number = now - lastInactiveTime.value
+      resume()
+      if (inactiveDuration > props.minInactiveTime) {
+        checkNewVersionWithRetry()
+      }
+    } else {
+      lastInactiveTime.value = now
+      pause()
+    }
+  },
+  { immediate: true },
+)
+
 onBeforeUnmount(() => {
-  pause()
+  if (abortController.value) {
+    abortController.value.abort()
+  }
 })
 </script>
 
 <template>
   <VAppBar
     v-if="showSystemBar"
-    height="24"
-    color="orange accent-3"
+    height="48"
+    color="orange-accent-3"
     elevation="0"
     :order="-1"
   >
-    <div class="text-center w-100 text-caption pb-1">
+    <div class="text-center w-100 text-body-small pb-1">
       <component :is="systemBarComponent" />
     </div>
   </VAppBar>

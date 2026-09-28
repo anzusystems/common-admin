@@ -4,6 +4,9 @@
       "texts": {
         "description": "Popis",
         "source": "Zdroj"
+      },
+      "flags": {
+        "showSource": "Zobraziť zdroj"
       }
     },
     "meta": {
@@ -12,22 +15,53 @@
     "button": {
       "options": "Upraviť obrázok",
       "editAsset": "Upraviť v DAM",
-      "upload": "Nahrať",
+      "upload": "Nahrať obrázok",
       "addFromDam": "Pridať z DAM",
       "replaceFromDam": "Vymeniť z DAM",
       "removeImage": "Odstrániť obrázok"
+    },
+    "help": {
+      "texts": {
+        "description": "Ak prepíšete popis na tomto mieste, nezmeníte ho v úložisku obrázkov."
+      }
+    }
+  },
+  "media": {
+    "model": {
+      "damMedia": {
+        "assetId": "ID assetu",
+        "licenceId": "Licencia",
+        "title": "Titulok",
+        "authorNames": "Autori",
+        "episodeName": "Epizóda",
+        "episodeNumber": "Číslo epizódy",
+        "seriesName": "Podcast"
+      }
+    },
+    "meta": {
+      "edit": "Upraviť médium",
+      "preview": "Náhľad",
+      "notPlayable": "Mediálny obsah sa zatiaľ neprehrá na webe. Skontrolujte distribúciu."
+    },
+    "button": {
+      "remove": "Odstrániť médium",
+      "editInDam": "Upraviť v DAM"
     }
   },
   "queueItem": {
     "edit": "Upraviť v DAM",
     "displayTitle": "Meno originálu",
     "error": "Chyba",
-    "copyAssetId": "Kopírovať asset ID"
+    "copyAssetId": "Kopírovať asset ID",
+    "stillUploadingOrProcessing": "Asset sa stále nahráva alebo spracováva serverom",
+    "removeFromQueue": "Ostrániť z fronty nahrávania?",
+    "errorUnableToCopyToLicence": "Chyba, nie je možné kopírovať assety do licencie"
   },
   "asset": {
     "model": {
       "authors": "Autori",
-      "keywords": "Kľúčové slová"
+      "keywords": "Kľúčové slová",
+      "mainFileSingleUse": "Jednorazová licencia"
     },
     "assetType": {
       "image": "Obrázok",
@@ -69,7 +103,7 @@
       },
       "roi": {
         "title": "Náhľady",
-        "description": "Náhľad obrázku na mobile, počítači alebo v aplikácii.",
+        "description": "Náhľady sú určené pre hlavný obrázok v článku, zoznamy článkov, titulky a rubriky. V tele článku sa zobrazuje formát bez orezania.",
         "refresh": "Znovu načítať náhľady",
         "rotate": {
           "rotateMainFileImage": "Otočenie obrázku (hlavného súboru)",
@@ -116,6 +150,7 @@
     "add": "Pridať do nahrávania",
     "save": "Uložiť a pokračovať",
     "saveAndApply": "Uložiť a použiť",
+    "apply": "Použiť",
     "title": "Nahrávanie",
     "titleDone": "Nahrávanie ukončené",
     "stopConfirmQuestion": "Chcete ukončiť nahrávanie?",
@@ -138,13 +173,17 @@
     },
     "meta": {
       "create": "Vytvoriť kľúčové slovo"
-    }
+    },
+    "filterMinChars": "Zadajte minimálne 2 znaky"
   },
   "author": {
     "model": {
       "name": "Meno",
       "identifier": "Identifikátor",
-      "type": "Typ"
+      "type": "Typ",
+      "flags": {
+        "reviewed": "Schválený"
+      }
     },
     "authorType": {
       "none": "Žiaden",
@@ -158,7 +197,8 @@
     "meta": {
       "create": "Vytvorenie autora"
     },
-    "conflicts": "Konflikt autorov"
+    "conflicts": "Konflikt autorov",
+    "filterMinChars": "Zadajte minimálne 2 znaky"
   },
   "uploadErrors": {
     "unknownError": "Systémova chyba. Skúste neskôr alebo kontaktujte administrátora.",

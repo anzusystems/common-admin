@@ -1,9 +1,11 @@
 import type { IntegerId, IntegerIdNullable } from '@/types/common'
 import type { Permissions } from '@/types/Permission'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { LanguageCode } from '@/composables/languageSettings'
 
-export interface AnzuUserMinimal {
-  id: IntegerId
+export interface BaseUser {
+  id?: IntegerIdNullable
+  email: string
   person: {
     firstName: string
     lastName: string
@@ -13,12 +15,15 @@ export interface AnzuUserMinimal {
     color: string
     text: string
   }
-  email: string
 }
 
-export interface AnzuUser extends AnzuUserAndTimeTrackingAware, Omit<AnzuUserMinimal, 'id'> {
-  id?: IntegerIdNullable
+export interface AnzuUserMinimal extends BaseUser {
+  id: IntegerId
+}
+
+export interface AnzuUser extends AnzuUserAndTimeTrackingAware, BaseUser {
   enabled: boolean
+  locale: LanguageCode | null
   roles: string[]
   permissionGroups: IntegerId[]
   permissions: Permissions

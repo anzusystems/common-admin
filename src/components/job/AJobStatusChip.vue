@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { JobStatus, useJobStatus } from '@/model/valueObject/JobStatus'
+import { type JobStatusType, useJobStatus } from '@/model/valueObject/JobStatus'
 
 const props = defineProps<{
-  value: JobStatus
+  value: JobStatusType
 }>()
 
 const { getJobStatusOption } = useJobStatus()

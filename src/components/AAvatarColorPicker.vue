@@ -18,7 +18,7 @@ const props = withDefaults(
     required: false,
     randomColor: false,
     hideLabel: false,
-  }
+  },
 )
 const emit = defineEmits<{
   (e: 'update:modelValue', data: string): void
@@ -64,7 +64,7 @@ watch(
       emit('update:modelValue', generatedColor.value)
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

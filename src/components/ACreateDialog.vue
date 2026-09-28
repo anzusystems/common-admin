@@ -16,6 +16,7 @@ const props = withDefaults(
     disableRedirect?: boolean
     redirectRouteName?: string | undefined
     redirectParamName?: string
+    disableShowErrorsDefault?: boolean
   }>(),
   {
     buttonClass: '',
@@ -25,7 +26,8 @@ const props = withDefaults(
     disableRedirect: false,
     redirectRouteName: undefined,
     redirectParamName: 'id',
-  }
+    disableShowErrorsDefault: false,
+  },
 )
 
 const emit = defineEmits<{
@@ -48,7 +50,7 @@ const onOpen = () => {
 }
 
 const onClose = () => {
-  modelValue.value = true
+  modelValue.value = false
   emit('onClose')
 }
 
@@ -76,7 +78,9 @@ const onConfirm = async () => {
       })
     }
   } catch (error) {
-    showErrorsDefault(error)
+    if (!props.disableShowErrorsDefault) {
+      showErrorsDefault(error)
+    }
     emit('onError', error)
   } finally {
     buttonLoading.value = false

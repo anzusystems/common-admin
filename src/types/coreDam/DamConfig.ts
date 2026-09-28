@@ -1,4 +1,4 @@
-import type { DamAssetType, DamDistributionServiceName } from '@/types/coreDam/Asset'
+import type { DamDistributionServiceName } from '@/types/coreDam/Asset'
 import type { IntegerId } from '@/types/common'
 
 export interface DamPrvConfig {
@@ -9,8 +9,8 @@ export interface DamPrvConfig {
     [key: string]: {
       title: string
       iconPath: string
-      type: DamDistributionServiceType
-      allowedRedistributeStatuses: Array<DamDistributionStatus>
+      type: DamDistributionServiceTypeType
+      allowedRedistributeStatuses: Array<DamDistributionStatusType>
     }
   }
   colorSet: {
@@ -31,12 +31,12 @@ export interface DamPrvConfig {
   }
 }
 
-export interface DamExtSystemConfig extends Record<DamAssetType, DamExtSystemConfigItem> {
-  assetExternalProviders: DamExternalProviderAssetConfig
-  audio: DamExtSystemConfigItem
-  video: DamExtSystemConfigItem
-  image: DamExtSystemConfigItem
-  document: DamExtSystemConfigItem
+export interface DamExtSystemConfig {
+  assetExternalProviders?: DamExternalProviderAssetConfig
+  audio?: DamExtSystemConfigItem
+  video?: DamExtSystemConfigItem
+  image?: DamExtSystemConfigItemImage
+  document?: DamExtSystemConfigItem
 }
 
 export interface DamConfigLicenceExtSystem {
@@ -52,15 +52,21 @@ export interface DamConfigLicenceExtSystemReturnType {
 }
 
 export interface DamExtSystemConfigItem {
+  enabled: boolean
   sizeLimit: number
-  defaultFileVersion: string
-  versions: Array<string>
+  defaultFileVersion?: string
+  versions?: Array<string>
   mimeTypes: Array<string>
-  distribution: DamDistributionConfig
-  authors: DamExtSystemAssetTypeExifMetadata
-  keywords: DamExtSystemAssetTypeExifMetadata
+  distribution?: DamDistributionConfig
+  authors?: DamExtSystemAssetTypeExifMetadata
+  keywords?: DamExtSystemAssetTypeExifMetadata
   customMetadataPinnedAmount: number
   slots: string[]
+}
+
+export interface DamExtSystemConfigItemImage extends DamExtSystemConfigItem {
+  roiWidth: number
+  roiHeight: number
 }
 
 export type DamExternalProviderAssetConfig = Record<
@@ -83,16 +89,18 @@ export interface DamDistributionRequirementsConfig {
   requiredAuth: boolean
   blockedBy: Array<DamDistributionServiceName>
   categorySelect: DamDistributionRequirementsCategorySelectConfig
-  strategy: DamDistributionRequirementStrategy
+  strategy: DamDistributionRequirementStrategyType
 }
 
-export enum DamDistributionRequirementStrategy {
-  None = 'none',
-  AtLeastOne = 'at_least_one',
-  OneFromType = 'one_from_type',
-  WaitForAll = 'wait_for_all',
-  Default = None,
-}
+export const DamDistributionRequirementStrategy = {
+  None: 'none',
+  AtLeastOne: 'at_least_one',
+  OneFromType: 'one_from_type',
+  WaitForAll: 'wait_for_all',
+} as const
+export type DamDistributionRequirementStrategyType =
+  (typeof DamDistributionRequirementStrategy)[keyof typeof DamDistributionRequirementStrategy]
+export const DamDistributionRequirementStrategyDefault = DamDistributionRequirementStrategy.None
 
 export interface DamDistributionRequirementsCategorySelectConfig {
   enabled: boolean
@@ -104,27 +112,32 @@ export interface DamExtSystemAssetTypeExifMetadata {
   required: boolean
 }
 
-export enum DamDistributionServiceType {
-  Youtube = 'youtubeDistribution',
-  Jw = 'jwDistribution',
-  Custom = 'customDistribution',
-}
+export const DamDistributionServiceType = {
+  Youtube: 'youtubeDistribution',
+  Jw: 'jwDistribution',
+  Custom: 'customDistribution',
+} as const
+export type DamDistributionServiceTypeType =
+  (typeof DamDistributionServiceType)[keyof typeof DamDistributionServiceType]
 
-export enum DamDistributionStatus {
-  Waiting = 'waiting',
-  Distributing = 'distributing',
-  RemoteProcessing = 'remote_processing',
-  Distributed = 'distributed',
-  Failed = 'failed',
-  Default = Waiting,
-}
+export const DamDistributionStatus = {
+  Waiting: 'waiting',
+  Distributing: 'distributing',
+  RemoteProcessing: 'remote_processing',
+  Distributed: 'distributed',
+  Failed: 'failed',
+} as const
+export type DamDistributionStatusType =
+  (typeof DamDistributionStatus)[keyof typeof DamDistributionStatus]
+export const DamDistributionStatusDefault = DamDistributionStatus.Waiting
 
 export interface DamPubConfig {
-  userAuthType: UserAuthType
+  userAuthType: UserAuthTypeType
 }
 
-export enum UserAuthType {
-  JsonCredentials = 'json_credentials',
-  OAuth2 = 'oauth2',
-  Default = JsonCredentials,
-}
+export const UserAuthType = {
+  JsonCredentials: 'json_credentials',
+  OAuth2: 'oauth2',
+} as const
+export type UserAuthTypeType = (typeof UserAuthType)[keyof typeof UserAuthType]
+export const UserAuthTypeDefault = UserAuthType.JsonCredentials

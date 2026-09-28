@@ -1,6 +1,7 @@
 import ABooleanValue from '@/components/ABooleanValue.vue'
 import ARow from '@/components/ARow.vue'
 import AAlerts from '@/components/AAlerts.vue'
+import AProgress from '@/components/AProgress.vue'
 import ACard from '@/components/ACard.vue'
 import ACardLoader from '@/components/ACardLoader.vue'
 import AFormTextField from '@/components/form/AFormTextField.vue'
@@ -34,6 +35,7 @@ import AFormRemoteSwitch from '@/components/form/AFormRemoteSwitch.vue'
 import AFormValueObjectOptionsSelect from '@/components/form/AFormValueObjectOptionsSelect.vue'
 import AFilterValueObjectOptionsSelect from '@/components/filter/AFilterValueObjectOptionsSelect.vue'
 import AFilterRemoteAutocomplete from '@/components/filter/AFilterRemoteAutocomplete.vue'
+import AFilterRemoteAutocompleteWithMinimal from '@/components/filter/AFilterRemoteAutocompleteWithMinimal.vue'
 import AFilterBooleanGroup from '@/components/filter/AFilterBooleanGroup.vue'
 import AFilterBooleanSelect from '@/components/filter/AFilterBooleanSelect.vue'
 import AJobStatusChip from '@/components/job/AJobStatusChip.vue'
@@ -47,6 +49,7 @@ import ACollabCountdown from '@/components/collab/components/ACollabCountdown.vu
 import ACollabManagement from '@/components/collab/components/ACollabManagement.vue'
 import AUserAndTimeTrackingFields from '@/components/AUserAndTimeTrackingFields.vue'
 import AActionCloseButton from '@/components/buttons/action/AActionCloseButton.vue'
+import AActionCloseButtonHistory from '@/components/buttons/action/AActionCloseButtonHistory.vue'
 import AActionCreateButton from '@/components/buttons/action/AActionCreateButton.vue'
 import AActionDeleteButton from '@/components/buttons/action/AActionDeleteButton.vue'
 import AActionEditButton from '@/components/buttons/action/AActionEditButton.vue'
@@ -70,23 +73,39 @@ import ALoginView from '@/components/view/ALoginView.vue'
 import ALogoutView from '@/components/view/ALogoutView.vue'
 import AUnauthorizedView from '@/components/view/AUnauthorizedView.vue'
 import ANotFoundView from '@/components/view/ANotFoundView.vue'
+import AGenericView from '@/components/view/AGenericView.vue'
 import AJobDetailCommon from '@/components/job/AJobDetailCommon.vue'
 import AJobPriorityChip from '@/components/job/AJobPriorityChip.vue'
 import AJobBaseCreateForm from '@/components/job/AJobBaseCreateForm.vue'
+import AFileInput from '@/components/file/AFileInput.vue'
 import AAssetSelect from '@/components/dam/assetSelect/AAssetSelect.vue'
+import AAssetList from '@/components/dam/assetSelect/AAssetList.vue'
+import AAssetListInner from '@/components/dam/assetSelect/AAssetListInner.vue'
 import ASortable from '@/components/sortable/ASortable.vue'
 import ASortableNested from '@/components/sortable/ASortableNested.vue'
 import ASubjectSelect from '@/components/subjectSelect/ASubjectSelect.vue'
 import ACustomDataForm from '@/components/customDataForm/ACustomDataForm.vue'
 import ACustomDataFormElement from '@/components/customDataForm/ACustomDataFormElement.vue'
 import AImageWidget from '@/components/damImage/AImageWidget.vue'
+import AImageWidgetInner from '@/components/damImage/uploadQueue/components/ImageWidgetInner.vue'
+import AImageMediaWidget from '@/components/damImage/AImageMediaWidget.vue'
 import AImageWidgetSimple from '@/components/damImage/AImageWidgetSimple.vue'
+import AMediaWidgetSimple from '@/components/damImage/AMediaWidgetSimple.vue'
 import AImageWidgetMultiple from '@/components/damImage/AImageWidgetMultiple.vue'
+import AImageWidgetMultipleInner from '@/components/damImage/uploadQueue/components/ImageWidgetMultipleInner.vue'
 import AImageWidgetMultipleSimple from '@/components/damImage/AImageWidgetMultipleSimple.vue'
+import ImageMassOperations from '@/components/damImage/uploadQueue/components/ImageMassOperations.vue'
 import AImagePublicInput from '@/components/damImage/AImagePublicInput.vue'
 import ACropperjs from '@/components/ACropperjs.vue'
+import DamAssetImageRoiSelect from '@/components/damImage/uploadQueue/components/DamAssetImageRoiSelect.vue'
+import type { ACropperjsExposed } from '@/components/damImage/uploadQueue/composables/cropperJsService'
+import {
+  cropToRegion,
+  regionToCrop,
+} from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import ADatatable from '@/components/datatable/ADatatable.vue'
 import ABooleanSelect from '@/components/ABooleanSelect.vue'
+import ACachedUserChip from '@/components/ACachedUserChip.vue'
 import { useSubjectSelect } from '@/components/subjectSelect/useSubjectSelect'
 import { useCustomDataForm } from '@/components/customDataForm/useCustomDataForm'
 import {
@@ -96,7 +115,7 @@ import {
   useCustomDataFormElementType,
 } from '@/components/customDataForm/CustomDataFormElementTypes'
 import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
-import { i18n } from '@/plugins/i18n'
+import { i18n, slovakPluralizationRule } from '@/plugins/i18n'
 import {
   type Immutable,
   objectDeepFreeze,
@@ -134,8 +153,10 @@ import {
   stringTrimLength,
   stringUrlTemplateReplace,
   stringUrlTemplateReplaceVueRouter,
+  stringToBooleanExact,
 } from '@/utils/string'
 import { booleanToInteger } from '@/utils/boolean'
+import { isOneOf } from '@/utils/enum'
 import {
   dateDiff,
   dateModifyMinutes,
@@ -154,9 +175,15 @@ import {
   timestampCurrent,
   yearNow,
 } from '@/utils/datetime'
-import { Grant, useGrant } from '@/model/valueObject/Grant'
-import { GrantOrigin, useGrantOrigin } from '@/model/valueObject/GrantOrigin'
+import { Grant, GrantDefault, type GrantType, useGrant } from '@/model/valueObject/Grant'
+import {
+  GrantOrigin,
+  GrantOriginDefault,
+  type GrantOriginType,
+  useGrantOrigin,
+} from '@/model/valueObject/GrantOrigin'
 import { useAnzuUserFactory } from '@/model/factory/AnzuUserFactory'
+import { useBaseUserFactory } from '@/model/factory/BaseUserFactory'
 import { usePermissionConfigFactory } from '@/model/factory/PermissionConfigFactory'
 import { usePermissionGroupFactory } from '@/model/factory/PermissionGroupFactory'
 import type {
@@ -172,7 +199,7 @@ import type { Filter, FilterBag, FilterVariant } from '@/types/Filter'
 import type { Pagination } from '@/types/Pagination'
 import type { OwnerAware } from '@/types/OwnerAware'
 import { isOwnerAware } from '@/types/OwnerAware'
-import type { AnzuUser, AnzuUserMinimal } from '@/types/AnzuUser'
+import type { AnzuUser, AnzuUserMinimal, BaseUser } from '@/types/AnzuUser'
 import type { ValueObjectOption } from '@/types/ValueObject'
 import type { PermissionConfig, PermissionTranslationGroup } from '@/types/PermissionConfig'
 import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
@@ -180,45 +207,67 @@ import type { PermissionGroup, PermissionGroupMinimal } from '@/types/Permission
 import { type CreatedByAware, isCreatedByAware } from '@/types/CreatedByAware'
 import type { VuetifyIconValue } from '@/types/Vuetify'
 import { usePagination, usePaginationAutoHide } from '@/composables/system/pagination'
-import { makeFilterHelper, type MakeFilterOptions, useFilterHelpers } from '@/composables/filter/filterHelpers'
+import { useDatatablePageStore } from '@/composables/system/datatablePageStore'
+import { useRouteHistory } from '@/composables/system/routeHistory'
+import {
+  makeFilterHelper,
+  type MakeFilterOptions,
+  useFilterHelpers,
+} from '@/composables/filter/filterHelpers'
 import {
   AvailableLanguagesSymbol,
   DefaultLanguageSymbol,
   SubjectScopeSymbol,
   SystemScopeSymbol,
 } from '@/components/injectionKeys'
-import { prettyBytes } from '@/utils/file'
+import { prettyBytes, prettyDuration } from '@/utils/file'
 import { isValidHTTPStatus } from '@/utils/response'
 import {
   HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_CREATED,
   HTTP_STATUS_FORBIDDEN,
   HTTP_STATUS_NO_CONTENT,
+  HTTP_STATUS_NOT_FOUND,
   HTTP_STATUS_OK,
   HTTP_STATUS_UNAUTHORIZED,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
 } from '@/composables/statusCodes'
-import { AnzuApiResponseCodeError, isAnzuApiResponseCodeError } from '@/model/error/AnzuApiResponseCodeError'
+import {
+  AnzuApiResponseCodeError,
+  isAnzuApiResponseCodeError,
+} from '@/model/error/AnzuApiResponseCodeError'
 import {
   AnzuApiValidationError,
   type AnzuApiValidationResponseData,
   axiosErrorResponseHasValidationData,
+  hasAnzuApiValidationErrorSpecific,
   isAnzuApiValidationError,
   type ValidationError,
 } from '@/model/error/AnzuApiValidationError'
+import {
+  AnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+  isAnzuApiDependencyExistsError,
+} from '@/model/error/AnzuApiDependencyExistsError'
 import { AnzuFatalError, isAnzuFatalError } from '@/model/error/AnzuFatalError'
+import { AnzuApiAxiosError, isAnzuApiAxiosError } from '@/model/error/AnzuApiAxiosError'
 import { apiAnyRequest } from '@/services/api/apiAnyRequest'
 import { apiCreateOne } from '@/services/api/apiCreateOne'
 import { apiDeleteOne } from '@/services/api/apiDeleteOne'
 import { apiFetchByIds } from '@/services/api/apiFetchByIds'
-import { apiFetchList } from '@/services/api/apiFetchList'
+import { apiFetchList, apiGenerateListQuery } from '@/services/api/apiFetchList'
 import { apiFetchListBatch } from '@/services/api/apiFetchListBatch'
 import { apiFetchOne } from '@/services/api/apiFetchOne'
 import { apiUpdateOne } from '@/services/api/apiUpdateOne'
 import { useApiQueryBuilder } from '@/services/api/queryBuilder'
 import { NEW_LINE_MARK, type RecordWasType, useAlerts } from '@/composables/system/alerts'
 import { useErrors } from '@/composables/system/error'
-import { JobStatus, useJobStatus } from '@/model/valueObject/JobStatus'
+import {
+  JobStatus,
+  JobStatusDefault,
+  type JobStatusType,
+  useJobStatus,
+} from '@/model/valueObject/JobStatus'
 import type { JobBase, JobUserDataDelete } from '@/types/Job'
 import { useJobApi } from '@/services/api/job/jobApi'
 import {
@@ -226,15 +275,17 @@ import {
   type JobBaseResource,
   useJobBaseResource,
 } from '@/model/valueObject/JobBaseResource'
-import { ROLE_SUPER_ADMIN, useAcl } from '@/composables/system/ability'
 import AnzuSystemsCommonAdmin, {
   type CurrentUserType,
-  type CustomAclResolver,
   type PluginOptions,
 } from '@/AnzuSystemsCommonAdmin'
 import type { AclValue, Permissions } from '@/types/Permission'
 import { Theme, useTheme } from '@/composables/themeSettings'
-import { type LanguageCode, modifyLanguageSettings, useLanguageSettings } from '@/composables/languageSettings'
+import {
+  type LanguageCode,
+  modifyLanguageSettings,
+  useLanguageSettings,
+} from '@/composables/languageSettings'
 import {
   arrayFlatten,
   arrayFromArgs,
@@ -252,7 +303,12 @@ import messagesCs from '@/locales/cs'
 import messagesEn from '@/locales/en'
 import messagesSk from '@/locales/sk'
 import type { Log } from '@/types/Log'
-import { LogLevel, useLogLevel } from '@/model/valueObject/LogLevel'
+import {
+  LogLevel,
+  LogLevelDefault,
+  type LogLevelType,
+  useLogLevel,
+} from '@/model/valueObject/LogLevel'
 import '@/styles/main.scss'
 import { COMMON_CONFIG } from '@/model/commonConfig'
 import { useValidate } from '@/validators/vuelidate/useValidate'
@@ -262,10 +318,16 @@ import {
   type DatatableOrderingOption,
   type DatatableOrderingOptions,
   type DatatableSortBy,
+  SORT_BY_ID,
+  SORT_BY_SCORE,
+  SortOrder,
+  type SortOrderType,
 } from '@/composables/system/datatableColumns'
 import { useCommonVuetifyConfig } from '@/model/commonVuetifyConfig'
 import { type CachedItem, defineCached } from '@/composables/system/defineCached'
-import type { ObjectLeaves, ObjectPaths, Prettify } from '@/types/utils'
+import { useCachedItem } from '@/composables/system/useCachedItem'
+import type { ObjectLeaves, ObjectPaths, Prettify, UniqueValues } from '@/types/utils'
+import { ensureUniqueValues } from '@/types/utils'
 import { loadCommonFonts } from '@/plugins/webfontloader'
 import {
   AnzuApiForbiddenError,
@@ -280,7 +342,7 @@ import {
 import { useCommonJobFactory } from '@/model/factory/JobFactory'
 import type { UrlParams } from '@/services/api/apiHelper'
 import { generateUUIDv1, generateUUIDv4 } from '@/utils/generator'
-import { useLoginStatus } from '@/composables/system/loginStatus'
+import { localTimeShiftInSeconds, useLoginStatus } from '@/composables/system/loginStatus'
 import { useRemainingTime } from '@/composables/datetime/remainingTime'
 import {
   type AssetCustomData,
@@ -290,7 +352,11 @@ import {
   type AssetMetadataSuggestions,
   type AssetSearchListItemDto,
   DamAssetStatus,
+  DamAssetStatusDefault,
+  type DamAssetStatusType,
   DamAssetType,
+  DamAssetTypeDefault,
+  type DamAssetTypeType,
   type DamDistributionServiceName,
 } from '@/types/coreDam/Asset'
 import {
@@ -299,6 +365,7 @@ import {
   type AssetFileDocument,
   type AssetFileDownloadLink,
   AssetFileFailReason,
+  type AssetFileFailReasonType,
   type AssetFileImage,
   type AssetFileImagePreviewNullable,
   assetFileIsAudioFile,
@@ -308,11 +375,15 @@ import {
   type AssetFileLink,
   type AssetFileLinks,
   AssetFileLinkType,
+  type AssetFileLinkTypeType,
   type AssetFileMainRouteAware,
   type AssetFileNullable,
   AssetFileProcessStatus,
+  type AssetFileProcessStatusType,
   type AssetFileRoute,
-  type AssetFileRouteStatus,
+  AssetFileRouteStatus,
+  AssetFileRouteStatusDefault,
+  type AssetFileRouteStatusType,
   type AssetFileVideo,
 } from '@/types/coreDam/AssetFile'
 import {
@@ -320,33 +391,50 @@ import {
   type UploadQueue,
   type UploadQueueItem,
   UploadQueueItemStatus,
+  type UploadQueueItemStatusType,
   UploadQueueItemType,
+  type UploadQueueItemTypeType,
 } from '@/types/coreDam/UploadQueue'
 import type {
   CustomDataAware,
   CustomDataFormElement,
   CustomDataFormElementAttributes,
+  CustomDataValue,
 } from '@/components/customDataForm/CustomDataForm'
 import type { AssetSelectReturnData } from '@/types/coreDam/AssetSelect'
 import type { SortableItem, SortablePropItem } from '@/components/sortable/sortableActions'
-import type { SortableNested, SortableNestedItem } from '@/components/sortable/sortableNestedActions'
-import type { SortableItemDataAware, SortableItemWithParentDataAware } from '@/components/sortable/sortableUtils'
+import type {
+  SortableNested,
+  SortableNestedItem,
+} from '@/components/sortable/sortableNestedActions'
+import type {
+  SortableItemDataAware,
+  SortableItemWithParentDataAware,
+} from '@/components/sortable/sortableUtils'
 import { useDamConfigState } from '@/components/damImage/uploadQueue/composables/damConfigState'
 import {
   type DamDistributionConfig,
   type DamDistributionRequirementsCategorySelectConfig,
   type DamDistributionRequirementsConfig,
   DamDistributionRequirementStrategy,
+  DamDistributionRequirementStrategyDefault,
+  type DamDistributionRequirementStrategyType,
   DamDistributionServiceType,
+  type DamDistributionServiceTypeType,
   DamDistributionStatus,
+  DamDistributionStatusDefault,
+  type DamDistributionStatusType,
   type DamExternalProviderAssetConfig,
   type DamExternalProviderAssetName,
   type DamExtSystemAssetTypeExifMetadata,
   type DamExtSystemConfig,
   type DamExtSystemConfigItem,
+  type DamExtSystemConfigItemImage,
   type DamPrvConfig,
   type DamPubConfig,
   UserAuthType,
+  UserAuthTypeDefault,
+  type UserAuthTypeType,
 } from '@/types/coreDam/DamConfig'
 import { useUploadQueueItemFactory } from '@/components/damImage/uploadQueue/composables/UploadQueueItemFactory'
 import { getAssetTypeByMimeType } from '@/components/damImage/uploadQueue/composables/mimeTypeHelper'
@@ -368,21 +456,28 @@ import type {
   ImageCreateUpdateAware,
   ImageCreateUpdateAwareKeyed,
 } from '@/types/ImageAware'
-import type { DamAuthor, DamAuthorMinimal } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import type { DamKeyword, DamKeywordMinimal } from '@/components/damImage/uploadQueue/keyword/DamKeyword'
-import type { DamExtSystem, DamExtSystemMinimal } from '@/components/damImage/uploadQueue/composables/DamExtSystem'
-import { DamAuthorType, useDamAuthorType } from '@/components/damImage/uploadQueue/author/DamAuthorType'
+import type {
+  DamAuthor,
+  DamAuthorMinimal,
+} from '@/components/damImage/uploadQueue/author/DamAuthor'
+import type {
+  DamKeyword,
+  DamKeywordMinimal,
+} from '@/components/damImage/uploadQueue/keyword/DamKeyword'
+import type {
+  DamExtSystem,
+  DamExtSystemMinimal,
+} from '@/components/damImage/uploadQueue/composables/DamExtSystem'
+import {
+  DamAuthorType,
+  DamAuthorTypeDefault,
+  type DamAuthorTypeType,
+  useDamAuthorType,
+} from '@/components/damImage/uploadQueue/author/DamAuthorType'
 import { useDamKeywordFactory } from '@/components/damImage/uploadQueue/keyword/KeywordFactory'
 import { useDamAuthorFactory } from '@/components/damImage/uploadQueue/author/AuthorFactory'
-import { cropToRegion, regionToCrop } from '@/components/damImage/uploadQueue/composables/cropperJsService'
 import type { DamCurrentUserDto } from '@/types/coreDam/DamCurrentUser'
 import { fetchDamCurrentUser } from '@/components/damImage/uploadQueue/api/damCurrentUserApi'
-import {
-  damCurrentUser,
-  damCurrentUserIsSuperAdmin,
-  updateDamCurrentUser,
-  useDamCurrentUser,
-} from '@/components/damImage/composables/damCurrentUser'
 import type { DamAssetLicence, DamAssetLicenceMinimal } from '@/types/coreDam/AssetLicence'
 import type { DamAssetLicenceGroup } from '@/types/coreDam/AssetLicenceGroup'
 import { useCollabInit } from '@/components/collab/composables/collabInit'
@@ -410,6 +505,7 @@ import {
   type CollabGatheringBufferDataEvent,
   type CollabJoinRequestEvent,
   type CollabKickedFromRoomEvent,
+  type CollabPurgeRoomEvent,
   type CollabRejectedJoinRequestEvent,
   type CollabRejectedRequestToTakeModerationEvent,
   type CollabRequestToTakeModerationEvent,
@@ -422,6 +518,7 @@ import {
   useCollabGatheringBufferDataEventBus,
   useCollabJoinRequestEventBus,
   useCollabKickedFromRoomEventBus,
+  useCollabPurgeRoomEventBus,
   useCollabReconnectEventBus,
   useCollabRejectedJoinRequestEventBus,
   useCollabRejectedRequestToTakeModerationEventBus,
@@ -481,19 +578,81 @@ import DamExtSystemRemoteAutocomplete from '@/components/dam/user/DamExtSystemRe
 import DamExternalProviderAssetSelect from '@/components/dam/user/DamExternalProviderAssetSelect.vue'
 import DamDistributionServiceSelect from '@/components/dam/user/DamDistributionServiceSelect.vue'
 import { useDamDistributionServiceType } from '@/components/dam/user/DamDistributionServiceType'
-import { useDamAssetLicenceFilter } from '@/components/dam/user/AssetLicenceFilter'
-import { fetchDamAssetLicenceList, fetchDamAssetLicenceListByIds } from '@/components/dam/user/assetLicenceApi'
-import { fetchDamAssetLicenceGroupList, fetchDamAssetLicenceGroupListByIds } from '@/components/dam/user/assetLicenceGroupApi'
-import { fetchDamExtSystemList, fetchDamExtSystemListByIds } from '@/components/dam/user/extSystemApi'
+import {
+  useDamAssetLicenceInnerFilter,
+  useDamAssetLicenceFilter,
+} from '@/components/dam/user/AssetLicenceFilter'
+import {
+  fetchDamAssetLicenceListByIds,
+  useFetchDamAssetLicenceList,
+  fetchDamAssetLicenceList,
+} from '@/components/dam/user/assetLicenceApi'
+import {
+  fetchDamAssetLicenceGroupListByIds,
+  useFetchDamAssetLicenceGroupList,
+  fetchDamAssetLicenceGroupList,
+} from '@/components/dam/user/assetLicenceGroupApi'
+import {
+  fetchDamExtSystemListByIds,
+  useFetchDamExtSystemList,
+  fetchDamExtSystemList,
+} from '@/components/dam/user/extSystemApi'
 import type { DamUser, DamUserUpdateDto } from '@/components/dam/user/DamUser'
-import { fetchDamUser, fetchDamUserList, fetchDamUserListByIds, updateDamUser } from '@/components/dam/user/userApi'
+import {
+  fetchDamUser,
+  fetchDamUserListByIds,
+  updateDamUser,
+  useFetchDamUserList,
+  fetchDamUserList,
+} from '@/components/dam/user/userApi'
 import { useImageActions } from '@/components/damImage/composables/imageActions'
 import { useCommonAdminImageOptions } from '@/components/damImage/composables/commonAdminImageOptions'
+import { defineAuth, ROLE_SUPER_ADMIN } from '@/composables/auth/defineAuth'
+import {
+  type BreadcrumbItem,
+  type Breadcrumbs,
+  defineBreadcrumbs,
+} from '@/composables/system/breadcrumbs'
+import { useDamConfigStore } from '@/components/damImage/uploadQueue/composables/damConfigStore'
+import DamAuthorFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocomplete.vue'
+import DamAuthorFilterRemoteAutocompleteLegacy from '@/components/damImage/uploadQueue/author/DamAuthorFilterRemoteAutocompleteLegacy.vue'
+import DamKeywordFilterRemoteAutocomplete from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocomplete.vue'
+import DamKeywordFilterRemoteAutocompleteLegacy from '@/components/damImage/uploadQueue/keyword/DamKeywordFilterRemoteAutocompleteLegacy.vue'
+import DamUserFilterRemoteAutocomplete from '@/components/dam/user/DamUserFilterRemoteAutocomplete.vue'
+import DamUserFilterRemoteAutocompleteLegacy from '@/components/dam/user/DamUserFilterRemoteAutocompleteLegacy.vue'
+import DamAdminAssetLink from '@/components/dam/DamAdminAssetLink.vue'
+import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
+import { useImageStore } from '@/components/damImage/uploadQueue/composables/imageStore'
+import {
+  isImageCreateUpdateAware,
+  isMediaAware,
+} from '@/components/damImage/uploadQueue/composables/imageMediaWidgetStore'
+import type { DamMedia, DamMediaFromDam, MediaAware } from '@/types/MediaAware'
+import { useUnreleasedFeatures } from '@/composables/useUnreleasedFeatures'
+import { useSentry } from '@/services/sentry'
+import { useUserActivity } from '@/composables/useUserActivity'
+import { useSystemBar } from '@/components/systemBar/systemBar'
+import { fetchAssetAndCheckForSingleUseByFileIds } from '@/components/damImage/uploadQueue/api/damfetchAssetListByFileIdsMultipleLicences'
+import {
+  fetchAsset,
+  fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
+} from '@/components/damImage/uploadQueue/api/damAssetApi'
+import type { UploadQueueKey } from '@/types/coreDam/UploadQueue'
+import type { DamConfigLicenceExtSystemReturnType } from '@/types/coreDam/DamConfig'
+import { ImageWidgetUploadConfig } from '@/components/damImage/composables/imageWidgetInkectionKeys'
+import {
+  mapUploadMetadataToImages,
+  type UploadMetadataToImageMapFn,
+  type UploadMetadataToImageMapItem,
+  type AssetSelectMetadataToImageMapFn,
+} from '@/components/damImage/uploadQueue/composables/metadataToImageMap'
 
 export {
   // COMPONENTS
   ACard,
   ACardLoader,
+  AProgress,
   ARow,
   AChipNoLink,
   AAlerts,
@@ -514,6 +673,7 @@ export {
   AFilterString,
   AFilterInteger,
   AFilterRemoteAutocomplete,
+  AFilterRemoteAutocompleteWithMinimal,
   AFilterValueObjectOptionsSelect,
   AFilterBooleanGroup,
   AFilterBooleanSelect,
@@ -528,6 +688,7 @@ export {
   ALogData,
   AJobStatusChip,
   ACachedChip,
+  ACachedUserChip,
   AAdminSwitcher,
   AEmptyRouterView,
   ATimeTrackingFields,
@@ -536,6 +697,7 @@ export {
   AIconGroup,
   AUserAndTimeTrackingFields,
   AActionCloseButton,
+  AActionCloseButtonHistory,
   AActionCreateButton,
   AActionDeleteButton,
   AActionEditButton,
@@ -566,15 +728,25 @@ export {
   ACustomDataForm,
   ACustomDataFormElement,
   AImageWidget,
+  AImageWidgetInner,
+  AImageMediaWidget,
   AImageWidgetSimple,
+  AMediaWidgetSimple,
   AImageWidgetMultiple,
+  AImageWidgetMultipleInner,
   AImageWidgetMultipleSimple,
+  ImageMassOperations,
   AImagePublicInput,
   ACropperjs,
+  type ACropperjsExposed,
+  DamAssetImageRoiSelect,
   ACollabLockedByUser,
   ACollabCountdown,
   ACollabManagement,
+  AFileInput,
   AAssetSelect,
+  AAssetList,
+  AAssetListInner,
   ADatatable,
   ABooleanSelect,
   DamExtSystemRemoteAutocomplete,
@@ -582,16 +754,26 @@ export {
   DamDistributionServiceSelect,
   DamAssetLicenceRemoteAutocomplete,
   DamAssetLicenceGroupRemoteAutocomplete,
+  DamAuthorFilterRemoteAutocomplete,
+  DamAuthorFilterRemoteAutocompleteLegacy,
+  DamKeywordFilterRemoteAutocomplete,
+  DamKeywordFilterRemoteAutocompleteLegacy,
+  DamUserFilterRemoteAutocomplete,
+  DamUserFilterRemoteAutocompleteLegacy,
+  DamAdminAssetLink,
 
   // VIEWS
   ALoginView,
   ALogoutView,
   AUnauthorizedView,
   ANotFoundView,
+  AGenericView,
 
   // COMPOSABLES
   usePagination,
   usePaginationAutoHide,
+  useDatatablePageStore,
+  useRouteHistory,
   useFilterHelpers,
   makeFilterHelper,
   useRemainingTime,
@@ -600,6 +782,7 @@ export {
   createDatatableColumnsConfig,
   useTheme,
   defineCached,
+  useCachedItem,
   Theme,
   useLanguageSettings,
   modifyLanguageSettings,
@@ -619,19 +802,30 @@ export {
   useDamKeywordFactory,
   useDamAuthorFactory,
   useDamAuthorType,
-  useDamCurrentUser,
-  updateDamCurrentUser,
   useDamDistributionServiceType,
+  useDamAssetLicenceInnerFilter,
   useDamAssetLicenceFilter,
   useImageActions,
   useCommonAdminImageOptions,
+  defineAuth,
+  defineBreadcrumbs,
+  useDamCachedUsers,
+  useUnreleasedFeatures,
+  useSentry,
+  useUserActivity,
 
   // VALUE OBJECTS
+  type GrantType,
   Grant,
+  GrantDefault,
   useGrant,
+  type GrantOriginType,
   GrantOrigin,
+  GrantOriginDefault,
   useGrantOrigin,
   LogLevel,
+  type LogLevelType,
+  LogLevelDefault,
   useLogLevel,
 
   // TYPES
@@ -642,6 +836,7 @@ export {
   type DatetimeUTCNullable,
   type DatetimeUTC,
   type AnzuUser,
+  type BaseUser,
   type AnzuUserMinimal,
   type AnzuUserAndTimeTrackingAware,
   type ValueObjectOption,
@@ -663,12 +858,13 @@ export {
   type JobUserDataDelete,
   JOB_RESOURCE_USER_DATA_DELETE,
   JobStatus,
+  JobStatusDefault,
+  type JobStatusType,
   type JobBaseResource,
   useCommonJobFactory,
   type CurrentUserType,
   type AclValue,
   type Permissions,
-  type CustomAclResolver,
   type PluginOptions,
   type LanguageCode,
   type Immutable,
@@ -680,9 +876,12 @@ export {
   type DatatableOrderingOption,
   type DatatableOrderingOptions,
   type DatatableSortBy,
+  type SortOrderType,
   type ObjectPaths,
   type ObjectLeaves,
   type Prettify,
+  type UniqueValues,
+  ensureUniqueValues,
   type EnableDisable,
   type CachedItem,
   type RecordWasType,
@@ -701,8 +900,11 @@ export {
   type AssetCustomData,
   type AssetMetadataSuggestions,
   AssetFileFailReason,
+  type AssetFileFailReasonType,
   AssetFileProcessStatus,
+  type AssetFileProcessStatusType,
   AssetFileLinkType,
+  type AssetFileLinkTypeType,
   type AssetFile,
   type AssetFileDocument,
   type AssetFileVideo,
@@ -712,7 +914,9 @@ export {
   type AssetFileLink,
   type AssetFileLinks,
   type AssetFileRoute,
-  type AssetFileRouteStatus,
+  AssetFileRouteStatus,
+  AssetFileRouteStatusDefault,
+  type AssetFileRouteStatusType,
   type AssetFileMainRouteAware,
   type AssetFileDownloadLink,
   type AssetFileImagePreviewNullable,
@@ -723,41 +927,67 @@ export {
   type UploadQueue,
   type UploadQueueItem,
   UploadQueueItemStatus,
+  type UploadQueueItemStatusType,
   UploadQueueItemType,
+  type UploadQueueItemTypeType,
   type CustomDataAware,
+  type CustomDataValue,
   type CustomDataFormElement,
   type CustomDataFormElementAttributes,
   CustomDataFormElementType,
   CustomDataFormElementTypeDefault,
   type CustomDataFormElementTypeType,
   DamAssetType,
+  DamAssetTypeDefault,
+  type DamAssetTypeType,
   DamAssetStatus,
+  DamAssetStatusDefault,
+  type DamAssetStatusType,
   type DamPubConfig,
   type DamPrvConfig,
   type DamExtSystemConfig,
   type DamDistributionServiceName,
   type DamExtSystemConfigItem,
+  type DamExtSystemConfigItemImage,
   type DamExternalProviderAssetConfig,
   type DamExternalProviderAssetName,
   type DamDistributionConfig,
   type DamDistributionRequirementsConfig,
   DamDistributionRequirementStrategy,
+  DamDistributionRequirementStrategyDefault,
+  type DamDistributionRequirementStrategyType,
   type DamDistributionRequirementsCategorySelectConfig,
   type DamExtSystemAssetTypeExifMetadata,
   DamDistributionServiceType,
+  type DamDistributionServiceTypeType,
   DamDistributionStatus,
+  DamDistributionStatusDefault,
+  type DamDistributionStatusType,
   UserAuthType,
+  type UserAuthTypeType,
+  UserAuthTypeDefault,
   type DamUploadStartResponse,
   type DamNotificationNameType,
   DamNotificationName,
   type ImageAware,
   type ImageCreateUpdateAware,
   type ImageCreateUpdateAwareKeyed,
+  type UploadMetadataToImageMapFn,
+  type UploadMetadataToImageMapItem,
+  mapUploadMetadataToImages,
+  type AssetSelectMetadataToImageMapFn,
+  isImageCreateUpdateAware,
+  type MediaAware,
+  isMediaAware,
+  type DamMediaFromDam,
+  type DamMedia,
   type DamAuthor,
   type DamAuthorMinimal,
   type DamKeyword,
   type DamKeywordMinimal,
   DamAuthorType,
+  DamAuthorTypeDefault,
+  type DamAuthorTypeType,
   type DamExtSystem,
   type DamExtSystemMinimal,
   type DamCurrentUserDto,
@@ -766,9 +996,14 @@ export {
   type DamAssetLicenceGroup,
   type DamUserUpdateDto,
   type DamUser,
+  type BreadcrumbItem,
+  type Breadcrumbs,
+  type UploadQueueKey,
+  type DamConfigLicenceExtSystemReturnType,
 
   // FACTORIES
   useAnzuUserFactory,
+  useBaseUserFactory,
   usePermissionConfigFactory,
   usePermissionGroupFactory,
 
@@ -806,6 +1041,7 @@ export {
   stringIsValidEmail,
   stringUrlTemplateReplace,
   stringUrlTemplateReplaceVueRouter,
+  stringToBooleanExact,
   // datetime
   DATETIME_MIN,
   DATETIME_MAX,
@@ -825,6 +1061,7 @@ export {
   dateDiff,
   // file
   prettyBytes,
+  prettyDuration,
   // response
   isValidHTTPStatus,
   // number
@@ -846,6 +1083,8 @@ export {
   // generator
   generateUUIDv1,
   generateUUIDv4,
+  // enum
+  isOneOf,
 
   // SERVICES
   apiAnyRequest,
@@ -857,22 +1096,30 @@ export {
   apiFetchOne,
   apiUpdateOne,
   useApiQueryBuilder,
+  apiGenerateListQuery,
   useJobApi,
   useJobBaseResource,
   useJobStatus,
-  useAcl,
   regionToCrop,
   cropToRegion,
   fetchDamAssetLicenceListByIds,
+  useFetchDamAssetLicenceList,
   fetchDamAssetLicenceList,
   fetchDamAssetLicenceGroupListByIds,
+  useFetchDamAssetLicenceGroupList,
   fetchDamAssetLicenceGroupList,
   fetchDamExtSystemListByIds,
+  useFetchDamExtSystemList,
   fetchDamExtSystemList,
   fetchDamUserListByIds,
+  useFetchDamUserList,
   fetchDamUserList,
   updateDamUser,
   fetchDamUser,
+  fetchAssetAndCheckForSingleUseByFileIds,
+  fetchAsset,
+  fetchAssetAsCmsMedia,
+  fetchAssetByFileId,
 
   // TRANSLATIONS
   messagesCs,
@@ -890,10 +1137,15 @@ export {
   HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_UNAUTHORIZED,
   HTTP_STATUS_FORBIDDEN,
+  HTTP_STATUS_NOT_FOUND,
   HTTP_STATUS_UNPROCESSABLE_ENTITY,
   ROLE_SUPER_ADMIN,
   NEW_LINE_MARK,
   COMMON_CONFIG,
+  SORT_BY_SCORE,
+  SORT_BY_ID,
+  SortOrder,
+  ImageWidgetUploadConfig,
 
   // VALIDATIONS
   useValidate,
@@ -917,6 +1169,7 @@ export {
   type CollabApprovedRequestToTakeModerationEvent,
   type CollabRejectedRequestToTakeModerationEvent,
   type CollabKickedFromRoomEvent,
+  type CollabPurgeRoomEvent,
   useCollabRoomDataChangeEventBus,
   useCollabReconnectEventBus,
   useCollabStartingEventBus,
@@ -928,6 +1181,7 @@ export {
   useCollabRejectedRequestToTakeModerationEventBus,
   useCollabRequestToTakeModerationEventBus,
   useCollabKickedFromRoomEventBus,
+  useCollabPurgeRoomEventBus,
   CollabFieldLockType,
   type CollabFieldLockTypeType,
   CollabFieldLockStatus,
@@ -984,8 +1238,13 @@ export {
   COLLAB_FIELD_PREFIX_EMBED,
   COLLAB_FIELD_PREFIX_COMMENT,
 
+  //  STORES
+  useDamConfigStore,
+  useImageStore,
+
   // OTHER
   i18n,
+  slovakPluralizationRule,
   useI18n,
   isAnzuApiForbiddenError,
   axiosErrorResponseIsForbidden,
@@ -996,18 +1255,27 @@ export {
   axiosErrorResponseHasForbiddenOperationData,
   AnzuApiForbiddenOperationError,
   isAnzuApiValidationError,
+  hasAnzuApiValidationErrorSpecific,
   axiosErrorResponseHasValidationData,
   AnzuApiValidationError,
   isAnzuFatalError,
   AnzuFatalError,
+  isAnzuApiAxiosError,
+  AnzuApiAxiosError,
   type ValidationError,
   type AnzuApiValidationResponseData,
+  isAnzuApiDependencyExistsError,
+  axiosErrorResponseHasDependencyExistsData,
+  AnzuApiDependencyExistsError,
   AnzuSystemsCommonAdmin,
   useCommonVuetifyConfig,
   loadCommonFonts,
   getAssetTypeByMimeType,
   damFileTypeFix,
   fetchDamCurrentUser,
-  damCurrentUser,
-  damCurrentUserIsSuperAdmin,
+  localTimeShiftInSeconds,
+  useSystemBar,
 }
+
+export { createCachedChip } from '@/components/createCachedChip'
+export type { CreateCachedChipOptions, CachedChipId } from '@/components/createCachedChip'

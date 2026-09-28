@@ -1,0 +1,103 @@
+<script lang="ts" setup>
+import { computed, inject } from 'vue'
+import AFilterWrapper from '@/labs/filters/AFilterWrapper.vue'
+import AFilterString from '@/labs/filters/AFilterString.vue'
+import { FilterConfigKey, FilterDataKey } from '@/labs/filters/filterInjectionKeys'
+import FilterSubjectSiteRemoteAutocomplete from '@/playground/filterView/FilterSubjectSiteRemoteAutocomplete.vue'
+import FilterSubjectAuthorRemoteAutocomplete from '@/playground/filterView/FilterSubjectAuthorRemoteAutocomplete.vue'
+import FilterSubjectRubricRemoteAutocomplete from '@/playground/filterView/FilterSubjectRubricRemoteAutocomplete.vue'
+import FilterSubjectDeskRemoteAutocomplete from '@/playground/filterView/FilterSubjectDeskRemoteAutocomplete.vue'
+import FilterSubjectUserRemoteAutocomplete from '@/playground/filterView/FilterSubjectUserRemoteAutocomplete.vue'
+import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import AFilterValueObjectOptionsSelect from '@/labs/filters/AFilterValueObjectOptionsSelect.vue'
+import {
+  allowedTimeIntervalValuesSubject,
+  useSubjectListActions,
+  useSubjectLockType,
+  useSubjectStatus,
+} from '@/playground/filterView/subjectTools'
+import AFilterTimeInterval from '@/labs/filters/AFilterTimeInterval.vue'
+import { cmsClient } from '@/playground/mock/cmsClient'
+import { isUndefined } from '@/utils/common'
+
+const emit = defineEmits<{
+  (e: 'submit'): void
+  (e: 'reset'): void
+}>()
+
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+if (isUndefined(filterConfig) || isUndefined(filterData)) {
+  throw new Error('Incorrect provide/inject config.')
+}
+
+const siteId = computed(() => {
+  return filterData.site as IntegerIdNullable | IntegerId[]
+})
+
+const { subjectStatusOptions } = useSubjectStatus()
+const { subjectLockTypeOptions } = useSubjectLockType()
+const { datatableHiddenColumns } = useSubjectListActions()
+</script>
+
+<template>
+  {{ filterData }}
+  <AFilterWrapper
+    v-model:datatable-hidden-columns="datatableHiddenColumns"
+    :client="cmsClient"
+    system="cms"
+    :user-id="10001039"
+    bookmark-system-resource="subject"
+    @submit="emit('submit')"
+    @reset="emit('reset')"
+    @bookmark-load-after="emit('submit')"
+  >
+    <template #search>
+      <AFilterString name="text" />
+    </template>
+    <template #item.status>
+      <AFilterValueObjectOptionsSelect
+        name="status"
+        :items="subjectStatusOptions"
+      />
+    </template>
+    <template #item.lockType>
+      <AFilterValueObjectOptionsSelect
+        name="lockType"
+        :items="subjectLockTypeOptions"
+      />
+    </template>
+    <template #item.site>
+      <FilterSubjectSiteRemoteAutocomplete name="site" />
+    </template>
+    <template #item.rubric>
+      <FilterSubjectRubricRemoteAutocomplete
+        name="rubric"
+        :site-id="siteId"
+      />
+    </template>
+    <template #item.articleAuthors>
+      <FilterSubjectAuthorRemoteAutocomplete name="articleAuthors" />
+    </template>
+    <template #item.desks>
+      <FilterSubjectDeskRemoteAutocomplete name="desks" />
+    </template>
+    <template #item.owners>
+      <FilterSubjectUserRemoteAutocomplete name="owners" />
+    </template>
+    <template #item.publicPublishedAtFrom>
+      <AFilterTimeInterval
+        name-from="publicPublishedAtFrom"
+        name-until="publicPublishedAtUntil"
+        :allowed="allowedTimeIntervalValuesSubject"
+      />
+    </template>
+    <template #item.modifiedAtFrom>
+      <AFilterTimeInterval
+        name-from="modifiedAtFrom"
+        name-until="modifiedAtUntil"
+        :allowed="allowedTimeIntervalValuesSubject"
+      />
+    </template>
+  </AFilterWrapper>
+</template>

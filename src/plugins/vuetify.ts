@@ -1,4 +1,4 @@
-import '@mdi/font/scss/materialdesignicons.scss'
+import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import { Intersect } from 'vuetify/directives'

@@ -11,7 +11,7 @@ const props = withDefaults(
     color: null,
     width: 20,
     height: 20,
-  }
+  },
 )
 
 const style = computed(() => {

@@ -1,7 +1,9 @@
 import { reactive, ref } from 'vue'
 // @ts-ignore
 import { makeFilterHelper } from '@/composables/filter/filterHelpers'
+// @ts-ignore
 import type { Pagination } from '@/types/Pagination'
+// @ts-ignore
 import type { FilterBag } from '@/types/Filter'
 // @ts-ignore
 import { useAlerts } from '@/composables/system/alerts'
@@ -120,7 +122,7 @@ export function useLogSystem() {
   }
 }
 
-export const fetchSiteList = (pagination: Pagination, filterBag: FilterBag) => {
+export const fetchSiteList = (_pagination: Pagination, _filterBag: FilterBag) => {
   return Promise.resolve([])
 }
 

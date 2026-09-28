@@ -26,15 +26,23 @@ const props = withDefaults(
     collabRoom: CollabRoom
     cachedUsers: CollabCachedUsersMap | Ref<CollabCachedUsersMap>
     isEdit?: boolean
+    isAllowedToPurgeRoom?: boolean
+    approveRequestBlocked?: boolean
     addToCachedUsers?: ((...args: AddToCachedArgs<IntegerId>) => void) | undefined
     fetchCachedUsers?: (() => Promisify<Promise<any>>) | undefined
   }>(),
   {
     isEdit: false,
+    isAllowedToPurgeRoom: false,
+    approveRequestBlocked: false,
     addToCachedUsers: undefined,
     fetchCachedUsers: undefined,
-  }
+  },
 )
+
+const emit = defineEmits<{
+  (e: 'approvedRequestToJoinCollabRoom'): void
+}>()
 
 const {
   collabRoomInfo,
@@ -51,6 +59,7 @@ const {
   addApprovedRequestToTakeModerationListener,
   addRejectedRequestToTakeModerationListener,
   kickUserFromRoom,
+  purgeRoom,
   transferModeration,
   alertedOccupiedRooms,
   // eslint-disable-next-line vue/no-setup-props-reactivity-loss
@@ -148,11 +157,21 @@ const showModeratorManagementButton = computed(() => {
 })
 
 const showJoinCollaborationDialog = computed(() => {
-  return !props.isEdit && alertedOccupiedRooms.value.has(props.collabRoom) && requestToJoinAccepted.value === null
+  return (
+    !props.isEdit &&
+    alertedOccupiedRooms.value.has(props.collabRoom) &&
+    requestToJoinAccepted.value === null
+  )
+})
+
+const collabUsers = computed(() => {
+  return collabRoomInfo.value.users.filter((user) => user !== collabRoomInfo.value.moderator)
 })
 
 const requestToJoinCollabTimerDone = (userId: number) => {
-  approveRequestsToCollab.value = approveRequestsToCollab.value.filter((request) => request.userId !== userId)
+  approveRequestsToCollab.value = approveRequestsToCollab.value.filter(
+    (request) => request.userId !== userId,
+  )
   selectedIdsToCollab.value = selectedIdsToCollab.value.filter((id) => id !== userId)
 }
 
@@ -189,9 +208,10 @@ const approveRequestToCollaborate = () => {
     approveRequestToJoinCollabRoom(selectedId)
   })
   approveRequestsToCollab.value = approveRequestsToCollab.value.filter(
-    (request) => !selectedIdsToCollab.value.includes(request.userId)
+    (request) => !selectedIdsToCollab.value.includes(request.userId),
   )
   selectedIdsToCollab.value = []
+  emit('approvedRequestToJoinCollabRoom')
 }
 
 const rejectRequestToCollaborate = () => {
@@ -199,7 +219,7 @@ const rejectRequestToCollaborate = () => {
     rejectRequestToJoinCollabRoom(selectedId)
   })
   approveRequestsToCollab.value = approveRequestsToCollab.value.filter(
-    (request) => !selectedIdsToCollab.value.includes(request.userId)
+    (request) => !selectedIdsToCollab.value.includes(request.userId),
   )
   selectedIdsToCollab.value = []
 }
@@ -229,6 +249,10 @@ const kickUserAction = (userId: CollabUserId) => {
   moderatorManagementDialog.value = false
 }
 
+const purgeRoomAction = () => {
+  purgeRoom()
+}
+
 const kickYourselfAction = () => {
   kickUserFromRoom(currentUserId.value ?? 0)
 }
@@ -240,23 +264,29 @@ const calculateWaitingSeconds = (timestamp: number) => {
 
 <template>
   <div>
-    moderator:
     <ACollabLockedByUser
       v-if="collabRoomInfo.moderator"
       :id="collabRoomInfo.moderator"
       :key="collabRoomInfo.moderator"
       :users="cachedUsers"
+      is-moderator
     />
-    users:
+    <VDivider
+      class="ml-2 mr-1"
+      style="height: 16px"
+      vertical
+    />
     <ACollabLockedByUser
-      v-for="userId in collabRoomInfo.users.filter((user) => user !== collabRoomInfo.moderator)"
+      v-for="userId in collabUsers"
       :id="userId"
       :key="userId"
       :users="cachedUsers"
+      class="mx-1"
     />
     <VDivider
-      class="mx-2"
-      inset
+      v-if="collabUsers.length > 0"
+      class="ml-1 mr-2"
+      style="height: 16px"
       vertical
     />
     <ABtnSecondary
@@ -345,7 +375,7 @@ const calculateWaitingSeconds = (timestamp: number) => {
             {{ t('common.collab.button.reject') }}
           </ABtnTertiary>
           <ABtnPrimary
-            :disabled="!selectedIdsToCollab.length"
+            :disabled="!selectedIdsToCollab.length || approveRequestBlocked"
             @click.stop="approveRequestToCollaborate"
           >
             {{ t('common.collab.button.accept') }}
@@ -420,6 +450,23 @@ const calculateWaitingSeconds = (timestamp: number) => {
     >
       {{ t('common.collab.button.kickYourself') }}
     </ABtnTertiary>
+    <VMenu v-if="isAllowedToPurgeRoom">
+      <template #activator="{ props: moreProps }">
+        <VBtn
+          v-tooltip="t('common.collab.button.more')"
+          variant="text"
+          size="small"
+          icon="mdi-dots-horizontal"
+          v-bind="moreProps"
+        />
+      </template>
+      <VList>
+        <VListItem
+          :title="t('common.collab.button.purgeCollabRoom')"
+          @click.stop="purgeRoomAction"
+        />
+      </VList>
+    </VMenu>
     <VDialog
       v-if="moderationRequest"
       v-model="approveRequestTakeModerationDialog"
@@ -449,7 +496,10 @@ const calculateWaitingSeconds = (timestamp: number) => {
           <ABtnTertiary @click="rejectRequestToTakeModerationAction">
             {{ t('common.collab.button.reject') }}
           </ABtnTertiary>
-          <ABtnPrimary @click.stop="approveRequestToTakeModerationAction">
+          <ABtnPrimary
+            :disabled="approveRequestBlocked"
+            @click.stop="approveRequestToTakeModerationAction"
+          >
             {{ t('common.collab.button.accept') }}
             <ACollabCountdown
               parentheses

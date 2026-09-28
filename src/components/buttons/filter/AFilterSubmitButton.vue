@@ -14,18 +14,19 @@ withDefaults(
     buttonClass: '',
     dataCy: 'filter-submit',
     touched: true,
-  }
+  },
 )
+
 const emit = defineEmits<{
   (e: 'submit'): void
 }>()
+
+const { t } = useI18n()
 
 const onClick = (event: Event) => {
   eventClickBlur(event)
   emit('submit')
 }
-
-const { t } = useI18n()
 </script>
 
 <template>
@@ -35,7 +36,7 @@ const { t } = useI18n()
     color="primary"
     type="submit"
     :variant="touched ? 'flat' : 'text'"
-    @click.stop="onClick"
+    @click="onClick"
   >
     {{ t(buttonT) }}
   </VBtn>

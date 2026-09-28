@@ -1,7 +1,7 @@
 import { useStorage } from '@vueuse/core'
 import { readonly } from 'vue'
 // import { useLocale } from 'vuetify'
-import { i18n } from '@/plugins/i18n'
+import { i18n as defaultI18n } from '@/plugins/i18n'
 
 // use ISO 639-1 codes
 export type LanguageCode = 'en' | 'sk' | 'cs' | 'xx'
@@ -34,8 +34,12 @@ export const ALL_LANGUAGES = [
 
 const storedSettings = useStorage<LanguageCode | 'default'>('language', 'default')
 
-export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[], configDefaultLanguage: LanguageCode) {
-  if (storedSettings.value === 'default') storedSettings.value = configDefaultLanguage
+export function modifyLanguageSettings(
+  configAvailableLanguages: LanguageCode[],
+  configDefaultLanguage: LanguageCode,
+  i18nInstance?: any,
+) {
+  const i18n = i18nInstance || defaultI18n
   // const { current } = useLocale()
 
   function addMessages(language: LanguageCode, messages: any) {
@@ -58,7 +62,14 @@ export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[],
   }
 
   const initializeLanguage = () => {
-    if (!i18n || !i18n.global || storedSettings.value === 'default') return
+    if (!i18n || !i18n.global) return
+    if (storedSettings.value === 'default') {
+      // No explicit user preference in localStorage — use app default
+      storedSettings.value = configDefaultLanguage
+      // @ts-ignore
+      i18n.global.locale.value = configDefaultLanguage
+      return
+    }
     if (configAvailableLanguages.includes(storedSettings.value) || storedSettings.value === 'xx') {
       // current.value = storedSettings.value
       // @ts-ignore
@@ -71,8 +82,16 @@ export function modifyLanguageSettings(configAvailableLanguages: LanguageCode[],
     i18n.global.locale.value = configDefaultLanguage
   }
 
+  const applyUserLocale = (locale: string | null) => {
+    if (!locale) return false
+    const code = locale as LanguageCode
+    if (storedSettings.value !== 'default' && code === storedSettings.value) return false
+    return setLanguage(code)
+  }
+
   return {
     addMessages,
+    applyUserLocale,
     initializeLanguage,
     currentLanguageCode: readonly(storedSettings),
     setLanguage,

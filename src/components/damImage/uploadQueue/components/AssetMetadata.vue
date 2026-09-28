@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
-import { DamAssetType } from '@/types/coreDam/Asset'
+import { DamAssetType, DamAssetTypeDefault } from '@/types/coreDam/Asset'
 import { type AssetFile, assetFileIsImageFile } from '@/types/coreDam/AssetFile'
 import { useAssetDetailStore } from '@/components/damImage/uploadQueue/composables/assetDetailStore'
 import { storeToRefs } from 'pinia'
@@ -17,23 +17,40 @@ import KeywordRemoteAutocompleteWithCached from '@/components/damImage/uploadQue
 import { useDamKeywordAssetTypeConfig } from '@/components/damImage/uploadQueue/keyword/damKeywordConfig'
 import { useDamAuthorAssetTypeConfig } from '@/components/damImage/uploadQueue/author/damAuthorConfig'
 import type { IntegerId } from '@/types/common'
+import ABooleanValue from '@/components/ABooleanValue.vue'
+import ARow from '@/components/ARow.vue'
+import ACachedUserChip from '@/components/ACachedUserChip.vue'
+import { useDamCachedUsers } from '@/components/damImage/uploadQueue/author/cachedUsers'
+import { useCommonAdminCoreDamOptions } from '@/components/dam/assetSelect/composables/commonAdminCoreDamOptions'
 
 const props = withDefaults(
   defineProps<{
     extSystem: IntegerId
+    readonly?: boolean
+    configName?: string
+    showEditButton?: boolean
   }>(),
-  {}
+  {
+    readonly: false,
+    configName: 'default',
+    showEditButton: false,
+  },
 )
+
+const emit = defineEmits<{
+  (e: 'editInDam'): void
+}>()
 
 const { t } = useI18n()
 
 const panels = ref(['metadata', 'file'])
 
 const assetDetailStore = useAssetDetailStore()
-const { asset, authorConflicts, metadataAreTouched } = storeToRefs(assetDetailStore)
+const { asset, authorConflicts, metadataAreTouched, mainFileSingleUse } =
+  storeToRefs(assetDetailStore)
 
 const assetType = computed(() => {
-  return asset.value?.attributes.assetType || DamAssetType.Default
+  return asset.value?.attributes.assetType || DamAssetTypeDefault
 })
 
 const isTypeImage = computed(() => {
@@ -48,13 +65,34 @@ const onAnyMetadataChange = () => {
   metadataAreTouched.value = true
 }
 
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(assetType.value, props.extSystem)
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss,vue/no-ref-object-reactivity-loss
-const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.value, props.extSystem)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { keywordRequired, keywordEnabled } = useDamKeywordAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
+  // eslint-disable-next-line vue/no-ref-object-reactivity-loss
+  assetType.value,
+  props.extSystem,
+)
+
+const { cachedUsers } = useDamCachedUsers()
+
+const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } =
+  useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
 </script>
 
 <template>
+  <VBtn
+    v-if="showEditButton && asset"
+    size="small"
+    class="ma-2"
+    @click="emit('editInDam')"
+  >
+    {{ editAssetLabel }}
+  </VBtn>
   <VExpansionPanels
     v-if="asset"
     v-model="panels"
@@ -72,12 +110,13 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
           v-model="asset.metadata.customData"
           :ext-system="extSystem"
           :asset-type="assetType"
+          :readonly="readonly"
           @any-change="onAnyMetadataChange"
         >
           <template #after-pinned>
             <VRow
               v-if="keywordEnabled"
-              dense
+              density="comfortable"
               class="my-2"
             >
               <VCol>
@@ -92,6 +131,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                     data-cy="custom-field-keywords"
                     clearable
                     multiple
+                    :disabled="readonly"
                     :required="keywordRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
@@ -101,7 +141,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
             </VRow>
             <VRow
               v-if="authorEnabled"
-              dense
+              density="comfortable"
               class="my-2"
             >
               <VCol>
@@ -117,6 +157,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                     data-cy="custom-field-authors"
                     clearable
                     multiple
+                    :disabled="readonly"
                     :required="authorRequired"
                     :validation-scope="ADamAssetMetadataValidationScopeSymbol"
                     @update:model-value="onAnyMetadataChange"
@@ -124,16 +165,39 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
                 </ASystemEntityScope>
               </VCol>
             </VRow>
+            <VRow
+              v-if="mainFileSingleUseEnabled"
+              density="comfortable"
+              class="my-2"
+            >
+              <VCol>
+                <ARow
+                  v-if="readonly"
+                  :title="t('common.damImage.asset.model.mainFileSingleUse')"
+                >
+                  <ABooleanValue :value="mainFileSingleUse" />
+                </ARow>
+                <VSwitch
+                  v-else
+                  v-model="mainFileSingleUse"
+                  :label="t('common.damImage.asset.model.mainFileSingleUse')"
+                />
+              </VCol>
+            </VRow>
           </template>
         </AssetCustomMetadataForm>
       </VExpansionPanelText>
     </VExpansionPanel>
     <VExpansionPanel
+      v-if="showFileInfoEnabled"
       elevation="0"
       :title="t('common.damImage.asset.detail.info.file')"
       value="file"
     >
-      <VExpansionPanelText class="text-caption">
+      <VExpansionPanelText
+        class="text-body-small"
+        style="overflow-wrap: normal"
+      >
         <!-- all types -->
         <VRow>
           <VCol cols="3">
@@ -156,7 +220,11 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
             {{ t('common.model.tracking.created') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.createdAt) }}
+            {{ dateTimePretty(asset.createdAt) }}<br>
+            <ACachedUserChip
+              :id="asset.createdBy"
+              :cached-users="cachedUsers"
+            />
           </VCol>
         </VRow>
         <VRow>
@@ -164,10 +232,14 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
             {{ t('common.model.tracking.modified') }}
           </VCol>
           <VCol cols="9">
-            {{ dateTimePretty(asset.modifiedAt) }}
+            {{ dateTimePretty(asset.modifiedAt) }}<br>
+            <ACachedUserChip
+              :id="asset.modifiedBy"
+              :cached-users="cachedUsers"
+            />
           </VCol>
         </VRow>
-        <div v-if="assetMainFile">
+        <template v-if="assetMainFile">
           <VRow>
             <VCol cols="3">
               {{ t('common.damImage.asset.detail.info.field.mainFileId') }}
@@ -196,7 +268,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(assetType.
             v-if="isTypeImage && assetFileIsImageFile(assetMainFile)"
             :file="assetMainFile"
           />
-        </div>
+        </template>
       </VExpansionPanelText>
     </VExpansionPanel>
   </VExpansionPanels>

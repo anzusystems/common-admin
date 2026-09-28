@@ -1,0 +1,258 @@
+<script lang="ts" setup>
+import AFilterAdvancedButton from '@/labs/filters/AFilterAdvancedButton.vue'
+import AFilterSubmitButton from '@/components/buttons/filter/AFilterSubmitButton.vue'
+import AFilterResetButton from '@/components/buttons/filter/AFilterResetButton.vue'
+import { computed, inject, nextTick, provide, ref } from 'vue'
+import {
+  FilterConfigKey,
+  FilterDataKey,
+  FilterSelectedKey,
+  FilterSubmitResetCounterKey,
+} from '@/labs/filters/filterInjectionKeys'
+import FiltersSelected from '@/labs/filters/FiltersSelected.vue'
+import type { ValueObjectOption } from '@/types/ValueObject'
+import { isBoolean, isDefined, isUndefined } from '@/utils/common'
+import { type FilterStoreIdentifier, useFilterClearHelpers } from '@/labs/filters/filterFactory'
+import { datatableSlotName } from '@/components/datatable/datatable'
+import FilterDetailItem from '@/labs/filters/FilterDetailItem.vue'
+import AFilterBookmarkButton from '@/components/buttons/filter/AFilterBookmarkButton.vue'
+import FilterBookmarks from '@/labs/filters/FilterBookmarks.vue'
+import type { IntegerIdNullable } from '@/types/common'
+import { type AxiosInstance } from 'axios'
+
+const props = withDefaults(
+  defineProps<{
+    enableTop?: boolean
+    hideButtons?: boolean
+    formName?: string
+    userId?: IntegerIdNullable | undefined
+    client?: (() => AxiosInstance) | undefined
+    store?: FilterStoreIdentifier | boolean // false to disable, FilterStoreIdentifier to custom store key
+    alwaysVisible?: boolean
+    hideMore?: boolean
+  }>(),
+  {
+    enableTop: false,
+    hideButtons: false,
+    formName: 'search',
+    userId: undefined,
+    client: undefined,
+    store: true,
+    alwaysVisible: false,
+    hideMore: false,
+  },
+)
+const emit = defineEmits<{
+  (e: 'submit'): void
+  (e: 'reset'): void
+  (e: 'bookmarkLoadAfter'): void
+}>()
+
+const datatableHiddenColumns = defineModel<string[] | undefined>('datatableHiddenColumns', {
+  default: undefined,
+  required: false,
+})
+const showDetail = defineModel<boolean>('showDetail', { default: false, required: false })
+
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+if (isUndefined(filterConfig) || isUndefined(filterData)) {
+  throw new Error('Incorrect provide/inject config.')
+}
+const identifier = ref<Partial<FilterStoreIdentifier>>({
+  system: filterConfig.general.system,
+  subject: filterConfig.general.subject,
+})
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+if (!isBoolean(props.store)) {
+  identifier.value.system = props.store.system
+  identifier.value.subject = props.store.subject
+} else if (false === props.store) {
+  identifier.value.system = undefined
+  identifier.value.subject = undefined
+}
+const submitResetCounter = ref(0)
+provide(FilterSubmitResetCounterKey, submitResetCounter)
+const filterSelected = ref<Map<string, ValueObjectOption<string | number>[]>>(new Map())
+provide(FilterSelectedKey, filterSelected)
+
+const submitFilter = () => {
+  submitResetCounter.value++
+  nextTick(() => {
+    emit('submit')
+  })
+}
+
+const { clearAll, clearAllFilterSelected } = useFilterClearHelpers()
+
+const submitFilterBookmark = () => {
+  nextTick(() => {
+    submitResetCounter.value++
+    emit('bookmarkLoadAfter')
+  })
+}
+
+const resetFilter = () => {
+  clearAll(filterData, filterConfig)
+  clearAllFilterSelected(filterData, filterConfig, filterSelected)
+  nextTick(() => {
+    submitResetCounter.value++
+    emit('reset')
+  })
+}
+
+const toggleFilterDetail = () => {
+  showDetail.value = !showDetail.value
+}
+
+const touched = computed(() => {
+  return filterConfig.touched
+})
+
+const renderedFieldNames = computed(() => {
+  return Object.entries(filterConfig.fields)
+    .filter(([, field]) => !field.render.skip)
+    .map(([fieldName]) => fieldName)
+})
+
+if (props.alwaysVisible) {
+  showDetail.value = true
+}
+
+defineExpose({
+  submit: submitFilter,
+  reset: resetFilter,
+})
+</script>
+
+<template>
+  <VForm
+    :name="formName"
+    @submit.prevent="submitFilter"
+  >
+    <VRow
+      v-if="enableTop"
+      density="comfortable"
+    >
+      <VCol>
+        <slot name="top" />
+      </VCol>
+    </VRow>
+    <VRow density="compact">
+      <VCol v-if="store && userId && isDefined(client)">
+        <slot name="bookmarks">
+          <div class="d-flex flex-wrap align-center">
+            <FilterBookmarks
+              v-if="identifier.system && identifier.subject && userId && isDefined(client)"
+              v-model:datatable-hidden-columns="datatableHiddenColumns"
+              :client="client"
+              :system="identifier.system"
+              :subject="identifier.subject"
+              :user-id="userId"
+              @submit="submitFilterBookmark"
+            />
+          </div>
+        </slot>
+      </VCol>
+    </VRow>
+    <VRow
+      v-if="!alwaysVisible"
+      density="comfortable"
+    >
+      <VCol
+        v-if="!hideMore"
+        cols="auto"
+      >
+        <AFilterAdvancedButton
+          :button-active="showDetail"
+          @advanced-filter="toggleFilterDetail"
+        />
+      </VCol>
+      <VCol>
+        <div class="a-filter__container">
+          <div class="a-filter__search">
+            <slot name="search" />
+          </div>
+          <FiltersSelected />
+        </div>
+      </VCol>
+      <VCol
+        v-if="!hideButtons"
+        class="text-right"
+        cols="auto"
+      >
+        <slot name="buttons">
+          <AFilterSubmitButton :touched="touched" />
+          <AFilterResetButton @reset="resetFilter" />
+          <AFilterBookmarkButton
+            v-if="identifier.system && identifier.subject && userId && isDefined(client)"
+            :client="client"
+            :user="userId"
+            :system="identifier.system"
+            :subject="identifier.subject"
+            :datatable-hidden-columns="datatableHiddenColumns"
+          />
+        </slot>
+      </VCol>
+    </VRow>
+    <div v-if="!hideMore">
+      <component :is="alwaysVisible ? 'div' : 'VSlideYTransition'">
+        <div
+          v-show="showDetail"
+          :class="{ 'mt-6 pa-4 system-border-a': !alwaysVisible }"
+        >
+          <slot name="detail">
+            <VRow>
+              <VCol
+                v-for="fieldName in renderedFieldNames"
+                :key="fieldName"
+                :cols="filterConfig.fields[fieldName].render.xs || 12"
+                :sm="filterConfig.fields[fieldName].render.sm || 6"
+                :md="filterConfig.fields[fieldName].render.md || 4"
+                :lg="filterConfig.fields[fieldName].render.lg || 3"
+                :xl="filterConfig.fields[fieldName].render.xl || 2"
+              >
+                <slot
+                  :name="datatableSlotName(fieldName)"
+                  :item-config="filterConfig.fields[fieldName]"
+                >
+                  <FilterDetailItem :name="fieldName" />
+                </slot>
+              </VCol>
+            </VRow>
+          </slot>
+        </div>
+      </component>
+    </div>
+  </VForm>
+</template>
+
+<style lang="scss">
+@use 'vuetify/tools' as *;
+
+.a-filter {
+  &__container {
+    width: 100%;
+  }
+
+  &__search {
+    display: inline-flex;
+    vertical-align: middle;
+    min-width: 100%;
+    height: 34px;
+
+    @include media-breakpoint-up(sm) {
+      min-width: 50%;
+      margin-right: 8px;
+    }
+
+    @include media-breakpoint-up(md) {
+      min-width: 40%;
+    }
+
+    @include media-breakpoint-up(lg) {
+      min-width: 30%;
+    }
+  }
+}
+</style>

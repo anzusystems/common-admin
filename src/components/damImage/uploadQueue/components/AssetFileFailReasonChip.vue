@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
-import type { AssetFileFailReason } from '@/types/coreDam/AssetFile'
+import type { AssetFileFailReasonType } from '@/types/coreDam/AssetFile'
 import { useAssetFileFailReason } from '@/components/damImage/uploadQueue/composables/assetFileFailReason'
 import AChipNoLink from '@/components/AChipNoLink.vue'
 
 const props = withDefaults(
   defineProps<{
-    reason: AssetFileFailReason
+    reason: AssetFileFailReasonType
   }>(),
-  {}
+  {},
 )
 
 const { getAssetFileFailReasonOption } = useAssetFileFailReason()

@@ -3,6 +3,14 @@ import AssetSelectTilesItem from '@/components/dam/assetSelect/components/AssetS
 import { useGridView } from '@/components/dam/assetSelect/composables/assetSelectGridView'
 import { useAssetSelectActions } from '@/components/dam/assetSelect/composables/assetSelectListActions'
 import { useI18n } from 'vue-i18n'
+import type { IntegerId } from '@/types/common'
+
+withDefaults(
+  defineProps<{
+    extSystem: IntegerId
+  }>(),
+  {},
+)
 
 const { gridView } = useGridView()
 const { onItemClick, assetListItems, loader } = useAssetSelectActions()
@@ -20,12 +28,13 @@ const { t } = useI18n()
       :key="item.asset.id"
       :index="index"
       :item="item"
-      @item-click="onItemClick"
+      show-meta-icons
+      @item-click="onItemClick($event, extSystem)"
     />
   </div>
   <div
     v-if="!loader && assetListItems.length === 0"
-    class="text-h6 text-medium-emphasis d-flex w-100 h-100 align-center justify-center"
+    class="text-body-large d-flex w-100 h-100 align-center justify-center"
   >
     {{ t('common.assetSelect.meta.texts.noItemsFound') }}
   </div>
@@ -54,11 +63,12 @@ $bg-color-actions-dark: #1a1a1a;
   &__item {
     user-select: none;
     flex-grow: 2;
-    max-width: 800px;
+    max-width: 600px;
     padding: 10px;
     position: relative;
     overflow: hidden;
     min-width: 200px;
+    min-height: 260px;
 
     &-card {
       border-radius: 5px;
@@ -103,9 +113,13 @@ $bg-color-actions-dark: #1a1a1a;
 
   &--thumbnail {
     display: grid;
-    grid-template-columns: repeat(6, auto);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    width: 100%;
 
     .#{$class-name-root}__item {
+      min-width: unset;
+      max-width: unset;
+
       img:not(.img-svg) {
         object-fit: contain;
         padding-left: 6px;
@@ -118,8 +132,8 @@ $bg-color-actions-dark: #1a1a1a;
 
   .#{$class-name-root}__selected-triangle {
     position: absolute;
-    top: 11px;
-    right: 11px;
+    top: 10px;
+    right: 10px;
     z-index: 1;
 
     &__bg {
@@ -127,7 +141,7 @@ $bg-color-actions-dark: #1a1a1a;
       width: 0;
       height: 0;
       border-style: solid;
-      border-width: 0 30px 30px 0;
+      border-width: 0 60px 60px 0;
       border-color: transparent #608a32 transparent transparent;
       top: 0;
       right: 0;
