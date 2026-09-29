@@ -1,21 +1,17 @@
 <script lang="ts" setup>
 import { useSubjectListFilter } from '@/playground/filterView/subjectFilter'
 import SubjectFilter from '@/playground/filterView/SubjectFilter.vue'
-import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
+import ADatatableConfigButton from '@/domains/filters/datatable/components/ADatatableConfigButton.vue'
 import { onMounted, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSubjectListActions } from '@/playground/filterView/subjectTools'
-import ADatetime from '@/components/datetime/ADatetime.vue'
-import { useFilterHelpers } from '@/labs/filters/filterFactory'
-import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
-import {
-  DatatablePaginationKey,
-  FilterConfigKey,
-  FilterDataKey,
-} from '@/labs/filters/filterInjectionKeys'
-import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
-import { usePagination } from '@/labs/filters/pagination'
-import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
+import ADatetime from '@/domains/ui/datetime/components/ADatetime.vue'
+import { useFilterHelpers } from '@/domains/filters/composables/filterFactory'
+import ADatatableOrdering from '@/domains/filters/datatable/components/ADatatableOrdering.vue'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import ADatatablePagination from '@/domains/filters/datatable/components/ADatatablePagination.vue'
+import { usePagination } from '@/domains/api/composables/pagination'
+import { createDatatableColumnsConfig } from '@/domains/filters/datatable/composables/createDatatableColumnsConfig'
 import { useDebounceFn } from '@vueuse/core'
 
 type DatatableItem = any
@@ -56,7 +52,7 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
   ],
   datatableHiddenColumns,
   'system',
-  'subject',
+  'subject'
 )
 
 const getList = useDebounceFn(() => {

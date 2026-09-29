@@ -1,52 +1,129 @@
 #!/bin/bash
+set -euo pipefail
+
+# Usage: ./copy.sh [/path/to/admin ...]
+# Targets given as arguments replace the ones from .env.local / .env.
 
 # Change to the script's directory
-cd "$(dirname "${BASH_SOURCE[0]}")" || exit
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
-# Check if .env.local file exists
 if [[ -f ".env.local" ]]; then
     source ".env.local"
 elif [[ -f ".env" ]]; then
     source ".env"
+elif [[ $# -eq 0 ]]; then
+    echo "Error: Neither .env.local nor .env file found, and no target given."
+    exit 1
+fi
+COMMON_ADMIN_PROJECT="${COMMON_ADMIN_PROJECT:-$(pwd)}"
+
+# Target projects can be defined as:
+#   ADMIN_PROJECT=/path/to/admin-cms
+#   ADMIN_PROJECT=/path/to/admin-cms:/path/to/admin-ugc   (colon separated)
+#   ADMIN_PROJECTS=("/path/to/admin-cms" "/path/to/admin-ugc")   (bash array)
+TARGETS=()
+
+if [[ $# -gt 0 ]]; then
+    TARGETS+=("$@")
 else
-    echo "Error: Neither .env.local nor .env file found."
+    if [[ -n "${ADMIN_PROJECTS+x}" ]]; then
+        TARGETS+=("${ADMIN_PROJECTS[@]}")
+    fi
+
+    if [[ -n "${ADMIN_PROJECT+x}" ]]; then
+        if [[ "$(declare -p ADMIN_PROJECT 2>/dev/null)" == "declare -a"* ]]; then
+            TARGETS+=("${ADMIN_PROJECT[@]}")
+        else
+            IFS=':' read -r -a SPLIT_TARGETS <<< "${ADMIN_PROJECT}"
+            TARGETS+=("${SPLIT_TARGETS[@]}")
+        fi
+    fi
+fi
+
+# Drop empty entries (e.g. trailing colon)
+FILTERED_TARGETS=()
+for target in "${TARGETS[@]}"; do
+    if [[ -n "${target}" ]]; then
+        FILTERED_TARGETS+=("${target}")
+    fi
+done
+
+if [[ ${#FILTERED_TARGETS[@]} -eq 0 ]]; then
+    echo "Error: No target admin given (arguments, or ADMIN_PROJECT(S) in the sourced file)."
+    exit 1
+fi
+TARGETS=("${FILTERED_TARGETS[@]}")
+
+# Check if source directory exists
+if [[ ! -d "${COMMON_ADMIN_PROJECT}" ]]; then
+    echo "Error: Source directory ${COMMON_ADMIN_PROJECT} does not exist."
     exit 1
 fi
 
-# Ensure that paths are set in the sourced file
-if [[ -z "$COMMON_ADMIN_PROJECT" || -z "$ADMIN_PROJECT" ]]; then
-    echo "Error: Paths not defined in the sourced file."
+if [[ ! -d "${COMMON_ADMIN_PROJECT}/dist" ]]; then
+    echo "Error: dist not found in ${COMMON_ADMIN_PROJECT}. Build it first."
     exit 1
 fi
 
-# Check if directories exist
-if [[ ! -d "${COMMON_ADMIN_PROJECT}" || ! -d "${ADMIN_PROJECT}" ]]; then
-    echo "Error: One or both of the specified directories do not exist."
-    exit 1
-fi
+# A failed build can leave dist/ without its entry or declarations, and the copy below deletes each
+# admin's working copy before it writes the new one.
+for entry in common-admin.js common-admin.d.ts common-admin.css; do
+    if [[ ! -f "${COMMON_ADMIN_PROJECT}/dist/${entry}" ]]; then
+        echo "Error: dist/${entry} not found in ${COMMON_ADMIN_PROJECT}. The build did not finish; build it again."
+        exit 1
+    fi
+done
 
-# Create directories before copying files
-mkdir -p "${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/"
-mkdir -p "${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist"
-
-# Copy package.json from COMMON_ADMIN_PROJECT to ADMIN_PROJECT
-if [[ -f "${COMMON_ADMIN_PROJECT}/package.json" ]]; then
-    cp "${COMMON_ADMIN_PROJECT}/package.json" "${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/"
-else
+if [[ ! -f "${COMMON_ADMIN_PROJECT}/package.json" ]]; then
     echo "Error: package.json not found in ${COMMON_ADMIN_PROJECT}."
     exit 1
 fi
 
-# Create dist directory before copying files
-mkdir -p "${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist"
+# Check if all target directories exist before copying anything
+MISSING=0
+for target in "${TARGETS[@]}"; do
+    if [[ ! -d "${target}" ]]; then
+        echo "Error: Target directory ${target} does not exist."
+        MISSING=1
+    fi
+done
+[[ ${MISSING} -eq 1 ]] && exit 1
 
-# Use paths from sourced file
-cp -r "${COMMON_ADMIN_PROJECT}/dist/"* "${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist/"
+for target in "${TARGETS[@]}"; do
+    PACKAGE_DIR="${target}/node_modules/@anzusystems/common-admin"
 
-# Clear Vite's dependency pre-bundle cache so it picks up the new files
-rm -rf "${ADMIN_PROJECT}/node_modules/.vite/deps/"
+    # Wipe the previous dist first. `cp -r` only overwrites; it never removes, so chunks whose
+    # content hash changed piled up as orphans and the package ended up holding several builds at
+    # once. Scoped to this package's own dist directory, nothing else in node_modules is touched.
+    rm -rf "${PACKAGE_DIR}/dist"
 
-# Touch trigger file so Vite plugin detects the update and does a full-reload
-touch "${ADMIN_PROJECT}/.common-admin-updated"
+    # Create directories before copying files
+    mkdir -p "${PACKAGE_DIR}/dist"
 
-echo "Successfully copied release from ${COMMON_ADMIN_PROJECT}/dist to ${ADMIN_PROJECT}/node_modules/@anzusystems/common-admin/dist"
+    # Copy package.json from COMMON_ADMIN_PROJECT to the target project. Removed first: `cp` writes into an
+    # existing file, and under pnpm that file is a hard link into the global store.
+    rm -f "${PACKAGE_DIR}/package.json"
+    cp "${COMMON_ADMIN_PROJECT}/package.json" "${PACKAGE_DIR}/"
+
+    cp -r "${COMMON_ADMIN_PROJECT}/dist/"* "${PACKAGE_DIR}/dist/"
+
+    # The eslint plugin ships from `src/eslint` (package.json "files"), not from dist. Without this the
+    # admins keep linting with the plugin of whatever version they installed, however old.
+    # Same for the Vite plugins (`src/vite`, Sentry and source maps), which the admin's build loads.
+    for dir in eslint vite; do
+        rm -rf "${PACKAGE_DIR}/src/${dir}"
+        mkdir -p "${PACKAGE_DIR}/src/${dir}"
+        cp -r "${COMMON_ADMIN_PROJECT}/src/${dir}/"* "${PACKAGE_DIR}/src/${dir}/"
+    done
+
+    # Clear Vite's dependency pre-bundle cache so it picks up the new files, and vue-tsc's build info: tsc --build
+    # does not look at node_modules, so it would call the admin up to date against the old declarations
+    rm -rf "${target}/node_modules/.vite/deps/" "${target}/node_modules/.cache/tsc/"
+
+    # Empty the trigger file (creating it if needed): the admin's Vite plugin restarts the dev server,
+    # which re-bundles the new files. Emptied, not touched: `yarn dev:admin` lists the files it changed
+    # in it, and a stale list would make the plugin reload those few instead of taking everything.
+    : > "${target}/.common-admin-updated"
+
+    echo "Successfully copied release from ${COMMON_ADMIN_PROJECT} (dist, src/eslint, src/vite) to ${PACKAGE_DIR}"
+done

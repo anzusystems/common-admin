@@ -2,9 +2,32 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue"],
   "env": { "browser": true },
+  // Inputs and outputs of the explicit-imports codemod tests: code written to trip it, not to pass lint.
+  // doc: analyses keep their prototypes and scripts there, they are not part of the library.
+  "ignorePatterns": ["scripts/codemods/explicit-imports/test/fixtures", "scripts/codemods/explicit-imports/test/expected", "doc"],
   "categories": { "correctness": "error" },
   "rules": {
     "no-unused-vars": ["error", { "caughtErrors": "none", "argsIgnorePattern": "^_" }],
-    "no-unused-expressions": "off"
+    "no-unused-expressions": "off",
+
+    // oxlint does not run prefer-const inside a .vue file at all, so handing it over
+    // would switch it off for every SFC. Left to eslint, which does both.
+    "prefer-const": "off",
+
+    "no-var": "error",
+    "prefer-rest-params": "error",
+    "prefer-spread": "error",
+    "typescript/no-array-constructor": "error",
+    "typescript/no-namespace": "error",
+    "typescript/no-require-imports": "error",
+    "typescript/no-unnecessary-type-constraint": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "vue/component-definition-name-casing": "error",
+    "vue/no-multiple-slot-args": "error",
+    "vue/no-required-prop-with-default": "error",
+    "vue/prop-name-casing": "error",
+    "vue/require-default-prop": "error",
+    "vue/require-prop-types": "error",
+    "vue/require-typed-ref": "error"
   }
 }

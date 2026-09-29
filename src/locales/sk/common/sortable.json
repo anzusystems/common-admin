@@ -7,6 +7,7 @@
   "delete": "Zmazať",
   "deleteConfirmTitle": "Zmazať položku?",
   "deleteConfirmText": "Naozaj chcete zmazať túto položku? Túto akciu nie je možné vrátiť späť.",
+  "deleteConfirmTextDeferred": "Táto položka sa zmaže pri uložení. Dovtedy je možné akciu vrátiť.",
   "remove": "Odstrániť",
   "addAfter": "Pridať za túto položku",
   "addChild": "Pridať dovnútra",
@@ -18,6 +19,8 @@
   "reorderModeLabel": "Režim preskupovania",
   "expandAll": "Rozbaliť všetko",
   "collapseAll": "Zbaliť všetko",
+  "expand": "Rozbaliť",
+  "collapse": "Zbaliť",
   "reorderApply": "Použiť",
   "reorderCancel": "Zrušiť",
   "moveUp": "Posunúť hore",
@@ -47,6 +50,8 @@
   "unsavedChanges": {
     "title": "Neuložené zmeny",
     "body": "Máte neuložené zmeny. Naozaj chcete odísť?",
+    "sectionsIntro": "Neuložené zmeny máte v týchto častiach:",
+    "leaveQuestion": "Naozaj chcete odísť?",
     "stay": "Zostať",
     "discard": "Odísť aj tak"
   },
@@ -61,5 +66,7 @@
   "error": {
     "maxDeepExceed": "Nie je možné presunúť. Nová hĺbka prekročí maximálnu hĺbku.",
     "unableToAdd": "Nie je možné pridať položku."
-  }
+  },
+  "moreOptions": "Ďalšie možnosti",
+  "addNewAfter": "Pridať novú položku za túto"
 }

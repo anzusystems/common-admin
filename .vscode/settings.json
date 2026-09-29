@@ -1,0 +1,38 @@
+{
+  "editor.formatOnSave": true,
+
+  // oxfmt owns formatting. The extension reads .oxfmtrc.json, so these are the
+  // same settings as `yarn format` and files outside src/ are left alone.
+  "[typescript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[vue]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[scss]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[json]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+
+  // Autofix on save: oxlint first (fast), eslint handles what oxlint cannot.
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+
+  "eslint.useFlatConfig": true,
+  "stylelint.validate": ["scss", "vue"],
+
+  // The built-in CSS/SCSS validator duplicates stylelint and reports false
+  // positives on scss syntax.
+  "css.validate": false,
+  "scss.validate": false,
+
+  // Make Volar and TS use the workspace TypeScript, not the one bundled with
+  // VS Code.
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  "files.eol": "\n",
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.yarn": true,
+    "yarn.lock": true
+  }
+}

@@ -1,19 +1,19 @@
-import type { ValueObjectOption } from '@/types/ValueObject'
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { ValueObjectOption } from '@/shared/types/ValueObject'
+import type { IntegerId, IntegerIdNullable } from '@/shared/types/common'
+import type { AnzuUserAndTimeTrackingAware } from '@/shared/types/AnzuUserAndTimeTrackingAware'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
-import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
+import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
+import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
 import {
   createFilter,
   createFilterStore,
   type FilterConfig,
   type FilterData,
   type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
+} from '@/domains/filters/composables/filterFactory'
 import { type Ref } from 'vue'
 
-import type { Pagination } from '@/labs/filters/pagination'
+import type { Pagination } from '@/domains/api/composables/pagination'
 
 export interface Desk extends AnzuUserAndTimeTrackingAware {
   name: string
@@ -33,7 +33,7 @@ export interface Desk extends AnzuUserAndTimeTrackingAware {
 const END_POINT = '/adm/desks'
 
 const useFetchDeskList = () =>
-  useApiFetchList<Desk[]>({
+  useApiFetchList<Desk>({
     client: cmsClient,
     system: 'cms',
     entity: 'desk',
@@ -41,36 +41,32 @@ const useFetchDeskList = () =>
   })
 
 const fetchDeskListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<Desk[]>({
+  const { execute } = useApiFetchByIds<Desk>({
     client: cmsClient,
     system: 'cms',
     entity: 'desk',
     urlTemplate: END_POINT,
   })
-  return executeFetch(ids)
+  return execute(ids)
 }
 
-export const fetchItems = async (
-  pagination: Ref<Pagination>,
-  filterData: FilterData,
-  filterConfig: FilterConfig,
-) => {
-  const { executeFetch } = useFetchDeskList()
-  const desks = await executeFetch(pagination, filterData, filterConfig)
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const { execute } = useFetchDeskList()
+  const desks = await execute(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
+  return desks.map((desk: Desk) => ({
     title: desk.name,
     value: desk.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
   const desks = await fetchDeskListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>desks.map((desk: Desk) => ({
+  return desks.map((desk: Desk) => ({
     title: desk.name,
     value: desk.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export function useSubjectDeskInnerFilter() {

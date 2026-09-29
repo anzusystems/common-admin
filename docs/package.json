@@ -1,7 +1,0 @@
-{
-  "private": true,
-  "type": "module",
-  "devDependencies": {
-    "vitepress": "workspace:*"
-  }
-}

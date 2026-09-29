@@ -1,0 +1,93 @@
+{
+  "state": {
+    "loading": "Načítava sa…",
+    "enabled": "Zapnutý",
+    "disabled": "Vypnutý",
+    "absent": "Konto tu nemá",
+    "forbidden": "Nemáte prístup",
+    "unavailable": "Systém neodpovedal",
+    "configDisabled": "Vypnuté v konfigurácii"
+  },
+  "button": {
+    "create": "Vytvoriť",
+    "edit": "Upraviť",
+    "manageIn": "Spravovať v {system}",
+    "retry": "Skúsiť znova"
+  },
+  "tab": {
+    "otherSystems": "Ostatné systémy"
+  },
+  "create": {
+    "title": "Vytvoriť konto v systéme {system}",
+    "note": "Konto vznikne bez rolí a oprávnení. V admine sa nedá zmazať, len vypnúť.",
+    "willBeDisabled": "Účet vznikne vypnutý; po zapnutí sa tento človek vie prihlásiť.",
+    "willBeEnabled": "Účet vznikne rovno funkčný.",
+    "notAuthoritative": "V týchto systémoch sa nepodarilo overiť, či konto existuje: {systems}.",
+    "invalidId": "ID musí byť celé kladné číslo.",
+    "sourceUnreadable": "Údaje zdrojového účtu sa nepodarilo načítať zo systému {system}.",
+    "sourceChanged": "Zdrojový účet sa medzitým zmenil. Skontrolujte riadok a potvrďte znova."
+  },
+  "manageMissingUrl": "Adresa tohto admina nie je nastavená v konfigurácii.",
+  "table": {
+    "system": "Systém",
+    "state": "Stav",
+    "name": "Meno",
+    "action": "Akcia"
+  },
+  "bulk": {
+    "enable": {
+      "title": "Zapnúť používateľa",
+      "confirm": "Zapnúť v {count} systéme | Zapnúť v {count} systémoch | Zapnúť v {count} systémoch"
+    },
+    "disable": {
+      "title": "Vypnúť používateľa",
+      "confirm": "Vypnúť v {count} systéme | Vypnúť v {count} systémoch | Vypnúť v {count} systémoch"
+    },
+    "metadata": {
+      "title": "Opraviť metadáta všade",
+      "confirm": "Zapísať do {count} systému | Zapísať do {count} systémov | Zapísať do {count} systémov"
+    },
+    "alreadyInState": "Už je v požadovanom stave",
+    "retryFailed": "Skúsiť znova neúspešné",
+    "close": "Zavrieť",
+    "log": "Priebeh",
+    "concurrentChange": "Medzitým to niekto zmenil ({fields}); zapísala sa vaša hodnota.",
+    "openEnable": "Zapnúť na všetkých…",
+    "openDisable": "Vypnúť na všetkých…",
+    "openMetadata": "Opraviť metadáta všade…",
+    "runningElsewhere": "Iná hromadná akcia práve beží.",
+    "outcome": {
+      "pending": "Čaká",
+      "running": "Prebieha",
+      "done": "Hotovo",
+      "forbidden": "Nemáte právo na túto operáciu",
+      "unauthenticated": "Účet sa nepodarilo overiť",
+      "notFound": "Tento používateľ tu neexistuje",
+      "invalid": "Údaje účtu neprešli validáciou — treba ho opraviť ručne",
+      "unavailable": "Systém neodpovedal"
+    }
+  },
+  "search": {
+    "label": "ID alebo e-mail",
+    "hint": "Hľadá sa presná zhoda ID alebo e-mailu.",
+    "submit": "Hľadať",
+    "notFound": "Používateľ sa nenašiel",
+    "createAnywhere": "Vytvoriť konto…",
+    "phase": {
+      "matchingEmail": "Hľadám zhodu e-mailu…",
+      "verifyingById": "Overujem podľa ID vo všetkých systémoch…"
+    },
+    "identityConflict": "Ten istý e-mail má v systémoch rôzne ID. Hromadné akcie sú zastavené.",
+    "termRejected": "Zadaný text nie je ani ID, ani e-mail. Hľadá sa presná zhoda jedného z nich."
+  },
+  "inconsistency": {
+    "title": "Rozdiely medzi systémami",
+    "field": "Pole",
+    "values": "Hodnoty"
+  },
+  "repair": {
+    "title": "Opraviť metadáta",
+    "source": "Zdroj údajov",
+    "changes": "Čo sa zmení"
+  }
+}

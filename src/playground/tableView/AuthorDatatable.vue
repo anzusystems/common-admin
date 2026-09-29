@@ -1,23 +1,19 @@
 <script lang="ts" setup>
 import { onMounted, provide } from 'vue'
-import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
-import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
-import ABooleanValue from '@/components/ABooleanValue.vue'
-import ADatetime from '@/components/datetime/ADatetime.vue'
-import ATableCopyIdButton from '@/components/buttons/table/ATableCopyIdButton.vue'
-import ADatatablePagination from '@/labs/filters/ADatatablePagination.vue'
-import type { DamAuthor } from '@/components/damImage/uploadQueue/author/DamAuthor'
-import { SORT_BY_ID } from '@/composables/system/datatableColumns'
+import ADatatableOrdering from '@/domains/filters/datatable/components/ADatatableOrdering.vue'
+import ADatatableConfigButton from '@/domains/filters/datatable/components/ADatatableConfigButton.vue'
+import ABooleanValue from '@/domains/ui/components/ABooleanValue.vue'
+import ADatetime from '@/domains/ui/datetime/components/ADatetime.vue'
+import ATableCopyIdButton from '@/domains/ui/buttons/table/components/ATableCopyIdButton.vue'
+import ADatatablePagination from '@/domains/filters/datatable/components/ADatatablePagination.vue'
+import type { DamAuthor } from '@/domains/dam/author/types/DamAuthor'
+import { SORT_BY_ID } from '@/domains/filters/datatable/utils/datatableColumns'
 import { useAuthorListFilter } from '@/playground/tableView/authorFilter'
 import { useAuthorListActions } from '@/playground/tableView/authorActions'
-import { createDatatableColumnsConfig } from '@/labs/filters/datatableColumns'
-import {
-  DatatablePaginationKey,
-  FilterConfigKey,
-  FilterDataKey,
-} from '@/labs/filters/filterInjectionKeys'
-import { usePagination } from '@/labs/filters/pagination'
-import { useFilterHelpers } from '@/labs/filters/filterFactory'
+import { createDatatableColumnsConfig } from '@/domains/filters/datatable/composables/createDatatableColumnsConfig'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import { usePagination } from '@/domains/api/composables/pagination'
+import { useFilterHelpers } from '@/domains/filters/composables/filterFactory'
 import { useDebounceFn } from '@vueuse/core'
 
 type DatatableItem = DamAuthor
@@ -52,7 +48,7 @@ const { columnsVisible, columnsAll, columnsHidden } = createDatatableColumnsConf
   ],
   datatableHiddenColumns,
   'coreDam',
-  'author',
+  'author'
 )
 
 const sortByChange = () => {

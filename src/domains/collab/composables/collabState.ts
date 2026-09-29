@@ -1,0 +1,101 @@
+import type { Socket } from 'socket.io-client'
+import type {
+  CollabClientToServerEvents,
+  CollabFieldData,
+  CollabFieldLock,
+  CollabFieldName,
+  CollabRoom,
+  CollabRoomInfo,
+  CollabRoomPlainData,
+  CollabServerToClientEvents,
+} from '@/domains/collab/types/Collab'
+import { computed, reactive, ref, type Ref, toRaw } from 'vue'
+import { useCollabGatheringBufferDataEventBus } from '@/domains/collab/composables/collabEventBus'
+import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
+
+const collabConnected = ref(true)
+const collabSocket: Ref<Socket<CollabServerToClientEvents, CollabClientToServerEvents> | undefined> = ref()
+const collabRoomInfoState = reactive(new Map<CollabRoom, CollabRoomInfo>())
+// Plain, not reactive: bookkeeping for the map above, nothing renders from it.
+let collabRoomInfoWriteCounter = 0
+const collabRoomInfoWriteSeq = new Map<CollabRoom, number>()
+const collabFieldLocksState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldLock>>())
+const collabFieldDataBufferState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldData>>())
+// Plain, not reactive: fields whose lock request timed out. The server may have granted it after all, and it tells only
+// the others about a grant, so the lock map never shows this editor holding it. Kept till a release is confirmed: a
+// later request can be refused while the slow one still holds the field on the server, and granted after.
+const collabFieldLocksUnanswered = new Map<CollabRoom, Set<CollabFieldName>>()
+
+/**
+ * Everything the collaboration modules share, the socket included. Internal: an admin reads
+ * `useCollabState()`.
+ */
+export function useCollabStateInternal() {
+  const { collabOptions } = useCommonAdminCollabOptions()
+
+  const collabReconnecting = computed(() => collabOptions.value.enabled && !collabConnected.value)
+
+  const gatherBufferData = (room: CollabRoom): CollabRoomPlainData => {
+    const collabGatheringBufferDataEventBus = useCollabGatheringBufferDataEventBus()
+    collabGatheringBufferDataEventBus.emit({ room })
+    let dataBuffer: CollabRoomPlainData = {}
+    const dataBufferMap = collabFieldDataBufferState.get(room)
+    if (dataBufferMap) {
+      dataBuffer = toRaw(Object.fromEntries(dataBufferMap.entries()))
+      collabFieldDataBufferState.delete(room)
+    }
+    return dataBuffer
+  }
+
+  /**
+   * Call before emitting anything whose acknowledgement writes `collabRoomInfoState`, and let the
+   * returned predicate decide whether that write still applies.
+   *
+   * The server serialises join and leave per room only for the lifetime of its lease, so a leave that
+   * outruns it can acknowledge after a following join and mark a room inactive while the client is in
+   * it — after which the client goes quiet with nothing visible to show for it.
+   */
+  const claimRoomInfoWrite = (room: CollabRoom) => {
+    /* Global and never restarting, so a number is never handed out twice. Claims outlive a
+     * reconnect on purpose — see the `connect` handler in `collabInit.ts`. */
+    const seq = ++collabRoomInfoWriteCounter
+    collabRoomInfoWriteSeq.set(room, seq)
+
+    return () => collabRoomInfoWriteSeq.get(room) === seq
+  }
+
+  const setFieldLockUnanswered = (room: CollabRoom, field: CollabFieldName, unanswered: boolean) => {
+    if (!unanswered) return void collabFieldLocksUnanswered.get(room)?.delete(field)
+    if (!collabFieldLocksUnanswered.has(room)) collabFieldLocksUnanswered.set(room, new Set())
+    collabFieldLocksUnanswered.get(room)?.add(field)
+  }
+
+  const fieldLockMaybeHeld = (room: CollabRoom, field: CollabFieldName, userId: CollabFieldLock) =>
+    collabFieldLocksState.get(room)?.get(field) === userId || !!collabFieldLocksUnanswered.get(room)?.has(field)
+
+  return {
+    collabReconnecting,
+    collabConnected,
+    collabSocket,
+    collabRoomInfoState,
+    claimRoomInfoWrite,
+    collabFieldLocksState,
+    collabFieldDataBufferState,
+    collabFieldLocksUnanswered,
+    setFieldLockUnanswered,
+    fieldLockMaybeHeld,
+    gatherBufferData,
+  }
+}
+
+/**
+ * What an admin reads from the collaboration state: whether the connection is being re-established,
+ * the rooms' info, and the buffered field data of a room (`gatherBufferData` collects and clears it).
+ * The socket and the lock bookkeeping stay inside the library.
+ */
+export function useCollabState() {
+  const { collabReconnecting, collabRoomInfoState, collabFieldDataBufferState, gatherBufferData } =
+    useCollabStateInternal()
+
+  return { collabReconnecting, collabRoomInfoState, collabFieldDataBufferState, gatherBufferData }
+}

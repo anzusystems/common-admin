@@ -1,0 +1,4 @@
+{
+  "allowAll": "Allow all",
+  "restrictiveGrantKept": "Kept {count} action explicitly set to deny or owner only | Kept {count} actions explicitly set to deny or owner only"
+}

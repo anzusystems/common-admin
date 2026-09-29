@@ -5,14 +5,14 @@ import {
   useSubjectUserInnerFilter,
 } from '@/playground/filterView/FilterSubjectUserTools'
 import { provide } from 'vue'
-import { FilterInnerConfigKey, FilterInnerDataKey } from '@/labs/filters/filterInjectionKeys'
-import AFilterRemoteAutocompleteWithMinimal from '@/labs/filters/AFilterRemoteAutocompleteWithMinimal.vue'
+import { FilterInnerConfigKey, FilterInnerDataKey } from '@/domains/filters/utils/filterInjectionKeys'
+import AFilterRemoteAutocompleteWithMinimal from '@/domains/remoteAutocomplete/components/AFilterRemoteAutocompleteWithMinimal.vue'
 
 withDefaults(
   defineProps<{
     name: string
   }>(),
-  {},
+  {}
 )
 const emit = defineEmits<{
   (e: 'change'): void

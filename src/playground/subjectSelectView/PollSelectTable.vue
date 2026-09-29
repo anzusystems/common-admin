@@ -1,19 +1,15 @@
 <script lang="ts" setup>
-import ADatetime from '@/components/datetime/ADatetime.vue'
+import ADatetime from '@/domains/ui/datetime/components/ADatetime.vue'
 import PollSelectFilter from '@/playground/subjectSelectView/PollSelectFilter.vue'
-import { generateDatatableMinMaxSelectStrategy } from '@/components/subjectSelect/selectStrategies'
+import { generateDatatableMinMaxSelectStrategy } from '@/domains/subjectSelect/utils/selectStrategies'
 import { type PollDemo, useFetchPollListDemo } from '@/playground/subjectSelectView/pollDemoApi'
-import ASubjectSelect from '@/labs/subjectSelect/ASubjectSelect.vue'
-import ADatatableOrdering from '@/labs/filters/ADatatableOrdering.vue'
-import ADatatableConfigButton from '@/components/ADatatableConfigButton.vue'
+import ASubjectSelect from '@/domains/subjectSelect/components/ASubjectSelect.vue'
+import ADatatableOrdering from '@/domains/filters/datatable/components/ADatatableOrdering.vue'
+import ADatatableConfigButton from '@/domains/filters/datatable/components/ADatatableConfigButton.vue'
 import { usePollSelectStore } from '@/playground/subjectSelectView/pollSelectStore'
-import { useSubjectSelect } from '@/labs/subjectSelect/useSubjectSelect'
+import { useSubjectSelect } from '@/domains/subjectSelect/composables/useSubjectSelect'
 import { provide } from 'vue'
-import {
-  DatatablePaginationKey,
-  FilterConfigKey,
-  FilterDataKey,
-} from '@/labs/filters/filterInjectionKeys'
+import { DatatablePaginationKey, FilterConfigKey, FilterDataKey } from '@/domains/filters/utils/filterInjectionKeys'
 
 withDefaults(
   defineProps<{
@@ -23,16 +19,16 @@ withDefaults(
   {
     minCount: 1,
     maxCount: 1,
-  },
+  }
 )
 const emit = defineEmits<{
-  (e: 'onConfirm', data: Array<PollDemo>): void
+  (e: 'confirm', data: Array<PollDemo>): void
 }>()
 
 const { datatableHiddenColumns, filterConfig, filterData } = usePollSelectStore()
 provide(FilterConfigKey, filterConfig)
 provide(FilterDataKey, filterData)
-const { executeFetch } = useFetchPollListDemo()
+const { execute } = useFetchPollListDemo()
 
 const {
   items,
@@ -63,14 +59,14 @@ const {
   datatableHiddenColumns,
   'cms',
   'poll',
-  executeFetch,
+  execute,
   filterData,
-  filterConfig,
+  filterConfig
 )
 provide(DatatablePaginationKey, pagination)
 
 const onConfirm = (items: Array<PollDemo>) => {
-  emit('onConfirm', items)
+  emit('confirm', items)
 }
 </script>
 
@@ -83,10 +79,10 @@ const onConfirm = (items: Array<PollDemo>) => {
     :submit-filter="submitFilter"
     :reset-filter="resetFilter"
     :loading="loading"
-    @on-open="onOpen"
-    @on-fetch-next-page="onFetchNextPage"
-    @on-page-change="getList"
-    @on-confirm="onConfirm"
+    @open="onOpen"
+    @fetch-next-page="onFetchNextPage"
+    @page-change="getList"
+    @confirm="onConfirm"
   >
     <template #activator="{ props: activatorProps }">
       <VBtn

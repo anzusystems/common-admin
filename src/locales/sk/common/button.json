@@ -4,6 +4,7 @@
   "save": "Uložiť",
   "saveAndClose": "Uložiť a zatvoriť",
   "close": "Zatvoriť",
+  "open": "Otvoriť",
   "edit": "Editovať",
   "detail": "Detail",
   "submitFilter": "Hľadať",
@@ -11,6 +12,7 @@
   "advancedFilters": "Viac filtrov",
   "bookmarkFilter": "Záložky filtrov",
   "cancel": "Zrušiť",
+  "retry": "Skúsiť znova",
   "delete": "Zmazať",
   "id": "ID",
   "now": "Teraz",
@@ -26,5 +28,12 @@
   "prev": "Späť",
   "loadMore": "Načítaj ďalšie",
   "copy": "Kopírovať",
-  "advanced": "Pokročilé"
+  "advanced": "Pokročilé",
+  "clear": "Vymazať",
+  "moreOptions": "Ďalšie možnosti",
+  "chooseColor": "Vybrať farbu",
+  "increaseHours": "Pridať hodinu",
+  "decreaseHours": "Ubrať hodinu",
+  "increaseMinutes": "Pridať minútu",
+  "decreaseMinutes": "Ubrať minútu"
 }

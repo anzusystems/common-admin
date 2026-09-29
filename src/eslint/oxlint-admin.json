@@ -1,0 +1,45 @@
+{
+  // The oxlint rules the admins share; an admin's .oxlintrc.json extends it and keeps its own env,
+  // categories and ignorePatterns (oxlint merges only rules, plugins and overrides from `extends`, and
+  // eslint-plugin-oxlint follows `extends` the same way).
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue", "import"],
+  "rules": {
+    "no-unused-vars": ["error", { "caughtErrors": "none" }],
+    "no-unused-expressions": "off",
+
+    "no-var": "error",
+    "prefer-rest-params": "error",
+    "prefer-spread": "error",
+    "typescript/no-array-constructor": "error",
+    "typescript/no-namespace": "error",
+    "typescript/no-require-imports": "error",
+    "typescript/no-unnecessary-type-constraint": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "vue/component-definition-name-casing": "error",
+    "vue/no-multiple-slot-args": "error",
+    "vue/no-required-prop-with-default": "error",
+    "vue/prop-name-casing": "error",
+    "vue/require-default-prop": "error",
+    "vue/require-prop-types": "error",
+    "vue/require-typed-ref": "error",
+
+    // oxlint does not run prefer-const inside a .vue file at all, so handing it over
+    // would switch it off for every SFC. Left to eslint, which does both.
+    "prefer-const": "off",
+
+    // Enabled here, so that eslint stops running its copies: it had to while the imports were implicit.
+    "vue/no-async-in-computed-properties": "error",
+    "vue/no-side-effects-in-computed-properties": "error",
+    "vue/return-in-computed-property": "error",
+    "vue/no-lifecycle-after-await": "error",
+    "vue/no-watch-after-await": "error",
+
+    // Imports: oxfmt sorts the statements (`sortImports` in .oxfmtrc.json); these sort the names
+    // inside the braces, merge two imports of one module and keep types in their own `import type`.
+    "sort-imports": ["error", { "ignoreDeclarationSort": true }],
+    "import/no-duplicates": ["error", { "considerQueryString": true }],
+    "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
+    // Reads `@/typed-router.d.ts?raw` in the route tests as a module without a default export.
+    "import/default": "off"
+  }
+}

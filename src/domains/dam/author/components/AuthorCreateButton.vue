@@ -1,0 +1,214 @@
+<script lang="ts" setup>
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { ValidationScope } from '@/shared/types/Validation'
+import { ADamAuthorCreateValidationScopeSymbol } from '@/domains/dam/composables/uploadValidations'
+import type { DamAuthor } from '@/domains/dam/author/types/DamAuthor'
+import { useDamAuthorType } from '@/domains/dam/author/types/DamAuthorType'
+import { isUndefined } from '@/shared/utils/common'
+import { useAuthorValidation } from '@/domains/dam/author/composables/authorValidation'
+import { useAlerts } from '@/domains/system/composables/alerts'
+import { createAuthor } from '@/domains/dam/author/api/authorApi'
+import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import { useDamAuthorFactory } from '@/domains/dam/author/factory/AuthorFactory'
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { SYSTEM_CORE_DAM } from '@/domains/dam/api/damConstants'
+import ASystemEntityScope from '@/domains/form/components/ASystemEntityScope.vue'
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
+import ARow from '@/domains/ui/components/ARow.vue'
+import AFormTextField from '@/domains/form/components/AFormTextField.vue'
+import AFormValueObjectOptionsSelect from '@/domains/form/components/AFormValueObjectOptionsSelect.vue'
+import type { IntegerId } from '@/shared/types/common'
+
+const props = withDefaults(
+  defineProps<{
+    extSystem: IntegerId
+    initialValue?: string
+    disableRedirect?: boolean
+    variant?: 'button' | 'icon' | 'listItem'
+    buttonT?: string
+    buttonClass?: string
+    dataCy?: string
+    disabled?: boolean | undefined
+    validationScope?: ValidationScope
+  }>(),
+  {
+    initialValue: '',
+    disableRedirect: false,
+    variant: 'button',
+    buttonT: 'common.button.create',
+    buttonClass: 'ml-2',
+    dataCy: undefined,
+    disabled: undefined,
+    validationScope: ADamAuthorCreateValidationScopeSymbol,
+  }
+)
+const emit = defineEmits<{
+  (e: 'success', data: DamAuthor): void
+}>()
+
+const { damClient } = useCommonAdminCoreDamOptions()
+const { getDamConfigExtSystem } = useDamConfigState()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const configExtSystem = getDamConfigExtSystem(props.extSystem)
+if (isUndefined(configExtSystem)) {
+  throw new Error('AuthorCreateButton: Ext system must be initialised.')
+}
+
+const { createDefault } = useDamAuthorFactory()
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const author = ref<DamAuthor>(createDefault(props.extSystem))
+const dialog = ref(false)
+const buttonLoading = ref(false)
+
+const onClick = (textOverride: string | undefined) => {
+  if (isUndefined(configExtSystem)) {
+    throw new Error('AuthorCreateButton: Ext system must be initialised.')
+  }
+  author.value = createDefault(props.extSystem, true)
+  textOverride ? (author.value.name = textOverride) : (author.value.name = props.initialValue)
+  dialog.value = true
+}
+
+const onCancel = () => {
+  dialog.value = false
+}
+
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const { v$ } = useAuthorValidation(author, props.validationScope)
+const { t } = useI18n()
+const { showValidationError, showRecordWas, showErrorsDefault } = useAlerts()
+
+const onConfirm = async () => {
+  if (buttonLoading.value) return
+  try {
+    buttonLoading.value = true
+    v$.value.$touch()
+    if (v$.value.$invalid) {
+      showValidationError()
+      buttonLoading.value = false
+      return
+    }
+    const res = await createAuthor(damClient, author.value)
+    emit('success', res)
+    showRecordWas('created')
+    dialog.value = false
+    if (!isUndefined(res.id) && !props.disableRedirect) {
+      // router.push({ name: ROUTE.DAM.AUTHOR.DETAIL, params: { id: res.id } })
+    }
+  } catch (error) {
+    showErrorsDefault(error)
+  } finally {
+    buttonLoading.value = false
+  }
+}
+
+const { authorTypeOptions } = useDamAuthorType()
+
+defineExpose({
+  open: onClick,
+})
+</script>
+
+<template>
+  <VListItem v-if="variant === 'listItem'">
+    <ABtnSecondary
+      size="small"
+      :text="initialValue"
+      prepend-icon="mdi-plus-circle"
+      @click.stop="onClick"
+    />
+  </VListItem>
+  <ABtnPrimary
+    v-else-if="variant === 'button'"
+    :class="buttonClass"
+    :data-cy="dataCy"
+    :disabled="disabled"
+    rounded="pill"
+    @click.stop="onClick(undefined)"
+  >
+    {{ t(buttonT) }}
+  </ABtnPrimary>
+  <VBtn
+    v-else
+    :aria-label="t('common.damImage.author.button.add')"
+    :class="buttonClass"
+    :data-cy="dataCy"
+    icon
+    :disabled="disabled"
+    variant="text"
+    size="small"
+    @click.stop="onClick(undefined)"
+  >
+    <VIcon icon="mdi-plus" />
+    <VTooltip
+      activator="parent"
+      location="bottom"
+    >
+      {{ t('common.damImage.author.button.add') }}
+    </VTooltip>
+  </VBtn>
+  <VDialog v-model="dialog">
+    <VCard
+      v-if="dialog"
+      width="500"
+      class="mt-0 mr-auto ml-auto"
+      data-cy="create-panel"
+    >
+      <ADialogToolbar @cancel="onCancel">
+        {{ t('common.damImage.author.meta.create') }}
+      </ADialogToolbar>
+      <VCardText>
+        <ASystemEntityScope
+          :system="SYSTEM_CORE_DAM"
+          subject="author"
+        >
+          <ARow>
+            <AFormTextField
+              v-model="author.name"
+              :label="t('common.damImage.author.model.name')"
+              :v="v$.author.name"
+              required
+              data-cy="author-name"
+              @keyup.enter="onConfirm"
+            />
+          </ARow>
+          <ARow>
+            <AFormTextField
+              v-model="author.identifier"
+              :label="t('common.damImage.author.model.identifier')"
+              :v="v$.author.identifier"
+              data-cy="author-identifier"
+              @keyup.enter="onConfirm"
+            />
+          </ARow>
+          <ARow>
+            <AFormValueObjectOptionsSelect
+              v-model="author.type"
+              :label="t('common.damImage.author.model.type')"
+              :items="authorTypeOptions"
+              data-cy="author-type"
+              @keyup.enter="onConfirm"
+            />
+          </ARow>
+        </ASystemEntityScope>
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <ABtnTertiary
+          data-cy="button-cancel"
+          @click.stop="onCancel"
+        >
+          {{ t('common.button.cancel') }}
+        </ABtnTertiary>
+        <ABtnPrimary
+          :loading="buttonLoading"
+          data-cy="button-confirm"
+          @click.stop="onConfirm"
+        >
+          {{ t(buttonT) }}
+        </ABtnPrimary>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>

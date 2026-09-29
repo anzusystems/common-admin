@@ -1,4 +1,4 @@
-import type { Locale, Path } from 'vue-i18n'
+import type { I18n, Locale, Path } from 'vue-i18n'
 import { createI18n } from 'vue-i18n'
 import type en from '@/locales/en'
 
@@ -44,12 +44,16 @@ export const slovakPluralizationRule = (choice: number, choicesLength: number) =
   return choice === 1 ? 0 : 1
 }
 
-export const i18n = createI18n<[MessageSchema]>({
+export const i18n = createI18n<[MessageSchema], string, false>({
   globalInjection: false,
+  legacy: false,
   locale: REQUIRED_LOCALES[0],
   fallbackLocale: false,
   pluralRules: {
     sk: slovakPluralizationRule,
+    // Czech shares the Slovak plural categories (one / 2-4 / other), and without
+    // a rule the default would pick zero|one|other: "1 nepotvrzené změny".
+    cs: slovakPluralizationRule,
   },
   missing: (locale: Locale, key: Path) => {
     if (REQUIRED_LOCALES.includes(locale) && !key.startsWith('system.subject.')) {
@@ -57,3 +61,32 @@ export const i18n = createI18n<[MessageSchema]>({
     }
   },
 })
+
+/** The admin's instance as the plugin takes it: composition mode (`legacy: false`), any message schema. */
+// oxlint-disable-next-line typescript/no-explicit-any -- the admin's own message schema
+export type CommonAdminI18n = I18n<any, any, any, string, false>
+
+let installed: CommonAdminI18n | undefined
+
+/** Takes the admin's instance (the plugin's `i18n` option); the library translates through it from then on. */
+export const setCommonAdminI18n = (instance: CommonAdminI18n): void => {
+  installed = instance
+}
+
+/**
+ * The instance the library translates through: the admin's own, once the plugin has it. Before that --
+ * the library's tests and playground -- the library's instance above.
+ *
+ * Read when a text is translated, not when a module loads: a validator or an alert module imported
+ * before the plugin is installed would otherwise keep the wrong instance for good.
+ */
+export const commonI18n = (): CommonAdminI18n => installed ?? (i18n as unknown as CommonAdminI18n)
+
+type Translate = (key: string, ...args: unknown[]) => string
+
+/** `t` of `commonI18n()`, resolved on every call. */
+export const commonT: Translate = (key, ...args) => (commonI18n().global.t as unknown as Translate)(key, ...args)
+
+/** `te` of `commonI18n()`, resolved on every call. */
+export const commonTe = (key: string, locale?: string): boolean =>
+  (commonI18n().global.te as (key: string, locale?: string) => boolean)(key, locale)

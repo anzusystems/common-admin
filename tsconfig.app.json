@@ -6,7 +6,7 @@
     "src/**/*.vue"
   ],
   "exclude": [
-    "src/**/__tests__/*",
+    "src/**/__tests__/**/*",
     "src/test/**/*",
     "src/**/*.test.*",
     "src/**/*.spec.*",
@@ -14,8 +14,7 @@
   ],
   "compilerOptions": {
     "incremental": true,
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "baseUrl": ".",
+    "tsBuildInfoFile": "./node_modules/.cache/tsc/tsconfig.app.tsbuildinfo",
     "paths": {
       "@/*": [
         "./src/*"
@@ -26,6 +25,10 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "erasableSyntaxOnly": true
   }
 }

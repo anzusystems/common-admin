@@ -1,19 +1,19 @@
-import type { AnzuUser } from '@/types/AnzuUser'
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
+import type { AnzuUser } from '@/shared/types/AnzuUser'
+import type { IntegerId, IntegerIdNullable } from '@/shared/types/common'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
-import type { ValueObjectOption } from '@/types/ValueObject'
+import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
+import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
+import type { ValueObjectOption } from '@/shared/types/ValueObject'
 import {
   createFilter,
   createFilterStore,
   type FilterConfig,
   type FilterData,
   type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
+} from '@/domains/filters/composables/filterFactory'
 import { type Ref } from 'vue'
 
-import type { Pagination } from '@/labs/filters/pagination'
+import type { Pagination } from '@/domains/api/composables/pagination'
 
 export interface User extends AnzuUser {
   mainSite: IntegerIdNullable
@@ -41,44 +41,40 @@ export interface UserMinimal {
 const END_POINT = '/adm/users'
 
 const fetchUserListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<User[]>({
+  const { execute } = useApiFetchByIds<User>({
     client: cmsClient,
     system: 'cms',
     entity: 'user',
     urlTemplate: END_POINT,
   })
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 const useFetchUserList = () =>
-  useApiFetchList<User[]>({
+  useApiFetchList<User>({
     client: cmsClient,
     system: 'cms',
     entity: 'user',
     urlTemplate: END_POINT,
   })
 
-export const fetchItems = async (
-  pagination: Ref<Pagination>,
-  filterData: FilterData,
-  filterConfig: FilterConfig,
-) => {
-  const { executeFetch } = useFetchUserList()
-  const users = await executeFetch(pagination, filterData, filterConfig)
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const { execute } = useFetchUserList()
+  const users = await execute(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>users.map((user: User) => ({
+  return users.map((user: User) => ({
     title: user.person.fullName,
     value: user.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
   const users = await fetchUserListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>users.map((user: User) => ({
+  return users.map((user: User) => ({
     title: user.person.fullName,
     value: user.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 const mapToMinimal = (user: User): UserMinimal => ({
@@ -94,12 +90,10 @@ const mapToMinimals = (users: User[]): UserMinimal[] => {
 export const fetchItemsMinimal = async (
   pagination: Ref<Pagination>,
   filterData: FilterData,
-  filterConfig: FilterConfig,
+  filterConfig: FilterConfig
 ) => {
-  const { executeFetch } = useFetchUserList()
-  return mapToMinimals(
-    await executeFetch(pagination, filterData, filterConfig, { urlTemplate: END_POINT }),
-  )
+  const { execute } = useFetchUserList()
+  return mapToMinimals(await execute(pagination, filterData, filterConfig, { urlTemplate: END_POINT }))
 }
 
 export const fetchItemsMinimalByIds = async (ids: IntegerId[]) => {

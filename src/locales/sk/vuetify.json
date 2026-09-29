@@ -5,7 +5,7 @@
   "dismiss": "Zrušiť",
   "confirmEdit": {
     "ok": "OK",
-    "cancel": "Cancel"
+    "cancel": "Zrušiť"
   },
   "dataIterator": {
     "noResultsText": "Nenašli sa žiadne zodpovedajúce záznamy",
@@ -19,7 +19,10 @@
       "sortNone": "Bez zoradenia.",
       "activateNone": "Prestať radiť.",
       "activateDescending": "Aktivovať zostupné radenie.",
-      "activateAscending": "Aktivovať vzostupné radenie"
+      "activateAscending": "Aktivovať vzostupné radenie.",
+      "selectRow": "Vybrať riadok",
+      "selectAll": "Vybrať všetko",
+      "selectGroup": "Vybrať skupinu"
     },
     "sortBy": "Radiť"
   },
@@ -34,6 +37,20 @@
   },
   "dateRangeInput": {
     "divider": "do"
+  },
+  "monthPicker": {
+    "title": "Vyberte mesiac",
+    "itemsSelected": "{0} vybraných",
+    "header": "Zadajte mesiac",
+    "range": {
+      "title": "Zadajte mesiace"
+    },
+    "ariaLabel": {
+      "previousYear": "Predchádzajúci rok",
+      "nextYear": "Nasledujúci rok",
+      "selectYear": "Vyberte rok",
+      "currentMonth": "Aktuálny mesiac, {0}"
+    }
   },
   "datePicker": {
     "itemsSelected": "{0} vybraných",
@@ -69,11 +86,15 @@
     "moreEvents": "{0} ďalších",
     "today": "Dnes"
   },
+  "heatmap": {
+    "less": "Menej",
+    "more": "Viac"
+  },
   "input": {
     "clear": "Vymazať {0}",
-    "prependAction": "{0} akcií pred",
-    "appendAction": "{0} nasledovných akcií",
-    "otp": "Please enter OTP character {0}"
+    "prependAction": "Akcia pred {0}",
+    "appendAction": "Akcia za {0}",
+    "otp": "Zadajte verifikačný kód"
   },
   "fileInput": {
     "counter": "{0} súborov",
@@ -90,7 +111,8 @@
     "title": "Vyberte čas",
     "hour": "Hodina",
     "minute": "Minúty",
-    "second": "Sekundy"
+    "second": "Sekundy",
+    "notAllowed": "Hodnota nie je povolená"
   },
   "pagination": {
     "ariaLabel": {
@@ -104,18 +126,18 @@
     }
   },
   "stepper": {
-    "next": "Next",
-    "prev": "Previous"
+    "next": "Ďalší",
+    "prev": "Predchádzajúci"
   },
   "rating": {
     "ariaLabel": {
       "item": "Hodnotenie {0} z {1}"
     }
   },
-  "loading": "Načítám...",
+  "loading": "Načítavam...",
   "infiniteScroll": {
-    "loadMore": "Load more",
-    "empty": "No more"
+    "loadMore": "Načítať viac",
+    "empty": "Žiadne ďalšie"
   },
   "rules": {
     "required": "Toto pole je povinné",
@@ -129,6 +151,9 @@
     "exclude": "Znak {0} nie je povolený",
     "notEmpty": "Vyberte aspoň jednu hodnotu",
     "pattern": "Neplatný formát"
+  },
+  "command": {
+    "search": "Zadajte príkaz alebo hľadajte..."
   },
   "hotkey": {
     "then": "potom",

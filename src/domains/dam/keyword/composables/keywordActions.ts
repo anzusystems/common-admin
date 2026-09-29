@@ -1,0 +1,59 @@
+import { useCommonAdminCoreDamOptions } from '@/domains/dam/composables/commonAdminCoreDamOptions'
+import { useDamConfigState } from '@/domains/dam/config/composables/damConfigState'
+import { isUndefined } from '@/shared/utils/common'
+import type { DamKeyword, DamKeywordMinimal } from '@/domains/dam/keyword/types/DamKeyword'
+import type { ValueObjectOption } from '@/shared/types/ValueObject'
+import type { Pagination } from '@/domains/api/composables/pagination'
+import { fetchKeywordListByIds, useFetchKeywordList } from '@/domains/dam/keyword/api/keywordApi'
+import type { IntegerId } from '@/shared/types/common'
+import type { Ref } from 'vue'
+import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
+
+export const useKeywordSelectActions = (extSystem: IntegerId) => {
+  const { damClient } = useCommonAdminCoreDamOptions()
+  const { getDamConfigExtSystem } = useDamConfigState()
+
+  const configExtSystem = getDamConfigExtSystem(extSystem)
+  if (isUndefined(configExtSystem)) {
+    throw new Error('Ext system must be initialised.')
+  }
+
+  const mapToValueObject = (keyword: DamKeyword): ValueObjectOption<string> => ({
+    title: keyword.name,
+    value: keyword.id,
+  })
+
+  const mapToMinimal = (keyword: DamKeyword): DamKeywordMinimal => ({
+    id: keyword.id,
+    name: keyword.name,
+  })
+
+  const mapToValueObjects = (keywords: DamKeyword[]): ValueObjectOption<string>[] => {
+    return keywords.map((keyword: DamKeyword) => mapToValueObject(keyword))
+  }
+
+  const mapToMinimals = (keywords: DamKeyword[]): DamKeywordMinimal[] => {
+    return keywords.map((keyword: DamKeyword) => mapToMinimal(keyword))
+  }
+
+  const { execute } = useFetchKeywordList(damClient, extSystem)
+
+  const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToValueObjects(await execute(pagination, filterData, filterConfig))
+  }
+
+  const fetchItemsMinimal = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+    return mapToMinimals(await execute(pagination, filterData, filterConfig))
+  }
+
+  const fetchItemsByIds = async (ids: string[]) => {
+    return mapToValueObjects(await fetchKeywordListByIds(damClient, extSystem, ids))
+  }
+
+  return {
+    mapToValueObject,
+    fetchItems,
+    fetchItemsByIds,
+    fetchItemsMinimal,
+  }
+}

@@ -14,10 +14,10 @@
     },
     "button": {
       "options": "Edit image",
-      "editAsset": "Edit in DAM",
+      "editAsset": "Edit in Media Library",
       "upload": "Upload image",
-      "addFromDam": "Add from DAM",
-      "replaceFromDam": "Replace from DAM",
+      "addFromDam": "Add from Media Library",
+      "replaceFromDam": "Replace from Media Library",
       "removeImage": "Remove image"
     },
     "help": {
@@ -51,7 +51,7 @@
     "displayTitle": "Original Name",
     "error": "Error",
     "copyAssetId": "Copy asset ID",
-    "stillUploadingOrProcessing": "Asset is still uploading or processing by server",
+    "stillUploadingOrProcessing": "Asset is still uploading or being processed by server",
     "removeFromQueue": "Remove item from queue?",
     "errorUnableToCopyToLicence": "Error, unable to copy assets to licence"
   },
@@ -67,11 +67,15 @@
       "video": "Video",
       "document": "Document"
     },
+    "list": {
+      "noTitle": "No title"
+    },
     "detail": {
+      "sourceSystem": "Media Library",
       "toggleInfo": "Info card",
       "metadataToggle": {
-        "show": "Hide more details",
-        "hide": "Show more details"
+        "show": "Show more details",
+        "hide": "Hide more details"
       },
       "tabs": {
         "info": "Info",
@@ -203,12 +207,19 @@
     "systemError": "Error",
     "size": "Invalid size",
     "offset": "Invalid offset",
-    "mimeType": "Invalid file format"
+    "mimeType": "Invalid file format",
+    "chunkValidationFailed": "Upload chunk validation failed. Please contact the administrator.",
+    "processingTooLong": "Processing is taking too long. Use the item's refresh button, or remove the item and try again later."
   },
   "notificationsNotConnected": "The notification service is temporarily down, some features may not behave correctly.",
   "public": {
     "idOrUrl": "Image ID or public image URL",
     "inputError": "Incorrect ID provided",
     "imagePreview": "Image preview"
+  },
+  "error": {
+    "loadingConfig": "Loading Media Library config error",
+    "accessRights": "Media Library access rights error",
+    "unableToLock": "Unable to lock image widget by current user."
   }
 }

@@ -4,6 +4,7 @@
   "save": "Save",
   "saveAndClose": "Save And Close",
   "close": "Close",
+  "open": "Open",
   "edit": "Edit",
   "detail": "Detail",
   "submitFilter": "Apply Filter",
@@ -11,6 +12,7 @@
   "advancedFilters": "More filters",
   "bookmarkFilter": "Bookmark filter",
   "cancel": "Cancel",
+  "retry": "Try again",
   "delete": "Delete",
   "id": "Id",
   "now": "Now",
@@ -26,5 +28,12 @@
   "prev": "Prev",
   "loadMore": "Load more",
   "copy": "Copy",
-  "advanced": "Advanced"
+  "advanced": "Advanced",
+  "clear": "Clear",
+  "moreOptions": "More options",
+  "chooseColor": "Choose color",
+  "increaseHours": "Increase hours",
+  "decreaseHours": "Decrease hours",
+  "increaseMinutes": "Increase minutes",
+  "decreaseMinutes": "Decrease minutes"
 }

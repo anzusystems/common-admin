@@ -1,0 +1,115 @@
+<script setup lang="ts">
+import ADialogToolbar from '@/domains/ui/components/ADialogToolbar.vue'
+import { useI18n } from 'vue-i18n'
+import AFileInput from '@/domains/ui/file/components/AFileInput.vue'
+import type { VBtn } from 'vuetify/components'
+import type { InputFileChangeEvent } from '@/shared/types/ChangeEvent'
+import { nextTick, ref } from 'vue'
+import ARow from '@/domains/ui/components/ARow.vue'
+
+/**
+ * For accept and maxSizes check docs {@see useFormatAndSizeCheck}
+ */
+withDefaults(
+  defineProps<{
+    fileInputKey?: number | undefined
+    accept?: string | undefined
+    maxSizes?: Record<string, number> | undefined
+    multiple?: boolean
+    toolbarT?: string
+  }>(),
+  {
+    fileInputKey: undefined,
+    accept: undefined,
+    maxSizes: undefined,
+    multiple: false,
+    toolbarT: 'common.button.upload',
+  }
+)
+
+const emit = defineEmits<{
+  (e: 'change', event: InputFileChangeEvent): void
+  (e: 'filesInput', files: File[]): void
+}>()
+
+const modelValue = defineModel<boolean>({ default: false, required: false })
+
+const onClose = () => {
+  modelValue.value = false
+}
+
+const { t } = useI18n()
+
+const fileInputComponent = ref<InstanceType<typeof AFileInput> | null>(null)
+
+const onFilesInput = (files: File[]) => {
+  emit('filesInput', files)
+  modelValue.value = false
+}
+
+// Opens the file choice straight away, as a click on the input would. The input lives in the dialog, so the dialog
+// opens first; the choice still comes within the same click, which the browser requires.
+const activate = async () => {
+  modelValue.value = true
+  await nextTick()
+  fileInputComponent.value?.activate()
+}
+
+defineExpose({
+  activate,
+})
+</script>
+
+<template>
+  <VDialog
+    :model-value="modelValue"
+    persistent
+    :max-width="500"
+    @update:model-value="modelValue = $event"
+  >
+    <template #activator="{ props: dialogProps }">
+      <slot
+        name="activator"
+        :props="dialogProps"
+      >
+        <VBtn
+          v-bind="dialogProps"
+          :text="t('common.button.open')"
+        />
+      </slot>
+    </template>
+    <VCard
+      v-if="modelValue"
+      data-cy="create-panel"
+    >
+      <ADialogToolbar @cancel="onClose">
+        <slot name="title">
+          {{ t(toolbarT) }}
+        </slot>
+      </ADialogToolbar>
+      <VCardText>
+        <ARow>
+          <AFileInput
+            ref="fileInputComponent"
+            :file-input-key="fileInputKey"
+            :accept="accept"
+            :max-sizes="maxSizes"
+            :multiple="multiple"
+            use-dropzone
+            @files-input="onFilesInput"
+            @change="emit('change', $event)"
+          />
+        </ARow>
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <ABtnTertiary
+          data-cy="button-close"
+          @click.stop="onClose"
+        >
+          {{ t('common.button.close') }}
+        </ABtnTertiary>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>

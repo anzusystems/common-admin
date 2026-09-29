@@ -15,7 +15,7 @@ const onConfirm = (data: any) => {
   <VCard>
     <VCardText>
       <VRow>
-        <VCol> Open using activator: </VCol>
+        <VCol>Open using activator:</VCol>
       </VRow>
       <VRow>
         <VCol cols="10">
@@ -26,7 +26,7 @@ const onConfirm = (data: any) => {
           <PollSelectTable
             :min-count="1"
             :max-count="maxCount"
-            @on-confirm="onConfirm"
+            @confirm="onConfirm"
           />
         </VCol>
       </VRow>

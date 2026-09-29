@@ -2,6 +2,11 @@
   "system": "Systém",
   "notSelected": "Nevybrané",
   "all": "Všetko",
+  "link": "Odkaz",
+  "text": "Text",
+  "url": "URL",
+  "external": "Externý odkaz",
+  "nofollow": "Nofollow",
   "boolean": {
     "true": "áno",
     "false": "nie"

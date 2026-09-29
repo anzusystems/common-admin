@@ -1,0 +1,34 @@
+/**
+ * Datetime in RFC 3339 format as string.
+ */
+export type DatetimeUTC = string
+
+/**
+ * Calendar day carried as an RFC 3339 datetime pinned to UTC midnight.
+ */
+export type DateUTC = string
+
+/**
+ * Datetime in RFC 3339 format as string + null.
+ */
+export type DatetimeUTCNullable = string | null
+
+/**
+ * Integer ID.
+ */
+export type IntegerId = number
+
+/**
+ * Integer ID + null.
+ */
+export type IntegerIdNullable = number | null
+
+/**
+ * UUID v4 as string.
+ */
+export type DocId = string
+
+/**
+ * UUID v4 as string + null.
+ */
+export type DocIdNullable = string | null

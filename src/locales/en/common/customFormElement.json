@@ -1,0 +1,24 @@
+{
+  "model": {
+    "id": "Id",
+    "property": "Property",
+    "name": "Name",
+    "position": "Position",
+    "attributes": {
+      "type": "Type",
+      "minValue": "Min. value",
+      "maxValue": "Max. value",
+      "minCount": "Min. count",
+      "maxCount": "Max. count",
+      "required": "Required",
+      "searchable": "Searchable"
+    }
+  },
+  "type": {
+    "string": "String",
+    "integer": "Integer",
+    "stringArray": "Array of strings",
+    "stringArrayLegacy": "Array of strings (legacy)",
+    "boolean": "Boolean"
+  }
+}

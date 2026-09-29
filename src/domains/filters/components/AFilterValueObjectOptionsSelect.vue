@@ -1,0 +1,133 @@
+<script lang="ts" setup>
+import type { ValueObjectOption } from '@/shared/types/ValueObject'
+import { computed, inject, watch, getCurrentInstance } from 'vue'
+import { useI18n } from 'vue-i18n'
+import {
+  FilterConfigKey,
+  FilterDataKey,
+  FilterSelectedKey,
+  FilterSubmitResetCounterKey,
+} from '@/domains/filters/utils/filterInjectionKeys'
+import { isArray, isBoolean, isNull, isUndefined } from '@/shared/utils/common'
+import { type AllowedFilterValues, useFilterClearHelpers } from '@/domains/filters/composables/filterFactory'
+
+const props = withDefaults(
+  defineProps<{
+    name: string
+    items: ValueObjectOption<string | number>[]
+    dataCy?: string
+  }>(),
+  {
+    dataCy: 'filter-value',
+  }
+)
+const emit = defineEmits<{
+  (e: 'change'): void
+}>()
+
+const submitResetCounter = inject(FilterSubmitResetCounterKey)
+const filterSelected = inject(FilterSelectedKey)
+const filterConfig = inject(FilterConfigKey)
+const filterData = inject(FilterDataKey)
+
+const componentName = getCurrentInstance()?.type.__name
+
+if (
+  isUndefined(submitResetCounter) ||
+  isUndefined(filterSelected) ||
+  isUndefined(filterData) ||
+  isUndefined(filterConfig)
+) {
+  throw new Error(`[${componentName}] Incorrect provide/inject config.`)
+}
+
+if (
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterConfig.fields[props.name]) ||
+  // eslint-disable-next-line vue/no-setup-props-reactivity-loss
+  isUndefined(filterData[props.name])
+) {
+  throw new Error(
+    `[${componentName}] Incorrect filter config. ` +
+      `Name is '${props.name}' and available options are ${Object.keys(filterData).join(', ')}.`
+  )
+}
+
+const modelValue = computed({
+  get() {
+    return filterData[props.name]
+  },
+  set(newValue) {
+    filterData[props.name] = newValue
+    updateSelected(newValue)
+    filterConfig.touched = true
+    emit('change')
+  },
+})
+
+// The setup above throws unless the field is configured.
+const filterConfigCurrent = computed(() => filterConfig.fields[props.name]!)
+
+const { t } = useI18n()
+
+const label = computed(() => {
+  return filterConfigCurrent.value.titleT ? t(filterConfigCurrent.value.titleT) : undefined
+})
+
+const { clearOne } = useFilterClearHelpers()
+
+const clearField = () => {
+  clearOne(props.name, filterData, filterConfig)
+  filterSelected.value.delete(props.name)
+}
+
+const updateSelected = (newValue: AllowedFilterValues) => {
+  // `null` reaches here when the filter is reset from outside - loading a hash clears every field
+  // before applying it, and the chip has to go with the value. Falling through to `items.find`
+  // would find nothing and leave the previous chip in place, naming a value the query no longer
+  // carries.
+  if (isNull(newValue) || isUndefined(newValue) || (isArray(newValue) && newValue.length === 0)) {
+    filterSelected.value.delete(props.name)
+    return
+  }
+  if (isArray(newValue)) {
+    filterSelected.value.set(
+      props.name,
+      newValue.map((modelItemValue) => {
+        const found = props.items.find((item) => item.value === modelItemValue)
+        if (found) return { title: found.title, value: found.value }
+        return { title: modelItemValue as string, value: modelItemValue as string }
+      })
+    )
+    return
+  }
+  const found = props.items.find((item) => item.value === newValue)
+  if (found) {
+    filterSelected.value.set(props.name, [{ title: found.title as string, value: found.value as string }])
+  }
+}
+
+watch(
+  () => filterData[props.name],
+  (newValue, oldValue) => {
+    if (newValue === oldValue || isBoolean(newValue)) return
+    updateSelected(newValue)
+  },
+  { immediate: true }
+)
+</script>
+
+<template>
+  <VAutocomplete
+    v-model="modelValue"
+    :items="items"
+    :chips="filterConfigCurrent.multiple"
+    :label="label"
+    :multiple="filterConfigCurrent.multiple"
+    :clearable="!filterConfigCurrent.mandatory"
+    :data-cy="dataCy"
+    hide-details
+    autocomplete="off"
+    @click:clear.stop="clearField"
+  />
+</template>

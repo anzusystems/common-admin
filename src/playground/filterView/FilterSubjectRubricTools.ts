@@ -4,16 +4,16 @@ import {
   type FilterConfig,
   type FilterData,
   type MakeFilterOption,
-} from '@/labs/filters/filterFactory'
-import { useApiFetchList } from '@/labs/api/useApiFetchList'
-import { useApiFetchByIds } from '@/labs/api/useApiFetchByIds'
-import type { IntegerId, IntegerIdNullable } from '@/types/common'
-import type { ValueObjectOption } from '@/types/ValueObject'
+} from '@/domains/filters/composables/filterFactory'
+import { useApiFetchList } from '@/domains/api/composables/useApiFetchList'
+import { useApiFetchByIds } from '@/domains/api/composables/useApiFetchByIds'
+import type { IntegerId, IntegerIdNullable } from '@/shared/types/common'
+import type { ValueObjectOption } from '@/shared/types/ValueObject'
 import { cmsClient } from '@/playground/mock/cmsClient'
-import type { AnzuUserAndTimeTrackingAware } from '@/types/AnzuUserAndTimeTrackingAware'
+import type { AnzuUserAndTimeTrackingAware } from '@/shared/types/AnzuUserAndTimeTrackingAware'
 import { type Ref } from 'vue'
 
-import type { Pagination } from '@/labs/filters/pagination'
+import type { Pagination } from '@/domains/api/composables/pagination'
 
 interface Rubric extends AnzuUserAndTimeTrackingAware {
   id: IntegerId
@@ -63,44 +63,40 @@ interface Rubric extends AnzuUserAndTimeTrackingAware {
 const END_POINT = '/adm/v1/rubric'
 
 const fetchRubricListByIds = (ids: IntegerId[]) => {
-  const { executeFetch } = useApiFetchByIds<Rubric[]>({
+  const { execute } = useApiFetchByIds<Rubric>({
     client: cmsClient,
     system: 'cms',
     entity: 'rubric',
     urlTemplate: END_POINT,
   })
-  return executeFetch(ids)
+  return execute(ids)
 }
 
 const useFetchRubricList = () =>
-  useApiFetchList<Rubric[]>({
+  useApiFetchList<Rubric>({
     client: cmsClient,
     system: 'cms',
     entity: 'rubric',
     urlTemplate: END_POINT,
   })
 
-export const fetchItems = async (
-  pagination: Ref<Pagination>,
-  filterData: FilterData,
-  filterConfig: FilterConfig,
-) => {
-  const { executeFetch } = useFetchRubricList()
-  const rubrics = await executeFetch(pagination, filterData, filterConfig)
+export const fetchItems = async (pagination: Ref<Pagination>, filterData: FilterData, filterConfig: FilterConfig) => {
+  const { execute } = useFetchRubricList()
+  const rubrics = await execute(pagination, filterData, filterConfig)
 
-  return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({
+  return rubrics.map((rubric: Rubric) => ({
     title: rubric.texts.title,
     value: rubric.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export const fetchItemsByIds = async (ids: IntegerId[]) => {
   const rubrics = await fetchRubricListByIds(ids)
 
-  return <ValueObjectOption<IntegerId>[]>rubrics.map((rubric: Rubric) => ({
+  return rubrics.map((rubric: Rubric) => ({
     title: rubric.texts.title,
     value: rubric.id,
-  }))
+  })) as ValueObjectOption<IntegerId>[]
 }
 
 export function useSubjectRubricInnerFilter() {

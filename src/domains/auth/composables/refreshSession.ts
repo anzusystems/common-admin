@@ -1,0 +1,131 @@
+import axios, { type InternalAxiosRequestConfig } from 'axios'
+import { isDefined, isNull } from '@/shared/utils/common'
+import { skipUrlPrefixes } from '@/domains/api/composables/defineApiClient'
+import { AuthUnavailableError } from '@/shared/error/AuthUnavailableError'
+import { isInCauseChain } from '@/shared/error/isInCauseChain'
+import { SessionExpiredError } from '@/shared/error/SessionExpiredError'
+
+const HTTP_BAD_REQUEST = 400
+const HTTP_UNAUTHORIZED = 401
+// How long a 400 waits for the cookie of the tab whose refresh won: its answer can come after this one's.
+const ROTATION_GRACE_MS = 1000
+const ROTATION_POLL_MS = 100
+
+export type RefreshResult =
+  | { type: 'refreshed' }
+  | { type: 'session-expired' }
+  | { type: 'auth-unavailable'; error: unknown }
+
+/** What the refresh needs to know about the auth cookies. */
+export interface AuthCookieState {
+  refreshTokenExists: unknown
+  jwtPayload: string | null | undefined
+}
+
+// `undefined`: no response anywhere in the chain -- a timeout or a network failure.
+const httpStatusInCauseChain = (error: unknown): number | undefined => {
+  let status: number | undefined
+  isInCauseChain(error, (value) => {
+    if (!axios.isAxiosError(value) || !isDefined(value.response)) return false
+    status = value.response.status
+    return true
+  })
+  return status
+}
+
+/**
+ * The session refresh, single flight: a refresh already running is joined, otherwise a new one
+ * starts; a finished result is never reused.
+ *
+ * Only a 401 means the session is gone. A 400 (`unable_to_refresh`) can equally mean another tab
+ * rotated the token first -- the backend rotation is not atomic -- which a changed JWT cookie shows,
+ * up to a second later when that tab's answer arrives after this one's.
+ * Everything else is the auth backend being unavailable, never a reason to log out.
+ */
+export function createRefreshSession(options: {
+  /** Calls the refresh endpoint; rejects with whatever the api helper throws. */
+  refresh: () => Promise<unknown>
+  /** The JWT payload cookie as it is now. */
+  jwtPayload: () => string | null | undefined
+}): () => Promise<RefreshResult> {
+  let inFlight: Promise<RefreshResult> | null = null
+
+  const rotatedMeanwhile = async (before: string | null | undefined): Promise<boolean> => {
+    for (let waited = 0; ; waited += ROTATION_POLL_MS) {
+      const now = options.jwtPayload()
+      if (isDefined(now) && !isNull(now) && now !== before) return true
+      if (waited >= ROTATION_GRACE_MS) return false
+      await new Promise((resolve) => setTimeout(resolve, ROTATION_POLL_MS))
+    }
+  }
+
+  const run = async (): Promise<RefreshResult> => {
+    // Before the request: with a refresh in flight the cookie is already there, so only a changed
+    // value says something afterwards.
+    const jwtPayloadBefore = options.jwtPayload()
+    try {
+      await options.refresh()
+      return { type: 'refreshed' }
+    } catch (error) {
+      const status = httpStatusInCauseChain(error)
+      if (status === HTTP_UNAUTHORIZED) return { type: 'session-expired' }
+      if (status === HTTP_BAD_REQUEST) {
+        return (await rotatedMeanwhile(jwtPayloadBefore)) ? { type: 'refreshed' } : { type: 'session-expired' }
+      }
+      return { type: 'auth-unavailable', error }
+    }
+  }
+
+  return () => {
+    if (isNull(inFlight)) {
+      inFlight = run().finally(() => {
+        inFlight = null
+      })
+    }
+    return inFlight
+  }
+}
+
+/**
+ * The axios request interceptor that refreshes an expired JWT before a request goes out, with the
+ * `runWhen` that keeps it off the auth endpoints themselves. Concurrent requests share one refresh
+ * (`refreshSession`), and a request is rejected with `SessionExpiredError` (after `logout`) or
+ * `AuthUnavailableError` (the user stays logged in).
+ */
+export function createRefreshRequestInterceptor(options: {
+  cookies: () => AuthCookieState
+  refreshSession: () => Promise<RefreshResult>
+  logout: () => void
+  /** Requests to these urls (the auth endpoints) are never held for a refresh. */
+  skipUrlPrefix: string
+  /** A JWT that is still there but past its expiry also needs a refresh (default: only a missing one). */
+  jwtExpired?: () => boolean
+}) {
+  // Requests waiting on one refresh share its result: log out once for it, not once per request.
+  const loggedOut = new WeakSet<RefreshResult>()
+
+  const interceptor = async (requestConfig: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
+    const { refreshTokenExists, jwtPayload } = options.cookies()
+    if (!refreshTokenExists && !jwtPayload) {
+      options.logout()
+      throw new SessionExpiredError()
+    }
+    if (refreshTokenExists && (!jwtPayload || options.jwtExpired?.())) {
+      const result = await options.refreshSession()
+      if (result.type === 'session-expired') {
+        if (!loggedOut.has(result)) {
+          loggedOut.add(result)
+          options.logout()
+        }
+        throw new SessionExpiredError()
+      }
+      if (result.type === 'auth-unavailable') throw new AuthUnavailableError(result.error)
+    }
+    return requestConfig
+  }
+
+  return {
+    interceptor,
+    options: { runWhen: skipUrlPrefixes(options.skipUrlPrefix) },
+  }
+}
