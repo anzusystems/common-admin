@@ -373,7 +373,11 @@ import { useDamUploadChunkSize } from '@/domains/dam/uploadQueue/composables/dam
 import { damFileTypeFix } from '@/domains/ui/file/utils/fileType'
 import { useDamAcceptTypeAndSizeHelper } from '@/domains/dam/config/composables/acceptTypeAndSizeHelper'
 import { useAssetSuggestions } from '@/domains/dam/uploadQueue/composables/assetSuggestions'
-import { initDamNotifications, useDamNotifications } from '@/domains/dam/composables/damNotifications'
+import {
+  destroyDamNotifications,
+  initDamNotifications,
+  useDamNotifications,
+} from '@/domains/dam/composables/damNotifications'
 import { useDropzoneGlobalDragState } from '@/domains/ui/file/composables/dropzone'
 import { DamNotificationName, type DamNotificationNameType } from '@/domains/dam/composables/damNotificationsEventBus'
 import type { ImageAware, ImageCreateUpdateAware } from '@/domains/dam/types/ImageAware'
@@ -816,6 +820,7 @@ export {
   useDamUploadChunkSize,
   useDamAcceptTypeAndSizeHelper,
   useAssetSuggestions,
+  destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
   useDropzoneGlobalDragState,

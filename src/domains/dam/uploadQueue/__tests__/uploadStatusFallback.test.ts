@@ -111,6 +111,56 @@ describe('upload status fallback poll', () => {
   })
 })
 
+// Removed while its poll waited for the asset, an item kept polling for the tries left, and the poll kept it
+// in memory, file and all.
+describe('an item removed while its poll waits for the asset', () => {
+  it('is polled no more', async () => {
+    fetchAsset.mockReset()
+    let answer: (value: unknown) => void = () => {}
+    fetchAsset.mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)))
+    fetchAsset.mockResolvedValue(asset('asset-1', AssetFileProcessStatus.Uploaded))
+    const store = useUploadQueuesStore()
+    const key = 'removed'
+    await store.addByCopyToLicence(key, 1, 1, ['asset-1'])
+    await vi.waitFor(() => expect(fetchAsset).toHaveBeenCalledTimes(1), { timeout: 2000 })
+
+    store.removeByIndex(key, 0)
+    answer(asset('asset-1', AssetFileProcessStatus.Uploaded))
+    await settle(300)
+
+    expect(polls).toEqual([10_000])
+    expect(fetchAsset).toHaveBeenCalledTimes(1)
+  })
+})
+
+// A stop while the finish request ran was overwritten when it answered: the item went back to processing and was
+// polled, file and all.
+describe('an upload stopped while it finishes', () => {
+  it('stays stopped and is not polled', async () => {
+    const { imageUploadFinish } = await import('@/domains/dam/api/damImageApi')
+    let answer: (value: unknown) => void = () => {}
+    vi.mocked(imageUploadFinish).mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)) as never)
+    const item = useUploadQueueItemFactory().createDefault(
+      'k',
+      UploadQueueItemType.File,
+      UploadQueueItemStatus.Uploading,
+      DamAssetType.Image,
+      1024,
+      1
+    )
+    item.assetId = 'asset-1'
+
+    const finished = damUploadFinish(() => ({}) as never, '/asset', '/image', item, 'sha', true)
+    item.status = UploadQueueItemStatus.Stop
+    answer({})
+    await finished
+    await settle()
+
+    expect(item.status).toBe(UploadQueueItemStatus.Stop)
+    expect(polls).toEqual([])
+  })
+})
+
 describe('an asset copied to the licence', () => {
   it('is polled for when no notification comes, and ends up uploaded with its file', async () => {
     fetchAsset.mockResolvedValue(asset('asset-1', AssetFileProcessStatus.Processed))

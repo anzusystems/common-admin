@@ -74,6 +74,19 @@ describe('damNotifications singleton', () => {
     expect(handle.damNotificationsInitialized.value).toBe(false)
   })
 
+  // Disposed directly, the handle stayed cached: the next init handed it back, and it never opened again.
+  it('opens a fresh connection after its handle was disposed directly', () => {
+    const first = initDamNotifications()
+    first.dispose()
+
+    const second = initDamNotifications()
+    second.openConnection()
+
+    expect(second).not.toBe(first)
+    expect(second.damNotificationsInitialized.value).toBe(true)
+    expect(second.status.value).not.toBe('CLOSED')
+  })
+
   it('does not reopen an already open connection', () => {
     const handle = initDamNotifications()
 

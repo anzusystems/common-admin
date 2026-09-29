@@ -437,11 +437,25 @@ export const useUploadQueuesStore = defineStore('commonUploadQueuesStore', () =>
     }
   }
 
+  // A removed item is stopped as a stopped upload is. The fallback reschedules itself for up to 550s, polling fetchAsset
+  // and holding the File, and a poll already waiting for its fetch has no timer to clear: it stops at the status. An
+  // upload still sending went on unseen, then was polled, and no longer counted against the parallel limit.
+  function stopRemoved(item: UploadQueueItem) {
+    clearTimeout(item.notificationFallbackTimer)
+    const active: UploadQueueItemStatusType[] = [
+      UploadQueueItemStatus.Waiting,
+      UploadQueueItemStatus.Uploading,
+      UploadQueueItemStatus.Processing,
+    ]
+    if (!active.includes(item.status)) return
+    item.status = UploadQueueItemStatus.Stop
+    if (item.latestChunkAbortController) uploadStop(item.latestChunkAbortController)
+  }
+
   function removeByIndex(queueKey: UploadQueueKey, index: number) {
     const queue = queues.value.get(queueKey)
     if (!queue || !queue.items[index]) return
-    // The fallback reschedules itself for up to 550s, polling fetchAsset and holding the File.
-    clearTimeout(queue.items[index].notificationFallbackTimer)
+    stopRemoved(queue.items[index])
     queue.items.splice(index, 1)
     recalculateQueueCounts(queueKey)
   }

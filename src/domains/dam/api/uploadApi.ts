@@ -74,6 +74,11 @@ export const damUploadFinish = (
     }
     imageUploadFinish(client, endPointImage, item, sha)
       .then((res) => {
+        // Stopped while the finish request ran, which has nothing to cancel: it stays stopped, and is not polled.
+        if (item.status === UploadQueueItemStatus.Stop) {
+          resolve(res)
+          return
+        }
         item.status = UploadQueueItemStatus.Processing
         if (uploadStatusFallback) armNotificationFallback(client, endPointAsset, item)
         resolve(res)

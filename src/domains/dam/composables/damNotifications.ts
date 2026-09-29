@@ -15,7 +15,7 @@ let singleton: DamNotificationsHandle | undefined = undefined
 let singletonScope: EffectScope | undefined = undefined
 let singletonKey: string | undefined = undefined
 
-function createDamNotifications() {
+function createDamNotifications(onDispose: () => void = () => {}) {
   const { notification } = useCommonAdminCoreDamOptionsGlobal()
 
   const enabled = notification.enabled && notification.webSocketUrl.length > 0
@@ -69,6 +69,7 @@ function createDamNotifications() {
   const dispose = () => {
     disposed = true
     closeConnection()
+    onDispose()
   }
 
   return {
@@ -92,10 +93,24 @@ export function initDamNotifications() {
   if (singleton) destroyDamNotifications()
 
   singletonScope = effectScope(true)
-  singleton = singletonScope.run(() => createDamNotifications())!
+  // Disposed directly, the handle is forgotten too: kept, the next call handed back a socket that never opened again.
+  const handle: DamNotificationsHandle = singletonScope.run(() =>
+    createDamNotifications(() => {
+      if (singleton === handle) forgetSingleton()
+    })
+  )!
+  singleton = handle
   singletonKey = key
 
   return singleton
+}
+
+const forgetSingleton = () => {
+  singletonScope?.stop()
+  damNotificationsInitialized.value = false
+  singleton = undefined
+  singletonScope = undefined
+  singletonKey = undefined
 }
 
 /**
@@ -104,11 +119,7 @@ export function initDamNotifications() {
  */
 export function destroyDamNotifications() {
   singleton?.dispose()
-  singletonScope?.stop()
-  damNotificationsInitialized.value = false
-  singleton = undefined
-  singletonScope = undefined
-  singletonKey = undefined
+  forgetSingleton()
 }
 
 export function useDamNotifications() {

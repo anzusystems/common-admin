@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import axios from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
 import { DamAssetType } from '@/domains/dam/types/Asset'
@@ -17,7 +18,7 @@ vi.mock('@/domains/dam/composables/damNotifications', () => ({
   }),
 }))
 
-// Each chunk waits until the test lets that file's request answer.
+// Each chunk waits until the test lets that file's request answer, or, as axios does, rejects once its signal aborts.
 const release = new Map<string, () => void>()
 const damUploadStart = vi.fn(async (_c: unknown, _e: unknown, item: UploadQueueItem) => ({
   asset: `asset-${item.file!.name}`,
@@ -25,7 +26,10 @@ const damUploadStart = vi.fn(async (_c: unknown, _e: unknown, item: UploadQueueI
 }))
 const damUploadChunk = vi.fn(
   (_c: unknown, _e: unknown, item: UploadQueueItem) =>
-    new Promise((resolve) => release.set(item.file!.name, () => resolve({})))
+    new Promise((resolve, reject) => {
+      release.set(item.file!.name, () => resolve({}))
+      item.latestChunkAbortController?.signal.addEventListener('abort', () => reject(new axios.CanceledError()))
+    })
 )
 // As the real one: a finished upload leaves "uploading" for "processing".
 const damUploadFinish = vi.fn(async (_c: unknown, _a: unknown, _i: unknown, item: UploadQueueItem) => {
@@ -103,6 +107,26 @@ describe('an asset copied to the licence whose detail fails to load', () => {
 
     expect(item.error.hasError).toBe(true)
     expect(store.getQueueProcessedCount('q')).toBe(store.getQueueTotalCount('q'))
+  })
+})
+
+// Removed while it sent, an upload went on in the background: it finished, was polled for its processing, and no
+// longer counted as uploading, so the queue started one more beside it.
+describe('an upload removed while it sends', () => {
+  it('stops, and the next file takes its slot', async () => {
+    const store = useUploadQueuesStore()
+    const files = ['a', 'b', 'c'].map((n) => new File(['x'], `${n}.jpg`, { type: 'image/jpeg' }))
+    await store.addByFiles('removed', 1, 1, files)
+    await vi.waitFor(() => expect(release.size).toBe(2))
+    const removed = store.getQueueItems('removed')[0]!
+
+    // Its chunk request never answers: only the abort frees the slot for c.
+    store.removeByIndex('removed', 0)
+    await vi.waitFor(() => expect(release.has('c.jpg')).toBe(true))
+    await settle()
+
+    expect(damUploadFinish.mock.calls.some((call) => call[3].file?.name === 'a.jpg')).toBe(false)
+    expect(removed.status).not.toBe(UploadQueueItemStatus.Processing)
   })
 })
 

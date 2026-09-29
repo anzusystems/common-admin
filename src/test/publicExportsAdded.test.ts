@@ -15,6 +15,12 @@ describe('exports the admins redefined', () => {
     expect(lib.SORT_BY_SCORE_DATE).toBe('score_date')
     expect(lib.SORT_BY_SCORE_BEST).toBe('score_best')
   })
+
+  // Exported in 1.x, dropped from 2.0 with the commented-out exports: an app tearing down its DAM socket had
+  // nothing to call.
+  it('include tearing down the DAM notification socket', () => {
+    expect(lib.destroyDamNotifications).toBeTypeOf('function')
+  })
 })
 
 describe('apiErrorStatus', () => {
