@@ -259,7 +259,7 @@ __metadata:
     stylelint-config-standard-scss: "npm:^17.0.0"
     typescript: "npm:5.9.3"
     unplugin: "npm:3.3.0"
-    unplugin-dts: "npm:^1.0.3"
+    unplugin-dts: "npm:^1.1.0"
     uuid: "npm:^14.0.2"
     vite: "npm:7.3.6"
     vite-plugin-vuetify: "npm:^2.1.3"
@@ -5453,6 +5453,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"glob-to-regexp@npm:0.4.1":
+  version: 0.4.1
+  resolution: "glob-to-regexp@npm:0.4.1"
+  checksum: 10/9009529195a955c40d7b9690794aeff5ba665cc38f1519e111c58bb54366fd0c106bde80acf97ba4e533208eb53422c83b136611a54c5fefb1edd8dc267cb62e
+  languageName: node
+  linkType: hard
+
 "glob@npm:^13.0.0, glob@npm:^13.0.6":
   version: 13.0.6
   resolution: "glob@npm:13.0.6"
@@ -8727,14 +8734,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin-dts@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "unplugin-dts@npm:1.0.3"
+"unplugin-dts@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "unplugin-dts@npm:1.1.0"
   dependencies:
     "@rollup/pluginutils": "npm:^5.1.4"
     "@volar/typescript": "npm:^2.4.26"
     compare-versions: "npm:^6.1.1"
     debug: "npm:^4.4.0"
+    glob-to-regexp: "npm:0.4.1"
     kolorist: "npm:^1.8.0"
     local-pkg: "npm:^1.1.1"
     magic-string: "npm:^0.30.17"
@@ -8766,7 +8774,7 @@ __metadata:
       optional: true
     webpack:
       optional: true
-  checksum: 10/bb6e5b8dfe9a25d2524b6a7ecfac29dbf4db408dcfd31df9d8cd74daa048eb3aec90c1cd4c025b1d63fe42864f274767a7290e30e3d6f4e964f14371cbe096f4
+  checksum: 10/d78eed80ed676b9952c09d0159326266f9ea26ad5c6348f04f8584f906b5df96d3b694e6914f4c9af14a157586afd5e1b5230bfcbca0e725624713e15e6ed258
   languageName: node
   linkType: hard
 
