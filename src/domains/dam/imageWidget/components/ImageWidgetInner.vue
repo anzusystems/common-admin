@@ -132,8 +132,10 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   // })
   addCollabFieldLockStatusListener((data: CollabFieldLockStatusPayload) => {
     if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Acquire) {
+      lockRequestPending.value = false
       collabFieldLockReallyLocked.value = true
     } else if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
+      lockRequestPending.value = false
       collabFieldLockReallyLocked.value = false
     } else if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Release) {
       collabFieldLockReallyLocked.value = false
@@ -143,10 +145,17 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
   })
 }
 const lockedLocal = ref(false)
-const acquireFieldLockLocal = () => {
-  if (lockedLocal.value === true || props.collabStatus === CollabStatus.Inactive) return
+// Asked for once per lock. A drop asks again for a lock not confirmed yet: a refused request left every later drop
+// waiting on a lock never granted. A refusal does not forget the lock either: a timed-out request answers the same,
+// and the server may have granted it, so it is still released. Never asked while a request is out: a second one
+// could answer after the first, and one sent by the click that closes the menu raced its release on the server.
+const lockRequestPending = ref(false)
+const acquireFieldLockLocal = (again = false) => {
+  if (props.collabStatus === CollabStatus.Inactive) return
+  if (lockedLocal.value === true && (!again || lockRequestPending.value || collabFieldLockReallyLocked.value)) return
   // What an earlier answer left says nothing about this lock: the wait for it waits for this answer.
   collabFieldLockReallyLocked.value = false
+  lockRequestPending.value = true
   acquireFieldLock.value()
   lockedLocal.value = true
 }
@@ -280,7 +289,7 @@ const onDrop = async (files: File[]) => {
     showErrorT('common.damImage.error.unableToLock')
     return
   }
-  acquireFieldLockLocal()
+  acquireFieldLockLocal(true)
   const config = imageWidgetUploadConfig.value!
   try {
     await waitForFieldLockIsReallyAcquired()
@@ -370,7 +379,19 @@ const reset = () => {
 const assetSelectStore = useAssetSelectStore()
 const { getDamConfigExtSystem } = useDamConfigState()
 
+// The picker closes itself as it answers, and the widget's next dialog opens only once the asset is fetched or
+// copied: till then the pick counts as an open dialog, or the close watcher gave the lock up with the old value.
+const assetPickPending = ref(false)
 const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
+  assetPickPending.value = true
+  try {
+    await pickAsset(data)
+  } finally {
+    assetPickPending.value = false
+  }
+}
+
+const pickAsset = async (data: AssetSelectReturnData) => {
   metadataDialogLoading.value = true
   imageMediaWidgetStore.setDetail(null)
   showDamAuthorsInCmsImage.value = false
@@ -583,6 +604,7 @@ const onOptionsButtonClick = () => {
 
 const anyWidgetDialogOpened = computed(() => {
   return (
+    assetPickPending.value ||
     metadataDialog.value ||
     assetSelectDialog.value ||
     fileInputDialog.value ||
@@ -597,7 +619,10 @@ const isLocked = computed(() => {
 watch(
   clickMenuOpened,
   (newValue, oldValue) => {
-    if (newValue === oldValue || newValue || anyWidgetDialogOpened.value) return
+    if (newValue === oldValue) return
+    // Opened: a lock a refused drop left unconfirmed is asked for again, here and not in the click, which also closes.
+    if (newValue) return void acquireFieldLockLocal(true)
+    if (anyWidgetDialogOpened.value) return
     releaseFieldLockLocal(modelValue.value)
   },
   { immediate: false }
