@@ -1,20 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent, h, ref, shallowRef } from 'vue'
-import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
+import ImageWidgetInner from '@/domains/dam/imageWidget/components/ImageWidgetInner.vue'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
-import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
+import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
 import {
   CollabFieldLockStatus,
   type CollabFieldLockStatusPayload,
   CollabFieldLockType,
 } from '@/domains/collab/composables/collabEventBus'
 
-// The widget holds an image or a media. Released with a bare id, the other editors could not tell which,
-// nor set either: an admin wrote the value under the field name and nobody else saw the new lead image.
-// Mounted under a `v-model` parent, as in an admin: there an assigned model shows only after the parent renders, and
-// a release that read the models back sent the previous image.
+// A second release of the field's lock is refused by the server, and the widget read the refusal as the lock still
+// held: the next drop uploaded without waiting for its own lock, also while another editor held the field.
 
 const released = vi.fn()
 const acquired = vi.fn()
@@ -47,7 +45,7 @@ vi.mock('@/domains/dam/imageWidget/composables/commonAdminImageOptions', () => (
     imageApi: {
       fetchImage: vi.fn(async (_client: unknown, id: number) => ({
         id,
-        texts: { description: 'lead', source: '' },
+        texts: { description: 'listing', source: '' },
         flags: { showSource: true, internal: false, overrideInternal: false },
         dam: { damId: `file-${id}`, licenceId: 1, regionPosition: 0, internal: false },
         position: 1,
@@ -65,9 +63,9 @@ vi.mock('@/domains/dam/config/composables/damConfigState', () => ({
   useDamConfigState: () => ({ getDamConfigExtSystem: () => undefined, getExtSystemByLicence: async () => 1 }),
 }))
 
-const initialImage = {
+const image = {
   id: 7,
-  texts: { description: 'lead', source: '' },
+  texts: { description: 'listing', source: '' },
   flags: { showSource: true, internal: false, overrideInternal: false },
   dam: { damId: 'file-7', licenceId: 1, regionPosition: 0, internal: false },
   position: 1,
@@ -76,20 +74,17 @@ const initialImage = {
 const mountWidget = (queueKey: string) => {
   released.mockClear()
   acquired.mockClear()
-  const image = ref<number | null>(7)
-  const media = ref<unknown>(null)
+  const model = ref<number | null>(7)
   const Parent = defineComponent({
     setup: () => () =>
-      h(ImageMediaWidgetInner as never, {
+      h(ImageWidgetInner as never, {
         queueKey,
         uploadLicence: 1,
         selectLicences: [1],
-        initialImage,
-        image: image.value,
-        'onUpdate:image': (value: number | null) => (image.value = value),
-        media: media.value,
-        'onUpdate:media': (value: unknown) => (media.value = value),
-        collab: { room: 'article:1', field: 'leadImageMedia', cachedUsers: {} },
+        image,
+        modelValue: model.value,
+        'onUpdate:modelValue': (value: number | null) => (model.value = value),
+        collab: { room: 'article:1', field: 'listingImage', cachedUsers: new Map() },
         collabStatus: 'active',
       }),
   })
@@ -106,7 +101,7 @@ const mountWidget = (queueKey: string) => {
       },
       stubs: {
         ImageDetailDialogMetadata: true,
-        AAssetSelectMedia: true,
+        AAssetSelect: true,
         AssetDetailDialog: true,
         UploadQueueDialogSingle: true,
         AFileInputDialog: true,
@@ -115,87 +110,61 @@ const mountWidget = (queueKey: string) => {
       },
     },
   })
-  return { wrapper, image }
+  return { wrapper, model }
 }
 
-const removeImage = async (wrapper: ReturnType<typeof mountWidget>['wrapper']) => {
+const openMenu = async (wrapper: ReturnType<typeof mountWidget>['wrapper']) => {
   await flushPromises()
   await wrapper.find('[aria-label="Edit image"]').trigger('click')
   await flushPromises()
-  const remove = [...document.body.querySelectorAll('.v-list-item')].find((item) =>
-    /remove/i.test(item.textContent ?? '')
-  ) as HTMLElement | undefined
-  remove?.click()
-  await flushPromises()
 }
 
-describe('ImageMediaWidgetInner in a collab room', () => {
-  it('releases the field with both what it holds, image and media', async () => {
-    const { wrapper, image } = mountWidget('lead-release')
-    await removeImage(wrapper)
+const drop = (wrapper: ReturnType<typeof mountWidget>['wrapper']) =>
+  wrapper.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', [new File(['x'], 'x.jpg')])
+
+describe('ImageWidgetInner in a collab room', () => {
+  it('releases the field once, with no image, after a remove', async () => {
+    const { wrapper, model } = mountWidget('listing-remove')
+    await openMenu(wrapper)
+    const remove = [...document.body.querySelectorAll('.v-list-item')].find((item) =>
+      /remove/i.test(item.textContent ?? '')
+    ) as HTMLElement | undefined
+    remove?.click()
+    await flushPromises()
+    await flushPromises()
 
     // eslint-disable-next-line vue/no-ref-object-reactivity-loss -- final read for an assertion
-    expect(image.value).toBeNull()
-    expect(released).toHaveBeenCalled()
-    expect(released.mock.calls[0]![0]).toEqual({ image: null, media: null })
-    wrapper.unmount()
-  })
-
-  // A second release is refused by the server, and the widget read the refusal as still holding the lock.
-  it('releases the field once for the lock it took', async () => {
-    const { wrapper } = mountWidget('lead-once')
-    await removeImage(wrapper)
-    await flushPromises()
-
+    expect(model.value).toBeNull()
     expect(acquired).toHaveBeenCalledTimes(1)
     expect(released).toHaveBeenCalledTimes(1)
+    expect(released.mock.calls[0]![0]).toBeNull()
     wrapper.unmount()
   })
 
-  // The metadata dialog is a stub: opened, then confirmed, as the user does with the detail in the store.
-  const confirmMetadata = async (
-    wrapper: ReturnType<typeof mountWidget>['wrapper'],
-    detail: Parameters<ReturnType<typeof useImageMediaWidgetStore>['setDetail']>[0]
-  ) => {
-    await flushPromises()
-    await wrapper.find('[aria-label="Edit image"]').trigger('click')
-    await flushPromises()
+  it('releases once with the image it saved', async () => {
+    const { wrapper } = mountWidget('listing-confirm')
+    await openMenu(wrapper)
     const dialog = wrapper.findComponent({ name: 'ImageDetailDialogMetadata' })
     dialog.vm.$emit('update:modelValue', true)
     await flushPromises()
-    useImageMediaWidgetStore().setDetail(detail)
+    useImageMediaWidgetStore().setDetail({ ...image } as never)
     dialog.vm.$emit('confirm')
     await flushPromises()
     await flushPromises()
-  }
-
-  it('releases once with the image it saved', async () => {
-    const { wrapper } = mountWidget('lead-image-confirm')
-    await confirmMetadata(wrapper, { ...initialImage } as never)
 
     expect(released).toHaveBeenCalledTimes(1)
-    expect(released.mock.calls[0]![0]).toEqual({ image: 8, media: null })
-    wrapper.unmount()
-  })
-
-  it('releases once with the media it picked', async () => {
-    const { wrapper } = mountWidget('lead-media-confirm')
-    const media = { damMedia: { assetId: 'a1', imageFileId: null, assetType: 'video' }, texts: {} }
-    await confirmMetadata(wrapper, media as never)
-
-    expect(released).toHaveBeenCalledTimes(1)
-    expect(released.mock.calls[0]![0]).toEqual({ image: null, media })
+    expect(released.mock.calls[0]![0]).toBe(8)
     wrapper.unmount()
   })
 
   it('takes no drop while another editor holds the field, whatever an earlier refusal left behind', async () => {
-    const { wrapper } = mountWidget('lead-drop')
+    const { wrapper } = mountWidget('listing-drop')
     await flushPromises()
     lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Release } as never)
     lock.byUser!.value = 9
     await flushPromises()
 
-    wrapper.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', [new File(['x'], 'x.jpg')])
+    drop(wrapper)
     await flushPromises()
 
     expect(acquired).not.toHaveBeenCalled()
@@ -204,12 +173,12 @@ describe('ImageMediaWidgetInner in a collab room', () => {
   })
 
   it('waits for the answer to its own lock before a drop uploads', async () => {
-    const { wrapper } = mountWidget('lead-wait')
+    const { wrapper } = mountWidget('listing-wait')
     const addByFiles = vi.spyOn(useUploadQueuesStore(), 'addByFiles').mockResolvedValue(undefined as never)
     await flushPromises()
     lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Release } as never)
 
-    wrapper.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', [new File(['x'], 'x.jpg')])
+    drop(wrapper)
     await flushPromises()
     expect(acquired).toHaveBeenCalledTimes(1)
     expect(addByFiles).not.toHaveBeenCalled()

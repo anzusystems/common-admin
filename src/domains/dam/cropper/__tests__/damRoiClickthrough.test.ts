@@ -175,7 +175,37 @@ const mountEditor = async (
       if (Date.now() > deadline) throw new Error('the editor never came back')
       await wait(40)
     }
-    await wait(150)
+    // The canvas comes before the picture is loaded and fitted into it; a fixed pause could end mid-fit when the
+    // browser was busy, and the crop then measured against a picture still moving. Wait until picture and
+    // selection hold still.
+    const geometry = () => {
+      const picture = frame.querySelector('cropper-image')?.getBoundingClientRect()
+      const selection = frame.querySelector('cropper-selection') as
+        | (HTMLElement & { x: number; y: number; width: number; height: number })
+        | null
+      if (!picture || !selection || picture.width === 0) return null
+      return [
+        picture.left,
+        picture.top,
+        picture.width,
+        picture.height,
+        selection.x,
+        selection.y,
+        selection.width,
+        selection.height,
+      ].join()
+    }
+    let last = geometry()
+    let stillSince = Date.now()
+    while (last === null || Date.now() - stillSince < 150) {
+      if (Date.now() > deadline) throw new Error('the editor never settled')
+      await wait(40)
+      const now = geometry()
+      if (now !== last) {
+        last = now
+        stillSince = Date.now()
+      }
+    }
   }
 
   const crop = (): [number, number, number, number] => {

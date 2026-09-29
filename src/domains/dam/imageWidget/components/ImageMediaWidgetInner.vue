@@ -154,12 +154,21 @@ const collabValue = (): ImageMediaCollabValue => ({ image: imageModel.value, med
 const lockedLocal = ref(false)
 const acquireFieldLockLocal = () => {
   if (lockedLocal.value === true || props.collabStatus === CollabStatus.Inactive) return
+  // What an earlier answer left says nothing about this lock: the wait for it waits for this answer.
+  collabFieldLockReallyLocked.value = false
   acquireFieldLock.value()
   lockedLocal.value = true
 }
 const releaseFieldLockLocal = () => {
   if (lockedLocal.value === false || props.collabStatus === CollabStatus.Inactive) return
   releaseFieldLock.value(collabValue())
+  lockedLocal.value = false
+}
+// One release per lock: the server refuses a second one, and its refusal read as the lock still held. An inactive
+// room keeps the value for the editors who join, lock or not.
+const releaseFieldLockWith = (value: ImageMediaCollabValue) => {
+  if (lockedLocal.value === false && props.collabStatus !== CollabStatus.Inactive) return
+  releaseFieldLock.value(value)
   lockedLocal.value = false
 }
 
@@ -276,6 +285,11 @@ const waitForFieldLockIsReallyAcquired = async () => {
 }
 
 const onDrop = async (files: File[]) => {
+  // As a click on the dropzone: the field is another editor's.
+  if (isLocked.value) {
+    showErrorT('common.damImage.error.unableToLock')
+    return
+  }
   acquireFieldLockLocal()
   const config = imageWidgetUploadConfig.value!
   try {
@@ -389,7 +403,7 @@ const reset = () => {
   imageModel.value = null
   mediaModel.value = null
   imageMediaWidgetStore.reset()
-  releaseFieldLock.value({ image: null, media: null } satisfies ImageMediaCollabValue)
+  releaseFieldLockWith({ image: null, media: null })
 }
 
 watch(
@@ -598,7 +612,7 @@ const tryMediaConfirm = async () => {
     imageMediaWidgetStore.setDetail(null)
     reloadMedia(media)
     emit('afterMetadataSaveSuccess')
-    releaseFieldLock.value({ image: null, media } satisfies ImageMediaCollabValue)
+    releaseFieldLockWith({ image: null, media })
   } catch (e) {
     showErrorsDefault(e)
   } finally {
@@ -634,9 +648,10 @@ const tryImageConfirm = async () => {
     imageModel.value = res.id
     mediaModel.value = null
     imageMediaWidgetStore.setDetail(null)
+    // Before the dialog's close is seen, so this release, with what was just assigned, is the one that goes.
+    releaseFieldLockWith({ image: res.id, media: null })
     await reloadImage(res, res.id, true)
     emit('afterMetadataSaveSuccess')
-    releaseFieldLock.value({ image: res.id, media: null } satisfies ImageMediaCollabValue)
   } catch (e) {
     showErrorsDefault(e)
   } finally {

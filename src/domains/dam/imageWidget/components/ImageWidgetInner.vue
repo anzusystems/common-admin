@@ -145,11 +145,20 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
 const lockedLocal = ref(false)
 const acquireFieldLockLocal = () => {
   if (lockedLocal.value === true || props.collabStatus === CollabStatus.Inactive) return
+  // What an earlier answer left says nothing about this lock: the wait for it waits for this answer.
+  collabFieldLockReallyLocked.value = false
   acquireFieldLock.value()
   lockedLocal.value = true
 }
 const releaseFieldLockLocal = (value: IntegerIdNullable) => {
   if (lockedLocal.value === false || props.collabStatus === CollabStatus.Inactive) return
+  releaseFieldLock.value(value)
+  lockedLocal.value = false
+}
+// One release per lock: the server refuses a second one, and its refusal read as the lock still held. An inactive
+// room keeps the value for the editors who join, lock or not.
+const releaseFieldLockWith = (value: IntegerIdNullable) => {
+  if (lockedLocal.value === false && props.collabStatus !== CollabStatus.Inactive) return
   releaseFieldLock.value(value)
   lockedLocal.value = false
 }
@@ -266,6 +275,11 @@ const waitForFieldLockIsReallyAcquired = async () => {
 }
 
 const onDrop = async (files: File[]) => {
+  // As a click on the dropzone: the field is another editor's.
+  if (isLocked.value) {
+    showErrorT('common.damImage.error.unableToLock')
+    return
+  }
   acquireFieldLockLocal()
   const config = imageWidgetUploadConfig.value!
   try {
@@ -350,7 +364,7 @@ const reset = () => {
   resolvedSrc.value = imagePlaceholderPath
   resImage.value = null
   modelValue.value = null
-  releaseFieldLock.value(null)
+  releaseFieldLockWith(null)
 }
 
 const assetSelectStore = useAssetSelectStore()
@@ -502,9 +516,10 @@ const onMetadataDialogConfirm = async () => {
     metadataDialog.value = false
     modelValue.value = res.id
     imageMediaWidgetStore.setDetail(null)
+    // Before the dialog's close is seen, so this release, with the id just assigned, is the one that goes.
+    releaseFieldLockWith(res.id)
     await reload(res, res.id, true)
     emit('afterMetadataSaveSuccess')
-    releaseFieldLock.value(res.id)
   } catch (e) {
     showErrorsDefault(e)
   } finally {
