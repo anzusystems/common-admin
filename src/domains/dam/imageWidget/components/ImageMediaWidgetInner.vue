@@ -810,7 +810,7 @@ watch(
 
 // A lost connection took this editor's locks on the server: counted still, the lock was never asked for again and the
 // server refused its release. When the room is active again, a menu or dialog still open asks for it anew, as does one
-// opened while the editor was alone, once the other editor arrives.
+// opened while the editor was alone, once the other editor arrives, and one whose ask was refused or went unanswered.
 watch(collabReconnecting, (reconnecting) => {
   if (!reconnecting) return
   lockedLocal.value = false
@@ -821,7 +821,7 @@ watch(
   () => props.collabStatus,
   (status, previous) => {
     if (status === CollabStatus.Inactive || previous !== CollabStatus.Inactive) return
-    if (clickMenuOpened.value || anyWidgetDialogOpened.value) acquireFieldLockLocal()
+    if (clickMenuOpened.value || anyWidgetDialogOpened.value) acquireFieldLockLocal(true)
   }
 )
 

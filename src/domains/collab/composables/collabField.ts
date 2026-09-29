@@ -133,7 +133,7 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName, disable
       ?.timeout(1000)
       .emit('acquireFieldLock', room, field, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
         const statusEvent: CollabFieldLockStatusEvent = { field, room }
-        setFieldLockUnanswered(room, field, !!error)
+        if (error) setFieldLockUnanswered(room, field, true)
         if (error || isCollabFailedChangeRoomLockCallback(response)) {
           return void fieldLockStatusEventBus.emit(
             statusEvent,
@@ -169,7 +169,6 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName, disable
       // field locked. Released there too while connected; after a disconnect the server has let it go already.
       if (!collabSocket.value.connected || !fieldLockMaybeHeld(room, field, currentUserId.value)) return
     }
-    setFieldLockUnanswered(room, field, false)
     collabSocket.value
       ?.timeout(1000)
       .emit('releaseFieldLock', room, field, data, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
@@ -181,6 +180,7 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName, disable
           )
         }
         if (isCollabSuccessChangeRoomLockCallback(response)) {
+          setFieldLockUnanswered(room, field, false)
           if (!collabFieldLocksState.has(room)) {
             collabFieldLocksState.set(room, new Map())
           }

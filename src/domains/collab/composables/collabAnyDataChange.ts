@@ -99,7 +99,7 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
       ?.timeout(1000)
       .emit('acquireFieldLock', room, field, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
         const statusEvent: CollabFieldLockStatusEvent = { field, room }
-        setFieldLockUnanswered(room, field, !!error)
+        if (error) setFieldLockUnanswered(room, field, true)
         if (error || isCollabFailedChangeRoomLockCallback(response)) {
           return void fieldLockStatusEventBus.emit(
             statusEvent,
@@ -138,7 +138,6 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
       // As `useCollabField` does: a lock held while the other editor left is released on the server too.
       if (!collabSocket.value.connected || !fieldLockMaybeHeld(room, field, currentUserId.value)) return
     }
-    setFieldLockUnanswered(room, field, false)
     collabSocket.value
       ?.timeout(1000)
       .emit('releaseFieldLock', room, field, data, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
@@ -150,6 +149,7 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
           )
         }
         if (isCollabSuccessChangeRoomLockCallback(response)) {
+          setFieldLockUnanswered(room, field, false)
           if (!collabFieldLocksState.has(room)) {
             collabFieldLocksState.set(room, new Map())
           }

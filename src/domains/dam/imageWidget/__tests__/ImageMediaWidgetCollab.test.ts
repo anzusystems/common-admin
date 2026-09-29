@@ -4,6 +4,7 @@ import { defineComponent, h, ref, shallowRef } from 'vue'
 import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { useUploadQueueDialog } from '@/domains/dam/uploadQueue/composables/useUploadQueueDialog'
 import { useCollabStateInternal } from '@/domains/collab/composables/collabState'
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import {
@@ -81,6 +82,8 @@ const initialImage = {
 
 const mountWidget = (queueKey: string, collabStatus = 'active') => {
   const status = ref(collabStatus)
+  // Shared: an upload left open by an earlier test, or by a failed try of this one, counts as a dialog open here.
+  useUploadQueueDialog().uploadQueueDialog.value = null
   released.mockClear()
   acquired.mockClear()
   const image = ref<number | null>(7)
@@ -370,6 +373,62 @@ describe('ImageMediaWidgetInner in a collab room', () => {
     status.value = 'active'
     await flushPromises()
     expect(acquired).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  // Picked while alone and confirmed after the other editor arrived, the image never reached the room.
+  it('asks for the lock when another editor arrives while a dialog is open', async () => {
+    const { wrapper, status } = mountWidget('lead-arrival-dialog', 'inactive')
+    await flushPromises()
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await flushPromises()
+    wrapper.findComponent({ name: 'AAssetSelectMedia' }).vm.$emit('update:modelValue', true)
+    await flushPromises()
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await flushPromises()
+    expect(acquired).not.toHaveBeenCalled()
+
+    status.value = 'active'
+    await flushPromises()
+    expect(acquired).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  // Refused while the other editor held the field, the menu's lock was not asked for again once that editor was back.
+  it('asks again for a refused lock when another editor arrives while the menu is open', async () => {
+    const { wrapper, status } = mountWidget('lead-arrival-refused')
+    await flushPromises()
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Acquire } as never)
+    status.value = 'inactive'
+    await flushPromises()
+    status.value = 'active'
+    await flushPromises()
+
+    expect(acquired).toHaveBeenCalledTimes(2)
+    wrapper.unmount()
+  })
+
+  // A dialog opened from the menu holds the lock the menu asked for: released when the drop gave up, the confirm's own
+  // release was skipped as for a lock already given back.
+  it('keeps the lock of a dialog opened while a drop waits', { timeout: 15000 }, async () => {
+    const { wrapper } = mountWidget('lead-drop-then-dialog')
+    await flushPromises()
+    wrapper.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', [new File(['x'], 'x.jpg')])
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Acquire } as never)
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Acquire } as never)
+    wrapper.findComponent({ name: 'AAssetSelectMedia' }).vm.$emit('update:modelValue', true)
+    await flushPromises()
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await new Promise((resolve) => setTimeout(resolve, 5600))
+    await flushPromises()
+
+    expect(acquired).toHaveBeenCalledTimes(2)
+    expect(released).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
