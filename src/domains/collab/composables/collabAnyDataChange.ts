@@ -22,13 +22,21 @@ import {
 import { type Fn, tryOnBeforeUnmount } from '@vueuse/core'
 import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
 import { useCollabStateInternal } from '@/domains/collab/composables/collabState'
+import { useCollabCurrentUserId } from '@/domains/collab/composables/collabCurrentUserId'
 import { cloneDeep, isDefined, isUndefined } from '@/shared/utils/common'
 import { objectSetValueByPath } from '@/shared/utils/object'
 
 export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe = false) {
   const { collabOptions } = useCommonAdminCollabOptions()
-  const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } =
-    useCollabStateInternal()
+  const { currentUserId } = useCollabCurrentUserId()
+  const {
+    collabSocket,
+    collabFieldLocksState,
+    collabFieldDataBufferState,
+    collabRoomInfoState,
+    setFieldLockUnanswered,
+    fieldLockMaybeHeld,
+  } = useCollabStateInternal()
   const changeEventBus = useCollabRoomDataChangeEventBus()
   const fieldLockStatusEventBus = useCollabFieldLockStatusEventBus()
 
@@ -91,6 +99,7 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
       ?.timeout(1000)
       .emit('acquireFieldLock', room, field, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
         const statusEvent: CollabFieldLockStatusEvent = { field, room }
+        setFieldLockUnanswered(room, field, !!error)
         if (error || isCollabFailedChangeRoomLockCallback(response)) {
           return void fieldLockStatusEventBus.emit(
             statusEvent,
@@ -126,8 +135,10 @@ export function useCollabAnyDataChange(room: CollabRoom, disableAutoUnsubscribe 
         collabFieldDataBufferState.set(room, new Map())
       }
       collabFieldDataBufferState.get(room)?.set(field, data)
-      return
+      // As `useCollabField` does: a lock held while the other editor left is released on the server too.
+      if (!collabSocket.value.connected || !fieldLockMaybeHeld(room, field, currentUserId.value)) return
     }
+    setFieldLockUnanswered(room, field, false)
     collabSocket.value
       ?.timeout(1000)
       .emit('releaseFieldLock', room, field, data, options, (error, response: CollabChangeRoomLockCallbackTypes) => {

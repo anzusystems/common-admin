@@ -21,6 +21,9 @@ let collabRoomInfoWriteCounter = 0
 const collabRoomInfoWriteSeq = new Map<CollabRoom, number>()
 const collabFieldLocksState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldLock>>())
 const collabFieldDataBufferState = reactive(new Map<CollabRoom, Map<CollabFieldName, CollabFieldData>>())
+// Plain, not reactive: fields whose lock request timed out. The server may have granted it after all, and it tells only
+// the others about a grant, so the lock map never shows this editor holding it.
+const collabFieldLocksUnanswered = new Map<CollabRoom, Set<CollabFieldName>>()
 
 /**
  * Everything the collaboration modules share, the socket included. Internal: an admin reads
@@ -60,6 +63,15 @@ export function useCollabStateInternal() {
     return () => collabRoomInfoWriteSeq.get(room) === seq
   }
 
+  const setFieldLockUnanswered = (room: CollabRoom, field: CollabFieldName, unanswered: boolean) => {
+    if (!unanswered) return void collabFieldLocksUnanswered.get(room)?.delete(field)
+    if (!collabFieldLocksUnanswered.has(room)) collabFieldLocksUnanswered.set(room, new Set())
+    collabFieldLocksUnanswered.get(room)?.add(field)
+  }
+
+  const fieldLockMaybeHeld = (room: CollabRoom, field: CollabFieldName, userId: CollabFieldLock) =>
+    collabFieldLocksState.get(room)?.get(field) === userId || !!collabFieldLocksUnanswered.get(room)?.has(field)
+
   return {
     collabReconnecting,
     collabConnected,
@@ -68,6 +80,9 @@ export function useCollabStateInternal() {
     claimRoomInfoWrite,
     collabFieldLocksState,
     collabFieldDataBufferState,
+    collabFieldLocksUnanswered,
+    setFieldLockUnanswered,
+    fieldLockMaybeHeld,
     gatherBufferData,
   }
 }

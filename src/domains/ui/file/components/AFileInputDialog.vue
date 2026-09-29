@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import AFileInput from '@/domains/ui/file/components/AFileInput.vue'
 import type { VBtn } from 'vuetify/components'
 import type { InputFileChangeEvent } from '@/shared/types/ChangeEvent'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import ARow from '@/domains/ui/components/ARow.vue'
 
 /**
@@ -47,7 +47,11 @@ const onFilesInput = (files: File[]) => {
   modelValue.value = false
 }
 
-const activate = () => {
+// Opens the file choice straight away, as a click on the input would. The input lives in the dialog, so the dialog
+// opens first; the choice still comes within the same click, which the browser requires.
+const activate = async () => {
+  modelValue.value = true
+  await nextTick()
   fileInputComponent.value?.activate()
 }
 
@@ -86,7 +90,7 @@ defineExpose({
       <VCardText>
         <ARow>
           <AFileInput
-            ref="fileInput"
+            ref="fileInputComponent"
             :file-input-key="fileInputKey"
             :accept="accept"
             :max-sizes="maxSizes"

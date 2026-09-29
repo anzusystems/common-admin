@@ -4,6 +4,7 @@ import { defineComponent, h, ref, shallowRef } from 'vue'
 import ImageMediaWidgetInner from '@/domains/dam/imageWidget/components/ImageMediaWidgetInner.vue'
 import { ImageWidgetUploadConfigKey } from '@/domains/dam/imageWidget/utils/imageWidgetInkectionKeys'
 import { useUploadQueuesStore } from '@/domains/dam/uploadQueue/store/uploadQueuesStore'
+import { useCollabStateInternal } from '@/domains/collab/composables/collabState'
 import { useImageMediaWidgetStore } from '@/domains/dam/imageWidget/store/imageMediaWidgetStore'
 import {
   CollabFieldLockStatus,
@@ -78,7 +79,8 @@ const initialImage = {
   position: 1,
 }
 
-const mountWidget = (queueKey: string) => {
+const mountWidget = (queueKey: string, collabStatus = 'active') => {
+  const status = ref(collabStatus)
   released.mockClear()
   acquired.mockClear()
   const image = ref<number | null>(7)
@@ -95,7 +97,7 @@ const mountWidget = (queueKey: string) => {
         media: media.value,
         'onUpdate:media': (value: unknown) => (media.value = value),
         collab: { room: 'article:1', field: 'leadImageMedia', cachedUsers: {} },
-        collabStatus: 'active',
+        collabStatus: status.value,
       }),
   })
   const wrapper = mount(Parent, {
@@ -120,7 +122,7 @@ const mountWidget = (queueKey: string) => {
       },
     },
   })
-  return { wrapper, image }
+  return { wrapper, image, status }
 }
 
 const removeImage = async (wrapper: ReturnType<typeof mountWidget>['wrapper']) => {
@@ -230,6 +232,8 @@ describe('ImageMediaWidgetInner in a collab room', () => {
     await flushPromises()
     await flushPromises()
     expect(released).toHaveBeenCalledTimes(1)
+    // Nor is the metadata dialog left loading: the next upload or edit showed only a spinner.
+    expect(wrapper.findComponent({ name: 'ImageDetailDialogMetadata' }).props('loading')).toBe(false)
     wrapper.unmount()
   })
 
@@ -303,6 +307,145 @@ describe('ImageMediaWidgetInner in a collab room', () => {
     await flushPromises()
 
     expect(acquired).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  // A request that timed out may have been granted: with no menu or dialog open, nothing else released it.
+  it('releases the lock of a drop whose wait for it ran out', { timeout: 15000 }, async () => {
+    const { wrapper } = mountWidget('lead-drop-timeout')
+    await flushPromises()
+    wrapper.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', [new File(['x'], 'x.jpg')])
+    await new Promise((resolve) => setTimeout(resolve, 5600))
+    await flushPromises()
+
+    expect(acquired).toHaveBeenCalledTimes(1)
+    expect(released).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  // The other editor left: the room is inactive, and the server still holds this editor's lock for whoever comes back.
+  it('releases a lock taken in an active room after the room turned inactive', async () => {
+    const { wrapper, status } = mountWidget('lead-turned-inactive')
+    await flushPromises()
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await flushPromises()
+    status.value = 'inactive'
+    await flushPromises()
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await flushPromises()
+
+    expect(acquired).toHaveBeenCalledTimes(1)
+    expect(released).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  // A lost connection took the lock on the server; counted still, it was never asked for again.
+  it('asks for the lock again when the room is back after a lost connection', async () => {
+    const { collabConnected } = useCollabStateInternal()
+    collabConnected.value = true
+    const { wrapper, status } = mountWidget('lead-reconnect')
+    await flushPromises()
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Success, type: CollabFieldLockType.Acquire } as never)
+    collabConnected.value = false
+    status.value = 'inactive'
+    await flushPromises()
+    collabConnected.value = true
+    status.value = 'active'
+    await flushPromises()
+
+    expect(acquired).toHaveBeenCalledTimes(2)
+    wrapper.unmount()
+  })
+
+  // Opened while the editor was alone, the menu took no lock; the other editor arriving did not change that.
+  it('asks for the lock when another editor arrives while the menu is open', async () => {
+    const { wrapper, status } = mountWidget('lead-arrival', 'inactive')
+    await flushPromises()
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await flushPromises()
+    expect(acquired).not.toHaveBeenCalled()
+
+    status.value = 'active'
+    await flushPromises()
+    expect(acquired).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  // Released while another drop still waited, a refused release read as the lock held and let that drop upload.
+  it('keeps a waiting drop waiting when an earlier drop gives up', { timeout: 20000 }, async () => {
+    const { wrapper } = mountWidget('lead-overlapping-drops')
+    const addByFiles = vi.spyOn(useUploadQueuesStore(), 'addByFiles').mockResolvedValue(undefined as never)
+    await flushPromises()
+    const dropzone = wrapper.findComponent({ name: 'AFileDropzone' })
+    dropzone.vm.$emit('drop', [new File(['x'], 'x.jpg')])
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    // Both wait for the one request, which is refused.
+    dropzone.vm.$emit('drop', [new File(['y'], 'y.jpg')])
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Acquire } as never)
+
+    // A release sent meanwhile is refused at once, as the server does.
+    const firstDropAt = Date.now()
+    while (Date.now() - firstDropAt < 7000 && released.mock.calls.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    }
+    lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Release } as never)
+    await new Promise((resolve) => setTimeout(resolve, 700))
+    await flushPromises()
+
+    expect(acquired).toHaveBeenCalledTimes(1)
+    expect(addByFiles).not.toHaveBeenCalled()
+    addByFiles.mockRestore()
+    wrapper.unmount()
+  })
+
+  // Released when the drop gave up, the lock the open menu asked for went with it: one the server granted after its
+  // request timed out, and the confirm's own release, skipped as for a lock already given back.
+  it('keeps the lock of a menu opened while a drop waits', { timeout: 15000 }, async () => {
+    const { wrapper } = mountWidget('lead-drop-then-menu')
+    await flushPromises()
+    wrapper.findComponent({ name: 'AFileDropzone' }).vm.$emit('drop', [new File(['x'], 'x.jpg')])
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Acquire } as never)
+    await wrapper.find('[aria-label="Edit image"]').trigger('click')
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Acquire } as never)
+    await new Promise((resolve) => setTimeout(resolve, 5600))
+    await flushPromises()
+
+    expect(acquired).toHaveBeenCalledTimes(2)
+    expect(released).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  // The refusal of a release sent before a new request answered nothing about that request: read as the lock held, it
+  // let the new drop upload before its own answer came.
+  it('waits for its own answer when an earlier release is refused meanwhile', { timeout: 20000 }, async () => {
+    const { wrapper } = mountWidget('lead-release-then-drop')
+    const addByFiles = vi.spyOn(useUploadQueuesStore(), 'addByFiles').mockResolvedValue(undefined as never)
+    await flushPromises()
+    const dropzone = wrapper.findComponent({ name: 'AFileDropzone' })
+    dropzone.vm.$emit('drop', [new File(['x'], 'x.jpg')])
+    const firstDropAt = Date.now()
+    while (Date.now() - firstDropAt < 7000 && released.mock.calls.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    }
+    expect(released).toHaveBeenCalledTimes(1)
+
+    dropzone.vm.$emit('drop', [new File(['y'], 'y.jpg')])
+    await flushPromises()
+    lock.status!({ status: CollabFieldLockStatus.Failure, type: CollabFieldLockType.Release } as never)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flushPromises()
+    expect(addByFiles).not.toHaveBeenCalled()
+
+    lock.status!({ status: CollabFieldLockStatus.Success, type: CollabFieldLockType.Acquire } as never)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flushPromises()
+    expect(addByFiles).toHaveBeenCalledTimes(1)
+    addByFiles.mockRestore()
     wrapper.unmount()
   })
 

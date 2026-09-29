@@ -31,8 +31,14 @@ import { useCollabCurrentUserId } from '@/domains/collab/composables/collabCurre
 export function useCollabField(room: CollabRoom, field: CollabFieldName, disableAutoUnsubscribe = false) {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { currentUserId } = useCollabCurrentUserId()
-  const { collabSocket, collabFieldLocksState, collabFieldDataBufferState, collabRoomInfoState } =
-    useCollabStateInternal()
+  const {
+    collabSocket,
+    collabFieldLocksState,
+    collabFieldDataBufferState,
+    collabRoomInfoState,
+    setFieldLockUnanswered,
+    fieldLockMaybeHeld,
+  } = useCollabStateInternal()
 
   const changeEventBus = useCollabRoomDataChangeEventBus()
   const unsubscribeCollabFieldDataChangeListener = ref<undefined | Fn>()
@@ -127,6 +133,7 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName, disable
       ?.timeout(1000)
       .emit('acquireFieldLock', room, field, options, (error, response: CollabChangeRoomLockCallbackTypes) => {
         const statusEvent: CollabFieldLockStatusEvent = { field, room }
+        setFieldLockUnanswered(room, field, !!error)
         if (error || isCollabFailedChangeRoomLockCallback(response)) {
           return void fieldLockStatusEventBus.emit(
             statusEvent,
@@ -158,8 +165,11 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName, disable
         collabFieldDataBufferState.set(room, new Map())
       }
       collabFieldDataBufferState.get(room)?.set(field, data)
-      return
+      // Left alone by the other editor, this one still holds the lock on the server, and whoever came back found the
+      // field locked. Released there too while connected; after a disconnect the server has let it go already.
+      if (!collabSocket.value.connected || !fieldLockMaybeHeld(room, field, currentUserId.value)) return
     }
+    setFieldLockUnanswered(room, field, false)
     collabSocket.value
       ?.timeout(1000)
       .emit('releaseFieldLock', room, field, data, options, (error, response: CollabChangeRoomLockCallbackTypes) => {

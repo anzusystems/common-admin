@@ -27,7 +27,8 @@ import { isNull } from '@/shared/utils/common'
 export function useCollabInit() {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { showWarningT, showSuccessT } = useAlerts()
-  const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState } = useCollabStateInternal()
+  const { collabConnected, collabSocket, collabRoomInfoState, collabFieldLocksState, collabFieldLocksUnanswered } =
+    useCollabStateInternal()
 
   const { logError } = useSentry()
 
@@ -137,6 +138,8 @@ export function useCollabInit() {
          * flushed just before this handler runs, and its acknowledgement arrives a round trip
          * later to find its claim gone. */
         collabRoomInfoState.clear()
+        // The server let the locks of the old connection go; a timed-out request was dropped from the send buffer.
+        collabFieldLocksUnanswered.clear()
         // Without the reset a transient network error burns the flag and a later JWT
         // expiration never triggers a token refresh.
         authorizationReconnectTriggered = false

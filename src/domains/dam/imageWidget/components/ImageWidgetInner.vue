@@ -36,6 +36,7 @@ import {
   type CollabStatusType,
 } from '@/domains/collab/types/Collab'
 import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
+import { useCollabState } from '@/domains/collab/composables/collabState'
 import { useCollabField } from '@/domains/collab/composables/collabField'
 import ACollabLockedByUser from '@/domains/collab/components/ACollabLockedByUser.vue'
 import AFileInputDialog from '@/domains/ui/file/components/AFileInputDialog.vue'
@@ -108,6 +109,7 @@ const showDamAuthorsInCmsImage = ref(false)
 
 // Collaboration
 const { collabOptions } = useCommonAdminCollabOptions()
+const { collabReconnecting } = useCollabState()
 
 const releaseFieldLock = ref((_data: CollabFieldData, _options?: Partial<CollabFieldLockOptions>) => {})
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -137,6 +139,10 @@ if (collabOptions.value.enabled && isDefined(props.collab)) {
     } else if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Acquire) {
       lockRequestPending.value = false
       collabFieldLockReallyLocked.value = false
+    } else if (lockRequestPending.value) {
+      // The answer to a release sent before a request still out says nothing about that request, whose own answer
+      // decides: a refused release read as the lock held let a drop upload before its request was answered.
+      return
     } else if (data.status === CollabFieldLockStatus.Success && data.type === CollabFieldLockType.Release) {
       collabFieldLockReallyLocked.value = false
     } else if (data.status === CollabFieldLockStatus.Failure && data.type === CollabFieldLockType.Release) {
@@ -159,8 +165,10 @@ const acquireFieldLockLocal = (again = false) => {
   acquireFieldLock.value()
   lockedLocal.value = true
 }
+// A lock taken while the room was active is released in an inactive one too: the room turned inactive because the
+// other editor left, and the server still holds it for whoever comes back.
 const releaseFieldLockLocal = (value: IntegerIdNullable) => {
-  if (lockedLocal.value === false || props.collabStatus === CollabStatus.Inactive) return
+  if (lockedLocal.value === false) return
   releaseFieldLock.value(value)
   lockedLocal.value = false
 }
@@ -300,6 +308,11 @@ const onDrop = async (files: File[]) => {
     uploadQueueDialog.value = props.queueKey
   } catch (e) {
     if (disposed || e === LOCK_WAIT_CANCELLED) return
+    // A request that timed out may have been granted after all, and nothing else would release it. Only when nothing
+    // else waits for or holds it: refused, this release reads as the lock held, and another drop still waiting uploaded
+    // without its lock, or a menu opened meanwhile lost the one it asked for.
+    if (pendingLockWaits.size === 0 && !clickMenuOpened.value && !anyWidgetDialogOpened.value)
+      releaseFieldLockLocal(modelValue.value)
     showErrorT('common.damImage.error.unableToLock')
   }
 }
@@ -388,6 +401,9 @@ const onAssetSelectConfirm = async (data: AssetSelectReturnData) => {
     await pickAsset(data)
   } finally {
     assetPickPending.value = false
+    // Ended early (no main file, the media not loaded), the pick left the dialog loading: the next upload or edit
+    // showed only a spinner. Whatever it loaded is loaded by now.
+    metadataDialogLoading.value = false
   }
 }
 
@@ -643,6 +659,23 @@ watch(
     await reload(newImage, newImageId)
   },
   { immediate: true }
+)
+
+// A lost connection took this editor's locks on the server: counted still, the lock was never asked for again and the
+// server refused its release. When the room is active again, a menu or dialog still open asks for it anew, as does one
+// opened while the editor was alone, once the other editor arrives.
+watch(collabReconnecting, (reconnecting) => {
+  if (!reconnecting) return
+  lockedLocal.value = false
+  lockRequestPending.value = false
+  collabFieldLockReallyLocked.value = false
+})
+watch(
+  () => props.collabStatus,
+  (status, previous) => {
+    if (status === CollabStatus.Inactive || previous !== CollabStatus.Inactive) return
+    if (clickMenuOpened.value || anyWidgetDialogOpened.value) acquireFieldLockLocal()
+  }
 )
 
 defineExpose({
