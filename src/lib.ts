@@ -443,6 +443,7 @@ import { damFileTypeFix } from '@/components/file/composables/fileType'
 import { useDamAcceptTypeAndSizeHelper } from '@/components/damImage/uploadQueue/composables/acceptTypeAndSizeHelper'
 import { useAssetSuggestions } from '@/components/damImage/uploadQueue/composables/assetSuggestions'
 import {
+  destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
 } from '@/components/damImage/uploadQueue/composables/damNotifications'
@@ -796,6 +797,7 @@ export {
   useDamUploadChunkSize,
   useDamAcceptTypeAndSizeHelper,
   useAssetSuggestions,
+  destroyDamNotifications,
   initDamNotifications,
   useDamNotifications,
   useDropzoneGlobalDragState,
