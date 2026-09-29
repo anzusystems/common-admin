@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script lang="ts" setup generic="TUser extends Pick<AnzuUser, 'roles' | 'permissionGroups' | 'permissions'>">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 // `ABtnPrimary` / `ABtnTertiary` are Vuetify aliases registered globally by
@@ -20,12 +20,13 @@ const props = defineProps<{
    * Copies whatever the system keeps beyond roles, groups and grants. cms has nineteen such
    * fields; systems with none leave this out.
    */
-  copySystemFields?: ((target: AnzuUser, source: AnzuUser) => void) | undefined
+  copySystemFields?: ((target: TUser, source: AnzuUser) => void) | undefined
   /** i18n keys listed in the dialog, so the operator sees exactly what will be overwritten. */
   copiedSettingKeys?: string[]
 }>()
 
-const user = defineModel<AnzuUser>('user', { required: true })
+// What the dialog overwrites is all it needs of the account: a wizard holds a system's permissions without the rest.
+const user = defineModel<TUser>('user', { required: true })
 
 const dialog = ref(false)
 const loading = ref(false)

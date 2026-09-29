@@ -54,7 +54,7 @@ const props = withDefaults(
     defaultValue: null,
     errorMessages: undefined,
     lastMinuteMoment: false,
-    // Left to a `VForm` around it when not set.
+    // Not set, the text field follows a readonly `VForm` around it; the calendar and clearing follow only this prop.
     readonly: undefined,
   }
 )

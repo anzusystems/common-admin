@@ -596,7 +596,7 @@ const tryMediaConfirm = async () => {
     mediaModel.value = media
     imageModel.value = null
     imageMediaWidgetStore.setDetail(null)
-    reloadMedia(mediaModel.value)
+    reloadMedia(media)
     emit('afterMetadataSaveSuccess')
     releaseFieldLock.value({ image: null, media } satisfies ImageMediaCollabValue)
   } catch (e) {

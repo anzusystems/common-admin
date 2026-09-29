@@ -467,6 +467,7 @@ import { useDamConfigStore } from '@/domains/dam/config/store/damConfigStore'
 import ADamAuthorFilterRemoteAutocomplete from '@/domains/dam/author/components/DamAuthorFilterRemoteAutocomplete.vue'
 import ADamKeywordFilterRemoteAutocomplete from '@/domains/dam/keyword/components/DamKeywordFilterRemoteAutocomplete.vue'
 import ADamUserFilterRemoteAutocomplete from '@/domains/dam/user/components/DamUserFilterRemoteAutocomplete.vue'
+import ADamUserRemoteAutocomplete from '@/domains/dam/user/components/DamUserRemoteAutocomplete.vue'
 import ADamAdminAssetLink from '@/domains/dam/components/DamAdminAssetLink.vue'
 import { useDamCachedUsers } from '@/domains/dam/author/composables/cachedUsers'
 import { useImageStore } from '@/domains/dam/imageWidget/store/imageStore'
@@ -785,6 +786,7 @@ export {
   ADamAuthorFilterRemoteAutocomplete,
   ADamKeywordFilterRemoteAutocomplete,
   ADamUserFilterRemoteAutocomplete,
+  ADamUserRemoteAutocomplete,
   ADamAdminAssetLink,
 
   // VIEWS
