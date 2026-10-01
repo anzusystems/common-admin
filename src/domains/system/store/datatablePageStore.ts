@@ -1,11 +1,6 @@
 import { ref } from 'vue'
-import {
-  isNavigationFailure,
-  NavigationFailureType,
-  type RouteLocationNormalized,
-  type RouteLocationRaw,
-  type Router,
-} from 'vue-router'
+import { isNavigationFailure, NavigationFailureType, type Router } from 'vue-router'
+import type { NavigateBackTarget } from '@/domains/system/composables/routeHistory'
 import { isUndefined } from '@/shared/utils/common'
 
 // The page is remembered per table. A single global slot used to leak across entities: paging
@@ -34,44 +29,56 @@ export function useDatatablePageStore() {
   }
 
   /**
-   * The flag for the page the navigation just started to `to` lands on, and only for it: a list there takes the page
-   * as it mounts, after this navigation's `afterEach`. The next navigation, a failed one or one that errors drops it,
-   * so it cannot reach whichever list opens later, a filtered link included. Only a landing at `to` takes it: a second
-   * click while the first Close is under way does, a link that cancelled the Close does not. Without `to` (a step back
-   * in the browser's history) the first landing takes it.
+   * The flag for the page the Close's navigation lands on, and only for it: a list there takes the page as it mounts,
+   * after the landing's `afterEach`. The next navigation drops it, and so does the Close's navigation stopped, failing
+   * or cancelled by another one (its own `router.push` answers that), and a landing elsewhere; a second click takes it
+   * over. The navigation that cancelled the Close is one of its own, a link opening the list afresh, even to the very
+   * same address; only one that lands there before the Close's cancel is reported finds the page. Without `closing` (a
+   * step back in the browser's history, which answers nothing) the first landing takes it, and a failure other than a
+   * cancel, or a navigation error, drops it.
+   *
+   * The push's rejection is handled here: an error vue-router reports goes to the app's `onError` as before, but one
+   * it does not (an app's `afterEach` throwing, as for a `RouterLink`) is no longer an unhandled rejection. During a
+   * step back the store listens to `onError` too, so in an app with no listener of its own vue-router no longer logs
+   * that navigation's error to the console.
    */
-  const preservePageForLanding = (router: Router, to?: RouteLocationRaw) => {
+  const preservePageForLanding = (router: Router, closing?: NavigateBackTarget) => {
     stopPendingLanding?.()
     preservePage.value = true
     let landed = false
-    const target = isUndefined(to) ? undefined : router.resolve(to).fullPath
+    let stopped = false
+    const target = isUndefined(closing) ? undefined : router.resolve(closing.to).fullPath
     const stop = () => {
+      stopped = true
       stopAfterEach()
-      stopError()
+      stopError?.()
     }
     const drop = () => {
       stop()
       if (stopPendingLanding === stop) stopPendingLanding = undefined
       preservePage.value = false
     }
-    const isTheClose = (to: RouteLocationNormalized) =>
-      isUndefined(target) || (to.redirectedFrom ?? to).fullPath === target
+    closing?.navigation.then(
+      (failure) => {
+        if (!stopped && failure) drop()
+      },
+      () => {
+        if (!stopped) drop()
+      }
+    )
     const stopAfterEach = router.afterEach((landing, _from, failure) => {
-      if (isNavigationFailure(failure, NavigationFailureType.cancelled)) return
       if (landed) return drop()
-      // Before the landing, an older navigation still under way that fails is not the Close's to answer for; one that
-      // lands elsewhere is.
-      if (!isTheClose(landing)) return failure ? undefined : drop()
-      if (failure) return drop()
+      if (failure) {
+        // Another navigation's failure is not the Close's to answer for; the Close's own comes from its push.
+        if (isUndefined(closing) && !isNavigationFailure(failure, NavigationFailureType.cancelled)) drop()
+        return
+      }
+      if (!isUndefined(target) && (landing.redirectedFrom ?? landing).fullPath !== target) return drop()
       landed = true
-      // Landed: the next navigation drops the flag before a list mounts; kept, the listener would also keep
-      // vue-router from logging that navigation's error.
-      stopError()
+      // Kept past the landing, the listener would keep vue-router from logging the next navigation's error.
+      stopError?.()
     })
-    // While the Close is under way vue-router does not log navigation errors itself: a listener is there.
-    const stopError = router.onError((_error, to) => {
-      if (isTheClose(to)) drop()
-    })
+    const stopError = isUndefined(closing) ? router.onError(drop) : undefined
     stopPendingLanding = stop
   }
 

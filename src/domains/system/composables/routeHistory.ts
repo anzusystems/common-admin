@@ -1,4 +1,5 @@
 import type {
+  NavigationFailure,
   RouteLocationNormalized,
   RouteLocationRaw,
   RouteRecordName,
@@ -24,6 +25,12 @@ const blacklistedRouteNames = ref<RouteRecordName[]>([])
  */
 const MAX_HISTORY = 10
 
+/** Where `navigateBack` goes and its navigation, as `router.push` answers it. */
+export interface NavigateBackTarget {
+  to: RouteLocationRaw
+  navigation: Promise<NavigationFailure | void | undefined>
+}
+
 export interface NavigateBackOptions {
   /**
    * Route names that are not a destination -- typically the sibling views of the record being
@@ -43,8 +50,8 @@ export function useRouteHistory(): {
   // The admin's typed router narrows `RouteRecordName` to its route names: a misspelled one does not compile.
   setBlacklistedRoutes: (routeNames: RouteRecordName[]) => void
   addBlacklistedRoute: (routeName: RouteRecordName) => void
-  /** Returns where it goes, `undefined` for a step back in the browser's history. */
-  navigateBack: (router: Router, options?: NavigateBackOptions) => RouteLocationRaw | undefined
+  /** Returns where it goes and its navigation, `undefined` for a step back in the browser's history. */
+  navigateBack: (router: Router, options?: NavigateBackOptions) => NavigateBackTarget | undefined
 } {
   const addRoute = (route: RouteLocationNormalized) => {
     if (blacklistedRouteNames.value.includes(route.name as RouteRecordName)) {
@@ -96,7 +103,7 @@ export function useRouteHistory(): {
     history.value = []
   }
 
-  const navigateBack = (router: Router, options: NavigateBackOptions = {}): RouteLocationRaw | undefined => {
+  const navigateBack = (router: Router, options: NavigateBackOptions = {}): NavigateBackTarget | undefined => {
     const { skipRouteNames, fallbackRouteName, fallbackRouteParams } = options
     const current = router.currentRoute.value
     const skip: readonly RouteRecordNameGeneric[] = skipRouteNames ?? []
@@ -117,13 +124,11 @@ export function useRouteHistory(): {
     const route = findRouteBack((entry) => !isCurrent(entry) && !skip.includes(entry.name))
 
     if (route) {
-      router.push(route.fullPath)
-      return route.fullPath
+      return { to: route.fullPath, navigation: router.push(route.fullPath) }
     }
     if (fallbackRouteName) {
       const fallback = { name: fallbackRouteName, params: fallbackRouteParams }
-      router.push(fallback)
-      return fallback
+      return { to: fallback, navigation: router.push(fallback) }
     }
     router.back()
     return undefined

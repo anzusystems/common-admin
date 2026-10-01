@@ -67,3 +67,43 @@ describe('useDatatablePageStore', () => {
     expect(consumeStoredPage(datatablePageKey('cms', 'never-visited'))).toBeNull()
   })
 })
+
+describe('preservePageForLanding', () => {
+  // A router that only takes the listeners and resolves what it is given.
+  const fakeRouter = () =>
+    ({
+      afterEach: () => () => undefined,
+      onError: () => () => undefined,
+      resolve: (to: string) => ({ fullPath: to }),
+    }) as never
+
+  const deferred = () => {
+    let reject!: (error: unknown) => void
+    const promise = new Promise<undefined>((_, rej) => (reject = rej))
+    return { promise, reject }
+  }
+
+  it('leaves the page to a second click when the navigation of the first fails after it', async () => {
+    const { preservePageForLanding } = useDatatablePageStore()
+    const router = fakeRouter()
+    setStoredPage(listA, 3)
+    const first = deferred()
+    preservePageForLanding(router, { to: '/a', navigation: first.promise })
+    preservePageForLanding(router, { to: '/a', navigation: new Promise(() => undefined) })
+
+    first.reject(new Error('first'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(consumeStoredPage(listA)).toBe(3)
+  })
+
+  it('drops the page when the navigation of the Close fails', async () => {
+    const { preservePageForLanding } = useDatatablePageStore()
+    setStoredPage(listA, 3)
+    const close = deferred()
+    preservePageForLanding(fakeRouter(), { to: '/a', navigation: close.promise })
+
+    close.reject(new Error('close'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(consumeStoredPage(listA)).toBeNull()
+  })
+})

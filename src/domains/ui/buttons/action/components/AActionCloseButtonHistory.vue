@@ -34,13 +34,13 @@ const { navigateBack } = useRouteHistory()
 const { preservePageForLanding } = useDatatablePageStore()
 
 const onClick = () => {
-  const to = navigateBack(router, {
+  const closing = navigateBack(router, {
     skipRouteNames: props.skipRouteNames,
     fallbackRouteName: props.fallbackRouteName,
     fallbackRouteParams: props.fallbackRouteParams,
   })
   // Right after the push: its `afterEach` comes later, its guards first.
-  preservePageForLanding(router, to)
+  preservePageForLanding(router, closing)
 }
 </script>
 

@@ -328,11 +328,72 @@ describe('AActionCloseButtonHistory', () => {
     const { child } = mountInParent(AActionCloseButtonHistory, { fallbackRouteName: 'home' })
     await child.find('button').trigger('click')
     await router.push('/articles#title=x~')
+    // The link's list mounts now, while the Close still waits for its guard: it must not take the page either.
+    expect(consumeStoredPage('cms_article')).toBeNull()
     stop()
     release()
     await flushPromises()
     expect(router.currentRoute.value.fullPath).toBe('/articles#title=x~')
+  })
+
+  // A link is a navigation of its own, opening its list afresh, even to the Close's address.
+  it('does not hand the page to a link to its own address that cancels it and lands after', async () => {
+    await router.push('/articles')
+    addRoute(router.currentRoute.value)
+    await router.push('/articles/5')
+    setStoredPage('cms_article', 3)
+    const releases: (() => void)[] = []
+    const stop = router.beforeEach((to) =>
+      to.name === 'articleList' ? new Promise<void>((resolve) => releases.push(resolve)) : true
+    )
+    const { child } = mountInParent(AActionCloseButtonHistory, { fallbackRouteName: 'home' })
+    await child.find('button').trigger('click')
+    const link = router.push('/articles')
+    await flushPromises()
+    releases[0]!()
+    await flushPromises()
+    expect(router.currentRoute.value.name).toBe('articleDetail')
     expect(consumeStoredPage('cms_article')).toBeNull()
+    let page: number | null = null
+    const stopLanding = router.afterEach(() => void (page = consumeStoredPage('cms_article')))
+    releases[1]!()
+    await link
+    stop()
+    stopLanding()
+    expect(router.currentRoute.value.fullPath).toBe('/articles')
+    expect(page).toBeNull()
+  })
+
+  describe.each([
+    ['a guard stops', (answer: { resolve: (value: boolean) => void }) => answer.resolve(false)],
+    ['fails', (answer: { reject: (error: Error) => void }) => answer.reject(new Error('broken'))],
+  ])('cancelled by a link to its own address that %s after the cancel', (_, end) => {
+    it('leaves no page for the next landing there', async () => {
+      await router.push('/articles')
+      addRoute(router.currentRoute.value)
+      await router.push('/articles/5')
+      setStoredPage('cms_article', 3)
+      const answers: { resolve: (value: boolean) => void; reject: (error: Error) => void }[] = []
+      const stop = router.beforeEach((to) =>
+        to.name === 'articleList' ? new Promise<boolean>((resolve, reject) => answers.push({ resolve, reject })) : true
+      )
+      const { child } = mountInParent(AActionCloseButtonHistory, { fallbackRouteName: 'home' })
+      await child.find('button').trigger('click')
+      const link = router.push('/articles').catch(() => undefined)
+      await flushPromises()
+      answers[0]!.resolve(true)
+      await flushPromises()
+      end(answers[1]!)
+      await link
+      stop()
+      expect(router.currentRoute.value.name).toBe('articleDetail')
+
+      let page: number | null = null
+      const stopLanding = router.afterEach(() => void (page = consumeStoredPage('cms_article')))
+      await router.push('/articles')
+      stopLanding()
+      expect(page).toBeNull()
+    })
   })
 
   it('keeps the page through a Close that lands on another Close', async () => {
@@ -382,10 +443,6 @@ describe('AActionCloseButtonHistory', () => {
     const stop = router.beforeEach((to) => {
       if (to.name === 'articleList') throw new Error('guard failed')
     })
-    // `navigateBack` does not wait for its push; the rejection is what an app's error handler gets.
-    const push = router.push.bind(router)
-    router.push = (to) =>
-      push(to).catch((error: Error) => (error.message === 'guard failed' ? undefined : Promise.reject(error)))
     const { child } = mountInParent(AActionCloseButtonHistory, { fallbackRouteName: 'home' })
     await child.find('button').trigger('click')
     await flushPromises()
@@ -422,6 +479,63 @@ describe('AActionCloseButtonHistory', () => {
 
     await router.push('/articles#title=x~')
     expect(consumeStoredPage('cms_article')).toBeNull()
+  })
+
+  it('drops the page when a step back fails', async () => {
+    await router.push('/articles/5')
+    setStoredPage('cms_article', 3)
+    const stop = router.beforeEach((to) => {
+      if (to.name === 'home') throw new Error('guard failed')
+    })
+    // No route to go back to and no fallback: a step back in the browser's history, which a guard fails.
+    const { child } = mountInParent(AActionCloseButtonHistory, {})
+    await child.find('button').trigger('click')
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    await flushPromises()
+    stop()
+    expect(router.currentRoute.value.name).toBe('articleDetail')
+    expect(consumeStoredPage('cms_article')).toBeNull()
+  })
+
+  it('keeps the page when a step back cancels an older navigation still under way', async () => {
+    await router.push('/articles')
+    await router.push('/articles/5')
+    clearHistory()
+    setStoredPage('cms_article', 3)
+    const stop = router.beforeEach(async (to) => {
+      if (to.name === 'articleCreate') await new Promise((resolve) => setTimeout(resolve, 20))
+      if (to.name === 'articleList') await new Promise((resolve) => setTimeout(resolve, 40))
+    })
+    const older = router.push('/articles/new')
+    await flushPromises()
+    // No route to go back to and no fallback: a step back in the browser's history, to the list.
+    const { child } = mountInParent(AActionCloseButtonHistory, {})
+    await child.find('button').trigger('click')
+    await older
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    await flushPromises()
+    stop()
+    expect(router.currentRoute.value.name).toBe('articleList')
+    expect(consumeStoredPage('cms_article')).toBe(3)
+  })
+
+  it('leaves the errors of the navigations after a step back that landed to vue-router', async () => {
+    await router.push('/articles/5')
+    // No route to go back to and no fallback: a step back in the browser's history, to `/`.
+    const { child } = mountInParent(AActionCloseButtonHistory, {})
+    await child.find('button').trigger('click')
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    await flushPromises()
+    expect(router.currentRoute.value.name).toBe('home')
+
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const stop = router.beforeEach(() => {
+      throw new Error('guard failed')
+    })
+    await router.push('/articles/6').catch(() => undefined)
+    stop()
+    expect(logged).toHaveBeenCalled()
+    logged.mockRestore()
   })
 
   it('keeps the page when an older navigation still under way is stopped', async () => {
@@ -479,6 +593,33 @@ describe('AActionCloseButtonHistory', () => {
     stop()
     expect(router.currentRoute.value.name).toBe('articleList')
     expect(consumeStoredPage('cms_article')).toBe(3)
+  })
+
+  describe.each([
+    ['a link to the page it is on', () => router.push('/articles/5')],
+    ['a link a guard stops', () => router.push('/articles/new')],
+    ['a link that fails', () => router.push('/articles/6').catch(() => undefined)],
+  ])('cancelled by %s that does not land', (_, navigate) => {
+    it('leaves no page for a list on the page it stays on', async () => {
+      await router.push('/articles')
+      addRoute(router.currentRoute.value)
+      await router.push('/articles/5')
+      setStoredPage('cms_article', 3)
+      const stop = router.beforeEach((to) => {
+        if (to.name === 'articleList') return new Promise<boolean>((resolve) => setTimeout(() => resolve(true), 30))
+        if (to.name === 'articleCreate') return false
+        if (to.fullPath === '/articles/6') throw new Error('broken')
+        return true
+      })
+      const { child } = mountInParent(AActionCloseButtonHistory, { fallbackRouteName: 'home' })
+      await child.find('button').trigger('click')
+      await navigate()
+      await new Promise((resolve) => setTimeout(resolve, 60))
+      await flushPromises()
+      stop()
+      expect(router.currentRoute.value.name).toBe('articleDetail')
+      expect(consumeStoredPage('cms_article')).toBeNull()
+    })
   })
 
   it('leaves the errors of the navigations after its landing to vue-router', async () => {

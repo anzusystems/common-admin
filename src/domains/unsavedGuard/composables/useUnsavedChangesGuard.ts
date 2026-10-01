@@ -129,7 +129,9 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions): 
   )
 
   const promptOpen = ref<boolean>(false)
-  let pendingResolver: ((discard: boolean) => void) | null = null
+  // Every navigation waiting on the open prompt: one started meanwhile (the browser's Back) asks too, and the answer is
+  // theirs alike.
+  let pendingResolvers: ((discard: boolean) => void)[] = []
   let acknowledgedOnce = false
   let acknowledgeTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -147,17 +149,16 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions): 
       return Promise.resolve(true)
     }
     return new Promise((resolve) => {
-      pendingResolver = resolve
+      pendingResolvers.push(resolve)
       promptOpen.value = true
     })
   }
 
   const resolvePrompt = (discard: boolean) => {
     promptOpen.value = false
-    if (pendingResolver) {
-      pendingResolver(discard)
-      pendingResolver = null
-    }
+    const resolvers = pendingResolvers
+    pendingResolvers = []
+    resolvers.forEach((resolve) => resolve(discard))
   }
 
   const acknowledge = () => {

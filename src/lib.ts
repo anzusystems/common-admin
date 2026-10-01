@@ -170,6 +170,7 @@ import { type CreatedByAware } from '@/shared/types/CreatedByAware'
 import type { VuetifyIconValue } from '@/shared/types/Vuetify'
 import {
   type NavigateBackOptions,
+  type NavigateBackTarget,
   type RouteHistoryEntry,
   useRouteHistory,
 } from '@/domains/system/composables/routeHistory'
@@ -804,6 +805,7 @@ export {
   // COMPOSABLES
   useRouteHistory,
   type NavigateBackOptions,
+  type NavigateBackTarget,
   type RouteHistoryEntry,
   useRemainingTime,
   useAlerts,

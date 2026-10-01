@@ -344,6 +344,29 @@ describe('useUnsavedChangesGuard — route-leave guard (router harness)', () => 
     expect(router.currentRoute.value.path).toBe('/other')
   })
 
+  // A navigation started while the prompt is open (the browser's Back) asks too; the one before it must not be left
+  // waiting for good, its caller never told how it ended.
+  it.each([
+    [false, '/'],
+    [true, '/other'],
+  ])('answers every navigation waiting on the prompt (discard: %s)', async (discard, path) => {
+    const dirty = ref(true)
+    const { router, api } = mountRouted(dirty)
+    await router.isReady()
+    await flushPromises()
+
+    const settled: string[] = []
+    void router.push('/other').then(() => void settled.push('first'))
+    await flushPromises()
+    void router.push('/other').then(() => void settled.push('second'))
+    await flushPromises()
+    api().resolvePrompt(discard)
+    await flushPromises()
+    expect(settled.sort()).toEqual(['first', 'second'])
+    expect(router.currentRoute.value.path).toBe(path)
+    expect(api().promptOpen.value).toBe(false)
+  })
+
   it('a clean route-leave passes without prompting', async () => {
     const dirty = ref(false)
     const { router, api } = mountRouted(dirty)
