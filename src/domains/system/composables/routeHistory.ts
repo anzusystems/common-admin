@@ -1,4 +1,10 @@
-import type { RouteLocationNormalized, RouteRecordName, RouteRecordNameGeneric, Router } from 'vue-router'
+import type {
+  RouteLocationNormalized,
+  RouteLocationRaw,
+  RouteRecordName,
+  RouteRecordNameGeneric,
+  Router,
+} from 'vue-router'
 import { readonly, type Ref, ref } from 'vue'
 
 /** A visited route, as far as going back to it needs. */
@@ -37,7 +43,8 @@ export function useRouteHistory(): {
   // The admin's typed router narrows `RouteRecordName` to its route names: a misspelled one does not compile.
   setBlacklistedRoutes: (routeNames: RouteRecordName[]) => void
   addBlacklistedRoute: (routeName: RouteRecordName) => void
-  navigateBack: (router: Router, options?: NavigateBackOptions) => void
+  /** Returns where it goes, `undefined` for a step back in the browser's history. */
+  navigateBack: (router: Router, options?: NavigateBackOptions) => RouteLocationRaw | undefined
 } {
   const addRoute = (route: RouteLocationNormalized) => {
     if (blacklistedRouteNames.value.includes(route.name as RouteRecordName)) {
@@ -89,7 +96,7 @@ export function useRouteHistory(): {
     history.value = []
   }
 
-  const navigateBack = (router: Router, options: NavigateBackOptions = {}) => {
+  const navigateBack = (router: Router, options: NavigateBackOptions = {}): RouteLocationRaw | undefined => {
     const { skipRouteNames, fallbackRouteName, fallbackRouteParams } = options
     const current = router.currentRoute.value
     const skip: readonly RouteRecordNameGeneric[] = skipRouteNames ?? []
@@ -111,11 +118,15 @@ export function useRouteHistory(): {
 
     if (route) {
       router.push(route.fullPath)
-    } else if (fallbackRouteName) {
-      router.push({ name: fallbackRouteName, params: fallbackRouteParams })
-    } else {
-      router.back()
+      return route.fullPath
     }
+    if (fallbackRouteName) {
+      const fallback = { name: fallbackRouteName, params: fallbackRouteParams }
+      router.push(fallback)
+      return fallback
+    }
+    router.back()
+    return undefined
   }
 
   return {

@@ -31,15 +31,16 @@ const props = withDefaults(
 const { t } = useI18n()
 const router = useRouter()
 const { navigateBack } = useRouteHistory()
-const { setPreservePage } = useDatatablePageStore()
+const { preservePageForLanding } = useDatatablePageStore()
 
 const onClick = () => {
-  setPreservePage()
-  navigateBack(router, {
+  const to = navigateBack(router, {
     skipRouteNames: props.skipRouteNames,
     fallbackRouteName: props.fallbackRouteName,
     fallbackRouteParams: props.fallbackRouteParams,
   })
+  // Right after the push: its `afterEach` comes later, its guards first.
+  preservePageForLanding(router, to)
 }
 </script>
 
