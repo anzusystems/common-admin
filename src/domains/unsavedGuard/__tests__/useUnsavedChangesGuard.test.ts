@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref, unref, type Ref } from 'vue'
-import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
+import { createMemoryHistory, createRouter, RouterView, useRoute } from 'vue-router'
 import { useUnsavedChangesGuard } from '@/domains/unsavedGuard/composables/useUnsavedChangesGuard'
 
 let mounted: VueWrapper | null = null
@@ -354,6 +354,88 @@ describe('useUnsavedChangesGuard — route-leave guard (router harness)', () => 
     await flushPromises()
     expect(api().promptOpen.value).toBe(false)
     expect(router.currentRoute.value.path).toBe('/other')
+  })
+
+  // Another item's page on the same route: the view is remounted per path, and the changes went without a question.
+  it('asks on a dirty change of the route params, not of the query alone', async () => {
+    const dirty = ref(true)
+    let api!: ReturnType<typeof useUnsavedChangesGuard>
+    const Guarded = defineComponent({
+      setup() {
+        api = useUnsavedChangesGuard({ sources: [dirty], guardWindowUnload: false })
+        return () => h('div', 'guarded')
+      },
+    })
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/items/:id', component: Guarded }],
+    })
+    routed = mount(defineComponent({ setup: () => () => h(RouterView) }), { global: { plugins: [router] } })
+    await router.push('/items/1')
+    await flushPromises()
+
+    const nav = router.push('/items/2')
+    await flushPromises()
+    expect(api.promptOpen.value).toBe(true)
+    api.resolvePrompt(false)
+    await nav
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/items/1')
+
+    await router.push('/items/1?tab=seo')
+    await flushPromises()
+    expect(api.promptOpen.value).toBe(false)
+    expect(router.currentRoute.value.fullPath).toBe('/items/1?tab=seo')
+
+    // A list's filters live in the hash: Back and Forward on the page change only that.
+    await router.push('/items/1?tab=seo#filter')
+    await flushPromises()
+    expect(api.promptOpen.value).toBe(false)
+    expect(router.currentRoute.value.fullPath).toBe('/items/1?tab=seo#filter')
+  })
+
+  // The admins key their view by path: a child route switching remounts the guarded parent too, and its changes went
+  // without a question.
+  it('asks when a child route switches under a guarded parent in a view keyed by path', async () => {
+    const dirty = ref(true)
+    let api!: ReturnType<typeof useUnsavedChangesGuard>
+    const Guarded = defineComponent({
+      setup() {
+        api = useUnsavedChangesGuard({ sources: [dirty], guardWindowUnload: false })
+        return () => h(RouterView)
+      },
+    })
+    const Child = defineComponent({ setup: () => () => h('div', 'child') })
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: '/items/:id',
+          component: Guarded,
+          children: [
+            { path: 'seo', component: Child },
+            { path: 'history', component: Child },
+          ],
+        },
+      ],
+    })
+    const App = defineComponent({
+      setup() {
+        const route = useRoute()
+        return () => h(RouterView, { key: route.path })
+      },
+    })
+    routed = mount(App, { global: { plugins: [router] } })
+    await router.push('/items/1/seo')
+    await flushPromises()
+
+    const nav = router.push('/items/1/history')
+    await flushPromises()
+    expect(api.promptOpen.value).toBe(true)
+    api.resolvePrompt(false)
+    await nav
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/items/1/seo')
   })
 
   it('acknowledge() lets the next dirty route-leave through without prompting', async () => {

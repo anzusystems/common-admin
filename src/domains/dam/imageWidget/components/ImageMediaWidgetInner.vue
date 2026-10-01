@@ -418,13 +418,15 @@ const reloadMedia = (newMedia: MediaAware | null) => {
   resImageMedia.value = null
 }
 
-const reset = () => {
+// `release` false: a menu or dialog still open holds the lock, and its close or confirm releases it. Alone, the editor
+// holds none, and the value goes to the buffer here or nowhere.
+const reset = (release = true) => {
   resolvedSrc.value = imagePlaceholderPath
   resImageMedia.value = null
   imageModel.value = null
   mediaModel.value = null
   imageMediaWidgetStore.reset()
-  releaseFieldLockWith({ image: null, media: null })
+  if (release || props.collabStatus === CollabStatus.Inactive) releaseFieldLockWith({ image: null, media: null })
 }
 
 watch(
@@ -700,14 +702,23 @@ const onMetadataDialogConfirm = async () => {
   await tryImageConfirm()
 }
 
+// Till the delete is answered, neither the menu's close nor a dialog's gives the lock up: the menu closes on the click,
+// and its release went out with the image still there, the reset's own skipped as for a lock already given back.
+const deletePending = ref(false)
 const onImageMediaDelete = async () => {
-  if (props.callDeleteApiOnRemove && isImageCreateUpdateAware(detail.value) && detail.value.id) {
+  // The widget's own image: the store's detail is shared, empty unless a dialog loaded it, or another widget's.
+  const imageId = imageModel.value
+  if (props.callDeleteApiOnRemove && !isNull(imageId)) {
+    deletePending.value = true
     try {
-      await imageApi.deleteImage(imageClient, detail.value.id)
-      reset()
+      await imageApi.deleteImage(imageClient, imageId)
+      reset(!clickMenuOpened.value && !anyWidgetDialogOpened.value)
     } catch (e) {
       showErrorsDefault(e)
+    } finally {
+      deletePending.value = false
     }
+    if (!clickMenuOpened.value && !anyWidgetDialogOpened.value) releaseFieldLockLocal()
     return
   }
   reset()
@@ -793,7 +804,7 @@ watch(
     if (newValue === oldValue) return
     // Opened: a lock a refused drop left unconfirmed is asked for again, here and not in the click, which also closes.
     if (newValue) return void acquireFieldLockLocal(true)
-    if (anyWidgetDialogOpened.value) return
+    if (anyWidgetDialogOpened.value || deletePending.value) return
     releaseFieldLockLocal()
   },
   { immediate: false }
@@ -802,7 +813,11 @@ watch(
 watch(
   anyWidgetDialogOpened,
   (newValue, oldValue) => {
-    if (newValue === oldValue || newValue) return
+    if (newValue === oldValue) return
+    // Opened by a button of `expandOptions`, with no menu to ask for the lock, the dialog asks; opened from the menu,
+    // only for a lock not confirmed yet.
+    if (newValue) return void acquireFieldLockLocal(true)
+    if (deletePending.value) return
     releaseFieldLockLocal()
   },
   { immediate: false }
@@ -865,6 +880,7 @@ defineExpose({
             <VBtn
               v-if="imageMediaLoaded && !expandMetadata"
               class="mr-2 mb-2"
+              :disabled="isLocked"
               :text="
                 type === DamAssetType.Image
                   ? t('common.damImage.image.meta.edit')
@@ -874,6 +890,7 @@ defineExpose({
             />
             <VBtn
               class="mr-2 mb-2"
+              :disabled="isLocked"
               @click="actionLibrary"
             >
               <span v-if="imageMediaLoaded">{{ replaceFromDamLabel }}</span>
@@ -889,7 +906,10 @@ defineExpose({
               @files-input="onFileInput"
             >
               <template #activator="{ props: fileInputProps }">
-                <VBtn v-bind="fileInputProps">
+                <VBtn
+                  v-bind="fileInputProps"
+                  :disabled="isLocked"
+                >
                   {{ t('common.damImage.image.button.upload') }}
                 </VBtn>
               </template>

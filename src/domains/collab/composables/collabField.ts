@@ -9,7 +9,7 @@ import {
   isCollabFailedChangeRoomLockCallback,
   isCollabSuccessChangeRoomLockCallback,
 } from '@/domains/collab/types/Collab'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
   CollabFieldLockStatus,
   type CollabFieldLockStatusEvent,
@@ -28,7 +28,17 @@ import { isDefined, isUndefined } from '@/shared/utils/common'
 import { useCommonAdminCollabOptions } from '@/domains/collab/composables/commonAdminCollabOptions'
 import { useCollabCurrentUserId } from '@/domains/collab/composables/collabCurrentUserId'
 
-export function useCollabField(room: CollabRoom, field: CollabFieldName, disableAutoUnsubscribe = false) {
+/**
+ * `reacquireWhenActive`: a lock the component asked for and has not released is asked for again whenever the room
+ * turns active — back after a lost connection, whose server let it go, or joined by another editor while this one was
+ * alone and asked for none. For a field that holds the lock while it has the focus.
+ */
+export function useCollabField(
+  room: CollabRoom,
+  field: CollabFieldName,
+  disableAutoUnsubscribe = false,
+  reacquireWhenActive = false
+) {
   const { collabOptions } = useCommonAdminCollabOptions()
   const { currentUserId } = useCollabCurrentUserId()
   const {
@@ -125,8 +135,10 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName, disable
     return null
   })
 
+  let lockWanted: Partial<CollabFieldLockOptions> | null = null
   const acquireCollabFieldLock = (options: Partial<CollabFieldLockOptions> = {}) => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    lockWanted = options
     const roomInfo = collabRoomInfoState.get(room)
     if (roomInfo && roomInfo.status === CollabStatus.Inactive) return
     collabSocket.value
@@ -159,6 +171,7 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName, disable
 
   const releaseCollabFieldLock = (data: CollabFieldData, options: Partial<CollabFieldLockOptions> = {}) => {
     if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return
+    lockWanted = null
     const roomInfo = collabRoomInfoState.get(room)
     if (roomInfo && roomInfo.status === CollabStatus.Inactive) {
       if (!collabFieldDataBufferState.has(room)) {
@@ -196,6 +209,16 @@ export function useCollabField(room: CollabRoom, field: CollabFieldName, disable
           )
         }
       })
+  }
+
+  if (reacquireWhenActive) {
+    watch(
+      () => collabRoomInfoState.get(room)?.status,
+      (status, previous) => {
+        if (status !== CollabStatus.Active || previous === CollabStatus.Active || lockWanted === null) return
+        acquireCollabFieldLock(lockWanted)
+      }
+    )
   }
 
   const changeCollabFieldData = (data: CollabFieldData) => {

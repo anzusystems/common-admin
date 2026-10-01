@@ -46,7 +46,9 @@ const lockedByUserLocal = ref<IntegerIdNullable>(null)
 if (collabOptions.value.enabled && isDefined(props.collab)) {
   const { releaseCollabFieldLock, acquireCollabFieldLock, lockedByUser } = useCollabField(
     props.collab.room,
-    props.collab.field
+    props.collab.field,
+    false,
+    true
   )
   releaseFieldLock.value = releaseCollabFieldLock
   acquireFieldLock.value = acquireCollabFieldLock

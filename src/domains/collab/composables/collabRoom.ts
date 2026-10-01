@@ -269,7 +269,12 @@ export function useCollabRoom(
             return void reject(CollabAccessRoomStatus.Failed)
           }
           if (isCollabSuccessAccessRoomCallback(response)) {
-            if (isNewestWrite()) collabRoomInfoState.set(room, response.room)
+            if (isNewestWrite()) {
+              collabRoomInfoState.set(room, response.room)
+              // Joined where others are: the room's state was gathered from its moderator. What this editor wrote
+              // alone before, never gathered, stayed, and went out later as the room's state over newer values.
+              if (response.room.status === CollabStatus.Active) collabFieldDataBufferState.delete(room)
+            }
             return void resolve(response.status)
           }
           markRoomInactiveOnFailedClaim()
@@ -296,6 +301,8 @@ export function useCollabRoom(
   const leaveCollabRoom = (): Promise<void> => {
     return new Promise((resolve) => {
       if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return void resolve()
+      // Nobody gathers it any more: kept, it went out as the room's state when this editor was next alone in it.
+      collabFieldDataBufferState.delete(room)
       const isNewestWrite = claimRoomInfoWrite(room)
       collabSocket.value
         ?.timeout(5000)

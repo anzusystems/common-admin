@@ -399,6 +399,7 @@ import { useCollabField } from '@/domains/collab/composables/collabField'
 import { useCollabRoom } from '@/domains/collab/composables/collabRoom'
 import {
   COLLAB_FIELD_PREFIX_COMMENT,
+  COLLAB_FIELD_PREFIX_EMBED,
   type CollabCachedUsersMap,
   useCollabHelpers,
 } from '@/domains/collab/composables/collabHelpers'
@@ -1188,6 +1189,7 @@ export {
   type CollabCachedUsersMap,
   type CollabComponentConfig,
   COLLAB_FIELD_PREFIX_COMMENT,
+  COLLAB_FIELD_PREFIX_EMBED,
 
   //  STORES
   useDamConfigStore,

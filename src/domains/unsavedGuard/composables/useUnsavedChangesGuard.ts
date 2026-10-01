@@ -1,5 +1,5 @@
 import { computed, getCurrentInstance, onBeforeUnmount, ref, watch, type ComputedRef, type Ref } from 'vue'
-import { onBeforeRouteLeave } from 'vue-router'
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import {
   provideUnsavedSectionRegistry,
   type UnsavedSectionDescriptor,
@@ -16,7 +16,7 @@ export interface UseUnsavedChangesGuardOptions {
    */
   sources: UnsavedSource[]
   /**
-   * Block route navigation via vue-router's onBeforeRouteLeave. Default true.
+   * Block route navigation via vue-router's onBeforeRouteLeave, and onBeforeRouteUpdate when the path changes. Default true.
    * Only a literal `false` skips registering the guard; a Ref is read when the navigation happens, so
    * it can turn blocking on and off later.
    */
@@ -176,16 +176,22 @@ export function useUnsavedChangesGuard(options: UseUnsavedChangesGuardOptions): 
     clearAcknowledgeTimer()
   }
 
-  // Route guard — `onBeforeRouteLeave` only works inside a route component
+  // Route guards — `onBeforeRouteLeave` and `onBeforeRouteUpdate` only work inside a route component
   // (it reads the current vm context). Outside a component it's a no-op.
   // A Ref option is read at event time (register whenever it is not a literal `false`).
   if (options.guardRoute !== false && getCurrentInstance()) {
     try {
-      onBeforeRouteLeave(async () => {
+      const guardLeave = async () => {
         if (!resolveBool(options.guardRoute, true) || !hasUnsavedChanges.value) return true
         const discard = await askToLeave()
         return discard
-      })
+      }
+      onBeforeRouteLeave(guardLeave)
+      // The same route with other params (another article's edit page) drops this page's changes as surely: an admin
+      // keys its view by path and remounts it, a child route switching under a guarded parent included, and only a
+      // leave was asked about. Any path, not only the guarded route's own params: where the view is not keyed so, the
+      // question is one too many, never a loss of changes without one. Query and hash alone keep the page.
+      onBeforeRouteUpdate((to, from) => (to.path === from.path ? true : guardLeave()))
     } catch {
       // Not in a route context — skip silently.
     }
