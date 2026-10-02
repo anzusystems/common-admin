@@ -3,6 +3,7 @@
   "forbiddenError": "Přístup zamítnut. K provedení dané akce nemáte oprávnění.",
   "recordNotFound": "Záznam neexistuje nebo byl smazán.",
   "recordForbidden": "K tomuto záznamu nemáte oprávnění.",
+  "navigationFailed": "Stránku se nepodařilo otevřít.",
   "fixValidationErrors": "Vyplňte všechna povinná pole a opravte chyby.",
   "fixApiValidationErrors": "Opravte tyto chyby.",
   "apiForbiddenOperationError": "Zakázaná akce.",

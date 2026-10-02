@@ -176,6 +176,10 @@ import {
   useRouteHistory,
 } from '@/domains/system/composables/routeHistory'
 import {
+  createNavigationErrorHandler,
+  type NavigationErrorHandlerOptions,
+} from '@/domains/system/composables/navigationError'
+import {
   handleRecordLoadError,
   useRecordPage,
   type UseRecordPageOptions,
@@ -826,6 +830,8 @@ export {
   useRecordPage,
   type UseRecordPageOptions,
   type UseRecordPageReturn,
+  createNavigationErrorHandler,
+  type NavigationErrorHandlerOptions,
   useRemainingTime,
   useAlerts,
   useTheme,

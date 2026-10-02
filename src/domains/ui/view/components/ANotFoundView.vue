@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { useRouteHistory } from '@/domains/system/composables/routeHistory'
 import { useDatatablePageStore } from '@/domains/system/store/datatablePageStore'
 
 const props = withDefaults(
@@ -13,15 +12,20 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const router = useRouter()
-const { navigateBack } = useRouteHistory()
 const { preservePageForLanding } = useDatatablePageStore()
 
 // A mistyped or stale record address lands here, so the way back to the list it came from is worth a
-// button of its own. The home route is the fallback: in a tab opened on the bad address there is no
-// history, and `router.back()` would leave the application.
+// button of its own. A step back, so the browser's Back does not return to this page; the home route
+// when the app has no previous entry -- a tab opened on the bad address, where `router.back()` would
+// leave the application.
 const goBack = () => {
-  const closing = navigateBack(router, { fallbackRouteName: props.returnRouteName })
-  preservePageForLanding(router, closing)
+  if (typeof router.options.history.state.back === 'string') {
+    preservePageForLanding(router)
+    router.back()
+    return
+  }
+  const to = { name: props.returnRouteName }
+  preservePageForLanding(router, { to, navigation: router.replace(to) })
 }
 </script>
 

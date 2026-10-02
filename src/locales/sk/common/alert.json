@@ -3,6 +3,7 @@
   "forbiddenError": "Prístup zamietnutý. Na vykonanie danej akcie nemáte oprávnenie.",
   "recordNotFound": "Záznam neexistuje alebo bol vymazaný.",
   "recordForbidden": "Na tento záznam nemáte oprávnenie.",
+  "navigationFailed": "Stránku sa nepodarilo otvoriť.",
   "fixValidationErrors": "Vyplňte všetky povinné polia a opravte chyby.",
   "fixApiValidationErrors": "Opravte tieto chyby.",
   "apiForbiddenOperationError": "Zakázaná akcia.",
