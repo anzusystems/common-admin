@@ -400,6 +400,35 @@ describe('defineCached — unresolved reasons, the queue and logging', () => {
     expect(cache.value.get(101)?._unresolvedReason).toBe('error')
   })
 
+  it('sends batches of the size the cache asks for, each committed on its own', async () => {
+    const fetchCallback = vi
+      .fn<(ids: number[]) => Promise<Row[]>>()
+      .mockImplementationOnce(async (ids) => ids.map((id) => ({ id, name: String(id) })))
+      .mockRejectedValueOnce(new AnzuApiResponseCodeError(400))
+      .mockImplementationOnce(async (ids) => ids.map((id) => ({ id, name: String(id) })))
+    const { add, immediateFetch, isLoaded, cache } = makeCache(fetchCallback, 1000, { batchSize: 2 })
+
+    add(1, 2, 3, 4, 5)
+    await expect(immediateFetch()).rejects.toThrow()
+
+    expect(fetchCallback.mock.calls.map(([ids]) => ids)).toEqual([[1, 2], [3, 4], [5]])
+    expect(isLoaded(1)).toBe(true)
+    expect(isLoaded(2)).toBe(true)
+    expect(cache.value.get(3)?._unresolvedReason).toBe('error')
+    expect(cache.value.get(4)?._unresolvedReason).toBe('error')
+    expect(isLoaded(5)).toBe(true)
+  })
+
+  it('falls back to batches of a hundred for a batch size below one', async () => {
+    const fetchCallback = vi.fn(async (ids: number[]) => ids.map((id) => ({ id, name: String(id) })))
+    const { add, immediateFetch } = makeCache(fetchCallback, 1000, { batchSize: 0 })
+
+    add(Array.from({ length: 150 }, (_, i) => i + 1))
+    await immediateFetch()
+
+    expect(fetchCallback.mock.calls.map(([ids]) => ids.length)).toEqual([100, 50])
+  })
+
   it('writes down the failure of every batch, not only the first', async () => {
     vi.useFakeTimers()
     try {

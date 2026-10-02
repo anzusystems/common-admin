@@ -38,6 +38,12 @@ export interface DefineCachedOptions {
    * table (a system user of another backend) would otherwise be asked for on every page showing it.
    */
   retryNotFound?: boolean
+  /**
+   * How many ids one call of `fetchCallback` gets, each call committed on its own. Defaults to
+   * `FETCH_BY_IDS_BATCH_SIZE`. A backend that takes fewer ids a request needs its own limit here: split
+   * inside the callback, a failing part would take the parts already loaded with it.
+   */
+  batchSize?: number
 }
 
 // A rejected 403 arrives mapped as `AnzuApiForbiddenError`, which carries no status of its own.
@@ -85,6 +91,8 @@ export function defineCached<
   options: DefineCachedOptions = {}
 ) {
   const { retryNotFound = true } = options
+  const batchSize =
+    options.batchSize && options.batchSize >= 1 ? Math.floor(options.batchSize) : FETCH_BY_IDS_BATCH_SIZE
   const cache: Ref<Map<I, CachedItem<M>>> = ref(new Map())
   const toFetch = ref(new Set()) as Ref<Set<I>>
   // Settles, never rejects: a run that failed still hands over what its earlier batches loaded.
@@ -224,9 +232,9 @@ export function defineCached<
   const runBatches = async (ids: I[]) => {
     const items: T[] = []
     const failures: unknown[] = []
-    for (let start = 0; start < ids.length; start += FETCH_BY_IDS_BATCH_SIZE) {
+    for (let start = 0; start < ids.length; start += batchSize) {
       try {
-        items.push(...(await fetchBatch(ids.slice(start, start + FETCH_BY_IDS_BATCH_SIZE))))
+        items.push(...(await fetchBatch(ids.slice(start, start + batchSize))))
       } catch (error: unknown) {
         failures.push(error)
       }

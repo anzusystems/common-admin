@@ -63,8 +63,11 @@ const containerClassComputed = computed(() => {
   return props.wrapText ? props.containerClass + ' a-chip--wrap' : props.containerClass
 })
 
+// A title given by the caller still wins over the placeholder.
+const showUnresolved = computed(() => unresolved.value && props.title.length === 0)
+
 const displayTitle = computed(() => {
-  if (unresolved.value && props.title.length === 0) return '#' + props.id
+  if (showUnresolved.value) return '#' + props.id
   if (props.customTitleFn && cached.value) {
     const customTitle = props.customTitleFn(cached.value, props.title, props.displayTextPath, props.fallbackIdText)
     if (customTitle !== undefined) {
@@ -92,7 +95,14 @@ const onClick = () => {
       v-else-if="textOnly"
       :title="unresolved ? t('common.model.cachedUnavailable') : undefined"
     >
-      {{ displayTitle }}
+      <slot
+        v-if="showUnresolved"
+        :id="id"
+        name="unresolved"
+      >
+        {{ displayTitle }}
+      </slot>
+      <template v-else>{{ displayTitle }}</template>
       <VProgressCircular
         v-if="!loaded && title.length === 0"
         :size="12"
@@ -108,7 +118,14 @@ const onClick = () => {
       :closable="closable"
       @click:close="() => emit('close', id)"
     >
-      {{ displayTitle }}
+      <slot
+        v-if="showUnresolved"
+        :id="id"
+        name="unresolved"
+      >
+        {{ displayTitle }}
+      </slot>
+      <template v-else>{{ displayTitle }}</template>
       <VTooltip
         v-if="unresolved"
         activator="parent"
