@@ -77,7 +77,7 @@ const { authorRequired, authorEnabled } = useDamAuthorAssetTypeConfig(
   props.extSystem
 )
 
-const { cachedUsers } = useDamCachedUsers()
+const { getCachedUser } = useDamCachedUsers()
 
 const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCommonAdminCoreDamOptions(props.configName) // eslint-disable-line vue/no-setup-props-reactivity-loss
 </script>
@@ -221,7 +221,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCom
             {{ dateTimePretty(asset.createdAt) }}<br />
             <ACachedUserChip
               :id="asset.createdBy"
-              :cached-users="cachedUsers"
+              :get-cached-fn="getCachedUser"
             />
           </VCol>
         </VRow>
@@ -233,7 +233,7 @@ const { mainFileSingleUseEnabled, showFileInfoEnabled, editAssetLabel } = useCom
             {{ dateTimePretty(asset.modifiedAt) }}<br />
             <ACachedUserChip
               :id="asset.modifiedBy"
-              :cached-users="cachedUsers"
+              :get-cached-fn="getCachedUser"
             />
           </VCol>
         </VRow>

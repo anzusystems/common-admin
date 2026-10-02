@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+// Deprecated: `AUserAndTimeTrackingFields` without `users` draws the dates (dropping a row that has
+// none, where this one keeps the title), and with an admin's user cache
+// (`createUserAndTimeTrackingFields`) also who. Kept for the admins that still use it.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { AnzuUserAndTimeTrackingAware } from '@/shared/types/AnzuUserAndTimeTrackingAware'

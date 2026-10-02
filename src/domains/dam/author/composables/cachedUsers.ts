@@ -24,7 +24,11 @@ const { cache, fetch, add, addManual, has, get, isLoaded } = defineCached<Intege
   (ids: IntegerId[]) => {
     const { damClient } = useCommonAdminCoreDamOptions()
     return fetchDamUserListByIds(damClient, ids)
-  }
+  },
+  'id',
+  1000,
+  // A user missing from the table stays missing, instead of being asked for on every page showing it.
+  { retryNotFound: false }
 )
 
 export const useDamCachedUsers = () => {

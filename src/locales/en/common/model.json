@@ -15,8 +15,10 @@
     "createdAt": "Created",
     "modifiedAt": "Modified",
     "created": "Created",
-    "modified": "Modified"
+    "modified": "Modified",
+    "userUnavailable": "The user could not be loaded"
   },
+  "cachedUnavailable": "The record could not be loaded",
   "filterPlaceholder": {
     "eq": "Exact match",
     "contains": "Anywhere in the text",

@@ -32,6 +32,7 @@ import AFormRemoteSwitch from '@/domains/form/components/AFormRemoteSwitch.vue'
 import AFormValueObjectOptionsSelect from '@/domains/form/components/AFormValueObjectOptionsSelect.vue'
 import AJobStatusChip from '@/domains/job/components/AJobStatusChip.vue'
 import ACachedChip from '@/domains/cached/components/ACachedChip.vue'
+import ACachedUserChip from '@/domains/cached/components/ACachedUserChip.vue'
 import ACopyText from '@/domains/ui/components/ACopyText.vue'
 import AIconGroup from '@/domains/ui/components/AIconGroup.vue'
 import AChipNoLink from '@/domains/ui/components/AChipNoLink.vue'
@@ -266,7 +267,14 @@ import {
 } from '@/domains/filters/datatable/utils/datatableColumns'
 import { SortOrder, type SortOrderType } from '@/domains/api/types/SortOrder'
 import { createAnzuVuetify, type CreateAnzuVuetifyOptions, useCommonVuetifyConfig } from '@/plugins/commonVuetifyConfig'
-import { type CachedItem, defineCached } from '@/domains/cached/composables/defineCached'
+import {
+  type AddToCachedArgs,
+  type CachedItem,
+  type CachedUnresolvedReason,
+  type DefineCachedOptions,
+  defineCached,
+} from '@/domains/cached/composables/defineCached'
+import { useCachedItem } from '@/domains/cached/composables/useCachedItem'
 import type { ObjectLeaves, UniqueValues } from '@/shared/types/utils'
 import { ensureUniqueValues } from '@/shared/types/utils'
 import { loadCommonFonts } from '@/plugins/webfontloader'
@@ -740,6 +748,7 @@ export {
   ACreateDialog,
   AJobStatusChip,
   ACachedChip,
+  ACachedUserChip,
   AAdminSwitcher,
   ATimeTrackingFields,
   Acl,
@@ -811,6 +820,7 @@ export {
   useAlerts,
   useTheme,
   defineCached,
+  useCachedItem,
   Theme,
   type ThemeType,
   useLanguageSettings,
@@ -914,6 +924,9 @@ export {
   type UniqueValues,
   ensureUniqueValues,
   type CachedItem,
+  type AddToCachedArgs,
+  type CachedUnresolvedReason,
+  type DefineCachedOptions,
   type RecordWasType,
   type UrlParams,
   type AssetSelectReturnData,
@@ -1420,3 +1433,11 @@ export {
 
 export { createCachedChip } from '@/domains/cached/composables/createCachedChip'
 export type { CreateCachedChipOptions } from '@/domains/cached/composables/createCachedChip'
+export { createUserAndTimeTrackingFields } from '@/domains/cached/composables/createUserAndTimeTrackingFields'
+export type { CreateUserAndTimeTrackingFieldsOptions } from '@/domains/cached/composables/createUserAndTimeTrackingFields'
+export { useCachedAnzuUsers } from '@/domains/anzuUser/composables/cachedAnzuUsers'
+export { useCachedPermissionGroups } from '@/domains/permission/group/composables/cachedPermissionGroups'
+export type { CachedPermissionGroupsParams } from '@/domains/permission/group/composables/cachedPermissionGroups'
+export type { CachedAnzuUsersParams } from '@/domains/anzuUser/composables/cachedAnzuUsers'
+export { syncUserAndTimeTracking } from '@/shared/utils/userAndTimeTracking'
+export type { UserAndTimeTrackingData, UserAndTimeTrackingUsers } from '@/shared/types/UserAndTimeTracking'

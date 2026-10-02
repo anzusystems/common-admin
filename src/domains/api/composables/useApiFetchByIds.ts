@@ -36,10 +36,16 @@ export type FetchByIdsParams = {
   signal?: AbortSignal
 }
 
+/**
+ * Ids per request. A cache drains everything queued in one go, and a thousand ids in a query string is
+ * past the 8 KB request line a proxy takes by default -- the request would come back 414.
+ */
+export const FETCH_BY_IDS_BATCH_SIZE = 100
+
 /** The `filter_in` query that fetches exactly the ids asked for, in one request. */
 const generateByIdsApiQuery = (ids: IntegerId[] | DocId[], isSearchApi: boolean, field = 'id'): string => {
   const { querySetLimit, querySetOffset, querySetOrder, queryBuild, queryAddFilter, queryAdd } = useApiQueryBuilder()
-  const limit = ids.length // todo add batch fetch
+  const limit = ids.length
   querySetLimit(limit)
   querySetOffset(1, limit)
   querySetOrder(field, false)
@@ -65,7 +71,7 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
   } = params
   const abortable = createAbortable({ cancelPrevious })
 
-  const execute = async (ids: DocId[] | IntegerId[], fetchParams: FetchByIdsParams = {}): Promise<T[]> => {
+  const executeBatch = async (ids: DocId[] | IntegerId[], fetchParams: FetchByIdsParams): Promise<T[]> => {
     const { urlTemplate: urlTemplateOverride, urlParams: urlParamsOverride, signal } = fetchParams
 
     // Assigned inside `run`, once, at the moment there is a url to ask for; undefined until then,
@@ -125,6 +131,18 @@ export const useApiFetchByIds = <T>(params: UseApiFetchByIdsParams): UseApiFetch
 
       throw report(mapApiError(err, context), context)
     }
+  }
+
+  // One batch after another, not side by side: with `cancelPrevious` each batch would stop the one
+  // before it. A failed batch fails the call, as a single request would.
+  const execute = async (ids: DocId[] | IntegerId[], fetchParams: FetchByIdsParams = {}): Promise<T[]> => {
+    if (ids.length <= FETCH_BY_IDS_BATCH_SIZE) return executeBatch(ids, fetchParams)
+    const items: T[] = []
+    for (let start = 0; start < ids.length; start += FETCH_BY_IDS_BATCH_SIZE) {
+      const batch = ids.slice(start, start + FETCH_BY_IDS_BATCH_SIZE) as DocId[] | IntegerId[]
+      items.push(...(await executeBatch(batch, fetchParams)))
+    }
+    return items
   }
 
   return { execute, abort: abortable.abort, loading: abortable.loading }

@@ -13,6 +13,7 @@ vi.mock('vue-router', () => ({
 interface CachedEntry {
   name?: string
   _loaded?: boolean
+  _unresolved?: boolean
 }
 
 // reactive so `getCachedFn(id)` reads are tracked by the component's `cached`
@@ -68,5 +69,21 @@ describe('ACachedChip', () => {
     const wrapper = mountChip(cache)
     await nextTick()
     expect(wrapper.find('.v-progress-circular').exists()).toBe(true)
+  })
+
+  // An item the fetch could not resolve has only its placeholder: an empty name drew an empty chip.
+  it('shows the id of an item that could not be loaded, without a spinner', () => {
+    const cache = reactive<Record<number, CachedEntry>>({ 7: { name: '', _loaded: false, _unresolved: true } })
+    const wrapper = mountChip(cache)
+    expect(wrapper.text()).toContain('#7')
+    expect(wrapper.find('.v-progress-circular').exists()).toBe(false)
+    expect(wrapper.find('[title]').attributes('title')).toBe('The record could not be loaded')
+  })
+
+  it('does not link an item that could not be loaded', () => {
+    const cache = reactive<Record<number, CachedEntry>>({ 7: { name: '', _loaded: false, _unresolved: true } })
+    const wrapper = mountChip(cache, { textOnly: false })
+    expect(wrapper.find('.mdi-arrow-top-right').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'VTooltip' }).exists()).toBe(true)
   })
 })

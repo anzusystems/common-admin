@@ -108,6 +108,36 @@ describe('what fetching by ids asks for', () => {
   })
 })
 
+describe('fetching many ids', () => {
+  it('asks in batches of a hundred, one after another, and hands back all of them', async () => {
+    const ids = Array.from({ length: 250 }, (_, i) => i + 1)
+    const get = vi.fn(async (url: string) => {
+      const asked = decodeURIComponent(url)
+        .match(/filter_in\[id\]=([\d,]+)/)![1]
+        .split(',')
+        .map(Number)
+      return { status: 200, data: { data: asked.map((id) => ({ id })), totalCount: asked.length } }
+    })
+    const { execute } = setup(get)
+
+    const items = await execute(ids)
+
+    expect(get).toHaveBeenCalledTimes(3)
+    expect(items.map((item) => item.id)).toStrictEqual(ids)
+    expect(decodeURIComponent(get.mock.calls[2]![0] as string)).toContain('limit=50')
+  })
+
+  it('fails the call when one of the batches fails', async () => {
+    const get = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 200, data: { data: [], totalCount: 0 } })
+      .mockResolvedValueOnce({ status: 500, data: '' })
+    const { execute } = setup(get)
+
+    await expect(execute(Array.from({ length: 150 }, (_, i) => i + 1))).rejects.toBeInstanceOf(AnzuApiResponseCodeError)
+  })
+})
+
 describe('stopping a by-ids fetch', () => {
   it('reports a cancellation as one, and never writes it down', async () => {
     const logged = vi.fn()

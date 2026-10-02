@@ -15,8 +15,10 @@
     "createdAt": "Vytvorené",
     "modifiedAt": "Upravené",
     "created": "Vytvorené",
-    "modified": "Upravené"
+    "modified": "Upravené",
+    "userUnavailable": "Používateľa sa nepodarilo načítať"
   },
+  "cachedUnavailable": "Záznam sa nepodarilo načítať",
   "filterPlaceholder": {
     "eq": "Presný výraz",
     "contains": "Kdekoľvek vo výraze",

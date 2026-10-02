@@ -11,6 +11,7 @@ import type { AnzuUser } from '@/shared/types/AnzuUser'
 import type { IntegerId } from '@/shared/types/common'
 import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
 import { isNull, isUndefined } from '@/shared/utils/common'
+import { syncUserAndTimeTracking } from '@/shared/utils/userAndTimeTracking'
 
 export interface AnzuUserActionsParams {
   client: AxiosClientFn
@@ -183,10 +184,13 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
         throw new AnzuFatalError(undefined, '[useAnzuUserActions] update called on a record with no id.')
       }
       const { execute } = useUpdateAnzuUser()
-      await execute({
+      const res = await execute({
         urlParams: { id },
         body: anzuUserOneStore.anzuUser,
       })
+      // Before the snapshot: `isDirty` compares the whole record, so tracking written after it would
+      // mark the form as unsaved.
+      syncUserAndTimeTracking(anzuUserOneStore.anzuUser, res)
       showRecordWas('updated')
       snapshot()
       return true

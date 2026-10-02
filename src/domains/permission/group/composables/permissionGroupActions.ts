@@ -16,6 +16,7 @@ import type { IntegerId } from '@/shared/types/common'
 import type { PermissionGroup } from '@/domains/permission/group/types/PermissionGroup'
 import type { ValueObjectOption } from '@/shared/types/ValueObject'
 import { AnzuFatalError } from '@/shared/error/AnzuFatalError'
+import { syncUserAndTimeTracking } from '@/shared/utils/userAndTimeTracking'
 
 // The record store is shared by every page, and a request is not aborted when its page goes: only the
 // latest fetch may write the record, or reset it on failure. A store reset (a page's teardown, a create
@@ -156,10 +157,11 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
         throw new AnzuFatalError(undefined, '[usePermissionGroupActions] update called on a record with no id.')
       }
       const { execute } = useUpdatePermissionGroup()
-      await execute({
+      const res = await execute({
         urlParams: { id: permissionGroupOneStore.permissionGroup.id },
         body: permissionGroupOneStore.permissionGroup,
       })
+      syncUserAndTimeTracking(permissionGroupOneStore.permissionGroup, res)
       showRecordWas('updated')
       return true
     } catch (error) {

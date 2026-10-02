@@ -63,6 +63,16 @@ const { v$ } = usePermissionGroupValidation(permissionGroup)
           :end-point="permissionConfigEndPoint"
         />
       </VCol>
+      <VCol
+        v-if="$slots.tracking"
+        cols="12"
+      >
+        <!-- Created/modified by whom: each app resolves users against its own cache and routes. -->
+        <slot
+          name="tracking"
+          :permission-group="permissionGroup"
+        />
+      </VCol>
     </VRow>
   </ASystemEntityScope>
 </template>

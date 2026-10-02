@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import type { DocId, IntegerId } from '@/shared/types/common'
 import { objectGetValueByPath } from '@/shared/utils/object'
@@ -50,14 +51,20 @@ const emit = defineEmits<{
   (e: 'close', id: null | undefined | IntegerId | DocId): void
 }>()
 
+const { t } = useI18n()
 const router = useRouter()
-const { cached, loaded } = useCachedItem(() => props.getCachedFn(props.id as any))
+const { cached, loaded, unresolved } = useCachedItem(() => props.getCachedFn(props.id as any))
+
+// An item the fetch could not resolve has only its placeholder to show: its id, and no link to a
+// detail that would not load either.
+const linkDisabled = computed(() => props.disableClick || unresolved.value)
 
 const containerClassComputed = computed(() => {
   return props.wrapText ? props.containerClass + ' a-chip--wrap' : props.containerClass
 })
 
 const displayTitle = computed(() => {
+  if (unresolved.value && props.title.length === 0) return '#' + props.id
   if (props.customTitleFn && cached.value) {
     const customTitle = props.customTitleFn(cached.value, props.title, props.displayTextPath, props.fallbackIdText)
     if (customTitle !== undefined) {
@@ -81,7 +88,10 @@ const onClick = () => {
     <template v-if="isNull(id) || isUndefined(id)">
       <slot name="empty">-</slot>
     </template>
-    <div v-else-if="textOnly">
+    <div
+      v-else-if="textOnly"
+      :title="unresolved ? t('common.model.cachedUnavailable') : undefined"
+    >
       {{ displayTitle }}
       <VProgressCircular
         v-if="!loaded && title.length === 0"
@@ -92,13 +102,20 @@ const onClick = () => {
       />
     </div>
     <VChip
-      v-else-if="disableClick"
+      v-else-if="linkDisabled"
       :size="size"
       :label="forceRounded ? undefined : true"
       :closable="closable"
       @click:close="() => emit('close', id)"
     >
       {{ displayTitle }}
+      <VTooltip
+        v-if="unresolved"
+        activator="parent"
+        location="bottom"
+      >
+        {{ t('common.model.cachedUnavailable') }}
+      </VTooltip>
       <VProgressCircular
         v-if="!loaded && title.length === 0"
         :size="12"

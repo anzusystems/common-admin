@@ -15,8 +15,10 @@
     "createdAt": "Vytvořeno",
     "modifiedAt": "Upraveno",
     "created": "Vytvořeno",
-    "modified": "Upraveno"
+    "modified": "Upraveno",
+    "userUnavailable": "Uživatele se nepodařilo načíst"
   },
+  "cachedUnavailable": "Záznam se nepodařilo načíst",
   "filterPlaceholder": {
     "eq": "Přesný výraz",
     "contains": "Kdekoli ve výrazu",
