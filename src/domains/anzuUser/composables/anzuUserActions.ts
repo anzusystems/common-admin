@@ -2,6 +2,7 @@ import { computed, nextTick, ref, type Ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/domains/system/composables/alerts'
+import { handleRecordLoadError } from '@/domains/system/composables/recordPage'
 import type { AxiosClientFn } from '@/domains/api/utils/client'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 import type { Pagination } from '@/domains/api/composables/pagination'
@@ -104,27 +105,32 @@ export const useAnzuUserActions = (params: AnzuUserActionsParams) => {
 
   const isDirty = computed(() => pristine.value !== '' && pristine.value !== JSON.stringify(anzuUser.value))
 
-  const fetchAnzuUser = async (id: IntegerId) => {
+  /**
+   * `true` once loaded, `false` when the page should leave (`handleRecordLoadError`), `undefined`
+   * when a newer fetch took over or the request was stopped.
+   */
+  const fetchAnzuUser = async (id: IntegerId, options: { signal?: AbortSignal } = {}): Promise<boolean | undefined> => {
     const generation = ++fetchGeneration
     const isLatest = () => fetchGeneration === generation
     anzuUserOneStore.setLoadingAnzuUser(true)
     try {
       const { execute } = useFetchAnzuUser()
-      const res = await execute({ urlParams: { id } })
-      if (!isLatest()) return
+      const res = await execute({ urlParams: { id }, signal: options.signal })
+      if (!isLatest()) return undefined
       anzuUserOneStore.setAnzuUser(res)
       // After the form has settled, not before it. The derived fields recompute in a watcher, and
       // a baseline taken ahead of that would make an account whose stored full name is empty read
       // as edited the instant it opens -- an unsaved dot and a leave prompt before anyone typed.
       await nextTick()
       snapshot()
+      return true
     } catch (error) {
       // A newer fetch owns the record now, possibly another page's: leave it alone.
-      if (!isLatest()) return
+      if (!isLatest()) return undefined
       // Not the previous record: Save would PUT it back to its own id from a page opened for another.
       anzuUserOneStore.reset(system)
       pristine.value = ''
-      showErrorsDefault(error)
+      return handleRecordLoadError(error) ? false : undefined
     } finally {
       if (isLatest()) anzuUserOneStore.setLoadingAnzuUser(false)
     }

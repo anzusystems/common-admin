@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { useAlerts } from '@/domains/system/composables/alerts'
+import { handleRecordLoadError } from '@/domains/system/composables/recordPage'
 import type { AxiosClientFn } from '@/domains/api/utils/client'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 import type { Pagination } from '@/domains/api/composables/pagination'
@@ -90,7 +91,6 @@ export function useLogListActions(params: LogActionsParams) {
 }
 
 export function useLogDetailActions(params: LogActionsParams) {
-  const { showErrorsDefault } = useAlerts()
   const { execute, abort } = useFetchLog(params)
 
   const log = ref<Log | null>(null)
@@ -99,17 +99,19 @@ export function useLogDetailActions(params: LogActionsParams) {
   let generation = 0
   const isCurrent = (token: number) => token === generation
 
-  const fetchData = async (id: string) => {
+  /** `true` once loaded, `false` when the page should leave, `undefined` when superseded or stopped. */
+  const fetchData = async (id: string): Promise<boolean | undefined> => {
     const token = ++generation
     detailLoading.value = true
     try {
       const res = await execute({ urlParams: { id } })
-      if (!isCurrent(token)) return
+      if (!isCurrent(token)) return undefined
       log.value = res
+      return true
     } catch (error) {
-      if (!isCurrent(token)) return
+      if (!isCurrent(token)) return undefined
       log.value = null
-      showErrorsDefault(error)
+      return handleRecordLoadError(error) ? false : undefined
     } finally {
       if (isCurrent(token)) detailLoading.value = false
     }

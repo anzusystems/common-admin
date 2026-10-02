@@ -71,6 +71,53 @@ describe('stale single-record fetch', () => {
   })
 })
 
+describe('what a page reads from the single-record fetch', () => {
+  // `true` loaded, `false` leave (the message is shown), `undefined` a newer fetch took over -- the page
+  // leaves only on `false`, so a superseded fetch must not read as a failure.
+  it('anzuUser: true, false, then undefined for the fetch a newer one superseded', async () => {
+    const actions = inComponent(() => useAnzuUserActions({ client, system: 'cms' }))
+    expect(await actions.fetchAnzuUser(5)).toBe(true)
+    expect(await actions.fetchAnzuUser(7)).toBe(false)
+    const superseded = actions.fetchAnzuUser(9)
+    expect(await actions.fetchAnzuUser(8)).toBe(true)
+    slow.settle(200)
+    expect(await superseded).toBeUndefined()
+    expect(actions.anzuUser.value.id).toBe(8)
+  })
+
+  it.each([
+    ['anzuUser', () => inComponent(() => useAnzuUserActions({ client, system: 'cms' })).fetchAnzuUser],
+    [
+      'permissionGroup',
+      () => inComponent(() => usePermissionGroupActions({ client, system: 'cms' } as never)).fetchPermissionGroup,
+    ],
+  ])('%s: the page’s signal stops the request when the page goes', async (_name, loader) => {
+    const load = loader()
+    const controller = new AbortController()
+    const pending = load(9, { signal: controller.signal })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    // The helper hands the request a signal of its own, tied to the caller's.
+    const sent = (request.mock.calls.at(-1)![0] as { signal?: AbortSignal }).signal
+    expect(sent?.aborted).toBe(false)
+
+    controller.abort()
+
+    expect(sent?.aborted).toBe(true)
+    slow.settle(200)
+    await pending
+  })
+
+  it('permissionGroup: true, false, then undefined for the fetch a newer one superseded', async () => {
+    const actions = inComponent(() => usePermissionGroupActions({ client, system: 'cms' } as never))
+    expect(await actions.fetchPermissionGroup(5)).toBe(true)
+    expect(await actions.fetchPermissionGroup(7)).toBe(false)
+    const superseded = actions.fetchPermissionGroup(9)
+    expect(await actions.fetchPermissionGroup(8)).toBe(true)
+    slow.settle(200)
+    expect(await superseded).toBeUndefined()
+  })
+})
+
 describe.each([
   [
     'anzuUser',

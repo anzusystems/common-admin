@@ -2,6 +2,7 @@ import { ref, type Ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import useVuelidate from '@vuelidate/core'
 import { useAlerts } from '@/domains/system/composables/alerts'
+import { handleRecordLoadError } from '@/domains/system/composables/recordPage'
 import type { AxiosClientFn } from '@/domains/api/utils/client'
 import type { FilterConfig, FilterData } from '@/domains/filters/composables/filterFactory'
 import type { Pagination } from '@/domains/api/composables/pagination'
@@ -104,20 +105,28 @@ export const usePermissionGroupActions = (params: PermissionGroupActionsParams) 
   const permissionGroupOneStore = usePermissionGroupOneStore()
   const { permissionGroup, loadingPermissionGroup } = storeToRefs(permissionGroupOneStore)
 
-  const fetchPermissionGroup = async (id: IntegerId) => {
+  /**
+   * `true` once loaded, `false` when the page should leave (`handleRecordLoadError`), `undefined`
+   * when a newer fetch took over or the request was stopped.
+   */
+  const fetchPermissionGroup = async (
+    id: IntegerId,
+    options: { signal?: AbortSignal } = {}
+  ): Promise<boolean | undefined> => {
     const generation = ++fetchGeneration
     permissionGroupOneStore.setLoadingPermissionGroup(true)
     try {
       const { execute } = useFetchPermissionGroup()
-      const res = await execute({ urlParams: { id } })
-      if (generation !== fetchGeneration) return
+      const res = await execute({ urlParams: { id }, signal: options.signal })
+      if (generation !== fetchGeneration) return undefined
       permissionGroupOneStore.setPermissionGroup(res)
+      return true
     } catch (error) {
       // A newer fetch owns the record now, possibly another page's: leave it alone.
-      if (generation !== fetchGeneration) return
+      if (generation !== fetchGeneration) return undefined
       // Not the previous record: Save would PUT it back to its own id from a page opened for another.
       permissionGroupOneStore.reset()
-      showErrorsDefault(error)
+      return handleRecordLoadError(error) ? false : undefined
     } finally {
       if (generation === fetchGeneration) permissionGroupOneStore.setLoadingPermissionGroup(false)
     }

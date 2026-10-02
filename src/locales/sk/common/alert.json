@@ -1,6 +1,8 @@
 {
   "unknownError": "Systémová chyba. Skúste neskôr alebo kontaktujte administrátora.",
   "forbiddenError": "Prístup zamietnutý. Na vykonanie danej akcie nemáte oprávnenie.",
+  "recordNotFound": "Záznam neexistuje alebo bol vymazaný.",
+  "recordForbidden": "Na tento záznam nemáte oprávnenie.",
   "fixValidationErrors": "Vyplňte všetky povinné polia a opravte chyby.",
   "fixApiValidationErrors": "Opravte tieto chyby.",
   "apiForbiddenOperationError": "Zakázaná akcia.",

@@ -47,7 +47,8 @@
   "notFound": {
     "title": "Ups, nastala chyba 404",
     "text": "Táto stránka neexistuje. Pokiaľ by mala, kontaktujte administrátora.",
-    "backButton": "Vráť ma na úvodnú stránku"
+    "backButton": "Vráť ma na úvodnú stránku",
+    "previousButton": "Späť"
   },
   "unauthorized": {
     "title": "Ups, nastala chyba 401",

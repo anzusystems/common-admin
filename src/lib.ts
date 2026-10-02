@@ -175,6 +175,12 @@ import {
   type RouteHistoryEntry,
   useRouteHistory,
 } from '@/domains/system/composables/routeHistory'
+import {
+  handleRecordLoadError,
+  useRecordPage,
+  type UseRecordPageOptions,
+  type UseRecordPageReturn,
+} from '@/domains/system/composables/recordPage'
 import { SubjectScopeKey, SystemScopeKey } from '@/shared/injectionKeys'
 import { prettyBytes, prettyDuration } from '@/shared/utils/file'
 import {
@@ -816,6 +822,10 @@ export {
   type NavigateBackOptions,
   type NavigateBackTarget,
   type RouteHistoryEntry,
+  handleRecordLoadError,
+  useRecordPage,
+  type UseRecordPageOptions,
+  type UseRecordPageReturn,
   useRemainingTime,
   useAlerts,
   useTheme,

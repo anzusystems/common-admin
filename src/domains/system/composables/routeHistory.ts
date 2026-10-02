@@ -17,6 +17,32 @@ export interface RouteHistoryEntry {
 // Module state, so the history is one list per document. A test that fills it has to clear it
 // again (`clearHistory`), or the next test in the file reads what the previous one left behind.
 const history = ref<RouteHistoryEntry[]>([])
+// Paths a record page left because its record failed, with when; read by `useRecordPage`, which
+// skips them as a destination for a while. Here so that `clearHistory` clears it with the history.
+const leftAfterFailure = new Map<string, number>()
+const LEFT_AFTER_FAILURE_MS = 60_000
+
+/** For `useRecordPage` only. */
+export const markLeftAfterFailure = (path: string) => {
+  const now = Date.now()
+  // Expired ones go here too: a path is otherwise only dropped when it is looked up again.
+  for (const [left, at] of leftAfterFailure) if (now - at >= LEFT_AFTER_FAILURE_MS) leftAfterFailure.delete(left)
+  leftAfterFailure.set(path, now)
+}
+
+/** For `useRecordPage` only: the page is there again, so a failure before no longer counts. */
+export const forgetLeftAfterFailure = (path: string) => {
+  leftAfterFailure.delete(path)
+}
+
+/** For `useRecordPage` only. */
+export const isLeftAfterFailureRecently = (path: string) => {
+  const at = leftAfterFailure.get(path)
+  if (at === undefined) return false
+  if (Date.now() - at < LEFT_AFTER_FAILURE_MS) return true
+  leftAfterFailure.delete(path)
+  return false
+}
 const blacklistedRouteNames = ref<RouteRecordName[]>([])
 /**
  * How many routes back the history reaches. Note that `addRoute` drops only CONSECUTIVE duplicates,
@@ -101,6 +127,7 @@ export function useRouteHistory(): {
 
   const clearHistory = () => {
     history.value = []
+    leftAfterFailure.clear()
   }
 
   const navigateBack = (router: Router, options: NavigateBackOptions = {}): NavigateBackTarget | undefined => {

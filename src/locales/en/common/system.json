@@ -47,7 +47,8 @@
   "notFound": {
     "title": "Oops, 404",
     "text": "This page doesn't exist",
-    "backButton": "Return to homepage"
+    "backButton": "Return to homepage",
+    "previousButton": "Back"
   },
   "unauthorized": {
     "title": "Oops, 401",

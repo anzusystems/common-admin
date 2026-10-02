@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-router'
 import { parseTypedRouterDeclaration } from '@/testing/typedRouter'
 
+// One value per id shape the admins constrain a param to: an integer id, a uuid (any version, the
+// backends make v4, v6 and v7) and a log's Mongo ObjectId.
+const PARAM_SAMPLES = ['1', '00000000-0000-4000-8000-000000000001', '000000000000000000000001']
+
 export interface DescribeGeneratedRoutesOptions {
   /** `routes` from `vue-router/auto-routes`. */
   routes: RouteRecordRaw[]
@@ -35,12 +39,19 @@ export function describeGeneratedRoutes({
   const declaredPaths = parseTypedRouterDeclaration(declaration).paths.filter(({ path }) => !path.includes(catchAll))
   const router = createRouter({ history: createMemoryHistory(), routes })
 
-  // `:id(\d+)` has to be filled with something the constraint accepts, or the route would fail to
-  // match for a reason that says nothing about the route itself. The trailing `?` of an optional
-  // param goes with it: left in place it starts a query string, and everything after it -- `/edit` in
+  // A constrained param -- `:id(\d+)`, a uuid, a log's ObjectId -- has to be filled with something its
+  // regex accepts, or the route would fail to match for a reason that says nothing about the route
+  // itself: the first sample the regex takes, else `sample`. The trailing `?` of an optional param
+  // goes with it: left in place it starts a query string, and everything after it -- `/edit` in
   // `/articles/:docId/:version?/edit` -- stops being part of the path.
   const fillParams = (path: string) =>
-    path.replace(/:[a-zA-Z]+\(\\d\+\)\??/g, '1').replace(/:[a-zA-Z]+(\([^)]*\))?\??/g, 'sample')
+    path.replace(/:[a-zA-Z]+(?:\(((?:\\.|[^\\)])*)\))?\??/g, (_match, regex?: string) =>
+      regex
+        ? // vue-router reads `\)` as a group's closing parenthesis inside a custom regex, `RegExp` would not.
+          (PARAM_SAMPLES.find((sample) => new RegExp(`^(?:${regex.replace(/\\\)/g, ')')})$`, 'i').test(sample)) ??
+          'sample')
+        : 'sample'
+    )
 
   describe('generated routes', () => {
     it('declares exactly the pages that exist on disk', () => {
