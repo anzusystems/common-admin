@@ -175,7 +175,6 @@ describe('ImageMediaWidgetInner in a collab room', () => {
     const { wrapper, image } = mountWidget('lead-release')
     await removeImage(wrapper)
 
-    // eslint-disable-next-line vue/no-ref-object-reactivity-loss -- final read for an assertion
     expect(image.value).toBeNull()
     expect(released).toHaveBeenCalled()
     expect(released.mock.calls[0]![0]).toEqual({ image: null, media: null })

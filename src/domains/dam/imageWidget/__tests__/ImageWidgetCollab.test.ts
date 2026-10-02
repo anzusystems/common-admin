@@ -179,7 +179,6 @@ describe('ImageWidgetInner in a collab room', () => {
     await flushPromises()
     await flushPromises()
 
-    // eslint-disable-next-line vue/no-ref-object-reactivity-loss -- final read for an assertion
     expect(model.value).toBeNull()
     expect(acquired).toHaveBeenCalledTimes(1)
     expect(released).toHaveBeenCalledTimes(1)
