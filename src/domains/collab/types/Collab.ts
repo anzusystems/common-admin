@@ -146,6 +146,19 @@ export interface CollabRoomOptions {
   editors?: CollabFieldName[]
 }
 
+/**
+ * How this client waits for a join or a leave. Kept apart from `CollabRoomOptions`, which the server stores as the
+ * room's.
+ */
+export interface CollabJoinAckOptions {
+  /**
+   * Milliseconds to wait for the server's answer before the join fails or the leave resolves. The server may still
+   * finish one the client has given up on; a caller that cleans up or joins again behind it waits longer than the
+   * server can take.
+   */
+  ackTimeout?: number
+}
+
 export const CollabRequestToTakeModerationStatus = {
   Ok: 'ok',
   AlreadyRequested: 'alreadyRequested',

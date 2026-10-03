@@ -4,6 +4,7 @@ import {
   type CollabAccessRoomStatusType,
   type CollabFieldLock,
   type CollabFieldName,
+  type CollabJoinAckOptions,
   CollabRequestToJoinStatus,
   type CollabRequestToJoinStatusCallback,
   type CollabRequestToJoinStatusType,
@@ -48,6 +49,7 @@ import type { AddToCachedArgs } from '@/domains/cached/composables/defineCached'
 import type { IntegerId } from '@/shared/types/common'
 
 const alertedOccupiedRooms = ref(new Set<CollabRoom>())
+const ACK_TIMEOUT = 5000
 
 export function useCollabRoom(
   room: CollabRoom,
@@ -252,12 +254,15 @@ export function useCollabRoom(
     })
   }
 
-  const joinCollabRoom = async (options: Partial<CollabRoomOptions> = {}): Promise<CollabAccessRoomStatusType> => {
+  const joinCollabRoom = async (
+    options: Partial<CollabRoomOptions> = {},
+    { ackTimeout = ACK_TIMEOUT }: CollabJoinAckOptions = {}
+  ): Promise<CollabAccessRoomStatusType> => {
     return new Promise((resolve, reject) => {
       if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return reject(CollabAccessRoomStatus.Failed)
       const isNewestWrite = claimRoomInfoWrite(room)
       collabSocket.value
-        ?.timeout(5000)
+        ?.timeout(ackTimeout)
         .emit('joinCollabRoom', room, options, (error, response: CollabAccessRoomCallbackTypes) => {
           if (error) {
             markRoomInactiveOnFailedClaim()
@@ -265,7 +270,8 @@ export function useCollabRoom(
              * membership this client never hears about: a leave is not tied to the join it cleans up,
              * so it could remove the membership of a remount that succeeded in the meantime. Marking
              * inactive keeps the failure on the safe side — the stale membership is released on
-             * disconnect. Closing it properly needs a generation the server can compare. */
+             * disconnect. Closing it properly needs a generation the server can compare. A caller that
+             * leaves after a timeout itself passes an `ackTimeout` past the server's own run. */
             return void reject(CollabAccessRoomStatus.Failed)
           }
           if (isCollabSuccessAccessRoomCallback(response)) {
@@ -296,16 +302,17 @@ export function useCollabRoom(
   /**
    * Resolves once the server has acknowledged the leave, so a caller that re-joins the same room can
    * serialise the two. Never rejects: every existing caller invokes it without handling the result,
-   * mostly from unmount hooks. A missing ack resolves on the timeout rather than hanging.
+   * mostly from unmount hooks. A missing ack resolves on the timeout rather than hanging; a caller
+   * that joins again behind it passes an `ackTimeout` past the server's own run, as for the join.
    */
-  const leaveCollabRoom = (): Promise<void> => {
+  const leaveCollabRoom = ({ ackTimeout = ACK_TIMEOUT }: CollabJoinAckOptions = {}): Promise<void> => {
     return new Promise((resolve) => {
       if (!collabOptions.value.enabled || isUndefined(collabSocket.value)) return void resolve()
       // Nobody gathers it any more: kept, it went out as the room's state when this editor was next alone in it.
       collabFieldDataBufferState.delete(room)
       const isNewestWrite = claimRoomInfoWrite(room)
       collabSocket.value
-        ?.timeout(5000)
+        ?.timeout(ackTimeout)
         .emit('leaveCollabRoom', room, (error, response: CollabAccessRoomCallbackTypes) => {
           if (!error && isNewestWrite() && isCollabSuccessAccessRoomCallback(response)) {
             collabRoomInfoState.set(room, response.room)
